@@ -324,6 +324,9 @@ xdr_Device_DocmdResp(XDR *xdrs, void *arg, ...)
 
 /* 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1  2003/10/01 19:30:03  mrk
+ * asynGpib and vxi11 now supported
+ *
  * Revision 1.2  2003/04/10 15:17:07  mrk
  * open source license
  *

@@ -40,7 +40,7 @@
 #include <waveformRecord.h>
 
 #include <asynDriver.h>
-#include <gpibDriver.h>
+#include <asynGpibDriver.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -132,16 +132,15 @@ struct gDset {
 struct gpibDpvt {
     ELLNODE node; /*For use by devSupportGpib*/
     devGpibParmBlock *pdevGpibParmBlock; 
-    int gpibAddr;
     CALLBACK callback;
     dbCommon *precord;
     asynUser *pasynUser;
-    asynDriver *pasynDriver;
-    void *asynDriverPvt;
-    octetDriver *poctetDriver;
-    void *octetDriverPvt;
-    gpibDriver *pgpibDriver;
-    void *gpibDriverPvt;
+    asynCommon *pasynCommon;
+    void *asynCommonPvt;
+    asynOctet *pasynOctet;
+    void *asynOctetPvt;
+    asynGpib *pasynGpib;
+    void *asynGpibPvt;
     int parm;                 /* parameter index into gpib commands */
     char *rsp;                /* for read/write message error responses */
     char *msg;                /* for read/write messages */
@@ -286,10 +285,10 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * gpibAddr - gpib address of instrument
  * callback - For use by requestProcessCallback
  * precord - address of record with dbCommon.dpvt pointing to this
- * pasynUser - For calling asynDriver methods
- * pasynDriver,asynDriverPvt - For calling asynDriver
- * poctetDriver,octetDriverPvt - For calling octetDriver
- * pgpibDriver,gpibDriverPvt - For calling gpibDriver. May be null.
+ * pasynUser - For calling asynCommon methods
+ * pasynCommon,asynCommonPvt - For calling asynCommon
+ * pasynOctet,asynOctetPvt - For calling asynOctet
+ * pasynGpib,asynGpibPvt - For calling asynGpib. May be null.
  * parm - The index of the gpibCmd in the gpibCmd array
  * rsp - Response buffer of length gpibCmd.rspLen
  * msg - Message buffer of length gpibCmd.msgLen

@@ -22,7 +22,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-extern int vxi11Config(char *deviceName,char *hostName,int recoverWithIFC,
+extern int vxi11Config(char *portName,char *hostName,int recoverWithIFC,
         double defTimeout,
         char *vxiName,
         unsigned int priority, unsigned int stackSize,

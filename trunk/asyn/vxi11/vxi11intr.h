@@ -45,6 +45,9 @@ bool_t xdr_Device_SrqParms(XDR *, void *, ...);
 
 /* 
  * $Log: not supported by cvs2svn $
+ * Revision 1.1  2003/10/01 19:30:03  mrk
+ * asynGpib and vxi11 now supported
+ *
  * Revision 1.3  2003/04/10 15:17:07  mrk
  * open source license
  *
