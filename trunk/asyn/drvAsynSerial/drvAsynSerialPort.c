@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.8 2004-04-14 17:48:24 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.9 2004-04-15 14:51:03 norume Exp $
  */
 
 #include <string.h>
@@ -121,7 +121,7 @@ drvAsynSerialPortReport(void *drvPvt, FILE *fp, int details)
 }
 
 /*
- * Silently close a connection
+ * Close a connection
  */
 static void
 closeConnection(ttyController_t *tty)
@@ -532,11 +532,15 @@ static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
     asynStatus status = asynSuccess;
 
     assert(tty);
-    assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                             "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                             "%s write %d ", tty->serialDeviceName, numchars);
+    if (tty->fd < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s disconnected:", tty->serialDeviceName);
+        return asynError;
+    }
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -621,9 +625,13 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
     asynStatus status = asynSuccess;
 
     assert(tty);
-    assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "%s read.\n", tty->serialDeviceName);
+    if (tty->fd < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s disconnected:", tty->serialDeviceName);
+        return asynError;
+    }
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s maxchars %d Why <=0?\n",tty->serialDeviceName,maxchars);
