@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.36 2004-03-31 22:09:29 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.37 2004-04-01 00:54:29 norume Exp $
  */
 
 #include <string.h>
@@ -141,43 +141,6 @@ timeoutHandler(void *p)
      * again in a little while.
      */
     epicsTimerStartDelay(tty->timer, 10.0);
-}
-
-/*
- * Set I/O to blocking/non-blocking
- */
-static asynStatus
-setNonBlockMode(ttyController_t *tty, int nonBlock)
-{
-    asynUser *pasynUser = tty->pasynUser;
-
-#ifdef vxWorks
-    if (ioctl(tty->fd, FIONBIO, &nonBlock) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s FIONBIO failed: %s.\n",
-                                        tty->serialDeviceName, strerror(errno));
-        return asynError;
-    }
-#else
-    int flags;
-    if ((flags = fcntl(tty->fd, F_GETFL, 0)) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s F_GETFL failed: %s.\n",
-                                        tty->serialDeviceName, strerror(errno));
-        return asynError;
-    }
-    if (nonBlock)
-        flags |= O_NONBLOCK;
-    else
-        flags &= ~O_NONBLOCK;
-    if (fcntl(tty->fd, F_SETFL, flags) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s F_SETFL failed: %s.\n",
-                                        tty->serialDeviceName, strerror(errno));
-        return asynError;
-    }
-#endif
-    return asynSuccess;
 }
 
 /*
@@ -346,11 +309,20 @@ openConnection (ttyController_t *tty)
             tty->fd = -1;
             return asynError;
         }
-        if (setNonBlockMode(tty, 0) != asynSuccess) {
+#ifndef vxWorks
+        /*
+         * Turn off non-blocking mode
+         */
+        tcflush(tty->fd, TCIOFLUSH);
+        if (fcntl(tty->fd, F_SETFL, 0) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "Can't set %s file flags: %s",
+                                        tty->serialDeviceName, strerror(errno));
             close(tty->fd);
             tty->fd = -1;
             return asynError;
         }
+#endif
     }
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->serialDeviceName);
@@ -709,27 +681,8 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
          * timer fired after the read returned but before the timer cancel.
          */
         if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
-            if (epicsInterruptibleSyscallWasClosed(tty->interruptibleSyscallContext)) {
+            if (epicsInterruptibleSyscallWasClosed(tty->interruptibleSyscallContext))
                 closeConnection(tty);
-            }
-            else if (thisRead < 0) {
-                /* 
-                 * Last-ditch attempt to try to soak up 
-                 * any characters that actually are available.
-                 */
-                if (setNonBlockMode(tty, 1) == asynSuccess) {
-                    thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
-                    if (thisRead > 0) {
-                        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
-                                    tty->inBuffer + tty->inBufferHead, thisRead,
-                                   "%s read %d ", tty->serialDeviceName, thisRead);
-                        tty->inBufferHead += thisRead;
-                        if (tty->inBufferHead == INBUFFER_SIZE)
-                            tty->inBufferHead = 0;
-                    }
-                    setNonBlockMode(tty, 1);
-                }
-            }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,
                                     "%s timed out.\n", tty->serialDeviceName);
             didTimeout = 1;
@@ -766,11 +719,21 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
             /*
              * Toss characters until there are none left
              */
-            if (setNonBlockMode(tty, 1) == asynSuccess) {
+#ifdef vxWorks
+            int flag = 1;
+            if (ioctl(tty->fd, FIONBIO, &flag) >= 0) {
+#else
+            if (fcntl(tty->fd, F_SETFL, O_NONBLOCK) >= 0) {
+#endif
                 char cbuf[512];
                 while (read(tty->fd, cbuf, sizeof cbuf) > 0)
                     continue;
-                setNonBlockMode(tty, 0);
+#ifdef vxWorks
+                flag = 0;
+                ioctl(tty->fd, FIONBIO, &flag);
+#else
+                fcntl(tty->fd, F_SETFL, 0);
+#endif
             }
         }
         else {
