@@ -19,8 +19,8 @@ Instrument Device Support</h1>
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer and Eric
 Norum</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">November 19,
-2004</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">February 25,
+2005</span></p>
 </center>
 <hr>
 
@@ -296,24 +296,32 @@ functions (optional.).</p>
 
 <p>A simplified version of the skeleton file is:</p>
 <pre>/* devSkeletonGpib.c */
+...
 #include &lt;devCommonGpib.h&gt;
+...
 /* define all desired DSETs */
-#define DSET_AI    devAiSkeletonGpib
-#define DSET_BI    devBiSkeletonGpib
-#define DSET_MBBI   devMbbiSkeletonGpib
+...
+#define DSET_BO    devBiSkeletonGpib
+...
 #include &lt;devGpib.h&gt;    /* must be included after DSET defines */
 #define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
-/* example choices for BI */
-/* example EFAST table */
-static char *userOffOn[] = {"USER OFF;", "USER ON;", 0};
-/* example devGpibNames */
+...
+/* Strings used by the init routines to fill in the znam,onam,... in BI and BO*/
 static  char    *offOnList[] = { "Off", "On" };
 static  struct  devGpibNames   offOn = { 2, offOnList, 0, 1 };
+
+static char  *initNamesList[] = { "Init","Init" };
+static struct devGpibNames initNames = { 2,initNamesList,0,1 };
+/* example EFAST table */
+static char *userOffOn[] = {"USER OFF;", "USER ON;", 0};
+
 /* Array of structures that define all GPIB messages */
 static struct gpibCmd gpibCmds[] =
 {
   /* Param 0 */
+  {&amp;DSET_BO,GPIBCMD,IB_Q_HIGH,"init",0,0,32,NULL,0,0,NULL,&amp;initNames,0},
+  /* Param 1 */
   {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH,0,0, 0, 32,0, 0, 0, userOffOn, &amp;offOn, 0},
   /* definitions for other parameters follow*/
 };
@@ -471,17 +479,17 @@ definition must define field OUT as</p>
     <dd>Input message termination string. It can be:
       <dl>
         <dt><code>0</code></dt>
-          <dd>A NULL pointer  means that this read operation will be terminated
-            by the current asynOctetSetInputEos value, if any.</dd>
+          <dd>A NULL pointer  means that this read operation will be
+            terminated by the current asynOctetSetInputEos value, if any.</dd>
         <dt><code>""</code></dt>
           <dd>An empty string signifies that a single null character ('\0')
             is the terminator for this operation.</dd>
         <dt>non-empty string (e.g. <code>"\n"</code>)</dt>
           <dd>The termination characters (not including the null character
-            terminating the string) for this operation. For example, <code>"\n"</code> sets the
-            message terminator to a single ASCII newline (<code>'\n'</code>)
-            character.  Some drivers, e.g. the VXI-11, allow only a single
-            termination character.</dd>
+            terminating the string) for this operation. For example,
+            <code>"\n"</code> sets the message terminator to a single ASCII
+            newline (<code>'\n'</code>) character.  Some drivers, e.g. the
+            VXI-11, allow only a single termination character.</dd>
       </dl>
     </dd>
 </dl>
