@@ -28,7 +28,6 @@
 #include <recSup.h>
 #include <recGbl.h>
 #include <epicsString.h>
-#include <epicsString1.h>
 #include <epicsStdio.h>
 #include <epicsExport.h>
 #include <asynGpibDriver.h>

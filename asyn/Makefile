@@ -19,10 +19,8 @@ asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
 INC += epicsInterruptibleSyscall.h
-INC += epicsString1.h
 asyn_SRCS += asynManager.c
 asyn_SRCS += epicsInterruptibleSyscall.c
-asyn_SRCS += epicsString1.c
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
