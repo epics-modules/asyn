@@ -44,6 +44,7 @@ INC += asynOctet.h asynOctetSyncIO.h
 INC += asynOption.h
 INC += asynDrvUser.h
 asyn_SRCS += asynInt32Base.c asynInt32SyncIO.c
+asyn_SRCS += asynInt32ArrayBase.c
 asyn_SRCS += asynUInt32DigitalBase.c asynUInt32DigitalSyncIO.c
 asyn_SRCS += asynFloat64Base.c asynFloat64SyncIO.c
 asyn_SRCS += asynOctetSyncIO.c
