@@ -736,11 +736,6 @@ gpibDpvt
 \layout Standard
 
 Here are the custom conversion functions I wrote for the AB300.
-  Because these routines use epicsSnprintf I had to also add a 
-\family typewriter 
-#include <epicsStdio.h>
-\family default 
- to the file.
 \layout LyX-Code
 
 /*
@@ -1418,7 +1413,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-15 15:08:02 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-16 20:41:08 $$
 \newline 
 ############################################################################
 \newline 
