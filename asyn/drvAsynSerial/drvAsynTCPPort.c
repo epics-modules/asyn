@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.5 2004-04-12 18:02:13 mrk Exp $
+ * $Id: drvAsynTCPPort.c,v 1.6 2004-04-13 03:41:24 rivers Exp $
  */
 
 #include <string.h>
@@ -593,7 +593,7 @@ drvAsynTCPPortConfigure(char *portName,
         *cp = '\0';
     if(hostToIPAddr(tty->serialDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
         *cp = ':';
-        errlogPrintf("drvGenericSerialConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
+        errlogPrintf("drvAsynTCPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
         ttyCleanup(tty);
         return -1;
     }
