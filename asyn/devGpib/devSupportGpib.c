@@ -1239,9 +1239,11 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     int nchars;
 
     nchars = pasynOctet->write(asynOctetPvt,pgpibDpvt->pasynUser,message,len);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nchars,
-        "%s writeIt\n",precord->name);
-    if(nchars!=len) {
+    if(nchars==len) {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nchars,
+                                            "%s writeIt\n",precord->name);
+    }
+    else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s write requested %d but sent %d bytes\n",
                                                     precord->name,len,nchars);
