@@ -891,14 +891,14 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
     if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
-    if(pdevGpibPvt->finish)
-        failure = pdevGpibPvt->finish(pgpibDpvt,failure);
     status = pasynManager->unlock(pgpibDpvt->pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pasynManager->unlock failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
     }
+    if(pdevGpibPvt->finish)
+        failure = pdevGpibPvt->finish(pgpibDpvt,failure);
     if(failure) recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
     return failure;
 }
