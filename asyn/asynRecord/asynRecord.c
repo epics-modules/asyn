@@ -81,7 +81,7 @@ static long get_precision(struct dbAddr * paddr, long *precision);
 static void monitor(asynRecord * pasynRec);
 static void monitorStatus(asynRecord * pasynRec);
 static asynStatus connectDevice(asynRecord * pasynRec);
-static void gpibUniversialCmd(asynUser * pasynUser);
+static void gpibUniversalCmd(asynUser * pasynUser);
 static void gpibAddressedCmd(asynUser * pasynUser);
 static void asynCallbackProcess(asynUser * pasynUser);
 static void asynCallbackSpecial(asynUser * pasynUser);
@@ -477,7 +477,7 @@ static void asynCallbackProcess(asynUser * pasynUser)
               pasynRec->name, pasynRecPvt->state);
     resetError(pasynRec);
     pasynUser->timeout = pasynRec->tmot;
-    if(pasynRec->ucmd != gpibUCMD_None) gpibUniversialCmd(pasynUser);
+    if(pasynRec->ucmd != gpibUCMD_None) gpibUniversalCmd(pasynUser);
     else if(pasynRec->acmd != gpibACMD_None) gpibAddressedCmd(pasynUser);
     else if(pasynRec->tmod != asynTMOD_NoIO) performIO(pasynUser);
     yesNo = 0;
@@ -1166,7 +1166,7 @@ static void performOctetIO(asynUser * pasynUser)
     }
 }
 
-static void gpibUniversialCmd(asynUser * pasynUser)
+static void gpibUniversalCmd(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
