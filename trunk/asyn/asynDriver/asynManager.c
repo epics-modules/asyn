@@ -91,10 +91,11 @@ typedef struct interruptBase {
 }interruptBase;
 
 typedef struct interruptNodePvt {
-    ELLNODE  node;
-    ELLNODE  addRemoveNode;
+    ELLNODE  addNode;
+    ELLNODE  removeNode;
     BOOL     isOnList;
-    int      addRemoveAction; /* (0,1,2) => (none,add,remove)*/
+    BOOL     isOnAddList;
+    BOOL     isOnRemoveList;
     interruptBase *pinterruptBase;
     interruptNode nodePublic;
 }interruptNodePvt;
@@ -1739,10 +1740,17 @@ static asynStatus addInterruptUser(interruptNode*pinterruptNode)
     }
     pinterruptNodePvt->isOnList = TRUE;
     if(pinterruptBase->callbackActive) {
-         ellAdd(&pinterruptBase->addList,&pinterruptNodePvt->node);
-         pinterruptBase->listModified = TRUE;
+        if(pinterruptNodePvt->isOnAddList) {
+            epicsMutexUnlock(pport->asynManagerLock);
+            printf("%s asynManager:addInterruptUser already on addRemove list\n",
+                pport->portName);
+            return asynError;
+        }
+        ellAdd(&pinterruptBase->addList,&pinterruptNodePvt->addNode);
+        pinterruptNodePvt->isOnAddList = TRUE;
+        pinterruptBase->listModified = TRUE;
     } else {
-         ellAdd(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+         ellAdd(&pinterruptBase->callbackList,&pinterruptNode->node);
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
@@ -1762,10 +1770,17 @@ static asynStatus removeInterruptUser(interruptNode*pinterruptNode)
         return asynError;
     }
     if(pinterruptBase->callbackActive) {
-         ellAdd(&pinterruptBase->removeList,&pinterruptNodePvt->node);
-         pinterruptBase->listModified = TRUE;
+        if(pinterruptNodePvt->isOnRemoveList) {
+            epicsMutexUnlock(pport->asynManagerLock);
+            printf("%s asynManager:addInterruptUser already on addRemove list\n",
+                pport->portName);
+            return asynError;
+        }
+        ellAdd(&pinterruptBase->removeList,&pinterruptNodePvt->removeNode);
+        pinterruptNodePvt->isOnRemoveList = TRUE;
+        pinterruptBase->listModified = TRUE;
     } else {
-         ellDelete(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+         ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
          pinterruptNodePvt->isOnList = FALSE;
     }
     epicsMutexUnlock(pport->asynManagerLock);
@@ -1789,7 +1804,7 @@ static asynStatus interruptEnd(void *pasynPvt)
 {
     interruptBase  *pinterruptBase = (interruptBase *)pasynPvt;
     port *pport = pinterruptBase->pport;
-    interruptNodePvt *pinterruptNodePvt;
+    ELLNODE   *pnode;
 
     epicsMutexMustLock(pport->asynManagerLock);
     pinterruptBase->callbackActive = FALSE;
@@ -1797,14 +1812,20 @@ static asynStatus interruptEnd(void *pasynPvt)
         epicsMutexUnlock(pport->asynManagerLock);
         return asynSuccess;
     }
-    while((pinterruptNodePvt = (interruptNodePvt *)ellFirst(
-    &pinterruptBase->removeList))){
-        ellDelete(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+    while((pnode = ellFirst( &pinterruptBase->removeList))){
+        interruptNodePvt *pinterruptNodePvt = (interruptNodePvt *)(pnode -1);
+        interruptNode *pinterruptNode = &pinterruptNodePvt->nodePublic;
+
+        ellDelete(&pinterruptBase->removeList,&pinterruptNodePvt->removeNode);
+        ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
         pinterruptNodePvt->isOnList = FALSE;
     }
-    while((pinterruptNodePvt = (interruptNodePvt *)ellFirst(
-    &pinterruptBase->addList))){
-        ellAdd(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+    while((pnode = ellFirst( &pinterruptBase->addList))){
+        interruptNodePvt *pinterruptNodePvt = (interruptNodePvt *)pnode;
+        interruptNode *pinterruptNode = &pinterruptNodePvt->nodePublic;
+
+        ellDelete(&pinterruptBase->addList,&pinterruptNodePvt->addNode);
+        ellAdd(&pinterruptBase->callbackList,&pinterruptNode->node);
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
