@@ -524,7 +524,7 @@ tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
-asynSetPortOption("L0","9600")
+asynSetPortOption("L0","baud","9600")
 \end{verbatim}
 \end{itemize}
 
@@ -575,7 +575,7 @@ asynSetTraceIOMask("L0",0,0x2)
 iocInit()
 ############################################################################
 ###  EPICS IOC CORE built on Jan 29 2004
-###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-02 13:41:32 $$
+###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-02 20:30:01 $$
 ############################################################################
 Starting iocInit
 iocInit: All initialization complete
