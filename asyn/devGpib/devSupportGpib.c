@@ -821,8 +821,6 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
     }
     epicsMutexUnlock(pportInstance->lock);
     if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) {
-        if(cmdType&(GPIBREADW|GPIBEFASTIW)) 
-                epicsTimerCancel(pdeviceInstance->srqWaitTimer);
         failure = -1;
         goto done;
     }
@@ -839,9 +837,6 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
         lenmsg = strlen(pgpibCmd->cmd);
         nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenmsg);
         if(nchars!=lenmsg) {
-            if(cmdType&(GPIBREADW|GPIBEFASTIW)) {
-                epicsTimerCancel(pdeviceInstance->srqWaitTimer);
-            }
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s lenmsg %d but nchars written %d\n",
                 precord->name,lenmsg,nchars);
@@ -859,7 +854,12 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
     }
 done:
     if(failure) recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-    gpibRead(pgpibDpvt,failure);
+    if(cmdType&(GPIBREADW|GPIBEFASTIW)) {
+        epicsTimerCancel(pdeviceInstance->srqWaitTimer);
+        readWait(pgpibDpvt,failure);
+    } else {
+        gpibRead(pgpibDpvt,failure);
+    }
 }
 
 static void readWait(gpibDpvt *pgpibDpvt,int failure)
