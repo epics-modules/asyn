@@ -37,7 +37,9 @@ typedef struct asynInt32 {
 /* asynInt32Base does the following:
    calls  registerInterface for asynInt32.
    Implements registerInterruptUser and cancelInterruptUser
-   Provides default implementations of getBounds, write, and read
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
 */
 
 #define asynInt32BaseType "asynInt32Base"

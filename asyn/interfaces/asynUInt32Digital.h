@@ -38,7 +38,9 @@ typedef struct asynUInt32Digital {
 /* asynUInt32DigitalBase does the following:
    calls  registerInterface for asynUInt32Digital.
    Implements registerInterruptUser and cancelInterruptUser
-   Provides default implementations of getBounds, write, and read
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
 */
 
 #define asynUInt32DigitalBaseType "asynUInt32DigitalBase"
