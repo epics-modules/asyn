@@ -229,6 +229,7 @@ static long process(asynRecord * pasynRec)
     if (pasynRecPvt->pasynOctet == NULL) {
         reportError(pasynRec, asynSuccess,
                     "Port does not have asynOctet interface");
+        goto done;
     }
 
     if(!pasynRec->pact) {
