@@ -21,11 +21,29 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+typedef void (*interruptCallbackFloat64)(void *userPvt, epicsFloat64 data);
 #define asynFloat64Type "asynFloat64"
 typedef struct asynFloat64 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsFloat64 value);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+        interruptCallbackFloat64 callback, void *userPvt,void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
 } asynFloat64;
+
+/* asynFloat64Base does the following:
+   calls  registerInterface for asynFloat64.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of getBounds, write, and read
+*/
+
+#define asynFloat64BaseType "asynFloat64Base"
+typedef struct asynFloat64Base {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pasynFloat64Interface);
+} asynFloat64Base;
+epicsShareExtern asynFloat64Base *pasynFloat64Base;
+
 
 #ifdef __cplusplus
 }
