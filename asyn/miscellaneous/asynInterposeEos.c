@@ -277,7 +277,7 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
     if(eomReason) *eomReason = 0;
     for (;;) {
         if ((peosPvt->inBufTail != peosPvt->inBufHead)) {
-            char c = *data++ = peosPvt->inBuf[peosPvt->inBufTail++];
+            *data++ = peosPvt->inBuf[peosPvt->inBufTail++];
             nRead++;
             if (nRead >= maxchars) break;
             continue;
