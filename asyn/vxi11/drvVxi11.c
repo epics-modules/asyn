@@ -601,6 +601,7 @@ s */
             errlogPrintf("SrqThread(): read EOF\n");
         }
     }
+    pvxiLink->srqThreadStop = 0;
     errlogPrintf("SrqThread(): terminating\n");
     if(pvxiLink->srqFd >= 0) {
         close(pvxiLink->srqFd);
