@@ -75,7 +75,7 @@ typedef enum {recTypeBi, recTypeBo, recTypeLi, recTypeLo} recType;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                        recType rt);
-static long queueRequest(dbCommon *pr);
+static long processCallback(dbCommon *pr);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void dataCallback(void *v, epicsUInt32 value);
 static long initBi(biRecord *pbi);
@@ -88,10 +88,10 @@ static long initLo(longoutRecord *plo);
 static void callbackLo(asynUser *pasynUser);
 
 
-dsetDigital devBiAsynUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, queueRequest};
-dsetDigital devLiAsynUInt32Digital = {5, 0, 0, initLi, getIoIntInfo, queueRequest};
-dsetDigital devBoAsynUInt32Digital = {5, 0, 0, initBo, 0,            queueRequest};
-dsetDigital devLoAsynUInt32Digital = {5, 0, 0, initLo, 0,            queueRequest};
+dsetDigital devBiAsynUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, processCallback};
+dsetDigital devLiAsynUInt32Digital = {5, 0, 0, initLi, getIoIntInfo, processCallback};
+dsetDigital devBoAsynUInt32Digital = {5, 0, 0, initBo, 0,            processCallback};
+dsetDigital devLoAsynUInt32Digital = {5, 0, 0, initLo, 0,            processCallback};
 
 epicsExportAddress(dset, devBiAsynUInt32Digital);
 epicsExportAddress(dset, devLiAsynUInt32Digital);
@@ -247,7 +247,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
     return 0;
 }
 
-static long queueRequest(dbCommon *pr)
+static long processCallback(dbCommon *pr)
 {
     devDigitalPvt *pPvt = (devDigitalPvt *)pr->dpvt;
     asynStatus status;
@@ -262,7 +262,7 @@ static long queueRequest(dbCommon *pr)
     }
     return(0);
 }
-
+
 static void callbackBi(asynUser *pasynUser)
 {
     biRecord *pbi = (biRecord *)pasynUser->userPvt;
@@ -309,8 +309,7 @@ static void callbackLi(asynUser *pasynUser)
               "devAsynUInt32Digital::callbackLi %s, value=%x\n", 
               pli->name, pli->val);
 }
-
-
+
 static void callbackBo(asynUser *pasynUser)
 {
     boRecord *pbo = (boRecord *)pasynUser->userPvt;

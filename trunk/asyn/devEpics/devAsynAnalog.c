@@ -69,6 +69,7 @@
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynInt32.h"
+#include "asynInt32SyncIO.h"
 #include "asynInt32Callback.h"
 #include "asynFloat64.h"
 #include "asynFloat64Callback.h"
@@ -76,16 +77,16 @@
 
 typedef enum {
     typeAiInt32,
-    typeAoInt32,
     typeAiInt32Average,
     typeAiInt32Interrupt,
     typeAiFloat64,
-    typeAoFloat64,
     typeAiFloat64Average,
-    typeAiFloat64Interrupt
-} asynAnalogDevType;
+    typeAiFloat64Interrupt,
+    typeAoInt32,
+    typeAoFloat64
+}asynAnalogDevType;
 
-typedef struct {
+typedef struct devAsynAnalogPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
     asynInt32         *pint32;
@@ -108,7 +109,7 @@ typedef struct {
     char              *portName;
     char              *userParam;
     int               addr;
-} devAsynAnalogPvt;
+}devAsynAnalogPvt;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                        asynAnalogDevType devType);
@@ -189,7 +190,6 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     /* Create asynUser */
     pasynUser = pasynManager->createAsynUser(callback, 0);
     pasynUser->userPvt = pPvt;
-    pasynUser->timeout = 2.0; /*IS THIS SUFFICIENT???*/
     pPvt->pasynUser = pasynUser;
     pPvt->mutexId = epicsMutexCreate();
     pPvt->devType = devType;
@@ -298,13 +298,12 @@ static long initAoInt32(aoRecord *pao)
                         typeAoInt32);
     if (status == asynSuccess) {
         pPvt = pao->dpvt;
-        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser,
+        pasynInt32SyncIO->getBoundsOnce(pPvt->portName,pPvt->addr,
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
-        /* set linear conversion slope */
         convertAo(pao, 1);
         /* Read the current value from the device */
-/*THIS SHOULD BE DONE VIA processCommon???*/
-        status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &value);
+        status = pasynInt32SyncIO->readOnce(pPvt->portName,pPvt->addr,
+                          &value, pPvt->pasynUser->timeout);
         if (status == asynSuccess) {
             pao->rval = value;
             return(0);
@@ -331,7 +330,7 @@ static long initAiInt32(aiRecord *pai)
                         typeAiInt32);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
+        pasynInt32SyncIO->getBoundsOnce(pPvt->portName,pPvt->addr,
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
@@ -352,7 +351,7 @@ static long initAiInt32Average(aiRecord *pai)
                                                 pPvt->pasynUser, 
                                                 callbackInt32Average, 
                                                 pPvt);
-        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
+        pasynInt32SyncIO->getBoundsOnce(pPvt->portName,pPvt->addr,
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
@@ -373,8 +372,8 @@ static long initAiInt32Interrupt(aiRecord *pai)
                                                 pPvt->pasynUser,
                                                 callbackInt32Interrupt, 
                                                 pPvt);
-        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
-                               &pPvt->deviceLow, &pPvt->deviceHigh);
+        pasynInt32SyncIO->getBoundsOnce(pPvt->portName,pPvt->addr,
+                                &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
         scanIoInit(&pPvt->ioScanPvt);
@@ -432,16 +431,17 @@ static long processCommon(dbCommon *pr)
     int status;
 
     if (pr->pact == 0) {   /* This is an initial call from record */
-        if (pPvt->canBlock) pr->pact = 1;
-        pPvt->ioStatus = 0;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if (status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                       "devAsynAnalog::processCommon, error queuing request %s\n", 
                       pPvt->pasynUser->errorMessage);
-            return(-1);
+            pPvt->ioStatus = -1;
+        }else {
+            if (pPvt->canBlock) pr->pact = 1;
+            pPvt->ioStatus = 0;
         }
-        if (pPvt->canBlock) return(0);
+        if (pr->pact) return(0);
     }
     /* This is either a second call from record or the device is synchronous.
      * In either case the I/O is complete.
