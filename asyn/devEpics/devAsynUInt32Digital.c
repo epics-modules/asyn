@@ -260,10 +260,10 @@ static void interruptCallbackInput(void *drvPvt, epicsUInt32 value)
     epicsUInt32 oldvalue = pPvt->value;
     epicsUInt32 mask = pPvt->mask;
 
-    if((oldvalue&mask) == (value&mask)) return;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
         pr->name, value);
+    if((oldvalue&mask) == (value&mask)) return;
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -275,10 +275,10 @@ static void interruptCallbackOutput(void *drvPvt, epicsUInt32 value)
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    if(pPvt->gotValue) return;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
         pr->name, value);
+    if(pPvt->gotValue) return;
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -347,12 +347,14 @@ static long initBo(boRecord *pbo)
     pPvt = pbo->dpvt;
     pbo->mask = pPvt->mask;
     /* Read the current value from the device */
+/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pbo->rval = value;
         return 0;
     }
+*/
     return 2; /* Do not convert */
 }
 
@@ -430,9 +432,11 @@ static long initLo(longoutRecord *pr)
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
+/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) pr->val = value;
+*/
     return 0;
 }
 
@@ -512,12 +516,14 @@ static long initMbbo(mbboRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
+/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
         return 0;
     }
+*/
     return 2;
 }
 static long processMbbo(mbboRecord *pr)
@@ -617,12 +623,14 @@ static long initMbboDirect(mbboDirectRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
+/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
         return 0;
     }
+*/
     return 2;
 }
 static long processMbboDirect(mbboDirectRecord *pr)
