@@ -14,7 +14,7 @@ Instrument Device Support</h1>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>Janurary 2004</h2>
+<h2>January 2004</h2>
 </center>
 <hr>
 
@@ -429,7 +429,13 @@ definition must define field OUT as</p>
     <dd>A conversion function that has the prototype:
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
       The use depends on the pgpibCmd-&gt;type. See below for details. Set to
-      0 when no conversion function is present.</dd>
+      0 when no conversion function is present.  Conversion functions
+      should report error conditions by returning -1 after first
+      creating an error message:
+      <pre>
+       epicsSnprintf(pgpibDpvt-&gt;pasynUser-&gt;errorMessage,
+                     pgpibDpvt-&gt;pasynUser-&gt;errorMessageSize,
+                     "&lt;format&gt;", ...); </pre></dd>
   <dt><code>P1</code></dt>
     <dd>This plays a dual role.
       <p>For EFAST operations it is set equal to the number of entries in the
