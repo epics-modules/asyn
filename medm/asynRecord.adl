@@ -5,10 +5,10 @@ file {
 }
 display {
 	object {
-		x=176
-		y=428
+		x=72
+		y=61
 		width=442
-		height=435
+		height=500
 	}
 	clr=14
 	bclr=4
@@ -125,7 +125,7 @@ composite {
 "text update" {
 	object {
 		x=34
-		y=152
+		y=177
 		width=2
 		height=2
 	}
@@ -139,7 +139,7 @@ composite {
 "text update" {
 	object {
 		x=75
-		y=157
+		y=182
 		width=359
 		height=16
 	}
@@ -155,7 +155,7 @@ composite {
 text {
 	object {
 		x=10
-		y=156
+		y=181
 		width=70
 		height=20
 	}
@@ -167,7 +167,7 @@ text {
 rectangle {
 	object {
 		x=6
-		y=153
+		y=178
 		width=430
 		height=25
 	}
@@ -179,7 +179,7 @@ rectangle {
 text {
 	object {
 		x=300
-		y=187
+		y=212
 		width=130
 		height=20
 	}
@@ -196,7 +196,7 @@ text {
 text {
 	object {
 		x=310
-		y=187
+		y=212
 		width=110
 		height=20
 	}
@@ -213,7 +213,7 @@ text {
 menu {
 	object {
 		x=305
-		y=208
+		y=233
 		width=120
 		height=20
 	}
@@ -226,7 +226,7 @@ menu {
 text {
 	object {
 		x=180
-		y=187
+		y=212
 		width=70
 		height=20
 	}
@@ -243,7 +243,7 @@ text {
 text {
 	object {
 		x=175
-		y=187
+		y=212
 		width=80
 		height=20
 	}
@@ -260,7 +260,7 @@ text {
 menu {
 	object {
 		x=155
-		y=209
+		y=234
 		width=120
 		height=20
 	}
@@ -270,57 +270,10 @@ menu {
 		bclr=51
 	}
 }
-text {
-	object {
-		x=25
-		y=187
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).CNCT"
-	}
-	textix="Connected"
-	align="horiz. right"
-}
-text {
-	object {
-		x=10
-		y=187
-		width=120
-		height=20
-	}
-	"basic attribute" {
-		clr=20
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).CNCT"
-	}
-	textix="Disconnected"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=10
-		y=209
-		width=120
-		height=20
-	}
-	control {
-		chan="$(P)$(R).CNCT"
-		clr=14
-		bclr=51
-	}
-}
 rectangle {
 	object {
 		x=6
-		y=185
+		y=210
 		width=430
 		height=49
 	}
@@ -332,7 +285,7 @@ rectangle {
 composite {
 	object {
 		x=5
-		y=242
+		y=267
 		width=430
 		height=185
 	}
@@ -341,7 +294,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=291
+				y=316
 				width=96
 				height=18
 			}
@@ -353,7 +306,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=360
+				y=385
 				width=96
 				height=18
 			}
@@ -365,7 +318,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=383
+				y=408
 				width=96
 				height=18
 			}
@@ -377,7 +330,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=337
+				y=362
 				width=96
 				height=18
 			}
@@ -389,7 +342,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=314
+				y=339
 				width=96
 				height=18
 			}
@@ -401,7 +354,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=244
+				y=269
 				width=100
 				height=20
 			}
@@ -413,7 +366,7 @@ composite {
 		text {
 			object {
 				x=183
-				y=244
+				y=269
 				width=100
 				height=20
 			}
@@ -425,7 +378,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=291
+				y=316
 				width=100
 				height=18
 			}
@@ -437,7 +390,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=314
+				y=339
 				width=100
 				height=18
 			}
@@ -449,7 +402,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=337
+				y=362
 				width=100
 				height=18
 			}
@@ -461,7 +414,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=291
+				y=316
 				width=55
 				height=18
 			}
@@ -475,7 +428,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=360
+				y=385
 				width=55
 				height=18
 			}
@@ -489,7 +442,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=383
+				y=408
 				width=55
 				height=18
 			}
@@ -503,7 +456,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=337
+				y=362
 				width=55
 				height=18
 			}
@@ -517,7 +470,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=314
+				y=339
 				width=55
 				height=18
 			}
@@ -531,7 +484,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=291
+				y=316
 				width=55
 				height=18
 			}
@@ -545,7 +498,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=314
+				y=339
 				width=55
 				height=18
 			}
@@ -559,7 +512,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=337
+				y=362
 				width=55
 				height=18
 			}
@@ -573,7 +526,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=360
+				y=385
 				width=104
 				height=18
 			}
@@ -585,7 +538,7 @@ composite {
 		"text entry" {
 			object {
 				x=183
-				y=360
+				y=385
 				width=50
 				height=20
 			}
@@ -600,7 +553,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=406
+				y=431
 				width=80
 				height=18
 			}
@@ -612,7 +565,7 @@ composite {
 		"text entry" {
 			object {
 				x=99
-				y=404
+				y=429
 				width=330
 				height=20
 			}
@@ -627,7 +580,7 @@ composite {
 		rectangle {
 			object {
 				x=5
-				y=242
+				y=267
 				width=430
 				height=185
 			}
@@ -639,7 +592,7 @@ composite {
 		"text entry" {
 			object {
 				x=9
-				y=268
+				y=293
 				width=70
 				height=20
 			}
@@ -655,7 +608,7 @@ composite {
 		"text entry" {
 			object {
 				x=183
-				y=268
+				y=293
 				width=70
 				height=20
 			}
@@ -673,83 +626,7 @@ composite {
 composite {
 	object {
 		x=6
-		y=47
-		width=422
-		height=20
-	}
-	"composite name"=""
-	children {
-		composite {
-			object {
-				x=6
-				y=47
-				width=205
-				height=20
-			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=6
-						y=47
-						width=50
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Port:"
-				}
-				"text entry" {
-					object {
-						x=61
-						y=47
-						width=150
-						height=20
-					}
-					control {
-						chan="$(P)$(R).PORT"
-						clr=14
-						bclr=51
-					}
-					limits {
-					}
-				}
-			}
-		}
-		text {
-			object {
-				x=228
-				y=47
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Address:"
-		}
-		"text entry" {
-			object {
-				x=318
-				y=47
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ADDR"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-	}
-}
-composite {
-	object {
-		x=6
-		y=72
+		y=97
 		width=232
 		height=20
 	}
@@ -758,7 +635,7 @@ composite {
 		text {
 			object {
 				x=6
-				y=72
+				y=97
 				width=80
 				height=20
 			}
@@ -770,7 +647,7 @@ composite {
 		"text entry" {
 			object {
 				x=88
-				y=72
+				y=97
 				width=150
 				height=20
 			}
@@ -787,7 +664,7 @@ composite {
 composite {
 	object {
 		x=6
-		y=97
+		y=122
 		width=235
 		height=20
 	}
@@ -796,7 +673,7 @@ composite {
 		menu {
 			object {
 				x=111
-				y=97
+				y=122
 				width=130
 				height=20
 			}
@@ -809,7 +686,7 @@ composite {
 		text {
 			object {
 				x=6
-				y=97
+				y=122
 				width=100
 				height=20
 			}
@@ -824,7 +701,7 @@ composite {
 composite {
 	object {
 		x=6
-		y=122
+		y=147
 		width=416
 		height=20
 	}
@@ -833,7 +710,7 @@ composite {
 		text {
 			object {
 				x=291
-				y=122
+				y=147
 				width=70
 				height=20
 			}
@@ -846,7 +723,7 @@ composite {
 		"related display" {
 			object {
 				x=366
-				y=122
+				y=147
 				width=56
 				height=20
 			}
@@ -881,7 +758,7 @@ composite {
 		"message button" {
 			object {
 				x=6
-				y=122
+				y=147
 				width=150
 				height=20
 			}
@@ -892,6 +769,225 @@ composite {
 			}
 			label="Cancel queueRequest"
 			press_msg="1"
+		}
+	}
+}
+text {
+	object {
+		x=244
+		y=97
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="reason:"
+}
+"text entry" {
+	object {
+		x=318
+		y=97
+		width=50
+		height=20
+	}
+	control {
+		chan="$(P)$(R).REASON"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+composite {
+	object {
+		x=10
+		y=212
+		width=120
+		height=42
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=25
+				y=212
+				width=90
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Connected"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=10
+				y=212
+				width=120
+				height=20
+			}
+			"basic attribute" {
+				clr=20
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Disconnected"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=10
+				y=234
+				width=120
+				height=20
+			}
+			control {
+				chan="$(P)$(R).CNCT"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=6
+		y=47
+		width=422
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=6
+				y=47
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Port:"
+		}
+		"text entry" {
+			object {
+				x=61
+				y=47
+				width=150
+				height=20
+			}
+			control {
+				chan="$(P)$(R).PORT"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=228
+				y=47
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Address:"
+		}
+		"text entry" {
+			object {
+				x=318
+				y=47
+				width=110
+				height=20
+			}
+			control {
+				chan="$(P)$(R).ADDR"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=61
+		y=72
+		width=287
+		height=20
+	}
+	"composite name"=""
+	children {
+		menu {
+			object {
+				x=61
+				y=72
+				width=120
+				height=20
+			}
+			control {
+				chan="$(P)$(R).PCNCT"
+				clr=14
+				bclr=51
+			}
+		}
+		composite {
+			object {
+				x=228
+				y=72
+				width=120
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=243
+						y=72
+						width=90
+						height=20
+					}
+					"basic attribute" {
+						clr=62
+					}
+					"dynamic attribute" {
+						vis="if not zero"
+						chan="$(P)$(R).PCNCT"
+					}
+					textix="Connected"
+					align="horiz. right"
+				}
+				text {
+					object {
+						x=228
+						y=72
+						width=120
+						height=20
+					}
+					"basic attribute" {
+						clr=20
+					}
+					"dynamic attribute" {
+						vis="if zero"
+						chan="$(P)$(R).PCNCT"
+					}
+					textix="Disconnected"
+					align="horiz. right"
+				}
+			}
 		}
 	}
 }
