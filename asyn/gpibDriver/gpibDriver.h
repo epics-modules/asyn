@@ -1,13 +1,26 @@
+#ifndef INCgpibDriverh
+#define INCgpibDriverh
+
+/* GPIB Addressed Commands*/
+#define IBSDC "\x04"    /* Selective Device Clear */
+#define IBGTL "\x01"    /* Go to local */
+
+/* GPIB Universial Commands*/
+#define IBDCL 0x14      /* Device Clear */
+#define IBLLO 0x11      /* Local Lockout */
+#define IBSPE 0x18      /* Serial Poll Enable */
+#define IBSPD 0x19      /* Serial Poll Disable */
+
 #include "asynDriver.h"
 #define gpibDriverUserType "gpibDriverUser"
 /* GPIB drivers */
-typedef void (*srqHandler)(void *userPrivate,int statusByte);
+typedef void (*srqHandler)(void *userPrivate,int gpibAddr,int statusByte);
 typedef struct gpibDriverUser{
     /* The following are called by gpib aware users*/
     asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
-        int addr, srqHandler handler, void *userPrivate);
+        srqHandler handler, void *userPrivate);
     asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
-        int addr, char *data, int length, int timeout);
+        int addr, const char *data, int length);
     asynStatus (*universalCmd) (void *pdrvPvt,asynUser *pasynUser, int cmd);
     asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
@@ -20,7 +33,7 @@ typedef struct gpibDriverUser{
         double *srqTimeout,double *pollTimeout,double *pollRate,
         int *srqMaxEvents);
     /* The following are called by low level gpib drivers */
-    drvPvt *(*registerDriver)(void *pdrvPvt,const char *name);
+    void *(*registerDriver)(void *pdrvPvt,const char *name);
     void (*srqHappened)(void *pdrvPvt); /*pvt is gpibDriverUser pvt*/
 }gpibDriverUser;
 /*gpibDriverUser is the driver called by user callbacks.
@@ -46,18 +59,17 @@ typedef struct gpibDriver {
     int (*write)(void *pdrvPvt,asynUser *pasynUser,
                         int addr,const char *data,int numchars);
     asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser, double timeout);
     asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
     asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,peekHandler handler);
     asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
     /*gpibDriver methods*/
-    asynStatus (*registerSrqHandler)(void *pdrvPvt,
+    asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
         int addr, srqHandler handler, void *userPrivate);
-    asynStatus (*addressedCmd) (void *pdrvPvt,
-        int addr, char *data, int length, int timeout);
-    asynStatus (*universalCmd) (void *pdrvPvt, int cmd);
-    asynStatus (*ifc) (void *pdrvPvt);
-    asynStatus (*ren) (void *pdrvPvt, int onOff);
+    asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
+        int addr, char *data, int length);
+    asynStatus (*universalCmd) (void *pdrvPvt, asynUser *pasynUser, int cmd);
+    asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
     int (*srqStatus) (void *pdrvPvt);
     asynStatus (*srqEnable) (void *pdrvPvt, int onOff);
     asynStatus (*serialPollBegin) (void *pdrvPvt);
@@ -73,3 +85,5 @@ typedef struct gpibDriver {
  *serialPoll - Poll a specific addresss
  *serialPollEnd - End of serial poll
  */
+
+#endif  /* INCgpibDriverh */
