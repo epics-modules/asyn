@@ -358,17 +358,15 @@ static asynStatus echoFlush(void *ppvt,asynUser *pasynUser)
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
      const char *eos,int eoslen)
 {
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "echoDriver:setEos not implemented\n");
-    return(asynError);
+    return(asynSuccess);
 }
 
 static asynStatus getEos(void *ppvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "echoDriver:getEos not implemented\n");
-    return(asynError);
+    *eoslen = 0;
+    eos[0] = 0;
+    return(asynSuccess);
 }
 
 /* register echoDriverInit*/
