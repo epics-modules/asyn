@@ -1,19 +1,8 @@
-/* dev_NAME_.c */
-/* $Id: dev_NAME_.c,v 1.1 2004-05-13 18:16:27 norume Exp $ */
-/***********************************************************************
-* Copyright (c) 2002 The University of Chicago,as Operator of Argonne
-* National Laboratory,and the Regents of the University of
-* California,as Operator of Los Alamos National Laboratory,and
-* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
-* asynDriver is distributed subject to a Software License Agreement
-* found in file LICENSE that is included with this distribution.
-***********************************************************************/
 /*
- * Current Author: Marty Kraimer
- * Original Authors: John Winans and Benjamin Franksen
+ * _NAME_ device support
  */
-#include <devCommonGpib.h>
 
+#include <devCommonGpib.h>
 
 /******************************************************************************
  *
@@ -41,9 +30,8 @@
 
 #include <devGpib.h> /* must be included after DSET defines */
 
-
-#define TIMEOUT     1.0
-#define TIMEWINDOW  2.0
+#define TIMEOUT     1.0    /* I/O must complete within this time */
+#define TIMEWINDOW  2.0    /* Wait this long after device timeout */
 
 /******************************************************************************
  * Strings used by the init routines to fill in the znam,onam,...
@@ -105,7 +93,7 @@ static struct devGpibNames intExtSsBmStop = {
  ******************************************************************************/
 
 static char *userOffOn[] = {"USER OFF;","USER ON;",0};
-
+
 /******************************************************************************
  * Array of structures that define all GPIB messages
  * supported for this type of instrument.
