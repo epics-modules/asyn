@@ -122,8 +122,8 @@ static void asynExample(const char *port,int addr,const char *message)
     }
     if(canBlock) {
         epicsEventWait(pmyData2->done);
-        pasynManager->memFree(pasynUser->userPvt,sizeof(myData));
         epicsEventDestroy(pmyData2->done);
+        pasynManager->memFree(pmyData2,sizeof(myData));
     }
 }
 
