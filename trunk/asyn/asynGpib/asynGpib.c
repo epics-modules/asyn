@@ -146,8 +146,10 @@ static gpibPvt *locateGpibPvt(const char *portName)
 
 static void srqPoll(asynUser *pasynUser)
 {
-    void *drvPvt = pasynUser->userPvt;
-    int srqStatus,primary,secondary,ntrys;
+    void       *drvPvt = pasynUser->userPvt;
+    asynStatus status;
+    int        srqStatus= 0;
+    int        primary,secondary,ntrys;
     GETgpibPvtasynGpibPort
 
     epicsMutexMustLock(pgpibPvt->lock);
@@ -158,7 +160,14 @@ static void srqPoll(asynUser *pasynUser)
     pgpibPvt->pollRequestIsQueued = 0;
     epicsMutexUnlock(pgpibPvt->lock);
     for(ntrys=0; ntrys<MAX_POLL; ntrys++) {
-        srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
+        status = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt,&srqStatus);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s asynGpib:srqPoll srqStatus error %s\n",
+                pgpibPvt->portName,
+                (status==asynTimeout ? "timeout" : "error"));
+            break;
+        }
         if(!srqStatus) break;
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s asynGpib:srqPoll serialPollBegin\n",pgpibPvt->portName);
@@ -169,12 +178,20 @@ static void srqPoll(asynUser *pasynUser)
             int statusByte;
     
             if(ppollListNode->pollIt) {
+                statusByte = 0;
+                status = pasynGpibPort->serialPoll(
+                    pgpibPvt->asynGpibPortPvt,primary,SRQTIMEOUT,&statusByte);
+                if(status!=asynSuccess) {
+                    asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "%s asynGpib:srqPoll serialPoll error %s\n",
+                        pgpibPvt->portName,
+                        (status==asynTimeout ? "timeout" : "error"));
+                    continue;
+                }
                 asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                    "%s asynGpib:srqPoll serialPoll addr %d\n",
-                    pgpibPvt->portName,primary);
-                statusByte = pasynGpibPort->serialPoll(
-                    pgpibPvt->asynGpibPortPvt,primary,SRQTIMEOUT);
-                if(statusByte) {
+                    "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
+                    pgpibPvt->portName,primary,statusByte);
+                if(statusByte&0x40) {
                     pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
                         primary,statusByte);
                 }
@@ -183,12 +200,20 @@ static void srqPoll(asynUser *pasynUser)
                 ppollListNode = &ppollListPrimary->secondary[secondary];
                 if(ppollListNode->pollIt) {
                     int addr = primary*100+secondary;
+                    statusByte = 0;
+                    status = pasynGpibPort->serialPoll(
+                        pgpibPvt->asynGpibPortPvt,addr,SRQTIMEOUT,&statusByte);
+                    if(status!=asynSuccess) {
+                        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                            "%s asynGpib:srqPoll serialPoll error %s\n",
+                            pgpibPvt->portName,
+                            (status==asynTimeout ? "timeout" : "error"));
+                        continue;
+                    }
                     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                        "%s asynGpib:srqPoll serialPoll addr %d\n",
-                        pgpibPvt->portName,addr);
-                    statusByte = pasynGpibPort->serialPoll(
-                        pgpibPvt->asynGpibPortPvt,addr,SRQTIMEOUT);
-                    if(statusByte) {
+                        "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
+                        pgpibPvt->portName,addr,statusByte);
+                    if(statusByte&0x40) {
                         pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
                             addr,statusByte);
                     }
@@ -198,12 +223,10 @@ static void srqPoll(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s asynGpib:srqPoll serialPollEnd\n",pgpibPvt->portName);
         pasynGpibPort->serialPollEnd(pgpibPvt->asynGpibPortPvt);
-        srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
-        if(!srqStatus) break;
     }
     if(srqStatus) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s asynGpib:srqPoll srqStatus is %x after ntrys %dWhy?\n",
+            "%s asynGpib:srqPoll srqStatus is %x after ntrys %d Why?\n",
             pgpibPvt->portName,srqStatus,ntrys);
     }
 }
@@ -404,6 +427,8 @@ static void srqHappened(void *drvPvt)
     GETgpibPvtasynGpibPort
 
     pasynUser = pgpibPvt->pasynUser;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s asynGpib:srqHappened\n", pgpibPvt->portName);
     epicsMutexMustLock(pgpibPvt->lock);
     if(pgpibPvt->pollRequestIsQueued) {
         epicsMutexUnlock(pgpibPvt->lock);
