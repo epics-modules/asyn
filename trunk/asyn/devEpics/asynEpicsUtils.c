@@ -127,6 +127,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         errno = 0;
         pasynUser->timeout = strtod(pnext,&endp);
         if(errno) goto error;
+        pnext = endp;
         while(*pnext && isspace(*pnext)) pnext++;
         if(*pnext!=')') goto error;
         pnext = endp;
