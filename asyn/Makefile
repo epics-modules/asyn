@@ -57,11 +57,15 @@ asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 
 SRC_DIRS += $(ASYN)/devEpics
+DBD += devAsynAnalog.dbd
+DBD += devAsynOctet.dbd
+DBD += devAsynUInt32Digital.dbd
 DBD += devEpics.dbd
 INC += asynEpicsUtils.h
+asyn_SRCS += asynEpicsUtils.c
 asyn_SRCS += devAsynAnalog.c
 asyn_SRCS += devAsynUInt32Digital.c
-asyn_SRCS += asynEpicsUtils.c
+asyn_SRCS += devAsynOctet.c
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
