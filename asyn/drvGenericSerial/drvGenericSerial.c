@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.30 2004-03-29 20:50:56 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.31 2004-03-29 21:37:09 norume Exp $
  */
 
 #include <string.h>
@@ -714,7 +714,7 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s flush\n", tty->serialDeviceName);
-    if (tty->fd >= 0) {
+    if (!tty->isRemote && (tty->fd >= 0)) {
 #ifdef vxWorks
         ioctl(tty->fd, FIOCANCEL, 0);
 #else
