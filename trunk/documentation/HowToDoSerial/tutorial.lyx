@@ -1413,7 +1413,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-16 20:41:08 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-16 22:14:29 $$
 \newline 
 ############################################################################
 \newline 
@@ -1734,7 +1734,7 @@ drvAsynSerialPortConfigure
 \family typewriter 
 addr
 \family default 
- value should be zero.
+ value should be that of the instrument whose I/O you wish to monitor.
  The 
 \family typewriter 
 P
