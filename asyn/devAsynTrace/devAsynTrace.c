@@ -21,6 +21,7 @@
 #include <recGbl.h>
 #include <recSup.h>
 #include <devSup.h>
+#include <drvSup.h>
 #include <longoutRecord.h>
 #include <stringoutRecord.h>
 #include <epicsExport.h>
@@ -243,4 +244,23 @@ static long writeTraceFile(stringoutRecord *pstringout)
         return 0;
     }
     return 0;
+}
+
+/* add support so that dbior generates asynDriver reports */
+static long drvAsynReport(int level);
+struct {
+        long    number;
+        DRVSUPFUN       report;
+        DRVSUPFUN       init;
+} drvAsyn={
+        2,
+        drvAsynReport,
+        0
+};
+epicsExportAddress(drvet,drvAsyn);
+
+static long drvAsynReport(int level)
+{
+    pasynManager->report(stdout,level);
+    return(0);
 }
