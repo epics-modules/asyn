@@ -862,8 +862,6 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = pgpibCmd->type;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
-    portInstance *pportInstance = pdevGpibPvt->pportInstance;
-    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     int nchars = 0, lenmsg = 0;
     asynStatus status;
 
@@ -951,8 +949,6 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = pgpibCmd->type;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
-    portInstance *pportInstance = pdevGpibPvt->pportInstance;
-    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
     size_t nchars = 0;
