@@ -36,6 +36,7 @@ license</a> described at the end of this document.</p>
 <a href="#Acknowledgments">Acknowledgments</a> <br>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#asynDriver">asynDriver Structures and Interfaces</a> <br>
+<a href="#standardInterfaces">Standard Interfaces</a> <br>
 <a href="#asynSyncIO">Synchronous Interface to asynDriver</a> <br>
 <a href="#theoryOfOperation">Theory of Operation</a> <br>
 <a href="#asynRecord">asynRecord: Generic Record Support</a> <br>
@@ -60,7 +61,14 @@ license</a> described at the end of this document.</p>
 </center>
 
 <p>asynDriver is a general purpose facility for interfacing device specific
-code to low level communication drivers.</p>
+code to low level drivers. Originally it was intended for drivers that
+could block, e.g. serial or network drivers. It has been extended to
+interface to drivers that do not block, e.g. register based drivers.
+The name asynDriver is based on the way blocking drivers are supported,
+e.g. it uses the concept of asynchronous callbacks.
+asynDriver is designed so that it is easy to write non blocking device support
+that works with both blocking and non blocking drivers.
+</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS.</p>
@@ -209,17 +217,26 @@ defines the following terminology:</p>
 </ul>
 
 <p>Standard interfaces are defined so that most device specific code can
-communicate with multiple port drivers. If device support does all its
+communicate with multiple port drivers.
+For example if device support does all its
 communication via reads and writes consisting of 8 bit bytes (octets), then
-it should work with almost all port drivers. If device support requires more
-complicated support, then the types of ports will be more limited. Additional
-interfaces can be defined, and it is expected that additional standard
+it should work with all port drivers that support octet messages.
+If device support requires more
+complicated support, then the types of ports will be more limited.
+Standard interfaces are also defined for drivers that accept 32 bit integers
+or 64 bit floats.
+Additional interfaces can be defined,
+and it is expected that additional standard
 interfaces will be defined.</p>
 
-<p>Examples of ports are GPIB controllers, serial ports, Ethernet ports, etc.
+<p>Examples of ports that require drivers that can block
+are GPIB controllers, serial ports, Ethernet ports, etc.
 One or more devices can be attached to a port. For example, only one device
 can be attached to an RS-232 port, but up to 15 devices can be attached to a
 GPIB port.</p>
+
+<p>Examples of ports that require drivers that do not block are register
+based devices.</p>
 
 <p>Multiple layers can exist between device specific code and a port driver.
 A software layer calls interposeInterface in order to be placed between
@@ -273,8 +290,6 @@ must be implemented by all low level drivers. The methods are:</p>
   <li>report - Report status of port.</li>
   <li>connect - Connect to the port or device.</li>
   <li>disconnect - Disconnect from the port or device.</li>
-  <li>setOption - Set device option.</li>
-  <li>showOption - Show device option.</li>
 </ul>
 
 <p><span style="font-weight: bold">asynOctet</span> is a set of methods
@@ -322,36 +337,41 @@ in this document. The methods are: </p>
   completion.</li>
 </ul>
 
-<h3>Overview</h3>
+<h3>Brief Theory of Operation</h3>
 
 <p>During initialization, port drivers register each communication port as
 well as all supported interfaces.</p>
 
 <p>User code creates an asynUser by calling  <span
-style="font-family: courier">pasynManager-&gt;createAsynUser()</span>. The
-address of the asynUser is passed to most other asynDriver methods.</p>
+style="font-family: courier">pasynManager-&gt;createAsynUser(processCallback,...)</span>. The
+address of the asynUser is passed to most other asynDriver methods.
+processCallback is the addresss of a caller supplied callback routine,
+which will be described shortly.
+</p>
 
-<p>User code connects to a device, which is located located at some address
-on a port,  and communicates with the device via combination of asynManager
-and one or more interfaces.</p>
-
-<p>User code communicates with drivers via the following method:</p>
-<ol>
-  <li>The user code calls:
-    <pre> pasynManager-&gt;queueRequest(...)</pre>
-  </li>
-  <li>The callback specified in createAsynUser calls the driver via one of
-    the driver interfaces.
-    <p></p>
-  </li>
-</ol>
+<p>User code connects to a low level driver via a call to
+<span style="font-family: courier">pasynManager-&gt;connectDevice(portName,addr)</span>.
+This call must specify the name of the port and the address of the device.
+</p>
+<p>User code makes calls to the low level driver via an interface.
+All calls must be made from the processCallback passed to createAsynUser.
+Two asynManager methods are provided that
+call processCallback: queueRequest and synchronousRequest.
+A thread that calls queueRequest is guaranteed not to block.
+A thread that calls synchronousRequest may block.
+If queueRequest is called for a port that can block the request is
+queued to a thread dedicated to the port.
+If queueRequest is called for a port does not block it just calls
+synchronousRequest. In either case asynManager guarantees that
+multiple threads do not simultaneously call a low level driver.
+This guarantees is valid as long as all threads only call low level
+drivers by calling queueRequest or synchronousRequest.
 
 <center>
 <img name="AsynFlow" src="AsynFlow.jpg" border="1">
 
-<p>Figure 1:  ASYN Control Flow</p>
+<p>Figure 1:  Asynchronous Control Flow</p>
 
-<p></p>
 </center>
 The sequence of record device support events that occurs starting with an
 application thread is pictured above in figure 1, and explained below in the
@@ -375,6 +395,12 @@ following steps:
     returns the results of the I/O operation to the record device support
     code which completes record processing.</li>
 </ol>
+<center>
+<img name="SynFlow" src="SynFlow.jpg" border="1">
+
+<p>Figure 2:  Synchronous Control Flow</p>
+
+</center>
 
 <h3>Comments:</h3>
 <ol>
@@ -405,8 +431,6 @@ following steps:
   <li>asynManager - An interface for communicating with asynDriver.</li>
   <li>asynCommon - An interface providing methods that must be implemented by
     all low level drivers.</li>
-  <li>asynOctet - An interface providing I/O methods that most low level
-    drivers implement.</li>
   <li>asynTrace - An interface plus associated functions and definitions that
     implement the trace facility.</li>
 </ul>
@@ -528,9 +552,10 @@ asynManager:createAsynUser and asynManager:freeAsynUser.</p>
     char *errorMessage;
     int errorMessageSize;
     /* The following must be set by the user */
-    double timeout;  /*Timeout for I/O operations */
-    void *userPvt;   /* pointer to user private */
+    double       timeout;  /*Timeout for I/O operations */
+    void         *userPvt;   /* pointer to user private */
     /* The following are for additional information from method calls */
+    void         *userData;
     int          auxStatus; /*For auxillary status*/
 }asynUser;</pre>
 
@@ -608,7 +633,11 @@ asynManager:interposeInterface.</p>
 <h3>asynManager</h3>
 
 <p>This is the main interface for communicating with asynDriver.</p>
-<pre>typedef void (*userCallback)(asynUser *pasynUser);
+<pre>/*registerPort attributes*/
+#define ASYN_MULTIDEVICE  0x0001
+#define ASYN_CANBLOCK     0x0002
+
+typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct asynManager {
@@ -617,6 +646,8 @@ typedef struct asynManager {
     asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
                                  userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
+    void       *(*memMalloc)(size_t size);
+    void       (*memFree)(void *pmem,size_t size);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
                                 const char *portName,int *yesNo);
     /* addr = (-1,&gt;=0) =&gt; connect to (port,device) */
@@ -631,12 +662,14 @@ typedef struct asynManager {
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
+    asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*synchronousRequest)(asynUser *pasynUser, int connectRequest);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
-                              int multiDevice,int autoConnect,
+                              int attributes,int autoConnect,
                               unsigned int priority,unsigned int stackSize);
     asynStatus (*registerInterface)(const char *portName,
                               asynInterface *pasynInterface);
@@ -688,6 +721,18 @@ epicsShareExtern asynManager *pasynManager;</pre>
         the asynUser is saved on a free list and will be reused in later
         calls to createAsynUser. Thus, there is little loss in efficiency to
         continually call createAsynUser and freeAsynUser.</td>
+    </tr>
+    <tr>
+      <td>memMalloc</td>
+      <td>Allocate memory. memMalloc/memFree maintains a set of freelists of
+        different sizes. Thus any application that needs storage for a short
+        time can use memMalloc/memFree to allocate and free the storage
+        without causing memory fragmentation.</td>
+    </tr>
+    <tr>
+      <td>memFree</td>
+      <td>Free memory allocated by memMalloc. Size MUST be the same as the
+        value specified in the call to memMalloc.</td>
     </tr>
     <tr>
       <td>isMultiDevice</td>
@@ -753,17 +798,23 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>queueRequest</td>
-      <td>A device support thread never calls a driver directly. Instead it
-        calls queueRequest. After the thread associated with the port takes
-        this request from the queue, it calls the queue callback specified in
-        the call to createAsynUser. The callback makes calls to the driver.
-        If the asynUser is already on a queue, asynError is returned. The
+      <td>When portRegister is called, the caller must specify if it can
+        block, i.e. attribute bit ASYN_CANBLOCK is set of cleared. If the
+        port has been registered with ASYN_CANBLOCK true then the request is
+        put on a queue for the thread associated with the queue. If the port
+        has been registered with ASYN_CANBLOCK false then queueRequest just
+        calls synchronousRequest. If either case the queue callback specified
+        in the call to createAsynUser is called. The callback makes calls to
+        the driver.
+
+        <p>If the asynUser is already on a queue, asynError is returned. The
         timeout starts when the request is queued. A value less than or equal
         to 0.0 means no timeout. The request is removed from the queue before
         the callback is called. Thus callbacks are allowed to unlock and
         issue new queue requests. The priority asynQueuePriorityConnect must
         be used for asynCommon:connect and asynCommon:disconnect calls, and
-        must NOT be used for any other calls.</td>
+        must NOT be used for any other calls.</p>
+      </td>
     </tr>
     <tr>
       <td>cancelRequest</td>
@@ -772,6 +823,21 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         this call has no effect. If the return value is asynSuccess, then
         wasQueued (0,1) if a request (was not, was) canceled, i.e. removed
         from the queue.</td>
+    </tr>
+    <tr>
+      <td>canBlock</td>
+      <td>yesNo is set to (0,1), i.e. (false,true) if calls to the low level
+        driver can block. The value is determined  by the attributes passed
+        to registerPort.</td>
+    </tr>
+    <tr>
+      <td>synchronousRequest</td>
+      <td>Call the queue callback immediately, i.e. call it in the context of
+        the caller rather then the portThread. This should only be called if
+        the caller is willing to block or has received a "no" response from
+        calling canBlock. connectRequest is normally 0. It should be set to 1
+        (true) only if the callback will make a pasynCommon-&gt;connect
+        request.</td>
     </tr>
     <tr>
       <td>lock/unlock</td>
@@ -876,11 +942,6 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    /*The following are generic methods to set/get device options*/
-    asynStatus (*setOption)(void *drvPvt, asynUser *pasynUser,
-                                const char *key, const char *val);
-    asynStatus (*getOption)(void *drvPvt, asynUser *pasynUser,
-                                const char *key, char *val, int sizeval);
 }asynCommon;</pre>
 
 <p>asynCommon describes the methods that must be implemented by drivers.</p>
@@ -903,72 +964,6 @@ typedef struct  asynCommon {
       <td>disconnect</td>
       <td>Disconnect from the hardware device or communication path. The
         queueRequest must specify priority asynQueuePriorityConnect.</td>
-    </tr>
-    <tr>
-      <td>setOption</td>
-      <td>This is a generic routine for setting a device option. The
-        arguments are key,value pairs. The meaning is driver specific. If a
-        driver does not accept options, it can return asynError.</td>
-    </tr>
-    <tr>
-      <td>getOption</td>
-      <td>This is a generic routine for getting a device option. The value
-        for the key is written into val. If a driver does not accept options,
-        it can return asynError.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynOctet</h3>
-<pre>/* Device Interface supported by low level octet drivers. */
-#define asynOctetType "asynOctet"
-typedef struct asynOctet{
-    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered);
-    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
-    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
-                         const char *eos,int eoslen);
-    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
-                        char *eos, int eossize, int *eoslen);
-}asynOctet;</pre>
-
-<p>NOTE: The name octet is used instead of ASCII because it implies that
-communication is done via 8-bit bytes.</p>
-
-<p>asynOctet describes the methods implemented by drivers that use octet
-strings for sending commands and receiving responses from a device.</p>
-
-<table border="1">
-  <caption>asynOctet</caption>
-  <tbody>
-    <tr>
-      <td>read</td>
-      <td>Read a message from the device.  *nbytesTransfered is the number of
-        8-bit bytes read from the device.</td>
-    </tr>
-    <tr>
-      <td>write</td>
-      <td>Send a message to the device.  *nbytesTransfered is the number of
-        8-bit bytes sent to the device.</td>
-    </tr>
-    <tr>
-      <td>flush</td>
-      <td>Flush the input buffer.</td>
-    </tr>
-    <tr>
-      <td>setEos</td>
-      <td>Set End Of String. For example "\n". Note that gpib drivers usually
-        accept at most a one character string.
-    If eoslen is equal to 0, the behaviour depends on the interface.  The 
-    asynInterposeEos asynOctet interface provides a read method which will
-    not return until the specified number of characters have been
-    been read or the time limit has been reached.</td>
-    </tr>
-    <tr>
-      <td>getEos</td>
-      <td>Get the current End of String.</td>
     </tr>
   </tbody>
 </table>
@@ -1158,6 +1153,115 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
 </table>
 <hr>
 
+<center>
+<h2><a name="standardInterfaces"></a>Standard Interfaces</h2>
+</center>
+
+<h3>asynOctet</h3>
+<pre>/* Device Interface supported by low level octet drivers. */
+#define asynOctetType "asynOctet"
+typedef struct asynOctet{
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                       char *data,int maxchars,int *nbytesTransfered);
+    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
+                        const char *data,int numchars,int *nbytesTransfered);
+    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
+                         const char *eos,int eoslen);
+    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
+                        char *eos, int eossize, int *eoslen);
+}asynOctet;</pre>
+
+<p>NOTE: The name octet is used instead of ASCII because it implies that
+communication is done via 8-bit bytes.</p>
+
+<p>asynOctet describes the methods implemented by drivers that use octet
+strings for sending commands and receiving responses from a device.</p>
+
+<table border="1">
+  <caption>asynOctet</caption>
+  <tbody>
+    <tr>
+      <td>read</td>
+      <td>Read a message from the device.  *nbytesTransfered is the number of
+        8-bit bytes read from the device.</td>
+    </tr>
+    <tr>
+      <td>write</td>
+      <td>Send a message to the device.  *nbytesTransfered is the number of
+        8-bit bytes sent to the device.</td>
+    </tr>
+    <tr>
+      <td>flush</td>
+      <td>Flush the input buffer.</td>
+    </tr>
+    <tr>
+      <td>setEos</td>
+      <td>Set End Of String. For example "\n". Note that gpib drivers usually
+        accept at most a one character string. If eoslen is equal to 0, the
+        behaviour depends on the interface.  The asynInterposeEos asynOctet
+        interface provides a read method which will not return until the
+        specified number of characters have been been read or the time limit
+        has been reached.</td>
+    </tr>
+    <tr>
+      <td>getEos</td>
+      <td>Get the current End of String.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynInt32</h3>
+<pre>/* Device Interface supported by low level octet drivers. */
+#define asynInt32Type "asynInt32"
+typedef struct asynInt32{
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
+}asynInt32;</pre>
+
+<p>asynInt32 describes the methods implemented by drivers that use integers
+for sending commands and receiving responses from a device.</p>
+
+<table border="1">
+  <caption>asynInt32</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write an integer value to the device.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read an integer value from the device.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynFloat32</h3>
+<pre>/* Device Interface supported by low level octet drivers. */
+#define asynFloat32Type "asynFloat32"
+typedef struct asynFloat32{
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsFloat32 value);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat32 *value);
+}asynFloat32;</pre>
+
+<p>asynFloat32 describes the methods implemented by drivers that use integers
+for sending commands and receiving responses from a device.</p>
+
+<table border="1">
+  <caption>asynFloat32</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write an integer value to the device.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read an integer value from the device.</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
 <center>
 <h2><a name="asynSyncIO"></a>Synchronous Interface to asynDriver</h2>
 </center>
@@ -1595,10 +1699,6 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fp,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
-                                const char *key,const char *val);
-    asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
-                                const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
                                 char *data,int maxchars,int *nbytesTransfered);
@@ -1751,16 +1851,16 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the generic EOS handler will
-         be interposed.  Non-zero will not interpose the EOS handler.</li>
+  <li>noEos - Zero or missing indicates that the generic EOS handler will be
+    interposed.  Non-zero will not interpose the EOS handler.</li>
   <li>addr - This argument is ignored since serial devices are configured
     with multiDevice=0.</li>
 </ul>
 
 <p>The setEos and getEos methods have no effect and return asynError.  The
-read method blocks until at least one character has been received or
-until a timeout occurs.  The read method transfers as many characters
-as possible, limited by the specified count.</p>
+read method blocks until at least one character has been received or until a
+timeout occurs.  The read method transfers as many characters as possible,
+limited by the specified count.</p>
 
 <p>The following table summarizes the drvAsynSerialPort driver asynSetOption
 keys and values. Default values are enclosed in square brackets.</p>
@@ -1846,14 +1946,14 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the generic EOS handler will
-         be interposed.  Non-zero will not interpose the EOS handler.</li>
+  <li>noEos - Zero or missing indicates that the generic EOS handler will be
+    interposed.  Non-zero will not interpose the EOS handler.</li>
 </ul>
 
 <p>The setEos and getEos methods have no effect and return asynError.  The
-read method blocks until at least one character has been received or
-until a timeout occurs.  The read method transfers as many characters
-as possible, limited by the specified count.</p>
+read method blocks until at least one character has been received or until a
+timeout occurs.  The read method transfers as many characters as possible,
+limited by the specified count.</p>
 
 <p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
 connections.</p>
