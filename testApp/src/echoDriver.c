@@ -247,7 +247,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     echoPvt      *pechoPvt = (echoPvt *)drvPvt;
     deviceInfo   *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
-    char         *pnext;
+    char         *pfrom,*pto;
     char         thisChar;
     int          nremaining;
     int          nout = 0;
@@ -288,9 +288,10 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     pdeviceBuffer = &pdeviceInfo->buffer;
     nremaining = pdeviceBuffer->nchars;
     pdeviceBuffer->nchars = 0;
-    pnext = pdeviceBuffer->buffer;
+    pfrom = pdeviceBuffer->buffer;
+    pto = data;
     while(nremaining>0 && nout<maxchars) {
-        thisChar = *data++ = *pnext++; nremaining--; nout++;
+        thisChar = *pto++ = *pfrom++; nremaining--; nout++;
         if(pechoPvt->eoslen>0) {
             if(thisChar==pechoPvt->eos[0]) {
                 if(pechoPvt->eoslen==1) {
@@ -301,8 +302,8 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
                     if(eomReason) *eomReason |= ASYN_EOM_CNT;
                     break;
                 }
-                if(*pnext==pechoPvt->eos[1]) {
-                    *data++ = *pnext++; nremaining--; nout++;
+                if(*pfrom==pechoPvt->eos[1]) {
+                    *pto++ = *pfrom++; nremaining--; nout++;
                     if(eomReason) {
                         *eomReason |= ASYN_EOM_EOS;
                         if(nremaining==0) *eomReason |= ASYN_EOM_CNT;
