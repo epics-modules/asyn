@@ -265,6 +265,7 @@ static void waitTimeout(gpib *pgpib,double seconds)
 {
     ip488RegisterMap *regs = pgpib->regs;
     epicsEventWaitStatus status;
+    transferState_t saveState;
 
     /* No need to check return status from epicsEventWaitWithTimeout    */
     /* If interrupt handler completes it changes transferState from one */
@@ -274,7 +275,9 @@ static void waitTimeout(gpib *pgpib,double seconds)
     } else {
         status = epicsEventWaitWithTimeout(pgpib->waitForInterrupt,seconds);
     }
-    switch(pgpib->transferState) {
+    saveState = pgpib->transferState;
+    pgpib->transferState = transferStateIdle;
+    switch(saveState) {
     case transferStateRead:
         pgpib->status=asynTimeout;
         printStatus(pgpib,"waitTimeout transferStateRead\n");
@@ -294,7 +297,6 @@ static void waitTimeout(gpib *pgpib,double seconds)
         auxCmd(regs,auxCmdnbaf,0,0,0);
     default: break;
     }
-    pgpib->transferState = transferStateIdle;
 }
 
 static void gpibInterruptHandler(int v)
@@ -429,7 +431,7 @@ static asynStatus cmdIpGpib(gpib *pgpib,
         return(asynError);
     }
     if(!auxCmd(regs,auxCmdtca,&regs->addressStatus,asrATN,asrATN)) {
-        printStatus(pgpib,"cmdIpGpib");
+        printStatus(pgpib,"cmdIpGpib auxCmdtca");
         return(asynError);
     }
     auxCmd(regs,auxCmdnbaf,0,0,0);
@@ -439,7 +441,9 @@ static asynStatus cmdIpGpib(gpib *pgpib,
     pgpib->status = asynSuccess;
     writew(isr0BO,&regs->intStatusMask0);
     waitTimeout(pgpib,timeout);
-    auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0);
+    if(!auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0)) {
+        printStatus(pgpib,"cmdIpGpib auxCmdgts");
+    }
     return(pgpib->status);
 }
 
@@ -455,7 +459,7 @@ static asynStatus readIpGpib(gpib *pgpib,
     auxCmd(regs,auxCmdrhdf,0,0,0);
     auxCmd(regs,auxCmdhdfeS,0,0,0);
     if(!auxCmd(regs,auxCmdlonS,&regs->addressStatus,asrLADS,asrLADS)) {
-        printStatus(pgpib,"readIpGpib");
+        printStatus(pgpib,"readIpGpib auxCmdlonS");
         return(asynError);
     }
     pgpib->bytesRemaining = cnt;
@@ -464,7 +468,9 @@ static asynStatus readIpGpib(gpib *pgpib,
     pgpib->status = asynSuccess;
     writew(isr0BI,&regs->intStatusMask0);
     waitTimeout(pgpib,timeout);
-    auxCmd(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0);
+    if(!auxCmd(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0)) {
+        printStatus(pgpib,"readIpGpib auxCmdlonC");
+    }
     *actual = cnt - pgpib->bytesRemaining;
     return(pgpib->status);
 }
@@ -479,7 +485,7 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
         return (asynError);
     }
     if(!auxCmd(regs,auxCmdtonS,&regs->addressStatus,asrTADS,asrTADS)) {
-        printStatus(pgpib,"writeIpGpib");
+        printStatus(pgpib,"writeIpGpib auxCmdtonS");
         return(asynError);
     }
     auxCmd(regs,auxCmdnbaf,0,0,0);
@@ -493,7 +499,9 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
     pgpib->status = asynSuccess;
     writew(isr0BO,&regs->intStatusMask0);
     waitTimeout(pgpib,timeout);
-    auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0);
+    if(!auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0)) {
+        printStatus(pgpib,"writeIpGpib auxCmdtonC");
+    }
     *actual = cnt - pgpib->bytesRemaining;
     return(pgpib->status);
 
@@ -688,13 +696,13 @@ static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     asynStatus status;
-    char buffer[10];
+    char buffer[100];
     int actual = 0;
     int addr = pasynManager->getAddr(pasynUser);
 
     while(1) {
         actual = 0;
-        status = readGpib(pgpib,buffer,(int)sizeof(buffer),&actual,addr,.02);
+        status = readGpib(pgpib,buffer,(int)sizeof(buffer),&actual,addr,.05);
         if(actual<=0) break;
     }
     return(asynSuccess);
