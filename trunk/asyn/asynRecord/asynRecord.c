@@ -1720,7 +1720,7 @@ static void setEos(asynUser * pasynUser)
         if(eoslen>0) {
             status = pasynRecPvt->pasynOctet->setInputEos(
                        pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
-            if (status==asynSuccess) {
+            if (status!=asynSuccess) {
                 reportError(pasynRec, status,
                     "Error setting input eos, %s", pasynUser->errorMessage);
             }
@@ -1731,7 +1731,7 @@ static void setEos(asynUser * pasynUser)
         if(eoslen>0) {
             status = pasynRecPvt->pasynOctet->setOutputEos(
                        pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
-            if(status==asynSuccess) {
+            if(status!=asynSuccess) {
                 reportError(pasynRec, status,
                     "Error setting output eos, %s", pasynUser->errorMessage);
             }
