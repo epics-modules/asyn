@@ -236,8 +236,8 @@ static void srqPoll(asynUser *pasynUser)
                 pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,primary);
             }
             for(secondary=0; secondary<NUM_GPIB_ADDRESSES; secondary++) {
-                ppollNode = &ppollListPrimary->secondary[secondary];
                 int addr = primary*100+secondary;
+                ppollNode = &ppollListPrimary->secondary[secondary];
                 if(ppollNode->pollIt) {
                     pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,addr);
                 }
