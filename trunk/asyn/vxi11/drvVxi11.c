@@ -123,8 +123,10 @@ static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val);
 static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
     const char *key, char *val, int sizeval);
-static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
-static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
+static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered);
+static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -855,11 +857,14 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
 {
     vxiPort     *pvxiPort = (vxiPort *)pdrvPvt;
     Device_Link lid;
-    int         addr = pasynManager->getAddr(pasynUser);
+    int         addr;
     devLink     *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     int         primary,secondary;
     char        devName[40];
+    asynStatus  status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pdevLink) return asynError;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s addr %d vxiConnect\n",pvxiPort->portName,addr);
@@ -899,10 +904,12 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     addr = pasynManager->getAddr(pasynUser);
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     asynStatus status = asynSuccess;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pdevLink) return asynError;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s addr %d vxiDisconnect\n",pvxiPort->portName,addr);
@@ -942,20 +949,31 @@ static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
     return asynError;
 }
 
-static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
+static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
     int     nRead = 0, thisRead;
-    int     addr = pasynManager->getAddr(pasynUser);
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     enum clnt_stat   clntStat;
     Device_ReadParms devReadP;
     Device_ReadResp  devReadR;
+    asynStatus       status = asynSuccess;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     assert(data);
-    if(!pdevLink) return -1;
-    if(!vxiIsPortConnected(pvxiPort,pasynUser)) return -1;
-    if(!pdevLink->connected) return -1;
+    if(!pdevLink) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s No devLink. Why?\n",pvxiPort->portName);
+        return asynError;
+    }
+    if(!vxiIsPortConnected(pvxiPort,pasynUser) || !pdevLink->connected) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s port is not connected\n",pvxiPort->portName);
+        return asynError;
+    }
     devReadP.lid = pdevLink->lid;
     /* device link is created; do the read */
     do {
@@ -983,12 +1001,20 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRead %d, %s, %d %s\n",
                 pvxiPort->portName, addr, data, maxchars,
                 clnt_sperror(pvxiPort->rpcClient,""));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s RPC failed\n",pvxiPort->portName);
+            status = asynError;
+            break;
         } else if(devReadR.error != VXI_OK) {
             if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
                 vxiIfc(pdrvPvt, pasynUser);
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRead %d, %s, %d %s\n",
                 pvxiPort->portName, addr, data, maxchars,
                 vxiError(devReadR.error));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s read request failed\n",pvxiPort->portName);
+            status = asynError;
+            break;
         } 
         thisRead = devReadR.data.data_len;
         if(thisRead>0) {
@@ -1005,28 +1031,38 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
     if(vxiWriteCmd(pvxiPort,pasynUser, "_?", 2) != 2) return -1;
-    return nRead ? nRead : -1;
+    *nbytesTransfered = nRead;
+    return status;
 }
 
-static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars)
+static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered)
 {
     vxiPort *pvxiPort = (vxiPort *) pdrvPvt;
-    int     status = 0;
-    int     addr = pasynManager->getAddr(pasynUser);
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
+    int     nWrite = 0, thisWrite;
+    int     size;  /* devWriteR.size */
+    asynStatus        status = asynSuccess;
     enum clnt_stat    clntStat;
     Device_WriteParms devWriteP;
     Device_WriteResp  devWriteR;
-    int rtnlen = 0;
-    int lennow;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     assert(data);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d vxiWrite numchars %d\n",pvxiPort->portName,addr,numchars);
-    if(!pdevLink) return -1;
-    if(!vxiIsPortConnected(pvxiPort,pasynUser)) return -1;
-    if(!pdevLink->connected) return -1;
+    if(!pdevLink) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s No devLink. Why?\n",pvxiPort->portName);
+        return asynError;
+    }
+    if(!vxiIsPortConnected(pvxiPort,pasynUser) || !pdevLink->connected) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s port is not connected\n",pvxiPort->portName);
+        return asynError;
+    }
     devWriteP.lid = pdevLink->lid;;
     devWriteP.io_timeout = getIoTimeout(pasynUser,pvxiPort);
     devWriteP.lock_timeout = 0;
@@ -1034,12 +1070,12 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     do {
         if(numchars<=pvxiPort->maxRecvSize) {
             devWriteP.flags = VXI_ENDW;
-            lennow = numchars;
+            thisWrite = numchars;
         } else {
             devWriteP.flags = 0;
-            lennow = pvxiPort->maxRecvSize;
+            thisWrite = pvxiPort->maxRecvSize;
         }
-        devWriteP.data.data_len = lennow;
+        devWriteP.data.data_len = thisWrite;
         devWriteP.data.data_val = (char *)data;
         /* initialize devWriteR */
         memset((char *) &devWriteR, 0, sizeof(Device_WriteResp));
@@ -1052,7 +1088,10 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
                 "%s vxiWrite %d, \"%s\", %d)%s\n",
                 pvxiPort->portName, addr, data, numchars,
                 clnt_sperror(pvxiPort->rpcClient, ""));
-            status = -1;
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s RPC failed\n",pvxiPort->portName);
+            status = asynError;
+            break;
         } else if(devWriteR.error != VXI_OK) {
             if(devWriteR.error != VXI_IOTIMEOUT) {
                 asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -1062,22 +1101,26 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             }
             if(devWriteR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC) 
                 vxiIfc(pdrvPvt, pasynUser);
-            status = -1;
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s write request failed\n",pvxiPort->portName);
+            status = asynError;
+            break;
         } else {
-            status = devWriteR.size;
+            size = devWriteR.size;
             asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
                 devWriteP.data.data_val,devWriteP.data.data_len,
                 "%s %d vxiWrite\n",pvxiPort->portName,addr);
-            data += status;
-            numchars -= status;
-            rtnlen += status;
+            data += size;
+            numchars -= size;
+            nWrite += size;
         }
         xdr_free((const xdrproc_t) xdr_Device_WriteResp, (char *) &devWriteR);
-    } while(status==lennow && numchars>0);
+    } while(size==thisWrite && numchars>0);
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
     if(vxiWriteCmd(pvxiPort,pasynUser, "_?", 2) != 2) return -1;
-    return rtnlen;
+    *nbytesTransfered = nWrite;
+    return status;
 }
 
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser)
@@ -1090,9 +1133,12 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     addr = pasynManager->getAddr(pasynUser);
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
+    asynStatus  status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pdevLink) return asynError;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
             "%s vxiSetEos %d: ",pvxiPort->portName,eoslen);
@@ -1115,9 +1161,12 @@ static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     addr = pasynManager->getAddr(pasynUser);
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
+    asynStatus  status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pdevLink) return asynError;
     if(eossize<1) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -1140,11 +1189,14 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    long    status;
-    int     addr = pasynManager->getAddr(pasynUser);
+    long    nWrite;
+    int     addr;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     Device_Link lid;
+    asynStatus  status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     assert(data);
     if(!pdevLink) return asynError;
     if(!vxiIsPortConnected(pvxiPort,pasynUser)) return asynError;
@@ -1154,12 +1206,12 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
         "%s %d vxiAddressedCmd %2.2x\n",pvxiPort->portName,addr,data);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,length,"%s %d vxiAddressedCmd\n",pvxiPort->portName,addr);
-    status = vxiWriteAddressed(pvxiPort,pasynUser,lid,
+    nWrite = vxiWriteAddressed(pvxiPort,pasynUser,lid,
         (char *)data,length,pvxiPort->defTimeout);
-    if(status!=length)asynPrint(pasynUser,ASYN_TRACE_ERROR,
+    if(nWrite!=length)asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
-        pvxiPort->portName,addr,length,status);
-    return status;
+        pvxiPort->portName,addr,length,nWrite);
+    return nWrite;
 }
 
 static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)

@@ -83,8 +83,10 @@ struct asynGpibPort {
     asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
-    int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
-    int (*write)(void *drvPvt,asynUser *pasynUser,const char *data,int numchars);
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                                char *data,int maxchars,int *nbytesTransfered);
+    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
+                          const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                 const char *eos,int eoslen);

@@ -434,6 +434,7 @@ static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
 static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
 {
     long ltmp;
+    asynStatus status;
     int nread;
     int count;
     char *endptr;
@@ -445,8 +446,8 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     int bufSize = pgpibCmd->msgLen;
 
     pasynOctet->setEos(asynOctetPvt,pasynUser,"#",1);
-    nread = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize);
-    if (nread <= 0) {
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread);
+    if (status!=asynSuccess || nread == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                       "Error reading preamble");
         return -1;
@@ -459,8 +460,8 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     buf += nread;
     bufSize -= nread;
     pasynOctet->setEos(asynOctetPvt,pasynUser,NULL,0);
-    nread = pasynOctet->read(asynOctetPvt,pasynUser,buf,1);
-    if (nread < 0) {
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,1,&nread);
+    if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                               "Error reading number of digits");
         return -1;
@@ -483,8 +484,8 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
                                                             "Buffer too small");
         return -1;
     }
-    nread = pasynOctet->read(asynOctetPvt,pasynUser,buf,count);
-    if (nread < 0) {
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread);
+    if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                "Error reading number of bytes");
         return -1;
@@ -510,8 +511,8 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         else
             count++;
     }
-    nread = pasynOctet->read(asynOctetPvt,pasynUser,buf,count);
-    if (nread != count) {
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread);
+    if (status!=asynSuccess || nread != count) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                              "Error reading waveform bytes (and trailing EOS)");
         return -1;
@@ -870,7 +871,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
-    int nchars;
+    int nchars = 0;
     asynStatus status;
 
     if(failure) goto done;
@@ -880,18 +881,18 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
             "%s pgpibDpvt->msg is null\n",precord->name);
         nchars = 0; failure = -1; goto done;
     } else {
-        nchars = pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,
-            pgpibDpvt->msg,pgpibCmd->msgLen);
+        status = pasynOctet->read(asynOctetPvt,pasynUser,
+            pgpibDpvt->msg,pgpibCmd->msgLen,&nchars);
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibRead nchars %d\n",
         precord->name,nchars);
     if(nchars > 0) {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt->msg,nchars,
-                                            "%s gpibRead\n",precord->name);
-    }
-    else {
+            "%s gpibRead\n",precord->name);
+    } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                                "%s read returned %d\n",precord->name, nchars);
+            "%s read status %d nin %d\n",
+            precord->name, pasynUser->errorMessage,nchars);
         pgpibDpvt->msgInputLen = 0;
         gpibErrorHappened(pgpibDpvt);
         failure = -1; goto done;
@@ -901,11 +902,11 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
-    status = pasynManager->unlock(pgpibDpvt->pasynUser);
+    status = pasynManager->unlock(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pasynManager->unlock failed %s\n",
-            precord->name,pgpibDpvt->pasynUser->errorMessage);
+            precord->name,pasynUser->errorMessage);
     }
     if(pdevGpibPvt->finish) pdevGpibPvt->finish(pgpibDpvt,failure);
 }
@@ -1243,27 +1244,28 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
     int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
+    asynStatus status;
     int nchars;
 
-    nchars = pasynOctet->write(asynOctetPvt,pgpibDpvt->pasynUser,message,len);
+    status = pasynOctet->write(asynOctetPvt,pasynUser, message,len,&nchars);
     if(nchars==len) {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nchars,
                                             "%s writeIt\n",precord->name);
-    }
-    else {
+    } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s write requested %d but sent %d bytes\n",
-                                                    precord->name,len,nchars);
+            "%s write status %s requested %d but sent %d bytes\n",
+                precord->name,pasynUser->errorMessage,len,nchars);
             gpibErrorHappened(pgpibDpvt);
     }
     if(respond2Writes>=0 && rspLen>0) {
+        int nrsp;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
         if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
         if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
-        if (pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,rsp,rspLen) < 0){
+        status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp);
+        if (status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s respond2Writes read failed\n", precord->name);
-            nchars = -1;
         }
     }
     return nchars;

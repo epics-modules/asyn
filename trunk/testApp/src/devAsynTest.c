@@ -87,6 +87,8 @@ static void sosiCallback(asynUser *pasynUser)
     asynOctet       *pasynOctet = pdpvtSo->pasynOctet;
     void            *octetPvt = pdpvtSo->octetPvt;
     ioState         state;
+    asynStatus      status;
+    int             yesNo;
 
     state = pdpvtSo->state;
     assert(state==stateWrite || state==stateRead);
@@ -94,28 +96,33 @@ static void sosiCallback(asynUser *pasynUser)
         int nout;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s soCallback\n",pso->name);
         sprintf(pdpvtSo->buffer,"%s",pso->val);
-        if(!pasynManager->isConnected(pasynUser)) {
+        status = pasynManager->isConnected(pasynUser,&yesNo);
+        if(status!=asynSuccess || !yesNo) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not connected\n",pso->name);
             strcpy(pso->val,"not connected");
             recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
-        } else if(!pasynManager->isEnabled(pasynUser)) {
+            goto writedone;
+        }
+        status = pasynManager->isEnabled(pasynUser,&yesNo);
+        if(status!=asynSuccess || !yesNo) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not enabled\n",pso->name);
             strcpy(pso->val,"disabled");
             recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
-        } else {
-            nout = pasynOctet->write(octetPvt,pasynUser,
-                pdpvtSo->buffer,strlen(pdpvtSo->buffer)+1);
-            if(nout<(strlen(pdpvtSo->buffer)+1)) {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "%s pasynOctet->write failed %s\n",
-                    pso->name,pasynUser->errorMessage);
-                recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
-            } else {
-                asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-                    pdpvtSo->buffer,strlen(pdpvtSo->buffer),
-                    "%s soCallback\n",pso->name);
-            }
+            goto writedone;
         }
+        status = pasynOctet->write(octetPvt,pasynUser,
+            pdpvtSo->buffer,strlen(pdpvtSo->buffer)+1,&nout);
+        if(status!=asynSuccess || nout<(strlen(pdpvtSo->buffer)+1)) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s pasynOctet->write failed %s\n",
+                pso->name,pasynUser->errorMessage);
+            recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
+        } else {
+            asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+                pdpvtSo->buffer,strlen(pdpvtSo->buffer),
+                "%s soCallback\n",pso->name);
+        }
+writedone:
         callbackRequestProcessCallback(&pdpvtSo->callback,pso->prio,(void *)pso);
         return;
     }
@@ -127,39 +134,44 @@ static void sosiCallback(asynUser *pasynUser)
     
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s siCallback\n",psi->name);
         pdpvtSi->buffer[0] = 0;
-        if(!pasynManager->isConnected(pasynUser)) {
+        status = pasynManager->isConnected(pasynUser,&yesNo);
+        if(status!=asynSuccess || !yesNo) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not connected\n",psi->name);
             strcpy(psi->val,"not connected");
             psi->udf = 0;
             recGblSetSevr(psi,WRITE_ALARM,MAJOR_ALARM);
-        } else if(!pasynManager->isEnabled(pasynUser)) {
+            goto readdone;
+        }
+        status = pasynManager->isEnabled(pasynUser,&yesNo);
+        if(status!=asynSuccess || !yesNo) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not enabled\n",psi->name);
             strcpy(psi->val,"not enabled");
             psi->udf = 0;
             recGblSetSevr(psi,WRITE_ALARM,MAJOR_ALARM);
-        } else {
-            pasynOctet->setEos(octetPvt,pasynUser,"",1);
-            nin = pasynOctet->read(octetPvt,pasynUser,
-                pdpvtSi->buffer,sizeof(pdpvtSi->buffer));
-            if(nin<0) {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "%s pasynOctet->read failed %s\n",
-                    psi->name,pasynUser->errorMessage);
-                recGblSetSevr(psi,READ_ALARM,MAJOR_ALARM);
-            } else {
-                asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-                    pdpvtSo->buffer,nin,"%s siCallback\n",psi->name);
-            }
-            if(strcmp(pdpvtSi->buffer,pdpvtSo->buffer)==0) {
-                sprintf(psi->val,"OK");
-                psi->udf = 0;
-            } else {
-                recGblSetSevr(psi,READ_ALARM,MAJOR_ALARM);
-                epicsSnprintf(psi->val,sizeof(psi->val),"%s|but got|%s\n",
-                    pdpvtSo->buffer,pdpvtSi->buffer);
-                psi->udf = 0;
-            }
+            goto readdone;
         }
+        pasynOctet->setEos(octetPvt,pasynUser,"",1);
+        status = pasynOctet->read(octetPvt,pasynUser,
+            pdpvtSi->buffer,sizeof(pdpvtSi->buffer),&nin);
+        if(status!=asynSuccess || nin==0) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s pasynOctet->read failed %s\n",
+                psi->name,pasynUser->errorMessage);
+            recGblSetSevr(psi,READ_ALARM,MAJOR_ALARM);
+        } else {
+            asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+                pdpvtSo->buffer,nin,"%s siCallback\n",psi->name);
+        }
+        if(strcmp(pdpvtSi->buffer,pdpvtSo->buffer)==0) {
+            sprintf(psi->val,"OK");
+            psi->udf = 0;
+        } else {
+            recGblSetSevr(psi,READ_ALARM,MAJOR_ALARM);
+            epicsSnprintf(psi->val,sizeof(psi->val),"%s|but got|%s\n",
+                pdpvtSo->buffer,pdpvtSi->buffer);
+            psi->udf = 0;
+        }
+readdone:
         callbackRequestProcessCallback(&pdpvtSi->callback,psi->prio,(void *)psi);
         return;
     }
@@ -229,9 +241,10 @@ static long initSo(stringoutRecord *pso)
 
 static long writeSo(stringoutRecord *pso)
 {
-    dpvtSo *pdpvtSo = (dpvtSo *)pso->dpvt;
-    asynUser *pasynUser = pdpvtSo->pasynUser;
+    dpvtSo     *pdpvtSo = (dpvtSo *)pso->dpvt;
+    asynUser   *pasynUser = pdpvtSo->pasynUser;
     asynStatus status;
+    int        yesNo;
 
     if(!pdpvtSo) {
         recGblSetSevr(pso,WRITE_ALARM,INVALID_ALARM);
@@ -248,13 +261,17 @@ static long writeSo(stringoutRecord *pso)
         strcpy(pso->val,"not stateIdle");
         return 0;
     }
-    if(!pasynManager->isConnected(pasynUser)
-    && !pasynManager->isAutoConnect(pasynUser)) {
+    status = pasynManager->isConnected(pasynUser,&yesNo);
+    if(status==asynSuccess && yesNo)
+        status = pasynManager->isAutoConnect(pasynUser,&yesNo);
+    if(status!=asynSuccess || !yesNo) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not connected\n",pso->name);
         strcpy(pso->val,"not connected");
         pso->udf = 0;
         goto bad;
-    } else if(!pasynManager->isEnabled(pasynUser)) {
+    }
+    status = pasynManager->isEnabled(pasynUser,&yesNo);
+    if(status!=asynSuccess || !yesNo) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not enabled\n",pso->name);
         strcpy(pso->val,"not enabled");
         pso->udf = 0;

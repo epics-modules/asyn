@@ -17,45 +17,14 @@ LIBRARY_IOC += asyn
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 SRC_DIRS += $(ASYN)/asynDriver
-DBD += asyn.dbd
 INC += asynDriver.h
-INC += asynShellCommands.h
-INC += asynSyncIO.h
 INC += epicsInterruptibleSyscall.h
-INC += asynInterposeEos.h
 asyn_SRCS += asynManager.c
-asyn_SRCS += asynShellCommands.c
-asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
-asyn_SRCS += asynInterposeEos.c
-asyn_SRCS += interposeFlush.c
-
-SRC_DIRS += $(ASYN)/asynRecord
-DBD += asynRecDevDrv.dbd
-DBDINC += asynRecord
-asyn_SRCS += asynRecord.c
-asyn_SRCS += drvAsyn.c
-DB += asynRecord.db
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
 asyn_SRCS += asynGpib.c
-
-SRC_DIRS += $(ASYN)/devGpib
-INC += devGpib.h
-INC += devSupportGpib.h
-INC += devCommonGpib.h
-DBD += devGpib.dbd
-asyn_SRCS += devCommonGpib.c
-asyn_SRCS += devSupportGpib.c
-
-SRC_DIRS += $(ASYN)/vxi11
-asyn_SRCS += vxi11core_xdr.c
-asyn_SRCS += drvVxi11.c
-asyn_SRCS += E5810Reboot.c
-asyn_SRCS += E2050Reboot.c
-asyn_SRCS += TDS3000Reboot.c
-DBD += drvVxi11.dbd
 
 SRC_DIRS += $(ASYN)/drvAsynSerial
 INC += drvAsynSerialPort.h
@@ -65,12 +34,45 @@ INC += drvAsynTCPPort.h
 asyn_SRCS += drvAsynTCPPort.c
 DBD += drvAsynTCPPort.dbd
 
+SRC_DIRS += $(ASYN)/asynMisc
+DBD += asyn.dbd
+INC += asynShellCommands.h
+INC += asynSyncIO.h
+INC += asynInterposeEos.h
+asyn_SRCS += asynShellCommands.c
+asyn_SRCS += asynSyncIO.c
+asyn_SRCS += asynInterposeEos.c
+asyn_SRCS += asynInterposeFlush.c
+
+SRC_DIRS += $(ASYN)/asynRecord
+DBD += asynRecDevDrv.dbd
+DBDINC += asynRecord
+asyn_SRCS += asynRecord.c
+asyn_SRCS += drvAsyn.c
+DB += asynRecord.db
+
+SRC_DIRS += $(ASYN)/vxi11
+asyn_SRCS += vxi11core_xdr.c
+asyn_SRCS += drvVxi11.c
+asyn_SRCS += E5810Reboot.c
+asyn_SRCS += E2050Reboot.c
+asyn_SRCS += TDS3000Reboot.c
+DBD += drvVxi11.dbd
+
 ifdef IPAC
 SRC_DIRS += $(ASYN)/gsIP488
 asyn_SRCS_vxWorks += drvGsIP488.c
 DBD += drvGsIP488.dbd
 asyn_LIBS_vxWorks += Ipac
 endif
+
+SRC_DIRS += $(ASYN)/devGpib
+INC += devGpib.h
+INC += devSupportGpib.h
+INC += devCommonGpib.h
+DBD += devGpib.dbd
+asyn_SRCS += devCommonGpib.c
+asyn_SRCS += devSupportGpib.c
 
 include $(TOP)/configure/RULES
 
