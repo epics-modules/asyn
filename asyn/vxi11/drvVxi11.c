@@ -1297,6 +1297,7 @@ static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
 
 extern int E5810Reboot(char * inetAddr,char *password);
 extern int E2050Reboot(char * inetAddr);
+extern int TDS3000Reboot(char * inetAddr);
 
 static const iocshArg E5810RebootArg0 = { "inetAddr",iocshArgString};
 static const iocshArg E5810RebootArg1 = { "password",iocshArgString};
@@ -1313,6 +1314,14 @@ static const iocshFuncDef E2050RebootFuncDef = {"E2050Reboot",1,E2050RebootArgs}
 static void E2050RebootCallFunc(const iocshArgBuf *args)
 {
     E2050Reboot(args[0].sval);
+}
+
+static const iocshArg TDS3000RebootArg0 = { "inetAddr",iocshArgString};
+static const iocshArg *TDS3000RebootArgs[1] = {&TDS3000RebootArg0};
+static const iocshFuncDef TDS3000RebootFuncDef = {"TDS3000Reboot",1,TDS3000RebootArgs};
+static void TDS3000RebootCallFunc(const iocshArgBuf *args)
+{
+    TDS3000Reboot(args[0].sval);
 }
 
 static const iocshArg vxi11SetRpcTimeoutArg0 = {"double",iocshArgDouble};
@@ -1336,6 +1345,7 @@ static void vxi11RegisterCommands (void)
         iocshRegister(&vxi11ConfigureFuncDef,vxi11ConfigureCallFunc);
         iocshRegister(&E2050RebootFuncDef,E2050RebootCallFunc);
         iocshRegister(&E5810RebootFuncDef,E5810RebootCallFunc);
+        iocshRegister(&TDS3000RebootFuncDef,TDS3000RebootCallFunc);
         iocshRegister(&vxi11SetRpcTimeoutFuncDef,vxi11SetRpcTimeoutCallFunc);
     }
 }
