@@ -18,22 +18,11 @@
 #include <epicsEvent.h>
 #include <epicsExport.h>
 #include <iocsh.h>
-
-#define epicsExportSharedSymbols
 #include "asynDriver.h"
 
-/*This module implements the following shell commands.*/
-/*Each is extern so that vxWorks shell knows about them*/
-int asynSetOption(const char *portName, int addr, const char *key, const char *val);
-int asynShowOption(const char *portName, int addr,const char *key);
-int asynReport(const char *filename, int level);
-int asynSetTraceMask(const char *portName,int addr,int mask);
-int asynSetTraceIOMask(const char *portName,int addr,int mask);
-int asynShowOption(const char *portName, int addr,const char *key);
-int asynSetOption(const char *portName, int addr, const char *key, const char *val);
-int asynShowOption(const char *portName, int addr,const char *key);
-int asynAutoConnect(const char *portName,int addr,int yesNo);
-int asynEnable(const char *portName,int addr,int yesNo);
+#define epicsExportSharedSymbols
+
+#include "asynShellCommands.h"
 
 typedef struct setOptionArgs {
     const char     *key;
@@ -62,7 +51,8 @@ static void setOption(asynUser *pasynUser)
     epicsEventSignal(poptionargs->done);
 }
 
-int asynSetOption(const char *portName, int addr, const char *key, const char *val)
+int epicsShareAPI
+ asynSetOption(const char *portName, int addr, const char *key, const char *val)
 {
     asynInterface *pasynInterface;
     setOptionArgs optionargs;
@@ -120,7 +110,8 @@ static void showOption(asynUser *pasynUser)
     epicsEventSignal(poptionargs->done);
 }
 
-int asynShowOption(const char *portName, int addr,const char *key)
+int epicsShareAPI
+ asynShowOption(const char *portName, int addr,const char *key)
 {
     asynInterface *pasynInterface;
     showOptionArgs optionargs;
@@ -159,7 +150,8 @@ static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
 static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1};
 static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
-int asynReport(const char *filename, int level)
+int epicsShareAPI
+ asynReport(const char *filename, int level)
 {
     FILE *fp;
 
@@ -215,7 +207,8 @@ static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
 static const iocshFuncDef asynSetTraceMaskDef =
     {"asynSetTraceMask", 3, asynSetTraceMaskArgs};
-int asynSetTraceMask(const char *portName,int addr,int mask)
+int epicsShareAPI
+ asynSetTraceMask(const char *portName,int addr,int mask)
 {
     asynUser *pasynUser;
     asynStatus status;
@@ -248,7 +241,8 @@ static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
 static const iocshFuncDef asynSetTraceIOMaskDef =
     {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs};
-int asynSetTraceIOMask(const char *portName,int addr,int mask)
+int epicsShareAPI
+ asynSetTraceIOMask(const char *portName,int addr,int mask)
 {
     asynUser *pasynUser;
     asynStatus status;
@@ -281,7 +275,8 @@ static const iocshArg *const asynEnableArgs[] = {
     &asynEnableArg0,&asynEnableArg1,&asynEnableArg2};
 static const iocshFuncDef asynEnableDef =
     {"asynEnable", 3, asynEnableArgs};
-int asynEnable(const char *portName,int addr,int yesNo)
+int epicsShareAPI
+ asynEnable(const char *portName,int addr,int yesNo)
 {
     asynUser *pasynUser;
     asynStatus status;
@@ -314,7 +309,8 @@ static const iocshArg *const asynAutoConnectArgs[] = {
     &asynAutoConnectArg0,&asynAutoConnectArg1,&asynAutoConnectArg2};
 static const iocshFuncDef asynAutoConnectDef =
     {"asynAutoConnect", 3, asynAutoConnectArgs};
-int asynAutoConnect(const char *portName,int addr,int yesNo)
+int epicsShareAPI
+ asynAutoConnect(const char *portName,int addr,int yesNo)
 {
     asynUser *pasynUser;
     asynStatus status;
