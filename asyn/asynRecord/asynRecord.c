@@ -27,6 +27,7 @@
 #include <errMdef.h>
 #include <recSup.h>
 #include <recGbl.h>
+#include <special.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
 #include <epicsExport.h>
@@ -54,7 +55,7 @@ static char *flow_control_choices[NUM_FLOW_CHOICES]={"Unknown","Y","N"};
 
 #define OPT_SIZE 80  /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10  /* Size of buffer for EOS */
-#define ERR_SIZE 200 /* Size of buffer for error message */
+#define ERR_SIZE 100 /* Size of buffer for error message */
 #define QUEUE_TIMEOUT 5.0 /* Timeout for queueRequest */
 
 
@@ -89,8 +90,8 @@ static void exceptCallback(asynUser *pasynUser, asynException exception);
 static void performIO(asynUser *pasynUser);
 static void setOption(asynUser *pasynUser);
 static void getOptions(asynUser *pasynUser);
-static void reportError(asynRecord *pasynRec, int status, int severity,
-                        const char *pformat, ...);
+static void reportError(asynRecord *pasynRec,asynStatus astatus,
+    int rstatus, int severity, const char *pformat, ...);
 static void resetError(asynRecord *pasynRec);
 
 struct rset asynRSET={
@@ -145,7 +146,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16     auct;   /*Autoconnect*/
     epicsEnum16     cnct;   /*Connect/Disconnect*/
     epicsEnum16     enbl;   /*Enable/Disable*/
-    char            errs[40]; /*Error string*/
+    char            errs[ERR_SIZE]; /*Error string*/
 } oldValues;
 
 #define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
@@ -213,6 +214,8 @@ static long init_record(asynRecord *pasynRec, int pass)
         pasynRec->imax, sizeof(char),"asynRecord");
     pasynRecPvt->outbuff =  (char *)callocMustSucceed(
         pasynRec->omax, sizeof(char),"asynRecord");
+    pasynRec->errs = (char *)callocMustSucceed(
+        ERR_SIZE,sizeof(char),"asynRecord");
 
     /* Get initial values of trace and connect bits */
     monitorStatus(pasynRec);
@@ -348,12 +351,12 @@ static long special(struct dbAddr *paddr, int after)
              pasynRecPvt->old.traceFd = fd;
              status = pasynTrace->setTraceFile(pasynUser, fd);
              if (status != asynSuccess) {
-                reportError(pasynRec, NO_ALARM, NO_ALARM,
+                reportError(pasynRec,status, NO_ALARM, NO_ALARM,
                             "Error setting trace file: %s",
                             pasynUser->errorMessage);
              }
           } else {    
-             reportError(pasynRec, NO_ALARM, NO_ALARM,
+             reportError(pasynRec,status, NO_ALARM, NO_ALARM,
                          "Error opening trace file: %s",
                          pasynRec->tfil);
           }
@@ -373,7 +376,7 @@ static long special(struct dbAddr *paddr, int after)
                     pasynRec->name);
           status = pasynManager->cancelRequest(pasynUser,&wasQueued);
           if(status!=asynSuccess || !wasQueued) {
-             reportError(pasynRec, COMM_ALARM, MAJOR_ALARM,
+             reportError(pasynRec,status, COMM_ALARM, MAJOR_ALARM,
                          "Cancel request failed: %s",
                          pasynUser->errorMessage);
              return 0;
@@ -391,7 +394,7 @@ static long special(struct dbAddr *paddr, int after)
     }
     /* These cases require idle state */
     if(pasynRecPvt->state!=stateIdle) {
-       reportError(pasynRec, NO_ALARM, NO_ALARM,
+       reportError(pasynRec,asynSuccess, NO_ALARM, NO_ALARM,
                    "state!=stateIdle, state=%d, try again later",
                    pasynRecPvt->state);
        goto done;
@@ -482,7 +485,7 @@ static void asynCallback(asynUser *pasynUser)
           }
           break;
       default:
-          reportError(pasynRec, NO_ALARM, NO_ALARM,
+          reportError(pasynRec,asynError, NO_ALARM, NO_ALARM,
                       "asynCallback illegal state %d\n",
                       pasynRecPvt->state);
           return;
@@ -512,7 +515,7 @@ static void queueTimeoutCallback(asynUser *pasynUser)
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
 
-   reportError(pasynRec, COMM_ALARM, MAJOR_ALARM, 
+   reportError(pasynRec,asynError, COMM_ALARM, MAJOR_ALARM, 
                "queueRequest timeout");
    dbScanLock( (dbCommon*) pasynRec);
    process(pasynRec);
@@ -537,6 +540,13 @@ static long cvt_dbaddr(struct dbAddr *paddr)
       paddr->field_type = DBF_CHAR;
       paddr->field_size = sizeof(char);
       paddr->dbr_field_type = DBF_CHAR;
+   } else if (fieldIndex == asynRecordERRS) {
+      paddr->pfield = pasynRec->errs;
+      paddr->no_elements = ERR_SIZE;
+      paddr->field_type = DBF_CHAR;
+      paddr->field_size = sizeof(char);
+      paddr->dbr_field_type = DBR_CHAR;
+      paddr->special = SPC_NOMOD;
    }
    return(0);
 }
@@ -552,6 +562,9 @@ static long get_array_info(struct dbAddr *paddr, long *no_elements,
       *offset = 0;
    } else if (fieldIndex == asynRecordBINP) {
       *no_elements =  pasynRec->nord;
+      *offset = 0;
+   } else if (fieldIndex == asynRecordERRS) {
+      *no_elements =  ERR_SIZE;
       *offset = 0;
    }
    return(0);
@@ -704,7 +717,7 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     status = pasynManager->connectDevice(pasynUser,pasynRec->port,
                                          pasynRec->addr);
     if (status!=asynSuccess) {
-        reportError(pasynRec, COMM_ALARM, MAJOR_ALARM, 
+        reportError(pasynRec,status, COMM_ALARM, MAJOR_ALARM, 
                     "Connect error, status=%d, %s",
                     status, pasynUser->errorMessage);
         return(status);
@@ -714,8 +727,8 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
     if(!pasynInterface) {
         pasynRecPvt->pasynCommon = 0; pasynRecPvt->asynCommonPvt = 0;
-        reportError(pasynRec, COMM_ALARM, MAJOR_ALARM, 
-                    "Error finding common interface, %s",
+        reportError(pasynRec,status, COMM_ALARM, MAJOR_ALARM, 
+                    "findInterface common: %s",
                     pasynUser->errorMessage);
         return(asynError);
     }
@@ -726,8 +739,8 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if(!pasynInterface) {
         pasynRecPvt->pasynOctet = 0; pasynRecPvt->asynOctetPvt = 0;
-        reportError(pasynRec, COMM_ALARM, MAJOR_ALARM,
-                    "Error finding octet interface, %s",
+        reportError(pasynRec,status, COMM_ALARM, MAJOR_ALARM,
+                    "findInterface octet: %s",
                     pasynUser->errorMessage);
         return(asynError);
     }
@@ -757,7 +770,7 @@ static void performIO(asynUser *pasynUser)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
-   asynStatus status;
+   asynStatus status = asynSuccess;
    int        nbytesTransfered;
    char    *inptr;
    char    *outptr;
@@ -774,8 +787,8 @@ static void performIO(asynUser *pasynUser)
     * Command is being done */
    if ((pasynRec->ucmd != gpibUCMD_None) || (pasynRec->acmd != gpibACMD_None)) {
       if (pasynRecPvt->pasynGpib == NULL) {
-         reportError(pasynRec, COMM_ALARM, MAJOR_ALARM,
-                     "GPIB operation but not GPIB interface, port=%s",
+         reportError(pasynRec,status, COMM_ALARM, MAJOR_ALARM,
+                     "GPIB op but no GPIB interface, port=%s",
                      pasynRec->port);
       } else {
          GPIB_command(pasynUser);
@@ -846,7 +859,7 @@ static void performIO(asynUser *pasynUser)
             status, nbytesTransfered);
       if (status!=asynSuccess || nbytesTransfered != nwrite) {
          /* Something is wrong if we couldn't write everything */
-         reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
+         reportError(pasynRec,status, WRITE_ALARM, MAJOR_ALARM,
                      "Write error, nout=%d, %s", 
                      nbytesTransfered, pasynUser->errorMessage);
       }
@@ -867,7 +880,7 @@ static void performIO(asynUser *pasynUser)
       status = pasynRecPvt->pasynOctet->setEos(pasynRecPvt->asynOctetPvt, 
                                         pasynUser, eos, eoslen);
       if (status)  {
-         reportError(pasynRec, WRITE_ALARM, MINOR_ALARM,
+         reportError(pasynRec,status, WRITE_ALARM, MINOR_ALARM,
                      "Error setting EOS, %s", 
                      pasynUser->errorMessage);
       }
@@ -880,30 +893,23 @@ static void performIO(asynUser *pasynUser)
             status, nbytesTransfered);
       inlen = nbytesTransfered;
       if (status!=asynSuccess) {
-         if (nbytesTransfered == 0) {
-            /* Nothing transfered */
-            reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
-                        "Timeout, nothing received, %s", 
-                        pasynUser->errorMessage);
-         } else {
-            reportError(pasynRec, READ_ALARM, MINOR_ALARM,
-                        "Timeout, read %d bytes, %s", 
+         reportError(pasynRec,status, READ_ALARM, MINOR_ALARM,
+                        "Timeout nread %d %s", 
                         nbytesTransfered, pasynUser->errorMessage);
-         }
       }
       /* Check for input buffer overflow */
       if ((pasynRec->ifmt == asynFMT_ASCII) && 
           (nbytesTransfered >= (int)sizeof(pasynRec->ainp))) {
-         reportError(pasynRec, READ_ALARM, MINOR_ALARM,
-                     "Buffer overflow, read=%d bytes, %s", 
+         reportError(pasynRec,status, READ_ALARM, MINOR_ALARM,
+                     "Overflow nread %d %s", 
                      nbytesTransfered, pasynUser->errorMessage);
          /* terminate response with \0 */
          inptr[sizeof(pasynRec->ainp)-1] = '\0';
       }
       else if ((pasynRec->ifmt == asynFMT_Hybrid) && 
                (nbytesTransfered >= pasynRec->imax)) {
-         reportError(pasynRec, READ_ALARM, MINOR_ALARM,
-                     "Buffer overflow, read %d bytes, %s", 
+         reportError(pasynRec,status, READ_ALARM, MINOR_ALARM,
+                     "Overflow nread %d %s", 
                      nbytesTransfered, pasynUser->errorMessage);
          /* terminate response with \0 */
          inptr[pasynRec->imax-1] = '\0';
@@ -911,8 +917,8 @@ static void performIO(asynUser *pasynUser)
       else if ((pasynRec->ifmt == asynFMT_Binary) && 
                (nbytesTransfered > pasynRec->imax)) {
          /* This should not be able to happen */
-         reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
-                     "Buffer overflow, read %d bytes, %s", 
+         reportError(pasynRec,status, READ_ALARM, MAJOR_ALARM,
+                     "Overflow nread %d %s", 
                      nbytesTransfered, pasynUser->errorMessage);
       }
       else if (pasynRec->ifmt != asynFMT_Binary) {
@@ -973,8 +979,8 @@ static void GPIB_command(asynUser *pasynUser)
       status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
       if (status) {
          /* Something is wrong if we couldn't write */
-         reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
-                     "Error in GPIB Universal command, %s",
+         reportError(pasynRec,status, WRITE_ALARM, MAJOR_ALARM,
+                     "GPIB Universal command %s",
                      pasynUser->errorMessage);
       }
    }
@@ -1012,7 +1018,7 @@ static void GPIB_command(asynUser *pasynUser)
             status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
             if (status!=asynSuccess) {
                 /* Something is wrong if we couldn't write */
-                reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
+                reportError(pasynRec,status, WRITE_ALARM, MAJOR_ALARM,
                             "Error in GPIB Serial Poll write, %s",
                             pasynUser->errorMessage);
             }
@@ -1022,7 +1028,7 @@ static void GPIB_command(asynUser *pasynUser)
                   1,&nbytesTransfered);
             if (status!=asynSuccess || nbytesTransfered!=1) {
                 /* Something is wrong if we couldn't read */
-                reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
+                reportError(pasynRec,status, READ_ALARM, MAJOR_ALARM,
                             "Error in GPIB Serial Poll read, %s",
                             pasynUser->errorMessage);
             }
@@ -1031,7 +1037,7 @@ static void GPIB_command(asynUser *pasynUser)
             status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
             if (status!=asynSuccess) {
                 /* Something is wrong if we couldn't write */
-                reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
+                reportError(pasynRec,status, WRITE_ALARM, MAJOR_ALARM,
                             "Error in GPIB Serial Poll disable write, %s",
                             pasynUser->errorMessage);
             }
@@ -1041,7 +1047,7 @@ static void GPIB_command(asynUser *pasynUser)
                       pasynRecPvt->pasynUser, acmd, lenCmd);
       if (status) {
          /* Something is wrong if we couldn't write */
-         reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
+         reportError(pasynRec,status, WRITE_ALARM, MAJOR_ALARM,
                      "Error in GPIB Addressed Command write, %s",
                      pasynUser->errorMessage);
       }
@@ -1088,7 +1094,7 @@ static void setOption(asynUser *pasynUser)
       break;
    }
    if (status != asynSuccess) {
-      reportError(pasynRec, NO_ALARM, NO_ALARM, 
+      reportError(pasynRec,status, NO_ALARM, NO_ALARM, 
          "Error setting option, %s", pasynUser->errorMessage);
    }
 }
@@ -1153,8 +1159,8 @@ static void getOptions(asynUser *pasynUser)
     POST_IF_NEW(fctl);
 }
 
-static void reportError(asynRecord *pasynRec, int status, int severity,
-                        const char *pformat, ...)
+static void reportError(asynRecord *pasynRec,asynStatus astatus,
+    int rstatus, int severity, const char *pformat, ...)
 {
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
    asynUser *pasynUser = pasynRecPvt->pasynUser;
@@ -1162,15 +1168,16 @@ static void reportError(asynRecord *pasynRec, int status, int severity,
    char buffer[ERR_SIZE];
    va_list  pvar;
 
-   if (status != NO_ALARM) recGblSetSevr(pasynRec, status, severity);
+   if (rstatus != NO_ALARM) recGblSetSevr(pasynRec, rstatus, severity);
 
    va_start(pvar,pformat);
    epicsVsnprintf(buffer, ERR_SIZE, pformat, pvar);
    va_end(pvar);
-   pasynTrace->print(pasynUser, ASYN_TRACE_ERROR, "%s: %s\n", 
-                     pasynRec->name, buffer);
- 
-   strncpy(pasynRec->errs, buffer, sizeof(pasynRec->errs));
+   if(astatus!=asynSuccess && astatus!=asynTimeout) {
+      asynPrint(pasynUser, ASYN_TRACE_ERROR, "%s: %s\n", 
+                      pasynRec->name, buffer);
+   }
+   strncpy(pasynRec->errs, buffer, ERR_SIZE);
    if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
        strcpy(pasynRecPvt->old.errs, pasynRec->errs);
        monitor_mask = DBE_VALUE | DBE_LOG;
