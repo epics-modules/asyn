@@ -115,7 +115,6 @@ typedef struct asynManager {
     asynStatus (*registerInterruptSource)(const char *portName,int addr,
                                         void *callerPvt, void **pasynPvt);
     void       (*interrupt)(void *asynPvt,int addr, int reason,void *pvalue);
-    /*drivers or interpose interfaces normally call the following*/
     asynStatus (*registerInterruptUser)(asynUser *pasynUser,
                             interruptCallback callback, void *userPvt);
     asynStatus (*cancelInterruptUser)(asynUser *pasynUser);
