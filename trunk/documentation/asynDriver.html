@@ -386,7 +386,7 @@ and one or more interfaces.</p>
 
 <h3>asynStatus</h3>
 
-<p>Defines the status returned by most methods If a method returns a
+<p>Defines the status returned by most methods.  If a method returns a
 status other than asynSuccess and one of the arguments to the method is
 pasynUser then the method is expected to write a message into
 pasynUser-&gt;errorMessage.</p>
@@ -742,7 +742,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     <tr>
       <td>getAddr</td>
       <td>
-        *addr is set equal to the address to which the user connected
+        *addr is set equal to the address which the user specified
         in the call to connectDevice.
         <p>See the Theory of Operation section for a description of the
         difference between single and multi-device port drivers.</p>
@@ -863,7 +863,7 @@ drivers.</p>
     <tr>
       <td>setOption</td>
       <td>This is a generic routine for setting a device option. The
-        arguments are a key,value pairs. The meaning is driver specific.
+        arguments are key,value pairs. The meaning is driver specific.
        If a driver does not accept options it can return asynError.
        </td>
     </tr>
@@ -1882,7 +1882,7 @@ ni1014Config("L0","L1",0x5000,0x64,5,0,0)</pre>
        be disconnected and reconnected.</li>
    <li>When the ports are connected, portA MUST be connected before portB.</li>
    <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
-       A14 address space is required.</li>
+       A24 address space is required.</li>
 </ul>
 <hr>
 
