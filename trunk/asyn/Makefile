@@ -45,7 +45,6 @@ asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 
 SRC_DIRS += $(ASYN)/asynRecord
-DBD += asynRecDevDrv.dbd
 DBDINC += asynRecord
 asyn_SRCS += asynRecord.c
 asyn_SRCS += drvAsyn.c

@@ -1975,10 +1975,9 @@ explains how to include asynDriver components.</p>
     </pre>
   </li>
   <li>Add the following to <code>&lt;app&gt;Include.dbd<span
-    style="font-family: times"> (except for the first two the rest are
-    applivation dependent)</span></code>
-    <pre>      include "asyn.dbd"
-      include "asynRecDevDrv.dbd"
+    style="font-family: times"> and uncomment the line or lines appropriate
+    for your application:</span></code>
+    <pre>
       #include "drvAsynSerialPort.dbd"
       #include "drvAsynTCPPort.dbd"
       #include "drvVxi11.dbd"
