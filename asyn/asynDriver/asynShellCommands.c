@@ -27,11 +27,12 @@
 
 #include "asynShellCommands.h"
 
+#define MAX_EOS_LEN 10
 typedef struct asynIOPvt {
    asynUser *pasynUser;
-   char *ieos;
+   char ieos[MAX_EOS_LEN];
    int  ieos_len;
-   char *oeos;
+   char oeos[MAX_EOS_LEN];
    int  oeos_len;
    double timeout;
    char *write_buffer;
@@ -204,9 +205,9 @@ epicsShareFunc int epicsShareAPI
     pPvt->oeos_len = dbTranslateEscape(pPvt->oeos, oeos);
     pPvt->timeout = timeout ? (double)timeout : READ_TIMEOUT;
     pPvt->write_buffer_len = buffer_len ? buffer_len : BUFFER_SIZE;
-    pPvt->write_buffer = calloc(pPvt->write_buffer_len, 1);
+    pPvt->write_buffer = calloc(1, pPvt->write_buffer_len);
     pPvt->read_buffer_len = pPvt->write_buffer_len;
-    pPvt->read_buffer = calloc(pPvt->read_buffer_len, 1);
+    pPvt->read_buffer = calloc(1, pPvt->read_buffer_len);
     return(0);
 }
 
