@@ -32,6 +32,18 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
  asynEnable(const char *portName,int addr,int yesNo);
 
+epicsShareFunc int epicsShareAPI
+ asynConnect(const char *entry, const char *port, int addr,
+          const char *oeos, const char *ieos, int timeout, int buffer_len);
+epicsShareFunc int epicsShareAPI
+ asynRead(const char *entry, int flush);
+epicsShareFunc int epicsShareAPI
+ asynWrite(const char *entry, const char *output);
+epicsShareFunc int epicsShareAPI
+ asynWriteRead(const char *entry, const char *output);
+epicsShareFunc int epicsShareAPI
+ asynFlush(const char *entry);
+
 #ifdef __cplusplus
 }
 #endif
