@@ -93,9 +93,9 @@ static struct gpibCmd gpibCmds[] =
   {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
 
   /* Param 16 (id)   */
-  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", "%s", 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", "%s", 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 18, */
   {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK",  0, 0, 0, 0, 0, 0, 0, 0, -1}
 };
