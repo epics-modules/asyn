@@ -363,6 +363,13 @@ recordtype(asyn) {
     }
 
 # Connection management fields
+    field(ACTD,DBF_MENU) {
+        prompt("Autoconnect active")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_NOMOD)
+        interest(1)
+        menu(asynAUTOCONNECT)
+    }
     field(AUCT,DBF_MENU) {
         prompt("Autoconnect")
         promptgroup(GUI_DISPLAY)
@@ -370,12 +377,26 @@ recordtype(asyn) {
         interest(1)
         menu(asynAUTOCONNECT)
     }
+    field(CNTD,DBF_MENU) {
+        prompt("Connected")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_NOMOD)
+        interest(1)
+        menu(asynCONNECTED)
+    }
     field(CNCT,DBF_MENU) {
         prompt("Connect/Disconnect")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
         menu(asynCONNECT)
+    }
+    field(ENBD,DBF_MENU) {
+        prompt("Enabled")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_NOMOD)
+        interest(1)
+        menu(asynENABLED)
     }
     field(ENBL,DBF_MENU) {
         prompt("Enable/Disable")

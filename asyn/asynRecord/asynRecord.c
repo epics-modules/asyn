@@ -133,8 +133,11 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsInt32      tsiz;   /*Trace IO truncate size*/
     char            tfil[40]; /*Trace IO file*/
     FILE*           traceFd; /*Trace file descriptor*/
+    epicsEnum16     actd;   /*Autoconnect active*/
     epicsEnum16     auct;   /*Autoconnect*/
+    epicsEnum16     cntd;   /*Connected*/
     epicsEnum16     cnct;   /*Connect/Disconnect*/
+    epicsEnum16     enbd;   /*Enabled*/
     epicsEnum16     enbl;   /*Enable/Disable*/
     char            errs[40]; /*Error string*/
 } oldValues;
@@ -465,9 +468,9 @@ static void monitorStatus(asynRecord *pasynRec)
     pasynRec->tib1 = (trace_mask & ASYN_TRACEIO_ESCAPE) ? 1 : 0;
     pasynRec->tib2 = (trace_mask & ASYN_TRACEIO_HEX)    ? 1 : 0;
 
-    pasynRec->auct = pasynManager->isAutoConnect(pasynUser);
-    pasynRec->cnct = pasynManager->isConnected(pasynUser);
-    pasynRec->enbl = pasynManager->isEnabled(pasynUser);
+    pasynRec->actd = pasynManager->isAutoConnect(pasynUser);
+    pasynRec->cntd = pasynManager->isConnected(pasynUser);
+    pasynRec->enbd = pasynManager->isEnabled(pasynUser);
     pasynRec->tsiz = pasynTrace->getTraceIOTruncateSize(pasynUser);
     traceFd        = pasynTrace->getTraceFile(pasynUser);
     POST_IF_NEW(tb0);
@@ -485,8 +488,11 @@ static void monitorStatus(asynRecord *pasynRec)
        strcpy(pasynRec->tfil, "Unknown");
        db_post_events(pasynRec, pasynRec->tfil, monitor_mask);
     }
+    POST_IF_NEW(actd);
     POST_IF_NEW(auct);
+    POST_IF_NEW(cntd);
     POST_IF_NEW(cnct);
+    POST_IF_NEW(enbd);
     POST_IF_NEW(enbl);
 }
 
