@@ -63,6 +63,14 @@ INC += drvGenericSerial.h
 asyn_SRCS += drvGenericSerial.c
 DBD += drvGenericSerial.dbd
 
+SRC_DIRS += $(ASYN)/drvAsynSerial
+INC += drvAsynLocalSerialPort.h
+asyn_SRCS += drvAsynLocalSerialPort.c
+DBD += drvAsynLocalSerialPort.dbd
+INC += drvAsynTCPPort.h
+asyn_SRCS += drvAsynTCPPort.c
+DBD += drvAsynTCPPort.dbd
+
 ifdef IPAC
 SRC_DIRS += $(ASYN)/gsIP488
 asyn_SRCS_vxWorks += drvGsIP488.c
