@@ -24,7 +24,7 @@ extern "C" {
 #define asynUInt32DigitalSyncIOType "asynUInt32DigitalSyncIO"
 typedef struct asynUInt32DigitalSyncIO {
     asynStatus (*connect)(const char *port, int addr, 
-                       asynUser **ppasynUser, char *drvInfo);
+                       asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,
                        epicsUInt32 value,epicsUInt32 mask,double timeout);
@@ -38,18 +38,18 @@ typedef struct asynUInt32DigitalSyncIO {
                        epicsUInt32 *mask, interruptReason reason,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
                        epicsUInt32 value,epicsUInt32 mask,double timeout,
-                       char *drvInfo);
+                       const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
                        epicsUInt32 *pvalue,epicsUInt32 mask,double timeout,
-                       char *drvInfo);
+                       const char *drvInfo);
     asynStatus (*setInterruptOnce)(const char *port, int addr,
                        epicsUInt32 mask, interruptReason reason,double timeout,
-                       char *drvInfo);
+                       const char *drvInfo);
     asynStatus (*clearInterruptOnce)(const char *port, int addr,
-                       epicsUInt32 mask,double timeout,char *drvInfo);
+                       epicsUInt32 mask,double timeout,const char *drvInfo);
     asynStatus (*getInterruptOnce)(const char *port, int addr,
                        epicsUInt32 *mask, interruptReason reason,double timeout,
-                       char *drvInfo);
+                       const char *drvInfo);
 } asynUInt32DigitalSyncIO;
 epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;
 

@@ -38,16 +38,23 @@ epicsShareFunc int epicsShareAPI
 
 epicsShareFunc int epicsShareAPI
  asynOctetConnect(const char *entry, const char *port, int addr,
-                  const char *oeos, const char *ieos, int timeout, 
-                  int buffer_len);
+                  int timeout, int buffer_len,const char *drvInfo);
 epicsShareFunc int epicsShareAPI
- asynRead(const char *entry, int nread, int flush);
+ asynOctetRead(const char *entry, int nread);
 epicsShareFunc int epicsShareAPI
- asynWrite(const char *entry, const char *output);
+ asynOctetWrite(const char *entry, const char *output);
 epicsShareFunc int epicsShareAPI
- asynWriteRead(const char *entry, const char *output, int nread);
+ asynOctetWriteRead(const char *entry, const char *output, int nread);
 epicsShareFunc int epicsShareAPI
- asynFlush(const char *entry);
+ asynOctetFlush(const char *entry);
+epicsShareFunc int epicsShareAPI
+ asynOctetSetInputEos(const char *port, int addr,const char *eos,const char *drvInfo);
+epicsShareFunc int epicsShareAPI
+ asynOctetGetInputEos(const char *port, int addr,const char *drvInfo);
+epicsShareFunc int epicsShareAPI
+ asynOctetSetOutputEos(const char *port, int addr,const char *eos,const char *drvInfo);
+epicsShareFunc int epicsShareAPI
+ asynOctetGetOutputEos(const char *port, int addr,const char *drvInfo);
 
 #ifdef __cplusplus
 }

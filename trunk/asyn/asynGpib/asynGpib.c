@@ -93,10 +93,10 @@ static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
-static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransfered);
+static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -121,7 +121,7 @@ static asynCommon common = {
    report,connect,disconnect
 };
 static asynOctet octet = {
-    gpibRead,gpibWrite,gpibFlush, setEos, getEos
+    0,gpibWrite,0,gpibRead,gpibFlush, 0,0,setEos, getEos,0,0
 };
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren, pollAddr, registerPort, srqHappened
@@ -353,22 +353,30 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 /*asynOctet methods */
-static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
+static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
+    const char *data,size_t numchars,size_t *nbytesTransfered)
 {
+    int nt;
+    asynStatus status;
     GETgpibPvtasynGpibPort
 
-    return pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
-               data,maxchars,nbytesTransfered,eomReason);
+    status =  pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
+              data,(int)numchars,&nt);
+    *nbytesTransfered = (size_t)nt;
+    return status;
 }
 
-static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered)
+static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
+    int nt;
+    asynStatus status;
     GETgpibPvtasynGpibPort
 
-    return pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
-              data,numchars,nbytesTransfered);
+    status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
+               data,(int)maxchars,&nt,eomReason);
+    *nbytesTransfered = (size_t)nt;
+    return status;
 }
 
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser)
@@ -526,7 +534,7 @@ static void *registerPort(
     if(status==asynSuccess)
         status = pasynManager->registerInterface(portName,&pgpibPvt->common);
     if(status==asynSuccess)
-        status = pasynManager->registerInterface(portName,&pgpibPvt->octet);
+        status = pasynOctetBase->initialize(portName,&pgpibPvt->octet,0,0,1);
     if(status==asynSuccess)
         status = pasynManager->registerInterface(portName,&pgpibPvt->gpib);
     if(status==asynSuccess)

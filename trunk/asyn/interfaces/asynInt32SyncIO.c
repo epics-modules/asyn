@@ -57,18 +57,18 @@ static void processCallback(asynUser *pasynUser);
 
 /*asynInt32SyncIO methods*/
 static asynStatus connect(const char *port, int addr,
-                          asynUser **ppasynUser, char *drvInfo);
+                          asynUser **ppasynUser, const char *drvInfo);
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout);
 static asynStatus readOp(asynUser *pasynUser,epicsInt32 *pvalue,double timeout);
 static asynStatus getBounds(asynUser *pasynUser,
-                            epicsInt32 *plow, epicsInt32 *phigh);
+                       epicsInt32 *plow, epicsInt32 *phigh);
 static asynStatus writeOpOnce(const char *port, int addr,
-                                       epicsInt32 value,double timeout,char *drvInfo);
+                       epicsInt32 value,double timeout,const char *drvInfo);
 static asynStatus readOpOnce(const char *port, int addr,
-                                       epicsInt32 *pvalue,double timeout,char *drvInfo);
+                       epicsInt32 *pvalue,double timeout,const char *drvInfo);
 static asynStatus getBoundsOnce(const char *port, int addr,
-                            epicsInt32 *plow, epicsInt32 *phigh,char *drvInfo);
+                       epicsInt32 *plow, epicsInt32 *phigh,const char *drvInfo);
 static asynInt32SyncIO interface = {
     connect,
     disconnect,
@@ -175,7 +175,7 @@ static void processCallback(asynUser *pasynUser)
 }
 
 static asynStatus connect(const char *port, int addr,
-   asynUser **ppasynUser, char *drvInfo)
+   asynUser **ppasynUser, const char *drvInfo)
 {
     ioPvt *pioPvt;
     asynUser *pasynUser;
@@ -311,7 +311,7 @@ static asynStatus getBounds(asynUser *pasynUser,
 }
 
 static asynStatus writeOpOnce(const char *port, int addr,
-    epicsInt32 value,double timeout,char *drvInfo)
+    epicsInt32 value,double timeout,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
@@ -325,7 +325,7 @@ static asynStatus writeOpOnce(const char *port, int addr,
 }
 
 static asynStatus readOpOnce(const char *port, int addr,
-                   epicsInt32 *pvalue,double timeout,char *drvInfo)
+                   epicsInt32 *pvalue,double timeout,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
@@ -338,7 +338,7 @@ static asynStatus readOpOnce(const char *port, int addr,
 }
 
 static asynStatus getBoundsOnce(const char *port, int addr,
-                            epicsInt32 *plow, epicsInt32 *phigh,char *drvInfo)
+                epicsInt32 *plow, epicsInt32 *phigh,const char *drvInfo)
 {
     asynStatus         status;
     asynUser   *pasynUser;

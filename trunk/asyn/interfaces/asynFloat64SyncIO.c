@@ -53,14 +53,14 @@ static void processCallback(asynUser *pasynUser);
 
 /*asynFloat64SyncIO methods*/
 static asynStatus connect(const char *port, int addr,
-                          asynUser **ppasynUser, char *drvInfo);
+                          asynUser **ppasynUser, const char *drvInfo);
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeOp(asynUser *pasynUser,epicsFloat64 value,double timeout);
 static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout);
 static asynStatus writeOpOnce(const char *port, int addr,
-                          epicsFloat64 value, double timeout, char *drvInfo);
+                     epicsFloat64 value, double timeout, const char *drvInfo);
 static asynStatus readOpOnce(const char *port, int addr,
-                        epicsFloat64 *pvalue,double timeout, char *drvInfo);
+                     epicsFloat64 *pvalue,double timeout, const char *drvInfo);
 static asynFloat64SyncIO interface = {
     connect,
     disconnect,
@@ -160,7 +160,7 @@ static void processCallback(asynUser *pasynUser)
 }
 
 static asynStatus connect(const char *port, int addr,
-   asynUser **ppasynUser, char *drvInfo)
+   asynUser **ppasynUser, const char *drvInfo)
 {
     ioPvt *pioPvt;
     asynUser *pasynUser;
@@ -281,7 +281,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout
 }
 
 static asynStatus writeOpOnce(const char *port, int addr,
-    epicsFloat64 value,double timeout,char *drvInfo)
+    epicsFloat64 value,double timeout,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
@@ -295,7 +295,7 @@ static asynStatus writeOpOnce(const char *port, int addr,
 }
 
 static asynStatus readOpOnce(const char *port, int addr,
-                   epicsFloat64 *pvalue,double timeout,char *drvInfo)
+                   epicsFloat64 *pvalue,double timeout,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;

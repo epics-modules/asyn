@@ -180,14 +180,14 @@ static asynIOPvt* asynFindEntry(const char *name)
 
 epicsShareFunc int epicsShareAPI
     asynOctetConnect(const char *entry, const char *port, int addr,
-             const char *oeos, const char *ieos, int timeout, int buffer_len)
+             int timeout, int buffer_len, const char *drvInfo)
 {
     asynIOPvt *pPvt;
     asynUser *pasynUser;
     asynStatus status;
     GPHENTRY *hashEntry;
 
-    status = pasynOctetSyncIO->connect(port, addr, &pasynUser);
+    status = pasynOctetSyncIO->connect(port, addr, &pasynUser,drvInfo);
     if (status) return(-1);
 
     /* Create hash table if it does not exist */
@@ -197,10 +197,6 @@ epicsShareFunc int epicsShareAPI
     pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt)); 
     hashEntry->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
-    if (ieos == NULL) ieos =  "\r";
-    pPvt->ieos_len = dbTranslateEscape(pPvt->ieos, ieos);
-    if (oeos == NULL) oeos =  "\r";
-    pPvt->oeos_len = dbTranslateEscape(pPvt->oeos, oeos);
     pPvt->timeout = timeout ? (double)timeout : READ_TIMEOUT;
     pPvt->write_buffer_len = buffer_len ? buffer_len : BUFFER_SIZE;
     pPvt->write_buffer = calloc(1, pPvt->write_buffer_len);
@@ -210,7 +206,7 @@ epicsShareFunc int epicsShareAPI
 }
 
 epicsShareFunc int epicsShareAPI
-    asynOctetRead(const char *entry, int nread, int flush)
+    asynOctetRead(const char *entry, int nread)
 {
     asynStatus status;
     asynUser *pasynUser;
@@ -228,7 +224,7 @@ epicsShareFunc int epicsShareAPI
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     status = pasynOctetSyncIO->read(pasynUser, pPvt->read_buffer, nread,
-        pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout,&ninp,&eomReason);
+        pPvt->timeout,&ninp,&eomReason);
     if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error reading, ninp=%d error %s\n", ninp,pasynUser->errorMessage);
@@ -305,7 +301,7 @@ epicsShareFunc int epicsShareAPI
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     status = pasynOctetSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
                                   pPvt->read_buffer, nread,
-                                  pPvt->ieos, pPvt->ieos_len, pPvt->timeout,
+                                  pPvt->timeout,
                                   &nout,&ninp,&eomReason);
     if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -341,7 +337,100 @@ epicsShareFunc int epicsShareAPI
     }
     return(0);
 }
+
+epicsShareFunc int epicsShareAPI
+    asynOctetSetInputEos(const char *portName, int addr,
+    const char *eosin,const char *drvInfo)
+{
+    int eoslen;
+    char eos[10];
+    asynStatus status;
 
+    if(strlen(eosin)>10) {
+        printf("eos is too long\n");
+        return -1;
+    }
+    eoslen = dbTranslateEscape(eos,eosin);
+    if(eoslen>2) {
+        printf("translateted eos is too long\n");
+        return -1;
+    }
+    status = pasynOctetSyncIO->setInputEosOnce(portName,addr,
+        eos,eoslen,drvInfo);
+    return (status==asynSuccess) ? 0 : -1;
+}
+
+epicsShareFunc int epicsShareAPI
+    asynOctetGetInputEos(const char *portName, int addr,const char *drvInfo)
+{
+    char eos[2],eostran[10];
+    int  eoslen = 0;
+    int  tranlen = 0;
+    asynStatus  status;
+
+    status = pasynOctetSyncIO->getInputEosOnce(portName,addr,
+       eos,2,&eoslen,drvInfo);
+    if(status!=asynSuccess) return -1;
+    if(eoslen==0) {
+        printf("eoslen is 0\n");
+        return -1;
+    }
+    tranlen = epicsStrSnPrintEscaped(eostran,sizeof(eostran),eos,eoslen);
+    if(tranlen<=0) {
+        printf("epicsStrSnPrintEscaped failed\n");
+        return -1;
+    }
+    eostran[tranlen] = 0;
+    printf("%s\n",eostran);
+    return -1;
+}
+
+epicsShareFunc int epicsShareAPI
+    asynOctetSetOutputEos(const char *portName, int addr,
+    const char *eosin,const char *drvInfo)
+{
+    int eoslen;
+    char eos[10];
+    asynStatus status;
+
+    if(strlen(eosin)>10) {
+        printf("eos is too long\n");
+        return -1;
+    }
+    eoslen = dbTranslateEscape(eos,eosin);
+    if(eoslen>2) {
+        printf("translateted eos is too long\n");
+        return -1;
+    }
+    status = pasynOctetSyncIO->setOutputEosOnce(portName,addr,
+        eos,eoslen,drvInfo);
+    return (status==asynSuccess) ? 0 : -1;
+}
+
+epicsShareFunc int epicsShareAPI
+    asynOctetGetOutputEos(const char *portName, int addr,const char *drvInfo)
+{
+    char eos[2],eostran[10];
+    int  eoslen = 0;
+    int  tranlen = 0;
+    asynStatus  status;
+
+    status = pasynOctetSyncIO->getInputEosOnce(portName,addr,
+       eos,2,&eoslen,drvInfo);
+    if(status!=asynSuccess) return -1;
+    if(eoslen==0) {
+        printf("eoslen is 0\n");
+        return -1;
+    }
+    tranlen = epicsStrSnPrintEscaped(eostran,sizeof(eostran),eos,eoslen);
+    if(tranlen<=0) {
+        printf("epicsStrSnPrintEscaped failed\n");
+        return -1;
+    }
+    eostran[tranlen] = 0;
+    printf("%s\n",eostran);
+    return -1;
+}
 
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
@@ -620,38 +709,34 @@ static void asynAutoConnectCall(const iocshArgBuf * args) {
 static const iocshArg asynOctetConnectArg0 = {"device name", iocshArgString};
 static const iocshArg asynOctetConnectArg1 = {"asyn portName", iocshArgString};
 static const iocshArg asynOctetConnectArg2 = {"asyn addr (default=0)", iocshArgInt};
-static const iocshArg asynOctetConnectArg3 = {"output eos (default=\\r)", iocshArgString};
-static const iocshArg asynOctetConnectArg4 = {"input eos (default=\\r)", iocshArgString};
-static const iocshArg asynOctetConnectArg5 = {"timeout (sec) (default=1)", iocshArgInt};
-static const iocshArg asynOctetConnectArg6 = {"buffer length (default=80)", iocshArgInt};
+static const iocshArg asynOctetConnectArg3 = {"timeout (sec) (default=1)", iocshArgInt};
+static const iocshArg asynOctetConnectArg4 = {"buffer length (default=80)", iocshArgInt};
+static const iocshArg asynOctetConnectArg5 = {"drvInfo", iocshArgString};
 static const iocshArg *const asynOctetConnectArgs[] = {
-    &asynOctetConnectArg0, &asynOctetConnectArg1, &asynOctetConnectArg2, &asynOctetConnectArg3,
-    &asynOctetConnectArg4, &asynOctetConnectArg5, &asynOctetConnectArg6};
+    &asynOctetConnectArg0, &asynOctetConnectArg1, &asynOctetConnectArg2,
+    &asynOctetConnectArg3, &asynOctetConnectArg4, &asynOctetConnectArg5};
 static const iocshFuncDef asynOctetConnectDef =
-    {"asynOctetConnect", 7, asynOctetConnectArgs};
+    {"asynOctetConnect", 6, asynOctetConnectArgs};
 static void asynOctetConnectCall(const iocshArgBuf * args) {
     const char *deviceName = args[0].sval;
     const char *portName   = args[1].sval;
     int addr               = args[2].ival;
-    const char *oeos       = args[3].sval;
-    const char *ieos       = args[4].sval;
-    int timeout            = args[5].ival;
-    int buffer_len         = args[6].ival;
-    asynOctetConnect(deviceName, portName, addr, oeos, ieos, timeout, buffer_len);
+    int timeout            = args[3].ival;
+    int buffer_len         = args[4].ival;
+    const char *drvInfo    = args[5].sval;
+    asynOctetConnect(deviceName, portName, addr, timeout, buffer_len,drvInfo);
 }
 
 static const iocshArg asynOctetReadArg0 = {"device name", iocshArgString};
 static const iocshArg asynOctetReadArg1 = {"max. bytes", iocshArgInt};
-static const iocshArg asynOctetReadArg2 = {"flush (1=yes)", iocshArgInt};
 static const iocshArg *const asynOctetReadArgs[] = {
-    &asynOctetReadArg0, &asynOctetReadArg1, &asynOctetReadArg2};
+    &asynOctetReadArg0, &asynOctetReadArg1};
 static const iocshFuncDef asynOctetReadDef =
-    {"asynOctetRead", 3, asynOctetReadArgs};
+    {"asynOctetRead", 2, asynOctetReadArgs};
 static void asynOctetReadCall(const iocshArgBuf * args) {
     const char *deviceName = args[0].sval;
     int nread              = args[1].ival;
-    int flush              = args[2].ival;
-    asynOctetRead(deviceName, nread, flush);
+    asynOctetRead(deviceName, nread);
 }
 
 static const iocshArg asynOctetWriteArg0 = {"device name", iocshArgString};
@@ -689,6 +774,70 @@ static void asynOctetFlushCall(const iocshArgBuf * args) {
     asynOctetFlush(deviceName);
 }
 
+static const iocshArg asynOctetSetInputEosArg0 = {"portName", iocshArgString};
+static const iocshArg asynOctetSetInputEosArg1 = {"addr", iocshArgInt};
+static const iocshArg asynOctetSetInputEosArg2 = {"eos", iocshArgString};
+static const iocshArg asynOctetSetInputEosArg3 = {"drvInfo", iocshArgString};
+static const iocshArg *const asynOctetSetInputEosArgs[] = {
+    &asynOctetSetInputEosArg0, &asynOctetSetInputEosArg1,
+    &asynOctetSetInputEosArg2, &asynOctetSetInputEosArg3};
+static const iocshFuncDef asynOctetSetInputEosDef =
+    {"asynOctetSetInputEos", 4, asynOctetSetInputEosArgs};
+static void asynOctetSetInputEosCall(const iocshArgBuf * args) {
+    const char *portName   = args[0].sval;
+    int addr               = args[1].ival;
+    const char *eos        = args[2].sval;
+    const char *drvInfo    = args[3].sval;
+    asynOctetSetInputEos( portName, addr, eos , drvInfo);
+}
+
+static const iocshArg asynOctetGetInputEosArg0 = {"portName", iocshArgString};
+static const iocshArg asynOctetGetInputEosArg1 = {"addr", iocshArgInt};
+static const iocshArg asynOctetGetInputEosArg2 = {"drvInfo", iocshArgString};
+static const iocshArg *const asynOctetGetInputEosArgs[] = {
+    &asynOctetGetInputEosArg0, &asynOctetGetInputEosArg1,
+    &asynOctetGetInputEosArg2};
+static const iocshFuncDef asynOctetGetInputEosDef =
+    {"asynOctetGetInputEos", 3, asynOctetGetInputEosArgs};
+static void asynOctetGetInputEosCall(const iocshArgBuf * args) {
+    const char *portName   = args[0].sval;
+    int addr               = args[1].ival;
+    const char *drvInfo    = args[2].sval;
+    asynOctetGetInputEos( portName, addr, drvInfo);
+}
+
+static const iocshArg asynOctetSetOutputEosArg0 = {"portName", iocshArgString};
+static const iocshArg asynOctetSetOutputEosArg1 = {"addr", iocshArgInt};
+static const iocshArg asynOctetSetOutputEosArg2 = {"eos", iocshArgString};
+static const iocshArg asynOctetSetOutputEosArg3 = {"drvInfo", iocshArgString};
+static const iocshArg *const asynOctetSetOutputEosArgs[] = {
+    &asynOctetSetOutputEosArg0, &asynOctetSetOutputEosArg1,
+    &asynOctetSetOutputEosArg2, &asynOctetSetOutputEosArg3};
+static const iocshFuncDef asynOctetSetOutputEosDef =
+    {"asynOctetSetOutputEos", 4, asynOctetSetOutputEosArgs};
+static void asynOctetSetOutputEosCall(const iocshArgBuf * args) {
+    const char *portName   = args[0].sval;
+    int addr               = args[1].ival;
+    const char *eos        = args[2].sval;
+    const char *drvInfo    = args[3].sval;
+    asynOctetSetOutputEos( portName, addr, eos , drvInfo);
+}
+
+static const iocshArg asynOctetGetOutputEosArg0 = {"portName", iocshArgString};
+static const iocshArg asynOctetGetOutputEosArg1 = {"addr", iocshArgInt};
+static const iocshArg asynOctetGetOutputEosArg2 = {"drvInfo", iocshArgString};
+static const iocshArg *const asynOctetGetOutputEosArgs[] = {
+    &asynOctetGetOutputEosArg0, &asynOctetGetOutputEosArg1,
+    &asynOctetGetOutputEosArg2};
+static const iocshFuncDef asynOctetGetOutputEosDef =
+    {"asynOctetGetOutputEos", 3, asynOctetGetOutputEosArgs};
+static void asynOctetGetOutputEosCall(const iocshArgBuf * args) {
+    const char *portName   = args[0].sval;
+    int addr               = args[1].ival;
+    const char *drvInfo    = args[2].sval;
+    asynOctetGetOutputEos( portName, addr, drvInfo);
+}
+
 static void asynRegister(void)
 {
     static int firstTime = 1;
@@ -708,5 +857,9 @@ static void asynRegister(void)
     iocshRegister(&asynOctetWriteDef,asynOctetWriteCall);
     iocshRegister(&asynOctetWriteReadDef,asynOctetWriteReadCall);
     iocshRegister(&asynOctetFlushDef,asynOctetFlushCall);
+    iocshRegister(&asynOctetSetInputEosDef,asynOctetSetInputEosCall);
+    iocshRegister(&asynOctetGetInputEosDef,asynOctetGetInputEosCall);
+    iocshRegister(&asynOctetSetOutputEosDef,asynOctetSetOutputEosCall);
+    iocshRegister(&asynOctetGetOutputEosDef,asynOctetGetOutputEosCall);
 }
 epicsExportRegistrar(asynRegister);
