@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.18 2004-01-21 13:17:09 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.19 2004-01-22 15:05:50 norume Exp $
  */
 
 #include <string.h>
@@ -728,19 +728,23 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
  * Set the end-of-string message
  */
 static asynStatus
-drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eoslen)
+drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    assert(eoslen >= 0);
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
-            "drvGenericSerial set eos %d ", eoslen);
-    if (eoslen > sizeof tty->eos) {
-        errlogPrintf("devGenericSerial: EOS can be at most %d characters.\n", sizeof tty->eos);
+            "drvGenericSerialSetEos %d: ", eoslen);
+    switch (eoslen) {
+    default:
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+           "%s drvGenericSerialSetEos illegal eoslen %d\n",
+            tty->serialDeviceName,eoslen);
         return asynError;
+    case 2: tty->eos[1] = eos[1]; /* fall through to case 1 */
+    case 1: tty->eos[0] = eos[0]; break;
+    case 0: break;
     }
-    memcpy(tty->eos, eos, eoslen);
     tty->eoslen = eoslen;
     tty->eosMatch = 0;
     return asynSuccess;

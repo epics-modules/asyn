@@ -169,7 +169,6 @@ struct devSupportGpib {
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
-    int (*setEos)(gpibDpvt *pgpibDpvt,char *eos, int leneos);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
 

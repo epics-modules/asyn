@@ -842,10 +842,9 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
         nout += fprintf(fd,"%.*s\n",nBytes,buffer);
     }
     if(traceIOMask&ASYN_TRACEIO_ESCAPE) {
-        if(nBytes>0) {
+        if(nBytes>0)
             nout += epicsStrPrintEscaped(fd,buffer,nBytes);
-            nout += fprintf(fd,"\n");
-        }
+        nout += fprintf(fd,"\n");
     }
     if((traceIOMask&ASYN_TRACEIO_HEX) && (traceTruncateSize>0)) {
         int i;
