@@ -1082,7 +1082,47 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
 
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser)
 {
-    /*Nothing to do */
+    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    int     nRead = 0, thisRead;
+    int     addr = pasynManager->getAddr(pasynUser);
+    devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
+    char    buffer[100];
+    enum clnt_stat   clntStat;
+    Device_ReadParms devReadP;
+    Device_ReadResp  devReadR;
+
+    if(!pdevLink) return -1;
+    if(!vxiIsPortConnected(pvxiPort,pasynUser)) return -1;
+    if(!pdevLink->connected) return -1;
+    devReadP.lid = pdevLink->lid;
+    /* device link is created; do the read */
+    do {
+        thisRead = -1;
+        devReadP.requestSize = (int)sizeof(buffer);;
+        devReadP.io_timeout = 10; /*10 milliseconds*/
+        devReadP.lock_timeout = 0;
+        devReadP.flags = 0;
+        if(pdevLink->eos != -1) {
+            devReadP.flags |= VXI_TERMCHRSET;
+            devReadP.termChar = pdevLink->eos;
+        }
+        /* initialize devReadR */
+        memset((char *) &devReadR, 0, sizeof(Device_ReadResp));
+        /* RPC call */
+        clntStat = clientIoCall(pvxiPort, pasynUser, device_read,
+            (const xdrproc_t) xdr_Device_ReadParms,(void *) &devReadP,
+            (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
+        if(clntStat != RPC_SUCCESS) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiFlush %d,%s\n",
+                pvxiPort->portName, addr,
+                clnt_sperror(pvxiPort->rpcClient,""));
+        } 
+        thisRead = devReadR.data.data_len;
+        xdr_free((const xdrproc_t) xdr_Device_ReadResp, (char *) &devReadR);
+    } while(!devReadR.reason && thisRead>0);
+    /* send <UNT,UNL> after completion */
+    /* SHOULD THIS BE DONE ???*/
+    if(vxiWriteCmd(pvxiPort,pasynUser, "_?", 2) != 2) return -1;
     return asynSuccess;
 }
 
