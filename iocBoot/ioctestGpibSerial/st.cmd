@@ -11,7 +11,7 @@ dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=3,OMAX=0,IMAX
 drvAsynTCPPortConfigure("L0","164.54.9.90:4004",0,0)
 
 #The following commands are for a local serial line
-#drvAsynLocalSerialPortConfigure("L0","/dev/cua/a",0,0)
+#drvAsynLocalSerialPortConfigure("L0","/dev/cua/a",0,0,0)
 #asynSetOption("L0", -1, "baud", "9600")
 #asynSetOption("L0", -1, "bits", "8")
 #asynSetOption("L0", -1, "parity", "none")
