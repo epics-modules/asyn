@@ -25,6 +25,11 @@ extern "C" {
 #define IBSPE 0x18      /* Serial Poll Enable */
 #define IBSPD 0x19      /* Serial Poll Disable */
 
+/* Talk, Listen, Secondary base addresses */
+#define TADBASE    0x40   /* offset to GPIB listen address 0 */
+#define LADBASE    0x20   /* offset to GPIB talk address 0 */
+#define SADBASE    0x60   /* offset to GPIB secondary address 0 */
+
 #define NUM_GPIB_ADDRESSES    32
 #include "asynDriver.h"
 #define asynGpibType "asynGpib"
