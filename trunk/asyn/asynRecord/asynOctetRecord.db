@@ -1,4 +1,4 @@
-record(asynOctet,"$(P)$(R)")
+record(asynOctet,"$(REC)")
 {
     field(PORT,"$(PORT)")
     field(ADDR,"$(ADDR)")
