@@ -623,7 +623,7 @@ static portInstance *createPortInstance(
         pasynUser = pasynManager->createAsynUser(registerSrqHandlerCallback,0);
         pasynUser->userPvt = pportInstance;
         pportInstance->pasynUser = pasynUser;
-        status = pasynManager->connectDevice(pasynUser,portName,0);
+        status = pasynManager->connectDevice(pasynUser,portName,-1);
         if(status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s devGpibCommon:createPortInstance "
