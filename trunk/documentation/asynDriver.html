@@ -2767,10 +2767,14 @@ release provides the following:</p>
 <ul>
   <li>devAsynInt32 - support for drivers that implement interface
   asynInt32</li>
+  <li>devAsynInt32Array - support for drivers that implement interface
+  asynInt32Array</li>
   <li>devAsynUInt32Digital - support for drivers that implement interface
     asynUInt32Digital</li>
   <li>devAsynFloat64 - support for drivers that implement interface
     asynFloat64</li>
+  <li>devAsynFloat64Array - support for drivers that implement interface
+    asynFloat64Array</li>
   <li>devAsynOctet - support for drivers that implement interface
   asynOctet</li>
   <li>devEpics - This is just a single file devEpics.dbd that includes the
@@ -2932,6 +2936,19 @@ interface asynInt32.</p>
         field(THST,"threeVal")
    }</pre>
 
+<h2>asynInt32Array device support</h2>
+
+<p>The following support is available:</p>
+<pre>
+device(waveform,INST_IO,asynInt32ArrayWfIn,"asynInt32ArrayIn")
+device(waveform,INST_IO,asynInt32ArrayWfOut,"asynInt32ArrayOut")
+</pre>
+
+<p>devAsynInt32Array.c provides EPICS device support for drivers that implement
+interface asynInt32Array.
+It has support for both reading and writing a waveform.
+It does not support interrupt processing.</p>
+
 <h2>devAsynUInt32Digital</h2>
 
 <p>The following support is available:</p>
@@ -3088,6 +3105,18 @@ interface asynFloat64.</p>
     properly implements getBounds.</p>
   </li>
 </ul>
+<h2>asynFloat64Array device support</h2>
+
+<p>The following support is available:</p>
+<pre>
+device(waveform,INST_IO,asynFloat64ArrayWfIn,"asynFloat64ArrayIn")
+device(waveform,INST_IO,asynFloat64ArrayWfOut,"asynFloat64ArrayOut")
+</pre>
+
+<p>devAsynFloat64Array.c provides EPICS device support for drivers that implement
+interface asynFloat64Array.
+It has support for both reading and writing a waveform.
+It does not support interrupt processing.</p>
 
 <h2>octet device support</h2>
 
