@@ -200,7 +200,7 @@ static void interruptThread(drvPvt *pdrvPvt)
                 pinterrupt = pnode->drvPvt;
                 addr = pinterrupt->addr;
                 pinterrupt->callback(pinterrupt->userPvt, pdrvPvt->channel[addr].value);
-                pnode = (interruptNode *)ellNext(pnode);
+                pnode = (interruptNode *)ellNext(&pnode->node);
             }
             pasynManager->interruptEnd(pdrvPvt->interruptPvt);
             epicsThreadSleep(pdrvPvt->interruptDelay);
