@@ -114,7 +114,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     *registrarPvt = pinterruptNode;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d registerInterruptUser\n",portName,addr);
-    return pasynManager->addInterruptUser(pinterruptNode);
+    return pasynManager->addInterruptUser(pasynUser,pinterruptNode);
 }
 
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
@@ -131,6 +131,6 @@ static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d cancelInterruptUser\n",portName,addr);
     pasynManager->memFree(pinterruptNode->drvPvt, sizeof(asynFloat64ArrayInterrupt));
-    status = pasynManager->removeInterruptUser(pinterruptNode);
+    status = pasynManager->removeInterruptUser(pasynUser,pinterruptNode);
     return status;
 }

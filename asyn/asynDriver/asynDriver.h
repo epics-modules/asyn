@@ -124,8 +124,10 @@ typedef struct asynManager {
                                const char *interfaceType, void **pasynPvt);
     interruptNode *(*createInterruptNode)(void *pasynPvt);
     asynStatus (*freeInterruptNode)(asynUser *pasynUser,interruptNode *pnode);
-    asynStatus (*addInterruptUser)(interruptNode*pinterruptNode);
-    asynStatus (*removeInterruptUser)(interruptNode*pinterruptNode);
+    asynStatus (*addInterruptUser)(asynUser *pasynUser,
+                                  interruptNode*pinterruptNode);
+    asynStatus (*removeInterruptUser)(asynUser *pasynUser,
+                                  interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
     asynStatus (*interruptEnd)(void *pasynPvt);
 }asynManager;
