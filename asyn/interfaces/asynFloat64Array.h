@@ -21,18 +21,18 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+typedef void (*interruptCallbackFloat64Array)(
+               void *userPvt, epicsFloat64 *data, size_t nelements);
 #define asynFloat64ArrayType "asynFloat64Array"
 typedef struct asynFloat64Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements, size_t *nIn);
-    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
-         void (callback)(void *userPvt, epicsFloat64 *data,size_t nelems),
-         void *userPvt);
-    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
-         void (callback)(void *userPvt, epicsFloat64 *data,size_t nelems),
-         void *userPvt);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+         interruptCallbackFloat64Array callback,
+         void *userPvt,void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
 } asynFloat64Array;
 
 #ifdef __cplusplus
