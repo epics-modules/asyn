@@ -30,6 +30,8 @@
 #include <epicsExport.h>
 #include <asynGpibDriver.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
+#include <asynOption.h>
 #include <drvAsynIPPort.h>
 #define GEN_SIZE_OFFSET
 #include "asynRecord.h"
@@ -158,10 +160,12 @@ typedef struct asynRecPvt {
     int fieldIndex;	/* For special */
     asynUser *pasynUserProcess;
     asynUser *pasynUserSpecial;
-    asynOctet *pasynOctet;
-    void *asynOctetPvt;
     asynCommon *pasynCommon;
     void *asynCommonPvt;
+    asynOption *pasynOption;
+    void *asynOptionPvt;
+    asynOctet *pasynOctet;
+    void *asynOctetPvt;
     asynGpib *pasynGpib;
     void *asynGpibPvt;
     char *outbuff;
@@ -218,6 +222,12 @@ static long process(asynRecord * pasynRec)
     asynRecPvt    *pasynRecPvt = pasynRec->dpvt;
     callbackState state = pasynRecPvt->state;
     asynStatus    status;
+
+    /* If the asynOctet interface does not exist then report error and return */
+    if (pasynRecPvt->pasynOctet == NULL) {
+        reportError(pasynRec, asynSuccess,
+                    "Port does not have asynOctet interface");
+    }
 
     if(!pasynRec->pact) {
         if(state == stateIdle) {
@@ -714,17 +724,24 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     }
     pasynRecPvt->pasynCommon = (asynCommon *) pasynInterface->pinterface;
     pasynRecPvt->asynCommonPvt = pasynInterface->drvPvt;
-    /* Get asynOctet interface */
+    /* Get asynOption interface if it exists*/
+    pasynInterface = pasynManager->findInterface(pasynUser, asynOptionType, 1);
+    if(pasynInterface) {
+        pasynRecPvt->pasynOption = (asynOption *) pasynInterface->pinterface;
+        pasynRecPvt->asynOptionPvt = pasynInterface->drvPvt;
+    } else {
+        pasynRecPvt->pasynOption = 0;
+        pasynRecPvt->asynOptionPvt = 0;
+    }
+    /* Get asynOctet interface if it exists*/
     pasynInterface = pasynManager->findInterface(pasynUser, asynOctetType, 1);
-    if(!pasynInterface) {
+    if(pasynInterface) {
+        pasynRecPvt->pasynOctet = (asynOctet *) pasynInterface->pinterface;
+        pasynRecPvt->asynOctetPvt = pasynInterface->drvPvt;
+    } else {
         pasynRecPvt->pasynOctet = 0;
         pasynRecPvt->asynOctetPvt = 0;
-        reportError(pasynRec, status, "findInterface octet: %s",
-                    pasynUser->errorMessage);
-        return (asynError);
     }
-    pasynRecPvt->pasynOctet = (asynOctet *) pasynInterface->pinterface;
-    pasynRecPvt->asynOctetPvt = pasynInterface->drvPvt;
     /* Get asynGpib interface if it exists */
     pasynInterface = pasynManager->findInterface(pasynUser, asynGpibType, 1);
     if(pasynInterface) {
@@ -1011,29 +1028,37 @@ static void setOption(asynUser * pasynUser)
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
+
+    /* If port does not have an asynOption interface report error and return */
+    if (pasynRecPvt->pasynOption == NULL) {
+        reportError(pasynRec, asynError,
+            "Port does not support get/set option");
+        return;
+    }
+
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s: setOptionCallback port=%s, addr=%d index=%d\n",
               pasynRec->name, pasynRec->port, pasynRec->addr,
               pasynRecPvt->fieldIndex);
     switch (pasynRecPvt->fieldIndex) {
     case asynRecordBAUD:
-        status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
             pasynUser, "baud", baud_choices[pasynRec->baud]);
         break;
     case asynRecordPRTY:
-        status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
             pasynUser, "parity", parity_choices[pasynRec->prty]);
         break;
     case asynRecordSBIT:
-        status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
             pasynUser, "stop", stop_bit_choices[pasynRec->sbit]);
         break;
     case asynRecordDBIT:
-        status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
            pasynUser, "bits", data_bit_choices[pasynRec->dbit]);
         break;
     case asynRecordFCTL:
-        status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
            pasynUser, "clocal", flow_control_choices[pasynRec->fctl]);
         break;
     }
@@ -1050,6 +1075,10 @@ static void getOptions(asynUser * pasynUser)
     char optbuff[OPT_SIZE];
     int i;
     unsigned short monitor_mask;
+
+    /* If port does not have an asynOption interface return */
+    if (pasynRecPvt->pasynOption == NULL) return;
+
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s: getOptionCallback() port=%s, addr=%d\n",
               pasynRec->name, pasynRec->port, pasynRec->addr);
@@ -1061,31 +1090,31 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(dbit);
     REMEMBER_STATE(fctl);
     /* Get port options */
-    pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
     pasynRec->baud = 0;
     for (i = 0; i < NUM_BAUD_CHOICES; i++)
         if(strcmp(optbuff, baud_choices[i]) == 0)
             pasynRec->baud = i;
-    pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "parity", optbuff, OPT_SIZE);
     pasynRec->prty = 0;
     for (i = 0; i < NUM_PARITY_CHOICES; i++)
         if(strcmp(optbuff, parity_choices[i]) == 0)
             pasynRec->prty = i;
-    pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "stop", optbuff, OPT_SIZE);
     pasynRec->sbit = 0;
     for (i = 0; i < NUM_SBIT_CHOICES; i++)
         if(strcmp(optbuff, stop_bit_choices[i]) == 0)
             pasynRec->sbit = i;
-    pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "bits", optbuff, OPT_SIZE);
     pasynRec->dbit = 0;
     for (i = 0; i < NUM_DBIT_CHOICES; i++)
         if(strcmp(optbuff, data_bit_choices[i]) == 0)
             pasynRec->dbit = i;
-    pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "clocal", optbuff, OPT_SIZE);
     pasynRec->fctl = 0;
     for (i = 0; i < NUM_FLOW_CHOICES; i++)
