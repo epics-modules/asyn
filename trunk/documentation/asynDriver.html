@@ -1013,6 +1013,8 @@ tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
+If you're using the vxWorks shell you must include all the <code>stty</code>
+parameters in double quotes.
 
 <center>
 <h2><a name="License Agreement"></a>License Agreement</h2>
