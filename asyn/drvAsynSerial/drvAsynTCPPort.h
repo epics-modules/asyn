@@ -1,5 +1,5 @@
 /**********************************************************************
-* Asyn device support using local serial interface                    *
+* Asyn device support using TCP stream port                           *
 **********************************************************************/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
