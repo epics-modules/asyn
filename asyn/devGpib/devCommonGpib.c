@@ -41,8 +41,13 @@
 #include "devCommonGpib.h"
 
 
+/* The following is a generic finish routine for output records */
+static void genericFinish(gpibDpvt * pgpibDpvt,int failure)
+{
+    requestProcessCallback(pgpibDpvt);
+}
 
-static int aiGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void aiFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initAi(aiRecord * pai)
 {
     long result;
@@ -76,12 +81,12 @@ long epicsShareAPI devGpib_readAi(aiRecord * pai)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,aiGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,aiFinish);
     }
     return (got_special_linconv ? 0 : 2);
 }
 
-static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void aiFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     double value;
     long rawvalue;
@@ -102,8 +107,7 @@ static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             failure = -1;
         }
     } else if (!pgpibDpvt->msg) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s no msg buffer\n",pai->name);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s no msg buffer\n",pai->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         int result = 0;
@@ -120,11 +124,9 @@ static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int aoGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int aoGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int aoStart(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initAo(aoRecord * pao)
 {
     long result;
@@ -158,12 +160,12 @@ long epicsShareAPI devGpib_writeAo(aoRecord * pao)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,aoGpibStart,aoGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,aoStart,genericFinish);
     }
     return 0;
 }
 
-static int aoGpibStart(gpibDpvt *pgpibDpvt,int failure)
+static int aoStart(gpibDpvt *pgpibDpvt,int failure)
 {
     aoRecord *pao = ((aoRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -180,14 +182,8 @@ static int aoGpibStart(gpibDpvt *pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int aoGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
-static int biGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void biFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initBi(biRecord * pbi)
 {
     long result;
@@ -226,12 +222,12 @@ long epicsShareAPI devGpib_readBi(biRecord * pbi)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,biGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,biFinish);
     }
     return 0;
 }
 
-static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void biFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     biRecord *pbi = ((biRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -272,13 +268,11 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pbi, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int boGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int boGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int boStart(gpibDpvt *pgpibDpvt,int failure);
 static void writeBoSpecial(boRecord * pbo);
-static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure);
+static void boWorkSpecial(gpibDpvt *pgpibDpvt,int failure);
 static char *ifcName[] = {"noop", "IFC", 0};
 static char *renName[] = {"drop REN", "assert REN", 0};
 static char *dclName[] = {"noop", "DCL", "0"};
@@ -346,12 +340,12 @@ long epicsShareAPI devGpib_writeBo(boRecord * pbo)
     if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
         writeBoSpecial(pbo);
     } else {
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,boGpibStart,boGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,boStart,genericFinish);
     }
     return 0;
 }
 
-static int boGpibStart(gpibDpvt * pgpibDpvt,int failure)
+static int boStart(gpibDpvt * pgpibDpvt,int failure)
 {
     boRecord *pbo = (boRecord *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -365,12 +359,6 @@ static int boGpibStart(gpibDpvt * pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int boGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
 static void writeBoSpecial(boRecord * pbo)
 {
@@ -381,11 +369,11 @@ static void writeBoSpecial(boRecord * pbo)
     if(cmdType&(GPIBIFC|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
         if(pbo->val==0) return;
     }
-    pdevSupportGpib->queueRequest(pgpibDpvt,boGpibWorkSpecial);
+    pdevSupportGpib->queueRequest(pgpibDpvt,boWorkSpecial);
     return;
 }
 
-static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
+static void boWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
 {
     boRecord *precord = (boRecord *)pgpibDpvt->precord;
     int val = (int)precord->val;
@@ -428,10 +416,9 @@ static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
     if(status!=asynSuccess) failure = -1;
     if(failure==-1) recGblSetSevr(precord, WRITE_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int evGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void evFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initEv(eventRecord * pev)
 {
     long result;
@@ -464,12 +451,12 @@ long epicsShareAPI devGpib_readEv(eventRecord * pev)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,evGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,evFinish);
     }
     return 0;
 }
 
-static int evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void evFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     unsigned short value;
     eventRecord *pev = ((eventRecord *) (pgpibDpvt->precord));
@@ -502,10 +489,9 @@ static int evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pev, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int liGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void liFinish(gpibDpvt *pgpibDpvt,int failure);
 static void liSrqHandler(void *userPrivate,int gpibAddr,int statusByte)
 {
     longinRecord *pli = (longinRecord *)userPrivate;
@@ -551,12 +537,12 @@ long epicsShareAPI devGpib_readLi(longinRecord * pli)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,liGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,liFinish);
     }
     return 0;
 }
 
-static int liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void liFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     long value;
     longinRecord *pli = ((longinRecord *) (pgpibDpvt->precord));
@@ -588,11 +574,9 @@ static int liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int loGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int loGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int loStart(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initLo(longoutRecord * plo)
 {
     long result;
@@ -624,12 +608,12 @@ long epicsShareAPI devGpib_writeLo(longoutRecord * plo)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,loGpibStart,loGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,loStart,genericFinish);
     }
     return 0;
 }
 
-static int loGpibStart(gpibDpvt * pgpibDpvt,int failure)
+static int loStart(gpibDpvt * pgpibDpvt,int failure)
 {
     longoutRecord *plo = ((longoutRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -641,14 +625,8 @@ static int loGpibStart(gpibDpvt * pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int loGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
-static int mbbiGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void mbbiFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
 {
     long result;
@@ -708,12 +686,12 @@ long epicsShareAPI devGpib_readMbbi(mbbiRecord * pmbbi)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiFinish);
     }
     return 0;
 }
 
-static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void mbbiFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     mbbiRecord *pmbbi = ((mbbiRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -754,10 +732,9 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pmbbi, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
 
-static int mbbiDirectGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void mbbiDirectFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
 {
     long result;
@@ -790,12 +767,12 @@ long epicsShareAPI devGpib_readMbbiDirect(mbbiDirectRecord * pmbbiDirect)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiDirectGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiDirectFinish);
     }
     return 0;
 }
 
-static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void mbbiDirectFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     unsigned long value;
     mbbiDirectRecord *pmbbiDirect = ((mbbiDirectRecord *) (pgpibDpvt->precord));
@@ -829,11 +806,9 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pmbbiDirect, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return 0;
 }
 
-static int mbboGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int mbboGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int mbboStart(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
 {
     long result;
@@ -892,12 +867,12 @@ long epicsShareAPI devGpib_writeMbbo(mbboRecord * pmbbo)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,mbboGpibStart,mbboGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,mbboStart,genericFinish);
     }
     return 0;
 }
 
-static int mbboGpibStart(gpibDpvt * pgpibDpvt,int failure)
+static int mbboStart(gpibDpvt * pgpibDpvt,int failure)
 {
     mbboRecord *pmbbo = (mbboRecord *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -911,15 +886,8 @@ static int mbboGpibStart(gpibDpvt * pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int mbboGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
-static int mbboDirectGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int mbboDirectGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int mbboDirectStart(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
 {
     long result;
@@ -952,12 +920,12 @@ long epicsShareAPI devGpib_writeMbboDirect(mbboDirectRecord * pmbboDirect)
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
         pdevSupportGpib->queueWriteRequest(pgpibDpvt,
-            mbboDirectGpibStart,mbboDirectGpibFinish);
+            mbboDirectStart,genericFinish);
     }
     return 0;
 }
 
-static int mbboDirectGpibStart(gpibDpvt * pgpibDpvt,int failure)
+static int mbboDirectStart(gpibDpvt * pgpibDpvt,int failure)
 {
     mbboDirectRecord *pmbboDirect = ((mbboDirectRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -969,14 +937,8 @@ static int mbboDirectGpibStart(gpibDpvt * pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int mbboDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
-static int siGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static void siFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initSi(stringinRecord * psi)
 {
     long result;
@@ -1009,12 +971,12 @@ long epicsShareAPI devGpib_readSi(stringinRecord * psi)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,siGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,siFinish);
     }
     return 0;
 }
 
-static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void siFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     stringinRecord *psi = ((stringinRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -1051,11 +1013,9 @@ static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(psi, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return 0;
 }
 
-static int soGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int soGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int soStart(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
 {
     long result;
@@ -1087,12 +1047,12 @@ long epicsShareAPI devGpib_writeSo(stringoutRecord * pso)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else {
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,soGpibStart,soGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,soStart,genericFinish);
     }
     return 0;
 }
 
-static int soGpibStart(gpibDpvt *pgpibDpvt,int failure)
+static int soStart(gpibDpvt *pgpibDpvt,int failure)
 {
     stringoutRecord *pso = ((stringoutRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -1104,15 +1064,9 @@ static int soGpibStart(gpibDpvt *pgpibDpvt,int failure)
     }
     return failure;
 }
-
-static int soGpibFinish(gpibDpvt * pgpibDpvt,int failure)
-{
-    requestProcessCallback(pgpibDpvt);
-    return failure;
-}
 
-static int wfGpibStart(gpibDpvt *pgpibDpvt,int failure);
-static int wfGpibFinish(gpibDpvt *pgpibDpvt,int failure);
+static int wfStart(gpibDpvt *pgpibDpvt,int failure);
+static void wfFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
 {
     long result;
@@ -1143,7 +1097,7 @@ long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
     }
     return 0;
 }
-
+
 long epicsShareAPI devGpib_readWf(waveformRecord * pwf)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pwf);
@@ -1155,14 +1109,14 @@ long epicsShareAPI devGpib_readWf(waveformRecord * pwf)
         return 0;
     }
     if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
-        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,wfGpibFinish);
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,wfFinish);
     } else { /*Must be Output Operation*/
-        pdevSupportGpib->queueWriteRequest(pgpibDpvt,wfGpibStart,wfGpibFinish);
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,wfStart,wfFinish);
     }
     return 0;
 }
-
-static int wfGpibStart(gpibDpvt * pgpibDpvt,int failure)
+
+static int wfStart(gpibDpvt * pgpibDpvt,int failure)
 {
     waveformRecord *pwf = (waveformRecord *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -1180,7 +1134,7 @@ static int wfGpibStart(gpibDpvt * pgpibDpvt,int failure)
     return failure;
 }
 
-static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
+static void wfFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     waveformRecord *pwf = (waveformRecord *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -1223,5 +1177,4 @@ static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     }
     if(failure==-1) recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
-    return failure;
 }
