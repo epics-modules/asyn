@@ -1,0 +1,4 @@
+device(bi,INST_IO,asynBiUInt32Digital,"asynUInt32Digital")
+device(bo,INST_IO,asynBoUInt32Digital,"asynUInt32Digital")
+device(longin,INST_IO,asynLiUInt32Digital,"asynUInt32Digital")
+device(longout,INST_IO,asynLoUInt32Digital,"asynUInt32Digital")

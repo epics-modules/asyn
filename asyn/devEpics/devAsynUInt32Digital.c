@@ -88,15 +88,15 @@ static long initLo(longoutRecord *plo);
 static void callbackLo(asynUser *pasynUser);
 
 
-dsetDigital devBiAsynUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, processCallback};
-dsetDigital devLiAsynUInt32Digital = {5, 0, 0, initLi, getIoIntInfo, processCallback};
-dsetDigital devBoAsynUInt32Digital = {5, 0, 0, initBo, 0,            processCallback};
-dsetDigital devLoAsynUInt32Digital = {5, 0, 0, initLo, 0,            processCallback};
+dsetDigital asynBiUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, processCallback};
+dsetDigital asynLiUInt32Digital = {5, 0, 0, initLi, getIoIntInfo, processCallback};
+dsetDigital asynBoUInt32Digital = {5, 0, 0, initBo, 0,            processCallback};
+dsetDigital asynLoUInt32Digital = {5, 0, 0, initLo, 0,            processCallback};
 
-epicsExportAddress(dset, devBiAsynUInt32Digital);
-epicsExportAddress(dset, devLiAsynUInt32Digital);
-epicsExportAddress(dset, devBoAsynUInt32Digital);
-epicsExportAddress(dset, devLoAsynUInt32Digital);
+epicsExportAddress(dset, asynBiUInt32Digital);
+epicsExportAddress(dset, asynLiUInt32Digital);
+epicsExportAddress(dset, asynBoUInt32Digital);
+epicsExportAddress(dset, asynLoUInt32Digital);
 
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -118,13 +118,13 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     status = pasynEpicsUtils->parseLink(pasynUser, plink,
                 &pPvt->portName, &addr, &pPvt->userParam);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynUInt32Digital::initCommon, %s error parsing link %s\n",
+        printf("devAsynUInt32Digital::initCommon, %s error parsing link %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
     if ((rt == recTypeBi) || (rt == recTypeBo)) {
         if(addr<0 || addr>31) {
-            errlogPrintf("%s devAsynUInt32Digital::initCommon: Illegal addr field"
+            printf("%s devAsynUInt32Digital::initCommon: Illegal addr field"
                          " (0-31)=%d\n",
                          pr->name, addr);
             goto bad;
@@ -137,8 +137,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, addr);
     if (status != asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "devAsynUInt32Digital::initCommon, %s connectDevice failed %s\n",
-                  pr->name, pasynUser->errorMessage);
+            "%s devAsynUInt32Digital::initCommon connectDevice failed %s\n",
+            pr->name, pasynUser->errorMessage);
         goto bad;
     }
     /*call drvUserInit*/
@@ -152,7 +152,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         status = pasynDrvUser->create(drvPvtCommon,pasynUser,
             pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            errlogPrintf("devAsynUInt32Digital::initCommon, %s drvUserInit failed %s\n",
+            printf("devAsynUInt32Digital::initCommon, %s drvUserInit failed %s\n",
                      pr->name, pasynUser->errorMessage);
             goto bad;
         }
@@ -163,8 +163,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                                                  asynUInt32DigitalType, 1);
     if (!pasynInterface) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "devAsynUInt32Digital::initCommon, %s find asynUInt32Digital"
-                  " interface failed\n", pr->name);
+            "%s devAsynUInt32Digital::initCommon find asynUInt32Digital"
+            " interface failed\n", pr->name);
         goto bad;
     }
     pPvt->pasynUInt32D = (asynUInt32Digital *)pasynInterface->pinterface;
@@ -226,8 +226,8 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
     if (cmd == 0) {
         /* Add to scan list.  Enable callbacks */
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-                  "devAsynUInt32Digital::getIoIntInfo %s registering callback\n",
-                  pr->name);
+            "%s devAsynUInt32Digital::getIoIntInfo registering callback\n",
+            pr->name);
         pPvt->callbacksEnabled = 1;
         pPvt->pasynUInt32DCb->registerCallback(pPvt->asynUInt32DCbPvt, 
                                                pPvt->pasynUser,
@@ -235,8 +235,8 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
                                                pPvt->mask, pr);
     } else {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-                  "devAsynUInt32Digital::getIoIntInfo %s cancelling callback\n",
-                  pr->name);
+            "%s devAsynUInt32Digital::getIoIntInfo cancelling callback\n",
+             pr->name);
         pPvt->callbacksEnabled = 0;
         pPvt->pasynUInt32DCb->cancelCallback(pPvt->asynUInt32DCbPvt, 
                                              pPvt->pasynUser,
@@ -255,8 +255,8 @@ static long processCallback(dbCommon *pr)
     status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
     if (status != asynSuccess) {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, 
-                  "devAsynUInt32Digital::queueRequest %s error %s\n",
-                  pr->name, pPvt->pasynUser->errorMessage);
+            "%s devAsynUInt32Digital::queueRequest error %s\n",
+            pr->name, pPvt->pasynUser->errorMessage);
         recGblSetSevr(pr, COMM_ALARM, INVALID_ALARM);
         return(-1);
     }
@@ -274,7 +274,7 @@ static void callbackBi(asynUser *pasynUser)
         status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser,
                                           &pPvt->value, pPvt->mask);
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-                  "devAsynUInt32Digital::callbackBi %s read=%x\n", 
+                  "%s devAsynUInt32Digital::callbackBi read=%x\n", 
                    pbi->name, pPvt->value);
         if (status == asynSuccess) {
             pbi->udf=0;
@@ -284,8 +284,7 @@ static void callbackBi(asynUser *pasynUser)
     }
     pbi->rval = (pPvt->value & pPvt->mask) ? 1 : 0;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynUInt32Digital::callbackBi %s value=%d\n", 
-              pbi->name, pbi->rval);
+        "%s devAsynUInt32Digital::callbackBi value=%d\n",pbi->name, pbi->rval);
 }
 
 static void callbackLi(asynUser *pasynUser)
@@ -306,8 +305,7 @@ static void callbackLi(asynUser *pasynUser)
     }
     pli->val = pPvt->value;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynUInt32Digital::callbackLi %s, value=%x\n", 
-              pli->name, pli->val);
+        "%s devAsynUInt32Digital::callbackLi value=%x\n", pli->name, pli->val);
 }
 
 static void callbackBo(asynUser *pasynUser)
@@ -322,8 +320,7 @@ static void callbackBo(asynUser *pasynUser)
     status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt, 
                                        pPvt->pasynUser, data, pPvt->mask);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynUInt32Digital::callbackBo %s, write=%x\n", 
-              pbo->name, data);
+        "%s devAsynUInt32Digital::callbackBo write=%x\n", pbo->name, data);
     if (status != asynSuccess)
         recGblSetSevr(pbo, WRITE_ALARM, INVALID_ALARM);
 }
@@ -338,8 +335,7 @@ static void callbackLo(asynUser *pasynUser)
     status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt,
                                        pPvt->pasynUser, plo->val, pPvt->mask);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynUInt32Digital::callbackLo %s, write=%x\n",
-              plo->name, plo->val);
+        "%s devAsynUInt32Digital::callbackLo write=%x\n", plo->name, plo->val);
     if (status != asynSuccess)
         recGblSetSevr(plo, WRITE_ALARM, INVALID_ALARM);
 }
@@ -353,6 +349,6 @@ static void dataCallback(void *v, epicsUInt32 value)
     pPvt->value = value;
     pr->udf = 0;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynUInt32Digital::dataCallback, new value=%x\n", value);
+        "%s devAsynUInt32Digital::dataCallback, new value=%x\n",pr->name,value);
     scanIoRequest(pPvt->ioScanPvt);
 }
