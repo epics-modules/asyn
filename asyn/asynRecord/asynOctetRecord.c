@@ -71,7 +71,7 @@ static long get_precision(struct dbAddr *paddr, long *precision);
 #define get_alarm_double NULL
 
 static void  monitor();
-static asynStatus connectDevice(asynOctetRecord *pasynRec);
+static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord);
 static void  GPIB_command(asynUser *pasynUser);
 
 static void  asynOctetCallback(asynUser *pasynUser);
@@ -176,7 +176,7 @@ static long init_record(asynOctetRecord *pasynRec, int pass)
     pasynUser = pasynManager->createAsynUser(asynOctetCallback,0);
     pasynRecPvt->pasynUser = pasynUser;
     pasynUser->userPvt = pasynRecPvt;
-    status = connectDevice(pasynRec);
+    status = connectDevice(pasynRec,1);
     if (status!=asynSuccess) {
        printf("asynOctetRecord, error connecting to device, status=%d\n", 
                status);
@@ -260,7 +260,7 @@ static long special(struct dbAddr *paddr, int after)
        case asynOctetRecordPORT: 
        case asynOctetRecordADDR: 
           /* If the PORT or ADDR fields changed then reconnect to new device */
-          status = connectDevice(pasynRec);
+          status = connectDevice(pasynRec,0);
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
              "asynOctetRecord special() port=%s, addr=%d, connect status=%d\n",
              pasynRec->port, pasynRec->addr, status);
@@ -374,7 +374,7 @@ static void monitor(asynOctetRecord *pasynRec)
     POST_IF_NEW(addr);
 }
 
-static asynStatus connectDevice(asynOctetRecord *pasynRec)
+static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
 {
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt=pasynRec->dpvt;
@@ -424,12 +424,16 @@ static asynStatus connectDevice(asynOctetRecord *pasynRec)
         pasynRecPvt->asynGpibPvt = pasynInterface->drvPvt;
     }
     pasynRecPvt->state = stateGetOption;
-    pasynRecPvt->callbackShouldProcess = 0;
-    pasynManager->queueRequest(pasynUser, asynQueuePriorityLow, 0.0);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,
-           "asynOctetRecord getOptions() port=%s, addr=%d queued request\n",
-           pasynRec->port, pasynRec->addr);
-    return(asynSuccess);
+    if(isInitRecord) {
+        pasynRecPvt->callbackShouldProcess = 0;
+        pasynManager->queueRequest(pasynUser, asynQueuePriorityLow, 0.0);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+               "asynOctetRecord getOptions() port=%s, addr=%d queued request\n",
+               pasynRec->port, pasynRec->addr);
+        return(asynSuccess);
+    } else {
+        scanOnce(pasynRec);
+    }
 }
 
 static void GPIB_command(asynUser *pasynUser)
@@ -539,8 +543,8 @@ static void asynOctetCallback(asynUser *pasynUser)
    
    switch(pasynRecPvt->state) {
       case stateIO:        IOCallback(pasynUser); break;
-      case stateGetOption: setOptionCallback(pasynUser); break;
-      case stateSetOption: getOptionCallback(pasynUser); break;
+      case stateSetOption: setOptionCallback(pasynUser); break;
+      case stateGetOption: getOptionCallback(pasynUser); break;
       default:
           printf("%s asynOctetCallback illegal state %d\n",
               pasynRec->name,pasynRecPvt->state);
