@@ -49,6 +49,7 @@ typedef struct drvPvt {
     asynInterface asynFloat64;
     epicsInt32    low;
     epicsInt32    high;
+    void          *interruptPvt;
     chanPvt       channel[NCHANNELS];
 }drvPvt;
 
@@ -141,11 +142,11 @@ static int int32DriverInit(const char *dn,int low,int high)
     pdrvPvt->interruptDelay = 0.0;
     for(addr=0; addr<NCHANNELS; addr++) {
         pdrvPvt->channel[addr].value = pdrvPvt->low;
-        status = pasynManager->registerInterruptSource(portName,addr,
-            pdrvPvt,&pdrvPvt->channel[addr].asynPvt);
-        if(status!=asynSuccess) {
-            printf("int32DriverInit registerCallbackDriver failed\n");
-        }
+    }
+    status = pasynManager->registerInterruptSource(portName,&pdrvPvt->asynInt32,
+                                                   &pdrvPvt->interruptPvt);
+    if(status!=asynSuccess) {
+        printf("int32DriverInit registerInterruptSource failed\n");
     }
     epicsThreadCreate("driverInt32",
         epicsThreadPriorityHigh,
@@ -176,6 +177,9 @@ static void interruptThread(drvPvt *pdrvPvt)
         while(1) {
             int addr;
             epicsInt32 value;
+            ELLLIST *pclientList;
+            interruptNode *pnode;
+            asynInt32Interrupt *pinterrupt;
     
             if(pdrvPvt->interruptDelay <= .0001) break;
             for(addr=0; addr<NCHANNELS; addr++) {
@@ -189,9 +193,16 @@ static void interruptThread(drvPvt *pdrvPvt)
                 }
                 pchannel->value = value;
                 epicsMutexUnlock(pdrvPvt->lock);
-                pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,
-                    addr,0,&value);
             }
+            pasynManager->interruptStart(pdrvPvt->interruptPvt, &pclientList);
+            pnode = (interruptNode *)ellFirst(pclientList);
+            while (pnode) {
+                pinterrupt = pnode->drvPvt;
+                addr = pinterrupt->addr;
+                pinterrupt->callback(pinterrupt->userPvt, pdrvPvt->channel[addr].value);
+                pnode = (interruptNode *)ellNext(pnode);
+            }
+            pasynManager->interruptEnd(pdrvPvt->interruptPvt);
             epicsThreadSleep(pdrvPvt->interruptDelay);
         }
     }
@@ -281,7 +292,6 @@ static asynStatus int32Write(void *pvt,asynUser *pasynUser,
     epicsMutexUnlock(pdrvPvt->lock);
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
         "%s addr %d write %d\n",pdrvPvt->portName,addr,value);
-    pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,addr,0,&value);
     return asynSuccess;
 }
 
@@ -336,7 +346,6 @@ static asynStatus float64Write(void *pvt,asynUser *pasynUser,
     epicsEventSignal(pdrvPvt->waitWork);
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
         "%s addr %d write %d\n",pdrvPvt->portName,addr,value);
-    pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,addr,1,&value);
     return asynSuccess;
 }
 
