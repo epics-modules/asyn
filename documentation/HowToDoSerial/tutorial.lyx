@@ -73,7 +73,7 @@ This tutorial provides step-by-step instructions on how to create EPICS
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -83,7 +83,7 @@ ahref{../asynDriver.html}{asynDriver}
 
  and 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -526,12 +526,12 @@ Each command array entry describes the details of a single I/O operation
 The command array entries I created for the AB300 are shown below.
  The elements of each entry are described using the names from the 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
 \backslash 
-ahref{../../devGpib.html}{GPIB documentation}
+ahref{../devGpib.html}{GPIB documentation}
 \end_inset 
 
 .
@@ -1188,14 +1188,14 @@ asynSetTraceIOMask("L0",-1,0x2)
 A better way to control the amount and type of diagnostic output is to add
  an 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
 \backslash 
 ahref{
 \backslash 
-url{../asynDriver.html#DiagnosticAids}}{asynRecord}
+url{../asynRecord.html}}{asynRecord}
 \end_inset 
 
  to your application.
@@ -1271,7 +1271,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-29 13:38:15 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-29 13:53:48 $$
 \newline 
 ############################################################################
 \newline 
