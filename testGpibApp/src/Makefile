@@ -12,7 +12,9 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 DBD += devTestGpib.dbd
 
 DBD += testGpib.dbd
-DBD_vxWorks += testGpibVx.dbd
+ifeq ($(OS_CLASS),vxWorks)
+DBD += testGpibVx.dbd
+endif
 testGpib_DBD += commonInclude.dbd
 
 #=============================
