@@ -1,0 +1,3 @@
+include "devAsynAnalog.dbd"
+include "devAsynOctet.dbd"
+include "devAsynUInt32Digital.dbd"

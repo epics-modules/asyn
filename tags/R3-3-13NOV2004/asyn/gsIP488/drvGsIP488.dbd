@@ -1,0 +1,2 @@
+registrar(gsIP488RegisterCommands)
+include "asyn.dbd"
