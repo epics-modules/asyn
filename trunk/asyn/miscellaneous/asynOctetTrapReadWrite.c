@@ -1,9 +1,6 @@
 /* asynOctetTrapReadWrite.c*/
 /***********************************************************************
-* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
-* National Laboratory, and the Regents of the University of
-* California, as Operator of Los Alamos National Laboratory, and
-* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
+* Copyright (c) 2004 Swiss Light Source (SLS).
 * asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
@@ -16,7 +13,6 @@
 *  Author: Dirk Zimoch
 *
 */
- 
 
 #include "asynOctetTrapReadWrite.h"
 #include <stdlib.h>
@@ -28,7 +24,11 @@
 
 typedef struct client {
     asynUser *pasynUser;
-    asynOctetTrapReadWriteCallback callback;
+    union {
+        asynOctetTrapReadCallback read;
+        asynOctetTrapWriteCallback write;
+        void* any;
+    } callback;
     struct client *next;
 } client;
 
@@ -45,35 +45,45 @@ typedef struct trapPvt {
 
 /* asynOctet methods */
 
-static asynStatus trapRead(void *ppvt,
-    asynUser *pasynUser, char *data,int maxchars,int *nbytesTransfered,int *eomReason);
-static asynStatus trapWrite(void *ppvt,
-    asynUser *pasynUser, const char *data,int numchars,int *nbytesTransfered);
+static asynStatus trapRead(void *ppvt, asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
+static asynStatus trapWrite(void *ppvt, asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus trapFlush(void *ppvt, asynUser *pasynUser);
-static asynStatus trapSetEos(void *ppvt,
-    asynUser *pasynUser, const char *eos, int eoslen);
-static asynStatus trapGetEos(void *ppvt,
-    asynUser *pasynUser, char *eos, int eossize, int *eoslen);
+static asynStatus trapSetEos(void *ppvt, asynUser *pasynUser,
+    const char *eos, int eoslen);
+static asynStatus trapGetEos(void *ppvt, asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen);
 
 static asynOctet octet = {
-    trapRead,trapWrite,trapFlush,trapSetEos,trapGetEos
+    trapRead, trapWrite, trapFlush, trapSetEos, trapGetEos
 };
 
 /* intercept read and write */
 
 static asynStatus trapRead(void *ppvt, asynUser *pasynUser,
-    char *data,int maxchars,int *transfered,int *eomReason)
+    char *data, int maxchars, int *transfered, int *eomReason)
 {
     asynStatus result;
     client* pclient;
+    client* pnext;
     trapPvt *ptrapPvt = (trapPvt *)ppvt;
 
     result = ptrapPvt->plowerLevel->read(ptrapPvt->lowerLevelPvt,
-        pasynUser, data, maxchars, transfered,eomReason);
+        pasynUser, data, maxchars, transfered, eomReason);
     epicsMutexLock(ptrapPvt->mutex);
-    for (pclient = ptrapPvt->readClients; pclient; pclient = pclient->next)
+    pclient = ptrapPvt->readClients;
+    while (pclient)
     {
-        pclient->callback(pclient->pasynUser, data, *transfered, result);
+        pnext = pclient->next; /* necessary to allow removing this
+                                  client in its own callback */
+        if (pclient->pasynUser != pasynUser)
+        {
+            /* dont trap client's own read */
+            pclient->callback.read(pclient->pasynUser, data,
+                *transfered, *eomReason, result);
+        }
+        pclient = pnext;
     }
     epicsMutexUnlock(ptrapPvt->mutex);
     return result;
@@ -84,14 +94,24 @@ static asynStatus trapWrite(void *ppvt, asynUser *pasynUser,
 {
     asynStatus result;
     client* pclient;
+    client* pnext;
     trapPvt *ptrapPvt = (trapPvt *)ppvt;
 
     result = ptrapPvt->plowerLevel->write(ptrapPvt->lowerLevelPvt,
         pasynUser, data, numchars, transfered);
     epicsMutexLock(ptrapPvt->mutex);
-    for (pclient = ptrapPvt->writeClients; pclient; pclient = pclient->next)
+    pclient = ptrapPvt->writeClients;
+    while (pclient)
     {
-        pclient->callback(pclient->pasynUser, data, *transfered, result);
+        pnext = pclient->next; /* necessary to allow removing this
+                                  client in its own callback */
+        if (pclient->pasynUser != pasynUser)
+        {
+            /* dont trap client's own write */
+            pclient->callback.write(pclient->pasynUser, data,
+                *transfered, result);
+        }
+        pclient = pnext;
     }
     epicsMutexUnlock(ptrapPvt->mutex);
     return result;
@@ -128,13 +148,13 @@ static asynStatus trapGetEos(void *ppvt, asynUser *pasynUser,
 /* asynOctetTrapReadWrite methods */
 
 static asynStatus trapInstallReadCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback);
+    asynUser *pasynUser, asynOctetTrapReadCallback callback);
 static asynStatus trapInstallWriteCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback);
+    asynUser *pasynUser, asynOctetTrapWriteCallback callback);
 static asynStatus trapRemoveReadCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback);
+    asynUser *pasynUser, asynOctetTrapReadCallback callback);
 static asynStatus trapRemoveWriteCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback);
+    asynUser *pasynUser, asynOctetTrapWriteCallback callback);
 
 static asynOctetTrapReadWrite trap = {
     trapInstallReadCallback, trapInstallWriteCallback,
@@ -142,16 +162,21 @@ static asynOctetTrapReadWrite trap = {
 };
 
 static asynStatus trapInstallCallback (void *drvPvt, int write,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, void* callback)
 {
     client* pclient;
     client** pprev;
     trapPvt* ptrapPvt = (trapPvt*)drvPvt;
 
     pclient = calloc(1, sizeof(client));
-    if (!pclient) return asynError;
+    if (!pclient)
+    {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+            "out of memory");
+        return asynError;
+    }
     pclient->pasynUser = pasynUser;
-    pclient->callback = callback;
+    pclient->callback.any = callback;
     epicsMutexLock(ptrapPvt->mutex);
     for (pprev = write ? &ptrapPvt->writeClients : &ptrapPvt->readClients;
         *pprev; pprev=&(*pprev)->next);
@@ -161,7 +186,7 @@ static asynStatus trapInstallCallback (void *drvPvt, int write,
 }
 
 static asynStatus trapRemoveCallback (void *drvPvt, int write,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, void* callback)
 {
     client* pclient;
     client** pprev;
@@ -169,12 +194,11 @@ static asynStatus trapRemoveCallback (void *drvPvt, int write,
 
     epicsMutexLock(ptrapPvt->mutex);
     for (pprev = write ? &ptrapPvt->writeClients : &ptrapPvt->readClients;
-        *pprev; pprev=&(*pprev)->next)
+        (pclient = *pprev); pprev=&(*pprev)->next)
     {
-        if ((*pprev)->pasynUser == pasynUser &&
-            (*pprev)->callback == callback)
+        if (pclient->pasynUser == pasynUser &&
+            pclient->callback.any == callback)
         {
-            pclient = *pprev;
             *pprev = pclient->next;
             free(pclient);
             epicsMutexUnlock(ptrapPvt->mutex);
@@ -182,29 +206,31 @@ static asynStatus trapRemoveCallback (void *drvPvt, int write,
         }
     }
     epicsMutexUnlock(ptrapPvt->mutex);
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+        "callback was not installed");
     return asynError;
 }
 
 static asynStatus trapInstallReadCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, asynOctetTrapReadCallback callback)
 {
     return trapInstallCallback(drvPvt, 0, pasynUser, callback);
 }
 
 static asynStatus trapInstallWriteCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, asynOctetTrapWriteCallback callback)
 {
     return trapInstallCallback(drvPvt, 1, pasynUser, callback);
 }
 
 static asynStatus trapRemoveReadCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, asynOctetTrapReadCallback callback)
 {
     return trapRemoveCallback(drvPvt, 0, pasynUser, callback);
 }
 
 static asynStatus trapRemoveWriteCallback (void *drvPvt,
-    asynUser *pasynUser, asynOctetTrapReadWriteCallback callback)
+    asynUser *pasynUser, asynOctetTrapWriteCallback callback)
 {
     return trapRemoveCallback(drvPvt, 1, pasynUser, callback);
 }
