@@ -2231,6 +2231,15 @@ where
     issued.</li>
 </ul>
 
+<p>The vxi11 driver implements two timeouts: ioTimeout and rpcTimeout (Remote
+Procedure Call timeout). The ioTimeout is taken from asynUser:timeout. The
+rpcTimeout is handled internally for each port. It has a default of 4 seconds
+but can be changed by calling setOptions. For example:</p>
+<pre>asynSetOption L0 -1 rpctimeout .1</pre>
+Will change the rpcTimeout for port L0 to .1 seconds.
+
+<p></p>
+
 <h3><a name="gsIP488"></a>Green Springs IP488</h3>
 
 <p>This is support for the Green Springs Industry Pack GPIB carrier. The
