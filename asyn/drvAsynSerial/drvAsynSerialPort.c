@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.19 2004-07-20 13:50:33 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.20 2004-07-27 17:45:24 norume Exp $
  */
 
 #include <string.h>
@@ -740,12 +740,15 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
             break;
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
-    if ((nRead == 0) && (status == asynSuccess) && tty->timeoutFlag) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                        "%s timeout", tty->serialDeviceName);
-        if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
-            closeConnection(tty);
+    if (tty->timeoutFlag && (status == asynSuccess)) {
         status = asynTimeout;
+        if ((nRead == 0)
+         && (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s too many timeouts", tty->serialDeviceName);
+            closeConnection(tty);
+            status = asynError;
+        }
     }
     *nbytesTransfered = nRead;
     return status;
