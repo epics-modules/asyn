@@ -402,7 +402,7 @@ int epicsShareAPI
 
     pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if(status!=asynSuccess) {
+    if((status!=asynSuccess) && (strlen(portName)!=0)) {
         printf("%s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
         return -1;
