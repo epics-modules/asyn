@@ -3,7 +3,7 @@
 <META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
 <BODY>
 <H1>asyn Record</H1>
-<ADDRESS>Mark Rivers</ADDRESS>
+<ADDRESS>Mark Rivers and Marty Kraimer</ADDRESS>
 <HR>
 
 <H2>Contents</H2>
@@ -24,18 +24,28 @@
   screens</a><LI>
   <a href="#Example 1">Example 1</a><LI><a href="#Example 2">Example 2</a></UL><A name=Overview>
 <H2>Overview</H2></A>
-<P>The asyn record is designed to perform generic I/O to any asyn device that
-supports the asynOctet interface. It is intended to allow EPICS to communicate with a new
-device without rebooting the IOC, i.e. without writing any C code or 
-changing the database. The asyn record is thus very useful for allowing 
-Channel Access clients to communicate with devices for which no EPICS 
-device support exists. In combination with the scalcout record to format output
-strings and to parse response strings, it can actually eliminate the need for C
-device support code in many applications. It is also useful for diagnostics. The
-asyn device &quot;port&quot; and &quot;address&quot; can be dynamically changed
-in the record, so a single asyn record can be switched from talking to one
-device to another at run time. It provides access to asynTrace for the device, 
-controlling debugging output.
+<P>The asyn record is designed to provide access to nearly all of the features 
+of the asyn facility.&nbsp; It includes the ability to:<ul>
+  <li>Perform  I/O to any asyn device that
+supports the asynOctet interface.</li>
+  <li>Allow EPICS to communicate with a new device without rebooting the IOC, 
+  i.e. without writing any C code or changing the database. This allows Channel 
+  Access clients to communicate with devices for which no EPICS device support 
+  exists.</li>
+  <li>In combination with the scalcout record to format output
+strings and to parse response strings,  eliminate the need for C
+device support code in many applications. 
+  </li>
+  <li>Dynamically change the asyn device &quot;port&quot; and &quot;address&quot;, so a single asyn 
+  record can be switched from talking to one device to another at run time.</li>
+  <li>Provide access to asynTrace for the device, controlling debugging output 
+  for any asyn device.</li>
+  <li>Control the the baud rate, parity, etc. for local serial ports.</li>
+  <li>Control the GPIB address and exectute global and addressed commands for 
+  GPIB devices.</li>
+  <li>Create asyn socket ports  dynamically at run time for new TCP/IP 
+  connections.</li>
+  </ul>
 <P>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The
 OFMT (Output Format) field is used to select one of these fields or the other as
 the output source to the  device. Similarly, there are two input fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT 
@@ -47,10 +57,7 @@ screens where the user can type a string and observe the response from the
 instrument. The ASCII fields, however are limited to 40 characters in length,
 and cannot be used to read or write binary data. The byte input and output
 fields are DBF_CHAR arrays, and can be used to transfer large blocks of
-arbitrary data, either ASCII or binary.<P>For local serial ports the baud 
-rate, parity, etc. can be controlled by fields in the record.&nbsp; For GPIB
-devices the GPIB address can be changed, and global and addressed commands can
-be executed.&nbsp; asyn socket ports can be dynamically created at run time.<P>&nbsp;In 
+arbitrary data, either ASCII or binary.<P>&nbsp;<P>&nbsp;In 
 the &quot;Access&quot; columns in the field description tables:
       <TABLE>
         <TR vAlign=top>
@@ -112,10 +119,10 @@ dynamically changing what asyn device the record is connected to.
 <P>Writing to the PORT or ADDR fields causes the asyn record to disconnect 
 from the current device and connect to the specified asyn port and address.&nbsp; 
 This permits a single asyn record to be used to control any asyn device.&nbsp; 
-Writing to these fields does not cause the record to process, i.e. no I/O is 
+Writing to these fields does not cause any I/O to be 
 done.<P>Writing to the SOCK field causes the record to create a new asyn port 
 with the same name as the SOCK field.&nbsp; This is done with 
-drvGenericSerialConfigure.<p>&nbsp;</p>
+drvAsynTCPPortConfigure.<p>&nbsp;</p>
 <HR>
 
 <h2 align="center"><a name="Input/Output Control Fields">Input/Output Control Fields</a></h2>
@@ -154,6 +161,9 @@ drvGenericSerialConfigure.<p>&nbsp;</p>
         </TR>
         <TR vAlign=top>
           <TD>&quot;Flush&quot;</TD>
+        </TR>
+        <TR vAlign=top>
+          <TD>&quot;NoI/O&quot;</TD>
         </TR></TBODY></TABLE></TD></TR>
   <tr>
     <TD>TMOT</TD>
@@ -162,7 +172,7 @@ drvGenericSerialConfigure.<p>&nbsp;</p>
     <TD>DBF_DOUBLE</TD>
     <TD>The timeout value for read and write operations in seconds. If a 
       response is not received from the device within this time then the record 
-      sets a major alarm. -1.0 means wait forever, no timeour. Default=1.0</TD>
+      sets a major alarm. -1.0 means wait forever, no timeout. Default=1.0</TD>
   </tr>
 </TABLE>
 &nbsp;
@@ -191,7 +201,13 @@ processes.</p>
         <TR vAlign=top>
           <TD>&quot;Flush&quot;</TD>
           <TD>The input buffer is flushed.&nbsp; Nothing is sent to the device
-            or read from the device.</TD></TR></TABLE>
+            or read from the device.</TD></TR>
+        <TR vAlign=top>
+          <TD>&quot;NoI/O&quot;</TD>
+          <TD>The record processes but no I/O is actually performed.&nbsp; This 
+          mode can be used as a safety feature when using an asyn record to just 
+          control the trace fields of&nbsp; asyn ports.&nbsp; If the record is 
+          in this mode and is accidentally processed, then no I/O will occur.</TD></TR></TABLE>
 
 
 <p>&nbsp;</p>
@@ -240,15 +256,14 @@ processes.</p>
     <TD>"Max. size of output array"</TD>
     <TD>DBF_LONG</TD>
     <TD>The allocated length of the BOUT array. This value cannot be changed 
-      after IOC initialization. Default=512.</TD></TR>
+    after IOC initialization. Default=80.</TD></TR>
   <tr>
     <TD>NOWT</TD>
     <TD>R/W</TD>
     <TD>"Number of bytes to write"</TD>
     <TD>DBF_LONG</TD>
     <TD>The number of bytes to send from the BOUT array to the  device if OFMT=&quot;Binary&quot;. This value must be less than or equal to
-      OMAX. 
-  Default=512.</TD>
+      OMAX. Default=80.</TD>
   </tr>
   <TR vAlign=top>
     <TD>NAWT</TD>
@@ -343,7 +358,7 @@ not called.
     <TD>"Max. size of input array"</TD>
     <TD>DBF_LONG</TD>
     <TD>The allocated length of the BINP array. This value cannot be changed 
-      after IOC initialization. Default=512.</TD></TR>
+    after IOC initialization. Default=80.</TD></TR>
   <TR vAlign=top>
     <TD>NRRD</TD>
     <TD>R/W</TD>
@@ -423,43 +438,45 @@ permit 1 character end-of-message strings.<br>
     <TD>R/W</TD>
     <TD>"Baud rate"</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The baud rate for the port. Choices are "300", "600", "1200", "2400", 
-      "4800", "9600", "19200", and "38400", &quot;57600&quot;, &quot;115200&quot;, and &quot;230400&quot;. Default="9600".</TD></TR>
+    <TD>The baud rate for the port. Choices are &quot;Unknown&quot;, "300", "600", "1200", "2400", 
+      "4800", "9600", "19200", and "38400", &quot;57600&quot;, &quot;115200&quot;, and &quot;230400&quot;. Default="Unknown".</TD></TR>
   <TR vAlign=top>
     <TD>PRTY</TD>
     <TD>R/W</TD>
     <TD>"Parity"</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The device parity. Choices are "None", "Even", and "Odd". 
-      Default="None".</TD></TR>
+    <TD>The device parity. Choices are &quot;Unknown&quot;, "None", "Even", and "Odd". 
+      Default="Unknown".</TD></TR>
   <TR vAlign=top>
     <TD>DBIT</TD>
     <TD>R/W</TD>
     <TD>"Data bits"</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The number of data bits. Choices are "5", "6", "7", and "8". 
-      Default="8".</TD></TR>
+    <TD>The number of data bits. Choices are &quot;Unknown&quot;, "5", "6", "7", and "8". 
+      Default="Unknown".</TD></TR>
   <TR vAlign=top>
     <TD>SBIT</TD>
     <TD>R/W</TD>
     <TD>"Stop bits"</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The number of stop bits. Choices are "1" and "2". Default="1".</TD></TR>
+    <TD>The number of stop bits. Choices are &quot;Unknown&quot;, "1" and "2". Default="Unknown".</TD></TR>
   <TR vAlign=top>
     <TD>FCTL</TD>
     <TD>R/W</TD>
     <TD>"Flow control"</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The flow control. Choices are "None" and "Hardware". 
-  Default="None".</TD></TR>
+    <TD>The flow control. Choices are &quot;Unknown&quot;, "None" and "Hardware". 
+  Default="Unknown".</TD></TR>
 </TABLE>
 <P>
  The above fields are used to set the serial port 
       parameters. A write to any of these fields causes the port parameters to 
-      be changed immediately, but does not cause the record to process.&nbsp;
+      be changed immediately, but does not cause any I/O to be performed.&nbsp;
 The port parameters can currently be set only for local serial ports, including
 IP-Octal on vxWorks.&nbsp; They cannot currently be set for Ethernet/serial
 adapters like the Moxa units.<P>
+ The &quot;Unknown&quot; choice for each option is used on readback if the driver does not 
+ support that option.&nbsp; &quot;Unknown&quot; should not be written into the field.<P>
  The baud rates actually available are device dependent.&nbsp; For the SBS 
  IP-Octal module the maximum baud rate is 38400. 
 <P>
@@ -497,9 +514,7 @@ adapters like the Moxa units.<P>
     <td>R/W*</td>
     <td>&quot;Universal command&quot;</td>
     <td>DBF_RECCHOICE</td>
-    <td>A GPIB Universal Command to be executed. GPIB Universal Commands are 
-    commands which are directed to all devices on the GPIB bus, not just 
-    addressed devices. The choices are:
+    <td>A GPIB Universal Command to be executed.  . The choices are:
     <table>
       <tr vAlign="top">
         <td>&quot;None&quot;</td>
@@ -523,18 +538,14 @@ adapters like the Moxa units.<P>
         <td>&quot;Untalk (UNT)&quot;</td>
       </tr>
     </table>
-    <p>If the UCMD field is set to any value except &quot;None&quot; then the appropriate 
-    Universal Command is executed, and UCMD is set back to &quot;None&quot;. The record 
-    processing only performs the Universal Command, i.e. it does not also 
-    perform the GPIB operation indicated by TMOD.</td>
+    </td>
   </tr>
   <tr vAlign="top">
     <td>ACMD</td>
     <td>R/W*</td>
     <td>&quot;Addressed command&quot;</td>
     <td>DBF_RECCHOICE</td>
-    <td>A GPIB Addressed Command to be executed. GPIB Addressed Commands are 
-    commands which are directed to only the addressed devices on the GPIB bus. 
+    <td>A GPIB Addressed Command to be executed.&nbsp; 
     The choices are:
     <table>
       <tr vAlign="top">
@@ -556,13 +567,20 @@ adapters like the Moxa units.<P>
         <td>&quot;Serial Poll&quot;</td>
       </tr>
     </table>
-    <p>If the ACMD field is set to any value except &quot;None&quot; then the appropriate 
-    Addressed Command is executed, and ACMD is set back to &quot;None&quot;. The record 
-    processing only performs the Addressed Command, i.e. it does not also 
-    perform the GPIB operation indicated by TMOD.</td>
+    </td>
   </tr>
 </table>
-<p>&nbsp;</p>
+<p>GPIB Universal Commands are 
+    commands which are directed to all devices on the GPIB bus, not just 
+addressed devices. If the UCMD field is set to any value except &quot;None&quot; then the appropriate 
+    Universal Command is executed, and UCMD is set back to &quot;None&quot;. The record 
+    processing only performs the Universal Command, i.e. it does not also 
+    perform the GPIB operation indicated by TMOD.</p>
+<p>GPIB Addressed Commands are 
+    commands which are directed to only the addressed devices on the GPIB bus. If the ACMD field is set to any value except &quot;None&quot; then the appropriate 
+    Addressed Command is executed, and ACMD is set back to &quot;None&quot;. The record 
+    processing only performs the Addressed Command, i.e. it does not also 
+    perform the GPIB operation indicated by TMOD.</p>
 <HR>
 
 <h2 align="center"><a name="Trace Control Fields">Trace Control Fields</a></h2>
@@ -574,6 +592,13 @@ adapters like the Moxa units.<P>
     <TH>Prompt</TH>
     <TH>Data type</TH>
     <TH>Description</TH>
+  </tr>
+  <tr>
+    <TD>TMSK</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Trace mask&quot;</TD>
+    <TD>DBF_LONG</TD>
+    <TD>The asynTraceMask.</TD>
   </tr>
   <TR vAlign=top>
     <TD>TB0</TD>
@@ -607,7 +632,14 @@ adapters like the Moxa units.<P>
     <TD>R/W</TD>
     <TD>"Trace flow&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The ASYN_TRACEIO_FLOW bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+    <TD>The ASYN_TRACE_FLOW bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TIOM</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Trace I/O mask&quot;</TD>
+    <TD>DBF_LONG</TD>
+    <TD>The asynTraceIOMask.</TD>
   </tr>
   <tr>
     <TD>TIB0</TD>
@@ -650,6 +682,11 @@ adapters like the Moxa units.<P>
  The above fields are used to control the asynTrace facility.&nbsp; They allow 
  one to turn on and off debugging output printed at the shell or written to the 
  trace file.<P>
+ The TMSK field allows one to read/write the entire asynTraceMask word.&nbsp; 
+ The TB0-TB4 fields allow one to read/write the individual bits in asynTraceMask.&nbsp; 
+ Similarly, the TIOM field allows one to read/write the entire asynTraceIOMask 
+ word, and the TIB0-TIB2 fields allow one to read/write the individual bits in 
+ asynTraceIOMask<P>
  When the asyn record is connected to a new device with the PORT and ADDR 
  fields the above trace fields are automatically updated to reflect the current 
  asynTrace and asynTraceIO masks for that device.<P>
@@ -659,8 +696,7 @@ adapters like the Moxa units.<P>
  &quot;Unknown&quot;.&nbsp; Set this field to a string  file name (including
  possibly a valid path from the IOC's current default directory) to have the
  output written to that file.&nbsp; Set the string to &quot;&quot; (null string)
- to set the output to stdout.
-<p>&nbsp;</p>
+ to set the output to the EPICS error logging facility.<p>&nbsp;</p>
 <HR>
 
 <h2 align="center"><a name="Connection Management Fields">Connection Management Fields</a></h2>
@@ -673,13 +709,6 @@ adapters like the Moxa units.<P>
     <TH>Data type</TH>
     <TH>Description</TH>
   </tr>
-  <tr>
-    <TD>ACTD</TD>
-    <TD>R</TD>
-    <TD>&quot;Autoconnected&quot;</TD>
-    <TD>DBF_RECCHOICE</TD>
-    <TD>The current autoconnect status of the port.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.</TD>
-  </tr>
   <TR vAlign=top>
     <TD>AUCT</TD>
     <TD>R/W</TD>
@@ -687,26 +716,12 @@ adapters like the Moxa units.<P>
     <TD>DBF_RECCHOICE</TD>
     <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.&nbsp;</TD></TR>
   <tr>
-    <TD>ENBD</TD>
-    <TD>R</TD>
-    <TD>&quot;Enabled&quot;</TD>
-    <TD>DBF_RECCHOICE</TD>
-    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enabled&quot;.</TD>
-  </tr>
-  <tr>
     <TD>ENBL</TD>
     <TD>R/W</TD>
     <TD>&quot;Disable/Enable&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>Disables or enables the port.&nbsp; Choices are &quot;Disable&quot; and
-      &quot;Enable.</TD>
-  </tr>
-  <tr>
-    <TD>CNTD</TD>
-    <TD>R</TD>
-    <TD>&quot;Connected&quot;</TD>
-    <TD>DBF_RECCHOICE</TD>
-    <TD>The current connected/disconnted status of the port.&nbsp; Values are &quot;Disconnected&quot; and &quot;Connected&quot;.</TD>
+      &quot;Enable&quot;.</TD>
   </tr>
   <tr>
     <TD>CNCT</TD>
@@ -740,10 +755,16 @@ adapters like the Moxa units.<P>
       operation.</TD></TR>
 </TABLE>
 <P>
- In addition to ERRS, the standard EPICS record fields STAT (status) and SEVR
- (severity) are used to report error status.&nbsp; For example status field may
+ The ERRS field is set to &quot;&quot; (null string) at the start of every operation, 
+ including trace and connection management operations.&nbsp; It contains the 
+ first 40 characters of any error message the record writes with asynPrint(...ASYN_TRACE_ERROR...).&nbsp; 
+<P>
+ The standard EPICS record fields STAT (status) and SEVR
+ (severity) are used to report the I/O error status.&nbsp; For example status field may
  be set to NO_ALARM, WRITE, READ, or COMM, and the SEVR field may be set to NO_ALARM,
- MINOR, or MAJOR.<P>
+ MINOR, or MAJOR.&nbsp; These alarm fields are only used to report I/O errors or 
+ errors when connecting to a new PORT or ADDR.&nbsp; They are not affected by 
+ trace or connection management operations.<P>
  &nbsp;
 <HR>
 
@@ -827,14 +848,9 @@ and GPIB records</a></h2>
   screen shots of the medm screens provided for the asyn record.</p><p>&nbsp;</p>
   <h3 align="center">Main control screen, asynRecord.adl</h3>
   <p align="center">
-  <img border="0" src="asynRecord.gif" width="449" height="427"></p>
+  <img border="0" src="asynRecord.gif" width="450" height="645"></p>
   <p align="center">
   &nbsp;</p>
-  <h3 align="center">Debug screen, asynRecordDebug.adl</h3>
-
-  <p align="center">
-  <img border="0" src="asynRecordDebug.gif" width="450" height="637"></p>
-  <p align="center">&nbsp;</p>
   <h3 align="center">Serial port setup screen, asynSerialPortSetup.adl</h3>
   <p align="center"><img border="0" src="asynSerialPortSetup.gif" width="258" height="210"></p>
   <p align="center">&nbsp;</p>
@@ -844,13 +860,6 @@ and GPIB records</a></h2>
   <h3 align="center">Socket setup screen, asynSocketSetup.adl</h3>
   <p align="center"><img border="0" src="asynSocketSetup.gif" width="358" height="150"></p>
   <p align="center">&nbsp;</p>
-  <h3 align="center">Trace control screen, asynTrace.adl</h3>
-  <p align="center">
-  <img border="0" src="asynTrace.gif" width="358" height="277"></p>
-  <p align="center">&nbsp;</p>
-  <h3 align="center">Connection management screen, asynConnect.adl</h3>
-  <p align="center">
-  <img border="0" src="asynConnect.gif" width="278" height="197"></p>
   <P>
 <HR>
 <A name=Restrictions>
