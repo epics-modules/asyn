@@ -1,7 +1,8 @@
 dbLoadDatabase("../../dbd/testEpics.dbd")
 testEpics_registerRecordDeviceDriver(pdbbase)
 
-int32DriverInit("int32",-32768,32767)
+int32DriverInit("cacheInt32",-32768,32767)
+int32DriverInit("interruptInt32",-32768,32767)
 dbLoadRecords("../../db/devInt32.db")
 
 uint32DigitalDriverInit("digital")
