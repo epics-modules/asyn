@@ -65,12 +65,8 @@ int epicsShareAPI interposeFlushConfig(const char *pmn,
     asynStatus status;
     asynInterface *poctetasynInterface;
 
-    interposeName = callocMustSucceed(strlen(pmn)+1,sizeof(char),
-        "interposeInterfaceInit");
-    strcpy(interposeName,pmn);
-    portName = callocMustSucceed(strlen(dn)+1,sizeof(char),
-        "interposeInterfaceInit");
-    strcpy(portName,dn);
+    interposeName = epicsStrDup(pmn);
+    portName = epicsStrDup(dn);
     pinterposePvt = callocMustSucceed(1,sizeof(interposePvt),"interposeInterfaceInit");
     pinterposePvt->interposeName = interposeName;
     pinterposePvt->portName = portName;
