@@ -15,6 +15,7 @@
 #include <string.h>
 #include <epicsEvent.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <drvAsynIPPort.h>
 #include <asynSyncIO.h>
 
