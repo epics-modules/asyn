@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 17 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">March 21 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -399,7 +399,7 @@ drivers. It provides the following services:</p>
   </li>
   <li>Queuing services
     <p>Methods: queueRequest, cancelRequest, lockPort, unlockPort,
-    lockDevice, unlockDevice</p>
+    blockProcessCallback, unblockProcessCallback</p>
     <p>These methods should only be called by the code that created the
     asynUser.</p>
     <p>queueRequest is a request to call either the processCallback or
@@ -423,15 +423,15 @@ drivers. It provides the following services:</p>
     unlockPort is called. If the port  blocks then lockPort and all calls to
     the port driver may block. lockPort/unlockPort are provided for use by
     code that is willing to block.</p>
-    <p>lockDevice is a request to prevent acccess to a port by other
-    asynUsers between queueRequests. After lockDevice is called, nothing
-    happens until the next time  processCallback has been called. Starting at
-    that time no other asynUser's processCallback will be called until
-    unlockDevice is called. lockDevice only works with drivers that can
-    block. If lockDevice is called for a port that does not block, asynError
-    is returned. It is permissible for the processCallback to call lockDevice
-    but if it also issues a new queueRequest it must call lockDevice
-    first.</p>
+    <p>blockProcessCallback is a request to prevent acccess to a device or
+    port by other asynUsers between queueRequests. blockProcessCallback can
+    be called from a processCallback or when the asynUser has no request
+    queued. When called from processCallback blocking starts immediately,
+    otherwise blocking starts the next time processCallback is called.
+    Blocking means that no other asynUser's processCallback will be called
+    until unblockProcessCallback is called. blockProcessCallback only works
+    with drivers that can block and an error is returned if it is called for
+    non-blocking drivers.</p>
   </li>
   <li>Basic Driver services
     <p>Methods: registerPort,registerInterface</p>
@@ -1039,8 +1039,8 @@ typedef struct asynManager {
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
-    asynStatus (*lockDevice)(asynUser *pasynUser);
-    asynStatus (*unlockDevice)(asynUser *pasynUser);
+    asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
+    asynStatus (*unblockProcessCallback)(asynUser *pasynUser);
     asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
@@ -1199,9 +1199,9 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         timeout starts when the request is queued. A value less than or equal
         to 0.0 means no timeout. The request is removed from the queue before
         the callback is called. Callbacks are allowed to make requests to
-        asynManager such as queueRequest, lockDevice, etc. It is even
-        permissible to call freeAsynUser from a callback but the request will
-        be delayed until after the callback completes. The priority
+        asynManager such as queueRequest, blockProcessCallback, etc. It is
+        even permissible to call freeAsynUser from a callback but the request
+        will be delayed until after the callback completes. The priority
         asynQueuePriorityConnect must be used for asynCommon:connect and
         asynCommon:disconnect calls, and must NOT be used for any other
         calls.</p>
@@ -1224,15 +1224,23 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         to registerPort.</td>
     </tr>
     <tr>
-      <td>lockDevice/unlockDevice</td>
-      <td>lockDevice is used to block other users from accessing a device
-        while a user is making a series of queueRequests. Only the addr
-        specified in the connectDevice request is locked. asynManager locks
-        when a callback completes. At that point all other entries in the
-        queue must wait until unlockDevice is called by the same pasynUser
-        that called lockDevice. lockDevice/unlockDevice fail if a request is
-        currently queued. It is permissible to call lockDevice from
-        processCallback.</td>
+      <td>blockProcessCallback/unblockProcessCallback</td>
+      <td>blockProcessCallback is a request to prevent acccess to a device or
+        port by other asynUsers between queueRequests. blockProcessCallback
+        can be called from a processCallback or when the asynUser has no
+        request queued. When called from processCallback blocking starts
+        immediately, otherwise blocking starts the next time processCallback
+        is called. Blocking means that no other asynUser's processCallback
+        will be called until unblockProcessCallback is called. Note the
+        following restrictions for blockProcessCallback:
+        <ul>
+          <li>blockProcessCallback only works with drivers that can block and
+            an error is returned if it is called for non-blocking
+          drivers.</li>
+          <li>queueRequests that specify a priority of
+            asynQueuePriorityConnect are not blocked.</li>
+        </ul>
+      </td>
     </tr>
     <tr>
       <td>lockPort/unlockPort</td>
