@@ -686,7 +686,30 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
 
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
 {
-    /*Nothing to do */
+    gpib *pgpib = (gpib *)pdrvPvt;
+    ip488RegisterMap *regs = pgpib->regs;
+    int        addr = pasynManager->getAddr(pasynUser);
+    char cmdbuf[3];
+    asynStatus status;
+    epicsUInt16 copyIsr0;
+
+    strcpy(cmdbuf,untalkUnlisten);
+    cmdbuf[2] = (char)(addr + 0x40);
+    status = cmdIpGpib(pgpib,cmdbuf,3,1.0);
+    if(status!=asynSuccess) return(status);
+    auxCmd(regs,auxCmdrhdf,0,0,0);
+    auxCmd(regs,auxCmdhdfeS,0,0,0);
+    if(!auxCmd(regs,auxCmdlonS,&regs->addressStatus,asrLADS,asrLADS)) {
+        printStatus(pgpib,"readIpGpib");
+        return(asynError);
+    }
+    while(1) {
+        epicsThreadSleep(.01);
+        copyIsr0 = readw(&regs->intStatusMask0);
+        if(!(copyIsr0&isr0BI)) break;
+        readw(&regs->data);
+    }
+    status = cmdIpGpib(pgpib,untalkUnlisten, 2, 1.0);
     return(asynSuccess);
 }
 
