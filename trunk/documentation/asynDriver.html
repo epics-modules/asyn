@@ -11,11 +11,11 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<h2>Release 1.0alpha3</h2>
+<h2>Release ?.?</h2>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>December 2003</h2>
+<h2>Janurary 2004</h2>
 </center>
 <hr>
 
@@ -27,7 +27,7 @@
 <a href="#Acknowledgments">Acknowledgments</a> <br>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#asynDriver">asynDriver</a> <br>
-<a href="#Discussion">Discussion of asynDriver</a> <br>
+<a href="#Example">Example</a> <br>
 <a href="#asynGpib">asynGpib</a> <br>
 <a href="#PortDrivers">Port Drivers</a> <br>
 <a href="#DiagnosticAids">Diagnostic Aids</a> <br>
@@ -87,8 +87,8 @@ than using libCom, it is independent of EPICS.</p>
     Winans/Franksen GPIB support.</li>
   <li>streams is the protocol file based support for serial/GPIB/can from
     Dirk Zimoch.</li>
-  <li>devAscii/drvAscii is support from KECK Observatory.</li>
-  <li>devOrnl is the support from John Sinclair at Oak Ridge National
+  <li>devAscii/drvAscii is serial support from KECK Observatory.</li>
+  <li>devOrnl is serial support from John Sinclair at Oak Ridge National
   Lab.</li>
   <li>mpfSerial is the serial support provided with MPF (Message Passing
     Facility)</li>
@@ -133,16 +133,15 @@ individuals have been most influential.</p>
 <dl>
   <dt>John Winans</dt>
     <dd>John provided the original EPICS GPIB support.  Databases using
-      John's support can be used without modification with the latest
-      support. With small modifications, device support modules written for
-      John's support can be used with the latest support.</dd>
+      John's support can be used without modification with devGpib. With
+      small modifications, device support modules written for John's support
+      can be used.</dd>
   <dt>Benjamin Franksen</dt>
     <dd>John's support only worked on vxWorks. In addition the driver support
-      was implement as a single source file, i.e. what is now asynGpib,
-      drvNI1014, and drvBitBusGpib were  mixed together. Benjamin defined an
-      interface between drvCommon and low level controllers and split the
-      code into drvGpib and the low level drivers. He also created the
-      support for drvVxi11.</dd>
+      was implement as a single source file. Benjamin defined an interface
+      between drvCommon and low level controllers and split the code into
+      drvGpib and the low level drivers. He also created the support for
+      drvVxi11.</dd>
   <dt>Eric Norum</dt>
     <dd>Eric started with Benjamin's code and converted it to use the
       Operating System Independent features of EPICS 3.14.</dd>
@@ -240,6 +239,7 @@ can be used by other code, e.g. a sequence program.</p>
       <li>report - Report status of device.</li>
       <li>connect - Open the port.</li>
       <li>disconnect - Close the port.</li>
+      <li>setPortOptions - Specify port options.</li>
     </ul>
   </li>
   <li><span style="font-weight: bold">asynOctet</span>
@@ -248,18 +248,19 @@ can be used by other code, e.g. a sequence program.</p>
     responses. This interface will be sufficient for most device specific
     code. For example the code for streams protocol files needs only this
     interface. The term octet is used instead of ASCII because the only
-    requirement is messages consist of 8-bit bytes. The methods are:</p>
+    requirement is that messages consist of 8-bit bytes. The methods are:</p>
     <ul>
       <li>read - read a message.  The routine returns the number of 8-bit
-        bytes read from the device or -1 to indicate that some sort of error
-        occurred.</li>
+        bytes read from the device or -1 to indicate error.</li>
       <li>write - write a message.  The routine returns the number of 8-bit
-        bytes written to the device or -1 to indicate that some sort of error
-        occurred.</li>
+        bytes written to the device or -1 to indicate error.</li>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
         input messages.</li>
     </ul>
+  </li>
+  <li><span style="font-weight: bold">asynTrace</span>
+    <p>asynTrace is a set of methods for generating diagnostic messages.</p>
   </li>
 </ul>
 
@@ -305,7 +306,7 @@ and one or more interfaces.</p>
 
 <p>asynDriver.h contains the following definitions:</p>
 <pre>typedef enum {
-    asynSuccess,asynTimeout,asynError
+    asynSuccess,asynTimeout,asynOverflow,asynError
 }asynStatus;
 
 typedef enum {
@@ -363,6 +364,8 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
+    /*The following is a generic method for setting port options*/
+    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
 }asynCommon;
 
 /* Methods supported by low level octet drivers. */
@@ -482,7 +485,7 @@ calling asynUserCalloc and asynUserFree.</p>
       <td>Device code calls this to connect to a device. It passes the name
         of the communication port and the address of the device.. The port
         Name is the same as that specified in the call to registerPort. The
-        call will fail if the asynUser is connected to a device.</td>
+        call will fail if the asynUser is already connected to a device.</td>
     </tr>
     <tr>
       <td>disconnectDevice</td>
@@ -534,12 +537,13 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>lock/unlock</td>
-      <td>lock/unlock are used to block other users from calling a driver
-        while a user is making a series of queueRequests. Only the addr
-        specified in the connectDevice request is locked. asynManager locks
-        when a queueRequest for a locked asynUser is taken from the queue. At
-        that point all other entries in the queue must wait until unlock is
-        called. lock/unlock fail if a request is currently queued.</td>
+      <td>lock/unlock are used to block other users from accessing an
+        instrument while a user is making a series of queueRequests. Note
+        that only the addr specified in the connectDevice request is locked.
+        asynManager locks when a queueRequest for a locked asynUser is taken
+        from the queue. At that point all other entries in the queue must
+        wait until unlock is called. lock/unlock fail if a request is
+        currently queued.</td>
     </tr>
     <tr>
       <td>getAddr</td>
@@ -588,6 +592,12 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>Disconnect from the hardware device. This is normally called by
         command utilities that want to stop and then restart communication to
         a device.</td>
+    </tr>
+    <tr>
+      <td>setPortOptions</td>
+      <td>This is a generic routine for setting port options. argc/argv are
+        just like the arguments to the main routine of a C program. The
+        meaning is port driver specific.</td>
     </tr>
   </tbody>
 </table>
@@ -646,14 +656,15 @@ for sending commands and receiving responses from a device.</p>
         report calls they make to other support.</li>
     </ul>
   </li>
-  <li></li>
-  Another mask determines how message buffers are printed.
-  <ul>
-    <li>ASYN_TRACEIO_NODATA Dont print any data from the message buffers</li>
-    <li>ASYN_TRACEIO_ASCII Print with a "%s" style format.</li>
-    <li>ASYN_TRACEIO_ESCAPE Call epicsStrPrintEscaped.</li>
-    <li>ASYN_TRACEIO_HEX    Print each byte with " %2.2x".</li>
-  </ul>
+  <li>Another mask determines how message buffers are printed.
+    <ul>
+      <li>ASYN_TRACEIO_NODATA Dont print any data from the message
+      buffers</li>
+      <li>ASYN_TRACEIO_ASCII Print with a "%s" style format.</li>
+      <li>ASYN_TRACEIO_ESCAPE Call epicsStrPrintEscaped.</li>
+      <li>ASYN_TRACEIO_HEX    Print each byte with " %2.2x".</li>
+    </ul>
+  </li>
 </ul>
 
 <p>In order for the trace facility to perform properly, device support, and
@@ -691,15 +702,15 @@ calling asynUserCalloc and asynUserFree.
     <tr>
       <td>lock/unlock</td>
       <td>These are only needed if some code wants to do it's own I/O instead
-        of using print and printIO. All set methods, print, and printIO all
-        lock while performing their operations. The get routines do not lock
-        but except for getTraceFILE they are safe. The worst that happens is
-        that the user gets a little more or a little less output.</td>
+        of using print and printIO. Set methods, print, and printIO all lock
+        while performing their operations. The get routines do not lock but
+        except for getTraceFILE they are safe. The worst that happens is that
+        the user gets a little more or a little less output.</td>
     </tr>
     <tr>
       <td>setTraceMask</td>
       <td>Set the trace mask. Normally set by the user requesting it via a
-        shell command or the devTrace device support TBD.</td>
+        shell command or the devTrace device support.</td>
     </tr>
     <tr>
       <td>getTraceMask</td>
@@ -709,7 +720,7 @@ calling asynUserCalloc and asynUserFree.
     <tr>
       <td>setTraceIOMask</td>
       <td>Set the traceIO mask. Normally set by the user requesting it via a
-        shell command or the devTrace device support TBD.</td>
+        shell command or the devTrace device support.</td>
     </tr>
     <tr>
       <td>getTraceIOMask</td>
@@ -721,7 +732,7 @@ calling asynUserCalloc and asynUserFree.
       <td>setTraceFILE</td>
       <td>Set the file descriptor to use for output. A null value means
         stdout. Normally set by the user requesting it via a shell command or
-        the devTrace device support TBD.</td>
+        the devTrace device support.</td>
     </tr>
     <tr>
       <td>getTraceFILE</td>
@@ -737,7 +748,7 @@ calling asynUserCalloc and asynUserFree.
         number of characters printed depends on the traceIO mask. For example
         ASYN_TRACEIO_HEX results in 3 characters being printed for each byte.
         Normally set by the user requesting it via a shell command or the
-        devTrace device support TBD.</td>
+        devTrace device support.</td>
     </tr>
     <tr>
       <td>getTraceIOTruncateSize</td>
@@ -748,38 +759,24 @@ calling asynUserCalloc and asynUserFree.
       <td>print</td>
       <td>If reason ored with the current traceMask is not zero then the
         message is printed. Most code should call asynPrint instead of
-        calling print/td&gt;</td>
+        calling this method</td>
     </tr>
     <tr>
       <td>printIO</td>
       <td>If reason ored with the current traceMask is not zero then the
         message is printed. If len is &gt;0 then the buffer is printed using
         the traceIO mask and getTraceIOTruncateSize to decide how to print.
-        Most code should call asynPrintIO instead of calling printIO.</td>
+        Most code should call asynPrintIO instead of calling this method</td>
     </tr>
   </tbody>
 </table>
 <hr>
 
 <center>
-<h2><a name="Discussion"></a>Discussion of asynDriver</h2>
+<h2><a name="Example"></a>Example</h2>
 </center>
 
-<p>asynDriver.h describes the following structures:</p>
-<ul>
-  <li>asynUser - Structure for interfacing between user code and asynManager
-    or drivers.</li>
-  <li>asynInterface - Structure for registering and location driver
-    interfaces and a pdrvPvt.</li>
-  <li>asynManager - Interface describing the asynManager methods.</li>
-  <li>asynCommon - Interface describing methods implemented by all
-  drivers</li>
-  <li>asynOctet - Interface describing methods implemented by all drivers
-    that handle octet messages</li>
-</ul>
-
-<p>The following is the skeleton for code that communicates with a device via
-octet messages..</p>
+<p>The following reads from an instrument via octet messages.</p>
 <pre>#include &lt;asynCommon.h&gt;
 ...
 #define BUFSIZE 80
@@ -881,7 +878,7 @@ asynOctet. asynGpib defines two interfaces.</p>
 
 <h3>asynGpib.h</h3>
 
-<p>Include file asynGpib.h contains the following definitions:</p>
+<p>asynGpibDriver.h contains the following definitions:</p>
 <pre>#include "asynDriver.h"
 
 #define asynGpibUserType "asynGpibUser"
@@ -899,7 +896,7 @@ struct asynGpib{
         srqHandler handler, void *srqHandlerPvt);
     void (*pollAddr)(void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are called by low level gpib drivers */
-    /*registerPort returns pointer passed to srqHappened*/
+    /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
@@ -937,12 +934,11 @@ struct asynGpibPort {
 <h3>asynGpib</h3>
 
 <p>asynGpib describes the interface for device support code. It provides gpib
-specific functions like SRQ handling. It makes calls to a asynGpib. Note that
-the gpib user support also implements the asynCommon and asynOctet
-interraces.</p>
+specific functions like SRQ handling. It makes calls to asynGpibPort. Note
+that asynGpib.c also implements asynCommon and asynOctet.</p>
 
 <table border="1">
-  <caption>asynGpibUser</caption>
+  <caption>asynGpib</caption>
   <tbody>
     <tr>
       <td>addressedCmd</td>
@@ -962,9 +958,8 @@ interraces.</p>
     </tr>
     <tr>
       <td>registerSrqHandler</td>
-      <td>Register an srq handler is registered for the port,addr. The
-        handler will be called when an SRQ is detected for that
-      port,addr.</td>
+      <td>Register an srq handler for port,addr. The handler will be called
+        when an SRQ is detected for that port,addr.</td>
     </tr>
     <tr>
       <td>pollAddr</td>
@@ -1088,7 +1083,7 @@ where
   <li>vxiName - Must be chosen as specified above.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
-  assigned.</ul>
+</ul>
 
 <h3>Generic Serial</h3>
 
@@ -1096,8 +1091,9 @@ where
 the IOC and devices connected through Ethernet/Serial converter boxes.</p>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
-command:</p>
-<pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect [,stty options])</pre>
+and <tt>asynSetPortOptions</tt> commands:</p>
+<pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)
+   asynSetPortOptions("portName",[stty options])</pre>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGib.</li>
@@ -1161,9 +1157,36 @@ UART Industry-Pack module on a GreenSprings VIP616-01 carrier.</p>
 tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
-drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
+asynSetPortOptions("L0","9600","cs8","-parenb","-crtscts","clocal")</pre>
 If you're using the vxWorks shell you must include all the <code>stty</code>
 parameters in double quotes.
+
+<h3>Green Springs IP488</h3>
+
+<p>This is support for the Green Springs Industry Pack GPIB carrier. The
+configuration command is:</p>
+<pre>    gsIP488Configure(portName,carrier,module,intVec,priority)</pre>
+where
+<dl>
+  <dt>portName</dt>
+    <dd>An ascii string specifying the port name the will be registered with
+      asynDriver.</dd>
+  <dt>carrier</dt>
+    <dd>An integer identifying the Industry Pack Carrier</dd>
+  <dt>module</dt>
+    <dd>An integer identifying the module on the carrier</dd>
+  <dt>intVec</dt>
+    <dd>An integer specifying the interrupt vector</dd>
+  <dt>priority</dt>
+    <dd>In integer specifying the priority of the port thread. A value of 0
+      will result in a defalt value being assigned</dd>
+</dl>
+
+<p>An example is:</p>
+<pre>#The following is for the Greensprings IP488 on an MV162 
+ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
+gsIP488Configure("L0",0,0,0x61,0)</pre>
 <hr>
 
 <center>
@@ -1240,8 +1263,8 @@ tar xvf &lt;file&gt;.tar</pre>
   where X-Y is the release. For example.
   <pre>.../support/asyn/1-1</pre>
   <li>Edit the <tt>config/RELEASE</tt> file and set the paths to your
-    installation of EPICS base and to your version of IPAC and EPICS_BASE.
-    IPAC is only needed if you are building for vxWorks.</li>
+    installation of EPICS_BASE, ASYN, and IPAC. IPAC is only needed if you
+    are building for vxWorks.</li>
   <li>Run <tt>make</tt> in the top level directory and check for any
     compilation errors.</li>
 </ol>
