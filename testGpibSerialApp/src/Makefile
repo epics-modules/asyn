@@ -41,7 +41,3 @@ testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
-
-#after 3.14.6 the following is no longer needed
-include $(TOP)/configure/RULES.DbExtra
-
