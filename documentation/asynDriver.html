@@ -128,9 +128,9 @@ than using libCom, it is independent of EPICS.</p>
         drivers.</li>
     </ul>
   </li>
-  <li>Hopefully Dirk Ziomoch will get time soon to convert streams to use
+  <li>Hopefully Dirk Zimoch will get time soon to convert streams to use
     asynDriver.</li>
-  <li>In the future other protocals will be supported especially for ethernet
+  <li>In the future other protocols will be supported especially for ethernet
     based devices.</li>
 </ul>
 
@@ -138,7 +138,7 @@ than using libCom, it is independent of EPICS.</p>
 <ul>
   <li>gpibCore is the Operating System Independent version of the
     Winans/Franksen gpib support.</li>
-  <li>streams is the protocal file based support for serial/gpib/can from
+  <li>streams is the protocol file based support for serial/gpib/can from
     Dirk Zimoch.</li>
   <li>devAscii/drvAscii is support from KECK Observatory.</li>
   <li>devOnrl is the support from John Sinclair at Oak Ridge National
@@ -189,8 +189,8 @@ individuals have been most influencial.</p>
   <dt>Pete Owens</dt>
     <dd>Pete, for the Diamond Light Source, did a survey of several types of
       device/driver support packages for serial devices. Diamond decided to
-      use the streams support developed by Dirk Ziomoch.</dd>
-  <dt>Dirk Ziomoch</dt>
+      use the streams support developed by Dirk Zimoch.</dd>
+  <dt>Dirk Zimoch</dt>
     <dd>Dirk developed streams, which has a single device support model, but
       supports arbitrary low level message based drivers, i.e. gpib, serial,
       etc.</dd>
@@ -241,7 +241,7 @@ method looks first for process module interfaces and then for driver
 interfaces. A process module normally calls drivers as part of it's
 processing.</p>
 
-<p>For more complicated protocals additional layers can be created. For
+<p>For more complicated protocols additional layers can be created. For
 example gpib support is implemented as a asynGpib interface which is called
 by user code and a asynGpibPort interface which is called by asynGpib.</p>
 
@@ -281,7 +281,7 @@ can be used by other code, e.g. a sequence program.</p>
     <p>asynOctet is a set of methods implemented by any driver that accepts
     octet messages (messages consisting of 8 bit bytes) and returns octet
     responses. This interface will be sufficient for most device specific
-    code. For example the code for streams protocal files needs only this
+    code. For example the code for streams protocol files needs only this
     interface. The term octet is used instead of ascii because the only
     requirement is messages consist of 8 bit bytes. The methods are:</p>
     <ul>
@@ -883,15 +883,15 @@ the vxi11. It provides:</p>
 
 <h3>vxi11</h3>
 
-<p>VXI-11 is a TCP/IP protocal for communicating with IEEE 488.2 devices. It
-is an RPC based protocal. In addition to the VXI-11 standard three additional
+<p>VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
+is an RPC based protocol. In addition to the VXI-11 standard three additional
 standard are defined.</p>
 <ul>
   <li>VXI-11.1 - A standard for communicating with VXIbus instruments. These
     devices have a vxiName that starts with "vxi".</li>
   <li>VXI-11.2 - A standard for communicating with a IEEE 488.1 device. This
     means that theTCP/IP connection is talking to a GPIB controller that is
-    talking to a GIB bus. These devices have an vxiName that starts with
+    talking to a GPIB bus. These devices have an vxiName that starts with
     "gpib".</li>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 instruments.
     This means that the TCP/IP connection is talking directky with an
@@ -902,7 +902,7 @@ standard are defined.</p>
 <p>Consult the following documents (available on-line for free) for
 details.</p>
 <pre>VMEbus Extensions for Instrumentation
-    VXI-11   TCP/IP Instrument Protocal Specification
+    VXI-11   TCP/IP Instrument Protocol Specification
     VXI-11.1 TCP/IP-VXIbus Interface Specification
     VXI-11.2 TCP/IP-IEEE 488.1 Interface Specification
     VXI-11.3 TCP/IP-IEEE 488.2 Instrument Interface Specification</pre>
@@ -937,6 +937,61 @@ where
   <li>priority - epicsThread priority. If this is 0, or missing, then a default is
     assigned.</li>
 </ul>
+
+<h3>Generic Serial</h3>
+
+<p>The generic serial driver supports devices connected to serial
+ports on the IOC and devices connected through Ethernet/Serial converter
+boxes.</p>
+<p>The generic serial support has been tested with the following:</p>
+<ul>
+  <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME carrier.</li>
+  <li>Linux with PC hardware serial ports (COM1:).</li>
+  <li>Linux, Solaris and Darwin with a Moxa NPort Ethernet/Serial converter box.</li>
+</ul>
+
+<p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt> command:
+<pre>
+   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)</pre>
+where
+<ul>
+  <li>portName - The portName that is registered with asynGib.</li>
+  <li>ttyName - The name of the serial port.   This can specify a local hardware
+  serial port (e.g. "/dev/ttyS0") or the Internet host name and TCP port number of an Ethernet terminal concentrator (e.g. "164.54.9.90:4002").</li>
+  <li>priority - epicsThread priority. If this is 0, or missing, then a default is assigned.</li>
+  <li>openOnlyOnDisconnect - If zero the driver will automatically attempt to
+  reconnect after an error.  If non-zero the driver will not attempt to
+  reconnect until explicit disconnect/reconect commands have been issued.
+  A missing argument is taken to be 0.</li>
+</ul>
+
+<p>On non-vxWorks machines local serial port parameters can be set
+with the IOC shell <tt>stty</tt> command.  The syntax and arguments
+are similar to the UNIX command of the same name:
+<pre>
+stty --file=/dev/ttyS0 9600 cs8 -parenb -crtscts clocal
+drvGenericSerialConfigure L0 /dev/ttyS0
+</pre>
+or equivalently:
+<pre>
+stty("-F","/dev/ttyS0",9600,"cs8","-parenb","-crtscts","clocal")
+drvGenericSerialConfigure("L0","/dev/ttyS0")
+</pre>
+
+<p>
+Serial ports directly attached to a vxWorks IOC must be set up using
+hardware-specific commands.
+The following example shows the
+commands to set up and configure a port on a GreenSprings UART Industry-Pack module.
+Note that these are vxWorks shell commands and not IOC shell commands.
+<pre>
+ipacAddCarrier(&vipc616_01,"0x6000,B0000000")
+tyGSOctalDrv 1
+octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
+port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
+tyGSOctalConfig(port0,9600,'N',1,8,'N')
+drvGenericSerialConfigure("L0","/tyGS/0/0")
+</pre>
 
 <center>
 <h2><a name="License Agreement"></a>License Agreement</h2>
