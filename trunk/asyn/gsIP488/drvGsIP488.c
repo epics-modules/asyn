@@ -91,10 +91,6 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val);
-static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val, int sizeval);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
@@ -119,8 +115,6 @@ static asynGpibPort gpibPort = {
     gpibPortReport,
     gpibPortConnect,
     gpibPortDisconnect,
-    gpibPortSetPortOptions,
-    gpibPortGetPortOptions,
     gpibPortRead,
     gpibPortWrite,
     gpibPortFlush,
@@ -499,30 +493,6 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
     return asynSuccess;
 }
 
-static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val)
-{
-    gsport *pgsport = (gsport *)pdrvPvt;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortSetPortOptions\n",
-        pgsport->portName);
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gpibPort does not have any options\n",pgsport->portName);
-    return asynError;
-}
-
-static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val,int sizeval)
-{
-    gsport *pgsport = (gsport *)pdrvPvt;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortGetPortOptions\n",
-        pgsport->portName);
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gpibPort does not have any options\n",pgsport->portName);
-    return asynError;
-}
-
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered)
 {
@@ -799,7 +769,8 @@ int gsIP488Configure(char *portName,int carrier, int module, int vector,
     ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
     writeRegister(pgsport,VECTOR,pgsport->vector);
     pgsport->asynGpibPvt = pasynGpib->registerPort(pgsport->portName,
-        1,!noAutoConnect, &gpibPort,pgsport,priority,0);
+        ASYN_MULTIDEVICE|ASYN_CANBLOCK,
+        !noAutoConnect, &gpibPort,pgsport,priority,0);
     return 0;
 }
 

@@ -120,10 +120,6 @@ static void vxiSrqThread(void *pvxiPort);
 static void vxiReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val);
-static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val, int sizeval);
 static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered);
 static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
@@ -959,24 +955,6 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return status;
 }
-
-static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val)
-{
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s vxi11 does not have any options\n",pvxiPort->portName);
-    return asynError;
-}
-
-static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val, int sizeval)
-{
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s vxi11 does not have any options\n",pvxiPort->portName);
-    return asynError;
-}
 
 static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered)
@@ -1489,8 +1467,6 @@ static asynGpibPort vxi11 = {
     vxiReport,
     vxiConnect,
     vxiDisconnect,
-    vxiSetPortOption,
-    vxiGetPortOption,
     vxiRead,
     vxiWrite,
     vxiFlush,
@@ -1568,8 +1544,8 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiPort->hostName, hostName);
     pvxiPort->asynGpibPvt = pasynGpib->registerPort(pvxiPort->portName,
-        (pvxiPort->isSingleLink ? 0 : 1),!noAutoConnect,
-        &vxi11,pvxiPort,priority,0);
+        (pvxiPort->isSingleLink ? 0 : ASYN_MULTIDEVICE)|ASYN_CANBLOCK,
+        !noAutoConnect, &vxi11,pvxiPort,priority,0);
     pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
     pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
     status = pasynManager->connectDevice(

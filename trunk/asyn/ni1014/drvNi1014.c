@@ -92,10 +92,6 @@ static asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val);
-static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val, int sizeval);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
@@ -120,8 +116,6 @@ static asynGpibPort gpibPort = {
     gpibPortReport,
     gpibPortConnect,
     gpibPortDisconnect,
-    gpibPortSetPortOptions,
-    gpibPortGetPortOptions,
     gpibPortRead,
     gpibPortWrite,
     gpibPortFlush,
@@ -562,30 +556,6 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
-
-static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val)
-{
-    niport *pniport = (niport *)pdrvPvt;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortSetPortOptions\n",
-        pniport->portName);
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gpibPort does not have any options\n",pniport->portName);
-    return asynError;
-}
-
-static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val,int sizeval)
-{
-    niport *pniport = (niport *)pdrvPvt;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortGetPortOptions\n",
-        pniport->portName);
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gpibPort does not have any options\n",pniport->portName);
-    return asynError;
-}
 
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered)
@@ -877,7 +847,8 @@ int ni1014Config(char *portNameA,char *portNameB,
         }
         pniport->isPortA = (indPort==0) ? 1 : 0;
         pniport->asynGpibPvt = pasynGpib->registerPort(pniport->portName,
-            1,!noAutoConnect,&gpibPort,pniport,priority,0);
+            ASYN_MULTIDEVICE|ASYN_CANBLOCK,
+            !noAutoConnect,&gpibPort,pniport,priority,0);
         base = base + PORT_REGISTER_SIZE;
         vector += 2;
     }
