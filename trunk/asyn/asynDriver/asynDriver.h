@@ -22,7 +22,6 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-#define USER_DATA_SIZE 80
 
 typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError
@@ -46,8 +45,8 @@ typedef struct asynUser {
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt; 
     /* The following are for additional information from method calls */
+    void         *userData; 
     int          auxStatus; /*For auxillary status*/
-    char         *userData[USER_DATA_SIZE];
 }asynUser;
 
 typedef struct asynInterface{
@@ -55,6 +54,10 @@ typedef struct asynInterface{
     void *pinterface;          /*For example pasynCommon */
     void *drvPvt;
 }asynInterface;
+
+/*registerPort attributes*/
+#define ASYN_MULTIDEVICE  0x0001
+#define ASYN_CANBLOCK     0x0002
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
@@ -65,6 +68,8 @@ typedef struct asynManager {
     asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
                                  userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
+    void       *(*memMalloc)(size_t size);
+    void       (*memFree)(void *pmem,size_t size);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
                                 const char *portName,int *yesNo);
     /* addr = (-1,>=0) => connect to (port,device) */
@@ -79,12 +84,14 @@ typedef struct asynManager {
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
+    asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*synchronousRequest)(asynUser *pasynUser, int connectRequest);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
-                              int multiDevice,int autoConnect,
+                              int attributes,int autoConnect,
                               unsigned int priority,unsigned int stackSize);
     asynStatus (*registerInterface)(const char *portName,
                               asynInterface *pasynInterface);
