@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.34 2004-03-30 01:48:08 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.35 2004-03-31 19:37:19 norume Exp $
  */
 
 #include <string.h>
@@ -720,7 +720,8 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
              * Toss characters until there are none left
              */
 #ifdef vxWorks
-            if (ioctl(tty->fd, FIONBIO, 1) >= 0) {
+            int flag = 1;
+            if (ioctl(tty->fd, FIONBIO, &flag) >= 0) {
 #else
             if (fcntl(tty->fd, F_SETFL, O_NONBLOCK) >= 0) {
 #endif
@@ -728,7 +729,8 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
                 while (read(tty->fd, cbuf, sizeof cbuf) > 0)
                     continue;
 #ifdef vxWorks
-                ioctl(tty->fd, FIONBIO, 0);
+                flag = 0;
+                ioctl(tty->fd, FIONBIO, &flag);
 #else
                 fcntl(tty->fd, F_SETFL, 0);
 #endif
