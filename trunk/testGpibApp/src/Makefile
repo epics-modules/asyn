@@ -23,11 +23,10 @@ PROD_IOC_vxWorks += testGpibVx
 LIBRARY_IOC += devTestGpib
 devTestGpib_SRCS += devTestGpib.c
 devTestGpib_LIBS += asyn
+testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
 ifdef IPAC
-testGpibVx_DBD += commonInclude.dbd ipacInclude.dbd
+testGpibVx_DBD += ipacInclude.dbd
 devTestGpib_LIBS_vxWorks += Ipac
-else
-testGpibVx_DBD += commonInclude.dbd
 endif
 devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 

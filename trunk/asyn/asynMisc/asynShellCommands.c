@@ -455,19 +455,17 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     asynSetTraceIOMask(portName,addr,mask);
 }
 
-static const iocshArg asynSetTraceFileArg0 = {"portName", iocshArgString};
-static const iocshArg asynSetTraceFileArg1 = {"addr", iocshArgInt};
-static const iocshArg asynSetTraceFileArg2 = {"filename", iocshArgString};
-static const iocshArg *const asynSetTraceFileArgs[] = {
-    &asynSetTraceFileArg0,&asynSetTraceFileArg1,&asynSetTraceFileArg2};
-static const iocshFuncDef asynSetTraceFileDef =
-    {"asynSetTraceFile", 3, asynSetTraceFileArgs};
-int epicsShareAPI
- asynSetTraceFile(const char *portName,int addr,const char *filename)
+typedef struct setFilenameArgs {
+    const char   *filename;
+    epicsEventId done;
+}setFilenameArgs;
+
+static void setFilename(asynUser *pasynUser)
 {
-    asynUser *pasynUser;
-    asynStatus status;
-    FILE *fp;
+    setFilenameArgs *pargs = (setFilenameArgs *)pasynUser->userPvt;
+    const char      *filename = pargs->filename;
+    FILE            *fp;
+    asynStatus      status;
 
     if(!filename) {
         fp = 0;
@@ -477,30 +475,59 @@ int epicsShareAPI
         fp = fopen(filename,"w");
         if(!fp) {
             printf("fopen failed %s\n",strerror(errno));
-            return 0;
+            goto done;
         }
     }
-    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynTrace->setTraceFile(pasynUser,fp);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+done:
+    epicsEventSignal(pargs->done);
+}
+
+int epicsShareAPI
+ asynSetTraceFile(const char *portName,int addr,const char *filename)
+{
+    asynUser        *pasynUser;
+    asynStatus      status;
+    setFilenameArgs args;
+    pasynUser = pasynManager->createAsynUser(setFilename,0);
     status = pasynManager->connectDevice(pasynUser,portName,addr);
     if((status!=asynSuccess) && (strlen(portName)!=0)) {
         printf("%s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
         return -1;
     }
-    status = pasynTrace->setTraceFile(pasynUser,fp);
+    args.filename = filename;
+    args.done = epicsEventMustCreate(epicsEventEmpty);
+    pasynUser->userPvt = &args;
+    status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.0);
     if(status!=asynSuccess) {
-        printf("%s\n",pasynUser->errorMessage);
+        printf("queueRequest failed %s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return asynError;
     }
+    epicsEventWait(args.done);
+    epicsEventDestroy(args.done);
     pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
+
+static const iocshArg asynSetTraceFileArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceFileArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceFileArg2 = {"filename", iocshArgString};
+static const iocshArg *const asynSetTraceFileArgs[] = {
+    &asynSetTraceFileArg0,&asynSetTraceFileArg1,&asynSetTraceFileArg2};
+static const iocshFuncDef asynSetTraceFileDef =
+    {"asynSetTraceFile", 3, asynSetTraceFileArgs};
 static void asynSetTraceFileCall(const iocshArgBuf * args) {
     const char *portName = args[0].sval;
     int addr = args[1].ival;
     const char *filename = args[2].sval;
     asynSetTraceFile(portName,addr,filename);
 }
-
+
 static const iocshArg asynSetTraceIOTruncateSizeArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceIOTruncateSizeArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceIOTruncateSizeArg2 = {"size", iocshArgInt};

@@ -28,6 +28,17 @@ dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=3,OMAX=0,IMAX
 #vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0,0)
 
 #The following is for the Greensprings IP488
-ipacAddMVME162("A:l=3,3 m=0xe0000000,64;B:m=e0000000,64 l=3,2")
-gsIP488Configure("L0",0,0,0x61,0,0)
+#ipacAddMVME162("A:l=3,3 m=0xe0000000,64;B:m=e0000000,64 l=3,2")
+#gsIP488Configure("L0",0,0,0x61,0,0)
+
+#The following command is for the National Instruments 1014
+ni1014Config("L0","L1",0x5000,0x64,5,0,0)
+#asynSetTraceMask("L0",-1,0x15)
+#asynSetTraceMask("L0",3,0x15)
+#asynSetTraceFile("L0",-1,"temp")
+#asynSetTraceFile("L0",3,"temp")
+#asynSetTraceIOMask("L0",3,0x2)
+#asynSetTraceMask("L0",15,0x15)
+#asynSetTraceIOMask("L0",15,0x2)
+#asynSetTraceFile("L0",15,"stdout")
 iocInit()

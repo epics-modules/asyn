@@ -65,6 +65,10 @@ DBD += drvGsIP488.dbd
 asyn_LIBS_vxWorks += Ipac
 endif
 
+SRC_DIRS += $(ASYN)/ni1014
+asyn_SRCS_vxWorks += drvNi1014.c
+DBD += drvNi1014.dbd
+
 SRC_DIRS += $(ASYN)/devGpib
 INC += devGpib.h
 INC += devSupportGpib.h
