@@ -57,7 +57,7 @@ struct asynGpib{
     /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
-        int multiDevice,int autoConnect,
+        int attributes,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
     void (*srqHappened)(void *asynGpibPvt);
@@ -69,10 +69,6 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
-                                const char *key,const char *val);
-    asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
-                                const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
                                 char *data,int maxchars,int *nbytesTransfered);
