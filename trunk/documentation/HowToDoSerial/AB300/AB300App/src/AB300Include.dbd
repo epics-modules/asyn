@@ -1,0 +1,13 @@
+include "base.dbd"
+
+#
+# Define the connection between the DTYP field name and the device DSET tables
+#
+device(longout, GPIB_IO, devAB300_lo, "AB300Gpib")
+device(longin,  GPIB_IO, devAB300_li, "AB300Gpib")
+device(ai,      GPIB_IO, devAB300_ai, "AB300Gpib")
+
+#
+# Pull in the driver support
+#
+include "drvGenericSerial.dbd"
