@@ -2,8 +2,9 @@
 \lyxformat 221
 \textclass article
 \begin_preamble
-\usepackage{html}
-\usepackage{verbatimfiles}
+\usepackage{hevea}
+\usepackage{moreverb}
+\usepackage{url}
 
 \textwidth=6.5in
 \topmargin=0pt
@@ -15,7 +16,6 @@
 
 \parindent=0pt
 \parskip=0.5ex
-
 \usepackage{hyperref}
 \end_preamble
 \language english
@@ -56,7 +56,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-htmladdnormallink{norume@aps.anl.gov}{mailto:norume@aps.anl.gov}
+mailto{norume@aps.anl.gov}
 \end_inset 
 
 
@@ -72,22 +72,22 @@ This tutorial provides step-by-step instructions on how to create EPICS
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
 \backslash 
-htmladdnormallink{asynDriver}{../../asynDriver.html}
+ahref{../../asynDriver.html}{asynDriver}
 \end_inset 
 
  and 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
 \backslash 
-htmladdnormallink{devGpib}{../../devGpib.html}
+ahref{../../devGpib.html}{devGpib}
 \end_inset 
 
  documentation.
@@ -127,7 +127,7 @@ I based this tutorial on the device support I wrote for a CVI Laser Corporation
 
 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
@@ -138,7 +138,7 @@ If you'd like to print this tutorial you can download a
 \newline 
 
 \backslash 
-htmladdnormallink{PDF version}{tutorial.pdf}.
+ahref{tutorial.pdf}{PDF version}.
 \newline 
 
 \backslash 
@@ -165,7 +165,6 @@ The first order of business is to determine the set of operations the device
 \end_inset 
 
 .
- 
 \layout Standard
 
 
@@ -184,75 +183,120 @@ AB300 filter wheel commands
 \layout Standard
 \align center 
 
-\begin_inset ERT
-status Open
+\begin_inset  Tabular
+<lyxtabular version="3" rows="6" columns="2">
+<features>
+<column alignment="left" valignment="top" leftline="true" rightline="true" width="0pt">
+<column alignment="left" valignment="top" rightline="true" width="0pt">
+<row topline="true" bottomline="true">
+<cell multicolumn="1" alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
 
 \layout Standard
 
-\backslash 
-begin{tabular}{|l|l|}
-\layout Standard
-
-\backslash 
-hline
-\layout Standard
-
-\backslash 
-multicolumn{2}{|c|}{CVI Laser Corporation AB300 filter wheel} 
-\backslash 
-
-\backslash 
+CVI Laser Corporation AB300 filter wheel
+\end_inset 
+</cell>
+<cell multicolumn="2" alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
 
 \layout Standard
 
-\backslash 
-hline
-\layout Standard
-
-\backslash 
-multicolumn{1}{|c|}{Command}  &
-\backslash 
-multicolumn{1}{c|}{EPICS record type} 
-\backslash 
-
-\backslash 
+\end_inset 
+</cell>
+</row>
+<row bottomline="true">
+<cell multicolumn="1" alignment="left" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
 
 \layout Standard
 
-\backslash 
-hline
-\layout Standard
-Reset                &longout 
-\backslash 
-
-\backslash 
-
-\layout Standard
-Go to new position   &longout 
-\backslash 
-
-\backslash 
-
-\layout Standard
-Query position       &longin 
-\backslash 
-
-\backslash 
-
-\layout Standard
-Query status         &longin 
-\backslash 
-
-\backslash 
+Command
+\end_inset 
+</cell>
+<cell multicolumn="1" alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
 
 \layout Standard
 
-\backslash 
-hline
+EPICS record type
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
 \layout Standard
 
-\backslash 
-end{tabular} 
+Reset 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longout 
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Go to new position 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longout 
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Query position 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longin 
+\end_inset 
+</cell>
+</row>
+<row bottomline="true">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Query status 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longin  
+\end_inset 
+</cell>
+</row>
+</lyxtabular>
+
 \end_inset 
 
 
@@ -489,7 +533,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-htmladdnormallink{GPIB documentation}{../../devGpib.html}
+ahref{../../devGpib.html}{GPIB documentation}
 \end_inset 
 
 .
@@ -621,15 +665,9 @@ cmd Because this is a GPIBWRITE operation this element is unused.
 format The format string to generate the command to be sent to the device.
  The filter position (1-6) can be converted to the required command byte
  with the printf 
-\begin_inset ERT
-status Collapsed
-
-\layout Standard
-
-\backslash 
-verb@%c@
-\end_inset 
-
+\family typewriter 
+%c
+\family default 
  format.
  
 \layout Description
@@ -968,7 +1006,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatimfile{AB300/AB300App/src/AB300Include.dbd}
+verbatiminput{AB300/AB300App/src/AB300Include.dbd}
 \end_inset 
 
 
@@ -996,7 +1034,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatimfile{AB300/AB300App/Db/AB300.db}
+verbatiminput{AB300/AB300App/Db/AB300.db}
 \end_inset 
 
 
@@ -1166,7 +1204,9 @@ status Open
 \layout Standard
 
 \backslash 
-htmladdnormallink{asynTrace}{../../asynDriver.html}
+ahref{
+\backslash 
+url{../asynDriver.html#DiagnosticAids}}{asynTrace}
 \end_inset 
 
  facility.
@@ -1512,7 +1552,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatimfile{AB300/AB300App/src/devAB300.c}
+verbatiminput{AB300/AB300App/src/devAB300.c}
 \end_inset 
 
 
