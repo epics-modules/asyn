@@ -242,8 +242,8 @@ static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
 static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
 static asynStatus registerInterruptSource(const char *portName,
-    asynInterface *pasynInterface);
-static asynStatus getInterruptPvt(const char *portName,
+    asynInterface *pasynInterface, void **pasynPvt);
+static asynStatus getInterruptPvt(asynUser *pasynUser,
     const char *interfaceType, void **pasynPvt);
 static interruptNode *createInterruptNode(void *pasynPvt);
 static asynStatus addInterruptUser(interruptNode*pinterruptNode);
@@ -899,6 +899,7 @@ static asynUser *duplicateAsynUser(asynUser *pasynUser,
     pnew->user.userData = pold->user.userData;
 /*MARTY IS THIS SAFE*/
     pnew->user.drvUser = pold->user.drvUser;
+    pnew->user.reason = pold->user.reason;
     pnew->user.timeout = pold->user.timeout;
     return &pnew->user;
 }
@@ -1622,7 +1623,7 @@ static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo)
 }
 
 static asynStatus registerInterruptSource(const char *portName,
-    asynInterface *pasynInterface)
+    asynInterface *pasynInterface, void **pasynPvt)
 {
     port          *pport = locatePort(portName);
     interfaceNode *pinterfaceNode;
@@ -1659,34 +1660,40 @@ static asynStatus registerInterruptSource(const char *portName,
     ellInit(&pinterruptBase->removeList);
     pinterruptBase->pasynInterface = pinterfaceNode->pasynInterface;
     pinterruptBase->pport = pport;
+    *pasynPvt = pinterruptBase;
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
 
-static asynStatus getInterruptPvt(const char *portName,
+static asynStatus getInterruptPvt(asynUser *pasynUser,
     const char *interfaceType, void **pasynPvt)
 {
-    port          *pport = locatePort(portName);
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
     interfaceNode *pinterfaceNode;
 
     if(!pport) {
        printf("asynManager:getInterruptPvt portName %s not registered\n",
-          portName);
+          pport->portName);
        return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
     if(!pinterfaceNode) {
-        printf("interface %s already registered for port %s\n",
-            interfaceType,pport->portName);
        printf("%s asynManager:getInterruptPvt interface %s not registered\n",
-          portName,interfaceType);
+          pport->portName,interfaceType);
         epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
     *pasynPvt = pinterfaceNode->pinterruptBase;
     epicsMutexUnlock(pport->asynManagerLock);
+    if (!*pasynPvt) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                      "Driver does not support interrupts on interface %s",
+                      interfaceType);
+        return(asynError);
+    }
     return asynSuccess;
 }
 
