@@ -53,11 +53,11 @@ device support and also with asynDriver.</p>
 instruments. Other methods are available. If support for an instrument does
 not exist consider using STREAMS instead of devGpib.</p>
 
-<p>devGpib is the successor to the gpib support that came with EPICS base
+<p>devGpib is the successor to the GPIB support that came with EPICS base
 3.13, unbundled by Benjamin Franksen, and ultimately became gpibCore which is
 the 3.14 version of Benjamin's support.</p>
 
-<p>The 3.13 gpib support only worked with real GPIB instruments. Since
+<p>The 3.13 GPIB support only worked with real GPIB instruments. Since
 devGpib uses low level asyn drivers, it can also work with other instruments,
 e.g. serial devices. Thus this manual  uses the terminology <i>instrument</i>
 rather than <i>GPIB device</i>.</p>
@@ -75,10 +75,10 @@ write new support.</p>
   <li>devSupportGpib provides record independent support.</li>
   <li>devCommonGpib/devSupportGpib use asynCommon, asynOctet, and asynGpib.
     Thus the support will work with any driver that implements these
-    interraces. If instrument support does not use gpib specific features,
+    interfaces. If instrument support does not use GPIB specific features,
     e.g. SRQs, then the support will work with any driver that implements
-    asynCommon and asynOctet. In particular communication via serial and
-    ethernet ports is possible.</li>
+    asynCommon and asynOctet. In particular communication via serial ports is
+    possible.</li>
   <li>devCommonGpib should satisfy most requirements but it is also possible
     to provide custom support that uses devSupportGpib.</li>
 </ul>
@@ -105,7 +105,7 @@ write new support.</p>
   <dt>Marty Kraimer</dt>
     <dd>Marty started with Eric's version and made changes to support
       secondary addressing and to replace ioctl with code to support general
-      bus management, universial commands, and addressed commands. He also
+      bus management, universal commands, and addressed commands. He also
       made the conversion to using asyn drivers..</dd>
 </dl>
 <hr>
@@ -115,7 +115,7 @@ write new support.</p>
 </center>
 
 <p>devGpib is bundled with the asyn support. The code is in library asyn.
-Thus once asyn is included as part on an application debGpib will also be
+Thus once asyn is included as part of an application debGpib will also be
 available. It is only necessary to include the device definitions via your
 &lt;app&gt;Include.dbd file.</p>
 
@@ -126,7 +126,7 @@ available. It is only necessary to include the device definitions via your
 <h2><a name="Using Instrument Support"></a>Using Instrument Support</h2>
 </center>
 
-<p>devGpib does not provide support for specific gpib devices but for
+<p>devGpib does not provide support for specific GPIB devices but for
 implementing such support. Within the EPICS community, support exists for
 many gpib devices. The EPICS supported hardware list shows some of the
 support. If your device is not listed and a message to tech-talk does not
@@ -158,9 +158,9 @@ where:
   <dt>&lt;addr&gt;</dt>
     <dd>GPIB address of your device, which can  be a primary address or an
       extended address. A primary address has a value &lt;=31. An extended
-      addresss is of the form: PSS,where P represents the primary address and
+      address is of the form: PSS,where P represents the primary address and
       SS is the secondary address. It is NOT possible to express an extended
-      address if the primary adddress is 0. Some examples are :
+      address if the primary address is 0. Some examples are :
       <pre>A9    primary address 9
 A900  extended address: primary address is 9, secondary address is 0
 A906  extended address: primary address is 9, secondary address is 6. </pre>
@@ -421,7 +421,7 @@ definition must define field OUT as</p>
   <dt>P1</dt>
     <dd>This plays a dual role.
       <p>For EFAST operations it is set equal to the number of entries in the
-      efast tablei by devSupportGpib:init_record.</p>
+      efast table by devSupportGpib:init_record.</p>
       <p>For other operations, it is an integer  passed to the conversion
       function specified in <code>convert.</code></p>
     </dd>
@@ -450,7 +450,7 @@ definition must define field OUT as</p>
 
 <p>The following describes the semantics for the device support provided by
 the devGpib support provided with asynDriver. If an application extends this
-support that it bwill have to document it's rules.</p>
+support it must to document its changes.</p>
 <dl>
   <dt>GPIBREAD</dt>
     <dd><p>Supports record types: ai, bi, event, longin, mbbi, mbbiDirect,
@@ -466,8 +466,8 @@ support that it bwill have to document it's rules.</p>
       <ul>
         <li><code>convert</code> is called. It is expected to give a value to
           the appropriate field of the record or return -1.</li>
-        <li>If the return indicates failure (-1) recGblSetSevr has been
-          called.</li>
+        <li>If the return indicates failure (-1) the convert routine must
+          also have called recGblSetSevr.</li>
         <li>record completion occurs.</li>
       </ul>
       <p>If <code>convert</code> is not defined then what is done depends on
@@ -568,13 +568,13 @@ support that it bwill have to document it's rules.</p>
     <dd><p>This operation type is only valid on BO and MBBO record types.
       <code>pgpibCmd-&gt;P3</code>must contain the address of an efast table.
       At init time some checks are made to see that an efast table is defined
-      but if it is defined incorrectly problems mat arise.</p>
+      but if it is defined incorrectly problems may arise.</p>
       <p>The following is done:</p>
       <ul>
         <li>Device support sets <code>pibDpvt.efastVal</code> equal to the
           VAL field.</li>
         <li>If <code>pgpibCmd-&gt;cmdis not null then msgLen must also be
-          specified. msg is set equal to the concatination of cmd and the
+          specified. msg is set equal to the concatenation of cmd and the
           efast value specified bt <code>pgpibCmd-&gt;P3</code>. The
           resulting msg is sent.</code></li>
         <li>If <code>pgpibCmd-&gt;cmdis null then the string pointed to by
@@ -590,7 +590,7 @@ support that it bwill have to document it's rules.</p>
         <li>Read the data from the instrument and place it into
           <code>pgpibDpvt-&gt;msg</code>.</li>
         <li>Compare <code>msg</code> with each element of the EFAST Table
-          referenced by <code>pgpibCmd-&gt;P3</code></li>
+          referenced by <code>pgpibCmd-&gt;P3.</code></li>
         <li>devSupportGpib sets <code>pgpibDpvt-&gt;efastVal</code> to the
           index of the EFAST table that matched.</li>
         <li>Device support sets RVAL equal to
@@ -645,19 +645,19 @@ support that it bwill have to document it's rules.</p>
     <dd><p>If rval = (0,1) then (do nothing, send GTL). GTL is an addressed
       GPIB command, i.e. it applys only to the addressed device.</p>
       <p>If a device has local control locked out,  local control can be
-      temporily granted by issuing this command. However the next time the
+      temporarily granted by issuing this command. However the next time the
       device is addressed it will again disable local control.</p>
       <p>Only define <code>dset</code>, <code>type</code>, and
       <code>pri</code>. A default pdevGpibNames is provided.</p>
     </dd>
   <dt>GPIBRESETLNK Valid only for BO records.</dt>
     <dd><p>If rval = (0,1) then (do nothing, reset link task).  This
-      completly restarts the link thread. This is a very drastic action.</p>
+      completely restarts the link thread. This is a very drastic action.</p>
       <p>Only define <code>dset</code>, <code>type</code>, and
       <code>pri</code>. A default pdevGpibNames is provided.</p>
     </dd>
   <dt>GPIBSRQHANDLER</dt>
-    <dd>This is used to handle an unsollicited SRQ from gpibAddr,, i.e. a
+    <dd>This is used to handle an unsolicited SRQ from gpibAddr,, i.e. a
       device raises SRQ when a read wait, e.g. GPIBREADW or GPIBEFASTIW, is
       not active. This request is implemented only for longin records. When
       the device issues an SRQ the status byte is put into the val field and
@@ -665,7 +665,7 @@ support that it bwill have to document it's rules.</p>
       link to records that issue GPIB commands to read the information that
       caused the SRQ.</dd>
   <dt>GPIBEOS</dt>
-    <dd>This is NOT a separate request type but is ored with another
+    <dd>This is NOT a separate request type but is or'd with another
       operation type, e.g. GPIBREAD|GPIBEOS. It signifies that eosChar
       contains an end of message character. This is for devices that don't
       use EOL to signify end of message. Most GPIB devices should not require
@@ -675,7 +675,7 @@ support that it bwill have to document it's rules.</p>
 
 <h2>Efast (Enumerated Fast I/O) Tables</h2>
 A device's command set often has things like  "OFF" or "ON" in the command
-string. It is convienient to issue such commands via binary and multibit
+string. It is convenient to issue such commands via binary and multibit
 binary records. Efast tables specify such strings. Simply specifies the
 string value for each of the possible states of the VAL field of the record.
 
@@ -688,7 +688,7 @@ string value for each of the possible states of the VAL field of the record.
 <pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, NULL, NULL, 0, 0,NULL, 0, 0, tableName, NULL, -1},</pre>
 For an input entry, it would look like this:
 <pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", NULL, 0, 50, NULL, 0, 0, tableName, NULL, -1},</pre>
-The efast table MUST be null terminated.
+The efast table MUST be NULL terminated.
 
 <p>For outputs the VAL field is used to index into the efast table and select
 a string to send to the instrument. The string is sent to the instrument
@@ -854,21 +854,21 @@ structure.
 </dl>
 
 <h2>Debugging Flags</h2>
-devCommonGpib/devSupportGpib provie some debugging output during normal
+devCommonGpib/devSupportGpib provide some debugging output during normal
 processing if the debug flag in the parm block is set to a non-zero value.
 
 <h2>SRQ Processing</h2>
 
 <p>If the low level device driver implements interface <code>asynGpib</code>
 then devSupportGpib registers itself to handle SRQs. It defines two types of
-SRQs: sollicited and unsollicited. Sollicited SRQs are for GPIBREADW and
+SRQs: solicited and unsollicited. Solicited SRQs are for GPIBREADW and
 GPIBEFASTIW commands. If an SRQ is raised for a gpibAddr that does not have
 an outstanding GPIBREADW or GPIBEFASTIW command, the SRQ is considered
-unsollicited.</p>
+unsolicited.</p>
 
-<p>When the devSupportGpib receives an unsollicited SRQ and it has a
+<p>When the devSupportGpib receives an unsolicited SRQ and it has a
 registered handler for the gpibAddr, it calls the handler, otherwise it
-issues a message that it received an unsollicited SRQ.</p>
+issues a message that it received an unsolicited SRQ.</p>
 
 <p>The device support for the longinRecord supports gpibCmd type
 GPIBSRQHANDLER. It calls the devSupportGpib registerSrqHandler method. When
@@ -901,7 +901,7 @@ devCommonGpib and modify it</p>
   <li>devCommonGpib.h - This defines the function prototypes for the methods
     implemented in devCommonGpib.c</li>
   <li>devGpib.h - Included in instrument specific device support. It
-    generates DSETs refering to the functions implemented in
+    generates DSETs revering to the functions implemented in
   devCommonGpib.</li>
   <li>devSupportGpib.h - Describes the structures gpibCmd, devGpibNames, and
     devGpibParmBlock described above. It also describes additional structures
@@ -974,9 +974,9 @@ address of a pgpibDpvt-&gt;</p>
 <p>where</p>
 <dl>
   <dt>node</dt>
-    <dd>For use by devGpibCommon. When a sollicited SRQ request is active,
-      any additional requests for the device are put on a wait list until the
-      SRQ occurs. This the node for the wait list.</dd>
+    <dd>For use by devGpibCommon. When a solicited SRQ request is active, any
+      additional requests for the device are put on a wait list until the SRQ
+      occurs. This the node for the wait list.</dd>
   <dt>pdevGpibParmBlock</dt>
     <dd>Address of the devGpibParmBlock. It is the same value as
       gDset.pdevGpibPvt</dd>
@@ -1002,7 +1002,7 @@ address of a pgpibDpvt-&gt;</p>
       into alarm.</dd>
   <dt>parm</dt>
     <dd>The value of the parm field of INP or OUT. It locates the gpibCmd for
-      it's record.</dd>
+      its record.</dd>
   <dt>rsp</dt>
     <dd>If respond2Writes is &gt;=0 and rspLen is &gt;0, this is the buffer
       that holds the read after each write..</dd>
@@ -1048,7 +1048,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
       the thread created for low level gpib driver. It can call asynCommon,
       asynOctet, and asynGpib.</dd>
   <dt>initRecord</dt>
-    <dd>This initializes all the devGpib structues attached to the record
+    <dd>This initializes all the devGpib structures attached to the record
       starting with dbCommon.dpvt.</dd>
   <dt>processGPIBSOFT</dt>
     <dd>If pgpibCmd-&gt;type is GPIBSOFT just call this method.</dd>
@@ -1091,12 +1091,11 @@ support had definitions like:</p>
 <p>Now the definitions would be:</p>
 <pre>#define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
-<br>
-</pre>
+<br></pre>
 
 <p>The fields in devGpibParmBlock have been reordered and some have gone
 away. In addition the timeout fields are now of type double and have units of
-seconds. The following fields have disapeared:</p>
+seconds. The following fields have disappeared:</p>
 <dl>
   <dt>magicSrq</dt>
     <dd>This is an obsolete field.</dd>
@@ -1104,7 +1103,7 @@ seconds. The following fields have disapeared:</p>
     <dd>SRQs are handled differently than before. It is no longer possible
       for device support code to provide it's own SRQ handler for ALL gpib
       devices attached to the gpib interface. It is possible, as described
-      above to register va handler for a specific gpibAddr.</dd>
+      above to register a handler for a specific gpibAddr.</dd>
   <dt>wrConversion</dt>
     <dd>The secondary conversion routine is no longer supported. It was used
       if respond2Writes is &gt;=0.</dd>
@@ -1137,7 +1136,7 @@ init_ai.</p>
 <h3>devGpib.h</h3>
 
 <p>Instead of using devGpib.h, older device support created it's own DSET_xxx
-definitions. Remove all of these and use the techique of defining DSET_AI as
+definitions. Remove all of these and use the technique of defining DSET_AI as
 shown above</p>
 
 <p>Older device support initialized devGpibParmBlock with the statement:</p>
