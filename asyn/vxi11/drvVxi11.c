@@ -19,6 +19,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 /* epics includes */
 #include <dbDefs.h>
 #include <taskwd.h>
@@ -134,6 +135,29 @@ static asynStatus vxiSerialPollBegin(void *pdrvPvt);
 static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout);
 static asynStatus vxiSerialPollEnd(void *pdrvPvt);
 
+/*
+ * Show string in human-readable form
+ */
+static void
+showString(const char *str, int numchars)
+{
+    while (numchars--) {
+        char c = *str++;
+        switch (c) {
+        case '\n':  printf("\\n");  break;
+        case '\r':  printf("\\r");  break;
+        case '\t':  printf("\\t");  break;
+        case '\\':  printf("\\\\");  break;
+        default:
+            if (isprint(c))
+                printf("%c", c);   /* putchar(c) doesn't work on vxWorks (!!) */
+            else
+                printf("\\%03o", (unsigned char)c);
+            break;
+        }
+    }
+}
+
 /******************************************************************************
  * Convert VXI error code to a string.
  ******************************************************************************/
@@ -776,7 +800,6 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
 
     assert(pvxiLink);
     assert(data);
-    if(vxi11Debug) printf("%s vxiRead addr %d\n",pvxiLink->portName,addr);
     if(!vxiSetDevLink(pvxiLink, addr, &devReadP.lid)) return(-1);
     /* device link is created; do the read */
     do{
@@ -811,6 +834,12 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
             }
 	    status = -1;
 	} else {
+        if(vxi11Debug) {
+            printf("%s %d vxiRead %d  ",pvxiLink->portName,addr,devReadR.data.data_len);
+            if(vxi11Debug>1)
+                showString(devReadR.data.data_val, devReadR.data.data_len);
+            printf("\n");
+        }
 	    memcpy(data, devReadR.data.data_val, devReadR.data.data_len);
 	    status += devReadR.data.data_len;
 	    data += devReadR.data.data_len;
@@ -838,7 +867,12 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     int lennow;
 
     assert(pvxiLink && data);
-    if(vxi11Debug) printf("%s %d vxiWrite %s\n",pvxiLink->portName,addr,data);
+    if(vxi11Debug) {
+        printf("%s %d vxiWrite %d  ",pvxiLink->portName,addr,numchars);
+        if(vxi11Debug>1)
+            showString(data, numchars);
+        printf("\n");
+    }
     assert(pvxiLink);
     assert(data);
     if(!vxiSetDevLink(pvxiLink, addr, &devWriteP.lid)) return(-1);
