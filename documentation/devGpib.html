@@ -871,7 +871,7 @@ structure.  For example:
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
-    int respond2Writes; /* seconds to wait if a device responds to writes */
+    int respond2Writes; /* milliseconds to wait if a device responds to writes */
     /*The following are set by devSupportGpib*/
     int  msgLenMax;     /*max msgLen all commands*/
     int  rspLenMax;     /*max rspLen all commands*/
@@ -896,12 +896,12 @@ structure.  For example:
       in all cases.)</dd>
   <dt><code>respond2Writes</code></dt>
     <dd>This field is for devices that echo writes.
-      After an output command the following is done:
+      If respond2Writes &gt;=0 then after an output command the following is done:
       <ul>
         <li>If pgpibCmd-&gt;rspLen is &lt;=0 no action is taken. This is a
           way to override respond2Writes for specific commands.</li>
         <li>If respond2Writes is &gt;0 then a wait of respond2Writes
-          seconds occurs.</li>
+          milliseconds occurs.</li>
         <li>A read of up to pgpibCmd-&gt;rspLen bytes (terminated 
           earlier by GPIB EOI or by the
           terminator string, if any) is read into pgpibDpvt-&gt;rsp.</li>
