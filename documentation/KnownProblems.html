@@ -21,10 +21,37 @@ alink="#FF0000">
 </center>
 
 <h3>asynRecord</h3>
-<p>asynRecord (and other code) use epicsStrSnPrintEscaped.  The version
-in base 3.14.6 has a buffer overflow problem that can lead to
-corruption.  In fact it is guaranteed to lead to corruption in
+<p>asynRecord (and other code) use epicsStrSnPrintEscaped.  In EPICS 3.14.6
+the files epicsVsnprintf on vxWorks (which gets called by several other 
+epicsXXXprintf routines) and epicsStrSnPrintEscaped each
+have a bug could cause buffer overflow. These bugs are guaranteed to lead to corruption in
 asynRecord if the received string is longer than 40 characters.<p>
+
+<h3>drvAsynSerial</h3>
+<ul>
+  <li>drvAsynSerialPort.c has a bug that can cause segmentation faults 
+      on some systems (e.g. cygwin-x86).  The line
+<pre>
+static const struct asynOctet drvAsynSerialPortAsynOctet = {
+</pre>
+must be changed to
+<pre>
+static struct asynOctet drvAsynSerialPortAsynOctet = {
+</pre>
+i.e. remove the const keyword.
+ </li>
+  <li>drvAsynIPPort.c has a bug that can cause segmentation faults 
+      on some systems (e.g. cygwin-x86).  The line
+<pre>
+static const struct asynOctet drvAsynIPPortAsynOctet = {
+</pre>
+must be changed to
+<pre>
+static struct asynOctet drvAsynIPPortAsynOctet = {
+</pre>
+i.e. remove the const keyword.
+ </li>
+</ul>
 
 <h3>asynManager</h3>
 <ul>
