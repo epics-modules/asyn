@@ -132,7 +132,7 @@ static asynStatus asynInt32SyncIOQueueAndWait(asynUser *pasynUser,
            status = pasynManager->cancelRequest(pasynUser,&wasQueued);
            if(status!=asynSuccess || !wasQueued) {
               asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                        "asynInt32SyncIOQueueAndWait Cancel request failed: %s",
+                        "asynInt32SyncIOQueueAndWait Cancel request failed: %s\n",
                         pasynUser->errorMessage);
            }
            return(asynTimeout);
@@ -158,7 +158,7 @@ static void asynInt32SyncIOCallback(asynUser *pasynUser)
                     "asynInt32SyncIO connect failed %s\n",
                     pasynUser->errorMessage);
        } else {
-          asynPrint(pasynUser, ASYN_TRACE_FLOW, "asynInt32SyncIO connect");
+          asynPrint(pasynUser, ASYN_TRACE_FLOW, "asynInt32SyncIO connect\n");
        }
        break;
     case asynInt32SyncIO_WRITE:
@@ -191,7 +191,7 @@ static void asynInt32SyncIOCallback(asynUser *pasynUser)
                     pasynUser->errorMessage);
        } else {
           asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-             "asynInt32SyncIO getBounds: low %d high %d",pPvt->low,pPvt->high);
+             "asynInt32SyncIO getBounds: low %d high %d\n",pPvt->low,pPvt->high);
        }
        break;
     }
