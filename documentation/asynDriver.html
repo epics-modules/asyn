@@ -948,7 +948,7 @@ boxes.</p>
   <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME carrier.</li>
   <li>Linux hardware serial port (/dev/ttyS0).</li>
   <li>Solaris hardware serial port (/dev/cua/a).</li>
-  <li>Linux, Solaris and Darwin with a Moxa NPort Ethernet/Serial converter.</li>
+  <li>Linux, Solaris, Darwin and vxWorks with a Moxa NPort Ethernet/Serial converter.</li>
 </ul>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt> command:
@@ -977,10 +977,10 @@ where the arguments are:
 Serial ports directly attached to a vxWorks IOC must be set up using
 hardware-specific commands.
 The following example shows the
-commands to set up and configure a port on a GreenSprings UART Industry-Pack module.
+commands to set up and configure a port on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01 carrier.
 Note that these are vxWorks shell commands and not IOC shell commands.
 <pre>
-ipacAddCarrier(&vipc616_01,"0x6000,B0000000")
+ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv 1
 octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
 port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
