@@ -1,6 +1,6 @@
 dbLoadDatabase("../../dbd/AB300.dbd",0,0)
 AB300_registerRecordDeviceDriver(pdbbase) 
-dbLoadRecords("../../db/AB300.db","user=AB300")
+dbLoadRecords("../../db/devAB300.db","P=AB300:,L=0,A=0")
 
 # Create a diagnostic asynRecord
 dbLoadRecords("../../db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
