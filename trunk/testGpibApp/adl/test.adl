@@ -95,7 +95,7 @@ display {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):llo"
+		chan="$(P)$(R)_P$(PORT)_llo"
 		clr=14
 		bclr=4
 	}
@@ -110,7 +110,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):llo"
+		chan="$(P)$(R)_P$(PORT)_llo"
 		clr=14
 		bclr=4
 	}
@@ -127,7 +127,7 @@ display {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):sdc"
+		chan="$(P)$(R)_P$(PORT)_sdc"
 		clr=14
 		bclr=4
 	}
@@ -142,7 +142,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):sdc"
+		chan="$(P)$(R)_P$(PORT)_sdc"
 		clr=14
 		bclr=4
 	}
@@ -159,7 +159,7 @@ display {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):gtl"
+		chan="$(P)$(R)_P$(PORT)_gtl"
 		clr=14
 		bclr=4
 	}
@@ -174,7 +174,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):gtl"
+		chan="$(P)$(R)_P$(PORT)_gtl"
 		clr=14
 		bclr=4
 	}
@@ -191,7 +191,7 @@ display {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):dcl"
+		chan="$(P)$(R)_P$(PORT)_dcl"
 		clr=14
 		bclr=4
 	}
@@ -206,7 +206,7 @@ display {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):dcl"
+		chan="$(P)$(R)_P$(PORT)_dcl"
 		clr=14
 		bclr=4
 	}
@@ -223,7 +223,7 @@ menu {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):ren"
+		chan="$(P)$(R)_P$(PORT)_ren"
 		clr=14
 		bclr=4
 	}
@@ -236,7 +236,7 @@ menu {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):ren"
+		chan="$(P)$(R)_P$(PORT)_ren"
 		clr=14
 		bclr=4
 	}
@@ -262,7 +262,7 @@ composite {
 				height=20
 			}
 			monitor {
-				chan="$(name)L$(L):ifc"
+				chan="$(P)$(R)_P$(PORT)_ifc"
 				clr=14
 				bclr=4
 			}
@@ -279,7 +279,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(name)L$(L):ifc"
+				chan="$(P)$(R)_P$(PORT)_ifc"
 				clr=14
 				bclr=4
 			}
@@ -309,7 +309,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):setDESE"
+		chan="$(P)$(R)_P$(PORT)_setDESE"
 		clr=14
 		bclr=4
 	}
@@ -340,7 +340,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):setESE"
+		chan="$(P)$(R)_P$(PORT)_setESE"
 		clr=14
 		bclr=4
 	}
@@ -355,7 +355,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):getESE"
+		chan="$(P)$(R)_P$(PORT)_getESE"
 		clr=14
 		bclr=4
 	}
@@ -385,7 +385,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):setSRE"
+		chan="$(P)$(R)_P$(PORT)_setSRE"
 		clr=14
 		bclr=4
 	}
@@ -400,7 +400,7 @@ text {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):getSRE"
+		chan="$(P)$(R)_P$(PORT)_getSRE"
 		clr=14
 		bclr=4
 	}
@@ -417,7 +417,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):getESE.PROC"
+		chan="$(P)$(R)_P$(PORT)_getESE.PROC"
 		clr=14
 		bclr=4
 	}
@@ -432,7 +432,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):getSRE.PROC"
+		chan="$(P)$(R)_P$(PORT)_getSRE.PROC"
 		clr=14
 		bclr=4
 	}
@@ -456,7 +456,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(name)L$(L):getDESE.PROC"
+				chan="$(P)$(R)_P$(PORT)_getDESE.PROC"
 				clr=14
 				bclr=4
 			}
@@ -471,7 +471,7 @@ composite {
 				height=20
 			}
 			monitor {
-				chan="$(name)L$(L):getDESE"
+				chan="$(P)$(R)_P$(PORT)_getDESE"
 				clr=14
 				bclr=4
 			}
@@ -490,7 +490,7 @@ composite {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):XXXJUNK.PROC"
+		chan="$(P)$(R)_P$(PORT)_XXXJUNK.PROC"
 		clr=14
 		bclr=4
 	}
@@ -505,7 +505,7 @@ composite {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):getESR.PROC"
+		chan="$(P)$(R)_P$(PORT)_getESR.PROC"
 		clr=14
 		bclr=4
 	}
@@ -520,7 +520,7 @@ composite {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):srqHandler"
+		chan="$(P)$(R)_P$(PORT)_srqHandler"
 		clr=14
 		bclr=4
 	}
@@ -537,7 +537,7 @@ composite {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):getESR"
+		chan="$(P)$(R)_P$(PORT)_getESR"
 		clr=14
 		bclr=4
 	}
@@ -554,7 +554,7 @@ composite {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):srqCount"
+		chan="$(P)$(R)_P$(PORT)_srqCount"
 		clr=14
 		bclr=4
 	}
@@ -570,7 +570,7 @@ composite {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):getSTB.PROC"
+		chan="$(P)$(R)_P$(PORT)_getSTB.PROC"
 		clr=14
 		bclr=4
 	}
@@ -585,7 +585,7 @@ composite {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):getSTB"
+		chan="$(P)$(R)_P$(PORT)_getSTB"
 		clr=14
 		bclr=4
 	}
@@ -626,7 +626,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):idn.PROC"
+		chan="$(P)$(R)_P$(PORT)_idn.PROC"
 		clr=14
 		bclr=4
 	}
@@ -650,7 +650,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(name)L$(L):saveSRE.PROC"
+				chan="$(P)$(R)_P$(PORT)_saveSRE.PROC"
 				clr=14
 				bclr=4
 			}
@@ -665,7 +665,7 @@ composite {
 				height=20
 			}
 			monitor {
-				chan="$(name)L$(L):idnvalueWait"
+				chan="$(P)$(R)_P$(PORT)_idnvalueWait"
 				clr=14
 				bclr=4
 			}
@@ -684,7 +684,7 @@ composite {
 		height=20
 	}
 	monitor {
-		chan="$(name)L$(L):idnvalue"
+		chan="$(P)$(R)_P$(PORT)_idnvalue"
 		clr=14
 		bclr=4
 	}
@@ -701,7 +701,7 @@ composite {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):idnvalue"
+		chan="$(P)$(R)_P$(PORT)_idnvalue"
 		clr=14
 		bclr=4
 	}
@@ -716,7 +716,7 @@ composite {
 		height=20
 	}
 	control {
-		chan="$(name)L$(L):idnvalueWait"
+		chan="$(P)$(R)_P$(PORT)_idnvalueWait"
 		clr=14
 		bclr=4
 	}

@@ -95,7 +95,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.ENBL"
+		chan="asynRecord_PA_A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -110,7 +110,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.ENBL"
+		chan="asynRecord_PA_A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -125,11 +125,10 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.ENBL"
+		chan="asynRecord_PA_A0.ENBL"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -142,7 +141,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.ENBL"
+		chan="asynRecord_PB_A-1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -157,7 +156,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.ENBL"
+		chan="asynRecord_PB_A-1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -172,11 +171,10 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.ENBL"
+		chan="asynRecord_PB_A-1.ENBL"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -189,7 +187,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.ENBL"
+		chan="asynRecord_PB_A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -204,7 +202,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.ENBL"
+		chan="asynRecord_PB_A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -219,11 +217,10 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.ENBL"
+		chan="asynRecord_PB_A0.ENBL"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -236,7 +233,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.ENBL"
+		chan="asynRecord_PB_A1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -251,7 +248,7 @@ display {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.ENBL"
+		chan="asynRecord_PB_A1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -266,11 +263,10 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.ENBL"
+		chan="asynRecord_PB_A1.ENBL"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -285,7 +281,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client1:PA:A0"
+	textix="testClient1_PA_A0"
 	align="horiz. right"
 }
 text {
@@ -298,7 +294,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client2:PA:A0"
+	textix="testClient2_PA_A0"
 	align="horiz. right"
 }
 menu {
@@ -309,7 +305,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client1:PA:A0:calc.SCAN"
+		chan="testClient1_PA_A0_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -322,7 +318,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client2:PA:A0:calc.SCAN"
+		chan="testClient2_PA_A0_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -335,7 +331,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PA:A0:so"
+		chan="testClient1_PA_A0_so"
 		clr=14
 		bclr=4
 	}
@@ -353,7 +349,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PA:A0:so"
+		chan="testClient2_PA_A0_so"
 		clr=14
 		bclr=4
 	}
@@ -371,7 +367,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PA:A0:si"
+		chan="testClient1_PA_A0_si"
 		clr=14
 		bclr=4
 	}
@@ -389,7 +385,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PA:A0:si"
+		chan="testClient2_PA_A0_si"
 		clr=14
 		bclr=4
 	}
@@ -409,7 +405,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client:PB:A-1"
+	textix="testClient_PB_A-1"
 	align="horiz. right"
 }
 text {
@@ -422,7 +418,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client1:PB:A0"
+	textix="testClient1_PB_A0"
 	align="horiz. right"
 }
 text {
@@ -435,7 +431,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client2:PB:A0"
+	textix="testClient2_PB_A0"
 	align="horiz. right"
 }
 text {
@@ -448,7 +444,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client1:PB:A1"
+	textix="testClient1_PB_A1"
 	align="horiz. right"
 }
 text {
@@ -461,7 +457,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="client2:PB:A1"
+	textix="testClient2_PB_A1"
 	align="horiz. right"
 }
 menu {
@@ -472,7 +468,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client1:PB:A0:calc.SCAN"
+		chan="testClient1_PB_A0_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -485,7 +481,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client2:PB:A0:calc.SCAN"
+		chan="testClient2_PB_A0_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -498,7 +494,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client1:PB:A1:calc.SCAN"
+		chan="testClient1_PB_A1_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -511,7 +507,7 @@ menu {
 		height=18
 	}
 	control {
-		chan="client2:PB:A1:calc.SCAN"
+		chan="testClient2_PB_A1_calc.SCAN"
 		clr=14
 		bclr=4
 	}
@@ -524,7 +520,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PB:A0:so"
+		chan="testClient1_PB_A0_so"
 		clr=14
 		bclr=4
 	}
@@ -542,7 +538,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PB:A0:so"
+		chan="testClient2_PB_A0_so"
 		clr=14
 		bclr=4
 	}
@@ -560,7 +556,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PB:A1:so"
+		chan="testClient1_PB_A1_so"
 		clr=14
 		bclr=4
 	}
@@ -578,7 +574,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PB:A1:so"
+		chan="testClient2_PB_A1_so"
 		clr=14
 		bclr=4
 	}
@@ -596,7 +592,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PB:A0:si"
+		chan="testClient1_PB_A0_si"
 		clr=14
 		bclr=4
 	}
@@ -614,7 +610,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PB:A0:si"
+		chan="testClient2_PB_A0_si"
 		clr=14
 		bclr=4
 	}
@@ -632,7 +628,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client1:PB:A1:si"
+		chan="testClient1_PB_A1_si"
 		clr=14
 		bclr=4
 	}
@@ -650,7 +646,7 @@ menu {
 		height=18
 	}
 	monitor {
-		chan="client2:PB:A1:si"
+		chan="testClient2_PB_A1_si"
 		clr=14
 		bclr=4
 	}
@@ -668,7 +664,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.CNCT"
+		chan="asynRecord_PA_A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -683,7 +679,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.CNCT"
+		chan="asynRecord_PA_A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -698,11 +694,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.CNCT"
+		chan="asynRecord_PA_A0.CNCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -715,7 +710,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.CNCT"
+		chan="asynRecord_PB_A-1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -730,7 +725,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.CNCT"
+		chan="asynRecord_PB_A-1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -745,11 +740,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.CNCT"
+		chan="asynRecord_PB_A-1.CNCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -762,7 +756,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.CNCT"
+		chan="asynRecord_PB_A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -777,7 +771,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.CNCT"
+		chan="asynRecord_PB_A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -792,11 +786,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.CNCT"
+		chan="asynRecord_PB_A0.CNCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -809,7 +802,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.CNCT"
+		chan="asynRecord_PB_A1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -824,7 +817,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.CNCT"
+		chan="asynRecord_PB_A1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -839,11 +832,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.CNCT"
+		chan="asynRecord_PB_A1.CNCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -856,7 +848,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.AUCT"
+		chan="asynRecord_PA_A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -871,7 +863,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PA:A0.AUCT"
+		chan="asynRecord_PA_A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -886,11 +878,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.AUCT"
+		chan="asynRecord_PA_A0.AUCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -903,7 +894,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.AUCT"
+		chan="asynRecord_PB_A-1.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -918,7 +909,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1.AUCT"
+		chan="asynRecord_PB_A-1.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -933,11 +924,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.AUCT"
+		chan="asynRecord_PB_A-1.AUCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -950,7 +940,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.AUCT"
+		chan="asynRecord_PB_A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -965,7 +955,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0.AUCT"
+		chan="asynRecord_PB_A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -980,11 +970,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.AUCT"
+		chan="asynRecord_PB_A0.AUCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -997,7 +986,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.AUCT"
+		chan="asynRecord_PB_A1.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -1012,7 +1001,7 @@ menu {
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1.AUCT"
+		chan="asynRecord_PB_A1.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -1027,11 +1016,10 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.AUCT"
+		chan="asynRecord_PB_A1.AUCT"
 		clr=14
 		bclr=4
 	}
-	clrmod="alarm"
 	format="string"
 	limits {
 	}
