@@ -1,3 +1,4 @@
+/*drvVxi11.c*/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -32,9 +33,11 @@
 #include <epicsTime.h>
 #include <cantProceed.h>
 #include <epicsString.h>
+#include <asynDriver.h>
+#include <asynOption.h>
+#include "asynGpibDriver.h"
 #include <epicsInterruptibleSyscall.h>
 /* local includes */
-#include "asynGpibDriver.h"
 #include "vxi11.h"
 #include "osiRpc.h"
 #include "vxi11core.h"
@@ -68,6 +71,7 @@ typedef struct vxiPort {
     epicsEventId  srqThreadReady;   /* wait for srqThread to be ready*/
     char          *srqThreadName;
     BOOL          rpcTaskInitCalled; /*Only call rpcTaskInit once*/
+    struct timeval vxiRpcTimeout;/* time to wait for RPC completion */
     const char    *portName;
     char          *hostName;   /* ip address of VXI-11 server */
     char          *vxiName;   /* Holds name of logical link */
@@ -83,13 +87,8 @@ typedef struct vxiPort {
     asynUser      *pasynUser;
     unsigned char recoverWithIFC;/*fire out IFC pulse on timeout (read/write)*/
     epicsInterruptibleSyscallContext *srqInterrupt;
+    asynInterface option;
 }vxiPort;
-
-/* local variables */
-typedef struct vxiLocal {
-    struct timeval vxiRpcTimeout;/* time to wait for RPC completion */
-}vxiLocal;
-static vxiLocal *pvxiLocal = 0;
 
 /* Local routines */
 static char *vxiError(Device_ErrorCode error);
@@ -111,36 +110,64 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static asynStatus vxiBusStatus(vxiPort * pvxiPort, int request,
     double timeout,int *status);
-static int vxiInit(void);
 static void vxiCreateIrqChannel(vxiPort *pvxiPort);
 static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser);
 static asynStatus vxiDisconnectPort(vxiPort *pvxiPort);
 static void vxiSrqThread(void *pvxiPort);
-
+
 /* asynGpibPort methods */
-static void vxiReport(void *pdrvPvt,FILE *fd,int details);
-static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
+static void vxiReport(void *drvPvt,FILE *fd,int details);
+static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser);
+static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser);
+static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered);
-static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
-static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiFlush(void *drvPvt,asynUser *pasynUser);
+static asynStatus vxiSetEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
-static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiGetEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
-static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
     const char *data, int length);
-static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
-static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser);
-static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static asynStatus vxiSrqStatus(void *pdrvPvt,int *srqStatus);
-static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff);
-static asynStatus vxiSerialPollBegin(void *pdrvPvt);
-static asynStatus vxiSerialPoll(void *pdrvPvt, int addr,
+static asynStatus vxiUniversalCmd(void *drvPvt, asynUser *pasynUser, int cmd);
+static asynStatus vxiIfc(void *drvPvt, asynUser *pasynUser);
+static asynStatus vxiRen(void *drvPvt,asynUser *pasynUser, int onOff);
+static asynStatus vxiSrqStatus(void *drvPvt,int *srqStatus);
+static asynStatus vxiSrqEnable(void *drvPvt, int onOff);
+static asynStatus vxiSerialPollBegin(void *drvPvt);
+static asynStatus vxiSerialPoll(void *drvPvt, int addr,
     double timeout,int *statusByte);
-static asynStatus vxiSerialPollEnd(void *pdrvPvt);
+static asynStatus vxiSerialPollEnd(void *drvPvt);
+
+static asynGpibPort vxi11 = {
+    vxiReport,
+    vxiConnect,
+    vxiDisconnect,
+    vxiRead,
+    vxiWrite,
+    vxiFlush,
+    vxiSetEos,
+    vxiGetEos,
+    vxiAddressedCmd,
+    vxiUniversalCmd,
+    vxiIfc,
+    vxiRen,
+    vxiSrqStatus,
+    vxiSrqEnable,
+    vxiSerialPollBegin,
+    vxiSerialPoll,
+    vxiSerialPollEnd
+};
+
+static asynStatus vxiSetPortOption(void *drvPvt,
+    asynUser *pasynUser,const char *key, const char *val);
+static asynStatus vxiGetPortOption(void *drvPvt,
+    asynUser *pasynUser, const char *key, char *val, int valSize);
+static const struct asynOption vxiOption = {
+    vxiSetPortOption,
+    vxiGetPortOption
+};
 
 static char *vxiError(Device_ErrorCode error)
 {
@@ -236,7 +263,7 @@ static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
     clntStat = clnt_call(pvxiPort->rpcClient, create_link,
         (xdrproc_t)xdr_Create_LinkParms,(caddr_t)&crLinkP,
         (xdrproc_t)xdr_Create_LinkResp, (caddr_t)&crLinkR,
-        pvxiLocal->vxiRpcTimeout);
+        pvxiPort->vxiRpcTimeout);
     if(clntStat != RPC_SUCCESS) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiCreateDeviceLink RPC error %s\n",
@@ -333,7 +360,7 @@ static BOOL vxiDestroyDevLink(vxiPort * pvxiPort, Device_Link devLink)
     clntStat = clnt_call(pvxiPort->rpcClient, destroy_link,
         (xdrproc_t) xdr_Device_Link,(caddr_t) &devLink,
         (xdrproc_t) xdr_Device_Error, (caddr_t) &devErr,
-        pvxiLocal->vxiRpcTimeout);
+        pvxiPort->vxiRpcTimeout);
     if(clntStat != RPC_SUCCESS) {
         status = FALSE;
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -497,7 +524,7 @@ static enum clnt_stat clientCall(vxiPort * pvxiPort,
 
     errno = 0;
     stat = clnt_call(pvxiPort->rpcClient,
-        req, proc1, addr1, proc2, addr2, pvxiLocal->vxiRpcTimeout);
+        req, proc1, addr1, proc2, addr2, pvxiPort->vxiRpcTimeout);
     if(stat!=RPC_SUCCESS || errno!=0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxi11 clientCall errno %d clnt_stat %d\n",
@@ -525,7 +552,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     errno = 0;
     while(TRUE) {
         stat = clnt_call(pvxiPort->rpcClient,
-            req, proc1, addr1, proc2, addr2, pvxiLocal->vxiRpcTimeout);
+            req, proc1, addr1, proc2, addr2, pvxiPort->vxiRpcTimeout);
         if(timeout>=0.0 || stat!=RPC_TIMEDOUT) break;
     }
     if(stat!=RPC_SUCCESS || errno!=0) {
@@ -535,14 +562,6 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
         if(stat!=RPC_TIMEDOUT) vxiDisconnectPort(pvxiPort);
     }
     return stat;
-}
-
-static int vxiInit()
-{
-    if(pvxiLocal) return 0;
-    pvxiLocal = callocMustSucceed(1,sizeof(vxiLocal),"vxiInit");
-    pvxiLocal->vxiRpcTimeout.tv_sec = DEFAULT_RPC_TIMEOUT;
-    return 0;
 }
 
 static void vxiCreateIrqChannel(vxiPort *pvxiPort)
@@ -727,7 +746,7 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
     clntStat = clnt_call(pvxiPort->rpcClient, destroy_intr_chan,
         (xdrproc_t) xdr_void, (caddr_t) &dummy,
         (xdrproc_t) xdr_Device_Error,(caddr_t) &devErr,
-        pvxiLocal->vxiRpcTimeout);
+        pvxiPort->vxiRpcTimeout);
     /* report errors only if debug flag set. If any errors, the next time this
      * link is initialized, make sure a new SRQ thread is started.  See comments
      * in vxiConnectPort. */
@@ -871,9 +890,9 @@ s */
     epicsEventSignal(pvxiPort->srqThreadReady);
 }
 
-static void vxiReport(void *pdrvPvt,FILE *fd,int details)
+static void vxiReport(void *drvPvt,FILE *fd,int details)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     assert(pvxiPort);
     fprintf(fd,"    vxi11, host name: %s\n", pvxiPort->hostName);
     if(details > 1) {
@@ -888,9 +907,9 @@ static void vxiReport(void *pdrvPvt,FILE *fd,int details)
     }
 }
 
-static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser)
 {
-    vxiPort     *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort     *pvxiPort = (vxiPort *)drvPvt;
     int         addr;
     devLink     *pdevLink;
     asynStatus  status;
@@ -928,9 +947,9 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     return asynSuccess;
 }
 
-static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     addr;
     devLink *pdevLink;
     asynStatus status = asynSuccess;
@@ -959,10 +978,10 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     return status;
 }
 
-static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     nRead = 0, thisRead;
     int     addr;
     devLink *pdevLink;
@@ -1015,7 +1034,7 @@ static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
             break;
         } else if(devReadR.error != VXI_OK) {
             if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
-                vxiIfc(pdrvPvt, pasynUser);
+                vxiIfc(drvPvt, pasynUser);
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "%s read request failed\n",pvxiPort->portName);
             status = (devReadR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
@@ -1040,10 +1059,10 @@ static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
     return status;
 }
 
-static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered)
 {
-    vxiPort *pvxiPort = (vxiPort *) pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *) drvPvt;
     int     addr;
     devLink *pdevLink;
     int     nWrite = 0, thisWrite;
@@ -1096,7 +1115,7 @@ static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             break;
         } else if(devWriteR.error != VXI_OK) {
             if(devWriteR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC) 
-                vxiIfc(pdrvPvt, pasynUser);
+                vxiIfc(drvPvt, pasynUser);
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "%s write request failed\n",pvxiPort->portName);
             status = (devWriteR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
@@ -1119,16 +1138,16 @@ static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     return status;
 }
 
-static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus vxiFlush(void *drvPvt,asynUser *pasynUser)
 {
     /* Nothing to do */
     return asynSuccess;
 }
 
-static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiSetEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     addr;
     devLink *pdevLink;
     asynStatus  status;
@@ -1154,10 +1173,10 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     return asynSuccess;
 }
 
-static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiGetEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     addr;
     devLink *pdevLink;
     asynStatus  status;
@@ -1183,10 +1202,10 @@ static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
     return asynSuccess;
 }
 
-static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int      nWrite;
     int     addr;
     devLink *pdevLink;
@@ -1231,9 +1250,9 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     return status;
 }
 
-static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
+static asynStatus vxiUniversalCmd(void *drvPvt, asynUser *pasynUser, int cmd)
 {
-    vxiPort    *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort    *pvxiPort = (vxiPort *)drvPvt;
     long       nout;
     char       data[2];
     asynStatus status = asynSuccess;
@@ -1251,9 +1270,9 @@ static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
     return status;
 }
 
-static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
+static asynStatus vxiIfc(void *drvPvt, asynUser *pasynUser)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     status = asynSuccess;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,-1);
     enum clnt_stat    clntStat;
@@ -1296,9 +1315,9 @@ static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
     return status;
 }
 
-static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
+static asynStatus vxiRen(void *drvPvt,asynUser *pasynUser, int onOff)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     status = asynSuccess;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,-1);
     enum clnt_stat    clntStat;
@@ -1344,9 +1363,9 @@ static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     return status;
 }
 
-static asynStatus vxiSrqStatus(void *pdrvPvt,int *srqStatus)
+static asynStatus vxiSrqStatus(void *drvPvt,int *srqStatus)
 {
-    vxiPort    *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort    *pvxiPort = (vxiPort *)drvPvt;
     asynStatus status;
 
     assert(pvxiPort);
@@ -1355,9 +1374,9 @@ static asynStatus vxiSrqStatus(void *pdrvPvt,int *srqStatus)
     return status;
 }
 
-static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff)
+static asynStatus vxiSrqEnable(void *drvPvt, int onOff)
 {
-    vxiPort    *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort    *pvxiPort = (vxiPort *)drvPvt;
     asynStatus status = asynSuccess;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,0,-1);
     enum clnt_stat        clntStat;
@@ -1401,15 +1420,15 @@ static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff)
     return status;
 }
 
-static asynStatus vxiSerialPollBegin(void *pdrvPvt)
+static asynStatus vxiSerialPollBegin(void *drvPvt)
 {
     return asynSuccess;
 }
 
-static asynStatus vxiSerialPoll(void *pdrvPvt, int addr,
+static asynStatus vxiSerialPoll(void *drvPvt, int addr,
     double timeout,int *statusByte)
 {
-    vxiPort             *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort             *pvxiPort = (vxiPort *)drvPvt;
     devLink             *pdevLink;
     enum clnt_stat      clntStat;
     Device_GenericParms devGenP;
@@ -1461,42 +1480,54 @@ static asynStatus vxiSerialPoll(void *pdrvPvt, int addr,
     return asynSuccess;
 }
 
-static asynStatus vxiSerialPollEnd(void *pdrvPvt)
+static asynStatus vxiSerialPollEnd(void *drvPvt)
 {
     return asynSuccess;
 }
-
-static asynGpibPort vxi11 = {
-    vxiReport,
-    vxiConnect,
-    vxiDisconnect,
-    vxiRead,
-    vxiWrite,
-    vxiFlush,
-    vxiSetEos,
-    vxiGetEos,
-    vxiAddressedCmd,
-    vxiUniversalCmd,
-    vxiIfc,
-    vxiRen,
-    vxiSrqStatus,
-    vxiSrqEnable,
-    vxiSerialPollBegin,
-    vxiSerialPoll,
-    vxiSerialPollEnd
-};
-
-int vxi11SetRpcTimeout(double timeout)
-{
-    int seconds,microseconds;
 
+static asynStatus vxiSetPortOption(void *drvPvt,
+    asynUser *pasynUser,const char *key, const char *val)
+{
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
+    double  timeout;
+    int     seconds,microseconds;
+    int     nitems;
+
+    if(epicsStrCaseCmp(key, "rpctimeout") != 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+    nitems = sscanf(val,"%lf",&timeout);
+    if(nitems!=1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Illegal value \"%s\"", val);
+        return asynError;
+    }
     seconds = (int)timeout;
     microseconds = (int)(((timeout - (double)seconds))*1e6);
-    pvxiLocal->vxiRpcTimeout.tv_sec = seconds;
-    pvxiLocal->vxiRpcTimeout.tv_usec = microseconds;
-    return 0;
+    pvxiPort->vxiRpcTimeout.tv_sec = seconds;
+    pvxiPort->vxiRpcTimeout.tv_usec = microseconds;
+    return asynSuccess;
 }
 
+static asynStatus vxiGetPortOption(void *drvPvt,
+    asynUser *pasynUser, const char *key, char *val, int valSize)
+{
+    vxiPort *pvxiPort = (vxiPort *)drvPvt;
+    double  timeout;
+
+    if(epicsStrCaseCmp(key, "rpctimeout") != 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+    timeout = pvxiPort->vxiRpcTimeout.tv_sec;
+    timeout += ((double)pvxiPort->vxiRpcTimeout.tv_usec)/1e6;
+    epicsSnprintf(val,valSize,"%f",timeout);
+    return asynSuccess;
+}
+
 int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     double defTimeout,
     char *vxiName,
@@ -1514,7 +1545,6 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
 
     assert(dn && hostName && vxiName);
     /* Force registration */
-    if(vxiInit() != 0) return -1;
     if(aToIPAddr(hostName, 0, &ip) < 0) {
         printf("%s Unknown host: \"%s\"\n", dn, hostName);
         return 0;
@@ -1525,6 +1555,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     len += strlen(dn) + 1; /*for portName*/
     len += strlen(dn) + 4; /*for <portName>SRQ*/
     pvxiPort = callocMustSucceed(len,sizeof(char),"vxi11Configure");
+    pvxiPort->vxiRpcTimeout.tv_sec = DEFAULT_RPC_TIMEOUT;
     pvxiPort->portName = portName = (char *)(pvxiPort+1);
     strcpy(portName,dn);
     pvxiPort->srqThreadName = srqThreadName = portName + strlen(dn) + 1;
@@ -1549,12 +1580,21 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->asynGpibPvt = pasynGpib->registerPort(pvxiPort->portName,
         (pvxiPort->isSingleLink ? 0 : ASYN_MULTIDEVICE)|ASYN_CANBLOCK,
         !noAutoConnect, &vxi11,pvxiPort,priority,0);
+    if(!pvxiPort->asynGpibPvt) {
+        printf("registerPort failed\n");
+        return 0;
+    }
     pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
     pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
     status = pasynManager->connectDevice(
         pvxiPort->pasynUser,pvxiPort->portName,-1);
     if(status!=asynSuccess) 
         printf("connectDevice failed %s\n",pvxiPort->pasynUser->errorMessage);
+    pvxiPort->option.interfaceType = asynOptionType;
+    pvxiPort->option.pinterface  = (void *)&vxiOption;
+    pvxiPort->option.drvPvt = pvxiPort;
+    status = pasynManager->registerInterface(pvxiPort->portName,&pvxiPort->option);
+    if(status!=asynSuccess) printf("Can't register option.\n");
     return 0;
 }
 
@@ -1608,15 +1648,6 @@ static void TDS3000RebootCallFunc(const iocshArgBuf *args)
     TDS3000Reboot(args[0].sval);
 }
 
-static const iocshArg vxi11SetRpcTimeoutArg0 = {"double",iocshArgDouble};
-static const iocshArg *vxi11SetRpcTimeoutArgs[1] = {&vxi11SetRpcTimeoutArg0};
-static const iocshFuncDef vxi11SetRpcTimeoutFuncDef =
-    {"vxi11SetRpcTimeout",1,vxi11SetRpcTimeoutArgs};
-static void vxi11SetRpcTimeoutCallFunc(const iocshArgBuf *args)
-{ 
-    vxi11SetRpcTimeout(args[0].dval);
-}
-
 /*
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
@@ -1630,7 +1661,6 @@ static void vxi11RegisterCommands (void)
         iocshRegister(&E2050RebootFuncDef,E2050RebootCallFunc);
         iocshRegister(&E5810RebootFuncDef,E5810RebootCallFunc);
         iocshRegister(&TDS3000RebootFuncDef,TDS3000RebootCallFunc);
-        iocshRegister(&vxi11SetRpcTimeoutFuncDef,vxi11SetRpcTimeoutCallFunc);
     }
 }
 epicsExportRegistrar(vxi11RegisterCommands);
