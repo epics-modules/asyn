@@ -1,0 +1,8 @@
+record(ai,"asyndevAiInt32") {
+    field(DTYP,"asyn Int32")
+    field(INP,"@asyn($(PORT),$(ADDR)) testParams")
+}
+record(ao,"asyndevAoInt32") {
+    field(DTYP,"asyn Int32")
+    field(OUT,"@asyn($(PORT),$(ADDR)) testParams")
+}
