@@ -1444,7 +1444,10 @@ static void performOctetIO(asynUser * pasynUser)
         inlen = nbytesTransfered;
         if(status != asynSuccess) {
             reportError(pasynRec, status,
-                "Timeout nread %d %s",nbytesTransfered, pasynUser->errorMessage);
+                "%s  nread %d %s",
+                ((status==asynTimeout) ? "timeout" :
+                 (status==asynOverflow) ? "overflow" : "error"),
+                 nbytesTransfered, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MAJOR_ALARM);
         }
         /* Check for input buffer overflow */
