@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.9 2003-11-24 15:42:29 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.10 2004-01-09 19:34:27 mrk Exp $
  */
 
 #include <string.h>
@@ -297,6 +297,8 @@ drvGenericSerialConnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+               "drvGenericSerial: %s connect.\n", tty->serialDeviceName);
     tty->pasynUser = pasynUser;
     return openConnection(tty);
 }
@@ -317,6 +319,122 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
     return asynSuccess;
 }
 
+static asynStatus
+drvGenericSerialSetPortOptions(void *drvPvt, int argc, char **argv)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+    char *arg;
+    int i;
+
+    assert(tty);
+    if ((argc > 1) && tty->isRemote)
+        printf ("Warning -- stty parameters are ignored for remote terminal connections.\n");
+    tty->cflag = CREAD | CLOCAL | CS8;
+    for (i = 1 ; i < argc ; i++) {
+        arg = argv[i];
+        if (isdigit(*arg)) {
+            tty->setBaud = 1;
+            tty->baud = 0;
+            while (isdigit(*arg)) {
+                if (tty->baud < 100000)
+                    tty->baud = tty->baud * 10 + (*arg - '0');
+                arg++;
+            }
+            if (*arg != '\0') {
+                errlogPrintf("Invalid speed\n");
+                return -1;
+            }
+        }
+        else if (strcmp(arg, "cs5") == 0) {
+            tty->cflag = (tty->cflag & ~CSIZE) | CS5;
+        }
+        else if (strcmp(arg, "cs6") == 0) {
+            tty->cflag = (tty->cflag & ~CSIZE) | CS6;
+        }
+        else if (strcmp(arg, "cs7") == 0) {
+            tty->cflag = (tty->cflag & ~CSIZE) | CS7;
+        }
+        else if (strcmp(arg, "cs8") == 0) {
+            tty->cflag = (tty->cflag & ~CSIZE) | CS8;
+        }
+        else if (strcmp(arg, "parenb") == 0) {
+            tty->cflag |= PARENB;
+        }
+        else if (strcmp(arg, "-parenb") == 0) {
+            tty->cflag &= ~PARENB;
+        }
+        else if (strcmp(arg, "parodd") == 0) {
+            tty->cflag |= PARODD;
+        }
+        else if (strcmp(arg, "-parodd") == 0) {
+            tty->cflag &= ~PARODD;
+        }
+        else if (strcmp(arg, "clocal") == 0) {
+            tty->cflag |= CLOCAL;
+        }
+        else if (strcmp(arg, "-clocal") == 0) {
+            tty->cflag &= ~CLOCAL;
+        }
+        else if (strcmp(arg, "cstopb") == 0) {
+            tty->cflag |= CSTOPB;
+        }
+        else if (strcmp(arg, "-cstopb") == 0) {
+            tty->cflag &= ~CSTOPB;
+        }
+        else if (strcmp(arg, "crtscts") == 0) {
+#if defined(CRTSCTS)
+            tty->cflag |= CRTSCTS;
+#else
+            errlogPrintf("Warning -- RTS/CTS flow control is not available on this machine.\n");
+#endif
+        }
+        else if (strcmp(arg, "-crtscts") == 0) {
+#if defined(CRTSCTS)
+            tty->cflag &= ~CRTSCTS;
+#endif
+        }
+        else {
+            errlogPrintf("stty: Warning -- Unsupported option `%s'\n", arg);
+        }
+    }
+#ifdef HAVE_TERMIOS
+    tty->termios.c_cflag = tty->cflag;
+    tty->termios.c_iflag = IGNBRK | IGNPAR;
+    tty->termios.c_oflag = 0;
+    tty->termios.c_lflag = 0;
+    tty->termios.c_cc[VMIN] = 1;
+    tty->termios.c_cc[VTIME] = 0;
+    cfsetispeed(&tty->termios,B9600);
+    cfsetospeed(&tty->termios,B9600);
+    switch(tty->baud) {
+    case -1:    break;
+    case 50:    cfsetispeed(&tty->termios,B50);    cfsetospeed(&tty->termios,B50);     break;
+    case 75:    cfsetispeed(&tty->termios,B75);    cfsetospeed(&tty->termios,B75);     break;
+    case 110:   cfsetispeed(&tty->termios,B110);   cfsetospeed(&tty->termios,B110);    break;
+    case 134:   cfsetispeed(&tty->termios,B134);   cfsetospeed(&tty->termios,B134);    break;
+    case 150:   cfsetispeed(&tty->termios,B150);   cfsetospeed(&tty->termios,B150);    break;
+    case 200:   cfsetispeed(&tty->termios,B200);   cfsetospeed(&tty->termios,B200);    break;
+    case 300:   cfsetispeed(&tty->termios,B300);   cfsetospeed(&tty->termios,B300);    break;
+    case 600:   cfsetispeed(&tty->termios,B600);   cfsetospeed(&tty->termios,B600);    break;
+    case 1200:  cfsetispeed(&tty->termios,B1200);  cfsetospeed(&tty->termios,B1200);   break;
+    case 1800:  cfsetispeed(&tty->termios,B1800);  cfsetospeed(&tty->termios,B1800);   break;
+    case 2400:  cfsetispeed(&tty->termios,B2400);  cfsetospeed(&tty->termios,B2400);   break;
+    case 4800:  cfsetispeed(&tty->termios,B4800);  cfsetospeed(&tty->termios,B4800);   break;
+    case 9600:  cfsetispeed(&tty->termios,B9600);  cfsetospeed(&tty->termios,B9600);   break;
+    case 19200: cfsetispeed(&tty->termios,B19200); cfsetospeed(&tty->termios,B19200);  break;
+    case 38400: cfsetispeed(&tty->termios,B38400); cfsetospeed(&tty->termios,B38400);  break;
+    case 57600: cfsetispeed(&tty->termios,B57600); cfsetospeed(&tty->termios,B57600);  break;
+    case 115200:cfsetispeed(&tty->termios,B115200);cfsetospeed(&tty->termios,B115200); break;
+    case 230400:cfsetispeed(&tty->termios,B230400);cfsetospeed(&tty->termios,B230400); break;
+    default:
+        errlogPrintf("Invalid speed.\n");
+        return -1;
+    }
+#endif
+
+    return asynSuccess;
+}
+
 /*
  * Write to the serial line
  */
@@ -327,6 +445,8 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     int wrote;
 
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+               "drvGenericSerial: %s write.\n", tty->serialDeviceName);
     if (tty->fd < 0) {
       if (tty->openOnlyOnDisconnect) return asynError;
       if (openConnection(tty) != asynSuccess) return asynError;
@@ -382,6 +502,8 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
     int nleft = 0;
 
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+               "drvGenericSerial: %s read.\n", tty->serialDeviceName);
     if (tty->fd < 0) {
       if (tty->openOnlyOnDisconnect) return asynError;
       if (openConnection(tty) != asynSuccess) return asynError;
@@ -534,7 +656,8 @@ ttyCleanup(ttyController_t *tty)
 static const struct asynCommon drvGenericSerialAsynCommon = {
     drvGenericSerialReport,
     drvGenericSerialConnect,
-    drvGenericSerialDisconnect
+    drvGenericSerialDisconnect,
+    drvGenericSerialSetPortOptions
 };
 
 /*
@@ -550,18 +673,16 @@ static const struct asynOctet drvGenericSerialAsynOctet = {
 /*
  * Configure and register a generic serial device
  */
-static int
-drvGenericSerialConf(char *portName,
+/* Dont make this statis so that it can be cxalled by vxWorks shell */
+int
+drvGenericSerialConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
-                     int openOnlyOnDisconnect,
-                     int argc, char **argv)
+                     int openOnlyOnDisconnect)
 {
-    int i;
     ttyController_t *tty;
     asynInterface *pasynInterface;
     char *cp;
-    char *arg;
 
     /*
      * Check arguments
@@ -605,113 +726,6 @@ drvGenericSerialConf(char *portName,
     }
     tty->openOnlyOnDisconnect = openOnlyOnDisconnect;
 
-    /*
-     * Parse stty parameters
-     */
-    if ((argc > 1) && tty->isRemote)
-        printf ("Warning -- stty parameters are ignored for remote terminal connections.\n");
-    tty->cflag = CREAD | CLOCAL | CS8;
-    for (i = 1 ; i < argc ; i++) {
-        arg = argv[i];
-        if (isdigit(*arg)) {
-            tty->setBaud = 1;
-            tty->baud = 0;
-            while (isdigit(*arg)) {
-                if (tty->baud < 100000)
-                    tty->baud = tty->baud * 10 + (*arg - '0');
-                arg++;
-            }
-            if (*arg != '\0') {
-                errlogPrintf("Invalid speed\n");
-                return -1;
-            }
-        }
-        else if (strcmp(arg, "cs5") == 0) {
-            tty->cflag = (tty->cflag & ~CSIZE) | CS5;
-        }
-        else if (strcmp(arg, "cs6") == 0) {
-            tty->cflag = (tty->cflag & ~CSIZE) | CS6;
-        }
-        else if (strcmp(arg, "cs7") == 0) {
-            tty->cflag = (tty->cflag & ~CSIZE) | CS7;
-        }
-        else if (strcmp(arg, "cs8") == 0) {
-            tty->cflag = (tty->cflag & ~CSIZE) | CS8;
-        }
-        else if (strcmp(arg, "parenb") == 0) {
-            tty->cflag |= PARENB;
-        }
-        else if (strcmp(arg, "-parenb") == 0) {
-            tty->cflag &= ~PARENB;
-        }
-        else if (strcmp(arg, "parodd") == 0) {
-            tty->cflag |= PARODD;
-        }
-        else if (strcmp(arg, "-parodd") == 0) {
-            tty->cflag &= ~PARODD;
-        }
-        else if (strcmp(arg, "clocal") == 0) {
-            tty->cflag |= CLOCAL;
-        }
-        else if (strcmp(arg, "-clocal") == 0) {
-            tty->cflag &= ~CLOCAL;
-        }
-        else if (strcmp(arg, "cstopb") == 0) {
-            tty->cflag |= CSTOPB;
-        }
-        else if (strcmp(arg, "-cstopb") == 0) {
-            tty->cflag &= ~CSTOPB;
-        }
-        else if (strcmp(arg, "crtscts") == 0) {
-#if defined(CRTSCTS)
-            tty->cflag |= CRTSCTS;
-#else
-            errlogPrintf("Warning -- RTS/CTS flow control is not available on this machine.\n");
-#endif
-        }
-        else if (strcmp(arg, "-crtscts") == 0) {
-#if defined(CRTSCTS)
-            tty->cflag &= ~CRTSCTS;
-#endif
-        }
-        else {
-            errlogPrintf("stty: Warning -- Unsupported option `%s'\n", arg);
-        }
-    }
-#ifdef HAVE_TERMIOS
-    tty->termios.c_cflag = tty->cflag;
-    tty->termios.c_iflag = IGNBRK | IGNPAR;
-    tty->termios.c_oflag = 0;
-    tty->termios.c_lflag = 0;
-    tty->termios.c_cc[VMIN] = 1;
-    tty->termios.c_cc[VTIME] = 0;
-    cfsetispeed(&tty->termios,B9600);
-    cfsetospeed(&tty->termios,B9600);
-    switch(tty->baud) {
-    case -1:    break;
-    case 50:    cfsetispeed(&tty->termios,B50);    cfsetospeed(&tty->termios,B50);     break;
-    case 75:    cfsetispeed(&tty->termios,B75);    cfsetospeed(&tty->termios,B75);     break;
-    case 110:   cfsetispeed(&tty->termios,B110);   cfsetospeed(&tty->termios,B110);    break;
-    case 134:   cfsetispeed(&tty->termios,B134);   cfsetospeed(&tty->termios,B134);    break;
-    case 150:   cfsetispeed(&tty->termios,B150);   cfsetospeed(&tty->termios,B150);    break;
-    case 200:   cfsetispeed(&tty->termios,B200);   cfsetospeed(&tty->termios,B200);    break;
-    case 300:   cfsetispeed(&tty->termios,B300);   cfsetospeed(&tty->termios,B300);    break;
-    case 600:   cfsetispeed(&tty->termios,B600);   cfsetospeed(&tty->termios,B600);    break;
-    case 1200:  cfsetispeed(&tty->termios,B1200);  cfsetospeed(&tty->termios,B1200);   break;
-    case 1800:  cfsetispeed(&tty->termios,B1800);  cfsetospeed(&tty->termios,B1800);   break;
-    case 2400:  cfsetispeed(&tty->termios,B2400);  cfsetospeed(&tty->termios,B2400);   break;
-    case 4800:  cfsetispeed(&tty->termios,B4800);  cfsetospeed(&tty->termios,B4800);   break;
-    case 9600:  cfsetispeed(&tty->termios,B9600);  cfsetospeed(&tty->termios,B9600);   break;
-    case 19200: cfsetispeed(&tty->termios,B19200); cfsetospeed(&tty->termios,B19200);  break;
-    case 38400: cfsetispeed(&tty->termios,B38400); cfsetospeed(&tty->termios,B38400);  break;
-    case 57600: cfsetispeed(&tty->termios,B57600); cfsetospeed(&tty->termios,B57600);  break;
-    case 115200:cfsetispeed(&tty->termios,B115200);cfsetospeed(&tty->termios,B115200); break;
-    case 230400:cfsetispeed(&tty->termios,B230400);cfsetospeed(&tty->termios,B230400); break;
-    default:
-        errlogPrintf("Invalid speed.\n");
-        return -1;
-    }
-#endif
 
     /*
      *  Link with higher level routines
@@ -736,44 +750,6 @@ drvGenericSerialConf(char *portName,
 }
 
 /*
- * Entry point from vxWorks shell
- */
-int
-drvGenericSerialConfigure(char *portName,
-                          char *ttyName,
-                          unsigned int priority,
-                          int openOnlyOnDisconnect,
-                          char *a1, char *a2, char *a3,
-                          char *a4, char *a5, char *a6)
-{
-    int argc = 0;
-    char *argv[7];
-
-    argv[argc++] = "stty";
-    if (a1) {
-        argv[argc++] = a1;
-        if (a2) {
-            argv[argc++] = a2;
-            if (a3) {
-                argv[argc++] = a3;
-                if (a4) {
-                    argv[argc++] = a4;
-                    if (a5) {
-                        argv[argc++] = a5;
-                        if (a6) {
-                            argv[argc++] = a6;
-                        }
-                    }
-                }
-            }
-        }
-    }
-    argv[argc] = NULL;
-    return drvGenericSerialConf(portName, ttyName, priority,
-                                openOnlyOnDisconnect, argc, argv);
-}
-
-/*
  * IOC shell command registration
  */
 #include <iocsh.h>
@@ -781,17 +757,14 @@ static const iocshArg drvGenericSerialConfigureArg0 = { "port name",iocshArgStri
 static const iocshArg drvGenericSerialConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvGenericSerialConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvGenericSerialConfigureArg3 = { "reopen only after disconnect",iocshArgInt};
-static const iocshArg drvGenericSerialConfigureArg4 = { "[stty options]",iocshArgArgv};
 static const iocshArg *drvGenericSerialConfigureArgs[] = {
     &drvGenericSerialConfigureArg0, &drvGenericSerialConfigureArg1,
-    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3,
-    &drvGenericSerialConfigureArg4};
+    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3};
 static const iocshFuncDef drvGenericSerialConfigureFuncDef =
-                      {"drvGenericSerialConfigure",5,drvGenericSerialConfigureArgs};
+                      {"drvGenericSerialConfigure",4,drvGenericSerialConfigureArgs};
 static void drvGenericSerialConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvGenericSerialConf(args[0].sval, args[1].sval, args[2].ival, args[3].ival,
-                         args[4].aval.ac, args[4].aval.av);
+    drvGenericSerialConfigure(args[0].sval,args[1].sval,args[2].ival,args[3].ival);
 }
 
 /*

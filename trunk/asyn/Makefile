@@ -14,6 +14,7 @@ ASYN = $(TOP)/asyn
 #USR_CFLAGS += -DDEBUG
 
 LIBRARY_IOC += asyn
+asyn_LIBS_vxWorks += Ipac
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 SRC_DIRS += $(ASYN)/asynDriver
@@ -50,5 +51,9 @@ DBD += drvVxi11.dbd
 SRC_DIRS += $(ASYN)/drvGenericSerial
 asyn_SRCS += drvGenericSerial.c
 DBD += drvGenericSerial.dbd
+
+SRC_DIRS += $(ASYN)/gsIP488
+asyn_SRCS_vxWorks += drvGsIP488.c
+DBD += drvGsIP488.dbd
 
 include $(TOP)/configure/RULES

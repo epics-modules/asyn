@@ -118,6 +118,8 @@ static asynStatus connectDevice(asynUser *pasynUser,
 static asynStatus disconnectDevice(asynUser *pasynUser);
 static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int processModuleOK);
+static asynInterface *findPortInterface(const char *portName,
+    const char *interfaceType);
 static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout);
 static int cancelRequest(asynUser *pasynUser);
@@ -141,6 +143,7 @@ static asynManager queueManager = {
     connectDevice,
     disconnectDevice,
     findInterface,
+    findPortInterface,
     queueRequest,
     cancelRequest,
     lock,
@@ -515,6 +518,23 @@ static asynInterface *findInterface(asynUser *pasynUser,
             return(pasynInterface);
         }
     }
+    for(i=0; i<pasynPort->nasynInterface; i++) {
+        pasynInterface = &pasynPort->paasynInterface[i];
+        if(strcmp(interfaceType,pasynInterface->interfaceType)==0) {
+            return(pasynInterface);
+        }
+    }
+    return(0);
+}
+
+static asynInterface *findPortInterface(const char *portName,
+    const char *interfaceType)
+{
+    asynPort *pasynPort = locateAsynPort(portName);
+    asynInterface *pasynInterface;
+    int i;
+
+    if(!pasynPort) return(0);
     for(i=0; i<pasynPort->nasynInterface; i++) {
         pasynInterface = &pasynPort->paasynInterface[i];
         if(strcmp(interfaceType,pasynInterface->interfaceType)==0) {
@@ -936,6 +956,56 @@ static asynStatus registerProcessModule(
     return(asynSuccess);
 }
 
+/* version of asynSetPortOptions that can be called from vxWorks shell */
+int asynSetPortOptions(const char *portName,
+    char *a1,char *a2,char *a3,char *a4,char *a5,char *a6,
+    char *a7,char *a8,char *a9)
+{
+    int argc = 0;
+    char *argv[10];
+    asynInterface *pasynInterface;
+    asynCommon *pasynCommon;
+    void *drvPvt;
+
+    argv[argc++] = "stty";
+    if (a1) {
+        argv[argc++] = a1;
+        if (a2) {
+            argv[argc++] = a2;
+            if (a3) {
+                argv[argc++] = a3;
+                if (a4) {
+                    argv[argc++] = a4;
+                    if (a5) {
+                        argv[argc++] = a5;
+                        if (a6) {
+                            argv[argc++] = a6;
+                            if (a7) {
+                                argv[argc++] = a7;
+                                if (a8) {
+                                    argv[argc++] = a8;
+                                    if (a9) {
+                                        argv[argc++] = a9;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    argv[argc] = NULL;
+    pasynInterface = pasynManager->findPortInterface(portName,asynCommonType);
+    if(!pasynInterface) {
+        printf("port %s not found\n",portName);
+        return asynError;
+    }
+    pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    drvPvt = pasynInterface->drvPvt;
+    return(pasynCommon->setPortOptions(drvPvt,argc,argv));
+}
+
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
 static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1};
@@ -956,6 +1026,28 @@ static void asynReportCall(const iocshArgBuf * args) {
     report(fp,args[1].ival);
 }
 
+static const iocshArg asynSetPortOptionsArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetPortOptionsArg1 = {"[options]", iocshArgArgv};
+static const iocshArg *const asynSetPortOptionsArgs[] = {&asynSetPortOptionsArg0,&asynSetPortOptionsArg1};
+static const iocshFuncDef asynSetPortOptionsDef = {"asynSetPortOptions", 2, asynSetPortOptionsArgs};
+static void asynSetPortOptionsCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int argc = args[1].aval.ac;
+    char **argv = args[1].aval.av;
+    asynInterface *pasynInterface;
+    asynCommon *pasynCommon;
+    void *drvPvt;
+
+    pasynInterface = pasynManager->findPortInterface(portName,asynCommonType);
+    if(!pasynInterface) {
+        printf("port %s not found\n",portName);
+        return;
+    }
+    pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    drvPvt = pasynInterface->drvPvt;
+    pasynCommon->setPortOptions(drvPvt,argc,argv);
+}
+
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgInt};
@@ -983,7 +1075,7 @@ static void asynSetTraceMaskCall(const iocshArgBuf * args) {
     }
     pasynManager->freeAsynUser(pasynUser);
 }
-
+
 static const iocshArg asynSetTraceIOMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceIOMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgInt};
@@ -1018,6 +1110,7 @@ static void asyn(void)
     if(!firstTime) return;
     firstTime = 0;
     iocshRegister(&asynReportDef,asynReportCall);
+    iocshRegister(&asynSetPortOptionsDef,asynSetPortOptionsCall);
     iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
 }

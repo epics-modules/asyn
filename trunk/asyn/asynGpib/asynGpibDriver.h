@@ -45,7 +45,7 @@ struct asynGpib{
         srqHandler handler, void *srqHandlerPvt);
     void (*pollAddr)(void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are called by low level gpib drivers */
-    /*registerPort returns pointer passed to srqHappened*/
+    /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
@@ -72,6 +72,7 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
     int (*write)(void *drvPvt,asynUser *pasynUser,const char *data,int numchars);

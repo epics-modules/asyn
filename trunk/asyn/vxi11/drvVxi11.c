@@ -23,7 +23,6 @@
 /* epics includes */
 #include <dbDefs.h>
 #include <taskwd.h>
-#include <errlog.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsSignal.h>
@@ -99,9 +98,10 @@ static BOOL vxiCreateLink(vxiLink * pvxiLink,
 static BOOL vxiSetDevLink(vxiLink * pvxiLink, int addr,
     Device_Link *callerLink);
 static int vxiDestroyDevLink(vxiLink * pvxiLink, Device_Link devLink);
-static int vxiWriteAddressed(vxiLink * pvxiLink, Device_Link lid,
-    char *buffer, int length, double timeout);
-static int vxiWriteCmd(vxiLink * pvxiLink, char *buffer, int length);
+static int vxiWriteAddressed(vxiLink * pvxiLink,asynUser *pasynUser,
+    Device_Link lid,char *buffer,int length,double timeout);
+static int vxiWriteCmd(vxiLink * pvxiLink,asynUser *pasynUser,
+    char *buffer, int length);
 static enum clnt_stat clientCall(vxiLink * pvxiLink, u_long req,
     xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static int vxiBusStatus(vxiLink * pvxiLink, int request, double timeout);
@@ -114,6 +114,7 @@ static void vxiSrqThread(void *pvxiLink);
 static void vxiReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus vxiSetPortOptions(void *pdrvPvt,int argc, char **argv);
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
@@ -176,10 +177,10 @@ static BOOL vxiCreateLink(vxiLink * pvxiLink,
         (const xdrproc_t) xdr_Create_LinkParms,(void *) &crLinkP,
         (const xdrproc_t) xdr_Create_LinkResp,(void *) &crLinkR);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiCreateLink RPC error %s\n",
-            devName,clnt_sperror(pvxiLink->rpcClient, ""));
+        printf("%s vxiCreateLink RPC error %s\n",
+            devName,clnt_sperror(pvxiLink->rpcClient,""));
     } else if(crLinkR.error != VXI_OK) {
-        errlogPrintf("%s vxiCreateLink error %s\n",
+        printf("%s vxiCreateLink error %s\n",
             devName,vxiError(crLinkR.error));
     } else {
         *pDevice_Link = crLinkR.lid;
@@ -255,7 +256,7 @@ static int vxiDestroyDevLink(vxiLink * pvxiLink, Device_Link devLink)
     if(clntStat != RPC_SUCCESS) {
         status = -1;
         printf("%s vxiDestroyDevLink RPC error %s\n",
-             pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient, ""));
+             pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient,""));
     } else if(devErr.error != VXI_OK) {
         status = -1;
         printf("%s vxiDestroyDevLink error %s\n",
@@ -266,8 +267,8 @@ static int vxiDestroyDevLink(vxiLink * pvxiLink, Device_Link devLink)
 }
 
 /*write with ATN true */
-static int vxiWriteAddressed(vxiLink * pvxiLink, Device_Link lid,
-    char *buffer, int length, double timeout)
+static int vxiWriteAddressed(vxiLink *pvxiLink,asynUser *pasynUser,
+    Device_Link lid, char *buffer, int length, double timeout)
 {
     int status = 0;
     enum clnt_stat clntStat;
@@ -293,12 +294,12 @@ static int vxiWriteAddressed(vxiLink * pvxiLink, Device_Link lid,
         (const xdrproc_t) xdr_Device_DocmdParms,(void *) &devDocmdP,
         (const xdrproc_t) xdr_Device_DocmdResp,(void *) &devDocmdR);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiWriteAddressed %s error %s\n",
-            pvxiLink->portName,buffer,clnt_sperror(pvxiLink->rpcClient, ""));
+        printf("%s vxiWriteAddressed %s error %s\n",
+            pvxiLink->portName,buffer,clnt_sperror(pvxiLink->rpcClient,""));
         status = -1;
     } else if(devDocmdR.error != VXI_OK) {
         if(devDocmdR.error != VXI_IOTIMEOUT) {
-            errlogPrintf("%s vxiWriteAddressed %s error %s\n",
+            printf("%s vxiWriteAddressed %s error %s\n",
                 pvxiLink->portName,buffer,vxiError(devDocmdR.error));
         }
         status = -1;
@@ -313,11 +314,12 @@ static int vxiWriteAddressed(vxiLink * pvxiLink, Device_Link lid,
  * Output a command string to the GPIB bus.
  * The string is sent with the ATN line held TRUE (low).
  ******************************************************************************/
-static int vxiWriteCmd(vxiLink * pvxiLink, char *buffer, int length)
+static int vxiWriteCmd(vxiLink * pvxiLink,asynUser *pasynUser,
+    char *buffer, int length)
 {
     long status;
 
-    status = vxiWriteAddressed(pvxiLink,
+    status = vxiWriteAddressed(pvxiLink,pasynUser,
         pvxiLink->serverAddr,buffer,length,pvxiLink->defTimeout);
     return(status);
 }
@@ -365,14 +367,14 @@ static int vxiBusStatus(vxiLink * pvxiLink, int request, double timeout)
             (const xdrproc_t) xdr_Device_DocmdParms,(void *) &devDocmdP,
             (const xdrproc_t) xdr_Device_DocmdResp, (void *) &devDocmdR);
         if(clntStat != RPC_SUCCESS) {
-            errlogPrintf("%s vxiBusStatus error %s\n",
-                pvxiLink->portName, clnt_sperror(pvxiLink->rpcClient, ""));
+            printf("%s vxiBusStatus error %s\n",
+                pvxiLink->portName, clnt_sperror(pvxiLink->rpcClient,""));
             xdr_free((const xdrproc_t)xdr_Device_DocmdResp,(char *) &devDocmdR);
             return(-1);
         }
         if(devDocmdR.error != VXI_OK) {
             if(devDocmdR.error != VXI_IOTIMEOUT) {
-                errlogPrintf("%s vxiBusStatus error %s\n",
+                printf("%s vxiBusStatus error %s\n",
                     pvxiLink->portName, vxiError(devDocmdR.error));
             }
             xdr_free((const xdrproc_t)xdr_Device_DocmdResp,(char *)&devDocmdR);
@@ -430,7 +432,8 @@ static void reconnectCallback(asynUser *pasynUser)
     assert(status==asynSuccess);
     status = vxiConnect(pvxiLink,pasynUser);
     if(status!=asynSuccess) {
-        errlogPrintf("%s reconnect attempt failed\n",pvxiLink->portName);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s reconnect attempt failed\n",pvxiLink->portName);
         cantProceed("vxi11");
     }
     pasynManager->freeAsynUser(preconnect->pasynUser);
@@ -488,7 +491,7 @@ static int vxiInit()
     pvxiLocal = callocMustSucceed(1,sizeof(vxiLocal),"vxiInit");
     pvxiLocal->vxiRpcTimeout.tv_sec = DEFAULT_RPC_TIMEOUT;
     if(rpcTaskInit() != 0) { /* init RPC lib for iocInit task */
-        errlogPrintf("vxiInit can't init RPC library\n");
+        printf("vxiInit can't init RPC library\n");
         return(-1);
     }
     return 0;
@@ -511,12 +514,12 @@ static void vxiCreateIrqChannel(vxiLink *pvxiLink)
         (const xdrproc_t) xdr_Device_RemoteFunc, (void *) &devRemF,
         (const xdrproc_t) xdr_Device_Error, (void *) &devErr);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiCreateIrqChannel (create_intr_chan)%s\n",
-            pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient, ""));
+        printf("%s vxiCreateIrqChannel (create_intr_chan)%s\n",
+            pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient,""));
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
         clnt_destroy(pvxiLink->rpcClient);
     } else if(devErr.error != VXI_OK) {
-        errlogPrintf("%s vxiCreateIrqChannel %s (create_intr_chan)\n",
+        printf("%s vxiCreateIrqChannel %s (create_intr_chan)\n",
             pvxiLink->portName, vxiError(devErr.error));
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
         clnt_destroy(pvxiLink->rpcClient);
@@ -525,7 +528,7 @@ static void vxiCreateIrqChannel(vxiLink *pvxiLink)
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
         return;
     }
-    errlogPrintf("Warning -- SRQ not operational.\n");
+    printf("Warning -- SRQ not operational.\n");
 }
 
 static void vxiSrqThread(void *arg)
@@ -540,7 +543,7 @@ static void vxiSrqThread(void *arg)
 
     s = socket (AF_INET, SOCK_STREAM, 0);
     if (s < 0) {
-        errlogPrintf ("SrqThread(): can't create socket: %s\n", strerror (errno));
+        printf ("SrqThread(): can't create socket: %s\n", strerror (errno));
         return;
     }
     pvxiLink->srqPort.ia.sin_family = AF_INET;
@@ -549,7 +552,7 @@ static void vxiSrqThread(void *arg)
     memset (pvxiLink->srqPort.ia.sin_zero, '\0',
         sizeof pvxiLink->srqPort.ia.sin_zero);
     if (bind (s, &pvxiLink->srqPort.sa, sizeof pvxiLink->srqPort.ia) < 0) {
-        errlogPrintf ("SrqThread(): can't bind socket: %s\n", strerror (errno));
+        printf ("SrqThread(): can't bind socket: %s\n", strerror (errno));
         close(s);
         return;
     }
@@ -560,7 +563,7 @@ s */
     pvxiLink->srqPort = osiLocalAddr(s); /* Gets address, but not port */
     pvxiLink->srqPort.ia.sin_port = i;
     if (listen (s, 2) < 0) {
-        errlogPrintf ("SrqThread(): can't listen on socket: %s\n", strerror (errno
+        printf ("SrqThread(): can't listen on socket: %s\n", strerror (errno
 ));
         close(s);
         return;
@@ -580,7 +583,7 @@ s */
     }
     close(s);
     if(s1 < 0) {
-        errlogPrintf("SrqThread(): can't accept connection: %s\n", strerror(errno));
+        printf("SrqThread(): can't accept connection: %s\n", strerror(errno));
         taskwdRemove(myTid);
         epicsEventSignal(pvxiLink->srqThreadReady);
         return;
@@ -593,18 +596,18 @@ s */
         if(epicsInterruptibleSyscallWasInterrupted(pvxiLink->srqInterrupt))
             break;
         if(i < 0) {
-            errlogPrintf("SrqThread(): read error: %s\n", strerror(errno));
+            printf("SrqThread(): read error: %s\n", strerror(errno));
             break;
         }
         else if (i == 0) {
-            errlogPrintf("SrqThread(): read EOF\n");
+            printf("SrqThread(): read EOF\n");
             break;
         }
         pasynGpib->srqHappened(pvxiLink->asynGpibPvt);
     }
     if(!epicsInterruptibleSyscallWasClosed(pvxiLink->srqInterrupt))
         close(s1);
-    errlogPrintf("SrqThread(): terminating\n");
+    printf("SrqThread(): terminating\n");
     taskwdRemove(myTid);
     epicsEventSignal(pvxiLink->srqThreadReady);
 }
@@ -639,14 +642,16 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     Device_Link link;
 
     assert(pvxiLink);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiConnect\n",pvxiLink->portName);
     if(rpcTaskInit() == -1) {
-        errlogPrintf("%s Can't init RPC\n",pvxiLink->portName);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+           "%s Can't init RPC\n",pvxiLink->portName);
         return(asynError);
     }
     pvxiLink->rpcClient = clnt_create(pvxiLink->hostName,
         DEVICE_CORE, DEVICE_CORE_VERSION, "tcp");
     if(!pvxiLink->rpcClient) {
-        errlogPrintf("%s vxiConnect error %s\n",
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiConnect error %s\n",
             pvxiLink->portName, clnt_spcreateerror(pvxiLink->hostName));
         return(asynError);
     }
@@ -658,8 +663,9 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     pvxiLink->ctrlAddr = vxiBusStatus(pvxiLink,
         VXI_BSTAT_BUS_ADDRESS,pvxiLink->defTimeout);
     if(pvxiLink->ctrlAddr == -1) {
-        errlogPrintf("%s vxiConnect cannot read bus status,"
-            " initialization aborted\n",pvxiLink->portName);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiConnect cannot read bus status initialization aborted\n",
+            pvxiLink->portName);
         clnt_destroy(pvxiLink->rpcClient);
         return(asynError);
     }
@@ -670,8 +676,9 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     isController = vxiBusStatus(pvxiLink, VXI_BSTAT_SYSTEM_CONTROLLER,
         pvxiLink->defTimeout);
     if(isController < 0) {
-        errlogPrintf("%s vxiConnect vxiBusStatus error %d"
-            " initialization aborted\n",pvxiLink->portName,isController);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiConnect vxiBusStatus error %d initialization aborted\n",
+            pvxiLink->portName,isController);
         clnt_destroy(pvxiLink->rpcClient);
         return(asynError);
     }
@@ -679,14 +686,17 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
         isController = vxiBusStatus(pvxiLink, VXI_BSTAT_CONTROLLER_IN_CHARGE,
             pvxiLink->defTimeout);
         if(isController < 0) {
-            errlogPrintf("vxiGenLink vxiBusStatus error %d"
-                         " initialization aborted\n",isController);
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiConnect vxiBusStatus error %d initialization aborted\n",
+                pvxiLink->portName,isController);
             clnt_destroy(pvxiLink->rpcClient);
             return -1;
         }
         if(isController == 0) {
-            errlogPrintf("vxiGenLink neither system controller nor "
-                "controller in charge -- initialization aborted\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiConnect neither system controller nor "
+                "controller in charge -- initialization aborted\n",
+                pvxiLink->portName);
             clnt_destroy(pvxiLink->rpcClient);
             return -1;
         }
@@ -694,7 +704,9 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     pvxiLink->srqThreadReady = epicsEventMustCreate(epicsEventEmpty);
     pvxiLink->srqInterrupt = epicsInterruptibleSyscallCreate();
     if(pvxiLink->srqInterrupt == NULL) {
-        errlogPrintf("vxiGenLink can't create interruptible syscall context.\n");
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiGenLink can't create interruptible syscall context.\n",
+            pvxiLink->portName);
         return -1;
     }
     epicsThreadCreate(srqThreadName, 46,
@@ -748,7 +760,7 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
                 break;
             }
             if(i == 10) {
-                errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
+                printf("WARNING -- %s SRQ thread will not terminate!\n",
                                                            pvxiLink->portName);
                 break;
             }
@@ -757,6 +769,12 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
         pvxiLink->srqInterrupt = NULL;
     }
     return(0);
+}
+
+static asynStatus vxiSetPortOptions(void *pdrvPvt,int argc, char **argv)
+{
+    /* Currently no need to set options*/
+    return(asynSuccess);
 }
 
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
@@ -819,7 +837,7 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
     while(status != -1 && !devReadR.reason);
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
-    if(vxiWriteCmd(pvxiLink, "_?", 2) != 2) return(-1);
+    if(vxiWriteCmd(pvxiLink,pasynUser, "_?", 2) != 2) return(-1);
     return(status);
 }
 
@@ -890,7 +908,7 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     } while(status==lennow && numchars>0);
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
-    if(vxiWriteCmd(pvxiLink, "_?", 2) != 2) return(-1);
+    if(vxiWriteCmd(pvxiLink,pasynUser, "_?", 2) != 2) return(-1);
     return(rtnlen);
 }
 
@@ -931,7 +949,8 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
         "%s %d vxiAddressedCmd %s\n",pvxiLink->portName,addr);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,length,"%s %d vxiAddressedCmd\n",pvxiLink->portName,addr);
-    status = vxiWriteAddressed(pvxiLink,lid,(char *)data,length,pvxiLink->defTimeout);
+    status = vxiWriteAddressed(pvxiLink,pasynUser,lid,
+        (char *)data,length,pvxiLink->defTimeout);
     if(status!=length)asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
         length,status);
@@ -948,7 +967,7 @@ static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
         "%s vxiUniversalCmd %d\n",pvxiLink->portName,cmd);
     data[0] = cmd;
     data[1] = 0;
-    nout = vxiWriteCmd(pvxiLink, data, 1);
+    nout = vxiWriteCmd(pvxiLink,pasynUser, data, 1);
     return( nout==1 ? 0 : -1 );
 }
 
@@ -1072,12 +1091,12 @@ static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff)
         (const xdrproc_t) xdr_Device_EnableSrqParms,(void *) &devEnSrqP,
         (const xdrproc_t) xdr_Device_Error, (void *) &devErr);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiSrqEnable %s\n",
-                     pvxiLink->portName, clnt_sperror(pvxiLink->rpcClient, ""));
+        printf("%s vxiSrqEnable %s\n",
+            pvxiLink->portName, clnt_sperror(pvxiLink->rpcClient,""));
         status = asynError;
     } else if(devErr.error != VXI_OK) {
-        errlogPrintf("%s vxiSrqEnable %s\n",
-                     pvxiLink->portName, vxiError(devErr.error));
+        printf("%s vxiSrqEnable %s\n",
+            pvxiLink->portName, vxiError(devErr.error));
         status = asynError;
     }
     xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
@@ -1108,12 +1127,12 @@ static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
         (const xdrproc_t) xdr_Device_GenericParms, (void *) &devGenP,
         (const xdrproc_t) xdr_Device_ReadStbResp, (void *) &devGenR);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiSerialPoll %d %s\n",
+        printf("%s vxiSerialPoll %d %s\n",
             pvxiLink->portName, addr, clnt_sperror(pvxiLink->rpcClient,""));
         return(-1);
     } else if(devGenR.error != VXI_OK) {
         if(devGenR.error != VXI_IOTIMEOUT) {
-            errlogPrintf("%s vxiSerialPoll %d: %s\n",
+            printf("%s vxiSerialPoll %d: %s\n",
                 pvxiLink->portName, addr, vxiError(devGenR.error));
         }
         return(-1);
@@ -1133,6 +1152,7 @@ static asynGpibPort vxi11 = {
     vxiReport,
     vxiConnect,
     vxiDisconnect,
+    vxiSetPortOptions,
     vxiRead,
     vxiWrite,
     vxiFlush,
@@ -1176,7 +1196,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
         "vxi11Configure");
     strcpy(portName,dn);
     if(aToIPAddr(hostName, 0, &ip) < 0) {
-        errlogPrintf("%s Unknown host: \"%s\"\n", portName, hostName);
+        printf("%s Unknown host: \"%s\"\n", portName, hostName);
         return(0);
     }
     inAddr.s_addr = ip.sin_addr.s_addr;

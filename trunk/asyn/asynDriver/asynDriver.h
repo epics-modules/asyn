@@ -22,7 +22,7 @@ extern "C" {
 #endif  /* __cplusplus */
 
 typedef enum {
-    asynSuccess,asynTimeout,asynError
+    asynSuccess,asynTimeout,asynOverflow,asynError
 }asynStatus;
 
 typedef enum {
@@ -54,6 +54,8 @@ typedef struct asynManager {
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
     asynInterface *(*findInterface)(asynUser *pasynUser,
                                 const char *interfaceType,int processModuleOK);
+    asynInterface *(*findPortInterface)(const char *portName,
+                                const char *interfaceType);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
     /*cancelRequest returns (0,-1) if request (was, was not) queued*/
@@ -80,6 +82,8 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
+    /*The following is a generic method for setting port options*/
+    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
 }asynCommon;
 
 /* Methods supported by low level octet drivers. */
