@@ -251,7 +251,7 @@ epicsShareFunc int epicsShareAPI
     asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int ninp = 0;
+    size_t ninp = 0;
     int eomReason;
 
     pPvt = asynFindEntry(entry);
@@ -263,7 +263,7 @@ epicsShareFunc int epicsShareAPI
 
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
-    status = pasynOctetSyncIO->read(pasynUser, pPvt->read_buffer, nread,
+    status = pasynOctetSyncIO->read(pasynUser, pPvt->read_buffer, (size_t)nread,
         pPvt->timeout,&ninp,&eomReason);
     if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -282,8 +282,8 @@ epicsShareFunc int epicsShareAPI
     asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int nout = 0;
-    int len;
+    size_t nout = 0;
+    size_t len;
 
     pPvt = asynFindEntry(entry);
     if (!pPvt) {
@@ -315,9 +315,9 @@ epicsShareFunc int epicsShareAPI
     asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int nout = 0;
-    int ninp = 0;
-    int len;
+    size_t nout = 0;
+    size_t ninp = 0;
+    size_t len;
     int eomReason;
 
     pPvt = asynFindEntry(entry);
@@ -336,7 +336,7 @@ epicsShareFunc int epicsShareAPI
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     status = pasynOctetSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
-                                  pPvt->read_buffer, nread,
+                                  pPvt->read_buffer, (size_t)nread,
                                   pPvt->timeout,
                                   &nout,&ninp,&eomReason);
     if (status!=asynSuccess) {
