@@ -16,6 +16,7 @@ LIBRARY_IOC += testSupport
 testSupport_SRCS += echoDriver.c
 testSupport_SRCS += interposeInterface.c
 testSupport_SRCS += devAsynTest.c
+testSupport_SRCS += asynExample.c
 testSupport_LIBS += asyn
 testSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
