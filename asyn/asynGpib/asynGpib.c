@@ -456,7 +456,6 @@ static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
 static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
-    asynStatus status;
     int        len;
     GETgpibPvtasynGpibPort
 
