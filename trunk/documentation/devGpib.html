@@ -128,12 +128,12 @@ available. It is only necessary to include the device definitions via your
 
 <p>devGpib does not provide support for specific GPIB devices but for
 implementing such support. Within the EPICS community, support exists for
-many gpib devices. The EPICS supported hardware list shows some of the
+many GPIB devices. The EPICS supported hardware list shows some of the
 support. If your device is not listed and a message to tech-talk does not
 provide any help then you will have to write your own device support. This
 section assume that an instrument support is available.</p>
 
-<p>An EPICS record is connected to gpib by the fields DTYP and INP or OUT.</p>
+<p>An EPICS record is connected to GPIB by the fields DTYP and INP or OUT.</p>
 
 <p>The DTYP field has the format:</p>
 <pre>    field(DTYP,"&lt;device support name&gt;")</pre>
@@ -166,7 +166,7 @@ A900  extended address: primary address is 9, secondary address is 0
 A906  extended address: primary address is 9, secondary address is 6. </pre>
     </dd>
   <dt>&lt;number&gt;</dt>
-    <dd>An integer that identifies a gpibCmd definition in a gpib device
+    <dd>An integer that identifies a gpibCmd definition in a GPIB device
       support module. If the implementer is nice documentation like the
       following is provided:
       <pre>   recordType  @&lt;number&gt;   Description</pre>
@@ -174,7 +174,7 @@ A906  extended address: primary address is 9, secondary address is 6. </pre>
       itself for statements like:
       <pre>  /* Param 12 */
   {&amp;DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},</pre>
-      The  above states that @12 is a gpib read command via a longin record.
+      The  above states that @12 is a GPIB read command via a longin record.
       Thus the record definition would be:
       <pre>    record(longin,"&lt;name&gt;") {
         field(DTYP,"&lt;device support name&gt;")
@@ -573,12 +573,14 @@ support it must to document its changes.</p>
       <ul>
         <li>Device support sets <code>pibDpvt.efastVal</code> equal to the
           VAL field.</li>
-        <li>If <code>pgpibCmd-&gt;cmdis not null then msgLen must also be
-          specified. msg is set equal to the concatenation of cmd and the
-          efast value specified bt <code>pgpibCmd-&gt;P3</code>. The
-          resulting msg is sent.</code></li>
-        <li>If <code>pgpibCmd-&gt;cmdis null then the string pointed to by
-          <code>P3</code>[efastVal] is sent.</code></li>
+        <li>If <code>pgpibCmd-&gt;cmd </code>is not null then<code>
+          msgLen</code> must also be specified. <code>msg</code> is set equal
+          to the concatenation of<code> cmd</code> and the efast value
+          specified by<code> <code>pgpibCmd-&gt;P3</code></code>. The
+          resulting <code>msg</code> is sent.</li>
+        <li>If <code>pgpibCmd-&gt;cmd </code>is null then the string pointed
+          to by <code><code>pgpibCmd-&gt;P3</code>[efastVal]</code> is
+        sent.</li>
       </ul>
     </dd>
   <dt>GPIBEFASTI</dt>
