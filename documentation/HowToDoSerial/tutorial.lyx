@@ -1073,7 +1073,7 @@ linux-x86
 Using the device support in an application
 \layout Standard
 
-Several files need minor modifications to add the device support tothe test,
+Several files need minor modifications to add the device support to the test,
  or any other, application.
 \layout Subsection
 
@@ -1371,7 +1371,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-21 18:57:43 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-04 18:02:03 $$
 \newline 
 ############################################################################
 \newline 
