@@ -47,7 +47,6 @@ static char *untalkUnlisten = "_?";
 
 #define DEFAULT_BUFFERSIZE 1024
 #define ERROR_MESSAGE_BUFFER_SIZE 160
-#define DEFAULT_TIMEOUT 5.0
 
 #define IP488_CIC_ADDR  0       /* Primary address of the TI9914 controller*/
 #define GREEN_SPRING_ID  0xf0
@@ -60,8 +59,7 @@ typedef enum {
 
 static epicsUInt16 readw(volatile epicsUInt16 *addr) { return *addr;}
 static void writew(epicsUInt16 value,volatile epicsUInt16 *addr) {*addr = value;}
-#define setTimeout(pasynUser) \
-    (((pasynUser)->timeout<=0.0) ? DEFAULT_TIMEOUT : (pasynUser)->timeout)
+#define setTimeout(pasynUser) ((pasynUser)->timeout)
 
 typedef struct gpib {
     int         intVec;
@@ -271,7 +269,11 @@ static void waitTimeout(gpib *pgpib,double seconds)
     /* No need to check return status from epicsEventWaitWithTimeout    */
     /* If interrupt handler completes it changes transferState from one */
     /* of the states checked below before it signals completion         */
-    status = epicsEventWaitWithTimeout(pgpib->waitForInterrupt,seconds);
+    if(seconds<0.0) {
+        status = epicsEventWait(pgpib->waitForInterrupt);
+    } else {
+        status = epicsEventWaitWithTimeout(pgpib->waitForInterrupt,seconds);
+    }
     switch(pgpib->transferState) {
     case transferStateRead:
         pgpib->status=asynTimeout;
