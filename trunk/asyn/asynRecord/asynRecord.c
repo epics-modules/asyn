@@ -1717,24 +1717,20 @@ static void setEos(asynUser * pasynUser)
     switch (pmsg->fieldIndex) {
     case asynRecordIEOS:
         eoslen = dbTranslateEscape(eosBuff, pasynRec->ieos);
-        if(eoslen>0) {
-            status = pasynRecPvt->pasynOctet->setInputEos(
-                       pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
-            if (status!=asynSuccess) {
-                reportError(pasynRec, status,
-                    "Error setting input eos, %s", pasynUser->errorMessage);
-            }
+        status = pasynRecPvt->pasynOctet->setInputEos(
+                     pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
+        if (status!=asynSuccess) {
+            reportError(pasynRec, status,
+                        "Error setting input eos, %s", pasynUser->errorMessage);
         }
         break;
     case asynRecordOEOS:
         eoslen = dbTranslateEscape(eosBuff, pasynRec->oeos);
-        if(eoslen>0) {
-            status = pasynRecPvt->pasynOctet->setOutputEos(
-                       pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
-            if(status!=asynSuccess) {
-                reportError(pasynRec, status,
-                    "Error setting output eos, %s", pasynUser->errorMessage);
-            }
+        status = pasynRecPvt->pasynOctet->setOutputEos(
+                     pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
+        if(status!=asynSuccess) {
+            reportError(pasynRec, status,
+                       "Error setting output eos, %s", pasynUser->errorMessage);
         }
         break;
     }
@@ -1747,6 +1743,7 @@ static void getEos(asynUser * pasynUser)
     char eosBuff[EOS_SIZE];
     char eosTranslate[EOS_SIZE];
     int eosSize;
+    int ntranslate;
     unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
     /* If port does not have an asynOctet interface return */
@@ -1754,18 +1751,18 @@ static void getEos(asynUser * pasynUser)
 
     pasynRecPvt->pasynOctet->getInputEos(pasynRecPvt->asynOctetPvt, pasynUser,
                                          eosBuff, EOS_SIZE, &eosSize);
-    epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
-                           eosBuff, eosSize);
+    ntranslate = epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
+                                        eosBuff, eosSize);
     if (strcmp(eosTranslate, pasynRec->ieos) != 0) {
-        strncpy(pasynRec->ieos, eosTranslate, sizeof(pasynRec->ieos));
+        strncpy(pasynRec->ieos, eosTranslate, ntranslate);
         db_post_events(pasynRec, pasynRec->ieos, monitor_mask);
     }
     pasynRecPvt->pasynOctet->getOutputEos(pasynRecPvt->asynOctetPvt, pasynUser,
                                           eosBuff, EOS_SIZE, &eosSize);
-    epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
-                           eosBuff, eosSize);
+    ntranslate = epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
+                                        eosBuff, eosSize);
     if (strcmp(eosTranslate, pasynRec->oeos) != 0) {
-        strncpy(pasynRec->oeos, eosTranslate, sizeof(pasynRec->oeos));
+        strncpy(pasynRec->oeos, eosTranslate, ntranslate);
         db_post_events(pasynRec, pasynRec->oeos, monitor_mask);
     }
 }
