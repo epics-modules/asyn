@@ -198,16 +198,16 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
                 &pPvt->portName, &pPvt->addr, &pPvt->userParam);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynAnalog::initCommon, error in link %s\n",
-                     pasynUser->errorMessage);
+        errlogPrintf("devAsynAnalog::initCommon, %s error in link %s\n",
+                     pr->name, pasynUser->errorMessage);
         goto bad;
     }
 
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynAnalog::initCommon, connectDevice failed %s\n",
-                     pasynUser->errorMessage);
+        errlogPrintf("devAsynAnalog::initCommon, %s connectDevice failed %s\n",
+                     pr->name, pasynUser->errorMessage);
         goto bad;
     }
 
@@ -222,8 +222,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         status = pasynDrvUser->create(drvPvt,pasynUser,
             pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            errlogPrintf("devAsynAnalog::initCommon, drvUserInit failed %s\n",
-                     pasynUser->errorMessage);
+            errlogPrintf("devAsynAnalog::initCommon, %s drvUserInit failed %s\n",
+                     pr->name, pasynUser->errorMessage);
             goto bad;
         }
     }
@@ -234,8 +234,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynInt32CallbackType;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                         itype);
+            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+                         pr->name, itype);
             goto bad;
         }
         pPvt->pint32Callback = pasynInterface->pinterface;
@@ -246,8 +246,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynInt32Type;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                         itype);
+            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+                         pr->name, itype);
             goto bad;
         }
         pPvt->pint32 = pasynInterface->pinterface;
@@ -258,8 +258,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynFloat64CallbackType;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                         itype);
+            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+                         pr->name, itype);
             goto bad;
         }
         pPvt->pfloat64Callback = pasynInterface->pinterface;
@@ -270,8 +270,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynFloat64Type;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                         itype);
+            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+                         pr->name, itype);
             goto bad;
         }
         pPvt->pfloat64 = pasynInterface->pinterface;
