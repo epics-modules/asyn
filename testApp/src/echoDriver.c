@@ -64,16 +64,17 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 static asynCommon asyn = { report, connect, disconnect };
 
 /* asynOctet methods */
-static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransfered);
+static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
 static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
-static asynOctet octet = { echoRead, echoWrite, echoFlush, setEos, getEos };
+static asynOctet octet = {
+    0,echoWrite,0,echoRead, echoFlush,0,0, setEos, getEos,0,0 };
 
 static int echoDriverInit(const char *dn, double delay,
     int noAutoConnect,int multiDevice)
@@ -110,7 +111,11 @@ static int echoDriverInit(const char *dn, double delay,
         printf("echoDriverInit registerInterface failed\n");
         return 0;
     }
-    status = pasynManager->registerInterface(portName,&pechoPvt->octet);
+    if(multiDevice) {
+        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,0,0,1);
+    } else {
+        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,1,1,1);
+    }
     if(status!=asynSuccess){
         printf("echoDriverInit registerInterface failed\n");
         return 0;
@@ -241,8 +246,56 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 /* asynOctet methods */
+static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
+    const char *data,size_t nchars,size_t *nbytesTransfered)
+{
+    echoPvt      *pechoPvt = (echoPvt *)drvPvt;
+    deviceInfo   *pdeviceInfo;
+    deviceBuffer *pdeviceBuffer;
+    int          addr;
+    asynStatus   status;
+
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
+    if(!pechoPvt->multiDevice) addr = 0;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s echoDriver:write addr %d\n",pechoPvt->portName,addr);
+    if(addr<0 || addr>=NUM_DEVICES) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "addr %d is illegal. Must be 0 or 1\n",addr);
+        return asynError;
+    }
+    pdeviceInfo = &pechoPvt->device[addr];
+    if(!pdeviceInfo->connected) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s echoDriver:write device %d not connected\n",
+            pechoPvt->portName,addr);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver:write device %d not connected\n",
+            pechoPvt->portName,addr);
+        return asynError;
+    }
+    if(pechoPvt->delay>pasynUser->timeout) {
+        if(pasynUser->timeout>0.0) epicsThreadSleep(pasynUser->timeout);
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s echoDriver write timeout\n",pechoPvt->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver write timeout\n",pechoPvt->portName);
+        return asynTimeout;
+    }
+    pdeviceBuffer = &pdeviceInfo->buffer;
+    if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
+    if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
+            "echoWrite nchars %d ",nchars);
+    pdeviceBuffer->nchars = nchars;
+    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
+    *nbytesTransfered = nchars;
+    return status;
+}
+
 static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
     echoPvt      *pechoPvt = (echoPvt *)drvPvt;
     deviceInfo   *pdeviceInfo;
@@ -320,54 +373,6 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
         "echoRead nbytesTransfered %d ",*nbytesTransfered);
-    return status;
-}
-
-static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int nchars,int *nbytesTransfered)
-{
-    echoPvt      *pechoPvt = (echoPvt *)drvPvt;
-    deviceInfo   *pdeviceInfo;
-    deviceBuffer *pdeviceBuffer;
-    int          addr;
-    asynStatus   status;
-
-    status = pasynManager->getAddr(pasynUser,&addr);
-    if(status!=asynSuccess) return status;
-    if(!pechoPvt->multiDevice) addr = 0;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:write addr %d\n",pechoPvt->portName,addr);
-    if(addr<0 || addr>=NUM_DEVICES) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "addr %d is illegal. Must be 0 or 1\n",addr);
-        return asynError;
-    }
-    pdeviceInfo = &pechoPvt->device[addr];
-    if(!pdeviceInfo->connected) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s echoDriver:write device %d not connected\n",
-            pechoPvt->portName,addr);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver:write device %d not connected\n",
-            pechoPvt->portName,addr);
-        return asynError;
-    }
-    if(pechoPvt->delay>pasynUser->timeout) {
-        if(pasynUser->timeout>0.0) epicsThreadSleep(pasynUser->timeout);
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s echoDriver write timeout\n",pechoPvt->portName);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver write timeout\n",pechoPvt->portName);
-        return asynTimeout;
-    }
-    pdeviceBuffer = &pdeviceInfo->buffer;
-    if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
-    if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
-            "echoWrite nchars %d ",nchars);
-    pdeviceBuffer->nchars = nchars;
-    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
-    *nbytesTransfered = nchars;
     return status;
 }
 

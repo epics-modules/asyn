@@ -367,7 +367,7 @@ static long special(struct dbAddr * paddr, int after)
     }
     resetError(pasynRec);
     if(fieldIndex == asynRecordSOCK) {
-        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0);
+        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0,0);
         if(status) {
             reportError(pasynRec,asynSuccess,"drvAsynIPPortConfigure failed\n");
             return 0;
@@ -1324,16 +1324,16 @@ static void performOctetIO(asynUser * pasynUser)
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
-    int nbytesTransfered;
+    size_t nbytesTransfered = 0;
     char *inptr;
     char *outptr;
-    int inlen;
-    int nread;
-    int nwrite;
+    size_t inlen;
+    size_t nread = 0;
+    size_t nwrite = 0;
     int eoslen;
     int ntranslate;
     char eos[EOS_SIZE];
-    int  eomReason;
+    int  eomReason = 0;
 
     if(pasynRec->ofmt == asynFMT_ASCII) {
         /* ASCII output mode */
@@ -1399,25 +1399,31 @@ static void performOctetIO(asynUser * pasynUser)
         /* Set the input buffer to all zeros */
         memset(inptr, 0, inlen);
         /* Read the message  */
+        nbytesTransfered = 0;
+        status = asynSuccess;
         if(pasynRec->ifmt == asynFMT_Binary) {
-            eos[0] = '\0';
-            eoslen = 0;
+            status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynOctetPvt,
+                  pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
         } else {
             /* ASCII or Hybrid mode */
             eoslen = dbTranslateEscape(eos, pasynRec->ieos);
-        }
-        status = pasynRecPvt->pasynOctet->setEos(pasynRecPvt->asynOctetPvt,
-                                                 pasynUser, eos, eoslen);
-        if(status) {
-            reportError(pasynRec, status,
-                "Error setting EOS, %s", pasynUser->errorMessage);
-        }
-        nbytesTransfered = 0;
-        status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
+            if(eoslen>0) {
+                status = pasynRecPvt->pasynOctet->setInputEos(
+                    pasynRecPvt->asynOctetPvt, pasynUser, eos, eoslen);
+            }
+            if(status==asynSuccess) {
+                 status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
                   pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
-        asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
+            }
+        }
+        if(status!=asynSuccess) {
+            reportError(pasynRec, status,
+                "Error %s", pasynUser->errorMessage);
+        } else {
+            asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
              "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen,
                     status, nbytesTransfered);
+        }
         pasynRec->eomr = eomReason;
         inlen = nbytesTransfered;
         if(status != asynSuccess) {
@@ -1519,7 +1525,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
     asynGpib   *pasynGpib = pasynRecPvt->pasynGpib;
     void       *asynGpibPvt = pasynRecPvt->asynGpibPvt;
     asynStatus status;
-    int        nbytesTransfered;
+    size_t     nbytesTransfered;
     char       acmd[6];
     char       cmd_char = 0;
     int lenCmd = 6;
@@ -1560,7 +1566,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
             recGblSetSevr(pasynRec,WRITE_ALARM, MAJOR_ALARM);
         }
         /* Read the response byte  */
-        status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynGpibPvt,
+        status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynGpibPvt,
                 pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered,0);
         if(status != asynSuccess || nbytesTransfered != 1) {
             reportError(pasynRec, status,

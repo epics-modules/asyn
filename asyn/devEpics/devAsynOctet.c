@@ -67,8 +67,8 @@ typedef struct devPvt{
     char        *userParam;
     /*Following are for CmdResponse */
     char        *buffer;
-    int         bufSize;
-    int         bufLen;
+    size_t      bufSize;
+    size_t      bufLen;
     /* Following for writeRead */
     DBADDR      dbAddr;
 }devPvt;
@@ -78,9 +78,10 @@ static long initWfCommon(waveformRecord *pwf);
 static void initDrvUser(devPvt *pdevPvt);
 static void initCmdBuffer(devPvt *pdevPvt);
 static void initDbAddr(devPvt *pdevPvt);
-static asynStatus writeIt(asynUser *pasynUser,const char *message,int nbytes);
+static asynStatus writeIt(asynUser *pasynUser,
+        const char *message,size_t nbytes);
 static asynStatus readIt(asynUser *pasynUser,char *message,
-        int maxBytes, int *nBytesRead);
+        size_t maxBytes, size_t *nBytesRead);
 static long processCommon(dbCommon *precord);
 static void finish(dbCommon *precord);
 
@@ -243,14 +244,14 @@ static void initDbAddr(devPvt *pdevPvt)
     }
 }
 
-static asynStatus writeIt(asynUser *pasynUser,const char *message,int nbytes)
+static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
 {
     devPvt     *pdevPvt = (devPvt *)pasynUser->userPvt;
     dbCommon   *precord = pdevPvt->precord;
     asynOctet  *poctet = pdevPvt->poctet;
     void       *octetPvt = pdevPvt->octetPvt;
     asynStatus status;
-    int        nbytesTransfered;
+    size_t     nbytesTransfered;
 
     status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
     if(status!=asynSuccess) {
@@ -273,7 +274,7 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,int nbytes)
 }
 
 static asynStatus readIt(asynUser *pasynUser,char *message,
-        int maxBytes, int *nBytesRead)
+        size_t maxBytes, size_t *nBytesRead)
 {
     devPvt     *pdevPvt = (devPvt *)pasynUser->userPvt;
     dbCommon   *precord = pdevPvt->precord;
@@ -344,8 +345,8 @@ static void callbackSiCmdResponse(asynUser *pasynUser)
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
     asynStatus     status;
-    int            len = sizeof(psi->val);
-    int            nBytesRead;
+    size_t         len = sizeof(psi->val);
+    size_t         nBytesRead;
 
     status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
     if(status==asynSuccess) {
@@ -375,11 +376,11 @@ static void callbackSiWriteRead(asynUser *pasynUser)
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
     asynStatus     status;
-    int            nBytesRead;
+    size_t         nBytesRead;
     long           dbStatus;
     char           raw[MAX_STRING_SIZE];
     char           translate[MAX_STRING_SIZE];
-    int            len = sizeof(psi->val);
+    size_t         len = sizeof(psi->val);
 
     dbStatus = dbGet(&pdevPvt->dbAddr,DBR_STRING,raw,0,0,0);
     if(dbStatus) {
@@ -417,9 +418,9 @@ static void callbackSiRead(asynUser *pasynUser)
 {
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
-    int            nBytesRead;
+    size_t         nBytesRead;
     asynStatus     status;
-    int            len = sizeof(psi->val);
+    size_t         len = sizeof(psi->val);
 
     status = readIt(pasynUser,psi->val,len,&nBytesRead);
     if(status==asynSuccess) {
@@ -469,11 +470,11 @@ static void callbackWfCmdResponse(asynUser *pasynUser)
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
     asynStatus     status;
-    int            nBytesRead;
+    size_t         nBytesRead;
 
     status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
     if(status==asynSuccess) {
-        status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);
+        status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
         if(status==asynSuccess) pwf->nord = nBytesRead;
     }
     finish((dbCommon *)pwf);
@@ -497,7 +498,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
     asynStatus     status;
-    int            nBytesRead;
+    size_t         nBytesRead;
     long           dbStatus;
     char           raw[MAX_STRING_SIZE];
     char           translate[MAX_STRING_SIZE];
@@ -513,7 +514,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     dbTranslateEscape(translate,raw);
     status = writeIt(pasynUser,translate,strlen(translate));
     if(status==asynSuccess) {
-        status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);
+        status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
         if(status==asynSuccess) pwf->nord = nBytesRead;
     }
     finish((dbCommon *)pwf);
@@ -536,7 +537,7 @@ static void callbackWfRead(asynUser *pasynUser)
 {
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
-    int            nBytesRead;
+    size_t         nBytesRead;
     asynStatus     status;
 
     status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);

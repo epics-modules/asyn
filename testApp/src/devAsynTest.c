@@ -94,7 +94,7 @@ static void sosiCallback(asynUser *pasynUser)
     state = pdpvtSo->state;
     assert(state==stateWrite || state==stateRead);
     if(pdpvtSo->state==stateWrite) {
-        int nout;
+        size_t nout;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s soCallback\n",pso->name);
         sprintf(pdpvtSo->buffer,"%s",pso->val);
         status = pasynManager->isConnected(pasynUser,&yesNo);
@@ -141,7 +141,7 @@ writedone:
     {
         stringinRecord *psi = pdpvtSo->psi;
         dpvtSi     *pdpvtSi = (dpvtSi *)psi->dpvt;
-        int        nin;
+        size_t     nin;
     
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s siCallback\n",psi->name);
         pdpvtSi->buffer[0] = 0;
@@ -161,7 +161,7 @@ writedone:
             recGblSetSevr(psi,WRITE_ALARM,MAJOR_ALARM);
             goto readdone;
         }
-        pasynOctet->setEos(octetPvt,pasynUser,"",1);
+        pasynOctet->setInputEos(octetPvt,pasynUser,"",1);
         status = pasynOctet->read(octetPvt,pasynUser,
             pdpvtSi->buffer,sizeof(pdpvtSi->buffer),&nin,0);
         if(status!=asynSuccess || nin==0) {

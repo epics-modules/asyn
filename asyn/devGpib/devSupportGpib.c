@@ -166,7 +166,7 @@ static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt);
 static int checkEnums(char * msg, char **enums);
 static void gpibErrorHappened(gpibDpvt *pgpibDpvt);
 static int isTimeWindowActive(gpibDpvt *pgpibDpvt);
-static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len);
+static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len);
 
 /*iocsh  and dbior routines */
 static void devGpibQueueTimeoutSet(
@@ -442,7 +442,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
 {
     long ltmp;
     asynStatus status;
-    int nread;
+    size_t nread;
     int count;
     char *endptr;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
@@ -450,9 +450,9 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     asynUser *pasynUser = pgpibDpvt->pasynUser;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     char *buf = pgpibDpvt->msg;
-    int bufSize = pgpibCmd->msgLen;
+    size_t bufSize = pgpibCmd->msgLen;
 
-    pasynOctet->setEos(asynOctetPvt,pasynUser,"#",1);
+    pasynOctet->setInputEos(asynOctetPvt,pasynUser,"#",1);
     status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread,0);
     if (status!=asynSuccess || nread == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -466,7 +466,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     }
     buf += nread;
     bufSize -= nread;
-    pasynOctet->setEos(asynOctetPvt,pasynUser,NULL,0);
+    pasynOctet->setInputEos(asynOctetPvt,pasynUser,NULL,0);
     status = pasynOctet->read(asynOctetPvt,pasynUser,buf,1,&nread,0);
     if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -544,7 +544,7 @@ static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
     } else {
         eosLen = 0;
     }
-    status = pgpibDpvt->pasynOctet->setEos(
+    status = pgpibDpvt->pasynOctet->setInputEos(
         pgpibDpvt->asynOctetPvt,pasynUser,pgpibCmd->eos,eosLen);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -888,7 +888,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
-    int nchars = 0;
+    size_t nchars = 0;
     asynStatus status;
 
     if(failure) goto done;
@@ -1242,7 +1242,7 @@ static int checkEnums(char *msg, char **enums)
     return -1;
 }
 
-static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
+static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
 {
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     asynUser *pasynUser = pgpibDpvt->pasynUser;
@@ -1253,7 +1253,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
     int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     asynStatus status;
-    int nchars;
+    size_t nchars;
 
     status = pasynOctet->write(asynOctetPvt,pasynUser, message,len,&nchars);
     if(nchars==len) {
@@ -1266,7 +1266,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
             gpibErrorHappened(pgpibDpvt);
     }
     if(respond2Writes>=0 && rspLen>0) {
-        int nrsp;
+        size_t nrsp;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
         if(respond2Writes>0) epicsThreadSleep(respond2Writes);
         if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;

@@ -48,7 +48,7 @@ asyn_SRCS += asynInt32ArrayBase.c
 asyn_SRCS += asynUInt32DigitalBase.c asynUInt32DigitalSyncIO.c
 asyn_SRCS += asynFloat64Base.c asynFloat64SyncIO.c
 asyn_SRCS += asynFloat64ArrayBase.c
-asyn_SRCS += asynOctetSyncIO.c
+asyn_SRCS += asynOctetBase.c asynOctetSyncIO.c
 
 SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd

@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.22 2004-07-29 20:00:06 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.23 2004-11-09 15:40:23 mrk Exp $
  */
 
 #include <string.h>
@@ -532,7 +532,7 @@ drvAsynSerialPortSetPortOption(void *drvPvt, asynUser *pasynUser,
  * Write to the serial line
  */
 static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
-    const char *data, int numchars,int *nbytesTransfered)
+    const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
@@ -625,7 +625,7 @@ static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
  * Read from the serial line
  */
 static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
-    char *data, int maxchars,int *nbytesTransfered,int *gotEom)
+    char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
@@ -833,11 +833,15 @@ static const struct asynOption drvAsynSerialPortAsynOption = {
  * asynOctet methods
  */
 static const struct asynOctet drvAsynSerialPortAsynOctet = {
-    drvAsynSerialPortRead,
+    0,
     drvAsynSerialPortWrite,
+    0,
+    drvAsynSerialPortRead,
     drvAsynSerialPortFlush,
+    0,0,
     drvAsynSerialPortSetEos,
-    drvAsynSerialPortGetEos
+    drvAsynSerialPortGetEos,
+    0,0
 };
 
 /*
@@ -848,7 +852,7 @@ drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
                      int noAutoConnect,
-                     int noEosProcessing)
+                     int processEosIn,int processEosOut)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -858,11 +862,11 @@ drvAsynSerialPortConfigure(char *portName,
      * Check arguments
      */
     if (portName == NULL) {
-        errlogPrintf("Port name missing.\n");
+        printf("Port name missing.\n");
         return -1;
     }
     if (ttyName == NULL) {
-        errlogPrintf("TTY name missing.\n");
+        printf("TTY name missing.\n");
         return -1;
     }
 
@@ -877,7 +881,7 @@ drvAsynSerialPortConfigure(char *portName,
      tty->timer = epicsTimerQueueCreateTimer(
          pserialBase->timerQueue, timeoutHandler, tty);
      if(!tty->timer) {
-        errlogPrintf("drvAsynSerialPortConfigure: Can't create timer.\n");
+        printf("drvAsynSerialPortConfigure: Can't create timer.\n");
         return -1;
     }
     tty->fd = -1;
@@ -904,33 +908,33 @@ drvAsynSerialPortConfigure(char *portName,
                                    !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
-        errlogPrintf("drvAsynSerialPortConfigure: Can't register myself.\n");
+        printf("drvAsynSerialPortConfigure: Can't register myself.\n");
         ttyCleanup(tty);
         return -1;
     }
-    if(pasynManager->registerInterface(tty->portName,&tty->common)!= asynSuccess) {
-        errlogPrintf("drvAsynSerialPortConfigure: Can't register common.\n");
+    status = pasynManager->registerInterface(tty->portName,&tty->common);
+    if(status != asynSuccess) {
+        printf("drvAsynSerialPortConfigure: Can't register common.\n");
         ttyCleanup(tty);
         return -1;
     }
-    if(pasynManager->registerInterface(tty->portName,&tty->option)!= asynSuccess) {
-        errlogPrintf("drvAsynSerialPortConfigure: Can't register option.\n");
+    status = pasynManager->registerInterface(tty->portName,&tty->option);
+    if(status!= asynSuccess) {
+        printf("drvAsynSerialPortConfigure: Can't register option.\n");
         ttyCleanup(tty);
         return -1;
     }
-    if(pasynManager->registerInterface(tty->portName,&tty->octet)!= asynSuccess) {
-        errlogPrintf("drvAsynSerialPortConfigure: Can't register octet.\n");
+    status = pasynOctetBase->initialize(tty->portName,&tty->octet,
+         (processEosIn ? 1 : 0),(processEosOut ? 1 : 0),1);
+    if(status == asynSuccess) {
+        printf("drvAsynSerialPortConfigure: Can't register octet.\n");
         ttyCleanup(tty);
         return -1;
     }
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
     if(status!=asynSuccess) {
-        errlogPrintf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
-        ttyCleanup(tty);
-        return -1;
-    }
-    if (!noEosProcessing && (asynInterposeEosConfig(tty->portName, -1) < 0)) {
+        printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
         ttyCleanup(tty);
         return -1;
     }
@@ -945,17 +949,18 @@ static const iocshArg drvAsynSerialPortConfigureArg0 = { "port name",iocshArgStr
 static const iocshArg drvAsynSerialPortConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvAsynSerialPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynSerialPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynSerialPortConfigureArg4 = { "disable EOS processing",iocshArgInt};
+static const iocshArg drvAsynSerialPortConfigureArg4 = { "processEosIn",iocshArgInt};
+static const iocshArg drvAsynSerialPortConfigureArg5 = { "processEosOut",iocshArgInt};
 static const iocshArg *drvAsynSerialPortConfigureArgs[] = {
     &drvAsynSerialPortConfigureArg0, &drvAsynSerialPortConfigureArg1,
     &drvAsynSerialPortConfigureArg2, &drvAsynSerialPortConfigureArg3,
-    &drvAsynSerialPortConfigureArg4};
+    &drvAsynSerialPortConfigureArg4, &drvAsynSerialPortConfigureArg5};
 static const iocshFuncDef drvAsynSerialPortConfigureFuncDef =
-                      {"drvAsynSerialPortConfigure",5,drvAsynSerialPortConfigureArgs};
+                      {"drvAsynSerialPortConfigure",6,drvAsynSerialPortConfigureArgs};
 static void drvAsynSerialPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynSerialPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                                                args[3].ival, args[4].ival);
+                               args[3].ival, args[4].ival, args[5].ival);
 }
 
 /*

@@ -27,32 +27,59 @@ extern "C" {
 #endif /* __cplusplus */
 
 typedef struct asynOctetSyncIO {
-   asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+   asynStatus (*connect)(const char *port, int addr,
+                         asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
    asynStatus (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
                   double timeout,int *nbytesTransfered);
+   asynStatus (*writeRaw)(asynUser *pasynUser,char const *buffer,int buffer_len,
+                  double timeout,int *nbytesTransfered);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
-                  const char *ieos, int ieos_len, int flush, double timeout,
-                  int *nbytesTransfered,int *eomReason);
+                  double timeout, int *nbytesTransfered,int *eomReason);
+   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, int buffer_len, 
+                  double timeout, int *nbytesTransfered,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
-                  const char *ieos, int ieos_len, double timeout,
+                  double timeout,
                   int *nbytesOut, int *nbytesIn, int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
+   asynStatus (*setInputEos)(asynUser *pasynUser,
+                  const char *eos,int eoslen);
+   asynStatus (*getInputEos)(asynUser *pasynUser,
+                  char *eos, int eossize, int *eoslen);
+   asynStatus (*setOutputEos)(asynUser *pasynUser,
+                  const char *eos,int eoslen);
+   asynStatus (*getOutputEos)(asynUser *pasynUser,
+                  char *eos, int eossize, int *eoslen);
    asynStatus (*writeOnce)(const char *port, int addr,
                   char const *buffer, int buffer_len, double timeout,
-                  int *nbytesTransfered);
+                  int *nbytesTransfered, const char *drvInfo);
+   asynStatus (*writeRawOnce)(const char *port, int addr,
+                  char const *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
-                  char *buffer, int buffer_len, 
-                  const char *ieos, int ieos_len, int flush, double timeout,
-                  int *nbytesTransfered,int *eomReason);
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
+   asynStatus (*readRawOnce)(const char *port, int addr,
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
-                  const char *ieos, int ieos_len, double timeout,
-                  int *nbytesOut, int *nbytesIn, int *eomReason);
+                  double timeout,
+                  int *nbytesOut, int *nbytesIn, int *eomReason,
+                  const char *drvInfo);
+   asynStatus (*flushOnce)(const char *port, int addr,const char *drvInfo);
+   asynStatus (*setInputEosOnce)(const char *port, int addr,
+                  const char *eos,int eoslen,const char *drvInfo);
+   asynStatus (*getInputEosOnce)(const char *port, int addr,
+                  char *eos, int eossize, int *eoslen,const char *drvInfo);
+   asynStatus (*setOutputEosOnce)(const char *port, int addr,
+                  const char *eos,int eoslen,const char *drvInfo);
+   asynStatus (*getOutputEosOnce)(const char *port, int addr,
+                  char *eos, int eossize, int *eoslen,const char *drvInfo);
 } asynOctetSyncIO;
 epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;
 

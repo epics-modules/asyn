@@ -18,10 +18,6 @@
 
 #include "asynUInt32Digital.h"
 
-typedef struct pvt {
-    epicsUInt32           mask;
-} pvt;
-
 static asynStatus initialize(const char *portName, asynInterface *puint32Interface);
 static asynUInt32DigitalBase uint32Base = {initialize};
 epicsShareDef asynUInt32DigitalBase *pasynUInt32DigitalBase = &uint32Base;

@@ -23,7 +23,8 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-int epicsShareAPI asynInterposeEosConfig(const char *portName,int addr);
+int epicsShareAPI asynInterposeEosConfig(const char *portName,int addr,
+                                         int processEosIn,int processEosOut);
 
 #ifdef __cplusplus
 }

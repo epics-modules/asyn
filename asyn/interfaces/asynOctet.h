@@ -20,20 +20,60 @@ extern "C" {
 #define ASYN_EOM_EOS 0x0002 /*End of String detected*/
 #define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
+typedef void (*interruptCallbackOctet)(void *userPvt,
+                      char *data,size_t numchars, int eomReason);
+
+typedef struct asynOctetInterrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackOctet callback;
+    void *userPvt;
+}asynOctetInterrupt;
+
+
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
-    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered,
-                       int *eomReason);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
+                    const char *data,size_t numchars,size_t *nbytesTransfered);
+    asynStatus (*writeRaw)(void *drvPvt,asynUser *pasynUser,
+                    const char *data,size_t numchars,size_t *nbytesTransfered);
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                    char *data,size_t maxchars,size_t *nbytesTransfered,
+                    int *eomReason);
+    asynStatus (*readRaw)(void *drvPvt,asynUser *pasynUser,
+                    char *data,size_t maxchars,size_t *nbytesTransfered,
+                    int *eomReason);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
-                         const char *eos,int eoslen);
-    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
-                        char *eos, int eossize, int *eoslen);
+    asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
+                    interruptCallbackOctet callback, void *userPvt,
+                    void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*setInputEos)(void *drvPvt,asynUser *pasynUser,
+                    const char *eos,int eoslen);
+    asynStatus (*getInputEos)(void *drvPvt,asynUser *pasynUser,
+                    char *eos, int eossize, int *eoslen);
+    asynStatus (*setOutputEos)(void *drvPvt,asynUser *pasynUser,
+                    const char *eos,int eoslen);
+    asynStatus (*getOutputEos)(void *drvPvt,asynUser *pasynUser,
+                    char *eos, int eossize, int *eoslen);
 }asynOctet;
+
+/* asynOctetBase does the following:
+   calls  registerInterface for asynOctet.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
+*/
 
+#define asynOctetBaseType "asynOctetBase"
+typedef struct asynOctetBase {
+    asynStatus (*initialize)(const char *portName,
+        asynInterface *pint32Interface,
+        int processEosIn,int processEosOut,int interruptProcess);
+} asynOctetBase;
+epicsShareExtern asynOctetBase *pasynOctetBase;
 
 #ifdef __cplusplus
 }

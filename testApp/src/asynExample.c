@@ -38,7 +38,7 @@ static void queueCallback(asynUser *pasynUser) {
     asynOctet  *pasynOctet = pmydata->pasynOctet;
     void       *drvPvt = pmydata->drvPvt;
     asynStatus status;
-    int        writeBytes,readBytes;
+    size_t     writeBytes,readBytes;
     int        eomReason;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
