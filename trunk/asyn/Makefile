@@ -96,6 +96,7 @@ endif
 
 SRC_DIRS += $(ASYN)/ni1014
 asyn_SRCS_vxWorks += drvNi1014.c
+asyn_SRCS_RTEMS += drvNi1014.c
 DBD += drvNi1014.dbd
 
 SRC_DIRS += $(ASYN)/devGpib
