@@ -44,7 +44,7 @@
 
 \layout Title
 
-How to create EPICS device support for a simple serial device
+How to create EPICS device support for a simple serial or GPIB device
 \layout Author
 
 W.
@@ -67,9 +67,9 @@ Introduction
 \layout Standard
 
 This tutorial provides step-by-step instructions on how to create EPICS
- support for a simple serial device.
+ support for a simple serial or GPIB (IEEE-488) device.
  The steps are presented in a way that should make it possible to apply
- them in cookbook fashion to create support for other serial devices.
+ them in cookbook fashion to create support for other devices.
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
 \begin_inset ERT
@@ -106,11 +106,11 @@ EPICS R3.14.6 or higher.
 EPICS modules/soft/asyn version 3.2 or higher.
 \layout Standard
 
-Serial devices can now be treated in much the same way as GPIB (IEEE-488)
- devices.
+Serial and GPIB devices can now be treated in much the same way.
  The EPICS 'asyn' driver devGpib module can use the low-level drivers which
- communicate with devices connected to serial ports on the IOC or with devices
- connected through Ethernet/Serial converter boxes.
+ communicate with serial devices connected to ports on the IOC or to Ethernet/Se
+rial converters or with GPIB devices connected to local I/O cards or to
+ Ethernet/GPIB converters.
 \layout Standard
 
 I based this tutorial on the device support I wrote for a CVI Laser Corporation
@@ -329,7 +329,7 @@ Here are the commands I ran.
 norume> 
 \family roman 
 \series bold 
-mkdir AB300
+mkdir ab300
 \family default 
 \series default 
 
@@ -337,7 +337,7 @@ mkdir AB300
 norume> 
 \family roman 
 \series bold 
-cd AB300
+cd ab300
 \family default 
 \series default 
 
@@ -345,8 +345,7 @@ cd AB300
 norume> 
 \family roman 
 \series bold 
-/home/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl -t devGpib
- AB300
+/home/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl -t devGpib AB300
 \layout Subsection
 
 Make some changes to the files in configure/
@@ -356,8 +355,9 @@ Edit the
 \family typewriter 
 configure/RELEASE
 \family default 
- file which makeSupport.pl created and modify the entries describing the
- paths to where you installed EPICS base and ASYN:
+ file which makeSupport.pl created and confirm that the entries describing
+ the paths to your EPICS base and ASYN support are correct.
+ For example these might be:
 \layout LyX-Code
 
 ASYN=/home/EPICS/modules/soft/asyn
@@ -387,8 +387,7 @@ Create the device support file
 
 The contents of the device support file provide all the details of the communica
 tion between the device and EPICS.
- The makeSupport.pl command created a skeleton device support file in
- 
+ The makeSupport.pl command created a skeleton device support file in 
 \family typewriter 
 src/devAB300.c
 \family default 
@@ -440,9 +439,9 @@ TIMEOUT
 seconds since the filter wheel can be slow in responding.
 \layout LyX-Code
 
-#define TIMEOUT     5.0
+#define TIMEOUT     5.0    /* I/O must complete within this time */
 \newline 
-#define TIMEWINDOW  2.0
+#define TIMEWINDOW  2.0    /* Wait this long after device timeout */
 \layout Subsubsection
 
 Clean up some unused values
@@ -472,7 +471,7 @@ Each command array entry describes the details of a single I/O operation
 The command array entries I created for the AB300 are shown below.
  The elements of each entry are described using the names from the 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -559,7 +558,8 @@ pdevGpibNames There's no name table.
 \layout Description
 
 eos The end-of-string value used to mark the end of the readback operation.
- 
+ GPIB devices can usually leave this entry NULL since they use the End-Or-Identi
+fy (EOI) line to delimit messages.
 \layout Paragraph
 
 Command array index 1 -- Go to new filter position
@@ -736,7 +736,8 @@ gpibDpvt
 \layout Standard
 
 Here are the custom conversion functions I wrote for the AB300.
- 
+  Because theseroutines use epicsSnprintf I had to also add a #include <epicsStd
+io.h> to the file.
 \layout LyX-Code
 
 /*
@@ -831,50 +832,36 @@ Because of way code is stored in object libraries on different systems the
 \layout Standard
 
 Here's the initialization for the AB300 device support.
- As you can see, most of the skeleton file values are left unchanged: 
+ The AB300 immediately echos the command characters sent to it so the respond2Wr
+ites value must be set to 0.
+ All the other values are left as created by the makeSupport.pl script:
 \layout LyX-Code
 
 static long init_ai(int parm)
 \newline 
 {
 \newline 
-  if(parm==0) {
+    if(parm==0) {
 \newline 
-    devSupParms.name = "devAB300";
+        devSupParms.name = "devAB300";
 \newline 
-    devSupParms.gpibCmds = gpibCmds;
+        devSupParms.gpibCmds = gpibCmds;
 \newline 
-    devSupParms.numparams = NUMPARAMS;
+        devSupParms.numparams = NUMPARAMS;
 \newline 
-    devSupParms.timeout = TIMEOUT;
+        devSupParms.timeout = TIMEOUT;
 \newline 
-    devSupParms.timeWindow = TIMEWINDOW;
+        devSupParms.timeWindow = TIMEWINDOW;
 \newline 
-    devSupParms.respond2Writes = 0;
+        devSupParms.respond2Writes = 0;
 \newline 
-  }
+    }
 \newline 
-  return(0);
+    return(0);
 \newline 
 }
 \layout LyX-Code
 
-\layout Standard
-
-Three values have been changed: 
-\layout Enumerate
-
-The AB300 sends back values in response to commands, but needs no time delay,
- so the 
-\family typewriter 
-respond2Writes
-\family default 
- entry is set to 0.
- 
-\layout Enumerate
-
-The name entry is used for diagnostic purposes only.
- 
 \layout Subsection
 
 Modify the device support database definition file
@@ -956,10 +943,9 @@ The numbers following the
 \family typewriter 
 A
 \family default 
- in the INP and OUT fields are unused by the device support but must be
- a valid GPIB address (0-30) since the GPIB address conversion routines
- check the value and the diagnostic display routines require a matching
- value.
+ in the INP and OUT fields are unused by serial devices but must be a valid
+ GPIB address (0-30) since the GPIB address conversion routines check the
+ value and the diagnostic display routines require a matching value.
  
 \layout Enumerate
 
@@ -1000,8 +986,11 @@ gnumake
  on solaris).
 \layout Standard
 
-If all goes well you'll be left with a device support library in lib/linux-x86/,
- a device support database description in dbd/ and a device support database
+If all goes well you'll be left with a device support library in lib/
+\shape italic 
+<EPICS_HOST_ARCH>
+\shape default 
+/, a device support database description in dbd/ and a device support database
  in db/.
 \layout Section
 
@@ -1036,13 +1025,13 @@ darwin-ppc
  I built the test application in the same <top> as the device support, but
  the application could be built anywhere.
  As well, I built the application as a 'soft' IOC running on the host machine,
- but the serial 'GPIB' driver also works on RTEMS and vxWorks.
+ but the serial/GPIB driver also works on RTEMS and vxWorks.
 \layout LyX-Code
 
 norume> 
 \family roman 
 \series bold 
-cd AB300
+cd ab300
 \family default 
 \series default 
 
@@ -1079,18 +1068,48 @@ What architecture do you want to use?
 \family roman 
 \series bold 
 linux-x86
+\layout Section
+
+Using the device support in an application
 \layout Standard
 
+Several files need minor modifications to add the device support tothe test,
+ or any other, application.
+\layout Subsection
+
+Make some changes to configure/RELEASE
+\layout Standard
+
+Edit the 
+\family typewriter 
+configure/RELEASE
+\family default 
+ file which makeBaseApp.pl created and confirm that the EPICS_BASE path is
+ correct.
+ Add entries for your ASYN and device support.
+ For example these might be:
+\layout LyX-Code
+
+AB300=/home/EPICS/modules/instrument/ab300
+\layout LyX-Code
+
+ASYN=/home/EPICS/modules/soft/asyn
+\layout LyX-Code
+
+EPICS_BASE=/home/EPICS/base
 \layout Subsection
 
 Modify the application database definition file
 \layout Standard
 
-Add entries to 
+Add entries to the aplication 
+\shape italic 
+xxx
 \family typewriter 
-AB300App/src/AB300Include.dbd
+\shape default 
+Include.dbd
 \family default 
- for your device support and for serial line 'GPIB' driver support:
+ file for your device support and for serial/GPIB driver support:
 \layout Standard
 
 
@@ -1110,25 +1129,43 @@ Add the device support libraries to the application
 \layout Standard
 
 You must link your device suport library and the ASYN support library with
- your application.
+ the application.
  Add the following lines 
 \layout LyX-Code
 
-AB300_LIBS += devAB300
+
+\family roman 
+\shape italic 
+xxx
+\family default 
+\shape default 
+_LIBS += devAB300
 \layout LyX-Code
 
-AB300_LIBS += asyn
+
+\family roman 
+\shape italic 
+xxx
+\family default 
+\shape default 
+_LIBS += asyn
 \layout Standard
 
 before the
 \layout LyX-Code
 
-AB300_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+\family roman 
+\shape italic 
+xxx
+\family default 
+\shape default 
+_LIBS += $(EPICS_BASE_IOC_LIBS)
 \layout Standard
 
-line in 
+line in the application 
 \family typewriter 
-AB300App/src/Makefile
+Makefile
 \family default 
 .
 \layout Subsection
@@ -1137,8 +1174,11 @@ Add the device support database file to the application
 \layout Standard
 
 The makeBaseApp.pl script creates 
+\shape italic 
+xxx
 \family typewriter 
-AB300App/Db/Makefile
+\shape default 
+App/Db/Makefile
 \family default 
 .
  Add a line for the device support database file:
@@ -1152,7 +1192,7 @@ Modify the application startup script
 
 The 
 \family typewriter 
-iocBoot/iocAB300/st.cmd
+st.cmd
 \family default 
  application startup script created by the makeBaseApp.pl script needs a
  few changes to get the application working properly.
@@ -1240,8 +1280,7 @@ L
 \end_deeper 
 \layout Enumerate
 
-(Optional) Add lines to control the debugging level of the serial line 'GPIB'
- driver.
+(Optional) Add lines to control the debugging level of the serial/GPIB driver.
  The following enables error messages and a description of every I/O operation.
 \begin_deeper 
 \layout LyX-Code
@@ -1332,7 +1371,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-18 16:10:16 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-21 14:38:32 $$
 \newline 
 ############################################################################
 \newline 
