@@ -25,6 +25,7 @@
 #include <errlog.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
+#include <epicsSignal.h>
 #include <osiSock.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
@@ -64,9 +65,11 @@ typedef struct devLinkPrimary {
  ******************************************************************************/
 typedef struct vxiLink {
     void *asynGpibPvt;
-    epicsThreadId srqThreadId;   /* current SRQ task id */
+    epicsThreadId srqThreadId;   /* current SRQ thread id */
+    volatile int srqThreadStop;  /* ask the SRQ thread to destroy itself */
+    volatile int srqFd;          /* socket descriptor for interrupt channel */
     osiSockAddr srqPort;         /* TCP port for interrupt channel */
-    epicsEventId srqTaskReady;   /* wait for srqTask to be ready*/
+    epicsEventId srqThreadReady;   /* wait for srqThread to be ready*/
     const char *portName;
     char *hostName;	   /* ip address of VXI-11 server */
     char *vxiName;	   /* Holds name of logical link */
@@ -110,7 +113,7 @@ static int vxiBusStatus(vxiLink * pvxiLink, int request, double timeout);
 static void vxiReconnect(vxiLink * pvxiLink);
 static int vxiInit(void);
 static void vxiCreateIrqChannel(vxiLink *pvxiLink);
-static int vxiSrqTask(vxiLink *pvxiLink);
+static void vxiSrqThread(void *pvxiLink);
 
 /* asynGpibPort methods */
 static void vxiReport(void *pdrvPvt,FILE *fd,int details);
@@ -530,9 +533,11 @@ static void vxiCreateIrqChannel(vxiLink *pvxiLink)
     errlogPrintf("Warning -- SRQ not operational.\n");
 }
 
-static int vxiSrqTask(vxiLink *pvxiLink)
+static void vxiSrqThread(void *arg)
 {
-    int s, s1;
+    vxiLink *pvxiLink = arg;
+    epicsThreadId myTid;
+    int s;
     osiSockAddr farAddr;
     osiSocklen_t addrlen;
     char buf[512];
@@ -540,8 +545,8 @@ static int vxiSrqTask(vxiLink *pvxiLink)
 
     s = socket (AF_INET, SOCK_STREAM, 0);
     if (s < 0) {
-        errlogPrintf ("SrqTask(): can't create socket: %s\n", strerror (errno));
-        return -1;
+        errlogPrintf ("SrqThread(): can't create socket: %s\n", strerror (errno));
+        return;
     }
     pvxiLink->srqPort.ia.sin_family = AF_INET;
     pvxiLink->srqPort.ia.sin_port = htons (0);
@@ -549,9 +554,9 @@ static int vxiSrqTask(vxiLink *pvxiLink)
     memset (pvxiLink->srqPort.ia.sin_zero, '\0',
         sizeof pvxiLink->srqPort.ia.sin_zero);
     if (bind (s, &pvxiLink->srqPort.sa, sizeof pvxiLink->srqPort.ia) < 0) {
-        errlogPrintf ("SrqTask(): can't bind socket: %s\n", strerror (errno));
+        errlogPrintf ("SrqThread(): can't bind socket: %s\n", strerror (errno));
         close(s);
-        return -1;
+        return;
     }
     addrlen = sizeof pvxiLink->srqPort;
     getsockname(s, &pvxiLink->srqPort.sa, &addrlen); /* Gets port but not addres
@@ -560,33 +565,49 @@ s */
     pvxiLink->srqPort = osiLocalAddr(s); /* Gets address, but not port */
     pvxiLink->srqPort.ia.sin_port = i;
     if (listen (s, 2) < 0) {
-        errlogPrintf ("SrqTask(): can't listen on socket: %s\n", strerror (errno
+        errlogPrintf ("SrqThread(): can't listen on socket: %s\n", strerror (errno
 ));
         close(s);
-        return -1;
+        return;
     }
-    pvxiLink->srqThreadId = epicsThreadGetIdSelf();
+    pvxiLink->srqThreadId = myTid = epicsThreadGetIdSelf();
     taskwdInsert(pvxiLink->srqThreadId, NULL, NULL);
-    epicsEventSignal(pvxiLink->srqTaskReady);
+    epicsEventSignal(pvxiLink->srqThreadReady);
     addrlen = sizeof farAddr.ia;
-    s1 = accept (s, &farAddr.sa, &addrlen);
-    if (s1 < 0) {
-        errlogPrintf ("SrqTask(): can't accept connection: %s\n",
+    pvxiLink->srqFd = accept (s, &farAddr.sa, &addrlen);
+    if (pvxiLink->srqFd < 0) {
+        errlogPrintf ("SrqThread(): can't accept connection: %s\n",
             strerror (errno));
         close(s);
-        return -1;
-    }
-    while((i = read(s1, buf, sizeof buf)) >= 0)
-        pasynGpib->srqHappened(pvxiLink->asynGpibPvt);
-    if (i < 0) {
-        errlogPrintf ("SrqTask(): read error: %s\n", strerror (errno));
-    }
-    else {
-        errlogPrintf ("SrqTask(): read EOF\n");
+        pvxiLink->srqThreadId = 0;
+        taskwdRemove(myTid);
+        return;
     }
     close(s);
-    close(s1);
-    return i;
+    for(;;) {
+        if(pvxiLink->srqThreadStop)
+            break;
+        if((i = read(pvxiLink->srqFd, buf, sizeof buf)) <= 0)
+            break;
+        if(pvxiLink->srqThreadStop)
+            break;
+        pasynGpib->srqHappened(pvxiLink->asynGpibPvt);
+    }
+    if(!pvxiLink->srqThreadStop) {
+        if(i < 0) {
+            errlogPrintf("SrqThread(): read error: %s\n", strerror(errno));
+        }
+        else {
+            errlogPrintf("SrqThread(): read EOF\n");
+        }
+    }
+    errlogPrintf("SrqThread(): terminating\n");
+    if(pvxiLink->srqFd >= 0) {
+        close(pvxiLink->srqFd);
+        pvxiLink->srqFd = -1;
+    }
+    pvxiLink->srqThreadId = 0;
+    taskwdRemove(myTid);
 }
 
 static void vxiReport(void *pdrvPvt,FILE *fd,int details)
@@ -672,11 +693,14 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
             return -1;
         }
     }
-    pvxiLink->srqTaskReady = epicsEventMustCreate(epicsEventEmpty);
+    pvxiLink->srqThreadReady = epicsEventMustCreate(epicsEventEmpty);
+    if(pvxiLink->srqThreadId)
+        errlogPrintf("Warning -- previous SRQ thread is still active!\n");
     epicsThreadCreate(srqThreadName, 46,
           epicsThreadGetStackSize(epicsThreadStackMedium),
-          (EPICSTHREADFUNC) vxiSrqTask,pvxiLink);
-    epicsEventMustWait(pvxiLink->srqTaskReady);
+          vxiSrqThread,pvxiLink);
+    epicsEventMustWait(pvxiLink->srqThreadReady);
+    epicsEventDestroy(pvxiLink->srqThreadReady);
     vxiCreateIrqChannel(pvxiLink);
     return(asynSuccess);
 }
@@ -692,6 +716,34 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
 
     assert(pvxiLink);
     if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
+    /*
+     * Force the I/O thread out of its slow system call.
+     */
+    if (pvxiLink->srqThreadId) {
+        int fd;
+        epicsThreadId thread;
+        pvxiLink->srqThreadStop = 1;
+        switch(epicsSocketSystemCallInterruptMechanismQuery()) {
+        case esscimqi_socketCloseRequired:
+            fd = pvxiLink->srqFd;
+            pvxiLink->srqFd = -1;
+            close(fd);
+            break;
+
+        case esscimqi_socketBothShutdownRequired:
+            shutdown(pvxiLink->srqFd, SHUT_RDWR);
+            break;
+
+        case esscimqi_socketSigAlarmRequired:
+            if ((thread = pvxiLink->srqThreadId) != 0)
+                epicsSignalRaiseSigAlarm(thread);
+            break;
+
+        default:
+            errlogPrintf("No mechanism for unblocking socket I/O!\n");
+            break;
+        }
+    }
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
 	int link;
 	link = pvxiLink->devLink[addr].primary;
@@ -705,7 +757,7 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
         (const xdrproc_t) xdr_void, (void *) &dummy,
         (const xdrproc_t) xdr_Device_Error,(void *) &devErr);
     /* report errors only if debug flag set. If any errors, the next time this
-     * link is initialized, make sure a new SRQ task is started.  See comments
+     * link is initialized, make sure a new SRQ thread is started.  See comments
      * in vxiConnect. */
     if(clntStat != RPC_SUCCESS) {
         if(vxi11Debug) printf("%s vxiDestroyLink %s\n",
