@@ -1,0 +1,1 @@
+medm -x -macro "name=gpibTest,L=2" test.adl 

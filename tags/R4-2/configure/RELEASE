@@ -1,0 +1,7 @@
+#RELEASE Location of external products
+#  IPAC is only necessary if support for Greensprings IP488 is required
+#  IPAC release V2-7 or later is required.
+#IPAC=/usr/local/iocapps/R3.14.6/support/ipac/2-7-asd1
+#  EPICS_BASE 3.14.6 or later is required
+LINUX_GPIB=NO
+EPICS_BASE=/usr/local/iocapps/R3.14.6/support/base/3-14-6-asd1

@@ -1,0 +1,2 @@
+registrar(GpibBoardDriverRegister)
+include "asyn.dbd"
