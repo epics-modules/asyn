@@ -2,7 +2,7 @@
 <!-- saved from url=(0058)http://cars9.uchicago.edu/software/epics/serialRecord.html -->
 <HTML><HEAD><TITLE>serial - Generic Serial Record</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=windows-1252">
-<META content="Microsoft FrontPage 4.0" name=GENERATOR></HEAD>
+<META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
 <BODY>
 <H1>asynOctet Record</H1>
 <ADDRESS>Mark Rivers</ADDRESS>
@@ -53,9 +53,6 @@ devices the GPIB address can be changed, and global and addressed commands can
 be executed.&nbsp; asyn socket ports can be dynamically created at run time.<P>&nbsp;In 
 the &quot;Access&quot; columns in the field description tables:
       <TABLE>
-        <TR>
-          <TD colSpan=3>Note: In the Access columns in the field description
-            tables: </TD>
         <TR vAlign=top>
           <TD>R</TD>
           <TD>Read only
@@ -452,7 +449,7 @@ permit 1 character end-of-message strings.<br>
 The port parameters can currently be set only for local serial ports, including
 IP-Octal on vxWorks.&nbsp; They cannot currently be set for Ethernet/serial
 adapters like the Moxa units.<P>
- The baud rates actually available with be device dependent.&nbsp; For the SBS 
+ The baud rates actually available are device dependent.&nbsp; For the SBS 
  IP-Octal module the maximum baud rate is 38400. 
 <p>&nbsp;</p>
 <HR>
@@ -738,7 +735,8 @@ added in the future.</p>
 <HR>
 <H2><a name="Example 1">Example #1</a></H2>The following is an IDL program which demonstrates the use 
 of the asynOctet record. It transfers data in both ASCII and binary formats. 
-<PRE>; This IDL program demonstrates the use of the EPICS asynOctet record.
+Hopefully the IDL syntax is clear enough to understand by non-IDL users, and can 
+be translated into your favorite scripting language.<PRE>; This IDL program demonstrates the use of the EPICS asynOctet record.
 ; The program uses 2 asynOctet records.  The ports corresponding to these
 ; 2 records are connected with a null-modem cable
 ; Record 1 sends a message to record 2 in ASCII.
@@ -843,6 +841,8 @@ loaded with IMAX at least large enough to read the waveform.&nbsp; The entire
 waveform readout is 2500 channels on the TDS220.&nbsp; The buffer size required
 is 1 byte per channel + 7 bytes header/checksum.&nbsp; The start and stop
 parameters to the procedure can be used to read a subset of the waveform.
+<p>Hopefully the IDL syntax is clear enough to understand by non-IDL users, and 
+can be translated into your favorite scripting language.</p>
 <PRE>pro read_tds200, record, data, start=start, stop=stop, chan=chan
 
 ; This procedure reads waveforms from the Tektronix TDS200 series scopes
@@ -927,4 +927,3 @@ href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>:
 </ADDRESS>
 </BODY>
 </HTML>NG</TD>
-
