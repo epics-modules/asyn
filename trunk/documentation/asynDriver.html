@@ -341,7 +341,39 @@ and one or more interfaces.</p>
     <pre> pasynManager-&gt;queueRequest(...)</pre>
   </li>
   <li>The callback specified in createAsynUser calls the driver via one of
-    the driver interfaces.</li>
+    the driver interfaces.
+    <p></p>
+  </li>
+</ol>
+
+<center>
+<img name="AsynFlow" src="AsynFlow.jpg" border="1">
+
+<p>Figure 1:  ASYN Data Flow</p>
+
+<p></p>
+</center>
+The sequence of record device support events that occurs starting with an
+application thread is pictured above in figure 1, and explained below in the
+following steps:
+<ol>
+  <li>Record processing causes I/O request to be sent to record device
+    support.</li>
+  <li>Record device support sends I/O request to ASYN.</li>
+  <li>ASYN places the I/O request on the driver work queue.  The application
+    thread is now able to go on and perform other operations.  All subsequent
+    operations for this I/O request are handled in the port driver
+  thread.</li>
+  <li>The port thread ASYN Code removes the I/O request from the work
+  queue.</li>
+  <li>The ASYN code sends the I/O request back to the record device
+  support.</li>
+  <li>The record device support calls the low-level driver read or write
+    routine.</li>
+  <li>The low-level driver read or write routine blocks until the I/O
+    completes or until a timeout occurs.  The low-level driver routine
+    returns the results of the I/O operation to the record device support
+    code which completes record processing.</li>
 </ol>
 
 <h3>Comments:</h3>
