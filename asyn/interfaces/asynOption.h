@@ -7,7 +7,6 @@
 * asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
-#define asynOptionType "asynOption"
 
 #ifndef asynOptionH
 #define asynOptionH
@@ -16,6 +15,7 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+#define asynOptionType "asynOption"
 /*The following are generic methods to set/get device options*/
 typedef struct asynOption {
     asynStatus (*setOption)(void *drvPvt, asynUser *pasynUser,
