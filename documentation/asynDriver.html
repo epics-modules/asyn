@@ -564,7 +564,7 @@ drivers. It provides the following services:</p>
     <p>The code that implements registerInterruptSource must call
     addInterruptUser and removeInterruptUser.</p>
     <p>On operating systems like vxWorks or RTEMS interruptStart,interruptEnd
-     MUST NOT be called from interupt level.</p>
+    MUST NOT be called from interupt level.</p>
     <p>Code that has called connectDevice can call registerInterruptUser and
     cancelInterruptUser. The callbacks must not block.</p>
     <p>Many standard interfaces, e.g. asynInt32, provide methods
@@ -896,13 +896,13 @@ asynManager:freeAsynUser.</p>
     </tr>
     <tr>
       <td>reason</td>
-      <td>Drivers and asynUsers can use this as a general purpose field.
-        By convention it is used for asynManager interrupt support.
-        A driver that is calling an interrupt users often uses
-        reason to decide if the users callback should be called.
-        Values of reason less than 0 are reserved for standard meanings.
-        For example ASYN_REASON_SIGNAL is used to mean "out of band"
-        request. The devGpib support uses this to report SRQs.</td>
+      <td>Drivers and asynUsers can use this as a general purpose field. By
+        convention it is used for asynManager interrupt support. A driver
+        that is calling an interrupt users often uses reason to decide if the
+        users callback should be called. Values of reason less than 0 are
+        reserved for standard meanings. For example ASYN_REASON_SIGNAL is
+        used to mean "out of band" request. The devGpib support uses this to
+        report SRQs.</td>
     </tr>
     <tr>
       <td>auxStatus</td>
@@ -1614,50 +1614,143 @@ communication is done via 8-bit bytes.</p>
 #define ASYN_EOM_EOS 0x0002 /*End of String detected*/
 #define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
+typedef struct asynOctetInterrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackOctet callback;
+    void *userPvt;
+}asynOctetInterrupt;
+
+
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
-    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered,
-                       int *eomReason);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
+                    const char *data,size_t numchars,size_t *nbytesTransfered);
+    asynStatus (*writeRaw)(void *drvPvt,asynUser *pasynUser,
+                    const char *data,size_t numchars,size_t *nbytesTransfered);
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                    char *data,size_t maxchars,size_t *nbytesTransfered,
+                    int *eomReason);
+    asynStatus (*readRaw)(void *drvPvt,asynUser *pasynUser,
+                    char *data,size_t maxchars,size_t *nbytesTransfered,
+                    int *eomReason);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
-                         const char *eos,int eoslen);
-    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
-                        char *eos, int eossize, int *eoslen);
-}asynOctet;</pre>
+    asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
+                    interruptCallbackOctet callback, void *userPvt,
+                    void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*setInputEos)(void *drvPvt,asynUser *pasynUser,
+                    const char *eos,int eoslen);
+    asynStatus (*getInputEos)(void *drvPvt,asynUser *pasynUser,
+                    char *eos, int eossize, int *eoslen);
+    asynStatus (*setOutputEos)(void *drvPvt,asynUser *pasynUser,
+                    const char *eos,int eoslen);
+    asynStatus (*getOutputEos)(void *drvPvt,asynUser *pasynUser,
+                    char *eos, int eossize, int *eoslen);
+}asynOctet;
+/* asynOctetBase does the following:
+   calls  registerInterface for asynOctet.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
+*/
+
+#define asynOctetBaseType "asynOctetBase"
+typedef struct asynOctetBase {
+    asynStatus (*initialize)(const char *portName,
+        asynInterface *pint32Interface,
+        int processEosIn,int processEosOut,int interruptProcess);
+} asynOctetBase;
+epicsShareExtern asynOctetBase *pasynOctetBase;
+
+</pre>
 
 <table border="1">
   <caption>asynOctet</caption>
   <tbody>
     <tr>
+      <td>write</td>
+      <td>Send a message to the device.  *nbytesTransfered is the number of
+        8-bit bytes sent to the device. Interpose or driver code may
+        add end of string terminators to the message.</td>
+    </tr>
+    <tr>
+      <td>writeRaw</td>
+      <td>Send a message to the device.  *nbytesTransfered is the number of
+        8-bit bytes sent to the device. Interpose or driver code must
+       not add end of string terminators to the message.</td>
+    </tr>
+    <tr>
       <td>read</td>
       <td>Read a message from the device.  *nbytesTransfered is the number of
         8-bit bytes read from the device. If read returns asynSuccess than
-        eomReason tells why the read completed.</td>
+        eomReason tells why the read completed. Interpose or driver code may
+        strip end of string terminators from the message. If it does the 
+        first eos character will be replaced by null and the eos characters
+        will not be included in nbytesTransfered.
+    </td>
     </tr>
     <tr>
-      <td>write</td>
-      <td>Send a message to the device.  *nbytesTransfered is the number of
-        8-bit bytes sent to the device.</td>
+      <td>readRaw</td>
+      <td>Read a message from the device.  *nbytesTransfered is the number of
+        8-bit bytes read from the device. If read returns asynSuccess than
+        eomReason tells why the read completed. Interpose or driver code
+        must not strip end of string terminators from the message.</td>
     </tr>
     <tr>
       <td>flush</td>
       <td>Flush the input buffer.</td>
     </tr>
     <tr>
-      <td>setEos</td>
-      <td>Set End Of String. For example "\n". Note that gpib drivers usually
-        accept at most a one character string. If eoslen is equal to 0, the
-        behaviour depends on the interface.  The asynInterposeEos asynOctet
-        interface provides a read method which will not return until the
-        specified number of characters have been been read or the time limit
-        has been reached.</td>
+      <td>registerInterruptUser</td>
+      <td>Register a user that will be called whenever a new message
+         is received.</td>
     </tr>
     <tr>
-      <td>getEos</td>
+      <td>cancelInterruptUser</td>
+      <td>Cancel a registered user.</td>
+    </tr>
+    <tr>
+      <td>setInputEos</td>
+      <td>Set End Of String for input. For example "\n".
+        Note that gpib drivers usually
+        accept at most a one character string.</td>
+    </tr>
+    <tr>
+      <td>getInputEos</td>
       <td>Get the current End of String.</td>
+    </tr>
+    <tr>
+      <td>setOutputEos</td>
+      <td>Set End Of String for output.</td>
+    </tr>
+    <tr>
+      <td>getOutputEos</td>
+      <td>Get the current End of String.</td>
+    </tr>
+  </tbody>
+</table>
+<p>asynOctetBase is an interface and associated code that is used by drivers
+that implement interface asynOctet. asynOctetBase provides code to handle
+callbacks to users that call registerInterruptUser.
+It can optionally implement interrupt support. For single device support
+it can optionally call asynInterposeEosConfig to handle end of string
+processing for input and/or output.</p>
+
+<table border="1">
+  <caption>asynInt32Base</caption>
+  <tbody>
+    <tr>
+      <td>initialize</td>
+      <td>After a driver calls registerPort is can call:
+        <pre>pasynInt32Base-&gt;initialize(...</pre>
+        Any null methods in the asynInterface are replaced by default
+        implementations. It is expected that most drivers use the default
+        implementations of registerInterruptUser and cancelInterruptUser.
+        Since these methods are called only during initialization they do not
+        need to be called via a queueRequest callback.</td>
     </tr>
   </tbody>
 </table>
@@ -1672,32 +1765,59 @@ asynOctet interfaces. Examples include motor drivers running in their own
 threads, SNL programs, and the shell commands described later in this
 document.</p>
 <pre>typedef struct asynOctetSyncIO {
-   asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+   asynStatus (*connect)(const char *port, int addr,
+                         asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
    asynStatus (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
                   double timeout,int *nbytesTransfered);
+   asynStatus (*writeRaw)(asynUser *pasynUser,char const *buffer,int buffer_len,
+                  double timeout,int *nbytesTransfered);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, int buffer_len,
-                  const char *ieos, int ieos_len, int flush, double timeout,
-                  int *nbytesTransfered,int *eomReason);
+                  double timeout, int *nbytesTransfered,int *eomReason);
+   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, int buffer_len,
+                  double timeout, int *nbytesTransfered,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
-                  const char *ieos, int ieos_len, double timeout,
+                  double timeout,
                   int *nbytesOut, int *nbytesIn, int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
+   asynStatus (*setInputEos)(asynUser *pasynUser,
+                  const char *eos,int eoslen);
+   asynStatus (*getInputEos)(asynUser *pasynUser,
+                  char *eos, int eossize, int *eoslen);
+   asynStatus (*setOutputEos)(asynUser *pasynUser,
+                  const char *eos,int eoslen);
+   asynStatus (*getOutputEos)(asynUser *pasynUser,
+                  char *eos, int eossize, int *eoslen);
    asynStatus (*writeOnce)(const char *port, int addr,
                   char const *buffer, int buffer_len, double timeout,
-                  int *nbytesTransfered);
+                  int *nbytesTransfered, const char *drvInfo);
+   asynStatus (*writeRawOnce)(const char *port, int addr,
+                  char const *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
-                  char *buffer, int buffer_len,
-                  const char *ieos, int ieos_len, int flush, double timeout,
-                  int *nbytesTransfered,int *eomReason);
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
+   asynStatus (*readRawOnce)(const char *port, int addr,
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
-                  const char *ieos, int ieos_len, double timeout,
-                  int *nbytesOut, int *nbytesIn, int *eomReason);
+                  double timeout,
+                  int *nbytesOut, int *nbytesIn, int *eomReason,
+                  const char *drvInfo);
+   asynStatus (*flushOnce)(const char *port, int addr,const char *drvInfo);
+   asynStatus (*setInputEosOnce)(const char *port, int addr,
+                  const char *eos,int eoslen,const char *drvInfo);
+   asynStatus (*getInputEosOnce)(const char *port, int addr,
+                  char *eos, int eossize, int *eoslen,const char *drvInfo);
+   asynStatus (*setOutputEosOnce)(const char *port, int addr,
+                  const char *eos,int eoslen,const char *drvInfo);
+   asynStatus (*getOutputEosOnce)(const char *port, int addr,
+                  char *eos, int eossize, int *eoslen,const char *drvInfo);
 } asynOctetSyncIO;
 epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
 
@@ -1726,25 +1846,57 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         or time out.</td>
     </tr>
     <tr>
+      <td>writeRaw</td>
+      <td>Calls asynOctet-&gt;writeRaw and waits for the operation to complete
+        or time out.</td>
+    </tr>
+    <tr>
       <td>read</td>
-      <td>Calls asynOctet-&gt;setEos (if ieos_len is non-zero), asynOctet
-        flush (if flush=1), and asynOctet-&gt;read. Waits for the operation
+      <td>Calls asynOctet-&gt;read. Waits for the operation
+        to complete or time out.</td>
+    </tr>
+    <tr>
+      <td>readRaw</td>
+      <td>Calls asynOctet-&gt;readRaw. Waits for the operation
         to complete or time out.</td>
     </tr>
     <tr>
       <td>writeRead</td>
-      <td>Calls pasynOcter-&gt;write, asynOctet-&gt;setEos (if ieos_len is
-        non-zero), asynOctet flush, and asynOctet-&gt;read. Waits for the
+      <td>Calls pasynOctet-&gt;flush, pasynOctet-&gt;write, 
+        and asynOctet-&gt;read. Waits for the
         operations to complete or time out.</td>
     </tr>
     <tr>
       <td>flush</td>
-      <td>Calls pasynOctet-&gt;flush and waits for the operation to
-      complete.</td>
+      <td>Calls pasynOctet-&gt;flush</td>
+    </tr>
+    <tr>
+      <td>setInputEos</td>
+      <td>Calls pasynOctet-&gt;setInputEos</td>
+    </tr>
+    <tr>
+      <td>getInputEos</td>
+      <td>Calls pasynOctet-&gt;getInputEos</td>
+    </tr>
+    <tr>
+      <td>setOutputEos</td>
+      <td>Calls pasynOctet-&gt;setOutputEos</td>
+    </tr>
+    <tr>
+      <td>getOutputEos</td>
+      <td>Calls pasynOctet-&gt;getOutputEos</td>
     </tr>
     <tr>
       <td>writeOnce</td>
       <td>This does a connect, write, and disconnect.</td>
+    </tr>
+    <tr>
+      <td>writeRawOnce</td>
+      <td>This does a connect, writeRaw, and disconnect.</td>
+    </tr>
+    <tr>
+      <td>readOnce</td>
+      <td>This does a connect, read, and disconnect.</td>
     </tr>
     <tr>
       <td>readOnce</td>
@@ -1753,60 +1905,6 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     <tr>
       <td>writeReadOnce</td>
       <td>This does a connect, writeRead, and disconnect.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynOctetTrapReadWrite</h3>
-
-<p>asynOctetTrapReadWriteConfig intercepts all asynOctet messages and calls
-all registered callbacks for read and write messages.</p>
-<pre>#define asynOctetTrapReadWriteType "asynOctetTrapReadWrite"
-typedef void (*asynOctetTrapReadWriteCallback) (asynUser *pasynUser,
-    const char *data, int numchars, asynStatus status);
-
-/* asynOctetTrapReadWrite methods are thread-safe but might block.
-*  Thus, they can be called directly by a task that is allowed to
-*  block, or indirectly with asynManager-&gt;queueRequest()
-*  Note that, when using asynManager-&gt;queueRequest, a callback
-*  cannot be installed or removed as long as some other asynUser has
-*  locked the port/address.
-*
-*  Before pasynUser is freed, it must remove all callbacks that it has
-*  previously installed or the system might crash!
-*/
-
-typedef struct asynOctetTrapReadWrite {
-    asynStatus (*installReadCallback) (void *drvPvt, asynUser *pasynUser,
-        asynOctetTrapReadWriteCallback callback);
-    asynStatus (*installWriteCallback) (void *drvPvt, asynUser *pasynUser,
-        asynOctetTrapReadWriteCallback callback);
-    asynStatus (*removeReadCallback) (void *drvPvt, asynUser *pasynUser,
-        asynOctetTrapReadWriteCallback callback);
-    asynStatus (*removeWriteCallback) (void *drvPvt, asynUser *pasynUser,
-        asynOctetTrapReadWriteCallback callback);
-} asynOctetTrapReadWrite;
-
-int epicsShareAPI asynOctetTrapReadWriteConfig(const char *portName, int addr);</pre>
-
-<table border="1">
-  <caption>asynOctetTrapReadWrite</caption>
-  <tbody>
-    <tr>
-      <td>installReadCallback</td>
-      <td>install a callback that gets called after each read.</td>
-    </tr>
-    <tr>
-      <td>installWriteCallback</td>
-      <td>install a callback that gets called after each write.</td>
-    </tr>
-    <tr>
-      <td>removeReadCallback</td>
-      <td>remove callback.</td>
-    </tr>
-    <tr>
-      <td>removeWriteCallback</td>
-      <td>remove callback.</td>
     </tr>
   </tbody>
 </table>
@@ -1915,7 +2013,6 @@ typedef struct asynInt32 {
    registerInterruptUser and cancelInterruptUser can be called
    directly rather than via queueRequest.
 */
-
 #define asynInt32BaseType "asynInt32Base"
 typedef struct asynInt32Base {
     asynStatus (*initialize)(const char *portName,
@@ -1953,17 +2050,10 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
   </tbody>
 </table>
 
-<h3>asynInt32Base</h3>
 
 <p>asynInt32Base is an interface and associated code that is used by drivers
 that implement interface asynInt32. asynInt32Base provides code to handle
 callbacks to users that call registerInterruptUser.</p>
-<pre>#define asynInt32BaseType "asynInt32Base"
-typedef struct asynInt32Base {
-    asynStatus (*initialize)(const char *portName,
-                            asynInterface *pint32Interface);
-} asynInt32Base;
-epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
 
 <table border="1">
   <caption>asynInt32Base</caption>
@@ -2031,18 +2121,19 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
 that calls it must be willing to block.</p>
 <pre>#define asynInt32SyncIOType "asynInt32SyncIO"
 typedef struct asynInt32SyncIO {
-    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+    asynStatus (*connect)(const char *port, int addr,
+                          asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser, epicsInt32 value,double timeout);
     asynStatus (*read)(asynUser *pasynUser, epicsInt32 *pvalue,double timeout);
     asynStatus (*getBounds)(asynUser *pasynUser,
-                            epicsInt32 *plow, epicsInt32 *phigh);
+                    epicsInt32 *plow, epicsInt32 *phigh);
     asynStatus (*writeOnce)(const char *port, int addr,
-                            epicsInt32 value,double timeout);
+                    epicsInt32 value,double timeout, const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
-                            epicsInt32 *pvalue,double timeout);
+                    epicsInt32 *pvalue,double timeout, const char *drvInfo);
     asynStatus (*getBoundsOnce)(const char *port, int addr,
-                            epicsInt32 *plow, epicsInt32 *phigh);
+                    epicsInt32 *plow, epicsInt32 *phigh,const char *drvInfo);
 } asynInt32SyncIO;
 epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
 
@@ -2236,18 +2327,10 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
   </tbody>
 </table>
 
-<h3>asynUInt32DigitalBase</h3>
-
 <p>asynUInt32DigitalBase is an interface and associated code that is used by
 drivers that implement interface asynUInt32Digital. asynUInt32DigitalBase
 provides code to handle callbacks to users that call
 registerInterruptUser.</p>
-<pre>#define asynUInt32DigitalBaseType "asynUInt32DigitalBase"
-typedef struct asynUInt32DigitalBase {
-    asynStatus (*initialize)(const char *portName,
-                            asynInterface *pint32Interface);
-} asynUInt32DigitalBase;
-epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
 
 <table border="1">
   <caption>asynUInt32DigitalBase</caption>
@@ -2272,7 +2355,7 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
   <tbody>
     <tr>
       <td>write</td>
-      <td></td>
+      <td>Reports an error "write is not supported" and returns asynError</td>
     </tr>
     <tr>
       <td>read</td>
@@ -3399,12 +3482,11 @@ struct asynGpibPort {
 
 <p>asynGpib describes the interface for device support code. It provides gpib
 specific functions like SRQ handling. It makes calls to asynGpibPort.
-asynGpib.c implements asynCommon and asynOctet.
-It supports asynInt32 by using the methods from asynInt32Base.
-asynInt32 is the way asynGpib reports SRQs to asynUsers. An asynUser that
-wishes to receive SRQs calls pasynInt32->registerInterruptUser and
-must set asynUser.reason = ASYN_REASON_SIGNAL.
-</p>
+asynGpib.c implements asynCommon and asynOctet. It supports asynInt32 by
+using the methods from asynInt32Base. asynInt32 is the way asynGpib reports
+SRQs to asynUsers. An asynUser that wishes to receive SRQs calls
+pasynInt32-&gt;registerInterruptUser and must set asynUser.reason =
+ASYN_REASON_SIGNAL.</p>
 
 <table border="1">
   <caption>asynGpib</caption>
