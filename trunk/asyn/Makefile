@@ -23,13 +23,18 @@ asyn_SRCS += asynManager.c
 asyn_SRCS += asynShellCommands.c
 INC += epicsInterruptibleSyscall.h
 INC += asynShellCommands.h
+INC += asynSyncIO.h
+asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
 
 SRC_DIRS += $(ASYN)/devAsyn
 DBD += devAsyn.dbd
+DBDINC += asynOctetRecord
 asyn_SRCS += devAsyn.c
+asyn_SRCS += asynOctetRecord.c
 asyn_SRCS += devAsynGeneric.c
 DB += asyn.db
+DB += asynOctetRecord.db
 DB += asynGeneric.db
 
 SRC_DIRS += $(ASYN)/asynGpib
