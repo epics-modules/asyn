@@ -49,7 +49,8 @@ typedef struct drvPvt {
     asynInterface asynFloat64;
     epicsInt32    low;
     epicsInt32    high;
-    void          *interruptPvt;
+    void          *asynInt32Pvt; /* For registerInterruptSource*/
+    void          *asynFloat64Pvt; /* For registerInterruptSource*/
     chanPvt       channel[NCHANNELS];
 }drvPvt;
 
@@ -144,7 +145,12 @@ static int int32DriverInit(const char *dn,int low,int high)
         pdrvPvt->channel[addr].value = pdrvPvt->low;
     }
     status = pasynManager->registerInterruptSource(portName,&pdrvPvt->asynInt32,
-                                                   &pdrvPvt->interruptPvt);
+        &pdrvPvt->asynInt32Pvt);
+    if(status!=asynSuccess) {
+        printf("int32DriverInit registerInterruptSource failed\n");
+    }
+    status = pasynManager->registerInterruptSource(portName,&pdrvPvt->asynFloat64,
+        &pdrvPvt->asynFloat64Pvt);
     if(status!=asynSuccess) {
         printf("int32DriverInit registerInterruptSource failed\n");
     }
@@ -194,15 +200,16 @@ static void interruptThread(drvPvt *pdrvPvt)
                 pchannel->value = value;
                 epicsMutexUnlock(pdrvPvt->lock);
             }
-            pasynManager->interruptStart(pdrvPvt->interruptPvt, &pclientList);
+            pasynManager->interruptStart(pdrvPvt->asynInt32Pvt, &pclientList);
             pnode = (interruptNode *)ellFirst(pclientList);
             while (pnode) {
                 pinterrupt = pnode->drvPvt;
                 addr = pinterrupt->addr;
-                pinterrupt->callback(pinterrupt->userPvt, pdrvPvt->channel[addr].value);
+                pinterrupt->callback(pinterrupt->userPvt,
+                    pdrvPvt->channel[addr].value);
                 pnode = (interruptNode *)ellNext(&pnode->node);
             }
-            pasynManager->interruptEnd(pdrvPvt->interruptPvt);
+            pasynManager->interruptEnd(pdrvPvt->asynInt32Pvt);
             epicsThreadSleep(pdrvPvt->interruptDelay);
         }
     }
@@ -275,6 +282,9 @@ static asynStatus int32Write(void *pvt,asynUser *pasynUser,
     drvPvt   *pdrvPvt = (drvPvt *)pvt;
     int        addr;
     asynStatus status;  
+    ELLLIST *pclientList;
+    interruptNode *pnode;
+    asynInt32Interrupt *pinterrupt;
 
     status = getAddr(pdrvPvt,pasynUser,&addr,0);
     if(status!=asynSuccess) return status;
@@ -292,6 +302,18 @@ static asynStatus int32Write(void *pvt,asynUser *pasynUser,
     epicsMutexUnlock(pdrvPvt->lock);
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
         "%s addr %d write %d\n",pdrvPvt->portName,addr,value);
+    pasynManager->interruptStart(pdrvPvt->asynInt32Pvt, &pclientList);
+    pnode = (interruptNode *)ellFirst(pclientList);
+    while (pnode) {
+        pinterrupt = pnode->drvPvt;
+        if(addr==pinterrupt->addr) {
+            pinterrupt->callback(pinterrupt->userPvt,
+                pdrvPvt->channel[addr].value);
+            break;
+        }
+        pnode = (interruptNode *)ellNext(&pnode->node);
+    }
+    pasynManager->interruptEnd(pdrvPvt->asynInt32Pvt);
     return asynSuccess;
 }
 
@@ -337,6 +359,9 @@ static asynStatus float64Write(void *pvt,asynUser *pasynUser,
     drvPvt   *pdrvPvt = (drvPvt *)pvt;
     int        addr;
     asynStatus status;
+    ELLLIST *pclientList;
+    interruptNode *pnode;
+    asynFloat64Interrupt *pinterrupt;
 
     status = getAddr(pdrvPvt,pasynUser,&addr,0);
     if(status!=asynSuccess) return status;
@@ -346,6 +371,17 @@ static asynStatus float64Write(void *pvt,asynUser *pasynUser,
     epicsEventSignal(pdrvPvt->waitWork);
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
         "%s addr %d write %d\n",pdrvPvt->portName,addr,value);
+    pasynManager->interruptStart(pdrvPvt->asynFloat64Pvt, &pclientList);
+    pnode = (interruptNode *)ellFirst(pclientList);
+    while (pnode) {
+        pinterrupt = pnode->drvPvt;
+        if(addr==pinterrupt->addr && pinterrupt->reason==1) {
+            pinterrupt->callback(pinterrupt->userPvt,value);
+            break;
+        }
+        pnode = (interruptNode *)ellNext(&pnode->node);
+    }
+    pasynManager->interruptEnd(pdrvPvt->asynFloat64Pvt);
     return asynSuccess;
 }
 

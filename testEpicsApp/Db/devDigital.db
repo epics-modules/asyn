@@ -1,6 +1,7 @@
-record(ao,"asyndevSetRate") {
-     field(DTYP,"asynFloat64")
-     field(OUT,"@asyn(digital,0,1.0) reason(1)")
+record(ao,"asyndevSetRateUInt32Digital") {
+    field(DTYP,"asynFloat64")
+    field(OUT,"@asyn(digital,0,1.0) reason(1)")
+    field(PREC,"1")
 }
 
 record(bo,"asyndevBoUInt32Bit0") {
@@ -13,7 +14,7 @@ record(longout,"asyndevLoUInt32") {
     field(DTYP,"asynUInt32Digital")
     field(OUT,"@asynMask(digital 0, 0xffffffff)")
 }
-record(mbbo,"asyndevMbboInt32") {
+record(mbbo,"asyndevMbboUInt32") {
     field(DTYP,"asynUInt32Digital")
     field(OUT,"@asynMask(digital,0,0xf,1.0) ")
     field(ZRST,"zero")
