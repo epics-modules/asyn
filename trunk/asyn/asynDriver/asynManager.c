@@ -824,7 +824,6 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
     FILE *fd;
 
     if(!pasynDevice) {
-        printf("asynManager::print not connected\n");
         va_start(pvar,pformat);
         nout = vfprintf(stdout,pformat,pvar);
         va_end(pvar);
