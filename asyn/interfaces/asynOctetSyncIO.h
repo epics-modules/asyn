@@ -30,28 +30,29 @@ typedef struct asynOctetSyncIO {
    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
-   int        (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
-                  double timeout);
-   int        (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
+   asynStatus (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
+                  double timeout,int *nbytesTransfered);
+   asynStatus (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
                   const char *ieos, int ieos_len, int flush, double timeout,
-                  int *eomReason);
-   int        (*writeRead)(asynUser *pasynUser,
+                  int *nbytesTransfered,int *eomReason);
+   asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
                   const char *ieos, int ieos_len, double timeout,
-                  int *eomReason);
+                  int *nbytesOut, int *nbytesIn, int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
-   int        (*writeOnce)(const char *port, int addr,
-                  char const *buffer, int buffer_len, double timeout);
-   int        (*readOnce)(const char *port, int addr,
+   asynStatus (*writeOnce)(const char *port, int addr,
+                  char const *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered);
+   asynStatus (*readOnce)(const char *port, int addr,
                   char *buffer, int buffer_len, 
                   const char *ieos, int ieos_len, int flush, double timeout,
-                  int *eomReason);
-   int        (*writeReadOnce)(const char *port, int addr,
+                  int *nbytesTransfered,int *eomReason);
+   asynStatus (*writeReadOnce)(const char *port, int addr,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
                   const char *ieos, int ieos_len, double timeout,
-                  int *eomReason);
+                  int *nbytesOut, int *nbytesIn, int *eomReason);
 } asynOctetSyncIO;
 epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;
 

@@ -188,10 +188,7 @@ epicsShareFunc int epicsShareAPI
     GPHENTRY *hashEntry;
 
     status = pasynOctetSyncIO->connect(port, addr, &pasynUser);
-    if (status) {
-       printf("Error calling pasynOctetSyncIO->connect, status=%d\n", status);
-       return(-1);
-    }
+    if (status) return(-1);
 
     /* Create hash table if it does not exist */
     if (asynHash == NULL) gphInitPvt(&asynHash, 256);
@@ -215,9 +212,10 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
     asynOctetRead(const char *entry, int nread, int flush)
 {
+    asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int ninp;
+    int ninp = 0;
     int eomReason;
 
     pPvt = asynFindEntry(entry);
@@ -229,11 +227,11 @@ epicsShareFunc int epicsShareAPI
 
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
-    ninp = pasynOctetSyncIO->read(pasynUser, pPvt->read_buffer, nread,
-                   pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout,&eomReason);
-    if (ninp <= 0) {
+    status = pasynOctetSyncIO->read(pasynUser, pPvt->read_buffer, nread,
+        pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout,&ninp,&eomReason);
+    if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                 "Error reading, ninp=%d\n", ninp);
+                 "Error reading, ninp=%d error %s\n", ninp,pasynUser->errorMessage);
        return(-1);
     }
     fprintf(stdout,"eomReason 0x%x\n",eomReason);
@@ -245,9 +243,10 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
     asynOctetWrite(const char *entry, const char *output)
 {
+    asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int nout;
+    int nout = 0;
     int len;
 
     pPvt = asynFindEntry(entry);
@@ -265,10 +264,12 @@ epicsShareFunc int epicsShareAPI
     len = dbTranslateEscape(pPvt->write_buffer, output);
     strcat(pPvt->write_buffer, pPvt->oeos);
     len += pPvt->oeos_len;
-    nout = pasynOctetSyncIO->write(pasynUser, pPvt->write_buffer, len, pPvt->timeout);
-    if (nout != len) {
+    status = pasynOctetSyncIO->write(pasynUser, pPvt->write_buffer,
+        len, pPvt->timeout,&nout);
+    if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                 "Error in asynOctetWrite, nout=%d, len=%d\n", nout, len);
+                 "Error in asynOctetWrite, nout=%d, len=%d error %s\n",
+                 nout, len,pasynUser->errorMessage);
        return(-1);
     }
     return(nout);
@@ -277,9 +278,11 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
     asynOctetWriteRead(const char *entry, const char *output, int nread)
 {
+    asynStatus status;
     asynUser *pasynUser;
     asynIOPvt *pPvt;
-    int ninp;
+    int nout = 0;
+    int ninp = 0;
     int len;
     int eomReason;
 
@@ -300,13 +303,14 @@ epicsShareFunc int epicsShareAPI
     len += pPvt->oeos_len;
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
-    ninp = pasynOctetSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
+    status = pasynOctetSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
                                   pPvt->read_buffer, nread,
                                   pPvt->ieos, pPvt->ieos_len, pPvt->timeout,
-                                  &eomReason);
-    if (ninp <= 0) {
+                                  &nout,&ninp,&eomReason);
+    if (status!=asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                 "Error in WriteRead, ninp=%d\n", ninp);
+           "Error in WriteRead, nout %d ninp=%d error %s\n",
+           nout, ninp,pasynUser->errorMessage);
        return(-1);
     }
     fprintf(stdout,"eomReason 0x%x\n",eomReason);
