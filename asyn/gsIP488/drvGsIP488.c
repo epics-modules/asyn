@@ -535,8 +535,6 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     pgsport->errorMessage[0] = 0;
     status = readGpib(pgsport,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d readGpib error %s\n",
-            pgsport->portName,addr,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s readGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     }
@@ -562,13 +560,9 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     pgsport->errorMessage[0] = 0;
     status = writeGpib(pgsport,data,numchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d writeGpib error %s\n",
-            pgsport->portName,addr,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     } else if(actual!=numchars) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d requested %d but sent %d\n",
-            pgsport->portName,addr,numchars,actual);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s requested %d but sent %d bytes\n",pgsport->portName,numchars,actual);
         status = asynError;
@@ -647,8 +641,6 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
         status=writeCmd(pgsport,data,length,timeout,transferStateIdle);
     }
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s gpibPortAddressedCmd error %s\n",
-            pgsport->portName,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     }
@@ -671,8 +663,6 @@ static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int c
     buffer[0] = cmd;
     status = writeCmd(pgsport,buffer,1,timeout,transferStateIdle);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
-            pgsport->portName,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     }
