@@ -73,22 +73,22 @@ This tutorial provides step-by-step instructions on how to create EPICS
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
 \backslash 
-ahref{../../asynDriver.html}{asynDriver}
+ahref{../asynDriver.html}{asynDriver}
 \end_inset 
 
  and 
 \begin_inset ERT
-status Collapsed
+status Open
 
 \layout Standard
 
 \backslash 
-ahref{../../devGpib.html}{devGpib}
+ahref{../devGpib.html}{devGpib}
 \end_inset 
 
  documentation.
@@ -108,10 +108,9 @@ EPICS modules/soft/asyn version 3.1 or higher.
 
 Serial devices can now be treated in much the same way as GPIB (IEEE-488)
  devices.
- The EPICS 'asyn' driver devGpib module can use the low-level
- drivers which communicate with devices connected to serial
- ports on the IOC or with devices connected through Ethernet/Serial converter
- boxes.
+ The EPICS 'asyn' driver devGpib module can use the low-level drivers which
+ communicate with devices connected to serial ports on the IOC or with devices
+ connected through Ethernet/Serial converter boxes.
 \layout Standard
 
 I based this tutorial on the device support I wrote for a CVI Laser Corporation
@@ -1272,7 +1271,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-27 13:46:07 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-29 13:38:15 $$
 \newline 
 ############################################################################
 \newline 
