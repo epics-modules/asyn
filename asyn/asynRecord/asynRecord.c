@@ -150,16 +150,20 @@ typedef struct oldValues {	/* Used in monitor() and monitorStatus() */
            db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 typedef enum {
-    stateNoDevice, stateIdle, stateCancelIO, stateIO,
-    stateConnect, stateGetOption, stateSetOption
+    stateNoDevice, stateIdle, stateCancelIO, stateIO
 }   callbackState;
+typedef enum {
+    callbackConnect, callbackGetOption, callbackSetOption
+}   callbackType;
+typedef struct callbackMessage {
+    callbackType callbackType;
+    int fieldIndex;
+} callbackMessage;
 typedef struct asynRecPvt {
     CALLBACK callback;
     asynRecord *prec;	/* Pointer to record */
     callbackState state;
-    int fieldIndex;	/* For special */
-    asynUser *pasynUserProcess;
-    asynUser *pasynUserSpecial;
+    asynUser *pasynUser;
     asynCommon *pasynCommon;
     void *asynCommonPvt;
     asynOption *pasynOption;
@@ -202,11 +206,7 @@ static long init_record(asynRecord * pasynRec, int pass)
     pasynUser = pasynManager->createAsynUser(
                      asynCallbackProcess, queueTimeoutCallbackProcess);
     pasynUser->userPvt = pasynRecPvt;
-    pasynRecPvt->pasynUserProcess = pasynUser;
-    pasynUser = pasynManager->createAsynUser(
-                     asynCallbackSpecial, queueTimeoutCallbackSpecial);
-    pasynUser->userPvt = pasynRecPvt;
-    pasynRecPvt->pasynUserSpecial = pasynUser;
+    pasynRecPvt->pasynUser = pasynUser;
     pasynRecPvt->state = stateNoDevice;
     if(strlen(pasynRec->port) != 0) {
         status = connectDevice(pasynRec);
@@ -241,7 +241,7 @@ static long process(asynRecord * pasynRec)
             if(pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
             if(pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
             resetError(pasynRec);
-            status = pasynManager->queueRequest(pasynRecPvt->pasynUserProcess,
+            status = pasynManager->queueRequest(pasynRecPvt->pasynUser,
                                       asynQueuePriorityLow, QUEUE_TIMEOUT);
             if(status==asynSuccess) {
                 pasynRecPvt->state = state = stateIO;
@@ -270,7 +270,10 @@ static long special(struct dbAddr * paddr, int after)
     asynRecord *pasynRec = (asynRecord *) paddr->precord;
     int        fieldIndex = dbGetFieldIndex(paddr);
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
-    asynUser   *pasynUser = pasynRecPvt->pasynUserSpecial;
+    asynUser *pasynUser = pasynManager->duplicateAsynUser(pasynRecPvt->pasynUser,
+                                                          asynCallbackSpecial, 
+                                                  queueTimeoutCallbackSpecial);
+    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
     asynStatus status = asynSuccess;
     int        traceMask;
     FILE       *fd;
@@ -278,12 +281,7 @@ static long special(struct dbAddr * paddr, int after)
     asynQueuePriority priority;
 
     if(!after) {
-        if(fieldIndex == asynRecordPORT || fieldIndex == asynRecordADDR) {
-            if(state != stateIdle && state != stateNoDevice) {
-                reportError(pasynRec, asynSuccess, "busy  try again later");
-                return -1;
-            }
-        } else if(fieldIndex==asynRecordSOCK) {
+        if(fieldIndex==asynRecordSOCK) {
             if(state!=stateNoDevice) {
                 reportError(pasynRec, asynSuccess,
                         "PORT has already been configured");
@@ -311,7 +309,7 @@ static long special(struct dbAddr * paddr, int after)
         {
             int wasQueued = 0;
             status = pasynManager->cancelRequest(
-                pasynRecPvt->pasynUserProcess,&wasQueued);
+                pasynRecPvt->pasynUser,&wasQueued);
             if(wasQueued) {
                 reportError(pasynRec,status, "I/O request canceled");
                 recGblSetSevr(pasynRec,STATE_ALARM,MAJOR_ALARM);
@@ -320,10 +318,7 @@ static long special(struct dbAddr * paddr, int after)
                 callbackRequestProcessCallback(&pasynRecPvt->callback,
                     pasynRec->prio, pasynRec);
             }
-            wasQueued = 0;
-            status = pasynManager->cancelRequest(
-                pasynRecPvt->pasynUserSpecial,&wasQueued);
-            if(wasQueued) pasynRecPvt->state = stateIdle;
+            pasynRecPvt->state = stateIdle;
 
         }
         return 0;
@@ -405,27 +400,27 @@ static long special(struct dbAddr * paddr, int after)
     /* remaining cases must be handled by asynCallbackSpecial*/
     switch (fieldIndex) {
     case asynRecordCNCT:
-        pasynRecPvt->state = stateConnect;
+        pmsg->callbackType = callbackConnect;
         break;
     case asynRecordGOPT:
-        pasynRecPvt->state = stateGetOption;
+        pmsg->callbackType = callbackGetOption;
         break;
     case asynRecordBAUD:
     case asynRecordPRTY:
     case asynRecordDBIT:
     case asynRecordSBIT:
     case asynRecordFCTL:
-        pasynRecPvt->fieldIndex = fieldIndex;
-        pasynRecPvt->state = stateSetOption;
+        pmsg->fieldIndex = fieldIndex;
+        pmsg->callbackType = callbackSetOption;
         break;
     }
-    if(pasynRecPvt->state==stateConnect) {
+    if(pmsg->callbackType == callbackConnect) {
         priority = asynQueuePriorityConnect;
     } else {
         priority = asynQueuePriorityLow;
     }
-    status = pasynManager->queueRequest(pasynRecPvt->pasynUserSpecial,
-        priority,QUEUE_TIMEOUT);
+    status = pasynManager->queueRequest(pasynUser,
+                                        priority,QUEUE_TIMEOUT);
     if(status!=asynSuccess) {
         reportError(pasynRec,status,"queueRequest failed for special. Why?");
     }
@@ -453,21 +448,22 @@ static void asynCallbackSpecial(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
-    asynStatus status;
-    callbackState state = pasynRecPvt->state;
+    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
+    callbackType callbackType = pmsg->callbackType;
+    asynStatus status=asynSuccess;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "%s: asynCallbackSpecial, state=%d\n",
-              pasynRec->name, pasynRecPvt->state);
-    switch (state) {
-    case stateSetOption:
+              "%s: asynCallbackSpecial, type=%d\n",
+              pasynRec->name, pmsg->callbackType);
+    switch (callbackType) {
+    case callbackSetOption:
         setOption(pasynUser);
         /* no break - every time an option is set call getOptions to verify */
-    case stateGetOption:
+    case callbackGetOption:
         getOptions(pasynUser);
         break;
-    case stateConnect:{
+    case callbackConnect:{
             int isConnected;
-            status = pasynManager->isConnected(pasynUser, &isConnected);
+            pasynManager->isConnected(pasynUser, &isConnected);
             if(pasynRec->cnct) {
                 if(!isConnected) {
                     pasynRecPvt->pasynCommon->connect(
@@ -487,10 +483,11 @@ static void asynCallbackSpecial(asynUser * pasynUser)
         break;
     default:
         reportError(pasynRec, asynError,
-            "asynCallbackSpecial illegal state %d\n", pasynRecPvt->state);
-        return;
+            "asynCallbackSpecial illegal type %d\n", callbackType);
+        status = asynError;
     }
-    pasynRecPvt->state = stateIdle;
+    pasynManager->freeAsynUser(pasynUser);
+    if (status == asynSuccess) pasynRecPvt->state = stateIdle;
 }
 
 static void exceptCallback(asynUser * pasynUser, asynException exception)
@@ -621,7 +618,7 @@ static void monitorStatus(asynRecord * pasynRec)
     /* Called to update trace and connect fields. */
     unsigned short monitor_mask;
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
-    asynUser *pasynUser = pasynRecPvt->pasynUserSpecial;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
     int traceMask;
     asynStatus status;
     FILE *traceFd;
@@ -698,8 +695,10 @@ static asynStatus connectDevice(asynRecord * pasynRec)
 {
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
-    asynUser *pasynUser = pasynRecPvt->pasynUserSpecial;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
     asynStatus status;
+    callbackMessage *pmsg;
+
     resetError(pasynRec);
     /* Disconnect any connected device.  Ignore error if there is no device
      * currently connected. */
@@ -755,19 +754,14 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     /* Add exception callback */
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
     /* Get the trace and connect flags */
-    /* Now disconnect and connect pasynUserProcess */
-    pasynUser = pasynRecPvt->pasynUserProcess;
-    pasynManager->disconnect(pasynUser);
-    /* Connect to the new device */
-    status = pasynManager->connectDevice(pasynUser, pasynRec->port,
-                                         pasynRec->addr);
-    if(status != asynSuccess) {
-        reportError(pasynRec, status,
-                    "Connect error process SHOULD NOT HAPPEN, status=%d, %s",
-                    status, pasynUser->errorMessage);
-        return (status);
-    }
     monitorStatus(pasynRec);
+    /* Queue a request to get the options */
+    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
+                                                queueTimeoutCallbackSpecial);
+    pmsg = (callbackMessage *)&pasynUser->userData;
+    pmsg->callbackType = callbackGetOption;
+    status = pasynManager->queueRequest(pasynUser,
+                                        asynQueuePriorityLow,QUEUE_TIMEOUT);
     return (asynSuccess);
 }
 
@@ -1026,6 +1020,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
 static void setOption(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
+    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
 
@@ -1039,8 +1034,8 @@ static void setOption(asynUser * pasynUser)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s: setOptionCallback port=%s, addr=%d index=%d\n",
               pasynRec->name, pasynRec->port, pasynRec->addr,
-              pasynRecPvt->fieldIndex);
-    switch (pasynRecPvt->fieldIndex) {
+              pmsg->fieldIndex);
+    switch (pmsg->fieldIndex) {
     case asynRecordBAUD:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
             pasynUser, "baud", baud_choices[pasynRec->baud]);
@@ -1132,7 +1127,7 @@ static void reportError(asynRecord * pasynRec, asynStatus status,
     const char *pformat,...)
 {
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
-    asynUser *pasynUser = pasynRecPvt->pasynUserSpecial;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
     unsigned short monitor_mask;
     char buffer[ERR_SIZE + 1];
     va_list pvar;
