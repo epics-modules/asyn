@@ -18,4 +18,7 @@ dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record_PB_A1,PORT=B,ADDR=1,OMAX
 dbLoadRecords("../../db/test.db","P=test,R=Client1,PORT=B,A=1")
 dbLoadRecords("../../db/test.db","P=test,R=Client2,PORT=B,A=1")
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=A,ADDR=0,OMAX=0,IMAX=0")
+dbLoadRecords("../../db/devGenericTest.db","PORT=A,ADDR=0")
+asynSetTraceMask("A",0,0xff)
+asynSetTraceIOMask("A",0,0x2)
 iocInit()

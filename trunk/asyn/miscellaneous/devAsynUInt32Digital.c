@@ -20,6 +20,7 @@
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
+#include <ctype.h>
 
 #include <alarm.h>
 #include <recGbl.h>
@@ -41,6 +42,7 @@
 #include <epicsExport.h>
 
 #include "asynDriver.h"
+#include "asynDrvUser.h"
 #include "asynUInt32Digital.h"
 #include "asynUInt32DigitalCallback.h"
 #include "asynEpicsUtils.h"
@@ -48,14 +50,16 @@
 typedef struct {
    asynUser *pasynUser;
    asynUInt32Digital *pasynUInt32D;
-   void *asynUInt32DPvt;
+   void              *asynUInt32DPvt;
    asynUInt32DigitalCallback *pasynUInt32DCb;
-   void *asynUInt32DCbPvt;
+   void                      *asynUInt32DCbPvt;
    epicsUInt32 value;
    epicsUInt32 mask;
-   int callbacksSupported;
-   int callbacksEnabled;
-   IOSCANPVT ioScanPvt;
+   int         callbacksSupported;
+   int         callbacksEnabled;
+   IOSCANPVT   ioScanPvt;
+   char        *portName;
+   char        *userParam;
 } devDigitalPvt;
 
 typedef struct  {
@@ -99,11 +103,10 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                        recType rt)
 {
     devDigitalPvt *pPvt;
-    char *port, *userParam;
-    int addr;
-    asynStatus status;
-    asynUser *pasynUser;
+    asynStatus    status;
+    asynUser      *pasynUser;
     asynInterface *pasynInterface;
+    int           addr;
 
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynUInt32Digital::initCommon");
     pr->dpvt = pPvt;
@@ -112,8 +115,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     pasynUser->userPvt = pr;
     pPvt->pasynUser = pasynUser;
 
-    status = pasynEpicsUtils->parseLink(pasynUser, plink, &port, &addr,
-                                        &userParam);
+    status = pasynEpicsUtils->parseLink(pasynUser, plink,
+                &pPvt->portName, &addr, &pPvt->userParam);
     if (status != asynSuccess) {
         errlogPrintf("devAsynUInt32Digital::initCommon, %s error parsing link %s\n",
                      pr->name, pasynUser->errorMessage);
@@ -131,12 +134,28 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         pPvt->mask = 0xffffffff;
     }
     /* Connect to device */
-    status = pasynManager->connectDevice(pasynUser, port, 0);
+    status = pasynManager->connectDevice(pasynUser, pPvt->portName, addr);
     if (status != asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "devAsynUInt32Digital::initCommon, connectDevice failed %s\n",
                   pasynUser->errorMessage);
         goto bad;
+    }
+    /*call drvUserInit*/
+    pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
+    if(pasynInterface) {
+        asynDrvUser *pasynDrvUser;
+        void       *drvPvtCommon;
+
+        pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
+        drvPvtCommon = pasynInterface->drvPvt;
+        status = pasynDrvUser->create(drvPvtCommon,pasynUser,
+            pPvt->userParam,0,0);
+        if(status!=asynSuccess) {
+            errlogPrintf("devAsynUInt32Digital::initCommon, drvUserInit failed %s\n",
+                     pasynUser->errorMessage);
+            goto bad;
+        }
     }
 
     /* Get the asynUInt32Digital interface */

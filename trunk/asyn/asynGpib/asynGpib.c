@@ -110,7 +110,7 @@ static void *registerPort(
         unsigned int priority, unsigned int stackSize);
 static void srqHappened(void *pgpibvt);
 
-static asynCommon asyn = {
+static asynCommon common = {
    report,connect,disconnect
 };
 static asynOctet octet = {
@@ -394,7 +394,7 @@ static void *registerPort(
     pgpibPvt->pasynGpibPort = pasynGpibPort;
     pgpibPvt->asynGpibPortPvt = asynGpibPortPvt;
     pgpibPvt->common.interfaceType = asynCommonType;
-    pgpibPvt->common.pinterface = &asyn;
+    pgpibPvt->common.pinterface = &common;
     pgpibPvt->common.drvPvt = pgpibPvt;
     pgpibPvt->octet.interfaceType = asynOctetType;
     pgpibPvt->octet.pinterface = &octet;

@@ -28,6 +28,7 @@ extern "C" {
 
 typedef struct asynSyncIO {
    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+   asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
    int        (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
                   double timeout);

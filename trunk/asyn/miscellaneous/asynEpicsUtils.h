@@ -22,6 +22,8 @@ extern "C" {
 typedef struct asynEpicsUtils {
     asynStatus (*parseLink)(asynUser *pasynUser, DBLINK *plink, 
                 char **port, int *addr, char **userParam);
+    asynStatus (*parseLinkFree)(asynUser *pasynUser, 
+                char **port, char **userParam);
 } asynEpicsUtils;
 epicsShareExtern asynEpicsUtils *pasynEpicsUtils;
 

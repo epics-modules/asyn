@@ -40,7 +40,9 @@ INC += asynInt32Callback.h asynFloat64Callback.h
 INC += asynInt32Array.h asynFloat64Array.h
 INC += asynInt32ArrayCallback.h asynFloat64ArrayCallback.h
 INC += asynUInt32Digital.h asynUInt32DigitalCallback.h
-INC += asynOctet.h asynOption.h
+INC += asynOctet.h
+INC += asynOption.h
+INC += asynDrvUser.h
 
 SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd
