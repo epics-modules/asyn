@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.14 2004-01-14 18:44:53 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.15 2004-01-14 18:50:34 mrk Exp $
  */
 
 #include <string.h>
@@ -593,7 +593,7 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                "drvGenericSerialWrite %d ", numchars);
     epicsTimerStartDelay(tty->timer, pasynUser->timeout);
-    wrote = write(tty->fd, data, numchars);
+    wrote = write(tty->fd, (char *)data, numchars);
     epicsTimerCancel(tty->timer);
     if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
         reportFailure(tty, "drvGenericSerialWrite", "timeout");
@@ -796,7 +796,8 @@ static const struct asynCommon drvGenericSerialAsynCommon = {
     drvGenericSerialReport,
     drvGenericSerialConnect,
     drvGenericSerialDisconnect,
-    drvGenericSerialSetPortOption
+    drvGenericSerialSetPortOption,
+    drvGenericSerialGetPortOption
 };
 
 /*
