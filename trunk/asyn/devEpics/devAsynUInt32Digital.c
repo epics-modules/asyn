@@ -283,13 +283,10 @@ static void interruptCallbackInput(void *drvPvt, epicsUInt32 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
-    epicsUInt32 oldvalue = pPvt->value;
-    epicsUInt32 mask = pPvt->mask;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
         pr->name, value);
-    if((oldvalue&mask) == (value&mask)) return;
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
