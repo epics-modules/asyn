@@ -41,6 +41,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                void **registrarPvt);
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
 
+
 static void int32Callback(void *userPvt, void *pvalue)
 {
     pvt        *ppvt = (pvt *)userPvt;
@@ -48,7 +49,7 @@ static void int32Callback(void *userPvt, void *pvalue)
 
     ppvt->callback(ppvt->userPvt,value);
 }
-
+
 asynStatus initialize(const char *portName, asynInterface *pint32Interface)
 {
     asynInt32 *pasynInt32 = (asynInt32 *)pint32Interface->pinterface;
@@ -62,7 +63,7 @@ asynStatus initialize(const char *portName, asynInterface *pint32Interface)
         pasynInt32->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pint32Interface);
 }
-
+
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
     epicsInt32 value)
 {
@@ -115,7 +116,7 @@ static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
         "%s %d getBounds setting low=high=0\n",portName,addr);
     return asynSuccess;
 }
-    
+
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32 callback, void *userPvt,
                                void **registrarPvt)

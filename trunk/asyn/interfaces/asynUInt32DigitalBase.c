@@ -44,7 +44,8 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
        interruptCallbackUInt32Digital callback, void *userPvt,epicsUInt32 mask,
        void **registrarPvt);
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
-
+
+
 static void uint32Callback(void *userPvt, void *pvalue)
 {
     pvt        *ppvt = (pvt *)userPvt;
@@ -57,7 +58,7 @@ static void uint32Callback(void *userPvt, void *pvalue)
         ppvt->prevValue = value;
     }
 }
-
+
 static asynStatus initialize(const char *portName,
     asynInterface *puint32Interface)
 {
@@ -78,7 +79,7 @@ static asynStatus initialize(const char *portName,
         pasynUInt32Digital->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,puint32Interface);
 }
-
+
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
     epicsUInt32 value,epicsUInt32 mask)
 {
@@ -114,6 +115,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
         "%s %d read is not supported\n",portName,addr);
     return asynError;
 }
+
 static asynStatus setInterrupt(void *drvPvt, asynUser *pasynUser,
                                epicsUInt32 mask, interruptReason reason)
 {
@@ -167,7 +169,6 @@ static asynStatus getInterrupt(void *drvPvt, asynUser *pasynUser,
         "%s %d getInterrupt is not supported\n",portName,addr);
     return asynError;
 }
-
 
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
       interruptCallbackUInt32Digital callback, void *userPvt,epicsUInt32 mask,
