@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.7 2004-04-13 18:44:57 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.8 2004-04-14 14:16:42 norume Exp $
  */
 
 #include <string.h>
@@ -40,11 +40,13 @@
 #include <asynInterposeEos.h>
 #include <drvAsynTCPPort.h>
 
-#if !defined(vxWorks) && !defined(__rtems__)
+#if defined(vxWorks) || defined(__rtems__)
+# define USE_SOCKTIMEOUT
+#else
+# define USE_POLL
 # include <sys/poll.h>
 #endif
 
-#define INBUFFER_SIZE         600
 #define CANCEL_CHECK_INTERVAL 5.0 /* Interval between checks for I/O cancel */
 #define CONSECUTIVE_READ_TIMEOUT_LIMIT  5   /* Disconnect after this many */
 
@@ -162,7 +164,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
     }
 
     /*
-     * Connect to the remote terminal server
+     * Connect to the remote host
      */
     epicsTimerStartDelay(tty->timer, 10.0);
     i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
@@ -184,7 +186,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
         tty->fd = -1;
         return asynError;
     }
-#ifdef POLLIN
+#ifdef USE_POLL
     if (((i = fcntl(tty->fd, F_GETFL, 0)) < 0)
      || (fcntl(tty->fd, F_SETFL, i | O_NONBLOCK) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -251,9 +253,9 @@ static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
     assert(tty);
     assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                       "%s write.\n", tty->serialDeviceName);
+                           "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                               "%s write %d ", tty->serialDeviceName, numchars);
+                            "%s write %d ", tty->serialDeviceName, numchars);
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -267,7 +269,7 @@ static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
         else {
             tty->writePollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
-#if defined(vxWorks) || defined(__rtems__)
+#ifdef USE_SOCKTIMEOUT
         if (setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO,
                         &tty->writePollmsec, sizeof tty->writePollmsec) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -285,7 +287,7 @@ static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
         timerStarted = 1;
     }
     for (;;) {
-#ifdef POLLOUT
+#ifdef USE_POLL
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
@@ -348,7 +350,7 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
                "%s read.\n", tty->serialDeviceName);
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s maxchars %d. Why <=0?\n",tty->serialDeviceName,maxchars );
+            "%s maxchars %d. Why <=0?\n",tty->serialDeviceName,maxchars);
         return asynError;
     }
     if ((tty->readPollmsec < 0) || (pasynUser->timeout != tty->readTimeout)) {
@@ -364,7 +366,7 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
         else {
             tty->readPollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
-#if defined(vxWorks) || defined(__rtems__)
+#ifdef USE_SOCKTIMEOUT
         if (setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO,
                         &tty->readPollmsec, sizeof tty->readPollmsec) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -381,7 +383,7 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
         }
-#ifdef POLLIN
+#ifdef USE_POLL
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
@@ -414,20 +416,19 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
         if (tty->cancelFlag) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                     "%s I/O cancelled", tty->serialDeviceName);
-            status = asynError;
             break;
         }
-        if (tty->timeoutFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s timeout", tty->serialDeviceName);
-            if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
-                closeConnection(tty);
-            status = asynError;
+        if (tty->timeoutFlag)
             break;
-        }
     }
-    if (timerStarted)
-        epicsTimerCancel(tty->timer);
+    if (timerStarted) epicsTimerCancel(tty->timer);
+    if ((nRead == 0) && (status == asynSuccess) && tty->timeoutFlag) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                        "%s timeout", tty->serialDeviceName);
+        if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
+            closeConnection(tty);
+        status = asynTimeout;
+    }
     *nbytesTransfered = nRead;
     return status;
 }
@@ -635,7 +636,7 @@ drvAsynTCPPortConfigure(char *portName,
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
     if(status!=asynSuccess) {
-        printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
+        errlogPrintf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
         ttyCleanup(tty);
         return -1;
     }

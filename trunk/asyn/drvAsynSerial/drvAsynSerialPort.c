@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.6 2004-04-13 18:44:57 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.7 2004-04-14 14:16:42 norume Exp $
  */
 
 #include <string.h>
@@ -39,6 +39,7 @@
 #include <drvAsynSerialPort.h>
 
 #if !defined(vxWorks) && !defined(__rtems__)
+# define USE_POLL
 # include <sys/poll.h>
 #endif
 
@@ -48,15 +49,14 @@
 # include <sioLib.h>
 # define CSTOPB STOPB
 #else
-# define HAVE_TERMIOS
+# define USE_TERMIOS
 # include <termios.h>
 #endif
 
-#define INBUFFER_SIZE         600
 #define CANCEL_CHECK_INTERVAL 5.0 /* Interval between checks for I/O cancel */
 #define CONSECUTIVE_READ_TIMEOUT_LIMIT  5   /* Disconnect after this many */
 
-#if !defined(HAVE_TERMIOS)
+#if !defined(USE_TERMIOS)
 /*
  * Fake termios structure
  */
@@ -150,7 +150,7 @@ timeoutHandler(void *p)
 #ifdef vxWorks
     ioctl(tty->fd, FIOCANCEL, NULL);
 #endif
-#ifdef HAVE_TERMIOS
+#ifdef USE_TERMIOS
     tcflush(tty->fd, TCOFLUSH);
 #endif
     /*
@@ -169,7 +169,7 @@ setMode(ttyController_t *tty)
 {
     asynUser *pasynUser = tty->pasynUser;
 
-#if defined(HAVE_TERMIOS)
+#if defined(USE_TERMIOS)
     struct termios termios;
     int baudCode;
     switch (tty->baud) {
@@ -219,7 +219,7 @@ setMode(ttyController_t *tty)
     return asynSuccess;
 #else
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "Warning: drvAsynSerialPort doesn't know how to set serial port mode on this machine.\n");
+              "Warning: No way to set serial port mode on this machine.\n");
     return asynSuccess;
 #endif
 }
@@ -230,7 +230,7 @@ setMode(ttyController_t *tty)
 static asynStatus
 setBaud (ttyController_t *tty)
 {
-#if defined(HAVE_TERMIOS)
+#if defined(USE_TERMIOS)
     return  setMode(tty);
 #elif defined(vxWorks)
     if ((ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
@@ -241,7 +241,7 @@ setBaud (ttyController_t *tty)
     return asynSuccess;
 #else
     asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-              "Don't know how to set serial port mode on this machine.\n");
+              "Warning: No way to set serial port mode on this machine.\n");
     return asynSuccess; 
 #endif
 }
@@ -288,18 +288,7 @@ drvAsynSerialPortConnect(void *drvPvt, asynUser *pasynUser)
     /*
      * Turn off non-blocking mode for systems without poll()
      */
-#ifdef __rtems__
-    tcflush(tty->fd, TCIOFLUSH);
-    if (fcntl(tty->fd, F_SETFL, 0) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "Can't set %s file flags: %s",
-                                    tty->serialDeviceName, strerror(errno));
-        close(tty->fd);
-        tty->fd = -1;
-        return asynError;
-    }
-#endif
-#ifndef vxWorks
+#if !defined(USE_POLL) && !defined(vxWorks)
     tcflush(tty->fd, TCIOFLUSH);
     if (fcntl(tty->fd, F_SETFL, 0) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -545,9 +534,9 @@ static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
     assert(tty);
     assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s write.\n", tty->serialDeviceName);
+                            "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-        "%s write %d ", tty->serialDeviceName, numchars);
+                            "%s write %d ", tty->serialDeviceName, numchars);
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -566,20 +555,20 @@ static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
     tty->timeoutFlag = 0;
     nleft = numchars;
 #ifdef vxWorks
-    if (pasynUser->timeout >= 0)
+    if (tty->writeTimeout >= 0)
 #else
-    if (pasynUser->timeout > 0)
+    if (tty->writeTimeout > 0)
 #endif
         {
         epicsTimerStartDelay(tty->timer, tty->writeTimeout);
         timerStarted = 1;
         }
     for (;;) {
-#ifdef POLLWRNORM
+#ifdef USE_POLL
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
-        pollfd.events = POLLWRNORM;
+        pollfd.events = POLLOUT;
         poll(&pollfd, 1, tty->writePollmsec);
         }
 #endif
@@ -654,7 +643,10 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
             tty->readPollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
 #ifdef __rtems__
-        /* RTEMS has neither poll() nor ioctl(FIOCANCEL) */
+        /*
+         * RTEMS has neither poll() nor ioctl(FIOCANCEL) and so must rely
+         * on termios timeouts.
+         */
         tty->termios.c_cc[VTIME] = (tty->readPollmsec + 99) / 100;
         if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -668,22 +660,30 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
     tty->timeoutFlag = 0;
     for (;;) {
 #ifdef vxWorks
+        /*
+         * vxWorks has neither poll() nor termios but does have the
+         * ability to cancel an operation in progress.  If the read
+         * timeout is zero we have to check for characters explicitly
+         * since we don't want to start a timer with 0 delay.
+         */
         if (tty->readTimeout == 0) {
             int nready;
             ioctl(tty->fd, FIONREAD, &nready);
-            if (nready == 0)
+            if (nready == 0) {
                 tty->timeoutFlag = 1;
+                break;
+            }
         }
 #endif
         if (!timerStarted && (tty->readTimeout > 0)) {
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
         }
-#ifdef POLLRDNORM
+#ifdef USE_POLL
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
-        pollfd.events = POLLRDNORM;
+        pollfd.events = POLLIN;
         poll(&pollfd, 1, tty->readPollmsec);
         }
 #endif
@@ -714,15 +714,17 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
                                     "%s I/O cancelled", tty->serialDeviceName);
             break;
         }
-        if (tty->timeoutFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s timeout", tty->serialDeviceName);
-            if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
-                closeConnection(tty);
+        if (tty->timeoutFlag)
             break;
-        }
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
+    if ((nRead == 0) && (status == asynSuccess) && tty->timeoutFlag) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                        "%s timeout", tty->serialDeviceName);
+        if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
+            closeConnection(tty);
+        status = asynTimeout;
+    }
     *nbytesTransfered = nRead;
     return status;
 }
@@ -892,7 +894,7 @@ drvAsynSerialPortConfigure(char *portName,
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
     if(status!=asynSuccess) {
-        printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
+        errlogPrintf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
         ttyCleanup(tty);
         return -1;
     }
