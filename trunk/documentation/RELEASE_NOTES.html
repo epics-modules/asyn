@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>March 16, 2005</h1>
+<h1>March 30, 2005</h1>
 </center>
 <hr>
 
@@ -73,6 +73,17 @@ asynUInt32DigitalSyncIO</h3>
 <p>These all use <span
 style="font-family: courier">lockPort/unlockPort</span> instead of <span
 style="font-family: courier">queueRequest</span>.</p>
+
+<center>
+<h2>Release 4-2-1</h2>
+</center>
+<h3>devAsynFloat64</h3>
+<p>Device support was not returning 2 (do not convert) for ai records
+when it should.  This meant that the VAL field was being set back to 0
+by the record after device support wrote to it. This bug is fixed.</p>
+<h3>asynRecord</h3>
+<p>The record sometimes did not read the current input and output EOS
+values from the driver when it connected. This bug is fixed.</p>
 
 <center>
 <h2>Release 4-2</h2>
