@@ -154,12 +154,14 @@ struct gpibDpvt {
 };
 
 /* If a method retuns int then 0,-1) => (OK, failure) */
-typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
+typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
+typedef int (*gpibStart)(gpibDpvt *pgpibDpvt,int failure);
+typedef void (*gpibFinish)(gpibDpvt *pgpibDpvt,int failure);
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
-    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
-    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start, gpibWork finish);
+    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
+    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibStart start, gpibFinish finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
         srqHandler handler,void *unsollicitedHandlerPvt);
