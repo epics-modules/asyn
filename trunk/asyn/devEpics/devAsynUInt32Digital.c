@@ -36,6 +36,8 @@
 #include <boRecord.h>
 #include <mbbiRecord.h>
 #include <mbboRecord.h>
+#include <mbbiDirectRecord.h>
+#include <mbboDirectRecord.h>
 #include <longinRecord.h>
 #include <longoutRecord.h>
 #include <epicsPrint.h>
@@ -72,7 +74,8 @@ typedef struct  {
 } dsetDigital;
 
 typedef enum {recTypeBi, recTypeBo, recTypeLi, recTypeLo, 
-              recTypeMbbi, recTypeMbbo} recType;
+    recTypeMbbi, recTypeMbbo,recTypeMbbiDirect, recTypeMbboDirect
+}recType;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                        recType rt);
@@ -91,6 +94,10 @@ static long initMbbi(mbbiRecord *pmbbi);
 static void callbackMbbi(asynUser *pasynUser);
 static long initMbbo(mbboRecord *pmbbo);
 static void callbackMbbo(asynUser *pasynUser);
+static long initMbbiDirect(mbbiDirectRecord *pmbbiDirect);
+static void callbackMbbiDirect(asynUser *pasynUser);
+static long initMbboDirect(mbboDirectRecord *pmbboDirect);
+static void callbackMbboDirect(asynUser *pasynUser);
 
 
 dsetDigital asynBiUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, processCallback};
@@ -99,6 +106,8 @@ dsetDigital asynBoUInt32Digital = {5, 0, 0, initBo, 0,            processCallbac
 dsetDigital asynLoUInt32Digital = {5, 0, 0, initLo, 0,            processCallback};
 dsetDigital asynMbbiUInt32Digital = {5, 0, 0, initMbbi, 0,        processCallback};
 dsetDigital asynMbboUInt32Digital = {5, 0, 0, initMbbo, 0,        processCallback};
+dsetDigital asynMbbiDirectUInt32Digital = {5, 0, 0, initMbbiDirect, 0,        processCallback};
+dsetDigital asynMbboDirectUInt32Digital = {5, 0, 0, initMbboDirect, 0,        processCallback};
 
 epicsExportAddress(dset, asynBiUInt32Digital);
 epicsExportAddress(dset, asynLiUInt32Digital);
@@ -106,6 +115,8 @@ epicsExportAddress(dset, asynBoUInt32Digital);
 epicsExportAddress(dset, asynLoUInt32Digital);
 epicsExportAddress(dset, asynMbbiUInt32Digital);
 epicsExportAddress(dset, asynMbboUInt32Digital);
+epicsExportAddress(dset, asynMbbiDirectUInt32Digital);
+epicsExportAddress(dset, asynMbboDirectUInt32Digital);
 
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -193,7 +204,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         pPvt->asynUInt32DCbPvt = pasynInterface->drvPvt;
     }
     if (pPvt->callbacksSupported && 
-        ((rt == recTypeBi) || (rt == recTypeLi) || rt == recTypeMbbi)) {
+        ((rt == recTypeBi) || (rt == recTypeLi) || (rt == recTypeMbbi)
+        || (rt == recTypeMbbiDirect))) {
         scanIoInit(&pPvt->ioScanPvt);
     }
     return(0);
@@ -245,6 +257,25 @@ static long initMbbo(mbboRecord *pmbbo)
     return(2);
 }
 
+static long initMbbiDirect(mbbiDirectRecord *pmbbiDirect)
+{
+    initCommon((dbCommon *)pmbbiDirect, &pmbbiDirect->inp,
+        callbackMbbiDirect, recTypeMbbiDirect);
+    if(pmbbiDirect->nobt == 0) pmbbiDirect->mask = 0xffffffff;
+    pmbbiDirect->mask <<= pmbbiDirect->shft;
+    return(0);
+}
+
+static long initMbboDirect(mbboDirectRecord *pmbboDirect)
+{
+    initCommon((dbCommon *)pmbboDirect, &pmbboDirect->out,
+        callbackMbboDirect, recTypeMbboDirect);
+    if(pmbboDirect->nobt == 0) pmbboDirect->mask = 0xffffffff;
+    pmbboDirect->mask <<= pmbboDirect->shft;
+    /* don't convert */
+    return(2);
+}
+
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devDigitalPvt *pPvt = (devDigitalPvt *)pr->dpvt;
@@ -334,7 +365,7 @@ static void callbackLi(asynUser *pasynUser)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::callbackLi value=%x\n", pli->name, pli->val);
 }
-
+
 static void callbackMbbi(asynUser *pasynUser)
 {
     mbbiRecord *pmbbi = (mbbiRecord *)pasynUser->userPvt;
@@ -354,6 +385,28 @@ static void callbackMbbi(asynUser *pasynUser)
     pmbbi->rval = pPvt->value & pmbbi->mask;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::callbackMbbi value=%x\n", pmbbi->name, pmbbi->rval);
+}
+
+static void callbackMbbiDirect(asynUser *pasynUser)
+{
+    mbbiDirectRecord *pmbbiDirect = (mbbiDirectRecord *)pasynUser->userPvt;
+    devDigitalPvt *pPvt = (devDigitalPvt *)pmbbiDirect->dpvt;
+    asynStatus status;
+
+    /* If callbacks not enabled, need to read value */
+    if (!pPvt->callbacksEnabled) {
+        status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser, 
+                                          &pPvt->value, pPvt->mask);
+        if (status == asynSuccess) {
+            pmbbiDirect->udf=0;
+        } else {
+            recGblSetSevr(pmbbiDirect, READ_ALARM, INVALID_ALARM);
+        }
+    }
+    pmbbiDirect->rval = pPvt->value & pmbbiDirect->mask;
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynUInt32Digital::callbackMbbiDirect value=%x\n",
+        pmbbiDirect->name, pmbbiDirect->rval);
 }
 
 static void callbackBo(asynUser *pasynUser)
@@ -388,7 +441,6 @@ static void callbackLo(asynUser *pasynUser)
         recGblSetSevr(plo, WRITE_ALARM, INVALID_ALARM);
 }
 
-
 static void callbackMbbo(asynUser *pasynUser)
 {
     mbboRecord *pmbbo = (mbboRecord *)pasynUser->userPvt;
@@ -405,7 +457,23 @@ static void callbackMbbo(asynUser *pasynUser)
         recGblSetSevr(pmbbo, WRITE_ALARM, INVALID_ALARM);
 }
 
+static void callbackMbboDirect(asynUser *pasynUser)
+{
+    mbboDirectRecord *pmbboDirect = (mbboDirectRecord *)pasynUser->userPvt;
+    devDigitalPvt *pPvt = (devDigitalPvt *)pmbboDirect->dpvt;
+    asynStatus status;
+    epicsUInt32 value;
 
+    value = pmbboDirect->rval & pmbboDirect->mask;
+    status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt,
+                                pPvt->pasynUser, value, pmbboDirect->mask);
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynUInt32Digital::callbackMbboDirect write=%x\n",
+        pmbboDirect->name, value);
+    if (status != asynSuccess)
+        recGblSetSevr(pmbboDirect, WRITE_ALARM, INVALID_ALARM);
+}
+
 static void dataCallback(void *v, epicsUInt32 value)
 {
     dbCommon *pr = (dbCommon *)v;
