@@ -1875,13 +1875,13 @@ where
 ni1014Config("L0","L1",0x5000,0x64,5,0,0)</pre>
 <p>NOTES:</p>
 <ul>
-   <li>Ports A and B are almost but not quite completely duplicates.
+   <li>Ports A and B are almost but not quite the same.
        Thus the code for connecting to port A is slightly different
        than the code for portB.</li>
-   <li>In order to disconnect and reconnect either port BOTH ports must
+   <li>In order to disconnect and reconnect either port, BOTH ports must
        be disconnected and reconnected.</li>
-   <li>When the ports are connected portA MUST be connected before portB.</li>
-   <li>Interrupt driver Programmed I/O is used rather than DMA. Thus no
+   <li>When the ports are connected, portA MUST be connected before portB.</li>
+   <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
        A14 address space is required.</li>
 </ul>
 <hr>
