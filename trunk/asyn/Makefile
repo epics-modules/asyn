@@ -46,6 +46,7 @@ asyn_SRCS += drvVxi11.c
 asyn_SRCS += vxi11core_xdr.c
 asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
+asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
 SRC_DIRS += $(ASYN)/drvGenericSerial
