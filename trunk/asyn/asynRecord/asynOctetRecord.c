@@ -248,9 +248,7 @@ static long special(struct dbAddr *paddr, int after)
        epicsMutexUnlock(pasynRecPvt->lock);
        return -1;
     } 
-    if (!after) return(0);
-    switch (fieldIndex) {
-
+    if(after) switch (fieldIndex) {
        case asynOctetRecordSOCK:
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
