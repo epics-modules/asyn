@@ -52,7 +52,7 @@ asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
-asyn_SRCS += devAoAsynInt32.c
+asyn_SRCS += devAsynAnalog.c
 asyn_SRCS += devAsynUInt32Digital.c
 asyn_SRCS += asynEpicsUtils.c
 

@@ -26,6 +26,8 @@ extern "C" {
 typedef struct asynInt32 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
+    asynStatus (*getBounds)(void *drvPvt, asynUser *pasynUser, 
+                            epicsInt32 *low, epicsInt32 *high);
 } asynInt32;
 
 #ifdef __cplusplus
