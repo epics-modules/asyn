@@ -1,4 +1,4 @@
-/*  asynUtils.h*/
+/*  asynEpicsUtils.h*/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -9,8 +9,8 @@
 ***********************************************************************/
 /*22-July-2004 Mark Rivers*/
 
-#ifndef asynUtilsH
-#define asynUtilsH
+#ifndef asynEpicsUtilsH
+#define asynEpicsUtilsH
 
 #include <link.h>
 #include "asynDriver.h"
@@ -19,15 +19,14 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-typedef struct asynUtils {
-    asynStatus (*parseVmeIo)(asynUser *pasynUser, DBLINK *plink, int *card, int *signal, 
-                char **port, char **userParam);
-} asynUtils;
-epicsShareExtern asynUtils *pasynUtils;
-
+typedef struct asynEpicsUtils {
+    asynStatus (*parseLink)(asynUser *pasynUser, DBLINK *plink, 
+                char **port, int *addr, char **userParam);
+} asynEpicsUtils;
+epicsShareExtern asynEpicsUtils *pasynEpicsUtils;
 
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */
 
-#endif /* asynUtilsH */
+#endif /* asynEpicsUtilsH */
