@@ -1,7 +1,7 @@
 
 file {
-	name="j:\epics\synApps5-1\asyn\2-2beta\medm\asynRecordDebug.adl"
-	version=020306
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecordDebug.adl"
+	version=030004
 }
 display {
 	object {
@@ -1105,177 +1105,144 @@ rectangle {
 		fill="outline"
 	}
 }
-composite {
+text {
 	object {
 		x=300
 		y=345
 		width=130
-		height=41
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=300
-				y=345
-				width=130
-				height=20
-			}
-			"basic attribute" {
-				clr=30
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).ACTD"
-			}
-			textix="noAutoConnect"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=310
-				y=345
-				width=110
-				height=20
-			}
-			"basic attribute" {
-				clr=62
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).ACTD"
-			}
-			textix="autoConnect"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=305
-				y=366
-				width=120
-				height=20
-			}
-			control {
-				chan="$(P)$(R).AUCT"
-				clr=14
-				bclr=51
-			}
-		}
+	"basic attribute" {
+		clr=30
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).ACTD"
+	}
+	textix="noAutoConnect"
+	align="horiz. right"
+}
+text {
+	object {
+		x=310
+		y=345
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).ACTD"
+	}
+	textix="autoConnect"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=305
+		y=366
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).AUCT"
+		clr=14
+		bclr=51
 	}
 }
-composite {
+text {
+	object {
+		x=180
+		y=345
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).ENBD"
+	}
+	textix="Enabled"
+	align="horiz. right"
+}
+text {
+	object {
+		x=175
+		y=345
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).ENBD"
+	}
+	textix="Disabled"
+	align="horiz. right"
+}
+menu {
 	object {
 		x=155
-		y=345
+		y=367
 		width=120
-		height=42
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=180
-				y=345
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=62
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).ENBD"
-			}
-			textix="Enabled"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=175
-				y=345
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=20
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).ENBD"
-			}
-			textix="Disabled"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=155
-				y=367
-				width=120
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ENBL"
-				clr=14
-				bclr=51
-			}
-		}
+	control {
+		chan="$(P)$(R).ENBL"
+		clr=14
+		bclr=51
 	}
 }
-composite {
+text {
+	object {
+		x=25
+		y=345
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).CNTD"
+	}
+	textix="Connected"
+	align="horiz. right"
+}
+text {
 	object {
 		x=10
 		y=345
 		width=120
-		height=42
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=25
-				y=345
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=62
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).CNTD"
-			}
-			textix="Connected"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=10
-				y=345
-				width=120
-				height=20
-			}
-			"basic attribute" {
-				clr=20
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).CNTD"
-			}
-			textix="Disconnected"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=10
-				y=367
-				width=120
-				height=20
-			}
-			control {
-				chan="$(P)$(R).CNCT"
-				clr=14
-				bclr=51
-			}
-		}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).CNTD"
+	}
+	textix="Disconnected"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=10
+		y=367
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).CNCT"
+		clr=14
+		bclr=51
 	}
 }
