@@ -92,19 +92,13 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen);
-static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
-    char *eos, int eossize, int *eoslen);
-static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen);
-static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
-    char *eos, int eossize, int *eoslen);
 static asynOctet octet = {
     writeIt,writeRaw,readIt,readRaw,
     0, /* Let asynOctetBase handle flush*/
     0,0, /*Let asynOctetBase handle registerInterruptUser/cancelInterruptUser*/
-    setInputEos, getInputEos,setOutputEos,getOutputEos };
+    0,0, /*Let asynOctetBase report error for setInputEos,getInputEos*/
+    0,0  /*Let asynOctetBase report error for setOutputEos,getOutputEos*/
+};
 
 static asynStatus otherPortInit(addrChangePvt *paddrChangePvt)
 {
@@ -506,114 +500,6 @@ static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
         "addrChangeDriver\n");
     unlockPort(paddrChangePvt,pasynUser);
     return status;
-}
-
-static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    int           addr;
-    asynStatus    status;
-    deviceInfo    *pdeviceInfo;
-    int           i;
-    
-    status = pasynManager->getAddr(pasynUser,&addr);
-    if(status!=asynSuccess) return status;
-    if(addr<0 || addr>1) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal address %d. Must be 1 or 2\n",addr);
-        return asynError;
-    }
-    if(eoslen<0 || eoslen>2) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal eoslen %d. Must be 0 or 1 or 2\n",eoslen);
-        return asynError;
-    }
-    pdeviceInfo = &paddrChangePvt->device[addr];
-    pdeviceInfo->eosInLen = eoslen;
-    for(i=0; i<eoslen; i++) pdeviceInfo->eosIn[i] = eos[i];
-    return asynSuccess;
-}
-
-static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
-    char *eos, int eossize, int *eoslen)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    int           addr;
-    asynStatus    status;
-    deviceInfo    *pdeviceInfo;
-    int           i;
-    
-    status = pasynManager->getAddr(pasynUser,&addr);
-    if(status!=asynSuccess) return status;
-    if(addr<0 || addr>1) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal address %d. Must be 1 or 2\n",addr);
-        return asynError;
-    }
-    pdeviceInfo = &paddrChangePvt->device[addr];
-    if(eossize<pdeviceInfo->eosInLen) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal eossize %d. Must be 0 or 1 or 2\n",eossize);
-        return asynError;
-    }
-    *eoslen = pdeviceInfo->eosInLen;
-    for(i=0; i<pdeviceInfo->eosInLen; i++) eos[i] = pdeviceInfo->eosIn[i];
-    return asynSuccess;
-}
-
-static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    int           addr;
-    asynStatus    status;
-    deviceInfo    *pdeviceInfo;
-    int           i;
-    
-    status = pasynManager->getAddr(pasynUser,&addr);
-    if(status!=asynSuccess) return status;
-    if(addr<0 || addr>1) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal address %d. Must be 1 or 2\n",addr);
-        return asynError;
-    }
-    if(eoslen<0 || eoslen>2) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal eoslen %d. Must be 0 or 1 or 2\n",eoslen);
-        return asynError;
-    }
-    pdeviceInfo = &paddrChangePvt->device[addr];
-    pdeviceInfo->eosOutLen = eoslen;
-    for(i=0; i<eoslen; i++) pdeviceInfo->eosOut[i] = eos[i];
-    return asynSuccess;
-}
-
-static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
-    char *eos, int eossize, int *eoslen)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    int           addr;
-    asynStatus    status;
-    deviceInfo    *pdeviceInfo;
-    int           i;
-    
-    status = pasynManager->getAddr(pasynUser,&addr);
-    if(status!=asynSuccess) return status;
-    if(addr<0 || addr>1) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal address %d. Must be 1 or 2\n",addr);
-        return asynError;
-    }
-    pdeviceInfo = &paddrChangePvt->device[addr];
-    if(eossize<pdeviceInfo->eosOutLen) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Illegal eossize %d. Must be 0 or 1 or 2\n",eossize);
-        return asynError;
-    }
-    *eoslen = pdeviceInfo->eosOutLen;
-    for(i=0; i<pdeviceInfo->eosOutLen; i++) eos[i] = pdeviceInfo->eosOut[i];
-    return asynSuccess;
 }
 
 /* register addrChangeDriverInit*/
