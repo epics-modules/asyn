@@ -1,2 +1,0 @@
-device(stringin,INST_IO,devAsynTestInp,"asynTest")
-device(stringout,INST_IO,devAsynTestOut,"asynTest")
