@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.3 2004-07-12 05:49:58 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.4 2004-07-15 21:43:26 norume Exp $
  */
 
 #include <string.h>
@@ -522,7 +522,12 @@ drvAsynIPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
     assert(tty);
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
             "%s set EOS %d: ", tty->serialDeviceName, eoslen);
-    return asynError;
+    if (eoslen > 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s: setEos not supported", tty->serialDeviceName);
+        return asynError;
+    }
+    return asynSuccess;
 }
 
 /*
@@ -537,7 +542,8 @@ drvAsynIPPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s get EOS\n", tty->serialDeviceName);
-    return asynError;
+    *eoslen = 0;
+    return asynSuccess;
 }
 
 /*
