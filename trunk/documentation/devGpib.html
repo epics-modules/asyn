@@ -471,14 +471,14 @@ definition must define field OUT as</p>
     <dd>Input message termination string. It can be:
       <dl>
         <dt><code>0</code></dt>
-          <dd>A null pointer  means that the read operation does not look for
-            "end of message" termination characters.</dd>
+          <dd>A NULL pointer  means that this read operation will be terminated
+            by the current asynOctetSetInputEos value, if any.</dd>
         <dt><code>""</code></dt>
           <dd>An empty string signifies that a single null character ('\0')
-            is the terminator.</dd>
+            is the terminator for this operation.</dd>
         <dt>non-empty string (e.g. <code>"\n"</code>)</dt>
           <dd>The termination characters (not including the null character
-            terminating the string). For example, <code>"\n"</code> sets the
+            terminating the string) for this operation. For example, <code>"\n"</code> sets the
             message terminator to a single ASCII newline (<code>'\n'</code>)
             character.  Some drivers, e.g. the VXI-11, allow only a single
             termination character.</dd>
