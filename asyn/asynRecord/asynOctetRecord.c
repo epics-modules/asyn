@@ -809,7 +809,7 @@ static void GPIB_command(asynUser *pasynUser)
                 recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
             /* Read the response byte  */
             ninp = pPvt->pasynOctet->read(pPvt->asynGpibPvt, 
-                                          pPvt->pasynUser, &pasynRec->spr, 1);
+                                    pPvt->pasynUser, (char *)&pasynRec->spr, 1);
             if (ninp < 0) /* Is this right? */
                 /* Something is wrong if we couldn't read */
                 recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);

@@ -276,6 +276,11 @@ static long writeConnect(stringoutRecord *pso)
         pdpvtAsyn->commonPvt = 0;
         pdpvtAsyn->pasynCommon = 0;
     }
+    if(strlen(pso->val)==0) {
+        pdpvtAsyn->state = stateInit;
+        epicsMutexUnlock(pdpvtAsyn->lock);
+        return(0);
+    }
     strncpy(buffer,pso->val,sizeof(buffer));
     buffer[sizeof(buffer) -1] = 0;
     separator = strchr(buffer,',');
@@ -345,10 +350,15 @@ static long readConnected(biRecord *pbi)
         goto bad;
     }
     if(pdpvtAsyn->state==stateInit) {
-        pdpvtAsyn->state = stateConnected;
-        pbi->val = pbi->rval = 1;
-        pbi->udf = 0;
-    } else if(pdpvtAsyn->state==stateNoPort){
+        if(!pdpvtAsyn->portName) {
+            pdpvtAsyn->state = stateNoPort;
+        } else {
+            pdpvtAsyn->state = stateConnected;
+            pbi->val = pbi->rval = 1;
+            pbi->udf = 0;
+        }
+    }
+    if(pdpvtAsyn->state==stateNoPort){
         recGblSetSevr(pbi,WRITE_ALARM,MINOR_ALARM);
         pbi->val = pbi->rval = 0;
         pbi->udf = 0;
@@ -377,6 +387,11 @@ static long readState(biRecord *pbi)
     epicsMutexMustLock(pdpvtAsyn->lock);
     switch(pdpvtAsyn->state) {
     case stateInit:
+        if(!pdpvtAsyn->portName) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s Not connected.\n",pbi->name);
+            goto unlock;
+        }
         switch(pbi->mask) {
             case 0x1: pdpvtAsyn->pconnectState = pbi; break;
             case 0x2: pdpvtAsyn->penableState = pbi; break;
@@ -444,6 +459,11 @@ static long writeState(boRecord *pbo)
     pasynUser = pdpvtAsyn->pasynUser;
     switch(pdpvtAsyn->state) {
     case stateInit:
+        if(!pdpvtAsyn->portName) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s Not connected.\n",pbo->name);
+            goto unlock;
+        }
         switch(pbo->mask) {
         case 0x1:
             pdpvtAsyn->pconnect = pbo;
@@ -535,6 +555,7 @@ static long writeTrace(boRecord	*pbo)
         pbo->udf = 0;
         break;
     case stateConnected:
+    case stateNoPort:
         traceMask = pasynTrace->getTraceMask(pasynUser);
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s getTraceMask %d\n",
             pbo->name,traceMask);
@@ -596,6 +617,7 @@ static long writeTraceIO(boRecord	*pbo)
         pbo->udf = 0;
         break;
     case stateConnected:
+    case stateNoPort:
         traceIOMask = pasynTrace->getTraceIOMask(pasynUser);
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s getTraceIOMask %d\n",
             pbo->name,traceIOMask);
