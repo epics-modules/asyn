@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.8 2003-11-14 15:20:31 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.9 2003-11-24 15:42:29 norume Exp $
  */
 
 #include <string.h>
@@ -53,6 +53,7 @@
  * asyn link.  There is one for each serial line.
  */
 typedef struct {
+    asynUser          *pasynUser;
     char              *serialDeviceName;
     int                fd;
     int                isRemote;
@@ -78,32 +79,6 @@ typedef struct {
     struct termios     termios;
 #endif
 } ttyController_t;
-
-int drvGenericSerialDebug = 0;
-epicsExportAddress(int,drvGenericSerialDebug);
-
-/*
- * Show string in human-readable form
- */
-static void
-showString(const char *str, int numchars)
-{
-    while (numchars--) {
-        char c = *str++;
-        switch (c) {
-        case '\n':  printf("\\n");  break;
-        case '\r':  printf("\\r");  break;
-        case '\t':  printf("\\t");  break;
-        case '\\':  printf("\\\\");  break;
-        default:
-            if (isprint(c))
-                printf("%c", c);   /* putchar(c) doesn't work on vxWorks (!!) */
-            else
-                printf("\\%03o", (unsigned char)c);
-            break;
-        }
-    }
-}
 
 /*
  * Report link parameters
@@ -164,8 +139,8 @@ timeoutHandler(void *p)
 {
     ttyController_t *tty = (ttyController_t *)p;
 
-    if (drvGenericSerialDebug >= 3)
-        printf("drvGenericSerial: %s timeout.\n", tty->serialDeviceName);
+    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+               "drvGenericSerial: %s timeout.\n", tty->serialDeviceName);
     epicsInterruptibleSyscallInterrupt(tty->interruptibleSyscallContext);
     /*
      * Since it is possible, though unlikely, that we got here before the
@@ -235,8 +210,8 @@ openConnection (ttyController_t *tty)
     /*
      * Create the remote or local connection
      */
-    if (drvGenericSerialDebug >= 1)
-        printf("drvGenericSerial open connection to %s\n", tty->serialDeviceName);
+    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+          "drvGenericSerial open connection to %s\n", tty->serialDeviceName);
     if (tty->isRemote) {
         /*
          * Create the socket
@@ -308,8 +283,8 @@ openConnection (ttyController_t *tty)
     }
     if (tty->wasClosed)
         tty->nReconnect++;
-    if (drvGenericSerialDebug >= 1)
-        printf("drvGenericSerial opened connection to %s\n", tty->serialDeviceName);
+    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+          "drvGenericSerial opened connection to %s\n", tty->serialDeviceName);
     return asynSuccess;
 }
 
@@ -322,6 +297,7 @@ drvGenericSerialConnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
+    tty->pasynUser = pasynUser;
     return openConnection(tty);
 }
 
@@ -331,8 +307,8 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    if (drvGenericSerialDebug >= 1)
-        printf("drvGenericSerial disconnect %s\n", tty->serialDeviceName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "drvGenericSerial disconnect %s\n", tty->serialDeviceName);
     if (tty->timer)
         epicsTimerCancel(tty->timer);
     closeConnection(tty);
@@ -351,16 +327,12 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     int wrote;
 
     assert(tty);
-    if (tty->fd < 0) {      
+    if (tty->fd < 0) {
       if (tty->openOnlyOnDisconnect) return asynError;
       if (openConnection(tty) != asynSuccess) return asynError;
     }
-    if (drvGenericSerialDebug >= 1) {
-        printf("drvGenericSerialWrite %d ", numchars);
-        if (drvGenericSerialDebug >= 2)
-            showString(data, numchars);
-        printf("\n");
-    }
+    asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
+               "drvGenericSerialWrite %d ", numchars);
     epicsTimerStartDelay(tty->timer, pasynUser->timeout);
     wrote = write(tty->fd, data, numchars);
     epicsTimerCancel(tty->timer);
@@ -408,9 +380,9 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
     int eosMatched = 0;
     char *eosCheck = data;
     int nleft = 0;
-    
+
     assert(tty);
-    if (tty->fd < 0) {      
+    if (tty->fd < 0) {
       if (tty->openOnlyOnDisconnect) return asynError;
       if (openConnection(tty) != asynSuccess) return asynError;
     }
@@ -433,12 +405,8 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
             closeConnection(tty);
             return -1;
         }
-        if (drvGenericSerialDebug >= 1) {
-            printf("drvGenericSerialRead %d ", thisRead);
-            if ((thisRead > 0) && (drvGenericSerialDebug >= 2))
-                showString(data, thisRead);
-            printf("\n");
-        }
+        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
+                   "drvGenericSerialRead %d ", thisRead);
         totalRead += thisRead;
         maxchars -= thisRead;
         data += thisRead;
@@ -499,6 +467,8 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "drvGenericSerial flush %s\n", tty->serialDeviceName);
     if (tty->fd >= 0) {
 #ifdef vxWorks
         ioctl(tty->fd, FIOCANCEL, 0);
@@ -519,6 +489,8 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eos
 
     assert(tty);
     assert(eoslen >= 0);
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
+            "drvGenericSerial set eos %d ", eoslen);
     if ((tty->eos == NULL)
      || (tty->eoslen != eoslen)
      || (memcmp(tty->eos, eos, eoslen) != 0)) {
@@ -826,7 +798,7 @@ static void drvGenericSerialConfigureCallFunc(const iocshArgBuf *args)
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
  */
-static void 
+static void
 drvGenericSerialRegisterCommands(void)
 {
     static int firstTime = 1;
