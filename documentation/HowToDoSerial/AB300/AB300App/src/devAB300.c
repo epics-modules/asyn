@@ -7,11 +7,10 @@
 * and higher are distributed subject to a Software License Agreement found
 * in file LICENSE that is included with this distribution. 
 \*************************************************************************/
-/* $Id: devAB300.c,v 1.3 2004-01-30 17:26:32 norume Exp $ */
+/* $Id: devAB300.c,v 1.4 2004-02-24 15:57:38 norume Exp $ */
 #include <epicsStdio.h>
 #include <devCommonGpib.h>
 
-
 /******************************************************************************
  *
  * The following define statements are used to declare the names to be used
@@ -27,11 +26,9 @@
 
 #include <devGpib.h> /* must be included after DSET defines */
 
-
 #define TIMEWINDOW 2.0       /* wait 2 seconds after device timeout */
 #define TIMEOUT    5.0       /* I/O must complete within 5 seconds */
 
-
 /*
  * Custom conversion routines
  */
@@ -91,7 +88,7 @@ static struct gpibCmd gpibCmds[] = {
 
 /* The following is the number of elements in the command array above.  */
 #define NUMPARAMS        sizeof(gpibCmds)/sizeof(struct gpibCmd)
-
+
 /******************************************************************************
  *
  * Initialize device support parameters
