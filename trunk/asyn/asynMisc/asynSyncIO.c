@@ -94,6 +94,7 @@ static asynStatus
     asynStatus status;
     asynInterface *pasynInterface;
     int isConnected;
+    int canBlock;
 
     /* Create private structure */
     pasynSyncIOPvt = (asynSyncIOPvt *)calloc(1, sizeof(asynSyncIOPvt));
@@ -103,14 +104,23 @@ static asynStatus
     pasynUser->userPvt = pasynSyncIOPvt;
     *ppasynUser = pasynUser;
 
-    /* Create epicsEvent */
-    pasynSyncIOPvt->event = epicsEventCreate(epicsEventEmpty);
-
     /* Look up port, addr */
     status = pasynManager->connectDevice(pasynUser, port, addr);    
     if (status != asynSuccess) {
-      printf("Can't connect to port %s address %d\n", port, addr);
+      printf("Can't connect to port %s address %d %s\n",
+          port, addr,pasynUser->errorMessage);
       return(status);
+    }
+
+    status = pasynManager->canBlock(pasynUser,&canBlock);
+    if (status != asynSuccess) {
+      printf("port %s address %d canBlock failed %s\n",
+         port,addr,pasynUser->errorMessage);
+      return(status);
+    }
+    if(canBlock) {
+        /* Create epicsEvent */
+        pasynSyncIOPvt->event = epicsEventCreate(epicsEventEmpty);
     }
 
     /* Get asynCommon interface */
@@ -207,23 +217,25 @@ static asynStatus
      * which means there could be some time before our message gets to the
      * head of the queue.  So add EVENT_TIMEOUT to timeout. 
      * If timeout is -1 this means wait forever, so don't do timeout at all*/
-    if (timeout == -1.0)
-       waitStatus = epicsEventWait(pPvt->event);
-    else
-       waitStatus = epicsEventWaitWithTimeout(pPvt->event, 
-                                              timeout+EVENT_TIMEOUT);
-    if (waitStatus!=epicsEventWaitOK) {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                 "asynSyncIOQueueAndWait event timeout\n");
-       /* We need to delete the entry from the queue or it will block this
-        * port forever */
-       status = pasynManager->cancelRequest(pasynUser,&wasQueued);
-       if(status!=asynSuccess || !wasQueued) {
-          asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                    "asynSyncIOQueueAndWait Cancel request failed: %s",
-                    pasynUser->errorMessage);
-       }
-       return(asynTimeout);
+    if(pPvt->event) {
+        if (timeout == -1.0)
+           waitStatus = epicsEventWait(pPvt->event);
+        else
+           waitStatus = epicsEventWaitWithTimeout(pPvt->event, 
+                                                  timeout+EVENT_TIMEOUT);
+        if (waitStatus!=epicsEventWaitOK) {
+           asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+                     "asynSyncIOQueueAndWait event timeout\n");
+           /* We need to delete the entry from the queue or it will block this
+            * port forever */
+           status = pasynManager->cancelRequest(pasynUser,&wasQueued);
+           if(status!=asynSuccess || !wasQueued) {
+              asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                        "asynSyncIOQueueAndWait Cancel request failed: %s",
+                        pasynUser->errorMessage);
+           }
+           return(asynTimeout);
+        }
     }
     /* Return that status that the callback put in the private structure */
     return(pPvt->nbytesTransfered);
@@ -349,5 +361,5 @@ static void asynSyncIOCallback(asynUser *pasynUser)
     pPvt->nbytesTransfered = nbytesTransfered;
 
     /* Signal the epicsEvent to let the waiting thread know we're done */
-    epicsEventSignal(pPvt->event);
+    if(pPvt->event) epicsEventSignal(pPvt->event);
 }
