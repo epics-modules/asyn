@@ -4,4 +4,3 @@ include "asynRecDevDrv.dbd"
 #include "drvIpac.dbd"
 #include "tyGSOctal.dbd"
 include "testGpibSerialInclude.dbd"
-registrar(vipc616Registrar)
