@@ -165,7 +165,7 @@ typedef struct  asynCommon {
 /* asynPrint and asynPrintIO are macros that act like
    int asynPrint(asynUser *pasynUser,int reason, const char *format, ... ); 
    int asynPrintIO(asynUser *pasynUser,int reason,
-        const char *buffer, int len, const char *format, ... ); 
+        const char *buffer, size_t len, const char *format, ... ); 
 */
 typedef struct asynTrace {
     /* lock/unlock are only necessary if caller performs I/O other then*/
@@ -178,11 +178,11 @@ typedef struct asynTrace {
     int        (*getTraceIOMask)(asynUser *pasynUser);
     asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fp);
     FILE       *(*getTraceFile)(asynUser *pasynUser);
-    asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
-    int        (*getTraceIOTruncateSize)(asynUser *pasynUser);
+    asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
+    size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
     int        (*printIO)(asynUser *pasynUser,int reason,
-               const char *buffer, int len,const char *pformat, ...);
+               const char *buffer, size_t len,const char *pformat, ...);
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;
 

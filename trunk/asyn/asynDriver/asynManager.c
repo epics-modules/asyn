@@ -56,8 +56,8 @@ struct tracePvt {
     int           traceIOMask;
     traceFileType type;
     FILE          *fp;
-    int           traceTruncateSize;
-    int           traceBufferSize;
+    size_t        traceTruncateSize;
+    size_t        traceBufferSize;
     char          *traceBuffer;
 };
 
@@ -314,12 +314,12 @@ static asynStatus setTraceIOMask(asynUser *pasynUser,int mask);
 static int        getTraceIOMask(asynUser *pasynUser);
 static asynStatus setTraceFile(asynUser *pasynUser,FILE *fp);
 static FILE       *getTraceFile(asynUser *pasynUser);
-static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size);
-static int        getTraceIOTruncateSize(asynUser *pasynUser);
+static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,size_t size);
+static size_t     getTraceIOTruncateSize(asynUser *pasynUser);
 static int        tracePrint(asynUser *pasynUser,
                       int reason, const char *pformat, ...);
 static int        tracePrintIO(asynUser *pasynUser,int reason,
-                      const char *buffer, int len,const char *pformat, ...);
+                      const char *buffer, size_t len,const char *pformat, ...);
 static asynTrace asynTraceManager = {
     traceLock,
     traceUnlock,
@@ -2083,7 +2083,7 @@ static FILE *getTraceFile(asynUser *pasynUser)
     return fp;
 }
 
-static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
+static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,size_t size)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
@@ -2101,7 +2101,7 @@ static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
     return asynSuccess;
 }
 
-static int getTraceIOTruncateSize(asynUser *pasynUser)
+static size_t getTraceIOTruncateSize(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
@@ -2155,7 +2155,7 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
 }
 
 static int tracePrintIO(asynUser *pasynUser,int reason,
-    const char *buffer, int len,const char *pformat, ...)
+    const char *buffer, size_t len,const char *pformat, ...)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
