@@ -122,7 +122,7 @@ typedef struct asynManager {
         asynInterface *pasynInterface);
     asynStatus (*getInterruptPvt)(const char *portName,
         const char *interfaceType, void **pasynPvt);
-    interruptNode *(*createInterruptNode)(void *pasynPvt,size_t drvPvtSize);
+    interruptNode *(*createInterruptNode)(void *pasynPvt);
     asynStatus (*addInterruptUser)(interruptNode*pinterruptNode);
     asynStatus (*removeInterruptUser)(interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
