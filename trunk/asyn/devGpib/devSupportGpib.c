@@ -88,6 +88,13 @@ typedef struct portInstance {
     void *asynGpibPvt;
     /* Following field is used for registerSrqHandlerCallback*/
     asynUser *pasynUser;
+    /*The following are for shared msg buffer*/
+    char *msg;   /*shared msg buffer for all gpibCmds*/
+    int  msgLen;/*size of msg*/
+    int  msgLenMax; /*msgLenMax all devices attached to this port*/
+    char *rsp;   /*shared rsp buffer for all respond2Writes*/
+    int  rspLen;/*size of rsp*/
+    int  rspLenMax; /*rspLenMax all devices attached to this port*/
 }portInstance;
 
 struct devGpibPvt {
@@ -527,29 +534,22 @@ static void commonGpibPvtInit(void)
 static void setMsgRsp(gpibDpvt *pgpibDpvt)
 {
     devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
+    devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    portInstance *pportInstance = pdevGpibPvt->pportInstance;
     gpibCmd *pgpibCmd;
-    int i,msgLen=0,rspLen=0;
+    int i,msgLenMax=0,rspLenMax=0;
 
-    if(!pdevGpibParmBlock->msg && !pdevGpibParmBlock->rsp) {
+    if(pdevGpibParmBlock->msgLenMax==0 && pdevGpibParmBlock->rspLenMax==0) {
         for(i=0; i<pdevGpibParmBlock->numparams; i++) {
             pgpibCmd = &pdevGpibParmBlock->gpibCmds[i];
-            if(pgpibCmd->rspLen > rspLen) rspLen = pgpibCmd->rspLen;
-            if(pgpibCmd->msgLen > msgLen) msgLen = pgpibCmd->msgLen;
+            if(pgpibCmd->rspLen > rspLenMax) rspLenMax = pgpibCmd->rspLen;
+            if(pgpibCmd->msgLen > msgLenMax) msgLenMax = pgpibCmd->msgLen;
         }
-        if(rspLen) {
-            pdevGpibParmBlock->rsp = callocMustSucceed(
-                rspLen,sizeof(char),"devSupportGpib::setMsgRsp");
-            pdevGpibParmBlock->rspLen = rspLen;
-        }
-        if(msgLen) {
-            pdevGpibParmBlock->msg = callocMustSucceed(
-                msgLen,sizeof(char),"devSupportGpib::setMsgRsp");
-            pdevGpibParmBlock->msgLen = msgLen;
-        }
+        pdevGpibParmBlock->rspLenMax = rspLenMax;
+        pdevGpibParmBlock->msgLenMax = msgLenMax;
     }
-    pgpibCmd =  &pdevGpibParmBlock->gpibCmds[pgpibDpvt->parm];
-    if(pgpibCmd->rspLen>0) pgpibDpvt->rsp = pdevGpibParmBlock->rsp;
-    if(pgpibCmd->msgLen>0) pgpibDpvt->msg = pdevGpibParmBlock->msg;
+    if(pportInstance->rspLenMax<rspLenMax) pportInstance->rspLenMax = rspLenMax;
+    if(pportInstance->msgLenMax<msgLenMax) pportInstance->msgLenMax = msgLenMax;
 }
 
 static void registerSrqHandlerCallback(asynUser *pasynUser)
@@ -1034,6 +1034,25 @@ static void queueCallback(asynUser *pasynUser)
     assert(pdevGpibPvt->work);
     work = pdevGpibPvt->work;
     pdevGpibPvt->work = 0;
+    if(pportInstance->msgLen<pportInstance->msgLenMax) {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            " queueCallback allocate msg length %d\n",pportInstance->msgLenMax);
+        if(pportInstance->msgLen>0) free(pportInstance->msg);
+        pportInstance->msg = callocMustSucceed(
+            pportInstance->msgLenMax,sizeof(char),
+            "devSupportGpib::queueCallback");
+        pportInstance->msgLen = pportInstance->msgLenMax;
+    }
+    if(pportInstance->rspLen<pportInstance->rspLenMax) {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            " queueCallback allocate rsp length %d\n",pportInstance->rspLenMax);
+        if(pportInstance->rspLen>0) free(pportInstance->rsp);
+        pportInstance->rsp = callocMustSucceed(
+            pportInstance->rspLenMax,sizeof(char),
+            "devSupportGpib::queueCallback");
+        pportInstance->rspLen = pportInstance->rspLenMax;
+    }
+    pgpibDpvt->rsp = pportInstance->rsp;
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,failure);
 }
