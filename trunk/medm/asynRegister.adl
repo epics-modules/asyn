@@ -5,10 +5,10 @@ file {
 }
 display {
 	object {
-		x=387
-		y=537
-		width=645
-		height=260
+		x=261
+		y=74
+		width=510
+		height=345
 	}
 	clr=14
 	bclr=4
@@ -86,38 +86,6 @@ display {
 		289315,
 		1a7309,
 	}
-}
-text {
-	object {
-		x=181
-		y=161
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=21
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).F64IVAL"
-	}
-	textix="Unsupported"
-}
-text {
-	object {
-		x=181
-		y=131
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=21
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).UI32IVAL"
-	}
-	textix="Unsupported"
 }
 composite {
 	object {
@@ -197,8 +165,8 @@ composite {
 text {
 	object {
 		x=10
-		y=202
-		width=70
+		y=284
+		width=110
 		height=20
 	}
 	"basic attribute" {
@@ -209,8 +177,8 @@ text {
 text {
 	object {
 		x=217
-		y=202
-		width=90
+		y=284
+		width=130
 		height=20
 	}
 	"basic attribute" {
@@ -221,7 +189,7 @@ text {
 "text update" {
 	object {
 		x=122
-		y=202
+		y=284
 		width=85
 		height=20
 	}
@@ -237,7 +205,7 @@ text {
 "text update" {
 	object {
 		x=349
-		y=202
+		y=284
 		width=85
 		height=20
 	}
@@ -253,7 +221,7 @@ text {
 rectangle {
 	object {
 		x=6
-		y=197
+		y=279
 		width=430
 		height=25
 	}
@@ -265,7 +233,7 @@ rectangle {
 composite {
 	object {
 		x=9
-		y=228
+		y=310
 		width=250
 		height=20
 	}
@@ -274,7 +242,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=228
+				y=310
 				width=50
 				height=20
 			}
@@ -287,7 +255,7 @@ composite {
 		menu {
 			object {
 				x=64
-				y=228
+				y=310
 				width=110
 				height=20
 			}
@@ -300,7 +268,7 @@ composite {
 		"message button" {
 			object {
 				x=179
-				y=228
+				y=310
 				width=80
 				height=20
 			}
@@ -351,96 +319,110 @@ composite {
 }
 text {
 	object {
-		x=388
-		y=83
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Output"
-}
-text {
-	object {
-		x=478
-		y=83
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Input"
-}
-text {
-	object {
-		x=569
-		y=83
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Mask"
-}
-text {
-	object {
-		x=68
-		y=161
+		x=27
+		y=251
 		width=110
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="asynFloat64"
+	textix="Mask (hex):"
 }
 text {
 	object {
-		x=8
-		y=131
-		width=170
+		x=17
+		y=226
+		width=120
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="asynUInt32Digital"
+	textix="Input (hex):"
 }
 text {
 	object {
-		x=88
-		y=103
-		width=90
+		x=77
+		y=201
+		width=60
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="asynInt32"
+	textix="Input:"
 }
-"text entry" {
+text {
 	object {
-		x=383
-		y=103
+		x=7
+		y=176
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Output (hex):"
+}
+text {
+	object {
+		x=67
+		y=151
 		width=70
 		height=20
 	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Output:"
+}
+menu {
+	object {
+		x=5
+		y=101
+		width=130
+		height=20
+	}
 	control {
-		chan="$(P)$(R).I32OUT"
+		chan="$(P)$(R).IFACE"
 		clr=14
 		bclr=51
 	}
+}
+text {
+	object {
+		x=37
+		y=76
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Interface:"
+}
+"text update" {
+	object {
+		x=147
+		y=226
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).I32INP"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
 	limits {
 	}
 }
 "text update" {
 	object {
-		x=466
-		y=103
-		width=85
+		x=147
+		y=201
+		width=100
 		height=20
 	}
 	monitor {
@@ -453,73 +435,13 @@ text {
 }
 "text entry" {
 	object {
-		x=383
-		y=161
-		width=70
+		x=147
+		y=176
+		width=100
 		height=20
 	}
 	control {
-		chan="$(P)$(R).F64OUT"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=466
-		y=161
-		width=85
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).F64INP"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=383
-		y=131
-		width=70
-		height=20
-	}
-	control {
-		chan="$(P)$(R).UI32OUT"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=466
-		y=131
-		width=85
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).UI32INP"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=564
-		y=131
-		width=70
-		height=20
-	}
-	control {
-		chan="$(P)$(R).UI32MASK"
+		chan="$(P)$(R).I32OUT"
 		clr=14
 		bclr=51
 	}
@@ -527,86 +449,25 @@ text {
 	limits {
 	}
 }
-text {
+"text entry" {
 	object {
-		x=88
-		y=83
-		width=90
+		x=147
+		y=151
+		width=100
 		height=20
 	}
-	"basic attribute" {
+	control {
+		chan="$(P)$(R).I32OUT"
 		clr=14
+		bclr=51
 	}
-	textix="Interface"
+	limits {
+	}
 }
 text {
 	object {
-		x=191
-		y=103
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=17
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).I32IVAL"
-	}
-	textix="Supported"
-}
-text {
-	object {
-		x=191
-		y=131
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=17
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).UI32IVAL"
-	}
-	textix="Supported"
-}
-text {
-	object {
-		x=191
-		y=161
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=17
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).F64IVAL"
-	}
-	textix="Supported"
-}
-text {
-	object {
-		x=181
-		y=103
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=21
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).I32IVAL"
-	}
-	textix="Unsupported"
-}
-text {
-	object {
-		x=305
-		y=103
+		x=167
+		y=126
 		width=60
 		height=20
 	}
@@ -622,8 +483,8 @@ text {
 }
 text {
 	object {
-		x=295
-		y=103
+		x=157
+		y=126
 		width=80
 		height=20
 	}
@@ -639,8 +500,130 @@ text {
 }
 text {
 	object {
-		x=305
-		y=131
+		x=152
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).I32IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=142
+		y=101
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).I32IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=172
+		y=76
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Int32"
+}
+"text entry" {
+	object {
+		x=272
+		y=251
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32MASK"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=272
+		y=226
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).UI32INP"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=272
+		y=201
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).UI32INP"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=272
+		y=176
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32OUT"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=272
+		y=151
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32OUT"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=292
+		y=126
 		width=60
 		height=20
 	}
@@ -656,8 +639,8 @@ text {
 }
 text {
 	object {
-		x=295
-		y=131
+		x=282
+		y=126
 		width=80
 		height=20
 	}
@@ -673,8 +656,82 @@ text {
 }
 text {
 	object {
-		x=305
-		y=161
+		x=267
+		y=101
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).UI32IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=277
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).UI32IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=257
+		y=76
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="UInt32Digital"
+}
+"text update" {
+	object {
+		x=397
+		y=201
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).F64INP"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=397
+		y=151
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).F64OUT"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=417
+		y=126
 		width=60
 		height=20
 	}
@@ -690,8 +747,8 @@ text {
 }
 text {
 	object {
-		x=295
-		y=161
+		x=407
+		y=126
 		width=80
 		height=20
 	}
@@ -705,16 +762,47 @@ text {
 	}
 	textix="Inactive"
 }
-menu {
+text {
 	object {
-		x=186
-		y=83
-		width=132
+		x=392
+		y=101
+		width=110
 		height=20
 	}
-	control {
-		chan="$(P)$(R).IFACE"
-		clr=14
-		bclr=51
+	"basic attribute" {
+		clr=21
 	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).F64IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=402
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).F64IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=412
+		y=76
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Float64"
 }
