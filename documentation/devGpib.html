@@ -78,9 +78,8 @@ write new support.</p>
   <li>devCommonGpib/devSupportGpib use asynCommon, asynOctet, and asynGpib.
     Thus the support will work with any driver that implements these
     interfaces. If instrument support does not use GPIB specific features,
-    then the support will work with any driver that implements
-    asynCommon and asynOctet. In particular communication via serial ports is
-    possible.</li>
+    then the support will work with any driver that implements asynCommon and
+    asynOctet. In particular communication via serial ports is possible.</li>
   <li>devCommonGpib should satisfy most requirements but it is also possible
     to provide custom support that uses devSupportGpib.</li>
 </ul>
@@ -429,13 +428,15 @@ definition must define field OUT as</p>
     <dd>A conversion function that has the prototype:
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
       The use depends on the pgpibCmd-&gt;type. See below for details. Set to
-      0 when no conversion function is present.  Conversion functions
-      should report error conditions by returning -1 after first
-      creating an error message:
-      <pre>
-       epicsSnprintf(pgpibDpvt-&gt;pasynUser-&gt;errorMessage,
-                     pgpibDpvt-&gt;pasynUser-&gt;errorMessageSize,
-                     "&lt;format&gt;", ...); </pre></dd>
+      0 when no conversion function is present.
+      <p>If a convert routine finds an error it should do the following:</p>
+      <ul>
+        <li>Generate and error massage as follows:
+          <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"&lt;format&gt;",...);</pre>
+        </li>
+        <li>return -1 to signify failure</li>
+      </ul>
+    </dd>
   <dt><code>P1</code></dt>
     <dd>This plays a dual role.
       <p>For EFAST operations it is set equal to the number of entries in the
@@ -584,145 +585,163 @@ support it must to document its changes.</p>
         <li><code>pgpibDpvt-&gt;msg</code> is sent to the instrument.</li>
       </ul>
     </dd>
-  <dt>GPIBCVTIO<dt>
+  <dt>GPIBCVTIO</dt>
+  <dt></dt>
     <dd><p>Supports record types: ai,ao,bi,bo,event,longin.longout,
-      mbbi,mbbo,mbbiDirect,mmboDirect,stringin,stringout,waveform.<p>
-      <p>All I/O is done by the <code>convert</code> routine, which must
-      be defined. <code>convert</code> is called by callback routune and thus
-      can make an arbitrary number of calls to low level drivers.
-      It is passed the address of <code>gpibDpvt<</code>
-      which contains the information needed to call the low level drivers:
-      <code>asynCommon, asynOctet, and asynGpib.</code> Note that <code>
-       asynGpib</code> may not be present, i.e. <code>pasynGpib</code> is
-       null. <code>gpibDpvt</code> also contains a field <code>pupvt</code>
-       which can be used by the convert routine. Is is initialized to null.
-       The macro <code>gpibCmdGet</code> can be used to get the address of
-       <code>gpibCmd</code> which contains other usefull information.<p>
-       <p>If the end of string terminator needs to be changed,
-       it must be changed by calling <code>pdevSupportGpib->setEos</code>
-       rather than calling <code>pgpibDpvt->pasynOctet->setEos</code></p>
-   </dd>
-
-      <ul>
-  <dt>GPIBCMD</dt>
-    <dd><p>Supports record types: ao, bo, longout, mbbo, mbboDirect,
-      stringout, and waveform.</p>
-      <p>Send the command string specified in <code>pgpibCmd-&gt;cmd</code>
-      to the instrument exactly as specified.</p>
+      mbbi,mbbo,mbbiDirect,mmboDirect,stringin,stringout,waveform.</p>
+      <p></p>
+      <p>All I/O is done by the <code>convert</code> routine, which must be
+      defined. <code>convert</code> is called by callback routune and thus
+      can make an arbitrary number of calls to low level drivers. It is
+      passed the address of <code>gpibDpvtcode&gt; which contains the
+      information needed to call the low level drivers: <code>asynCommon,
+      asynOctet, and asynGpib.</code> Note that <code> asynGpib</code> may
+      not be present, i.e. <code>pasynGpib</code> is null.
+      <code>gpibDpvt</code> also contains a field <code>pupvt</code> which
+      can be used by the convert routine. Is is initialized to null. The
+      macro <code>gpibCmdGet</code> can be used to get the address of
+      <code>gpibCmd</code> which contains other usefull
+      information.</code></p>
+      <p></p>
+      <p>If the end of string terminator needs to be changed, it must be
+      changed by calling <code>pdevSupportGpib-&gt;setEos</code> rather than
+      calling <code>pgpibDpvt-&gt;pasynOctet-&gt;setEos</code></p>
     </dd>
-  <dt>GPIBACMD</dt>
-    <dd>This is like GPIBCMD except that ATN is held active. This should
-      rarely be necessary.</dd>
-  <dt>GPIBSOFT</dt>
-    <dd>No I/O is done. It just calls <code>pgpibCmd-&gt;convert</code> and
-      passes the return value  to the caller.
-      <code>pgpibCmd-&gt;convert<code> must be defined.</code></code></dd>
-  <dt>GPIBREADW</dt>
-    <dd>Like GPIBREAD except for that it waits for the device to issue an SRQ
-      before it issues the read request.</dd>
-  <dt>GPIBRAWREAD</dt>
-    <dd>Like GPIBREAD except that no command is sent to the instrument</dd>
-  <dt>GPIBEFASTO</dt>
-    <dd><p>This operation type is only valid on BO and MBBO record types.
-      <code>pgpibCmd-&gt;P3</code> must contain the address of an efast
-      table. At init time some checks are made to see that an efast table is
-      defined but if it is defined incorrectly problems may arise.</p>
-      <p>The following is done:</p>
-      <ul>
-        <li>Device support sets <code>pibDpvt.efastVal</code> equal to the
-          VAL field.</li>
-        <li>If <code>pgpibCmd-&gt;cmd </code>is not null then<code>
-          msgLen</code> must also be specified. <code>msg</code> is set equal
-          to the concatenation of<code> cmd</code> and the efast value
-          specified by <code>pgpibCmd-&gt;P3</code>. The resulting
-          <code>msg</code> is sent.</li>
-        <li>If <code>pgpibCmd-&gt;cmd </code>is null then the string pointed
-          to by <code>pgpibCmd-&gt;P3[efastVal]</code> is sent.</li>
-      </ul>
-    </dd>
-  <dt>GPIBEFASTI</dt>
-    <dd><p>This operation type is only valid on BI and MBBI record types.</p>
-      <p>The following is done:</p>
-      <ul>
-        <li>Send the command string specified in <code>cmd</code> to the
-          instrument exactly as specified.</li>
-        <li>Read the data from the instrument and place it into
-          <code>pgpibDpvt-&gt;msg</code>.</li>
-        <li>Compare <code>msg</code> with each element of the EFAST Table
-          referenced by <code>pgpibCmd-&gt;P3.</code></li>
-        <li>devSupportGpib sets <code>pgpibDpvt-&gt;efastVal</code> to the
-          index of the EFAST table that matched.</li>
-        <li>Device support sets RVAL equal to
-          <code>pgpibDpvt-&gt;efastVal</code>.</li>
-      </ul>
-    </dd>
-  <dt>GPIBEFASTIW</dt>
-    <dd>This operation type is like GPIBEFASTI except that it waits for the
-      device to raise SRQ before the data is read.</dd>
-  <dt>GPIBIFC</dt>
-    <dd><p>Valid only for BO records. If rval = (0,1) then (do nothing, pulse
-      IFC). IFC is one of the GPIB Bus Management Lines.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided. For example</p>
-      <pre>{&amp;DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
+  <ul>
+    <dl>
+      <dt>GPIBCMD</dt>
+        <dd><p>Supports record types: ao, bo, longout, mbbo, mbboDirect,
+          stringout, and waveform.</p>
+          <p>Send the command string specified in
+          <code>pgpibCmd-&gt;cmd</code> to the instrument exactly as
+          specified.</p>
+        </dd>
+      <dt>GPIBACMD</dt>
+        <dd>This is like GPIBCMD except that ATN is held active. This should
+          rarely be necessary.</dd>
+      <dt>GPIBSOFT</dt>
+        <dd>No I/O is done. It calls <code>pgpibCmd-&gt;convert</code>.
+          <code>pgpibCmd-&gt;convert<code> must be defined.</code></code> If
+          GPIBSOFT fails it calls <code>asynPrint</code> with mask
+          <code>ASYN_TRACE_ERROR</code> and also puts the record into
+        alarm.</dd>
+      <dt>GPIBREADW</dt>
+        <dd>Like GPIBREAD except for that it waits for the device to issue an
+          SRQ before it issues the read request.</dd>
+      <dt>GPIBRAWREAD</dt>
+        <dd>Like GPIBREAD except that no command is sent to the
+        instrument</dd>
+      <dt>GPIBEFASTO</dt>
+        <dd><p>This operation type is only valid on BO and MBBO record types.
+          <code>pgpibCmd-&gt;P3</code> must contain the address of an efast
+          table. At init time some checks are made to see that an efast table
+          is defined but if it is defined incorrectly problems may arise.</p>
+          <p>The following is done:</p>
+          <ul>
+            <li>Device support sets <code>pibDpvt.efastVal</code> equal to
+              the VAL field.</li>
+            <li>If <code>pgpibCmd-&gt;cmd </code>is not null then<code>
+              msgLen</code> must also be specified. <code>msg</code> is set
+              equal to the concatenation of<code> cmd</code> and the efast
+              value specified by <code>pgpibCmd-&gt;P3</code>. The resulting
+              <code>msg</code> is sent.</li>
+            <li>If <code>pgpibCmd-&gt;cmd </code>is null then the string
+              pointed to by <code>pgpibCmd-&gt;P3[efastVal]</code> is
+            sent.</li>
+          </ul>
+        </dd>
+      <dt>GPIBEFASTI</dt>
+        <dd><p>This operation type is only valid on BI and MBBI record
+          types.</p>
+          <p>The following is done:</p>
+          <ul>
+            <li>Send the command string specified in <code>cmd</code> to the
+              instrument exactly as specified.</li>
+            <li>Read the data from the instrument and place it into
+              <code>pgpibDpvt-&gt;msg</code>.</li>
+            <li>Compare <code>msg</code> with each element of the EFAST Table
+              referenced by <code>pgpibCmd-&gt;P3.</code></li>
+            <li>devSupportGpib sets <code>pgpibDpvt-&gt;efastVal</code> to
+              the index of the EFAST table that matched.</li>
+            <li>Device support sets RVAL equal to
+              <code>pgpibDpvt-&gt;efastVal</code>.</li>
+          </ul>
+        </dd>
+      <dt>GPIBEFASTIW</dt>
+        <dd>This operation type is like GPIBEFASTI except that it waits for
+          the device to raise SRQ before the data is read.</dd>
+      <dt>GPIBIFC</dt>
+        <dd><p>Valid only for BO records. If rval = (0,1) then (do nothing,
+          pulse IFC). IFC is one of the GPIB Bus Management Lines.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided. For
+          example</p>
+          <pre>{&amp;DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       </pre>
-    </dd>
-  <dt>GPIBREN</dt>
-    <dd><p>Valid only for BO records. If rval = (0,1) then (drop,assert) REN.
-      REN is one of the GPIB Bus Management Lines.</p>
-      <p>If devices are in the LLO state they can be removed from this state
-      by toggling  the REN line, i.e. turn it off and then turn it back
-      on.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBDCL</dt>
-    <dd><p>Valid only for BO records. If rval = (0,1) then (do nothing, send
-      DCL). DCL is a Universal GPIB command, i.e. it applys to all devices on
-      the link</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBLLO</dt>
-    <dd><p>If rval = (0,1) then (do nothing, send LLO). LLO is a Universal
-      GPIB command, i.e. it applys to all devices on the link</p>
-      <p>After a LLO, the first time a device is addressed it will disable
-      local control, i.e. the front pannel controls will not respond.  To
-      remove devices from this state toggle the REN line. A single device can
-      temporarily be removed from LLO by sending the GPIBCTL command but it
-      will go back to LLO state as soon as it is again addressed.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBSDC</dt>
-    <dd><p>If rval = (0,1) then (do nothing, send SDC). SDC is an addressed
-      GPIB command, i.e. it applys only to the addressed device.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBGTL</dt>
-    <dd><p>If rval = (0,1) then (do nothing, send GTL). GTL is an addressed
-      GPIB command, i.e. it applys only to the addressed device.</p>
-      <p>If a device has local control locked out,  local control can be
-      temporarily granted by issuing this command. However the next time the
-      device is addressed it will again disable local control.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBRESETLNK Valid only for BO records.</dt>
-    <dd><p>If rval = (0,1) then (do nothing, reset link task).  This
-      completely restarts the link thread. This is a very drastic action.</p>
-      <p>Only define <code>dset</code>, <code>type</code>, and
-      <code>pri</code>. A default pdevGpibNames is provided.</p>
-    </dd>
-  <dt>GPIBSRQHANDLER</dt>
-    <dd>This is used to handle an unsolicited SRQ from gpibAddr,, i.e. a
-      device raises SRQ when a read wait, e.g. GPIBREADW or GPIBEFASTIW, is
-      not active. This request is implemented only for longin records. When
-      the device issues an SRQ the status byte is put into the val field and
-      the record is processed. It is expected that the record will forward
-      link to records that issue GPIB commands to read the information that
-      caused the SRQ.</dd>
+        </dd>
+      <dt>GPIBREN</dt>
+        <dd><p>Valid only for BO records. If rval = (0,1) then (drop,assert)
+          REN. REN is one of the GPIB Bus Management Lines.</p>
+          <p>If devices are in the LLO state they can be removed from this
+          state by toggling  the REN line, i.e. turn it off and then turn it
+          back on.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBDCL</dt>
+        <dd><p>Valid only for BO records. If rval = (0,1) then (do nothing,
+          send DCL). DCL is a Universal GPIB command, i.e. it applys to all
+          devices on the link</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBLLO</dt>
+        <dd><p>If rval = (0,1) then (do nothing, send LLO). LLO is a
+          Universal GPIB command, i.e. it applys to all devices on the
+          link</p>
+          <p>After a LLO, the first time a device is addressed it will
+          disable local control, i.e. the front pannel controls will not
+          respond.  To remove devices from this state toggle the REN line. A
+          single device can temporarily be removed from LLO by sending the
+          GPIBCTL command but it will go back to LLO state as soon as it is
+          again addressed.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBSDC</dt>
+        <dd><p>If rval = (0,1) then (do nothing, send SDC). SDC is an
+          addressed GPIB command, i.e. it applys only to the addressed
+          device.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBGTL</dt>
+        <dd><p>If rval = (0,1) then (do nothing, send GTL). GTL is an
+          addressed GPIB command, i.e. it applys only to the addressed
+          device.</p>
+          <p>If a device has local control locked out,  local control can be
+          temporarily granted by issuing this command. However the next time
+          the device is addressed it will again disable local control.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBRESETLNK Valid only for BO records.</dt>
+        <dd><p>If rval = (0,1) then (do nothing, reset link task).  This
+          completely restarts the link thread. This is a very drastic
+          action.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBSRQHANDLER</dt>
+        <dd>This is used to handle an unsolicited SRQ from gpibAddr,, i.e. a
+          device raises SRQ when a read wait, e.g. GPIBREADW or GPIBEFASTIW,
+          is not active. This request is implemented only for longin records.
+          When the device issues an SRQ the status byte is put into the val
+          field and the record is processed. It is expected that the record
+          will forward link to records that issue GPIB commands to read the
+          information that caused the SRQ.</dd>
+    </dl>
+  </ul>
 </dl>
 
 <h2>Efast (Enumerated Fast I/O) Tables</h2>
@@ -1086,7 +1105,7 @@ address of a gpibDpvt</p>
 typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
-    long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
+    void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
@@ -1175,7 +1194,7 @@ seconds. The following fields have disappeared:</p>
 <dl>
   <dt>debugFlag</dt>
     <dd>This is an obsolete field since devGpib uses the asynTrace
-        facility.</dd>
+    facility.</dd>
   <dt>magicSrq</dt>
     <dd>This is an obsolete field.</dd>
   <dt>srqHandler</dt>
