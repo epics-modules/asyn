@@ -19,11 +19,11 @@ asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
 DBD += asyn.dbd
-asyn_SRCS += asynDriver.c
+asyn_SRCS += asynManager.c
 
-SRC_DIRS += $(ASYN)/gpibDriver
-INC += gpibDriver.h
-asyn_SRCS += gpibDriver.c
+SRC_DIRS += $(ASYN)/asynGpib
+INC += asynGpibDriver.h
+asyn_SRCS += asynGpib.c
 
 #SRC_DIRS += $(ASYN)/serialDriver
 #INC += serialDriver.h
