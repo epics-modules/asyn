@@ -16,20 +16,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <epicsEvent.h>
+
+#include <cantProceed.h>
+
 #include <asynDriver.h>
 #include <asynInt32.h>
 #include <asynDrvUser.h>
-#include <drvAsynIPPort.h>
+#define epicsExportSharedSymbols
 #include <asynInt32SyncIO.h>
 
 typedef struct ioPvt{
    asynCommon   *pasynCommon;
    void         *pcommonPvt;
    asynInt32    *pasynInt32;
-   void         *pdrvPvt;
+   void         *int32Pvt;
+   asynDrvUser  *pasynDrvUser;
+   void         *drvUserPvt;
 }ioPvt;
-
+
 /*asynInt32SyncIO methods*/
 static asynStatus connect(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
@@ -59,91 +63,88 @@ epicsShareDef asynInt32SyncIO *pasynInt32SyncIO = &interface;
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)
 {
-    ioPvt *pioPvt;
-    asynUser *pasynUser;
-    asynStatus status;
+    ioPvt         *pioPvt;
+    asynUser      *pasynUser;
+    asynStatus    status;
     asynInterface *pasynInterface;
-    int isConnected;
 
-    /* Create private structure */
-    pioPvt = (ioPvt *)calloc(1, sizeof(ioPvt));
-    /* Create asynUser, copy address to caller */
+    pioPvt = (ioPvt *)callocMustSucceed(1, sizeof(ioPvt),"asynInt32SyncIO");
     pasynUser = pasynManager->createAsynUser(0,0);
     pasynUser->userPvt = pioPvt;
     *ppasynUser = pasynUser;
-    /* Look up port, addr */
     status = pasynManager->connectDevice(pasynUser, port, addr);    
     if (status != asynSuccess) {
       printf("Can't connect to port %s address %d %s\n",
           port, addr,pasynUser->errorMessage);
-      return(status);
+      pasynManager->freeAsynUser(pasynUser);
+      free(pioPvt);
+      return status ;
     }
-    /* Get asynCommon interface */
     pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
     if (!pasynInterface) {
-       printf("%s driver not supported\n", asynCommonType);
-       return(asynError);
+       printf("%s interface not supported\n", asynCommonType);
+       goto cleanup;
     }
     pioPvt->pasynCommon = (asynCommon *)pasynInterface->pinterface;
     pioPvt->pcommonPvt = pasynInterface->drvPvt;
-
-    /* Get asynInt32 interface */
     pasynInterface = pasynManager->findInterface(pasynUser, asynInt32Type, 1);
     if (!pasynInterface) {
-       printf("%s driver not supported\n", asynInt32Type);
-       return(asynError);
+       printf("%s interface not supported\n", asynInt32Type);
+       goto cleanup;
     }
     pioPvt->pasynInt32 = (asynInt32 *)pasynInterface->pinterface;
-    pioPvt->pdrvPvt = pasynInterface->drvPvt;
-
-    /* Get asynDrvUser interface */
-    pasynInterface = pasynManager->findInterface(pasynUser, asynDrvUserType, 1);
-    if(pasynInterface && drvInfo) {
-        asynDrvUser *pasynDrvUser;
-        void       *drvPvt;
-        pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
-        drvPvt = pasynInterface->drvPvt;
-        status = pasynDrvUser->create(drvPvt,pasynUser,drvInfo,0,0);
-        if(status!=asynSuccess) {
-            printf("asynInt32SyncIO::connect drvUserCreate drvInfo=%s %s\n",
-                     drvInfo, pasynUser->errorMessage);
+    pioPvt->int32Pvt = pasynInterface->drvPvt;
+    if(drvInfo) {
+        /* Check for asynDrvUser interface */
+        pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
+        if(pasynInterface) {
+            asynDrvUser *pasynDrvUser;
+            void       *drvPvt;
+            pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
+            drvPvt = pasynInterface->drvPvt;
+            status = pasynDrvUser->create(drvPvt,pasynUser,drvInfo,0,0);
+            if(status==asynSuccess) {
+                pioPvt->pasynDrvUser = pasynDrvUser;
+                pioPvt->drvUserPvt = drvPvt;
+            } else {
+                printf("asynInt32SyncIO::connect drvUserCreate drvInfo=%s %s\n",
+                         drvInfo, pasynUser->errorMessage);
+            }
         }
     }
-
-    /* Connect to device if not already connected.  
-     * For TCP/IP sockets this ensures that the port is connected */
-    status = pasynManager->isConnected(pasynUser, &isConnected);
-    if (status != asynSuccess) {
-       printf("Error getting isConnected status %s\n", pasynUser->errorMessage);
-       return(status);
-    }
-    status = pasynManager->lockPort(pasynUser,0);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
-        return status;
-    }
-    status = pioPvt->pasynCommon->connect(pioPvt->pcommonPvt,pasynUser);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynInt32SyncIO connect failed %s\n",pasynUser->errorMessage);
-    }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
-    }
-    return(status);
+    return asynSuccess ;
+cleanup:
+    disconnect(pasynUser);
+    return asynError;
 }
 
 static asynStatus disconnect(asynUser *pasynUser)
 {
-    ioPvt *pioPvt = (ioPvt *)pasynUser->userPvt;
-    asynStatus    status;
+    ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus status;
 
+    if(pioPvt->pasynDrvUser) {
+        status = pioPvt->pasynDrvUser->destroy(pioPvt->drvUserPvt,pasynUser);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "asynInt32SyncIO pasynDrvUser->destroy failed %s\n",
+                pasynUser->errorMessage);
+            return status;
+        }
+    }
     status = pasynManager->disconnect(pasynUser);
-    if(status!=asynSuccess) return status;
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO disconnect failed %s\n",pasynUser->errorMessage);
+        return status;
+    }
     status = pasynManager->freeAsynUser(pasynUser);
-    if(status!=asynSuccess) return status;
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO freeAsynUser failed %s\n",
+            pasynUser->errorMessage);
+        return status;
+    }
     free(pioPvt);
     return asynSuccess;
 }
@@ -152,7 +153,7 @@ static asynStatus disconnect(asynUser *pasynUser)
 static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout)
 {
     asynStatus status;
-    ioPvt *pioPvt = (ioPvt *)pasynUser->userPvt;
+    ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser,1);
@@ -161,7 +162,7 @@ static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout)
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
-    status = pioPvt->pasynInt32->write(pioPvt->pdrvPvt, pasynUser, value);
+    status = pioPvt->pasynInt32->write(pioPvt->int32Pvt, pasynUser, value);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                  "asynInt32SyncIO status=%d wrote: %d",status,value);
     if((pasynManager->unlockPort(pasynUser)) ) {
@@ -173,8 +174,8 @@ static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout)
 
 static asynStatus readOp(asynUser *pasynUser, epicsInt32 *pvalue, double timeout)
 {
-    ioPvt *pioPvt = (ioPvt *)pasynUser->userPvt;
-    asynStatus         status;
+    ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus status;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser,1);
@@ -183,7 +184,7 @@ static asynStatus readOp(asynUser *pasynUser, epicsInt32 *pvalue, double timeout
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
-    status = pioPvt->pasynInt32->read(pioPvt->pdrvPvt, pasynUser, pvalue);
+    status = pioPvt->pasynInt32->read(pioPvt->int32Pvt, pasynUser, pvalue);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                  "asynInt32SyncIO status=%d read: %d",status,*pvalue);
     if((pasynManager->unlockPort(pasynUser)) ) {
@@ -192,12 +193,12 @@ static asynStatus readOp(asynUser *pasynUser, epicsInt32 *pvalue, double timeout
     }
     return(status);
 }
-
+
 static asynStatus getBounds(asynUser *pasynUser,
                             epicsInt32 *plow, epicsInt32 *phigh)
 {
-    ioPvt *pioPvt = (ioPvt *)pasynUser->userPvt;
-    asynStatus         status;
+    ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus status;
 
     status = pasynManager->lockPort(pasynUser,1);
     if(status!=asynSuccess) {
@@ -205,7 +206,7 @@ static asynStatus getBounds(asynUser *pasynUser,
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
-    status = pioPvt->pasynInt32->getBounds(pioPvt->pdrvPvt,pasynUser,plow,phigh);
+    status = pioPvt->pasynInt32->getBounds(pioPvt->int32Pvt,pasynUser,plow,phigh);
     asynPrint(pasynUser, ASYN_TRACE_FLOW, 
                   "asynInt32SyncIO getBounds: status=%d low %d high %d\n",
                   status, *plow,*phigh);
@@ -215,19 +216,26 @@ static asynStatus getBounds(asynUser *pasynUser,
     }
     return(status);
 }
-
+
 static asynStatus writeOpOnce(const char *port, int addr,
     epicsInt32 value,double timeout,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
-    int        nbytes;
 
     status = connect(port,addr,&pasynUser,drvInfo);
-    if(status!=asynSuccess) return -1;
-    nbytes = writeOp(pasynUser,value,timeout);
+    if(status!=asynSuccess) {
+       printf("asynInt32SyncIO connect failed %s\n",
+           pasynUser->errorMessage);
+       return status;
+    }
+    status = writeOp(pasynUser,value,timeout);
+    if(status!=asynSuccess) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO writeOp failed %s\n",pasynUser->errorMessage);
+    }
     disconnect(pasynUser);
-    return nbytes;
+    return status;
 }
 
 static asynStatus readOpOnce(const char *port, int addr,
@@ -237,8 +245,16 @@ static asynStatus readOpOnce(const char *port, int addr,
     asynUser   *pasynUser;
 
     status = connect(port,addr,&pasynUser,drvInfo);
-    if(status!=asynSuccess) return -1;
+    if(status!=asynSuccess) {
+       printf("asynInt32SyncIO connect failed %s\n",
+           pasynUser->errorMessage);
+       return status;
+    }
     status = readOp(pasynUser,pvalue,timeout);
+    if(status!=asynSuccess) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO readOp failed %s\n",pasynUser->errorMessage);
+    }
     disconnect(pasynUser);
     return status;
 }
@@ -250,8 +266,16 @@ static asynStatus getBoundsOnce(const char *port, int addr,
     asynUser   *pasynUser;
 
     status = connect(port,addr,&pasynUser,drvInfo);
-    if(status!=asynSuccess) return -1;
+    if(status!=asynSuccess) {
+       printf("asynInt32SyncIO connect failed %s\n",
+           pasynUser->errorMessage);
+       return status;
+    }
     status = getBounds(pasynUser,plow,phigh);
+    if(status!=asynSuccess) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO getBounds failed %s\n",pasynUser->errorMessage);
+    }
     disconnect(pasynUser);
     return(status);
 }
