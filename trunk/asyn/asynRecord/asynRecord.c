@@ -278,10 +278,8 @@ static long special(struct dbAddr * paddr, int after)
     asynRecord *pasynRec = (asynRecord *) paddr->precord;
     int        fieldIndex = dbGetFieldIndex(paddr);
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
-    asynUser *pasynUser = pasynManager->duplicateAsynUser(pasynRecPvt->pasynUser,
-                                                          asynCallbackSpecial, 
-                                                  queueTimeoutCallbackSpecial);
-    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
+    callbackMessage *pmsg;
     asynStatus status = asynSuccess;
     int        traceMask;
     FILE       *fd;
@@ -316,8 +314,7 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordAQR:
         {
             int wasQueued = 0;
-            status = pasynManager->cancelRequest(
-                pasynRecPvt->pasynUser,&wasQueued);
+            status = pasynManager->cancelRequest(pasynUser,&wasQueued);
             if(wasQueued) {
                 reportError(pasynRec,status, "I/O request canceled");
                 recGblSetSevr(pasynRec,STATE_ALARM,MAJOR_ALARM);
@@ -411,6 +408,11 @@ static long special(struct dbAddr * paddr, int after)
         return 0;
     }
     /* remaining cases must be handled by asynCallbackSpecial*/
+    pasynUser = pasynManager->duplicateAsynUser(pasynUser,
+                                                asynCallbackSpecial, 
+                                                queueTimeoutCallbackSpecial);
+    pmsg = pasynUser->userData = 
+                (callbackMessage *)pasynManager->memMalloc(sizeof(*pmsg));
     switch (fieldIndex) {
     case asynRecordCNCT:
         pmsg->callbackType = callbackConnect;
@@ -467,7 +469,7 @@ static void asynCallbackSpecial(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
-    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
+    callbackMessage *pmsg = (callbackMessage *)pasynUser->userData;
     callbackType callbackType = pmsg->callbackType;
     asynStatus status=asynSuccess;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -505,6 +507,7 @@ static void asynCallbackSpecial(asynUser * pasynUser)
             "asynCallbackSpecial illegal type %d\n", callbackType);
         status = asynError;
     }
+    pasynManager->memFree(pmsg, sizeof(*pmsg));
     pasynManager->freeAsynUser(pasynUser);
     if (status == asynSuccess) pasynRecPvt->state = stateIdle;
 }
@@ -632,6 +635,7 @@ static void monitor(asynRecord * pasynRec)
     POST_IF_NEW(ucmd);
     POST_IF_NEW(acmd);
 }
+
 static void monitorStatus(asynRecord * pasynRec)
 {
     /* Called to update trace and connect fields. */
@@ -777,7 +781,8 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     /* Queue a request to get the options */
     pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
                                                 queueTimeoutCallbackSpecial);
-    pmsg = (callbackMessage *)&pasynUser->userData;
+    pmsg = (callbackMessage *)pasynUser->userData = 
+               pasynManager->memMalloc(sizeof(*pmsg));
     pmsg->callbackType = callbackGetOption;
     status = pasynManager->queueRequest(pasynUser,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
@@ -885,6 +890,7 @@ static void performIO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status,
                 "Timeout nread %d %s",nbytesTransfered, pasynUser->errorMessage);
+            recGblSetSevr(pasynRec,READ_ALARM, MAJOR_ALARM);
         }
         /* Check for input buffer overflow */
         if((pasynRec->ifmt == asynFMT_ASCII) &&
@@ -1039,7 +1045,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
 static void setOption(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
-    callbackMessage *pmsg = (callbackMessage *)&pasynUser->userData;
+    callbackMessage *pmsg = (callbackMessage *)pasynUser->userData;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
 
