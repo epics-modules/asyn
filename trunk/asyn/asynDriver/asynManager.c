@@ -193,7 +193,7 @@ static BOOL isDeviceUp(userPvt *puserPvt,dpCommon *pdpCommon);
 static void portThread(port *pport);
     
 /* asynManager methods */
-static void report(FILE *fp,int details);
+static void report(FILE *fp,int details,const char*portName);
 static asynUser *createAsynUser(userCallback process, userCallback timeout);
 static asynUser *duplicateAsynUser(asynUser *pasynUser,
    userCallback queue, userCallback timeout);
@@ -788,26 +788,22 @@ static void reportPrintInterfaceList(FILE *fp,ELLLIST *plist,const char *title)
     }
 }
 
-static void report(FILE *fp,int details)
+
+static void reportPrintPort(port *pport, FILE *fp,int details)
 {
-    port *pport;
+    int           i;
+    dpCommon      *pdpc;
+    device        *pdevice;
+    interfaceNode *pinterfaceNode;
+    asynCommon    *pasynCommon = 0;
+    void          *drvPvt = 0;
+    int           nQueued = 0;
+    int           lockCount;
 
-    if(!pasynBase) asynInit();
-    pport = (port *)ellFirst(&pasynBase->asynPortList);
-    while(pport) {
-        int           i;
-        dpCommon      *pdpc;
-        device        *pdevice;
-        interfaceNode *pinterfaceNode;
-        asynCommon    *pasynCommon = 0;
-        void          *drvPvt = 0;
-	int           nQueued = 0;
-        int           lockCount;
-
-	for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
-	    nQueued += ellCount(&pport->queueList[i]);
-        pdpc = &pport->dpc;
-	fprintf(fp,"%s multiDevice:%s canBlock:%s autoConnect:%s\n    "
+    for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
+        nQueued += ellCount(&pport->queueList[i]);
+    pdpc = &pport->dpc;
+    fprintf(fp,"%s multiDevice:%s canBlock:%s autoConnect:%s\n    "
             "enabled:%s connected:%s numberConnects %lu\n",
             pport->portName,
             ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
@@ -815,57 +811,76 @@ static void report(FILE *fp,int details)
             (pdpc->autoConnect ? "Yes" : "No"),
             (pdpc->enabled ? "Yes" : "No"),
             (pdpc->connected ? "Yes" : "No"),
-            pdpc->numberConnects);
-        epicsMutexMustLock(pport->asynManagerLock);
-        lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
-        epicsMutexUnlock(pport->asynManagerLock);
-        fprintf(fp,"    nDevices %d nQueued %d lockCount %d\n",
+             pdpc->numberConnects);
+    epicsMutexMustLock(pport->asynManagerLock);
+    lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
+    epicsMutexUnlock(pport->asynManagerLock);
+    fprintf(fp,"    nDevices %d nQueued %d lockCount %d\n",
             ellCount(&pport->deviceList),nQueued,lockCount);
-        fprintf(fp,"    exceptionActive: %s "
+    fprintf(fp,"    exceptionActive: %s "
             "exceptionUsers %d exceptionNotifys %d\n",
             (pdpc->exceptionActive ? "Yes" : "No"),
             ellCount(&pdpc->exceptionUserList),
             ellCount(&pdpc->exceptionNotifyList));
-        reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
-            "interposeInterfaceList");
-        reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
-        pdevice = (device *)ellFirst(&pport->deviceList);
-        while(pdevice) {
-            pdpc = &pdevice->dpc;
-            fprintf(fp,"    addr:%d",pdevice->addr);
-	    fprintf(fp," autoConnect:%s enabled:%s "
+    reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
+                             "interposeInterfaceList");
+    reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
+    pdevice = (device *)ellFirst(&pport->deviceList);
+    while(pdevice) {
+        pdpc = &pdevice->dpc;
+        fprintf(fp,"    addr:%d",pdevice->addr);
+        fprintf(fp," autoConnect:%s enabled:%s "
                 "connected:%s exceptionActive:%s\n",
                 (pdpc->autoConnect ? "Yes" : "No"),
                 (pdpc->enabled ? "Yes" : "No"),
                 (pdpc->connected ? "Yes" : "No"),
                 (pdpc->exceptionActive ? "Yes" : "No"));
-            epicsMutexMustLock(pport->asynManagerLock);
-            lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
-            epicsMutexUnlock(pport->asynManagerLock);
-            fprintf(fp,"    exceptionActive: %s "
+        epicsMutexMustLock(pport->asynManagerLock);
+        lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
+        epicsMutexUnlock(pport->asynManagerLock);
+        fprintf(fp,"    exceptionActive: %s "
                 "exceptionUsers %d exceptionNotifys %d lockCount %d\n",
                 (pdpc->exceptionActive ? "Yes" : "No"),
                 ellCount(&pdpc->exceptionUserList),
                 ellCount(&pdpc->exceptionNotifyList),lockCount);
-            reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
-                "interposeInterfaceList");
-            pdevice = (device *)ellNext(&pdevice->node);
+        reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
+                                 "interposeInterfaceList");
+        pdevice = (device *)ellNext(&pdevice->node);
+    }
+    pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
+    while(pinterfaceNode) {
+        asynInterface *pasynInterface = pinterfaceNode->pasynInterface;
+        if(strcmp(pasynInterface->interfaceType,asynCommonType)==0) {
+            pasynCommon = (asynCommon *)pasynInterface->pinterface;
+            drvPvt = pasynInterface->drvPvt;
+            break;
         }
-        pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
-        while(pinterfaceNode) {
-            asynInterface *pasynInterface = pinterfaceNode->pasynInterface;
-            if(strcmp(pasynInterface->interfaceType,asynCommonType)==0) {
-                pasynCommon = (asynCommon *)pasynInterface->pinterface;
-                drvPvt = pasynInterface->drvPvt;
-                break;
-            }
-            pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+        pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+    }
+    if(pasynCommon) {
+        fprintf(fp,"    Calling asynCommon.report\n");
+        pasynCommon->report(drvPvt,fp,details);
+    }
+}
+
+static void report(FILE *fp,int details,const char *portName)
+{
+    port *pport;
+
+    if(!pasynBase) asynInit();
+    if (portName) {
+        pport = locatePort(portName);
+        if(!pport) {
+            fprintf(fp, "asynManager:report port %s not found\n",portName);
+            return;
         }
-        if(pasynCommon) {
-            fprintf(fp,"    Calling asynCommon.report\n");
-            pasynCommon->report(drvPvt,fp,details);
+        reportPrintPort(pport,fp,details);
+    } else {
+        pport = (port *)ellFirst(&pasynBase->asynPortList);
+        while(pport) {
+            reportPrintPort(pport,fp,details);
+            pport = (port *)ellNext(&pport->node);
         }
-        pport = (port *)ellNext(&pport->node);
     }
 }
 
@@ -922,6 +937,7 @@ static asynUser *duplicateAsynUser(asynUser *pasynUser,
     pnew->pqrt->timeout = pold->pqrt->timeout;
     pnew->user.userPvt = pold->user.userPvt;
     pnew->user.userData = pold->user.userData;
+    pnew->user.drvUser = pold->user.drvUser;
     return &pnew->user;
 }
 
