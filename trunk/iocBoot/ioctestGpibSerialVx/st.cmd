@@ -15,7 +15,7 @@ dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=3,OMAX=0,IMAX=0")
 
 #The following command is for a serial line terminal concentrator
-drvAsynTCPPortConfigure("L0","164.54.9.90:4004",0,0)
+drvAsynIPPortConfigure("L0","164.54.9.90:4004",0,0)
 
 #The following commands are for a Greenspring octal UART and VIP616-01 carrier
 #ipacAddVIPC616_01("0x6000,B0000000")

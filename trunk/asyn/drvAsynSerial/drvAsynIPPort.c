@@ -1,5 +1,5 @@
 /**********************************************************************
-* Asyn device support using TCP stream port                           *
+* Asyn device support using TCP stream or UDP datagram port           *
 **********************************************************************/       
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.14 2004-05-14 16:41:32 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.1 2004-06-21 18:03:59 norume Exp $
  */
 
 #include <string.h>
@@ -34,7 +34,7 @@
 #include <epicsExport.h>
 #include <asynDriver.h>
 #include <asynInterposeEos.h>
-#include <drvAsynTCPPort.h>
+#include <drvAsynIPPort.h>
 
 #if defined(__rtems__)
 # define USE_SOCKTIMEOUT
@@ -58,6 +58,7 @@ typedef struct {
     asynUser          *pasynUser;
     char              *serialDeviceName;
     char              *portName;
+    int                socketType;
     int                fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -148,7 +149,7 @@ static int setNonBlock(int fd, int nonBlockFlag)
  * Report link parameters
  */
 static void
-drvAsynTCPPortReport(void *drvPvt, FILE *fp, int details)
+drvAsynIPPortReport(void *drvPvt, FILE *fp, int details)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -196,7 +197,7 @@ timeoutHandler(void *p)
  * Create a link
  */
 static asynStatus
-drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
+drvAsynIPPortConnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int i;
@@ -216,7 +217,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
     /*
      * Create the socket
      */
-    if ((tty->fd = epicsSocketCreate(PF_INET, SOCK_STREAM, 0)) < 0) {
+    if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't create socket: %s", strerror(SOCKERRNO));
         return asynError;
@@ -237,7 +238,8 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
         return asynError;
     }
     i = 1;
-    if (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0) {
+    if ((tty->socketType == SOCK_STREAM)
+     && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s socket NODELAY option: %s\n",
                                        tty->serialDeviceName, strerror(SOCKERRNO));
@@ -266,7 +268,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvAsynTCPPortDisconnect(void *drvPvt, asynUser *pasynUser)
+drvAsynIPPortDisconnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -279,7 +281,7 @@ drvAsynTCPPortDisconnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvAsynTCPPortGetPortOption(void *drvPvt, asynUser *pasynUser,
+drvAsynIPPortGetPortOption(void *drvPvt, asynUser *pasynUser,
                               const char *key, char *val, int valSize)
 {
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -288,7 +290,7 @@ drvAsynTCPPortGetPortOption(void *drvPvt, asynUser *pasynUser,
 }
 
 static asynStatus
-drvAsynTCPPortSetPortOption(void *drvPvt, asynUser *pasynUser,
+drvAsynIPPortSetPortOption(void *drvPvt, asynUser *pasynUser,
                               const char *key, const char *val)
 {
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -299,7 +301,7 @@ drvAsynTCPPortSetPortOption(void *drvPvt, asynUser *pasynUser,
 /*
  * Write to the TCP port
  */
-static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
+static asynStatus drvAsynIPPortWrite(void *drvPvt, asynUser *pasynUser,
     const char *data, int numchars,int *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -396,7 +398,7 @@ static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
 /*
  * Read from the TCP port
  */
-static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
+static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
     char *data, int maxchars,int *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -502,7 +504,7 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
  * Flush pending input
  */
 static asynStatus
-drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
+drvAsynIPPortFlush(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     char cbuf[512];
@@ -529,7 +531,7 @@ drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
  * Set the end-of-string message
  */
 static asynStatus
-drvAsynTCPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
+drvAsynIPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -543,7 +545,7 @@ drvAsynTCPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen
  * Get the end-of-string message
  */
 static asynStatus
-drvAsynTCPPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
+drvAsynIPPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
     int eossize, int *eoslen)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -572,31 +574,31 @@ ttyCleanup(ttyController_t *tty)
 /*
  * asynCommon methods
  */
-static const struct asynCommon drvAsynTCPPortAsynCommon = {
-    drvAsynTCPPortReport,
-    drvAsynTCPPortConnect,
-    drvAsynTCPPortDisconnect,
-    drvAsynTCPPortSetPortOption,
-    drvAsynTCPPortGetPortOption
+static const struct asynCommon drvAsynIPPortAsynCommon = {
+    drvAsynIPPortReport,
+    drvAsynIPPortConnect,
+    drvAsynIPPortDisconnect,
+    drvAsynIPPortSetPortOption,
+    drvAsynIPPortGetPortOption
 };
 
 /*
  * asynOctet methods
  */
-static const struct asynOctet drvAsynTCPPortAsynOctet = {
-    drvAsynTCPPortRead,
-    drvAsynTCPPortWrite,
-    drvAsynTCPPortFlush,
-    drvAsynTCPPortSetEos,
-    drvAsynTCPPortGetEos
+static const struct asynOctet drvAsynIPPortAsynOctet = {
+    drvAsynIPPortRead,
+    drvAsynIPPortWrite,
+    drvAsynIPPortFlush,
+    drvAsynIPPortSetEos,
+    drvAsynIPPortGetEos
 };
 
 /*
  * Configure and register a generic serial device
  */
 int
-drvAsynTCPPortConfigure(char *portName,
-                     char *hostInfo,
+drvAsynIPPortConfigure(const char *portName,
+                     const char *hostInfo,
                      unsigned int priority,
                      int noAutoConnect,
                      int noEosProcessing)
@@ -606,6 +608,7 @@ drvAsynTCPPortConfigure(char *portName,
     asynStatus status;
     char *cp;
     int port;
+    char protocol[6];
 
     /*
      * Check arguments
@@ -623,14 +626,15 @@ drvAsynTCPPortConfigure(char *portName,
     /*
      * Create a driver
      */
-    tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvAsynTCPPortConfigure()");
+    tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvAsynIPPortConfigure()");
+
     /*
      * Create timeout mechanism
      */
      tty->timer = epicsTimerQueueCreateTimer(
          pserialBase->timerQueue, timeoutHandler, tty);
      if(!tty->timer) {
-        errlogPrintf("drvAsynTCPPortConfigure: Can't create timer.\n");
+        errlogPrintf("drvAsynIPPortConfigure: Can't create timer.\n");
         return -1;
     }
     tty->fd = -1;
@@ -640,50 +644,63 @@ drvAsynTCPPortConfigure(char *portName,
     /*
      * Parse configuration parameters
      */
-    memset(&tty->farAddr, 0, sizeof tty->farAddr);
-    if ((cp = strchr(tty->serialDeviceName, ':')) == NULL) {
-        errlogPrintf("drvAsynTCPPortConfigure: \"%s\" is not of the form \"<host>:<port>\"\n",
+    protocol[0] = '\0';
+    if (((cp = strchr(tty->serialDeviceName, ':')) == NULL)
+     || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
+        errlogPrintf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
                                                         tty->serialDeviceName);
         return -1;
     }
-        *cp = '\0';
+    *cp = '\0';
+    memset(&tty->farAddr, 0, sizeof tty->farAddr);
     if(hostToIPAddr(tty->serialDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
         *cp = ':';
-        errlogPrintf("drvAsynTCPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
+        errlogPrintf("drvAsynIPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
         ttyCleanup(tty);
         return -1;
     }
-    port = strtol(cp+1, NULL, 0);
+    *cp = ':';
     tty->farAddr.ia.sin_port = htons(port);
     tty->farAddr.ia.sin_family = AF_INET;
-    *cp = ':';
+    if ((protocol[0] ==  '\0')
+     || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
+        tty->socketType = SOCK_STREAM;
+    }
+    else if (epicsStrCaseCmp(protocol, "udp") == 0) {
+        tty->socketType = SOCK_DGRAM;
+    }
+    else {
+        errlogPrintf("drvAsynIPPortConfigure: Unknown protocol \"%s\".\n", protocol);
+        ttyCleanup(tty);
+        return -1;
+    }
 
     /*
      *  Link with higher level routines
      */
-    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynTCPPortConfigure");
+    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynIPPortConfigure");
     tty->common.interfaceType = asynCommonType;
-    tty->common.pinterface  = (void *)&drvAsynTCPPortAsynCommon;
+    tty->common.pinterface  = (void *)&drvAsynIPPortAsynCommon;
     tty->common.drvPvt = tty;
     tty->octet.interfaceType = asynOctetType;
-    tty->octet.pinterface  = (void *)&drvAsynTCPPortAsynOctet;
+    tty->octet.pinterface  = (void *)&drvAsynIPPortAsynOctet;
     tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    0, /*not multiDevice*/
                                    !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
-        errlogPrintf("drvAsynTCPPortConfigure: Can't register myself.\n");
+        errlogPrintf("drvAsynIPPortConfigure: Can't register myself.\n");
         ttyCleanup(tty);
         return -1;
     }
     if(pasynManager->registerInterface(tty->portName,&tty->common)!= asynSuccess) {
-        errlogPrintf("drvAsynTCPPortConfigure: Can't register common.\n");
+        errlogPrintf("drvAsynIPPortConfigure: Can't register common.\n");
         ttyCleanup(tty);
         return -1;
     }
     if(pasynManager->registerInterface(tty->portName,&tty->octet)!= asynSuccess) {
-        errlogPrintf("drvAsynTCPPortConfigure: Can't register octet.\n");
+        errlogPrintf("drvAsynIPPortConfigure: Can't register octet.\n");
         ttyCleanup(tty);
         return -1;
     }
@@ -705,21 +722,21 @@ drvAsynTCPPortConfigure(char *portName,
  * IOC shell command registration
  */
 #include <iocsh.h>
-static const iocshArg drvAsynTCPPortConfigureArg0 = { "port name",iocshArgString};
-static const iocshArg drvAsynTCPPortConfigureArg1 = { "TCP host:port",iocshArgString};
-static const iocshArg drvAsynTCPPortConfigureArg2 = { "priority",iocshArgInt};
-static const iocshArg drvAsynTCPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynTCPPortConfigureArg4 = { "disable EOS processing",iocshArgInt};
-static const iocshArg *drvAsynTCPPortConfigureArgs[] = {
-    &drvAsynTCPPortConfigureArg0, &drvAsynTCPPortConfigureArg1,
-    &drvAsynTCPPortConfigureArg2, &drvAsynTCPPortConfigureArg3,
-    &drvAsynTCPPortConfigureArg4};
-static const iocshFuncDef drvAsynTCPPortConfigureFuncDef =
-                      {"drvAsynTCPPortConfigure",5,drvAsynTCPPortConfigureArgs};
-static void drvAsynTCPPortConfigureCallFunc(const iocshArgBuf *args)
+static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString};
+static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocshArgString};
+static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg4 = { "disable EOS processing",iocshArgInt};
+static const iocshArg *drvAsynIPPortConfigureArgs[] = {
+    &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
+    &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
+    &drvAsynIPPortConfigureArg4};
+static const iocshFuncDef drvAsynIPPortConfigureFuncDef =
+                      {"drvAsynIPPortConfigure",5,drvAsynIPPortConfigureArgs};
+static void drvAsynIPPortConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvAsynTCPPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                                                args[3].ival, args[4].ival);
+    drvAsynIPPortConfigure(args[0].sval, args[1].sval, args[2].ival,
+                                         args[3].ival, args[4].ival);
 }
 
 /*
@@ -727,12 +744,12 @@ static void drvAsynTCPPortConfigureCallFunc(const iocshArgBuf *args)
  * no race condition in the test/set of firstTime.
  */
 static void
-drvAsynTCPPortRegisterCommands(void)
+drvAsynIPPortRegisterCommands(void)
 {
     static int firstTime = 1;
     if (firstTime) {
-        iocshRegister(&drvAsynTCPPortConfigureFuncDef,drvAsynTCPPortConfigureCallFunc);
+        iocshRegister(&drvAsynIPPortConfigureFuncDef,drvAsynIPPortConfigureCallFunc);
         firstTime = 0;
     }
 }
-epicsExportRegistrar(drvAsynTCPPortRegisterCommands);
+epicsExportRegistrar(drvAsynIPPortRegisterCommands);

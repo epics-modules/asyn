@@ -1152,7 +1152,7 @@ _DBD += devAB300.dbd
 \shape italic 
 xxx
 \shape default 
-_DBD += drvAsynTCPPort.dbd
+_DBD += drvAsynIPPort.dbd
 \newline 
 
 \shape italic 
@@ -1257,7 +1257,7 @@ If you're using an Ethernet/RS-232 converter or a device which communicates
 \begin_deeper 
 \layout LyX-Code
 
-drvAsynTCPPortConfigure("L0","164.54.9.91:4002",0,0,0)
+drvAsynIPPortConfigure("L0","164.54.9.91:4002",0,0,0)
 \end_deeper 
 \layout Itemize
 
@@ -1401,7 +1401,7 @@ AB300_registerRecordDeviceDriver(pdbbase)
 \newline 
 dbLoadRecords("../../db/devAB300.db","P=AB300:,L=0,A=0")
 \newline 
-drvAsynTCPPortConfigure("L0","164.54.3.137:4001",0,0,0)
+drvAsynIPPortConfigure("L0","164.54.3.137:4001",0,0,0)
 \newline 
 asynSetTraceMask("L0",-1,0x9)
 \newline 
@@ -1413,7 +1413,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-16 22:14:29 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-21 18:03:58 $$
 \newline 
 ############################################################################
 \newline 
@@ -1723,7 +1723,7 @@ PORT
 \family default 
  value must match the the value in the corresponding 
 \family typewriter 
-drvAsynTCPPortConfigure
+drvAsynIPPortConfigure
 \family default 
  or 
 \family typewriter 

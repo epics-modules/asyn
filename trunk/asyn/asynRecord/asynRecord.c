@@ -33,7 +33,7 @@
 #include <epicsExport.h>
 #include <asynGpibDriver.h>
 #include <asynDriver.h>
-#include <drvAsynTCPPort.h>
+#include <drvAsynIPPort.h>
 #define GEN_SIZE_OFFSET
 #include "asynRecord.h"
 #undef GEN_SIZE_OFFSET
@@ -403,7 +403,7 @@ static long special(struct dbAddr *paddr, int after)
        case asynRecordSOCK:
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
-          status = drvAsynTCPPortConfigure(pasynRec->port, pasynRec->sock, 
+          status = drvAsynIPPortConfigure(pasynRec->port, pasynRec->sock, 
                                              0, 0, 0);
           /* We don't go to done on status!=asynSuccess here, because 
            * the error could be user just re-entering an existing port */

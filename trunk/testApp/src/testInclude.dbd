@@ -2,6 +2,6 @@ include "base.dbd"
 include "asyn.dbd"
 include "devAsynTest.dbd"
 include "drvAsynSerialPort.dbd"
-include "drvAsynTCPPort.dbd"
+include "drvAsynIPPort.dbd"
 registrar("echoDriverRegister")
 registrar("interposeInterfaceRegister")
