@@ -18,7 +18,7 @@ record(stringin,"devSiAsynRead")
     field(DTYP,"asynOctetRead")
     field(INP,"@asyn($(PORT),$(ADDR)) ")
 }
-record(stringout,"devSiAsynWrite")
+record(stringout,"devSoAsynWrite")
 {
     field(DTYP,"asynOctetWrite")
     field(OUT,"@asyn($(PORT),$(ADDR))")
@@ -41,19 +41,19 @@ record(waveform,"devWfAsynWriteRead")
     field(DTYP,"asynOctetWriteRead")
     field(INP,"@asyn($(PORT),$(ADDR)) devWfAsynCmdForWriteRead")
     field(NELM,"40")
-    field(FTVL,"UCHAR")
+    field(FTVL,"CHAR")
 }
 record(waveform,"devWfAsynRead")
 {
     field(DTYP,"asynOctetRead")
     field(INP,"@asyn($(PORT),$(ADDR)) ")
     field(NELM,"40")
-    field(FTVL,"UCHAR")
+    field(FTVL,"CHAR")
 }
 record(waveform,"devWfAsynWrite")
 {
     field(DTYP,"asynOctetWrite")
     field(INP,"@asyn($(PORT),$(ADDR))")
     field(NELM,"40")
-    field(FTVL,"UCHAR")
+    field(FTVL,"CHAR")
 }
