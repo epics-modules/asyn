@@ -269,11 +269,11 @@ static void portThread(asynPort *pasynPort)
     }
     if(pasynCommon) {
         asynStatus status;
+        pasynPort->pasynUser->errorMessage[0] = '\0';
         status = pasynCommon->connect(drvPvt,pasynPort->pasynUser);
         if(status!=asynSuccess) {
             printf("asynManager:portThread could not connect %s\n",
                 pasynPort->pasynUser->errorMessage);
-            return;
         }
     }
     while(1) {
@@ -963,7 +963,7 @@ int asynSetPortOption(const char *portName, const char *key, const char *val)
     if(status!=asynSuccess) {
         printf("connectDevice failed %s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
-        return 1;
+        return asynError;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,0);
     if(!pasynInterface) {
@@ -995,6 +995,7 @@ static void showPortOption(asynUser *pasynUser)
     asynStatus status;
     char val[100];
 
+    pasynUser->errorMessage[0] = '\0';
     status = poptionargs->pasynCommon->getPortOption(poptionargs->drvPvt,
         pasynUser,poptionargs->key,val,sizeof(val));
     if(status!=asynSuccess) {
