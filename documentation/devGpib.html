@@ -1159,99 +1159,12 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <h2><a name="ChangesToPrevious"></a>Changes to previous EPICS GPIB
 support</h2>
 </center>
-
-<h3>gpibCmd</h3>
-
-<p>GPIBEOS is no longer present and the last field of gpibCmd is now called
-eos. Previously the last field was an <code>int</code> that was supposed to
-be initialized to -1 or to a single termination character for reads. Eos is a
-<code>char *</code>. If no terminator is desired then eos should be 0, i.e. a
-NULL pointer. If old support initilizes this to -1 compiler warnings will be
-generated and a core dump is likely when the application is run.</p>
-
-<h3>devGpibParmBlock</h3>
-
-<p>EXTREMELY  IMPORTANT: Previously timeouts were in units of 1/60th of a
-second or milliseconds. Now timeouts are in seconds. For example 3.13 device
-support had definitions like:</p>
-<pre>#define TIME_WINDOW     120     /* 2 seconds  */
-#define DMA_TIME        60      /* 1 second   */</pre>
-
-<p>Now the definitions would be:</p>
-<pre>#define TIMEWINDOW  2.0  /* wait 2 seconds after device timeout */
-#define TIMEOUT     1.0  /* I/O must complete within 1 second */
-<br>
-</pre>
-
-<p>The fields in devGpibParmBlock have been reordered and some have gone
-away. In addition the timeout fields are now of type double and have units of
-seconds. The following fields have disappeared:</p>
-<dl>
-  <dt>debugFlag</dt>
-    <dd>This is an obsolete field since devGpib uses the asynTrace
-    facility.</dd>
-  <dt>magicSrq</dt>
-    <dd>This is an obsolete field.</dd>
-  <dt>srqHandler</dt>
-    <dd>SRQs are handled differently than before. It is no longer possible
-      for device support code to provide it's own SRQ handler for ALL gpib
-      devices attached to the gpib interface. It is possible, as described
-      above to register a handler for a specific gpibAddr.</dd>
-  <dt>wrConversion</dt>
-    <dd>The secondary conversion routine is no longer supported. It was used
-      if respond2Writes is &gt;=0.</dd>
-</dl>
-
-<p>Older device support initialized devGpibParmBlock with a C initializer
-statement:</p>
-<pre>static struct devGpibParmBlock devSupParms = {
-&amp;xxxDebug,
-... 
-};</pre>
-
-<p>Newer support initialized it by a function:</p>
-<pre>static long
-init_dev_sup(parm)
-int     parm;
-{
-  if(parm==0)  {
-    devSupParms.debugFlag = &amp;xxxDebug;
-    ...</pre>
-
-<p>Now this is done via the function:</p>
-<pre>static long init_ai(int parm)
-{
-  if(parm==0)  {
-    devSupParms.name = "devAB300";
-    devSupParms.gpibCmds = gpibCmds;
-    devSupParms.numparams = NUMPARAMS;
-    devSupParms.timeout = TIMEOUT;
-    devSupParms.timeWindow = TIMEWINDOW;
-    devSupParms.respond2Writes = 0;
-  }
-  return 0;
-}</pre>
-
-<p>The older support must be modified to use drvGpib.h and to implement
-init_ai.</p>
-
-<h3>devGpib.h</h3>
-
-<p>Instead of using devGpib.h, older device support created it's own DSET_xxx
-definitions. Remove all of these and use the technique of defining DSET_AI as
-shown above</p>
-
-<h3>Other changes</h3>
-
-<p>In a device support module used GPIBIOCTL it will have to be changed to
-use one on the new GPIBxxx command types.</p>
-
-<p>The old drvGpib support is replaced by asynDriver and asynGpib.</p>
-
-<p>If old support makes calls to the old devGpibLib_xxx routines then they
-must be replaced by calls to devSupportGpib routines.</p>
-<hr>
-
+<a href="gpibCoreConversion/conversionNotes.html">conversionNotes.html</a>
+describes how to convert GPIB device support modules written for
+the devGpib support that came with EPICS base 3.13 and earlier.
+The information also applys to support modules written for Benjamin Franksen's
+GPIB support or the gpibCore support since both of these evolved from the
+EPICS base GPIB support.
 <center>
 <h2><a name="General GPIB Problems"></a>General GPIB Problems</h2>
 </center>
