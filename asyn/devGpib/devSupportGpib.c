@@ -547,7 +547,7 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
             printf("Warning -- %s respond2Writes is quite large (%g seconds).\n"
                    "           Perhaps this value is still being set as\n"
                    "           milliseconds rather than seconds?\n",
-                    pdevGpibParmBlock->respond2Writes, pdevGpibParmBlock->name);
+                    pdevGpibParmBlock->name, pdevGpibParmBlock->respond2Writes);
         for(i=0; i<pdevGpibParmBlock->numparams; i++) {
             pgpibCmd = &pdevGpibParmBlock->gpibCmds[i];
             if(pgpibCmd->rspLen > rspLenMax) rspLenMax = pgpibCmd->rspLen;
