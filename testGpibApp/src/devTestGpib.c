@@ -56,9 +56,6 @@ int testDebug = 0;		/* debugging flags */
 #define	TIMEOUT	1.0
 #define TIMEWINDOW  2.0
 
-static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3);
-
-
 static struct gpibCmd gpibCmds[] = 
 {
   /* Param 0, */
@@ -96,9 +93,9 @@ static struct gpibCmd gpibCmds[] =
   {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
 
   /* Param 16 (id)   */
-  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, readString, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, readString, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 18, */
   {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK",  0, 0, 0, 0, 0, 0, 0, 0, -1}
 };
@@ -129,12 +126,4 @@ static long init_ai(int parm)
     devSupParms.debugFlag = &testDebug;
   }
   return(0);
-}
-
-static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3)
-{
-    stringinRecord *prec = (stringinRecord*)pdpvt->precord;
-    strncpy(prec->val,pdpvt->msg,sizeof(prec->val));
-    prec->val[sizeof(prec->val) - 1] = 0;
-    return(0);
 }
