@@ -1083,7 +1083,7 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser)
 {
     vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     nRead = 0, thisRead;
+    int     thisRead;
     int     addr = pasynManager->getAddr(pasynUser);
     devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     char    buffer[100];
