@@ -30,6 +30,8 @@
 #include <epicsTimer.h>
 #include <cantProceed.h>
 #include <epicsAssert.h>
+#include <epicsExport.h>
+#include <iocsh.h>
 
 #define epicsExportSharedSymbols
 #include "asynDriver.h"
@@ -50,6 +52,7 @@ typedef struct asynUserPvt asynUserPvt;
 typedef struct asynPvt {
     ELLNODE node;
     epicsMutexId lock;
+    asynUser *pasynUser;
     const char *deviceName;
     deviceDriver *padeviceDriver;
     int ndeviceDrivers;
@@ -88,7 +91,7 @@ static void deviceThread(asynPvt *pasynPvt);
 /* forward reference to asynQueueManager methods */
 static void report(int details);
 static asynUser *createAsynUser(
-    userCallback queue, userCallback timeout,void *puserPvt);
+    userCallback queue, userCallback timeout,void *userPvt);
 static asynStatus freeAsynUser(asynUser *pasynUser);
 static asynStatus connectDevice(asynUser *pasynUser, const char *deviceName);
 static asynStatus disconnectDevice(asynUser *pasynUser);
@@ -143,14 +146,35 @@ static asynPvt *locateAsynPvt(const char *deviceName)
     }
     return(0);
 }
-
+
 static void deviceThread(asynPvt *pasynPvt)
 {
     asynUserPvt *pasynUserPvt;
     asynUser *pasynUser;
     int i;
+    asynDriver *pasynDriver = 0;
+    void *drvPvt = 0;
 
     taskwdInsert(pasynPvt->threadid,0,0);
+    /* find and call pasynDriver->connect */
+    for(i=0; i<pasynPvt->ndeviceDrivers; i++) {
+        deviceDriver *pdeviceDriver = &pasynPvt->padeviceDriver[i];
+        driverInterface *pdriverInterface = pdeviceDriver->pdriverInterface;
+        if(strcmp(pdriverInterface->driverType,asynDriverType)==0) {
+            pasynDriver = (asynDriver *)pdriverInterface->pinterface;
+            drvPvt = pdeviceDriver->drvPvt;
+            break;
+        }
+    }
+    if(pasynDriver) {
+        asynStatus status;
+        status = pasynDriver->connect(drvPvt,pasynPvt->pasynUser);
+        if(status!=asynSuccess) {
+            printf("asynQueueManager:deviceThread could not connect %s\n",
+                pasynPvt->pasynUser->errorMessage);
+            return;
+        }
+    }
     while(1) {
         if(epicsEventWait(pasynPvt->notifyDeviceThread)!=epicsEventWaitOK) {
             errlogPrintf("asynQueueManager::deviceThread epicsEventWait error");
@@ -182,7 +206,7 @@ static void deviceThread(asynPvt *pasynPvt)
                 epicsTimerCancel(pasynUserPvt->timer);
             }
             epicsMutexUnlock(pasynPvt->lock);
-            pasynUserPvt->queueCallback(pasynUser->puserPvt);
+            pasynUserPvt->queueCallback(pasynUser->userPvt);
         }
     }
 }
@@ -196,6 +220,10 @@ static void report(int details)
     pasynPvt = (asynPvt *)ellFirst(&pasynBase->asynPvtList);
     while(pasynPvt) {
 	int nInQueue, i;
+        asynDriver *pasynDriver;
+        void *asynDriverPvt;
+
+        pasynDriver = 0;
         epicsMutexMustLock(pasynPvt->lock);
 	nInQueue = 0;
 	for(i=asynQueuePriorityLow; i<=asynQueuePriorityHigh; i++) {
@@ -206,27 +234,38 @@ static void report(int details)
             pasynPvt->deviceName,pasynPvt->threadid,pasynPvt->priority,nInQueue);
 	for(i=0; i<pasynPvt->ndeviceDrivers; i++) {
 	    deviceDriver *pdeviceDriver = &pasynPvt->padeviceDriver[i];
-	    printf("    %s pinterface %p pdrvPvt %p\n",
+	    printf("    %s pinterface %p drvPvt %p\n",
                 pdeviceDriver->pdriverInterface->driverType,
                 pdeviceDriver->pdriverInterface->pinterface,
-                pdeviceDriver->pdrvPvt);
+                pdeviceDriver->drvPvt);
+            if(strcmp(pdeviceDriver->pdriverInterface->driverType,
+            asynDriverType)==0) {
+                pasynDriver = pdeviceDriver->pdriverInterface->pinterface;
+                asynDriverPvt = pdeviceDriver->drvPvt;
+            }
 	}
 	if(pasynPvt->nprocessModules>0) {
 	    printf("    %s is process module\n",pasynPvt->processModuleName);
 	}
 	for(i=0; i<pasynPvt->nprocessModules; i++) {
 	    deviceDriver *pdeviceDriver = &pasynPvt->paprocessModule[i];
-	    printf("    %s pinterface %p pdrvPvt %p\n",
+	    printf("    %s pinterface %p drvPvt %p\n",
                 pdeviceDriver->pdriverInterface->driverType,
                 pdeviceDriver->pdriverInterface->pinterface,
-                pdeviceDriver->pdrvPvt);
+                pdeviceDriver->drvPvt);
+            if(strcmp(pdeviceDriver->pdriverInterface->driverType,
+            asynDriverType)==0) {
+                pasynDriver = pdeviceDriver->pdriverInterface->pinterface;
+                asynDriverPvt = pdeviceDriver->drvPvt;
+            }
 	}
+        if(pasynDriver) pasynDriver->report(asynDriverPvt,details);
         pasynPvt = (asynPvt *)ellNext(&pasynPvt->node);
     }
 }
 
 static asynUser *createAsynUser(
-    userCallback queue, userCallback timeout,void *puserPvt)
+    userCallback queue, userCallback timeout,void *userPvt)
 {
     asynUserPvt *pasynUserPvt;
     asynUser *pasynUser;
@@ -239,12 +278,12 @@ static asynUser *createAsynUser(
     pasynUserPvt->timeoutCallback = timeout;
     if(timeout) {
         pasynUserPvt->timer = epicsTimerQueueCreateTimer(
-            pasynBase->timerQueue,(epicsTimerCallback)timeout,puserPvt);
+            pasynBase->timerQueue,(epicsTimerCallback)timeout,userPvt);
     }
     pasynUser = asynUserPvtToAsynUser(pasynUserPvt);
     pasynUser->errorMessage = (char *)(pasynUser +1);
     pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
-    pasynUser->puserPvt = puserPvt;
+    pasynUser->userPvt = userPvt;
     return(pasynUser);
 }
 
@@ -471,6 +510,7 @@ static asynStatus registerDevice(
     }
     pasynPvt = callocMustSucceed(1,sizeof(asynPvt),"asynDriver:registerDriver");
     pasynPvt->lock = epicsMutexMustCreate();
+    pasynPvt->pasynUser = createAsynUser(0,0,0);
     pasynPvt->deviceName = deviceName;
     pasynPvt->padeviceDriver = padeviceDriver;
     pasynPvt->ndeviceDrivers = ndeviceDrivers;
@@ -510,3 +550,19 @@ static asynStatus registerProcessModule(
     pasynPvt->nprocessModules = ndeviceDrivers;
     return(asynSuccess);
 }
+
+static const iocshArg asynReportArg0 = {"level", iocshArgInt};
+static const iocshArg *const asynReportArgs[1] = {&asynReportArg0};
+static const iocshFuncDef asynReportDef =
+    {"asynReport", 1, asynReportArgs};
+static void asynReportCall(const iocshArgBuf * args) {
+        report(args[0].ival);
+}
+static void asyn(void)
+{
+    static int firstTime = 1;
+    if(!firstTime) return;
+    firstTime = 0;
+    iocshRegister(&asynReportDef,asynReportCall);
+}
+epicsExportRegistrar(asyn);
