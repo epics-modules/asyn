@@ -1,0 +1,10 @@
+#support for testing 
+device(bo,INST_IO,devAsynEnable,"asynEnable")
+device(bo,INST_IO,devAsynAutoConnect,"asynAutoConnect")
+device(bo,INST_IO,devAsynConnect,"asynConnect")
+device(longout,INST_IO,devAsynTrace,"asynTrace")
+device(longout,INST_IO,devAsynTraceIO,"asynTraceIO")
+device(longout,INST_IO,devAsynTraceIOTruncateSize,"asynTraceIOTSize")
+device(stringout,INST_IO,devAsynTraceFile,"asynTraceFile")
+registrar(asynSubRegistrar)
+driver(drvAsyn)
