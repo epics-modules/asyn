@@ -182,6 +182,13 @@ static asynGpibPort gpibPort = {
 
 /*Definitions for BSR*/
 #define BSRSRQ  0x04 /*SRQ request*/
+
+/*Must wait 5 clock cycles between AUXMR commands*/
+static void wasteTime(void)
+{
+    volatile int n = 100;
+    while(n>0) n--;
+}
 
 static epicsUInt8 readRegister(gsport *pgsport, int offset)
 {
@@ -308,12 +315,10 @@ void gsip488(void *pvt)
             writeRegister(pgsport,AUXMR,LONS); break;
         default:
         }
-{
-volatile int n = 100;
-while(n>0) n--;
-}
+        wasteTime();
         writeRegister(pgsport,AUXMR,GTS);
         if(pgsport->transferState!=transferStateWrite) return;
+        wasteTime();
     case transferStateWrite:
         if(!isr0&BO) return;
         if(pgsport->bytesRemainingWrite == 0) {
@@ -474,11 +479,15 @@ static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
     readRegister(pgsport,ISR1);
     epicsThreadSleep(.01);
     writeRegister(pgsport,AUXMR,SWRSTC);
+    epicsThreadSleep(.01);
     writeRegister(pgsport,AUXMR,IFCS);
     epicsThreadSleep(.01);
     writeRegister(pgsport,AUXMR,IFCC);
+    epicsThreadSleep(.01);
     writeRegister(pgsport,AUXMR,REMS);
+    epicsThreadSleep(.01);
     writeRegister(pgsport,AUXMR,HDFAS);
+    epicsThreadSleep(.01);
     writeRegister(pgsport,IMR0,BI|BO);
     writeRegister(pgsport,IMR1,ERR|MA|(pgsport->srqEnabled ? SRQ : 0));
     pasynManager->exceptionConnect(pasynUser);
