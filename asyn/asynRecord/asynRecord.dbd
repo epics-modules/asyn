@@ -1,17 +1,38 @@
-menu(asynOctetTMOD) {
-    choice(asynOctetTMOD_Write_Read,"Write/Read")
-    choice(asynOctetTMOD_Write,"Write")
-    choice(asynOctetTMOD_Read,"Read")
-    choice(asynOctetTMOD_Flush,"Flush")
+# Menus
+menu(asynTMOD) {
+    choice(asynTMOD_Write_Read,"Write/Read")
+    choice(asynTMOD_Write,"Write")
+    choice(asynTMOD_Read,"Read")
+    choice(asynTMOD_Flush,"Flush")
 }
-menu(asynOctetFMT) {
-    choice(asynOctetFMT_ASCII,"ASCII")
-    choice(asynOctetFMT_Binary,"Binary")
-    choice(asynOctetFMT_Hybrid,"Hybrid")
+menu(asynFMT) {
+    choice(asynFMT_ASCII,"ASCII")
+    choice(asynFMT_Hybrid,"Hybrid")
+    choice(asynFMT_Binary,"Binary")
 }
-menu(asynOctetTRACE) {
-    choice(asynOctetTRACE_Off,"Off")
-    choice(asynOctetTRACE_On,"On")
+menu(asynTRACE) {
+    choice(asynTRACE_Off,"Off")
+    choice(asynTRACE_On,"On")
+}
+menu(asynNOYES) {
+    choice(asynNOYES_No,"No")
+    choice(asynNOYES_Yes,"Yes")
+}
+menu(asynCONNECTED) {
+    choice(asynCONNECTED_Disconnected,"Disconnected")
+    choice(asynCONNECTED_Connected,"Connected")
+}
+menu(asynCONNECT) {
+    choice(asynCONNECT_Disconnect,"Disconnect")
+    choice(asynCONNECT_Connect,"Connect")
+}
+menu(asynENABLED) {
+    choice(asynENABLED_Disabled,"Disabled")
+    choice(asynENABLED_Enabled,"Enabled")
+}
+menu(asynENABLE) {
+    choice(asynENABLE_Disable,"Disable")
+    choice(asynENABLE_Enable,"Enable")
 }
 menu(serialBAUD) {
     choice(serialBAUD_300,"300")
@@ -62,7 +83,8 @@ menu(gpibACMD) {
     choice(gpibACMD_Take_Control__TCT_,"Take Control (TCT)")
     choice(gpibACMD_Serial_Poll,"Serial Poll")
 }
-recordtype(asynOctet) {
+
+recordtype(asyn) {
     include "dbCommon.dbd" 
     field(VAL,DBF_STRING) {
         prompt("Value field (unused)")
@@ -70,6 +92,8 @@ recordtype(asynOctet) {
         asl(ASL0)
         size(40)
     }
+
+# Address fields
     field(PORT,DBF_STRING) {
         prompt("asyn port")
         promptgroup(GUI_DISPLAY)
@@ -85,20 +109,30 @@ recordtype(asynOctet) {
         interest(1)
         initial("0")
     }
-    field(SOCK,DBF_STRING) {
-        prompt("asyn socket address")
+    field(SDEV,DBF_STRING) {
+        prompt("drvGenericSerial device")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
         initial("")
         size(40)
     }
+
+# Input/output control fields
     field(TMOD,DBF_MENU) {
         prompt("Transaction mode")
         promptgroup(GUI_COMMON)
         interest(1)
-        menu(asynOctetTMOD)
+        menu(asynTMOD)
     }
+    field(TMOT,DBF_DOUBLE) {
+        prompt("Timeout (sec)")
+        promptgroup(GUI_DISPLAY)
+        interest(1)
+        initial("1.0")
+    }
+
+# Output control fields
     field(AOUT,DBF_STRING) {
         prompt("Output (command) string")
         promptgroup(GUI_INPUTS)
@@ -142,8 +176,10 @@ recordtype(asynOctet) {
         prompt("Output format")
         promptgroup(GUI_COMMON)
         interest(1)
-        menu(asynOctetFMT)
+        menu(asynFMT)
     }
+
+# Input control fields
     field(AINP,DBF_STRING) {
         prompt("Input (response) string")
         promptgroup(GUI_INPUTS)
@@ -191,14 +227,10 @@ recordtype(asynOctet) {
         prompt("Input format")
         promptgroup(GUI_COMMON)
         interest(1)
-        menu(asynOctetFMT)
+        menu(asynFMT)
     }
-    field(TMOT,DBF_DOUBLE) {
-        prompt("Timeout (sec)")
-        promptgroup(GUI_DISPLAY)
-        interest(1)
-        initial("1.0")
-    }
+
+# Serial control fields
     field(BAUD,DBF_MENU) {
         prompt("Baud rate")
         promptgroup(GUI_COMMON)
@@ -231,6 +263,8 @@ recordtype(asynOctet) {
         special(SPC_MOD)
         menu(serialFCTL)
     }
+
+# GPIB control fields
     field(UCMD,DBF_MENU) {
         prompt("Universal command")
         promptgroup(GUI_COMMON)
@@ -251,61 +285,127 @@ recordtype(asynOctet) {
         asl(ASL0)
         special(SPC_NOMOD)
     }
+
+# Trace control fields
     field(TB0,DBF_MENU) {
         prompt("Trace error")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TB1,DBF_MENU) {
         prompt("Trace IO device")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TB2,DBF_MENU) {
         prompt("Trace IO filter")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TB3,DBF_MENU) {
         prompt("Trace IO driver")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TB4,DBF_MENU) {
         prompt("Trace flow")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TIB0,DBF_MENU) {
         prompt("Trace IO ASCII")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TIB1,DBF_MENU) {
         prompt("Trace IO escape")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
     }
     field(TIB2,DBF_MENU) {
         prompt("Trace IO hex")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynOctetTRACE)
+        menu(asynTRACE)
+    }
+    field(TSIZ,DBF_LONG) {
+        prompt("Trace IO truncate size")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+    }
+    field(TFIL,DBF_STRING) {
+        prompt("Trace IO file")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        size(40)
+    }
+
+# Connection management fields
+    field(AUCT,DBF_MENU) {
+        prompt("Autoconnect")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynNOYES)
+    }
+    field(CNTD,DBF_MENU) {
+        prompt("Connected")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynCONNECTED)
+    }
+    field(CNCT,DBF_MENU) {
+        prompt("Connect/Disconnect")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynCONNECT)
+    }
+    field(ENBD,DBF_MENU) {
+        prompt("Enabled")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynENABLED)
+    }
+    field(ENBL,DBF_MENU) {
+        prompt("Enable/Disable")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynENABLE)
+    }
+
+# Miscellaneous fields
+    field(POLL,DBF_LONG) {
+        prompt("Poll status")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+    }
+    field(ERRS,DBF_STRING) {
+        prompt("Error string")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        size(40)
     }
 }
-

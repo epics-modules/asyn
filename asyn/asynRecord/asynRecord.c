@@ -1,26 +1,11 @@
-/* asynOctetRecord.c - Record Support Routines for asynOctet record */
+/* asynRecord.c - Record Support Routines for asyn record */
 /*
- * Based on earlier asynOctetRecord.c and serialRecord.c.  
- * - Contains most fields from those records with the following differences:
- *   - IDEL and EOS have been renamed IEOS, and changed from integer to string
- *     data type to allow multi-character terminator
- *   - ODEL has been renamed OEOS, and changed from integer to string
- *     data type to allow multi-character terminator
- *   - Added the PORT field, so the asyn port can be dynamically changed.
- *   - The AOUT, IEOS and OEOS fields are passed through dbTranslateEscape
- *   - The record always post monitors on the input data (AINP or BINP) even 
- *     if the values are the same.  This is very useful for CA clients 
- *     (e.g. SNL programs) that use monitors on these fields to process a 
- *     response.
- *   - The units of the TMOT field have changed from milliseconds to seconds,
- *     and the data type has changed from int to double.
+ * Based on earlier asynRecord.c and serialRecord.c.  
+ * See documentation for differences between those records and this one.
  *
  *      Author:    Mark Rivers
  *      Date:      3/8/2004
  *
- * Modification Log:
- * -----------------
- * .01  08-Mar-2004 mlr  Based on gpibRecord and serialRecord.
  */
 
 
@@ -46,15 +31,15 @@
 #include        <asynDriver.h>
 #include        <drvGenericSerial.h>
 #define GEN_SIZE_OFFSET
-#include        "asynOctetRecord.h"
+#include        "asynRecord.h"
 #undef GEN_SIZE_OFFSET
 
 
 /* Create RSET - Record Support Entry Table*/
 #define report NULL
 #define initialize NULL
-static long init_record(asynOctetRecord *pasynRec, int pass);
-static long process(asynOctetRecord *pasynRec);
+static long init_record(asynRecord *pasynRec, int pass);
+static long process(asynRecord *pasynRec);
 static long special(struct dbAddr *paddr, int after);
 #define get_value NULL
 static long cvt_dbaddr(struct dbAddr *paddr);
@@ -70,16 +55,18 @@ static long get_precision(struct dbAddr *paddr, long *precision);
 #define get_control_double NULL
 #define get_alarm_double NULL
 
-static void  monitor();
-static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord);
+static void  monitor(asynRecord *pasynRec);
+static void  monitorStatus(asynRecord *pasynRec);
+static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord);
 static void  GPIB_command(asynUser *pasynUser);
 
-static void  asynOctetCallback(asynUser *pasynUser);
-static void  IOCallback(asynUser *pasynUser);
-static void  setOptionCallback(asynUser *pasynUser);
-static void  getOptionCallback(asynUser *pasynUser);
+static void  asynCallback(asynUser *pasynUser);
+static void  exceptCallback(asynUser *pasynUser, asynException exception);
+static void  performIO(asynUser *pasynUser);
+static void  setOption(asynUser *pasynUser);
+static void  getOptions(asynUser *pasynUser);
 
-struct rset asynOctetRSET={
+struct rset asynRSET={
    RSETNUMBER,
    report,
    initialize,
@@ -98,28 +85,50 @@ struct rset asynOctetRSET={
    get_graphic_double,
    get_control_double,
    get_alarm_double };
-epicsExportAddress(rset, asynOctetRSET);
+epicsExportAddress(rset, asynRSET);
 
-typedef struct old_field_values {              /* Used in monitor() */
-    int   nowt;               
-    int   nrrd;               
-    int   nord;
-    int   spr;               
-    int   ucmd;
-    int   acmd;
-    int   addr;
-}old_field_values;
 
-#define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
+typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
+    epicsInt32      addr;   /*asyn address*/
+    epicsInt32      nowt;   /*Number of octets to write*/
+    epicsInt32      nrrd;   /*Number of bytes to read*/
+    epicsInt32      nord;   /*Number of bytes read*/
+    epicsEnum16     baud;   /*Baud rate*/
+    epicsEnum16     prty;   /*Parity*/
+    epicsEnum16     dbit;   /*Data bits*/
+    epicsEnum16     sbit;   /*Stop bits*/
+    epicsEnum16     fctl;   /*Flow control*/
+    epicsEnum16     ucmd;   /*Universal command*/
+    epicsEnum16     acmd;   /*Addressed command*/
+    unsigned char   spr;    /*Serial poll response*/
+    epicsEnum16     tb0;    /*Trace error*/
+    epicsEnum16     tb1;    /*Trace IO device*/
+    epicsEnum16     tb2;    /*Trace IO filter*/
+    epicsEnum16     tb3;    /*Trace IO driver*/
+    epicsEnum16     tb4;    /*Trace flow*/
+    epicsEnum16     tib0;   /*Trace IO ASCII*/
+    epicsEnum16     tib1;   /*Trace IO escape*/
+    epicsEnum16     tib2;   /*Trace IO hex*/
+    epicsInt32      tsiz;   /*Trace IO truncate size*/
+    char            tfil[40]; /*Trace IO file*/
+    epicsEnum16     auct;   /*Autoconnect*/
+    epicsEnum16     cntd;   /*Connected*/
+    epicsEnum16     cnct;   /*Connect/Disconnect*/
+    epicsEnum16     enbd;   /*Enabled*/
+    epicsEnum16     enbl;   /*Enable/Disable*/
+    epicsInt32      poll;   /*Poll status*/
+    char            errs[40]; /*Error string*/
+} oldValues;
+
 #define POST_IF_NEW(FIELD) \
     if (pasynRec->FIELD != pasynRecPvt->old.FIELD) { \
         db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 
-typedef enum {stateIdle,stateIO,stateGetOption,stateSetOption} callbackState;
+typedef enum {stateIdle,stateIO,stateGetOption,stateSetOption,stateConnect} callbackState;
 
 typedef struct asynRecPvt {
-    asynOctetRecord *prec;      /* Pointer to record */
+    asynRecord *prec;      /* Pointer to record */
     epicsMutexId    lock;
     callbackState   state; 
     int             callbackShouldProcess; 
@@ -132,11 +141,11 @@ typedef struct asynRecPvt {
     asynGpib        *pasynGpib;
     void *          asynGpibPvt;
     char            *outbuff;
-    old_field_values old;
+    oldValues       old;
 } asynRecPvt;
 
 typedef struct asynPortPvt {
-    asynOctetRecord *prec;      /* Pointer to record */
+    asynRecord *prec;      /* Pointer to record */
 } asynPortPvt;
 
 /* These should be in a header file*/
@@ -157,7 +166,7 @@ static char *flow_control_choices[NUM_FLOW_CHOICES]={"Y","N"};
 #define EOS_SIZE 10  /* Size of buffer for EOS */
 
 
-static long init_record(asynOctetRecord *pasynRec, int pass)
+static long init_record(asynRecord *pasynRec, int pass)
 {
     asynRecPvt *pasynRecPvt;
     asynUser *pasynUser;
@@ -173,13 +182,15 @@ static long init_record(asynOctetRecord *pasynRec, int pass)
     pasynRecPvt->prec = pasynRec;
 
     /* Initialize asyn, connect to device */
-    pasynUser = pasynManager->createAsynUser(asynOctetCallback,0);
+    pasynUser = pasynManager->createAsynUser(asynCallback,0);
     pasynRecPvt->pasynUser = pasynUser;
     pasynUser->userPvt = pasynRecPvt;
-    status = connectDevice(pasynRec,1);
-    if (status!=asynSuccess) {
-       printf("asynOctetRecord, error connecting to device, status=%d\n", 
-               status);
+    if (strlen(pasynRec->port) != 0) {
+       status = connectDevice(pasynRec,1);
+       if (status!=asynSuccess) {
+          printf("asynRecord, error connecting to port %s, status=%d\n", 
+                  pasynRec->port, status);
+       }
     }
     /* Allocate the space for the binary/hybrid output and binary/hybrid 
      * input arrays */
@@ -191,134 +202,167 @@ static long init_record(asynOctetRecord *pasynRec, int pass)
     return(0);
 }
 
-static long process(asynOctetRecord *pasynRec)
+static long process(asynRecord *pasynRec)
 {
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
 
    epicsMutexMustLock(pasynRecPvt->lock);
-   if(!pasynRec->pact && pasynRecPvt->state==stateIdle) pasynRecPvt->state = stateIO;
+   if(!pasynRec->pact && pasynRecPvt->state==stateIdle) 
+                                      pasynRecPvt->state = stateIO;
    epicsMutexUnlock(pasynRecPvt->lock);
    /* If pact is FALSE then queue message to driver and return */
    if (!pasynRec->pact)
    {
-      /* Remember current state of fields for monitor() */
-      REMEMBER_STATE(nrrd);
-      REMEMBER_STATE(nord);
-      REMEMBER_STATE(nowt);
-      REMEMBER_STATE(spr);
-      REMEMBER_STATE(ucmd);
-      REMEMBER_STATE(acmd);
       /* Make sure nrrd and nowt are valid */
       if (pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
       if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
       pasynRecPvt->callbackShouldProcess = 1;
-      pasynManager->queueRequest(pasynRecPvt->pasynUser, asynQueuePriorityLow, 0.0);
+      pasynManager->queueRequest(pasynRecPvt->pasynUser, asynQueuePriorityLow, 
+                                 0.0);
       pasynRec->pact = TRUE;
       return(0);
    }
-   /* pact was TRUE, so we were called from asynOctetCallback.
-    * The I/O is complete, so finish up.
+   /* pact was TRUE, so we were called from asynCallback.
+    * If this was an I/O operation then finish up.
     */
-   recGblGetTimeStamp(pasynRec);
-   /* check event list */
-   monitor(pasynRec);
-   /* process the forward scan link record */
-   recGblFwdLink(pasynRec);
+   if (pasynRecPvt->state == stateIO) {
+      recGblGetTimeStamp(pasynRec);
+      /* check event list */
+      monitor(pasynRec);
+      /* process the forward scan link record */
+      recGblFwdLink(pasynRec);
+   }
    pasynRecPvt->state = stateIdle;
    pasynRec->pact=FALSE;
    return(0);
 }
 
-/* special() is called when any of the serial port parameters (baud rate, 
- * parity, etc.) are changed.  
- * It queues a request to write the new port parameters
- */
+/* special() is called when many fields are changed */
+
 static long special(struct dbAddr *paddr, int after)
 {
-    asynOctetRecord *pasynRec=(asynOctetRecord *)paddr->precord;
+    asynRecord *pasynRec=(asynRecord *)paddr->precord;
     int fieldIndex = dbGetFieldIndex(paddr);
     asynRecPvt *pasynRecPvt=pasynRec->dpvt;
     asynUser *pasynUser=pasynRecPvt->pasynUser;
     asynStatus status=asynSuccess;
     unsigned short monitor_mask;
+    int traceMask;
+    FILE *fd;
 
     if (!after) return(status);
+    epicsMutexMustLock(pasynRecPvt->lock);
     /* Process trace flags without regard to state so we can change 
      * debugging even when busy */
     switch (fieldIndex) {
-       case asynOctetRecordTB0: 
-       case asynOctetRecordTB1: 
-       case asynOctetRecordTB2: 
-       case asynOctetRecordTB3: 
-       case asynOctetRecordTB4: 
-          pasynTrace->setTraceMask(pasynUser, 
-                                   pasynRec->tb0    | pasynRec->tb1 << 1 |
-                                   pasynRec->tb2<<2 | pasynRec->tb3 << 3 |
-                                   pasynRec->tb4 << 4);
-          return(status);
-       case asynOctetRecordTIB0: 
-       case asynOctetRecordTIB1: 
-       case asynOctetRecordTIB2: 
-          pasynTrace->setTraceIOMask(pasynUser, 
-                                     pasynRec->tib0 | pasynRec->tib1 << 1 |
-                                     pasynRec->tib2 << 2);
-          return(status);
+       case asynRecordTB0: 
+       case asynRecordTB1: 
+       case asynRecordTB2: 
+       case asynRecordTB3: 
+       case asynRecordTB4:
+          traceMask = (pasynRec->tb0 ? ASYN_TRACE_ERROR    : 0) |
+                      (pasynRec->tb1 ? ASYN_TRACEIO_DEVICE : 0) |
+                      (pasynRec->tb2 ? ASYN_TRACEIO_FILTER : 0) |
+                      (pasynRec->tb3 ? ASYN_TRACEIO_DRIVER : 0) |
+                      (pasynRec->tb4 ? ASYN_TRACE_FLOW     : 0);
+          pasynTrace->setTraceMask(pasynUser, traceMask);
+          goto unlock;
+       case asynRecordTIB0: 
+       case asynRecordTIB1: 
+       case asynRecordTIB2: 
+          traceMask = (pasynRec->tib0 ? ASYN_TRACEIO_ASCII  : 0) |
+                      (pasynRec->tib1 ? ASYN_TRACEIO_ESCAPE : 0) |
+                      (pasynRec->tib2 ? ASYN_TRACEIO_HEX    : 0);
+          pasynTrace->setTraceIOMask(pasynUser, traceMask);
+          goto unlock;
+       case asynRecordTSIZ:
+          pasynTrace->setTraceIOTruncateSize(pasynUser, pasynRec->tsiz);
+          goto unlock;
+       case asynRecordTFIL:
+          fd = fopen(pasynRec->tfil, "a+");
+          if (fd) {
+             status = pasynTrace->setTraceFile(pasynUser, fd);
+             if (status != asynSuccess) {
+                asynPrint(pasynUser, ASYN_TRACE_ERROR,   
+                         "%s setTraceFile failed\n", pasynRec->name,
+                         pasynUser->errorMessage);
+                }
+          } else {
+             asynPrint(pasynUser, ASYN_TRACE_ERROR,   
+                       "%s fopen failed\n", pasynRec->tfil);
+          }
+          goto unlock;
+       case asynRecordAUCT:
+          pasynManager->autoConnect(pasynUser, pasynRec->auct);
+          goto unlock;
+       case asynRecordENBL:
+          pasynManager->enable(pasynUser, pasynRec->enbl);
+          goto unlock;
+       case asynRecordPOLL:
+          monitorStatus(pasynRec);
+          goto unlock;
     }
 
-    /* These cases require locking and idle state */
-    epicsMutexMustLock(pasynRecPvt->lock);
+    /* These cases require idle state */
     if(pasynRecPvt->state!=stateIdle) {
        printf("%s state!=stateIdle try again later\n",pasynRec->name);
-       epicsMutexUnlock(pasynRecPvt->lock);
-       return -1;
+       goto unlock;
     } 
     switch (fieldIndex) {
-       case asynOctetRecordSOCK:
-          strcpy(pasynRec->port, pasynRec->sock);
+       case asynRecordSDEV:
+          strcpy(pasynRec->port, pasynRec->sdev);
           pasynRec->addr = 0;
-          drvGenericSerialConfigure(pasynRec->port, pasynRec->sock, 0, 0);
+          status = drvGenericSerialConfigure(pasynRec->port, pasynRec->sdev, 
+                                             0, 0);
+          if (status != asynSuccess) goto unlock;
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
           db_post_events(pasynRec, pasynRec->port, monitor_mask);
           db_post_events(pasynRec, &pasynRec->addr, monitor_mask);
           /* Now do same thing as when port or addr change */
-       case asynOctetRecordPORT: 
-       case asynOctetRecordADDR: 
+       case asynRecordPORT: 
+       case asynRecordADDR: 
           /* If the PORT or ADDR fields changed then reconnect to new device */
           status = connectDevice(pasynRec,0);
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
-             "asynOctetRecord special() port=%s, addr=%d, connect status=%d\n",
+             "asynRecord special() port=%s, addr=%d, connect status=%d\n",
              pasynRec->port, pasynRec->addr, status);
           break;
-       case asynOctetRecordBAUD: 
-       case asynOctetRecordPRTY: 
-       case asynOctetRecordDBIT: 
-       case asynOctetRecordSBIT: 
-       case asynOctetRecordFCTL: 
+       case asynRecordBAUD: 
+       case asynRecordPRTY: 
+       case asynRecordDBIT: 
+       case asynRecordSBIT: 
+       case asynRecordFCTL: 
           /* One of the serial port parameters */
           pasynRecPvt->fieldIndex = fieldIndex;
           pasynRecPvt->state = stateSetOption;
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
-              "asynOctetRecord special() port=%s, addr=%d scanOnce request\n",
+              "asynRecord special() port=%s, addr=%d scanOnce request\n",
               pasynRec->port, pasynRec->addr);
           scanOnce(pasynRec);
           break;
+       case asynRecordCNCT: 
+          /* Connect or disconnect from device */
+          pasynRecPvt->state = stateConnect;
+          scanOnce(pasynRec);
+          break;
     }
+unlock:
     epicsMutexUnlock(pasynRecPvt->lock);
     return(status);
 }
 
 static long cvt_dbaddr(struct dbAddr *paddr)
 {
-   asynOctetRecord *pasynRec=(asynOctetRecord *)paddr->precord;
+   asynRecord *pasynRec=(asynRecord *)paddr->precord;
    int fieldIndex = dbGetFieldIndex(paddr);
 
-   if (fieldIndex == asynOctetRecordBOUT) {
+   if (fieldIndex == asynRecordBOUT) {
       paddr->pfield = (void *)(pasynRec->optr);
       paddr->no_elements = pasynRec->omax;
       paddr->field_type = DBF_CHAR;
       paddr->field_size = sizeof(char);
       paddr->dbr_field_type = DBF_CHAR;
-   } else if (fieldIndex == asynOctetRecordBINP) {
+   } else if (fieldIndex == asynRecordBINP) {
       paddr->pfield = (unsigned char *)(pasynRec->iptr);
       paddr->no_elements = pasynRec->imax;
       paddr->field_type = DBF_CHAR;
@@ -331,7 +375,7 @@ static long cvt_dbaddr(struct dbAddr *paddr)
 static long get_array_info(struct dbAddr *paddr, long *no_elements, 
                            long *offset)
 {
-   asynOctetRecord *pasynRec=(asynOctetRecord *)paddr->precord;
+   asynRecord *pasynRec=(asynRecord *)paddr->precord;
 
    *no_elements =  pasynRec->nord;
    *offset = 0;
@@ -340,7 +384,7 @@ static long get_array_info(struct dbAddr *paddr, long *no_elements,
 
 static long put_array_info(struct dbAddr *paddr, long nNew)
 {
-   asynOctetRecord *pasynRec=(asynOctetRecord *)paddr->precord;
+   asynRecord *pasynRec=(asynRecord *)paddr->precord;
 
    pasynRec->nowt = nNew;
    if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
@@ -352,7 +396,7 @@ static long get_precision(struct dbAddr *paddr, long *precision)
    int fieldIndex = dbGetFieldIndex(paddr);
 
    *precision = 0;
-   if (fieldIndex == asynOctetRecordTMOT) {
+   if (fieldIndex == asynRecordTMOT) {
       *precision = 4;
       return(0);
    }
@@ -360,14 +404,16 @@ static long get_precision(struct dbAddr *paddr, long *precision)
    return(0);
 }
 
-static void monitor(asynOctetRecord *pasynRec)
+
+static void monitor(asynRecord *pasynRec)
 {
+    /* Called when record processes for I/O operation */
     unsigned short  monitor_mask;
     asynRecPvt* pasynRecPvt = pasynRec->dpvt;
 
     monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
     
-    if (pasynRec->ifmt == asynOctetFMT_ASCII)
+    if (pasynRec->ifmt == asynFMT_ASCII)
        db_post_events(pasynRec,pasynRec->ainp, monitor_mask);
     else
        db_post_events(pasynRec, pasynRec->iptr, monitor_mask);
@@ -380,8 +426,55 @@ static void monitor(asynOctetRecord *pasynRec)
     POST_IF_NEW(acmd);
     POST_IF_NEW(addr);
 }
+
+
+static void monitorStatus(asynRecord *pasynRec)
+{
+    /* Called to poll state of trace and connect fields.  Other threads
+     * can change these */
+    unsigned short  monitor_mask;
+    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
+    int trace_mask;
+    FILE *fd;
+
+    monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+    
+    trace_mask = pasynTrace->getTraceMask(pasynUser);
+    pasynRec->tb0 = (trace_mask & ASYN_TRACE_ERROR)    ? 1 : 0;
+    pasynRec->tb1 = (trace_mask & ASYN_TRACEIO_DEVICE) ? 1 : 0;
+    pasynRec->tb2 = (trace_mask & ASYN_TRACEIO_FILTER) ? 1 : 0;
+    pasynRec->tb3 = (trace_mask & ASYN_TRACEIO_DRIVER) ? 1 : 0;
+    pasynRec->tb4 = (trace_mask & ASYN_TRACE_FLOW)     ? 1 : 0;
+    trace_mask = pasynTrace->getTraceIOMask(pasynUser);
+    pasynRec->tib0 = (trace_mask & ASYN_TRACEIO_ASCII)  ? 1 : 0;
+    pasynRec->tib1 = (trace_mask & ASYN_TRACEIO_ESCAPE) ? 1 : 0;
+    pasynRec->tib2 = (trace_mask & ASYN_TRACEIO_HEX)    ? 1 : 0;
+
+    pasynRec->auct = pasynManager->isAutoConnect(pasynUser);
+    pasynRec->cntd = pasynManager->isConnected(pasynUser);
+    pasynRec->cnct = pasynRec->cntd;
+    pasynRec->enbd = pasynManager->isEnabled(pasynUser);
+    pasynRec->enbl = pasynRec->enbd;
+    pasynRec->tsiz = pasynTrace->getTraceIOTruncateSize(pasynUser);
+    fd             = pasynTrace->getTraceFile(pasynUser);
+    POST_IF_NEW(tb0);
+    POST_IF_NEW(tb1);
+    POST_IF_NEW(tb2);
+    POST_IF_NEW(tb3);
+    POST_IF_NEW(tb4);
+    POST_IF_NEW(tib0);
+    POST_IF_NEW(tib1);
+    POST_IF_NEW(tib2);
+    POST_IF_NEW(auct);
+    POST_IF_NEW(cntd);
+    POST_IF_NEW(cnct);
+    POST_IF_NEW(enbd);
+    POST_IF_NEW(enbl);
+    POST_IF_NEW(tsiz);
+}
 
-static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
+static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord)
 {
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt=pasynRec->dpvt;
@@ -391,6 +484,7 @@ static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
     /* Disconnect any connected device.  Ignore error if there
      * is no device currently connected.
      */
+    pasynManager->exceptionCallbackRemove(pasynUser);
     pasynManager->disconnect(pasynUser);
 
     /* Connect to the new device */
@@ -398,7 +492,7 @@ static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
                                          pasynRec->addr);
     if (status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                  "asynOctetRecord connect error, status=%d, %s\n",
+                  "asynRecord connect error, status=%d, %s\n",
                   status, pasynUser->errorMessage);
         return(status);
     }
@@ -430,12 +524,16 @@ static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
         pasynRecPvt->pasynGpib = (asynGpib *)pasynInterface->pinterface;
         pasynRecPvt->asynGpibPvt = pasynInterface->drvPvt;
     }
+
+    /* Add exception callback */
+    pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
+
     pasynRecPvt->state = stateGetOption;
     if(isInitRecord) {
         pasynRecPvt->callbackShouldProcess = 0;
         pasynManager->queueRequest(pasynUser, asynQueuePriorityLow, 0.0);
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
-               "asynOctetRecord getOptions() port=%s, addr=%d queued request\n",
+               "asynRecord getOptions() port=%s, addr=%d queued request\n",
                pasynRec->port, pasynRec->addr);
         return(asynSuccess);
     } else {
@@ -448,13 +546,13 @@ static void GPIB_command(asynUser *pasynUser)
 {
    /* This function handles GPIB-specific commands */
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
-   asynOctetRecord *pasynRec = pasynRecPvt->prec;
+   asynRecord *pasynRec = pasynRecPvt->prec;
    int     status;
    int     ninp;
    char    cmd_char=0;
    char    acmd[6];
 
-   /* See asynOctetRecord.dbd for definitions of constants gpibXXXX_Abcd */
+   /* See asynRecord.dbd for definitions of constants gpibXXXX_Abcd */
    if ((pasynRecPvt->pasynGpib) && (pasynRec->ucmd != gpibUCMD_None))
    {
       switch (pasynRec->ucmd)
@@ -515,20 +613,20 @@ static void GPIB_command(asynUser *pasynUser)
             /* Serial Poll Enable */
             cmd_char = IBSPE;
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt, 
-                                             pasynRecPvt->pasynUser, &cmd_char, 1);
+                        pasynRecPvt->pasynUser, &cmd_char, 1);
             if (status)
                 /* Something is wrong if we couldn't write */
                 recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
             /* Read the response byte  */
             ninp = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynGpibPvt, 
-                                    pasynRecPvt->pasynUser, (char *)&pasynRec->spr, 1);
+                      pasynRecPvt->pasynUser, (char *)&pasynRec->spr, 1);
             if (ninp < 0) /* Is this right? */
                 /* Something is wrong if we couldn't read */
                 recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);
             /* Serial Poll Disable */
             cmd_char = IBSPD;
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt, 
-                                             pasynRecPvt->pasynUser, &cmd_char, 1);
+                        pasynRecPvt->pasynUser, &cmd_char, 1);
             if (status)
                 /* Something is wrong if we couldn't write */
                 recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
@@ -544,19 +642,29 @@ static void GPIB_command(asynUser *pasynUser)
    }
 }
 
-static void asynOctetCallback(asynUser *pasynUser)
+static void asynCallback(asynUser *pasynUser)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
-   asynOctetRecord *pasynRec = pasynRecPvt->prec;
-   
+   asynRecord *pasynRec = pasynRecPvt->prec;
+  
+   asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s asynCallback, state=%d\n",
+        pasynRec->name, pasynRecPvt->state);
    switch(pasynRecPvt->state) {
-      case stateIO:        IOCallback(pasynUser); break;
-      case stateSetOption: setOptionCallback(pasynUser); break;
-      case stateGetOption: getOptionCallback(pasynUser); break;
+      case stateIO:        performIO(pasynUser); break;
+      case stateSetOption: setOption(pasynUser); break;
+      case stateGetOption: getOptions(pasynUser); break;
+      case stateConnect:
+         if (pasynRec->cnct)
+            pasynRecPvt->pasynCommon->connect(pasynRecPvt->asynCommonPvt, 
+                                              pasynUser);
+         else
+            pasynRecPvt->pasynCommon->disconnect(pasynRecPvt->asynCommonPvt, 
+                                                 pasynUser);
+         break;
       default:
-          printf("%s asynOctetCallback illegal state %d\n",
-              pasynRec->name,pasynRecPvt->state);
-          return;
+         printf("%s asynCallback illegal state %d\n",
+                pasynRec->name,pasynRecPvt->state);
+         return;
    }
    if(pasynRecPvt->callbackShouldProcess) {
       dbScanLock( (dbCommon*) pasynRec);
@@ -566,11 +674,24 @@ static void asynOctetCallback(asynUser *pasynUser)
       pasynRecPvt->state = stateIdle;
    }
 }
-
-static void IOCallback(asynUser *pasynUser)
+
+static void exceptCallback(asynUser *pasynUser,asynException exception)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
-   asynOctetRecord *pasynRec = pasynRecPvt->prec;
+   asynRecord *pasynRec = pasynRecPvt->prec;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exception %d\n",
+        pasynRec->name,(int)exception);
+    epicsMutexMustLock(pasynRecPvt->lock);
+    /* There has been a changed in connect or enable status */
+    monitorStatus(pasynRec);
+    epicsMutexUnlock(pasynRecPvt->lock);
+}
+
+static void performIO(asynUser *pasynUser)
+{
+   asynRecPvt *pasynRecPvt=pasynUser->userPvt;
+   asynRecord *pasynRec = pasynRecPvt->prec;
    int     nout;
    int     ninp;
    int     status;
@@ -597,12 +718,12 @@ static void IOCallback(asynUser *pasynUser)
       return;
    }
 
-   if (pasynRec->ofmt == asynOctetFMT_ASCII) {
+   if (pasynRec->ofmt == asynFMT_ASCII) {
       /* ASCII output mode */
       /* Translate escape sequences */
       nwrite = dbTranslateEscape(pasynRecPvt->outbuff, pasynRec->aout);
       outptr = pasynRecPvt->outbuff;
-   } else if (pasynRec->ofmt == asynOctetFMT_Hybrid) {
+   } else if (pasynRec->ofmt == asynFMT_Hybrid) {
       /* Hybrid output mode */
       /* Translate escape sequences */
       nwrite = dbTranslateEscape(pasynRecPvt->outbuff, pasynRec->optr);
@@ -613,7 +734,7 @@ static void IOCallback(asynUser *pasynUser)
       outptr = pasynRec->optr;
    }
    /* If not binary mode, append the terminator */
-   if (pasynRec->ofmt != asynOctetFMT_Binary) {
+   if (pasynRec->ofmt != asynFMT_Binary) {
       eoslen = dbTranslateEscape(eos, pasynRec->oeos);
       /* Make sure there is room for terminator */
       if ((nwrite + eoslen) < pasynRec->omax) {
@@ -622,7 +743,7 @@ static void IOCallback(asynUser *pasynUser)
       }
    }
 
-   if (pasynRec->ifmt == asynOctetFMT_ASCII) {
+   if (pasynRec->ifmt == asynFMT_ASCII) {
       /* ASCII input mode */
       inptr = pasynRec->ainp;
       inlen = sizeof(pasynRec->ainp);
@@ -636,14 +757,14 @@ static void IOCallback(asynUser *pasynUser)
    else
       nread = inlen;
 
-   if ((pasynRec->tmod == asynOctetTMOD_Flush) ||
-       (pasynRec->tmod == asynOctetTMOD_Write_Read)) {
+   if ((pasynRec->tmod == asynTMOD_Flush) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
       /* Flush the input buffer */
       pasynRecPvt->pasynOctet->flush(pasynRecPvt->asynOctetPvt, pasynUser);
    }
 
-   if ((pasynRec->tmod == asynOctetTMOD_Write) ||
-       (pasynRec->tmod == asynOctetTMOD_Write_Read)) {
+   if ((pasynRec->tmod == asynTMOD_Write) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
       /* Send the message */
       nout = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt, 
                                      pasynUser, outptr, nwrite);
@@ -652,12 +773,12 @@ static void IOCallback(asynUser *pasynUser)
          recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
    }
     
-   if ((pasynRec->tmod == asynOctetTMOD_Read) ||
-       (pasynRec->tmod == asynOctetTMOD_Write_Read)) {
+   if ((pasynRec->tmod == asynTMOD_Read) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
       /* Set the input buffer to all zeros */
       memset(inptr, 0, inlen);
       /* Read the message  */
-      if (pasynRec->ifmt == asynOctetFMT_Binary) {
+      if (pasynRec->ifmt == asynFMT_Binary) {
          eos[0] = '\0';
          eoslen = 0;
       } else {
@@ -673,29 +794,29 @@ static void IOCallback(asynUser *pasynUser)
                                     pasynUser, inptr, nread);
 
       asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, inlen,
-            "asynOctetRecord: inlen=%d, ninp=%d\n", inlen, ninp);
+            "asynRecord: inlen=%d, ninp=%d\n", inlen, ninp);
       if (ninp <= 0) 
          /* Something is wrong if we didn't get any response */
          recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);
       /* Check for input buffer overflow */
-      if ((pasynRec->ifmt == asynOctetFMT_ASCII) && 
+      if ((pasynRec->ifmt == asynFMT_ASCII) && 
           (ninp >= sizeof(pasynRec->ainp))) {
          recGblSetSevr(pasynRec, READ_ALARM, MINOR_ALARM);
          /* terminate response with \0 */
          inptr[sizeof(pasynRec->ainp)-1] = '\0';
       }
-      else if ((pasynRec->ifmt == asynOctetFMT_Hybrid) && 
+      else if ((pasynRec->ifmt == asynFMT_Hybrid) && 
                (ninp >= pasynRec->imax)) {
          recGblSetSevr(pasynRec, READ_ALARM, MINOR_ALARM);
          /* terminate response with \0 */
          inptr[pasynRec->imax-1] = '\0';
       }
-      else if ((pasynRec->ifmt == asynOctetFMT_Binary) && 
+      else if ((pasynRec->ifmt == asynFMT_Binary) && 
                (ninp > pasynRec->imax)) {
          /* This should not be able to happen */
          recGblSetSevr(pasynRec, READ_ALARM, MINOR_ALARM);
       }
-      else if (pasynRec->ifmt != asynOctetFMT_Binary) {
+      else if (pasynRec->ifmt != asynFMT_Binary) {
          /* Not binary and no input buffer overflow has occurred */
          /* Add null at end of input.  This is safe because of tests above */
          inptr[ninp] = '\0';
@@ -710,53 +831,56 @@ static void IOCallback(asynUser *pasynUser)
    }
 }
 
-static void setOptionCallback(asynUser *pasynUser)
+static void setOption(asynUser *pasynUser)
 {
    asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
-   asynOctetRecord *pasynRec = pasynRecPvt->prec;
+   asynRecord *pasynRec = pasynRecPvt->prec;
 
    asynPrint(pasynUser,ASYN_TRACE_FLOW,
-             "asynOctetRecord setOptionCallback port=%s, addr=%d index=%d\n",
+             "asynRecord setOptionCallback port=%s, addr=%d index=%d\n",
              pasynRec->port, pasynRec->addr, pasynRecPvt->fieldIndex);
 
    switch (pasynRecPvt->fieldIndex) {
    
-   case asynOctetRecordBAUD:
-      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, pasynRecPvt->pasynUser, 
-                                       "baud", baud_choices[pasynRec->baud]);
+   case asynRecordBAUD:
+      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
+                                          pasynRecPvt->pasynUser, "baud", 
+                                          baud_choices[pasynRec->baud]);
       break;
-   case asynOctetRecordPRTY:
-      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, pasynRecPvt->pasynUser, 
-                                      "parity", parity_choices[pasynRec->prty]);
+   case asynRecordPRTY:
+      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
+                                          pasynRecPvt->pasynUser, "parity", 
+                                          parity_choices[pasynRec->prty]);
       break;
-   case asynOctetRecordSBIT:
-      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, pasynRecPvt->pasynUser, 
-                                      "stop", stop_bit_choices[pasynRec->sbit]);
+   case asynRecordSBIT:
+      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
+                                          pasynRecPvt->pasynUser, "stop", 
+                                          stop_bit_choices[pasynRec->sbit]);
       break;
-   case asynOctetRecordDBIT:
-      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, pasynRecPvt->pasynUser, 
-                                      "bits", stop_bit_choices[pasynRec->dbit]);
+   case asynRecordDBIT:
+      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
+                                          pasynRecPvt->pasynUser, "bits", 
+                                          stop_bit_choices[pasynRec->dbit]);
       break;
-   case asynOctetRecordFCTL:
-      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, pasynRecPvt->pasynUser, 
-                                       "clocal", 
-                                       flow_control_choices[pasynRec->fctl]);
+   case asynRecordFCTL:
+      pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
+                                          pasynRecPvt->pasynUser, "clocal", 
+                                          flow_control_choices[pasynRec->fctl]);
       break;
    }
 }
 
-static void getOptionCallback(asynUser *pasynUserPort)
+static void getOptions(asynUser *pasynUserPort)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUserPort->userPvt;
-    asynOctetRecord *pasynRec = pasynRecPvt->prec;
+    asynRecord *pasynRec = pasynRecPvt->prec;
     asynUser *pasynUser=pasynRecPvt->pasynUser;
     char optbuff[OPT_SIZE];
     int i;
-    int trace_mask;
     unsigned short monitor_mask;
 
     asynPrint(pasynUserPort,ASYN_TRACE_FLOW,
-           "asynOctetRecord getOptionCallback() port=%s, addr=%d\n",
+           "asynRecord getOptionCallback() port=%s, addr=%d\n",
            pasynRec->port, pasynRec->addr);
     /* Get port options */
     pasynRecPvt->pasynCommon->getOption(pasynRecPvt->asynCommonPvt, pasynUser, 
@@ -784,30 +908,11 @@ static void getOptionCallback(asynUser *pasynUserPort)
     for (i=0; i<NUM_FLOW_CHOICES; i++)
        if (strcmp(optbuff, flow_control_choices[i]) == 0) pasynRec->fctl = i;
 
-    trace_mask = pasynTrace->getTraceMask(pasynUser);
-    pasynRec->tb0 = (trace_mask>>0) & 1;
-    pasynRec->tb1 = (trace_mask>>1) & 1;
-    pasynRec->tb2 = (trace_mask>>2) & 1;
-    pasynRec->tb3 = (trace_mask>>3) & 1;
-    pasynRec->tb4 = (trace_mask>>4) & 1;
-    trace_mask = pasynTrace->getTraceIOMask(pasynUser);
-    pasynRec->tib0 = (trace_mask>>0) & 1;
-    pasynRec->tib1 = (trace_mask>>1) & 1;
-    pasynRec->tib2 = (trace_mask>>2) & 1;
-
     monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
     
-    db_post_events(pasynRec, &pasynRec->baud, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->prty, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->sbit, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->dbit, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->fctl, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tb0, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tb1, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tb2, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tb3, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tb4, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tib0, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tib1, monitor_mask);
-    db_post_events(pasynRec, &pasynRec->tib2, monitor_mask);
+    POST_IF_NEW(baud);
+    POST_IF_NEW(prty);
+    POST_IF_NEW(sbit);
+    POST_IF_NEW(dbit);
+    POST_IF_NEW(fctl);
 }
