@@ -29,6 +29,7 @@
 <a href="#asynGpib">asynGpib</a> <br>
 <a href="#PortDrivers">Port Drivers</a> <br>
 
+<hr>
 
 <center>
 <h2>License Agreement</h2>
@@ -36,6 +37,7 @@
 
 <p>This product is available via the open source license described at the end
 of this document</p>
+<hr>
 <hr>
 
 <center>
@@ -158,6 +160,7 @@ report could have problems. Does this matter?</p>
 <p>Interface asynGpib defines methods to handle SRQs. Should a more general
 interrupt mechanism be provided? Perhaps is is best to wait until a need
 arises.</p>
+<hr>
 
 <center>
 <h2><a name="Acknowledgments"></a>Acknowledgments</h2>
@@ -200,6 +203,7 @@ individuals have been most influential.</p>
       but provides a general framework for communicating with network based
       devices.</dd>
 </dl>
+<hr>
 
 <center>
 <h2><a name="Overview"></a>Overview of asynDriver</h2>
@@ -364,34 +368,32 @@ typedef struct asynInterface{
 }asynInterface;
 
 typedef struct asynManager {
-    void (*report)(FILE *fd,int details);
+    void       (*report)(FILE *fd,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*connectDevice)(asynUser *pasynUser,
-        const char *portName,int addr);
+                                const char *portName,int addr);
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
     asynInterface *(*findInterface)(asynUser *pasynUser,
-        const char *interfaceType,int processModuleOK);
+                                const char *interfaceType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
         asynQueuePriority priority,double timeout);
     /*cancelRequest returns (0,-1) if request (was, was not) queued*/
-    int (*cancelRequest)(asynUser *pasynUser);
+    int        (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
-    int (*getAddr)(asynUser *pasynUser);
+    int        (*getAddr)(asynUser *pasynUser);
     /* drivers call the following*/
-    asynStatus (*registerPort)(
-        const char *portName,
-        asynInterface *paasynInterface,int nasynInterface,
-        unsigned int priority,unsigned int stackSize);
+    asynStatus (*registerPort)(const char *portName,
+                 asynInterface *paasynInterface,int nasynInterface,
+                 unsigned int priority,unsigned int stackSize);
     /* paasynInterface is pointer to array of asynInterface */
     /*process modules call the following */
     asynStatus (*registerProcessModule)(
-        const char *processModuleName,const char *portName,int addr,
-        asynInterface *paasynInterface,int nasynInterface);
+                 const char *processModuleName,const char *portName,int addr,
+                 asynInterface *paasynInterface,int nasynInterface);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
-
 
 /*Methods supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
@@ -412,7 +414,48 @@ typedef struct asynOctet{
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                          const char *eos,int eoslen);
-}asynOctet;</pre>
+}asynOctet;
+
+
+/*asynTrace is implemented by asynManager*/
+/*All asynTrace methods can be called from any thread*/
+/* traceMask definitions*/
+#define ASYN_TRACE_ERROR     0x0001
+#define ASYN_TRACEIO_DEVICE  0x0002
+#define ASYN_TRACEIO_FILTER  0x0004
+#define ASYN_TRACEIO_DRIVER  0x0008
+#define ASYN_TRACE_FLOW      0x0010
+#define ASYN_TRACE_TRUNCATE  0x0020
+
+/* traceIO mask definitions*/
+#define ASYN_TRACEIO_NODATA 0x0000
+#define ASYN_TRACEIO_ASCII  0x0001
+#define ASYN_TRACEIO_ESCAPE 0x0002
+#define ASYN_TRACEIO_BINARY 0x0004
+
+/* asynPrint and asynPrintIO are macros that act like
+   int asynPrint(asynUser *pasynUser,int reason, const char *format, ... );
+   int asynPrintIO(asynUser *pasynUser,int reason,
+        const char *buffer, int len, const char *format, ... );
+*/
+typedef struct asynTrace {
+    /* lock/unlock are only necessary if caller performs I/O other then*/
+    /* by calling asynTrace methods                                    */
+    asynStatus (*lock)(asynUser *pasynUser);
+    asynStatus (*unlock)(asynUser *pasynUser);
+    asynStatus (*setTraceMask)(asynUser *pasynUser,int mask);
+    int        (*getTraceMask)(asynUser *pasynUser);
+    asynStatus (*setTraceIOMask)(asynUser *pasynUser,int mask);
+    int        (*getTraceIOMask)(asynUser *pasynUser);
+    asynStatus (*setTraceFILE)(asynUser *pasynUser,FILE *fd);
+    FILE       *(*getTraceFILE)(asynUser *pasynUser);
+    asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
+    int        (*getTraceIOTruncateSize)(asynUser *pasynUser);
+    int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
+    int        (*printIO)(asynUser *pasynUser,int reason,
+               const char *buffer, int len,const char *pformat, ...);
+}asynTrace;
+epicsShareExtern asynTrace *pasynTrace;</pre>
 
 <h3>asynUser</h3>
 
@@ -540,6 +583,11 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         called. lock/unlock fail if a request is currently queued.</td>
     </tr>
     <tr>
+      <td>getAddr</td>
+      <td>Returns the addr that was specified in the call to
+      connectDevice.</td>
+    </tr>
+    <tr>
       <td>registerPort</td>
       <td>This method is called by drivers. A call is made for each
         communication interface instance. If priority is 0 then a default
@@ -613,6 +661,143 @@ for sending commands and receiving responses from a device.</p>
     <tr>
       <td>setEos</td>
       <td>Specify end of string characters</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynTrace</h3>
+
+<p>asynDriver provides a trace facility with the following attributes:</p>
+<ul>
+  <li>Tracing is turned on/off for individual instruments, i.e. a
+    portName,addr</li>
+  <li>The output is sent to a file or to stdout.</li>
+  <li>A mask determines the type of information that can be displayed.
+    <ul>
+      <li>ASYN_TRACE_ERROR Specified that all run time errors are reported,
+        e.g. timeouts.</li>
+      <li>ASYN_TRACEIO_DEVICE The high level device support reports all I/O
+        activity.</li>
+      <li>ASYN_TRACEIO_FILTER Any layer between device support and the low
+        level driver reports about any filtering it does on I/O.</li>
+      <li>ASYN_TRACEIO_DRIVER The low level driver reports all I/O
+      activity.</li>
+      <li>ASYN_TRACE_FLOW Report logic flow. Device support should report all
+        queue requests, callbacks entered, and all calls to drivers. Layers
+        between device support and low level drivers should report all calls
+        they make to lower level drivers. Low level drivers should only
+        report calls they make to other support.</li>
+    </ul>
+  </li>
+  <li></li>
+  Another mask determines how message buffers are printed.
+  <ul>
+    <li>ASYN_TRACEIO_NODATA Dont print any data from the message buffers</li>
+    <li>ASYN_TRACEIO_ASCII Print with a "%s" format.</li>
+    <li>ASYN_TRACEIO_ESCAPE Call epicsStrPrintEscaped.</li>
+    <li>ASYN_TRACEIO_BINARY Print each byte with " %2.2x".</li>
+  </ul>
+</ul>
+
+<p>In order for the trace facility to perform properly, device support, and
+all drivers must use the trace facility according to the above guidelines.
+Device and driver support can directly call the asynManager methods. The
+asynPrint and asynPrintIO macros are provided so that it is easier for
+device/driver support. Support can have calls like.</p>
+<pre>    asynPrintIO(pasynUser,ASYN_TRACE_FLOW,"%s Calling queueRequest\n",
+        someName);</pre>
+
+<p>The asynPrintIO call is designed for device support or drivers that do not
+know it they are sending ascii strings or binary data. The can make calls
+like:</p>
+<pre>    asynPrintIO(pasynUser,TRACE_IO_DRIVER,data,nchars,"%s nchars %d ",
+       someName,nchars);</pre>
+
+<p>The asynTrace methods that are implemented by asynManager. These methods
+can be used by any code that has created an asynUser and connected to a
+device. All methods can be called by any thread. If a thread performs all I/O
+via calls to print or printIO, then it does not have to call lock or unlock.
+If it does want to do it's own I/O, it must lock before any I/O and unlock
+after. For example:</p>
+<pre>    pasynTrace-&gt;lock(pasunUser);
+    fd = pasynTrace-&gt;getTraceFILE(pasunUser);
+    /*perform I/O of fd */
+    pasynTrace-&gt;unlock(pasunUser);</pre>
+methods can be called by any thread. If some code wants to do it's own I/O
+instead of calling print or printIO, then it must call lock before
+asynManager and driver methods. Code must allocate and free an asynUser by
+calling asynUserCalloc and asynUserFree.
+
+<table border="1">
+  <caption>asynTrace</caption>
+  <tbody>
+    <tr>
+      <td>lock/unlock</td>
+      <td>These are only needed if some code wants to do it's own I/O instead
+        of using print and printIO. All set methods, print, and printIO all
+        lock while performing their operations. The get routines do not lock
+        but except for getTraceFILE they are safe. The worst that happens is
+        that the user gets a little more or a little less output.</td>
+    </tr>
+    <tr>
+      <td>setTraceMask</td>
+      <td>Set the trace mask. Normally set by the user requesting it via a
+        shell command or the devTrace device support TBD.</td>
+    </tr>
+    <tr>
+      <td>getTraceMask</td>
+      <td>Get the trace mask. Support that wants to issue trace messages
+        calls this to what trace options have been requested.</td>
+    </tr>
+    <tr>
+      <td>setTraceIOMask</td>
+      <td>Set the traceIO mask. Normally set by the user requesting it via a
+        shell command or the devTrace device support TBD.</td>
+    </tr>
+    <tr>
+      <td>getTraceIOMask</td>
+      <td>Get the traceIO mask. Support that wants to issue it's own IO
+        messages instead of calling asynPrintIO should call this and honor
+        the mask settings. Most code will not need it.</td>
+    </tr>
+    <tr>
+      <td>setTraceFILE</td>
+      <td>Set the file descriptor to use for output. A null value means
+        stdout. Normally set by the user requesting it via a shell command or
+        the devTrace device support TBD.</td>
+    </tr>
+    <tr>
+      <td>getTraceFILE</td>
+      <td>Get the file descriptor to use for output. Support that wants to
+        issue it's own IO messages instead of calling asynPrintIO should call
+        this and honor the mask settings. In this case lock must have been
+        called first. Most code will not need it.</td>
+    </tr>
+    <tr>
+      <td>setTraceIOTruncateSize</td>
+      <td>Determines how much data is printed by printIO. In all cases it
+        determines how many bytes of the buffer are displayed. The actual
+        number of characters printed depends on the traceIO mask. For example
+        ASYN_TRACEIO_BINARY results in 3 characters being printed for each
+        byte. Normally set by the user requesting it via a shell command or
+        the devTrace device support TBD.</td>
+    </tr>
+    <tr>
+      <td>getTraceIOTruncateSize</td>
+      <td>Get the current truncate size. Called by asynPrintIO. Code that
+        does it's own I/O should also support the traceIO mask.</td>
+    </tr>
+    <tr>
+      <td>print</td>
+      <td>If reason ored with the current traceMask is not zero then the
+        message is printed.</td>
+    </tr>
+    <tr>
+      <td>printIO</td>
+      <td>If reason ored with the current traceMask is not zero then the
+        message is printed. If len is &gt;0 then the buffer is printed using
+        the traceIO mask and getTraceIOTruncateSize to decide how to
+      print.</td>
     </tr>
   </tbody>
 </table>
@@ -709,6 +894,7 @@ void mainThread(void)
   <li>The thread associated with the port calls the callback which then calls
     the port driver's setEos and read methods.</li>
 </ol>
+<hr>
 <hr>
 
 <center>
@@ -982,6 +1168,7 @@ tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
 If you're using the vxWorks shell you must include all the <code>stty</code>
 parameters in double quotes.
+<hr>
 
 <center>
 <h2><a name="License Agreement"></a>License Agreement</h2>
