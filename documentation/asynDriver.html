@@ -11,9 +11,9 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<h2>Marty Kraimer, Eric Norum, and Dirk Zimoch</h2>
+<h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>October 2003</h2>
+<h2>November 2003</h2>
 </center>
 <hr>
 
@@ -21,6 +21,7 @@
 <h2>Contents</h2>
 </center>
 <a href="#Introduction">Introduction</a> <br>
+<a href="#TODO">TODO</a> <br>
 <a href="#Acknowledgments">Acknowledgments</a> <br>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#asynDriver">asynDriver</a> <br>
@@ -36,66 +37,6 @@
 <p>This product is available via the open source license described at the end
 of this document</p>
 <hr>
-
-<center>
-<h2>MAJOR CONCERNS</h2>
-</center>
-
-<h3>Debug, Logging, etc.</h3>
-
-<p>In the past device support has used at least three different methods for
-showing debug  information.</p>
-<ul>
-  <li>Debug variables.
-    <p>Debug variables were put in device and/or driver support. Thus was
-    fine on vxWorks because the vxWorks shell has access to external
-    variables. It is somewhat of a pain to make the debug variables available
-    on other platforms.</p>
-    <p>A problem is that the debug flag appliess to ALL instances of the
-    supported device/driver. If multiple instances of a device are controlled
-    from a single IOC then the debug flags can be almost useless. The user
-    normally wants debug information for a device that is having trouble  not
-    for all devices.</p>
-  </li>
-  <li>logging facility
-    <p>gpibCore has such a facility that is independent of debug flags.</p>
-  </li>
-  <li>peek facility
-    <p>mpfSerial provided a facility that could trap every byte sent to/from
-    a serial line.</p>
-  </li>
-</ul>
-
-<p>Currently the support has some debug flags. Perhaps there is a better
-way.</p>
-
-<p>How about the following: Define a new method for asynCommon.</p>
-<pre>#define TRACE_ERRORS    0x000000001
-#define TRACE_IO        0x000000002
-#define TRACE_TRUNCATE  0x000000004
-#define TRACE_FLOW      0x000000008
-trace(void *drvPvt,asynUser *pasynUser,FILE *fd, int mask);</pre>
-
-<p>All output will be written to fd. mask determines what is written.</p>
-<ul>
-  <li>TRACE_ERRORS- Show only errors, e.g. timeouts.</li>
-  <li>TRACE_IO_SHORT - Show I/O messages.</li>
-  <li>TRACE_IO_FULL - Truncate I/O messages if there are long..</li>
-  <li>TRACE_FLOW - Show program flow.</li>
-</ul>
-
-<h3>Locking data structures.</h3>
-
-<p>Currently only one mutex is available to lock data asynManager data
-structures. This should be sufficient. One exception is that report does not
-lock. If new ports or process modules are registered while report is active,
-report could have problems. Does this matter?</p>
-
-<h3>Interrupts</h3>
-
-<p>Interface asynGpib defines methods to handle SRQs. Should a more general
-interrupt mechanism be provided? Perhaps is is best to wait until a need
-arises.</p>
 
 <center>
 <h2><a name="Introduction"></a>Introduction</h2>
@@ -157,6 +98,77 @@ from their existing solution. Thus asynDriver implements a framework below
 device support that can be used by all of the above systems so that all can
 share the same drivers.</p>
 <hr>
+
+<center>
+<h2><a name="TODO"></a>TODO</h2>
+</center>
+
+<h3>Debug, Logging, etc.</h3>
+
+<p>In the past device support has used at least three different methods for
+showing debug  information.</p>
+<ul>
+  <li>Debug variables.
+    <p>Debug variables were put in device and/or driver support. Thus was
+    fine on vxWorks because the vxWorks shell has access to external
+    variables. It is somewhat of a pain to make the debug variables available
+    on other platforms.</p>
+    <p>A problem is that the debug flag appliess to ALL instances of the
+    supported device/driver. If multiple instances of a device are controlled
+    from a single IOC then the debug flags can be almost useless. The user
+    normally wants debug information for a device that is having trouble  not
+    for all devices.</p>
+  </li>
+  <li>logging facility
+    <p>gpibCore has such a facility that is independent of debug flags.</p>
+  </li>
+  <li>peek facility
+    <p>mpfSerial provided a facility that could trap every byte sent to/from
+    a serial line.</p>
+  </li>
+</ul>
+
+<p>Currently the support has some debug flags. Perhaps there is a better
+way.</p>
+
+<p>How about the following: Define a new method for asynCommon.</p>
+<pre>#define TRACE_ERRORS    0x000000001
+#define TRACE_IO        0x000000002
+#define TRACE_TRUNCATE  0x000000004
+#define TRACE_FLOW      0x000000008
+trace(void *drvPvt,asynUser *pasynUser,FILE *fd, int mask);</pre>
+
+<p>All output will be written to fd. mask determines what is written.</p>
+<ul>
+  <li>TRACE_ERRORS- Show only errors, e.g. timeouts.</li>
+  <li>TRACE_IO_SHORT - Show I/O messages.</li>
+  <li>TRACE_IO_FULL - Truncate I/O messages if there are long..</li>
+  <li>TRACE_FLOW - Show program flow.</li>
+</ul>
+
+<h3>Locking data structures.</h3>
+
+<p>Currently only one mutex is available to lock data asynManager data
+structures. This should be sufficient. One exception is that report does not
+lock. If new ports or process modules are registered while report is active,
+report could have problems. Does this matter?</p>
+
+<h3>Interrupts</h3>
+
+<p>Interface asynGpib defines methods to handle SRQs. Should a more general
+interrupt mechanism be provided? Perhaps is is best to wait until a need
+arises.</p>
+<h3>Planned additions</h3>
+<p>Hopefully Dirk Ziomoch will get time soon to convert streams to
+use asynDriver.</p>
+<p>Additional low level support</p>
+<ul>
+<li>A replacement for GI (Gpib Interact). GI, which is available
+with the base 3.13 gpib support and with gpibCore, is a command line
+tool that allows the user to compose commands to send to instruments.>/li>
+<li>Convert National Instruments NI1014 VME to GPIB driver to asynDriver.</li>
+<li>Convert Industry Pack IP488 driver to asynDriver.</li>
+</ul>
 
 <center>
 <h2><a name="Acknowledgments"></a>Acknowledgments</h2>
@@ -285,8 +297,12 @@ can be used by other code, e.g. a sequence program.</p>
     interface. The term octet is used instead of ASCII because the only
     requirement is messages consist of 8-bit bytes. The methods are:</p>
     <ul>
-      <li>read - read a message.  The routine should return the number of 8-bit bytes read from the device or -1 to indicate that some sort of error occurred.</li>
-      <li>write - write a message.  The routine should return the number of 8-bit bytes written ti the device or -1 to indicate that some sort of error occurred.</li>
+      <li>read - read a message.  The routine should return the number of
+        8-bit bytes read from the device or -1 to indicate that some sort of
+        error occurred.</li>
+      <li>write - write a message.  The routine should return the number of
+        8-bit bytes written ti the device or -1 to indicate that some sort of
+        error occurred.</li>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
         input messages.</li>
@@ -302,9 +318,9 @@ asynManager.</p>
 <p>User code creates an asynUser by calling  pasynManager-&gt;createAsynUser.
 The address of the asynUser is passed to most other asynDriver methods.</p>
 
-<p>User code connects to a device, which is located located at some address on a
-port,  and communicates with the device via combination of asynManager and
-one or more interfaces.</p>
+<p>User code connects to a device, which is located located at some address
+on a port,  and communicates with the device via combination of asynManager
+and one or more interfaces.</p>
 
 <p>User code communicates with drivers via the following method:</p>
 <ol>
@@ -370,7 +386,8 @@ typedef struct asynManager {
         const char *interfaceType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
         asynQueuePriority priority,double timeout);
-    void (*cancelRequest)(asynUser *pasynUser);
+    /*cancelRequest returns (0,-1) if request (was, was not) queued*/
+    int (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
     int (*getAddr)(asynUser *pasynUser);
@@ -522,7 +539,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>cancelRequest</td>
       <td>If a asynUser is queued remove it from the queue. If it is not on a
         queue nothing is done. In particular if the callback is active, this
-        call has no effect.</td>
+        call has no effect. A return value of (0,-1) means that a request
+        (was, was not) removed from the queue.</td>
     </tr>
     <tr>
       <td>lock/unlock</td>
@@ -538,9 +556,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>This method is called by drivers. A call is made for each
         communication interface instance. If priority is 0 then a default
         will be assigned. If stackSize is 0 a default is assigned.  The
-        portName argument specifies the name by which the upper levels
-        of the asyn code will refer to this communication interface
-        instance.</td>
+        portName argument specifies the name by which the upper levels of the
+        asyn code will refer to this communication interface instance.</td>
     </tr>
     <tr>
       <td>registerProcessModule</td>
@@ -593,11 +610,15 @@ for sending commands and receiving responses from a device.</p>
   <tbody>
     <tr>
       <td>read</td>
-      <td>Read a message from the device.  The routine should return the number of 8-bit bytes read from the device or -1 to indicate that some sort of error occurred.</td>
+      <td>Read a message from the device.  The routine should return the
+        number of 8-bit bytes read from the device or -1 to indicate that
+        some sort of error occurred.</td>
     </tr>
     <tr>
       <td>write</td>
-      <td>Send a message to the device.  The routine should return the number of 8-bit bytes sent to the device or -1 to indicate that some sort of error occurred.</td>
+      <td>Send a message to the device.  The routine should return the number
+        of 8-bit bytes sent to the device or -1 to indicate that some sort of
+        error occurred.</td>
     </tr>
     <tr>
       <td>flush</td>
@@ -937,60 +958,62 @@ where
   <li>timeout - timeout in seconds as a double. If 0.0 then a default is
     assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
-  <li>priority - Priority at which the asyn I/O thread will run. If this is zero or missing then epicsThreadPriorityMedium is used.</li>
-    assigned.</li>
-</ul>
+  <li>priority - Priority at which the asyn I/O thread will run. If this is
+    zero or missing then epicsThreadPriorityMedium is used.</li>
+  assigned.</ul>
 
 <h3>Generic Serial</h3>
 
-<p>The generic serial driver supports devices connected to serial
-ports on the IOC and devices connected through Ethernet/Serial converter
-boxes.</p>
+<p>The generic serial driver supports devices connected to serial ports on
+the IOC and devices connected through Ethernet/Serial converter boxes.</p>
+
 <p>The generic serial support has been tested with the following:</p>
 <ul>
-  <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME carrier.</li>
-  <li>Linux and Windows XP (Cygwin) with PC hardware serial port (/dev/ttyS0).</li>
+  <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME
+    carrier.</li>
+  <li>Linux and Windows XP (Cygwin) with PC hardware serial port
+  (/dev/ttyS0).</li>
   <li>Solaris hardware serial port (/dev/cua/a).</li>
-  <li>Linux, Solaris, Darwin, vxWorks, and Windows XP (Cygwin) with a Moxa NPort Ethernet/Serial converter.</li>
+  <li>Linux, Solaris, Darwin, vxWorks, and Windows XP (Cygwin) with a Moxa
+    NPort Ethernet/Serial converter.</li>
 </ul>
 
-<p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt> command:
-<pre>
-   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect [,stty options])</pre>
+<p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
+command:</p>
+<pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect [,stty options])</pre>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGib.</li>
-  <li>ttyName - The name of the serial port.   This can specify a local hardware
-  serial port (e.g. "/dev/ttyS0") or the Internet host name and TCP port number of an Ethernet terminal concentrator (e.g. "164.54.9.90:4002", or
-  "serials8n3:4002").</li>
-  <li>priority - Priority at which the asyn I/O thread will run. If this is zero or missing then epicsThreadPriorityMedium is used.</li>
-  <li>openOnlyOnDisconnect - If zero the driver will attempt to
-  reconnect to the serial port on the first I/O operation following an error.
-  If non-zero the driver will not attempt to
-  reconnect until explicit disconnect/reconnect commands have been issued.
-  A missing argument is taken to be zero.</li>
-  <li>stty options - Serial port configuration parameters for local
-  serial ports.  For example, the arguments which confirm the default
-  settings are <tt>9600, cs8, -parenb, -crtscts, clocal</tt>.
-  Note that if any stty arguments are present both the priority and
-  openOnlyOnDisconnect arguments must also be present.
+  <li>ttyName - The name of the serial port.   This can specify a local
+    hardware serial port (e.g. "/dev/ttyS0") or the Internet host name and
+    TCP port number of an Ethernet terminal concentrator (e.g.
+    "164.54.9.90:4002", or "serials8n3:4002").</li>
+  <li>priority - Priority at which the asyn I/O thread will run. If this is
+    zero or missing then epicsThreadPriorityMedium is used.</li>
+  <li>openOnlyOnDisconnect - If zero the driver will attempt to reconnect to
+    the serial port on the first I/O operation following an error. If
+    non-zero the driver will not attempt to reconnect until explicit
+    disconnect/reconnect commands have been issued. A missing argument is
+    taken to be zero.</li>
+  <li>stty options - Serial port configuration parameters for local serial
+    ports.  For example, the arguments which confirm the default settings are
+    <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. Note that if any stty
+    arguments are present both the priority and openOnlyOnDisconnect
+    arguments must also be present.</li>
 </ul>
 
-<p>
-Serial ports directly attached to a vxWorks IOC may need to be set up using
-hardware-specific commands.
-The following example shows the
-commands to set up and configure a port on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01 carrier.
-Note that these are vxWorks shell commands and not IOC shell commands so all
-the drvGenericSerialConfigure &#145;stty&#146; parameters must be enclosed in double quotes.
-<pre>
-ipacAddVIPC616_01("0x6000,B0000000")
+<p>Serial ports directly attached to a vxWorks IOC may need to be set up
+using hardware-specific commands. The following example shows the commands to
+set up and configure a port on a GreenSprings octal UART Industry-Pack module
+on a GreenSprings VIP616-01 carrier. Note that these are vxWorks shell
+commands and not IOC shell commands so all the drvGenericSerialConfigure
+‘stty’ parameters must be enclosed in double quotes.</p>
+<pre>ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv 1
 octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
 port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
 tyGSOctalConfig(port0,9600,'N',1,8,'N')
-drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")
-</pre>
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
 
 <center>
 <h2><a name="License Agreement"></a>License Agreement</h2>
