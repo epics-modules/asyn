@@ -1011,16 +1011,16 @@ int asynSetPortOption(const char *portName, const char *key, const char *val)
     return(0);
 }
 
-typedef struct getPortOptionArgs {
+typedef struct showPortOptionArgs {
     const char *key;
     asynCommon *pasynCommon;
     void *drvPvt;
     epicsEventId  done;
-}getPortOptionArgs;
+}showPortOptionArgs;
 
-static void getPortOptions(asynUser *pasynUser)
+static void showPortOptions(asynUser *pasynUser)
 {
-    getPortOptionArgs *poptionargs = (getPortOptionArgs *)pasynUser->userPvt;
+    showPortOptionArgs *poptionargs = (showPortOptionArgs *)pasynUser->userPvt;
     asynStatus status;
     char val[100];
 
@@ -1034,10 +1034,10 @@ static void getPortOptions(asynUser *pasynUser)
     epicsEventSignal(poptionargs->done);
 }
 
-int asynGetPortOption(const char *portName, const char *key)
+int asynShowPortOption(const char *portName, const char *key)
 {
     asynInterface *pasynInterface;
-    getPortOptionArgs optionargs;
+    showPortOptionArgs optionargs;
     asynUser *pasynUser;
     asynStatus status;
 
@@ -1045,7 +1045,7 @@ int asynGetPortOption(const char *portName, const char *key)
         printf("Missing argument\n");
         return asynError;
     }
-    pasynUser = pasynManager->createAsynUser(getPortOptions,0);
+    pasynUser = pasynManager->createAsynUser(showPortOptions,0);
     pasynUser->userPvt = &optionargs;
     status = pasynManager->connectDevice(pasynUser,portName,0);
     if(status!=asynSuccess) {
@@ -1100,13 +1100,13 @@ static void asynSetPortOptionCall(const iocshArgBuf * args) {
     asynSetPortOption(args[0].sval,args[1].sval,args[2].sval);
 }
 
-static const iocshArg asynGetPortOptionArg0 = {"portName", iocshArgString};
-static const iocshArg asynGetPortOptionArg1 = {"key", iocshArgString};
-static const iocshArg *const asynGetPortOptionArgs[] = {
-              &asynGetPortOptionArg0, &asynGetPortOptionArg1};
-static const iocshFuncDef asynGetPortOptionDef = {"asynGetPortOption", 2, asynGetPortOptionArgs};
-static void asynGetPortOptionCall(const iocshArgBuf * args) {
-    asynGetPortOption(args[0].sval,args[1].sval);
+static const iocshArg asynShowPortOptionArg0 = {"portName", iocshArgString};
+static const iocshArg asynShowPortOptionArg1 = {"key", iocshArgString};
+static const iocshArg *const asynShowPortOptionArgs[] = {
+              &asynShowPortOptionArg0, &asynShowPortOptionArg1};
+static const iocshFuncDef asynShowPortOptionDef = {"asynShowPortOption", 2, asynShowPortOptionArgs};
+static void asynShowPortOptionCall(const iocshArgBuf * args) {
+    asynShowPortOption(args[0].sval,args[1].sval);
 }
 
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
@@ -1172,7 +1172,7 @@ static void asyn(void)
     firstTime = 0;
     iocshRegister(&asynReportDef,asynReportCall);
     iocshRegister(&asynSetPortOptionDef,asynSetPortOptionCall);
-    iocshRegister(&asynGetPortOptionDef,asynGetPortOptionCall);
+    iocshRegister(&asynShowPortOptionDef,asynShowPortOptionCall);
     iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
 }
