@@ -483,7 +483,8 @@ static void evFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static void liFinish(gpibDpvt *pgpibDpvt,int failure);
-static void liSrqHandler(void *userPrivate,epicsInt32 statusByte)
+static void liSrqHandler(void *userPrivate,asynUser *pasynUser,
+                epicsInt32 statusByte)
 {
     longinRecord *pli = (longinRecord *)userPrivate;
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pli);

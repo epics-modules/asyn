@@ -21,10 +21,10 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-typedef void (*interruptCallbackFloat64)(void *userPvt, epicsFloat64 data);
+typedef void (*interruptCallbackFloat64)(void *userPvt, asynUser *pasynUser,
+            epicsFloat64 data);
 typedef struct asynFloat64Interrupt {
-    int reason;
-    void *drvUser;
+    asynUser *pasynUser;
     int addr;
     interruptCallbackFloat64 callback;
     void *userPvt;

@@ -26,12 +26,12 @@ typedef enum {
     interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
 } interruptReason;
 
-typedef void (*interruptCallbackUInt32Digital)(void *userPvt, epicsUInt32 data);
+typedef void (*interruptCallbackUInt32Digital)(void *userPvt, 
+                 asynUser *pasynUser, epicsUInt32 data);
 typedef struct asynUInt32DigitalInterrupt {
     epicsUInt32 mask;
-    int reason;
-    void *drvUser;
     int addr;
+    asynUser *pasynUser;
     interruptCallbackUInt32Digital callback;
     void *userPvt;
 } asynUInt32DigitalInterrupt;

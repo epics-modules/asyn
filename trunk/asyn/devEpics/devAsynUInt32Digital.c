@@ -74,8 +74,10 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
-static void interruptCallbackInput(void *drvPvt, epicsUInt32 value);
-static void interruptCallbackOutput(void *drvPvt, epicsUInt32 value);
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value);
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value);
 static int computeShift(epicsUInt32 mask);
 
 static long initBi(biRecord *pbi);
@@ -285,7 +287,8 @@ static void processCallbackOutput(asynUser *pasynUser)
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
-static void interruptCallbackInput(void *drvPvt, epicsUInt32 value)
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
@@ -299,7 +302,8 @@ static void interruptCallbackInput(void *drvPvt, epicsUInt32 value)
     scanIoRequest(pPvt->ioScanPvt);
 }
 
-static void interruptCallbackOutput(void *drvPvt, epicsUInt32 value)
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;

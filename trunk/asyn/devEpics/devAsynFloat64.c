@@ -75,9 +75,12 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
-static void interruptCallbackInput(void *drvPvt, epicsFloat64 value);
-static void interruptCallbackOutput(void *drvPvt, epicsFloat64 value);
-static void interruptCallbackAverage(void *drvPvt, epicsFloat64 value);
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value);
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value);
+static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value);
 
 static long initAi(aiRecord *pai);
 static long initAo(aoRecord *pai);
@@ -260,7 +263,8 @@ static void processCallbackOutput(asynUser *pasynUser)
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
-static void interruptCallbackInput(void *drvPvt, epicsFloat64 value)
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
@@ -274,7 +278,8 @@ static void interruptCallbackInput(void *drvPvt, epicsFloat64 value)
     scanIoRequest(pPvt->ioScanPvt);
 }
 
-static void interruptCallbackOutput(void *drvPvt, epicsFloat64 value)
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
@@ -289,7 +294,8 @@ static void interruptCallbackOutput(void *drvPvt, epicsFloat64 value)
     scanOnce(pr);
 }
 
-static void interruptCallbackAverage(void *drvPvt, epicsFloat64 value)
+static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
