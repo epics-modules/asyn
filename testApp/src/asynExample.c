@@ -91,14 +91,14 @@ static void asynExample(const char *port,int addr,const char *message)
     pasynUser->userPvt = pmyData1;
     status = pasynManager->connectDevice(pasynUser,port,addr);
     if(status!=asynSuccess) {
-        printf("can't connect to serialPort1 %s\n",pasynUser->errorMessage);
-        exit(1);
+        printf("can't connect to port %s\n",pasynUser->errorMessage);
+        return;
     }
     pasynInterface = pasynManager->findInterface(
         pasynUser,asynOctetType,1);
     if(!pasynInterface) {
         printf("%s driver not supported\n",asynOctetType);
-        exit(-1);
+        return;
     }
     pmyData1->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pmyData1->drvPvt = pasynInterface->drvPvt;

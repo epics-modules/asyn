@@ -29,7 +29,6 @@
 #include <asynOctet.h>
 
 #define BUFFERSIZE 4096
-#define NUM_INTERFACES 2
 #define NUM_DEVICES 2
 
 typedef struct deviceBuffer {
@@ -134,7 +133,7 @@ static void report(void *drvPvt,FILE *fp,int details)
     for(i=0;i<n;i++) {
        fprintf(fp,"        device %d connected:%s nchars = %d\n",
             i,
-            (pechoPvt->connected ? "Yes" : "No"),
+            (pechoPvt->device[i].connected ? "Yes" : "No"),
             pechoPvt->device[i].buffer.nchars);
     }
 }
