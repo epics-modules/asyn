@@ -1,14 +1,14 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecordDebug.adl"
-	version=030004
+	name="i:\epics\synApps5-1\asyn\2-2beta\medm\asynRecord.adl"
+	version=020306
 }
 display {
 	object {
-		x=230
-		y=408
+		x=78
+		y=74
 		width=442
-		height=610
+		height=615
 	}
 	clr=14
 	bclr=4
@@ -375,11 +375,11 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="Status:"
+	textix="I/O Status:"
 }
 text {
 	object {
-		x=208
+		x=217
 		y=301
 		width=90
 		height=20
@@ -387,7 +387,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="Severity:"
+	textix="I/O Severity:"
 }
 "text update" {
 	object {
@@ -405,9 +405,9 @@ text {
 }
 "text update" {
 	object {
-		x=87
+		x=122
 		y=301
-		width=90
+		width=85
 		height=20
 	}
 	monitor {
@@ -421,9 +421,9 @@ text {
 }
 "text update" {
 	object {
-		x=307
+		x=349
 		y=301
-		width=90
+		width=85
 		height=20
 	}
 	monitor {
@@ -437,17 +437,16 @@ text {
 }
 "text update" {
 	object {
-		x=87
-		y=323
-		width=350
-		height=20
+		x=75
+		y=324
+		width=359
+		height=19
 	}
 	monitor {
 		chan="$(P)$(R).ERRS"
 		clr=14
 		bclr=2
 	}
-	clrmod="alarm"
 	limits {
 	}
 }
@@ -724,8 +723,8 @@ text {
 }
 text {
 	object {
-		x=66
-		y=435
+		x=69
+		y=445
 		width=96
 		height=18
 	}
@@ -736,8 +735,8 @@ text {
 }
 text {
 	object {
-		x=66
-		y=504
+		x=69
+		y=514
 		width=96
 		height=18
 	}
@@ -748,8 +747,8 @@ text {
 }
 text {
 	object {
-		x=66
-		y=527
+		x=69
+		y=537
 		width=96
 		height=18
 	}
@@ -760,8 +759,8 @@ text {
 }
 text {
 	object {
-		x=66
-		y=481
+		x=69
+		y=491
 		width=96
 		height=18
 	}
@@ -772,8 +771,8 @@ text {
 }
 text {
 	object {
-		x=66
-		y=458
+		x=69
+		y=468
 		width=96
 		height=18
 	}
@@ -784,8 +783,8 @@ text {
 }
 text {
 	object {
-		x=30
-		y=403
+		x=10
+		y=398
 		width=100
 		height=20
 	}
@@ -796,8 +795,8 @@ text {
 }
 text {
 	object {
-		x=194
-		y=403
+		x=184
+		y=398
 		width=100
 		height=20
 	}
@@ -809,19 +808,19 @@ text {
 text {
 	object {
 		x=243
-		y=435
+		y=445
 		width=100
 		height=18
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="traceIOAScii"
+	textix="traceIOASCII"
 }
 text {
 	object {
 		x=243
-		y=458
+		y=468
 		width=100
 		height=18
 	}
@@ -833,7 +832,7 @@ text {
 text {
 	object {
 		x=243
-		y=481
+		y=491
 		width=100
 		height=18
 	}
@@ -844,8 +843,8 @@ text {
 }
 "choice button" {
 	object {
-		x=7
-		y=435
+		x=10
+		y=445
 		width=55
 		height=18
 	}
@@ -858,8 +857,8 @@ text {
 }
 "choice button" {
 	object {
-		x=7
-		y=504
+		x=10
+		y=514
 		width=55
 		height=18
 	}
@@ -872,8 +871,8 @@ text {
 }
 "choice button" {
 	object {
-		x=7
-		y=527
+		x=10
+		y=537
 		width=55
 		height=18
 	}
@@ -886,8 +885,8 @@ text {
 }
 "choice button" {
 	object {
-		x=7
-		y=481
+		x=10
+		y=491
 		width=55
 		height=18
 	}
@@ -900,8 +899,8 @@ text {
 }
 "choice button" {
 	object {
-		x=7
-		y=458
+		x=10
+		y=468
 		width=55
 		height=18
 	}
@@ -915,7 +914,7 @@ text {
 "choice button" {
 	object {
 		x=184
-		y=435
+		y=445
 		width=55
 		height=18
 	}
@@ -929,7 +928,7 @@ text {
 "choice button" {
 	object {
 		x=184
-		y=458
+		y=468
 		width=55
 		height=18
 	}
@@ -943,7 +942,7 @@ text {
 "choice button" {
 	object {
 		x=184
-		y=481
+		y=491
 		width=55
 		height=18
 	}
@@ -957,7 +956,7 @@ text {
 text {
 	object {
 		x=243
-		y=504
+		y=514
 		width=104
 		height=18
 	}
@@ -969,7 +968,7 @@ text {
 "text entry" {
 	object {
 		x=184
-		y=504
+		y=514
 		width=50
 		height=20
 	}
@@ -983,21 +982,21 @@ text {
 }
 text {
 	object {
-		x=184
-		y=550
-		width=104
+		x=10
+		y=560
+		width=80
 		height=18
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Trace file"
+	textix="Trace file:"
 }
 "text entry" {
 	object {
-		x=184
-		y=527
-		width=250
+		x=100
+		y=558
+		width=330
 		height=20
 	}
 	control {
@@ -1011,7 +1010,7 @@ text {
 text {
 	object {
 		x=6
-		y=580
+		y=590
 		width=50
 		height=20
 	}
@@ -1024,7 +1023,7 @@ text {
 menu {
 	object {
 		x=61
-		y=580
+		y=590
 		width=110
 		height=20
 	}
@@ -1037,7 +1036,7 @@ menu {
 "message button" {
 	object {
 		x=176
-		y=580
+		y=590
 		width=80
 		height=20
 	}
@@ -1052,7 +1051,7 @@ menu {
 text {
 	object {
 		x=294
-		y=580
+		y=590
 		width=70
 		height=20
 	}
@@ -1065,7 +1064,7 @@ text {
 "related display" {
 	object {
 		x=369
-		y=580
+		y=590
 		width=56
 		height=20
 	}
@@ -1089,10 +1088,10 @@ text {
 }
 rectangle {
 	object {
-		x=3
+		x=6
 		y=396
 		width=430
-		height=170
+		height=185
 	}
 	"basic attribute" {
 		clr=14
@@ -1238,5 +1237,37 @@ menu {
 		chan="$(P)$(R).CNCT"
 		clr=14
 		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=10
+		y=422
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TMSK"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=184
+		y=422
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TIOM"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
 	}
 }
