@@ -434,6 +434,7 @@ static asynStatus connectDevice(asynOctetRecord *pasynRec,int isInitRecord)
     } else {
         scanOnce(pasynRec);
     }
+    return(asynSuccess);
 }
 
 static void GPIB_command(asynUser *pasynUser)
