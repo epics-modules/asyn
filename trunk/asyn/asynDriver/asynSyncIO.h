@@ -19,7 +19,7 @@ of this distribution.
 
 #include <shareLib.h>
 #include "asynDriver.h"
-#include "asynDrvGenericSerial.h"
+#include "drvGenericSerial.h"
 
 #ifndef	INCasynSyncIOh
 #define	INCasynSyncIOh 1
