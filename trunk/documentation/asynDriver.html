@@ -43,7 +43,7 @@ of this document</p>
 
 <h3>Debug, Logging, etc.</h3>
 
-<p>In the past device support has used at least three diferent methods for
+<p>In the past device support has used at least three different methods for
 showing debug  information.</p>
 <ul>
   <li>Debug variables.
@@ -51,7 +51,7 @@ showing debug  information.</p>
     fine on vxWorks because the vxWorks shell has access to external
     variables. It is somewhat of a pain to make the debug variables available
     on other platforms.</p>
-    <p>A problem is that the debug flag applys to ALL instances of the
+    <p>A problem is that the debug flag appliess to ALL instances of the
     supported device/driver. If multiple instances of a device are controlled
     from a single IOC then the debug flags can be almost useless. The user
     normally wants debug information for a device that is having trouble  not
@@ -119,7 +119,7 @@ than using libCom, it is independent of EPICS.</p>
     support.</li>
   <li>genericSerial: Support for any serial port that is accessed by fopen,
     fread, fwrite, fclose.</li>
-  <li>Can be used by streams, devAscii/drvAscii, devOnrl, and mpfSerial.
+  <li>Can be used by streams, devAscii/drvAscii, devOrnl, and mpfSerial.
     <ul>
       <li>Each will have to be modified so that the device support component
         is compatible with existing uses but replace the driver part with
@@ -130,18 +130,18 @@ than using libCom, it is independent of EPICS.</p>
   </li>
   <li>Hopefully Dirk Zimoch will get time soon to convert streams to use
     asynDriver.</li>
-  <li>In the future other protocols will be supported especially for ethernet
+  <li>In the future other protocols will be supported especially for Ethernet
     based devices.</li>
 </ul>
 
 <h3>NOTES:</h3>
 <ul>
   <li>gpibCore is the Operating System Independent version of the
-    Winans/Franksen gpib support.</li>
-  <li>streams is the protocol file based support for serial/gpib/can from
+    Winans/Franksen GPIB support.</li>
+  <li>streams is the protocol file based support for serial/GPIB/can from
     Dirk Zimoch.</li>
   <li>devAscii/drvAscii is support from KECK Observatory.</li>
-  <li>devOnrl is the support from John Sinclair at Oak Ridge National
+  <li>devOrnl is the support from John Sinclair at Oak Ridge National
   Lab.</li>
   <li>mpfSerial is the serial support provided with MPF (Message Passing
     Facility)</li>
@@ -150,7 +150,7 @@ than using libCom, it is independent of EPICS.</p>
 <h3>Statement</h3>
 
 <p>At the present time each of the systems mentioned in the notes are used at
-EPICS facilities for accessing gpib and/or serial devices. Because device
+EPICS facilities for accessing GPIB and/or serial devices. Because device
 support has been written for many instruments and thousands of database
 records use the device support, users will not be easily persuaded to switch
 from their existing solution. Thus asynDriver implements a framework below
@@ -163,8 +163,8 @@ share the same drivers.</p>
 </center>
 
 <p>The idea of creating asynDriver resulted from many years of experience
-with writing device support for serial and gpib devices. The following
-individuals have been most influencial.</p>
+with writing device support for serial and GPIB devices. The following
+individuals have been most influential.</p>
 <dl>
   <dt>John Winans</dt>
     <dd>John provided the original EPICS GPIB support.  Databases using
@@ -185,14 +185,14 @@ individuals have been most influencial.</p>
   <dt>Marty Kraimer</dt>
     <dd>Marty started with Eric's version and made changes to support
       secondary addressing and to replace ioctl with code to support general
-      bus management, universial commands, and addressed commands.</dd>
+      bus management, universal commands, and addressed commands.</dd>
   <dt>Pete Owens</dt>
     <dd>Pete, for the Diamond Light Source, did a survey of several types of
       device/driver support packages for serial devices. Diamond decided to
       use the streams support developed by Dirk Zimoch.</dd>
   <dt>Dirk Zimoch</dt>
     <dd>Dirk developed streams, which has a single device support model, but
-      supports arbitrary low level message based drivers, i.e. gpib, serial,
+      supports arbitrary low level message based drivers, i.e. GPIB, serial,
       etc.</dd>
   <dt>Jun-ichi Odagare</dt>
     <dd>Jun-ichi developed NetDev, a systems that provides EPICS device
@@ -206,7 +206,7 @@ individuals have been most influencial.</p>
 </center>
 
 <p>asynDriver is a software layer between device specific code and
-communication drivers that send/recevice messages to/from devices. asynDriver
+communication drivers that send/receive messages to/from devices. asynDriver
 defines the following terminology:</p>
 <ul>
   <li>interface
@@ -229,9 +229,9 @@ bit bytes (octets) then it should work with almost all types of port. If
 device support requires more complicated support such as interrupts then the
 types of ports will be more limited.</p>
 
-<p>Examples of ports are GPIB controllers, serial ports, ethernet ports, etc.
+<p>Examples of ports are GPIB controllers, serial ports, Ethernet ports, etc.
 One or more devices can be attached to a port. For example only one device
-can be attached to an RS232 port but up to 15 devices can be attached to a
+can be attached to an RS-232 port but up to 15 devices can be attached to a
 GPIB port.</p>
 
 <p>Multiple layers can exist between device specific code and a port driver.
@@ -242,7 +242,7 @@ interfaces. A process module normally calls drivers as part of it's
 processing.</p>
 
 <p>For more complicated protocols additional layers can be created. For
-example gpib support is implemented as a asynGpib interface which is called
+example GPIB support is implemented as a asynGpib interface which is called
 by user code and a asynGpibPort interface which is called by asynGpib.</p>
 
 <p>A driver can implement multiple interfaces. For example asynGpib
@@ -262,7 +262,7 @@ can be used by other code, e.g. a sequence program.</p>
       <li>A method for locating port driver interfaces.</li>
       <li>queueRequest. This is a non-blocking method, i.e. it can be called
         from scan threads. A callback specified by the user is called by the
-        interface thread. The user callback can then make an arbitray number
+        interface thread. The user callback can then make an arbitrary number
         of calls to the driver. These calls may be blocking calls.</li>
       <li>A transaction service, i.e. user code can lock out other users
         while it makes multiple queueRequest.</li>
@@ -302,7 +302,7 @@ asynManager.</p>
 <p>User code creates an asynUser by calling  pasynManager-&gt;createAsynUser.
 The address of the asynUser is passed to most other asynDriver methods.</p>
 
-<p>User code connects to a device, which is located located at some addr on a
+<p>User code connects to a device, which is located located at some address on a
 port,  and communicates with the device via combination of asynManager and
 one or more interfaces.</p>
 
@@ -438,7 +438,7 @@ calling asynUserCalloc and asynUserFree.</p>
       <td>puserPvt</td>
       <td>For use by the user. The user should set this immediately after the
         call to pasynManager-&gt;createAsynUser. If this is changed while
-        asynUser is queued, the results are undefined, e.g. it couls cause a
+        asynUser is queued, the results are undefined, e.g. it could cause a
         crash.</td>
     </tr>
   </tbody>
@@ -579,7 +579,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
 
 <h3>asynOctet</h3>
 
-<p>NOTE: The name octet is used instead of ASCII because it implys that
+<p>NOTE: The name octet is used instead of ASCII because it implies that
 communication is done via 8-bit bytes.</p>
 
 <p>asynOctet describes the methods provided by drivers that use octet strings
@@ -711,12 +711,12 @@ asynOctet. asynGpib defines two interfaces.</p>
   <li>asynGpib - This is the interface that device support calls.. It
     provides the following:
     <ul>
-      <li>A set of gpib specific methods that device support can call.</li>
+      <li>A set of GPIB specific methods that device support can call.</li>
       <li>Code that handles generic GPIB functions like SRQ polling.</li>
-      <li>A registerPort method which is called by gpib port drivers.</li>
+      <li>A registerPort method which is called by GPIB port drivers.</li>
     </ul>
   </li>
-  <li>asynGpibPort - A set of methods implemented by gpib drivers</li>
+  <li>asynGpibPort - A set of methods implemented by GPIB drivers</li>
 </ul>
 
 <h3>asynGpib.h</h3>
@@ -726,7 +726,7 @@ asynOctet. asynGpib defines two interfaces.</p>
 
 #define asynGpibUserType "asynGpibUser"
 /* GPIB drivers */
-/*asynGpib defines methods called by gpib aware users*/
+/*asynGpib defines methods called by GPIB aware users*/
 struct asynGpib{
     /*addressedCmd,...,ren are just passed to device handler*/
     asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
@@ -843,7 +843,7 @@ the vxi11. It provides:</p>
     </tr>
     <tr>
       <td>universalCmd</td>
-      <td>Issue a GPIB universial command.</td>
+      <td>Issue a GPIB universal command.</td>
     </tr>
     <tr>
       <td>ifc</td>
@@ -890,11 +890,11 @@ standard are defined.</p>
   <li>VXI-11.1 - A standard for communicating with VXIbus instruments. These
     devices have a vxiName that starts with "vxi".</li>
   <li>VXI-11.2 - A standard for communicating with a IEEE 488.1 device. This
-    means that theTCP/IP connection is talking to a GPIB controller that is
+    means that the TCP/IP connection is talking to a GPIB controller that is
     talking to a GPIB bus. These devices have an vxiName that starts with
     "gpib".</li>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 instruments.
-    This means that the TCP/IP connection is talking directky with an
+    This means that the TCP/IP connection is talking directly with an
     instrument. These devices have an vxiName that starts with "inst".</li>
   <li></li>
 </ul>
@@ -914,9 +914,9 @@ details.</p>
   </li>
   <li>Agilent E5810A LAN/GPIB Gateway.</li>
   <li>Tektronix TDS3014B Scope.
-    <p>When communicating with the ethernet port it acts like a VXI-11.2
+    <p>When communicating with the Ethernet port it acts like a VXI-11.2
     rather than a VXI-11.3 device. It seems to just accept any GPIB
-    addresss</p>
+    address</p>
   </li>
 </ul>
 
@@ -934,7 +934,7 @@ where
   <li>timeout - timeout in seconds as a double. If 0.0 then a default is
     assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
-  <li>priority - epicsThread priority. If this is 0, or missing, then a default is
+  <li>priority - Priority at which the asyn I/O thread will run. If this is zero or missing then epicsThreadPriorityMedium is used.</li>
     assigned.</li>
 </ul>
 
@@ -970,7 +970,7 @@ where the arguments are:
   serial ports.  For example, the arguments which confirm the default
   settings are <tt>9600, cs8, -parenb, -crtscts, clocal</tt>.
   Note that if any stty arguments are present both the priority and
-  openaOnlyOnDisconnect arguments must also be present.
+  openOnlyOnDisconnect arguments must also be present.
 </ul>
 
 <p>
