@@ -9,12 +9,12 @@
 <body lang="en">
 
 <center>
-<h1>EPICS:devGpib<br>
+<h1>EPICS: asynDriver devGpib<br>
 Instrument Device Support</h1>
 
 <h2>Marty Kraimer, Benjamin Franksen, John Winans, Eric Norum</h2>
 
-<h2>October 2003</h2>
+<h2>November 2003</h2>
 </center>
 <hr>
 
@@ -55,7 +55,7 @@ not exist consider using STREAMS instead of devGpib.</p>
 
 <p>devGpib is the successor to the gpib support that came with EPICS base
 3.13, unbundled by Benjamin Franksen, and ultimately became gpibCore which is
-the 3.14 version of Benjamin's support. </p>
+the 3.14 version of Benjamin's support.</p>
 
 <p>The 3.13 gpib support only worked with real GPIB instruments. Since
 devGpib uses low level asyn drivers, it can also work with other instruments,
@@ -371,7 +371,8 @@ definition must define field OUT as</p>
     char *format;   /* string used to generate or interpret msg */
     long rspLen;    /* room for response error message */
     long msgLen;    /* room for return data message length */
-    int (*convert) ();  /* custom routine for conversions */
+    /*convert is optional custom routine for conversions */
+    int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
     int P1;             /* user defined parameter used in convert() */
     int P2;             /* user defined parameter used in convert() */
     /* P3 plays dual role. For EFAST address of EFAST table   */
@@ -385,66 +386,38 @@ definition must define field OUT as</p>
 <dl>
   <dt>dset</dt>
     <dd>Address of the Device Support Entry Table (DSET) that describes the
-      record type supported by the table entry..
-      <p></p>
-    </dd>
+      record type supported by the table entry..</dd>
   <dt>type</dt>
     <dd>Type of GPIB I/O operation that is to be performed. The
       <code>type</code> field must be set to one of the enumerated values
       declared in devSupportGpib.h, i.e. GPIBREAD,...,GPIBEOS. See next
-      section for the definitions.
-      <p></p>
-    </dd>
+      section for the definitions.</dd>
   <dt>pri</dt>
     <dd>Processing priority of the I/O operation. Must be
       <code>IB_Q_HIGH</code>, <code>IB_Q_MEDIUM</code>, or
       <code>IB_Q_LOW</code>.</dd>
-
-  <p></p>
   <dt>cmd</dt>
     <dd>Constant string that is used differently depending on the value of
       <code>type</code>. See the discussion of <code>type</code> below. Set
       this field to NULL if not used.</dd>
-
-  <p></p>
   <dt>format</dt>
     <dd>Format string that is used differently depending on the value of
       <code>type</code>. See the discussion of <code>type</code>. Set this
       field to NULL if not used.</dd>
-
-  <p></p>
   <dt>rspLen</dt>
-    <dd>Length of the buffer pointed to by <code>gpibDpvt.rsp</code>.  Holds
-      the message read back from a device when performing a respond2Writes
-      read operation. Set this field to zero when not used.
-      <p></p>
-    </dd>
+    <dd>Length of the buffer pointed to by <code>pgpibDpvt-&gt;rsp</code>.
+      Holds the message read back from a device when performing a
+      respond2Writes read operation. Set this field to zero when not
+    used.</dd>
   <dt>msgLen</dt>
-    <dd>Length of <code>gpibDpvt.msg</code>.  It is used for
+    <dd>Length of <code>pgpibDpvt-&gt;msg</code>.  It is used for
       <code>GPIBWRITE</code>, <code>GPIBREAD</code>, or
       <code>GPIBREADW</code>. Set this field to zero when not used.</dd>
-
-  <p></p>
   <dt>convert</dt>
-    <dd>Function that is called to perform the  I/O operation when
-      <code>type</code> is set to <code>GPIBSOFT</code>, or to perform a
-      conversion/parsing operation when <code>type</code> is set to any of
-      the other operation types. This function is intended to be used to
-      generate and parse strings being sent to and from an instrument, but
-      can be used for anything. This function must make sure that it does not
-      overflow the gpibDpvt.msg field.. This function is passed <code>P1</code>,
-      <code>P2</code>, and <code>P3</code> as parameters.
-      <p>For output operations the function is called to generate the string
-      (possibly using the records VAL field) that is to be sent to the
-      instrument. For input type operations, it is called to scan the
-      response string from the instrument (and fill in the records VAL
-      field).</p>
-      <p>The function must return an int. This return value is passed back to
-      the caller of the device support module after a processing request when
-      <code>type</code> is set to <code>GPIBSOFT</code> and is ignored in
-      other cases. Set to NULL when no conversion function is present.</p>
-      <p></p>
-    </dd>
+    <dd>A conversion function that has the prototype:
+      <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
+      The use depends on the pgpibCmd-&gt;type. See below for details. Set to
+      NULL when no conversion function is present.</dd>
   <dt>P1</dt>
     <dd>This plays a dual role.
       <p>For EFAST operations it is set equal to the number of entries in the
@@ -455,105 +428,173 @@ definition must define field OUT as</p>
   <dt>P2</dt>
     <dd>Integer  passed to the conversion function specified in
       <code>convert</code>.</dd>
-
-  <p></p>
   <dt>P3</dt>
-    <dd>This field plays a double role. 
+    <dd>This field plays a double role.
       <p>When <code>type</code> is one of the EFAST operations, this field
       points to the EFAST table. See the EFAST operation descriptions under
       the <code>type</code> field definitions and the section "Efast Tables"
       for more on the use of this field. Set this field to NULL when it is
       not used.</p>
       <p>For other operations, it is passed to the conversion function
-      specified in convert. It has a char** value. </p>
+      specified in convert. It has a char** value.</p>
     </dd>
   <dt>pdevGpibNames</dt>
     <dd>Pointer to a Name Table. Name tables are described in the section
-      "Name Tables". Set this to NULL when no Name Table is used.
-      <p></p>
-    </dd>
+      "Name Tables". Set this to NULL when no Name Table is used.</dd>
   <dt>eosChar</dt>
     <dd>If GPIBEOS is specified then eosChar (interpeted as an unsigned 8 bit
       value) is the end of message character.</dd>
 </dl>
 
-<h3>Definitions for gpibCmd.type</h3>
+<h3>Definitions for pgpibCmd-&gt;type</h3>
+
+<p>The following describes the semantics for the device support provided by
+the devGpib support provided with asynDriver. If an application extends this
+support that it bwill have to document it's rules.</p>
 <dl>
   <dt>GPIBREAD</dt>
-    <dd><ul>
-        <li>Send <code>gpibCmd.cmd</code> to the instrument.</li>
-        <li>Read from the instrument into <code>gpibDpvt.msg</code>. <br>
-          <code>gpibCmd.msgLen</code> must specify a size large enough for
-          the message.</li>
-        <li>If <code>convert</code> is defined It is called:
-          <pre>(*(<code>convert</code>))(&amp;gpibDpvt, <code>P1</code>, <code>P2</code>, <code>P3</code>);</pre>
+    <dd><p>Supports record types: ai, bi, event, longin, mbbi, mbbiDirect,
+      stringin, and waveform. For all of these types the following is
+      done.</p>
+      <ul>
+        <li>Send <code>pgpibCmd-&gt;cmd</code> to the instrument.</li>
+        <li>Read from the instrument into <code>pgpibDpvt-&gt;msg</code>. <br>
+          <code>pgpibCmd-&gt;msgLen</code> must specify a size large enough
+          for the message.</li>
+      </ul>
+      <p>If <code>convert</code> is defined then:</p>
+      <ul>
+        <li><code>convert</code> is called. It is expected to give a value to
+          the appropriate field of the record or return -1.</li>
+        <li>If the return indicates failure (-1) recGblSetSevr has been
+          called.</li>
+        <li>record completion occurs.</li>
+      </ul>
+      <p>If <code>convert</code> is not defined then what is done depends on
+      the record type.</p>
+      <ul>
+        <li>bi, event, longin, mbbi, and mbbiDirect.
+          <p><code>pgpibDpvt-&gt;msg</code> is converted via
+          <code>pgpibCmd-&gt;format</code> and the result put into field VAL.
+          The format must be appropriate for the specified record type.</p>
         </li>
-        <li>If <code>convert</code> is NULL, <code>gpibDpvt.msg</code> is
-          converted via <code>gpibCmd.format</code> and put in the VAL field
-          of the record.</li>
+        <li>ai
+          <p><code>pgpibDpvt-&gt;msg</code> is converted via
+          <code>pgpibCmd-&gt;format</code> and the result put into field VAL
+          or RVAL, Field VAL is used is the DSET does NOT define
+          special_linconv and RVAL is used if special_linconv is defined. The
+          format must be appropriate for the field. The DSET generated by
+          devGpib.h does not define special_linconv.</p>
+        </li>
+        <li>stringin
+          <p>strncpy is used to copy <code>pgpibDpvt-&gt;msg</code> into
+          VAL</p>
+        </li>
+        <li>waveform
+          <p>Unless FTVL is menuFtypeCHAR an error is generated and the
+          record is put into alarm. If FTVL is menuFtypeCHAR then strcpy is
+          used to copy <code>pgpibDpvt-&gt;msg</code> into field BPTR.</p>
+        </li>
       </ul>
     </dd>
   <dt>GPIBWRITE</dt>
-    <dd><ul>
-        <li>If <code>convert</code> is defined It is called:
-          <pre>(*(<code>convert</code>))(&amp;gpibDpvt, <code>P1</code>, <code>P2</code>, <code>P3</code>);</pre>
+    <dd><p>Supports record types: ao, bo, longout, mbbo, mbboDirect,
+      stringout, and waveform.</p>
+      <ul>
+        <li>If <code>convert</code> is defined It is called. It must put a
+          command string into pgpibDpvt-&gt;msg. It can return:
+          <ul>
+            <li>-1
+              <p>Signifies error. The operation is aborted and the record put
+              into alarm.</p>
+            </li>
+            <li>0
+              <p>Success and call strlen to determine the length of msg.</p>
+            </li>
+            <li>&gt;0
+              <p>Success and the return value is the number on bytes in
+              msg.</p>
+            </li>
+          </ul>
         </li>
-        <li>If <code>convert</code> is NULL, the VAL field is converted via
-          <code>format</code> and the result put into <code>msg</code>
-          (<code>msgLen</code> must specify a size large enough for the
-          message).
-          <p>This allows the module to create a character string that
-          includes the val field of a record. As in the case of the GPIBREAD
-          operation, keep the specific data type of the VAL field in mind. An
-          oddity of the sprintf() function that comes with vxWorks is that
-          %lf  generates nothing when the VAL field is zero. So you should
-          use a length specifier of at least one when using floating point
-          formatting. For example %.1f. IS THIS STILL TRUE?</p>
+        <li>If <code>convert</code> is not defined then what happens is
+          determined by the record type.
+          <ul>
+            <li>ao
+              <p>If special_linconv is NOT defined in DSET The RVAL field is
+              converted as a long into msg. If special_linconv is defined
+              OVAL is conveted as a double into msg.</p>
+            </li>
+            <li>bo, mbbo, and mbboDirect
+              <p>VAL is converted as an unsigned long into msg.</p>
+            </li>
+            <li>longout
+              <p>VAL is converted as a long into msg.</p>
+            </li>
+            <li>stringout
+              <p>VAL is converted into msg via epicsSnprintf. If
+              pgpibCmd-&gt;format is defined it is used otherwise "%s" is
+              used.</p>
+            </li>
+            <li>waveform
+              <p>BPTR is converted into msg via epicsSnprintf. If
+              pgpibCmd-&gt;format is defined it is used otherwise "%s" is
+              used.</p>
+            </li>
+          </ul>
         </li>
-        <li><code>gpibDpvt.msg</code> is sent to the instrument.</li>
+        <li><code>pgpibDpvt-&gt;msg</code> is sent to the instrument.</li>
       </ul>
     </dd>
   <dt>GPIBCMD</dt>
-    <dd><ul>
-        <li>Send the command string specified in <code>cmd</code> to the
-          instrument exactly as specified.</li>
-      </ul>
+    <dd><p>Supports record types: ao, bo, longout, mbbo, mbboDirect,
+      stringout, and waveform.</p>
+      <p>Send the command string specified in <code>pgpibCmd-&gt;cmd</code>
+      to the instrument exactly as specified.</p>
     </dd>
   <dt>GPIBACMD</dt>
     <dd>This is like GPIBCMD except that ATN is held active. This should
       rarely be necessary.</dd>
   <dt>GPIBSOFT</dt>
-    <dd>No I/O is done. It just calls <code>convert</code> and passes the
-      return value  to the caller.
-      <pre>    (*convert)(&amp;gpibDpvt, P1, P2, P3);</pre>
-      When GPIBSOFT is specified, <code>convert</code> must be defined.</dd>
+    <dd>No I/O is done. It just calls <code>pgpibCmd-&gt;convert</code> and
+      passes the return value  to the caller.
+      <code>pgpibCmd-&gt;convert<code> must be defined.</code></code></dd>
   <dt>GPIBREADW</dt>
     <dd>Like GPIBREAD except for that it waits for the device to issue an SRQ
       before it issues the read request.</dd>
   <dt>GPIBRAWREAD</dt>
     <dd>Like GPIBREAD except that no command is sent to the instrument</dd>
   <dt>GPIBEFASTO</dt>
-    <dd>This operation type is only valid on BO and MBBO record types.
+    <dd><p>This operation type is only valid on BO and MBBO record types.
+      <code>pgpibCmd-&gt;P3</code>must contain the address of an efast table.
+      At init time some checks are made to see that an efast table is defined
+      but if it is defined incorrectly problems mat arise.</p>
+      <p>The following is done:</p>
       <ul>
-        <li>Device support sets g<code>pibDpvt.efastVal</code> equal to the
+        <li>Device support sets <code>pibDpvt.efastVal</code> equal to the
           VAL field.</li>
-        <li>The string pointed to by <code>P3</code>[efastVal] is sent to the
-          instrument.</li>
+        <li>If <code>pgpibCmd-&gt;cmdis not null then msgLen must also be
+          specified. msg is set equal to the concatination of cmd and the
+          efast value specified bt <code>pgpibCmd-&gt;P3</code>. The
+          resulting msg is sent.</code></li>
+        <li>If <code>pgpibCmd-&gt;cmdis null then the string pointed to by
+          <code>P3</code>[efastVal] is sent.</code></li>
       </ul>
     </dd>
   <dt>GPIBEFASTI</dt>
-    <dd>This operation type is only valid on BI and MBBI record types.
+    <dd><p>This operation type is only valid on BI and MBBI record types.</p>
+      <p>The following is done:</p>
       <ul>
         <li>Send the command string specified in <code>cmd</code> to the
           instrument exactly as specified.</li>
         <li>Read the data from the instrument and place it into
-          <code>gpibDpvt.msg</code>.</li>
+          <code>pgpibDpvt-&gt;msg</code>.</li>
         <li>Compare <code>msg</code> with each element of the EFAST Table
-          referenced by <code>gpibCmd.P3</code></li>
-        <li>devSupportGpib sets <code>gpibDpvt.efastVal</code> to the index
-          of the EFAST table that matched.</li>
-        <li>Device support sets VAL equal to
-        <code>gpibDpvt.efastVal</code>.</li>
+          referenced by <code>pgpibCmd-&gt;P3</code></li>
+        <li>devSupportGpib sets <code>pgpibDpvt-&gt;efastVal</code> to the
+          index of the EFAST table that matched.</li>
+        <li>Device support sets RVAL equal to
+          <code>pgpibDpvt-&gt;efastVal</code>.</li>
       </ul>
     </dd>
   <dt>GPIBEFASTIW</dt>
@@ -643,17 +684,15 @@ string value for each of the possible states of the VAL field of the record.
         "OFF",    /* when VAL = 0 */
         "ON",    /* when VAL = 1 */
         0        /* list terminator */</pre>
-};
-And is referenced in an output parameter table entry like this:
+}; And is referenced in an output parameter table entry like this:
 <pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, NULL, NULL, 0, 0,NULL, 0, 0, tableName, NULL, -1},</pre>
 For an input entry, it would look like this:
 <pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", NULL, 0, 50, NULL, 0, 0, tableName, NULL, -1},</pre>
 The efast table MUST be null terminated.
 
-<p>For outputs the VAL field is used to
-index into the efast table and select a string to send to the instrument.
-The string is sent to the instrument exactly as as it appears in the
-efast table</p>
+<p>For outputs the VAL field is used to index into the efast table and select
+a string to send to the instrument. The string is sent to the instrument
+exactly as as it appears in the efast table</p>
 
 <p>For input operations, the <code>cmd</code> string is sent to the
 instrument, and <code>msg</code> is read from the instrument.
@@ -798,14 +837,14 @@ structure.
     <dd>This field is for devices that echo writes. If respond2Writes  is
       &gt;=0 then after an output command the following is done:
       <ul>
-        <li>If gpibCmd.rspLen is &lt;=0 no action is taken. This is a way to
-          override respond2Writes for specific commands.</li>
+        <li>If pgpibCmd-&gt;rspLen is &lt;=0 no action is taken. This is a
+          way to override respond2Writes for specific commands.</li>
         <li>If rspLen is &lt; len, where len is the length of the output
           request, an error message is issued and no further action is
         taken</li>
         <li>If respond2Writes is &gt;0 then a wait of respond2Writes
           milliseconds occurs.</li>
-        <li>A read of len bytes is read into gpibDpvt.rsp.</li>
+        <li>A read of len bytes is read into pgpibDpvt-&gt;rsp.</li>
       </ul>
     </dd>
   <dt>debugFlag</dt>
@@ -820,12 +859,12 @@ processing if the debug flag in the parm block is set to a non-zero value.
 
 <h2>SRQ Processing</h2>
 
-<p>If the low level device driver implements interface
-<code>asynGpib</code> then devSupportGpib registers itself to handle
-SRQs. It defines two types of SRQs: sollicited and unsollicited. Sollicited
-SRQs are for GPIBREADW and GPIBEFASTIW commands. If an SRQ is raised for a
-gpibAddr that does not have an outstanding GPIBREADW or GPIBEFASTIW command,
-the SRQ is considered unsollicited.</p>
+<p>If the low level device driver implements interface <code>asynGpib</code>
+then devSupportGpib registers itself to handle SRQs. It defines two types of
+SRQs: sollicited and unsollicited. Sollicited SRQs are for GPIBREADW and
+GPIBEFASTIW commands. If an SRQ is raised for a gpibAddr that does not have
+an outstanding GPIBREADW or GPIBEFASTIW command, the SRQ is considered
+unsollicited.</p>
 
 <p>When the devSupportGpib receives an unsollicited SRQ and it has a
 registered handler for the gpibAddr, it calls the handler, otherwise it
@@ -909,7 +948,7 @@ devGpibParmBlock.</p>
 <h3>gpibDpvt</h3>
 
 <p>The dpvt field of a record with devGpib device support contains the
-address of a gpibDpvt.</p>
+address of a pgpibDpvt-&gt;</p>
 <pre>struct gpibDpvt
 {
     ELLNODE node; /*For use by devGpibCommon*/
@@ -957,10 +996,10 @@ address of a gpibDpvt.</p>
     <dd>Used to call asynOctet. If initialization is successful these will
       have a value.</dd>
   <dt>pasynGpib,pasynGpibPvt</dt>
-    <dd>Used to call asynGpib. These may be NULL even if initialization
-      is successful. If a record that requires asynGpib is processed and
-      pasynGpib is NULL then an error message is generated and the record
-      put into alarm.</dd>
+    <dd>Used to call asynGpib. These may be NULL even if initialization is
+      successful. If a record that requires asynGpib is processed and
+      pasynGpib is NULL then an error message is generated and the record put
+      into alarm.</dd>
   <dt>parm</dt>
     <dd>The value of the parm field of INP or OUT. It locates the gpibCmd for
       it's record.</dd>
@@ -1012,7 +1051,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
     <dd>This initializes all the devGpib structues attached to the record
       starting with dbCommon.dpvt.</dd>
   <dt>processGPIBSOFT</dt>
-    <dd>If gpibCmd.type is GPIBSOFT just call this method.</dd>
+    <dd>If pgpibCmd-&gt;type is GPIBSOFT just call this method.</dd>
   <dt>queueReadRequest</dt>
     <dd>This handles GPIBREADW, GPIBEFASTIW, GPIBREAD, GPIBEFASTI, and
       GPIBRAWREAD. The only thing device support needs to provide is a work
@@ -1020,7 +1059,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
   <dt>queueWriteRequest</dt>
     <dd>The handles GPIBWRITE, GPIBCMD, GPIBACMD, and GPIBEFASTO. Before the
       queue request, the device support code must set msg or efastVal
-      depending on the gpibCmd.type.</dd>
+      depending on the pgpibCmd-&gt;type.</dd>
   <dt>queueRequest</dt>
     <dd>The device support provides a work function that is called when the
       request is dequeued.</dd>
@@ -1029,8 +1068,8 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
   <dt>registerSrqHandler</dt>
     <dd>Registers an SRQ handler for gpibAddr.</dd>
   <dt>writeMsgLong,writeMsgULong,writeMsgDouble,writeMsgString</dt>
-    <dd>gpibDpvt.msg is written from gpibCmd.format and the value passed by
-      the caller.</dd>
+    <dd>pgpibDpvt-&gt;msg is written from pgpibCmd-&gt;format and the value
+      passed by the caller.</dd>
   <dt>pdevSupportGpib</dt>
     <dd>An external variable which points to devSupportGpib</dd>
 </dl>
@@ -1128,24 +1167,27 @@ int     parm;
 use one on the new GPIBxxx command types.</p>
 
 <p>The old drvGpib support is replaced by asyn support.</p>
-<p>If old support makes calls to the old devGpibLib_xxx routines then
-they must be replaced by calls to devSupport routines.</p>
+
+<p>If old support makes calls to the old devGpibLib_xxx routines then they
+must be replaced by calls to devSupport routines.</p>
 <hr>
 
 <center>
 <h2><a name="General GPIB Problems"></a>General GPIB Problems</h2>
 </center>
+
 <p>NOTE: The following comments are from John Winan's original GPIB
 documentation.</p>
-<p>Every type of communication system has its problems. Some instrument  vendors
-don't properly test the GPIB interfaces on their products. Some devices miss
-messages or commands they are too close together in time. There are
-handshaking lines that are supposed to throttle the speed, but are apparently
-improperly implemented by device vendors, or make the (wrong) assumption that
-the controller in charge is slow in its ability to burst bytes down the bus.
-The only way that this problem can be worked around is to add delays in the
-GPIB device device support modules. The current device support library does
-not provide any means to do this.</p>
+
+<p>Every type of communication system has its problems. Some instrument
+vendors don't properly test the GPIB interfaces on their products. Some
+devices miss messages or commands they are too close together in time. There
+are handshaking lines that are supposed to throttle the speed, but are
+apparently improperly implemented by device vendors, or make the (wrong)
+assumption that the controller in charge is slow in its ability to burst
+bytes down the bus. The only way that this problem can be worked around is to
+add delays in the GPIB device device support modules. The current device
+support library does not provide any means to do this.</p>
 
 <p>Very often, a device will slow down over 800% when a user presses a button
 on the front panel of the device. This can cause the GPIB message transfer to
