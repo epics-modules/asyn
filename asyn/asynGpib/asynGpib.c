@@ -42,15 +42,16 @@ typedef struct gpibBase {
 static gpibBase *pgpibBase = 0;
 
 typedef struct pollNode {
-    int      pollIt;
-    int      statusByte;
-    asynUser *pasynUser;
-    asynCommon *pasynCommon;
-    void     *drvPvt;
+    int                    pollIt;
+    int                    statusByte;
+    asynUser               *pasynUser;
+    asynCommon             *pasynCommon;
+    void                   *drvPvt;
 }pollNode;
 
 typedef struct pollListPrimary {
     pollNode primary;
+    BOOL     pollSecondary;
     pollNode secondary[NUM_GPIB_ADDRESSES];
 }pollListPrimary;
 
@@ -64,11 +65,11 @@ typedef struct gpibPvt {
     asynGpibPort *pasynGpibPort;
     void *asynGpibPortPvt;
     asynUser *pasynUser;
-    srqHandler srq_handler;
-    void *srqHandlerPvt;
     asynInterface common;
     asynInterface octet;
     asynInterface gpib;
+    asynInterface int32;
+    void          *asynInt32Pvt;
 }gpibPvt;
 
 #define GETgpibPvtasynGpibPort \
@@ -81,6 +82,11 @@ typedef struct gpibPvt {
 /* forward reference to internal methods */
 static void gpibInit(void);
 static gpibPvt *locateGpibPvt(const char *portName);
+static asynStatus getAddr(gpibPvt *pgpibPvt,asynUser *pasynUser,
+           int *addr, int *primary,int *secondary, BOOL *isPrimary);
+static void exceptionHandler(asynUser *pasynUser,asynException exception);
+static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
+    asynGpibPort *pasynGpibPort,pollNode *ppollNode,int addr);
 static void srqPoll(asynUser *pasynUser);
 /*asynCommon methods */
 static void report(void *drvPvt,FILE *fd,int details);
@@ -102,9 +108,7 @@ static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
 static asynStatus universalCmd(void *drvPvt, asynUser *pasynUser, int cmd);
 static asynStatus ifc (void *drvPvt,asynUser *pasynUser);
 static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff);
-static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
-    srqHandler handler, void *srqHandlerPvt);
-static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff);
+static asynStatus pollAddr(void *drvPvt,asynUser *pasynUser, int onOff);
 /* The following are called by low level gpib drivers */
 static void *registerPort(
         const char *portName,
@@ -120,10 +124,10 @@ static asynOctet octet = {
     gpibRead,gpibWrite,gpibFlush, setEos, getEos
 };
 static asynGpib gpib = {
-    addressedCmd, universalCmd, ifc, ren,
-    registerSrqHandler, pollAddr,
-    registerPort, srqHappened
+    addressedCmd, universalCmd, ifc, ren, pollAddr, registerPort, srqHappened
 };
+/*asynInt32Base implements all asynInt32 methods*/
+static asynInt32 int32 = {0,0,0,0,0};
 
 epicsShareDef asynGpib *pasynGpib = &gpib;
 
@@ -147,6 +151,58 @@ static gpibPvt *locateGpibPvt(const char *portName)
     return(0);
 }
 
+static asynStatus getAddr(gpibPvt *pgpibPvt,asynUser *pasynUser,
+           int *addr, int *primary,int *secondary, BOOL *isPrimary)
+{
+    asynStatus status;
+
+    status = pasynManager->getAddr(pasynUser,addr);
+    if(status!=asynSuccess) return status;
+    if(*addr==-1) {
+        if(pgpibPvt->attributes&ASYN_MULTIDEVICE) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                "%s asynGpib addr %d is illegal\n",
+                 pgpibPvt->portName,*addr);
+            return asynError;
+        }
+        *primary = 0; *isPrimary = TRUE;
+        return asynSuccess;
+    } else if(*addr<100) {
+        if(*addr>=NUM_GPIB_ADDRESSES) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                "%s asynGpib addr %d is illegal\n",
+                 pgpibPvt->portName,*addr);
+            return asynError;
+        }
+        *primary = *addr; *isPrimary = TRUE;
+        return asynSuccess;
+    }
+    *primary = *addr/100; *secondary = *primary%100;
+    if(*primary>=NUM_GPIB_ADDRESSES || *secondary>=NUM_GPIB_ADDRESSES) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+            "%s asynGpib addr %d is illegal\n",
+             pgpibPvt->portName,*addr);
+        return asynError;
+    }
+    *isPrimary = FALSE;
+    return asynSuccess;
+}
+
+static void exceptionHandler(asynUser *pasynUser,asynException exception)
+{
+    gpibPvt *pgpibPvt = (gpibPvt *)pasynUser->userPvt;
+    asynGpibPort *pasynGpibPort = pgpibPvt->pasynGpibPort;
+    asynStatus status;
+
+    if(exception!=asynExceptionConnect) return;
+    status = pasynGpibPort->srqEnable(pgpibPvt->asynGpibPortPvt,1);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s asynGpib:pollAddr srqEnable %s\n",
+            pgpibPvt->portName,pasynUser->errorMessage);
+    }
+}
+
 static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
     asynGpibPort *pasynGpibPort,pollNode *ppollNode,int addr)
 {
@@ -196,8 +252,25 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
         "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
         pgpibPvt->portName,addr,statusByte);
     if(statusByte&0x40) {
-        pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
-            addr,statusByte);
+        ELLLIST            *pclientList;
+        interruptNode      *pnode;
+        asynInt32Interrupt *pinterrupt;
+
+        status = pasynManager->interruptStart(pgpibPvt->asynInt32Pvt,&pclientList);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s addr %d asynGpib:srqPoll interruptStart\n",
+                pgpibPvt->portName,addr);
+            return;
+        }
+        pnode = (interruptNode *)ellFirst(pclientList);
+        while (pnode) {
+            pinterrupt = pnode->drvPvt;
+            if(pinterrupt->reason==ASYN_REASON_SIGNAL)
+                pinterrupt->callback(pinterrupt->userPvt,statusByte);
+            pnode = (interruptNode *)ellNext(&pnode->node);
+        }
+        pasynManager->interruptEnd(pgpibPvt->asynInt32Pvt);
     }
 }
 
@@ -235,11 +308,13 @@ static void srqPoll(asynUser *pasynUser)
             if(ppollNode->pollIt) {
                 pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,primary);
             }
-            for(secondary=0; secondary<NUM_GPIB_ADDRESSES; secondary++) {
-                int addr = primary*100+secondary;
-                ppollNode = &ppollListPrimary->secondary[secondary];
-                if(ppollNode->pollIt) {
-                    pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,addr);
+            if(ppollListPrimary->pollSecondary) {
+                for(secondary=0; secondary<NUM_GPIB_ADDRESSES; secondary++) {
+                    int addr = primary*100+secondary;
+                    ppollNode = &ppollListPrimary->secondary[secondary];
+                    if(ppollNode->pollIt) {
+                        pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,addr);
+                    }
                 }
             }
         }
@@ -345,75 +420,31 @@ static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->ren(pgpibPvt->asynGpibPortPvt,pasynUser,onOff));
 }
-
-static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
-     srqHandler handler, void *srqHandlerPvt)
-{
-    asynStatus status;
-    GETgpibPvtasynGpibPort
-
-    if(pgpibPvt->srq_handler) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s asynGpib:registerSrqHandler. handler already registered\n",
-            pgpibPvt->portName);
-        return(asynError);
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s asynGpib:registerSrqHandler.\n",pgpibPvt->portName);
-    pgpibPvt->srq_handler = handler;
-    pgpibPvt->srqHandlerPvt = srqHandlerPvt;
-    status = pasynGpibPort->srqEnable(pgpibPvt->asynGpibPortPvt,1);
-    return(status);
-}
 
-static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
+static asynStatus pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 {
-    int primary,secondary,addr;
+    int addr,primary,secondary;
+    BOOL isPrimary;
     asynStatus status;
     pollNode *pnode;
     GETgpibPvtasynGpibPort
 
-    status = pasynManager->getAddr(pasynUser,&addr);
+    status = getAddr(pgpibPvt,pasynUser,&addr,&primary,&secondary,&isPrimary);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s asynGpib:pollAddr addr %d onOff %d\n",
         pgpibPvt->portName,addr,onOff);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s asynGpib:pollAddr getAddr failed %s\n",
-            pgpibPvt->portName,pasynUser->errorMessage);
-        return;
-    }
-    if(addr==-1) {
-        if(pgpibPvt->attributes&ASYN_MULTIDEVICE) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "%s asynGpib:pollAddr addr %d is illegal\n",
-                 pgpibPvt->portName,addr);
-            return;
-        }
-        pnode = &pgpibPvt->pollList[0].primary;
-    } else if(addr<100) {
-        if(addr>=NUM_GPIB_ADDRESSES) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "%s asynGpib:pollAddr addr %d is illegal\n",
-                 pgpibPvt->portName,addr);
-            return;
-        }
-        pnode = &pgpibPvt->pollList[addr].primary;
+    if(isPrimary) {
+        pnode = &pgpibPvt->pollList[primary].primary;
     } else {
-        primary = addr/100; secondary = primary%100;
-        if(primary>=NUM_GPIB_ADDRESSES || secondary>=NUM_GPIB_ADDRESSES) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "%s asynGpib:pollAddr addr %d is illegal\n",
-                 pgpibPvt->portName,addr);
-            return;
-        }
-        pnode = &pgpibPvt->pollList[addr].secondary[secondary];
+        pgpibPvt->pollList[primary].pollSecondary = TRUE;
+        pnode = &pgpibPvt->pollList[primary].secondary[secondary];
     }
     if(pnode->pollIt==onOff) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s asynGpib:pollAddr addr %d poll state not changed\n",
              pgpibPvt->portName,addr);
-        return;
+        return asynError;
     }
     if(onOff) {
         asynInterface *pasynInterface;
@@ -425,9 +456,9 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
             pgpibPvt->portName,addr);
         if(status!=asynSuccess) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "%s asynGpib:pollAddr %s\n",
+                "%s asynGpib:pollAddr connectDevice %s\n",
                 pgpibPvt->portName,pasynUser->errorMessage);
-                return;
+                return asynError;
         }
         pasynInterface = pasynManager->findInterface(pnode->pasynUser,
                  asynCommonType,0);
@@ -435,7 +466,7 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                 "%s asynGpib:pollIt cant find interface asynCommon\n",
                 pgpibPvt->portName);
-            return;
+            return asynError;
         }
         pnode->pasynCommon = (asynCommon *)pasynInterface->pinterface;
         pnode->drvPvt = pasynInterface->drvPvt;
@@ -450,6 +481,7 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
         }
         pnode->pasynUser = 0;
     }
+    return asynSuccess;
 }
 
 /* The following are called by low level gpib drivers */
@@ -461,6 +493,7 @@ static void *registerPort(
 {
     gpibPvt    *pgpibPvt;
     asynStatus status;
+    asynUser   *pasynUser;
 
     if(!pgpibBase) gpibInit();
     pgpibPvt = locateGpibPvt(portName);
@@ -484,6 +517,9 @@ static void *registerPort(
     pgpibPvt->gpib.interfaceType = asynGpibType;
     pgpibPvt->gpib.pinterface = &gpib;
     pgpibPvt->gpib.drvPvt = pgpibPvt;
+    pgpibPvt->int32.interfaceType = asynInt32Type;
+    pgpibPvt->int32.pinterface = &int32;
+    pgpibPvt->int32.drvPvt = pgpibPvt;
     ellAdd(&pgpibBase->gpibPvtList,&pgpibPvt->node);
     status = pasynManager->registerPort(portName,attributes,autoConnect,
          priority,stackSize);
@@ -493,15 +529,28 @@ static void *registerPort(
         status = pasynManager->registerInterface(portName,&pgpibPvt->octet);
     if(status==asynSuccess)
         status = pasynManager->registerInterface(portName,&pgpibPvt->gpib);
+    if(status==asynSuccess)
+        status = pasynInt32Base->initialize(portName,&pgpibPvt->int32);
+    if(status!=asynSuccess) return 0;
+    pasynUser = pasynManager->createAsynUser(srqPoll,0);
+    pgpibPvt->pasynUser = pasynUser;
+    pasynUser->userPvt = pgpibPvt;
+    pasynUser->errorMessage[0] = 0;
+    status = pasynManager->connectDevice(pasynUser,portName,-1);
     if(status==asynSuccess) {
-        pgpibPvt->pasynUser = pasynManager->createAsynUser(srqPoll,0);
-        pgpibPvt->pasynUser->userPvt = pgpibPvt;
-        status = pasynManager->connectDevice(pgpibPvt->pasynUser,portName,-1);
+        status = pasynManager->exceptionCallbackAdd(pasynUser,exceptionHandler);
     }
-    if(status!=asynSuccess) return(0);
-    return((void *)pgpibPvt);
+    if(status==asynSuccess) {
+        status = pasynManager->registerInterruptSource(portName,
+            &pgpibPvt->int32,&pgpibPvt->asynInt32Pvt);
+    }
+    if(status!=asynSuccess) {
+        printf("%s registerPort failed %s\n",portName,pasynUser->errorMessage);
+        return 0;
+    }
+    return (void *)pgpibPvt;
 }
-
+
 static void srqHappened(void *drvPvt)
 {
     asynStatus status;

@@ -36,9 +36,9 @@ extern "C" {
 
 #define NUM_GPIB_ADDRESSES    32
 #include "asynDriver.h"
+#include "asynInt32.h"
 #define asynGpibType "asynGpib"
 /* GPIB drivers */
-typedef void (*srqHandler)(void *userPrivate,int gpibAddr,int statusByte);
 typedef struct asynGpib asynGpib;
 typedef struct asynGpibPort asynGpibPort;
 /*asynGpib defines methods called by gpib aware users*/
@@ -50,9 +50,7 @@ struct asynGpib{
     asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are implemented by asynGpib */
-    asynStatus (*registerSrqHandler)(void *drvPvt,asynUser *pasynUser,
-        srqHandler handler, void *srqHandlerPvt);
-    void (*pollAddr)(void *drvPvt,asynUser *pasynUser, int onOff);
+    asynStatus (*pollAddr)(void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are called by low level gpib drivers */
     /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(

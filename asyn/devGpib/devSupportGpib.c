@@ -54,8 +54,11 @@ typedef struct commonGpibPvt {
 }commonGpibPvt;
 static commonGpibPvt *pcommonGpibPvt=0;
 
+typedef struct portInstance portInstance;
+
 typedef struct deviceInstance {
     ELLNODE node; /*For portInstance.deviceInstanceList*/
+    portInstance *pportInstance; 
     int gpibAddr;
     unsigned long errorCount;   /* total number of errors since boot time */
     double queueTimeout;
@@ -64,16 +67,17 @@ typedef struct deviceInstance {
     int timeoutActive;
     epicsTimeStamp timeoutTime;
     /*Following fields are for GPIBSRQHANDLER*/
-    srqHandler unsollicitedHandler;
+    interruptCallbackInt32 unsollicitedHandler;
     void *unsollicitedHandlerPvt;
     /*Following fields are for GPIBREADW and GPIBEFASTIW*/
     epicsTimerId srqWaitTimer;  /*to wait for SRQ*/
     int waitForSRQ;
     gpibDpvt *pgpibDpvt;        /*for record waiting for SRQ*/
     int queueRequestFromSrq;
+    void    *registrarPvt; /* For pasynInt32->registerInterruptUser*/
 }deviceInstance;
 
-typedef struct portInstance {
+struct portInstance {
     ELLNODE node;   /*For commonGpibPvt.portInstanceList*/
     ELLLIST deviceInstanceList;
     epicsMutexId lock; 
@@ -83,10 +87,10 @@ typedef struct portInstance {
     void *asynCommonPvt;
     asynOctet *pasynOctet;
     void *asynOctetPvt;
+    asynInt32 *pasynInt32;
+    void      *asynInt32Pvt;
     asynGpib *pasynGpib;
     void *asynGpibPvt;
-    /* Following field is used for registerSrqHandlerCallback*/
-    asynUser *pasynUser;
     /*The following are for shared msg buffer*/
     char *msg;   /*shared msg buffer for all gpibCmds*/
     int  msgLen;/*size of msg*/
@@ -94,7 +98,7 @@ typedef struct portInstance {
     char *rsp;   /*shared rsp buffer for all respond2Writes*/
     int  rspLen;/*size of rsp*/
     int  rspLenMax; /*rspLenMax all devices attached to this port*/
-}portInstance;
+};
 
 struct devGpibPvt {
     portInstance *pportInstance;
@@ -110,7 +114,7 @@ static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish fini
 static void queueWriteRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
 static int queueRequest(gpibDpvt *pgpibDpvt, gpibWork work);
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
-    srqHandler handler,void *unsollicitedHandlerPvt);
+    interruptCallbackInt32 handler,void *unsollicitedHandlerPvt);
 static int writeMsgLong(gpibDpvt *pgpibDpvt,long val);
 static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
@@ -139,7 +143,6 @@ epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 /*Initialization routines*/
 static void commonGpibPvtInit(void);
 static void setMsgRsp(gpibDpvt *pgpibDpvt);
-static void registerSrqHandlerCallback(asynUser *pasynUser);
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName);
 static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr);
@@ -154,7 +157,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure);
 /*Callback routines*/
 static void queueCallback(asynUser *pasynUser);
 static void queueTimeoutCallback(asynUser *pasynUser);
-static void srqHandlerGpib(void *parm, int gpibAddr, int statusByte);
+static void srqHandlerGpib(void *parm, epicsInt32 statusByte);
 static void srqWaitTimeoutCallback(void *parm);
 
 /*Utility routines*/
@@ -266,7 +269,7 @@ static void processGPIBSOFT(gpibDpvt *pgpibDpvt)
     }
     return;
 }
-
+
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
@@ -323,7 +326,7 @@ static int queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
 }
 
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
-    srqHandler handler,void *unsollicitedHandlerPvt)
+    interruptCallbackInt32 handler,void *unsollicitedHandlerPvt)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynUser *pasynUser = pgpibDpvt->pasynUser;
@@ -624,32 +627,13 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
     if(pportInstance->rspLenMax<rspLenMax) pportInstance->rspLenMax = rspLenMax;
     if(pportInstance->msgLenMax<msgLenMax) pportInstance->msgLenMax = msgLenMax;
 }
-
-static void registerSrqHandlerCallback(asynUser *pasynUser)
-{
-    portInstance *pportInstance = (portInstance *)pasynUser->userPvt;
-    int status;
-
-    status = pportInstance->pasynGpib->registerSrqHandler(
-        pportInstance->asynGpibPvt,pasynUser,srqHandlerGpib,pportInstance);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s devGpib:registerSrqHandlerCallback "
-            "registerSrqHandler failed %s\n",
-            pportInstance->portName,pasynUser->errorMessage);
-    } else {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s devGpib:registerSrqHandlerCallback\n",pportInstance->portName);
-    }
-}
 
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName)
 {
     portInstance *pportInstance;
     asynInterface *pasynInterface;
-    asynStatus status;
-    int portNameSize;
+    int           portNameSize;
 
     portNameSize = strlen(portName) + 1;
     pportInstance = (portInstance *)callocMustSucceed(
@@ -674,29 +658,17 @@ static portInstance *createPortInstance(
             (asynOctet *)pasynInterface->pinterface;
         pportInstance->asynOctetPvt = pasynInterface->drvPvt;
     }
+    pasynInterface = pasynManager->findInterface(pasynUser,asynInt32Type,1);
+    if(pasynInterface) {
+        pportInstance->pasynInt32 = 
+            (asynInt32 *)pasynInterface->pinterface;
+        pportInstance->asynInt32Pvt = pasynInterface->drvPvt;
+    }
     pasynInterface = pasynManager->findInterface(pasynUser,asynGpibType,1);
     if(pasynInterface) {
-        asynUser *pasynUser;
-
         pportInstance->pasynGpib = 
             (asynGpib *)pasynInterface->pinterface;
         pportInstance->asynGpibPvt = pasynInterface->drvPvt;
-        /*Must not call registerSrqHandler directly. queueRequest*/
-        pasynUser = pasynManager->createAsynUser(registerSrqHandlerCallback,0);
-        pasynUser->userPvt = pportInstance;
-        pportInstance->pasynUser = pasynUser;
-        status = pasynManager->connectDevice(pasynUser,portName,-1);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s devGpibCommon:createPortInstance "
-                "connectDevice failed %s\n",portName,pasynUser->errorMessage);
-        }
-        status = pasynManager->queueRequest(pasynUser,asynQueuePriorityHigh,0);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s devGpibCommon:createPortInstance "
-                "queueRequest failed %s\n",portName,pasynUser->errorMessage);
-        }
     }
     ellAdd(&pcommonGpibPvt->portInstanceList,&pportInstance->node);
     return pportInstance;
@@ -739,11 +711,26 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
     if(!pdeviceInstance) {
         pdeviceInstance = (deviceInstance *)callocMustSucceed(
             1,sizeof(deviceInstance),"devSupportGpib");
+        pdeviceInstance->pportInstance = pportInstance;
         pdeviceInstance->gpibAddr = gpibAddr;
         pdeviceInstance->queueTimeout = DEFAULT_QUEUE_TIMEOUT;
         pdeviceInstance->srqWaitTimeout = DEFAULT_SRQ_WAIT_TIMEOUT;
         pdeviceInstance->srqWaitTimer = epicsTimerQueueCreateTimer(
             pcommonGpibPvt->timerQueue,srqWaitTimeoutCallback,pdeviceInstance);
+        if(pportInstance->pasynInt32) {
+            pasynUser->reason = ASYN_REASON_SIGNAL;
+            status = pportInstance->pasynInt32->registerInterruptUser(
+                pportInstance->asynInt32Pvt,pasynUser,
+                srqHandlerGpib,pdeviceInstance,&pdeviceInstance->registrarPvt);
+            if(status!=asynSuccess) {
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "%s devGpib registerSrqHandler failed %s\n",
+                    pportInstance->portName,pasynUser->errorMessage);
+            } else {
+                asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                    "%s devGpib:registerSrqHandler\n",pportInstance->portName);
+            }
+        }
         ellAdd(&pportInstance->deviceInstanceList,&pdeviceInstance->node);
     }
     pdevGpibPvt->pportInstance = pportInstance;
@@ -1109,7 +1096,7 @@ static void queueCallback(asynUser *pasynUser)
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,failure);
 }
-
+
 static void queueTimeoutCallback(asynUser *pasynUser)
 {
     gpibDpvt *pgpibDpvt = (gpibDpvt *)pasynUser->userPvt;
@@ -1136,36 +1123,28 @@ static void queueTimeoutCallback(asynUser *pasynUser)
     work(pgpibDpvt,-1);
 }
 
-static void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
+static void srqHandlerGpib(void *parm, epicsInt32 statusByte)
 {
-    portInstance *pportInstance = (portInstance *)parm;
-    deviceInstance *pdeviceInstance;
+    deviceInstance *pdeviceInstance = (deviceInstance *)parm;
+    portInstance *pportInstance = pdeviceInstance->pportInstance;
 
     epicsMutexMustLock(pportInstance->lock);
-    pdeviceInstance = (deviceInstance *)ellFirst(
-        &pportInstance->deviceInstanceList);
-    while(pdeviceInstance) {
-        if(pdeviceInstance->gpibAddr==gpibAddr) break;
-        pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);
-    }
-    if(pdeviceInstance) {
-        if(pdeviceInstance->waitForSRQ) {
-            pdeviceInstance->queueRequestFromSrq = 1;
-            epicsMutexUnlock(pportInstance->lock);
-            epicsTimerCancel(pdeviceInstance->srqWaitTimer);
-            queueIt(pdeviceInstance->pgpibDpvt,1);
-            return;
-        } else if(pdeviceInstance->unsollicitedHandler) {
-            epicsMutexUnlock(pportInstance->lock);
-            pdeviceInstance->unsollicitedHandler(
-                pdeviceInstance->unsollicitedHandlerPvt,gpibAddr,statusByte);
-            return;
-        }
+    if(pdeviceInstance->waitForSRQ) {
+        pdeviceInstance->queueRequestFromSrq = 1;
+        epicsMutexUnlock(pportInstance->lock);
+        epicsTimerCancel(pdeviceInstance->srqWaitTimer);
+        queueIt(pdeviceInstance->pgpibDpvt,1);
+        return;
+    } else if(pdeviceInstance->unsollicitedHandler) {
+        epicsMutexUnlock(pportInstance->lock);
+        pdeviceInstance->unsollicitedHandler(
+            pdeviceInstance->unsollicitedHandlerPvt,statusByte);
+        return;
     }
     epicsMutexUnlock(pportInstance->lock);
     printf( "portName %s link %d gpibAddr %d "
        "SRQ happened but no record is attached to the gpibAddr\n",
-        pportInstance->portName,pportInstance->link,gpibAddr);
+        pportInstance->portName,pportInstance->link,pdeviceInstance->gpibAddr);
 }
 
 static void srqWaitTimeoutCallback(void *parm)

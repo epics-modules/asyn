@@ -41,6 +41,7 @@
 
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include <asynInt32.h>
 #include <asynGpibDriver.h>
 
 #ifdef __cplusplus
@@ -165,7 +166,7 @@ struct devSupportGpib {
     /* queueRequest returns (0,1) for (failure,success) */
     int (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
-        srqHandler handler,void *unsollicitedHandlerPvt);
+        interruptCallbackInt32 handler,void *unsollicitedHandlerPvt);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
