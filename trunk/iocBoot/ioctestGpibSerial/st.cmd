@@ -10,8 +10,8 @@ dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
 drvGenericSerialConfigure("L0","164.54.9.93:4003",0,0)
 
 #The following commands are for a local serial line
-#drvGenericSerialConfigure("L0","/dev/cua/a",0,0, 9600,"cs8","-parenb","-crtscts","clocal")
 #drvGenericSerialConfigure("L0","/dev/cua/a",0,0)
+#asynSetPortOptions("L0","9600","cs8","-parenb","-crtscts","clocal")
 
 asynSetTraceMask("L0",3,0xff)
 asynSetTraceIOMask("L0",3,0x2)

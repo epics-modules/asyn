@@ -60,7 +60,7 @@ static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3);
  * Define end-of-string character(s) here to allow
  * easier changes when testing the driver.
  */
-#define EOS "\n"
+#define EOSNL "\n"
 
 static struct gpibCmd gpibCmds[] = 
 {
@@ -82,28 +82,28 @@ static struct gpibCmd gpibCmds[] =
   /* Param 7, */
   {&DSET_LI, GPIBSRQHANDLER, IB_Q_LOW, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 8 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "DESE %ld"EOS, 0, 20, 0, 0, 0, 0, 0, 0},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "DESE %ld"EOSNL, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 9 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*ESE %ld"EOS, 0, 20, 0, 0, 0, 0, 0, 0},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*ESE %ld"EOSNL, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 10 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld"EOS, 0, 20, 0, 0, 0, 0, 0, 0},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld"EOSNL, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 11 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?"EOS,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOS},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?"EOSNL,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOSNL},
   /* Param 12 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?"EOS,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOS},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?"EOSNL,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOSNL},
   /* Param 13 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?"EOS,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOS},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?"EOSNL,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOSNL},
   /* Param 14 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?"EOS,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOS},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?"EOSNL,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOSNL},
   /* Param 15 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?"EOS,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOS},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?"EOSNL,  "%ld", 0, 20, 0, 0, 0, 0, 0, EOSNL},
 
   /* Param 16 (id)   */
-  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?"EOS, 0, 0, 200, readString, 0, 0, 0, 0, EOS},
+  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?"EOSNL, 0, 0, 200, readString, 0, 0, 0, 0, EOSNL},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?"EOS, 0, 0, 200, readString, 0, 0, 0, 0, 0},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?"EOSNL, 0, 0, 200, readString, 0, 0, 0, 0, 0},
   /* Param 18, */
-  {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK"EOS,  0, 0, 0, 0, 0, 0, 0, 0, 0}
+  {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK"EOSNL,  0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 
