@@ -3588,7 +3588,7 @@ the IOC.</p>
 <p>Serial ports are configured with the <tt>drvAsynSerialPortConfigure</tt>
 and <tt>asynSetOption</tt> commands:</p>
 <pre>   drvAsynSerialPortConfigure("portName","ttyName",priority,noAutoConnect,
-        processEosIn,processEosOut)
+        noProcessEosIn)
    asynSetOption("portName",addr,"key","value")</pre>
 where the arguments are:
 <ul>
@@ -3601,8 +3601,8 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>processEosIn, processEosOut - If either is set asynOctetBase will call
-    asynInterposeEosConfig.</li>
+  <li>noProcessEos If 0 then asynInterposeEosConfig is called
+      specifying both processEosIn and processEosOut.</li>
 </ul>
 
 <p>The setEos and getEos methods have no effect and return asynError.  The
@@ -3683,7 +3683,7 @@ Ethernet/Serial converter box.</p>
 <p>TCP/IP or UDP/IP connections are configured with the
 <tt>drvAsynIPPortConfigure</tt> command:</p>
 <pre>   drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,
-        processEosIn,processEosOut)</pre>
+        noProcessEos)</pre>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGpib.</li>
@@ -3696,8 +3696,8 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>processEosIn, processEosOut - If either is set asynOctetBase will call
-    asynInterposeEosConfig.</li>
+  <li>noProcessEos If 0 then asynInterposeEosConfig is called
+      specifying both processEosIn and processEosOut.</li>
 </ul>
 
 <p>The setEos and getEos methods have no effect and return asynError.  The
@@ -3766,42 +3766,51 @@ Will change the rpcTimeout for port L0 to .1 seconds.
 
 <h3><a name="Linux-gpib"></a>Linux-Gpib</h3>
 
-<p>The linux-gpib port driver was written to support <a
-href="http://sourceforge.net/project/showfiles.php?group_id=42378&amp;package_id=34482">
-The Linux GPIB Package library</a>.</p>
 
-<p>Configuration command is:</p>
+<p>The linux-gpib port driver was written to support <a href="http://sourceforge.net/project/showfiles.php?group_id=42378&package_id=34482">
+The Linux GPIB Package library</a>.
+</p>
+<p>In order to build this support the Linux GPIB Package must be installed. 
+Also in configure/RELEASE the statement:
+<pre>    LINUX_GPIB=NO</pre>
+must be changed to
+<pre>    LINUX_GPIB=YES</pre>
+</p>
+<p>   	
+Configuration command is:</p>
 <pre>    GpibBoardDriverConfig(portName,autoConnect,BoardIndex,timeout,priority)</pre>
 where
 <ul>
   <li>portName - An ascii string specifying the port name that will be
     registered with asynDriver.</li>
-  <li>noAutoConnect - Zero indicates that portThread should automatically
-    connect. Non-zero means explicit connect command must be issued.</li>
-  <li>boardIndex -Integer containing index of board (0 means /dev/gpib0).
-    Normaly it is 0. This must be the same as in gpib.conf file (minor number
-    - board index) of driver configuration.</li>
-  <li>timeout - Time in seconds in which an i/o operation must complete. Zero
-    means disabled. This is "general" timeout for every call to low level
-    drivers. For actual read/write operations timeout must be defined in
-    device support. Both timeouts are converted into integers 0-17 which
-    represents disabled to 1000 seconds.</li>
+  <li>noAutoConnect - Non-zero indicates that portThread should automatically connect.
+    Zero means explicit connect command must be issued.</li>
+  <li>boardIndex -Integer containing index of board (0 means /dev/gpib0). Normally it is 0. This must
+    be the same as in gpib.conf file (minor number - board index) of driver configuration.</li>
+  <li>timeout - Time in seconds in which an i/o operation must complete. Zero means disabled. This is "general"
+    timeout for every call to low level drivers. For actual read/write operations timeout must be
+    defined in device support. Both timeouts are converted into integers 0-17 which represents 
+    disabled to 1000 seconds.</li>
   <li>priority - An integer specifying the priority of the port thread. A
     value of 0 will result in a default value being assigned.</li>
 </ul>
 
 <p>An example is:</p>
 <pre>GpibBoardDriverConfig("L0",1,0,3,0)</pre>
-
-<p>NOTES:</p>
+<p>
+	NOTES:
+</p>
 <ul>
-  <li>AsynOption Interface is supported. Key (hexadecimal) and val (integer)
-    arguments to setPortOptions function must be appropriate values
-    represented as charachter arrays as stated in GPIB library
-  documentation.</li>
-  <li>pgpibCmd type GPIBREADW nad GPIBEFASTIW were not tested.</li>
-  <li>The linux-port driver was tested with PC104-GPIB board from Measurement
-    Computing.</li>
+   <li>
+   AsynOption Interface is supported. 
+   Key (hexadecimal) and val (integer) arguments to setPortOptions function
+   must be appropriate values represented as character arrays. See GPIB library documentation for details.</li>
+   <li>
+   pgpibCmd type GPIBREADW and GPIBEFASTIW were not tested.
+   </li>		
+   <li>
+   The linux-port driver was tested with PC104-GPIB board from Measurement Computing.
+   </li>
 </ul>
 
 <h3><a name="gsIP488"></a>Green Springs IP488</h3>
