@@ -1,0 +1,8 @@
+device(ao,INST_IO,asynAoInt32,"asynInt32")
+device(ao,INST_IO,asynAoFloat64,"asynFloat64")
+device(ai,INST_IO,asynAiInt32,"asynInt32")
+device(ai,INST_IO,asynAiFloat64,"asynFloat64")
+device(ai,INST_IO,asynAiInt32Average,"asynInt32Average")
+device(ai,INST_IO,asynAiFloat64Average,"asynFloat64Average")
+device(ai,INST_IO,asynAiInt32Interrupt,"asynInt32Interrupt")
+device(ai,INST_IO,asynAiFloat64Interrupt,"asynFloat64Interrupt")

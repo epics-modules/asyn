@@ -12,34 +12,34 @@
     31-July-2004
 
     This file provides device support for ai and ao records
-    devAoAsynInt32:
+    asynAoInt32:
         Analog output, writes from rval, supports LINEAR conversion
         Uses asynInt32 interface
-    devAoAsynFloat64:
+    asynAoFloat64:
         Analog output, writes from val, no conversion
         Uses asynFloat64 interface
-    devAiAsynInt32:
+    asynAiInt32:
         Analog input, reads into rval, supports LINEAR conversion
         Uses asynInt32 interface
-    devAiAsynInt32Average: 
+    asynAiInt32Average: 
         Analog input, averages into rval, supports LINEAR conversion
         Uses asynInt32 and asynInt32Callback interfaces
         Each callback adds to an accumulator for averaging
         Processing the record resets the accumulator
-    devAiAsynInt32Interrupt:
+    asynAiInt32Interrupt:
         Analog input, reads into rval, supports LINEAR conversion
         Uses asynInt32 and asynInt32Callback interfaces
         If record scan is I/O interrupt then record will process on 
         each callback
-    devAiAsynFloat64:
+    asynAiFloat64:
         Analog input, reads into val, no conversion
         Uses asynFloat64 interface
-    devAiAsynFloat64Average:
+    asynAiFloat64Average:
         Analog input, averages into val, no conversion
         Uses asynFloat64Callback interface
         Each callback adds to an accumulator for averaging
         Processing the record resets the accumulator
-    devAiAsynFloat64Interrupt:
+    asynAiFloat64Interrupt:
         Analog input, reads into val, no conversion
         Uses asynFloat64Callback interface
         If record scan is I/O interrupt then record will process on 
@@ -147,31 +147,31 @@ typedef struct analogDset { /* analog  dset */
     DEVSUPFUN     special_linconv;
 } analogDset;
 
-analogDset devAoAsynInt32 =            {6, 0, 0, initAoInt32, 0, 
+analogDset asynAoInt32 =            {6, 0, 0, initAoInt32, 0, 
                                         processCommon, convertAo};
-analogDset devAoAsynFloat64 =          {6, 0, 0, initAoFloat64, 0, 
+analogDset asynAoFloat64 =          {6, 0, 0, initAoFloat64, 0, 
                                         processCommon, convertAo};
-analogDset devAiAsynInt32 =            {6, 0, 0, initAiInt32, 0, 
+analogDset asynAiInt32 =            {6, 0, 0, initAiInt32, 0, 
                                         processCommon, convertAi};
-analogDset devAiAsynInt32Average =     {6, 0, 0, initAiInt32Average, 0, 
+analogDset asynAiInt32Average =     {6, 0, 0, initAiInt32Average, 0, 
                                         processCommon, convertAi};
-analogDset devAiAsynInt32Interrupt =   {6, 0, 0, initAiInt32Interrupt, 
+analogDset asynAiInt32Interrupt =   {6, 0, 0, initAiInt32Interrupt, 
                                         getIoIntInfo, processCommon, convertAi};
-analogDset devAiAsynFloat64 =          {6, 0, 0, initAiFloat64, 0, 
+analogDset asynAiFloat64 =          {6, 0, 0, initAiFloat64, 0, 
                                         processCommon, convertAi};
-analogDset devAiAsynFloat64Average =   {6, 0, 0, initAiFloat64Average, 0, 
+analogDset asynAiFloat64Average =   {6, 0, 0, initAiFloat64Average, 0, 
                                         processCommon, convertAi};
-analogDset devAiAsynFloat64Interrupt = {6, 0, 0, initAiFloat64Interrupt, 
+analogDset asynAiFloat64Interrupt = {6, 0, 0, initAiFloat64Interrupt, 
                                         getIoIntInfo, processCommon, convertAi};
 
-epicsExportAddress(dset, devAoAsynInt32);
-epicsExportAddress(dset, devAoAsynFloat64);
-epicsExportAddress(dset, devAiAsynInt32);
-epicsExportAddress(dset, devAiAsynInt32Average);
-epicsExportAddress(dset, devAiAsynInt32Interrupt);
-epicsExportAddress(dset, devAiAsynFloat64);
-epicsExportAddress(dset, devAiAsynFloat64Average);
-epicsExportAddress(dset, devAiAsynFloat64Interrupt);
+epicsExportAddress(dset, asynAoInt32);
+epicsExportAddress(dset, asynAoFloat64);
+epicsExportAddress(dset, asynAiInt32);
+epicsExportAddress(dset, asynAiInt32Average);
+epicsExportAddress(dset, asynAiInt32Interrupt);
+epicsExportAddress(dset, asynAiFloat64);
+epicsExportAddress(dset, asynAiFloat64Average);
+epicsExportAddress(dset, asynAiFloat64Interrupt);
 
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -198,7 +198,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
                 &pPvt->portName, &pPvt->addr, &pPvt->userParam);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynAnalog::initCommon, %s error in link %s\n",
+        printf("devAsynAnalog::initCommon, %s error in link %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
@@ -206,7 +206,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynAnalog::initCommon, %s connectDevice failed %s\n",
+        printf("devAsynAnalog::initCommon, %s connectDevice failed %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
@@ -222,7 +222,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         status = pasynDrvUser->create(drvPvt,pasynUser,
             pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            errlogPrintf("devAsynAnalog::initCommon, %s drvUserInit failed %s\n",
+            printf("devAsynAnalog::initCommon, %s drvUserInit failed %s\n",
                      pr->name, pasynUser->errorMessage);
             goto bad;
         }
@@ -234,7 +234,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynInt32CallbackType;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+            printf("devAsynAnalog::initCommon, %s find %s interface failed\n",
                          pr->name, itype);
             goto bad;
         }
@@ -246,7 +246,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynInt32Type;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+            printf("devAsynAnalog::initCommon, %s find %s interface failed\n",
                          pr->name, itype);
             goto bad;
         }
@@ -258,7 +258,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynFloat64CallbackType;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+            printf("devAsynAnalog::initCommon, %s find %s interface failed\n",
                          pr->name, itype);
             goto bad;
         }
@@ -270,7 +270,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         itype = asynFloat64Type;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
-            errlogPrintf("devAsynAnalog::initCommon, %s find %s interface failed\n",
+            printf("devAsynAnalog::initCommon, %s find %s interface failed\n",
                          pr->name, itype);
             goto bad;
         }
@@ -434,8 +434,8 @@ static long processCommon(dbCommon *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if (status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                      "devAsynAnalog::processCommon, error queuing request %s\n", 
-                      pPvt->pasynUser->errorMessage);
+                "%s devAsynAnalog::processCommon, error queuing request %s\n", 
+                pr->name,pPvt->pasynUser->errorMessage);
             pPvt->ioStatus = -1;
         }else {
             if (pPvt->canBlock) pr->pact = 1;
@@ -473,7 +473,7 @@ static void callbackAo(asynUser *pasynUser)
     int status;
 
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackAo %s devType=%d, rval=%d, val=%f\n",
+              "%s devAsynAnalog::callbackAo devType=%d, rval=%d, val=%f\n",
               pao->name, pPvt->devType, pao->rval, pao->val);
     if (pPvt->devType == typeAoInt32) {
         status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser, pao->rval);
@@ -485,7 +485,7 @@ static void callbackAo(asynUser *pasynUser)
         pao->udf=0;
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "devAsynAnalog::callbackAo %s read error %s\n",
+              "%s devAsynAnalog::callbackAo read error %s\n",
               pao->name, pasynUser->errorMessage);
         pPvt->ioStatus = -1;
         recGblSetSevr(pao, WRITE_ALARM, INVALID_ALARM);
@@ -510,14 +510,14 @@ static void callbackAi(asynUser *pasynUser)
         status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pai->val);
     }
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackAi %s devType=%d, rval=%d, val=%f\n",
+              "%s devAsynAnalog::callbackAi devType=%d, rval=%d, val=%f\n",
               pai->name, pPvt->devType, pai->rval, pai->val);
     if (status == asynSuccess) {
         pPvt->ioStatus = 0;
         pai->udf=0;
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "devAsynAnalog::callbackAi %s read error %s\n",
+              "%s devAsynAnalog::callbackAi read error %s\n",
               pai->name, pasynUser->errorMessage);
         pPvt->ioStatus = -1;
         recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
@@ -550,7 +550,7 @@ static void callbackAiAverage(asynUser *pasynUser)
     pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->mutexId);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackAiAverage %s rval=%d val=%f\n",
+              "%s devAsynAnalog::callbackAiAverage rval=%d val=%f\n",
               pai->name, pai->rval, pai->val);
     if (pai->pact) {
         dbScanLock((dbCommon *)pai);
@@ -572,7 +572,7 @@ static void callbackAiInterrupt(asynUser *pasynUser)
         pai->val = pPvt->sum;
     epicsMutexUnlock(pPvt->mutexId);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackAiInterrupt %s rval=%d val=%f\n",
+              "%s devAsynAnalog::callbackAiInterrupt rval=%d val=%f\n",
               pai->name, pai->rval, pai->val);
     if (pai->pact) {
         dbScanLock((dbCommon *)pai);
@@ -587,7 +587,7 @@ static void callbackInt32Average(void *drvPvt, epicsInt32 value)
     dbCommon *pr = pPvt->pr;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackInt32Average %s new value=%d\n",
+              "%s devAsynAnalog::callbackInt32Average new value=%d\n",
               pr->name, value);
     pr->udf = 0;
     epicsMutexLock(pPvt->mutexId);
@@ -602,7 +602,7 @@ static void callbackFloat64Average(void *drvPvt, epicsFloat64 value)
     dbCommon *pr = pPvt->pr;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackFloat64Average %s new value=%f\n",
+              "%s devAsynAnalog::callbackFloat64Average new value=%f\n",
               pr->name, value);
     pr->udf = 0;
     epicsMutexLock(pPvt->mutexId);
@@ -618,15 +618,12 @@ static void callbackInt32Interrupt(void *drvPvt, epicsInt32 value)
     dbCommon *pr = pPvt->pr;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackInt32Interrupt %s new value=%d\n",
+              "%s devAsynAnalog::callbackInt32Interrupt new value=%d\n",
               pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->sum = value;
     epicsMutexUnlock(pPvt->mutexId);
     pai->udf = 0;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackInt32Interrupt, new value=%d\n", 
-              value);
     scanIoRequest(pPvt->ioScanPvt);
 }
 
@@ -637,15 +634,12 @@ static void callbackFloat64Interrupt(void *drvPvt, epicsFloat64 value)
     dbCommon *pr = pPvt->pr;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackFloat64Interrupt %s new value=%f\n",
+              "%s devAsynAnalog::callbackFloat64Interrupt new value=%f\n",
               pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->sum = value;
     epicsMutexUnlock(pPvt->mutexId);
     pai->udf = 0;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "devAsynAnalog::callbackFloat64Interrupt, new value=%d\n", 
-              value);
     scanIoRequest(pPvt->ioScanPvt);
 }
 
