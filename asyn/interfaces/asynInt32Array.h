@@ -36,6 +36,13 @@ typedef struct asynInt32Array {
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
 } asynInt32Array;
 
+#define asynInt32ArrayBaseType "asynInt32ArrayBase"
+typedef struct asynInt32ArrayBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pint32ArrayInterface);
+} asynInt32ArrayBase;
+epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;
+
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */
