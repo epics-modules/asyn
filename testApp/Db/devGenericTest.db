@@ -1,8 +1,0 @@
-record(ai,"asyndevAiInt32") {
-    field(DTYP,"asyn Int32")
-    field(INP,"@$(PORT) $(ADDR) %d")
-}
-record(ao,"asyndevAoInt32") {
-    field(DTYP,"asyn Int32")
-    field(OUT,"@$(PORT) $(ADDR) %d")
-}

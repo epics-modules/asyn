@@ -26,9 +26,7 @@
 #include <iocsh.h>
 
 #include <asynDriver.h>
-#include <asynDrvUser.h>
 #include <asynOctet.h>
-#include <asynInt32.h>
 
 #define BUFFERSIZE 4096
 #define NUM_INTERFACES 2
@@ -44,12 +42,6 @@ typedef struct deviceInfo {
     int          connected;
 }deviceInfo;
 
-typedef struct drvUserInfo {
-    const char *format;
-    char       buffer[20];
-}drvUserInfo;
-static const char *drvUserType = "echoDriverType";
-
 typedef struct echoPvt {
     deviceInfo    device[NUM_DEVICES];
     const char    *portName;
@@ -57,9 +49,7 @@ typedef struct echoPvt {
     int           multiDevice;
     double        delay;
     asynInterface common;
-    asynInterface drvUser;
     asynInterface octet;
-    asynInterface int32;
 }echoPvt;
     
 /* init routine */
@@ -72,14 +62,6 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 static asynCommon asyn = { report, connect, disconnect };
 
-/* asynDrvUser methods */
-static asynStatus drvUserCreate(void *drvPvt,asynUser *pasynUser,
-    const char *drvInfo, const char **pptypeName,size_t *psize);
-static asynStatus drvUserGetType(void *drvPvt,asynUser *pasynUser,
-    const char **pptypeName,size_t *psize);
-static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser);
-static asynDrvUser drvUser = {drvUserCreate,drvUserGetType,drvUserDestroy};
-
 /* asynOctet methods */
 static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered,int *eomReason);
@@ -91,15 +73,6 @@ static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
 static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
 static asynOctet octet = { echoRead, echoWrite, echoFlush, setEos, getEos };
-
-/* asynInt32 methods */
-static asynStatus echoWriteInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 value);
-static asynStatus echoReadInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 *value);
-static asynStatus getBoundsInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 *low, epicsInt32 *high);
-static asynInt32 int32 = { echoWriteInt32, echoReadInt32, getBoundsInt32};
 
 static int echoDriverInit(const char *dn, double delay,
     int noAutoConnect,int multiDevice)
@@ -120,15 +93,9 @@ static int echoDriverInit(const char *dn, double delay,
     pechoPvt->common.interfaceType = asynCommonType;
     pechoPvt->common.pinterface  = (void *)&asyn;
     pechoPvt->common.drvPvt = pechoPvt;
-    pechoPvt->drvUser.interfaceType = asynDrvUserType;
-    pechoPvt->drvUser.pinterface  = (void *)&drvUser;
-    pechoPvt->drvUser.drvPvt = pechoPvt;
     pechoPvt->octet.interfaceType = asynOctetType;
     pechoPvt->octet.pinterface  = (void *)&octet;
     pechoPvt->octet.drvPvt = pechoPvt;
-    pechoPvt->int32.interfaceType = asynInt32Type;
-    pechoPvt->int32.pinterface  = (void *)&int32;
-    pechoPvt->int32.drvPvt = pechoPvt;
     attributes = 0;
     if(multiDevice) attributes |= ASYN_MULTIDEVICE;
     if(delay>0.0) attributes|=ASYN_CANBLOCK;
@@ -142,17 +109,7 @@ static int echoDriverInit(const char *dn, double delay,
         printf("echoDriverInit registerInterface failed\n");
         return 0;
     }
-    status = pasynManager->registerInterface(portName,&pechoPvt->drvUser);
-    if(status!=asynSuccess){
-        printf("echoDriverInit registerInterface failed\n");
-        return 0;
-    }
     status = pasynManager->registerInterface(portName,&pechoPvt->octet);
-    if(status!=asynSuccess){
-        printf("echoDriverInit registerInterface failed\n");
-        return 0;
-    }
-    status = pasynManager->registerInterface(portName,&pechoPvt->int32);
     if(status!=asynSuccess){
         printf("echoDriverInit registerInterface failed\n");
         return 0;
@@ -280,53 +237,6 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     pdeviceInfo->connected = 0;
     pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
-}
-
-static asynStatus drvUserCreate(void *drvPvt,asynUser *pasynUser,
-    const char *drvInfo, const char **pptypeName,size_t *psize)
-{
-    echoPvt    *pechoPvt = (echoPvt *)drvPvt;
-    drvUserInfo *pdrvUserInfo;
-
-    pdrvUserInfo = callocMustSucceed(1,sizeof(char),"drvUserCreate");
-    pdrvUserInfo->format = drvInfo;
-    pasynUser->drvUser = pdrvUserInfo;
-    if(pptypeName) *pptypeName = drvUserType;
-    if(psize) *psize = sizeof(drvUserInfo);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:drvUserCreate drvInfo %s\n",
-        pechoPvt->portName,
-        (drvInfo ? drvInfo : "null"));
-    return asynSuccess;
-}
-
-static asynStatus drvUserGetType(void *drvPvt,asynUser *pasynUser,
-    const char **pptypeName,size_t *psize)
-{
-    echoPvt    *pechoPvt = (echoPvt *)drvPvt;
-    if(pasynUser->drvUser) {
-        if(pptypeName) *pptypeName = drvUserType;
-        if(psize) *psize = sizeof(drvUserInfo);
-    } else {
-        if(pptypeName) *pptypeName = 0;
-        if(psize) *psize = 0;
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:drvUserGetType\n", pechoPvt->portName);
-    return asynSuccess;
-}
-
-static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser)
-{
-    echoPvt    *pechoPvt = (echoPvt *)drvPvt;
-    void *drvUser = pasynUser->drvUser;
-    if(drvUser) {
-        pasynUser->drvUser = 0;
-        free(pasynUser->drvUser);
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:drvUserDestroy\n", pechoPvt->portName);
-    return asynSuccess;
 }
 
 /* asynOctet methods */
@@ -460,106 +370,6 @@ static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     *eoslen = 0;
     eos[0] = 0;
     return(asynSuccess);
-}
-
-static asynStatus echoWriteInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 value)
-{
-    echoPvt      *pechoPvt = (echoPvt *)drvPvt;
-    drvUserInfo  *pdrvUserInfo = (drvUserInfo *)pasynUser->drvUser;
-    asynStatus   status;
-    int          nbytes;
-    int          nbytesTransfered = 0;
-
-    if(!pdrvUserInfo) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynUser.drvUser is null\n");
-        return asynError;
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:writeInt32 value %d\n",pechoPvt->portName,value);
-    errno = 0;
-    nbytes = epicsSnprintf(pdrvUserInfo->buffer,sizeof(pdrvUserInfo->buffer),
-        pdrvUserInfo->format,value);
-    if(nbytes<0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s echoDriver:writeInt32 epicsSnprintf error %s\n",
-            pechoPvt->portName,strerror(errno));
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "epicsSnprintf error %s",strerror(errno));
-        return asynError;
-    }
-    if(nbytes==0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s echoDriver:writeInt32 epicsSnprintf converted nothing\n",
-            pechoPvt->portName);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "epicsSnprintf converted nothing ");
-        return asynError;
-    }
-    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
-        "%s echoDriver:writeInt32 value %d\n",pechoPvt->portName,value);
-    status = echoWrite(drvPvt,pasynUser,
-        pdrvUserInfo->buffer,nbytes,&nbytesTransfered);
-    if(status!=asynSuccess) return status;
-    if(nbytes!=nbytesTransfered) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "nbytes %d but nbytesTransfered %d",nbytes,nbytesTransfered);
-        return asynError;
-    }
-    return asynSuccess;
-}
-
-static asynStatus echoReadInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 *value)
-{
-    echoPvt    *pechoPvt = (echoPvt *)drvPvt;
-    drvUserInfo  *pdrvUserInfo = (drvUserInfo *)pasynUser->drvUser;
-    asynStatus   status;
-    int          nitems;
-    int          nbytesTransfered = 0;
-
-    if(!pdrvUserInfo) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynUser.drvUser is null\n");
-        return asynError;
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:readInt32\n",pechoPvt->portName);
-    status = echoRead(drvPvt,pasynUser,
-         pdrvUserInfo->buffer,sizeof(pdrvUserInfo->buffer),&nbytesTransfered,0);
-    if(nbytesTransfered>=sizeof(pdrvUserInfo->buffer))
-         nbytesTransfered = sizeof(pdrvUserInfo->buffer) -1;
-    pdrvUserInfo->buffer[nbytesTransfered] = 0;
-    if(status!=asynSuccess) return status;
-    errno = 0;
-    nitems = sscanf(pdrvUserInfo->buffer,pdrvUserInfo->format,value);
-    if(nitems<0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s echoDriver:readInt32 sscanf error %s\n",
-            pechoPvt->portName,strerror(errno));
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "sscanf error %s",strerror(errno));
-        return asynError;
-    }
-    if(nitems==0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s echoDriver:readInt32 sscanf converted nothing\n",
-            pechoPvt->portName);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "sscanf convert nothing ");
-        return asynError;
-    }
-    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
-        "%s echoDriver:readInt32 value %d\n",pechoPvt->portName,*value);
-    return asynSuccess;
-}
-
-static asynStatus getBoundsInt32(void *drvPvt,asynUser *pasynUser,
-                                 epicsInt32 *low, epicsInt32 *high)
-{
-    *low = *high = 0;
-    return asynSuccess;
 }
 
 /* register echoDriverInit*/
