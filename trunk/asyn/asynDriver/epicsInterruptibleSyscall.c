@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.10 2004-05-14 16:41:32 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.11 2004-05-17 17:40:45 norume Exp $
  */
 
 #include <stdio.h>
@@ -115,7 +115,7 @@ epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
         switch(epicsSocketSystemCallInterruptMechanismQuery()) {
         case esscimqi_socketCloseRequired:
             if (c->fd >= 0) {
-                close(c->fd);
+                epicsSocketDestroy(c->fd);
                 c->wasClosed = 1;
                 c->fd = -1;
             }
