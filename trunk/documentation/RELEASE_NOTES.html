@@ -32,7 +32,14 @@ alink="#FF0000">
     <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
        </pre>
   </li>
+  <li>asynOctetSyncIO<
+    <p>All read and write methods now return asynStatus and
+      have additional args to return the number of bytes send/reeceived.</p>
+  </li>
 </ul>
+<h3>cancelRequest</h3>
+<p>If cancelRequest is called while either the process or timeout callback is
+active, it now waits until the callback completes.</p>
 
 <center>
 <h2>Release 3-3</h2>
