@@ -933,7 +933,7 @@ static void readAfterWait(gpibDpvt *pgpibDpvt,int failure)
     psrqPvt->waitState = srqWaitIdle;
     psrqPvt->pgpibDpvt = 0;
     epicsMutexUnlock(pportInstance->lock);
-    status = pasynManager->unlockDevice(pgpibDpvt->pasynUser);
+    status = pasynManager->unblockProcessCallback(pgpibDpvt->pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pasynManager->unlockDevice failed %s\n",
@@ -1202,7 +1202,7 @@ static asynStatus srqReadWait(gpibDpvt *pgpibDpvt)
 
     epicsMutexMustLock(pportInstance->lock);
     psrqPvt->waitState = srqWait;
-    status = pasynManager->lockDevice(pgpibDpvt->pasynUser);
+    status = pasynManager->blockProcessCallback(pgpibDpvt->pasynUser,0);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pasynManager->lockDevice failed %s\n",
