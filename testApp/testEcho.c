@@ -36,46 +36,44 @@ typedef struct testPvt {
     int isRead;
     double queueTimeout;
     char buffer[80];
-    octetDriver *poctetDriver;
-    void *octetDriverPvt;
+    asynOctet *pasynOctet;
+    void *asynOctetPvt;
     epicsEventId done;
 }testPvt;
 
-void queueCallback(void *ppvt)
+void queueCallback(asynUser *pasynUser)
 {
-    testPvt *ptestPvt = (testPvt *)ppvt;
-    asynUser *pasynUser = ptestPvt->pasynUser;
-    octetDriver *poctetDriver = ptestPvt->poctetDriver;
-    void *octetDriverPvt = ptestPvt->octetDriverPvt;
+    testPvt *ptestPvt = (testPvt *)pasynUser->userPvt;
+    asynOctet *pasynOctet = ptestPvt->pasynOctet;
+    void *asynOctetPvt = ptestPvt->asynOctetPvt;
     int nchars;
     asynStatus status;
 
     if(ptestPvt->isRead) {
-        nchars = poctetDriver->read(octetDriverPvt,
-             pasynUser,0,ptestPvt->buffer,80);
+        nchars = pasynOctet->read(asynOctetPvt,
+             pasynUser,ptestPvt->buffer,80);
         printf("%s received %d chars |%s|\n",
             ptestPvt->prefix,nchars,ptestPvt->buffer);
-        status = pasynQueueManager->unlock(pasynUser);
+        status = pasynManager->unlock(pasynUser);
         if(status!=asynSuccess) {
             printf("%s\n",pasynUser->errorMessage);
         }
     } else {
         sprintf(ptestPvt->buffer,"%s%d",ptestPvt->prefix,ptestPvt->itimes);
-        nchars = poctetDriver->write(octetDriverPvt,
-            pasynUser,0,ptestPvt->buffer,strlen(ptestPvt->buffer));
+        nchars = pasynOctet->write(asynOctetPvt,
+            pasynUser,ptestPvt->buffer,strlen(ptestPvt->buffer));
         printf("%s send %d chars |%s|\n",
             ptestPvt->prefix,nchars,ptestPvt->buffer);
     }
     epicsEventSignal(ptestPvt->done);
 }
 
-void timeoutCallback(void *ppvt)
+void timeoutCallback(asynUser *pasynUser)
 {
-    testPvt *ptestPvt = (testPvt *)ppvt;
-    asynUser *pasynUser = ptestPvt->pasynUser;
+    testPvt *ptestPvt = (testPvt *)pasynUser->userPvt;
 
     printf("timeoutCallback. Will cancel request\n");
-    pasynQueueManager->cancelRequest(pasynUser);
+    pasynManager->cancelRequest(pasynUser);
     epicsEventSignal(ptestPvt->done);
 }
 
@@ -91,40 +89,40 @@ static void writeReadThread(testPvt *ptestPvt)
             if(ptestPvt->ntimes 
             && ptestPvt->ntimes<ptestPvt->itimes) break;
             ptestPvt->isRead = 0;
-            status = pasynQueueManager->lock(pasynUser);
+            status = pasynManager->lock(pasynUser);
             if(status!=asynSuccess) {
                 printf("%s\n",pasynUser->errorMessage);
             }
         } else {
             ptestPvt->isRead = 1;
         }
-        status = pasynQueueManager->queueRequest(pasynUser,
+        status = pasynManager->queueRequest(pasynUser,
             asynQueuePriorityLow,ptestPvt->queueTimeout);
         if(status!=asynSuccess) {
             printf("%s\n",pasynUser->errorMessage);
-            pasynQueueManager->freeAsynUser(pasynUser);
+            pasynManager->freeAsynUser(pasynUser);
             break;
         }
         epicsEventMustWait(ptestPvt->done);
     }
-    status = pasynQueueManager->disconnectDevice(pasynUser);
+    status = pasynManager->disconnectPort(pasynUser);
     if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
-    status = pasynQueueManager->freeAsynUser(pasynUser);
+    status = pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
     epicsEventDestroy(ptestPvt->done);
     free(ptestPvt->prefix);
     free(ptestPvt);
 }
 
-static int testEcho(const char *deviceName,const char *pre,
+static int testEcho(const char *portName,const char *pre,
     int ntimes,double queueTimeout)
 {
     asynUser *pasynUser;
     testPvt *ptestPvt;
     char *prefix;
-    deviceDriver *pdeviceDriver;
-    asynDriver *pasynDriver;
-    void *asynDriverPvt;
+    asynInterface *pasynInterface;
+    asynCommon *pasynCommon;
+    void *asynCommonPvt;
     asynStatus status;
 
     prefix = calloc(strlen(pre)+1,sizeof(char));
@@ -134,36 +132,36 @@ static int testEcho(const char *deviceName,const char *pre,
     ptestPvt->queueTimeout = queueTimeout;
     ptestPvt->ntimes = ntimes;
     ptestPvt->done = epicsEventMustCreate(epicsEventEmpty);
-    pasynUser = pasynQueueManager->createAsynUser(
-        queueCallback,timeoutCallback,ptestPvt);
+    pasynUser = pasynManager->createAsynUser(
+        queueCallback,timeoutCallback);
+    pasynUser->userPvt = ptestPvt;
     ptestPvt->pasynUser = pasynUser;
-    status = pasynQueueManager->connectDevice(pasynUser,deviceName);
+    status = pasynManager->connectPort(pasynUser,portName);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
-        pasynQueueManager->freeAsynUser(pasynUser);
+        pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
-    pasynQueueManager->report(3);
-    pdeviceDriver = pasynQueueManager->findDriver(
-        pasynUser,asynDriverType,1);
-    if(!pdeviceDriver) {
-        printf("%s %s\n",asynDriverType,pasynUser->errorMessage);
-        pasynQueueManager->freeAsynUser(pasynUser);
+    pasynManager->report(3);
+    pasynInterface = pasynManager->findInterface(
+        pasynUser,asynCommonType,1);
+    if(!pasynInterface) {
+        printf("%s %s\n",asynCommonType,pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
-    pasynDriver = (asynDriver *)pdeviceDriver->pdriverInterface->pinterface;
-    asynDriverPvt = pdeviceDriver->drvPvt;
-    pasynDriver->report(asynDriverPvt,3);
-    pdeviceDriver = pasynQueueManager->findDriver(
-        pasynUser,octetDriverType,1);
-    if(!pdeviceDriver) {
-        printf("%s %s\n",octetDriverType,pasynUser->errorMessage);
-        pasynQueueManager->freeAsynUser(pasynUser);
+    pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    asynCommonPvt = pasynInterface->drvPvt;
+    pasynCommon->report(asynCommonPvt,3);
+    pasynInterface = pasynManager->findInterface(
+        pasynUser,asynOctetType,1);
+    if(!pasynInterface) {
+        printf("%s %s\n",asynOctetType,pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
-    ptestPvt->poctetDriver = (octetDriver *)
-        pdeviceDriver->pdriverInterface->pinterface;
-    ptestPvt->octetDriverPvt = pdeviceDriver->drvPvt;
+    ptestPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
+    ptestPvt->asynOctetPvt = pasynInterface->drvPvt;
     epicsThreadCreate(prefix,epicsThreadPriorityLow,
         epicsThreadGetStackSize(epicsThreadStackSmall),
         (EPICSTHREADFUNC)writeReadThread,(void *)ptestPvt);
@@ -171,7 +169,7 @@ static int testEcho(const char *deviceName,const char *pre,
 }
 
 /* register testEcho*/
-static const iocshArg testEchoArg0 = { "deviceName", iocshArgString };
+static const iocshArg testEchoArg0 = { "portName", iocshArgString };
 static const iocshArg testEchoArg1 = { "prefix", iocshArgString };
 static const iocshArg testEchoArg2 = { "ntimes", iocshArgInt };
 static const iocshArg testEchoArg3 = { "queueTimeout", iocshArgDouble };
