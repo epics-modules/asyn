@@ -943,9 +943,12 @@ issues a message that it received an unsolicited SRQ.</p>
 
 <p>The device support for the longinRecord supports gpibCmd type
 GPIBSRQHANDLER. It calls the devSupportGpib registerSrqHandler method. When
-its srqHandler gets called, it puts the SRQ status byte into the VAL field
+its interruptCallbackInt32 gets called, it puts the SRQ status byte into the VAL field
 and then makes a request to process the record. By forward linking this
-record to other records, the user can handle SRQs from specific devices.</p>
+record to other records, the user can handle SRQs from specific devices.
+Note that the callback is an interruptCallbackInt32 since asynGpib handles
+SRQ callbacks via the asynInt32 interface and using asynUser.reason = ASYN_REASON_SIGNAL.
+</p>
 <hr>
 
 <center>
@@ -1105,7 +1108,7 @@ struct devSupportGpib {
     /* queueRequest returns (0,1) for (failure,success) */
     int (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)(
-        gpibDpvt *pgpibDpvt,srqHandler handler,void *userPrivate);
+        gpibDpvt *pgpibDpvt,interruptCallbackInt32 handler,void *userPrivate);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);

@@ -896,10 +896,13 @@ asynManager:freeAsynUser.</p>
     </tr>
     <tr>
       <td>reason</td>
-      <td>A driver normally sets this field. One of the atguments to
-        asynManager:interrupt is reason.  asynManager compares the reason
-        with the value of reason in each  registerInterruptUser. It only
-        calls users with the same reason.</td>
+      <td>Drivers and asynUsers can use this as a general purpose field.
+        By convention it is used for asynManager interrupt support.
+        A driver that is calling an interrupt users often uses
+        reason to decide if the users callback should be called.
+        Values of reason less than 0 are reserved for standard meanings.
+        For example ASYN_REASON_SIGNAL is used to mean "out of band"
+        request. The devGpib support uses this to report SRQs.</td>
     </tr>
     <tr>
       <td>auxStatus</td>
@@ -945,6 +948,9 @@ asynManager:interposeInterface.</p>
 <pre>/*registerPort attributes*/
 #define ASYN_MULTIDEVICE  0x0001
 #define ASYN_CANBLOCK     0x0002
+
+/*standard values for asynUser.reason*/
+#define ASYN_REASON_SIGNAL -1
 
 typedef struct interruptNode{
     ELLNODE node;
@@ -3332,7 +3338,7 @@ asynOctet. asynGpib defines two interfaces.</p>
 
 <p>asynGpibDriver.h contains the following definitions:</p>
 <pre>#include "asynDriver.h"
-#define asynGpibType "asynGpib"
+#include "asynInt32.h"
 #define asynGpibType "asynGpib"
 /* GPIB drivers */
 typedef void (*srqHandler)(void *userPrivate,int gpibAddr,int statusByte);
@@ -3347,8 +3353,6 @@ struct asynGpib{
     asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are implemented by asynGpib */
-    asynStatus (*registerSrqHandler)(void *drvPvt,asynUser *pasynUser,
-        srqHandler handler, void *srqHandlerPvt);
     void (*pollAddr)(void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are called by low level gpib drivers */
     /*srqHappened is passed the pointer returned by registerPort*/
@@ -3394,8 +3398,13 @@ struct asynGpibPort {
 <h3>asynGpib</h3>
 
 <p>asynGpib describes the interface for device support code. It provides gpib
-specific functions like SRQ handling. It makes calls to asynGpibPort. Note
-that asynGpib.c also implements asynCommon and asynOctet.</p>
+specific functions like SRQ handling. It makes calls to asynGpibPort.
+asynGpib.c implements asynCommon and asynOctet.
+It supports asynInt32 by using the methods from asynInt32Base.
+asynInt32 is the way asynGpib reports SRQs to asynUsers. An asynUser that
+wishes to receive SRQs calls pasynInt32->registerInterruptUser and
+must set asynUser.reason = ASYN_REASON_SIGNAL.
+</p>
 
 <table border="1">
   <caption>asynGpib</caption>
