@@ -104,8 +104,8 @@ static void sosiCallback(asynUser *pasynUser)
             recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
         } else {
             nout = pasynOctet->write(octetPvt,pasynUser,
-                pdpvtSo->buffer,strlen(pdpvtSo->buffer));
-            if(nout<strlen(pdpvtSo->buffer)) {
+                pdpvtSo->buffer,strlen(pdpvtSo->buffer)+1);
+            if(nout<(strlen(pdpvtSo->buffer)+1)) {
                 asynPrint(pasynUser,ASYN_TRACE_ERROR,
                     "%s pasynOctet->write failed %s\n",
                     pso->name,pasynUser->errorMessage);
@@ -138,6 +138,7 @@ static void sosiCallback(asynUser *pasynUser)
             psi->udf = 0;
             recGblSetSevr(psi,WRITE_ALARM,MAJOR_ALARM);
         } else {
+            pasynOctet->setEos(octetPvt,pasynUser,"",1);
             nin = pasynOctet->read(octetPvt,pasynUser,
                 pdpvtSi->buffer,sizeof(pdpvtSi->buffer));
             if(nin<0) {
@@ -198,6 +199,7 @@ static long initSo(stringoutRecord *pso)
     strncpy(pdpvtSo->portName,parm,lenportName);
     pasynUser = pasynManager->createAsynUser(sosiCallback,0);
     pasynUser->userPvt = pso;
+    pasynUser->timeout = 2.0;
     pdpvtSo->pasynUser = pasynUser;
     pdpvtSo->addr = addr;
     status = pasynManager->connectDevice(pasynUser,pdpvtSo->portName,addr);

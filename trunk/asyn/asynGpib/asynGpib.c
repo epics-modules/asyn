@@ -109,8 +109,6 @@ static void *registerPort(
         int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
-static asynStatus registerInterface(const char *portName,
-        asynInterface *pasynInterface);
 static void srqHappened(void *pgpibvt);
 
 static asynCommon asyn = {
@@ -122,7 +120,7 @@ static asynOctet octet = {
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren,
     registerSrqHandler, pollAddr,
-    registerPort, registerInterface,srqHappened
+    registerPort, srqHappened
 };
 
 epicsShareDef asynGpib *pasynGpib = &gpib;
@@ -386,6 +384,7 @@ static void *registerPort(
     pgpibPvt->octet.drvPvt = pgpibPvt;
     pgpibPvt->gpib.interfaceType = asynGpibType;
     pgpibPvt->gpib.pinterface = &gpib;
+    pgpibPvt->gpib.drvPvt = pgpibPvt;
     ellAdd(&pgpibBase->gpibPvtList,&pgpibPvt->node);
     status = pasynManager->registerPort(portName,multiDevice,autoConnect,
          priority,stackSize);
@@ -403,9 +402,6 @@ static void *registerPort(
     if(status!=asynSuccess) return(0);
     return((void *)pgpibPvt);
 }
-static asynStatus registerInterface(const char *portName,
-        asynInterface *pasynInterface)
-{return pasynManager->registerInterface(portName,pasynInterface);}
 
 static void srqHappened(void *drvPvt)
 {

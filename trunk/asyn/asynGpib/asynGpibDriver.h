@@ -51,8 +51,6 @@ struct asynGpib{
         int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
-    asynStatus (*registerInterface)(const char *portName,
-        asynInterface *pasynInterface);
     void (*srqHappened)(void *asynGpibPvt);
 };
 epicsShareExtern asynGpib *pasynGpib;

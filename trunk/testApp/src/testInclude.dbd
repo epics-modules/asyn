@@ -2,6 +2,6 @@ include "base.dbd"
 include "asyn.dbd"
 include "devAsyn.dbd"
 include "devAsynTest.dbd"
+include "drvGenericSerial.dbd"
 registrar("echoDriverRegister")
 registrar("interposeInterfaceRegister")
-registrar("testEchoRegister")

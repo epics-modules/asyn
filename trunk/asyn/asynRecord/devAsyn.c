@@ -17,6 +17,7 @@
 #include <cantProceed.h>
 #include <epicsAssert.h>
 #include <link.h>
+#include <dbScan.h>
 #include <alarm.h>
 #include <callback.h>
 #include <dbDefs.h>
@@ -138,7 +139,6 @@ static void enableException(asynUser *pasynUser,asynException exception)
 {
     boRecord    *pbo = (boRecord *)pasynUser->userPvt;
     dbCommon    *precord = (dbCommon *)pbo;
-    dpvtAsyn    *pdpvtAsyn = (dpvtAsyn *)pbo->dpvt;
     int         yesNo,valueChanged;
 
     if(exception!=asynExceptionEnable) return;
@@ -149,8 +149,7 @@ static void enableException(asynUser *pasynUser,asynException exception)
     valueChanged = (pbo->val&1) ^ yesNo;
     if(valueChanged) pbo->val = pbo->rval = yesNo;
     dbScanUnlock(precord);
-    if(valueChanged) callbackRequestProcessCallback(
-                &pdpvtAsyn->callback,pbo->prio,(void *)pbo);
+    if(valueChanged) scanOnce(precord);
 }
 
 static long initEnable(boRecord *pbo)
@@ -209,7 +208,6 @@ static void autoConnectException(asynUser *pasynUser,asynException exception)
 {
     boRecord    *pbo = (boRecord *)pasynUser->userPvt;
     dbCommon    *precord = (dbCommon *)pbo;
-    dpvtAsyn    *pdpvtAsyn = (dpvtAsyn *)pbo->dpvt;
     int         yesNo,valueChanged;
 
     if(exception!=asynExceptionAutoConnect) return;
@@ -220,8 +218,7 @@ static void autoConnectException(asynUser *pasynUser,asynException exception)
     valueChanged = (pbo->val&1) ^ yesNo;
     if(valueChanged) pbo->val = yesNo;
     dbScanUnlock(precord);
-    if(valueChanged) callbackRequestProcessCallback(
-                &pdpvtAsyn->callback,pbo->prio,(void *)pbo);
+    if(valueChanged) scanOnce(precord);
 }
 
 static long initAutoConnect(boRecord *pbo)
@@ -312,7 +309,6 @@ static void connectException(asynUser *pasynUser,asynException exception)
 {
     boRecord    *pbo = (boRecord *)pasynUser->userPvt;
     dbCommon    *precord = (dbCommon *)pbo;
-    dpvtAsyn    *pdpvtAsyn = (dpvtAsyn *)pbo->dpvt;
     int         yesNo,valueChanged;
 
     if(exception!=asynExceptionConnect) return;
@@ -323,8 +319,7 @@ static void connectException(asynUser *pasynUser,asynException exception)
     valueChanged = (pbo->val&1) ^ yesNo;
     if(valueChanged) pbo->val =yesNo;
     dbScanUnlock(precord);
-    if(valueChanged) callbackRequestProcessCallback(
-        &pdpvtAsyn->callback,pbo->prio,(void *)pbo);
+    if(valueChanged) scanOnce(precord);
 }
 
 static long initConnect(boRecord *pbo)

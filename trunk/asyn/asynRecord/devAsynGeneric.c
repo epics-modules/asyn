@@ -500,6 +500,24 @@ static void connect(asynUser *pasynUser)
     }
     callbackRequestProcessCallback(&pdpvtConnect->callback,pbo->prio,(void *)pbo);
 }
+
+static void connectException(asynUser *pasynUser,asynException exception)
+{
+    boRecord     *pbo = (boRecord *)pasynUser->userPvt;
+    dbCommon     *precord = (dbCommon *)pbo;
+    dpvtAsyn     *pdpvtAsyn = (dpvtAsyn *)pbo->dpvt;
+    int          yesNo,valueChanged;
+
+    if(exception!=asynExceptionConnect) return;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectException %d\n",
+        pbo->name,(int)exception);
+    dbScanLock(precord);
+    yesNo = pasynManager->isConnected(pasynUser);
+    valueChanged = (pbo->val&1) ^ yesNo;
+    if(valueChanged) pbo->val =yesNo;
+    dbScanUnlock(precord);
+    if(valueChanged) scanOnce(precord);
+}
 
 static long initConnect(boRecord *pbo)
 {
@@ -559,8 +577,14 @@ static long writeConnect(boRecord *pbo)
         return 0;
     }
     if(state==stateInit && pasynUser) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n",pbo->name);
-        status = pasynManager->disconnect(pasynUser);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exceptionCallbackRemove\n",
+            pbo->name);
+        status = pasynManager->exceptionCallbackRemove(pasynUser);
+        if(status==asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n",
+                pbo->name);
+            status = pasynManager->disconnect(pasynUser);
+        }
         if(status==asynSuccess)
             status = pasynManager->freeAsynUser(pasynUser);
         if(status!=asynSuccess) {
@@ -586,6 +610,12 @@ static long writeConnect(boRecord *pbo)
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
                 pbo->name,pasynUser->errorMessage);
             goto freeAsynUser;
+        }
+        status = pasynManager->exceptionCallbackAdd(pasynUser,connectException);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s exceptionCallbackAdd error %s\n",
+                 pbo->name,pasynUser->errorMessage);
         }
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s findInterface %s\n",
             pbo->name,asynCommonType);
