@@ -939,15 +939,22 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
 {
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
 
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s vxiSetEos eoslen %d\n",pvxiLink->portName,eoslen);
-    if(eoslen>1 || eoslen<0) {
+    assert(pvxiLink);
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
+            "%s vxiSetEos %d: ",pvxiLink->portName,eoslen);
+    switch (eoslen) {
+    default:
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
            "%s vxiSetEos illegal eoslen %d\n",pvxiLink->portName,eoslen);
-        return(asynError);
+        return asynError;
+    case 1:
+        pvxiLink->eos = (unsigned char)eos[0];
+        break;
+    case 0:
+        pvxiLink->eos = -1;
+        break;
     }
-    pvxiLink->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
-    return(asynSuccess);
+    return asynSuccess;
 }
 
 static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
