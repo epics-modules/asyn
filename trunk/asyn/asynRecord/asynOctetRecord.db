@@ -1,4 +1,4 @@
-grecord(asynOctet,"$(P)$(R)")
+record(asynOctet,"$(P)$(R)")
 {
 	field(DESC,"asynOctet $(R)")
 	field(PORT,"$(PORT)")
