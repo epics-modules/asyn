@@ -1120,10 +1120,10 @@ static void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
     pdeviceInstance = (deviceInstance *)ellFirst(
         &pportInstance->deviceInstanceList);
     while(pdeviceInstance) {
-        if(pdeviceInstance->gpibAddr!=gpibAddr) {
-            pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);
-            continue;
-        }
+        if(pdeviceInstance->gpibAddr==gpibAddr) break;
+        pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);
+    }
+    if(pdeviceInstance) {
         if(pdeviceInstance->waitForSRQ) {
             pdeviceInstance->queueRequestFromSrq = 1;
             epicsMutexUnlock(pportInstance->lock);
@@ -1136,7 +1136,6 @@ static void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
                 pdeviceInstance->unsollicitedHandlerPvt,gpibAddr,statusByte);
             return;
         }
-        break;
     }
     epicsMutexUnlock(pportInstance->lock);
     printf( "portName %s link %d gpibAddr %d "
