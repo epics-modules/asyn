@@ -54,6 +54,7 @@ typedef struct gpibPvt {
     ELLNODE node;
     const char *portName;
     epicsMutexId lock;
+    BOOL         multiDevice;
     pollListPrimary pollList[NUM_GPIB_ADDRESSES];
     int pollRequestIsQueued;
     asynGpibPort *pasynGpibPort;
@@ -339,10 +340,17 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
     GETgpibPvtasynGpibPort
 
     status = pasynManager->getAddr(pasynUser,&addr);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s asynGpib:pollAddr addr %d onOff %d\n",
+        pgpibPvt->portName,addr,onOff);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s asynGpib:pollAddr getAddr failed %s\n",
             pgpibPvt->portName,pasynUser->errorMessage);
+        return;
+    }
+    if(!pgpibPvt->multiDevice && addr==-1) {
+        pgpibPvt->pollList[0].primary.pollIt = onOff;
         return;
     }
     if(addr<100) {
@@ -350,9 +358,6 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 	pgpibPvt->pollList[addr].primary.pollIt = onOff;
 	return;
     }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s asynGpib:pollAddr addr %d onOff %d\n",
-        pgpibPvt->portName,addr,onOff);
     primary = addr/100; secondary = primary%100;
     assert(primary>=0 && primary<NUM_GPIB_ADDRESSES);
     assert(secondary>=0 && secondary<NUM_GPIB_ADDRESSES);
@@ -379,6 +384,7 @@ static void *registerPort(
         "asynGpib:registerPort");
     pgpibPvt->lock = epicsMutexMustCreate();
     pgpibPvt->portName = portName;
+    pgpibPvt->multiDevice = multiDevice;
     pgpibPvt->pasynGpibPort = pasynGpibPort;
     pgpibPvt->asynGpibPortPvt = asynGpibPortPvt;
     pgpibPvt->common.interfaceType = asynCommonType;
