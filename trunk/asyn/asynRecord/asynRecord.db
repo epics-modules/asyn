@@ -1,10 +1,3 @@
-record(bo, "$(P)$(R)Poll")
-{
-    field(VAL,"1")
-    field(OUT,"$(P)$(R).POLL")
-    field(SCAN,"Passive")
-}
-
 record(asyn,"$(P)$(R)")
 {
     field(PORT,"$(PORT)")
