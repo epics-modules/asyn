@@ -388,8 +388,8 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
         pexceptionUser = (exceptionUser *)ellNext(&pexceptionUser->node);
     }
     epicsMutexMustLock(pport->lock);
-    pexceptionUser  = (exceptionUser *)ellFirst(&pdpCommon->exceptionNotifyList);
-    while(pexceptionUser) {
+    while((pexceptionUser  =
+    (exceptionUser *)ellFirst(&pdpCommon->exceptionNotifyList))) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
             "%s addr %d asynManager:exceptionOccurred notify\n",
             pport->portName,addr, (int)exception);
