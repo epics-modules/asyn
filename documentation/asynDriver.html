@@ -11,25 +11,30 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<h2>Release ?.?</h2>
+<h2>Release 1.1</h2>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>Janurary 2004</h2>
+<h2>January 2004</h2>
 </center>
 <hr>
 
 <center>
 <h2>Contents</h2>
 </center>
-<a href="#Introduction">Introduction</a> <br>
-<a href="#TODO">TODO</a> <br>
+<a href="#Purpose">Purpose</a> <br>
+<a href="#Status">Status</a> <br>
 <a href="#Acknowledgments">Acknowledgments</a> <br>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#asynDriver">asynDriver</a> <br>
 <a href="#Example">Example</a> <br>
 <a href="#asynGpib">asynGpib</a> <br>
-<a href="#PortDrivers">Port Drivers</a> <br>
+<a href="#PortDrivers">Port Drivers</a>
+<ul>
+  <li><a href="#genericSerial">Generic Serial</a></li>
+  <li><a href="#vxi11">vxi11</a></li>
+  <li><a href="#gsIP488">Green Springs IP488</a></li>
+</ul>
 <a href="#DiagnosticAids">Diagnostic Aids</a> <br>
 <a href="#InstallBuild">Install and Build</a> <br>
 
@@ -45,7 +50,7 @@ of this document</p>
 <hr>
 
 <center>
-<h2><a name="Introduction"></a>Introduction</h2>
+<h2><a name="Purpose"></a>Purpose</h2>
 </center>
 
 <p>asynDriver is a general purpose facility for interfacing device specific
@@ -54,34 +59,8 @@ code to low level communication drivers</p>
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS.</p>
 
-<p>This version provides</p>
-<ul>
-  <li>asynManager, i.e. the software layer between device support and
-  drivers.</li>
-  <li>devGpib: EPICS device support that replaces the device support layer of
-    the Winans/Franksen gpibCore support.</li>
-  <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
-    gpibCore support.</li>
-  <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
-    support.</li>
-  <li>genericSerial: Support for devices connected to serial ports and
-    devices connected through Ethernet/Serial converter boxes.</li>
-  <li>Can be used by streams, devAscii/drvAscii, devOrnl, and mpfSerial.
-    <ul>
-      <li>Each will have to be modified so that the device support component
-        is compatible with existing uses but replace the driver part with
-        asynDriver.</li>
-      <li>The benefit is that all could share the same set of low level
-        drivers.</li>
-    </ul>
-  </li>
-  <li>Hopefully Dirk Zimoch will get time soon to convert streams to use
-    asynDriver.</li>
-  <li>In the future other protocols will be supported especially for Ethernet
-    based devices.</li>
-</ul>
-
-<h3>NOTES:</h3>
+<p>The following are some of the existing EPICS general purpose device
+support systems that could be converted to use asynDriver.</p>
 <ul>
   <li>gpibCore is the Operating System Independent version of the
     Winans/Franksen GPIB support.</li>
@@ -94,33 +73,72 @@ than using libCom, it is independent of EPICS.</p>
     Facility)</li>
 </ul>
 
-<h3>Statement</h3>
+<p>Each of these systems is used at EPICS facilities for accessing GPIB
+and/or serial devices. Because device support has been written for many
+instruments and thousands of database records use the device support, users
+will not be easily persuaded to switch from their existing solution. Thus
+asynDriver implements a framework below device support that can be used by
+all of the above systems so that all can share the same drivers.</p>
 
-<p>At the present time each of the systems mentioned in the notes are used at
-EPICS facilities for accessing GPIB and/or serial devices. Because device
-support has been written for many instruments and thousands of database
-records use the device support, users will not be easily persuaded to switch
-from their existing solution. Thus asynDriver implements a framework below
-device support that can be used by all of the above systems so that all can
-share the same drivers.</p>
+<p>Each system needs to be modified so that the device support component is
+compatible with existing use but replace the driver part with asynDriver. The
+benefit is that all could share the same set of low level drivers.</p>
+
+<p>gpibCore has already been converted and is included with asynDriver.</p>
+
+<p>Marty Kraimer will convert mpfSerial. Hopefully Dirk Zimoch will get time
+soon to convert streams and Allen Honey time to convert devAscii.</p>
+
+<p>In the future other protocols will be supported especially for Ethernet
+based devices.</p>
 <hr>
 
 <center>
-<h2><a name="TODO"></a>TODO</h2>
+<h2><a name="Status"></a>Status</h2>
 </center>
 
-<h3>Locking data structures.</h3>
+<p>This version provides</p>
+<ul>
+  <li>asynManager, i.e. the software layer between device support and
+  drivers.</li>
+  <li>devGpib: EPICS device support that replaces the device support layer of
+    the Winans/Franksen gpibCore support.</li>
+  <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
+    gpibCore support.</li>
+  <li>genericSerial: Support for devices connected to serial ports and
+    devices connected through Ethernet/Serial converter boxes.</li>
+  <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
+    support.</li>
+  <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack
+    module. This support is only implemented for vxWorks.</li>
+</ul>
 
-<p>Currently only one mutex is available to lock data asynManager data
-structures. This should be sufficient. One exception is that report does not
-lock. If new ports or process modules are registered while report is active,
-report could have problems. Does this matter?</p>
+<h3>Coming Soon</h3>
+<ul>
+  <li>gsIP488:
+    <p>The current version does not implement gpib specific methods. This
+    will be done for a future release.</p>
+  </li>
+  <li>NI1014:
+    <p>The National Instruments 1014 VME to GPIB driver has not been
+    converted to asynDriver. This also will be done for a future release.</p>
+  </li>
+</ul>
 
-<h3>Interrupts</h3>
-
-<p>Interface asynGpib defines methods to handle SRQs. Should a more general
-interrupt mechanism be provided? Perhaps is is best to wait until a need
-arises.</p>
+<h3>Remaining Issues</h3>
+<ul>
+  <li>Locking data structures:
+    <p>asynManager locks it's internal data structures so that modifications
+    are thread safe. One exception is that report does not lock. If new ports
+    or process modules are registered while report is active, report could
+    have problems. Does this matter?</p>
+  </li>
+  <li>Interrupts:
+    <p>Interface asynGpib defines methods to handle SRQs. Should a more
+    general interrupt mechanism be provided? Perhaps is is best to wait until
+    a need arises.</p>
+  </li>
+</ul>
 <hr>
 
 <center>
@@ -190,8 +208,8 @@ defines the following terminology:</p>
 communicate via a large variety of different types of port. If device support
 does all it's communication via reads and writes of messages consisting of 8
 bit bytes (octets) then it should work with almost all types of port. If
-device support requires more complicated support such as interrupts then the
-types of ports will be more limited.</p>
+device support requires more complicated support then the types of ports will
+be more limited.</p>
 
 <p>Examples of ports are GPIB controllers, serial ports, Ethernet ports, etc.
 One or more devices can be attached to a port. For example only one device
@@ -250,9 +268,9 @@ can be used by other code, e.g. a sequence program.</p>
     interface. The term octet is used instead of ASCII because the only
     requirement is that messages consist of 8-bit bytes. The methods are:</p>
     <ul>
-      <li>read - read a message.  The routine returns the number of 8-bit
+      <li>read - input a message.  The routine returns the number of 8-bit
         bytes read from the device or -1 to indicate error.</li>
-      <li>write - write a message.  The routine returns the number of 8-bit
+      <li>write - output a message.  The routine returns the number of 8-bit
         bytes written to the device or -1 to indicate error.</li>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
@@ -456,7 +474,7 @@ calling asynUserCalloc and asynUserFree.</p>
 
 <h3>asynManager</h3>
 
-<p>asynManager describes the asynManager methods.</p>
+<p>asynManager contains the following methods.</p>
 
 <table border="1">
   <caption>asynManager</caption>
@@ -571,7 +589,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
 
 <h3>asynCommon</h3>
 
-<p>asynCommon describes the methods provided by all drivers.</p>
+<p>asynCommon describes the methods that must be implemented by all
+drivers.</p>
 
 <table border="1">
   <caption>asynCommon</caption>
@@ -607,8 +626,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
 <p>NOTE: The name octet is used instead of ASCII because it implies that
 communication is done via 8-bit bytes.</p>
 
-<p>asynOctet describes the methods provided by drivers that use octet strings
-for sending commands and receiving responses from a device.</p>
+<p>asynOctet describes the methods implemented by drivers that use octet
+strings for sending commands and receiving responses from a device.</p>
 
 <table border="1">
   <caption>asynOctet</caption>
@@ -629,7 +648,8 @@ for sending commands and receiving responses from a device.</p>
     </tr>
     <tr>
       <td>setEos</td>
-      <td>Specify end of string characters</td>
+      <td>Set End Of String message. For example "\n". Note that gpib drivers
+        often accept at most a one character string.</td>
     </tr>
   </tbody>
 </table>
@@ -795,7 +815,7 @@ void queueCallback(asynUser *pasynUser)
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
     status = pasynOctet-&gt;setEos(pdrvPvt,pasynUser,"\n",1);
-    if(status) {
+    if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
     }
@@ -822,7 +842,7 @@ void mainThread(void)
     pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
     pasynUser-&gt;userPvt = pmyData;
     status = pasynManager-&gt;connectDevice(pasynUser,"serialPort1",0)
-    if(status) {
+    if(status!=asynSuccess) {
         printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
         exit(1);
     }
@@ -846,10 +866,11 @@ void mainThread(void)
 
 <p>The flow of control is as follows:</p>
 <ol>
-  <li>A port driver calls registerPort..</li>
+  <li>A port driver calls registerPort. This step is not shown in the above
+    example.</li>
   <li>mainThread allocates myData and an asynUser.</li>
-  <li>mainThread connects to a  device and to an interface for the port
-    driver..</li>
+  <li>mainThread connects to a  device and to the asynOctet interface for the
+    port driver..</li>
   <li>When it is ready to communicate with the driver it calls
   queueRequest.</li>
   <li>The thread associated with the port calls the callback which then calls
@@ -911,6 +932,7 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
     int (*write)(void *drvPvt,asynUser *pasynUser,const char *data,int numchars);
@@ -1041,7 +1063,85 @@ the vxi11. It provides:</p>
 <h2><a name="PortDrivers"></a>Port Drivers</h2>
 </center>
 
-<h3>vxi11</h3>
+<h3><a name="genericSerial"></a>Generic Serial</h3>
+
+<p>The generic serial driver supports devices connected to serial ports on
+the IOC and devices connected through Ethernet/Serial converter boxes.</p>
+
+<p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
+and <tt>asynSetPortOptions</tt> commands:</p>
+<pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)
+   asynSetPortOptions("portName",[stty options])</pre>
+where the arguments are:
+<ul>
+  <li>portName - The portName that is registered with asynGpib.</li>
+  <li>ttyName - The name of the serial port.   This can specify a local
+    hardware serial port (e.g. "/dev/ttyS0") or the Internet host name and
+    TCP port number of an Ethernet terminal concentrator (e.g.
+    "164.54.9.90:4002", or "serials8n3:4002").</li>
+  <li>priority - Priority at which the asyn I/O thread will run. If this is
+    zero or missing then epicsThreadPriorityMedium is used.</li>
+  <li>openOnlyOnDisconnect - If zero the driver will attempt to reconnect to
+    the serial port on the first I/O operation following an error. If
+    non-zero the driver will not attempt to reconnect until explicit
+    disconnect/reconnect commands have been issued. A missing argument is
+    taken to be zero.</li>
+  <li>stty options - Serial port configuration parameters for local serial
+    ports.  For example, the arguments which confirm the default settings are
+    <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. The complete list of
+    supported stty options is:
+    <dl>
+      <dt><tt>cs8</tt></dt>
+        <dd>Set number of bits per character to 8 (default).</dd>
+      <dt><tt>cs7</tt></dt>
+        <dd>Set number of bits per character to 7.</dd>
+      <dt><tt>cs6</tt></dt>
+        <dd>Set number of bits per character to 6.</dd>
+      <dt><tt>cs5</tt></dt>
+        <dd>Set number of bits per character to 5.</dd>
+      <dt><tt>parenb</tt></dt>
+        <dd>Enable parity generation/checking.</dd>
+      <dt><tt>-parenb</tt></dt>
+        <dd>Disable parity generation/checking (default).</dd>
+      <dt><tt>parodd</tt></dt>
+        <dd>Check/generate ODD parity if enabled.</dd>
+      <dt><tt>-parodd</tt></dt>
+        <dd>Check/generate EVEN parity if enabled (default).</dd>
+      <dt><tt>cstopb</tt></dt>
+        <dd>Generate two stop bits.</dd>
+      <dt><tt>-cstopb</tt></dt>
+        <dd>Generate one stop bit (default).</dd>
+      <dt><tt>crtscts</tt></dt>
+        <dd>Enable RTS/CTS hardware handshaking.</dd>
+      <dt><tt>-crtscts</tt></dt>
+        <dd>Disable RTS/CTS hardware handshaking (default).</dd>
+      <dt><tt>clocal</tt></dt>
+        <dd>Disable CD/DTR modem control (default).</dd>
+      <dt><tt>-clocal</tt></dt>
+        <dd>Enable CD/DTR modem control.</dd>
+    </dl>
+  </li>
+</ul>
+
+<p>Serial ports directly attached to a vxWorks IOC may need to be set up
+using hardware-specific commands. Once this is done the standard
+drvGenericSerialConfigure and asynSetPortOptions commands can be issued.  For
+example, the following example shows the configuration procedure for a port
+on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01
+carrier.</p>
+<pre>ipacAddVIPC616_01("0x6000,B0000000")
+tyGSOctalDrv(1)
+tyGSOctalModuleInit("RS232", 0x80, 0, 0)
+tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
+asynSetPortOptions("L0","9600","cs8","-parenb","-crtscts","clocal")</pre>
+If you're using the vxWorks shell you must include all the <code>stty</code>
+parameters in double quotes. The vxWorks serial driver does not provide
+independent control of the hardware handshaking and modem control lines thus
+<code>"clocal"</code> implies <code>"-crtscts"</code> and
+<code>"-clocal"</code> implies <code>"crtscts"</code>.
+
+<h3><a name="vxi11"></a>vxi11</h3>
 
 <p>VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
 is an RPC based protocol. In addition to the VXI-11 standard three additional
@@ -1085,85 +1185,7 @@ where
     zero or missing then epicsThreadPriorityMedium is used.</li>
 </ul>
 
-<h3>Generic Serial</h3>
-
-<p>The generic serial driver supports devices connected to serial ports on
-the IOC and devices connected through Ethernet/Serial converter boxes.</p>
-
-<p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
-and <tt>asynSetPortOptions</tt> commands:</p>
-<pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)
-   asynSetPortOptions("portName",[stty options])</pre>
-where the arguments are:
-<ul>
-  <li>portName - The portName that is registered with asynGpib.</li>
-  <li>ttyName - The name of the serial port.   This can specify a local
-    hardware serial port (e.g. "/dev/ttyS0") or the Internet host name and
-    TCP port number of an Ethernet terminal concentrator (e.g.
-    "164.54.9.90:4002", or "serials8n3:4002").</li>
-  <li>priority - Priority at which the asyn I/O thread will run. If this is
-    zero or missing then epicsThreadPriorityMedium is used.</li>
-  <li>openOnlyOnDisconnect - If zero the driver will attempt to reconnect to
-    the serial port on the first I/O operation following an error. If
-    non-zero the driver will not attempt to reconnect until explicit
-    disconnect/reconnect commands have been issued. A missing argument is
-    taken to be zero.</li>
-  <li>stty options - Serial port configuration parameters for local serial
-    ports.  For example, the arguments which confirm the default settings are
-    <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. 
-    The complete list of supported stty options
-    is:
-    <dl>
-      <dt><tt>cs8</tt></dt>
-        <dd>Set number of bits per character to 8 (default).</dd>
-      <dt><tt>cs7</tt></dt>
-        <dd>Set number of bits per character to 7.</dd>
-      <dt><tt>cs6</tt></dt>
-        <dd>Set number of bits per character to 6.</dd>
-      <dt><tt>cs5</tt></dt>
-        <dd>Set number of bits per character to 5.</dd>
-      <dt><tt>parenb</tt></dt>
-        <dd>Enable parity generation/checking.</dd>
-      <dt><tt>-parenb</tt></dt>
-        <dd>Disable parity generation/checking (default).</dd>
-      <dt><tt>parodd</tt></dt>
-        <dd>Check/generate ODD parity if enabled.</dd>
-      <dt><tt>-parodd</tt></dt>
-        <dd>Check/generate EVEN parity if enabled (default).</dd>
-      <dt><tt>cstopb</tt></dt>
-        <dd>Generate two stop bits.</dd>
-      <dt><tt>-cstopb</tt></dt>
-        <dd>Generate one stop bit (default).</dd>
-      <dt><tt>crtscts</tt></dt>
-        <dd>Enable RTS/CTS hardware handshaking.</dd>
-      <dt><tt>-crtscts</tt></dt>
-        <dd>Disable RTS/CTS hardware handshaking (default).</dd>
-      <dt><tt>clocal</tt></dt>
-        <dd>Disable CD/DTR modem control (default).</dd>
-      <dt><tt>-clocal</tt></dt>
-        <dd>Enable CD/DTR modem control.</dd>
-    </dl>
-  </li>
-</ul>
-
-<p>Serial ports directly attached to a vxWorks IOC may need to be set up
-using hardware-specific commands. Once this is done the standard
-drvGenericSerialConfigure and asynSetPortOptions commands can be issued.  For example, the following
-example shows the configuration procedure for a port on a GreenSprings octal
-UART Industry-Pack module on a GreenSprings VIP616-01 carrier.</p>
-<pre>ipacAddVIPC616_01("0x6000,B0000000")
-tyGSOctalDrv(1)
-tyGSOctalModuleInit("RS232", 0x80, 0, 0)
-tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
-drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
-asynSetPortOptions("L0","9600","cs8","-parenb","-crtscts","clocal")</pre>
-If you're using the vxWorks shell you must include all the <code>stty</code>
-parameters in double quotes.
-The vxWorks serial driver does not provide independent control of the hardware handshaking
-and modem control lines thus <code>"clocal"</code> implies <code>"-crtscts"</code>
-and <code>"-clocal"</code> implies <code>"crtscts"</code>.
-
-<h3>Green Springs IP488</h3>
+<h3><a name="gsIP488"></a>Green Springs IP488</h3>
 
 <p>This is support for the Green Springs Industry Pack GPIB carrier. The
 configuration command is:</p>
@@ -1197,13 +1219,15 @@ gsIP488Configure("L0",0,0,0x61,0)</pre>
 <h3>iocsh commands</h3>
 <pre>    asynReport(filename,level)
     asynSetTraceMask(portName,addr,mask)
-    asynSetTraceIOMask(portName,addr,mask)</pre>
+    asynSetTraceIOMask(portName,addr,mask)
+    asynSetPortOptions(portName,"[options]")</pre>
 
 <p><code>asynReport</code> calls <code>asynCommon:report</code> for all
 registered drivers and processModules. <code>asynSetTraceMask</code> calls
 <code>asynTrace:setTraceMask</code> for the specified port and address.
 <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code>
-for the specified port and address.</p>
+for the specified port and address. <code>asynSetPortOptions calls
+<code>asynCommon:setPortOptions</code></code></p>
 
 <p>where</p>
 <dl>
@@ -1219,6 +1243,9 @@ for the specified port and address.</p>
   <dt>mask</dt>
     <dd>The mask value to set. See the mask bit definitions in
     asynDriver.h</dd>
+  <dt>[options]</dt>
+    <dd>The options are driver dependent. Consult the driver documentation
+      for details.</dd>
 </dl>
 
 <h3>devAsynTrace</h3>
