@@ -12,7 +12,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.3 2003-11-06 19:24:08 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.4 2003-11-07 23:08:26 norume Exp $
  */
 
 #include <stdio.h>
@@ -136,8 +136,8 @@ epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
             if (c->fd >= 0) {
                 close(c->fd);
                 c->wasClosed = 1;
+                c->fd = -1;
             }
-            c->fd = -1;
             break;
 
         case esscimqi_socketBothShutdownRequired:
