@@ -32,6 +32,7 @@
 #define TRUE 1
 #define FALSE 0
 #define SRQTIMEOUT 2.0
+#define MAX_POLL 5
 
 typedef struct gpibBase {
     ELLLIST gpibPvtList;
@@ -137,7 +138,7 @@ static gpibPvt *locateGpibPvt(const char *portName)
 static void srqPoll(asynUser *pasynUser)
 {
     void *drvPvt = pasynUser->userPvt;
-    int srqStatus,primary,secondary;
+    int srqStatus,primary,secondary,ntrys;
     GETgpibPvtasynGpibPort
 
     epicsMutexMustLock(pgpibPvt->lock);
@@ -145,8 +146,9 @@ static void srqPoll(asynUser *pasynUser)
         printf("%s srqPoll but !pollRequestIsQueued. Why?\n",pgpibPvt->portName);
     pgpibPvt->pollRequestIsQueued = 0;
     epicsMutexUnlock(pgpibPvt->lock);
-    srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
-    while(srqStatus) {
+    for(ntrys=0; ntrys<MAX_POLL; ntrys++) {
+        srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
+        if(!srqStatus) break;
         pasynGpibPort->serialPollBegin(pgpibPvt->asynGpibPortPvt);
         for(primary=0; primary<NUM_GPIB_ADDRESSES; primary++) {
             pollListPrimary *ppollListPrimary = &pgpibPvt->pollList[primary];
@@ -177,8 +179,11 @@ static void srqPoll(asynUser *pasynUser)
         pasynGpibPort->serialPollEnd(pgpibPvt->asynGpibPortPvt);
         srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
         if(!srqStatus) break;
-        printf("%s after srqPoll srqStatus is %x Why?\n",
-            pgpibPvt->portName,srqStatus);
+    }
+    if(srqStatus) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s srqPoll srqStatus is %x after ntrys %dWhy?\n",
+            pgpibPvt->portName,srqStatus,ntrys);
     }
 }
 

@@ -128,8 +128,6 @@ record(longout,"$(name)L$(L):setSRE1") {
     field(FLNK,"$(name)L$(L):idnWait")
 }
 record(stringin,"$(name)L$(L):idnWait") {
-    field(SDIS,"$(name)L$(L):waitWait")
-    field(DISV,"1")
     field(DTYP,"GPIB Test")
     field(INP,"#L$(L) A$(A) @17")
     field(FLNK,"$(name)L$(L):restore")
