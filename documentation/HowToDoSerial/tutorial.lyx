@@ -1073,8 +1073,8 @@ linux-x86
 Using the device support in an application
 \layout Standard
 
-Several files need minor modifications to add the device support to the test,
- or any other, application.
+Several files need minor modifications to use the device support in the
+ test, or any other, application.
 \layout Subsection
 
 Make some changes to configure/RELEASE
@@ -1102,19 +1102,25 @@ EPICS_BASE=/home/EPICS/base
 Modify the application database definition file
 \layout Standard
 
-Add entries to the aplication 
+Your application database definition file must include the database definition
+ files for your instrument and for the SYN drivers.
+ There are two ways that this can be done:
+\layout Enumerate
+
+If you are building your application database definition from an 
 \shape italic 
 xxx
 \family typewriter 
 \shape default 
 Include.dbd
 \family default 
- file for your device support and for serial/GPIB driver support:
-\layout Standard
-
+ file you include the additional database definitions in that file.
+ For example, to add support for the AB300 instrument and local and remote
+ serial line drivers:
+\newline 
 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -1123,6 +1129,42 @@ verbatiminput{AB300/AB300App/src/AB300Include.dbd}
 \end_inset 
 
 
+\layout Enumerate
+
+If you are building your application database definition from the application
+ Makefile you specify the additional database definitions there:
+\newline 
+ .
+\newline 
+.
+\newline 
+
+\shape italic 
+xxx
+\shape default 
+_DBD += base.dbd
+\newline 
+
+\shape italic 
+xxx
+\shape default 
+_DBD += devAB300.dbd
+\newline 
+
+\shape italic 
+xxx
+\shape default 
+_DBD += drvAsynTCPPort.dbd
+\newline 
+
+\shape italic 
+xxx
+\shape default 
+_DBD += drvAsynSerialPort.dbd
+\newline 
+.
+\newline 
+.
 \layout Subsection
 
 Add the device support libraries to the application
@@ -1371,7 +1413,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-04 18:02:03 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-04 20:58:36 $$
 \newline 
 ############################################################################
 \newline 
