@@ -307,7 +307,8 @@ static void asynSyncIOCallback(asynUser *pasynUser)
        }
     }
     if (pPvt->op == asynSyncIO_DRIVER_CONNECT) {
-       status = pPvt->pasynCommon->connect(pPvt->pcommonPvt,pasynUser);
+       nbytesTransfered = pPvt->pasynCommon->connect(
+                                             pPvt->pcommonPvt,pasynUser);
     }
     if ((pPvt->op == asynSyncIO_WRITE) || (pPvt->op ==asynSyncIO_WRITE_READ)) {
        status = pasynOctet->write(pdrvPvt, pasynUser, 
