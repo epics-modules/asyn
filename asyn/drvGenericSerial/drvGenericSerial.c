@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.4 2003-11-06 16:56:29 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.5 2003-11-13 16:42:19 norume Exp $
  */
 
 #include <string.h>
@@ -518,6 +518,7 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eos
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
+    assert(eoslen >= 0);
     if ((tty->eos == NULL)
      || (tty->eoslen != eoslen)
      || (memcmp(tty->eos, eos, eoslen) != 0)) {
@@ -528,7 +529,7 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eos
                 if (tty->eos == NULL) {
                     tty->eosCapacity = 0;
                     tty->eoslen = 0;
-                    errlogPrintf("Can't allocate memory for %s EOS\n", tty->serialDeviceName);
+                    errlogPrintf("devGenericSerial: Can't allocate memory for %s EOS\n", tty->serialDeviceName);
                     closeConnection(tty);
                     return asynError;
                 }
