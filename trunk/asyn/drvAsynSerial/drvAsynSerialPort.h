@@ -17,7 +17,7 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-int drvAsynLocalSerialPortConfigure(char *portName, char *ttyName,
+int drvAsynSerialPortConfigure(char *portName, char *ttyName,
                               unsigned int priority, int noAutoConnect);
 
 #ifdef __cplusplus

@@ -15,4 +15,4 @@
 
 #include <epicsExport.h>
 
-int epicsShareAPI interposeEosConfig(const char *portName,int addr);
+int epicsShareAPI asynInterposeEosConfig(const char *portName,int addr);
