@@ -74,9 +74,9 @@ epicsShareDef asynSyncIO *pasynSyncIO = &asynSyncIOManager;
 /* Timeout for queue callback.  0. means wait forever, don't remove entry
    from queue */
 #define QUEUE_TIMEOUT 0.
-/* Timeout for event waiting for queue. Set this to long time, lets other
-   threads talk on port  */
-#define EVENT_TIMEOUT 10.
+/* Timeout for event waiting for queue. This time lets other threads talk 
+ * on port  */
+#define EVENT_TIMEOUT 1.
 
 static void asynSyncIOCallback(asynUser *pasynUser);
 
@@ -168,8 +168,17 @@ static asynStatus
        return(status);
     }
 
-    /* Wait for event, signals I/O is complete */
-    waitStatus = epicsEventWaitWithTimeout(pPvt->event, EVENT_TIMEOUT);
+    /* Wait for event, signals I/O is complete
+     * The user specified timeout is for reading the device.  We want
+     * to also allow some time for other threads to talk to the device,
+     * which means there could be some time before our message gets to the
+     * head of the queue.  So add EVENT_TIMEOUT to timeout. 
+     * If timeout is -1 this means wait forever, so don't do timeout at all*/
+    if (timeout == -1.0)
+       waitStatus = epicsEventWait(pPvt->event);
+    else
+       waitStatus = epicsEventWaitWithTimeout(pPvt->event, 
+                                              timeout+EVENT_TIMEOUT);
     if (waitStatus!=epicsEventWaitOK) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                  "asynSyncIOQueueAndWait queue timeout\n");
