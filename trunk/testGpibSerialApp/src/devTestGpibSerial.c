@@ -62,28 +62,28 @@ static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3);
 static struct gpibCmd gpibCmds[] = 
 {
   /* Param 0, */
-  {&DSET_BO, GPIBIFC|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 1, */
-  {&DSET_BO, GPIBREN|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBREN, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 2, */
-  {&DSET_BO, GPIBDCL|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBDCL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 3, */
-  {&DSET_BO, GPIBLLO|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBLLO, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 4, */
-  {&DSET_BO, GPIBSDC|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBSDC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 5, */
-  {&DSET_BO, GPIBGTL|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBGTL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 6, */
-  {&DSET_BO, GPIBRESETLNK|GPIBEOS, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_BO, GPIBRESETLNK, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
 
   /* Param 7, */
-  {&DSET_LI, GPIBSRQHANDLER|GPIBEOS, IB_Q_LOW, 0,  0, 0, 0, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_LI, GPIBSRQHANDLER, IB_Q_LOW, 0,  0, 0, 0, 0, 0, 0, 0, 0, -1},
   /* Param 8 */
-  {&DSET_LO, GPIBWRITE|GPIBEOS, IB_Q_LOW, 0, "DESE %ld\n", 0, 20, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "DESE %ld\n", 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 9 */
-  {&DSET_LO, GPIBWRITE|GPIBEOS, IB_Q_LOW, 0, "*ESE %ld\n", 0, 20, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*ESE %ld\n", 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 10 */
-  {&DSET_LO, GPIBWRITE|GPIBEOS, IB_Q_LOW, 0, "*SRE %ld\n", 0, 20, 0, 0, 0, 0, 0, '\n'},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld\n", 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 11 */
   {&DSET_LI, GPIBREAD|GPIBEOS, IB_Q_LOW, "DESE?\n",  "%ld", 0, 20, 0, 0, 0, 0, 0, '\n'},
   /* Param 12 */
@@ -98,9 +98,9 @@ static struct gpibCmd gpibCmds[] =
   /* Param 16 (id)   */
   {&DSET_SI, GPIBREAD|GPIBEOS, IB_Q_LOW, "*IDN?\n", 0, 0, 200, readString, 0, 0, 0, 0, '\n'},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW|GPIBEOS, IB_Q_LOW, "*IDN?\n", 0, 0, 200, readString, 0, 0, 0, 0, '\n'},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?\n", 0, 0, 200, readString, 0, 0, 0, 0, -1},
   /* Param 18, */
-  {&DSET_BO, GPIBCMD|GPIBEOS, IB_Q_LOW, "XXXJUNK\n",  0, 0, 0, 0, 0, 0, 0, 0, '\n'}
+  {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK\n",  0, 0, 0, 0, 0, 0, 0, 0, -1}
 };
 
 
