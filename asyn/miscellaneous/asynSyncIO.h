@@ -1,13 +1,12 @@
-/*****************************************************************
-                          COPYRIGHT NOTIFICATION
-*****************************************************************
-
-(C)  COPYRIGHT 1993 UNIVERSITY OF CHICAGO
-
-This software was developed under a United States Government license
-described on the COPYRIGHT_UniversityOfChicago file included as part
-of this distribution.
-**********************************************************************/
+/*asynSyncIO.h*/
+/***********************************************************************
+* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
+* National Laboratory, and the Regents of the University of
+* California, as Operator of Los Alamos National Laboratory, and
+* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
+* asynDriver is distributed subject to a Software License Agreement
+* found in file LICENSE that is included with this distribution.
+***********************************************************************/
 
 /*
  *      Original Author: Mark Rivers

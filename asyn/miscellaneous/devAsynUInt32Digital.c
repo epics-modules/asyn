@@ -1,6 +1,13 @@
-/* devAsynUInt32Digital.c 
-
-    Author:  Mark Rivers
+/* devAsynUInt32Digital.c */
+/***********************************************************************
+* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
+* National Laboratory, and the Regents of the University of
+* California, as Operator of Los Alamos National Laboratory, and
+* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
+* asynDriver is distributed subject to a Software License Agreement
+* found in file LICENSE that is included with this distribution.
+***********************************************************************/
+/*  Author:  Mark Rivers
 
    This file provides device support for the following records for the
    asynUInt32Digital and asynUInt32DigitalCallback interfaces.
@@ -8,7 +15,6 @@
       longout
       binary input (bi)
       binary output (bo)
-
 */
 
 #include <stdlib.h>
