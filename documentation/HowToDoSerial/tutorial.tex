@@ -499,7 +499,7 @@ an Ethernet/RS-232 converter or a device which communicates over
 a telnet-style socket connection you need to specify the Internet host and
 port number like:
 \begin{verbatim}
-drvTermiosTtyGpibConfigure("L0","164.54.9.91:4002",0,0)
+drvGenericSerialConfigure("L0","164.54.9.91:4002",0,0)
 \end{verbatim}
 
 
@@ -529,7 +529,7 @@ asynSetPortOption("L0","baud","9600")
 \end{itemize}
 
 In all of the above examples the first argument of the
-drvTermiosTtyGpibConfigure and asynSetPortOption commands is
+drvGenericSerialConfigure and asynSetPortOption commands is
 the link identifier and must match the \verb@L@ value in the EPICS
 database record INP and OUT fields.
 
@@ -579,7 +579,7 @@ asynSetTraceIOMask("L0",0,0x2)
 iocInit()
 ############################################################################
 ###  EPICS IOC CORE built on Jan 29 2004
-###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-03 21:43:40 $$
+###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-05 15:52:34 $$
 ############################################################################
 Starting iocInit
 iocInit: All initialization complete
@@ -686,5 +686,43 @@ VAL: 4
 Here is the complete device support file for the AB300 filter wheel
 ({\tt AB300App/src/devAB300.c}):
 \verbatimfile{AB300/AB300App/src/devAB300.c}
+
+\section{asynTrace support}
+The asynTrace facility provides a convenient mechanism for controlling
+the diagnostic messages produced by asyn drivers.  To add asynTrace
+to your application:
+\begin{enumerate}
+\item  Add the line
+\begin{verbatim}
+include "devAsynTrace.dbd"
+\end{verbatim}
+to the application {\it xxx}{\tt Include.dbd} file.
+
+\item  Add the line
+\begin{verbatim}
+DB_INSTALLS += $(ASYN)/db/asynTrace.db
+\end{verbatim}
+to an application {\tt Makefile}.
+
+\item  For each port on which you wish to control diagnostic messages,
+add a line like
+\begin{verbatim}
+dbLoadRecords("db/asynTrace.db","ioc=ab300Test,port=L0,addr=0")
+\end{verbatim}
+to the application startup ({\tt st.cmd}) script.
+The {\tt port} value must match the the value in the corresponding
+{\tt drvGenericSerialConfigure} command. The {\tt addr} value should be zero.
+The {\tt ioc} value is arbitrary and should be chosen so that the ioc/port/addr
+combination is unique among all IOCs on your network.
+\end{enumerate}
+
+To run the asynTrace screen, add {\it $<$asynTop$>$}{\tt /testApp/adl} to your
+\verb@EPICS_DISPLAY_PATH@ environment variable and start medm with
+{\tt ioc}, {\tt port} and {\tt addr} values
+matching those given in the {\tt dbLoadRecords} command:
+\begin{verbatim}
+medm -x -macro "ioc=ab300Test,port=L0,addr=0" asynTrace.adl &
+\end{verbatim}
+
 
 \end{document}
