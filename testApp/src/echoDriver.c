@@ -277,6 +277,15 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
             pechoPvt->portName,addr);
         return asynError;
     }
+    if(pechoPvt->delay>pasynUser->timeout) {
+        if(pasynUser->timeout>0.0) epicsThreadSleep(pasynUser->timeout);
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s echoDriver read timeout\n",pechoPvt->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver read timeout\n",pechoPvt->portName);
+        return asynTimeout;
+    }
+    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     pdeviceBuffer = &pdeviceInfo->buffer;
     nremaining = pdeviceBuffer->nchars;
     pdeviceBuffer->nchars = 0;
@@ -311,7 +320,6 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
         "echoRead nbytesTransfered %d ",*nbytesTransfered);
-    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     return status;
 }
 
@@ -343,6 +351,14 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
             "%s echoDriver:write device %d not connected\n",
             pechoPvt->portName,addr);
         return asynError;
+    }
+    if(pechoPvt->delay>pasynUser->timeout) {
+        if(pasynUser->timeout>0.0) epicsThreadSleep(pasynUser->timeout);
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s echoDriver write timeout\n",pechoPvt->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver write timeout\n",pechoPvt->portName);
+        return asynTimeout;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
     if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
