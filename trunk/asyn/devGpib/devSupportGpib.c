@@ -117,6 +117,7 @@ static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str);
 static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt);
 static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd);
+static void completeProcess(gpibDpvt *pgpibDpvt);
 
 static devSupportGpib gpibSupport = {
     initRecord,
@@ -130,7 +131,8 @@ static devSupportGpib gpibSupport = {
     writeMsgDouble,
     writeMsgString,
     readArbitraryBlockProgramData,
-    gpibSetEOS
+    gpibSetEOS,
+    completeProcess
 };
 epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 
@@ -526,6 +528,51 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     return pgpibDpvt->msgInputLen;
 }
 
+static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
+{
+    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    dbCommon *precord = pgpibDpvt->precord;
+    asynStatus status;
+    int eosLen;
+
+    if(pgpibCmd->eos) {
+        eosLen = strlen(pgpibCmd->eos);
+        if(eosLen==0) eosLen = 1;
+    } else {
+        eosLen = 0;
+    }
+    status = pgpibDpvt->pasynOctet->setEos(
+        pgpibDpvt->asynOctetPvt,pasynUser,pgpibCmd->eos,eosLen);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynOctet->setEos failed %s\n",
+            precord->name,pgpibDpvt->pasynUser->errorMessage);
+        return -1;
+    }
+    return 0;
+}
+
+static void completeProcess(gpibDpvt *pgpibDpvt)
+{
+    asynUser   *pasynUser = pgpibDpvt->pasynUser;
+    dbCommon   *precord = pgpibDpvt->precord;
+    asynStatus status;
+    int        yesNo = 0;
+
+    status = pasynManager->canBlock(pasynUser,&yesNo);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynOctet->setEos failed %s\n",
+            precord->name,pgpibDpvt->pasynUser->errorMessage);
+    }
+    if(yesNo) {
+        callbackRequestProcessCallback(
+            &pgpibDpvt->callback,precord->prio,precord);
+    } else {
+        precord->pact = FALSE;
+    }
+}
+
 static void commonGpibPvtInit(void) 
 {
     if(pcommonGpibPvt) return;
@@ -740,30 +787,6 @@ static int queueIt(gpibDpvt *pgpibDpvt,int isLocked)
     }
     if(!isLocked)epicsMutexUnlock(pportInstance->lock);
     return 1;
-}
-
-static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
-{
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
-    dbCommon *precord = pgpibDpvt->precord;
-    asynStatus status;
-    int eosLen;
-
-    if(pgpibCmd->eos) {
-        eosLen = strlen(pgpibCmd->eos);
-        if(eosLen==0) eosLen = 1;
-    } else {
-        eosLen = 0;
-    }
-    status = pgpibDpvt->pasynOctet->setEos(
-        pgpibDpvt->asynOctetPvt,pasynUser,pgpibCmd->eos,eosLen);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s pasynOctet->setEos failed %s\n",
-            precord->name,pgpibDpvt->pasynUser->errorMessage);
-        return -1;
-    }
-    return 0;
 }
 
 static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)

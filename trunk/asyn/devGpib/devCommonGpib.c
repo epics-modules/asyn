@@ -45,7 +45,7 @@
 /* The following is a generic finish routine for output records */
 static void genericFinish(gpibDpvt * pgpibDpvt,int failure)
 {
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static void aiFinish(gpibDpvt *pgpibDpvt,int failure);
@@ -124,7 +124,7 @@ static void aiFinish(gpibDpvt * pgpibDpvt,int failure)
         if(result!=1) failure = -1;
     }
     if(failure==-1) recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static int aoStart(gpibDpvt *pgpibDpvt,int failure);
@@ -268,7 +268,7 @@ static void biFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pbi, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static int boStart(gpibDpvt *pgpibDpvt,int failure);
@@ -406,7 +406,7 @@ static void boWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
     }
     if(status!=asynSuccess) failure = -1;
     if(failure==-1) recGblSetSevr(precord, WRITE_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static void evFinish(gpibDpvt *pgpibDpvt,int failure);
@@ -479,7 +479,7 @@ static void evFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pev, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static void liFinish(gpibDpvt *pgpibDpvt,int failure);
@@ -564,7 +564,7 @@ static void liFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static int loStart(gpibDpvt *pgpibDpvt,int failure);
@@ -722,7 +722,7 @@ static void mbbiFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pmbbi, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static void mbbiDirectFinish(gpibDpvt *pgpibDpvt,int failure);
@@ -796,7 +796,7 @@ static void mbbiDirectFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pmbbiDirect, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static int mbboStart(gpibDpvt *pgpibDpvt,int failure);
@@ -998,7 +998,7 @@ static void siFinish(gpibDpvt * pgpibDpvt,int failure)
         psi->udf = FALSE;
     }
     if(failure==-1) recGblSetSevr(psi, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }
 
 static int soStart(gpibDpvt *pgpibDpvt,int failure);
@@ -1162,5 +1162,5 @@ static void wfFinish(gpibDpvt * pgpibDpvt,int failure)
         }
     }
     if(failure==-1) recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
-    requestProcessCallback(pgpibDpvt);
+    pdevSupportGpib->completeProcess(pgpibDpvt);
 }

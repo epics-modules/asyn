@@ -172,6 +172,7 @@ struct devSupportGpib {
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
     int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
+    void (*completeProcess)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
 
@@ -184,9 +185,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
     ((pdpvt)->pdevGpibParmBlock->gpibCmds[((pdpvt))->parm].type)
 #define devGpibNamesGet(pdpvt) \
     ((pdpvt)->pdevGpibParmBlock->gpibCmds[((pdpvt))->parm].pdevGpibNames)
-#define requestProcessCallback(pgpibDpvt) \
-    callbackRequestProcessCallback( \
-       &((pgpibDpvt)->callback),(pgpibDpvt)->precord->prio,(pgpibDpvt)->precord)
 
 /*  gpibCmd.type ************************************************************
  *
