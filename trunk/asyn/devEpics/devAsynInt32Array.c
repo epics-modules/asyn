@@ -19,6 +19,7 @@
 #include <alarm.h>
 #include <recGbl.h>
 #include <dbAccess.h>
+#include <callback.h>
 #include <dbDefs.h>
 #include <link.h>
 #include <errlog.h>
@@ -42,6 +43,7 @@ typedef struct devAsynWfPvt{
     asynInt32Array  *pint32Array;
     void            *int32ArrayPvt;
     int             canBlock;
+    CALLBACK        callback;
     IOSCANPVT       ioScanPvt;
     char            *portName;
     char            *userParam;
@@ -164,7 +166,6 @@ static void callbackWfOut(asynUser *pasynUser)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pasynUser->userPvt;
     waveformRecord *pwf = (waveformRecord *)pPvt->pr;
-    rset *prset = (rset *)pwf->rset;
     int status;
 
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
@@ -179,11 +180,7 @@ static void callbackWfOut(asynUser *pasynUser)
               pwf->name, pasynUser->errorMessage);
         recGblSetSevr(pwf, WRITE_ALARM, INVALID_ALARM);
     }
-    if (pwf->pact) {
-        dbScanLock((dbCommon *)pwf);
-        prset->process(pwf);
-        dbScanUnlock((dbCommon *)pwf);
-    }
+    if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf);
 } 
 
 static void callbackWf(asynUser *pasynUser)

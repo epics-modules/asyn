@@ -21,12 +21,13 @@
 #include <dbAccess.h>
 #include <dbDefs.h>
 #include <link.h>
+#include <dbScan.h>
+#include <callback.h>
 #include <errlog.h>
 #include <epicsExport.h>
 #include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
-#include <dbScan.h>
 #include <waveformRecord.h>
 #include <recSup.h>
 #include <devSup.h>
@@ -42,6 +43,7 @@ typedef struct devAsynWfPvt{
     asynFloat64Array  *pfloat64Array;
     void            *float64ArrayPvt;
     int             canBlock;
+    CALLBACK        callback;
     IOSCANPVT       ioScanPvt;
     char            *portName;
     char            *userParam;
@@ -164,7 +166,6 @@ static void callbackWfOut(asynUser *pasynUser)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pasynUser->userPvt;
     waveformRecord *pwf = (waveformRecord *)pPvt->pr;
-    rset *prset = (rset *)pwf->rset;
     int status;
 
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
@@ -179,11 +180,7 @@ static void callbackWfOut(asynUser *pasynUser)
               pwf->name, pasynUser->errorMessage);
         recGblSetSevr(pwf, WRITE_ALARM, INVALID_ALARM);
     }
-    if (pwf->pact) {
-        dbScanLock((dbCommon *)pwf);
-        prset->process(pwf);
-        dbScanUnlock((dbCommon *)pwf);
-    }
+    if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf);
 } 
 
 static void callbackWf(asynUser *pasynUser)
