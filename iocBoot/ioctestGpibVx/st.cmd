@@ -13,7 +13,7 @@ testGpibVx_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
 
-vxi11Debug = 10
+#vxi11Debug = 10
 
 #The following command is for the E2050
 #E2050Reboot("164.54.8.227")
