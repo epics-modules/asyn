@@ -1,14 +1,14 @@
 
 file {
-	name="i:\epics\synApps5-1\ip\ipApp\op\adl\asynGPIBSetup.adl"
+	name="C:\Program Files\EPICS\adls\asynGPIBSetup.adl"
 	version=020306
 }
 display {
 	object {
-		x=154
-		y=345
+		x=288
+		y=334
 		width=375
-		height=165
+		height=185
 	}
 	clr=14
 	bclr=4
@@ -89,181 +89,6 @@ display {
 }
 composite {
 	object {
-		x=4
-		y=48
-		width=210
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=48
-				width=130
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="GPIB address:"
-		}
-		"text entry" {
-			object {
-				x=139
-				y=48
-				width=75
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ADDR"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-	}
-}
-composite {
-	object {
-		x=4
-		y=73
-		width=284
-		height=28
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=77
-				width=210
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Serial poll response:"
-		}
-		composite {
-			object {
-				x=219
-				y=73
-				width=69
-				height=28
-			}
-			"composite name"=""
-			children {
-				rectangle {
-					object {
-						x=219
-						y=73
-						width=69
-						height=28
-					}
-					"basic attribute" {
-						clr=14
-						fill="outline"
-					}
-					"dynamic attribute" {
-						chan="$(P)$(R).SEVR"
-					}
-				}
-				"text update" {
-					object {
-						x=224
-						y=78
-						width=56
-						height=20
-					}
-					monitor {
-						chan="$(P)$(R).SPR"
-						clr=14
-						bclr=4
-					}
-					format="hexadecimal"
-					limits {
-					}
-				}
-			}
-		}
-	}
-}
-composite {
-	object {
-		x=4
-		y=106
-		width=355
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=106
-				width=170
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Universal Command"
-		}
-		menu {
-			object {
-				x=179
-				y=106
-				width=180
-				height=20
-			}
-			control {
-				chan="$(P)$(R).UCMD"
-				clr=14
-				bclr=51
-			}
-		}
-	}
-}
-composite {
-	object {
-		x=4
-		y=131
-		width=355
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=131
-				width=170
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Addressed Command"
-		}
-		menu {
-			object {
-				x=179
-				y=131
-				width=180
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ACMD"
-				clr=14
-				bclr=51
-			}
-		}
-	}
-}
-composite {
-	object {
 		x=86
 		y=9
 		width=203
@@ -296,4 +121,234 @@ composite {
 			align="horiz. centered"
 		}
 	}
+}
+composite {
+	object {
+		x=4
+		y=68
+		width=355
+		height=103
+	}
+	"composite name"=""
+	children {
+		composite {
+			object {
+				x=4
+				y=68
+				width=210
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=4
+						y=68
+						width=130
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="GPIB address:"
+				}
+				"text entry" {
+					object {
+						x=139
+						y=68
+						width=75
+						height=20
+					}
+					control {
+						chan="$(P)$(R).ADDR"
+						clr=14
+						bclr=51
+					}
+					limits {
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=4
+				y=93
+				width=284
+				height=28
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=4
+						y=97
+						width=210
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Serial poll response:"
+				}
+				composite {
+					object {
+						x=219
+						y=93
+						width=69
+						height=28
+					}
+					"composite name"=""
+					children {
+						rectangle {
+							object {
+								x=219
+								y=93
+								width=69
+								height=28
+							}
+							"basic attribute" {
+								clr=14
+								fill="outline"
+							}
+							"dynamic attribute" {
+								chan="$(P)$(R).SEVR"
+							}
+						}
+						"text update" {
+							object {
+								x=224
+								y=98
+								width=56
+								height=20
+							}
+							monitor {
+								chan="$(P)$(R).SPR"
+								clr=14
+								bclr=4
+							}
+							format="hexadecimal"
+							limits {
+							}
+						}
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=4
+				y=126
+				width=355
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=4
+						y=126
+						width=170
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Universal Command"
+				}
+				menu {
+					object {
+						x=179
+						y=126
+						width=180
+						height=20
+					}
+					control {
+						chan="$(P)$(R).UCMD"
+						clr=14
+						bclr=51
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=4
+				y=151
+				width=355
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=4
+						y=151
+						width=170
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Addressed Command"
+				}
+				menu {
+					object {
+						x=179
+						y=151
+						width=180
+						height=20
+					}
+					control {
+						chan="$(P)$(R).ACMD"
+						clr=14
+						bclr=51
+					}
+				}
+			}
+		}
+	}
+}
+text {
+	object {
+		x=218
+		y=42
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).GPIBIV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=208
+		y=42
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).GPIBIV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=4
+		y=42
+		width=200
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="asynGpib interface:"
 }
