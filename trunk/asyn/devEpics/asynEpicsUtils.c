@@ -66,7 +66,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
             return(asynError);
         }
         *port = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
-        *port[len] = 0;
+        (*port)[len] = 0;
         strncpy(*port,pvmeio->parm,len);
         *userParam = 0; /*initialize to null string*/
         if(*p) {
@@ -75,7 +75,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
                 len = strlen(p);
                 *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");	
                 strncpy(*userParam,p,len);
-                *userParam[len] = 0;
+                (*userParam)[len] = 0;
             }
         }
         break;
