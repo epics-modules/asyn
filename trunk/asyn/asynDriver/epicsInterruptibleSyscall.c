@@ -12,7 +12,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.1 2003-11-06 16:55:51 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.2 2003-11-06 18:49:40 norume Exp $
  */
 
 #include <stdio.h>
@@ -119,7 +119,8 @@ epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
         ioctl(c->fd, FIOCANCEL, 0);
 #else
         tcflush(c->fd, TCOFLUSH);
-        epicsSignalRaiseSigAlarm(c->tid);
+        if (c->tid != NULL)
+            epicsSignalRaiseSigAlarm(c->tid);
 #endif
     }
     else {  /* Assume it's a socket */
@@ -137,7 +138,8 @@ epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
             break;
 
         case esscimqi_socketSigAlarmRequired:
-            epicsSignalRaiseSigAlarm(c->tid);
+            if (c->tid != NULL)
+                epicsSignalRaiseSigAlarm(c->tid);
             break;
 
         default:
