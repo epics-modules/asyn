@@ -23,7 +23,8 @@ extern "C" {
 
 #define asynUInt32DigitalSyncIOType "asynUInt32DigitalSyncIO"
 typedef struct asynUInt32DigitalSyncIO {
-    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+    asynStatus (*connect)(const char *port, int addr, 
+                       asynUser **ppasynUser, char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,
                        epicsUInt32 value,epicsUInt32 mask,double timeout);
@@ -34,17 +35,21 @@ typedef struct asynUInt32DigitalSyncIO {
     asynStatus (*clearInterrupt)(asynUser *pasynUser,
                        epicsUInt32 mask,double timeout);
     asynStatus (*getInterrupt)(asynUser *pasynUser,
-                      epicsUInt32 *mask, interruptReason reason,double timeout);
+                       epicsUInt32 *mask, interruptReason reason,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
-                       epicsUInt32 value,epicsUInt32 mask,double timeout);
+                       epicsUInt32 value,epicsUInt32 mask,double timeout,
+                       char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
-                       epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+                       epicsUInt32 *pvalue,epicsUInt32 mask,double timeout,
+                       char *drvInfo);
     asynStatus (*setInterruptOnce)(const char *port, int addr,
-                      epicsUInt32 mask, interruptReason reason,double timeout);
+                       epicsUInt32 mask, interruptReason reason,double timeout,
+                       char *drvInfo);
     asynStatus (*clearInterruptOnce)(const char *port, int addr,
-                       epicsUInt32 mask,double timeout);
+                       epicsUInt32 mask,double timeout,char *drvInfo);
     asynStatus (*getInterruptOnce)(const char *port, int addr,
-                      epicsUInt32 *mask, interruptReason reason,double timeout);
+                       epicsUInt32 *mask, interruptReason reason,double timeout,
+                       char *drvInfo);
 } asynUInt32DigitalSyncIO;
 epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;
 
