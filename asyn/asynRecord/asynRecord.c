@@ -330,7 +330,7 @@ static long special(struct dbAddr *paddr, int after)
             if(status!=asynSuccess || !pasynUser->auxStatus) {
                 reportError(pasynRec, COMM_ALARM, MINOR_ALARM,
                     "special connect/disconnect",
-                    "asynCallback is active\n");
+                    "asynCallback is active");
                 return 0;
             }
             pasynRecPvt->state = stateConnect;
@@ -348,7 +348,7 @@ static long special(struct dbAddr *paddr, int after)
     if(pasynRecPvt->state!=stateIdle) {
        reportError(pasynRec, COMM_ALARM, MINOR_ALARM,
            "special",
-           " state!=stateIdle, state=%d, try again later\n",pasynRecPvt->state);
+           " state!=stateIdle, state=%d, try again later",pasynRecPvt->state);
        goto done;
     } 
     switch (fieldIndex) {
@@ -860,13 +860,22 @@ static void performIO(asynUser *pasynUser)
                    pasynUser, inptr, nread,&nbytesTransfered);
 
       asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
-            "%s: inlen=%d, ninp=%d\n", pasynRec->name, inlen, nbytesTransfered);
-      if (status!=asynSuccess || nbytesTransfered == 0) 
-         /* Something is wrong if we didn't get any response */
-         reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
-                     "Timeout, nothing received",
-                     "timeout in performIO, ninp=%d, %s", 
-                     nbytesTransfered, pasynUser->errorMessage);
+            "%s: inlen=%d, status=%d, ninp=%d\n", pasynRec->name, inlen, 
+            status, nbytesTransfered);
+      if (status!=asynSuccess) {
+         if (nbytesTransfered == 0) {
+            /* Nothing transfered */
+            reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
+                        "Timeout, nothing received",
+                        "timeout in performIO, ninp=%d, %s", 
+                        nbytesTransfered, pasynUser->errorMessage);
+         } else {
+            reportError(pasynRec, READ_ALARM, MINOR_ALARM,
+                        "Timeout",
+                        "timeout in performIO, ninp=%d, %s", 
+                        nbytesTransfered, pasynUser->errorMessage);
+         }
+      }
       /* Check for input buffer overflow */
       if ((pasynRec->ifmt == asynFMT_ASCII) && 
           (nbytesTransfered >= (int)sizeof(pasynRec->ainp))) {
