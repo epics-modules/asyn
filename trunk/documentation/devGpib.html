@@ -1047,7 +1047,7 @@ address of a gpibDpvt</p>
     <dd>Address of the devGpibParmBlock. It is the same value as
       <code>pgDset-&gt;pdevGpibPvt</code?</dd></code></dd>
   <dt><code>callback</code></dt>
-    <dd>For use by requestProcessCallback.</dd>
+    <dd>For use by completeProcess.</dd>
   <dt><code>precord</code></dt>
     <dd>Address of the record.</dd>
   <dt><code>pasynUser</code></dt>
@@ -1112,6 +1112,7 @@ struct devSupportGpib {
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
     int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
+    void (*completeProcess)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
@@ -1172,6 +1173,11 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
   <dt><code>setEos</code></dt>
     <dd>If the End of String terminator needs to be changed, it must be
       changed by calling this rather than calling the low level driver.</dd>
+  <dt><code>completeProcess</code></dt>
+    <dd>If the port can block, callbackRequestProcessCallback is called.
+    If the port can not block then PACT is set false. Thus before calling
+    queueRequest, the caller should set PACT true.
+    </dd>
   <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib.</dd>
 </dl>
