@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 /* epics includes */
+#include <epicsAssert.h>
 #include <ellLib.h>
 #include <errlog.h>
 #include <taskwd.h>
@@ -70,9 +71,9 @@ typedef struct gpibPvt {
 /* forward reference to internal methods */
 static void gpibInit(void);
 static gpibPvt *locateGpibPvt(const char *portName);
-static void srqPoll(void *drvPvt);
+static void srqPoll(asynUser *pasynUser);
 /*asynCommon methods */
-static void report(void *drvPvt,int details);
+static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
@@ -132,10 +133,11 @@ static gpibPvt *locateGpibPvt(const char *portName)
     }
     return(0);
 }
-static void srqPoll(void *drvPvt)
+static void srqPoll(asynUser *pasynUser)
 {
-    GETgpibPvtasynGpibPort
+    void *drvPvt = pasynUser->userPvt;
     int srqStatus,primary,secondary;
+    GETgpibPvtasynGpibPort
 
     srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
     while(srqStatus) {
@@ -175,10 +177,10 @@ static void srqPoll(void *drvPvt)
 }
 
 /*asynCommon methods */
-static void report(void *drvPvt,int details)
+static void report(void *drvPvt,FILE *fd,int details)
 {
     GETgpibPvtasynGpibPort
-    pasynGpibPort->report(pgpibPvt->asynGpibPortPvt,details);
+    pasynGpibPort->report(pgpibPvt->asynGpibPortPvt,fd,details);
 }
 
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
@@ -196,8 +198,9 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 /*asynOctet methods */
 static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars)
 {
-    GETgpibPvtasynGpibPort
     int nchars;
+    GETgpibPvtasynGpibPort
+
     nchars = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
            data,maxchars);
     return(nchars);
@@ -206,8 +209,9 @@ static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars)
 static int gpibWrite(void *drvPvt,asynUser *pasynUser,
                     const char *data,int numchars)
 {
-    GETgpibPvtasynGpibPort
     int nchars;
+    GETgpibPvtasynGpibPort
+
     nchars = pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
            data,numchars);
     return(nchars);
@@ -256,8 +260,8 @@ static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff)
 static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
      srqHandler handler, void *srqHandlerPvt)
 {
-    GETgpibPvtasynGpibPort
     asynStatus status;
+    GETgpibPvtasynGpibPort
 
     if(pgpibPvt->srq_handler) {
         printf("%s asynGpib:registerSrqHandler. handler already registered\n",
@@ -272,11 +276,10 @@ static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
 
 static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 {
+    int primary,secondary,addr;
     GETgpibPvtasynGpibPort
 
-    int primary,secondary;
-    int addr = pasynUser->addr;
-
+    addr = pasynManager->getAddr(pasynUser);
     if(addr<100) {
 	assert(addr>=0 && addr<NUM_GPIB_ADDRESSES);
 	pgpibPvt->pollList[addr].primary.pollIt = onOff;
@@ -326,7 +329,8 @@ static void *registerPort(
          paasynInterface,NUM_INTERFACES,priority,stackSize);
     if(status==asynSuccess) {
         pgpibPvt->pasynUser = pasynManager->createAsynUser(srqPoll,0);
-        status = pasynManager->connectPort(pgpibPvt->pasynUser,portName);
+        pgpibPvt->pasynUser->userPvt = pgpibPvt;
+        status = pasynManager->connectDevice(pgpibPvt->pasynUser,portName,0);
     }
     if(status!=asynSuccess) return(0);
     return((void *)pgpibPvt);
@@ -334,8 +338,8 @@ static void *registerPort(
 
 static void srqHappened(void *drvPvt)
 {
-    GETgpibPvtasynGpibPort
     asynStatus status;
+    GETgpibPvtasynGpibPort
 
     status = pasynManager->queueRequest(pgpibPvt->pasynUser,
         asynQueuePriorityLow,0.0);

@@ -251,7 +251,7 @@ static void report(FILE *fd,int details)
     while(pasynPort) {
 	int nQueued, i;
         asynCommon *pasynCommon;
-        void *asynCommonPvt;
+        void *asynCommonPvt = 0;
         asynDevice *pasynDevice;
 
         pasynCommon = 0;

@@ -25,9 +25,6 @@ SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
 asyn_SRCS += asynGpib.c
 
-#SRC_DIRS += $(ASYN)/serialDriver
-#INC += serialDriver.h
-
 SRC_DIRS += $(ASYN)/devGpib
 INC += devGpib.h
 INC += devSupportGpib.h

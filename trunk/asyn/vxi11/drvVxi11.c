@@ -116,7 +116,7 @@ STATIC int vxiSrqTask(void);
 STATIC void vxiIrq(struct svc_req * rqstp, SVCXPRT * transp);
 
 /* asynGpibPort methods */
-STATIC void vxiReport(void *pdrvPvt,int details);
+STATIC void vxiReport(void *pdrvPvt,FILE *fd,int details);
 STATIC asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
 STATIC asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
 STATIC int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
@@ -485,8 +485,8 @@ STATIC void vxiReconnect(vxiLink * pvxiLink)
     preconnect->pvxiLink = pvxiLink;
     preconnect->pasynUser = pasynManager->createAsynUser(reconnectCallback,0);
     preconnect->pasynUser->userPvt = preconnect;
-    status = pasynManager->connectPort(
-        preconnect->pasynUser,pvxiLink->portName);
+    status = pasynManager->connectDevice(
+        preconnect->pasynUser,pvxiLink->portName,0);
     status = pasynManager->queueRequest(preconnect->pasynUser,
         asynQueuePriorityLow,0);
 }
@@ -639,19 +639,19 @@ STATIC void vxiIrq(struct svc_req * rqstp, SVCXPRT * transp)
     return;
 }
 
-STATIC void vxiReport(void *pdrvPvt,int details)
+STATIC void vxiReport(void *pdrvPvt,FILE *fd,int details)
 {
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     assert(pvxiLink);
-    printf("  HP link, host name: %s\n", pvxiLink->hostName);
+    fprintf(fd,"  HP link, host name: %s\n", pvxiLink->hostName);
     if(details > 1) {
 	char nameBuf[60];
 	if(ipAddrToHostName(&pvxiLink->inAddr, nameBuf, sizeof nameBuf) > 0)
-	    printf(" ip address: %s\n", nameBuf);
-	printf("  vxi name: %s\n", pvxiLink->vxiName);
-	printf("  maxRecvSize: %lu\n", pvxiLink->maxRecvSize);
-	printf("  isSingleLink: %s\n", ((pvxiLink->isSingleLink) ? "yes" : "no"));
-	printf("  srq task: %s (%p)\n", srqThreadName,
+	    fprintf(fd," ip address: %s\n", nameBuf);
+	fprintf(fd,"  vxi name: %s\n", pvxiLink->vxiName);
+	fprintf(fd,"  maxRecvSize: %lu\n", pvxiLink->maxRecvSize);
+	fprintf(fd,"  isSingleLink: %s\n", ((pvxiLink->isSingleLink) ? "yes" : "no"));
+	fprintf(fd,"  srq task: %s (%p)\n", srqThreadName,
 	       (void *) pvxiLocal->srqThreadId);
     }
 }
@@ -758,7 +758,7 @@ STATIC int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
 {
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     int status = 0;
-    int addr = pasynUser->addr;
+    int addr = pasynManager->getAddr(pasynUser);
     enum clnt_stat clntStat;
     Device_ReadParms devReadP;
     Device_ReadResp devReadR;
@@ -819,16 +819,15 @@ STATIC int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
 {
     vxiLink *pvxiLink = (vxiLink *) pdrvPvt;
     int status = 0;
-    int addr = pasynUser->addr;
-
-    assert(pvxiLink && data);
-    if(vxi11Debug) printf("%s vxiWrite %s\n",pvxiLink->portName,data);
+    int addr = pasynManager->getAddr(pasynUser);
     enum clnt_stat clntStat;
     Device_WriteParms devWriteP;
     Device_WriteResp devWriteR;
     int rtnlen = 0;
     int lennow;
 
+    assert(pvxiLink && data);
+    if(vxi11Debug) printf("%s %d vxiWrite %s\n",pvxiLink->portName,addr,data);
     assert(pvxiLink);
     assert(data);
     if(!vxiSetDevLink(pvxiLink, addr, &devWriteP.lid)) return(-1);
@@ -907,11 +906,12 @@ STATIC asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     Device_Link lid;
     long status;
+    int addr = pasynManager->getAddr(pasynUser);
 
     assert(pvxiLink);
     assert(data);
     if(vxi11Debug) printf("%s vxiAddressedCmd %s\n",pvxiLink->portName,data);
-    if(!vxiSetDevLink(pvxiLink, pasynUser->addr, &lid)) return(-1);
+    if(!vxiSetDevLink(pvxiLink, addr, &lid)) return(-1);
     status = vxiWriteAddressed(pvxiLink,lid,(char *)data,length,pvxiLink->defTimeout);
     return(status);
 }

@@ -69,7 +69,7 @@ epicsShareExtern asynGpib *pasynGpib;
 
 struct asynGpibPort {
     /*asynCommon methods */
-    void (*report)(void *drvPvt,int details);
+    void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
     /*asynOctet methods passed through from asynGpib*/
