@@ -510,6 +510,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
         finish((dbCommon *)pwf);
         return;
     }
+    dbTranslateEscape(translate,raw);
     status = writeIt(pasynUser,translate,strlen(translate));
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);

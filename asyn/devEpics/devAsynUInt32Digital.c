@@ -523,7 +523,7 @@ static long processMbbo(mbboRecord *pr)
     int status;
 
     if(pPvt->gotValue) {
-        epicsUInt32 rval = pPvt->value;
+        epicsUInt32 rval = pPvt->value & pr->mask;
 
         pr->rval = rval;
         if(pr->shft>0) rval >>= pr->shft;
@@ -628,7 +628,7 @@ static long processMbboDirect(mbboDirectRecord *pr)
     int status;
 
     if(pPvt->gotValue) {
-        epicsUInt32 rval = pPvt->value;
+        epicsUInt32 rval = pPvt->value & pr->mask;
         unsigned char *bit = &(pr->b0);
         int i, offset=1;
 
