@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.5 2003-11-13 16:42:19 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.6 2003-11-13 19:07:53 norume Exp $
  */
 
 #include <string.h>
@@ -446,7 +446,7 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
             nleft = 0;
         }
         else if (tty->eoslen) {
-            nleft = data - eosCheck;
+            nleft = data - eosCheck - eosMatched;
             while (maxchars && nleft) {
                 if (eosMatched == 0) {
                     char *cp = memchr(eosCheck, *tty->eos, nleft);
