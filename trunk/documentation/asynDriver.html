@@ -1676,6 +1676,91 @@ that calls it must be willing to block.</p>
   </tbody>
 </table>
 
+<h3>asynUInt32Digital</h3>
+<pre>
+#define asynUInt32DigitalType "asynUInt32Digital"
+typedef struct asynUInt32Digital {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
+         epicsUInt32 value, epicsUInt32 mask);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 *value, epicsUInt32 mask);
+} asynUInt32Digital;
+</pre>
+
+<p>asynUInt32Digital  describes the methods for communicating via
+bits of an Int32 register.</p>
+
+<table border="1">
+  <caption>asynUInt32Digital</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Modify the bits specified by mask
+         with the corresponding bits in value.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read the bits specified by mask into value. The other bits
+         of value will be set to 0.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynUInt32DigitalCallback</h3>
+<pre>
+typedef enum {
+    interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
+} interruptReason;
+
+#define asynUInt32DigitalCallbackType "asynUInt32DigitalCallback"
+/*cancelCallback cancels based on callback and userPvt */
+typedef struct asynUInt32DigitalCallback {
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+        void (*callback)(void *userPvt, epicsUInt32 data),
+        epicsUInt32 mask, void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+        void (*callback)(void *userPvt, epicsUInt32 data),
+        epicsUInt32 mask, void *userPvt);
+    asynStatus (*setInterruptMask)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 mask, interruptReason reason);
+    asynStatus (*clearInterruptMask)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 mask);
+    asynStatus (*getInterruptMask)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 *mask, interruptReason reason);
+} asynUInt32DigitalCallback;
+</pre>
+
+<p>asynUInt32Digital  describes methods for communicating
+with interupt driven drivers.</p>
+
+<table border="1">
+  <caption>asynUInt32DigitalCallback</caption>
+  <tbody>
+    <tr>
+      <td>registerCallback</td>
+      <td>Register a callback that will be called whenever the driver
+         detects a change in any of the bits specified by mask.</td>
+    </tr>
+    <tr>
+      <td>cancelCallback</td>
+      <td>Cancels the registered callback. Callback, mask and userPvt
+         must all match the values passed to registerCallback.</td>
+    </tr>
+    <tr>
+      <td>setInterruptMask</td>
+      <td>Enable interrupts on bits specified by mask.</td>
+    </tr>
+    <tr>
+      <td>clearInterruptMask</td>
+      <td>Disable  interrupts on bits specified by mask.</td>
+    </tr>
+    <tr>
+      <td>getInterruptMask</td>
+      <td>Get enabled interrupt bits</td>
+    </tr>
+  </tbody>
+</table>
+
 <h3>asynFloat64</h3>
 <pre>#define asynFloat64Type "asynFloat64"
 typedef struct asynFloat64 {
