@@ -40,6 +40,7 @@
 #include <waveformRecord.h>
 
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <asynGpibDriver.h>
 
 #ifdef __cplusplus

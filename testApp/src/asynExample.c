@@ -20,6 +20,7 @@
 #include <epicsStdio.h>
 #include <epicsAssert.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <iocsh.h>
 #include <registryFunction.h>
 #include <epicsExport.h>
