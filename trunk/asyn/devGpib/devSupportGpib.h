@@ -67,7 +67,7 @@ struct gpibCmd {
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
     int P1;      /* P1 plays a dual role: */
-                 /*      For EFAST it is set internally to the
+                 /*      For EFAST it is set internally to the */
                  /*      number of entries in the EFAST table */
                  /*      For convert it is passed to convert() */
     int P2;      /* user defined parameter passed to convert() */
