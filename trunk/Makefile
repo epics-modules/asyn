@@ -7,5 +7,6 @@ DIRS += asyn
 DIRS += testApp
 DIRS += testGpibApp
 DIRS += testGpibSerialApp
+DIRS += testEpicsApp
 DIRS += iocBoot
 include $(TOP)/configure/RULES_TOP
