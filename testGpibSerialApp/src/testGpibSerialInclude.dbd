@@ -1,3 +1,4 @@
 include "base.dbd"
 include "devTestGpibSerial.dbd"
 include "drvGenericSerial.dbd"
+include "devAsynTrace.dbd"

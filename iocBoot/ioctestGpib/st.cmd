@@ -2,6 +2,7 @@ dbLoadDatabase("../../dbd/testGpib.dbd")
 testGpib_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
 
 #var vxi11Debug 3
 

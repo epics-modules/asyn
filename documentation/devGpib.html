@@ -293,7 +293,6 @@ functions (optional.).</p>
 #define DSET_BI    devBiSkeletonGpib
 #define DSET_MBBI   devMbbiSkeletonGpib
 #include &lt;devGpib.h&gt;    /* must be included after DSET defines */
-int SkeletonDebug = 0;
 #define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
 /* example choices for BI */
@@ -321,7 +320,6 @@ static long init_ai(int parm)
         devSupParms.timeout = TIMEOUT;
         devSupParms.timeWindow = TIMEWINDOW;
         devSupParms.respond2Writes = -1;
-        devSupParms.debugFlag = &amp;SkeletonDebug;
     }
 }</pre>
 
@@ -825,7 +823,6 @@ structure.
         devSupParms.timeout = TIMEOUT;
         devSupParms.timeWindow = TIMEWINDOW;
         devSupParms.respond2Writes = -1;
-        devSupParms.debugFlag = &amp;SkeletonDebug;
     }
     return(0);
 }</pre>
@@ -844,7 +841,6 @@ structure.
     int  rspLen;/*size of msg*/
     /*Are the following still needed? Marty thinks not */
     char *name;         /* Name of this device support*/
-    int *debugFlag; /* pointer to debug flag */
 };</pre>
 <dl>
   <dt><code>gpibCmds</code></dt>
@@ -891,15 +887,7 @@ structure.
     <dd>The size of rsp.</dd>
   <dt><code>name</code></dt>
     <dd>The device support module type name. NOTHING curently uses this.</dd>
-  <dt><code>debugFlag</code></dt>
-    <dd>Must point to a integer that is set to a non-zero value if you want
-      the GPIB device support library to provide debugging output for
-    you.</dd>
 </dl>
-
-<h2>Debugging Flags</h2>
-devCommonGpib/devSupportGpib provides some debugging output during normal
-processing if the debug flag in the parm block is set to a non-zero value.
 
 <h2>SRQ Processing</h2>
 
@@ -1159,6 +1147,9 @@ support had definitions like:</p>
 away. In addition the timeout fields are now of type double and have units of
 seconds. The following fields have disappeared:</p>
 <dl>
+  <dt>debugFlag</dt>
+    <dd>This is an obsolete field since devGpib uses the asynTrace
+        facility.</dd>
   <dt>magicSrq</dt>
     <dd>This is an obsolete field.</dd>
   <dt>srqHandler</dt>
@@ -1189,7 +1180,7 @@ int     parm;
 <pre>static long init_ai(int parm)
 {
   if(parm==0)  {
-    devSupParms.debugFlag = &amp;Dg535Debug;
+    devSupParms.name = "name";
 ...</pre>
 
 <p>The older support must be modified to use drvGpib.h and to implement

@@ -11,9 +11,11 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
+<h2>Release 1.0alpha3</h2>
+
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>November 2003</h2>
+<h2>December 2003</h2>
 </center>
 <hr>
 
@@ -28,6 +30,8 @@
 <a href="#Discussion">Discussion of asynDriver</a> <br>
 <a href="#asynGpib">asynGpib</a> <br>
 <a href="#PortDrivers">Port Drivers</a> <br>
+<a href="#DiagnosticAids">Diagnostic Aids</a> <br>
+<a href="#InstallBuild">Install and Build</a> <br>
 
 <hr>
 
@@ -104,49 +108,6 @@ share the same drivers.</p>
 <center>
 <h2><a name="TODO"></a>TODO</h2>
 </center>
-
-<h3>Debug, Logging, etc.</h3>
-
-<p>In the past device support has used at least three different methods for
-showing debug  information.</p>
-<ul>
-  <li>Debug variables.
-    <p>Debug variables were put in device and/or driver support. Thus was
-    fine on vxWorks because the vxWorks shell has access to external
-    variables. It is somewhat of a pain to make the debug variables available
-    on other platforms.</p>
-    <p>A problem is that the debug flag applys to ALL instances of the
-    supported device/driver. If multiple instances of a device are controlled
-    from a single IOC then the debug flags can be almost useless. The user
-    normally wants debug information for a device that is having trouble  not
-    for all devices.</p>
-  </li>
-  <li>logging facility
-    <p>gpibCore has such a facility that is independent of debug flags.</p>
-  </li>
-  <li>peek facility
-    <p>mpfSerial provided a facility that could trap every byte sent to/from
-    a serial line.</p>
-  </li>
-</ul>
-
-<p>Currently the support has some debug flags. Perhaps there is a better
-way.</p>
-
-<p>How about the following: Define a new method for asynCommon.</p>
-<pre>#define TRACE_ERRORS    0x000000001
-#define TRACE_IO        0x000000002
-#define TRACE_TRUNCATE  0x000000004
-#define TRACE_FLOW      0x000000008
-trace(void *drvPvt,asynUser *pasynUser,FILE *fd, int mask);</pre>
-
-<p>All output will be written to fd. mask determines what is written.</p>
-<ul>
-  <li>TRACE_ERRORS- Show only errors, e.g. timeouts.</li>
-  <li>TRACE_IO_SHORT - Show I/O messages.</li>
-  <li>TRACE_IO_FULL - Truncate I/O messages if there are long..</li>
-  <li>TRACE_FLOW - Show program flow.</li>
-</ul>
 
 <h3>Locking data structures.</h3>
 
@@ -377,7 +338,7 @@ typedef struct asynManager {
     asynInterface *(*findInterface)(asynUser *pasynUser,
                                 const char *interfaceType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
-        asynQueuePriority priority,double timeout);
+                              asynQueuePriority priority,double timeout);
     /*cancelRequest returns (0,-1) if request (was, was not) queued*/
     int        (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
@@ -385,13 +346,13 @@ typedef struct asynManager {
     int        (*getAddr)(asynUser *pasynUser);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
-                 asynInterface *paasynInterface,int nasynInterface,
-                 unsigned int priority,unsigned int stackSize);
+                              asynInterface *paasynInterface,int nasynInterface,
+                              unsigned int priority,unsigned int stackSize);
     /* paasynInterface is pointer to array of asynInterface */
     /*process modules call the following */
     asynStatus (*registerProcessModule)(
-                 const char *processModuleName,const char *portName,int addr,
-                 asynInterface *paasynInterface,int nasynInterface);
+                    const char *processModuleName,const char *portName,int addr,
+                    asynInterface *paasynInterface,int nasynInterface);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
 
@@ -416,7 +377,6 @@ typedef struct asynOctet{
                          const char *eos,int eoslen);
 }asynOctet;
 
-
 /*asynTrace is implemented by asynManager*/
 /*All asynTrace methods can be called from any thread*/
 /* traceMask definitions*/
@@ -425,13 +385,12 @@ typedef struct asynOctet{
 #define ASYN_TRACEIO_FILTER  0x0004
 #define ASYN_TRACEIO_DRIVER  0x0008
 #define ASYN_TRACE_FLOW      0x0010
-#define ASYN_TRACE_TRUNCATE  0x0020
 
 /* traceIO mask definitions*/
 #define ASYN_TRACEIO_NODATA 0x0000
 #define ASYN_TRACEIO_ASCII  0x0001
 #define ASYN_TRACEIO_ESCAPE 0x0002
-#define ASYN_TRACEIO_BINARY 0x0004
+#define ASYN_TRACEIO_HEX    0x0004
 
 /* asynPrint and asynPrintIO are macros that act like
    int asynPrint(asynUser *pasynUser,int reason, const char *format, ... );
@@ -674,14 +633,12 @@ for sending commands and receiving responses from a device.</p>
   <li>The output is sent to a file or to stdout.</li>
   <li>A mask determines the type of information that can be displayed.
     <ul>
-      <li>ASYN_TRACE_ERROR Specified that all run time errors are reported,
-        e.g. timeouts.</li>
-      <li>ASYN_TRACEIO_DEVICE The high level device support reports all I/O
-        activity.</li>
-      <li>ASYN_TRACEIO_FILTER Any layer between device support and the low
-        level driver reports about any filtering it does on I/O.</li>
-      <li>ASYN_TRACEIO_DRIVER The low level driver reports all I/O
+      <li>ASYN_TRACE_ERROR Run time errors are reported, e.g. timeouts.</li>
+      <li>ASYN_TRACEIO_DEVICE High level device support reports I/O
       activity.</li>
+      <li>ASYN_TRACEIO_FILTER Any layer between device support and the low
+        level driver reports any filtering it does on I/O.</li>
+      <li>ASYN_TRACEIO_DRIVER Low level driver reports I/O activity.</li>
       <li>ASYN_TRACE_FLOW Report logic flow. Device support should report all
         queue requests, callbacks entered, and all calls to drivers. Layers
         between device support and low level drivers should report all calls
@@ -693,9 +650,9 @@ for sending commands and receiving responses from a device.</p>
   Another mask determines how message buffers are printed.
   <ul>
     <li>ASYN_TRACEIO_NODATA Dont print any data from the message buffers</li>
-    <li>ASYN_TRACEIO_ASCII Print with a "%s" format.</li>
+    <li>ASYN_TRACEIO_ASCII Print with a "%s" style format.</li>
     <li>ASYN_TRACEIO_ESCAPE Call epicsStrPrintEscaped.</li>
-    <li>ASYN_TRACEIO_BINARY Print each byte with " %2.2x".</li>
+    <li>ASYN_TRACEIO_HEX    Print each byte with " %2.2x".</li>
   </ul>
 </ul>
 
@@ -710,15 +667,15 @@ device/driver support. Support can have calls like.</p>
 <p>The asynPrintIO call is designed for device support or drivers that do not
 know it they are sending ascii strings or binary data. The can make calls
 like:</p>
-<pre>    asynPrintIO(pasynUser,TRACE_IO_DRIVER,data,nchars,"%s nchars %d ",
+<pre>    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,"%s nchars %d ",
        someName,nchars);</pre>
 
-<p>The asynTrace methods that are implemented by asynManager. These methods
-can be used by any code that has created an asynUser and connected to a
-device. All methods can be called by any thread. If a thread performs all I/O
-via calls to print or printIO, then it does not have to call lock or unlock.
-If it does want to do it's own I/O, it must lock before any I/O and unlock
-after. For example:</p>
+<p>The asynTrace methods are implemented by asynManager. These methods can be
+used by any code that has created an asynUser and connected to a device. All
+methods can be called by any thread. If a thread performs all I/O via calls
+to print or printIO, then it does not have to call lock or unlock. If it does
+want to do it's own I/O, it must lock before any I/O and unlock after. For
+example:</p>
 <pre>    pasynTrace-&gt;lock(pasunUser);
     fd = pasynTrace-&gt;getTraceFILE(pasunUser);
     /*perform I/O of fd */
@@ -778,9 +735,9 @@ calling asynUserCalloc and asynUserFree.
       <td>Determines how much data is printed by printIO. In all cases it
         determines how many bytes of the buffer are displayed. The actual
         number of characters printed depends on the traceIO mask. For example
-        ASYN_TRACEIO_BINARY results in 3 characters being printed for each
-        byte. Normally set by the user requesting it via a shell command or
-        the devTrace device support TBD.</td>
+        ASYN_TRACEIO_HEX results in 3 characters being printed for each byte.
+        Normally set by the user requesting it via a shell command or the
+        devTrace device support TBD.</td>
     </tr>
     <tr>
       <td>getTraceIOTruncateSize</td>
@@ -790,14 +747,15 @@ calling asynUserCalloc and asynUserFree.
     <tr>
       <td>print</td>
       <td>If reason ored with the current traceMask is not zero then the
-        message is printed.</td>
+        message is printed. Most code should call asynPrint instead of
+        calling print/td&gt;</td>
     </tr>
     <tr>
       <td>printIO</td>
       <td>If reason ored with the current traceMask is not zero then the
         message is printed. If len is &gt;0 then the buffer is printed using
-        the traceIO mask and getTraceIOTruncateSize to decide how to
-      print.</td>
+        the traceIO mask and getTraceIOTruncateSize to decide how to print.
+        Most code should call asynPrintIO instead of calling printIO.</td>
     </tr>
   </tbody>
 </table>
@@ -838,15 +796,20 @@ void queueCallback(asynUser *pasynUser)
     asynStatus status;
     int retlen;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
     status = pasynOctet-&gt;setEos(pdrvPvt,pasynUser,"\n",1);
     if(status) {
-        printf("queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
     }
     retlen = pasynOctet-&gt;read(pdrvPvt,pasynUser,pmydata-&gt;buffer,BUFSIZE);
     if(retlen&lt;=0) {
-        printf("queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
     } else {
-        printf("queueCallback read returned: retlen %d data %s\n",
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,BUFSIZE,
+            "queueCallback read returned: retlen %d data %s\n",
             retlen,pmydata-&gt;buffer);
     }
 }
@@ -876,7 +839,8 @@ void mainThread(void)
     pmyData-&gt;pdrvPvt = pasynInterface-&gt;pdrvPvt;
     status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
-        printf("queueRequest failed %s\n",pasynUser-&gt;errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
         exit(1);
     }
     /*Note that callback will be called by another thread*/
@@ -1153,25 +1117,39 @@ where the arguments are:
     <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. Note that if any stty
     arguments are present both the priority and openOnlyOnDisconnect
     arguments must also be present but other than that the order of the stty
-    arguments is not important.  The complete list of supported stty
-    options is:
+    arguments is not important.  The complete list of supported stty options
+    is:
     <dl>
-  <dt><tt>cs8</tt></dt><dd>Set number of bits per character to 8 (default).</dd>
-  <dt><tt>cs7</tt></dt><dd>Set number of bits per character to 7.</dd>
-  <dt><tt>cs6</tt></dt><dd>Set number of bits per character to 6.</dd>
-  <dt><tt>cs5</tt></dt><dd>Set number of bits per character to 5.</dd>
-  <dt><tt>parenb</tt></dt><dd>Enable parity generation/checking.</dd>
-  <dt><tt>-parenb</tt></dt><dd>Disable parity generation/checking (default).</dd>
-  <dt><tt>parodd</tt></dt><dd>Check/generate ODD parity if enabled.</dd>
-  <dt><tt>-parodd</tt></dt><dd>Check/generate EVEN parity if enabled (default).</dd>
-  <dt><tt>cstopb</tt></dt><dd>Generate two stop bits.</dd>
-  <dt><tt>-cstopb</tt></dt><dd>Generate one stop bit (default).</dd>
-  <dt><tt>crtscts</tt></dt><dd>Enable RTS/CTS hardware handshaking.</dd>
-  <dt><tt>-crtscts</tt></dt><dd>Disable RTS/CTS hardware handshaking (default).</dd>
-  <dt><tt>clocal</tt></dt><dd>Disable CD/DTR modem control (default).</dd>
-  <dt><tt>-clocal</tt></dt><dd>Enable CD/DTR modem control.</dd>
+      <dt><tt>cs8</tt></dt>
+        <dd>Set number of bits per character to 8 (default).</dd>
+      <dt><tt>cs7</tt></dt>
+        <dd>Set number of bits per character to 7.</dd>
+      <dt><tt>cs6</tt></dt>
+        <dd>Set number of bits per character to 6.</dd>
+      <dt><tt>cs5</tt></dt>
+        <dd>Set number of bits per character to 5.</dd>
+      <dt><tt>parenb</tt></dt>
+        <dd>Enable parity generation/checking.</dd>
+      <dt><tt>-parenb</tt></dt>
+        <dd>Disable parity generation/checking (default).</dd>
+      <dt><tt>parodd</tt></dt>
+        <dd>Check/generate ODD parity if enabled.</dd>
+      <dt><tt>-parodd</tt></dt>
+        <dd>Check/generate EVEN parity if enabled (default).</dd>
+      <dt><tt>cstopb</tt></dt>
+        <dd>Generate two stop bits.</dd>
+      <dt><tt>-cstopb</tt></dt>
+        <dd>Generate one stop bit (default).</dd>
+      <dt><tt>crtscts</tt></dt>
+        <dd>Enable RTS/CTS hardware handshaking.</dd>
+      <dt><tt>-crtscts</tt></dt>
+        <dd>Disable RTS/CTS hardware handshaking (default).</dd>
+      <dt><tt>clocal</tt></dt>
+        <dd>Disable CD/DTR modem control (default).</dd>
+      <dt><tt>-clocal</tt></dt>
+        <dd>Enable CD/DTR modem control.</dd>
     </dl>
-    </li>
+  </li>
 </ul>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
@@ -1186,6 +1164,122 @@ tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
 If you're using the vxWorks shell you must include all the <code>stty</code>
 parameters in double quotes.
+<hr>
+
+<center>
+<h2><a name="DiagnosticAids"></a>Diagnostic Aids</h2>
+</center>
+
+<h3>iocsh commands</h3>
+<pre>    asynReport(filename,level)
+    asynSetTraceMask(portName,addr,mask)
+    asynSetTraceIOMask(portName,addr,mask)</pre>
+
+<p><code>asynReport</code> calls <code>asynCommon:report</code> for all
+registered drivers and processModules. <code>asynSetTraceMask</code> calls
+<code>asynTrace:setTraceMask</code> for the specified port and address.
+<code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code>
+for the specified port and address.</p>
+
+<p>where</p>
+<dl>
+  <dt>filename</dt>
+    <dd>An ascii string naming a file to which the report is sent. If this is
+      null or a null string then the output is sent to
+      <code>stdout</code></dd<dt>level</dd>
+    <dd>The report level.</dd>
+  <dt>portName</dt>
+    <dd>An ascii string specifying the portName of the driver.</dd>
+  <dt>addr</dt>
+    <dd>In integer specifying the address of the instrument.</dd>
+  <dt>mask</dt>
+    <dd>The mask value to set. See the mask bit definitions in
+    asynDriver.h</dd>
+</dl>
+
+<h3>devAsynTrace</h3>
+
+<p>This provides a generic facility for setting trace options via MEDM. It
+consists of the following components:</p>
+<dl>
+  <dt><code>devAsynTrace.c</code></dt>
+    <dd>An EPICS IOC device support module for setting trace options. It has
+      an associated <code>devAsynTrace.dbd</code> file that must be included
+      by any application that wants to use this facility.</dd>
+  <dt><code>asynTrace.db</code></dt>
+    <dd>A generic database that uses devAsynTrace. It has the following macro
+      definitions: <code>$(ioc):$(port)$(addr)</code>.</dd>
+  <dt><code>asynTrace.adl</code></dt>
+    <dd>A generic medm display for setting trace variables.</dd>
+</dl>
+
+<p>The following is the medm display.</p>
+
+<p><img src="./asynTrace.gif" alt="asynTrace"></p>
+<hr>
+
+<center>
+<h2><a name="InstallBuild"></a>Install and Build</h2>
+</center>
+
+<h3>Install and build asynDriver</h3>
+After obtaining a copy of the distribution, it must be installed and built
+for use at your site. These steps only need to be performed once for the site
+(unless versions of the module running under different releases of EPICS
+and/or the other required modules are needed).
+<ol>
+  <li>Create an installation directory for the module, usually this will end
+    with</li>
+  <pre><tt>.../support/asyn/</tt></pre>
+  <li>Place the distribution file in this directory. Then issue the commands
+    (Unix style)</li>
+  <pre>gunzip &lt;file&gt;.tar.gz
+tar xvf &lt;file&gt;.tar</pre>
+  <li>This creates a &lt;top&gt; application.</li>
+  <pre>.../support/asyn/X-Y</pre>
+  where X-Y is the release. For example.
+  <pre>.../support/asyn/1-1</pre>
+  <li>Edit the <tt>config/RELEASE</tt> file and set the paths to your
+    installation of EPICS base and to your version of IPAC and EPICS_BASE.
+    IPAC is only needed if you are building for vxWorks.</li>
+  <li>Run <tt>make</tt> in the top level directory and check for any
+    compilation errors.</li>
+</ol>
+
+<h3>Using asynDriver components with an EPICS iocCore application</h3>
+
+<p>Since asynDriver does NOT provide support for specific instruments an
+application must obtain instrument specific support elsewhere. This section
+only explains how to include asynDriver components.</p>
+
+<p>In the <code>configure/RELEASE</code> file add definitions for
+<code>IPAC</code> and <code>EPICS_BASE</code>.</p>
+
+<p>In the src directory where the application is built</p>
+<ul>
+  <li>Add the following to <code>Makefile</code>
+    <pre>        &lt;app&gt;_LIBS += asyn
+    </pre>
+  </li>
+  <li>Add the following to <code>&lt;app&gt;Include.dvd</code>
+    <pre>      include "asyn.dbd"
+      include "devAsynTrace.dbd"
+    </pre>
+  </li>
+</ul>
+
+<p>In the <code>st.cmd</code> file add.</p>
+<pre>dbLoadRecords("db/asynTrace.db","ioc=&lt;ioc&gt;,port=&lt;port&gt;,addr=&lt;addr&gt;")</pre>
+
+<p>This is done for each instrument. You must provide correct values for
+&lt;ioc&gt;,&lt;port&gt;, and &lt;addr&gt;</p>
+
+<p>Once the application is running the medm display for each imstrument can
+be started by:</p>
+<pre>medm -x -macro "ioc=&lt;ioc&gt;,port=&lt;port&gt;,addr=&lt;addr&gt;" &lt;asyntop&gt;/testApp/adl/asynTrace.adl &amp;</pre>
+
+<p>Again this done for each instrument. You must provide correct values for
+&lt;ioc&gt;,&lt;port&gt;, and &lt;addr&gt;</p>
 <hr>
 
 <center>

@@ -1,5 +1,5 @@
 /* devSkeletonGpib.c */
-/* $Id: devSkeletonGpib.c,v 1.4 2003-11-14 15:31:20 norume Exp $ */
+/* $Id: devSkeletonGpib.c,v 1.5 2003-12-04 19:56:02 mrk Exp $ */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago,as Operator of Argonne
 * National Laboratory,and the Regents of the University of
@@ -44,7 +44,6 @@
 #include <devGpib.h> /* must be included after DSET defines */
 
 
-static int SkeletonDebug = 0;
 #define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
 
@@ -141,7 +140,6 @@ static long init_ai(int parm)
         devSupParms.timeout = TIMEOUT;
         devSupParms.timeWindow = TIMEWINDOW;
         devSupParms.respond2Writes = -1;
-        devSupParms.debugFlag = &SkeletonDebug;
     }
     return(0);
 }

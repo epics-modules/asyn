@@ -23,6 +23,11 @@ asyn_SRCS += asynManager.c
 INC += epicsInterruptibleSyscall.h
 asyn_SRCS += epicsInterruptibleSyscall.c
 
+SRC_DIRS += $(ASYN)/devAsynTrace
+DBD += devAsynTrace.dbd
+asyn_SRCS += devAsynTrace.c
+DB += asynTrace.db
+
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
 asyn_SRCS += asynGpib.c

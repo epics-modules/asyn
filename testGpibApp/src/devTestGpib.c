@@ -51,8 +51,6 @@
 #include <devCommonGpib.h>
 #include <devGpib.h>
 
-int testDebug = 0;		/* debugging flags */
-
 #define	TIMEOUT	1.0
 #define TIMEWINDOW  2.0
 
@@ -123,7 +121,6 @@ static long init_ai(int parm)
     devSupParms.timeout = TIMEOUT;
     devSupParms.timeWindow = TIMEWINDOW;
     devSupParms.respond2Writes = -1;
-    devSupParms.debugFlag = &testDebug;
   }
   return(0);
 }

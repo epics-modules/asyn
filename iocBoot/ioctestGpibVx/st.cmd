@@ -12,6 +12,7 @@ dbLoadDatabase("../../dbd/testGpibVx.dbd")
 testGpibVx_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
 
 #vxi11Debug = 10
 
