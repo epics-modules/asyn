@@ -1448,7 +1448,7 @@ all registered callbacks for read and write messages.</p>
     <ul>
       <li>asynUInt32Digital - read/write.</li>
       <li>asynUInt32DigitalCallback - registerCallback/cancelCallback to
-        receive Float64 value. This is for interrupt driven drivers. It also
+        receive UInt32 value. This is for interrupt driven drivers. It also
         has methods to setInterrupt/getInterrupt.</li>
     </ul>
   </li>
@@ -1538,7 +1538,7 @@ typedef struct asynInt32Callback {
 } asynInt32Callback;
  </pre>
 
-<p>asynInt32Callback describes the methods implemented code continuously
+<p>MARTY FIX THIS SENTENCE asynInt32Callback describes the methods implemented code continuously
 collects data  makes it available to registered clients. An example is an
 interrupt based driver.</p>
 
@@ -1595,7 +1595,7 @@ typedef struct asynInt32ArrayCallback {
              void *userPvt);
 } asynInt32ArrayCallback;</pre>
 
-<p>asynInt32ArrayCallback describes the methods implemented by code that
+<p>MARTY FIX THIS SENTENCE asynInt32ArrayCallback describes the methods implemented by code that
 continuously and makes it available to registered clients.</p>
 
 <table border="1">
@@ -1950,7 +1950,7 @@ records</h2>
 </center>
 
 <p>NOTE: The generic device support for epics records is in an early stage of
-development. Although it is usable it is needs improvement. It will likely
+development. Although it is usable it needs improvement. It will likely
 evolve rapidly over the next several releases of asynDriver.</p>
 
 <p>Generic device support is provided for standard EPICS records. This
