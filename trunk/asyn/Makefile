@@ -29,14 +29,11 @@ asyn_SRCS += epicsInterruptibleSyscall.c
 asyn_SRCS += interposeFlush.c
 
 SRC_DIRS += $(ASYN)/asynRecord
-DBD += devAsyn.dbd
+DBD += asynRecDevDrv.dbd
 DBDINC += asynRecord
-asyn_SRCS += devAsyn.c
 asyn_SRCS += asynRecord.c
-asyn_SRCS += devAsynGeneric.c
-DB += asyn.db
+asyn_SRCS += drvAsyn.c
 DB += asynRecord.db
-DB += asynGeneric.db
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
