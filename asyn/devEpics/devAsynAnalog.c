@@ -16,7 +16,10 @@
         Analog output, writes from rval, supports LINEAR conversion
         Uses asynInt32 interface
     asynMbboInt32:
-        Analog output, writes from rval, supports BITS and MASK fields
+        mbbo, writes from rval, supports BITS and MASK fields
+        Uses asynInt32 interface
+    asynLoInt32:
+        longout, writes from val
         Uses asynInt32 interface
     asynAoFloat64:
         Analog output, writes from val, no conversion
@@ -36,6 +39,9 @@
         each callback
     asynMbbiInt32:
         Analog input, reads into rval, supports BITS and MASK fields
+        Uses asynInt32 interface
+    asynLiInt32:
+        longin, reads into val
         Uses asynInt32 interface
     asynAiFloat64:
         Analog input, reads into val, no conversion
@@ -71,6 +77,8 @@
 #include <aiRecord.h>
 #include <mbbiRecord.h>
 #include <mbboRecord.h>
+#include <longinRecord.h>
+#include <longoutRecord.h>
 #include <recSup.h>
 #include <devSup.h>
 
@@ -93,7 +101,9 @@ typedef enum {
     typeAoInt32,
     typeAoFloat64,
     typeMbbiInt32,
-    typeMbboInt32
+    typeMbboInt32,
+    typeLiInt32,
+    typeLoInt32
 }asynAnalogDevType;
 
 typedef struct devAsynAnalogPvt{
@@ -135,6 +145,8 @@ static long initAiInt32Interrupt(aiRecord *pai);
 static long initAiFloat64Interrupt(aiRecord *pai);
 static long initMbboInt32(mbboRecord *pmbbo);
 static long initMbbiInt32(mbbiRecord *pmbbi);
+static long initLoInt32(longoutRecord *plo);
+static long initLiInt32(longinRecord *pli);
 /* processCommon callbacks */
 static void callbackOutput(asynUser *pasynUser);
 static void callbackInput(asynUser *pasynUser);
@@ -179,6 +191,10 @@ analogDset asynMbboInt32 =          {5, 0, 0, initMbboInt32, 0,
                                         processCommon};
 analogDset asynMbbiInt32 =          {5, 0, 0, initMbbiInt32, 0, 
                                         processCommon};
+analogDset asynLoInt32 =            {5, 0, 0, initLoInt32, 0, 
+                                        processCommon};
+analogDset asynLiInt32 =            {5, 0, 0, initLiInt32, 0, 
+                                        processCommon};
 
 epicsExportAddress(dset, asynAoInt32);
 epicsExportAddress(dset, asynAoFloat64);
@@ -190,6 +206,8 @@ epicsExportAddress(dset, asynAiFloat64Average);
 epicsExportAddress(dset, asynAiFloat64Interrupt);
 epicsExportAddress(dset, asynMbboInt32);
 epicsExportAddress(dset, asynMbbiInt32);
+epicsExportAddress(dset, asynLoInt32);
+epicsExportAddress(dset, asynLiInt32);
 
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -262,6 +280,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     case typeAiInt32:
     case typeMbboInt32:
     case typeMbbiInt32:
+    case typeLoInt32:
+    case typeLiInt32:
         itype = asynInt32Type;
         pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
@@ -343,6 +363,16 @@ static long initMbboInt32(mbboRecord *pmbbo)
     return(2);
 }
 
+static long initLoInt32(longoutRecord *plo)
+{
+    asynStatus status;
+
+    status = initCommon((dbCommon *)plo, (DBLINK *)&plo->out, callbackOutput,
+                        typeLoInt32);
+    /* don't convert */
+    return(2);
+}
+
 static long initAoFloat64(aoRecord *pao)
 {
     asynStatus status;
@@ -374,6 +404,12 @@ static long initMbbiInt32(mbbiRecord *pmbbi)
     initCommon((dbCommon *)pmbbi, &pmbbi->inp, callbackInput, typeMbbiInt32);
     if(pmbbi->nobt == 0) pmbbi->mask = 0xffffffff;
     pmbbi->mask <<= pmbbi->shft;
+    return(0);
+}
+
+static long initLiInt32(longinRecord *pli)
+{
+    initCommon((dbCommon *)pli, &pli->inp, callbackInput, typeLiInt32);
     return(0);
 }
 
@@ -510,20 +546,31 @@ static void callbackOutput(asynUser *pasynUser)
     dbCommon *pr = pPvt->pr;
     aoRecord *pao = (aoRecord *)pPvt->pr;
     mbboRecord *pmbbo = (mbboRecord *)pPvt->pr;
+    longoutRecord *plo = (longoutRecord *)pPvt->pr;
     rset *prset = (rset *)pr->rset;
-    int status;
+    int status=asynSuccess;
     epicsInt32 ivalue=0;
     epicsFloat64 dvalue=0;
 
-    if (pPvt->devType == typeAoInt32) {
+    switch(pPvt->devType) {
+    case typeAoInt32:
         ivalue = pao->rval;
         status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser, ivalue);
-    } else if (pPvt->devType == typeMbboInt32) {
+        break;
+    case typeMbboInt32:
         ivalue = pmbbo->rval & pmbbo->mask;
         status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser, ivalue);
-    } else {
+        break;
+    case typeLoInt32:
+        ivalue = plo->val;
+        status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser, ivalue);
+        break;
+    case typeAoFloat64:
         dvalue = pao->val;
         status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser, pao->val);
+        break;
+    default:
+        break;
     }
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
               "%s devAsynAnalog::callbackOutput devType=%d, ivalue=%d, dvalue=%f\n",
@@ -551,22 +598,33 @@ static void callbackInput(asynUser *pasynUser)
     dbCommon *pr = pPvt->pr;
     aiRecord *pai = (aiRecord *)pPvt->pr;
     mbbiRecord *pmbbi = (mbbiRecord *)pPvt->pr;
+    longinRecord *pli = (longinRecord *)pPvt->pr;
     rset *prset = (rset *)pai->rset;
-    int status;
+    int status=asynSuccess;
     epicsInt32 ivalue=0;
     epicsFloat64 dvalue=0.;
 
-    if (pPvt->devType == typeAiInt32) {
+    switch (pPvt->devType) {
+    case typeAiInt32:
         status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pai->rval);
         ivalue = pai->rval;
-    } else if (pPvt->devType == typeMbbiInt32) {
+        break;
+    case typeMbbiInt32:
         status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, 
                                     (epicsInt32 *)&pmbbi->rval);
         pmbbi->rval = pmbbi->rval & pmbbi->mask;
         ivalue = pmbbi->rval;
-    } else {
+        break;
+    case typeLiInt32:
+        status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pli->val);
+        ivalue = pli->val;
+        break;
+    case typeAiFloat64:
         status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pai->val);
         dvalue = pai->val;
+        break;
+    default:
+        break;
     }
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
               "%s devAsynAnalog::callbackInput devType=%d, ivalue=%d, dvalue=%f\n",
