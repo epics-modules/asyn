@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.16 2004-07-12 05:48:29 rivers Exp $
+ * $Id: drvAsynSerialPort.c,v 1.17 2004-07-14 17:58:09 mrk Exp $
  */
 
 #include <string.h>
@@ -903,7 +903,7 @@ drvAsynSerialPortConfigure(char *portName,
     tty->octet.pinterface  = (void *)&drvAsynSerialPortAsynOctet;
     tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
-                                   0, /*not multiDevice*/
+                                   ASYN_CANBLOCK,
                                    !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
