@@ -13,9 +13,9 @@
 #define asynFloat64ArrayType "asynFloat64Array"
 typedef struct asynFloat64Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloat64 *value,size_t nelements);
+                       epicsFloat64 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloat64 *value,size_t nelements, size_t *nIn);
-} asynFloat64;
+                       epicsFloat64 *value, size_t nelements, size_t *nIn);
+} asynFloat64Array;
 
-#endif /* asynFloat64H */
+#endif /* asynFloat64ArrayH */

@@ -13,9 +13,9 @@
 #define asynInt32ArrayType "asynInt32Array"
 typedef struct asynInt32Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsInt32 *value,size_t nelements);
+                       epicsInt32 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsInt32 *value,size_t nelements, size_t *nIn);
-} asynInt32;
+                       epicsInt32 *value, size_t nelements, size_t *nIn);
+} asynInt32Array;
 
-#endif /* asynInt32H */
+#endif /* asynInt32ArrayH */
