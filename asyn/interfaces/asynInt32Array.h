@@ -24,6 +24,13 @@ extern "C" {
 
 typedef void (*interruptCallbackInt32Array)(
              void *userPvt, epicsInt32 *value, size_t *nelements);
+typedef struct asynInt32ArrayInterrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackInt32Array callback;
+    void *userPvt;
+} asynInt32ArrayInterrupt;
 #define asynInt32ArrayType "asynInt32Array"
 typedef struct asynInt32Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
