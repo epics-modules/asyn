@@ -34,9 +34,25 @@ alink="#FF0000">
   <li>Low-level driver read and write methods now return asynStatus and
   are passed an additional  argument through which they store the actual number
   of characters read or written.</li>
+  <li>The createSocket method in the asynSyncIO interface has been replaced by 
+  openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(), that must 
+  now be done by the caller.</li>
+  <li>Removed code for &quot;flush&quot; from gpib drivers.&nbsp; The implementation 
+  caused infinite loops on devices that speak when not spoken to.</li>
+  <li>asynRecord<ul>
+  <li>asynOctetRecord has been renamed to asynRecord</li>
+  <li>TIOM, TMSK, TSIZ, TFIL, AUCT, ENBL, CNCT, ERRS, TINP, NAWT fields have 
+  been added</li>
+  <li>Default values of OMAX and IMAX decreased from 512 to 80</li>
+  <li>Options that are unknown for a device (e.g. baud on a Moxa terminal 
+  server) are shown as Unknown.</li>
+  <li>Many bug fixes and improvements in logic and functionality</li>
 </ul>
 
-<h1>April 1, 2004</h1>
+  </li>
+</ul>
+
+<h1 align="left">April 1, 2004</h1>
 </center>
 <hr>
 
@@ -167,5 +183,4 @@ tested with the following vxi11 controllers:</p>
     NPort Ethernet/Serial converter.</li>
 </ul>
 Two Device Support modules have been converted from the 3.13 gpib support:
-DG535 and TDS3014B Scope.</body>
-</html>
+DG535 and TDS3014B Scope.</body></html>
