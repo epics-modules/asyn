@@ -72,6 +72,7 @@ typedef struct gpibPvt {
     void          *asynInt32Pvt;
     int           eoslen;
     char          eos;
+    void          *pasynPvt;   /*For registerInterruptSource*/
 }gpibPvt;
 
 #define GETgpibPvtasynGpibPort \
@@ -391,6 +392,8 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
         return asynOverflow;
     }
     *nbytesTransfered = (size_t)nt;
+    pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
+        data,maxchars,nbytesTransfered,eomReason);
     return status;
 }
 
@@ -404,6 +407,10 @@ static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
                data,(int)maxchars,&nt,eomReason);
     *nbytesTransfered = (size_t)nt;
+    if(status==asynSuccess) {
+        pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
+            data,maxchars,nbytesTransfered,eomReason);
+    }
     return status;
 }
 
@@ -575,7 +582,10 @@ static void *registerPort(
     if(status==asynSuccess)
         status = pasynManager->registerInterface(portName,&pgpibPvt->common);
     if(status==asynSuccess)
-        status = pasynOctetBase->initialize(portName,&pgpibPvt->octet,0,0,1);
+        status = pasynOctetBase->initialize(portName,&pgpibPvt->octet,0,0,0);
+    if(status==asynSuccess)
+        status = pasynManager->registerInterruptSource(
+            portName,&pgpibPvt->octet,&pgpibPvt->pasynPvt);
     if(status==asynSuccess)
         status = pasynManager->registerInterface(portName,&pgpibPvt->gpib);
     if(status==asynSuccess)

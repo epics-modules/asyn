@@ -57,3 +57,15 @@ record(waveform,"devWfAsynWrite")
     field(NELM,"40")
     field(FTVL,"CHAR")
 }
+record(stringin,"devSiAsynReadIntr")
+{
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+}
+record(stringin,"devWfAsynReadIntr")
+{
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+}
