@@ -124,7 +124,17 @@ static void sosiCallback(asynUser *pasynUser)
                 "%s soCallback\n",pso->name);
         }
 writedone:
-        callbackRequestProcessCallback(&pdpvtSo->callback,pso->prio,(void *)pso);
+        yesNo = 0;
+        status = pasynManager->canBlock(pasynUser,&yesNo);
+        if(yesNo) {
+            dbCommon *prec = (dbCommon*)pso;
+            dbScanLock(prec);
+            prec->rset->process(prec);
+            dbScanUnlock(prec);
+        } else {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s set stateRead\n",pso->name);
+            pdpvtSo->state = stateRead;
+        }
         return;
     }
     assert(pdpvtSo->state==stateRead);
@@ -173,7 +183,17 @@ writedone:
             psi->udf = 0;
         }
 readdone:
-        callbackRequestProcessCallback(&pdpvtSi->callback,psi->prio,(void *)psi);
+        yesNo = 0;
+        status = pasynManager->canBlock(pasynUser,&yesNo);
+        if(yesNo) {
+            dbCommon *prec = (dbCommon*)psi;
+            dbScanLock(prec);
+            prec->rset->process(prec);
+            dbScanUnlock(prec);
+        } else {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s set stateIdle\n",psi->name);
+            pdpvtSo->state = stateIdle;
+        }
         return;
     }
 }
@@ -292,7 +312,9 @@ static long writeSo(stringoutRecord *pso)
         pasynManager->unlock(pasynUser);
         goto bad;
     }
-    pso->pact = 1;
+    yesNo = 0;
+    status = pasynManager->canBlock(pasynUser,&yesNo);
+    if(yesNo) pso->pact = 1;
     return 0;
 bad:
     recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
@@ -331,6 +353,7 @@ static long readSi(stringinRecord *psi)
     dpvtSo     *pdpvtSo;
     asynUser   *pasynUser = 0;
     asynStatus status;
+    int        yesNo;
 
     if(!pdpvtSi) {
         recGblSetSevr(psi,WRITE_ALARM,INVALID_ALARM);
@@ -376,7 +399,9 @@ static long readSi(stringinRecord *psi)
             "%s queueRequest error %s\n",psi->name,pasynUser->errorMessage);
         goto bad;
     }
-    psi->pact = 1;
+    yesNo = 0;
+    status = pasynManager->canBlock(pasynUser,&yesNo);
+    if(yesNo) psi->pact = 1;
     return 0;
 bad:
     recGblSetSevr(psi,WRITE_ALARM,MAJOR_ALARM);

@@ -62,10 +62,10 @@ static void queueCallback(asynUser *pasynUser) {
             "queueCallback read returned: retlen %d data %s\n",
             readBytes,pmydata->buffer);
     }
-    if(strcmp(pmydata->buffer,"Duplicate")==0) {
+    if(pmydata->done) {
         epicsEventSignal(pmydata->done);
     } else {
-        strcpy(pmydata->buffer,"Duplicate");
+        pasynManager->memFree(pasynUser->userPvt,sizeof(myData));
     }
     status = pasynManager->freeAsynUser(pasynUser);
     if(status) {
@@ -75,17 +75,19 @@ static void queueCallback(asynUser *pasynUser) {
 }
 static void asynExample(const char *port,int addr,const char *message)
 {
-    myData        *pmyData;
-    asynUser      *pasynUser;
-    asynUser      *pasynUserDuplicate;
+    myData        *pmyData1,*pmyData2;
+    asynUser      *pasynUser,*pasynUserDuplicate;
     asynStatus    status;
     asynInterface *pasynInterface;
+    int           canBlock;
 
-    pmyData = calloc(1,sizeof(myData));
-    strcpy(pmyData->buffer,message);
+    pmyData1 = (myData *)pasynManager->memMalloc(sizeof(myData));
+    memset(pmyData1,0,sizeof(myData));
+    pmyData2 = (myData *)pasynManager->memMalloc(sizeof(myData));
+    memset(pmyData2,0,sizeof(myData));
+    strcpy(pmyData1->buffer,message);
     pasynUser = pasynManager->createAsynUser(queueCallback,0);
-printf("pasynUser %p\n",pasynUser);
-    pasynUser->userPvt = pmyData;
+    pasynUser->userPvt = pmyData1;
     status = pasynManager->connectDevice(pasynUser,port,addr);
     if(status!=asynSuccess) {
         printf("can't connect to serialPort1 %s\n",pasynUser->errorMessage);
@@ -97,12 +99,16 @@ printf("pasynUser %p\n",pasynUser);
         printf("%s driver not supported\n",asynOctetType);
         exit(-1);
     }
-    pmyData->pasynOctet = (asynOctet *)pasynInterface->pinterface;
-    pmyData->drvPvt = pasynInterface->drvPvt;
-    pmyData->done = epicsEventCreate(epicsEventEmpty);
-    pasynUserDuplicate = pasynManager->duplicateAsynUser(pasynUser,queueCallback,0);
-printf("pasynUserDuplicate %p\n",pasynUserDuplicate);
-    pasynUserDuplicate->userPvt = pmyData;
+    pmyData1->pasynOctet = (asynOctet *)pasynInterface->pinterface;
+    pmyData1->drvPvt = pasynInterface->drvPvt;
+    *pmyData2 = *pmyData1; /*structure copy*/
+    strcat(pmyData2->buffer," repeated");
+    canBlock = 0;
+    pasynManager->canBlock(pasynUser,&canBlock);
+    if(canBlock) pmyData2->done = epicsEventCreate(epicsEventEmpty);
+    pasynUserDuplicate = pasynManager->duplicateAsynUser(
+        pasynUser,queueCallback,0);
+    pasynUserDuplicate->userPvt = pmyData2;
     status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -113,9 +119,11 @@ printf("pasynUserDuplicate %p\n",pasynUserDuplicate);
         asynPrint(pasynUserDuplicate,ASYN_TRACE_ERROR,
             "queueRequest failed %s\n",pasynUserDuplicate->errorMessage);
     }
-    epicsEventWait(pmyData->done);
-    epicsEventDestroy(pmyData->done);
-    free(pmyData);
+    if(canBlock) {
+        epicsEventWait(pmyData2->done);
+        pasynManager->memFree(pasynUser->userPvt,sizeof(myData));
+        epicsEventDestroy(pmyData2->done);
+    }
 }
 
 static const iocshArg asynExampleArg0 = {"port", iocshArgString};
