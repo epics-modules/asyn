@@ -79,7 +79,7 @@ typedef struct vxiPort {
     int           ctrlAddr;
     BOOL          isSingleLink; /* Is this an ethernet device */ 
     struct in_addr inAddr; /* ip address of gateway */
-    CLIENT        *rpcClient; /* returned by clnt_create() */
+    CLIENT        *rpcClient; /* returned by clnttcp_create() */
     unsigned long maxRecvSize; /* max. # of bytes accepted by link */
     double        defTimeout;
     devLink       server;
@@ -516,6 +516,8 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
 {
     int         isController;
     Device_Link link;
+    int sock = -1;
+    struct sockaddr_in vxiServer;
 
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -532,8 +534,22 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         }
         pvxiPort->rpcTaskInitCalled = TRUE;
     }
-    pvxiPort->rpcClient = clnt_create(pvxiPort->hostName,
-        DEVICE_CORE, DEVICE_CORE_VERSION, "tcp");
+
+    /*
+     * We could simplify this by calling clnt_create rather than clnttcp_create
+     * but clnt_create often makes use of the non-thread-safe gethostbyname()
+     * routine.
+     */
+    memset((void *)&vxiServer, 0, sizeof vxiServer);
+    vxiServer.sin_family = AF_INET;
+    vxiServer.sin_port = htons(0);
+    if (hostToIPAddr(pvxiPort->hostName, &vxiServer.sin_addr) < 0) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't get IP address of %s\n",
+                                    pvxiPort->portName, pvxiPort->hostName);
+        return asynError;
+    }
+    pvxiPort->rpcClient = clnttcp_create(&vxiServer, 
+                                DEVICE_CORE, DEVICE_CORE_VERSION, &sock, 0, 0);
     if(!pvxiPort->rpcClient) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiConnectPort error %s\n",
             pvxiPort->portName, clnt_spcreateerror(pvxiPort->hostName));
