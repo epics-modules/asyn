@@ -1,6 +1,7 @@
 record(asynOctet,"$(P)$(R)")
 {
-	field(DESC,"asynOctet $(R)")
-	field(PORT,"$(PORT)")
-	field(ADDR,"$(ADDRESS)")
+    field(PORT,"$(PORT)")
+    field(ADDR,"$(ADDRESS)")
+    field(OMAX,"$(OMAX)")
+    field(IMAX,"$(IMAX)")
 }
