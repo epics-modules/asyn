@@ -123,7 +123,6 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     pasynInt32Interrupt = pasynManager->memMalloc(sizeof(asynInt32Interrupt));
     pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
     pinterruptNode->drvPvt = pasynInt32Interrupt;
-    if(status!=asynSuccess) return status;
     pasynInt32Interrupt->addr = addr;
     pasynInt32Interrupt->reason = pasynUser->reason;
     pasynInt32Interrupt->drvUser = pasynUser->drvUser;
