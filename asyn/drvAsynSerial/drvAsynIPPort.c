@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.2 2004-07-06 14:41:02 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.3 2004-07-12 05:49:58 rivers Exp $
  */
 
 #include <string.h>
@@ -33,6 +33,7 @@
 #include <osiUnistd.h>
 #include <epicsExport.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <asynInterposeEos.h>
 #include <drvAsynIPPort.h>
 
@@ -278,24 +279,6 @@ drvAsynIPPortDisconnect(void *drvPvt, asynUser *pasynUser)
     epicsTimerCancel(tty->timer);
     closeConnection(tty);
     return asynSuccess;
-}
-
-static asynStatus
-drvAsynIPPortGetPortOption(void *drvPvt, asynUser *pasynUser,
-                              const char *key, char *val, int valSize)
-{
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                "Unsupported key \"%s\"", key);
-    return asynError;
-}
-
-static asynStatus
-drvAsynIPPortSetPortOption(void *drvPvt, asynUser *pasynUser,
-                              const char *key, const char *val)
-{
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                "Unsupported key \"%s\"", key);
-    return asynError;
 }
 
 /*
@@ -578,9 +561,7 @@ ttyCleanup(ttyController_t *tty)
 static const struct asynCommon drvAsynIPPortAsynCommon = {
     drvAsynIPPortReport,
     drvAsynIPPortConnect,
-    drvAsynIPPortDisconnect,
-    drvAsynIPPortSetPortOption,
-    drvAsynIPPortGetPortOption
+    drvAsynIPPortDisconnect
 };
 
 /*
