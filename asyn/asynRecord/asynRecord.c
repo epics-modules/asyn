@@ -9,29 +9,31 @@
  */
 
 
-#include        <string.h>
-#include        <stdio.h>
-#include        <stdlib.h>
+#include <string.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include        <epicsMutex.h>
-#include        <dbScan.h>
-#include        <alarm.h>
-#include        <dbDefs.h>
-#include        <dbEvent.h>
-#include        <dbAccess.h>
-#include        <dbFldTypes.h>
-#include        <devSup.h>
-#include        <drvSup.h>
-#include        <errMdef.h>
-#include        <recSup.h>
-#include        <recGbl.h>
-#include        <epicsString.h>
-#include        <epicsExport.h>
-#include        <asynGpibDriver.h>
-#include        <asynDriver.h>
-#include        <drvAsynTCPPort.h>
+#include <epicsMutex.h>
+#include <callback.h>
+#include <cantProceed.h>
+#include <dbScan.h>
+#include <alarm.h>
+#include <dbDefs.h>
+#include <dbEvent.h>
+#include <dbAccess.h>
+#include <dbFldTypes.h>
+#include <devSup.h>
+#include <drvSup.h>
+#include <errMdef.h>
+#include <recSup.h>
+#include <recGbl.h>
+#include <epicsString.h>
+#include <epicsExport.h>
+#include <asynGpibDriver.h>
+#include <asynDriver.h>
+#include <drvAsynTCPPort.h>
 #define GEN_SIZE_OFFSET
-#include        "asynRecord.h"
+#include "asynRecord.h"
 #undef GEN_SIZE_OFFSET
 
 /* These should be in a header file*/
@@ -148,10 +150,11 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
         db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 
-typedef enum {stateIdle,stateIO,stateGetOption,stateSetOption} callbackState;
+typedef enum {stateIdle,stateConnect,stateIO,stateGetOption,stateSetOption} callbackState;
 
 typedef struct asynRecPvt {
-    asynRecord *prec;      /* Pointer to record */
+    CALLBACK        callback;
+    asynRecord      *prec;  /* Pointer to record */
     epicsMutexId    lock;
     callbackState   state; 
     int             callbackShouldProcess; 
@@ -176,7 +179,8 @@ static long init_record(asynRecord *pasynRec, int pass)
     if (pass != 0) return(0);
 
     /* Allocate and initialize private structure used by this record */
-    pasynRecPvt = (asynRecPvt*) calloc(1, sizeof(asynRecPvt)); 
+    pasynRecPvt = (asynRecPvt*) callocMustSucceed(
+        1, sizeof(asynRecPvt),"asynRecord");
     pasynRecPvt->lock = epicsMutexMustCreate();
     pasynRec->dpvt = pasynRecPvt;
 
@@ -197,9 +201,12 @@ static long init_record(asynRecord *pasynRec, int pass)
      * input arrays */
     if (pasynRec->omax <= 0) pasynRec->omax=MAX_STRING_SIZE;
     if (pasynRec->imax <= 0) pasynRec->imax=MAX_STRING_SIZE;
-    pasynRec->optr = (char *)calloc(pasynRec->omax, sizeof(char));
-    pasynRec->iptr = (char *)calloc(pasynRec->imax, sizeof(char));
-    pasynRecPvt->outbuff =  (char *)calloc(pasynRec->omax, sizeof(char));
+    pasynRec->optr = (char *)callocMustSucceed(
+        pasynRec->omax, sizeof(char),"asynRecord");
+    pasynRec->iptr = (char *)callocMustSucceed(
+        pasynRec->imax, sizeof(char),"asynRecord");
+    pasynRecPvt->outbuff =  (char *)callocMustSucceed(
+        pasynRec->omax, sizeof(char),"asynRecord");
     strcpy(pasynRec->tfil, "Unknown");
     pasynRec->udf = 0;
     monitorStatus(pasynRec);
@@ -222,28 +229,23 @@ static long process(asynRecord *pasynRec)
    }
    epicsMutexUnlock(pasynRecPvt->lock);
    /* If pact is FALSE then queue message to driver and return */
-   if (!pasynRec->pact)
-   {
+   if (!pasynRec->pact) {
       /* Make sure nrrd and nowt are valid */
       if (pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
       if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
       pasynRecPvt->callbackShouldProcess = 1;
       pasynManager->queueRequest(pasynRecPvt->pasynUser, 
-                                 asynQueuePriorityLow, 0.0);
+          ((pasynRecPvt->state==stateConnect)
+           ? asynQueuePriorityConnect : asynQueuePriorityLow),
+           0.0);
       pasynRec->pact = TRUE;
       return(0);
-   }
-   /* pact was TRUE, so we were called from asynCallback.
-    * If this was an I/O operation then finish up.
-    */
-   if (pasynRecPvt->state == stateIO) {
-      recGblGetTimeStamp(pasynRec);
-      /* check event list */
-      monitor(pasynRec);
-      /* process the forward scan link record */
-      recGblFwdLink(pasynRec);
-   }
-   pasynRecPvt->state = stateIdle;
+   } else if(pasynRecPvt->state==stateConnect) {
+       scanOnce(pasynRec);
+   } 
+   recGblGetTimeStamp(pasynRec);
+   monitor(pasynRec);
+   recGblFwdLink(pasynRec);
    pasynRec->pact=FALSE;
    return(0);
 }
@@ -320,18 +322,24 @@ static long special(struct dbAddr *paddr, int after)
        case asynRecordENBL:
           pasynManager->enable(pasynUser, pasynRec->enbl);
           goto unlock;
-       case asynRecordCNCT: 
-          /* Connect or disconnect from device */
-          /* This is supposed to be done in callback thread? */
-         if (pasynRec->cnct)
-            pasynRecPvt->pasynCommon->connect(pasynRecPvt->asynCommonPvt, 
-                                              pasynUser);
-         else
-            pasynRecPvt->pasynCommon->disconnect(pasynRecPvt->asynCommonPvt, 
-                                                 pasynUser);
+    }
+    if(fieldIndex==asynRecordCNCT) {
+        if(pasynRec->pact) {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "%s:special connect/disconnect calling cancelRequest\n",
+                pasynRec->name);
+            pasynManager->cancelRequest(pasynUser);
+            pasynRecPvt->state = stateConnect;
+            callbackRequestProcessCallback(&pasynRecPvt->callback,
+                pasynRec->prio,pasynRec);
+            goto unlock;
+         }
+         asynPrint(pasynUser,ASYN_TRACE_FLOW,
+             "%s:special connect/disconnect\n", pasynRec->name);
+         pasynRecPvt->state = stateConnect;
+         scanOnce(pasynRec);
          goto unlock;
     }
-
     /* These cases require idle state */
     if(pasynRecPvt->state!=stateIdle) {
        printf("%s state!=stateIdle, state=%d, try again later\n",
@@ -704,17 +712,25 @@ static void asynCallback(asynUser *pasynUser)
       case stateIO:        performIO(pasynUser); break;
       case stateSetOption: setOption(pasynUser); break;
       case stateGetOption: getOptions(pasynUser); break;
+      case stateConnect:
+          if(pasynRec->cnct) {
+              pasynRecPvt->pasynCommon->connect(
+                  pasynRecPvt->asynCommonPvt,pasynUser);
+          } else {
+               pasynRecPvt->pasynCommon->disconnect(
+                   pasynRecPvt->asynCommonPvt,pasynUser);
+          }
+          break;
       default:
-         printf("%s asynCallback illegal state %d\n",
+          printf("%s asynCallback illegal state %d\n",
                 pasynRec->name,pasynRecPvt->state);
-         return;
+          return;
    }
    if(pasynRecPvt->callbackShouldProcess) {
       dbScanLock( (dbCommon*) pasynRec);
       process(pasynRec);
-      dbScanUnlock( (dbCommon*) pasynRec);
-   } else {
       pasynRecPvt->state = stateIdle;
+      dbScanUnlock( (dbCommon*) pasynRec);
    }
 }
 
