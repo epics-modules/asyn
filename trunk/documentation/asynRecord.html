@@ -470,7 +470,7 @@ processes.</p>
       <td>"Number of bytes actually written"</td>
       <td>DBF_LONG</td>
       <td>The actual number of bytes written in the last write operation.
-        This field is valid for all OFMT modes. This number includes the
+        This field is valid for all OFMT modes. This number includes&nbsp; the
         output terminator, if any.</td>
     </tr>
     <tr valign="top">
@@ -508,19 +508,25 @@ processes.</p>
 The OFMT (Output Format) field is used to select one of these fields or the
 other as the output source to the device.&nbsp; </p>
 
-<p>If OFMT="ASCII" then the AOUT fields and OEOS fields are processed with
-dbTranslateEscape() to convert control characters (e.g. "\r", "\021") to
-bytes, these fields are combined into a single buffer, the length of the
-output is determined with strlen(), and the string is sent to the device.</p>
+<p>If OFMT="ASCII" then the AOUT field is processed with dbTranslateEscape() to convert control characters (e.g. "\r", "\021") to
+bytes, the
+length of the output is determined with strlen(), and the string is sent to the 
+device using asynOctet-&gt;write.&nbsp; This will append the output EOS if one has 
+been set.</p>
 
-<p>If OFMT="Hybrid" then the BOUT fields and OEOS fields are processed with
-dbTranslateEscape() to convert control characters (e.g. "\r", "\021") to
-bytes, these fields are combined into a single buffer, the length of the
-output is determined with strlen(), and the string is sent to the device.</p>
+<p>If OFMT="Hybrid" then the BOUT field is processed with dbTranslateEscape() to convert control characters (e.g. "\r", "\021") to
+bytes, the length of the
+output is determined with strlen(), and the string is sent to the device using 
+asynOctet-&gt;write. This will append the output EOS if one has been set.</p>
 
 <p>If OFMT="Binary" then NOWT bytes from the BOUT field are sent to the
-device.&nbsp; The OEOS field is ignored, and dbTranslateEscape() is not
-called. </p>
+device using asynOctet-&gt;writeRaw.&nbsp; This will not append an output EOS.</p>
+
+<p>OEOS is set to the current value for the port when the record connects to the 
+port.&nbsp; If OEOS is modified after the record connects to the port, then the 
+output EOS will be changed using asynOctet-&gt;setOutputEos.&nbsp;&nbsp; IMPORTANT: 
+The value of OEOS in the database file is never used, because it is modified 
+when the record connects to the port.</p>
 
 <p>&nbsp;</p>
 <hr>
@@ -653,20 +659,16 @@ met:</p>
   <li>The timeout (TMOT) expires</li>
 </ol>
 
-<p>If IFMT="ASCII" then the IEOS field is processed with dbTranslateEscape()
-to convert control characters (e.g. "\r", "\021") to bytes, and the asyn
-input terminator is set to this string.&nbsp; The input is read into the AINP
-field. The input terminator string, if present, is removed from AINP after
-the read, and AINP will be null terminated. </p>
+<p>If IFMT=&quot;ASCII&quot; then input is read into the AINP
+field with asynOctet-&gt;read. This will remove the input EOS string, if any, and 
+AINP will be NULL terminated if possible.</p>
 
-<p>If IFMT="Hybrid" then the IEOS field is processed with dbTranslateEscape()
-to convert control characters (e.g. "\r", "\021") to bytes, and the asyn
-input terminator is set to this string.&nbsp; The input is read into the BINP
-field. The input terminator string, if present, is removed from BINP after
-the read, and BINP will be null terminated. </p>
+<p>If IFMT="Hybrid" then the  input is read into the BINP field with asynOctet-&gt;read. 
+This will remove the input EOS string, if any, and BINP will be NULL terminated 
+if possible.</p>
 
-<p>If IFMT="Binary" then the IEOS field is ignored, and no asyn input
-terminator is used.&nbsp; The input is read into the BINP field. BINP will be
+<p>If IFMT="Binary" then the  input is read into the BINP field using asynOctet-&gt;readRaw.&nbsp; 
+This will ignore the input EOS.&nbsp; BINP will be
 null terminated. </p>
 
 <p>The TINP field is intended for operator display.&nbsp; It will contain up
@@ -680,9 +682,13 @@ in "Hybrid" and "Binary" input modes.</p>
 
 <p>The IEOS terminator field is 40 characters long.&nbsp; However, the serial
 drivers permit 2 character end-of-message strings at most. The GPIB drivers
-only permit 1 character end-of-message strings.<br>
+only permit 1 character end-of-message strings.</p>
 
-&nbsp;</p>
+<p>IEOS is set to the current value for the port when the record connects to the 
+port.&nbsp; If IEOS is modified after the record connects to the port, then the 
+input EOS will be changed using asynOctet-&gt;setInputEos.&nbsp;&nbsp; IMPORTANT: 
+The value of IEOS in the database file is never used, because it is modified 
+when the record connects to the port.</p>
 <hr>
 <h2 align="center"><a name="Input/Output Control Fields for Register Interfaces">
                             Input/Output Control Fields for Register Interfaces</a></h2>
@@ -825,7 +831,9 @@ field.</p>
 IP-Octal module the maximum baud rate is 38400. </p>
 
 <p>These record fields are set to the values currently in effect for the port
-when the connection to the port is made.</p>
+when the connection to the port is made. IMPORTANT: The value of these fields in 
+the database file is never used, because it is modified when the record connects 
+to the port.</p>
 
 <p>&nbsp;</p>
 <hr>
@@ -1247,6 +1255,12 @@ applications.</p>
   <li>The ODEL and IDEL fields were used even when OFMT or IFMT were in
     "Binary" mode.&nbsp; OEOS and IEOS are now ignored when OFMT or IFMT
     respectively are in "Binary" mode.</li>
+  <li>The ODEL and IDEL fields were always used to set the input and output end 
+  of string.&nbsp; The IEOS and OEOS fields now are now initialized to the 
+  current EOS settings for the port when the record connects.&nbsp; IEOS and 
+  OEOS only change the EOS settings if these fields are modified after the 
+  record connects to the port.&nbsp; Thus, it is now important to initialize the 
+  EOS strings for the port correctly in the startup script.</li>
   <li>The TMOT field has changed from DBF_LONG to DBF_DOUBLE, and the units
     have changed from milliseconds to seconds.&nbsp; TMOT=-1.0 now means wait
     forever. </li>
@@ -1267,44 +1281,46 @@ record.</p>
 
 <h3 align="center">Main control screen, asynRecord.adl</h3>
 
-<p align="center"><img border="0" src="asynRecord.gif" width="450"
-height="645"></p>
+<p align="center"><img border="0" src="asynRecord.gif" width="450" height="495"></p>
 
 <p align="center">&nbsp;</p>
 <!--NEW PAGE -->
 
 
+<h3 align="center">asynOctet I/O screen, asynOctet.adl</h3>
+
+
+<p align="center"><img border="0" src="asynOctet.gif" width="450" height="380"></p>
+
+
+<h3 align="center">asyn register device I/O screen, asynRegister.adl</h3>
+
+
+<p align="center">
+<img border="0" src="asynRegister.gif" width="518" height="375"></p>
+
+
 <h3 align="center">Serial port setup screen, asynSerialPortSetup.adl</h3>
 
-<p align="center"><img border="0" src="asynSerialPortSetup.gif" width="258"
-height="210"></p>
+<p align="center">
+<img border="0" src="asynSerialPortSetup.gif" width="258" height="210"></p>
 
 <p align="center">&nbsp;</p>
 
 <h3 align="center">GPIB setup screen, asynGPIBSetup.adl</h3>
 
-<p align="center"><img border="0" src="asynGPIBSetup.gif" width="383"
-height="195"></p>
+<p align="center">
+<img border="0" src="asynGPIBSetup.gif" width="383" height="215"></p>
 
 <p align="center">&nbsp;</p>
 
 <h3 align="center">Socket setup screen, asynSocketSetup.adl</h3>
 
-<p align="center"><img border="0" src="asynSocketSetup.gif" width="358"
-height="150"></p>
+<p align="center">
+<img border="0" src="asynSocketSetup.gif" width="358" height="162"></p>
 
 <p align="center">&nbsp;</p>
 
-<p>&nbsp;</p>
-<hr>
-
-<h2><a name="Restrictions">
-             Restrictions</a></h2>
-
-<p>I/O Event Scanning (SCAN="I/O Intr") is currently supported for the register
-       interfaces (asynInt32, asynUInt32Digital, asynFloat64).  It will be supported
-       for asynOctet as soon as the asynOctet interface supports callbacks.</p>
-<p>&nbsp;</p>
 <hr>
 
 <h2><a name="Example 1">Example #1</a></h2>
@@ -1503,7 +1519,7 @@ end</pre>
 <address>
   Suggestions and comments to: <a href="mailto:rivers@cars.uchicago.edu">Mark
   Rivers </a>: (rivers@cars.uchicago.edu) <br>
-  Last modified: November 1, 2004
+  Last modified: November 18, 2004
 </address>
 </body>
 </html>
