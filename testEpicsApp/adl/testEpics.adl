@@ -8,7 +8,7 @@ display {
 		x=99
 		y=76
 		width=400
-		height=400
+		height=100
 	}
 	clr=14
 	bclr=4
@@ -89,8 +89,8 @@ display {
 }
 menu {
 	object {
-		x=200
-		y=21
+		x=101
+		y=80
 		width=100
 		height=20
 	}
@@ -100,51 +100,40 @@ menu {
 		bclr=4
 	}
 }
-composite {
+text {
 	object {
 		x=0
-		y=0
-		width=200
+		y=60
+		width=100
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=0
-				y=0
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="intInt32"
-			align="horiz. centered"
-		}
-		"text update" {
-			object {
-				x=100
-				y=0
-				width=100
-				height=20
-			}
-			monitor {
-				chan="asyndevAiInt32Interrupt"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="intInt32"
+	align="horiz. centered"
+}
+"text update" {
+	object {
+		x=201
+		y=60
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAiInt32Interrupt"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
 	}
 }
 text {
 	object {
 		x=0
-		y=20
+		y=80
 		width=100
 		height=20
 	}
@@ -156,8 +145,8 @@ text {
 }
 "text update" {
 	object {
-		x=100
-		y=20
+		x=201
+		y=80
 		width=100
 		height=20
 	}
@@ -170,4 +159,124 @@ text {
 	align="horiz. centered"
 	limits {
 	}
+}
+menu {
+	object {
+		x=101
+		y=21
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevCalcA1.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=202
+		y=21
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAoInt32A1"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=202
+		y=1
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAoInt32A0"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=302
+		y=20
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAiInt32A1"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+menu {
+	object {
+		x=101
+		y=1
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevCalcA0.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=302
+		y=0
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAiInt32A0"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=0
+		y=1
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="int32A0"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=0
+		y=21
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="int32A1"
+	align="horiz. centered"
 }
