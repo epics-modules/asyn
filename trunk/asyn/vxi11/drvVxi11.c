@@ -66,6 +66,7 @@ typedef struct vxiPort {
     void          *asynGpibPvt;
     osiSockAddr   srqPort;         /* TCP port for interrupt channel */
     epicsEventId  srqThreadReady;   /* wait for srqThread to be ready*/
+    char          *srqThreadName;
     BOOL          rpcTaskInitCalled; /*Only call rpcTaskInit once*/
     const char    *portName;
     char          *hostName;   /* ip address of VXI-11 server */
@@ -565,11 +566,10 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     Device_Link link;
     int sock = -1;
     struct sockaddr_in vxiServer;
-    char srqThreadName[25];
 
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiConnectPort but already connected\n");
+            "%s vxiConnectPort but already connected\n",pvxiPort->portName);
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
@@ -657,8 +657,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
             pvxiPort->portName);
         return asynError;
     }
-    sprintf(srqThreadName,"%.*sSRQ",(int)sizeof(srqThreadName)-4,pvxiPort->portName);
-    epicsThreadCreate(srqThreadName, 46,
+    epicsThreadCreate(pvxiPort->srqThreadName, 46,
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiPort);
     epicsEventMustWait(pvxiPort->srqThreadReady);
@@ -677,7 +676,7 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
 
     if(!pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiDisconnectPort but not connected\n");
+            "%s vxiDisconnectPort but not connected\n",pvxiPort->portName);
         return asynError;
     }
     if(pasynUser) asynPrint(pasynUser,ASYN_TRACE_FLOW,
@@ -717,7 +716,8 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiDisconnectPort %s\n",
                 pvxiPort->portName,clnt_sperror(pvxiPort->rpcClient,""));
         } else {
-            printf(pvxiPort->portName,clnt_sperror(pvxiPort->rpcClient,""));
+            printf("%s vxiDisconnectPort %s\n",
+                pvxiPort->portName,clnt_sperror(pvxiPort->rpcClient,""));
         }
     } else if(devErr.error != VXI_OK) {
         if(pasynUser) {
@@ -743,7 +743,7 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
             if(i == 10) {
                 asynPrint(pasynUser,ASYN_TRACE_ERROR,
                             "WARNING -- %s SRQ thread will not terminate!\n",
-                                                           pvxiPort->portName);
+                             pvxiPort->portName);
                 break;
             }
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s: unwedge SRQ thread.\n",
@@ -782,7 +782,8 @@ static void vxiSrqThread(void *arg)
         sizeof pvxiPort->srqPort.ia.sin_zero);
     if (bind (s, &pvxiPort->srqPort.sa, sizeof pvxiPort->srqPort.ia) < 0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "SrqThread(): can't bind socket: %s\n", strerror (errno));
+                   "%s can't bind socket: %s\n",
+                    pvxiPort->srqThreadName,strerror (errno));
         close(s);
         return;
     }
@@ -794,7 +795,8 @@ s */
     pvxiPort->srqPort.ia.sin_port = i;
     if (listen (s, 2) < 0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "SrqThread(): can't listen on socket: %s\n", strerror (errno));
+                "%s can't listen on socket: %s\n",
+                 pvxiPort->srqThreadName,strerror (errno));
         close(s);
         return;
     }
@@ -807,15 +809,16 @@ s */
     if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt)) {
         if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
             close(s);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): terminating\n");
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s terminating\n",
+            pvxiPort->srqThreadName);
         taskwdRemove(myTid);
         epicsEventSignal(pvxiPort->srqThreadReady);
         return;
     }
     close(s);
     if(s1 < 0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "SrqThread(): can't accept connection: %s\n", strerror(errno));
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't accept connection: %s\n",
+                pvxiPort->srqThreadName,strerror(errno));
         taskwdRemove(myTid);
         epicsEventSignal(pvxiPort->srqThreadReady);
         return;
@@ -828,20 +831,22 @@ s */
         if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt))
             break;
         if(i < 0) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                            "SrqThread(): read error: %s\n", strerror(errno));
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s read error: %s\n",
+                pvxiPort->srqThreadName,strerror(errno));
             break;
         }
         else if (i == 0) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"SrqThread(): read EOF\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s read EOF\n",
+                pvxiPort->srqThreadName);
             break;
         }
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): SRQ\n");
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s SRQ\n",pvxiPort->srqThreadName);
         pasynGpib->srqHappened(pvxiPort->asynGpibPvt);
     }
     if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
         close(s1);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): terminating\n");
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s terminating\n",pvxiPort->srqThreadName);
     taskwdRemove(myTid);
     epicsEventSignal(pvxiPort->srqThreadReady);
 }
@@ -1170,7 +1175,7 @@ static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
     if(!pdevLink) return asynError;
     if(eossize<1) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiGetEos eossize %d too small\n",eossize);
+            "%s vxiGetEos eossize %d too small\n",pvxiPort->portName,eossize);
         *eoslen = 0;
         return asynError;
     }
@@ -1240,7 +1245,7 @@ static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
     asynStatus status = asynSuccess;
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s vxiUniversalCmd %d\n",pvxiPort->portName,cmd);
+        "%s vxiUniversalCmd %2.2x\n",pvxiPort->portName,cmd);
     data[0] = cmd;
     data[1] = 0;
     nout = vxiWriteCmd(pvxiPort,pasynUser, data, 1);
@@ -1492,26 +1497,32 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     int noAutoConnect)
 {
     char    *portName;
+    char    *srqThreadName;
     vxiPort *pvxiPort;
     int     addr,secondary;
     asynStatus status;
     struct sockaddr_in ip;
     struct in_addr     inAddr;
+    int     len;
 
     assert(dn && hostName && vxiName);
     /* Force registration */
     if(vxiInit() != 0) return -1;
-    portName = callocMustSucceed(strlen(dn)+1,sizeof(char),
-        "vxi11Configure");
-    strcpy(portName,dn);
     if(aToIPAddr(hostName, 0, &ip) < 0) {
         printf("%s Unknown host: \"%s\"\n", portName, hostName);
         return 0;
     }
     inAddr.s_addr = ip.sin_addr.s_addr;
     /* allocate vxiPort structure */
-    pvxiPort = (vxiPort *)callocMustSucceed(1,sizeof(vxiPort),"vxi11Configure");
-    pvxiPort->portName = portName;
+    len = sizeof(vxiPort); /*for vxiPort*/
+    len += strlen(dn) + 1; /*for portName*/
+    len += strlen(dn) + 4; /*for <portName>SRQ*/
+    pvxiPort = callocMustSucceed(len,sizeof(char),"vxi11Configure");
+    pvxiPort->portName = portName = (char *)(pvxiPort+1);
+    strcpy(portName,dn);
+    pvxiPort->srqThreadName = srqThreadName = portName + strlen(dn) + 1;
+    strcpy(srqThreadName,dn);
+    strcat(srqThreadName,"SRQ");
     pvxiPort->server.eos = -1;
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
         pvxiPort->primary[addr].primary.eos = -1;
