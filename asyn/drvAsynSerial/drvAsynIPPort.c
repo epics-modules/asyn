@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.4 2004-07-15 21:43:26 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.5 2004-07-16 14:36:53 mrk Exp $
  */
 
 #include <string.h>
@@ -674,7 +674,7 @@ drvAsynIPPortConfigure(const char *portName,
     tty->octet.pinterface  = (void *)&drvAsynIPPortAsynOctet;
     tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
-                                   0, /*not multiDevice*/
+                                   ASYN_CANBLOCK,
                                    !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
