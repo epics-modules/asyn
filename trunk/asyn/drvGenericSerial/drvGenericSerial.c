@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.13 2004-01-14 14:45:44 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.14 2004-01-14 18:44:53 norume Exp $
  */
 
 #include <string.h>
@@ -74,7 +74,6 @@ typedef struct {
     unsigned long      nRead;
     unsigned long      nWritten;
     int                baud;
-    int                baudCode;
     int                cflag;
 } ttyController_t;
 
@@ -154,29 +153,53 @@ timeoutHandler(void *p)
 static asynStatus
 setMode(ttyController_t *tty)
 {
-#ifdef HAVE_TERMIOS
-    struct termios     termios;
+#if defined(HAVE_TERMIOS)
+    struct termios termios;
+    int baudCode;
+    switch (tty->baud) {
+    case 50:    baudCode = B50;     break;
+    case 75:    baudCode = B75;     break;
+    case 110:   baudCode = B110;    break;
+    case 134:   baudCode = B134;    break;
+    case 150:   baudCode = B150;    break;
+    case 200:   baudCode = B200;    break;
+    case 300:   baudCode = B300;    break;
+    case 600:   baudCode = B600;    break;
+    case 1200:  baudCode = B1200;   break;
+    case 1800:  baudCode = B1800;   break;
+    case 2400:  baudCode = B2400;   break;
+    case 4800:  baudCode = B4800;   break;
+    case 9600:  baudCode = B9600;   break;
+    case 19200: baudCode = B19200;  break;
+    case 38400: baudCode = B38400;  break;
+    case 57600: baudCode = B57600;  break;
+    case 115200:baudCode = B115200; break;
+    case 230400:baudCode = B230400; break;
+    default:
+        errlogPrintf("Invalid speed.\n");
+        return asynError;
+    }
     termios.c_cflag = tty->cflag;
     termios.c_iflag = IGNBRK | IGNPAR;
     termios.c_oflag = 0;
     termios.c_lflag = 0;
     termios.c_cc[VMIN] = 1;
     termios.c_cc[VTIME] = 0;
-    cfsetispeed(&termios,tty->baudCode);
-    cfsetospeed(&termios,tty->baudCode);
+    cfsetispeed(&termios,baudCode);
+    cfsetospeed(&termios,baudCode);
     if (tcsetattr(tty->fd, TCSADRAIN, &termios) < 0) {
         errlogPrintf("drvGenericSerial: Can't set `%s' attributes: %s\n", tty->serialDeviceName, strerror(errno));
         return asynError;
     }
     return asynSuccess;
-#endif
-#ifdef vxWorks
+#elif defined(vxWorks)
     if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
         errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
     return asynSuccess;
-#endif
+#else
     errlogPrintf("Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
     return asynSuccess;
+#endif
 }
 
 /*
@@ -185,17 +208,17 @@ setMode(ttyController_t *tty)
 static asynStatus
 setBaud (ttyController_t *tty)
 {
-#ifdef HAVE_TERMIOS
+#if defined(HAVE_TERMIOS)
     return  setMode(tty);
-#endif
-#ifdef vxWorks
+#elif defined(vxWorks)
     if ((ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
      && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0))
         errlogPrintf("Warning: `%s' supports neither FIOBAUDRATE nor SIO_BAUD_SET.\n", tty->serialDeviceName);
     return asynSuccess;
-#endif
+#else
     errlogPrintf("Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
     return asynSuccess; 
+#endif
 }
 
 /*
@@ -437,24 +460,24 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
         if (*val != '\0')
             baud = 0;
         switch (baud) {
-        case 50:    tty->baudCode = B50;     break;
-        case 75:    tty->baudCode = B75;     break;
-        case 110:   tty->baudCode = B110;    break;
-        case 134:   tty->baudCode = B134;    break;
-        case 150:   tty->baudCode = B150;    break;
-        case 200:   tty->baudCode = B200;    break;
-        case 300:   tty->baudCode = B300;    break;
-        case 600:   tty->baudCode = B600;    break;
-        case 1200:  tty->baudCode = B1200;   break;
-        case 1800:  tty->baudCode = B1800;   break;
-        case 2400:  tty->baudCode = B2400;   break;
-        case 4800:  tty->baudCode = B4800;   break;
-        case 9600:  tty->baudCode = B9600;   break;
-        case 19200: tty->baudCode = B19200;  break;
-        case 38400: tty->baudCode = B38400;  break;
-        case 57600: tty->baudCode = B57600;  break;
-        case 115200:tty->baudCode = B115200; break;
-        case 230400:tty->baudCode = B230400; break;
+        case 50:     break;
+        case 75:     break;
+        case 110:    break;
+        case 134:    break;
+        case 150:    break;
+        case 200:    break;
+        case 300:    break;
+        case 600:    break;
+        case 1200:   break;
+        case 1800:   break;
+        case 2400:   break;
+        case 4800:   break;
+        case 9600:   break;
+        case 19200:  break;
+        case 38400:  break;
+        case 57600:  break;
+        case 115200: break;
+        case 230400: break;
         default:
             errlogPrintf("Invalid speed.\n");
             return asynError;
@@ -819,7 +842,6 @@ drvGenericSerialConfigure(char *portName,
     tty->fd = -1;
     tty->serialDeviceName = epicsStrDup(ttyName);
     tty->baud = 9600;
-    tty->baudCode = B9600;
     tty->cflag = CREAD | CLOCAL | CS8;
 
     /*
