@@ -1153,7 +1153,25 @@ where the arguments are:
     <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. Note that if any stty
     arguments are present both the priority and openOnlyOnDisconnect
     arguments must also be present but other than that the order of the stty
-    arguments is not important.k</li>
+    arguments is not important.  The complete list of supported stty
+    options is:
+    <dl>
+  <dt><tt>cs8</tt></dt><dd>Set number of bits per character to 8 (default).</dd>
+  <dt><tt>cs7</tt></dt><dd>Set number of bits per character to 7.</dd>
+  <dt><tt>cs6</tt></dt><dd>Set number of bits per character to 6.</dd>
+  <dt><tt>cs5</tt></dt><dd>Set number of bits per character to 5.</dd>
+  <dt><tt>parenb</tt></dt><dd>Enable parity generation/checking.</dd>
+  <dt><tt>-parenb</tt></dt><dd>Disable parity generation/checking (default).</dd>
+  <dt><tt>parodd</tt></dt><dd>Check/generate ODD parity if enabled.</dd>
+  <dt><tt>-parodd</tt></dt><dd>Check/generate EVEN parity if enabled (default).</dd>
+  <dt><tt>cstopb</tt></dt><dd>Generate two stop bits.</dd>
+  <dt><tt>-cstopb</tt></dt><dd>Generate one stop bit (default).</dd>
+  <dt><tt>crtscts</tt></dt><dd>Enable RTS/CTS hardware handshaking.</dd>
+  <dt><tt>-crtscts</tt></dt><dd>Disable RTS/CTS hardware handshaking (default).</dd>
+  <dt><tt>clocal</tt></dt><dd>Disable CD/DTR modem control (default).</dd>
+  <dt><tt>-clocal</tt></dt><dd>Enable CD/DTR modem control.</dd>
+    </dl>
+    </li>
 </ul>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
