@@ -49,6 +49,7 @@
 typedef struct devPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
+    asynUser          *pasynUserSync;
     asynUInt32Digital *puint32;
     void              *uint32Pvt;
     void              *registrarPvt;
@@ -105,21 +106,21 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynBiUInt32Digital = {
-    6,0,0,initBi,       getIoIntInfo,processBi};
+    6,0,0,initBi,         getIoIntInfo, processBi};
 analogDset asynBoUInt32Digital = {
-    6,0,0,initBo,       0,           processBo};
+    6,0,0,initBo,         getIoIntInfo, processBo};
 analogDset asynLiUInt32Digital = {
-    5,0,0,initLi,       getIoIntInfo, processLi};
+    5,0,0,initLi,         getIoIntInfo, processLi};
 analogDset asynLoUInt32Digital = {
-    5,0,0,initLo,       0,            processLo};
+    5,0,0,initLo,         getIoIntInfo, processLo};
 analogDset asynMbbiUInt32Digital = {
-    5,0,0,initMbbi,     getIoIntInfo, processMbbi};
+    5,0,0,initMbbi,       getIoIntInfo, processMbbi};
 analogDset asynMbboUInt32Digital = {
-    5,0,0,initMbbo,     0,            processMbbo};
+    5,0,0,initMbbo,       getIoIntInfo, processMbbo};
 analogDset asynMbbiDirectUInt32Digital = {
-    5,0,0,initMbbiDirect,     getIoIntInfo, processMbbiDirect};
+    5,0,0,initMbbiDirect, getIoIntInfo, processMbbiDirect};
 analogDset asynMbboDirectUInt32Digital = {
-    5,0,0,initMbboDirect,     0,            processMbboDirect};
+    5,0,0,initMbboDirect, getIoIntInfo, processMbboDirect};
 
 epicsExportAddress(dset, asynBiUInt32Digital);
 epicsExportAddress(dset, asynBoUInt32Digital);
@@ -186,6 +187,16 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     }
     pPvt->puint32 = pasynInterface->pinterface;
     pPvt->uint32Pvt = pasynInterface->drvPvt;
+
+    /* Initialize synchronous interface */
+    status = pasynUInt32DigitalSyncIO->connect(pPvt->portName, pPvt->addr,
+                 &pPvt->pasynUserSync, pPvt->userParam);
+    if (status != asynSuccess) {
+        printf("%s devAsynUInt32Digital::initCommon UInt32DigitalSyncIO->connect failed %s\n",
+               pr->name, pPvt->pasynUserSync->errorMessage);
+        goto bad;
+    }
+
     pPvt->interruptCallback = interruptCallback;
     scanIoInit(&pPvt->ioScanPvt);
     return 0;
@@ -362,7 +373,7 @@ static long initBo(boRecord *pbo)
     pPvt = pbo->dpvt;
     pbo->mask = pPvt->mask;
     /* Read the current value from the device */
-    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+    status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pbo->rval = value;
@@ -445,7 +456,7 @@ static long initLo(longoutRecord *pr)
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
-    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+    status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) pr->val = value;
     return 0;
@@ -527,7 +538,7 @@ static long initMbbo(mbboRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
-    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+    status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
@@ -632,7 +643,7 @@ static long initMbboDirect(mbboDirectRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
-    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+    status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
