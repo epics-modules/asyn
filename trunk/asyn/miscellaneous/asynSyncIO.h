@@ -24,7 +24,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /* __cplusplus */
 
 typedef struct asynSyncIO {
    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
@@ -43,6 +43,6 @@ epicsShareExtern asynSyncIO *pasynSyncIO;
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /* INCasynSyncIOh */
