@@ -15,7 +15,7 @@
 #include <string.h>
 #include <epicsEvent.h>
 #include <asynDriver.h>
-#include <drvGenericSerial.h>
+#include <asynDrvGenericSerial.h>
 #include <asynSyncIO.h>
 
 typedef enum {
@@ -43,6 +43,34 @@ typedef struct asynSyncIOPvt {
    int retval;
 } asynSyncIOPvt;
 
+static asynStatus 
+   asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser);
+static asynStatus 
+   asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser);
+static int
+    asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len, 
+                    double timeout);
+static int 
+    asynSyncIORead(asynUser *pasynUser, char *buffer, int buffer_len, 
+                   const char *ieos, int ieos_len, int flush, double timeout);
+static int 
+    asynSyncIOWriteRead(asynUser *pasynUser, 
+                        const char *write_buffer, int write_buffer_len,
+                        char *read_buffer, int read_buffer_len,
+                        const char *ieos, int ieos_len, double timeout);
+static asynStatus 
+    asynSyncIOFlush(asynUser *pasynUser);
+
+static asynSyncIO asynSyncIOManager = {
+    asynSyncIOConnect,
+    asynSyncIOConnectSocket,
+    asynSyncIOWrite,
+    asynSyncIORead,
+    asynSyncIOWriteRead,
+    asynSyncIOFlush
+};
+epicsShareDef asynSyncIO *pasynSyncIO = &asynSyncIOManager;
+
 /* Timeout for queue callback.  0. means wait forever, don't remove entry
    from queue */
 #define QUEUE_TIMEOUT 0.
@@ -52,8 +80,8 @@ typedef struct asynSyncIOPvt {
 
 static void asynSyncIOCallback(asynUser *pasynUser);
 
-epicsShareFunc asynStatus epicsShareAPI
-    asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser)
+static asynStatus 
+   asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser)
 {
     asynSyncIOPvt *pasynSyncIOPvt;
     asynUser *pasynUser;
@@ -90,8 +118,8 @@ epicsShareFunc asynStatus epicsShareAPI
     return(asynSuccess);
 }
 
-epicsShareFunc asynStatus epicsShareAPI
-    asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser)
+static asynStatus 
+   asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser)
 {
     char portString[20];
     char *serverString;
@@ -102,17 +130,18 @@ epicsShareFunc asynStatus epicsShareAPI
     strcpy(serverString, server);
     strcat(serverString, ":");
     strcat(serverString, portString);
-    status = drvGenericSerialConfigure(serverString, serverString, 0, 0);
+    status = asynDrvGenericSerialConfigure(serverString, serverString, 0, 0);
     status = asynSyncIOConnect(serverString, 0, ppasynUser);
     return(status);
 }
 
-static asynStatus asynSyncIOQueueAndWait(asynUser *pasynUser,
-                                         const char *output_buff, int output_len,
-                                         char *input_buff, int input_len,
-                                         const char *ieos, int ieos_len, 
-                                         int flush, double timeout,
-                                         asynSyncIOOp op)
+static asynStatus 
+   asynSyncIOQueueAndWait(asynUser *pasynUser, 
+                          const char *output_buff, int output_len,
+                          char *input_buff, int input_len,
+                          const char *ieos, int ieos_len, 
+                          int flush, double timeout,
+                          asynSyncIOOp op)
 {
     asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
     asynStatus status;
@@ -150,7 +179,7 @@ static asynStatus asynSyncIOQueueAndWait(asynUser *pasynUser,
 }
  
 
-epicsShareFunc int epicsShareAPI 
+static int
     asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len, 
                     double timeout)
 {
@@ -162,7 +191,7 @@ epicsShareFunc int epicsShareAPI
 }
 
 
-epicsShareFunc asynStatus epicsShareAPI 
+static asynStatus 
     asynSyncIOFlush(asynUser *pasynUser)
 {
     asynStatus status;
@@ -172,7 +201,7 @@ epicsShareFunc asynStatus epicsShareAPI
     return(status);
 }
 
-epicsShareFunc int epicsShareAPI 
+static int 
     asynSyncIORead(asynUser *pasynUser, char *buffer, int buffer_len, 
                    const char *ieos, int ieos_len, int flush, double timeout)
 {
@@ -185,7 +214,7 @@ epicsShareFunc int epicsShareAPI
 }
 
 
-epicsShareFunc int epicsShareAPI 
+static int 
     asynSyncIOWriteRead(asynUser *pasynUser, 
                         const char *write_buffer, int write_buffer_len,
                         char *read_buffer, int read_buffer_len,

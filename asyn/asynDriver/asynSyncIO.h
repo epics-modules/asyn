@@ -19,7 +19,7 @@ of this distribution.
 
 #include <shareLib.h>
 #include "asynDriver.h"
-#include "drvGenericSerial.h"
+#include "asynDrvGenericSerial.h"
 
 #ifndef	INCasynSyncIOh
 #define	INCasynSyncIOh 1
@@ -27,23 +27,21 @@ of this distribution.
 #ifdef __cplusplus
 extern "C" {
 #endif
-epicsShareFunc asynStatus epicsShareAPI
-    asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser);
-epicsShareFunc asynStatus epicsShareAPI
-    asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser);
-epicsShareFunc int epicsShareAPI
-    asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len,
-                    double timeout);
-epicsShareFunc asynStatus epicsShareAPI
-    asynSyncIOFlush(asynUser *pasynUser);
-epicsShareFunc int epicsShareAPI
-    asynSyncIORead(asynUser *pasynUser, char *buffer, int buffer_len,
-                   const char *ieos, int ieos_len, int flush, double timeout);
-epicsShareFunc int epicsShareAPI
-    asynSyncIOWriteRead(asynUser *pasynUser,
-                        const char *write_buffer, int write_buffer_len,
-                        char *read_buffer, int read_buffer_len,
-                        const char *ieos, int ieos_len, double timeout);
+typedef struct asynSyncIO {
+   asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+   asynStatus (*connectSocket)(const char *server, int port, 
+                  asynUser **ppasynUser);
+   int        (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
+                  double timeout);
+   int        (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
+                  const char *ieos, int ieos_len, int flush, double timeout);
+   int        (*writeRead)(asynUser *pasynUser,
+                  const char *write_buffer, int write_buffer_len,
+                  char *read_buffer, int read_buffer_len,
+                  const char *ieos, int ieos_len, double timeout);
+   asynStatus (*flush)(asynUser *pasynUser);
+} asynSyncIO;
+epicsShareExtern asynSyncIO *pasynSyncIO;
 
 #ifdef __cplusplus
 }

@@ -185,9 +185,9 @@ epicsShareFunc int epicsShareAPI
     asynStatus status;
     GPHENTRY *hashEntry;
 
-    status = asynSyncIOConnect(port, addr, &pasynUser);
+    status = pasynSyncIO->connect(port, addr, &pasynUser);
     if (status) {
-       printf("Error calling asynSyncIOConnect, status=%d\n", status);
+       printf("Error calling pasynSyncIO->connect, status=%d\n", status);
        return(-1);
     }
 
@@ -211,7 +211,7 @@ epicsShareFunc int epicsShareAPI
 }
 
 epicsShareFunc int epicsShareAPI
-    asynRead(const char *entry, int flush)
+    asynRead(const char *entry, int nread, int flush)
 {
     asynUser *pasynUser;
     asynIOPvt *pPvt;
@@ -224,7 +224,9 @@ epicsShareFunc int epicsShareAPI
     }
     pasynUser = pPvt->pasynUser;
 
-    ninp = asynSyncIORead(pasynUser, pPvt->read_buffer, pPvt->read_buffer_len,
+    if (nread == 0) nread = pPvt->read_buffer_len;
+    if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
+    ninp = pasynSyncIO->read(pasynUser, pPvt->read_buffer, nread,
                    pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout);
     if (ninp <= 0) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -259,7 +261,7 @@ epicsShareFunc int epicsShareAPI
     len = dbTranslateEscape(pPvt->write_buffer, output);
     strcat(pPvt->write_buffer, pPvt->oeos);
     len += pPvt->oeos_len;
-    nout = asynSyncIOWrite(pasynUser, pPvt->write_buffer, len, pPvt->timeout);
+    nout = pasynSyncIO->write(pasynUser, pPvt->write_buffer, len, pPvt->timeout);
     if (nout != len) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error in asynWrite, nout=%d, len=%d\n", nout, len);
@@ -269,7 +271,7 @@ epicsShareFunc int epicsShareAPI
 }
 
 epicsShareFunc int epicsShareAPI
-    asynWriteRead(const char *entry, const char *output)
+    asynWriteRead(const char *entry, const char *output, int nread)
 {
     asynUser *pasynUser;
     asynIOPvt *pPvt;
@@ -291,9 +293,11 @@ epicsShareFunc int epicsShareAPI
     len = dbTranslateEscape(pPvt->write_buffer, output);
     strcat(pPvt->write_buffer, pPvt->oeos);
     len += pPvt->oeos_len;
-    ninp = asynSyncIOWriteRead(pasynUser, pPvt->write_buffer, len,
-                                 pPvt->read_buffer, pPvt->read_buffer_len,
-                                 pPvt->ieos, pPvt->ieos_len, pPvt->timeout);
+    if (nread == 0) nread = pPvt->read_buffer_len;
+    if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
+    ninp = pasynSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
+                                  pPvt->read_buffer, nread,
+                                  pPvt->ieos, pPvt->ieos_len, pPvt->timeout);
     if (ninp <= 0) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error in WriteRead, ninp=%d\n", ninp);
@@ -318,7 +322,7 @@ epicsShareFunc int epicsShareAPI
     }
     pasynUser = pPvt->pasynUser;
 
-    status = asynSyncIOFlush(pasynUser);
+    status = pasynSyncIO->flush(pasynUser);
     if (status) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error in asynFlush, status=%d\n", status);
@@ -542,15 +546,17 @@ static void asynConnectCall(const iocshArgBuf * args) {
 }
 
 static const iocshArg asynReadArg0 = {"device name", iocshArgString};
-static const iocshArg asynReadArg1 = {"flush (1=yes)", iocshArgInt};
+static const iocshArg asynReadArg1 = {"max. bytes", iocshArgInt};
+static const iocshArg asynReadArg2 = {"flush (1=yes)", iocshArgInt};
 static const iocshArg *const asynReadArgs[] = {
-    &asynReadArg0, &asynReadArg1};
+    &asynReadArg0, &asynReadArg1, &asynReadArg2};
 static const iocshFuncDef asynReadDef =
-    {"asynRead", 2, asynReadArgs};
+    {"asynRead", 3, asynReadArgs};
 static void asynReadCall(const iocshArgBuf * args) {
     const char *deviceName = args[0].sval;
-    int flush              = args[1].ival;
-    asynRead(deviceName, flush);
+    int nread              = args[1].ival;
+    int flush              = args[2].ival;
+    asynRead(deviceName, nread, flush);
 }
 
 static const iocshArg asynWriteArg0 = {"device name", iocshArgString};
@@ -567,14 +573,16 @@ static void asynWriteCall(const iocshArgBuf * args) {
 
 static const iocshArg asynWriteReadArg0 = {"device name", iocshArgString};
 static const iocshArg asynWriteReadArg1 = {"output string", iocshArgString};
+static const iocshArg asynWriteReadArg2 = {"max. bytes", iocshArgInt};
 static const iocshArg *const asynWriteReadArgs[] = {
-    &asynWriteReadArg0, &asynWriteReadArg1};
+    &asynWriteReadArg0, &asynWriteReadArg1, &asynWriteReadArg2};
 static const iocshFuncDef asynWriteReadDef =
-    {"asynWriteRead", 2, asynWriteReadArgs};
+    {"asynWriteRead", 3, asynWriteReadArgs};
 static void asynWriteReadCall(const iocshArgBuf * args) {
     const char *deviceName = args[0].sval;
     const char *output     = args[1].sval;
-    asynWriteRead(deviceName, output);
+    int nread              = args[2].ival;
+    asynWriteRead(deviceName, output, nread);
 }
 
 static const iocshArg asynFlushArg0 = {"device name", iocshArgString};

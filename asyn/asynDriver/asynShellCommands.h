@@ -36,11 +36,11 @@ epicsShareFunc int epicsShareAPI
  asynConnect(const char *entry, const char *port, int addr,
           const char *oeos, const char *ieos, int timeout, int buffer_len);
 epicsShareFunc int epicsShareAPI
- asynRead(const char *entry, int flush);
+ asynRead(const char *entry, int nread, int flush);
 epicsShareFunc int epicsShareAPI
  asynWrite(const char *entry, const char *output);
 epicsShareFunc int epicsShareAPI
- asynWriteRead(const char *entry, const char *output);
+ asynWriteRead(const char *entry, const char *output, int nread);
 epicsShareFunc int epicsShareAPI
  asynFlush(const char *entry);
 
