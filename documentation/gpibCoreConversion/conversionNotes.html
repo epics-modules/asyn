@@ -2,25 +2,23 @@
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
-  <title>No title</title>
+  <title>Updating devGpib instrument support to ASYN</title>
   <meta name="generator" content="amaya 8.5, see http://www.w3.org/Amaya/" />
 </head>
 
 <body>
-<h1 align="center">Updating devCommonGpib instrument support to ASYN</h1>
+<h1 align="center">Updating devGpib instrument support to ASYN</h1>
 
-<h2 align="center">Eric Norum, May 17, 2004</h2>
-
-This tutorial provides basic instructions on converting 'devGpibCommon'  device
-support from R3.13 to R3.14/ASYN. 
-If possible, 
-R3.14/ASYN device support modules should be placed in the EPICS CVS
-repository in a directory within the modules/instrument directory.
-Files placed in the modules/instrument directory should
-be as flexible as possible to ease their use by others.
-For example, device support database file
-GPIB link numbers and addresses should be macros
-and all PV names should be prefixed with a macro.
+<p align="center"><span style="font-weight: bold; font-size: 14pt">Eric Norum, May 17,
+2004</span></p>
+This tutorial provides basic instructions on converting 'devGpib'
+device support from R3.13 to R3.14/ASYN. If possible, R3.14/ASYN device
+support modules should be placed in the EPICS CVS repository in a directory
+within the modules/instrument directory. Files placed in the
+modules/instrument directory should be as flexible as possible to ease their
+use by others. For example, device support database file GPIB link numbers
+and addresses should be macros and all PV names should be prefixed with a
+macro.
 
 <h2>1. Create instrument support development area</h2>
 <ol>
@@ -28,7 +26,7 @@ and all PV names should be prefixed with a macro.
   <li>'cd' to the directory created in the previous step and create a set of
     instrument support files by running the makeSupport.pl script:
     <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
-    -t instrument <em>&lt;InstName&gt;</em></p>
+    -t devGpib <em>&lt;InstName&gt;</em></p>
     <p>for example:</p>
     <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
     -t instrument Keithley196</p>
@@ -72,33 +70,40 @@ href="devKeithley196.c.diff.html">here</a>.
     <span style="font-family: courier; font-size: 12pt">TIMEOUT</span> and
     its value from 1/60th of a second units to seconds.</li>
   <li>Modify the command table entries:
-  <ul>
-  <li>Change the end-of-string value (the last element) of
-    each command from -1 to NULL or from a single character
-    constant to a string constant:
-    <table border="1">
-      <tbody>
-        <tr>
-          <td align="center" colspan="2">Convert</td>
-        </tr>
-        <tr>
-          <td align="center">From</td>
-          <td align="center">To</td>
-        </tr>
-        <tr>
-          <td align="center"><span style="font-family: courier">-1</span></td>
-          <td align="center"><span style="font-family: courier">NULL</span></td>
-        </tr>
-        <tr>
-          <td align="center"><span style="font-family: courier">'\r'</span></td>
-          <td align="center"><span style="font-family: courier">"\r"</span></td>
-        </tr>
-      </tbody>
-    </table></li>
-    <li>Remove any <span style="font-family: courier">GPIBEOS</span>
-    from the command type (the second element) of each command. Input end-of-string
-    checking is now enabled by the presence of a non-NULL end-of-string value.</li>
-  </ul>
+    <ul>
+      <li>Change the end-of-string value (the last element) of each command
+        from -1 to NULL or from a single character constant to a string
+        constant:
+
+        <table border="1">
+          <tbody>
+            <tr>
+              <td align="center" colspan="2">Convert</td>
+            </tr>
+            <tr>
+              <td align="center">From</td>
+              <td align="center">To</td>
+            </tr>
+            <tr>
+              <td align="center"><span
+              style="font-family: courier">-1</span></td>
+              <td align="center"><span
+                style="font-family: courier">NULL</span></td>
+            </tr>
+            <tr>
+              <td align="center"><span
+                style="font-family: courier">'\r'</span></td>
+              <td align="center"><span
+                style="font-family: courier">"\r"</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </li>
+      <li>Remove any <span style="font-family: courier">GPIBEOS</span> from
+        the command type (the second element) of each command. Input
+        end-of-string checking is now enabled by the presence of a non-NULL
+        end-of-string value.</li>
+    </ul>
   </li>
   <li>Change the name of the device-support initialization function to <span
     style="font-family: courier; font-size: 12pt">init_ai</span>.</li>
@@ -127,7 +132,7 @@ href="devKeithley196.c.diff.html">here</a>.
     shown above.</li>
   <li>Remove any report function.</li>
   <li>If the instrument device support contains custom conversion routines
-  ensure that they return proper success/failure (0/<0) values.</li>
+    ensure that they return proper success/failure (0/-1) values.</li>
   <li>(Optional) Update copyright/license comments.</li>
 </ol>
 
