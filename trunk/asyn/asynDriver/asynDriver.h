@@ -47,6 +47,8 @@ typedef struct asynUser {
     void         *userData; 
     /*The following is for user to/from driver communication*/
     void         *drvUser;
+    /*The following is normally set by driver*/
+    int          reason;
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
 }asynUser;
@@ -63,6 +65,7 @@ typedef struct asynInterface{
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
+typedef void (*interruptCallback)(void *userPvt, void *pvalue);
 
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
@@ -90,6 +93,7 @@ typedef struct asynManager {
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
+    asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
                               int attributes,int autoConnect,
@@ -107,6 +111,14 @@ typedef struct asynManager {
     asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
+    /*The following are methods for interrupts*/
+    asynStatus (*registerInterruptSource)(const char *portName,int addr,
+                                        void *callerPvt, void **pasynPvt);
+    void       (*interrupt)(void *asynPvt,int addr, int reason,void *pvalue);
+    /*drivers or interpose interfaces normally call the following*/
+    asynStatus (*registerInterruptUser)(asynUser *pasynUser,
+                            interruptCallback callback, void *userPvt);
+    asynStatus (*cancelInterruptUser)(asynUser *pasynUser);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
 

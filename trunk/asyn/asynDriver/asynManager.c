@@ -60,7 +60,7 @@ struct tracePvt {
     int           traceBufferSize;
     char          *traceBuffer;
 };
-
+
 #define nMemList 9
 static int memListSize[nMemList] =
     {16,32,64,128,256,512,1024,2048,4096};
@@ -68,7 +68,7 @@ typedef struct memNode {
     ELLNODE node;
     void    *memory;
 }memNode;
-
+
 typedef struct asynBase {
     ELLLIST           asynPortList;
     ELLLIST           asynUserFreeList;
@@ -85,6 +85,25 @@ typedef struct interfaceNode {
     asynInterface *pasynInterface;
 }interfaceNode;
 
+typedef struct callbackBase {
+    ELLLIST      callbackList;
+    ELLLIST      addList;
+    ELLLIST      removeList;
+    BOOL         callbackActive;
+    BOOL         listModified;
+}callbackBase;
+
+typedef struct callbackNode {
+    ELLNODE  node;
+    ELLNODE  addRemoveNode;
+    BOOL     isOnList;
+    int      addRemoveAction; /* (0,1,2) => (none,add,remove)*/
+    interruptCallback callback;
+    void     *userPvt;
+    asynUser *pasynUser;
+}callbackNode;
+
+
 typedef struct dpCommon { /*device/port common fields*/
     epicsMutexId   syncLock; /* lock/unlock for synchronousRequest*/
     BOOL           enabled;
@@ -98,6 +117,8 @@ typedef struct dpCommon { /*device/port common fields*/
     epicsTimeStamp lastConnectStateChange;
     unsigned long  numberConnects;
     tracePvt       trace;
+    port           *pport;
+    callbackBase   callback;
 }dpCommon;
 
 typedef struct exceptionUser {
@@ -108,35 +129,23 @@ typedef struct exceptionUser {
     epicsEventId      notify;
 }exceptionUser;
 
-/* qrt is queue Request Timeout */ 
-typedef enum {qrtIdle,qrtScheduled,qrtActive}qrtState;
-typedef struct qrt {
-    epicsMutexId lock;
-    epicsTimerId timer;
-    userCallback callback;
-    double       timeout;
-    qrtState     state;
-    ELLLIST      waitList;
-}qrt;
-
-typedef struct qrtWait {
-    ELLNODE      node;
-    epicsEventId callbackDone;
-}qrtWait;
-
 typedef enum {callbackIdle,callbackActive,callbackCanceled}callbackState;
 struct userPvt {
     ELLNODE       node;        /*For asynPort.queueList*/
     BOOL          freeAfterCallback;
     exceptionUser *pexceptionUser;
-    userCallback  callback;
-    qrt           *pqrt;
     BOOL          isQueued;
+    /* state,...,timeout are for queueRequest callbacks*/
     callbackState state;
     epicsEventId  callbackDone;
+    userCallback  processUser;
+    userCallback  timeoutUser;
+    epicsTimerId  timer;
+    double        timeout;
     unsigned int  lockCount;
     port          *pport;
     device        *pdevice;
+    callbackNode   callbackNode;
     asynUser      user;
 };
 
@@ -174,7 +183,7 @@ struct port {
 /* internal methods */
 static void tracePvtInit(tracePvt *ptracePvt);
 static void asynInit(void);
-static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect);
+static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect);
 static dpCommon *findDpCommon(userPvt *puserPvt);
 static tracePvt *findTracePvt(userPvt *puserPvt);
 static port *locatePort(const char *portName);
@@ -182,9 +191,7 @@ static device *locateDevice(port *pport,int addr,BOOL allocNew);
 static interfaceNode *locateInterfaceNode(
             ELLLIST *plist,const char *interfaceType,BOOL allocNew);
 static void exceptionOccurred(asynUser *pasynUser,asynException exception);
-static BOOL removeRequest(userPvt *puserPvt);
-static void qrtCancel(userPvt *puserPvt);
-static void qrtCallback(void *);
+static void queueTimeoutCallback(void *pvt);
 static void autoConnect(port *pport,int addr);
 static BOOL isPortEnabled(userPvt *puserPvt);
 static BOOL isPortUp(userPvt *puserPvt);
@@ -217,6 +224,7 @@ static asynStatus canBlock(asynUser *pasynUser,int *yesNo);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static asynStatus getAddr(asynUser *pasynUser,int *addr);
+static asynStatus getPortName(asynUser *pasynUser,const char **pportName);
 static asynStatus registerPort(const char *portName,
     int attributes,int autoConnect,
     unsigned int priority,unsigned int stackSize);
@@ -231,6 +239,12 @@ static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
 static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
 static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
+static asynStatus registerInterruptSource(const char *portName,int addr,
+    void *callerPvt, void **pasynPvt);
+static void       interrupt(void *asynPvt,int addr,int reason,void *pvalue);
+static asynStatus registerInterruptUser(asynUser *pasynUser,
+           interruptCallback callback, void *userPvt);
+static asynStatus cancelInterruptUser(asynUser *pasynUser);
 
 static asynManager manager = {
     report,
@@ -251,6 +265,7 @@ static asynManager manager = {
     lock,
     unlock,
     getAddr,
+    getPortName,
     registerPort,
     registerInterface,
     exceptionConnect,
@@ -260,7 +275,11 @@ static asynManager manager = {
     autoConnectAsyn,
     isConnected,
     isEnabled,
-    isAutoConnect
+    isAutoConnect,
+    registerInterruptSource,
+    interrupt,
+    registerInterruptUser,
+    cancelInterruptUser
 };
 epicsShareDef asynManager *pasynManager = &manager;
 
@@ -322,8 +341,9 @@ static void asynInit(void)
     for(i=0; i<nMemList; i++) ellInit(&pasynBase->memList[i]);
 }
 
-static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect)
+static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect)
 {
+    callbackBase *pcallbackBase = &pdpCommon->callback;
     pdpCommon->syncLock = epicsMutexMustCreate();
     pdpCommon->enabled = TRUE;
     pdpCommon->connected = FALSE;
@@ -331,6 +351,10 @@ static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect)
     ellInit(&pdpCommon->interposeInterfaceList);
     ellInit(&pdpCommon->exceptionUserList);
     ellInit(&pdpCommon->exceptionNotifyList);
+    ellInit(&pcallbackBase->callbackList);
+    ellInit(&pcallbackBase->addList);
+    ellInit(&pcallbackBase->removeList);
+    pdpCommon->pport = pport;
     tracePvtInit(&pdpCommon->trace);
 }
 
@@ -380,7 +404,7 @@ static device *locateDevice(port *pport,int addr,BOOL allocNew)
         pdevice = callocMustSucceed(1,sizeof(device),
             "asynManager:locateDevice");
         pdevice->addr = addr;
-        dpCommonInit(&pdevice->dpc,pport->dpc.autoConnect);
+        dpCommonInit(pport,&pdevice->dpc,pport->dpc.autoConnect);
         ellAdd(&pport->deviceList,&pdevice->node);
     }
     return pdevice;
@@ -443,100 +467,55 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
     if(pport->attributes&ASYN_CANBLOCK)
         epicsEventSignal(pport->notifyPortThread);
 }
-
-static BOOL removeRequest(userPvt *puserPvt)
+
+static void queueTimeoutCallback(void *pvt)
 {
-    asynUser *pasynUser = userPvtToAsynUser(puserPvt);
-    port *pport = puserPvt->pport;
-    int  i;
+    userPvt  *puserPvt = (userPvt *)pvt;
+    asynUser *pasynUser = &puserPvt->user;
+    port     *pport = puserPvt->pport;
+    int      i;
 
-    
     epicsMutexMustLock(pport->asynManagerLock);
     if(!puserPvt->isQueued) {
         epicsMutexUnlock(pport->asynManagerLock);
-        return FALSE;
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            "%s asynManager:queueTimeoutCallback but not queued\n",
+            pport->portName );
+        return;
     }
     for(i=asynQueuePriorityConnect; i>=asynQueuePriorityLow; i--) {
         puserPvt = (userPvt *)ellFirst(&pport->queueList[i]);
         while(puserPvt) {
             if(pasynUser == &puserPvt->user) {
                 ellDelete(&pport->queueList[i],&puserPvt->node);
-                puserPvt->isQueued = FALSE;
-                pport->queueStateChange = TRUE;
-                epicsEventSignal(pport->notifyPortThread);
                 break;
             }
             puserPvt = (userPvt *)ellNext(&puserPvt->node);
         }
-        if(puserPvt) break;
+        if (puserPvt) break;
+    }
+    if(!puserPvt) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s asynManager:queueTimeoutCallback LOGIC ERROR\n",
+            pport->portName);
+        return;
+    }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s asynManager:queueTimeoutCallback\n", pport->portName);
+    puserPvt->isQueued = FALSE;
+    pport->queueStateChange = TRUE;
+    if(puserPvt->timeoutUser) {
+	puserPvt->state = callbackActive;
+        epicsMutexUnlock(pport->asynManagerLock);
+        puserPvt->timeoutUser(pasynUser);
+        epicsMutexMustLock(pport->asynManagerLock);
+	if(puserPvt->state==callbackCanceled)
+	    epicsEventSignal(puserPvt->callbackDone);
+        puserPvt->state = callbackIdle;
     }
     epicsMutexUnlock(pport->asynManagerLock);
-    return puserPvt ? TRUE : FALSE;
-}
-
-static void qrtCancel(userPvt *puserPvt)
-{
-    asynUser *pasynUser = userPvtToAsynUser(puserPvt);
-    qrt      *pqrt = puserPvt->pqrt;
-    port     *pport = puserPvt->pport;
-
-    /*For performance check first with no lock*/
-    if(pqrt->state==qrtIdle) return;
-    epicsMutexMustLock(pqrt->lock);
-    if(pqrt->state==qrtIdle) {
-        epicsMutexUnlock(pqrt->lock);
-        return;
-    }
-    if(pqrt->state==qrtActive) {
-        qrtWait wait;
-
-        wait.callbackDone = epicsEventMustCreate(epicsEventEmpty);
-        ellAdd(&pqrt->waitList,&wait.node);
-        epicsMutexUnlock(pqrt->lock);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s qrtCancel wait for callback to complete\n",pport->portName);
-        epicsEventMustWait(wait.callbackDone);
-        epicsMutexMustLock(pqrt->lock);
-        epicsEventDestroy(wait.callbackDone);
-        epicsMutexUnlock(pqrt->lock);
-        return;
-    }
-    assert(pqrt->state==qrtScheduled);
-    pqrt->state = qrtIdle;
-    epicsMutexUnlock(pqrt->lock);
-    epicsTimerCancel(pqrt->timer);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,
-        "%s qrtCancel\n",pport->portName);
-}
-
-static void qrtCallback(void *pvt)
-{
-    userPvt  *puserPvt = (userPvt *)pvt;
-    qrt      *pqrt = puserPvt->pqrt;
-    asynUser *pasynUser = &puserPvt->user;
-    port     *pport = puserPvt->pport;
-    qrtWait  *pqrtWait;
-
-    epicsMutexMustLock(pqrt->lock);
-    if(pqrt->state==qrtIdle) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s qrtCallback but already canceled\n",pport->portName);
-        epicsMutexUnlock(pqrt->lock);
-        return;
-    }
-    pqrt->state = qrtActive;
-    epicsMutexUnlock(pqrt->lock);
-    removeRequest(puserPvt);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,
-        "%s qrtCallback\n",pport->portName);
-    pqrt->callback(pasynUser);
-    epicsMutexMustLock(pqrt->lock);
-    pqrt->state = qrtIdle;
-    while((pqrtWait = (qrtWait *)ellFirst(&pqrt->waitList))) {
-        epicsEventSignal(pqrtWait->callbackDone);
-        ellDelete(&pqrt->waitList,&pqrtWait->node);
-    }
-    epicsMutexUnlock(pqrt->lock);
+    epicsEventSignal(pport->notifyPortThread);
 }
 
 static void autoConnect(port *pport,int addr)
@@ -668,6 +647,7 @@ static void portThread(port *pport)
 {
     userPvt  *puserPvt;
     asynUser *pasynUser;
+    double   timeout;
 
     taskwdInsert(epicsThreadGetIdSelf(),0,0);
     while(1) {
@@ -681,33 +661,23 @@ static void portThread(port *pport)
         while((puserPvt = (userPvt *)ellFirst(
         &pport->queueList[asynQueuePriorityConnect]))) {
             assert(puserPvt->isQueued);
-            epicsMutexUnlock(pport->asynManagerLock);
-            qrtCancel(puserPvt);
-            epicsMutexMustLock(pport->asynManagerLock);
-            /* It may have been removed from list */
-            if(!puserPvt->isQueued) {
-                asynPrint(&puserPvt->user,ASYN_TRACE_FLOW,
-                    "%s connect timeout or cancel\n",
-                    pport->portName);
-                continue;
-            }
-            ellDelete(&pport->queueList[asynQueuePriorityConnect],&puserPvt->node);
+            ellDelete(&pport->queueList[asynQueuePriorityConnect],
+               &puserPvt->node);
             puserPvt->isQueued = FALSE;
-            puserPvt->state = callbackActive;
             pasynUser = userPvtToAsynUser(puserPvt);
             pasynUser->errorMessage[0] = '\0';
             asynPrint(pasynUser,ASYN_TRACE_FLOW,
-                "%s connect callback\n",pport->portName);
+                "asynManager connect queueCallback port:%s\n",
+                 pport->portName);
+            puserPvt->state = callbackActive;
+            timeout = puserPvt->timeout;
             epicsMutexUnlock(pport->asynManagerLock);
-            puserPvt->callback(pasynUser);
+            if(puserPvt->timer && timeout>0.0) epicsTimerCancel(puserPvt->timer);
+            puserPvt->processUser(pasynUser);
             epicsMutexMustLock(pport->asynManagerLock);
-            if(puserPvt->state==callbackCanceled)
+            if (puserPvt->state==callbackCanceled)
                 epicsEventSignal(puserPvt->callbackDone);
             puserPvt->state = callbackIdle;
-            if(puserPvt->freeAfterCallback) {
-                puserPvt->freeAfterCallback = FALSE;
-                ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
-            }
         }
         if(!pport->dpc.connected && pport->dpc.autoConnect) {
             epicsMutexUnlock(pport->asynManagerLock);
@@ -731,19 +701,8 @@ static void portThread(port *pport)
                         if(!pdpCommon->plockHolder
                         || pdpCommon->plockHolder==puserPvt) {
                             assert(puserPvt->isQueued);
-                            epicsMutexUnlock(pport->asynManagerLock);
-                            qrtCancel(puserPvt);
-                            epicsMutexMustLock(pport->asynManagerLock);
-                            if(!puserPvt->isQueued) {
-                                asynPrint(&puserPvt->user,ASYN_TRACE_FLOW,
-                                    "%s timeout or cancel\n",
-                                    pport->portName);
-                                puserPvt = 0; pport->queueStateChange=TRUE;
-                                break; /*while(puserPvt)*/
-                            }
                             ellDelete(&pport->queueList[i],&puserPvt->node);
                             puserPvt->isQueued = FALSE;
-                            puserPvt->state = callbackActive;
                             break; /*while(puserPvt)*/
                         }
                     }
@@ -755,10 +714,12 @@ static void portThread(port *pport)
             pasynUser = userPvtToAsynUser(puserPvt);
             if(puserPvt->lockCount>0) pdpCommon->plockHolder = puserPvt;
             pasynUser->errorMessage[0] = '\0';
-            asynPrint(pasynUser,ASYN_TRACE_FLOW,
-                "%s callback\n",pport->portName);
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s callback\n",pport->portName);
+            puserPvt->state = callbackActive;
+            timeout = puserPvt->timeout;
             epicsMutexUnlock(pport->asynManagerLock);
-            puserPvt->callback(pasynUser);
+            if(puserPvt->timer && timeout>0.0) epicsTimerCancel(puserPvt->timer);
+            puserPvt->processUser(pasynUser);
             epicsMutexMustLock(pport->asynManagerLock);
             if(puserPvt->state==callbackCanceled)
                 epicsEventSignal(puserPvt->callbackDone);
@@ -889,43 +850,40 @@ static asynUser *createAsynUser(userCallback process, userCallback timeout)
     userPvt  *puserPvt;
     asynUser *pasynUser;
     int      nbytes;
-    qrt      *pqrt;
 
     if(!pasynBase) asynInit();
     epicsMutexMustLock(pasynBase->lock);
     puserPvt = (userPvt *)ellFirst(&pasynBase->asynUserFreeList);
     if(!puserPvt) {
         epicsMutexUnlock(pasynBase->lock);
-        nbytes = sizeof(userPvt) + sizeof(qrt) + ERROR_MESSAGE_SIZE + 1;
+        nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
         puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
-        pqrt = (qrt *)(puserPvt +1);
         pasynUser = userPvtToAsynUser(puserPvt);
-        pasynUser->errorMessage = (char *)(pqrt +1);
+        pasynUser->errorMessage = (char *)(puserPvt +1);
         pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
         puserPvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
-        pqrt->lock = epicsMutexMustCreate();
-        pqrt->timer = epicsTimerQueueCreateTimer(
-            pasynBase->timerQueue,qrtCallback,puserPvt);
-        ellInit(&pqrt->waitList);
-        puserPvt->pqrt = pqrt;
+        puserPvt->timer = epicsTimerQueueCreateTimer(
+            pasynBase->timerQueue,queueTimeoutCallback,puserPvt);
+        puserPvt->callbackNode.pasynUser = &puserPvt->user;
     } else {
         ellDelete(&pasynBase->asynUserFreeList,&puserPvt->node);
         epicsMutexUnlock(pasynBase->lock);
         pasynUser = userPvtToAsynUser(puserPvt);
     }
-    puserPvt->callback = process;
+    puserPvt->processUser = process;
+    puserPvt->timeoutUser = timeout;
     puserPvt->isQueued = FALSE;
     puserPvt->state = callbackIdle;
     pasynUser->errorMessage[0] = 0;
+    pasynUser->timeout = 0.0;
     pasynUser->userPvt = 0;
     pasynUser->userData = 0;
+    pasynUser->drvUser = 0;
+    pasynUser->reason = 0;
     pasynUser->auxStatus = 0;
-    pqrt = puserPvt->pqrt;
-    pqrt->callback = timeout;
-    pqrt->state = qrtIdle;
     return pasynUser;
 }
-
+
 static asynUser *duplicateAsynUser(asynUser *pasynUser,
    userCallback process, userCallback timeout)
 {
@@ -934,10 +892,11 @@ static asynUser *duplicateAsynUser(asynUser *pasynUser,
 
     pnew->pport = pold->pport;
     pnew->pdevice = pold->pdevice;
-    pnew->pqrt->timeout = pold->pqrt->timeout;
     pnew->user.userPvt = pold->user.userPvt;
     pnew->user.userData = pold->user.userData;
+/*MARTY IS THIS SAFE*/
     pnew->user.drvUser = pold->user.drvUser;
+    pnew->user.timeout = pold->user.timeout;
     return &pnew->user;
 }
 
@@ -1064,6 +1023,11 @@ static asynStatus disconnect(asynUser *pasynUser)
         return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
+    if(puserPvt->callbackNode.isOnList) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager::disconnect must cancelInterruptUser before disconnect\n");
+        status = asynError; goto unlock;
+    }
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::disconnect request queued\n");
@@ -1200,7 +1164,6 @@ static asynStatus queueRequest(asynUser *pasynUser,
     device   *pdevice = puserPvt->pdevice;
     int      addr = (pdevice ? pdevice->addr : -1);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
-    qrt      *pqrt;
 
     assert(priority>=asynQueuePriorityLow && priority<=asynQueuePriorityConnect);
     if(!pport) {
@@ -1221,7 +1184,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
             "%s queueRequest calling callback\n",
             pport->portName);
-        puserPvt->callback(pasynUser);
+        puserPvt->processUser(pasynUser);
         epicsMutexUnlock(pport->synchronousLock);
         epicsMutexUnlock(pdpCommon->syncLock);
         return asynSuccess;
@@ -1248,16 +1211,13 @@ static asynStatus queueRequest(asynUser *pasynUser,
     }
     pport->queueStateChange = TRUE;
     puserPvt->isQueued = TRUE;
-    pqrt = puserPvt->pqrt;
     if(timeout<=0.0) {
-        pqrt->timeout = 0.0;
+        puserPvt->timeout = 0.0;
     } else {
-        assert(pqrt->state==qrtIdle);
-        pqrt->state = qrtScheduled;
-        pqrt->timeout = timeout;
+        puserPvt->timeout = timeout;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s qrtSchedule\n",puserPvt->pport->portName);
-        epicsTimerStartDelay(pqrt->timer,pqrt->timeout);
+            "%s schedule queueRequest timeout\n",puserPvt->pport->portName);
+        epicsTimerStartDelay(puserPvt->timer,puserPvt->timeout);
     }
     epicsMutexUnlock(pport->asynManagerLock);
     epicsEventSignal(pport->notifyPortThread);
@@ -1269,31 +1229,60 @@ static asynStatus cancelRequest(asynUser *pasynUser,int *wasQueued)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
     device   *pdevice = puserPvt->pdevice;
+    double   timeout;
     int      addr = (pdevice ? pdevice->addr : -1);
-
-    *wasQueued = FALSE;
+    int      i;
+    *wasQueued = 0; /*Initialize to not removed*/
     if(!pport) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "cancelRequest but not connected\n");
+            "asynManager:cancelRequest but not connected\n");
         return asynError;
     }
-    qrtCancel(puserPvt);
-    if(removeRequest(puserPvt)) {
-        *wasQueued = TRUE;
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d cancelRequest successful\n",pport->portName,addr);
-        return asynSuccess;
-    }
     epicsMutexMustLock(pport->asynManagerLock);
-    if(puserPvt->state==callbackActive) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d cancelRequest wait for callback\n", pport->portName,addr);
-        puserPvt->state = callbackCanceled;
-        epicsMutexUnlock(pport->asynManagerLock);
-        epicsEventMustWait(puserPvt->callbackDone);
+    if(!puserPvt->isQueued) {
+        if(puserPvt->state==callbackActive) {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "%s addr %d asynManager:cancelRequest wait for callback\n",
+                 pport->portName,addr);
+            puserPvt->state = callbackCanceled;
+            epicsMutexUnlock(pport->asynManagerLock);
+            epicsEventMustWait(puserPvt->callbackDone);
+        } else {
+            epicsMutexUnlock(pport->asynManagerLock);
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "%s addr %d asynManager:cancelRequest but not queued\n",
+                 pport->portName,addr);
+        }
         return asynSuccess;
     }
+    for(i=asynQueuePriorityConnect; i>=asynQueuePriorityLow; i--) {
+        puserPvt = (userPvt *)ellFirst(&pport->queueList[i]);
+        while(puserPvt) {
+            if(pasynUser == &puserPvt->user) {
+                ellDelete(&pport->queueList[i],&puserPvt->node);
+                *wasQueued = 1;
+                break;
+            }
+            puserPvt = (userPvt *)ellNext(&puserPvt->node);
+        }
+        if(puserPvt) break;
+    }
+    if(!puserPvt) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s addr %d asynManager:cancelRequest LOGIC ERROR\n",
+            pport->portName, addr);
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynError;
+    }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+             "%s addr %d asynManager:cancelRequest\n",
+              pport->portName,addr);
+    puserPvt->isQueued = FALSE;
+    pport->queueStateChange = TRUE;
+    timeout = puserPvt->timeout;
     epicsMutexUnlock(pport->asynManagerLock);
+    if(puserPvt->timer && timeout>0.0) epicsTimerCancel(puserPvt->timer);
+    epicsEventSignal(pport->notifyPortThread);
     return asynSuccess;
 }
 
@@ -1391,7 +1380,7 @@ static asynStatus getAddr(asynUser *pasynUser,int *addr)
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:getAddr no connected to device");
+            "asynManager:getAddr not connected to device");
         return asynError;
     }
     if(!(pport->attributes&ASYN_MULTIDEVICE) || !puserPvt->pdevice) {
@@ -1399,6 +1388,20 @@ static asynStatus getAddr(asynUser *pasynUser,int *addr)
     } else {
         *addr = puserPvt->pdevice->addr;
     }
+    return asynSuccess;
+}
+
+static asynStatus getPortName(asynUser *pasynUser,const char **pportName)
+{
+    userPvt *puserPvt = asynUserToUserPvt(pasynUser);
+    port    *pport = puserPvt->pport;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:getPortName not connected to device");
+        return asynError;
+    }
+    *pportName = pport->portName;
     return asynSuccess;
 }
 
@@ -1420,7 +1423,7 @@ static asynStatus registerPort(const char *portName,
     pport->attributes = attributes;
     pport->asynManagerLock = epicsMutexMustCreate();
     pport->synchronousLock = epicsMutexMustCreate();
-    dpCommonInit(&pport->dpc,autoConnect);
+    dpCommonInit(pport,&pport->dpc,autoConnect);
     pport->pasynUser = createAsynUser(0,0);
     ellInit(&pport->deviceList);
     ellInit(&pport->interfaceList);
@@ -1617,6 +1620,146 @@ static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo)
         return asynError;
     }
     *yesNo = pdpCommon->autoConnect;
+    return asynSuccess;
+}
+
+static asynStatus registerInterruptSource(const char *portName,int addr,
+    void *callerPvt, void **pasynPvt)
+{
+    port    *pport = locatePort(portName);
+    device  *pdevice;
+    dpCommon *pdpc = 0;
+
+    if(!pport) {
+        printf("asynManager:registerInterruptSource port %s not found\n",
+           portName);
+        return asynError;
+    }
+    if(addr>=0) {
+        pdevice = locateDevice(pport,addr,TRUE);
+        pdpc = &pdevice->dpc;
+    } else {
+        pdpc = &pport->dpc;
+    }
+    assert(pdpc);
+    *pasynPvt = pdpc;
+    return asynSuccess;
+}
+
+static void interrupt(void *asynPvt,int addr,int reason,void *pvalue)
+{
+    dpCommon *pdpc = (dpCommon *)asynPvt;
+    port *pport = pdpc->pport;
+    callbackBase *pcallbackBase = &pdpc->callback;
+    callbackNode *pcallbackNode;
+    char         *ptemp;
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    pcallbackBase->callbackActive = TRUE;
+    pcallbackBase->listModified = FALSE;
+    epicsMutexUnlock(pport->asynManagerLock);
+    pcallbackNode = (callbackNode *)ellFirst(&pcallbackBase->callbackList);
+    while(pcallbackNode) {
+        if(pcallbackNode->pasynUser->reason==reason) {
+            pcallbackNode->callback(pcallbackNode->userPvt,pvalue);
+        }
+        pcallbackNode = (callbackNode *)ellNext(&pcallbackNode->node);
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pcallbackBase->callbackActive = FALSE;
+    if(!pcallbackBase->listModified) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        return;
+    }
+    while((ptemp = (char *)ellFirst(&pcallbackBase->removeList))){
+        pcallbackNode = (callbackNode *)(ptemp - sizeof(ELLNODE));
+        ellDelete(&pcallbackBase->callbackList,&pcallbackNode->node);
+        pcallbackNode->isOnList = FALSE;
+        pcallbackNode->callback = 0;
+        pcallbackNode->userPvt = 0;
+    }
+    while((ptemp = (char *)ellFirst(&pcallbackBase->addList))){
+        pcallbackNode = (callbackNode *)(ptemp - sizeof(ELLNODE));
+        assert(pcallbackNode->isOnList);
+        ellAdd(&pcallbackBase->callbackList,&pcallbackNode->node);
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+}
+
+static asynStatus registerInterruptUser(asynUser *pasynUser,
+           interruptCallback callback, void *usrPvt)
+{
+    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
+    port     *pport = puserPvt->pport;
+    dpCommon *pdpc = findDpCommon(puserPvt);
+    callbackBase *pcallbackBase;
+    callbackNode *pcallbackNode;
+
+    if(!pport || !pdpc) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:registerInterruptUser asynUser not connected to device\n");
+        return asynError;
+    }
+    pcallbackBase = &pdpc->callback;
+    pcallbackNode = &puserPvt->callbackNode;
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(pcallbackNode->isOnList) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s asynManager:registerInterruptUser already registered\n",
+            pport->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:registerInterruptUser asynUser already registered\n");
+        return asynError;
+    }
+    pcallbackNode->isOnList = TRUE;
+    pcallbackNode->callback = callback;
+    pcallbackNode->userPvt = usrPvt;
+    if(pcallbackBase->callbackActive) {
+        ellAdd(&pcallbackBase->addList,&pcallbackNode->addRemoveNode);
+        pcallbackBase->listModified = TRUE;
+    } else {
+        ellAdd(&pcallbackBase->callbackList,&pcallbackNode->node);
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus cancelInterruptUser(asynUser *pasynUser)
+{
+    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
+    port     *pport = puserPvt->pport;
+    dpCommon *pdpc = findDpCommon(puserPvt);
+    callbackBase *pcallbackBase;
+    callbackNode *pcallbackNode;
+
+    if(!pport || !pdpc) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:cancelInterruptUser asynUser not connected to device\n");
+        return asynError;
+    }
+    pcallbackBase = &pdpc->callback;
+    pcallbackNode = &puserPvt->callbackNode;
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(!pcallbackNode->isOnList) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s asynManager:cancelInterruptUser not registered\n",
+            pport->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:cancelInterruptUser asynUser not registered\n");
+        return asynError;
+    }
+    if(pcallbackBase->callbackActive) {
+        ellAdd(&pcallbackBase->removeList,&pcallbackNode->addRemoveNode);
+        pcallbackBase->listModified = TRUE;
+    } else {
+        ellDelete(&pcallbackBase->callbackList,&pcallbackNode->node);
+        pcallbackNode->isOnList = FALSE;
+        pcallbackNode->callback = 0;
+        pcallbackNode->userPvt = 0;
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
 
