@@ -6,13 +6,12 @@
 * National Laboratory, and the Regents of the University of
 * California, as Operator of Los Alamos National Laboratory, and
 * Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
-* EPICS BASE Versions 3.13.7 and higher are distributed subject to a
-* Software License Agreement found in file LICENSE that is included
-* with this distribution.
+* asynDriver is distributed subject to a Software License Agreement
+* found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.4 2003-11-07 23:08:26 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.5 2003-11-14 15:20:30 mrk Exp $
  */
 
 #include <stdio.h>

@@ -9,7 +9,7 @@
 * National Laboratory, and the Regents of the University of
 * California, as Operator of Los Alamos National Laboratory, and
 * Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
-* gpibCore is distributed subject to a Software License Agreement
+* asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
@@ -45,6 +45,9 @@ bool_t xdr_Device_SrqParms(XDR *, void *, ...);
 
 /* 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2003/10/27 13:41:12  mrk
+ * interim commit before alp[ha2
+ *
  * Revision 1.1  2003/10/01 19:30:03  mrk
  * asynGpib and vxi11 now supported
  *

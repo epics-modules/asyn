@@ -1,11 +1,11 @@
 /* devSkeletonGpib.c */
-/* $Id: devSkeletonGpib.c,v 1.2 2003-07-24 19:38:47 mrk Exp $ */
+/* $Id: devSkeletonGpib.c,v 1.3 2003-11-14 15:20:31 mrk Exp $ */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago,as Operator of Argonne
 * National Laboratory,and the Regents of the University of
 * California,as Operator of Los Alamos National Laboratory,and
 * Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
-* gpibCore is distributed subject to a Software License Agreement
+* asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 /*

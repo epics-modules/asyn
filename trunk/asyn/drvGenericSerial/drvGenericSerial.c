@@ -6,12 +6,12 @@
 * National Laboratory, and the Regents of the University of
 * California, as Operator of Los Alamos National Laboratory, and
 * Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
-* gpibCore is distributed subject to a Software License Agreement
+* asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.7 2003-11-13 20:12:05 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.8 2003-11-14 15:20:31 mrk Exp $
  */
 
 #include <string.h>
