@@ -308,6 +308,10 @@ void gsip488(void *pvt)
             writeRegister(pgsport,AUXMR,LONS); break;
         default:
         }
+{
+volatile int n = 100;
+while(n>0) n--;
+}
         writeRegister(pgsport,AUXMR,GTS);
         if(pgsport->transferState!=transferStateWrite) return;
     case transferStateWrite:
