@@ -113,12 +113,13 @@ struct devGpibNames {
 };
 
 struct devGpibParmBlock {
-    char *name;         /* Name of this device support*/
     gpibCmd *gpibCmds;  /* pointer to gpib command list */
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
+    /*Are the following still needed? Marty thinks not */
+    char *name;         /* Name of this device support*/
     int *debugFlag; /* pointer to debug flag */
 };
 
@@ -134,7 +135,6 @@ struct gDset {
 };
 
 struct gpibDpvt {
-    ELLNODE node; /*For use by devSupportGpib*/
     devGpibParmBlock *pdevGpibParmBlock; 
     CALLBACK callback;
     dbCommon *precord;
@@ -146,8 +146,9 @@ struct gpibDpvt {
     asynGpib *pasynGpib;
     void *asynGpibPvt;
     int parm;                 /* parameter index into gpib commands */
-    char *rsp;                /* for read/write message error responses */
+    char *rsp;                /* for respond2Writes input buffer */
     char *msg;                /* for read/write messages */
+    int  msgInputLen;         /* number of characters in last READ*/
     int efastVal;             /* For GPIBEFASTxxx */
     void     *pupvt;          /*private pointer for custom code*/
     devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
@@ -161,7 +162,6 @@ struct devSupportGpib {
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
-    void (*report)(int interest);
     void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
         srqHandler handler,void *unsollicitedHandlerPvt);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
