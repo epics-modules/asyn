@@ -142,6 +142,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     char            errs[40]; /*Error string*/
 } oldValues;
 
+#define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
 #define POST_IF_NEW(FIELD) \
     if (pasynRec->FIELD != pasynRecPvt->old.FIELD) { \
         db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
@@ -210,8 +211,15 @@ static long process(asynRecord *pasynRec)
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
 
    epicsMutexMustLock(pasynRecPvt->lock);
-   if(!pasynRec->pact && pasynRecPvt->state==stateIdle) 
-                                      pasynRecPvt->state = stateIO;
+   if(!pasynRec->pact && pasynRecPvt->state==stateIdle) { 
+      pasynRecPvt->state = stateIO;
+      /* Need to store state of fields that could have been changed from
+       * outside since the last time the values were posted by monitor()
+       * and which process() or routines it calls can also change */
+      REMEMBER_STATE(ucmd);
+      REMEMBER_STATE(acmd);
+      REMEMBER_STATE(nowt);
+   }
    epicsMutexUnlock(pasynRecPvt->lock);
    /* If pact is FALSE then queue message to driver and return */
    if (!pasynRec->pact)
@@ -442,8 +450,6 @@ static void monitor(asynRecord *pasynRec)
     POST_IF_NEW(spr);
     POST_IF_NEW(ucmd);
     POST_IF_NEW(acmd);
-    POST_IF_NEW(addr);
-
 }
 
 
@@ -494,11 +500,8 @@ static void monitorStatus(asynRecord *pasynRec)
        db_post_events(pasynRec, pasynRec->tfil, monitor_mask);
     }
     POST_IF_NEW(actd);
-    POST_IF_NEW(auct);
     POST_IF_NEW(cntd);
-    POST_IF_NEW(cnct);
     POST_IF_NEW(enbd);
-    POST_IF_NEW(enbl);
 }
 
 static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord)
