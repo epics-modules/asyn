@@ -39,9 +39,9 @@ them in
 cookbook fashion to create support for other serial devices.
 For comprehensive description of all the details of the I/O system
 used here, refer to the
-\htmladdnormallink{asynDriver}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/asynDriver.html}
+\htmladdnormallink{asynDriver}{http://www.aps.anl.gov/epics/modules/soft/asyn/asynDriver.html}
 and
-\htmladdnormallink{devGpib}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/devGpib.html}
+\htmladdnormallink{devGpib}{http://www.aps.anl.gov/epics/modules/soft/asyn/devGpib.html}
 documentation.
 
 This document isn't for the absolute newcomer though.  You must have
@@ -214,7 +214,7 @@ read or write that value.
 The command array entries I created for the AB300 are shown below.  The
 elements of each entry are described using the names from
 the
-\htmladdnormallink{GPIB documentation}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/devGgpib.html}.
+\htmladdnormallink{GPIB documentation}{http://www.aps.anl.gov/epics/modules/soft/asyn/devGgpib.html}.
 \subsubsection{Command array index 0 -- Device Reset}
 \begin{verbatim}
    {&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "\377\377\033", 10, 10,
@@ -334,7 +334,7 @@ convertPositionReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+    if (pdpvt->msgInputLen != 3) {
         epicsSnprintf(pdpvt->pasynUser->errorMessage,
                       pdpvt->pasynUser->errorMessageSize,
                       "Invalid reply");
@@ -348,7 +348,7 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+    if (pdpvt->msgInputLen != 3) {
         epicsSnprintf(pdpvt->pasynUser->errorMessage,
                       pdpvt->pasynUser->errorMessageSize,
                       "Invalid reply");
@@ -575,7 +575,7 @@ asynSetTraceIOMask("L0",0,0x2)
 iocInit()
 ############################################################################
 ###  EPICS IOC CORE built on Jan 29 2004
-###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-01-28 20:17:39 $$
+###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-01-30 17:26:13 $$
 ############################################################################
 Starting iocInit
 iocInit: All initialization complete
