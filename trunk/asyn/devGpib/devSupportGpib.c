@@ -1019,6 +1019,7 @@ static void queueCallback(asynUser *pasynUser)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     portInstance *pportInstance = pdevGpibPvt->pportInstance;
+    devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
     gpibCmd *pgpibCmd;
     gpibWork work;
     int failure = 0;
@@ -1056,8 +1057,8 @@ static void queueCallback(asynUser *pasynUser)
         pportInstance->rspLen = pportInstance->rspLenMax;
     }
     pgpibCmd = &pdevGpibParmBlock->gpibCmds[pgpibDpvt->parm];
-    if(pgpibCmd->msgLen>0) pgpibDpvt->msg = pportInstance->msg;
-    if(pgpibCmd->rspLen>0) pgpibDpvt->rsp = pportInstance->rsp;
+    pgpibDpvt->msg = (pgpibCmd->msgLen>0) ? pportInstance->msg : NULL;
+    pgpibDpvt->rsp = (pgpibCmd->rspLen>0) ? pportInstance->rsp : NULL;
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,failure);
 }
