@@ -212,9 +212,6 @@ static void biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pbi->name);
-        failure = -1;
     } else {
         if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
             if(pgpibDpvt->efastVal>0) {
@@ -222,6 +219,9 @@ static void biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             } else {
                 failure = -1;
             }
+        } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
+            printf("%s Either no msg buffer or no format\n",pbi->name);
+            failure = -1;
         } else {
             if(sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
                 pbi->rval = value;
@@ -624,9 +624,6 @@ static void mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pmbbi->name);
-        failure = -1;
     } else {/* interpret msg with predefined format and write into rval */
         if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
             if(pgpibDpvt->efastVal>=0) {
@@ -634,6 +631,9 @@ static void mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             } else {
                 failure = -1;
             }
+        } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
+            printf("%s Either no msg buffer or no format\n",pmbbi->name);
+            failure = -1;
         } else {
             if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
                 pmbbi->rval = value;
