@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.26 2004-03-26 15:45:03 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.27 2004-03-26 16:05:25 mrk Exp $
  */
 
 #include <string.h>
@@ -820,7 +820,7 @@ int
 drvGenericSerialConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
-                     int noAutoConnect,
+                     int noAutoConnect)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
