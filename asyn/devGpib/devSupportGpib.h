@@ -115,7 +115,7 @@ struct devGpibParmBlock {
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
-    int respond2Writes; /* set to true if a device responds to writes */
+    int respond2Writes; /* milliseconds to wait if a device responds to writes */
     /*The following are computed by devSupportGpib*/
     int  msgLenMax;     /*max msgLen all commands*/
     int  rspLenMax;     /*max rspLen all commands*/
