@@ -190,6 +190,13 @@ recordtype(asyn) {
         special(SPC_NOMOD)
         size(40)
     }
+    field(TINP,DBF_STRING) {
+        prompt("Translated input string")
+        promptgroup(GUI_INPUTS)
+        asl(ASL0)
+        special(SPC_NOMOD)
+        size(40)
+    }
     field(IEOS,DBF_STRING) {
         prompt("Input Delimiter")
         promptgroup(GUI_DISPLAY)
