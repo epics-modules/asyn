@@ -48,7 +48,10 @@ static int echoDriverInit(const char *portName, double delay);
 static void report(void *ppvt,FILE *fp,int details);
 static asynStatus connect(void *ppvt,asynUser *pasynUser);
 static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
-static asynStatus setPortOption(void *ppvt,const char *key,const char *val);
+static asynStatus setPortOption(void *ppvt,asynUser *pasynUser,
+                                const char *key,const char *val);
+static asynStatus getPortOption(void *ppvt,asynUser *pasynUser,
+                                const char *key,char *val,int sizeval);
 static asynCommon asyn = {report,connect,disconnect,setPortOption};
 
 /* asynOctet methods */
@@ -109,8 +112,16 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 {
     return(asynSuccess);
 }
-static asynStatus setPortOption(void *drvPvt,const char *key,const char *val)
+static asynStatus setPortOption(void *ppvt,asynUser *pasynUser,
+                                const char *key,const char *val)
 {
+    return(asynSuccess);
+}
+static asynStatus getPortOption(void *ppvt,asynUser *pasynUser,
+                                const char *key,char *val,int sizeval)
+{
+    if (sizeval)
+        *val = '\0';
     return(asynSuccess);
 }
 
