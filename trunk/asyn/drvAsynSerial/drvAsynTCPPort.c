@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.9 2004-04-14 17:48:24 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.10 2004-04-15 13:45:45 norume Exp $
  */
 
 #include <string.h>
@@ -40,7 +40,9 @@
 #include <asynInterposeEos.h>
 #include <drvAsynTCPPort.h>
 
-#if defined(vxWorks) || defined(__rtems__)
+#if defined(vxWorks)
+# define USE_SHUTDOWN
+#elif defined(__rtems__)
 # define USE_SOCKTIMEOUT
 #else
 # define USE_POLL
@@ -130,6 +132,10 @@ timeoutHandler(void *p)
 
     asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
                                "%s timeout handler.\n", tty->serialDeviceName);
+#ifdef USE_SHUTDOWN
+    if (tty->fd >= 0)
+        shutdown(tty->fd, SHUT_RDWR);
+#endif
     tty->timeoutFlag = 1;
 }
 
