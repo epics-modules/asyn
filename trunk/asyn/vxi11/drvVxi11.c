@@ -1673,7 +1673,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
     if(epicsStrnCaseCmp("inst", vxiName, 4) == 0) pvxiPort->isSingleLink = 1;
-    pvxiPort->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
+    if(epicsStrnCaseCmp("com", vxiName, 3) == 0) pvxiPort->isSingleLink = 1;
     strcpy(pvxiPort->hostName, hostName);
     attributes = ASYN_CANBLOCK;
     if(!pvxiPort->isSingleLink) attributes |= ASYN_MULTIDEVICE;
