@@ -1250,7 +1250,8 @@ description of how to use it.</p>
 <pre>cd ${ASYN}
 dbLoadRecords("db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=15,IMAX=0,OMAX=0")</pre>
 
-<p>The example creates a record with name "asynTest" that will connect to
+<p>The example creates a record with name "asynTest" (formed from
+the concatenation of the P and R macros) that will connect to
 port "L0" and addr 15. After the ioc is started, it is possible to change
 PORT, ADDR, IMAX, and OMAX. Thus a single record can be used to access all
 asyn devices connected to the IOC. Multiple records are only needed if one or
