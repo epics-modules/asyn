@@ -389,7 +389,7 @@ The contents of the device support file provide all the details of the communica
 tion between the device and EPICS.
  The makeSupport.pl command created a skeleton device support file in 
 \family typewriter 
-src/devAB300.c
+AB300Sup/devAB300.c
 \family default 
 .
  Of course, device support for a device similar to the one you're working
@@ -871,7 +871,7 @@ This file specifies the link between the DSET names defined in the device
  support file and the DTYP fields in the application database.
  The makeSupport.pl command created an example file in 
 \family typewriter 
-src/devAB300.dbd
+AB300Sup/devAB300.dbd
 \family default 
 .
  If you removed any of the 
@@ -892,7 +892,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatiminput{AB300/src/devAB300.dbd}
+verbatiminput{AB300/AB300Sup/devAB300.dbd}
 \end_inset 
 
 
@@ -907,7 +907,7 @@ This is the database describing the actual EPICS process variables associated
 
 I modified the file 
 \family typewriter 
-src/devAB300.db
+AB300Sup/devAB300.db
 \family default 
  to have the following contents:
 \layout Standard
@@ -919,7 +919,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatiminput{AB300/src/devAB300.db}
+verbatiminput{AB300/AB300Sup/devAB300.db}
 \end_inset 
 
 
@@ -1371,7 +1371,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-21 14:38:32 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-21 18:57:43 $$
 \newline 
 ############################################################################
 \newline 
@@ -1611,7 +1611,7 @@ Device Support File
 
 Here is the complete device support file for the AB300 filter wheel (
 \family typewriter 
-src/devAB300.c
+AB300Sup/devAB300.c
 \family default 
 ):
 \layout Standard
@@ -1623,7 +1623,7 @@ status Collapsed
 \layout Standard
 
 \backslash 
-verbatiminput{AB300/src/devAB300.c}
+verbatiminput{AB300/AB300Sup/devAB300.c}
 \end_inset 
 
 
