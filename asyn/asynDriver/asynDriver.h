@@ -45,7 +45,7 @@ typedef struct asynUser {
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt; 
     void         *userData; 
-    /*The following is for user specific driver communication*/
+    /*The following is for user to/from driver communication*/
     void         *drvUser;
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/

@@ -1149,6 +1149,7 @@ static asynStatus lock(asynUser *pasynUser)
 {
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
     port    *pport = puserPvt->pport;
+    int     can;
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -1158,6 +1159,12 @@ static asynStatus lock(asynUser *pasynUser)
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::lock is queued\n");
+        return asynError;
+    }
+    canBlock(pasynUser,&can);
+    if(!can) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::lock but port does not block\n");
         return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
