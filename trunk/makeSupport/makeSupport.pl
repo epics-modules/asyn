@@ -5,20 +5,21 @@
 # Author: Andrew Johnson <anj@aps.anl.gov>
 # Date: 17 May 2004
 #
-# $Id: makeSupport.pl,v 1.2 2004-05-21 23:31:30 anj Exp $
+# $Id: makeSupport.pl,v 1.3 2004-05-24 15:40:36 anj Exp $
 #
 
 use strict;
 use Getopt::Std;
 use Cwd qw(cwd abs_path);
 
-
+# Command line options processing
 our ($opt_A, $opt_B, $opt_d, $opt_h, $opt_l, $opt_t, $opt_T);
 Usage() unless getopts('A:B:dhlt:T:');
 
 # Handle the -h command
 Usage() if $opt_h;
 
+# Get some basic information
 our $top = cwd();
 print "\$top = $top\n" if $opt_d;
 
@@ -26,8 +27,8 @@ our $arch = $ENV{EPICS_HOST_ARCH};
 print "\$arch = $arch\n" if $opt_d;
 
 our $user = $ENV{USER} ||
-	   $ENV{USERNAME} ||
-	   Win32::LoginName()
+	    $ENV{USERNAME} ||
+	    Win32::LoginName()
     or die "Can't determine your username!\n";
 print "\$user = $user\n" if $opt_d;
 
@@ -42,11 +43,11 @@ if ($opt_A) {
     # Work it out from this script's pathname
     my @asyn = split /[\/]/, $0;
     warn "expected 'makeSupport.pl', got '$_'\n"
-        unless 'makeSupport.pl' eq ($_ = pop @asyn);
+	unless 'makeSupport.pl' eq ($_ = pop @asyn);
     warn "expected 'expected $arch', got '$_'\n"
-        unless $arch eq ($_ = pop @asyn);
+	unless $arch eq ($_ = pop @asyn);
     warn "expected 'bin', got '$_'\n"
-        unless 'bin' eq ($_ = pop @asyn);
+	unless 'bin' eq ($_ = pop @asyn);
     $asyn = abs_path(join "/", @asyn);
 }
 print "\$asyn = $asyn\n" if $opt_d;
@@ -71,8 +72,8 @@ if ($opt_l) {
 
 # Check the template type
 our $type = $opt_t ||
-	   $ENV{EPICS_ASYN_TEMPLATE_DEFAULT} ||
-	   'default';
+	    $ENV{EPICS_ASYN_TEMPLATE_DEFAULT} ||
+	    'default';
 print "\$type = $type\n" if $opt_d;
 print "The template '$type' does not exist.\n"
     unless $opt_l or -d "$templates/$type";
@@ -103,7 +104,9 @@ die "EPICS_BASE directory '$base' does not exist\n"
     unless -d $base;
 
 # Substitutions work like this:
-# key => val  in the hash causes  _key_ in the templateto become by val
+#   (key => "val")  in the %subs hash causes
+#   '_key_'  in the template to be instantiated as  'val'
+# Individual templates can extend these hashes in the $type.pl script
 
 # Substitutions used in filenames
 our %namesubs = (
@@ -131,7 +134,7 @@ require $script if -f $script;
 print "Copying ";
 copyTree("$templates/top", $top, \%namesubs, \%textsubs);
 copyTree("$templates/$type", $top, \%namesubs, \%textsubs) if $type ne "top";
-print "\nTemplate instanciation complete.\n";
+print "\nTemplate instantiated.\n";
 
 
 ##### File contains subroutines only below here
@@ -165,6 +168,9 @@ EOF
     exit $opt_h ? 0 : 1;
 }
 
+
+# List the templates available
+
 sub listTemplates {
     my ($templates) = @_;
     opendir TEMPLATES, $templates or die "opendir failed: $!";
@@ -174,16 +180,16 @@ sub listTemplates {
     foreach (@templates) {
 	next if m/^\./;
 	next if m/^CVS$/;   # Shouldn't be necessary, but...
-	next if -f "$templates/$_";
+	next unless -d "$templates/$_";
 	print "\t$_\n";
     }
 }
 
-#
+
 # Parse a configure/RELEASE file.
 #
-# NB: This subroutine is taken from base/configure/tools/convertRelease.pl
-#
+# This code is from base/configure/tools/convertRelease.pl
+
 sub readRelease {
     my ($file, $Rmacros, $Rapps) = @_;
     # $Rmacros is a reference to a hash, $Rapps a ref to an array
@@ -228,6 +234,9 @@ sub expandRelease {
 	}
     }
 }
+
+
+# Copy directories and files from the template
 
 sub copyTree {
     my ($src, $dst, $Rnamesubs, $Rtextsubs) = @_;
