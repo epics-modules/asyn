@@ -36,8 +36,12 @@ license</a> described at the end of this document.</p>
 <a href="#Acknowledgments">Acknowledgments</a> <br>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#asynDriver">asynDriver Structures and Interfaces</a> <br>
-<a href="#standardInterfaces">Standard Interfaces</a> <br>
-<a href="#asynSyncIO">Synchronous Interface to asynDriver</a> <br>
+<a href="#standardMessageInterfaces">Standard Message Based Interfaces</a>
+<br>
+<a href="#standardRegisterInterfaces">Standard Registered Based
+Interfaces</a> <br>
+<a href="#genericEpicsSupport">Generic Device Support for EPICS records</a>
+<br>
 <a href="#theoryOfOperation">Theory of Operation</a> <br>
 <a href="#asynRecord">asynRecord: Generic Record Support</a> <br>
 <a href="#Example">Example</a> <br>
@@ -220,13 +224,11 @@ and message based devices. asynDriver defines the following terminology:</p>
     <p>A driver that does not block while communicating with a device. Many
     register based drivers are be non-blocking</p>
   </li>
-  <li>Message Driver
-    <p>A driver that uses "messages" for communication with code that calls
-    the driver, i.e.  octet streams..</p>
+  <li>Message Based Interfaces
+    <p>Interfaces that use octet arrays for read/write operations.</p>
   </li>
-  <li>Register Driver
-    <p>A driver that uses something besides octet streams for communication
-    with code that calls the driver.</p>
+  <li>Register Based Interfaces
+    <p>Interfaces that use integers or floats for read/write operations.</p>
   </li>
 </ul>
 
@@ -266,7 +268,7 @@ implements asynCommon, asynOctet, and asynGpib.</p>
 It is, however, independent of record/device support. Thus, it can be used by
 other code, e.g. a sequence program.</p>
 
-<h3>Standard  Interfaces</h3>
+<h3>Standard Interfaces</h3>
 
 <p>This section briefly describes the interfaces provided by asynManager and
 standard interfaces implemented by port drivers. asynManager  members are
@@ -308,77 +310,12 @@ must be implemented by all low level drivers. The methods are:</p>
 <p><span style="font-weight: bold">asynTrace</span> is a set of methods for
 generating diagnostic messages.</p>
 
-<p><span style="font-weight: bold">asyn</span><span
-style="font-weight: 700">SyncIO</span>  is a set of methods for performing
-synchronous I/O using asynManager and asynOctet. This interface is convenient
-for code that is running in a thread that is allowed to wait.&nbsp; Examples
-include motor drivers, SNL programs, and the shell commands described later
-in this document. The methods are: </p>
-<ul>
-  <li>connect - connect to a device and port, create asynUser for use by
-    other methods.</li>
-  <li>openSocket- open a TCP/IP or UDP/IP socket and port, creating an asyn
-    port.</li>
-  <li>read - read device, wait for response. Optionally flush input before
-    the read, and optionally set "end of message" string. The routine returns
-    the number of 8-bit bytes read from the device, or -1 to indicate
-  error.</li>
-  <li>write - write device, wait for response.&nbsp; The routine returns the
-    number of 8-bit bytes written to the device, or -1 to indicate error.</li>
-  <li>writeRead - perform a "write" and then a "read" as an atomic operation.
-    The routine returns the number of 8-bit bytes read from the device, or -1
-    to indicate error.</li>
-  <li>flush - if input is buffered, flush the buffer and wait for
-  completion.</li>
-</ul>
+<p><span style="font-weight: bold">asynDrvUser</span> is a set of methods for
+communication user specific information from a user to a driver</p>
 
-<p><span style="font-weight: bold">asynOctet</span> is a set of methods
-implemented by any low level driver that accepts octet messages (messages
-consisting of 8-bit bytes), and returns octet responses. This interface will
-be sufficient for most device specific code. For example the code for STREAMS
-protocol files needs only this interface. The term octet is used instead of
-ASCII because the only requirement is that messages consist of 8-bit bytes.
-The methods are:</p>
-<ul>
-  <li>read - input a message.</li>
-  <li>write - output a message.</li>
-  <li>flush - if input is buffered, flush the buffer.</li>
-  <li>setEos - Specify an "end of message" string for detecting the end of
-    input messages.</li>
-  <li>getEos - Get the currect "end of message" string.</li>
-</ul>
-
-<p><span style="font-weight: bold">asynInt32</span> is a set of methods
-implemented by any low level driver that accepts 32 bit integer scalers. The
-methods are:</p>
-<ul>
-  <li>read - read a 32 bit integer value.</li>
-  <li>write - write a 32 bit integer value.</li>
-</ul>
-
-<p><span style="font-weight: bold">asynInt32Array</span> is a set of methods
-implemented by any low level driver that accepts 32 bit integer scalers. The
-methods are:</p>
-<ul>
-  <li>read - read an array of 32 bit integer values.</li>
-  <li>write - write an array of 32 bit integer values.</li>
-</ul>
-
-<p><span style="font-weight: bold">asynFloat64</span> is a set of methods
-implemented by any low level driver that accepts 32 bit integer scalers. The
-methods are:</p>
-<ul>
-  <li>read - read a IEEE 64 bit float value.</li>
-  <li>write - write a IEEE 64 bit float value.</li>
-</ul>
-
-<p><span style="font-weight: bold">asynFloat64Array</span> is a set of
-methods implemented by any low level driver that accepts 32 bit integer
-scalers. The methods are:</p>
-<ul>
-  <li>read - read an array of IEEE 64 bit float values.</li>
-  <li>write - write an array of IEEE 64 bit float values.</li>
-</ul>
+<p>In addition to the standard interfaces port drivers must implement one or
+more of the message and/or register based interfaces described in later
+sections.</p>
 
 <h3>Brief Theory of Operation</h3>
 
@@ -612,8 +549,9 @@ asynManager:createAsynUser and asynManager:freeAsynUser.</p>
     /* The following must be set by the user */
     double       timeout;  /*Timeout for I/O operations */
     void         *userPvt;   /* pointer to user private */
-    /* The following are for additional information from method calls */
     void         *userData;
+    /*The following is for user specific driver communication*/
+    void         *drvUser;
     int          auxStatus; /*For auxillary status*/
 }asynUser;</pre>
 
@@ -649,6 +587,16 @@ asynManager:createAsynUser and asynManager:freeAsynUser.</p>
         <p>If this is changed while asynUser is queued, the results are
         undefined, e.g. it could cause a crash.</p>
       </td>
+    </tr>
+    <tr>
+      <td>userData</td>
+      <td>Also for use by the user.</td>
+    </tr>
+    <tr>
+      <td>drvUser</td>
+      <td>A driver can use this to hold asynUser specific data. The
+        asynDrvUser interface is used for communication between asynUser and
+        the driver.</td>
     </tr>
     <tr>
       <td>auxStatus</td>
@@ -1066,6 +1014,48 @@ typedef struct asynTrace {
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;</pre>
 
+<h3>asynDrvUser</h3>
+<pre>#define asynDrvUserType "asynDrvUser"
+typedef struct  asynDrvUser {
+    /*The following do not have to be called via queueRequest callback*/
+    asynStatus (*create)(void *drvPvt,asynUser *pasynUser,
+        const char *drvInfo, const char **pptypeName,size_t *psize);
+    asynStatus (*getType)(void *drvPvt,asynUser *pasynUser,
+        const char **pptypeName,size_t *psize);
+    asynStatus (*destroy)(void *drvPvt,asynUser *pasynUser);
+}asynDrvUser;</pre>
+
+<p>asynDrvUser provides methods that allow an asynUser to communicate user
+specific information to/from a port driver</p>
+
+<table border="1">
+  <caption>asynDrvUser</caption>
+  <tbody>
+    <tr>
+      <td>create</td>
+      <td>The driver can create what ever resources it needs. It can use
+        asynUser.drvUser to provide access to the resources. If the asynUser
+        and the driver both know about how to access the resources they must
+        agree and a name for the resource and a size. If pptypeName is not
+        null the the driver can give a value to *pptypeName. similarly of
+        psize is not null the driver can give a value to *psize. Unless
+        asynUser receives a typeName and size that it recognizes it must not
+        access asynUser.drvUser.</td>
+    </tr>
+    <tr>
+      <td>getType</td>
+      <td>If other code, e.g. an interposeInterface wants to access
+        asynUser.drvUser it must call this and verify that typeName and size
+        are what it expects.</td>
+    </tr>
+    <tr>
+      <td>destroy</td>
+      <td>Destroy the resources created by create and set asynUser.drvUser
+        null.</td>
+    </tr>
+  </tbody>
+</table>
+
 <h3>asynTrace</h3>
 
 <p>asynDriver provides a trace facility with the following attributes:</p>
@@ -1212,7 +1202,8 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
 <hr>
 
 <center>
-<h2><a name="standardInterfaces"></a>Standard Interfaces</h2>
+<h2><a name="standardMessageInterfaces"></a>Standard Message Based
+Interfaces</h2>
 </center>
 
 <h3>asynOctet</h3>
@@ -1274,240 +1265,60 @@ strings for sending commands and receiving responses from a device.</p>
   </tbody>
 </table>
 
-<h3>asynInt32</h3>
-<pre>#define asynInt32Type "asynInt32"
-typedef struct asynInt32{
-    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
-    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
-}asynInt32;</pre>
+<h3>asynOctetTrapReadWrite</h3>
+<pre>typedef void (*asynOctetTrapReadWriteCallback) (asynUser *pasynUser,
+    const char *data, int numchars, asynStatus status);
 
-<p>asynInt32 describes the methods implemented by drivers that use integers
-for communicating with a device.</p>
+/* asynOctetTrapReadWrite methods are thread-safe but might block.
+*  Thus, they can be called directly by a task that is allowed to
+*  block, or indirectly with asynManager-&gt;queueRequest()
+*  Note that, when using asynManager-&gt;queueRequest, a callback
+*  cannot be installed or removed as long as some other asynUser has
+*  locked the port/address.
+*
+*  Before pasynUser is freed, it must remove all callbacks that it has
+*  previously installed or the system might crash!
+*/
+
+typedef struct asynOctetTrapReadWrite {
+    asynStatus (*installReadCallback) (void *drvPvt, asynUser *pasynUser,
+        asynOctetTrapReadWriteCallback callback);
+    asynStatus (*installWriteCallback) (void *drvPvt, asynUser *pasynUser,
+        asynOctetTrapReadWriteCallback callback);
+    asynStatus (*removeReadCallback) (void *drvPvt, asynUser *pasynUser,
+        asynOctetTrapReadWriteCallback callback);
+    asynStatus (*removeWriteCallback) (void *drvPvt, asynUser *pasynUser,
+        asynOctetTrapReadWriteCallback callback);
+} asynOctetTrapReadWrite;
+
+int epicsShareAPI asynOctetTrapReadWriteConfig(const char *portName, int addr);</pre>
+
+<p>asynOctetTrapReadWriteConfig intercepts all asynOctet messages and calls
+all registered callbacks for read and write messages.</p>
 
 <table border="1">
-  <caption>asynInt32</caption>
+  <caption>asynOctetTrapReadWrite</caption>
   <tbody>
     <tr>
-      <td>write</td>
-      <td>Write an integer value to the device.</td>
+      <td>installReadCallback</td>
+      <td>install a callback that gets called after each read.</td>
     </tr>
     <tr>
-      <td>read</td>
-      <td>Read an integer value from the device.</td>
+      <td>installWriteCallback</td>
+      <td>install a callback that gets called after each write.</td>
+    </tr>
+    <tr>
+      <td>removeReadCallback</td>
+      <td>remove callback.</td>
+    </tr>
+    <tr>
+      <td>removeWriteCallback</td>
+      <td>remove callback.</td>
     </tr>
   </tbody>
 </table>
 
-<h3>asynInt32Array</h3>
-<pre>#define asynInt32ArrayType "asynInt32Array"
-typedef struct asynInt32Array{
-    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsInt32 value, size_t nelements);
-    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                      epicsInt32 *value, size_t nelements, size_t *nIn);
-}asynInt32Array;</pre>
-
-<p>asynInt32Array describes the methods implemented by drivers that use
-arrays of integers for communicating with a device.</p>
-
-<table border="1">
-  <caption>asynInt32Array</caption>
-  <tbody>
-    <tr>
-      <td>write</td>
-      <td>Write an array of integers to a device.</td>
-    </tr>
-    <tr>
-      <td>read</td>
-      <td>Read an array of integers from a device.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynInt32Callback</h3>
-<pre>#define asynInt32CallbackType "asynInt32Callback"
-typedef void (*asynInt32DataCallback)(void *drvPvt, epicsInt32 data);
-typedef void (*asynInt32IntervalCallback)(void *drvPvt, double seconds);
-    
-typedef struct asynInt32Callback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                    asynInt32DataCallback dataCallback,
-                                    asynInt32IntervalCallback intervalCallback,
-                                    void *pvt);
-} asynInt32Callback; </pre>
-
-<p>asynInt32Callback describes the methods implemented by drivers that are
-continuously collecting data and want to make this data available to
-registered clients.</p>
-
-<table border="1">
-  <caption>asynInt32Callback</caption>
-  <tbody>
-    <tr>
-      <td>setCallbackInterval</td>
-      <td>Specifies how often the user wants to be notified.</td>
-    </tr>
-    <tr>
-      <td>getCallbackInterval</td>
-      <td>Gets the current callback interval</td>
-    </tr>
-    <tr>
-      <td>registerCallbacks</td>
-      <td>registers a dataCallback and an intervalCallback. MARK WHAT DOES
-        THIS MEAN.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynInt32ArrayCallback</h3>
-<pre>#define asynInt32ArrayCallbackType "asynInt32ArrayCallback"
-typedef void (*asynInt32ArrayDataCallback)(void *drvPvt, epicsInt32 *data);
-typedef void (*asynInt32ArrayIntervalCallback)(void *drvPvt, double seconds);
-    
-typedef struct asynInt32ArrayCallback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                    asynInt32ArrayDataCallback dataCallback,
-                                    asynInt32ArrayIntervalCallback
-                                        intervalCallback,
-                                    void *pvt);
-} asynInt32ArrayCallback; </pre>
-
-<p>asynInt32ArrayCallback describes the methods implemented by drivers that
-are continuously collecting data and want to make this data available to
-registered clients.</p>
-
-<table border="1">
-  <caption>asynInt32ArrayCallback</caption>
-  <tbody>
-    <tr>
-      <td>setCallbackInterval</td>
-      <td>Specifies how often the user wants to be notified.</td>
-    </tr>
-    <tr>
-      <td>getCallbackInterval</td>
-      <td>Gets the current callback interval</td>
-    </tr>
-    <tr>
-      <td>registerCallbacks</td>
-      <td>registers a dataCallback and an intervalCallback. MARK WHAT DOES
-        THIS MEAN.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynFloat64Array</h3>
-<pre>#define asynFloat64ArrayType "asynFloat64Array"
-typedef struct asynFloat64Array{
-    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloat64 value, size_t nelements);
-    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                      epicsFloat64 *value, size_t nelements, size_t *nIn);
-}asynFloat64Array;</pre>
-
-<p>asynFloat64Array describes the methods implemented by drivers that use
-arrays of integers for communicating with a device.</p>
-
-<table border="1">
-  <caption>asynFloat64Array</caption>
-  <tbody>
-    <tr>
-      <td>write</td>
-      <td>Write an array of integers to a device.</td>
-    </tr>
-    <tr>
-      <td>read</td>
-      <td>Read an array of integers from a device.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynFloat64Callback</h3>
-<pre>#define asynFloat64CallbackType "asynFloat64Callback"
-typedef void (*asynFloat64DataCallback)(void *drvPvt, epicsFloat64 data);
-typedef void (*asynFloat64IntervalCallback)(void *drvPvt, double seconds);
-    
-typedef struct asynFloat64Callback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                    asynFloat64DataCallback dataCallback,
-                                    asynFloat64IntervalCallback intervalCallback,
-                                    void *pvt);
-} asynFloat64Callback; </pre>
-
-<p>asynFloat64Callback describes the methods implemented by drivers that are
-continuously collecting data and want to make this data available to
-registered clients.</p>
-
-<table border="1">
-  <caption>asynFloat64Callback</caption>
-  <tbody>
-    <tr>
-      <td>setCallbackInterval</td>
-      <td>Specifies how often the user wants to be notified.</td>
-    </tr>
-    <tr>
-      <td>getCallbackInterval</td>
-      <td>Gets the current callback interval</td>
-    </tr>
-    <tr>
-      <td>registerCallbacks</td>
-      <td>registers a dataCallback and an intervalCallback. MARK WHAT DOES
-        THIS MEAN.</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3>asynFloat64ArrayCallback</h3>
-<pre>#define asynFloat64ArrayCallbackType "asynFloat64ArrayCallback"
-typedef void (*asynFloat64ArrayDataCallback)(void *drvPvt, epicsFloat64 *data);
-typedef void (*asynFloat64ArrayIntervalCallback)(void *drvPvt, double seconds);
-    
-typedef struct asynFloat64ArrayCallback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                    asynFloat64ArrayDataCallback dataCallback,
-                                    asynFloat64ArrayIntervalCallback
-                                        intervalCallback,
-                                    void *pvt);
-} asynFloat64ArrayCallback; </pre>
-
-<p>asynFloat64ArrayCallback describes the methods implemented by drivers that
-are continuously collecting data and want to make this data available to
-registered clients.</p>
-
-<table border="1">
-  <caption>asynFloat64ArrayCallback</caption>
-  <tbody>
-    <tr>
-      <td>setCallbackInterval</td>
-      <td>Specifies how often the user wants to be notified.</td>
-    </tr>
-    <tr>
-      <td>getCallbackInterval</td>
-      <td>Gets the current callback interval</td>
-    </tr>
-    <tr>
-      <td>registerCallbacks</td>
-      <td>registers a dataCallback and an intervalCallback. MARK WHAT DOES
-        THIS MEAN.</td>
-    </tr>
-  </tbody>
-</table>
-<hr>
-
-<center>
-<h2><a name="asynSyncIO"></a>Synchronous Interface to asynDriver</h2>
-</center>
+<h3>Synchronous Message Based Interface</h3>
 
 <p>asynSyncIO.h describes the following:</p>
 <pre>/* Synchronous Interface to the asynManager and asynOctet interfaces. */
@@ -1574,6 +1385,300 @@ document.</p>
     </tr>
   </tbody>
 </table>
+<hr>
+
+<center>
+<h2><a name="standardRegisterInterfaces"></a>Standard Registered Based
+Interfaces</h2>
+</center>
+
+<h3>asynInt32</h3>
+<pre>#define asynInt32Type "asynInt32"
+typedef struct asynInt32{
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
+    asynStatus (*getBounds)(void *drvPvt, asynUser *pasynUser,
+                            epicsInt32 *low, epicsInt32 *high);
+}asynInt32;</pre>
+
+<p>asynInt32 describes the methods implemented by drivers that use integers
+for communicating with a device.</p>
+
+<table border="1">
+  <caption>asynInt32</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write an integer value to the device.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read an integer value from the device.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynInt32Callback</h3>
+<pre>#define asynInt32CallbackType "asynInt32Callback"
+/*cancelCallback cancels based on callback and userPvt */
+typedef struct asynInt32Callback {
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+                             void (*callback)(void *userPvt, epicsInt32 data),
+                             void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+                             void (*callback)(void *userPvt, epicsInt32 data),
+                             void *userPvt);
+} asynInt32Callback;
+ </pre>
+
+<p>asynInt32Callback describes the methods implemented code continuously
+collects data  makes it available to registered clients. An example is an
+interrupt based driver.</p>
+
+<table border="1">
+  <caption>asynInt32Callback</caption>
+  <tbody>
+    <tr>
+      <td>setCallbackInterval</td>
+      <td>Specifies how often the user wants to be notified.</td>
+    </tr>
+    <tr>
+      <td>getCallbackInterval</td>
+      <td>Gets the current callback interval</td>
+    </tr>
+    <tr>
+      <td>registerCallbacks</td>
+      <td>registers a dataCallback and an intervalCallback. MARK WHAT DOES
+        THIS MEAN.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynInt32Array</h3>
+<pre>#define asynInt32ArrayType "asynInt32Array"
+typedef struct asynInt32Array{
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
+                       epicsInt32 value, size_t nelements);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
+                      epicsInt32 *value, size_t nelements, size_t *nIn);
+}asynInt32Array;</pre>
+
+<p>asynInt32Array describes the methods implemented by drivers that use
+arrays of integers for communicating with a device.</p>
+
+<table border="1">
+  <caption>asynInt32Array</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write an array of integers to a device.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read an array of integers from a device.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynInt32ArrayCallback</h3>
+<pre>#define asynInt32ArrayCallbackType "asynInt32ArrayCallback"
+/*cancelCallback cancels based on callback and userPvt */
+typedef struct asynInt32ArrayCallback {
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+             void (*callback)(void *userPvt,epicsInt32 *val,epicsUInt32 nelem),
+             void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+             void (*callback)(void *userPvt,epicsInt32 *val,epicsUInt32 nelem),
+             void *userPvt);
+} asynInt32ArrayCallback;</pre>
+
+<p>asynInt32ArrayCallback describes the methods implemented by code that
+continuously and makes it available to registered clients.</p>
+
+<table border="1">
+  <caption>asynInt32ArrayCallback</caption>
+  <tbody>
+    <tr>
+      <td>registerCallback</td>
+      <td>Register a callback that is called whenever new data is
+      available.</td>
+    </tr>
+    <tr>
+      <td>cancelCallback</td>
+      <td>Cancel the callback</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynFloat64</h3>
+<pre>#define asynFloat64Type "asynFloat64"
+typedef struct asynFloat64 {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsFloat64 value);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
+} asynFloat64;</pre>
+
+<p>asynFloat64  describes the methods for communicating via IEEE double
+precision float values.</p>
+
+<table border="1">
+  <caption>asynFloat64</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write a value.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read a value.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynFloat64Callback</h3>
+<pre>#define asynFloat64CallbackType "asynFloat64Callback"
+/*cancelCallback cancels based on callback and userPvt */
+typedef struct asynFloat64Callback {
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+                        void (*callback)(void *userPvt, epicsFloat64 data),
+                        void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+                        void (*callback)(void *userPvt, epicsFloat64 data),
+                        void *userPvt);
+} asynFloat64Callback;</pre>
+
+<p>asynFloat64Callback is like asynInt32Callback except that it uses Float64
+values</p>
+
+<table border="1">
+  <caption>asynFloat64Callback</caption>
+  <tbody>
+    <tr>
+      <td>registerCallback</td>
+      <td>Register a callback that is called whenever new data is
+      available.</td>
+    </tr>
+    <tr>
+      <td>cancelCallback</td>
+      <td>Cancel the callback</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynFloat64Array</h3>
+<pre>#define asynFloat64ArrayType "asynFloat64Array"
+typedef struct asynFloat64Array {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
+                       epicsFloat64 *value, size_t nelements);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
+                       epicsFloat64 *value, size_t nelements, size_t *nIn);
+} asynFloat64Array;</pre>
+
+<p>asynFloat64Array  describes the methods for communicating via IEEE double
+precision float values.</p>
+
+<table border="1">
+  <caption>asynFloat64Array</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write an array of values.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read an array of values.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynFloat64ArrayCallback</h3>
+<pre>#define asynFloat64ArrayCallbackType "asynFloat64ArrayCallback"
+/*cancelCallback cancels based on callback and userPvt */
+typedef struct asynFloat64ArrayCallback {
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
+         void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
+         void *userPvt);
+} asynFloat64ArrayCallback;</pre>
+
+<p>asynFloat64ArrayCallback is like asynInt32Callback except that it uses an
+array of Float64 values</p>
+
+<table border="1">
+  <caption>asynFloat64ArrayCallback</caption>
+  <tbody>
+    <tr>
+      <td>registerCallback</td>
+      <td>Register a callback that is called whenever new data is
+      available.</td>
+    </tr>
+    <tr>
+      <td>cancelCallback</td>
+      <td>Cancel the callback</td>
+    </tr>
+  </tbody>
+</table>
+<hr>
+
+<center>
+<h2><a name="genericEpicsSupport"></a>Generic Device Support for EPICS
+records</h2>
+</center>
+
+<p>NOTE: This section describes support for aoRecord and aiRecord. It will be
+extended to describe support for other record types. For ao and ai it
+currently describes Int32 support. It will describe Float64 support.</p>
+
+<p>Generic device support is provided for standard EPICS records. This
+support should be usable for a large class of low level register based
+drivers. For truly complicated devices other support is required.</p>
+
+<p>The support uses the following conventions for DTYP and INP or OUT.</p>
+<pre>    field(DTYP,"asyn xxx")
+    field(INP,"@asyn(portName,addr,timeout) drvParams")
+     or
+    field(OUT,"@asyn(portName,addr,timeout) drvParams")</pre>
+<pre>where</pre>
+<ul>
+  <li>xxx - The name of the type of interface supported.</li>
+  <li>portName - The name of the port.</li>
+  <li>addr - The address. If addr is not specified the default is 0</li>
+  <li>timeout - The timeout value for asynUser.timeout. If not specified the
+    default is 1.0</li>
+  <li>drvParams - This is passed to the low level driver via the asynDrvUser
+    interface. This this is a way to pass information to the low level driver
+    at initialization time.</li>
+</ul>
+
+<p>For example:</p>
+<pre>    field(DTYP,"asyn Int32")
+    field(INP,"@asyn(portA,0,.1) thisIsForDriver")</pre>
+
+<h2>aoRecord generic device support</h2>
+
+<p>The following support is available:</p>
+<pre>device(ao,INST_IO,devAoAsynInt32,"asyn Int32")</pre>
+
+<p>This provides support for port drivers that require only interface
+asynInt32 for write requests.</p>
+
+<h2>aiRecord generic device support</h2>
+
+<p>The following suppoert is available:</p>
+<pre>device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
+device(ai,INST_IO,devAiAsynInt32Average,"asyn Int32Average")
+device(ai,INST_IO,devAiAsynInt32Interrupt,"asyn Int32Interrupt")</pre>
+
+<p>devAiAsynInt32 provides support for port drivers that require only
+interface asynInt32 for read requests.</p>
+
+<p>devAiAsynInt32Average and devAiAsynInt32Interrupt provides support for
+port drivers that implement interfaces asynInt32 and asynInt32Callback. If
+devAiAsynInt32Interrupt is chosen the record will usually have SCAN set to
+"I/O Intr". devAiAsynInt32Average is normally periodically scanned. Each time
+the record processes it receives the average of all the values obtained since
+the last time the record processed.</p>
 <hr>
 
 <center>
