@@ -31,6 +31,9 @@
 #include <asynGpibDriver.h>
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include <asynInt32.h>
+#include <asynUInt32Digital.h>
+#include <asynFloat64.h>
 #include <asynOption.h>
 #include <drvAsynIPPort.h>
 #define GEN_SIZE_OFFSET
@@ -85,6 +88,10 @@ static void queueTimeoutCallbackProcess(asynUser * pasynUser);
 static void queueTimeoutCallbackSpecial(asynUser * pasynUser);
 static void exceptCallback(asynUser * pasynUser, asynException exception);
 static void performIO(asynUser * pasynUser);
+static void performInt32IO(asynUser * pasynUser);
+static void performUInt32DigitalIO(asynUser * pasynUser);
+static void performFloat64IO(asynUser * pasynUser);
+static void performOctetIO(asynUser * pasynUser);
 static void setOption(asynUser * pasynUser);
 static void getOptions(asynUser * pasynUser);
 static void reportError(asynRecord * pasynRec, asynStatus status,
@@ -111,8 +118,19 @@ struct rset asynRSET = {
 get_alarm_double};
 epicsExportAddress(rset, asynRSET);
 
-typedef struct oldValues {	/* Used in monitor() and monitorStatus() */
-    epicsInt32 addr;	/* asyn address */
+typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
+    epicsInt32 octetival;   /* asynOctet is valid */
+    epicsInt32 i32ival;     /* asynInt32 is valid */
+    epicsInt32 ui32ival;    /* asynUInt32Digital is valid */
+    epicsInt32 f64ival;     /* asynFloat64 is valid */
+    epicsInt32 addr;	    /* asyn address */
+    epicsInt32 i32inp;      /* asynInt32 input */
+    epicsInt32 i32out;      /* asynInt32 output */
+    unsigned long ui32inp;  /* asynUInt32Digital input */
+    unsigned long ui32out;  /* asynUInt32Digital output */
+    unsigned long ui32mask; /* asynUInt32Digital mask */
+    double f64inp;      /* asynFloat64 input */
+    double f64out;      /* asynFloat64 output */
     epicsInt32 nowt;	/* Number of bytes to write */
     epicsInt32 nawt;	/* Number of bytes actually written */
     epicsInt32 nrrd;	/* Number of bytes to read */
@@ -173,6 +191,12 @@ typedef struct asynRecPvt {
     void *asynOctetPvt;
     asynGpib *pasynGpib;
     void *asynGpibPvt;
+    asynInt32 *pasynInt32;
+    void *asynInt32Pvt;
+    asynUInt32Digital *pasynUInt32;
+    void *asynUInt32Pvt;
+    asynFloat64 *pasynFloat64;
+    void *asynFloat64Pvt;
     char *outbuff;
     oldValues old;
 }   asynRecPvt;
@@ -224,13 +248,6 @@ static long process(asynRecord * pasynRec)
     callbackState state = pasynRecPvt->state;
     asynStatus    status;
     int           yesNo;
-
-    /* If the asynOctet interface does not exist then report error and return */
-    if (pasynRecPvt->pasynOctet == NULL) {
-        reportError(pasynRec, asynSuccess,
-                    "Port does not have asynOctet interface");
-        goto done;
-    }
 
     if(!pasynRec->pact) {
         if(state == stateIdle) {
@@ -634,6 +651,9 @@ static void monitor(asynRecord * pasynRec)
     POST_IF_NEW(ucmd);
     POST_IF_NEW(acmd);
     POST_IF_NEW(eomr);
+    POST_IF_NEW(i32inp);
+    POST_IF_NEW(ui32inp);
+    POST_IF_NEW(f64inp);
 }
 
 static void monitorStatus(asynRecord * pasynRec)
@@ -712,6 +732,10 @@ static void monitorStatus(asynRecord * pasynRec)
     POST_IF_NEW(auct);
     POST_IF_NEW(cnct);
     POST_IF_NEW(enbl);
+    POST_IF_NEW(octetival);
+    POST_IF_NEW(i32ival);
+    POST_IF_NEW(ui32ival);
+    POST_IF_NEW(f64ival);
 }
 
 static asynStatus connectDevice(asynRecord * pasynRec)
@@ -760,9 +784,44 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     if(pasynInterface) {
         pasynRecPvt->pasynOctet = (asynOctet *) pasynInterface->pinterface;
         pasynRecPvt->asynOctetPvt = pasynInterface->drvPvt;
+        pasynRec->octetival = 1;
     } else {
         pasynRecPvt->pasynOctet = 0;
         pasynRecPvt->asynOctetPvt = 0;
+        pasynRec->octetival = 0;
+    }
+    /* Get asynInt32 interface if it exists*/
+    pasynInterface = pasynManager->findInterface(pasynUser, asynInt32Type, 1);
+    if(pasynInterface) {
+        pasynRecPvt->pasynInt32 = (asynInt32 *) pasynInterface->pinterface;
+        pasynRecPvt->asynInt32Pvt = pasynInterface->drvPvt;
+        pasynRec->i32ival = 1;
+    } else {
+        pasynRecPvt->pasynInt32 = 0;
+        pasynRecPvt->asynInt32Pvt = 0;
+        pasynRec->i32ival = 0;
+    }
+    /* Get asynUInt32Digital interface if it exists*/
+    pasynInterface = pasynManager->findInterface(pasynUser, asynUInt32DigitalType, 1);
+    if(pasynInterface) {
+        pasynRecPvt->pasynUInt32 = (asynUInt32Digital *) pasynInterface->pinterface;
+        pasynRecPvt->asynUInt32Pvt = pasynInterface->drvPvt;
+        pasynRec->ui32ival = 1;
+    } else {
+        pasynRecPvt->pasynUInt32 = 0;
+        pasynRecPvt->asynUInt32Pvt = 0;
+        pasynRec->ui32ival = 0;
+    }
+    /* Get asynFloat64 interface if it exists*/
+    pasynInterface = pasynManager->findInterface(pasynUser, asynFloat64Type, 1);
+    if(pasynInterface) {
+        pasynRecPvt->pasynFloat64 = (asynFloat64 *) pasynInterface->pinterface;
+        pasynRecPvt->asynFloat64Pvt = pasynInterface->drvPvt;
+        pasynRec->f64ival = 1;
+    } else {
+        pasynRecPvt->pasynInt32 = 0;
+        pasynRecPvt->asynInt32Pvt = 0;
+        pasynRec->f64ival = 0;
     }
     /* Get asynGpib interface if it exists */
     pasynInterface = pasynManager->findInterface(pasynUser, asynGpibType, 1);
@@ -793,6 +852,143 @@ static void performIO(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
+
+    switch(pasynRec->iface) {
+    case asynINTERFACE_OCTET:
+        if (pasynRec->octetival) {
+           performOctetIO(pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynOctet interface");
+        }
+        break;
+    case asynINTERFACE_INT32:
+        if (pasynRec->i32ival) {
+           performInt32IO(pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynInt32 interface");
+        }
+        break;
+    case asynINTERFACE_UINT32:
+        if (pasynRec->ui32ival) {
+           performUInt32DigitalIO(pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynUInt32Digital interface");
+        }
+        break;
+    case asynINTERFACE_FLOAT64:
+        if (pasynRec->f64ival) {
+           performFloat64IO(pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynFloat64 interface");
+        }
+        break;
+    }
+}
+        
+static void performInt32IO(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = pasynUser->userPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+    asynStatus status;
+
+    if((pasynRec->tmod == asynTMOD_Write) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynInt32->write(pasynRecPvt->asynInt32Pvt,
+                                                pasynUser, pasynRec->i32out);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, Int32 write data=%d", 
+                  pasynRec->name, status, pasynRec->i32out);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "Int32 write error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+    if((pasynRec->tmod == asynTMOD_Read) ||
+        (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynInt32->read(pasynRecPvt->asynInt32Pvt,
+                                               pasynUser, &pasynRec->i32inp);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, Int32 read data=%d", 
+                  pasynRec->name, status, pasynRec->i32inp);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "Int32 read error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+}
+
+static void performUInt32DigitalIO(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = pasynUser->userPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+    asynStatus status;
+    epicsUInt32 data;
+    
+    if((pasynRec->tmod == asynTMOD_Write) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynUInt32->write(pasynRecPvt->asynInt32Pvt,
+                                                 pasynUser, pasynRec->ui32out, 
+                                                 pasynRec->ui32mask);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, UInt32 write data=%d, mask=%d",        
+                  pasynRec->name, status, pasynRec->ui32out, pasynRec->ui32mask);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "UInt32 write error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+    if((pasynRec->tmod == asynTMOD_Read) ||
+        (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynUInt32->read(pasynRecPvt->asynInt32Pvt,
+                                                pasynUser, &data,
+                                                pasynRec->ui32mask);
+        pasynRec->ui32inp = data;
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, UInt32 read data=%d, mask=%d",        
+                  pasynRec->name, status, pasynRec->i32inp, pasynRec->ui32mask);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "UInt32 read error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+}
+
+static void performFloat64IO(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = pasynUser->userPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+    asynStatus status;
+    
+    if((pasynRec->tmod == asynTMOD_Write) ||
+       (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynFloat64->write(pasynRecPvt->asynInt32Pvt,
+                                                  pasynUser, pasynRec->f64out);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, Float64 write data=%f",        
+                  pasynRec->name, status, pasynRec->f64out);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "Float64 write error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+    if((pasynRec->tmod == asynTMOD_Read) ||
+        (pasynRec->tmod == asynTMOD_Write_Read)) {
+        status = pasynRecPvt->pasynFloat64->read(pasynRecPvt->asynInt32Pvt,
+                                                 pasynUser, &pasynRec->f64inp);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "%s: status=%d, Float64 read data=%d",        
+                  pasynRec->name, status, pasynRec->f64inp);
+        if(status != asynSuccess) {
+            reportError(pasynRec, status, "Float64 read error, %s",
+                        pasynUser->errorMessage);
+        }
+    }
+}
+
+static void performOctetIO(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = pasynUser->userPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
     int nbytesTransfered;
     char *inptr;
@@ -801,6 +997,7 @@ static void performIO(asynUser * pasynUser)
     int nread;
     int nwrite;
     int eoslen;
+    int ntranslate;
     char eos[EOS_SIZE];
     int  eomReason;
 
@@ -929,8 +1126,12 @@ static void performIO(asynUser * pasynUser)
         }
         pasynRec->nord = nbytesTransfered;	/* Number of bytes read */
         /* Copy to tinp with dbTranslateEscape */
-        epicsStrSnPrintEscaped(pasynRec->tinp, sizeof(pasynRec->tinp),
-                               inptr, inlen);
+        ntranslate = epicsStrSnPrintEscaped(pasynRec->tinp, 
+                                           sizeof(pasynRec->tinp),
+                                           inptr, inlen);
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+             "%s: inlen=%d, nbytesTransfered=%d, ntranslate=%d sizeof(tinp)=%d tinp[39]=%x\n",
+             pasynRec->name, inlen, nbytesTransfered, ntranslate, sizeof(pasynRec->tinp), pasynRec->tinp[39]);
     }
 }
 

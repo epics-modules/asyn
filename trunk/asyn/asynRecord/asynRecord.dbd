@@ -6,6 +6,12 @@ menu(asynTMOD) {
     choice(asynTMOD_Flush,"Flush")
     choice(asynTMOD_NoIO,"NoI/O")
 }
+menu(asynINTERFACE) {
+    choice(asynINTERFACE_OCTET,"asynOctet")
+    choice(asynINTERFACE_INT32,"asynInt32")
+    choice(asynINTERFACE_UINT32,"asynUInt32Digital")
+    choice(asynINTERFACE_FLOAT64,"asynFloat64")
+}
 menu(asynFMT) {
     choice(asynFMT_ASCII,"ASCII")
     choice(asynFMT_Hybrid,"Hybrid")
@@ -139,8 +145,28 @@ recordtype(asyn) {
         interest(1)
         initial("1.0")
     }
+    field(DRVINFO,DBF_STRING) {
+        prompt("Driver info string")
+        size(40)
+    }
+    field(IFACE,DBF_MENU) {
+        prompt("Interface")
+        menu(asynINTERFACE)
+    }
+    field(OCTETIVAL, DBF_LONG) {
+        prompt("asynOctet is valid")
+    }
+    field(I32IVAL, DBF_LONG) {
+        prompt("asynInt32 is valid")
+    }
+    field(UI32IVAL, DBF_LONG) {
+        prompt("asynUInt32Digital is valid")
+    }
+    field(F64IVAL, DBF_LONG) {
+        prompt("asynFloat64 is valid")
+    }
 
-# Output control fields
+# asynOctet output control fields
     field(AOUT,DBF_STRING) {
         prompt("Output (command) string")
         promptgroup(GUI_INPUTS)
@@ -192,7 +218,7 @@ recordtype(asyn) {
         menu(asynFMT)
     }
 
-# Input control fields
+# asynOctet input control fields
     field(AINP,DBF_STRING) {
         prompt("Input (response) string")
         promptgroup(GUI_INPUTS)
@@ -255,6 +281,39 @@ recordtype(asyn) {
         special(SPC_NOMOD)
         interest(1)
         menu(asynEOMREASON)
+    }
+
+# asynInt32, asynUInt32Digital, and asynFloat64 data fields
+    field(I32INP,DBF_LONG) {
+        prompt("asynInt32 input")
+        interest(1)
+    }
+    field(I32OUT,DBF_LONG) {
+        prompt("asynInt32 output")
+        interest(1)
+        pp(TRUE)
+    }
+    field(UI32INP,DBF_ULONG) {
+        prompt("asynUInt32Digital input")
+        interest(1)
+    }
+    field(UI32OUT,DBF_ULONG) {
+        prompt("asynUInt32Digital output")
+        interest(1)
+        pp(TRUE)
+    }
+    field(UI32MASK,DBF_ULONG) {
+        prompt("asynUInt32Digital mask")
+        initial("0xffffffff")
+    }
+    field(F64INP,DBF_DOUBLE) {
+        prompt("asynFloat64 input")
+        interest(1)
+    }
+    field(F64OUT,DBF_DOUBLE) {
+        prompt("asynFloat64 output")
+        interest(1)
+        pp(TRUE)
     }
 
 # Serial control fields
