@@ -1268,7 +1268,7 @@ static asynStatus setTraceMask(asynUser *pasynUser,int mask)
     tracePvt   *ptracePvt = findTracePvt(puserPvt);
 
     ptracePvt->traceMask = mask;
-    exceptionOccurred(pasynUser,asynExceptionTraceMask);
+    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceMask);
     return asynSuccess;
 }
 
@@ -1286,7 +1286,7 @@ static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
     ptracePvt->traceIOMask = mask;
-    exceptionOccurred(pasynUser,asynExceptionTraceIOMask);
+    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceIOMask);
     return asynSuccess;
 }
 
@@ -1315,7 +1315,7 @@ static asynStatus setTraceFile(asynUser *pasynUser,FILE *fd)
         }
     }
     ptracePvt->fd = fd;
-    exceptionOccurred(pasynUser,asynExceptionTraceFile);
+    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceFile);
     epicsMutexUnlock(pasynBase->lockTrace);
     return asynSuccess;
 }
@@ -1341,7 +1341,7 @@ static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
         ptracePvt->traceBufferSize = size;
     }
     ptracePvt->traceTruncateSize = size;
-    exceptionOccurred(pasynUser,asynExceptionTraceIOTruncateSize);
+    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceIOTruncateSize);
     epicsMutexUnlock(pasynBase->lockTrace);
     return asynSuccess;
 }
