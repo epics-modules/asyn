@@ -30,9 +30,9 @@ SRC_DIRS += $(ASYN)/drvAsynSerial
 INC += drvAsynSerialPort.h
 asyn_SRCS += drvAsynSerialPort.c
 DBD += drvAsynSerialPort.dbd
-INC += drvAsynTCPPort.h
-asyn_SRCS += drvAsynTCPPort.c
-DBD += drvAsynTCPPort.dbd
+INC += drvAsynIPPort.h
+asyn_SRCS += drvAsynIPPort.c
+DBD += drvAsynIPPort.dbd
 
 SRC_DIRS += $(ASYN)/asynMisc
 DBD += asyn.dbd

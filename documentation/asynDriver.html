@@ -48,7 +48,7 @@ license</a> described at the end of this document.</p>
 <a href="#PortDrivers">Port Drivers</a>
 <ul>
   <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
-  <li><a href="#drvAsynTCPPort">TCP Port</a></li>
+  <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
   <li><a href="#vxi11">vxi11</a></li>
   <li><a href="#gsIP488">Green Springs IP488</a></li>
   <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
@@ -121,9 +121,9 @@ based devices.</p>
   <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
     gpibCore support.</li>
   <li>drvAsynSerialPort: Support for devices connected to serial ports.</li>
-  <li>drvAsynTCPPort: Support for devices connected to
-    devices connected through Ethernet/Serial converter boxes, and TCP/IP
-    sockets.</li>
+  <li>drvAsynIPPort: Support for devices connected to
+    devices connected through Ethernet/Serial converter boxes, TCP/IP
+    sockets or UDP/IP sockets.</li>
   <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
     support.</li>
   <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack
@@ -309,7 +309,7 @@ createAsynUser..</p>
     <ul>
       <li>connect - connect to a device and port, create asynUser for use by
         other methods.</li>
-      <li>openSocket- open a TCP/IP socket and port, creating an asyn
+      <li>openSocket- open a TCP/IP or UDP/IP socket and port, creating an asyn
       port.</li>
       <li>read - read device, wait for response. Optionally flush input
         before the read, and optionally set end of message string. The
@@ -1149,9 +1149,10 @@ document.</p>
     </tr>
     <tr>
       <td>openSocket</td>
-      <td>Opens a new connection to a TCP/IP socket, returning the name of a
+      <td>Opens a new connection to a TCP/IP or UDP/IP socket, returning the name of a
         newly created asyn port.&nbsp; The name of the port created is of the
-        form server:port, i.e. corvette:21 or 164.54.160.50:21.  </td>
+        form "server:port [protocol]", i.e. "corvette:21" or "164.54.160.50:21" 
+        or "corvette:21 UDP".  </td>
     </tr>
     <tr>
       <td>write</td>
@@ -1749,20 +1750,23 @@ tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvAsynSerialPortConfigure("L0","/tyGS/0/0",0,0,0)
 asynSetOption("L0",0,"baud","9600")</pre>
 
-<h3><a name="drvAsynTCPPort"></a>TCP Port</h3>
+<h3><a name="drvAsynIPPort"></a>TCP/IP or UDP/IP Port</h3>
 
-<p>The drvAsynTCPPort driver supports devices which communicate over a TCP/IP
-connection.  A typical example is a device connected through an
+<p>The drvAsynIPPort driver supports devices which communicate over a TCP/IP
+or UDP/IP connection.  A typical example is a device connected through an
 Ethernet/Serial converter box.</p>
 
-<p>TCP/IP connections are configured with the
-<tt>drvAsynTCPPortConfigure</tt> command:</p>
-<pre>   drvAsynTCPPortConfigure("portName","hostInfo",priority,noAutoConnect,noEos)</pre>
+<p>TCP/IP or UDP/IP connections are configured with the
+<tt>drvAsynIPPortConfigure</tt> command:</p>
+<pre>   drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,noEos)</pre>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGpib.</li>
-  <li>hostInfo - The Internet host name and TCP port number of the device
-    (e.g.  "164.54.9.90:4002", or "serials8n3:4002").</li>
+  <li>hostInfo - The Internet host name,  port number and optional
+      IP protocol of the device
+    (e.g.  "164.54.9.90:4002", "serials8n3:4002",  "serials8n3:4002 TCP"
+    or "164.54.17.43:5186 udp").  If no protocol is specified, TCP will
+    be used.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
@@ -1773,7 +1777,7 @@ where the arguments are:
     end-of-string search.</li>
 </ul>
 
-<p>There are no asynSetOption key/value pairs associated with drvAsynTCPPort
+<p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
 connections.</p>
 
 <h3><a name="vxi11"></a>vxi11</h3>
@@ -2028,7 +2032,7 @@ explains how to include asynDriver components.</p>
     for your application:</span></code>
     <pre>
       #include "drvAsynSerialPort.dbd"
-      #include "drvAsynTCPPort.dbd"
+      #include "drvAsynIPPort.dbd"
       #include "drvVxi11.dbd"
       #include "drvGsIP488.dbd"
       #include "drvIpac.dbd"

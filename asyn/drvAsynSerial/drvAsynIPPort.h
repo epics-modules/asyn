@@ -1,5 +1,5 @@
 /**********************************************************************
-* Asyn device support using TCP stream port                           *
+* Asyn device support using TCP stream or UDP datagram port           *
 **********************************************************************/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
@@ -10,18 +10,18 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
-#ifndef DRVASYNTCPPORT_H
-#define DRVASYNTCPPORT_H
+#ifndef DRVASYNIPPORT_H
+#define DRVASYNIPPORT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
-int drvAsynTCPPortConfigure(char *portName, char *hostInfo,
-                            unsigned int priority, int noAutoConnect,
-                            int noEosProcessing);
+int drvAsynIPPortConfigure(const char *portName, const char *hostInfo,
+                           unsigned int priority, int noAutoConnect,
+                           int noEosProcessing);
 
 #ifdef __cplusplus
 }
 #endif  /* __cplusplus */
-#endif  /* DRVASYNTCPPORT_H */
+#endif  /* DRVASYNIPPORT_H */

@@ -15,7 +15,7 @@
 #include <string.h>
 #include <epicsEvent.h>
 #include <asynDriver.h>
-#include <drvAsynTCPPort.h>
+#include <drvAsynIPPort.h>
 #include <asynSyncIO.h>
 
 typedef enum {
@@ -160,7 +160,7 @@ static asynStatus
     strcpy(*portName, server);
     strcat(*portName, ":");
     strcat(*portName, portString);
-    status = drvAsynTCPPortConfigure(*portName, *portName, 0, 0, 0);
+    status = drvAsynIPPortConfigure(*portName, *portName, 0, 0, 0);
     return(status);
 }
 
