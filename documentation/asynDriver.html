@@ -1921,10 +1921,10 @@ explains how to include asynDriver components.</p>
 
 <p>In the <code>st.cmd</code> file add.</p>
 <pre>dbLoadRecords("db/asynGeneric.db","ioc=&lt;ioc&gt;")
-dbLoadRecords("db/asynOctetRecord.db",&quot;P=&lt;ioc&gt;,R=&lt;record&gt;, PORT=&lt;port&gt;,ADDRESS=&lt;addr&gt;")
+dbLoadRecords("db/asynOctetRecord.db",&quot;P=&lt;ioc&gt;,R=&lt;record&gt;,PORT=&lt;port&gt;,ADDRESS=&lt;addr&gt;,OMAX=&lt;omax&gt;,IMAX=&lt;imax&gt;")
 </pre>
 
-<p>You must provide correct values for &lt;ioc&gt;, &lt;record&gt;, &lt;port&gt; and &lt;addr&gt;.</p>
+<p>You must provide  values for &lt;ioc&gt;, &lt;record&gt;, &lt;port&gt;, &lt;addr&gt;, &lt;omax&gt;, and &lt;imax&gt;.</p>
 
 <p>Once the application is running, medm displays for an ioc can
 be started by:</p>
