@@ -8,847 +8,759 @@
 *************************************************************************/
 
 /* Author: Marty Kraimer */
-/*   date: 18DEC2003 */
-
-/* Support for the IP-488 (Green Springs GPIB IP using the ti9914) */
-/* John Winans wrote the original IP488 support that worked with EPICS*/
-
-/* MARTY TO DO 
-    add rebootHook. Must keep list of modules.
-    implement disconnect
-*/
-
+/*   date: 08JUN2004 */
 #include <stdlib.h>
 #include <stddef.h>
 #include <string.h>
 #include <stdio.h>
 #include <string.h>
 
-/* From vxWorks */
-#include <logLib.h>
-
 #include <drvIpac.h>        /* IP management (from drvIpac) */
 
-/* From EPICS base */
 #include <epicsTypes.h>
-#include <epicsStdio.h>
-#include <devLib.h>
-#include <epicsMutex.h>
-#include <epicsThread.h>
 #include <epicsEvent.h>
-#include <epicsTimer.h>
+#include <epicsThread.h>
+#include <epicsInterrupt.h>
+#include <iocsh.h>
+#include <callback.h>
+#include <cantProceed.h>
+#include <epicsTime.h>
+#include <devLib.h>
+#include <taskwd.h>
 #include <asynDriver.h>
 #include <asynGpibDriver.h>
-#include <cantProceed.h>
+
 #include <epicsExport.h>
 
-static char *untalkUnlisten = "_?";
-
-#define DEFAULT_BUFFERSIZE 1024
+int gsip488Debug = 0;
 #define ERROR_MESSAGE_BUFFER_SIZE 160
 
-#define IP488_CIC_ADDR  0       /* Primary address of the TI9914 controller*/
 #define GREEN_SPRING_ID  0xf0
 #define GSIP_488  0x14
 
-typedef volatile struct ip488RegisterMap ip488RegisterMap;
 typedef enum {
-    transferStateIdle, transferStateRead, transferStateWrite, transferStateCntl
+    transferStateIdle, transferStateRead, transferStateWrite, transferStateCmd
 } transferState_t;
 
-static epicsUInt16 readw(volatile epicsUInt16 *addr) { return *addr;}
-static void writew(epicsUInt16 value,volatile epicsUInt16 *addr) {*addr = value;}
-#define setTimeout(pasynUser) ((pasynUser)->timeout)
-
-typedef struct gpib {
-    int         intVec;
-    int         carrier;   /* Which IP carrier board*/
-    int         module;    /* module number on carrier*/
+typedef struct gsport {
     char        *portName;
     void        *asynGpibPvt;
-    epicsUInt16 copyIsr0; 
-    epicsUInt16 copyIsr1;
-    /*bytesRemaining and nextByte are used by gpibInterruptHandler*/
-    int	        bytesRemaining;
-    epicsUInt8  *nextByte;
-    /*buffer: data sent/received to/from user*/
-    int         bufferSize;
-    epicsUInt8  *buffer;
-    epicsBoolean transferEoiOnLast;
+    epicsUInt32 base;
+    volatile epicsUInt8 *registers;
+    int         vector;
+    int         carrier;   /* Which IP carrier board*/
+    int         module;    /* module number on carrier*/
+    CALLBACK    callback;
+    epicsUInt8  isr0; 
+    epicsUInt8  isr1;
+    epicsBoolean srqHappened;
+    epicsBoolean srqEnabled;
     transferState_t transferState;
-    int         eos;
-    ip488RegisterMap	*regs;	/* hardware registers*/
-    asynStatus status; /*status of ip transfer*/
+    transferState_t nextTransferState;
+    /*bytesRemaining and nextByte are used by interruptHandler*/
+    int         bytesRemainingCmd;
+    epicsUInt8  *nextByteCmd;
+    int         bytesRemainingWrite;
+    epicsUInt8  *nextByteWrite;
+    int         bytesRemainingRead;
+    epicsUInt8  *nextByteRead;
+    int         eos; /* -1 means no end of string character*/
+    asynStatus  status; /*status of ip transfer*/
     epicsEventId waitForInterrupt;
     char errorMessage[ERROR_MESSAGE_BUFFER_SIZE];
-}gpib;
-
-static void printStatus(gpib *pgpib,const char *source);
-static epicsBoolean auxCmd(ip488RegisterMap *regs,
-    epicsUInt16 outval, volatile epicsUInt16 *regin,
-    epicsUInt16 mask, epicsUInt16 inval);
-/*auxCmdIH is called from interrupt handler*/
-static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
-    epicsUInt16 outval, volatile epicsUInt16 *regin,
-    epicsUInt16 mask, epicsUInt16 inval);
-static void sicIpGpib(gpib *pgpib);
+}gsport;
+
+static epicsUInt8 readRegister(gsport *pgsport, int offset);
+static void writeRegister(gsport *pgsport,int offset, epicsUInt8 value);
+static void printStatus(gsport *pgsport,const char *source);
 /* routine to wait for io completion*/
-static void waitTimeout(gpib *pgpib,double seconds);
-/* Interrupt routine */
-static void gpibInterruptHandler(int v);
-/* routines for ip I/O */
-static asynStatus cmdIpGpib(gpib *pgpib,
-    const char *buf, int cnt, double timeout);
-static asynStatus readIpGpib(gpib *pgpib,
-    char *buf, int cnt, int *actual, double timeout);
-static asynStatus writeIpGpib(gpib *pgpib,
-    const char *buf, int cnt, int *actual, epicsBoolean raw_flag, double timeout);
-/* Routines called by asynGpibPort methods */
-static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt, int *actual,
+static void waitTimeout(gsport *pgsport,double seconds);
+/* Interrupt Handlers */
+static void srqCallback(CALLBACK *pcallback);
+void gsip488(void *pvt);
+/*Routines that with interrupt handler perform I/O*/
+static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
+    double timeout,transferState_t nextState);
+static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
+    double timeout,transferState_t nextState);
+static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
+    int *actual, int addr, double timeout);
+static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     int addr, double timeout);
-static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
-    int addr, double timeout);
-
 /* asynGpibPort methods */
-static void gsTi9914Report(void *pdrvPvt,FILE *fd,int details);
-static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
+static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val);
-static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, char *val, int sizeval);
-static asynStatus gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered);
-static asynStatus gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
-static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus gpibPortSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
-static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
-static asynStatus gsTi9914AddressedCmd(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length);
-static asynStatus gsTi9914UniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
-static asynStatus gsTi9914Ifc(void *pdrvPvt, asynUser *pasynUser);
-static asynStatus gsTi9914Ren(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static int gsTi9914SrqStatus(void *pdrvPvt);
-static asynStatus gsTi9914SrqEnable(void *pdrvPvt, int onOff);
-static asynStatus gsTi9914SerialPollBegin(void *pdrvPvt);
-static int gsTi9914SerialPoll(void *pdrvPvt, int addr, double timeout);
-static asynStatus gsTi9914SerialPollEnd(void *pdrvPvt);
-
-struct ip488RegisterMap {
-  epicsUInt16 intStatusMask0;
-  epicsUInt16 intStatusMask1;
-  epicsUInt16 addressStatus;
-  epicsUInt16 busStatusAuxCmd;
-  epicsUInt16 address;
-  epicsUInt16 serialPoll;
-  epicsUInt16 cmdPassThruParallelPoll;
-  epicsUInt16 data;
-  epicsUInt16 addressSwitch;
-  epicsUInt16 vectorRegister;
+static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
+static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser);
+static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff);
+static int gpibPortSrqStatus(void *pdrvPvt);
+static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff);
+static asynStatus gpibPortSerialPollBegin(void *pdrvPvt);
+static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout);
+static asynStatus gpibPortSerialPollEnd(void *pdrvPvt);
+
+static asynGpibPort gpibPort = {
+    gpibPortReport,
+    gpibPortConnect,
+    gpibPortDisconnect,
+    gpibPortSetPortOptions,
+    gpibPortGetPortOptions,
+    gpibPortRead,
+    gpibPortWrite,
+    gpibPortFlush,
+    gpibPortSetEos,
+    gpibPortGetEos,
+    gpibPortAddressedCmd,
+    gpibPortUniversalCmd,
+    gpibPortIfc,
+    gpibPortRen,
+    gpibPortSrqStatus,
+    gpibPortSrqEnable,
+    gpibPortSerialPollBegin,
+    gpibPortSerialPoll,
+    gpibPortSerialPollEnd
 };
-
-/* intStatusMask0 */
-#define isr0MAC    0x01   /*My Address Change*/
-#define isr0RLC    0x02   /*Remote/Local Change*/
-#define isr0SPAS   0x04   /*Serial Poll or Aux command*/
-#define isr0END    0x08   /* EOI present on bus*/
-#define isr0BO     0x10	  /* Ready to write a byte*/
-#define isr0BI     0x20	  /* Ready to read byte*/
-#define isr0INT1   0x40	  /* Unmasked bit in ISR1 is set*/
-#define isr0INT0   0x80	  /* Unmasked bit 2-7 in ISR0 is set*/
-
-/* intStatusMask1 */
-#define isr1IFC    0x01   /*Interface Clear*/
-#define isr1SRQ    0x02   /* SRQ on bus is active*/
-#define isr1MA     0x04   /* My address */
-#define isr1DCAS   0x80   /*Device Clear Active Status*/
-#define isr1APT    0x10   /*Address Pass Through*/
-#define isr1UNC    0x20   /*Unrecognized command*/
-#define isr1ERR	   0x40   /* handshake error (no listener)*/
-#define isr1GET    0x80   /*Group Execute Trigger*/
-
-/* addressStatus */
-#define asrulpa    0x01   /*LSB of last address*/
-#define asrTADS    0x02   /*Device is addressed to talk*/
-#define asrLADS    0x04   /*Device is addressed to listen*/
-#define asrTPAS    0x08   /*talker primary addressed state*/
-#define asrLPAS    0x10   /*listener primary addressed state*/
-#define asrATN     0x20   /*State of attention line*/
-#define asrLLO     0x40   /*local lockout present*/
-#define asrREM     0x80   /*device in remote state*/
- 
-/* busStatusAuxCmd */
-#define busStatREN  0x01
-#define busStatIFC  0x02
-#define busStatSRQ  0x04
-#define busStatEOI  0x08
-#define busStatNRFD 0x10
-#define busStatNDAC 0x20
-#define busStatDAV  0x40
-#define busStatATN  0x80
-#define auxCmdswrstC    0x00    /* Software reset CLEAR              */
-#define auxCmdswrstS    0x80    /* Software reset SET                */
-#define auxCmdrhdf      0x02    /* Release RFD holdoff               */
-#define auxCmdhdfeS     0x84    /* Holdoff on EOI only SET           */
-#define auxCmdnbaf      0x05    /* New byte available false          */
-#define auxCmdfeoi      0x08    /* Send EOI with next byte           */
-#define auxCmdlonC      0x09    /* Listen only CLEAR                 */
-#define auxCmdlonS      0x89    /* Listen only SET                   */
-#define auxCmdtonC      0x0A    /* Talk only CLEAR                   */
-#define auxCmdtonS      0x8A    /* Talk only SET                     */
-#define auxCmdgts       0x0B    /* Go to standby                     */
-#define auxCmdtca       0x0C    /* Take control asynchronously       */
-#define auxCmdsicC      0x0F    /* Send interface clear CLEAR        */
-#define auxCmdsicS      0x8F    /* Send interface clear SET          */
-#define auxCmdsreC      0x10    /* Send remote enable CLEAR          */
-#define auxCmdsreS      0x90    /* Send remote enable SET            */
-#define auxCmddaiC      0x13    /* Disable all interrupts CLEAR      */
-#define auxCmddaiS      0x93    /* Disable all interrupts SET        */
 
-static void printStatus(gpib *pgpib, const char *source)
+/* Register definitions */
+#define ISR0    0x01 /*Interrupt Status Register 0*/
+#define IMR0    0x01 /*Interrupt   Mask Register 0*/
+#define ISR1    0x03 /*Interrupt Status Register 1*/
+#define IMR1    0x03 /*Interrupt   Mask Register 1*/
+#define ASR     0x05 /*Address Status Register*/
+#define BSR     0x07 /*Bus Status Register*/
+#define AUXMR   0x07 /*Auxiliary Mode Register*/
+#define ADR     0x09 /*Address Register*/
+#define DIR     0x0F /*Data In Register*/
+#define CDOR    0x0F /*Command/Data Out Register*/
+#define VECTOR  0x13 /*Vector Register*/
+
+/*Definitions for ISR0*/
+#define BI      0x20 /*Byte In*/
+#define BO      0x10 /*Byte Out*/
+#define END     0x08 /*Last Byte*/
+
+/*Definitions for ISR1*/
+#define ERR     0x40 /*Error*/
+#define MA      0x04 /*My Address*/
+#define SRQ     0x02 /*SRQ*/
+
+/*Definitions for AUXMR*/
+#define SWRSTC  0x00 /*Software reset clear*/
+#define SWRSTS  0x80 /*Software reset set*/
+#define RHDF    0x02 /*Release Ready For Data Holdoff*/
+#define HDFAS   0x83 /*Holdoff on all data set*/
+#define FEOI    0x08 /*Send EOI with next byte*/
+#define LONC    0x09 /*Listen Only Clear*/
+#define LONS    0x89 /*Listen Only Set*/
+#define TONC    0x0A /*Talk Only Clear*/
+#define TONS    0x8A /*Talk Only Set*/
+#define GTS     0x0B /*Go to Standby*/
+#define TCA     0x0C /*Take Control Asynchronously*/
+#define TCS     0x0D /*Take Control Synchronously*/
+#define IFCS    0x8F /*Interface Clear Set*/
+#define IFCC    0x0F /*Interface Clear Clear*/
+#define REMC    0x10 /*Remote Enable Clear*/
+#define REMS    0x90 /*Remote Enable Clear*/
+
+/*Definitions for ASR*/
+#define REM     0x80 /*Remote*/
+#define ATN     0x20 /*ATN*/
+#define LADS    0x04 /*Addressed to Listen*/
+#define TADS    0x02 /*Addressed to Talk*/
+
+static epicsUInt8 readRegister(gsport *pgsport, int offset)
 {
-    sprintf(pgpib->errorMessage, "%s "
-        "intStatus0 %x intStatus1 %x addressStatus %x busStatus %x\n",
-        source, (pgpib->copyIsr0&0xff),(pgpib->copyIsr1&0xff),
-        (readw(&pgpib->regs->addressStatus)&0xff),
-        (readw(&pgpib->regs->busStatusAuxCmd)&0xff));
+    volatile epicsUInt8 *pregister = (epicsUInt8 *)
+                             (((char *)pgsport->registers)+offset);
+    epicsUInt8 value;
+    
+    value = *pregister;
+    if(gsip488Debug) {
+        char message[100];
+
+        sprintf(message,"readRegister pregister %p offset %x value %2.2x\n",
+            pregister,offset,value);
+        if(epicsInterruptIsInterruptContext()) {
+            epicsInterruptContextMessage(message);
+        } else {
+            printf("%s",message);
+        }
+    }
+    return value;
 }
 
-static epicsBoolean auxCmd(ip488RegisterMap *regs,
-    epicsUInt16 outval, volatile epicsUInt16 *regin,
-    epicsUInt16 mask, epicsUInt16 inval)
+static void writeRegister(gsport *pgsport,int offset, epicsUInt8 value)
 {
-    volatile epicsUInt16 value = 0;
-    int i;
+    volatile epicsUInt8 *pregister = (epicsUInt8 *)
+                             (((char *)pgsport->registers)+offset);
 
-    writew(outval,&regs->busStatusAuxCmd);
-    /* Must wait 5 clock cycles. Lets just read busStatus 6 times*/
-    for(i=0; i<6; i++) value = readw(&regs->busStatusAuxCmd);
-    if(!regin) return epicsTrue;
-    value = readw(regin);
-    if((value & mask) == inval) return epicsTrue;
-    printf("auxCmd failed outval %2.2x regin %p mask %2.2x "
-        "inval %2.2x value %2.2x\n",outval,regin,mask,inval,value);
-    return epicsFalse;
+    if(gsip488Debug) {
+        char message[100];
+
+        sprintf(message,"writeRegister pregister %p offset %x value %2.2x\n",
+            pregister,offset,value);
+        if(epicsInterruptIsInterruptContext()) {
+            epicsInterruptContextMessage(message);
+        } else {
+            printf("%s",message);
+        }
+    }
+    *pregister = value;
 }
 
-static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
-    epicsUInt16 outval, volatile epicsUInt16 *regin,
-    epicsUInt16 mask, epicsUInt16 inval)
+static void printStatus(gsport *pgsport, const char *source)
 {
-    volatile epicsUInt16 value = 0;
-    int i;
-
-    writew(outval,&regs->busStatusAuxCmd);
-    /* Must wait 5 clock cycles. Lets just read busStatus 6 times*/
-    for(i=0; i<6; i++) value = readw(&regs->busStatusAuxCmd);
-    if(!regin) return epicsTrue;
-    value = readw(regin);
-    if((value & mask) == inval) return epicsTrue;
-    logMsg("auxCmdIH failed outval %2.2x regin %p mask %2.2x "
-        "inval %2.2x value %2.2x\n",outval,(int)regin,mask,inval,value,0);
-    return epicsFalse;
-}
-
-static void sicIpGpib(gpib *pgpib) /* set Interface Clear */
-{
-    pgpib->transferState = transferStateIdle;
-    writew(auxCmdsicS,&pgpib->regs->busStatusAuxCmd);
-    /* Must wait at least 100 microseconds*/
-    epicsThreadSleep(.01);
-    writew(auxCmdsicC,&pgpib->regs->busStatusAuxCmd);
+    sprintf(pgsport->errorMessage, "%s "
+        "isr0 %2.2x isr1 %2.2x ASR %2.2x BSR %2.2x\n",
+        source, pgsport->isr0,pgsport->isr1,
+        readRegister(pgsport,ASR),readRegister(pgsport,BSR));
 }
 
-static void waitTimeout(gpib *pgpib,double seconds)
+static void waitTimeout(gsport *pgsport,double seconds)
 {
-    ip488RegisterMap *regs = pgpib->regs;
     epicsEventWaitStatus status;
     transferState_t saveState;
 
-    /* No need to check return status from epicsEventWaitWithTimeout    */
-    /* If interrupt handler completes it changes transferState from one */
-    /* of the states checked below before it signals completion         */
     if(seconds<0.0) {
-        status = epicsEventWait(pgpib->waitForInterrupt);
+        status = epicsEventWait(pgsport->waitForInterrupt);
     } else {
-        status = epicsEventWaitWithTimeout(pgpib->waitForInterrupt,seconds);
+        status = epicsEventWaitWithTimeout(pgsport->waitForInterrupt,seconds);
     }
-    saveState = pgpib->transferState;
-    pgpib->transferState = transferStateIdle;
+    if(status==epicsEventWaitOK) return;
+    saveState = pgsport->transferState;
+    pgsport->transferState = transferStateIdle;
     switch(saveState) {
     case transferStateRead:
-        pgpib->status=asynTimeout;
-        printStatus(pgpib,"waitTimeout transferStateRead\n");
-        writew(0,&regs->intStatusMask0);
-        auxCmd(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0);
+        pgsport->status=asynTimeout;
+        printStatus(pgsport,"waitTimeout transferStateRead\n");
         break;
     case transferStateWrite:
-        pgpib->status=asynTimeout;
-        printStatus(pgpib,"waitTimeout transferStateWrite\n");
-        writew(0,&regs->intStatusMask0);
-        auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0);
-    case transferStateCntl:
-        pgpib->status=asynTimeout;
-        printStatus(pgpib,"waitTimeout transferStateCntl\n");
-        writew(0,&regs->intStatusMask0);
-        auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0);
-        auxCmd(regs,auxCmdnbaf,0,0,0);
-    default: break;
+        pgsport->status=asynTimeout;
+        printStatus(pgsport,"waitTimeout transferStateWrite\n");
+        break;
+    case transferStateCmd:
+        pgsport->status=asynTimeout;
+        printStatus(pgsport,"waitTimeout transferStateCmd\n");
+        break;
+    default:
     }
 }
-
-static void gpibInterruptHandler(int v)
-{
-    gpib *pgpib = (gpib *)v;
-    ip488RegisterMap *regs = pgpib->regs;
-    int message_complete = 0;
-    epicsUInt16 copyIsr0,copyIsr1;
 
-    copyIsr0 = readw(&regs->intStatusMask0);
-    copyIsr1 = readw(&regs->intStatusMask1);
-    if(copyIsr0==0 && copyIsr1==0) {
+static void srqCallback(CALLBACK *pcallback)
+{
+    gsport *pgsport;
+
+    callbackGetUser(pgsport,pcallback);
+    if(!pgsport->srqEnabled) return;
+    pgsport->srqHappened = epicsTrue;
+    pasynGpib->srqHappened(pgsport->asynGpibPvt);
+}
+
+void gsip488(void *pvt)
+{
+    gsport          *pgsport = (gsport *)pvt;
+    transferState_t state = pgsport->transferState;
+    epicsUInt8      isr0,isr1,octet;
+    char            message[80];
+
+    pgsport->isr0 = isr0 = readRegister(pgsport,ISR0);
+    pgsport->isr1 = isr1 = readRegister(pgsport,ISR1);
+    if(isr1&SRQ) callbackRequest(&pgsport->callback);
+    if(isr1&ERR) {
+        if(state!=transferStateIdle) {
+            sprintf(pgsport->errorMessage,"\n%s interruptHandler ERR state %d\n",
+                pgsport->portName,state);
+            pgsport->status = asynError;
+            epicsEventSignal(pgsport->waitForInterrupt);
+        }
         return;
     }
-    pgpib->copyIsr0 = copyIsr0;
-    pgpib->copyIsr1 = copyIsr1;
-    switch (pgpib->transferState) {
-    case transferStateRead:
-        if(copyIsr0 & isr0BI) {
-            /* We are ready to read a byte now */
-            epicsUInt8 data;
-            data = readw(&regs->data);
-            *pgpib->nextByte = data;
-            if (pgpib->eos != -1 ) {
-                /* Check for EOS character*/
-                if (*pgpib->nextByte == pgpib->eos) {
-                    /* This is EOS character, message complete */
-                    message_complete = 1;
-                }
-            }
-            --(pgpib->bytesRemaining);
-            ++(pgpib->nextByte);
-        }
-        if(copyIsr0 & isr0END) {
-            /* EOI was asserted for this character */
-            message_complete = 1;
-        }
-        if(!message_complete && pgpib->bytesRemaining == 0) {
-            pgpib->status = asynOverflow;
-            message_complete = 1;
-        }
-        if(message_complete) {
-            writew(0,&regs->intStatusMask0);
-            if(!auxCmdIH(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0))
-                pgpib->status = asynError;
-            pgpib->transferState = transferStateIdle;
-            epicsEventSignal(pgpib->waitForInterrupt);
+    switch(state) {
+    case transferStateCmd:
+        if(!isr0&BO) return;
+        if(pgsport->bytesRemainingCmd > 0) {
+            octet = *pgsport->nextByteCmd;
+            writeRegister(pgsport,CDOR,(epicsUInt8)octet);
+            --(pgsport->bytesRemainingCmd); ++(pgsport->nextByteCmd);
             return;
         }
-        break;
-
+        pgsport->transferState = pgsport->nextTransferState;
+        switch(pgsport->transferState) {
+        case transferStateIdle:
+            epicsEventSignal(pgsport->waitForInterrupt); return;
+        case transferStateWrite:
+            writeRegister(pgsport,AUXMR,TONS); break;
+        case transferStateRead:
+            writeRegister(pgsport,AUXMR,LONS); break;
+        default:
+        }
+        writeRegister(pgsport,AUXMR,GTS);
+        if(pgsport->transferState!=transferStateWrite) return;
     case transferStateWrite:
-        if (copyIsr1 & isr1ERR) {
-            /* Handshake failure -- we ain't got a listener */
-            writew(0,&regs->intStatusMask0);
-            ++(pgpib->bytesRemaining);
-            --(pgpib->nextByte);
-            logMsg("drvGsIP488::interruptHandler Handshake failure "
-                "ISR0 %x ISR1 %x\n",
-                copyIsr0&0xff,copyIsr1&0xff,0,0,0,0);
-            pgpib->transferState = transferStateIdle;
-    	    pgpib->status = asynError;
-            epicsEventSignal(pgpib->waitForInterrupt);
-            return ;
+        if(!isr0&BO) return;
+        if(pgsport->bytesRemainingWrite == 0) {
+            pgsport->transferState = transferStateIdle;
+            writeRegister(pgsport,AUXMR,TONC);
+            epicsEventSignal(pgsport->waitForInterrupt);
+            break ;
         }
-        if (copyIsr0 & isr0BO) { /* We are ready to send a byte now*/
-            epicsUInt8 data;
-            if (pgpib->bytesRemaining == 0) {
-                writew(0,&regs->intStatusMask0);
-                if(!auxCmdIH(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0))
-                    pgpib->status = asynError;
-                pgpib->transferState = transferStateIdle;
-                epicsEventSignal(pgpib->waitForInterrupt);
-                return ;
-            }
-            if ((pgpib->bytesRemaining == 1) && pgpib->transferEoiOnLast) {
-                auxCmdIH(regs,auxCmdfeoi,0,0,0);
-            }
-            data = *pgpib->nextByte;
-            writew((epicsUInt16)data,&regs->data);
-            --(pgpib->bytesRemaining);
-            ++(pgpib->nextByte);
-        }
+        if(pgsport->bytesRemainingWrite==1) writeRegister(pgsport,AUXMR,FEOI);
+        octet = *pgsport->nextByteWrite;
+        writeRegister(pgsport,CDOR,(epicsUInt8)octet);
+        --(pgsport->bytesRemainingWrite); ++(pgsport->nextByteWrite);
         break;
-    case transferStateCntl:
-        if (copyIsr1 & isr1ERR) {
-            /* Handshake failure -- we ain't got a listener */
-            writew(0,&regs->intStatusMask0);
-            ++(pgpib->bytesRemaining);
-            --(pgpib->nextByte);
-            logMsg("drvGsIP488::interruptHandler Handshake failure "
-                "ISR0 %x ISR1 %x\n",
-                copyIsr0&0xff,copyIsr1&0xff,0,0,0,0);
-            pgpib->transferState = transferStateIdle;
-    	    pgpib->status = asynError;
-            epicsEventSignal(pgpib->waitForInterrupt);
-            return ;
+    case transferStateRead:
+        if(!isr0&BI) break;
+        octet = readRegister(pgsport,DIR);
+        *pgsport->nextByteRead = octet;
+        --(pgsport->bytesRemainingRead); ++(pgsport->nextByteRead);
+        if(((pgsport->eos != -1 ) && (octet == pgsport->eos)) 
+        || (END&isr0) || (pgsport->bytesRemainingRead == 0)) {
+            pgsport->transferState = transferStateIdle;
+            writeRegister(pgsport,AUXMR,LONC);
+            epicsEventSignal(pgsport->waitForInterrupt);
         }
-        if (copyIsr0 & isr0BO) { /* We are ready to send a byte now*/
-            epicsUInt8 data;
-            if (pgpib->bytesRemaining == 0) {
-                writew(0,&regs->intStatusMask0);
-                if(!auxCmdIH(regs,auxCmdgts,&regs->addressStatus,asrATN,0))
-                    pgpib->status = asynError;
-                pgpib->transferState = transferStateIdle;
-                epicsEventSignal(pgpib->waitForInterrupt);
-                return ;
-            }
-            data = *pgpib->nextByte;
-            writew((epicsUInt16)data,&regs->data);
-            --(pgpib->bytesRemaining);
-            ++(pgpib->nextByte);
-        }
+        writeRegister(pgsport,AUXMR,RHDF);
         break;
-    case transferStateIdle:
-        writew(0,&regs->intStatusMask0);
-        logMsg("drvGsIP488::interrupt transferStateIdle isr0BI %d isr0BO %d\n",
-            ((copyIsr0 & isr0BI) ? 1 : 0),
-            ((copyIsr0 & isr0BO) ? 1 : 0),0,0,0,0);
-        return;
+    case transferStateIdle: 
+        if(readRegister(pgsport,ASR&ATN)) return;
+        if(!isr0&BI) return;
+        octet = readRegister(pgsport,DIR);
+        sprintf(message,"%s gsip488 received %2.2x\n",
+             pgsport->portName,octet);
+        epicsInterruptContextMessage(message);
     }
 }
 
-/* Write a string with the ATN line active */
-static asynStatus cmdIpGpib(gpib *pgpib,
-    const char *buf, int cnt, double timeout)
+static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
+    double timeout,transferState_t nextState)
 {
-    ip488RegisterMap *regs = pgpib->regs;
+    epicsUInt8 isr0 = pgsport->isr0;
 
-    if (cnt == 0) {
-        sprintf(pgpib->errorMessage,"cmdIpGpib called with cnt=0\n");
-        return asynError;
+    writeRegister(pgsport,AUXMR,TCA);
+    if(!isr0&BO) {
+        printStatus(pgsport,"writeCmd !isr0&BO\n");
+        return asynTimeout;
     }
-    if(!auxCmd(regs,auxCmdtca,&regs->addressStatus,asrATN,asrATN)) {
-        printStatus(pgpib,"cmdIpGpib auxCmdtca");
-        return asynError;
-    }
-    auxCmd(regs,auxCmdnbaf,0,0,0);
-    pgpib->bytesRemaining = cnt;
-    pgpib->nextByte = (epicsUInt8 *)buf;
-    pgpib->transferState = transferStateCntl;
-    pgpib->status = asynSuccess;
-    writew(isr0BO,&regs->intStatusMask0);
-    waitTimeout(pgpib,timeout);
-    if(!auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0)) {
-        printStatus(pgpib,"cmdIpGpib auxCmdgts");
-    }
-    return pgpib->status ;
+    pgsport->bytesRemainingCmd = cnt-1;
+    pgsport->nextByteCmd = (epicsUInt8 *)(buf+1);
+    pgsport->transferState = transferStateCmd;
+    pgsport->nextTransferState = nextState;
+    pgsport->status = asynSuccess;
+    writeRegister(pgsport,CDOR,(epicsUInt8)buf[0]);
+    waitTimeout(pgsport,timeout);
+    return pgsport->status;
 }
 
-static asynStatus readIpGpib(gpib *pgpib,
-    char *buf, int cnt, int *actual, double timeout)
+static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
+    double timeout,transferState_t nextState)
 {
-    ip488RegisterMap *regs = pgpib->regs;
+    epicsUInt8 cmdbuf[4];
+    int        lenCmd = 0;
+    int        primary,secondary;
 
-    if (cnt == 0) {
-        sprintf(pgpib->errorMessage,"readIpGpib called with cnt=0\n");
-        return asynError;
+    if(talk<100) {
+        cmdbuf[lenCmd++] = talk + TADBASE;
+    } else {
+        primary = talk / 100; secondary = talk % 100;
+        cmdbuf[lenCmd++] = primary + TADBASE;
+        cmdbuf[lenCmd++] = secondary + SADBASE;
     }
-    auxCmd(regs,auxCmdrhdf,0,0,0);
-    auxCmd(regs,auxCmdhdfeS,0,0,0);
-    if(!auxCmd(regs,auxCmdlonS,&regs->addressStatus,asrLADS,asrLADS)) {
-        printStatus(pgpib,"readIpGpib auxCmdlonS");
-        return asynError;
+    if(listen<100) {
+        cmdbuf[lenCmd++] = listen + LADBASE;
+    } else {
+        primary = listen / 100; secondary = listen % 100;
+        cmdbuf[lenCmd++] = primary + LADBASE;
+        cmdbuf[lenCmd++] = secondary + SADBASE;
     }
-    pgpib->bytesRemaining = cnt;
-    pgpib->nextByte = buf;
-    pgpib->transferState = transferStateRead;
-    pgpib->status = asynSuccess;
-    writew(isr0BI,&regs->intStatusMask0);
-    waitTimeout(pgpib,timeout);
-    if(!auxCmd(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0)) {
-        printStatus(pgpib,"readIpGpib auxCmdlonC");
-    }
-    *actual = cnt - pgpib->bytesRemaining;
-    return pgpib->status ;
-}
-
-static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
-    int cnt, int *actual, epicsBoolean raw_flag, double timeout)
-{
-    ip488RegisterMap *regs = pgpib->regs;
-
-    if (cnt == 0) {
-        sprintf(pgpib->errorMessage,"writeIpGpib called with cnt=0\n");
-        return asynError;
-    }
-    if(!auxCmd(regs,auxCmdtonS,&regs->addressStatus,asrTADS,asrTADS)) {
-        printStatus(pgpib,"writeIpGpib auxCmdtonS");
-        return asynError;
-    }
-    auxCmd(regs,auxCmdnbaf,0,0,0);
-    if(raw_flag) 
-	pgpib->transferEoiOnLast = epicsFalse;
-    else
-	pgpib->transferEoiOnLast = epicsTrue;
-    pgpib->bytesRemaining = cnt;
-    pgpib->nextByte = (epicsUInt8 *)buf;
-    pgpib->transferState = transferStateWrite;
-    pgpib->status = asynSuccess;
-    writew(isr0BO,&regs->intStatusMask0);
-    waitTimeout(pgpib,timeout);
-    if(!auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0)) {
-        printStatus(pgpib,"writeIpGpib auxCmdtonC");
-    }
-    *actual = cnt - pgpib->bytesRemaining;
-    return pgpib->status;
-
+    return writeCmd(pgsport,cmdbuf,lenCmd,timeout,nextState);
 }
 
-static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt, int *actual,
-     int addr, double timeout)
+static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
+    int *actual, int addr, double timeout)
 {
-    char cmdbuf[3];
+    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
 
     *actual=0;
-    strcpy(cmdbuf,untalkUnlisten);
-    cmdbuf[2] = (char)(addr + 0x20);
-    status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
+    pgsport->bytesRemainingWrite = cnt;
+    pgsport->nextByteWrite = (epicsUInt8 *)buf;
+    pgsport->status = asynSuccess;
+    status = writeAddr(pgsport,0,addr,timeout,transferStateWrite);
     if(status!=asynSuccess) return status;
-    status = writeIpGpib(pgpib,buf,cnt,actual,epicsFalse,timeout);
+    *actual = cnt - pgsport->bytesRemainingWrite;
+    status = pgsport->status;
     if(status!=asynSuccess) return status;
-    status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
+    writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
-static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
+static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     int addr, double timeout)
 {
-    char cmdbuf[3];
+    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
 
     *actual=0; *buf=0;
-    strcpy(cmdbuf,untalkUnlisten);
-    cmdbuf[2] = (char)(addr + 0x40);
-    status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
+    pgsport->bytesRemainingRead = cnt;
+    pgsport->nextByteRead = buf;
+    writeRegister(pgsport,AUXMR,RHDF);
+    pgsport->status = asynSuccess;
+    status = writeAddr(pgsport,addr,0,timeout,transferStateRead);
     if(status!=asynSuccess) return status;
-    status = readIpGpib(pgpib,buf,cnt,actual,timeout);
-    if(status!=asynSuccess && status!=asynOverflow) return status;
-    status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
+    *actual = cnt - pgsport->bytesRemainingRead;
+    writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
-static void gsTi9914Report(void *pdrvPvt,FILE *fd,int details)
+static void gpibPortReport(void *pdrvPvt,FILE *fd,int details)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
 
-    fprintf(fd,"    gpibGsTI9914 port %s intVec %d carrier %d module %d\n",
-        pgpib->portName,pgpib->intVec,pgpib->carrier,pgpib->module);
+    fprintf(fd,"    gsip488 port %s vector %d carrier %d module %d "
+               "base %x registers %p\n",
+               pgsport->portName,pgsport->vector,pgsport->carrier,
+               pgsport->module,pgsport->base,pgsport->registers);
 }
 
-static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
-    int carrier = pgpib->carrier;
-    int module = pgpib->module;
-    int intVec = pgpib->intVec;
-    ip488RegisterMap *regs = pgpib->regs;
-    int ipstatus;
+    gsport *pgsport = (gsport *)pdrvPvt;
     int addr = 0;
     asynStatus status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s addr %d gsTi9914Connect\n",pgpib->portName,addr);
+        "%s addr %d gpibPortConnect\n",pgsport->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionConnect(pasynUser);
         return asynSuccess;
     }
-    ipstatus = ipmIntConnect(carrier,module,intVec,
-        gpibInterruptHandler,(int)pgpib);
-    if(ipstatus) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "gsIP488Configure ipmIntConnect failed\n");
-        return asynError;
-    }
-    ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
-    writew((epicsUInt16)pgpib->intVec,&regs->vectorRegister);
     /* Issue a software reset to the GPIB controller chip*/
-    auxCmd(regs,auxCmdswrstS,0,0,0);
+    writeRegister(pgsport,AUXMR,SWRSTS);
     epicsThreadSleep(.01);
-    /* Set the ti9914's address to use while it is CIC */
-    writew(IP488_CIC_ADDR,&regs->address);
-    /* Toss interrupt status values before we release the reset */
-    pgpib->copyIsr0 = readw(&regs->intStatusMask0);
-    pgpib->copyIsr1 = readw(&regs->intStatusMask1);
-    writew(0,&regs->intStatusMask0);
-    writew(0,&regs->intStatusMask1);
+    writeRegister(pgsport,ADR,0); /*controller address is 0*/
+    writeRegister(pgsport,IMR0,0);
+    writeRegister(pgsport,IMR1,0);
+    readRegister(pgsport,ISR0);
+    readRegister(pgsport,ISR1);
     epicsThreadSleep(.01);
-    auxCmd(regs,auxCmdswrstC,0,0,0);
-    sicIpGpib(pgpib); /* assert IFC */
-    auxCmd(regs,auxCmdsreS,0,0,0);
+    writeRegister(pgsport,AUXMR,SWRSTC);
+    writeRegister(pgsport,AUXMR,IFCS);
+    epicsThreadSleep(.01);
+    writeRegister(pgsport,AUXMR,IFCC);
+    writeRegister(pgsport,AUXMR,REMS);
+    writeRegister(pgsport,AUXMR,HDFAS);
+    writeRegister(pgsport,IMR0,BI|BO);
+    writeRegister(pgsport,IMR1,ERR|MA|(pgsport->srqEnabled ? SRQ : 0));
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
 
-static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
-    int carrier = pgpib->carrier;
-    int module = pgpib->module;
-    ip488RegisterMap *regs = pgpib->regs;
+    gsport *pgsport = (gsport *)pdrvPvt;
     int addr = 0;
     asynStatus status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s addr %d gsTi9914Disconnect\n",pgpib->portName,addr);
+        "%s addr %d gpibPortDisconnect\n",pgsport->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionDisconnect(pasynUser);
         return asynSuccess;
     }
     /* Issue a software reset to the GPIB controller chip*/
-    auxCmd(regs,auxCmdswrstS,0,0,0);
-    epicsThreadSleep(.01);
-    ipmIrqCmd(carrier, module, 0, ipac_irqDisable);
+    writeRegister(pgsport,IMR0,0);
+    writeRegister(pgsport,IMR1,0);
     pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
 
-static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortSetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914SetPortOptions\n",
-        pgpib->portName);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortSetPortOptions\n",
+        pgsport->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gsTi9914 does not have any options\n",pgpib->portName);
+        "%s gpibPort does not have any options\n",pgsport->portName);
     return asynError;
 }
 
-static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, char *val,int sizeval)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914GetPortOptions\n",
-        pgpib->portName);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortGetPortOptions\n",
+        pgsport->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s gsTi9914 does not have any options\n",pgpib->portName);
+        "%s gpibPort does not have any options\n",pgsport->portName);
     return asynError;
 }
-
-static asynStatus gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,
+
+static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
     int        actual = 0;
-    double     timeout = setTimeout(pasynUser);
+    double     timeout = pasynUser->timeout;
     int        addr = 0;
     asynStatus status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read\n",pgpib->portName);
-    pgpib->errorMessage[0] = 0;
-    status = readGpib(pgpib,data,maxchars,&actual,addr,timeout);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortRead\n",
+        pgsport->portName,addr);
+    pgsport->errorMessage[0] = 0;
+    status = readGpib(pgsport,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        if(status==asynOverflow) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib overflow\n",
-            pgpib->portName);
-        } else {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib error %s\n",
-            pgpib->portName,pgpib->errorMessage);
-        }
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d readGpib error %s\n",
+            pgsport->portName,addr,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s readGpib failed %s\n",pgpib->portName,pgpib->errorMessage);
+            "%s readGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
-        data,actual,"%s gsTi9914Read\n",pgpib->portName);
+        data,actual,"%s addr %d gpibPortRead\n",pgsport->portName,addr);
     *nbytesTransfered = actual;
     return status;
 }
 
-static asynStatus gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
     int        actual = 0;
-    double     timeout = setTimeout(pasynUser);
+    double     timeout = pasynUser->timeout;
     int        addr = 0;
     asynStatus status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d\n",
-        pgpib->portName,numchars);
-    pgpib->errorMessage[0] = 0;
-    status = writeGpib(pgpib,data,numchars,&actual,addr,timeout);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortWrite nchar %d\n",
+        pgsport->portName,addr,numchars);
+    pgsport->errorMessage[0] = 0;
+    status = writeGpib(pgsport,data,numchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
-            pgpib->portName,pgpib->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d writeGpib error %s\n",
+            pgsport->portName,addr,pgsport->errorMessage);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s writeGpib failed %s\n",pgpib->portName,pgpib->errorMessage);
+            "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
     } else if(actual!=numchars) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s requested %d but sent %d\n",
-            pgpib->portName,numchars,actual);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d requested %d but sent %d\n",
+            pgsport->portName,addr,numchars,actual);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s requested %d but sent %d bytes\n",pgpib->portName,numchars,actual);
+            "%s requested %d but sent %d bytes\n",pgsport->portName,numchars,actual);
         status = asynError;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
-        data,actual,"%s gsTi9914Write\n",pgpib->portName);
+        data,actual,"%s addr %d gpibPortWrite\n",pgsport->portName,addr);
     *nbytesTransfered = actual;
     return status;
 }
 
-static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser)
 {
     /*Nothing to do */
     return asynSuccess;
 }
 
-static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport     *pgsport = (gsport *)pdrvPvt;
+    int        addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s gsTi9914SetEos eoslen %d\n",pgpib->portName,eoslen);
+        "%s addr %d gpibPortSetEos eoslen %d\n",pgsport->portName,addr,eoslen);
     if(eoslen>1 || eoslen<0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-           "%s gpibTi9914SetEos illegal eoslen %d\n",pgpib->portName,eoslen);
+           "%s addr %d gpibTi9914SetEos illegal eoslen %d\n",
+           pgsport->portName,addr,eoslen);
         return asynError;
     }
-    pgpib->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
+    pgsport->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
     return asynSuccess;
 }
-static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
 
     if(eossize<1) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s gsTi9914GetEos eossize %d too small\n",eossize);
+            "%s addr %d gpibPortGetEos eossize %d too small\n",
+            pgsport->portName,eossize);
         *eoslen = 0;
         return asynError;
     }
-    if(pgpib->eos==-1) {
+    if(pgsport->eos==-1) {
         *eoslen = 0;
     } else {
-        eos[0] = (unsigned int)pgpib->eos;
+        eos[0] = (unsigned int)pgsport->eos;
         *eoslen = 1;
     }
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s gsTi9914GetEos eoslen %d\n",pgpib->portName,eoslen);
+            "%s gpibPortGetEos eoslen %d\n",pgsport->portName,eoslen);
     return asynSuccess;
 }
 
-static asynStatus gsTi9914AddressedCmd(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
+    gsport *pgsport = (gsport *)pdrvPvt;
+    double     timeout = pasynUser->timeout;
+    int        addr = 0;
+    int        actual;
+    asynStatus status;
 
-    asynPrint(pasynUser, ASYN_TRACE_ERROR,
-        "%s gsTi9914AddressedCmd not implemented\n",pgpib->portName);
-    return asynError;
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortAddressedCmd nchar %d\n",
+        pgsport->portName,addr,length);
+    pgsport->errorMessage[0] = 0;
+    status = writeAddr(pgsport,0,addr,timeout,transferStateIdle);
+    if(status==asynSuccess) {
+        status=writeCmd(pgsport,data,length,timeout,transferStateIdle);
+    }
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s gpibPortAddressedCmd error %s\n",
+            pgsport->portName,pgsport->errorMessage);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
+    }
+    actual = length - pgsport->bytesRemainingCmd;
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
+        data,actual,"%s gpibPortAddressedCmd\n",pgsport->portName);
+    return status;
 }
 
-static asynStatus gsTi9914UniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
+static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
-    asynPrint(pasynUser, ASYN_TRACE_ERROR,
-        "%s gsTi9914UniversalCmd not implemented\n",pgpib->portName);
-    return asynError;
-}
- 
-static asynStatus gsTi9914Ifc(void *pdrvPvt, asynUser *pasynUser)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    asynPrint(pasynUser, ASYN_TRACE_ERROR,
-        "%s gsTi9914Ifc not implemented\n",pgpib->portName);
-    return asynError;
+    gsport *pgsport = (gsport *)pdrvPvt;
+    double     timeout = pasynUser->timeout;
+    asynStatus status;
+    char   buffer[1];
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortUniversalCmd %2.2x\n",
+        pgsport->portName,cmd);
+    pgsport->errorMessage[0] = 0;
+    buffer[0] = cmd;
+    status = writeCmd(pgsport,buffer,1,timeout,transferStateIdle);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
+            pgsport->portName,pgsport->errorMessage);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s writeGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
+    }
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
+        buffer,1,"%s gpibPortUniversalCmd\n",pgsport->portName);
+    return status;
 }
 
-static asynStatus gsTi9914Ren(void *pdrvPvt,asynUser *pasynUser, int onOff)
+static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
-    asynPrint(pasynUser, ASYN_TRACE_ERROR,
-        "%s gsTi9914Ren not implemented\n",pgpib->portName);
-    return asynError;
-}
+    gsport *pgsport = (gsport *)pdrvPvt;
 
-static int gsTi9914SrqStatus(void *pdrvPvt)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    printf("%s gsTi9914SrqStatus not implemented\n",pgpib->portName);
-    return 0;
-}
-
-static asynStatus gsTi9914SrqEnable(void *pdrvPvt, int onOff)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    printf("%s gsTi9914SrqEnable not implemented\n",pgpib->portName);
-    return asynError;
-}
-
-static asynStatus gsTi9914SerialPollBegin(void *pdrvPvt)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    printf("%s gsTi9914SerialPollBegin not implemented\n",pgpib->portName);
-    return asynError;
-}
-
-static int gsTi9914SerialPoll(void *pdrvPvt, int addr, double timeout)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    printf("%s gsTi9914SerialPoll not implemented\n",pgpib->portName);
-    return asynError;
-}
-
-static asynStatus gsTi9914SerialPollEnd(void *pdrvPvt)
-{
-    gpib *pgpib = (gpib *)pdrvPvt;
-    printf("%s gsTi9914SerialPollEnd not implemented\n",pgpib->portName);
-    return asynError;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s gpibPortIfc\n",pgsport->portName);
+    writeRegister(pgsport,AUXMR,IFCS);
+    epicsThreadSleep(.01);
+    writeRegister(pgsport,AUXMR,IFCC);
+    return asynSuccess;
 }
 
-static asynGpibPort gsTi9914 = {
-    gsTi9914Report,
-    gsTi9914Connect,
-    gsTi9914Disconnect,
-    gsTi9914SetPortOptions,
-    gsTi9914GetPortOptions,
-    gsTi9914Read,
-    gsTi9914Write,
-    gsTi9914Flush,
-    gsTi9914SetEos,
-    gsTi9914GetEos,
-    gsTi9914AddressedCmd,
-    gsTi9914UniversalCmd,
-    gsTi9914Ifc,
-    gsTi9914Ren,
-    gsTi9914SrqStatus,
-    gsTi9914SrqEnable,
-    gsTi9914SerialPollBegin,
-    gsTi9914SerialPoll,
-    gsTi9914SerialPollEnd
-};
+static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
+{
+    gsport *pgsport = (gsport *)pdrvPvt;
+
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s gpibPortRen %s\n",pgsport->portName,(onOff ? "On" : "Off"));
+    writeRegister(pgsport,AUXMR,(onOff ? REMS : REMC));
+    return asynSuccess;
+}
+
+static int gpibPortSrqStatus(void *pdrvPvt)
+{
+    gsport *pgsport = (gsport *)pdrvPvt;
+    int    srqHappened = pgsport->srqHappened;
+
+    pgsport->srqHappened = epicsFalse;
+    return srqHappened;
+}
+
+static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff)
+{
+    gsport *pgsport = (gsport *)pdrvPvt;
+
+    pgsport->srqEnabled = (onOff ? epicsTrue : epicsFalse);
+    writeRegister(pgsport,IMR1,ERR|MA|(pgsport->srqEnabled ? SRQ : 0));
+    return asynSuccess;
+}
+
+static asynStatus gpibPortSerialPollBegin(void *pdrvPvt)
+{
+    gsport     *pgsport = (gsport *)pdrvPvt;
+    double     timeout = 1.0;
+    asynStatus status;
+    char       cmd[1];
+
+    cmd[0] = IBSPE;
+    status = writeCmd(pgsport,cmd,1,timeout,transferStateIdle);
+    return status;
+}
+
+static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
+{
+    gsport     *pgsport = (gsport *)pdrvPvt;
+    epicsUInt8 buffer[1];
+    int        actual = 0;
+
+    readGpib(pgsport,buffer,1,&actual,addr,timeout);
+    return (actual==1 ? buffer[0] : 0);
+}
+
+static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
+{
+    gsport     *pgsport = (gsport *)pdrvPvt;
+    double     timeout = 1.0;
+    asynStatus status;
+    char       cmd[1];
+
+    cmd[0] = IBSPD;
+    status = writeCmd(pgsport,cmd,1,timeout,transferStateIdle);
+    return status;
+}
 
-int gsIP488Configure(char *portName,int carrier, int module, int intVec,
+int gsIP488Configure(char *portName,int carrier, int module, int vector,
     unsigned int priority, int noAutoConnect)
 {
-    gpib *pgpib;
+    gsport *pgsport;
     int ipstatus;
-    ip488RegisterMap *regs;
+    epicsUInt8 *registers;
     int size;
 
     ipstatus = ipmValidate(carrier,module,GREEN_SPRING_ID,GSIP_488);
@@ -856,29 +768,37 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
         printf("gsIP488Configure Unable to validate IP module");
         return 0;
     }
-    regs = (ip488RegisterMap*)ipmBaseAddr(
-        carrier, module, ipac_addrIO);
-    if(!regs) {
+    registers = (char *)ipmBaseAddr(carrier, module, ipac_addrIO);
+    if(!registers) {
         printf("gsIP488Configure no memory allocated "
             "for carrier %d module %d\n", carrier,module);
         return 0;
     }
-    if((intVec&1)==0) {
-        printf("gsIP488Configure intVec MUST be odd. "
-            "It is changed from %d to %d\n", intVec, intVec|1);
-        intVec |= 1;
+    if((vector&1)==0) {
+        printf("gsIP488Configure vector MUST be odd. "
+            "It is changed from %d to %d\n", vector, vector|1);
+        vector |= 1;
     }
-    size = sizeof(gpib) + strlen(portName)+1;
-    pgpib = callocMustSucceed(size,sizeof(char),"gsIP488Configure");
-    pgpib->carrier = carrier;
-    pgpib->module = module;
-    pgpib->intVec = intVec;
-    pgpib->portName = (char *)(pgpib+1);
-    strcpy(pgpib->portName,portName);
-    pgpib->waitForInterrupt = epicsEventMustCreate(epicsEventEmpty);
-    pgpib->regs = regs;
-    pgpib->asynGpibPvt = pasynGpib->registerPort(pgpib->portName,
-        1,!noAutoConnect, &gsTi9914,pgpib,priority,0);
+    size = sizeof(gsport) + strlen(portName)+1;
+    pgsport = callocMustSucceed(size,sizeof(char),"gsIP488Configure");
+    pgsport->carrier = carrier;
+    pgsport->module = module;
+    pgsport->vector = vector;
+    pgsport->portName = (char *)(pgsport+1);
+    strcpy(pgsport->portName,portName);
+    pgsport->waitForInterrupt = epicsEventMustCreate(epicsEventEmpty);
+    callbackSetCallback(srqCallback,&pgsport->callback);
+    callbackSetUser(pgsport,&pgsport->callback);
+    pgsport->registers = registers;
+    ipstatus = ipmIntConnect(carrier,module,vector,gsip488,(int)pgsport);
+    if(ipstatus) {
+        printf("gsIP488Configure ipmIntConnect failed\n");
+        return asynError;
+    }
+    ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
+    writeRegister(pgsport,VECTOR,pgsport->vector);
+    pgsport->asynGpibPvt = pasynGpib->registerPort(pgsport->portName,
+        1,!noAutoConnect, &gpibPort,pgsport,priority,0);
     return 0;
 }
 
@@ -887,7 +807,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
 static const iocshArg gsIP488ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg gsIP488ConfigureArg1 = { "carrier",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg2 = { "module",iocshArgInt};
-static const iocshArg gsIP488ConfigureArg3 = { "intVec",iocshArgInt};
+static const iocshArg gsIP488ConfigureArg3 = { "vector",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg4 = { "priority",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg5 = { "disable auto-connect",iocshArgInt};
 static const iocshArg *gsIP488ConfigureArgs[] = {&gsIP488ConfigureArg0,
