@@ -91,7 +91,7 @@ int asynSetOption(const char *portName, int addr, const char *key, const char *v
     optionargs.key = key;
     optionargs.val = val;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
-    status = pasynManager->queueRequest(pasynUser,0,0.0);
+    status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.0);
     if(status!=asynSuccess) {
         printf("queueRequest failed %s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
