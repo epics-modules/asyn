@@ -1,4 +1,4 @@
-/*  asynInt32Base.h */
+/*  asynInt32Base.c */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -20,7 +20,8 @@
 
 typedef struct pvt {
     interruptCallbackInt32 callback;
-    void                  *userPvt;
+    void       *userPvt;
+    epicsInt32 prevValue;
 } pvt;
 
 static void int32Callback(void *userPvt, void *pvalue);
@@ -45,8 +46,12 @@ static void int32Callback(void *userPvt, void *pvalue)
 {
     pvt        *ppvt = (pvt *)userPvt;
     epicsInt32 value = *(epicsInt32 *)pvalue;
+    epicsInt32 prevValue = ppvt->prevValue;
 
-    ppvt->callback(ppvt->userPvt,value);
+    if(value!=prevValue) {
+        ppvt->callback(ppvt->userPvt,value);
+        ppvt->prevValue = value;
+    }
 }
 
 asynStatus initialize(const char *portName, asynInterface *pint32Interface)
@@ -56,8 +61,10 @@ asynStatus initialize(const char *portName, asynInterface *pint32Interface)
     if(!pasynInt32->write) pasynInt32->write = writeDefault;
     if(!pasynInt32->read) pasynInt32->read = readDefault;
     if(!pasynInt32->getBounds) pasynInt32->getBounds = getBounds;
-    pasynInt32->registerInterruptUser = registerInterruptUser;
-    pasynInt32->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynInt32->registerInterruptUser)
+        pasynInt32->registerInterruptUser = registerInterruptUser;
+    if(!pasynInt32->cancelInterruptUser) 
+        pasynInt32->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pint32Interface);
 }
 
@@ -129,6 +136,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     ppvt->callback = callback;
     ppvt->userPvt = userPvt;
+    ppvt->prevValue = 0.0;
     *registrarPvt = ppvt;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d registerInterruptUser\n",portName,addr);

@@ -58,8 +58,10 @@ static asynStatus initialize(const char *portName,
 
     if(!pasynFloat64->write) pasynFloat64->write = writeDefault;
     if(!pasynFloat64->read) pasynFloat64->read = readDefault;
-    pasynFloat64->registerInterruptUser = registerInterruptUser;
-    pasynFloat64->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynFloat64->registerInterruptUser)
+        pasynFloat64->registerInterruptUser = registerInterruptUser;
+    if(!pasynFloat64->cancelInterruptUser)
+        pasynFloat64->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pfloat64Interface);
 }
 

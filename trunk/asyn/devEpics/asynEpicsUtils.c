@@ -42,6 +42,7 @@ epicsShareDef asynEpicsUtils *pasynEpicsUtils = &utils;
 /* parseLink syntax is:
    VME_IO "C<ignore> S<addr> @<portName> userParams
    INST_IO @asyn(<portName>ws<addr>ws<timeout>)userParams
+   INST_IO @asynMask(<portName>ws<addr>ws<mask>ws<timeout>)userParams
 */
 
 static char *skipWhite(char *pstart,int commaOk){
@@ -155,7 +156,7 @@ error:
     }
     return(asynSuccess);
 }
-
+
 static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink, 
                    char **port, int *addr, epicsUInt32 *mask,char **userParam)
 {
@@ -230,7 +231,7 @@ userParams:
     return(asynSuccess);
 error:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "invalid INST_IO Must be asyn(<port> <addr> <mask> <timeout>)userParams");
+            "invalid INST_IO Must be asynMask(<port> <addr> <mask> <timeout>)userParams");
         return(asynError);
 }
 

@@ -1,11 +1,11 @@
 record(ao,"asyndevSetRate") {
      field(DTYP,"asynFloat64")
-     field(OUT,"@asyn(digital,4,1.0)")
+     field(OUT,"@asyn(digital,0,1.0) reason(1)")
 }
 
 record(bo,"asyndevBoUInt32Bit0") {
     field(DTYP,"asynUInt32Digital")
-    field(OUT,"@asynMask(digital,0,0x1,1.0) testParams")
+    field(OUT,"@asynMask(digital,0,0x1,1.0) ")
     field(ZNAM,"zero")
     field(ONAM,"one")
 }
@@ -15,7 +15,7 @@ record(longout,"asyndevLoUInt32") {
 }
 record(mbbo,"asyndevMbboInt32") {
     field(DTYP,"asynUInt32Digital")
-    field(OUT,"@asynMask(digital,0,0xf,1.0) testParams")
+    field(OUT,"@asynMask(digital,0,0xf,1.0) ")
     field(ZRST,"zero")
     field(ONST,"one")
     field(TWST,"two")
@@ -52,7 +52,7 @@ record(mbbo,"asyndevMbboInt32") {
 record(bi,"asyndevBiUInt32Bit0") {
     field(SCAN,"I/O Intr")
     field(DTYP,"asynUInt32Digital")
-    field(INP,"@asynMask( digital , 0, 0x1 , 1.0) testParams")
+    field(INP,"@asynMask( digital , 0, 0x1 , 1.0) ")
     field(ZNAM,"zero")
     field(ONAM,"one")
 }
@@ -71,7 +71,7 @@ record(longin,"asyndevLiUInt32") {
 record(mbbi,"asyndevMbbiUInt32") {
     field(SCAN,"I/O Intr")
     field(DTYP,"asynUInt32Digital")
-    field(INP,"@asynMask( digital , 0, 0xf , 1.0) testParams")
+    field(INP,"@asynMask( digital , 0, 0xf , 1.0) ")
     field(ZRST,"zero")
     field(ONST,"one")
     field(TWST,"two")
@@ -105,7 +105,7 @@ record(mbbi,"asyndevMbbiUInt32") {
     field(FTVL,"0xe")
     field(FFVL,"0xf")
 }
-record(mbbiDirect,"asyndevMbbiDirectUInt32Interrupt") {
+record(mbbiDirect,"asyndevMbbiDirectUInt32") {
     field(SCAN,"I/O Intr")
     field(DTYP,"asynUInt32Digital")
     field(INP,"@asynMask(digital 0, 0xffff)")

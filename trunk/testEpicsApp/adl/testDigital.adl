@@ -5,9 +5,9 @@ file {
 }
 display {
 	object {
-		x=352
-		y=24
-		width=400
+		x=683
+		y=157
+		width=500
 		height=120
 	}
 	clr=14
@@ -89,7 +89,7 @@ display {
 }
 menu {
 	object {
-		x=0
+		x=100
 		y=20
 		width=100
 		height=20
@@ -102,7 +102,7 @@ menu {
 }
 "text update" {
 	object {
-		x=200
+		x=300
 		y=20
 		width=100
 		height=20
@@ -118,7 +118,7 @@ menu {
 }
 menu {
 	object {
-		x=0
+		x=100
 		y=40
 		width=100
 		height=20
@@ -131,7 +131,7 @@ menu {
 }
 "text update" {
 	object {
-		x=200
+		x=300
 		y=40
 		width=100
 		height=20
@@ -147,7 +147,7 @@ menu {
 }
 "text update" {
 	object {
-		x=200
+		x=300
 		y=60
 		width=100
 		height=20
@@ -158,6 +158,7 @@ menu {
 		bclr=4
 	}
 	align="horiz. centered"
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -193,7 +194,7 @@ text {
 }
 text {
 	object {
-		x=100
+		x=200
 		y=20
 		width=100
 		height=20
@@ -206,7 +207,7 @@ text {
 }
 text {
 	object {
-		x=100
+		x=200
 		y=40
 		width=100
 		height=20
@@ -219,7 +220,7 @@ text {
 }
 "text entry" {
 	object {
-		x=0
+		x=100
 		y=60
 		width=100
 		height=20
@@ -236,7 +237,7 @@ text {
 }
 text {
 	object {
-		x=100
+		x=200
 		y=60
 		width=100
 		height=20
@@ -249,7 +250,7 @@ text {
 }
 "text update" {
 	object {
-		x=300
+		x=400
 		y=20
 		width=100
 		height=20
@@ -265,7 +266,7 @@ text {
 }
 text {
 	object {
-		x=100
+		x=200
 		y=80
 		width=100
 		height=20
@@ -276,270 +277,298 @@ text {
 	textix="mbbDirect"
 	align="horiz. centered"
 }
-composite {
+"text update" {
 	object {
-		x=200
+		x=300
 		y=80
-		width=160
+		width=10
 		height=20
 	}
-	"composite name"=""
-	children {
-		"text update" {
-			object {
-				x=200
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BF"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=210
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BE"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=220
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BD"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=230
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BC"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=240
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BB"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=250
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.BA"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=260
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B9"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=270
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B8"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=280
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B7"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=290
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B6"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=300
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B5"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=310
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B4"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=320
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B3"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=330
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B2"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=340
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B1"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=350
-				y=80
-				width=10
-				height=20
-			}
-			monitor {
-				chan="asyndevMbbiDirectUInt32Interrupt.B0"
-				clr=14
-				bclr=4
-			}
-			align="horiz. centered"
-			limits {
-			}
-		}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BF"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=310
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BE"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=320
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BD"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=330
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BC"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=340
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BB"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=350
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.BA"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=360
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B9"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=370
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B8"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=380
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B7"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=390
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B6"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=400
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B5"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=410
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B4"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=420
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B3"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=430
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B2"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=440
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B1"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=450
+		y=80
+		width=10
+		height=20
+	}
+	monitor {
+		chan="asyndevMbbiDirectUInt32.B0"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+menu {
+	object {
+		x=0
+		y=20
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevBiUInt32Bit0.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=0
+		y=40
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevMbbiUInt32.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=0
+		y=60
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevLiUInt32.SCAN"
+		clr=14
+		bclr=4
 	}
 }

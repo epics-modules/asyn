@@ -55,12 +55,15 @@ static void uint32Callback(void *userPvt, void *pvalue)
 static asynStatus initialize(const char *portName,
     asynInterface *puint32Interface)
 {
-    asynUInt32Digital *pasynUInt32Digital = (asynUInt32Digital *)puint32Interface->pinterface;
+    asynUInt32Digital *pasynUInt32Digital =
+        (asynUInt32Digital *)puint32Interface->pinterface;
 
     if(!pasynUInt32Digital->write) pasynUInt32Digital->write = writeDefault;
     if(!pasynUInt32Digital->read) pasynUInt32Digital->read = readDefault;
-    pasynUInt32Digital->registerInterruptUser = registerInterruptUser;
-    pasynUInt32Digital->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynUInt32Digital->registerInterruptUser)
+        pasynUInt32Digital->registerInterruptUser = registerInterruptUser;
+    if(!pasynUInt32Digital->cancelInterruptUser)
+        pasynUInt32Digital->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,puint32Interface);
 }
 

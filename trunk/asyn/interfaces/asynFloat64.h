@@ -34,7 +34,9 @@ typedef struct asynFloat64 {
 /* asynFloat64Base does the following:
    calls  registerInterface for asynFloat64.
    Implements registerInterruptUser and cancelInterruptUser
-   Provides default implementations of getBounds, write, and read
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
 */
 
 #define asynFloat64BaseType "asynFloat64Base"
