@@ -18,6 +18,9 @@ alink="#FF0000">
 <center>
 <h2>Release 4-1</h2>
 </center>
+<h3>asynInterposeEos</h3>
+<p>If read reads maxchars, it forces the last character to be 0
+and returns asynOverflow if it wasn't.</p>
 <h3>drvAsynSerialPort,drvAsynIPPort - Error reporting</h3>
 <p>These do not properly set an error message in asynUser.errorMessage
 when they return asynError.</p>
