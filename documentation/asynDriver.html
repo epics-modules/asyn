@@ -56,7 +56,7 @@ license</a> described at the end of this document.</p>
 </center>
 
 <p>asynDriver is a general purpose facility for interfacing device specific
-code to low level communication drivers</p>
+code to low level communication drivers.</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS.</p>
@@ -135,16 +135,11 @@ based devices.</p>
 
 <h3>Remaining Issues</h3>
 <ul>
-  <li>Locking data structures:
-    <p>asynManager locks it's internal data structures so that modifications
-    are thread safe. One exception is that report does not lock. If new ports
-    or process modules are registered while report is active, report could
-    have problems. Does this matter?</p>
+  <li>Generic EPICS device support
+    <p>Look at creating generic support for connecting to EPICS records.</p>
   </li>
-  <li>Interrupts:
-    <p>Interface asynGpib defines methods to handle SRQs. Should a more
-    general interrupt mechanism be provided? Perhaps is is best to wait until
-    a need arises.</p>
+  <li>Support for various network protocals
+    <p>Modbus, etherIP, etc.</p>
   </li>
 </ul>
 <hr>
@@ -208,7 +203,7 @@ defines the following terminology:</p>
     "function pointer".</p>
   </li>
   <li>port
-    <p>A communication entity over which message are sent. Whenever this
+    <p>A communication entity over which messages are sent. Whenever this
     document uses the word port without a qualifier, it means a communication
     port. A port provides access to one or more devices.</p>
   </li>
@@ -223,7 +218,8 @@ defines the following terminology:</p>
     the name of the header file that describes the core interfaces</p>
   </li>
   <li>asynManager
-    <p>This code implements the methods in interface asynManager.</p>
+    <p>The code implements the methods in interfaces asynManager and
+    asynTrace..</p>
   </li>
 </ul>
 
@@ -250,17 +246,17 @@ by user code and a asynGpibPort interface which is called by asynGpib.</p>
 <p>A driver can implement multiple interfaces. For example asynGpib
 implements asynCommon, asynOctet, and asynGpib.</p>
 
-<p>Asynchronous driver support uses the Operating System Independent features
-of EPICS base. It is, however, independent of record/device support. Thus it
-can be used by other code, e.g. a sequence program.</p>
+<p>asynManager uses the Operating System Independent features of EPICS base.
+It is, however, independent of record/device support. Thus it can be used by
+other code, e.g. a sequence program.</p>
 
 <h3>Standard Asynchronous Driver Interfaces</h3>
 
 <p>This section briefly describes the interfaces provided by asynManager and
-interfaces that are implemented by most lower level drivers. asynManager and
-asynPortManager members are called by normal threads. Except for report, the
-driver interface methods can only be called from the user supplied callback
-that is called by the thread associated with each port.</p>
+standard interfaces implemented by port drivers. asynManager  members are
+called by normal threads. Except for asynCommon:report, port driver  methods
+can only be called from the user supplied callback that is called by the
+thread associated with each port.</p>
 
 <p>The interfaces are:</p>
 <ul>
@@ -270,7 +266,7 @@ that is called by the thread associated with each port.</p>
     <ul>
       <li>report - A method that reports the status of all ports.</li>
       <li>A thread for each communication port.</li>
-      <li>Methods  to connect/disconnect to a device or port</li>
+      <li>Methods  to connect/disconnect to a device or port.</li>
       <li>A method for locating port driver interfaces.</li>
       <li>queueRequest. This is a non-blocking method, i.e. it can be called
         from scan threads. A callback specified by the user is called by the
@@ -324,8 +320,9 @@ that is called by the thread associated with each port.</p>
 <p>During initialization a driver registers each communication port as well
 as all supported interfaces.</p>
 
-<p>User code creates an asynUser by calling  pasynManager-&gt;createAsynUser.
-The address of the asynUser is passed to most other asynDriver methods.</p>
+<p>User code creates an asynUser by calling  <span
+style="font-family: courier">pasynManager-&gt;createAsynUser()</span>. The
+address of the asynUser is passed to most other asynDriver methods.</p>
 
 <p>User code connects to a device, which is located located at some address
 on a port,  and communicates with the device via combination of asynManager
@@ -348,8 +345,8 @@ and one or more interfaces.</p>
     device support. However other code can call it. Examples are sequence
     programs, test programs, utility commands, etc.</li>
   <li>Device support can consist of more than one type of support. For
-    example most functions could be accessed via steams but asynGpib could be
-    used to handle SRQs.</li>
+    example most functions could be accessed via streams but asynGpib could
+    be used to handle SRQs.</li>
 </ol>
 <hr>
 
@@ -360,7 +357,7 @@ and one or more interfaces.</p>
 <p>asynDriver.h describes the following:</p>
 <ul>
   <li>asynStatus - An enum that describes the status returned by many
-  methods</li>
+  methods.</li>
   <li>asynException - An enum that describes exceptions.</li>
   <li>asynQueuePriority - An enum that describes the queue priorities,</li>
   <li>asynUser - A struture that contains generic information.</li>
@@ -378,7 +375,7 @@ and one or more interfaces.</p>
 
 <p>Thus defines a set of status values returned by many methods If a method
 returns a status other than asynStatus and one of the arguments to the method
-is pasynUser than the method is expected to provide a message in
+is pasynUser then the method is expected to provide a message in
 pasynUser-&gt;errorMessage.</p>
 <pre>typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError
@@ -618,7 +615,10 @@ epicsShareExtern asynManager *pasynManager;</pre>
         Name is the same as that specified in the call to registerPort. The
         call will fail if the asynUser is already connected to a device. If
         the port does not support multiple devices than addr is ignored. The
-        call will fail if the asynUser is already connected to a device.</td>
+        call will fail if the asynUser is already connected to a device.
+        Please note that this only connewcts a user to the port driver for
+        the portName,addr. The port driver may or may not be connected to the
+        actual device.</td>
     </tr>
     <tr>
       <td>disconnect</td>
@@ -686,25 +686,26 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         addr specified in the connectDevice request is locked. asynManager
         locks when a queueRequest for a locked asynUser is taken from the
         queue. At that point all other entries in the queue must wait until
-        unlock is called by the same pasynUser than locked. lock/unlock fail
+        unlock is called by the same pasynUser that locked. lock/unlock fail
         if a request is currently queued. The addr argument passed to
         connectDevice determines if the port or only a device is locked.</td>
     </tr>
     <tr>
       <td>getAddr</td>
       <td>The value returned is -1 if the port does not support multiple
-        devices or else the addr that was specified in the call to
+        devices or else returns the addr that was specified in the call to
         connectDevice.</td>
     </tr>
     <tr>
       <td>registerPort</td>
       <td>This method is called by drivers. A call is made for each
         communication interface instance. multiDevice is (0,1) of the driver
-        (does not, does) support multiple devices. If priority is 0 then a
-        default will be assigned. If stackSize is 0 a default is assigned.
-        The portName argument specifies the name by which the upper levels of
-        the asyn code will refer to this communication interface
-      instance.</td>
+        (does not, does) support multiple devices. autoConnect is (0,1) for
+        (no,yes). This provides the initial value for the port and any
+        devices  If priority is 0 then a default will be assigned. If
+        stackSize is 0 a default is assigned. The portName argument specifies
+        the name by which the upper levels of the asyn code will refer to
+        this communication interface instance.</td>
     </tr>
     <tr>
       <td>registerInterface</td>
@@ -712,18 +713,18 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>exceptionConnect</td>
-      <td>This method must be called by the driver whenever it connects to a
-        port or device.</td>
+      <td>This method must be called by the driver when and only when it
+        connects to a port or device.</td>
     </tr>
     <tr>
       <td>exceptionDisconnect</td>
-      <td>This method must be called by the driver whenever it disconnects
-        from a port or device.</td>
+      <td>This method must be called by the driver when and only when it
+        disconnects from a port or device.</td>
     </tr>
     <tr>
       <td>interposeInterface</td>
       <td>This is called by a software layer between client code and the port
-        driver. For example if an device echos writes then a software module
+        driver. For example if a device echos writes then a software module
         that issues a read after each write could be created and call
         interposeInterface for interface asynOctet.
 
@@ -742,14 +743,15 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>enable</td>
-      <td>If enable is set yes than dequeued unless their queue timeout
-        occurs.</td>
+      <td>If enable is set yes than queueRequests are not dequeued unless
+        their queue timeout occurs.</td>
     </tr>
     <tr>
       <td>autoConnect</td>
       <td>If autoConnect is true when a request is taken from a queue and the
         port or device is not connected, asynManager calls
-        pasynCommon-&gt;connect.</td>
+        pasynCommon-&gt;connect. See the discussion of Flow of Control below
+        for details.</td>
     </tr>
     <tr>
       <td>isConnected</td>
@@ -761,7 +763,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>isAutoConnect</td>
-      <td>Returns (0,1) if the port or device (is not, is) autoConnect.</td>
+      <td>Returns (0,1) if the portThread (will not, will) autoConnect for
+        the port or device.</td>
     </tr>
   </tbody>
 </table>
@@ -912,7 +915,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
   <li>Tracing is turned on/off for individual devices, i.e. a
   portName,addr</li>
   <li>The output is sent to a file or to stdout.</li>
-  <li>A mask determines the type of information that can be displayed.
+  <li>A mask determines the type of information that can be displayed. The
+    various choices can be ored together.
     <ul>
       <li>ASYN_TRACE_ERROR Run time errors are reported, e.g. timeouts.</li>
       <li>ASYN_TRACEIO_DEVICE High level device support reports I/O
@@ -927,7 +931,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
         make to other support.</li>
     </ul>
   </li>
-  <li>Another mask determines how message buffers are printed.
+  <li>Another mask determines how message buffers are printed. The various
+    choices can be ored together.
     <ul>
       <li>ASYN_TRACEIO_NODATA Dont print any data from the message
       buffers</li>
@@ -1111,7 +1116,7 @@ queueRequest. portThread runs forever implementing the following
 algorithm:</p>
 <ol>
   <li>Waits for work by calling epicsEventMustWait. Other code such as
-    queueRequest issues a epicsEventSignal.</li>
+    queueRequest call epicsEventSignal.</li>
   <li>If the port is disabled it returns to 1.</li>
   <li>For every element in queue asynQueuePriorityConnect:
     <ul>
@@ -1119,9 +1124,11 @@ algorithm:</p>
       <li>Calls the user's callback</li>
     </ul>
   </li>
+  <li>If the port is not connected and autoConnect is true for the port,
+   portThread calls pasynCommon->connect.</li>
   <li>If the port is still not connected it returns to 1.</li>
-  <li>For each element of asynQueuePriorityHigh,...,asynQueuePriorityLow
-    queues.
+  <li>For each element of the queues
+     asynQueuePriorityHigh,...,asynQueuePriorityLow.
     <ul>
       <li>IF disabled skip this element.</li>
       <li>IF not connected and autoConnect and device then autoConnect.</li>
@@ -1132,6 +1139,9 @@ algorithm:</p>
     </ul>
   </li>
 </ol>
+<p>The actual code is more complicated because it unlocks before it calls
+code outside asynManager. This means that the queues can be modified
+and exceptions may occur.</p>
 
 <center>
 <h2><a name="asynDeviceSupport"></a>Generic EPICS Device Support</h2>
@@ -1418,8 +1428,7 @@ struct asynGpibPort {
     asynStatus (*serialPollBegin) (void *drvPvt);
     int (*serialPoll) (void *drvPvt, int addr, double timeout);
     asynStatus (*serialPollEnd) (void *drvPvt);
-};
-</pre>
+};</pre>
 
 <h3>asynGpib</h3>
 
@@ -1538,7 +1547,7 @@ the IOC and devices connected through Ethernet/Serial converter boxes.</p>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
 and <tt>asynSetPortOption</tt> commands:</p>
-<pre>   drvGenericSerialConfigure("portName","ttyName",autoConnect,priority,openOnlyOnDisconnect)
+<pre>   drvGenericSerialConfigure("portName","ttyName",autoConnect,priority)
    asynSetPortOption("portName","key","value")</pre>
 where the arguments are:
 <ul>
@@ -1550,11 +1559,6 @@ where the arguments are:
   <li>autoConnect - Should portThread automatically connect.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
-  <li>openOnlyOnDisconnect - If zero the driver will attempt to reconnect to
-    the serial port on the first I/O operation following an error. If
-    non-zero the driver will not attempt to reconnect until explicit
-    disconnect/reconnect commands have been issued. A missing argument is
-    taken to be zero.</li>
 </ul>
 
 <p>The following table summarizes the generic serial driver asynSetPortOption
@@ -1595,19 +1599,18 @@ keys and values. Default values are enclosed in square brackets.</p>
 
 <p></p>
 
-<p>The clocal and crtscts parameter names are taken from the POSIX 
-termios serial interface definition.
-The clocal parameter controls whether the modem control lines (Data
-Terminal Ready, Carrier Detect/Received Line Signal Detect) are used (clocal=N)
-or ignored (clocal=Y).
-The crtscts parameter controls whether the hardware handshaking lines (Request
-To Send, Clear To Send) are used (crtscts=Y) or ignored (crtscts=N).
-The default parameter values (clocal=Y, crtscts=N) are those of a
-'data-leads-only' serial interface.</p>
-<p>
-The vxWorks serial driver does not provide independent control of the
-hardware handshaking and modem control lines thus clocal=Y
-implies crtscts=N and clocal=N implies crtscts=Y.</p>
+<p>The clocal and crtscts parameter names are taken from the POSIX termios
+serial interface definition. The clocal parameter controls whether the modem
+control lines (Data Terminal Ready, Carrier Detect/Received Line Signal
+Detect) are used (clocal=N) or ignored (clocal=Y). The crtscts parameter
+controls whether the hardware handshaking lines (Request To Send, Clear To
+Send) are used (crtscts=Y) or ignored (crtscts=N). The default parameter
+values (clocal=Y, crtscts=N) are those of a 'data-leads-only' serial
+interface.</p>
+
+<p>The vxWorks serial driver does not provide independent control of the
+hardware handshaking and modem control lines thus clocal=Y implies crtscts=N
+and clocal=N implies crtscts=Y.</p>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
 using hardware-specific commands. Once this is done the standard
@@ -1746,7 +1749,7 @@ tar xvf &lt;file&gt;.tar</pre>
   where X-Y is the release. For example.
   <pre>.../support/asyn/1-1</pre>
   <li>Edit the <tt>config/RELEASE</tt> file and set the paths to your
-    installation of EPICS_BASE, ASYN, and IPAC. IPAC is only needed if you
+    installation of EPICS_BASE and IPAC. IPAC is only needed if you
     are building for vxWorks.</li>
   <li>Run <tt>make</tt> in the top level directory and check for any
     compilation errors.</li>
@@ -1759,7 +1762,7 @@ application must obtain device specific support elsewhere. This section only
 explains how to include asynDriver components.</p>
 
 <p>In the <code>configure/RELEASE</code> file add definitions for
-<code>IPAC</code> and <code>EPICS_BASE</code>.</p>
+<code>IPAC</code>, <code>ASYN</code>, and <code>EPICS_BASE</code>.</p>
 
 <p>In the src directory where the application is built</p>
 <ul>
