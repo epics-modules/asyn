@@ -28,7 +28,7 @@ asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
 asyn_SRCS += interposeFlush.c
 
-SRC_DIRS += $(ASYN)/devAsyn
+SRC_DIRS += $(ASYN)/asynRecord
 DBD += devAsyn.dbd
 DBDINC += asynRecord
 asyn_SRCS += devAsyn.c
