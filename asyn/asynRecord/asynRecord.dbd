@@ -240,12 +240,6 @@ recordtype(asyn) {
         menu(asynFMT)
     }
 
-# Abort queueRequest
-    field(AQR,DBF_UCHAR) {
-        prompt("Abort queueRequest")
-        special(SPC_MOD)
-    }
-
 # Serial control fields
     field(GOPT,DBF_UCHAR) {
         prompt("Get Options")
@@ -416,5 +410,9 @@ recordtype(asyn) {
         special(SPC_DBADDR)
         interest(1)
         extra("char *errs")
+    }
+    field(AQR,DBF_UCHAR) {
+        prompt("Abort queueRequest")
+        special(SPC_MOD)
     }
 }
