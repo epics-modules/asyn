@@ -11,9 +11,9 @@
 #include <epicsTypes.h>
 
 #define asynInt32Type "asynInt32"
-typedef struct {
+typedef struct asynInt32 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
-}asynInt32;
+} asynInt32;
 
 #endif /* asynInt32H */

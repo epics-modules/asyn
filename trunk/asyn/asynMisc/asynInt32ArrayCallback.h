@@ -12,14 +12,18 @@
 
 #define asynInt32ArrayCallbackType "asynInt32ArrayCallback"
 
-typedef void (*asynInt32ArrayClbk)(void *drvPvt, epicsInt32 *readback);
+typedef void (*asynInt32ArrayDataCallback)(void *drvPvt, epicsInt32 *daya);
+typedef void (*asynInt32ArrayIntervalCallback)(void *drvPvt, double seconds);
 
-typedef struct {
+typedef struct asynInt32ArrayCallback {
     double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
                                       double seconds);
     double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallback)   (void *drvPvt, asynUser *pasynUser,
-                                      asynInt32ArrayClbk callback, void *pvt);
+    asynStatus (*registerCallbacks)   (void *drvPvt, asynUser *pasynUser,
+                                      asynInt32ArrayDataCallback dataCallback, 
+                                      asynInt32ArrayIntervalCallback 
+                                          intervalCallback, 
+                                      void *pvt);
 } asynInt32ArrayCallback;
 
 #endif /* asynInt32ArrayCallbackH */

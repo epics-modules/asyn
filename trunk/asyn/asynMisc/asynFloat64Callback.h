@@ -12,14 +12,17 @@
 
 #define asynFloat64CallbackType "asynFloat64Callback"
 
-typedef void (*asynFloat64Clbk)(void *drvPvt, epicsFloat64 readback);
+typedef void (*asynFloat64DataCallback)(void *drvPvt, epicsFloat64 data);
+typedef void (*asynFloat64IntervalCallback)(void *drvPvt, double seconds);
 
-typedef struct {
+typedef struct asynFloat64Callback {
     double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
                                       double seconds);
     double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallback)   (void *drvPvt, asynUser *pasynUser,
-                                      asynFloat64Clbk callback, void *pvt);
+    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
+                                   asynFloat64DataCallback dataCallback, 
+                                   asynFloat64IntervalCallback intervalCallback,
+                                   void *pvt);
 } asynFloat64Callback;
 
 #endif /* asynFloat64CallbackH*/

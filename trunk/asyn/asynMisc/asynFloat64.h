@@ -11,9 +11,9 @@
 #include <epicsTypes.h>
 
 #define asynFloat64Type "asynFloat64"
-typedef struct {
+typedef struct asynFloat64 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsFloat64 value);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
-}asynFloat64;
+} asynFloat64;
 
 #endif /* asynFloat64H */
