@@ -925,6 +925,7 @@ static asynStatus cancelRequest(asynUser *pasynUser)
     int      addr = (pdevice ? pdevice->addr : -1);
     int      i;
 
+    pasynUser->auxStatus = 0; /*Initialize to not removed*/
     if(!pport) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "asynManager:cancelRequest but not connected\n");
@@ -932,7 +933,6 @@ static asynStatus cancelRequest(asynUser *pasynUser)
     }
     epicsMutexMustLock(pport->lock);
     if(!puserPvt->isQueued) {
-        pasynUser->auxStatus = 0;
         epicsMutexUnlock(pport->lock);
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
             "%s addr %d asynManager:cancelRequest but not queued\n",
@@ -944,6 +944,7 @@ static asynStatus cancelRequest(asynUser *pasynUser)
 	while(puserPvt) {
 	    if(pasynUser == &puserPvt->user) {
 	        ellDelete(&pport->queueList[i],&puserPvt->node);
+                pasynUser->auxStatus = 1;
 	        break;
 	    }
 	    puserPvt = (userPvt *)ellNext(&puserPvt->node);
@@ -968,7 +969,6 @@ static asynStatus cancelRequest(asynUser *pasynUser)
     }
     epicsMutexUnlock(pport->lock);
     epicsEventSignal(pport->notifyPortThread);
-    pasynUser->auxStatus = 0;
     return asynSuccess;
 }
 
