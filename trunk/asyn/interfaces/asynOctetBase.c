@@ -153,12 +153,13 @@ static asynStatus initialize(const char *portName,
     initOverride(poctetPvt,poctetDriver);
     pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->isMultiDevice(pasynUser,portName,&yesNo);
-    pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) {
         printf("isMultiDevice failed %s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
         free(poctetPvt);
         return status;
     }
+    pasynManager->freeAsynUser(pasynUser);
     if(yesNo && (processEosIn || processEosOut || interruptProcess)) {
         printf("Can not processEosIn, processEosOut,interruptProcess "
                "for multiDevice port\n");
