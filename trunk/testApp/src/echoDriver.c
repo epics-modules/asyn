@@ -254,7 +254,7 @@ static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
     echoPvt      *pechoPvt = (echoPvt *)ppvt;
     deviceInfo   *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
-    int          nchars;
+    int          nchars,prevNchars;
     int          addr;
     asynStatus   status;
 
@@ -279,7 +279,7 @@ static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
         return asynError;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
-    nchars = pdeviceBuffer->nchars;
+    prevNchars = nchars = pdeviceBuffer->nchars;
     if(nchars>maxchars) nchars = maxchars;
     pdeviceBuffer->nchars = 0;
     if(nchars>0) memcpy(data,pdeviceBuffer->buffer,nchars);
@@ -288,8 +288,9 @@ static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     *nbytesTransfered = nchars;
     if(eomReason) {
-        if(nchars>=maxchars) *eomReason |= EOMCNT;
-        *eomReason |= EOMEND;
+        *eomReason = 0;
+        if(prevNchars>=maxchars) *eomReason |= ASYN_EOM_CNT;
+        *eomReason |= ASYN_EOM_END;
     }
     return status;
 }
