@@ -23,31 +23,32 @@ alink="#FF0000">
 <h3>Changed and obsolete features</h3>
 <ul>
   <li><strong>INCOMPATIBLE CHANGE -- </strong>  The units of the
-      <code>respond2Writes</code> field, if greater than 0, are now
-      seconds rather than in milliseconds.  This change was made
-      so that all time values set in the instrument support
-      initialization routine are specified in units of seconds.  Very
-      few instrument support files should be affected by this change</li>
-  <li>The contents of asynRecDevDrv.dbd have been placed in asyn.dbd and 
-      asynRecDevDrv.dbd has been removed.  This allows applications to
-      get correct dbior reports and access to asynRecords by including
-      any low-level driver .dbd file.</li>
-<ul>
-  <li>The drvAsynTCPPort driver has been renamed drvAsynIPPort as it
-       now supports both UDP and TCP protocols.  The protocol is
-       selected by adding a "UDP" or "TCP" after the "hostname:port"
-       in the drvAsynIPPortConfigure command.  A missing protocol is
-       taken to be "TCP".</li>
+    <code>respond2Writes</code> field, if greater than 0, are now seconds
+    rather than milliseconds. This change was made so that all time values
+    set in the instrument support initialization routine are specified
+    uniformly in units of seconds. Very few instrument support files are
+    likely to be affected by this change</li>
+  <li>The contents of asynRecDevDrv.dbd have been placed in asyn.dbd and
+    asynRecDevDrv.dbd has been removed.  This allows applications to get
+    correct dbior reports and access to asynRecords by including any
+    low-level driver .dbd file.</li>
+  <li>The drvAsynTCPPort driver has been renamed drvAsynIPPort since it now
+    supports both UDP and TCP protocols. The protocol is selected by adding a
+    "UDP" or "TCP" after the "hostname:port" in the drvAsynIPPortConfigure
+    command. A missing protocol is taken to be "TCP".</li>
+  <li>Work around 'missing SPD' bug in HP E2050 GPIB/LAN adapter.  SRQ
+    handling is much more robust on all supported hardware.</li>
 </ul>
+
 <h3>Major New Features</h3>
 <ul>
-   <li>National Instruments NI1014 VME GPIB interface is now supported.</li>
-   <li>GPIB - All low level GPIB support (vxi11, gsip88, and ni1014) now
-       fully support the GPIB specific features defined by asynGpibDriver.h</li>
-   <li>Implementation of asynTrace is more consistent across the low level
-       drivers.</li>
+  <li>National Instruments NI1014 VME GPIB interface is now supported.</li>
+  <li>GPIB - All low level GPIB support (vxi11, gsip488, and ni1014) now
+    fully support the GPIB specific features defined by asynGpibDriver.h</li>
+  <li>Implementation of asynTrace is more consistent across the low level
+    drivers.</li>
   <li>Added makeSupport script and template instrument support.  Updated
-      tutorials to reflect these additions.</li>
+    tutorials to reflect these additions.</li>
 </ul>
 
 <center>
@@ -61,34 +62,33 @@ alink="#FF0000">
 <h3>Changed and obsolete features</h3>
 <ul>
   <li>The drvGenericSerial driver has been split into drvAsynSerialPort and
-  drvAsynTCPPort drivers for local and remote serial ports, respectively.
-  End-of-string processing has been moved to an interposed interface.</li>
+    drvAsynTCPPort drivers for local and remote serial ports, respectively.
+    End-of-string processing has been moved to an interposed interface.</li>
   <li>The diagnostic facilities previously provided by asynTrace.db have been
-  replaced with the much more general asynRecord.db</li>
-  <li>All asynManager,asynCommon, and asynOctet methods except report
-   now return asynStatus. Methods that previously returned a different value now
-   have an additional argument for this value.</li>
-  <li>Low-level driver read and write methods now return asynStatus and
-  are passed an additional  argument through which they store the actual number
-  of characters read or written.</li>
-  <li>The createSocket method in the asynSyncIO interface has been replaced by 
-  openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(), that must 
-  now be done by the caller.</li>
-  <li>Removed code for &quot;flush&quot; from gpib drivers.&nbsp; The implementation 
-  caused infinite loops on devices that speak when not spoken to.</li>
-  <li>asynRecord<ul>
-  <li>asynOctetRecord has been renamed to asynRecord</li>
-  <li>TIOM, TMSK, TSIZ, TFIL, AUCT, ENBL, CNCT, ERRS, TINP, NAWT fields have 
-  been added</li>
-  <li>Default values of OMAX and IMAX decreased from 512 to 80</li>
-  <li>Options that are unknown for a device (e.g. baud on a Moxa terminal 
-  server) are shown as Unknown.</li>
-  <li>Many bug fixes and improvements in logic and functionality</li>
-</ul>
-
+    replaced with the much more general asynRecord.db</li>
+  <li>All asynManager,asynCommon, and asynOctet methods except report now
+    return asynStatus. Methods that previously returned a different value now
+    have an additional argument for this value.</li>
+  <li>Low-level driver read and write methods now return asynStatus and are
+    passed an additional  argument through which they store the actual number
+    of characters read or written.</li>
+  <li>The createSocket method in the asynSyncIO interface has been replaced
+    by openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(),
+    that must now be done by the caller.</li>
+  <li>Removed code for "flush" from gpib drivers.&nbsp; The implementation
+    caused infinite loops on devices that speak when not spoken to.</li>
+  <li>asynRecord
+    <ul>
+      <li>asynOctetRecord has been renamed to asynRecord</li>
+      <li>TIOM, TMSK, TSIZ, TFIL, AUCT, ENBL, CNCT, ERRS, TINP, NAWT fields
+        have been added</li>
+      <li>Default values of OMAX and IMAX decreased from 512 to 80</li>
+      <li>Options that are unknown for a device (e.g. baud on a Moxa terminal
+        server) are shown as Unknown.</li>
+      <li>Many bug fixes and improvements in logic and functionality</li>
+    </ul>
   </li>
 </ul>
-
 <hr>
 
 <center>
@@ -109,9 +109,9 @@ alink="#FF0000">
     an ioc.</li>
   <li>asynOctetRecord - A generic record and medm display that allows
     interactive access to many asynDriver features.</li>
-  <li>asynSyncIO - A synchronous interface to asynDriver. This can be used
-    by code, e.g. SNC programs, that are willing to wait instead of following
-    an asynchronous model.</li>
+  <li>asynSyncIO - A synchronous interface to asynDriver. This can be used by
+    code, e.g. SNC programs, that are willing to wait instead of following an
+    asynchronous model.</li>
 </ul>
 
 <h3>Changed and obsolete features</h3>
@@ -134,6 +134,7 @@ alink="#FF0000">
   </li>
 </ul>
 <hr>
+
 <center>
 <h2>Release 1-2</h2>
 </center>
@@ -145,8 +146,8 @@ alink="#FF0000">
   <li>Use sscanf to convert GPIB stringin response.</li>
   <li>Fix race condition in GPIB finish routines.</li>
 </ul>
-
 <hr>
+
 <center>
 <h2>Release 1-1</h2>
 </center>
@@ -169,8 +170,8 @@ alink="#FF0000">
   <li>Added dbior support.</li>
   <li>Changed devGPIB to no longer cache EOS.</li>
 </ol>
-
 <hr>
+
 <center>
 <h2>Release 1-0alpha2</h2>
 </center>
@@ -221,4 +222,5 @@ tested with the following vxi11 controllers:</p>
     NPort Ethernet/Serial converter.</li>
 </ul>
 Two Device Support modules have been converted from the 3.13 gpib support:
-DG535 and TDS3014B Scope.</body></html>
+DG535 and TDS3014B Scope.</body>
+</html>
