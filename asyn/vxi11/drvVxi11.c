@@ -111,7 +111,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static asynStatus vxiBusStatus(vxiPort * pvxiPort, int request,
     double timeout,int *status);
-static void vxiCreateIrqChannel(vxiPort *pvxiPort);
+static void vxiCreateIrqChannel(vxiPort *pvxiPort,osiSockAddr *plocalAddr);
 static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser);
 static asynStatus vxiDisconnectPort(vxiPort *pvxiPort);
 static void vxiSrqThread(void *pvxiPort);
@@ -565,14 +565,14 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     return stat;
 }
 
-static void vxiCreateIrqChannel(vxiPort *pvxiPort)
+static void vxiCreateIrqChannel(vxiPort *pvxiPort,osiSockAddr *plocalAddr)
 {
     enum clnt_stat clntStat;
     Device_Error devErr;
     Device_RemoteFunc devRemF;
 
     /* create the interrupt channel */
-    devRemF.hostAddr = ntohl(pvxiPort->srqPort.ia.sin_addr.s_addr);
+    devRemF.hostAddr = ntohl(plocalAddr->ia.sin_addr.s_addr);
     devRemF.hostPort = ntohs(pvxiPort->srqPort.ia.sin_port);
     devRemF.progNum = DEVICE_INTR;
     devRemF.progVers = DEVICE_INTR_VERSION;
@@ -606,6 +606,8 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     int         sock = -1;
     asynStatus  status;
     struct sockaddr_in vxiServer;
+    osiSocklen_t addrlen;
+    osiSockAddr vxiClnt;
 
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -693,7 +695,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     pvxiPort->srqInterrupt = epicsInterruptibleSyscallCreate();
     if(pvxiPort->srqInterrupt == NULL) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiGenLink can't create interruptible syscall context.\n",
+            "%s vxiConnectPort can't create interruptible syscall context.\n",
             pvxiPort->portName);
         return asynError;
     }
@@ -701,7 +703,15 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiPort);
     epicsEventMustWait(pvxiPort->srqThreadReady);
-    vxiCreateIrqChannel(pvxiPort);
+    memset((void *)&vxiClnt, 0, sizeof vxiClnt);
+    addrlen = sizeof vxiClnt;
+    if (getsockname(sock, &vxiClnt.sa, &addrlen)) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiConnectPort can't get address of local interface\n",
+            pvxiPort->portName);
+        return asynError;
+    }
+    vxiCreateIrqChannel(pvxiPort, &vxiClnt); 
     pasynManager->exceptionConnect(pvxiPort->pasynUser);
     return asynSuccess;
 }
