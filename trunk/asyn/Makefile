@@ -47,14 +47,14 @@ DBD += asyn.dbd
 INC += asynShellCommands.h
 INC += asynSyncIO.h
 INC += asynInterposeEos.h
-INC += asynUtils.h
+INC += asynEpicsUtils.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 asyn_SRCS += devAoAsynInt32.c
 asyn_SRCS += devAsynUInt32Digital.c
-asyn_SRCS += asynUtils.c
+asyn_SRCS += asynEpicsUtils.c
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
