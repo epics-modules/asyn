@@ -12,8 +12,7 @@ dbLoadDatabase("../../dbd/testGpibVx.dbd")
 testGpibVx_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
-dbLoadRecords("../../db/asynGeneric.db","ioc=gpibTest")
-dbLoadRecords("../../db/asynRecord.db","P=mrk,R=asyn1,PORT=L0,ADDR=3,OMAX=0,IMAX=0")
+dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=3,OMAX=0,IMAX=0")
 
 #vxi11Debug = 10
 
@@ -23,12 +22,12 @@ dbLoadRecords("../../db/asynRecord.db","P=mrk,R=asyn1,PORT=L0,ADDR=3,OMAX=0,IMAX
 
 #The following two commands are for the E5810
 #E5810Reboot("164.54.8.129",0)
-vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0,0)
+#vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0,0)
 
 #The following command is for an ethernet TSD3014B scope
 #vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0,0)
 
 #The following is for the Greensprings IP488
-#ipacAddMVME162("A:l=3,3 m=0xe0000000,64;B:m=e0000000,64 l=3,2")
-#gsIP488Configure("L0",0,0,0x61,0,0)
+ipacAddMVME162("A:l=3,3 m=0xe0000000,64;B:m=e0000000,64 l=3,2")
+gsIP488Configure("L0",0,0,0x61,0,0)
 iocInit()
