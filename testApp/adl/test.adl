@@ -8,7 +8,7 @@ display {
 		x=49
 		y=26
 		width=874
-		height=400
+		height=600
 	}
 	clr=14
 	bclr=4
@@ -652,6 +652,243 @@ composite {
 composite {
 	object {
 		x=0
+		y=30
+		width=850
+		height=32
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=38
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=400
+				y=30
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PA_A0"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=550
+				y=30
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PA_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=30
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PA_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=30
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PA_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=38
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=38
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=250
+		y=0
+		width=350
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="A is single device port"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=200
+		y=232
+		width=450
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="MA is two device port connected to A"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=0
 		y=100
 		width=850
 		height=106
@@ -1211,230 +1448,6 @@ composite {
 		}
 	}
 }
-composite {
-	object {
-		x=0
-		y=30
-		width=850
-		height=32
-	}
-	"composite name"=""
-	children {
-		"message button" {
-			object {
-				x=0
-				y=30
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.ENBL"
-				clr=14
-				bclr=4
-			}
-			label="enable"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=0
-				y=46
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.ENBL"
-				clr=14
-				bclr=4
-			}
-			label="disable"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=60
-				y=38
-				width=60
-				height=16
-			}
-			monitor {
-				chan="asynRecord_PA_A0.ENBL"
-				clr=14
-				bclr=4
-			}
-			format="string"
-			limits {
-			}
-		}
-		text {
-			object {
-				x=400
-				y=30
-				width=150
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="testClient_PA_A0"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=550
-				y=30
-				width=100
-				height=18
-			}
-			control {
-				chan="testClient_PA_A0_calc.SCAN"
-				clr=14
-				bclr=4
-			}
-		}
-		"text update" {
-			object {
-				x=650
-				y=30
-				width=100
-				height=18
-			}
-			monitor {
-				chan="testClient_PA_A0_so"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			format="string"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=750
-				y=30
-				width=100
-				height=18
-			}
-			monitor {
-				chan="testClient_PA_A0_si"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			format="string"
-			limits {
-			}
-		}
-		"message button" {
-			object {
-				x=260
-				y=30
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.CNCT"
-				clr=14
-				bclr=4
-			}
-			label="connect"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=260
-				y=46
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.CNCT"
-				clr=14
-				bclr=4
-			}
-			label="disconnect"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=320
-				y=38
-				width=80
-				height=16
-			}
-			monitor {
-				chan="asynRecord_PA_A0.CNCT"
-				clr=14
-				bclr=4
-			}
-			format="string"
-			limits {
-			}
-		}
-		"message button" {
-			object {
-				x=130
-				y=30
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.AUCT"
-				clr=14
-				bclr=4
-			}
-			label="auto"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=130
-				y=46
-				width=60
-				height=16
-			}
-			control {
-				chan="asynRecord_PA_A0.AUCT"
-				clr=14
-				bclr=4
-			}
-			label="noAuto"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=190
-				y=38
-				width=60
-				height=16
-			}
-			monitor {
-				chan="asynRecord_PA_A0.AUCT"
-				clr=14
-				bclr=4
-			}
-			format="string"
-			limits {
-			}
-		}
-	}
-}
-text {
-	object {
-		x=250
-		y=0
-		width=350
-		height=22
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="A is single device port"
-	align="horiz. centered"
-}
 text {
 	object {
 		x=250
@@ -1450,14 +1463,273 @@ text {
 }
 text {
 	object {
-		x=200
-		y=232
-		width=450
+		x=250
+		y=420
+		width=350
 		height=22
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="MA is two device port connected to A"
+	textix="blockProcessCallback test"
 	align="horiz. centered"
+}
+composite {
+	object {
+		x=200
+		y=460
+		width=450
+		height=48
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=200
+				y=490
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testBlock_PB_A1"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=350
+				y=490
+				width=100
+				height=18
+			}
+			control {
+				chan="testBlock_PB_A1_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=450
+				y=490
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A1_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=550
+				y=490
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A1_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=200
+				y=460
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testBlock_PB_A0"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=350
+				y=460
+				width=100
+				height=18
+			}
+			control {
+				chan="testBlock_PB_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=450
+				y=460
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=550
+				y=460
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=200
+		y=548
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="testBlockAll_PB_A1"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=350
+		y=548
+		width=100
+		height=18
+	}
+	control {
+		chan="testBlockAll_PB_A1_calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=450
+		y=548
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A1_so"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=550
+		y=548
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A1_si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=200
+		y=518
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="testBlockAll_PB_A0"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=350
+		y=518
+		width=100
+		height=18
+	}
+	control {
+		chan="testBlockAll_PB_A0_calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=450
+		y=518
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A0_so"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=550
+		y=518
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A0_si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
 }

@@ -24,6 +24,10 @@ dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record_PMA_A1,PORT=MA,ADDR=1,OM
 dbLoadRecords("../../db/test.db","P=test,R=Client,PORT=MA,A=1")
 
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=A,ADDR=0,OMAX=0,IMAX=0")
+dbLoadRecords("../../db/testBlock.db","P=test,R=Block,PORT=B,A=0,VAL= ")
+dbLoadRecords("../../db/testBlock.db","P=test,R=Block,PORT=B,A=1,VAL= ")
+dbLoadRecords("../../db/testBlock.db","P=test,R=BlockAll,PORT=B,A=0,VAL=blockAll")
+dbLoadRecords("../../db/testBlock.db","P=test,R=BlockAll,PORT=B,A=1,VAL=blockAll")
 #asynSetTraceMask("A",0,0xff)
 #asynSetTraceIOMask("A",0,0x2)
 iocInit()
