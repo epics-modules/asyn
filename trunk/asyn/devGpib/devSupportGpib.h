@@ -153,7 +153,7 @@ struct gpibDpvt {
     devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
 };
 
-/* If a method retuns int then 0,-1) => (OK, failure) */
+/* If a method returns int then (0,-1) => (OK, failure) */
 typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 typedef int (*gpibStart)(gpibDpvt *pgpibDpvt,int failure);
 typedef void (*gpibFinish)(gpibDpvt *pgpibDpvt,int failure);
