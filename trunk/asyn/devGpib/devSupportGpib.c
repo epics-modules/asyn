@@ -144,6 +144,8 @@ void srqHandlerGpib(void *parm, int gpibAddr, int statusByte);
 void srqWaitTimeout(void *parm);
 
 /*Utility routines*/
+/* gpibCmdIsConsistant returns (0,1) If (is not, is) consistant*/
+static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt);
 static int checkEnums(char * msg, char **enums);
 static void gpibTimeoutHappened(gpibDpvt *pgpibDpvt);
 static int isTimeWindowActive(gpibDpvt *pgpibDpvt);
@@ -201,7 +203,7 @@ static long initRecord(dbCommon *precord, struct link *plink)
     if(getDeviceInterface(pgpibDpvt,link,gpibAddr)) {
         printf("%s: init_record : no driver for link %d\n",precord->name,link);
         precord->pact = TRUE;	/* keep record from being processed */
-	free(pasynUser);
+        pasynManager->freeAsynUser(pasynUser);
         return(0);
     }
     pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -212,7 +214,14 @@ static long initRecord(dbCommon *precord, struct link *plink)
         printf("%s: init_record : pasynCommon %p pasynOctet %p\n",
            precord->name,pgpibDpvt->pasynCommon,pgpibDpvt->pasynOctet);
         precord->pact = TRUE;	/* keep record from being processed */
-	free(pasynUser);
+        pasynManager->freeAsynUser(pasynUser);
+        return(0);
+    }
+    if (pgpibCmd->dset != (gDset *) precord->dset) {
+        printf("%s : init_record : record type invalid for spec'd "
+            "GPIB param#%d\n", precord->name,pgpibDpvt->parm);
+	precord->pact = TRUE;	/* keep record from being processed */
+        pasynManager->freeAsynUser(pasynUser);
         return(0);
     }
     pgpibDpvt->pasynCommon = pasynCommon;
@@ -239,31 +248,12 @@ static long initRecord(dbCommon *precord, struct link *plink)
 	pgpibDpvt->rsp = (char *)callocMustSucceed(
             pgpibCmd->rspLen,sizeof(char),"devSupportGpib");
     }
-    if (pgpibCmd->dset != (gDset *) precord->dset) {
-        printf("%s : init_record : record type invalid for spec'd "
-            "GPIB param#%d\n", precord->name,pgpibDpvt->parm);
+    if(!gpibCmdIsConsistant(pgpibDpvt)) {
 	precord->pact = TRUE;	/* keep record from being processed */
+        pasynManager->freeAsynUser(pasynUser);
+        return(0);
     }
-    if(pgpibCmd->type&(GPIBEFASTO|GPIBEFASTI|GPIBEFASTIW)) {
-        /*Set P1 = number of items in efast table */
-        int n = 0;
-        if(pgpibCmd->P3) {
-            char **enums = pgpibCmd->P3;
-            while(enums[n] !=0) n++;
-        }
-        pgpibCmd->P1 = n;
-        if(n==0) {
-            printf("%s : init_record : P3 must be an EFAST table"
-                " GPIB param#%d\n", precord->name,pgpibDpvt->parm);
-	    precord->pact = TRUE;	/* keep record from being processed */
-        }
-    }
-    if(pgpibCmd->type&GPIBSOFT && !pgpibCmd->convert) {
-        printf("%s : init_record GPIBSOFT but convert is null"
-            " GPIB param#%d\n", precord->name,pgpibDpvt->parm);
-        precord->pact = TRUE;	/* keep record from being processed */
-    }
-    return (0);
+    return(0);
 }
 
 static long processGPIBSOFT(gpibDpvt *pgpibDpvt)
@@ -908,6 +898,68 @@ void srqWaitTimeout(void *parm)
 
     gpibReadWaitComplete(pgpibDpvt,1);
 }
+
+static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt)
+{
+    gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    dbCommon *precord = pgpibDpvt->precord;
+
+    /* If gpib spscific command make sure that pasynGpib is available*/
+    if(!pgpibDpvt->pasynGpib) {
+        if(pgpibCmd->type&(
+        GPIBACMD|GPIBREADW|GPIBEFASTIW|GPIBIFC
+        |GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBSRQHANDLER)) {
+            printf("%s parm %d gpibCmd.type requires asynGpib but "
+                "it is not implemented by port driver\n",
+                 precord->name,pgpibDpvt->parm);
+            return(0);
+        }
+    }
+    if(pgpibCmd->type&GPIBSOFT && !pgpibCmd->convert) {
+        printf("%s parm %d GPIBSOFT but convert is null\n",
+            precord->name,pgpibDpvt->parm);
+        return(0);
+    }
+    if(pgpibCmd->type&(GPIBEFASTO|GPIBEFASTI|GPIBEFASTIW)) {
+        /*Set P1 = number of items in efast table */
+        int n = 0;
+        if(pgpibCmd->P3) {
+            char **enums = pgpibCmd->P3;
+            while(enums[n] !=0) n++;
+        }
+        pgpibCmd->P1 = n;
+        if(n==0) {
+            printf("%s parm %d P3 must be an EFAST table\n",
+                precord->name,pgpibDpvt->parm);
+	    return(0);
+        }
+    }
+    if(pgpibCmd->type&(GPIBREAD|GPIBREADW)) {
+        if(!pgpibCmd->cmd
+        || !(pgpibCmd->format||pgpibCmd->convert)
+        ||(pgpibCmd->msgLen==0)) {
+            printf("%s parm %d requires cmd, format, and  msgLen>0\n",
+                precord->name,pgpibDpvt->parm);
+            return(0);
+        }
+    }
+    if(pgpibCmd->type&(GPIBRAWREAD|GPIBWRITE)) {
+        if(!(pgpibCmd->format||pgpibCmd->convert)
+        ||(pgpibCmd->msgLen==0)) {
+            printf("%s parm %d requires format and  msgLen>0\n",
+                precord->name,pgpibDpvt->parm);
+            return(0);
+        }
+    }
+    if(pgpibCmd->type&(GPIBCMD|GPIBACMD)) {
+        if(!pgpibCmd->cmd) {
+            printf("%s parm %d requires cmd \n",
+                precord->name,pgpibDpvt->parm);
+            return(0);
+        }
+    }
+    return (1);
+}
 
 static int checkEnums(char *msg, char **enums)
 {
@@ -978,7 +1030,7 @@ static void gpibTimeoutHappened(gpibDpvt *pgpibDpvt)
     ++pdeviceInstance->tmoCount;
     epicsMutexUnlock(pportInstance->lock);
 }
-
+
 static int isTimeWindowActive(gpibDpvt *pgpibDpvt)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
