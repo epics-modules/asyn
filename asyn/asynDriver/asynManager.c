@@ -716,6 +716,7 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
     pasynUser->errorMessage[0] = 0;
     pasynUser->timeout = 0;
     pasynUser->userPvt = 0;
+    pasynUser->userData = 0;
     pasynUser->auxStatus = 0;
     if(timeout && !puserPvt->timer) {
         puserPvt->timer = epicsTimerQueueCreateTimer(
@@ -1108,7 +1109,7 @@ static asynStatus canBlock(asynUser *pasynUser,int *yesNo)
 
     if(!pport) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "asynManager:cancelRequest but not connected\n");
+            "asynManager:canBlock but not connected\n");
         return asynError;
     }
     *yesNo = (pport->attributes&ASYN_CANBLOCK) ? 1 : 0;
