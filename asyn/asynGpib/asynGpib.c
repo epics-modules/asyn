@@ -34,7 +34,7 @@
 #define FALSE 0
 #define SRQTIMEOUT .01
 #define MAX_POLL 5
-
+
 typedef struct gpibBase {
     ELLLIST gpibPvtList;
     epicsTimerQueueId timerQueue;
@@ -125,12 +125,16 @@ static void srqHappened(void *pgpibvt);
 static asynCommon common = {
    report,connect,disconnect
 };
+
+/*NOTE: Since gpib does not support outputEos just use writeRaw for write*/
 static asynOctet octet = {
-    0,writeRaw,readIt,readRaw,gpibFlush, 0,0,setInputEos, getInputEos,0,0
+    writeRaw,writeRaw,readIt,readRaw,gpibFlush, 0,0,setInputEos, getInputEos,0,0
 };
+
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren, pollAddr, registerPort, srqHappened
 };
+
 /*asynInt32Base implements all asynInt32 methods*/
 static asynInt32 int32 = {0,0,0,0,0};
 
@@ -348,7 +352,16 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
     GETgpibPvtasynGpibPort
 
     status = pasynGpibPort->connect(pgpibPvt->asynGpibPortPvt,pasynUser);
-    if(status==asynSuccess) srqHappened(pgpibPvt);
+    if(status==asynSuccess) {
+        if(pgpibPvt->eoslen==1) {
+            char eos[2];
+
+            eos[0] = pgpibPvt->eos; eos[1] = 0;
+            status = pasynGpibPort->setEos(pgpibPvt->asynGpibPortPvt,
+                pasynUser,eos,pgpibPvt->eoslen);
+        }
+        srqHappened(pgpibPvt);
+    }
     return(status);
 }
 
@@ -419,7 +432,7 @@ static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->flush(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
-
+
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
@@ -443,10 +456,17 @@ static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
 static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
+    asynStatus status;
+    int        len;
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->getEos(pgpibPvt->asynGpibPortPvt,pasynUser,
-        eos,eossize, eoslen)
-);
+
+    len =  pgpibPvt->eoslen;
+    *eoslen = len;
+    if(len==1) {
+        eos[0] = pgpibPvt->eos;
+    }
+    if(eossize>len) eos[len] = 0;
+    return asynSuccess;
 }
 
 
