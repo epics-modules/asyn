@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.6 2003-11-13 19:07:53 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.7 2003-11-13 20:12:05 norume Exp $
  */
 
 #include <string.h>
@@ -288,12 +288,12 @@ openConnection (ttyController_t *tty)
         tcflush(tty->fd, TCIOFLUSH);
 #endif
 #ifdef vxWorks
+        if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
+            errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
         if ((tty->setBaud)
          && (ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
          && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0))
             errlogPrintf("Warning: `%s' supports neither FIOBAUDRATE nor SIO_BAUD_SET.\n", tty->serialDeviceName);
-        if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
-            errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
 #else
         /*
          * Turn off non-blocking mode
@@ -642,6 +642,7 @@ drvGenericSerialConf(char *portName,
     for (i = 1 ; i < argc ; i++) {
         arg = argv[i];
         if (isdigit(*arg)) {
+            tty->setBaud = 1;
             tty->baud = 0;
             while (isdigit(*arg)) {
                 if (tty->baud < 100000)
