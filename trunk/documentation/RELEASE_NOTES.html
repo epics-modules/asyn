@@ -47,31 +47,36 @@ This is the reason this release is called 4-0.
     <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
        </pre>
         </li>
-     <ul>
+     </ul>
   </li>
   <li>asynOctetSyncIO
-    <p>All read and write methods now return asynStatus and
-      have additional args to return the number of bytes send/reeceived.</p>
+    <ul><li>All read and write methods now return asynStatus and
+      have additional args to return the number of bytes send/received.</p>
   </li>
+  </ul>
+  <li>asynRecord
+  <ul>
+  <li>The IEOS and OEOS fields are set to the current values for the port when the record connects to the 
+port.  If they are modified after the record connects to the port, then the 
+EOS strings will be changed using asynOctet-&gt;setOutputEos or asynOctet-&gt;setIbputEos. IMPORTANT: 
+The values of IEOS and OEOS in the database file are never used, because they are modified 
+when the record connects to the port.
+  </li>
+  </ul>
 </ul>
 <h3>New Features</h3>
 <ul>
-  <li>interrupt support# -
-    <p>A major new feature is support for interrupts. See asynDriver.html
-    for details.</p>
+  <li>interrupt support -A major new feature is support for interrupts. See asynDriver.html
+    for details.
   </li>
-  <li>linuxGpib -
-     <p>This is support for the linusGpib open source project.
+  <li>linuxGpib - This is support for the linusGpib open source project.
        It contains support for many linux gpib kernel drivers.
        The asyn support was provided by Rok Sabjan (cosyLab).
-     </p>
    </li>
-</ul>
-<h3>cancelRequest</h3>
-<p>If cancelRequest is called while either the process or timeout callback is
-active, it now waits until the callback completes.</p>
-
-<h3>asynRecord</h3>
+<li>cancelRequest - If cancelRequest is called while either the process or timeout callback is
+active, it now waits until the callback completes.
+</li>
+<li>asynRecord
 <ul>
   <li>Added PCNCT field to connect/disconnect from port, and to indicate if
     port is currently connected.
@@ -89,8 +94,9 @@ active, it now waits until the callback completes.</p>
     and GPIBIV.
   </li>
   <li>Added support for I/O Intr scanning for any driver/interface that supports
-    callbacks.  asynOctet does not yet support callbacks.
+    callbacks. asynOctet does not yet support callbacks.
   </li>
+</ul>
 </ul>
 
 <center>
@@ -397,5 +403,4 @@ tested with the following vxi11 controllers:</p>
     NPort Ethernet/Serial converter.</li>
 </ul>
 Two Device Support modules have been converted from the 3.13 gpib support:
-DG535 and TDS3014B Scope.</body>
-</html>
+DG535 and TDS3014B Scope.</body></html>
