@@ -17,6 +17,7 @@
 \parindent=0pt
 \parskip=0.5ex
 \usepackage{hyperref}
+%HEVEA \def{\textbackslash}{$\backslash$} % No \textbackslash in hevea.
 \end_preamble
 \language english
 \inputencoding auto

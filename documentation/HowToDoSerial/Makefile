@@ -15,10 +15,8 @@ tutorial.pdf: tutorial.tex
 html: tutorial.html
 
 tutorial.html: tutorial.pdf Makefile
-	sed -e '/\\textbackslash/s//$$\\backslash$$/g' tutorial.tex >htutorial.tex
-	hevea -v -o tutorial.html htutorial.tex
-	hevea -v -o tutorial.html htutorial.tex
-	rm htutorial.tex
+	hevea -v tutorial.tex
+	hevea -v tutorial.tex
 
 install: html pdf
 	scp `find tutorial -type f -print -depth` \
