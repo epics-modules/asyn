@@ -12,13 +12,21 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>June 22, 2004</h1>
+<h1>June 25, 2004</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release x-y</h2>
+<h2>Release 3-3</h2>
 </center>
+
+<h3>asynRecord</h3>
+<p>Two new fields have been added: GOPT (Get Options) and AQR (Abort Queue Reque
+st)</p>
+<p>The semantics have been changed as follows: process is responsible for
+all and only for I/O operations. Only I/O operations cause the alarm status
+and severity to change. Special is responsible for all other operations
+performed by asynRecord.</p>
 
 <h3>Changed and obsolete features</h3>
 <ul>
