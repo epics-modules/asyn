@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>June 25, 2004</h1>
+<h1>July 27, 2004</h1>
 </center>
 <hr>
 
@@ -20,11 +20,48 @@ alink="#FF0000">
 <h2>Release x-y</h2>
 </center>
 
+<h3>Major New Features</h3>
+<ul>
+<li> Added support for synchronous devices. Changes to pasynManager->registerPort, and new pasynManager->canBlock() function.
+<li> Added userData to asynUser structure.
+<li> Added pasynManager->memMalloc() and pasynManager->memFree() for allocating and freeing memory with a freelist.  This is primarily meant to be used with pasynManager->duplicateAsynUser() and the new pasynUser->userData field.
+</ul>
+
+<h3>asynDriver.h</h3>
+<p>The following changes have been made</p>
+<ul>
+   <li>userData - this is a new field in asynUser.</li>
+   <li>registerPort - Field multiDevice is replaced by attributes.
+      Currently two attributes are defined: ASYN_MULTIDEVICE and ASYN_CANBLOCK.</li>
+   <li>duplicateAsynUser - This is a new method that creates a new
+      asynUser and initializes it with values from an existing asynUser.
+      freeAsynUser now puts the asynUser of a free list rather than calling
+      free.</li>
+   <li>memMalloc/memFree - New methods that manage storage. It uses a set
+     if free lists of different sizes.</li>
+   <li>asynCommon no longer  has methods setOption/getOption.</li>
+   <li>asynOctet is now defined in a separate header file.</li>
+</ul>
+
+
 <h3>asynRecord</h3>
 <p> Removed the GOPT field.  This is no longer necessary because the port options are automatically read whenever connecting to a port.  "special" requests are now queued without changing the state of the record, using the new duplicateAsynUser, memMalloc(), and memFree() methods.  This means that there is no longer a possibility of a special request being rejected because the record is busy. It is no longer possible to cancel a special request. </p>
 
+<h3>asynGpib</h3>
+<ul>
+   <li>asynGpibPort:srqStatus returns asynStatus</li>
+   <li>asynGpibPort:serialPoll returns asynStatus</li>
+   <li>serialPoll - It now only calls registered callback if statusByte&0x40
+      is non zero.</li>
+</ul>
 <h3>devSupportGpib</h3>
-<p>setEos is now a method.</p>
+<ul>
+  <li>setEos is now a method.</li>
+  <li>completeProcess is a new method. This was added to support synchronous
+     drivers.</li>
+  <li>Failures for GPIBREADW|GPIBEFASTIW were not handled properly.
+     This could cause and assert failure. This is fixed.</li>
+</ul>
 
 <h3>drvAsynSerialPortFlush</h3>
 <p>Flushes input only.</p>
@@ -40,12 +77,8 @@ the EOS read semantics match those of the low-level serial and IP drivers.</p>
 <li> Removed setOption() and getOption() from the asynCommon interface.  Moved them to a new interface, asynOption.
 </ul>
 
-<h3>Major New Features</h3>
-<ul>
-<li> Added support for synchronous devices. Changes to pasynManager->registerPort, and new pasynManager->canBlock() function.
-<li> Added userData to asynUser structure.
-<li> Added pasynManager->memMalloc() and pasynManager->memFree() for allocating and freeing memory with a freelist.  This is primarily meant to be used with pasynManager->duplicateAsynUser() and the new pasynUser->userData field.
-</ul>
+<h3>drvVxi11</h3>
+<p>vxi11SetRpcTimeout - now handles fractions of a second properly</p>
 
 <h1>June 25, 2004</h1>
 </center>
