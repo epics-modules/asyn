@@ -360,6 +360,14 @@ static void boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int timeoutOccured)
 
     if(timeoutOccured) {
         failure = 1;
+    } else if(gpibCmdTypeNoEOS(cmdType) == GPIBRESETLNK) {
+        asynCommon *pasynCommon = pgpibDpvt->pasynCommon;
+        void *asynCommonPvt = pgpibDpvt->asynCommonPvt;
+
+        assert(pasynCommon);
+        status = pgpibDpvt->pasynCommon->disconnect(asynCommonPvt,pasynUser);
+        if(status==asynSuccess)
+            status = pgpibDpvt->pasynCommon->connect(asynCommonPvt,pasynUser);
     } else if(!pasynGpib) {
         failure = 1;
         printf("%s pasynGpib is 0\n",precord->name);
@@ -378,19 +386,7 @@ static void boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int timeoutOccured)
         case GPIBGTL:
             status = pasynGpib->addressedCmd(drvPvt,pasynUser,IBGTL,1);
             break;
-        case GPIBRESETLNK:
-        {
-            asynCommon *pasynCommon = pgpibDpvt->pasynCommon;
-            void *asynCommonPvt = pgpibDpvt->asynCommonPvt;
-
-            assert(pasynCommon);
-            status = pgpibDpvt->pasynCommon->disconnect(
-                asynCommonPvt,pasynUser);
-            if(status==asynSuccess) status = pgpibDpvt->pasynCommon->connect(
-                asynCommonPvt,pasynUser);
-        }
-        break;
-        default: status = -1;
+        default: status = asynError; break;
     }
     if(status!=asynSuccess) failure = 1;
     if(failure) recGblSetSevr(precord, WRITE_ALARM, INVALID_ALARM);
