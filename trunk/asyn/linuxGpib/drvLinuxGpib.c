@@ -682,7 +682,7 @@ static asynStatus serialPollBegin (void *pdrvPvt)
 static asynStatus serialPoll (void *pdrvPvt, int addr, double timeout,int *statusByte)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
-        char serialPollByte;
+        char serialPollByte = 0;
 	int ibsta;
 
 	if(DEBUG){
