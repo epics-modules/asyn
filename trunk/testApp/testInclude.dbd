@@ -1,0 +1,2 @@
+registrar("echoDriverRegister")
+registrar("testEchoRegister")

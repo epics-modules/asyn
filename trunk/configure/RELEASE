@@ -1,0 +1,2 @@
+#RELEASE Location of external products
+EPICS_BASE=/home/phoebus/MRK/epics/base_3_14_2branch
