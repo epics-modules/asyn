@@ -38,17 +38,17 @@ static int processModuleInit(const char *processModuleName,const char *deviceNam
 
 
 /* octetDriver methods */
-static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
-static int write(void *ppvt,asynUser *pasynUser,
+static int processRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+static int processWrite(void *ppvt,asynUser *pasynUser,
     int addr,const char *data,int numchars);
-static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr);
+static asynStatus processFlush(void *ppvt,asynUser *pasynUser,int addr);
 static asynStatus setTimeout(void *ppvt,asynUser *pasynUser,
     asynTimeoutType type,double timeout);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,const char *eos,int eoslen);
 static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,peekHandler handler);
 static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser);
 static octetDriver octet = {
-    read,write,flush,
+    processRead,processWrite,processFlush,
     setTimeout, setEos,
     installPeekHandler, removePeekHandler
 };
@@ -108,7 +108,7 @@ static int processModuleInit(const char *pmn,const char *dn)
 }
 
 /* octetDriver methods */
-static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
+static int processRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars;
@@ -119,7 +119,7 @@ static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
     return(nchars);
 }
 
-static int write(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
+static int processWrite(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars;
@@ -130,7 +130,7 @@ static int write(void *ppvt,asynUser *pasynUser, int addr,const char *data,int n
     return(nchars);
 }
 
-static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr)
+static asynStatus processFlush(void *ppvt,asynUser *pasynUser,int addr)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
     asynStatus status;
