@@ -11,11 +11,11 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<h2>Release 2.1</h2>
+<h2>Release 3.1</h2>
 
 <h2>Marty Kraimer, Eric Norum, and Mark Rivers</h2>
 
-<h2>April 1, 2004</h2>
+<h2>April 14, 2004</h2>
 </center>
 <hr>
 
@@ -385,7 +385,13 @@ pasynUser then the method is expected to write a message into
 pasynUser-&gt;errorMessage.</p>
 <pre>typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError
-}asynStatus;</pre>
+}asynStatus;
+
+/* Define generic error masks */
+#define ASYN_ERROR_TIMEOUT 0x0001
+#define ASYN_ERROR_PARITY  0x0002
+#define ASYN_ERROR_FRAMING 0x0004
+</pre>
 
 <table border="1">
   <caption>asynStatus</caption>
@@ -477,6 +483,9 @@ calling asynManager:createAsynUser and asynManager:freeAsynUser.</p>
     /* The following must be set by the user */
     double timeout;  /*Timeout for I/O operations*/
     void *userPvt;
+    /* The following are for additional information from method calls */
+    int          auxStatus; /*For auxillary status*/
+    unsigned int errorMask; /*Normally some combination of ASYN_ERROR... */
 }asynUser;</pre>
 
 <table border="1">
@@ -564,12 +573,11 @@ typedef struct asynManager {
                             const char *interfaceType,int interposeInterfaceOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
-    /*cancelRequest returns (-1,0,1) if request (had error, was not, was) queued*/
-    int        (*cancelRequest)(asynUser *pasynUser);
+    /*cancelRequest sets auxStatus= (0,1) if request (was not, was) queued*/
+    asynStatus (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
-    /*getAddr returns -1 if !multiPort or connected to port */
-    int        (*getAddr)(asynUser *pasynUser);
+    asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
                               int multiDevice,int autoConnect,
@@ -584,9 +592,9 @@ typedef struct asynManager {
                               asynInterface **ppPrev);
     asynStatus (*enable)(asynUser *pasynUser,int yesNo);
     asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
-    int        (*isConnected)(asynUser *pasynUser);
-    int        (*isEnabled)(asynUser *pasynUser);
-    int        (*isAutoConnect)(asynUser *pasynUser);
+    asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;</pre>
 
@@ -689,8 +697,9 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>cancelRequest</td>
       <td>If a asynUser is queued remove it from the queue. If it is not on a
         queue nothing is done. In particular if the callback is active, this
-        call has no effect. A return value of (0,1) means that a request (was
-        not, was) canceled, i.e. removed from the queue.</td>
+        call has no effect. If the return value is asynSuccess then
+        pasynUser-&gt;auxStatus is (0,1) if a request (was not, was)
+        canceled, i.e. removed from the queue.</td>
     </tr>
     <tr>
       <td>lock/unlock</td>
@@ -835,10 +844,10 @@ drivers.</p>
 <pre>/* Device Interface supported by low level octet drivers. */
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
-    int        (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars);
-    int        (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars);
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                       char *data,int maxchars,int *nbytesTransfered);
+    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
+                        const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                          const char *eos,int eoslen);
@@ -1251,12 +1260,12 @@ description of how to use it.</p>
 <pre>cd ${ASYN}
 dbLoadRecords("db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=15,IMAX=0,OMAX=0")</pre>
 
-<p>The example creates a record with name "asynTest" (formed from
-the concatenation of the P and R macros) that will connect to
-port "L0" and addr 15. After the ioc is started, it is possible to change
-PORT, ADDR, IMAX, and OMAX. Thus a single record can be used to access all
-asyn devices connected to the IOC. Multiple records are only needed if one or
-more devices need a dedicated record.</p>
+<p>The example creates a record with name "asynTest" (formed from the
+concatenation of the P and R macros) that will connect to port "L0" and addr
+15. After the ioc is started, it is possible to change PORT, ADDR, IMAX, and
+OMAX. Thus a single record can be used to access all asyn devices connected
+to the IOC. Multiple records are only needed if one or more devices need a
+dedicated record.</p>
 
 <p>An medm display is available for accessing an asynRecord. It is started as
 follows:</p>
@@ -1265,7 +1274,7 @@ medm -x -macro "P=asyn,R=Test" asynRecordDebug.adl</pre>
 
 <p>The following medm display appears.</p>
 
-<p><img src="./asynRecordDebug.gif" alt="asynRecordDebug"></p>
+<p><img src="./asynRecord.gif" alt="asynRecordDebug"></p>
 
 <center>
 <h2><a name="Example"></a>Example</h2>
@@ -1617,8 +1626,8 @@ the vxi11. It provides:</p>
 <p>The asynSerialPort driver supports devices connected to serial ports on
 the IOC.</p>
 
-<p>Serial ports are configured with the <tt>asynSerialPortConfigure</tt>
-and <tt>asynSetOption</tt> commands:</p>
+<p>Serial ports are configured with the <tt>asynSerialPortConfigure</tt> and
+<tt>asynSetOption</tt> commands:</p>
 <pre>   asynSerialPortConfigure("portName","ttyName",priority,noAutoConnect,noEos)
    asynSetOption("portName",addr,"key","value")</pre>
 where the arguments are:
@@ -1630,9 +1639,9 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the input routines should
-  search for the end-of-string character(s), if any. 
-  Non-zero inhibits end-of-string search.</li>
+  <li>noEos - Zero or missing indicates that the input routines should search
+    for the end-of-string character(s), if any. Non-zero inhibits
+    end-of-string search.</li>
   <li>addr - This argument is ignored since serial devices are configured
     with multiDevice=0.</li>
 </ul>
@@ -1688,12 +1697,11 @@ interface.</p>
 hardware handshaking and modem control lines thus clocal=Y implies crtscts=N
 and clocal=N implies crtscts=Y.</p>
 
-<p>vxWorks IOC serial ports may need to be set up
-using hardware-specific commands. Once this is done the standard
-asynSerialPortConfigure and asynSetOption commands can be issued.  For
-example, the following example shows the configuration procedure for a port
-on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01
-carrier.</p>
+<p>vxWorks IOC serial ports may need to be set up using hardware-specific
+commands. Once this is done the standard asynSerialPortConfigure and
+asynSetOption commands can be issued.  For example, the following example
+shows the configuration procedure for a port on a GreenSprings octal UART
+Industry-Pack module on a GreenSprings VIP616-01 carrier.</p>
 <pre>ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
@@ -1703,9 +1711,9 @@ asynSetOption("L0",0,"baud","9600")</pre>
 
 <h3><a name="asynTCPPort"></a>TCP Port</h3>
 
-<p>The asynTCPPort driver supports devices which communicate over
-a TCP/IP connection.  A typical example is a device connected through
-an Ethernet/Serial converter box.</p>
+<p>The asynTCPPort driver supports devices which communicate over a TCP/IP
+connection.  A typical example is a device connected through an
+Ethernet/Serial converter box.</p>
 
 <p>TCP/IP connections are configured with the <tt>asynTCPPortConfigure</tt>
 command:</p>
@@ -1713,19 +1721,20 @@ command:</p>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGpib.</li>
-  <li>hostInfo - The Internet host name and TCP port number of the
-  device (e.g.  "164.54.9.90:4002", or "serials8n3:4002").</li>
+  <li>hostInfo - The Internet host name and TCP port number of the device
+    (e.g.  "164.54.9.90:4002", or "serials8n3:4002").</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the input routines should
-  search for the end-of-string character(s), if any. 
-  Non-zero inhibits end-of-string search.</li>
+  <li>noEos - Zero or missing indicates that the input routines should search
+    for the end-of-string character(s), if any. Non-zero inhibits
+    end-of-string search.</li>
 </ul>
 
-<p>There are no asynSetOption key/value pairs associated with asynTCPPort connections.
+<p>There are no asynSetOption key/value pairs associated with asynTCPPort
+connections.</p>
 
 <h3><a name="vxi11"></a>vxi11</h3>
 VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is
