@@ -17,6 +17,7 @@ html: tutorial.html
 tutorial.html: tutorial.pdf Makefile
 	sed -e '/\\textbackslash/s//$$\\backslash$$/g' tutorial.tex >htutorial.tex
 	hevea -v -o tutorial.html htutorial.tex
+	hevea -v -o tutorial.html htutorial.tex
 	rm htutorial.tex
 
 install: html pdf
@@ -25,7 +26,7 @@ install: html pdf
 
 clean:
 	rm -f *.dvi *.log *.aux *.bbl *.blg *.lof *.lot *.toc *.out *.haux *.htoc
-	rm -f tutorial.ps tutorial.pdf
+	rm -f tutorial.ps
 
 realclean: clean
-	rm -rf tutorial tutorial.tex tutorial.html tutorial.lyx~
+	rm -rf tutorial.tex tutorial.html tutorial.lyx~ tutorial.pdf
