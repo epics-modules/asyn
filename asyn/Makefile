@@ -62,15 +62,19 @@ asyn_SRCS += asynInterposeFlush.c
 SRC_DIRS += $(ASYN)/devEpics
 DBD += devAsynOctet.dbd
 DBD += devAsynInt32.dbd
+DBD += devAsynInt32Array.dbd
 DBD += devAsynUInt32Digital.dbd
 DBD += devAsynFloat64.dbd
+DBD += devAsynFloat64Array.dbd
 DBD += devEpics.dbd
 INC += asynEpicsUtils.h
 asyn_SRCS += devAsynOctet.c
 asyn_SRCS += asynEpicsUtils.c
 asyn_SRCS += devAsynInt32.c
+asyn_SRCS += devAsynInt32Array.c
 asyn_SRCS += devAsynUInt32Digital.c
 asyn_SRCS += devAsynFloat64.c
+asyn_SRCS += devAsynFloat64Array.c
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
@@ -103,6 +107,7 @@ ifeq ($(LINUX_GPIB),YES)
 SRC_DIRS += $(ASYN)/linuxGpib
 asyn_SRCS_Linux += drvLinuxGpib.c
 DBD += drvLinuxGpib.dbd
+asyn_LIBS += gpib
 endif
 
 SRC_DIRS += $(ASYN)/devGpib
