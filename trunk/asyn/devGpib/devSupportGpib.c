@@ -752,9 +752,9 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         } else {
             msg = efasto;
         }
-        lenMessage = msg ? strlen(pgpibDpvt->msg) : 0;
+        lenMessage = msg ? strlen(msg) : 0;
         if(lenMessage>0) {
-            nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
+            nchars = writeIt(pgpibDpvt,msg,lenMessage);
         } else {
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             printf("%s msgLen is 0\n",precord->name);
