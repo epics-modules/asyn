@@ -722,16 +722,18 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     assert(pvxiLink);
     if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
     if(pvxiLink->srqInterrupt) {
-        int i;
-        for (i = 0 ; ; i++) {
-            if(i == 10) {
-                errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
-                                                           pvxiLink->portName);
-                break;
+        if (epicsEventTryWait(pvxiLink->srqThreadReady,2.0) != epicsEventWaitOK) {
+            int i;
+            for (i = 0 ; ; i++) {
+                if(i == 10) {
+                    errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
+                                                               pvxiLink->portName);
+                    break;
+                }
+                epicsInterruptibleSyscallInterrupt(pvxiLink->srqInterrupt);
+                if (epicsEventWaitWithTimeout(pvxiLink->srqThreadReady,2.0) == epicsEventWaitOK)
+                    break;
             }
-            epicsInterruptibleSyscallInterrupt(pvxiLink->srqInterrupt);
-            if (epicsEventWaitWithTimeout(pvxiLink->srqThreadReady,2.0) == epicsEventWaitOK)
-                break;
         }
         epicsInterruptibleSyscallDelete(pvxiLink->srqInterrupt);
         pvxiLink->srqInterrupt = NULL;
