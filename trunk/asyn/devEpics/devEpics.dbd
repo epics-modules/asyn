@@ -1,0 +1,13 @@
+device(bi,INST_IO,devBiAsynUInt32Digital,"asyn UInt32Digital")
+device(bo,INST_IO,devBoAsynUInt32Digital,"asyn UInt32Digital")
+device(longin,INST_IO,devLiAsynUInt32Digital,"asyn UInt32Digital")
+device(longout,INST_IO,devLoAsynUInt32Digital,"asyn UInt32Digital")
+
+device(ao,INST_IO,devAoAsynInt32,"asyn Int32")
+device(ao,INST_IO,devAoAsynFloat64,"asyn Float64")
+device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
+device(ai,INST_IO,devAiAsynFloat64,"asyn Float64")
+device(ai,INST_IO,devAiAsynInt32Average,"asyn Int32Average")
+device(ai,INST_IO,devAiAsynFloat64Average,"asyn Float64Average")
+device(ai,INST_IO,devAiAsynInt32Interrupt,"asyn Int32Interrupt")
+device(ai,INST_IO,devAiAsynFloat64Interrupt,"asyn Float64Interrupt")
