@@ -891,7 +891,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
             "%s gpibRead\n",precord->name);
     } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s read status %d nin %d\n",
+            "%s read status \"%s\" nin %d\n",
             precord->name, pasynUser->errorMessage,nchars);
         pgpibDpvt->msgInputLen = 0;
         gpibErrorHappened(pgpibDpvt);
@@ -1253,7 +1253,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
                                             "%s writeIt\n",precord->name);
     } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s write status %s requested %d but sent %d bytes\n",
+            "%s write status \"%s\" requested %d but sent %d bytes\n",
                 precord->name,pasynUser->errorMessage,len,nchars);
             gpibErrorHappened(pgpibDpvt);
     }
