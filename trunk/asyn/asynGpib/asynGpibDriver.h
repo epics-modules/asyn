@@ -72,7 +72,10 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setPortOption)(void *drvPvt,const char *key,const char *val);
+    asynStatus (*setPortOption)(void *drvPvt,asynUser *pasynUser,
+                                const char *key,const char *val);
+    asynStatus (*getPortOption)(void *drvPvt,asynUser *pasynUser,
+                                const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
     int (*write)(void *drvPvt,asynUser *pasynUser,const char *data,int numchars);
