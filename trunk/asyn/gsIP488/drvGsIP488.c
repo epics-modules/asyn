@@ -78,7 +78,7 @@ static void printStatus(gsport *pgsport,const char *source);
 static void waitTimeout(gsport *pgsport,double seconds);
 /* Interrupt Handlers */
 static void srqCallback(CALLBACK *pcallback);
-void gsip488(void *pvt);
+void gsip488(int parameter);
 /*Routines that with interrupt handler perform I/O*/
 static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
     double timeout,transferState_t nextState);
@@ -277,9 +277,9 @@ static void srqCallback(CALLBACK *pcallback)
     pasynGpib->srqHappened(pgsport->asynGpibPvt);
 }
 
-void gsip488(void *pvt)
+void gsip488(int parameter)
 {
-    gsport          *pgsport = (gsport *)pvt;
+    gsport          *pgsport = (gsport *)parameter;
     transferState_t state = pgsport->transferState;
     epicsUInt8      isr0,isr1,octet;
     char            message[80];
