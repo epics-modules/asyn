@@ -1,5 +1,5 @@
 /* devSkeletonGpib.c */
-/* $Id: devSkeletonGpib.c,v 1.5 2003-12-04 19:56:02 mrk Exp $ */
+/* $Id: devSkeletonGpib.c,v 1.6 2004-02-16 15:02:13 mrk Exp $ */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago,as Operator of Argonne
 * National Laboratory,and the Regents of the University of
@@ -86,13 +86,13 @@ static struct devGpibNames clear = { 2,clearList,0,1 };
  * 4 elements,while the intExtSsBmStop structure represents 5.
  ******************************************************************************/
 
-static char           *intExtSsBmStopList[] = { "INTERNAL","EXTERNAL",
-                                "SINGLE SHOT","BURST MODE","STOP" };
-static unsigned long   intExtSsBmStopVal[] = { 0,1,2,3,2 };
-static struct devGpibNames intExtSsBm = { 4,intExtSsBmStopList,
-                                intExtSsBmStopVal,2 };
-static struct devGpibNames intExtSsBmStop = { 5,intExtSsBmStopList,
-                                        intExtSsBmStopVal,3 };
+static char *intExtSsBmStopList[] = {
+    "INTERNAL","EXTERNAL","SINGLE SHOT","BURST MODE","STOP" };
+static unsigned long intExtSsBmStopVal[] = { 0,1,2,3,2 };
+static struct devGpibNames intExtSsBm = {
+    4,intExtSsBmStopList, intExtSsBmStopVal,2 };
+static struct devGpibNames intExtSsBmStop = {
+    5,intExtSsBmStopList,intExtSsBmStopVal,3 };
 
 /******************************************************************************
  * String arrays for EFAST operations. The last entry must be 0.
