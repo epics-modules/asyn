@@ -222,7 +222,8 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 	/*create thread only if not yet created*/
 	if((!epicsThreadGetId("PollThread")))
 		epicsThreadCreate("PollThread", epicsThreadPriorityMedium,
-				epicsThreadGetStackSize(epicsThreadStackSmall),&poll_worker,pGpibBoardPvt);
+				epicsThreadGetStackSize(epicsThreadStackSmall),
+                                (EPICSTHREADFUNC)poll_worker,pGpibBoardPvt);
 		
 	pasynManager->exceptionConnect(pasynUser);
  	return asynSuccess;
