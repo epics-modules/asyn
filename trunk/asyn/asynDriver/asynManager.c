@@ -22,7 +22,6 @@
 #include <taskwd.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
-#include <epicsString1.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsThread.h>
