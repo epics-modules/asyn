@@ -13,6 +13,7 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
+#include <cantProceed.h>
 
 #define epicsExportSharedSymbols
 
@@ -33,17 +34,20 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
 
 
-asynStatus initialize(const char *portName, asynInterface *pint32ArrayInterface)
+asynStatus initialize(const char *portName, asynInterface *pdriver)
 {
-    asynInt32Array *pasynInt32Array = (asynInt32Array *)pint32ArrayInterface->pinterface;
+    asynInt32Array *pasynInt32Array = (asynInt32Array *)pdriver->pinterface;
 
+    if(pasynInt32Array->registerInterruptUser
+    || pasynInt32Array->cancelInterruptUser) {
+        printf("asynInt32ArrayBase:initialize "
+            " overrides registerInterruptUser and cancelInterruptUser");
+    }
     if(!pasynInt32Array->write) pasynInt32Array->write = writeDefault;
     if(!pasynInt32Array->read) pasynInt32Array->read = readDefault;
-    if(!pasynInt32Array->registerInterruptUser)
-        pasynInt32Array->registerInterruptUser = registerInterruptUser;
-    if(!pasynInt32Array->cancelInterruptUser) 
-        pasynInt32Array->cancelInterruptUser = cancelInterruptUser;
-    return pasynManager->registerInterface(portName,pint32ArrayInterface);
+    pasynInt32Array->registerInterruptUser = registerInterruptUser;
+    pasynInt32Array->cancelInterruptUser = cancelInterruptUser;
+    return pasynManager->registerInterface(portName,pdriver);
 }
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
@@ -84,15 +88,14 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
 
 
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
-                               interruptCallbackInt32Array callback, void *userPvt,
-                               void **registrarPvt)
+      interruptCallbackInt32Array callback, void *userPvt,void **registrarPvt)
 {
-    const char *portName;
-    asynStatus status;
-    int        addr;
+    const char    *portName;
+    asynStatus    status;
+    int           addr;
     interruptNode *pinterruptNode;
+    void          *pinterruptPvt;
     asynInt32ArrayInterrupt *pasynInt32ArrayInterrupt;
-    void *pinterruptPvt;
 
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
@@ -120,9 +123,9 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
 {
     interruptNode *pinterruptNode = (interruptNode *)registrarPvt;
-    asynStatus status;
-    const char *portName;
-    int        addr;
+    asynStatus    status;
+    const char    *portName;
+    int           addr;
     asynInt32ArrayInterrupt *pasynInt32ArrayInterrupt =
                   (asynInt32ArrayInterrupt *)pinterruptNode->drvPvt;
     
