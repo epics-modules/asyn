@@ -1,14 +1,14 @@
 
 file {
-	name="i:\epics\synApps5-1\asyn\3-3beta\medm\asynRecord.adl"
-	version=030003
+	name="C:\Program Files\EPICS\adls\asynRecord.adl"
+	version=020306
 }
 display {
 	object {
-		x=133
-		y=514
+		x=176
+		y=428
 		width=442
-		height=430
+		height=435
 	}
 	clr=14
 	bclr=4
@@ -89,44 +89,6 @@ display {
 }
 composite {
 	object {
-		x=6
-		y=47
-		width=205
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=6
-				y=47
-				width=50
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Port:"
-		}
-		"text entry" {
-			object {
-				x=61
-				y=47
-				width=150
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PORT"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-	}
-}
-composite {
-	object {
 		x=100
 		y=8
 		width=241
@@ -160,85 +122,10 @@ composite {
 		}
 	}
 }
-text {
-	object {
-		x=228
-		y=47
-		width=50
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Address:"
-}
-"text entry" {
-	object {
-		x=318
-		y=47
-		width=110
-		height=20
-	}
-	control {
-		chan="$(P)$(R).ADDR"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=294
-		y=108
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-	textix="More..."
-}
-"related display" {
-	object {
-		x=369
-		y=108
-		width=56
-		height=20
-	}
-	display[0] {
-		label="asynOctet Interface I/O"
-		name="asynOctet.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[1] {
-		label="Register interfaces I/O"
-		name="asynRegister.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[4] {
-		label="Serial port parameters"
-		name="asynSerialPortSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[5] {
-		label="GPIB parameters"
-		name="asynGPIBSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[6] {
-		label="Socket parameters"
-		name="asynSocketSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	clr=14
-	bclr=51
-}
 "text update" {
 	object {
 		x=34
-		y=135
+		y=152
 		width=2
 		height=2
 	}
@@ -252,7 +139,7 @@ text {
 "text update" {
 	object {
 		x=75
-		y=140
+		y=157
 		width=359
 		height=16
 	}
@@ -268,7 +155,7 @@ text {
 text {
 	object {
 		x=10
-		y=139
+		y=156
 		width=70
 		height=20
 	}
@@ -280,7 +167,7 @@ text {
 rectangle {
 	object {
 		x=6
-		y=136
+		y=153
 		width=430
 		height=25
 	}
@@ -292,7 +179,7 @@ rectangle {
 text {
 	object {
 		x=300
-		y=170
+		y=187
 		width=130
 		height=20
 	}
@@ -309,7 +196,7 @@ text {
 text {
 	object {
 		x=310
-		y=170
+		y=187
 		width=110
 		height=20
 	}
@@ -326,7 +213,7 @@ text {
 menu {
 	object {
 		x=305
-		y=191
+		y=208
 		width=120
 		height=20
 	}
@@ -339,7 +226,7 @@ menu {
 text {
 	object {
 		x=180
-		y=170
+		y=187
 		width=70
 		height=20
 	}
@@ -356,7 +243,7 @@ text {
 text {
 	object {
 		x=175
-		y=170
+		y=187
 		width=80
 		height=20
 	}
@@ -373,7 +260,7 @@ text {
 menu {
 	object {
 		x=155
-		y=192
+		y=209
 		width=120
 		height=20
 	}
@@ -386,7 +273,7 @@ menu {
 text {
 	object {
 		x=25
-		y=170
+		y=187
 		width=90
 		height=20
 	}
@@ -403,7 +290,7 @@ text {
 text {
 	object {
 		x=10
-		y=170
+		y=187
 		width=120
 		height=20
 	}
@@ -420,7 +307,7 @@ text {
 menu {
 	object {
 		x=10
-		y=192
+		y=209
 		width=120
 		height=20
 	}
@@ -433,7 +320,7 @@ menu {
 rectangle {
 	object {
 		x=6
-		y=168
+		y=185
 		width=430
 		height=49
 	}
@@ -442,25 +329,10 @@ rectangle {
 		fill="outline"
 	}
 }
-"message button" {
-	object {
-		x=9
-		y=110
-		width=150
-		height=20
-	}
-	control {
-		chan="$(P)$(R).AQR"
-		clr=14
-		bclr=4
-	}
-	label="cancel queueRequest"
-	press_msg="1"
-}
 composite {
 	object {
 		x=5
-		y=225
+		y=242
 		width=430
 		height=185
 	}
@@ -469,7 +341,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=274
+				y=291
 				width=96
 				height=18
 			}
@@ -481,7 +353,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=343
+				y=360
 				width=96
 				height=18
 			}
@@ -493,7 +365,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=366
+				y=383
 				width=96
 				height=18
 			}
@@ -505,7 +377,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=320
+				y=337
 				width=96
 				height=18
 			}
@@ -517,7 +389,7 @@ composite {
 		text {
 			object {
 				x=68
-				y=297
+				y=314
 				width=96
 				height=18
 			}
@@ -529,7 +401,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=227
+				y=244
 				width=100
 				height=20
 			}
@@ -541,7 +413,7 @@ composite {
 		text {
 			object {
 				x=183
-				y=227
+				y=244
 				width=100
 				height=20
 			}
@@ -553,7 +425,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=274
+				y=291
 				width=100
 				height=18
 			}
@@ -565,7 +437,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=297
+				y=314
 				width=100
 				height=18
 			}
@@ -577,7 +449,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=320
+				y=337
 				width=100
 				height=18
 			}
@@ -589,7 +461,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=274
+				y=291
 				width=55
 				height=18
 			}
@@ -603,7 +475,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=343
+				y=360
 				width=55
 				height=18
 			}
@@ -617,7 +489,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=366
+				y=383
 				width=55
 				height=18
 			}
@@ -631,7 +503,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=320
+				y=337
 				width=55
 				height=18
 			}
@@ -645,7 +517,7 @@ composite {
 		"choice button" {
 			object {
 				x=9
-				y=297
+				y=314
 				width=55
 				height=18
 			}
@@ -659,7 +531,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=274
+				y=291
 				width=55
 				height=18
 			}
@@ -673,7 +545,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=297
+				y=314
 				width=55
 				height=18
 			}
@@ -687,7 +559,7 @@ composite {
 		"choice button" {
 			object {
 				x=183
-				y=320
+				y=337
 				width=55
 				height=18
 			}
@@ -701,7 +573,7 @@ composite {
 		text {
 			object {
 				x=242
-				y=343
+				y=360
 				width=104
 				height=18
 			}
@@ -713,7 +585,7 @@ composite {
 		"text entry" {
 			object {
 				x=183
-				y=343
+				y=360
 				width=50
 				height=20
 			}
@@ -728,7 +600,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=389
+				y=406
 				width=80
 				height=18
 			}
@@ -740,7 +612,7 @@ composite {
 		"text entry" {
 			object {
 				x=99
-				y=387
+				y=404
 				width=330
 				height=20
 			}
@@ -755,7 +627,7 @@ composite {
 		rectangle {
 			object {
 				x=5
-				y=225
+				y=242
 				width=430
 				height=185
 			}
@@ -767,7 +639,7 @@ composite {
 		"text entry" {
 			object {
 				x=9
-				y=251
+				y=268
 				width=70
 				height=20
 			}
@@ -783,7 +655,7 @@ composite {
 		"text entry" {
 			object {
 				x=183
-				y=251
+				y=268
 				width=70
 				height=20
 			}
@@ -798,29 +670,228 @@ composite {
 		}
 	}
 }
-menu {
+composite {
 	object {
-		x=109
-		y=79
-		width=132
+		x=6
+		y=47
+		width=422
 		height=20
 	}
-	control {
-		chan="$(P)$(R).IFACE"
-		clr=14
-		bclr=51
+	"composite name"=""
+	children {
+		composite {
+			object {
+				x=6
+				y=47
+				width=205
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=6
+						y=47
+						width=50
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Port:"
+				}
+				"text entry" {
+					object {
+						x=61
+						y=47
+						width=150
+						height=20
+					}
+					control {
+						chan="$(P)$(R).PORT"
+						clr=14
+						bclr=51
+					}
+					limits {
+					}
+				}
+			}
+		}
+		text {
+			object {
+				x=228
+				y=47
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Address:"
+		}
+		"text entry" {
+			object {
+				x=318
+				y=47
+				width=110
+				height=20
+			}
+			control {
+				chan="$(P)$(R).ADDR"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
 	}
 }
-text {
+composite {
 	object {
-		x=4
-		y=80
-		width=70
+		x=6
+		y=72
+		width=232
 		height=20
 	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=6
+				y=72
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="drvInfo:"
+		}
+		"text entry" {
+			object {
+				x=88
+				y=72
+				width=150
+				height=20
+			}
+			control {
+				chan="$(P)$(R).DRVINFO"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
 	}
-	textix="Interface:"
+}
+composite {
+	object {
+		x=6
+		y=97
+		width=235
+		height=20
+	}
+	"composite name"=""
+	children {
+		menu {
+			object {
+				x=111
+				y=97
+				width=130
+				height=20
+			}
+			control {
+				chan="$(P)$(R).IFACE"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=6
+				y=97
+				width=100
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+				fill="outline"
+			}
+			textix="Interface:"
+		}
+	}
+}
+composite {
+	object {
+		x=6
+		y=122
+		width=416
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=291
+				y=122
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+				fill="outline"
+			}
+			textix="More..."
+		}
+		"related display" {
+			object {
+				x=366
+				y=122
+				width=56
+				height=20
+			}
+			display[0] {
+				label="asynOctet Interface I/O"
+				name="asynOctet.adl"
+				args="P=$(P),R=$(R)"
+			}
+			display[1] {
+				label="Register interfaces I/O"
+				name="asynRegister.adl"
+				args="P=$(P),R=$(R)"
+			}
+			display[4] {
+				label="Serial port parameters"
+				name="asynSerialPortSetup.adl"
+				args="P=$(P),R=$(R)"
+			}
+			display[5] {
+				label="GPIB parameters"
+				name="asynGPIBSetup.adl"
+				args="P=$(P),R=$(R)"
+			}
+			display[6] {
+				label="Socket parameters"
+				name="asynSocketSetup.adl"
+				args="P=$(P),R=$(R)"
+			}
+			clr=14
+			bclr=51
+		}
+		"message button" {
+			object {
+				x=6
+				y=122
+				width=150
+				height=20
+			}
+			control {
+				chan="$(P)$(R).AQR"
+				clr=14
+				bclr=51
+			}
+			label="Cancel queueRequest"
+			press_msg="1"
+		}
+	}
 }
