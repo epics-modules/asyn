@@ -164,10 +164,10 @@ static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int interposeInterfaceOK);
 static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout);
-static int cancelRequest(asynUser *pasynUser);
+static asynStatus cancelRequest(asynUser *pasynUser);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
-static int getAddr(asynUser *pasynUser);
+static asynStatus getAddr(asynUser *pasynUser,int *addr);
 static asynStatus registerPort(const char *portName,
     int multiDevice,int autoConnect,
     unsigned int priority,unsigned int stackSize);
@@ -179,9 +179,9 @@ static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev);
 static asynStatus enable(asynUser *pasynUser,int yesNo);
 static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
-static int isConnected(asynUser *pasynUser);
-static int isEnabled(asynUser *pasynUser);
-static int isAutoConnect(asynUser *pasynUser);
+static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
+static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
+static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
 
 static asynManager manager = {
     report,
@@ -352,10 +352,13 @@ static void queueTimeoutCallback(void *pvt)
 {
     userPvt *puserPvt = (userPvt *)pvt;
     asynUser *pasynUser = &puserPvt->user;
-    int status;
+    asynStatus status;
 
     status = cancelRequest(pasynUser);
-    if(status==1 && puserPvt->timeoutCallback) {
+    if(status!=asynSuccess) {
+         asynPrint(pasynUser,ASYN_TRACE_ERROR,
+             "asynManager:queueTimeoutCallback cancelRequest error. Why?\n");
+    } else if(pasynUser->auxStatus && puserPvt->timeoutCallback){
         puserPvt->timeoutCallback(pasynUser);
     }
 }
@@ -457,6 +460,7 @@ static void portThread(port *pport)
 {
     userPvt  *puserPvt;
     asynUser *pasynUser;
+    asynStatus status;
 
     taskwdInsert(epicsThreadGetIdSelf(),0,0);
     while(1) {
@@ -504,8 +508,13 @@ static void portThread(port *pport)
                     assert(pdpCommon);
                     if(pdpCommon->enabled) {
                         if(!pdpCommon->connected && pdpCommon->autoConnect) {
-                            int addr = pasynManager->getAddr(&puserPvt->user);
-                            if(addr>=0) {
+                            int addr;
+                            asynUser *pasynUser = &puserPvt->user;
+                            status = pasynManager->getAddr(pasynUser,&addr);
+                            if(status!=asynSuccess) {
+                                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                                    "%s\n",pasynUser->errorMessage);
+                            } else if(addr>=0) {
                                 epicsMutexUnlock(pport->lock);
                                 autoConnect(pport,addr);
                                 epicsMutexMustLock(pport->lock);
@@ -908,7 +917,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     return asynSuccess;
 }
 
-static int cancelRequest(asynUser *pasynUser)
+static asynStatus cancelRequest(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
@@ -919,15 +928,16 @@ static int cancelRequest(asynUser *pasynUser)
     if(!pport) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "asynManager:cancelRequest but not connected\n");
-        return -1;
+        return asynError;
     }
     epicsMutexMustLock(pport->lock);
     if(!puserPvt->isQueued) {
+        pasynUser->auxStatus = 0;
         epicsMutexUnlock(pport->lock);
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
             "%s addr %d asynManager:cancelRequest but not queued\n",
             pport->portName,addr);
-        return 0;
+        return asynSuccess;
     }
     for(i=asynQueuePriorityConnect; i>=asynQueuePriorityLow; i--) {
         puserPvt = (userPvt *)ellFirst(&pport->queueList[i]);
@@ -954,11 +964,12 @@ static int cancelRequest(asynUser *pasynUser)
             "%s addr %d asynManager:cancelRequest LOGIC ERROR\n",
             pport->portName, addr);
         epicsMutexUnlock(pport->lock);
-        return -1;
+        return asynError;
     }
     epicsMutexUnlock(pport->lock);
     epicsEventSignal(pport->notifyPortThread);
-    return 1;
+    pasynUser->auxStatus = 0;
+    return asynSuccess;
 }
 
 static asynStatus lock(asynUser *pasynUser)
@@ -1015,15 +1026,22 @@ static asynStatus unlock(asynUser *pasynUser)
     return asynSuccess;
 }
 
-static int getAddr(asynUser *pasynUser)
+static asynStatus getAddr(asynUser *pasynUser,int *addr)
 {
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
     port    *pport = puserPvt->pport;
 
-    assert(pport);
-    if(!pport->multiDevice) return -1;
-    if(!puserPvt->pdevice) return -1;
-    return puserPvt->pdevice->addr;
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:getAddr no connected to device");
+        return asynError;
+    }
+    if(!pport->multiDevice || !puserPvt->pdevice) {
+        *addr = -1;
+    } else {
+        *addr = puserPvt->pdevice->addr;
+    }
+    return asynSuccess;
 }
 
 static asynStatus registerPort(const char *portName,
@@ -1200,31 +1218,34 @@ static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo)
     return asynSuccess;
 }
 
-static int isConnected(asynUser *pasynUser)
+static asynStatus isConnected(asynUser *pasynUser,int *yesNo)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    if(!pdpCommon) return -1;
-    return pdpCommon->connected;
+    assert(pdpCommon);
+    *yesNo = pdpCommon->connected;
+    return asynSuccess;
 }
 
-static int isEnabled(asynUser *pasynUser)
+static asynStatus isEnabled(asynUser *pasynUser,int *yesNo)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    if(!pdpCommon) return -1;
-    return pdpCommon->enabled;
+    assert(pdpCommon);
+    *yesNo = pdpCommon->enabled;
+    return asynSuccess;
 }
 
-static int isAutoConnect(asynUser *pasynUser)
+static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    if(!pdpCommon) return -1;
-    return pdpCommon->autoConnect;
+    assert(pdpCommon);
+    *yesNo = pdpCommon->autoConnect;
+    return asynSuccess;
 }
 
 static asynStatus traceLock(asynUser *pasynUser)
