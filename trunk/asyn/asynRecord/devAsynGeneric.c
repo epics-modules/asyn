@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include <cantProceed.h>
+#include <epicsStdio.h>
 #include <epicsAssert.h>
 #include <link.h>
 #include <epicsMutex.h>
@@ -28,10 +29,10 @@
 #include <recSup.h>
 #include <devSup.h>
 #include <drvSup.h>
+#include <biRecord.h>
 #include <boRecord.h>
 #include <longoutRecord.h>
 #include <dbCommon.h>
-#include <subRecord.h>
 #include <stringoutRecord.h>
 #include <registryFunction.h>
 #include <epicsExport.h>
@@ -39,45 +40,35 @@
 #include <asynDriver.h>
 
 typedef enum {
-    stateNoPort,stateInit,stateConnected,stateException
+    stateNoPort,stateInit,stateConnected
 }devAsynState;
 
 typedef struct dpvtAsyn {
+    CALLBACK     callback; /*for connect*/
     asynUser     *pasynUser;
     char         *portName;
     int          addr;
     epicsMutexId lock;
     devAsynState state;
     int          connectActive;
-    int          connected;
-    int          enabled;
-    int          autoConnect;
     int          traceMask;
     int          traceIOMask;
-    /*Following for exclusive use of asynConnectDeviceInit/asynConnectDevice*/
-    dbAddr       dbaddr; /* of PortAddr stringout record*/
+    /* Following for asynBiState */
+    biRecord     *pconnectState;
+    biRecord     *penableState;
+    biRecord     *pautoConnectState;
+    /* Following for asynBoState */
+    boRecord     *pconnect;
+    asynCommon   *pasynCommon;
+    void         *commonPvt;
 }dpvtAsyn;
     
 typedef struct dpvtCommon{
     dpvtAsyn *pdpvtAsyn;
     dbAddr   dbaddr;
 }dpvtCommon;
-
-typedef struct dpvtConnect{
-    CALLBACK     callback;
-    asynUser     *pasynUser;
-    asynCommon   *pasynCommon;
-    void         *commonPvt;
-    dpvtAsyn     *pdpvtAsyn;
-    dbAddr       dbaddr;
-}dpvtConnect;
 
-static long initCommon(dbCommon *pdbCommon,struct link *plink,
-    userCallback queue);
-static long asynConnectDeviceInit(subRecord *psub,void *unused);
-static long asynConnectDevice(subRecord *psub);
-static long asynConnectedInit(subRecord *psub,void *unused);
-static long asynConnected(subRecord *psub);
+static long initCommon(dbCommon *pdbCommon,struct link *plink);
 static dpvtAsyn *dpvtAsynFind(dpvtCommon *pdpvtCommon);
 
 /* Create the dset for devAsynTrace */
@@ -90,12 +81,15 @@ typedef struct dsetAsyn{
 	DEVSUPFUN io;
 }dsetAsyn;
 
-static long initEnable();
-static long writeEnable();
-static long initAutoConnect();
-static long writeAutoConnect();
 static long initConnect();
 static long writeConnect();
+static long initConnected();
+static long readConnected();
+
+static long initBiState();
+static long readState();
+static long initBoState();
+static long writeState();
 
 static long initTrace();
 static long writeTrace();
@@ -106,14 +100,17 @@ static long writeTraceIOTruncateSize();
 static long initTraceFile();
 static long writeTraceFile();
 
-dsetAsyn devAsynEnableG = {5,0,0,initEnable,0,writeEnable};
-epicsExportAddress(dset,devAsynEnableG);
-
-dsetAsyn devAsynAutoConnectG = {5,0,0,initAutoConnect,0,writeAutoConnect};
-epicsExportAddress(dset,devAsynAutoConnectG);
-
 dsetAsyn devAsynConnectG = {5,0,0,initConnect,0,writeConnect};
 epicsExportAddress(dset,devAsynConnectG);
+
+dsetAsyn devAsynConnectedG = {5,0,0,initConnected,0,readConnected};
+epicsExportAddress(dset,devAsynConnectedG);
+
+dsetAsyn devAsynBiStateG = {5,0,0,initBiState,0,readState};
+epicsExportAddress(dset,devAsynBiStateG);
+
+dsetAsyn devAsynBoStateG = {5,0,0,initBoState,0,writeState};
+epicsExportAddress(dset,devAsynBoStateG);
 
 dsetAsyn devAsynTraceG = {5,0,0,initTrace,0,writeTrace};
 epicsExportAddress(dset,devAsynTraceG);
@@ -128,8 +125,7 @@ epicsExportAddress(dset,devAsynTraceIOTruncateSizeG);
 dsetAsyn devAsynTraceFileG = {5,0,0,initTraceFile,0,writeTraceFile};
 epicsExportAddress(dset,devAsynTraceFileG);
 
-static long initCommon(dbCommon *pdbCommon,struct link *plink,
-    userCallback queue)
+static long initCommon(dbCommon *pdbCommon,struct link *plink)
 {
     dpvtCommon *pdpvtCommon;
     char       *parm;
@@ -166,113 +162,122 @@ static dpvtAsyn *dpvtAsynFind(dpvtCommon *pdpvtCommon)
     return pdpvtAsyn;
 }
 
-/*The subroutines for connecting */
-
-static void exception(asynUser *pasynUser,asynException exception)
+/*callback to issue disconnect/connect to low level driver*/
+static void connect(asynUser *pasynUser)
 {
-    subRecord *psub = (subRecord *)pasynUser->userPvt;
-    dpvtAsyn  *pdpvtAsyn = (dpvtAsyn *)psub->dpvt;
-    int       yesNo;
+    stringoutRecord *pso = (stringoutRecord *)pasynUser->userPvt;
+    dpvtAsyn        *pdpvtAsyn = (dpvtAsyn *)pso->dpvt;
+    boRecord        *pbo = (boRecord *)pdpvtAsyn->pconnect;
+    dbCommon        *precord = (dbCommon *)pbo;
+    asynCommon      *pasynCommon = pdpvtAsyn->pasynCommon;
+    void            *drvPvt = pdpvtAsyn->commonPvt;
+    asynStatus      status = asynSuccess;
+    int             val;
 
-    epicsMutexMustLock(pdpvtAsyn->lock);
-    if(pdpvtAsyn->state==stateNoPort) goto unlock;
-    if(pdpvtAsyn->state==stateException) goto unlock;
-    switch(exception) {
-    case asynExceptionConnect:
-        if(pdpvtAsyn->connectActive) goto unlock;
-        yesNo = pasynManager->isConnected(pasynUser);
-        if(pdpvtAsyn->connected==yesNo) goto unlock;
-        break;
-    case asynExceptionEnable:
-        yesNo = pasynManager->isEnabled(pasynUser);
-        if(pdpvtAsyn->enabled==yesNo) goto unlock;
-        break;
-    case asynExceptionAutoConnect:
-        yesNo = pasynManager->isAutoConnect(pasynUser);
-        if(pdpvtAsyn->autoConnect==yesNo) goto unlock;
-        break;
+    assert(pbo);
+    assert(pasynCommon);
+    assert(drvPvt);
+    val = pbo->val;
+    if(val==0) {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect %d\n",
+            pbo->name,(int)pbo->val);
+        status = pasynCommon->disconnect(drvPvt,pasynUser);
+    } else {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connect %d\n",
+            pbo->name,(int)pbo->val);
+        status = pasynCommon->connect(drvPvt,pasynUser);
     }
-    pdpvtAsyn->state = stateException;
-    if(!pdpvtAsyn->connectActive) scanOnce((void *)psub);
-unlock:
-    epicsMutexUnlock(pdpvtAsyn->lock);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
+            pbo->name,pasynUser->errorMessage);
+        dbScanLock(precord);
+        recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
+        dbScanUnlock(precord);
+    }
+    callbackRequestProcessCallback(&pdpvtAsyn->callback,pbo->prio,(void *)pbo);
 }
 
-static long asynConnectDeviceInit(subRecord *psub,void *unused)
+/* exception callback for asynBiStatus */
+static void exception(asynUser *pasynUser,asynException exception)
 {
-    dbAddr   dbaddr;
-    long     status;
+    stringoutRecord  *pso = (stringoutRecord *)pasynUser->userPvt;
+    dpvtAsyn         *pdpvtAsyn = (dpvtAsyn *)pso->dpvt;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exception %d\n",
+        pso->name,(int)exception);
+    epicsMutexMustLock(pdpvtAsyn->lock);
+    switch(exception) {
+    case asynExceptionConnect:
+        if(pdpvtAsyn->pconnectState)
+            scanOnce((dbCommon *)pdpvtAsyn->pconnectState); break;
+    case asynExceptionEnable:
+        if(pdpvtAsyn->penableState)
+            scanOnce((dbCommon *)pdpvtAsyn->penableState); break;
+    case asynExceptionAutoConnect:
+        if(pdpvtAsyn->pautoConnectState)
+            scanOnce((dbCommon *)pdpvtAsyn->pautoConnectState); break;
+    default:
+        break;
+    }
+    epicsMutexUnlock(pdpvtAsyn->lock);
+}
+
+static long initConnect(stringoutRecord *pso)
+{
     dpvtAsyn *pdpvtAsyn;
 
-    status = dbNameToAddr(psub->desc,&dbaddr);
-    if(status) {
-        printf("%s dbNameToAddr failed for %s\n",psub->name,psub->desc);
-        psub->pact = 1;
-        return 0;
-    }
     pdpvtAsyn = (dpvtAsyn *)callocMustSucceed(
         1,sizeof(dpvtAsyn),"asynConnectDeviceInit");
     pdpvtAsyn->lock = epicsMutexMustCreate();
     pdpvtAsyn->state = stateNoPort;
-    pdpvtAsyn->dbaddr = dbaddr;
-    psub->val = 0.0;
-    psub->udf = 0;
-    psub->dpvt = pdpvtAsyn;
+    pso->dpvt = pdpvtAsyn;
     return 0;
 }
-
-static long asynConnectDevice(subRecord *psub)
+
+static long writeConnect(stringoutRecord *pso)
 {
-    dpvtAsyn    *pdpvtAsyn = (dpvtAsyn *)psub->dpvt;
-    char        buffer[100];
-    int         addr = 0;
-    int         lenportName = 0;
-    asynUser    *pasynUser = 0;
-    char        *separator;
-    char        *portName;
-    asynStatus  status;
-    long        dbstatus;
+    dpvtAsyn      *pdpvtAsyn = (dpvtAsyn *)pso->dpvt;
+    int           addr = 0;
+    int           lenportName = 0;
+    asynUser      *pasynUser = 0;
+    char          *separator;
+    char          *portName;
+    asynStatus    status = asynSuccess;
+    asynInterface *pasynInterface;
+    char          buffer[100];
     
     if(!pdpvtAsyn) {
-        recGblSetSevr(psub,WRITE_ALARM,INVALID_ALARM);
+        recGblSetSevr(pso,WRITE_ALARM,INVALID_ALARM);
         return 0;
     }
     pasynUser = pdpvtAsyn->pasynUser;
     epicsMutexMustLock(pdpvtAsyn->lock);
-    if(pdpvtAsyn->state==stateException) {
-        /* Just make all  linked records init */
-        pdpvtAsyn->state = stateInit;
-        epicsMutexUnlock(pdpvtAsyn->lock);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s stateException\n",
-            psub->name);
-        return 0;
-    }
     pdpvtAsyn->state = stateNoPort;
     if(pdpvtAsyn->pasynUser) {
         pasynUser = pdpvtAsyn->pasynUser;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exceptionCallbackRemove\n",
-            psub->name);
+            pso->name);
         status = pasynManager->exceptionCallbackRemove(pasynUser);
         if(status==asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n",
-                psub->name);
+                pso->name);
             status = pasynManager->disconnect(pasynUser);
         }
         if(status==asynSuccess)
             status = pasynManager->freeAsynUser(pasynUser);
         if(status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                psub->name,pasynUser->errorMessage);
-            recGblSetSevr(psub,WRITE_ALARM,MAJOR_ALARM);
+                pso->name,pasynUser->errorMessage);
+            recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
         }
         free(pdpvtAsyn->portName);
         pdpvtAsyn->portName = 0;
+        pdpvtAsyn->commonPvt = 0;
+        pdpvtAsyn->pasynCommon = 0;
         pdpvtAsyn->pasynUser = 0;
     }
-    buffer[0] = 0;
-    dbstatus = dbGet(&pdpvtAsyn->dbaddr,DBR_STRING,buffer,0,0,0);
-    if(dbstatus) recGblRecordError(dbstatus,(void *)psub,"dbGetLinkValue");
-    /*allow comma or blank to separate port and addr*/
+    strncpy(buffer,pso->val,sizeof(buffer));
+    buffer[sizeof(buffer) -1] = 0;
     separator = strchr(buffer,',');
     if(!separator)  separator = strchr(buffer,' ');
     if(separator) {
@@ -283,101 +288,158 @@ static long asynConnectDevice(subRecord *psub)
         lenportName = strlen(buffer);
     }
     if(lenportName<=0) {
-       printf("%s can't determine port,addr\n",psub->name);
+       printf("%s can't determine port,addr\n",pso->name);
        goto bad;
     }
     portName = (char *)callocMustSucceed(lenportName,sizeof(char),"devAsyn");
     strcpy(portName,buffer);
-    pasynUser = pasynManager->createAsynUser(0,0);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectDevice\n",psub->name);
+    pasynUser = pasynManager->createAsynUser(connect,0);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectDevice\n",pso->name);
     status = pasynManager->connectDevice(pasynUser,portName,addr);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s asynManager error %s\n",psub->name,pasynUser->errorMessage);
+            "%s asynManager error %s\n",pso->name,pasynUser->errorMessage);
         goto freeAsynUser;
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s findInterface %s\n",
+        pso->name,asynCommonType);
+    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
+    if(!pasynInterface) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
+            pso->name,pasynUser->errorMessage);
+        goto disconnect;
+    }
+    pdpvtAsyn->pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    pdpvtAsyn->commonPvt = pasynInterface->drvPvt;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
-        "%s exceptionCallbackAdd\n",psub->name);
+        "%s exceptionCallbackAdd\n",pso->name);
     status = pasynManager->exceptionCallbackAdd(pasynUser,exception);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-            psub->name,pasynUser->errorMessage);
+            pso->name,pasynUser->errorMessage);
         goto disconnect;
     }
     pdpvtAsyn->portName = portName;
     pdpvtAsyn->addr = addr;
-    pasynUser->userPvt = psub;
+    pasynUser->userPvt = pso;
     pdpvtAsyn->pasynUser = pasynUser;
     pdpvtAsyn->state = stateInit;
     epicsMutexUnlock(pdpvtAsyn->lock);
     return(0);
 disconnect:
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n", psub->name);
-    status = pasynManager->disconnect(pasynUser);
-    if(status!=asynSuccess) goto printMessage;
+    pasynManager->disconnect(pasynUser);
 freeAsynUser:
     pasynManager->freeAsynUser(pasynUser);
     free(portName);
-printMessage:
-    if(status!=asynSuccess)
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                psub->name,pasynUser->errorMessage);
 bad:
     epicsMutexUnlock(pdpvtAsyn->lock);
-    recGblSetSevr(psub,WRITE_ALARM,MAJOR_ALARM);
+    recGblSetSevr(pso,WRITE_ALARM,MAJOR_ALARM);
     return 0;
 }
 
-static long asynConnectedInit(subRecord *psub,void *unused)
-{
-    dbAddr   dbaddr;
-    long     status;
-    dpvtCommon *pdpvtCommon;
+static long initConnected(biRecord *pbi)
+{ return initCommon((dbCommon *)pbi,&pbi->inp); }
 
-    status = dbNameToAddr(psub->desc,&dbaddr);
-    if(status) {
-        printf("%s dbNameToAddr failed for %s\n",psub->name,psub->desc);
-        psub->pact = 1;
-        return 0;
-    }
-    pdpvtCommon = (dpvtCommon *)callocMustSucceed(
-        1,sizeof(dpvtCommon),"asynConnectDeviceInit");
-    pdpvtCommon->dbaddr = dbaddr;
-    psub->dpvt = pdpvtCommon;
-    psub->val = 0;
-    psub->udf = 0;
-    return 0;
-}
-
-static long asynConnected(subRecord *psub)
+static long readConnected(biRecord *pbi)
 {
-    dpvtCommon *pdpvtCommon = (dpvtCommon *)psub->dpvt;
+    dpvtCommon *pdpvtCommon = (dpvtCommon *)pbi->dpvt;
     dpvtAsyn   *pdpvtAsyn = dpvtAsynFind(pdpvtCommon);
 
     if(!pdpvtAsyn) {
-        printf("%s could not find pdpvtAsyn\n",psub->name);
+        printf("%s could not find pdpvtAsyn\n",pbi->name);
         goto bad;
     }
-    epicsMutexMustLock(pdpvtAsyn->lock);
-    pdpvtAsyn->state = stateConnected;
-    epicsMutexUnlock(pdpvtAsyn->lock);
+    if(pdpvtAsyn->state==stateInit) {
+        pdpvtAsyn->state = stateConnected;
+        pbi->val = pbi->rval = 1;
+        pbi->udf = 0;
+    } else if(pdpvtAsyn->state==stateNoPort){
+        recGblSetSevr(pbi,WRITE_ALARM,MINOR_ALARM);
+        pbi->val = pbi->rval = 0;
+        pbi->udf = 0;
+    }
     return(0);
 bad:
-    recGblSetSevr(psub,WRITE_ALARM,MAJOR_ALARM);
+    recGblSetSevr(pbi,WRITE_ALARM,MAJOR_ALARM);
     return 0;
 }
 
-static long initEnable(boRecord *pbo)
-{
-    return initCommon((dbCommon *)pbo,&pbo->out,0);
-}
+static long initBiState(biRecord *pbi)
+{ return initCommon((dbCommon *)pbi,&pbi->inp); }
 
-static long writeEnable(boRecord *pbo)
+static long readState(biRecord *pbi)
+{
+    dpvtCommon *pdpvtCommon = (dpvtCommon *)pbi->dpvt;
+    dpvtAsyn   *pdpvtAsyn = dpvtAsynFind(pdpvtCommon);
+    asynUser   *pasynUser;
+    int        yesNo;
+
+    if(!pdpvtAsyn) {
+        printf("%s could not find pdpvtAsyn\n",pbi->name);
+        goto bad;
+    }
+    pasynUser = pdpvtAsyn->pasynUser;
+    epicsMutexMustLock(pdpvtAsyn->lock);
+    switch(pdpvtAsyn->state) {
+    case stateInit:
+        switch(pbi->mask) {
+            case 0x1: pdpvtAsyn->pconnectState = pbi; break;
+            case 0x2: pdpvtAsyn->penableState = pbi; break;
+            case 0x4: pdpvtAsyn->pautoConnectState = pbi; break;
+            default:
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "%s illegal mask. Must be 0x1, 0x2, or 0x4\n",pbi->name);
+                pbi->pact = 1;
+                return 0;
+        }
+        /* no break on purpose */
+    case stateConnected:
+        switch(pbi->mask) {
+        case 0x1:
+            yesNo = pasynManager->isConnected(pasynUser);
+            if(yesNo<0) goto unlock;
+            break;
+        case 0x2:
+            yesNo = pasynManager->isEnabled(pasynUser);
+            if(yesNo<0) goto unlock;
+            break;
+        case 0x4:
+            yesNo = pasynManager->isAutoConnect(pasynUser);
+            if(yesNo<0) goto unlock;
+            break;
+        default:
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "illegal asynException\n");
+            goto unlock;
+        }
+        pbi->val = pbi->rval = yesNo;
+        pbi->udf = 0;
+        break;
+    default:
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s state doesn't allow enable. Try again later.\n",pbi->name);
+        goto unlock;
+    }
+    epicsMutexUnlock(pdpvtAsyn->lock);
+    return 0;
+unlock:
+    epicsMutexUnlock(pdpvtAsyn->lock);
+    asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        "%s failed %s\n",pbi->name,pasynUser->errorMessage);
+bad:
+    recGblSetSevr(pbi,WRITE_ALARM,MAJOR_ALARM);
+    return 0;
+}
+
+static long initBoState(boRecord *pbo)
+{ return initCommon((dbCommon *)pbo,&pbo->out); }
+
+static long writeState(boRecord *pbo)
 {
     dpvtCommon *pdpvtCommon = (dpvtCommon *)pbo->dpvt;
     dpvtAsyn   *pdpvtAsyn = dpvtAsynFind(pdpvtCommon);
     asynUser   *pasynUser;
-    asynStatus status;
+    asynStatus status = asynSuccess;
 
     if(!pdpvtAsyn) {
         printf("%s could not find pdpvtAsyn\n",pbo->name);
@@ -387,280 +449,61 @@ static long writeEnable(boRecord *pbo)
     pasynUser = pdpvtAsyn->pasynUser;
     switch(pdpvtAsyn->state) {
     case stateInit:
-        pbo->val = pasynManager->isEnabled(pasynUser);
-        pdpvtAsyn->enabled = pbo->val;
+        switch(pbo->mask) {
+        case 0x1:
+            pdpvtAsyn->pconnect = pbo;
+            pbo->val = pasynManager->isConnected(pasynUser);
+            break;
+        case 0x2:
+            pbo->val = pasynManager->isEnabled(pasynUser);
+            break;
+        case 0x4:
+            pbo->val = pasynManager->isAutoConnect(pasynUser);
+            break;
+        default:
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s illegal mask. Must be 0x1, 0x2, or 0x4\n",pbo->name);
+            goto unlock;
+        }
         pbo->udf = 0;
         break;
     case stateConnected:
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s enable %d\n",
-            pbo->name,(int)pbo->val);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s %d\n", pbo->name,(int)pbo->val);
         pbo->val = (pbo->val ? 1 : 0); /*make sure val is yesNo*/
-        pdpvtAsyn->enabled = pbo->val;
-        status = pasynManager->enable(pasynUser,(int)pbo->val);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s enable failed  %s\n",
-                pbo->name,pasynUser->errorMessage);
+        switch(pbo->mask) {
+        case 0x1:
+            if(pbo->pact) break;
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s queueRequest\n", pbo->name);
+            status = pasynManager->queueRequest(pasynUser,
+                asynQueuePriorityConnect,0.0);
+            if(status==asynSuccess) pbo->pact = 1;
+            break;
+        case 0x2:
+            status = pasynManager->enable(pasynUser,(int)pbo->val);
+            break;
+        case 0x4:
+            pbo->val = pasynManager->autoConnect(pasynUser,(int)pbo->val);
+            break;
+        default:
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "%s illegal mask. Must be 0x1, 0x2, or 0x4\n",pbo->name);
             goto unlock;
         }
-        break;
-    default:
-        printf("%s state doesn't allow enable. Try again later.\n",pbo->name);
-        goto unlock;
-    }
-    epicsMutexUnlock(pdpvtAsyn->lock);
-    return 0;
-unlock:
-    epicsMutexUnlock(pdpvtAsyn->lock);
-bad:
-    recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
-    return 0;
-}
-
-static long initAutoConnect(boRecord *pbo)
-{
-    return initCommon((dbCommon *)pbo,&pbo->out,0);
-}
-
-static long writeAutoConnect(boRecord *pbo)
-{
-    dpvtCommon *pdpvtCommon = (dpvtCommon *)pbo->dpvt;
-    dpvtAsyn   *pdpvtAsyn = dpvtAsynFind(pdpvtCommon);
-    asynUser   *pasynUser;
-    asynStatus status;
-
-    if(!pdpvtAsyn) {
-        printf("%s could not find pdpvtAsyn\n",pbo->name);
-        goto bad;
-    }
-    epicsMutexMustLock(pdpvtAsyn->lock);
-    pasynUser = pdpvtAsyn->pasynUser;
-    switch(pdpvtAsyn->state) {
-    case stateInit:
-        pbo->val = pasynManager->isAutoConnect(pasynUser);
-        pdpvtAsyn->autoConnect = pbo->val;
-        pbo->udf = 0;
-        break;
-    case stateConnected:
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s autoConnect %d\n",
-            pbo->name,(int)pbo->val);
-        pbo->val = (pbo->val ? 1 : 0); /*make sure val is yesNo*/
-        pdpvtAsyn->autoConnect = pbo->val;
-        status = pasynManager->autoConnect(pasynUser,(int)pbo->val);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s autoConnect failed  %s\n",
-                pbo->name,pasynUser->errorMessage);
-            goto unlock;
-        }
-        break;
-    default:
-        printf("%s state doesn't allow autoConnect. Try again later.\n",pbo->name);
-        goto unlock;
-    }
-    epicsMutexUnlock(pdpvtAsyn->lock);
-    return 0;
-unlock:
-    epicsMutexUnlock(pdpvtAsyn->lock);
-bad:
-    recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
-    return 0;
-}
-
-/*callback to issue disconnect/connect to low level driver*/
-static void connect(asynUser *pasynUser)
-{
-    boRecord    *pbo = (boRecord *)pasynUser->userPvt;
-    dbCommon    *precord = (dbCommon *)pbo;
-    dpvtConnect *pdpvtConnect = (dpvtConnect *)pbo->dpvt;
-    dpvtAsyn    *pdpvtAsyn = pdpvtConnect->pdpvtAsyn;
-    asynCommon  *pasynCommon = pdpvtConnect->pasynCommon;
-    void        *drvPvt = pdpvtConnect->commonPvt;
-    asynStatus  status = asynSuccess;
-    int         val;
-
-    assert(pasynCommon);
-    assert(drvPvt);
-    val = pbo->val;
-    if(val==0) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect %d\n",
-            pbo->name,(int)pbo->val);
-        status = pasynCommon->disconnect(drvPvt,pasynUser);
-        if(status==asynSuccess) pdpvtAsyn->connected = 0;
-    } else {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connect %d\n",
-            pbo->name,(int)pbo->val);
-        status = pasynCommon->connect(drvPvt,pasynUser);
-        if(status==asynSuccess) pdpvtAsyn->connected = 1;
-    }
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-            pbo->name,pasynUser->errorMessage);
-        dbScanLock(precord);
-        recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
-        dbScanUnlock(precord);
-    }
-    callbackRequestProcessCallback(&pdpvtConnect->callback,pbo->prio,(void *)pbo);
-}
-
-static void connectException(asynUser *pasynUser,asynException exception)
-{
-    boRecord     *pbo = (boRecord *)pasynUser->userPvt;
-    dbCommon     *precord = (dbCommon *)pbo;
-    dpvtAsyn     *pdpvtAsyn = (dpvtAsyn *)pbo->dpvt;
-    int          yesNo,valueChanged;
-
-    if(exception!=asynExceptionConnect) return;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectException %d\n",
-        pbo->name,(int)exception);
-    dbScanLock(precord);
-    yesNo = pasynManager->isConnected(pasynUser);
-    valueChanged = (pbo->val&1) ^ yesNo;
-    if(valueChanged) pbo->val =yesNo;
-    dbScanUnlock(precord);
-    if(valueChanged) scanOnce(precord);
-}
-
-static long initConnect(boRecord *pbo)
-{
-    struct link *plink = &pbo->out;
-    dpvtConnect *pdpvtConnect;
-    char        *parm;
-    dbAddr      dbaddr;
-    long        status;
-    
-    if(plink->type!=INST_IO) {
-        printf("%s link type invalid. Must be INST_IO",pbo->name);
-        pbo->pact = 1;
-        return -1;
-    }
-    parm = plink->value.instio.string;
-    status = dbNameToAddr(parm,&dbaddr);
-    if(status) {
-        printf("%s dbNameToAddr failed\n",pbo->name);
-        pbo->pact = 1;
-        return 0;
-    }
-    pdpvtConnect = (dpvtConnect *)callocMustSucceed(
-        1,sizeof(dpvtConnect),"devAsynTest");
-    pdpvtConnect->dbaddr = dbaddr;
-    pbo->dpvt = pdpvtConnect;
-    return 0;
-}
-
-static long writeConnect(boRecord *pbo)
-{
-    dpvtConnect   *pdpvtConnect = (dpvtConnect *)pbo->dpvt;
-    asynUser      *pasynUser = pdpvtConnect->pasynUser;
-    dpvtAsyn      *pdpvtAsyn = pdpvtConnect->pdpvtAsyn;
-    dbCommon      *pdbCommon;
-    asynInterface *pasynInterface;
-    asynStatus    status;
-    devAsynState  state;
-    int           isConnected;
-
-    if(!pdpvtAsyn) {
-        pdbCommon = (dbCommon *)pdpvtConnect->dbaddr.precord;
-        pdpvtConnect->pdpvtAsyn = (dpvtAsyn *)pdbCommon->dpvt;
-        pdpvtAsyn = pdpvtConnect->pdpvtAsyn;
-    }
-    if(!pdpvtAsyn) {
-        printf("%s could not find pdpvtAsyn\n",pbo->name);
-        goto bad;
-    }
-    pdbCommon = (dbCommon *)pdpvtConnect->dbaddr.precord;
-    epicsMutexMustLock(pdpvtAsyn->lock);
-    state = pdpvtAsyn->state;
-    if(pbo->pact) {
-        assert(pdpvtAsyn->connectActive);
-        pdpvtAsyn->connectActive = 0;
-        if(state==stateException) scanOnce((void *)pdbCommon);
-        epicsMutexUnlock(pdpvtAsyn->lock);
-        return 0;
-    }
-    if(state==stateInit && pasynUser) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exceptionCallbackRemove\n",
-            pbo->name);
-        status = pasynManager->exceptionCallbackRemove(pasynUser);
-        if(status==asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n",
-                pbo->name);
-            status = pasynManager->disconnect(pasynUser);
-        }
-        if(status==asynSuccess)
-            status = pasynManager->freeAsynUser(pasynUser);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                pbo->name,pasynUser->errorMessage);
-            recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
-        }
-        pdpvtConnect->commonPvt = 0;
-        pdpvtConnect->pasynCommon = 0;
-        pdpvtConnect->pasynUser = 0;
-        pasynUser = 0;
-    }
-    if(pdpvtAsyn->state==stateNoPort) {
-        printf("%s no port attached\n",pbo->name);
-        goto unlock;
-    }
-    if(!pasynUser) {
-        pasynUser = pasynManager->createAsynUser(connect,0);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectDevice\n", pbo->name);
-        status = pasynManager->connectDevice(pasynUser,
-            pdpvtAsyn->portName,pdpvtAsyn->addr);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                pbo->name,pasynUser->errorMessage);
-            goto freeAsynUser;
-        }
-        status = pasynManager->exceptionCallbackAdd(pasynUser,connectException);
         if(status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s exceptionCallbackAdd error %s\n",
-                 pbo->name,pasynUser->errorMessage);
-        }
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s findInterface %s\n",
-            pbo->name,asynCommonType);
-        pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
-        if(!pasynInterface) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                pbo->name,pasynUser->errorMessage);
-            goto disconnect;
-        }
-        pdpvtConnect->pasynCommon = (asynCommon *)pasynInterface->pinterface;
-        pdpvtConnect->commonPvt = pasynInterface->drvPvt;
-        pasynUser->userPvt = pbo;
-        pdpvtConnect->pasynUser = pasynUser;
-        pbo->val = pasynManager->isConnected(pasynUser);
-        pbo->udf = 0;
+                "%s error %s\n",pbo->name,pasynUser->errorMessage);
+        } 
+        break;
+    default:
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s state doesn't allow action. Try again later.\n",pbo->name);
+        goto unlock;
     }
-    isConnected = pasynManager->isConnected(pasynUser);
-    if(pbo->val==isConnected) goto success;
-    if(pdpvtAsyn->state==stateConnected) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s queueRequest\n", pbo->name);
-        status = pasynManager->queueRequest(pasynUser,
-           asynQueuePriorityConnect,0.0);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s enable failed %s\n",
-                pbo->name,pasynUser->errorMessage);
-            recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
-        } else {
-            pdpvtAsyn->connectActive = 1;
-        }
-    }
-success:
     epicsMutexUnlock(pdpvtAsyn->lock);
     return 0;
-disconnect:
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s disconnect\n", pbo->name);
-    status = pasynManager->disconnect(pasynUser);
-    if(status!=asynSuccess) goto printMessage;
-freeAsynUser:
-    status = pasynManager->freeAsynUser(pasynUser);
-printMessage:
-    if(status!=asynSuccess)
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
-                pbo->name,pasynUser->errorMessage);
 unlock:
+    asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        "%s error %s\n",pbo->name,pasynUser->errorMessage);
     epicsMutexUnlock(pdpvtAsyn->lock);
 bad:
     recGblSetSevr(pbo,WRITE_ALARM,MAJOR_ALARM);
@@ -668,9 +511,7 @@ bad:
 }
 
 static long initTrace(boRecord *pbo)
-{
-    return initCommon((dbCommon *)pbo,&pbo->out,0);
-}
+{ return initCommon((dbCommon *)pbo,&pbo->out); }
 
 static long writeTrace(boRecord	*pbo)
 {
@@ -731,9 +572,7 @@ bad:
 }
 
 static long initTraceIO(boRecord *pbo)
-{
-    return initCommon((dbCommon *)pbo,&pbo->out,0);
-}
+{ return initCommon((dbCommon *)pbo,&pbo->out); }
 
 static long writeTraceIO(boRecord	*pbo)
 {
@@ -794,9 +633,7 @@ bad:
 }
 
 static long initTraceIOTruncateSize(longoutRecord *plongout)
-{
-    return initCommon((dbCommon *)plongout,&plongout->out,0);
-}
+{ return initCommon((dbCommon *)plongout,&plongout->out); }
 
 static long writeTraceIOTruncateSize(longoutRecord *plongout)
 {
@@ -840,9 +677,7 @@ bad:
 }
 
 static long initTraceFile(stringoutRecord *pstringout)
-{
-    return initCommon((dbCommon *)pstringout,&pstringout->out,0);
-}
+{ return initCommon((dbCommon *)pstringout,&pstringout->out); }
 
 static long writeTraceFile(stringoutRecord *pstringout)
 {
@@ -863,10 +698,6 @@ static long writeTraceFile(stringoutRecord *pstringout)
         pstringout->udf = 0;
         break;
     case stateConnected:
-        fd = pasynTrace->getTraceFile(pasynUser);
-        if(fd) {
-            if(fclose(fd)) printf("%s fclose failed\n",pstringout->name);
-        }
         fd = fopen(pstringout->val,"a+");
         if(!fd) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -895,19 +726,6 @@ bad:
     recGblSetSevr(pstringout,WRITE_ALARM,MAJOR_ALARM);
     return 0;
 }
-
-static registryFunctionRef ref[] = {
-    {"asynConnectDeviceInit",(REGISTRYFUNCTION)&asynConnectDeviceInit},
-    {"asynConnectDevice",(REGISTRYFUNCTION)&asynConnectDevice},
-    {"asynConnectedInit",(REGISTRYFUNCTION)&asynConnectedInit},
-    {"asynConnected",(REGISTRYFUNCTION)&asynConnected}
-};
-
-static void asynSubRegistrar(void)
-{
-    registryFunctionRefAdd(ref,NELEMENTS(ref));
-}
-epicsExportRegistrar(asynSubRegistrar);
 
 /* add support so that dbior generates asynDriver reports */
 static long drvAsynReport(int level);
