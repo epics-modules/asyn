@@ -19,7 +19,9 @@ DBD += testGpibVx.dbd
 LIBRARY_IOC += devTestGpib
 devTestGpib_SRCS += devTestGpib.c
 devTestGpib_LIBS += asyn
+ifdef IPAC
 devTestGpib_LIBS_vxWorks += Ipac
+endif
 devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 PROD_IOC_DEFAULT += testGpib
@@ -40,7 +42,9 @@ testGpibVx_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 vxComLibrary_DIR = $(EPICS_BASE_BIN)
 
 testGpibVx_LIBS += devTestGpib
-testGpibVx_LIBS += Ipac
+ifdef IPAC
+testGpibVx_LIBS_vxWorks += Ipac
+endif
 testGpibVx_LIBS += testSupport asyn
 testGpibVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 
