@@ -23,18 +23,14 @@ extern "C" {
 #endif  /* __cplusplus */
 
 #define asynInt32CallbackType "asynInt32Callback"
-
-typedef void (*asynInt32DataCallback)(void *drvPvt, epicsInt32 data);
-typedef void (*asynInt32IntervalCallback)(void *drvPvt, double seconds);
-
+/*cancelCallback cancels based on callback and userPvt */
 typedef struct asynInt32Callback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                    asynInt32DataCallback dataCallback, 
-                                    asynInt32IntervalCallback intervalCallback,
-                                    void *pvt);
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+                             void (*callback)(void *userPvt, epicsInt32 data),
+                             void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+                             void (*callback)(void *userPvt, epicsInt32 data),
+                             void *userPvt);
 } asynInt32Callback;
 
 #ifdef __cplusplus

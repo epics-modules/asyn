@@ -22,19 +22,14 @@ extern "C" {
 #endif  /* __cplusplus */
 
 #define asynFloat64ArrayCallbackType "asynFloat64ArrayCallback"
-
-typedef void (*asynFloat64ArrayDataCallback)(void *drvPvt, epicsFloat64 *data);
-typedef void (*asynFloat64ArrayIntervalCallback)(void *drvPvt, double seconds);
-
+/*cancelCallback cancels based on callback and userPvt */
 typedef struct asynFloat64ArrayCallback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)  (void *drvPvt, asynUser *pasynUser,
-                                      asynFloat64ArrayDataCallabck dataCallback,
-                                      asynFloat64ArrayIntervalCallback 
-                                          intervalCallback, 
-                                      void *pvt);
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
+         void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
+         void *userPvt);
 } asynFloat64ArrayCallback;
 
 #ifdef __cplusplus

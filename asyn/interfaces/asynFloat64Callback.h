@@ -23,18 +23,14 @@ extern "C" {
 #endif  /* __cplusplus */
 
 #define asynFloat64CallbackType "asynFloat64Callback"
-
-typedef void (*asynFloat64DataCallback)(void *drvPvt, epicsFloat64 data);
-typedef void (*asynFloat64IntervalCallback)(void *drvPvt, double seconds);
-
+/*cancelCallback cancels based on callback and userPvt */
 typedef struct asynFloat64Callback {
-    double     (*setCallbackInterval)(void *drvPvt, asynUser *pasynUser,
-                                      double seconds);
-    double     (*getCallbackInterval)(void *drvPvt, asynUser *pasynUser);
-    asynStatus (*registerCallbacks)(void *drvPvt, asynUser *pasynUser,
-                                   asynFloat64DataCallback dataCallback, 
-                                   asynFloat64IntervalCallback intervalCallback,
-                                   void *pvt);
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+                        void (*callback)(void *userPvt, epicsFloat64 data),
+                        void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+                        void (*callback)(void *userPvt, epicsFloat64 data),
+                        void *userPvt);
 } asynFloat64Callback;
 
 #ifdef __cplusplus
