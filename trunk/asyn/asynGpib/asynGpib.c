@@ -431,7 +431,7 @@ static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
 
     status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
                data,(int)maxchars,&nt,eomReason);
-    *nbytesTransfered = (size_t)nt;
+    if(nbytesTransfered) *nbytesTransfered = (size_t)nt;
     if(status==asynSuccess) {
         pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
             data,maxchars,nbytesTransfered,eomReason);
