@@ -1,4 +1,4 @@
-record(ai,"$(P)_NAME_Record") {
+record(ai,"$(P)$(R)_NAME_Record") {
     field(DESC, "Example _NAME_ GPIB Record")
     field(SCAN, "1 second")
     field(DTYP, "_NAME_")
