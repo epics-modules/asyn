@@ -20,13 +20,12 @@ extern "C" {
 #define ASYN_EOM_EOS 0x0002 /*End of String detected*/
 #define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
-typedef void (*interruptCallbackOctet)(void *userPvt,
+typedef void (*interruptCallbackOctet)(void *userPvt, asynUser *pasynUser,
                       char *data,size_t numchars, int eomReason);
 
 typedef struct asynOctetInterrupt {
-    int reason;
-    void *drvUser;
-    int addr;
+    asynUser *pasynUser;
+    int      addr;
     interruptCallbackOctet callback;
     void *userPvt;
 }asynOctetInterrupt;
@@ -72,6 +71,8 @@ typedef struct asynOctetBase {
     asynStatus (*initialize)(const char *portName,
         asynInterface *pint32Interface,
         int processEosIn,int processEosOut,int interruptProcess);
+    void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
+        char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 } asynOctetBase;
 epicsShareExtern asynOctetBase *pasynOctetBase;
 

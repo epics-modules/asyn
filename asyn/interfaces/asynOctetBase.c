@@ -29,16 +29,8 @@
 #include "asynInterposeEos.h"
 
 #define overrideWrite        0x001
-#define overrideWriteRaw     0x002
-#define overrideRead         0x004
-#define overrideReadRaw      0x008
-#define overrideFlush        0x010
-#define overrideRegister     0x020
-#define overrideCancel       0x040
-#define overrideSetInputEos  0x080
-#define overrideGetInputEos  0x100
-#define overrideSetOutputEos 0x200
-#define overrideGetOutputEos 0x400
+#define overrideRead         0x002
+#define overrideFlush        0x004
 
 typedef struct octetPvt {
     char          *portName;
@@ -55,12 +47,16 @@ typedef struct interruptPvt {
     void                  *userPvt;
 }interruptPvt;
 
+static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet);
+
 static asynStatus initialize(const char *portName,
            asynInterface *poctetInterface,
            int processEosIn,int processEosOut,
            int interruptProcess);
+static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 
-static asynOctetBase octetBase = {initialize};
+static asynOctetBase octetBase = {initialize,callInterruptUsers};
 epicsShareDef asynOctetBase *pasynOctetBase = &octetBase;
 
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
@@ -114,46 +110,21 @@ static asynStatus getOutputEosFail(void *drvPvt,asynUser *pasynUser,
 static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
 {
     int        override = 0;
-    if(!pasynOctet->write) {
-        override |= overrideWrite;
-        pasynOctet->write = writeFail;
-    }
-    if(!pasynOctet->writeRaw) {
-        override |=  overrideWriteRaw;
-        pasynOctet->writeRaw = writeRawFail;
-    }
-    if(!pasynOctet->read) {
-        override |=  overrideRead;
-        pasynOctet->read = readFail;
-    }
-    if(!pasynOctet->readRaw) {
-        override |=  overrideReadRaw;
-        pasynOctet->readRaw = readRawFail;
-    }
-    if(!pasynOctet->flush) {
-        override |=  overrideFlush;
-        pasynOctet->flush = flushFail;
-    }
-    override |=  overrideRegister;
+
+    if(!pasynOctet->write) pasynOctet->write = writeFail;
+    if(pasynOctet->write == writeFail) override |= overrideWrite;
+    if(!pasynOctet->writeRaw) pasynOctet->writeRaw = writeRawFail;
+    if(!pasynOctet->read)  pasynOctet->read = readFail;
+    if(pasynOctet->read == readFail) override |=  overrideRead;
+    if(!pasynOctet->readRaw) pasynOctet->readRaw = readRawFail;
+    if(!pasynOctet->flush) pasynOctet->flush = flushFail;
+    if(pasynOctet->flush == flushFail) override |=  overrideFlush;
     pasynOctet->registerInterruptUser = registerInterruptUserFail;
-    override |=  overrideCancel;
     pasynOctet->cancelInterruptUser = cancelInterruptUserFail;
-    if(!pasynOctet->setInputEos) {
-        override |=  overrideSetInputEos;
-        pasynOctet->setInputEos = setInputEosFail;
-    }
-    if(!pasynOctet->getInputEos) {
-        override |=  overrideGetInputEos;
-        pasynOctet->getInputEos = getInputEosFail;
-    }
-    if(!pasynOctet->setOutputEos) {
-        override |=  overrideSetOutputEos;
-        pasynOctet->setOutputEos = setOutputEosFail;
-    }
-    if(!pasynOctet->getOutputEos) {
-        override |=  overrideGetOutputEos;
-        pasynOctet->getOutputEos = getOutputEosFail;
-    }
+    if(!pasynOctet->setInputEos) pasynOctet->setInputEos = setInputEosFail;
+    if(!pasynOctet->getInputEos) pasynOctet->getInputEos = getInputEosFail;
+    if(!pasynOctet->setOutputEos) pasynOctet->setOutputEos = setOutputEosFail;
+    if(!pasynOctet->getOutputEos) pasynOctet->getOutputEos = getOutputEosFail;
     poctetPvt->override = override;
 }
 
@@ -164,38 +135,21 @@ static asynStatus initialize(const char *portName,
 {
     int        len;
     octetPvt   *poctetPvt;
-    asynInterface *poctetInterface;
-    asynOctet  *pasynOctet;
+    asynOctet  *pasynOctetDriver;
     asynStatus status;
     asynUser   *pasynUser;
     int        yesNo;
 
-    /* Must make a complete copy of pasynInterface */
-    len = sizeof(octetPvt) +sizeof(asynInterface)
-         + sizeof(asynOctet) + strlen(portName);
+    pasynOctetDriver = (asynOctet *)pinterface->pinterface;
+    len = sizeof(octetPvt) + strlen(portName);
     poctetPvt = callocMustSucceed(1,len,"asynOctetBase:initialize");
-    poctetInterface = (asynInterface *)(poctetPvt + 1);
-    pasynOctet = (asynOctet *)(poctetInterface + 1);
-    poctetPvt->portName = (char *)(pasynOctet + 1);
-    poctetInterface->interfaceType = asynOctetType;
-    *pasynOctet = *(asynOctet *)pinterface->pinterface;
-    poctetInterface->pinterface = pasynOctet;
-    poctetInterface->drvPvt = pinterface->drvPvt;
-    strcpy(poctetPvt->portName,portName);
+    poctetPvt->portName = (char *)(poctetPvt + 1);
     poctetPvt->octetBase.interfaceType = asynOctetType;
     poctetPvt->octetBase.pinterface = &octet;
     poctetPvt->octetBase.drvPvt = poctetPvt;
-    poctetPvt->pasynOctet = pasynOctet;
-    poctetPvt->drvPvt = poctetInterface->drvPvt;
-    if((pasynOctet->registerInterruptUser
-        && pasynOctet->registerInterruptUser!=registerInterruptUserFail)
-    || (pasynOctet->cancelInterruptUser
-        &&pasynOctet->cancelInterruptUser!=cancelInterruptUserFail)) {
-        printf("registerInterruptUser or cancelInterruptUser "
-            "must NOT be implemented by driver\n");
-        free(poctetPvt);
-        return asynError;
-    }
+    poctetPvt->pasynOctet = pasynOctetDriver;
+    poctetPvt->drvPvt = pinterface->drvPvt;
+    initOverride(poctetPvt,pasynOctetDriver);
     pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->isMultiDevice(pasynUser,portName,&yesNo);
     pasynManager->freeAsynUser(pasynUser);
@@ -204,13 +158,13 @@ static asynStatus initialize(const char *portName,
         free(poctetPvt);
         return status;
     }
-    if(yesNo && (processEosIn || processEosOut)) {
-        printf("Can not processEosIn or processEosOut for multiDevice port\n");
+    if(yesNo && (processEosIn || processEosOut || interruptProcess)) {
+        printf("Can not processEosIn, processEosOut,interruptProcess "
+               "for multiDevice port\n");
         free(poctetPvt);
         return status;
     }
-    initOverride(poctetPvt,pasynOctet);
-    status = pasynManager->registerInterface(portName,poctetInterface);
+    status = pasynManager->registerInterface(portName,pinterface);
     if(status!=asynSuccess) return status;
     status = pasynManager->interposeInterface(
         portName,-1,&poctetPvt->octetBase,0);
@@ -230,6 +184,44 @@ static asynStatus initialize(const char *portName,
     return asynSuccess;
 }
 
+static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+{
+    asynStatus         status;
+    ELLLIST            *plist;
+    interruptNode      *pnode;
+    asynOctetInterrupt *pinterrupt;
+    const char         *portName;
+    int                addr;
+
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status==asynSuccess)
+        status = pasynManager->getPortName(pasynUser,&portName);
+    if(status==asynSuccess) 
+        status = pasynManager->interruptStart(pasynPvt,&plist);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s asynOctetBase callInterruptUsers failed %s\n",
+            portName,pasynUser->errorMessage);
+        return;
+    }
+    pnode = (interruptNode *)ellFirst(plist);
+    if(pnode) {
+        asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
+            "%s asynOctetBase interrupt\n",portName);
+    }
+    while (pnode) {
+        pinterrupt = pnode->drvPvt;
+        if(addr==pinterrupt->addr) {
+            pinterrupt->callback(
+                pinterrupt->userPvt,pinterrupt->pasynUser,
+                data,*nbytesTransfered,*eomReason);
+        }
+        pnode = (interruptNode *)ellNext(&pnode->node);
+    }
+    pasynManager->interruptEnd(pasynPvt);
+}
+
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
 {
@@ -249,29 +241,31 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     octetPvt *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideWriteRaw)) {
-        return pasynOctet->writeRaw(poctetPvt->drvPvt,pasynUser,
+    return pasynOctet->writeRaw(poctetPvt->drvPvt,pasynUser,
                       data,numchars,nbytesTransfered);
-    }
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s writeRaw not implemented\n",poctetPvt->portName);
-    return asynError;
 }
-
+
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
-    octetPvt  *poctetPvt = (octetPvt *)drvPvt;
-    asynOctet *pasynOctet = poctetPvt->pasynOctet;
+    octetPvt   *poctetPvt = (octetPvt *)drvPvt;
+    asynOctet  *pasynOctet = poctetPvt->pasynOctet;
+    asynStatus status;
 
     if(!(poctetPvt->override&overrideRead)) {
-        return pasynOctet->read(poctetPvt->drvPvt,pasynUser,
+        status = pasynOctet->read(poctetPvt->drvPvt,pasynUser,
                                  data,maxchars,nbytesTransfered,eomReason);
+    } else { 
+        status = readRaw(drvPvt,pasynUser,
+           data,maxchars,nbytesTransfered,eomReason);
     }
-    return readRaw(drvPvt,pasynUser,
-                       data,maxchars,nbytesTransfered,eomReason);
+    if(status!=asynSuccess) return status;
+    if(poctetPvt->interruptProcess)
+        callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
+            data,maxchars,nbytesTransfered,eomReason);
+    return status;
 }
-
+
 static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
@@ -279,40 +273,13 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
     asynStatus status;
 
-    if(!(poctetPvt->override&overrideReadRaw)) {
-        status = pasynOctet->readRaw(poctetPvt->drvPvt,pasynUser,
-                     data,maxchars,nbytesTransfered,eomReason);
-        if(status!=asynSuccess) return status;
-        if(poctetPvt->interruptProcess) {
-            ELLLIST *plist;
-
-            status = pasynManager->interruptStart(poctetPvt->pasynPvt,&plist);
-            if(status!=asynSuccess) {
-                printf("%s asynOctetBase interruptStart failed. Why?\n",
-                    poctetPvt->portName);
-            } else {
-                interruptNode *pnode;
-                asynOctetInterrupt *pinterrupt;
-
-                pnode = (interruptNode *)ellFirst(plist);
-                if(pnode) {
-                    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
-                        "%s asynOctetBase interrupt\n",poctetPvt->portName);
-                }
-                while (pnode) {
-                    pinterrupt = pnode->drvPvt;
-                    pinterrupt->callback(pinterrupt->userPvt,
-                        data,*nbytesTransfered,*eomReason);
-                    pnode = (interruptNode *)ellNext(&pnode->node);
-                }
-                pasynManager->interruptEnd(poctetPvt->pasynPvt);
-            }
-        }
-        return asynSuccess;
-    }
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s readRaw not implemented\n",poctetPvt->portName);
-    return asynError;
+    status = pasynOctet->readRaw(poctetPvt->drvPvt,pasynUser,
+                 data,maxchars,nbytesTransfered,eomReason);
+    if(status!=asynSuccess) return status;
+    if(poctetPvt->interruptProcess)
+        callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
+            data,maxchars,nbytesTransfered,eomReason);
+    return asynSuccess;
 }
 
 static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
@@ -362,9 +329,9 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     pasynOctetInterrupt = pasynManager->memMalloc(sizeof(asynOctetInterrupt));
     pinterruptNode->drvPvt = pasynOctetInterrupt;
+    pasynOctetInterrupt->pasynUser =
+        pasynManager->duplicateAsynUser(pasynUser, NULL, NULL);
     pasynOctetInterrupt->addr = addr;
-    pasynOctetInterrupt->reason = pasynUser->reason;
-    pasynOctetInterrupt->drvUser = pasynUser->drvUser;
     pasynOctetInterrupt->callback = callback;
     pasynOctetInterrupt->userPvt = userPvt;
     *registrarPvt = pinterruptNode;
@@ -376,6 +343,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
 {
     interruptNode *pinterruptNode = (interruptNode *)registrarPvt;
+    asynOctetInterrupt *pinterrupt = (asynOctetInterrupt *)pinterruptNode->drvPvt;
     asynStatus    status;
     const char    *portName;
     int           addr;
@@ -386,8 +354,11 @@ static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d cancelInterruptUser\n",portName,addr);
+    pasynManager->freeAsynUser(pinterrupt->pasynUser);
     pasynManager->memFree(pinterruptNode->drvPvt,sizeof(asynOctetInterrupt));
     status = pasynManager->removeInterruptUser(pasynUser,pinterruptNode);
+    if(status==asynSuccess)
+        pasynManager->freeInterruptNode(pasynUser,pinterruptNode);
     return status;
 }
 
@@ -397,13 +368,7 @@ static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     octetPvt  *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideSetInputEos)) {
-        return pasynOctet->setInputEos(poctetPvt->drvPvt,pasynUser,
-                     eos,eoslen);
-    }
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-         "%s setInputEos not supported\n",poctetPvt->portName);
-    return asynError;
+    return pasynOctet->setInputEos(poctetPvt->drvPvt,pasynUser, eos,eoslen);
 }
 
 static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
@@ -412,13 +377,8 @@ static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     octetPvt  *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideGetInputEos)) {
-        return pasynOctet->getInputEos(poctetPvt->drvPvt,pasynUser,
+    return pasynOctet->getInputEos(poctetPvt->drvPvt,pasynUser,
                      eos,eossize,eoslen);
-    }
-     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-         "%s setInputEos not implemented\n",poctetPvt->portName);
-     return asynError;
 }
 
 static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
@@ -427,13 +387,7 @@ static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
     octetPvt  *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideSetOutputEos)) {
-        return pasynOctet->setOutputEos(poctetPvt->drvPvt,pasynUser,
-                     eos,eoslen);
-    }
-    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s setOutputEos not supported\n",poctetPvt->portName);
-    return asynError;
+    return pasynOctet->setOutputEos(poctetPvt->drvPvt,pasynUser, eos,eoslen);
 }
 
 static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
@@ -442,13 +396,8 @@ static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
     octetPvt  *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideGetOutputEos)) {
-        return pasynOctet->getOutputEos(poctetPvt->drvPvt,pasynUser,
-                     eos,eossize,eoslen);
-    }
-     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-         "%s setOutputEos not supported\n",poctetPvt->portName);
-     return asynError;
+    return pasynOctet->getOutputEos(poctetPvt->drvPvt,pasynUser,
+                 eos,eossize,eoslen);
 }
 
 static asynStatus showFailure(asynUser *pasynUser,const char *method)
