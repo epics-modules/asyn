@@ -988,7 +988,7 @@ If all goes well you'll be left with a device support library in lib/
 \shape italic 
 <EPICS_HOST_ARCH>
 \shape default 
-/, a device support database description in dbd/ and a device support database
+/, a device support database definition in dbd/ and a device support database
  in db/.
 \layout Section
 
@@ -1101,7 +1101,7 @@ Modify the application database definition file
 \layout Standard
 
 Your application database definition file must include the database definition
- files for your instrument and for the SYN drivers.
+ files for your instrument and for the ASYN drivers.
  There are two ways that this can be done:
 \layout Enumerate
 
@@ -1413,7 +1413,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-21 18:03:58 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 17:25:06 $$
 \newline 
 ############################################################################
 \newline 
