@@ -33,7 +33,6 @@
 #define overrideFlush        0x004
 
 typedef struct octetPvt {
-    char          *portName;
     asynInterface octetBase; /*Implemented by asynOctetBase*/
     asynOctet     *pasynOctet; /*driver*/
     void          *drvPvt;
@@ -54,7 +53,7 @@ static asynStatus initialize(const char *portName,
            int processEosIn,int processEosOut,
            int interruptProcess);
 static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t *nbytesTransfered,int *eomReason);
 
 static asynOctetBase octetBase = {initialize,callInterruptUsers};
 epicsShareDef asynOctetBase *pasynOctetBase = &octetBase;
@@ -133,7 +132,6 @@ static asynStatus initialize(const char *portName,
     int processEosIn,int processEosOut,
     int interruptProcess)
 {
-    int        len;
     octetPvt   *poctetPvt;
     asynOctet  *pasynOctetDriver;
     asynStatus status;
@@ -141,9 +139,8 @@ static asynStatus initialize(const char *portName,
     int        yesNo;
 
     pasynOctetDriver = (asynOctet *)pinterface->pinterface;
-    len = sizeof(octetPvt) + strlen(portName);
-    poctetPvt = callocMustSucceed(1,len,"asynOctetBase:initialize");
-    poctetPvt->portName = (char *)(poctetPvt + 1);
+    poctetPvt = callocMustSucceed(1,sizeof(octetPvt),
+        "asynOctetBase:initialize");
     poctetPvt->octetBase.interfaceType = asynOctetType;
     poctetPvt->octetBase.pinterface = &octet;
     poctetPvt->octetBase.drvPvt = poctetPvt;
@@ -162,7 +159,7 @@ static asynStatus initialize(const char *portName,
         printf("Can not processEosIn, processEosOut,interruptProcess "
                "for multiDevice port\n");
         free(poctetPvt);
-        return status;
+        return asynError;
     }
     status = pasynManager->registerInterface(portName,pinterface);
     if(status!=asynSuccess) return status;
@@ -175,7 +172,7 @@ static asynStatus initialize(const char *portName,
             portName,&poctetPvt->octetBase,&poctetPvt->pasynPvt);
         if(status!=asynSuccess) {
             printf("registerInterruptSource failed\n");
-            return asynError;
+            return status;
         }
     }
     if(processEosIn || processEosOut) {
@@ -185,7 +182,7 @@ static asynStatus initialize(const char *portName,
 }
 
 static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t *nbytesTransfered,int *eomReason)
 {
     asynStatus         status;
     ELLLIST            *plist;
@@ -262,7 +259,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     if(poctetPvt->interruptProcess)
         callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
-            data,maxchars,nbytesTransfered,eomReason);
+            data,nbytesTransfered,eomReason);
     return status;
 }
 
@@ -278,7 +275,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     if(poctetPvt->interruptProcess)
         callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
-            data,maxchars,nbytesTransfered,eomReason);
+            data,nbytesTransfered,eomReason);
     return asynSuccess;
 }
 
