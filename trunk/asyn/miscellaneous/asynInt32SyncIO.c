@@ -147,8 +147,7 @@ static void asynInt32SyncIOCallback(asynUser *pasynUser)
     asynInt32SyncIOPvt *pPvt = (asynInt32SyncIOPvt *)pasynUser->userPvt;
     asynInt32 *pasynInt32 = pPvt->pasynInt32;
     void *pdrvPvt = pPvt->pdrvPvt;
-    asynStatus status;
-    int nbytesTransfered=0;
+    asynStatus status = asynSuccess;
 
     pasynUser->timeout = pPvt->timeout;
     switch(pPvt->op) {
