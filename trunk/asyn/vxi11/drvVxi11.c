@@ -31,6 +31,7 @@
 #include <epicsTime.h>
 #include <cantProceed.h>
 #include <epicsString.h>
+#include <epicsInterruptibleSyscall.h>
 #include <epicsExport.h>
 /* local includes */
 #include "drvVxi11.h"
@@ -65,9 +66,7 @@ typedef struct devLinkPrimary {
  ******************************************************************************/
 typedef struct vxiLink {
     void *asynGpibPvt;
-    epicsThreadId srqThreadId;   /* current SRQ thread id */
-    volatile int srqThreadStop;  /* ask the SRQ thread to destroy itself */
-    volatile int srqFd;          /* socket descriptor for interrupt channel */
+    epicsInterruptibleSyscallContext *srqInterrupt;
     osiSockAddr srqPort;         /* TCP port for interrupt channel */
     epicsEventId srqThreadReady;   /* wait for srqThread to be ready*/
     const char *portName;
@@ -537,7 +536,7 @@ static void vxiSrqThread(void *arg)
 {
     vxiLink *pvxiLink = arg;
     epicsThreadId myTid;
-    int s;
+    int s, s1;
     osiSockAddr farAddr;
     osiSocklen_t addrlen;
     char buf[512];
@@ -570,45 +569,48 @@ s */
         close(s);
         return;
     }
-    pvxiLink->srqThreadId = myTid = epicsThreadGetIdSelf();
-    taskwdInsert(pvxiLink->srqThreadId, NULL, NULL);
+    myTid = epicsThreadGetIdSelf();
+    taskwdInsert(myTid, NULL, NULL);
+    epicsInterruptibleSyscallArm(pvxiLink->srqInterrupt, s, myTid);
     epicsEventSignal(pvxiLink->srqThreadReady);
     addrlen = sizeof farAddr.ia;
-    pvxiLink->srqFd = accept (s, &farAddr.sa, &addrlen);
-    if (pvxiLink->srqFd < 0) {
-        errlogPrintf ("SrqThread(): can't accept connection: %s\n",
-            strerror (errno));
-        close(s);
-        pvxiLink->srqThreadId = 0;
+    s1 = accept(s, &farAddr.sa, &addrlen);
+    if(epicsInterruptibleSyscallWasInterrupted(pvxiLink->srqInterrupt)) {
+        if(!epicsInterruptibleSyscallWasClosed(pvxiLink->srqInterrupt))
+            close(s);
         taskwdRemove(myTid);
+        epicsEventSignal(pvxiLink->srqThreadReady);
         return;
     }
     close(s);
-    for(;;) {
-        if(pvxiLink->srqThreadStop)
-            break;
-        if((i = read(pvxiLink->srqFd, buf, sizeof buf)) <= 0)
-            break;
-        if(pvxiLink->srqThreadStop)
-            break;
-        pasynGpib->srqHappened(pvxiLink->asynGpibPvt);
+    if(s1 < 0) {
+        errlogPrintf("SrqThread(): can't accept connection: %s\n", strerror(errno));
+        taskwdRemove(myTid);
+        epicsEventSignal(pvxiLink->srqThreadReady);
+        return;
     }
-    if(!pvxiLink->srqThreadStop) {
+    epicsInterruptibleSyscallArm(pvxiLink->srqInterrupt, s1, myTid);
+    for(;;) {
+        if(epicsInterruptibleSyscallWasInterrupted(pvxiLink->srqInterrupt))
+            break;
+        i = read(s1, buf, sizeof buf);
+        if(epicsInterruptibleSyscallWasInterrupted(pvxiLink->srqInterrupt))
+            break;
         if(i < 0) {
             errlogPrintf("SrqThread(): read error: %s\n", strerror(errno));
+            break;
         }
-        else {
+        else if (i == 0) {
             errlogPrintf("SrqThread(): read EOF\n");
+            break;
         }
+        pasynGpib->srqHappened(pvxiLink->asynGpibPvt);
     }
-    pvxiLink->srqThreadStop = 0;
+    if(!epicsInterruptibleSyscallWasClosed(pvxiLink->srqInterrupt))
+        close(s1);
     errlogPrintf("SrqThread(): terminating\n");
-    if(pvxiLink->srqFd >= 0) {
-        close(pvxiLink->srqFd);
-        pvxiLink->srqFd = -1;
-    }
-    pvxiLink->srqThreadId = 0;
     taskwdRemove(myTid);
+    epicsEventSignal(pvxiLink->srqThreadReady);
 }
 
 static void vxiReport(void *pdrvPvt,FILE *fd,int details)
@@ -695,13 +697,15 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
         }
     }
     pvxiLink->srqThreadReady = epicsEventMustCreate(epicsEventEmpty);
-    if(pvxiLink->srqThreadId)
-        errlogPrintf("Warning -- previous SRQ thread is still active!\n");
+    pvxiLink->srqInterrupt = epicsInterruptibleSyscallCreate();
+    if(pvxiLink->srqInterrupt == NULL) {
+        errlogPrintf("vxiGenLink can't create interruptible syscall context.\n");
+        return -1;
+    }
     epicsThreadCreate(srqThreadName, 46,
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiLink);
     epicsEventMustWait(pvxiLink->srqThreadReady);
-    epicsEventDestroy(pvxiLink->srqThreadReady);
     vxiCreateIrqChannel(pvxiLink);
     return(asynSuccess);
 }
@@ -717,33 +721,20 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
 
     assert(pvxiLink);
     if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
-    /*
-     * Force the I/O thread out of its slow system call.
-     */
-    if (pvxiLink->srqThreadId) {
-        int fd;
-        epicsThreadId thread;
-        pvxiLink->srqThreadStop = 1;
-        switch(epicsSocketSystemCallInterruptMechanismQuery()) {
-        case esscimqi_socketCloseRequired:
-            fd = pvxiLink->srqFd;
-            pvxiLink->srqFd = -1;
-            close(fd);
-            break;
-
-        case esscimqi_socketBothShutdownRequired:
-            shutdown(pvxiLink->srqFd, SHUT_RDWR);
-            break;
-
-        case esscimqi_socketSigAlarmRequired:
-            if ((thread = pvxiLink->srqThreadId) != 0)
-                epicsSignalRaiseSigAlarm(thread);
-            break;
-
-        default:
-            errlogPrintf("No mechanism for unblocking socket I/O!\n");
-            break;
+    if(pvxiLink->srqInterrupt) {
+        int i;
+        for (i = 0 ; ; i++) {
+            if(i == 10) {
+                errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
+                                                           pvxiLink->portName);
+                break;
+            }
+            epicsInterruptibleSyscallInterrupt(pvxiLink->srqInterrupt);
+            if (epicsEventWaitWithTimeout(pvxiLink->srqThreadReady,2.0) == epicsEventWaitOK)
+                break;
         }
+        epicsInterruptibleSyscallDelete(pvxiLink->srqInterrupt);
+        pvxiLink->srqInterrupt = NULL;
     }
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
 	int link;

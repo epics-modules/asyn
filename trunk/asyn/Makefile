@@ -20,6 +20,8 @@ SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
 DBD += asyn.dbd
 asyn_SRCS += asynManager.c
+INC += epicsInterruptibleSyscall.h
+asyn_SRCS += epicsInterruptibleSyscall.c
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
