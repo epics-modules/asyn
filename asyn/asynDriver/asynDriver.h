@@ -68,7 +68,8 @@ typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct interruptNode{
-    ELLNODE node;
+    ELLNODE *next;
+    ELLNODE *previous;
     void    *drvPvt;
     void    *asynPvt;
 }interruptNode;
