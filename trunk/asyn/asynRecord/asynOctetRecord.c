@@ -42,7 +42,7 @@
 #include        <epicsExport.h>
 #include        <asynGpibDriver.h>
 #include        <asynDriver.h>
-#include        <drvGenericSerial.h>
+#include        <asynDrvGenericSerial.h>
 #define GEN_SIZE_OFFSET
 #include        "asynOctetRecord.h"
 #undef GEN_SIZE_OFFSET
@@ -381,7 +381,7 @@ static long special(struct dbAddr *paddr, int after)
        case asynOctetRecordSOCK:
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
-          drvGenericSerialConfigure(pasynRec->port, pasynRec->sock, 0, 0);
+          asynDrvGenericSerialConfigure(pasynRec->port, pasynRec->sock, 0, 0);
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
           db_post_events(pasynRec, pasynRec->port, monitor_mask);
           db_post_events(pasynRec, &pasynRec->addr, monitor_mask);
