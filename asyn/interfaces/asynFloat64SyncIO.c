@@ -34,7 +34,6 @@ typedef enum {
    opRead,
    opWrite
 } opType;
-
 typedef struct ioPvt{
    epicsEventId event;
    asynCommon   *pasynCommon;
@@ -46,7 +45,7 @@ typedef struct ioPvt{
    double       timeout;
    opType op;
 }ioPvt;
-
+
 /*local functions*/
 static asynStatus queueAndWait(asynUser *pasynUser, double timeout, opType op);
 static void processCallback(asynUser *pasynUser);
@@ -254,7 +253,6 @@ static asynStatus disconnect(asynUser *pasynUser)
     free(pPvt);
     return asynSuccess;
 }
- 
 
 static asynStatus writeOp(asynUser *pasynUser,epicsFloat64 value,double timeout)
 {
@@ -276,7 +274,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout
     if(status==asynSuccess) *pvalue = pPvt->value;
     return(status);
 }
-
+
 static asynStatus writeOpOnce(const char *port, int addr,
     epicsFloat64 value,double timeout)
 {
