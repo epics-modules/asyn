@@ -31,7 +31,7 @@
 
 #include "asynDriver.h"
 #include "asynInt32.h"
-#include "asynUtils.h"
+#include "asynEpicsUtils.h"
 
 typedef struct {
    aoRecord *pao;
@@ -71,7 +71,7 @@ static long init_record(aoRecord *pao)
 {
     devAoAsynInt32Pvt *pPvt;
     char *port, *userParam;
-    int card, signal;
+    int addr;
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
@@ -85,23 +85,17 @@ static long init_record(aoRecord *pao)
     pasynUser->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
 
-    /* Parse the VME link to get signal and port */
-    status = pasynUtils->parseVmeIo(pasynUser, &pao->out, &card, &signal, 
-                                    &port, &userParam);
+    /* Parse the VME link to get addr and port */
+    status = pasynEpicsUtils->parseLink(pasynUser, &pao->out, 
+                                        &port, &addr, &userParam);
     if (status != asynSuccess) {
-        errlogPrintf("devAoAsynInt32::initCommon, error in VME link %s\n",
+        errlogPrintf("devAoAsynInt32::initCommon, error in link %s\n",
                      pasynUser->errorMessage);
-        goto bad;
-    }
-    if (signal<0 || signal>7) {
-        errlogPrintf("devAoAsynInt32::init_record %s Illegal OUT signal field "
-                     "(0-7) = %d\n",
-                     pao->name, signal);
         goto bad;
     }
 
     /* Connect to device */
-    status = pasynManager->connectDevice(pasynUser, port, signal);
+    status = pasynManager->connectDevice(pasynUser, port, addr);
     if (status != asynSuccess) {
         errlogPrintf("devAoAsynInt32::init_record, connectDevice failed\n");
         goto bad;

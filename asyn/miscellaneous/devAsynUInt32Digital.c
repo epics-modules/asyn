@@ -43,7 +43,7 @@
 #include "asynDriver.h"
 #include "asynUInt32Digital.h"
 #include "asynUInt32DigitalCallback.h"
-#include "asynUtils.h"
+#include "asynEpicsUtils.h"
 
 typedef struct {
    asynUser *pasynUser;
@@ -100,7 +100,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
 {
     devDigitalPvt *pPvt;
     char *port, *userParam;
-    int card, signal;
+    int addr;
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
@@ -112,21 +112,21 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     pasynUser->userPvt = pr;
     pPvt->pasynUser = pasynUser;
 
-    status = pasynUtils->parseVmeIo(pasynUser, plink, &card, &signal, &port,
-                                    &userParam);
+    status = pasynEpicsUtils->parseLink(pasynUser, plink, &port, &addr,
+                                        &userParam);
     if (status != asynSuccess) {
         errlogPrintf("devAsynUInt32Digital::initCommon, %s error parsing link %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
     if ((rt == recTypeBi) || (rt == recTypeBo)) {
-        if(signal<0 || signal>31) {
-            errlogPrintf("%s devAsynUInt32Digital::initCommon: Illegal signal field"
+        if(addr<0 || addr>31) {
+            errlogPrintf("%s devAsynUInt32Digital::initCommon: Illegal addr field"
                          " (0-31)=%d\n",
-                         pr->name, signal);
+                         pr->name, addr);
             goto bad;
         }
-        pPvt->mask =  1 << signal;
+        pPvt->mask =  1 << addr;
     } else {
         pPvt->mask = 0xffffffff;
     }
