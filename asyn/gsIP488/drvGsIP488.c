@@ -375,14 +375,18 @@ static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
     int        lenCmd = 0;
     int        primary,secondary;
 
-    if(talk<100) {
+    if(talk<0) {
+        ; /*do nothing*/
+    } else if(talk<100) {
         cmdbuf[lenCmd++] = talk + TADBASE;
     } else {
         primary = talk / 100; secondary = talk % 100;
         cmdbuf[lenCmd++] = primary + TADBASE;
         cmdbuf[lenCmd++] = secondary + SADBASE;
     }
-    if(listen<100) {
+    if(listen<0) {
+        ; /*do nothing*/
+    } else if(listen<100) {
         cmdbuf[lenCmd++] = listen + LADBASE;
     } else {
         primary = listen / 100; secondary = listen % 100;
@@ -391,7 +395,7 @@ static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
     }
     return writeCmd(pgsport,cmdbuf,lenCmd,timeout,nextState);
 }
-
+
 static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
     int *actual, int addr, double timeout)
 {
@@ -719,10 +723,10 @@ static asynStatus gpibPortSerialPollBegin(void *pdrvPvt)
     gsport     *pgsport = (gsport *)pdrvPvt;
     double     timeout = 1.0;
     asynStatus status;
-    char       cmd[1];
+    char       cmd[2];
 
-    cmd[0] = IBSPE;
-    status = writeCmd(pgsport,cmd,1,timeout,transferStateIdle);
+    cmd[0] = IBUNL; cmd[1] = IBSPE;
+    status = writeCmd(pgsport,cmd,2,timeout,transferStateIdle);
     return status;
 }
 
@@ -730,10 +734,14 @@ static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
 {
     gsport     *pgsport = (gsport *)pdrvPvt;
     epicsUInt8 buffer[1];
-    int        actual = 0;
 
-    readGpib(pgsport,buffer,1,&actual,addr,timeout);
-    return (actual==1 ? buffer[0] : 0);
+    buffer[0] = 0;
+    pgsport->bytesRemainingRead = 1;
+    pgsport->nextByteRead = buffer;
+    writeRegister(pgsport,AUXMR,RHDF);
+    pgsport->status = asynSuccess;
+    writeAddr(pgsport,addr,-1,timeout,transferStateRead);
+    return buffer[0];
 }
 
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
@@ -741,10 +749,10 @@ static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
     gsport     *pgsport = (gsport *)pdrvPvt;
     double     timeout = 1.0;
     asynStatus status;
-    char       cmd[1];
+    char       cmd[2];
 
-    cmd[0] = IBSPD;
-    status = writeCmd(pgsport,cmd,1,timeout,transferStateIdle);
+    cmd[0] = IBSPD; cmd[1] = IBUNT;
+    status = writeCmd(pgsport,cmd,2,timeout,transferStateIdle);
     return status;
 }
 
