@@ -1,6 +1,6 @@
 
 file {
-	name="/home/phoebus/NORUME/src/EPICS/modules/soft/asyn/medm/work.adl"
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecord.adl"
 	version=030004
 }
 display {
@@ -822,13 +822,14 @@ rectangle {
 		x=75
 		y=102
 		width=359
-		height=19
+		height=16
 	}
 	monitor {
 		chan="$(P)$(R).ERRS"
 		clr=14
 		bclr=2
 	}
+	format="string"
 	limits {
 	}
 }
