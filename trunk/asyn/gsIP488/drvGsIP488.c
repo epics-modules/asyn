@@ -274,15 +274,18 @@ static void waitTimeout(gpib *pgpib,double seconds)
     switch(pgpib->transferState) {
     case transferStateRead:
         pgpib->status=asynTimeout;
+        printStatus(pgpib,"waitTimeout transferStateRead\n");
         writew(0,&regs->intStatusMask0);
         auxCmd(regs,auxCmdlonC,&regs->addressStatus,asrLADS,0);
         break;
     case transferStateWrite:
         pgpib->status=asynTimeout;
+        printStatus(pgpib,"waitTimeout transferStateWrite\n");
         writew(0,&regs->intStatusMask0);
         auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0);
     case transferStateCntl:
         pgpib->status=asynTimeout;
+        printStatus(pgpib,"waitTimeout transferStateCntl\n");
         writew(0,&regs->intStatusMask0);
         auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0);
         auxCmd(regs,auxCmdnbaf,0,0,0);
@@ -530,6 +533,8 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
     int ipstatus;
     int addr = pasynManager->getAddr(pasynUser);
 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s addr %d gsTi9914Connect\n",pgpib->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionConnect(pasynUser);
         return(asynSuccess);
@@ -569,6 +574,8 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
     ip488RegisterMap *regs = pgpib->regs;
     int addr = pasynManager->getAddr(pasynUser);
 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s addr %d gsTi9914Disconnect\n",pgpib->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionDisconnect(pasynUser);
         return(asynSuccess);
@@ -585,6 +592,9 @@ static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914SetPortOptions\n",
+        pgpib->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "%s gsTi9914 does not have any options\n",pgpib->portName);
     return(asynError);
@@ -594,6 +604,9 @@ static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, char *val,int sizeval)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914GetPortOptions\n",
+        pgpib->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "%s gsTi9914 does not have any options\n",pgpib->portName);
     return(asynError);
