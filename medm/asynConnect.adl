@@ -1,14 +1,14 @@
 
 file {
-	name="i:\epics\synApps5-1\asyn\2-2beta\medm\asynConnect.adl"
+	name="j:\epics\synApps5-1\asyn\2-2beta\medm\asynConnect.adl"
 	version=020306
 }
 display {
 	object {
-		x=175
-		y=93
-		width=320
-		height=140
+		x=310
+		y=607
+		width=270
+		height=170
 	}
 	clr=14
 	bclr=4
@@ -87,26 +87,9 @@ display {
 		1a7309,
 	}
 }
-text {
-	object {
-		x=33
-		y=56
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).CNTD"
-	}
-	textix="Connected"
-	align="horiz. right"
-}
 composite {
 	object {
-		x=69
+		x=19
 		y=8
 		width=203
 		height=29
@@ -115,7 +98,7 @@ composite {
 	children {
 		rectangle {
 			object {
-				x=69
+				x=19
 				y=8
 				width=203
 				height=29
@@ -126,7 +109,7 @@ composite {
 		}
 		text {
 			object {
-				x=72
+				x=22
 				y=12
 				width=199
 				height=21
@@ -139,24 +122,114 @@ composite {
 		}
 	}
 }
-"choice button" {
+composite {
 	object {
-		x=132
-		y=49
-		width=75
-		height=35
+		x=5
+		y=136
+		width=130
+		height=20
 	}
-	control {
-		chan="$(P)$(R).CNCT"
-		clr=14
-		bclr=51
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=25
+				y=136
+				width=110
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).AUCT"
+			}
+			textix="autoConnect"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=5
+				y=136
+				width=130
+				height=20
+			}
+			"basic attribute" {
+				clr=30
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).AUCT"
+			}
+			textix="noAutoConnect"
+			align="horiz. right"
+		}
 	}
 }
 "choice button" {
 	object {
-		x=132
-		y=97
-		width=75
+		x=152
+		y=129
+		width=110
+		height=35
+	}
+	control {
+		chan="$(P)$(R).AUCT"
+		clr=14
+		bclr=51
+	}
+}
+composite {
+	object {
+		x=55
+		y=96
+		width=80
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=65
+				y=96
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).ENBL"
+			}
+			textix="Enabled"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=55
+				y=96
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=20
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).ENBL"
+			}
+			textix="Disabled"
+			align="horiz. right"
+		}
+	}
+}
+"choice button" {
+	object {
+		x=152
+		y=89
+		width=110
 		height=35
 	}
 	control {
@@ -165,91 +238,61 @@ composite {
 		bclr=51
 	}
 }
-text {
+composite {
 	object {
-		x=3
+		x=15
 		y=56
 		width=120
 		height=20
-	}
-	"basic attribute" {
-		clr=20
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).CNTD"
-	}
-	textix="Disconnected"
-	align="horiz. right"
-}
-text {
-	object {
-		x=53
-		y=104
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).ENBD"
-	}
-	textix="Enabled"
-	align="horiz. right"
-}
-text {
-	object {
-		x=43
-		y=104
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=20
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).ENBD"
-	}
-	textix="Disabled"
-	align="horiz. right"
-}
-composite {
-	object {
-		x=223
-		y=49
-		width=89
-		height=35
 	}
 	"composite name"=""
 	children {
 		text {
 			object {
-				x=223
-				y=49
-				width=89
-				height=18
+				x=45
+				y=56
+				width=90
+				height=20
 			}
 			"basic attribute" {
-				clr=14
+				clr=62
 			}
-			textix="Autoconnect"
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Connected"
+			align="horiz. right"
 		}
-		"choice button" {
+		text {
 			object {
-				x=241
-				y=66
-				width=56
-				height=18
+				x=15
+				y=56
+				width=120
+				height=20
 			}
-			control {
-				chan="$(P)$(R).AUCT"
-				clr=14
-				bclr=51
+			"basic attribute" {
+				clr=20
 			}
-			stacking="column"
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Disconnected"
+			align="horiz. right"
 		}
+	}
+}
+"choice button" {
+	object {
+		x=152
+		y=49
+		width=110
+		height=35
+	}
+	control {
+		chan="$(P)$(R).CNCT"
+		clr=14
+		bclr=51
 	}
 }

@@ -1,6 +1,6 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynRecord.adl"
+	name="j:\epics\synApps5-1\asyn\2-2beta\medm\asynRecord.adl"
 	version=020306
 }
 display {
@@ -290,105 +290,100 @@ text {
 	limits {
 	}
 }
-composite {
+"message button" {
+	object {
+		x=176
+		y=372
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PROC"
+		clr=14
+		bclr=51
+	}
+	label="Process"
+	press_msg="1"
+}
+text {
+	object {
+		x=294
+		y=372
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	textix="More..."
+}
+"related display" {
+	object {
+		x=369
+		y=372
+		width=56
+		height=20
+	}
+	display[0] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[1] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[2] {
+		label="Socket parameters"
+		name="asynSocketSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[3] {
+		label="Trace control"
+		name="asynTrace.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[4] {
+		label="Connection management"
+		name="asynConnect.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[5] {
+		label="Debug screen"
+		name="asynRecordDebug.adl"
+		args="P=$(P),R=$(R)"
+		policy="replace display"
+	}
+	clr=14
+	bclr=51
+}
+menu {
+	object {
+		x=61
+		y=372
+		width=110
+		height=20
+	}
+	control {
+		chan="$(P)$(R).SCAN"
+		clr=14
+		bclr=51
+	}
+}
+text {
 	object {
 		x=6
 		y=372
-		width=419
+		width=50
 		height=20
 	}
-	"composite name"=""
-	children {
-		"message button" {
-			object {
-				x=176
-				y=372
-				width=80
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PROC"
-				clr=14
-				bclr=51
-			}
-			label="Process"
-			press_msg="1"
-		}
-		text {
-			object {
-				x=294
-				y=372
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-				fill="outline"
-			}
-			textix="More..."
-		}
-		"related display" {
-			object {
-				x=369
-				y=372
-				width=56
-				height=20
-			}
-			display[0] {
-				label="Serial port parameters"
-				name="asynSerialPortSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[1] {
-				label="GPIB parameters"
-				name="asynGPIBSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[2] {
-				label="Socket parameters"
-				name="asynSocketSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[3] {
-				label="Trace control"
-				name="asynTrace.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[4] {
-				label="Connection management"
-				name="asynConnect.adl"
-				args="P=$(P),R=$(R)"
-			}
-			clr=14
-			bclr=51
-		}
-		menu {
-			object {
-				x=61
-				y=372
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R).SCAN"
-				clr=14
-				bclr=51
-			}
-		}
-		text {
-			object {
-				x=6
-				y=372
-				width=50
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Scan:"
-			align="horiz. right"
-		}
+	"basic attribute" {
+		clr=14
 	}
+	textix="Scan:"
+	align="horiz. right"
 }
 composite {
 	object {
@@ -584,7 +579,7 @@ composite {
 			}
 			"dynamic attribute" {
 				vis="if not zero"
-				chan="$(P)$(R).ENBD"
+				chan="$(P)$(R).ENBL"
 			}
 			textix="Enabled"
 			align="horiz. right"
@@ -601,7 +596,7 @@ composite {
 			}
 			"dynamic attribute" {
 				vis="if zero"
-				chan="$(P)$(R).ENBD"
+				chan="$(P)$(R).ENBL"
 			}
 			textix="Disabled"
 			align="horiz. right"
@@ -627,7 +622,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if not zero"
-						chan="$(P)$(R).CNTD"
+						chan="$(P)$(R).CNCT"
 					}
 					textix="Connected"
 					align="horiz. right"
@@ -644,7 +639,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if zero"
-						chan="$(P)$(R).CNTD"
+						chan="$(P)$(R).CNCT"
 					}
 					textix="Disconnected"
 					align="horiz. right"
