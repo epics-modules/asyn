@@ -115,7 +115,7 @@ struct devGpibParmBlock {
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
-    int respond2Writes; /* milliseconds to wait if a device responds to writes */
+    double respond2Writes; /* set >= 0 if device responds to writes */
     /*The following are computed by devSupportGpib*/
     int  msgLenMax;     /*max msgLen all commands*/
     int  rspLenMax;     /*max rspLen all commands*/
@@ -268,8 +268,9 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  *   Number of seconds that should be skipped after a timeout. All commands
  *   issued within this time window will be aborted and returned as errors.
  * respond2Writes:
- *   Set to TRUE if the device responds to write operations.  This causes
- *   a read operation to follow each write operation.
+ *   Set >= 0 if the device responds to write operations.  This causes
+ *   a read operation to follow each write operation.  If >0 read will
+ *   be delayed by that many seconds.
  * msg msgLen
  *   Set by devSupportGpib. The msg size is the largest msgLen in all gppibCmds
  * rsp rspLen
