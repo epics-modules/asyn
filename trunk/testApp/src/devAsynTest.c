@@ -246,7 +246,8 @@ static long writeSo(stringoutRecord *pso)
         strcpy(pso->val,"not stateIdle");
         return 0;
     }
-    if(!pasynManager->isConnected(pasynUser)) {
+    if(!pasynManager->isConnected(pasynUser)
+    && !pasynManager->isAutoConnect(pasynUser)) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not connected\n",pso->name);
         strcpy(pso->val,"not connected");
         pso->udf = 0;
