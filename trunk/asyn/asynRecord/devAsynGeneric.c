@@ -225,11 +225,15 @@ static void exception(asynUser *pasynUser,asynException exception)
 static long initConnect(stringoutRecord *pso)
 {
     dpvtAsyn *pdpvtAsyn;
+    asynUser *pasynUser;
 
     pdpvtAsyn = (dpvtAsyn *)callocMustSucceed(
         1,sizeof(dpvtAsyn),"asynConnectDeviceInit");
     pdpvtAsyn->lock = epicsMutexMustCreate();
     pdpvtAsyn->state = stateNoPort;
+    pasynUser = pasynManager->createAsynUser(connect,0);
+    pasynUser->userPvt = pso;
+    pdpvtAsyn->pasynUser = pasynUser;
     pso->dpvt = pdpvtAsyn;
     return 0;
 }
@@ -252,9 +256,8 @@ static long writeConnect(stringoutRecord *pso)
     }
     pasynUser = pdpvtAsyn->pasynUser;
     epicsMutexMustLock(pdpvtAsyn->lock);
-    pdpvtAsyn->state = stateNoPort;
-    if(pdpvtAsyn->pasynUser) {
-        pasynUser = pdpvtAsyn->pasynUser;
+    if(pdpvtAsyn->state!=stateNoPort) {
+        pdpvtAsyn->state = stateNoPort;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s exceptionCallbackRemove\n",
             pso->name);
         status = pasynManager->exceptionCallbackRemove(pasynUser);
@@ -263,8 +266,6 @@ static long writeConnect(stringoutRecord *pso)
                 pso->name);
             status = pasynManager->disconnect(pasynUser);
         }
-        if(status==asynSuccess)
-            status = pasynManager->freeAsynUser(pasynUser);
         if(status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
                 pso->name,pasynUser->errorMessage);
@@ -274,7 +275,6 @@ static long writeConnect(stringoutRecord *pso)
         pdpvtAsyn->portName = 0;
         pdpvtAsyn->commonPvt = 0;
         pdpvtAsyn->pasynCommon = 0;
-        pdpvtAsyn->pasynUser = 0;
     }
     strncpy(buffer,pso->val,sizeof(buffer));
     buffer[sizeof(buffer) -1] = 0;
@@ -293,13 +293,12 @@ static long writeConnect(stringoutRecord *pso)
     }
     portName = (char *)callocMustSucceed(lenportName,sizeof(char),"devAsyn");
     strcpy(portName,buffer);
-    pasynUser = pasynManager->createAsynUser(connect,0);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s connectDevice\n",pso->name);
     status = pasynManager->connectDevice(pasynUser,portName,addr);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s asynManager error %s\n",pso->name,pasynUser->errorMessage);
-        goto freeAsynUser;
+        goto bad;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s findInterface %s\n",
         pso->name,asynCommonType);
@@ -321,15 +320,11 @@ static long writeConnect(stringoutRecord *pso)
     }
     pdpvtAsyn->portName = portName;
     pdpvtAsyn->addr = addr;
-    pasynUser->userPvt = pso;
-    pdpvtAsyn->pasynUser = pasynUser;
     pdpvtAsyn->state = stateInit;
     epicsMutexUnlock(pdpvtAsyn->lock);
     return(0);
 disconnect:
     pasynManager->disconnect(pasynUser);
-freeAsynUser:
-    pasynManager->freeAsynUser(pasynUser);
     free(portName);
 bad:
     epicsMutexUnlock(pdpvtAsyn->lock);
