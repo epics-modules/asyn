@@ -342,7 +342,7 @@ static long processAi(aiRecord *pr)
         pr->val = pPvt->value; pr->udf=0;
     }
     pPvt->gotValue = 0; pPvt->status = asynSuccess;
-    return 0;
+    return 2;
 }
 
 
@@ -423,5 +423,5 @@ static long processAiAverage(aiRecord *pai)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "%s devAsynAnalog::callbackAiAverage val=%f\n",
               pai->name, pai->val);
-    return 0;
+    return 2;
 }
