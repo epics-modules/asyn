@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.12 2004-05-14 16:41:32 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.13 2004-05-19 19:01:48 norume Exp $
  */
 
 #include <string.h>
@@ -277,6 +277,16 @@ drvAsynSerialPortConnect(void *drvPvt, asynUser *pasynUser)
                                     tty->serialDeviceName, strerror(errno));
         return asynError;
     }
+#ifdef FD_CLOEXEC
+    if (fcntl(tty->fd, F_SETFD, FD_CLOEXEC) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                            "Can't set %s close-on-exec flag: %s\n",
+                                    tty->serialDeviceName, strerror(errno));
+        close(tty->fd);
+        tty->fd = -1;
+        return asynError;
+    }
+#endif
     if ((setBaud(tty) != asynSuccess)
      || (setMode(tty) != asynSuccess)) {
         close(tty->fd);
