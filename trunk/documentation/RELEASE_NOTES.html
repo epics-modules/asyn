@@ -12,10 +12,41 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>Febuary 14, 2005</h1>
+<h1>March XX, 2005</h1>
 </center>
 <hr>
+<center>
+<h2>Release 4-3</h2>
+</center>
+<h3>lock/unlock renamed to lockDevice/unlockDevice</h3>
+<p>The names have been changed and now these methods only work for
+ports that. An error is returned if lockDevice is called for a port that
+does not block</p>
+<h3>lockPort/unlockPort</h3>
+<p>These are new asynManager methods. They can be used in place of
+queueRequest IF the caller can block. They have been added to make it
+easier to implement a driver with one addressing scheme that is a asynUser
+of a driver with a different addressing scheme. For example a multi-drop
+serial driver can be implemented that calls a standard serial driver.</p>
 
+<h3>devGpib</h3>
+<p>Several improvements were made to devSupportGpib.c. All changes should
+be transparent to code that uses devGpib.</p>
+<h3>asynOctetBase</h3>
+<p>The maxchars argument to callInterruptUsers has been removed.</p>
+<h3>asynReport</h3>
+<p>The filename argument has been removed.</p>
+<center>
+<h2>Release 4-2</h2>
+</center>
+<h3>Acknowledgement</h3>
+<p>Yevgeny A. Gusev has again reported some hard to recognize bugs.
+He must have spent many hours looking at the code. 
+His extra set of very good eyes are much appreciated!!.
+He also thought of the way to handle support that uses one addressing
+scheme but wants to use support that has a different addressing scheme.
+For example support for mult-drop serial that wants to use the
+standard serial support</p>
 <center>
 <h2>Release 4-2</h2>
 </center>
