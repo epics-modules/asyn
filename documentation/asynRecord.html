@@ -4,7 +4,7 @@
 <META http-equiv=Content-Type content="text/html; charset=windows-1252">
 <META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
 <BODY>
-<H1>asynOctet Record</H1>
+<H1>asyn Record</H1>
 <ADDRESS>Mark Rivers</ADDRESS>
 <HR>
 
@@ -24,16 +24,16 @@
   screens</a><LI>
   <a href="#Example 1">Example 1</a><LI><a href="#Example 2">Example 2</a></UL><A name=Overview>
 <H2>Overview</H2></A>
-<P>The asynOctet record is designed to perform generic I/O to any asyn device that
+<P>The asyn record is designed to perform generic I/O to any asyn device that
 supports the asynOctet interface. It is intended to allow EPICS to communicate with a new
 device without rebooting the IOC, i.e. without writing any C code or 
-changing the database. The asynOctet record is thus very useful for allowing 
+changing the database. The asyn record is thus very useful for allowing 
 Channel Access clients to communicate with devices for which no EPICS 
 device support exists. In combination with the scalcout record to format output
 strings and to parse response strings, it can actually eliminate the need for C
 device support code in many applications. It is also useful for diagnostics. The
 asyn device &quot;port&quot; and &quot;address&quot; can be dynamically changed
-in the record, so a single asynOctet record can be switched from talking to one
+in the record, so a single asyn record can be switched from talking to one
 device to another at run time. It provides access to asynTrace for the device, 
 controlling debugging output.
 <P>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The
@@ -106,12 +106,12 @@ the &quot;Access&quot; columns in the field description tables:
     164.54.160.50:21</TD>
   </tr>
 </TABLE>
-<P>The asynOctet record does not have traditional INP or OUT fields for input 
+<P>The asyn record does not have traditional INP or OUT fields for input 
 and output links.&nbsp; Rather it provides the PORT and ADDR fields to allow 
 dynamically changing what asyn device the record is connected to.
-<P>Writing to the PORT or ADDR fields causes the asynOctet record to disconnect 
+<P>Writing to the PORT or ADDR fields causes the asyn record to disconnect 
 from the current device and connect to the specified asyn port and address.&nbsp; 
-This permits a single asynOctet record to be used to control any asyn device.&nbsp; 
+This permits a single asyn record to be used to control any asyn device.&nbsp; 
 Writing to these fields does not cause the record to process, i.e. no I/O is 
 done.<P>Writing to the SOCK fields causes the record to create a new asyn port 
 with the same name as the SOCK field.&nbsp; This is done with 
@@ -134,7 +134,7 @@ drvGenericSerialConfigure.<p>&nbsp;</p>
     <TD>DBF_STRING</TD>
     <TD>This field is unused. The functions normally assigned to the VAL field 
       in many records are performed by the AOUT, BOUT, AINP, and BINP fields in 
-      the asynOctet record.</TD></TR>
+      the asyn record.</TD></TR>
   <TR vAlign=top>
     <TD>TMOD</TD>
     <TD>R/W</TD>
@@ -622,7 +622,7 @@ adapters like the Moxa units.<P>
  The above fields are used to control the asynTrace facility.&nbsp; They allow 
  one to turn on and off debugging output printed at the shell or written to the 
  trace file.<P>
- When the asynOctet record is connected to a new device with the PORT and ADDR 
+ When the asyn record is connected to a new device with the PORT and ADDR 
  fields the above trace fields are automatically updated to reflect the current 
  asynTrace and asynTraceIO masks for that device.<p>&nbsp;</p>
 <HR>
@@ -658,7 +658,7 @@ adapters like the Moxa units.<P>
 <h2 align="center"><a name="Record Processing">Record Processing</a></h2>
 
 <P>
- The asynOctet record processes, i.e. performs the I/O operation given by TMOD, 
+ The asyn record processes, i.e. performs the I/O operation given by TMOD, 
  according to the normal rules for EPICS records.&nbsp; The AOUT and BOUT fields 
  are Process Passive, so the record will process if these fields are written to 
  and the SCAN field of the record is Passive.&nbsp; The scan field of the record 
@@ -672,11 +672,11 @@ adapters like the Moxa units.<P>
 and GPIB records</a></h2>
 
 <P>
- The asynOctet record is designed to be a complete replacement for the older 
+ The asyn record is designed to be a complete replacement for the older 
  generic serial (&quot;serial&quot;) and generic GPIB (&quot;gpib&quot;) records.&nbsp; These 
  records are no longer needed, and will not be supported in the future.&nbsp; 
  The following is a list of differences between the old serial and GPIB records 
- and the new asynOctet record which may require changes to databases or 
+ and the new asyn record which may require changes to databases or 
  applications.<ul>
   <li>The ODEL field has been replaced by OEOS.&nbsp; It has changed from a 
   DBF_LONG to DBF_STRING in order to support multi-character terminators.</li>
@@ -688,7 +688,7 @@ and GPIB records</a></h2>
   <li>The AOUT and OEOS fields are processed by dbTranslateEscape before being 
   sent to the device.&nbsp; In rare cases this may require changing the output 
   strings if these contained the &quot;\&quot; character.</li>
-  <li>The asynOctet record always posts monitors on the input field (AINP or 
+  <li>The asyn record always posts monitors on the input field (AINP or 
   BINP) when the record processes.&nbsp; The older records did not post monitors 
   on the AINP field if the value was the same as the previous read.&nbsp; This 
   caused problems for some SNL programs and data acquisition applications.</li>
@@ -703,21 +703,21 @@ and GPIB records</a></h2>
 <HR>
 
 <H2><a name="medm screens">medm screens</a></H2><p>The following are 
-  screen shots of the medm screens provided for the asynOctet record.</p><p>&nbsp;</p>
-  <h3 align="center">Main control screen, asynOctet.adl</h3>
-  <p align="center"><img border="0" src="asynOctetRecord1.gif" width="448" height="350"></p>
+  screen shots of the medm screens provided for the asyn record.</p><p>&nbsp;</p>
+  <h3 align="center">Main control screen, asynRecord.adl</h3>
+  <p align="center"><img border="0" src="asynRecord1.gif" width="448" height="350"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">Serial port setup screen, asynSerialPortSetup.adl</h3>
-  <p align="center"><img border="0" src="asynOctetRecord2.gif" width="258" height="210"></p>
+  <p align="center"><img border="0" src="asynRecord2.gif" width="258" height="210"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">GPIB setup screen, asynGPIBSetup.adl</h3>
-  <p align="center"><img border="0" src="asynOctetRecord3.gif" width="383" height="195"></p>
+  <p align="center"><img border="0" src="asynRecord3.gif" width="383" height="195"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">Socket setup screen, asynSocketSetup.adl</h3>
-  <p align="center"><img border="0" src="asynOctetRecord4.gif" width="358" height="150"></p>
+  <p align="center"><img border="0" src="asynRecord4.gif" width="358" height="150"></p>
   <p align="center">&nbsp;</p>
-  <h3 align="center">Trace control screen, asynOctetTrace.adl</h3>
-  <p align="center"><img border="0" src="asynOctetRecord5.gif" width="358" height="230"></p>
+  <h3 align="center">Trace control screen, asynTrace.adl</h3>
+  <p align="center"><img border="0" src="asynRecord5.gif" width="358" height="230"></p>
   <P>
 <HR>
 <A name=Restrictions>
@@ -734,10 +734,10 @@ added in the future.</p>
 added in the future.</p>
 <HR>
 <H2><a name="Example 1">Example #1</a></H2>The following is an IDL program which demonstrates the use 
-of the asynOctet record. It transfers data in both ASCII and binary formats. 
+of the asyn record. It transfers data in both ASCII and binary formats. 
 Hopefully the IDL syntax is clear enough to understand by non-IDL users, and can 
-be translated into your favorite scripting language.<PRE>; This IDL program demonstrates the use of the EPICS asynOctet record.
-; The program uses 2 asynOctet records.  The ports corresponding to these
+be translated into your favorite scripting language.<PRE>; This IDL program demonstrates the use of the EPICS asyn record.
+; The program uses 2 asyn records.  The ports corresponding to these
 ; 2 records are connected with a null-modem cable
 ; Record 1 sends a message to record 2 in ASCII.
 ; Record 2 sends a message back to record 1 in binary.
@@ -834,7 +834,7 @@ end
 <HR>
   <H2><a name="Example 2" #2>Example #2</a></H2>The following is an IDL 
 procedure that demonstrates the use 
-of the asynOctet record to communicate with a Tektronix TDS200 Digital Oscilloscope. 
+of the asyn record to communicate with a Tektronix TDS200 Digital Oscilloscope. 
 It transfers data in both ASCII and binary formats.&nbsp; It will work with 
 either an RS-232 or GPIB connection to the scope.&nbsp; The record must be
 loaded with IMAX at least large enough to read the waveform.&nbsp; The entire
