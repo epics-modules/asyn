@@ -262,7 +262,7 @@ static long writeSo(stringoutRecord *pso)
         return 0;
     }
     status = pasynManager->isConnected(pasynUser,&yesNo);
-    if(status==asynSuccess && yesNo)
+    if(status==asynSuccess && !yesNo)
         status = pasynManager->isAutoConnect(pasynUser,&yesNo);
     if(status!=asynSuccess || !yesNo) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s not connected\n",pso->name);
