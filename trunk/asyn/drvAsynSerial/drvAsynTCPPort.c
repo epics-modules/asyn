@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.6 2004-04-13 03:41:24 rivers Exp $
+ * $Id: drvAsynTCPPort.c,v 1.7 2004-04-13 18:44:57 norume Exp $
  */
 
 #include <string.h>
@@ -541,9 +541,10 @@ static const struct asynOctet drvAsynTCPPortAsynOctet = {
  */
 int
 drvAsynTCPPortConfigure(char *portName,
-                     char *ttyName,
+                     char *hostInfo,
                      unsigned int priority,
-                     int noAutoConnect)
+                     int noAutoConnect,
+                     int noEosProcessing)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -558,8 +559,8 @@ drvAsynTCPPortConfigure(char *portName,
         errlogPrintf("Port name missing.\n");
         return -1;
     }
-    if (ttyName == NULL) {
-        errlogPrintf("TTY name missing.\n");
+    if (hostInfo == NULL) {
+        errlogPrintf("TCP host information missing.\n");
         return -1;
     }
 
@@ -578,7 +579,7 @@ drvAsynTCPPortConfigure(char *portName,
         return -1;
     }
     tty->fd = -1;
-    tty->serialDeviceName = epicsStrDup(ttyName);
+    tty->serialDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
 
     /*
@@ -638,7 +639,7 @@ drvAsynTCPPortConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    if (asynInterposeEosConfig(tty->portName, -1) < 0) {
+    if (!noEosProcessing && (asynInterposeEosConfig(tty->portName, -1) < 0)) {
         ttyCleanup(tty);
         return -1;
     }
@@ -650,18 +651,20 @@ drvAsynTCPPortConfigure(char *portName,
  */
 #include <iocsh.h>
 static const iocshArg drvAsynTCPPortConfigureArg0 = { "port name",iocshArgString};
-static const iocshArg drvAsynTCPPortConfigureArg1 = { "tty name",iocshArgString};
+static const iocshArg drvAsynTCPPortConfigureArg1 = { "TCP host:port",iocshArgString};
 static const iocshArg drvAsynTCPPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynTCPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
+static const iocshArg drvAsynTCPPortConfigureArg4 = { "disable EOS processing",iocshArgInt};
 static const iocshArg *drvAsynTCPPortConfigureArgs[] = {
     &drvAsynTCPPortConfigureArg0, &drvAsynTCPPortConfigureArg1,
-    &drvAsynTCPPortConfigureArg2, &drvAsynTCPPortConfigureArg3};
+    &drvAsynTCPPortConfigureArg2, &drvAsynTCPPortConfigureArg3,
+    &drvAsynTCPPortConfigureArg4};
 static const iocshFuncDef drvAsynTCPPortConfigureFuncDef =
-                      {"drvAsynTCPPortConfigure",4,drvAsynTCPPortConfigureArgs};
+                      {"drvAsynTCPPortConfigure",5,drvAsynTCPPortConfigureArgs};
 static void drvAsynTCPPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynTCPPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                                                                args[3].ival);
+                                                args[3].ival, args[4].ival);
 }
 
 /*

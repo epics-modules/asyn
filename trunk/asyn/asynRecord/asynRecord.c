@@ -352,7 +352,7 @@ static long special(struct dbAddr *paddr, int after)
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
           status = drvAsynTCPPortConfigure(pasynRec->port, pasynRec->sock, 
-                                             0, 0);
+                                             0, 0, 0);
           if (status != asynSuccess) goto done;
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
           db_post_events(pasynRec, pasynRec->port, monitor_mask);
