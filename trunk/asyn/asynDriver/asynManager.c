@@ -60,6 +60,7 @@ typedef struct asynBase {
     ELLLIST           asynPortList;
     ELLLIST           asynUserFreeList;
     epicsTimerQueueId timerQueue;
+    epicsMutexId      lock;
     epicsMutexId      lockTrace;
     tracePvt          trace;
 }asynBase;
@@ -265,6 +266,7 @@ static void asynInit(void)
     ellInit(&pasynBase->asynUserFreeList);
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
+    pasynBase->lock = epicsMutexMustCreate();
     pasynBase->lockTrace = epicsMutexMustCreate();
     tracePvtInit(&pasynBase->trace);
 }
@@ -459,7 +461,7 @@ disconnect:
             pport->portName,addr);
     }
 }
-
+
 static void portThread(port *pport)
 {
     userPvt  *puserPvt;
@@ -500,6 +502,7 @@ static void portThread(port *pport)
             epicsMutexUnlock(pport->lock);
             continue;
         }
+
         while(1) {
             int i;
             dpCommon *pdpCommon = 0;
@@ -659,8 +662,10 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
     int      nbytes;
 
     if(!pasynBase) asynInit();
+    epicsMutexMustLock(pasynBase->lock);
     puserPvt = (userPvt *)ellFirst(&pasynBase->asynUserFreeList);
     if(!puserPvt) {
+        epicsMutexUnlock(pasynBase->lock);
         nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
         puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
         pasynUser = userPvtToAsynUser(puserPvt);
@@ -668,6 +673,7 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
         pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
     } else {
         ellDelete(&pasynBase->asynUserFreeList,&puserPvt->node);
+        epicsMutexUnlock(pasynBase->lock);
         pasynUser = userPvtToAsynUser(puserPvt);
     }
     puserPvt->queueCallback = queue;
@@ -709,10 +715,12 @@ static asynStatus freeAsynUser(asynUser *pasynUser)
             return asynError;
         }
     }
+    epicsMutexMustLock(pasynBase->lock);
     ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+    epicsMutexUnlock(pasynBase->lock);
     return asynSuccess;
 }
-
+
 static asynStatus isMultiDevice(asynUser *pasynUser,
     const char *portName,int *yesNo)
 {
@@ -726,7 +734,7 @@ static asynStatus isMultiDevice(asynUser *pasynUser,
     *yesNo = (int)pport->multiDevice;
     return asynSuccess;
 }
-
+
 static asynStatus connectDevice(asynUser *pasynUser,
     const char *portName, int addr)
 {
@@ -753,7 +761,7 @@ static asynStatus connectDevice(asynUser *pasynUser,
     epicsMutexUnlock(pport->lock);
     return asynSuccess;
 }
-
+
 static asynStatus disconnect(asynUser *pasynUser)
 {
     userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
