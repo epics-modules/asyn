@@ -923,7 +923,7 @@ details.</p>
 <p>The following commands are specified in the st.cmd file</p>
 <pre>    E2050Reboot("inet_addr")
     E5810Reboot("inet_addr","password")
-    vxi11Config("portName","inet_addr",recoverWithIFC,timeout,"vxiName",priority)</pre>
+    vxi11Configure("portName","inet_addr",recoverWithIFC,timeout,"vxiName",priority)</pre>
 where
 <ul>
   <li>inet_addr - Internet Address</li>
@@ -934,7 +934,7 @@ where
   <li>timeout - timeout in seconds as a double. If 0.0 then a default is
     assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
-  <li>priority - epicsThread priority. If this is 0 then a default is
+  <li>priority - epicsThread priority. If this is 0, or missing, then a default is
     assigned.</li>
 </ul>
 
