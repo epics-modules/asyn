@@ -1,14 +1,14 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynOctet.adl"
-	version=020306
+	name="/home/phoebus/MRK/epics/modules/soft/asyn/medm/asynOctetRecord.adl"
+	version=030004
 }
 display {
 	object {
-		x=324
-		y=26
+		x=420
+		y=41
 		width=440
-		height=320
+		height=350
 	}
 	clr=14
 	bclr=4
@@ -578,107 +578,86 @@ text {
 	textix="Scan:"
 	align="horiz. right"
 }
-composite {
+text {
 	object {
 		x=6
 		y=47
-		width=427
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Port:"
+}
+"text entry" {
+	object {
+		x=61
+		y=47
+		width=150
+		height=20
+	}
+	control {
+		chan="$(REC).PORT"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+composite {
+	object {
+		x=228
+		y=15
+		width=205
 		height=20
 	}
 	"composite name"=""
 	children {
-		composite {
-			object {
-				x=6
-				y=47
-				width=205
-				height=20
-			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=6
-						y=47
-						width=50
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Port:"
-				}
-				"text entry" {
-					object {
-						x=61
-						y=47
-						width=150
-						height=20
-					}
-					control {
-						chan="$(REC).PORT"
-						clr=14
-						bclr=51
-					}
-					limits {
-					}
-				}
-			}
-		}
-		composite {
+		text {
 			object {
 				x=228
-				y=47
-				width=205
+				y=15
+				width=90
 				height=20
 			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=228
-						y=47
-						width=90
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Transfer:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=323
-						y=47
-						width=110
-						height=20
-					}
-					control {
-						chan="$(REC).TMOD"
-						clr=14
-						bclr=51
-					}
-				}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Transfer:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=323
+				y=15
+				width=110
+				height=20
+			}
+			control {
+				chan="$(REC).TMOD"
+				clr=14
+				bclr=51
 			}
 		}
 	}
 }
 composite {
 	object {
-		x=119
+		x=0
 		y=8
 		width=203
-		height=29
+		height=20
 	}
 	"composite name"=""
 	children {
 		rectangle {
 			object {
-				x=119
+				x=0
 				y=8
 				width=203
-				height=29
+				height=20
 			}
 			"basic attribute" {
 				clr=2
@@ -686,10 +665,10 @@ composite {
 		}
 		text {
 			object {
-				x=122
-				y=12
+				x=3
+				y=11
 				width=199
-				height=21
+				height=14
 			}
 			"basic attribute" {
 				clr=14
@@ -697,5 +676,32 @@ composite {
 			textix="$(REC)"
 			align="horiz. centered"
 		}
+	}
+}
+text {
+	object {
+		x=213
+		y=47
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Addr:"
+}
+"text entry" {
+	object {
+		x=268
+		y=47
+		width=150
+		height=20
+	}
+	control {
+		chan="$(REC).ADDR"
+		clr=14
+		bclr=51
+	}
+	limits {
 	}
 }
