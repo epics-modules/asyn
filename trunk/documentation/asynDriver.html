@@ -3220,13 +3220,12 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
 interface asynFloat64.</p>
 <ul>
   <li>aiRecord
-    <p>A value is given to rval. Linear conversions are supported if the
-    driver properly implements getBounds.</p>
+    <p>A value is given to val</p>
     <ul>
       <li>asynFloat64 - SCAN "I/O Intr" is supported. If the record is "I/O
         Intr" scanned then when the registerInterruptUser callback is called,
         it saves the value and calls scanIoRequest. When the record is
-        processed the saved value is put into rval. If the record is not "I/O
+        processed the saved value is put into val. If the record is not "I/O
         Intr" scanned then each time the record is processed, a new value is
         read via a call to pasynFloat64-&gt;read.</li>
       <li>asynFloat64Average - The registerInterruptUser callback adds the
@@ -3236,8 +3235,7 @@ interface asynFloat64.</p>
     </ul>
   </li>
   <li>aoRecord
-    <p>rval is written. Linear conversions are supported if the driver
-    properly implements getBounds.</p>
+    <p>val is written.</p>
   </li>
 </ul>
 
