@@ -72,6 +72,7 @@ typedef struct vxiPort {
     void          *asynGpibPvt;
     osiSockAddr   srqPort;         /* TCP port for interrupt channel */
     epicsEventId  srqThreadReady;   /* wait for srqThread to be ready*/
+    BOOL          rpcTaskInitCalled; /*Only call rpcTaskInit once*/
     const char    *portName;
     char          *hostName;   /* ip address of VXI-11 server */
     char          *vxiName;   /* Holds name of logical link */
@@ -474,10 +475,6 @@ static int vxiInit()
     if(pvxiLocal) return 0;
     pvxiLocal = callocMustSucceed(1,sizeof(vxiLocal),"vxiInit");
     pvxiLocal->vxiRpcTimeout.tv_sec = DEFAULT_RPC_TIMEOUT;
-    if(rpcTaskInit() != 0) { /* init RPC lib for iocInit task */
-        printf("vxiInit can't init RPC library\n");
-        return -1;
-    }
     return 0;
 }
 
@@ -527,10 +524,13 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s vxiConnectPort\n",pvxiPort->portName);
-    if(rpcTaskInit() == -1) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s Can't init RPC\n",pvxiPort->portName);
-        return asynError;
+    if(!pvxiPort->rpcTaskInitCalled) {
+        if(rpcTaskInit() == -1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s Can't init RPC\n",pvxiPort->portName);
+            return asynError;
+        }
+        pvxiPort->rpcTaskInitCalled = TRUE;
     }
     pvxiPort->rpcClient = clnt_create(pvxiPort->hostName,
         DEVICE_CORE, DEVICE_CORE_VERSION, "tcp");
