@@ -100,18 +100,16 @@ This document isn't for the absolute newcomer though.
  In particular you must have the following installed: 
 \layout Itemize
 
-EPICS R3.14.6 or higher 
+EPICS R3.14.6 or higher.
 \layout Itemize
 
-An up-to-date version of 
-\family typewriter 
-modules/soft/asyn
+EPICS modules/soft/asyn version 3.1 or higher.
 \layout Standard
 
 Serial devices can now be treated in much the same way as GPIB (IEEE-488)
  devices.
- Current versions of the EPICS asynDriver devGpib module contain a special
- 'GPIB' driver capable of communicating with devices connected to serial
+ The EPICS 'asyn' driver devGpib module can use the low-level
+ drivers which communicate with devices connected to serial
  ports on the IOC or with devices connected through Ethernet/Serial converter
  boxes.
 \layout Standard
@@ -1274,7 +1272,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-22 21:14:21 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-27 13:46:07 $$
 \newline 
 ############################################################################
 \newline 
