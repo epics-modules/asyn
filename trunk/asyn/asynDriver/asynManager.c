@@ -1405,6 +1405,7 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
         nout += errlogVprintf(pformat,pvar);
     }
     va_end(pvar);
+    if(fp==stdout) fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
 }
@@ -1477,6 +1478,7 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
             nout += errlogPrintf("\n");
         }
     }
+    if(fp==stdout) fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
 }
