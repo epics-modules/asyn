@@ -1,0 +1,2 @@
+registrar(drvAsynTCPPortRegisterCommands)
+include "asyn.dbd"

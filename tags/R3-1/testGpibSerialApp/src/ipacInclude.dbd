@@ -1,0 +1,3 @@
+include "drvIpac.dbd"
+include "tyGSOctal.dbd"
+registrar(vipc616Registrar)

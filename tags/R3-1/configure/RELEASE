@@ -1,0 +1,6 @@
+#RELEASE Location of external products
+#  IPAC is only necessary if support for Greensprings IP488 is required
+#  IPAC release V2-7 or later is required.
+#IPAC=/home/phoebus/MRK/epics/modules/bus/ipac
+#  EPICS_BASE 3.14.5 or later is required
+EPICS_BASE=/home/phoebus/MRK/epics/base3_14
