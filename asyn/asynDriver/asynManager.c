@@ -84,6 +84,7 @@ typedef struct interruptBase {
     ELLLIST      callbackList;
     ELLLIST      addList;
     ELLLIST      removeList;
+    ELLLIST      interruptNodeFree;
     BOOL         callbackActive;
     BOOL         listModified;
     port         *pport;
@@ -96,6 +97,7 @@ typedef struct interruptNodePvt {
     BOOL     isOnList;
     BOOL     isOnAddList;
     BOOL     isOnRemoveList;
+    epicsEventId  callbackDone;
     interruptBase *pinterruptBase;
     interruptNode nodePublic;
 }interruptNodePvt;
@@ -1671,6 +1673,7 @@ static asynStatus registerInterruptSource(const char *portName,
     ellInit(&pinterruptBase->callbackList);
     ellInit(&pinterruptBase->addList);
     ellInit(&pinterruptBase->removeList);
+    ellInit(&pinterruptBase->interruptNodeFree);
     pinterruptBase->pasynInterface = pinterfaceNode->pasynInterface;
     pinterruptBase->pport = pport;
     *pasynPvt = pinterruptBase;
@@ -1713,12 +1716,26 @@ static asynStatus getInterruptPvt(asynUser *pasynUser,
 static interruptNode *createInterruptNode(void *pasynPvt)
 {
     interruptBase    *pinterruptBase = (interruptBase *)pasynPvt;
+    port             *pport = pinterruptBase->pport;
+    interruptNode    *pinterruptNode;
     interruptNodePvt *pinterruptNodePvt;
 
-    pinterruptNodePvt = (interruptNodePvt *)
-         pasynManager->memMalloc(sizeof(interruptNodePvt));
+    epicsMutexMustLock(pport->asynManagerLock);
+    pinterruptNode = (interruptNode *)ellFirst(
+
+        &pinterruptBase->interruptNodeFree);
+    if(pinterruptNode) {
+        pinterruptNodePvt = interruptNodeToPvt(pinterruptNode);
+        ellDelete(&pinterruptBase->interruptNodeFree,&pinterruptNode->node);
+    } else {
+        pinterruptNodePvt = (interruptNodePvt *)
+            callocMustSucceed(1,sizeof(interruptNodePvt),
+                "asynManager:createInterruptNode");
+        pinterruptNodePvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
+    }
     pinterruptNodePvt->nodePublic.asynPvt = pinterruptNodePvt;
     pinterruptNodePvt->pinterruptBase = pinterruptBase;
+    epicsMutexUnlock(pport->asynManagerLock);
     return(&pinterruptNodePvt->nodePublic);
 }
 
@@ -1781,7 +1798,14 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
             "asynManager:removeInterruptUser not on list\n");
         return asynError;
     }
-    if(pinterruptBase->callbackActive) {
+    if(!pinterruptBase->callbackActive) {
+        ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
+        ellAdd(&pinterruptBase->interruptNodeFree,&pinterruptNode->node);
+        pinterruptNodePvt->isOnList = FALSE;
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynSuccess;
+    }
+    while(pinterruptBase->callbackActive) {
         if(pinterruptNodePvt->isOnRemoveList) {
             epicsMutexUnlock(pport->asynManagerLock);
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -1791,9 +1815,9 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
         ellAdd(&pinterruptBase->removeList,&pinterruptNodePvt->removeNode);
         pinterruptNodePvt->isOnRemoveList = TRUE;
         pinterruptBase->listModified = TRUE;
-    } else {
-         ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
-         pinterruptNodePvt->isOnList = FALSE;
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsEventMustWait(pinterruptNodePvt->callbackDone);
+        epicsMutexMustLock(pport->asynManagerLock);
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
@@ -1830,7 +1854,9 @@ static asynStatus interruptEnd(void *pasynPvt)
 
         ellDelete(&pinterruptBase->removeList,&pinterruptNodePvt->removeNode);
         ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
+        ellAdd(&pinterruptBase->interruptNodeFree,&pinterruptNode->node);
         pinterruptNodePvt->isOnList = FALSE;
+        epicsEventSignal(pinterruptNodePvt->callbackDone);
     }
     while((pnode = ellFirst( &pinterruptBase->addList))){
         interruptNodePvt *pinterruptNodePvt = (interruptNodePvt *)pnode;
