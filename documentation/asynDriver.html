@@ -537,7 +537,10 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>registerPort</td>
       <td>This method is called by drivers. A call is made for each
         communication interface instance. If priority is 0 then a default
-        will be assigned. If stackSize is 0 a default is assigned.</td>
+        will be assigned. If stackSize is 0 a default is assigned.  The
+        portName argument specifies the name by which the upper levels
+        of the asyn code will refer to this communication interface
+        instance.</td>
     </tr>
     <tr>
       <td>registerProcessModule</td>
