@@ -174,7 +174,7 @@ A906  extended address: primary address is 9, secondary address is 6. </pre>
       If such documentation is not available, look at the device support
       itself for statements like:
       <pre>  /* Param 12 */
-  {&amp;DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},</pre>
+  {&amp;DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  "%ld", 0, 20, 0, 0, 0, 0, 0, 0},</pre>
       The  above states that @12 is a GPIB read command via a longin record.
       Thus the record definition would be:
       <pre>    record(longin,"&lt;name&gt;") {
@@ -305,7 +305,7 @@ static  struct  devGpibNames   offOn = { 2, offOnList, 0, 1 };
 static struct gpibCmd gpibCmds[] =
 {
   /* Param 0 */
-  {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH,0,0, 0, 32,0, 0, 0, userOffOn, &amp;offOn, -1},
+  {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH,0,0, 0, 32,0, 0, 0, userOffOn, &amp;offOn, 0},
   /* definitions for other parameters follow*/
 };
 /* The following is the number of elements in the command array above.  */
@@ -355,7 +355,7 @@ field.</p>
 <pre>static struct gpibCmd gpibCmds[] =
 {
   /* Param 0 */
-  {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 32,0, 0, 0, userOffOn, &amp;offOn, -1},
+  {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 32,0, 0, 0, userOffOn, &amp;offOn, 0},
   /* definitions for other parameters follow*/
 };</pre>
 
@@ -457,20 +457,19 @@ definition must define field OUT as</p>
       "Name Tables". Set this to 0 when no Name Table is used.</dd>
   <dt><code>eos</code></dt>
     <dd>Input message termination string. It can be:
-      <ul>
-        <li>0
-          <p>A null pointer  means that the read operation does not look for
-          end of message termination characters.</p>
-        </li>
-        <li>""
-          <p>A null string signifies that a null character is the
-          terminator.</p>
-        </li>
-        <li>non null string
-          <p>The termination characters not including the null. Some drivers,
-          e.g. the vxi11, only allow a single termination character.</p>
-        </li>
-      </ul>
+      <dl>
+        <dt><code>0</code>
+          <dd>A null pointer  means that the read operation does not look for
+          end of message termination characters.
+        <dt><code>""</code>
+          <dd>An empty string signifies that a single null character ('\0') is the
+          terminator.
+        <dt>non-empty string (e.g. <code>"\n"</code>)
+          <dd>The termination characters (not including the null character terminating the string).  
+          For example, <code>"\n"</code> sets the message terminator to a single
+          ASCII newline (<code>'\n'</code>) character.  Some drivers,
+          e.g. the vxi11, allow only a single termination character.
+      </dl>
     </dd>
 </dl>
 
@@ -640,7 +639,7 @@ support it must to document its changes.</p>
       IFC). IFC is one of the GPIB Bus Management Lines.</p>
       <p>Only define <code>dset</code>, <code>type</code>, and
       <code>pri</code>. A default pdevGpibNames is provided. For example</p>
-      <pre>{&amp;DSET_BO, GPIBSDC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1}
+      <pre>{&amp;DSET_BO, GPIBSDC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
       </pre>
     </dd>
   <dt>GPIBREN</dt>
@@ -713,9 +712,9 @@ string value for each of the possible states of the VAL field of the record.
         "ON",    /* when VAL = 1 */
         0        /* list terminator */</pre>
 }; And is referenced in an output parameter table entry like this:
-<pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 0,0, 0, 0, tableName, 0, -1},</pre>
+<pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 0,0, 0, 0, tableName, 0, 0},</pre>
 For an input entry, it would look like this:
-<pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", 0, 0, 50, 0, 0, 0, tableName, 0, -1},</pre>
+<pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", 0, 0, 50, 0, 0, 0, tableName, 0, 0},</pre>
 The efast table MUST be 0 terminated.
 
 <p>For outputs the VAL field is used to index into the efast table and select
@@ -1133,12 +1132,12 @@ support</h2>
 
 <h3>gpibCmd</h3>
 
-<p>GPIBEOS is no longer an option and the last field of gpibCmd is now called
+<p>GPIBEOS is no longer present and the last field of gpibCmd is now called
 eos. Previously the last field was an <code>int</code> that was supposed to
 be initialized to -1 or to a single termination character for reads. Eos is a
 <code>char *</code>. If no terminator is desired then eos should be 0, i.e. a
-null pointer. If old support initilizes this to -1 compiler warnings will be
-generated.</p>
+NULL pointer. If old support initilizes this to -1 compiler warnings will be
+generated and a core dump is likely when the application is run.</p>
 
 <h3>devGpibParmBlock</h3>
 
