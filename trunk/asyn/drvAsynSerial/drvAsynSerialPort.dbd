@@ -1,2 +1,2 @@
-registrar(drvAsynLocalSerialPortRegisterCommands)
+registrar(drvAsynSerialPortRegisterCommands)
 include "asyn.dbd"
