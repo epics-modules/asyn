@@ -19,7 +19,17 @@ alink="#FF0000">
 <center>
 <h2>Release 3-2</h2>
 </center>
-<p>None so far.</p>
+
+<h3>Mac OS X (Darwin)</h3>
+<p>The RPC library on Mac OS X 10.3.3 does not handle device timeouts properly and may cause core dumps.  A bug report has been filed with Apple.  A workaround
+is to use the GNU glibc RPC/XDR routines.</p>
+
+<h3>vxWorks</h3>
+<p>Attempting to change the trace file to "stdout" does not work becuase
+vxWorks has per-task standard output streams.</p>
+
+
+
 
 <center>
 <h2>Release 3-1</h2>
