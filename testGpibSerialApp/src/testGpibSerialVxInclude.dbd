@@ -1,0 +1,2 @@
+include "testGpibSerialInclude.dbd"
+registrar(vipc616Registrar)
