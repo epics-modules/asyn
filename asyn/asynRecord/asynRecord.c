@@ -540,7 +540,9 @@ static long special(struct dbAddr * paddr, int after)
     status = pasynManager->queueRequest(pasynUser,
                                         priority,QUEUE_TIMEOUT);
     if(status!=asynSuccess) {
-        reportError(pasynRec,status,"queueRequest failed for special. Why?");
+        reportError(pasynRec,status,"queueRequest failed for special.");
+        reportError(pasynRec,status,pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
     }
     return 0;
 }
