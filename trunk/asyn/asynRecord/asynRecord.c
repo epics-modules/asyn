@@ -146,7 +146,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16     auct;   /*Autoconnect*/
     epicsEnum16     cnct;   /*Connect/Disconnect*/
     epicsEnum16     enbl;   /*Enable/Disable*/
-    char            errs[ERR_SIZE]; /*Error string*/
+    char            errs[ERR_SIZE+1]; /*Error string*/
 } oldValues;
 
 #define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
@@ -192,6 +192,18 @@ static long init_record(asynRecord *pasynRec, int pass)
 
     pasynRecPvt->prec = pasynRec;
 
+    /* Allocate the space for the binary/hybrid output and binary/hybrid 
+     * input arrays */
+    if (pasynRec->omax <= 0) pasynRec->omax=MAX_STRING_SIZE;
+    if (pasynRec->imax <= 0) pasynRec->imax=MAX_STRING_SIZE;
+    pasynRec->optr = (char *)callocMustSucceed(
+        pasynRec->omax, sizeof(char),"asynRecord");
+    pasynRec->iptr = (char *)callocMustSucceed(
+        pasynRec->imax, sizeof(char),"asynRecord");
+    pasynRecPvt->outbuff =  (char *)callocMustSucceed(
+        pasynRec->omax, sizeof(char),"asynRecord");
+    pasynRec->errs = (char *)callocMustSucceed(
+        ERR_SIZE+1,sizeof(char),"asynRecord");
     /* Initialize asyn, connect to device */
     pasynUser = pasynManager->createAsynUser(asynCallback,queueTimeoutCallback);
     pasynRecPvt->pasynUser = pasynUser;
@@ -204,18 +216,6 @@ static long init_record(asynRecord *pasynRec, int pass)
            pasynRec->pini = 1;
         }
     }
-    /* Allocate the space for the binary/hybrid output and binary/hybrid 
-     * input arrays */
-    if (pasynRec->omax <= 0) pasynRec->omax=MAX_STRING_SIZE;
-    if (pasynRec->imax <= 0) pasynRec->imax=MAX_STRING_SIZE;
-    pasynRec->optr = (char *)callocMustSucceed(
-        pasynRec->omax, sizeof(char),"asynRecord");
-    pasynRec->iptr = (char *)callocMustSucceed(
-        pasynRec->imax, sizeof(char),"asynRecord");
-    pasynRecPvt->outbuff =  (char *)callocMustSucceed(
-        pasynRec->omax, sizeof(char),"asynRecord");
-    pasynRec->errs = (char *)callocMustSucceed(
-        ERR_SIZE,sizeof(char),"asynRecord");
 
     /* Get initial values of trace and connect bits */
     monitorStatus(pasynRec);
@@ -1165,7 +1165,7 @@ static void reportError(asynRecord *pasynRec,asynStatus astatus,
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
    asynUser *pasynUser = pasynRecPvt->pasynUser;
    unsigned short monitor_mask;
-   char buffer[ERR_SIZE];
+   char buffer[ERR_SIZE+1];
    va_list  pvar;
 
    if (rstatus != NO_ALARM) recGblSetSevr(pasynRec, rstatus, severity);
@@ -1178,8 +1178,8 @@ static void reportError(asynRecord *pasynRec,asynStatus astatus,
                       pasynRec->name, buffer);
    }
    strncpy(pasynRec->errs, buffer, ERR_SIZE);
-   if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
-       strcpy(pasynRecPvt->old.errs, pasynRec->errs);
+   if (strncmp(pasynRec->errs, pasynRecPvt->old.errs, ERR_SIZE) != 0) {
+       strncpy(pasynRecPvt->old.errs, pasynRec->errs, ERR_SIZE);
        monitor_mask = DBE_VALUE | DBE_LOG;
        db_post_events(pasynRec, pasynRec->errs, monitor_mask);
    }
@@ -1190,9 +1190,9 @@ static void resetError(asynRecord *pasynRec)
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
    unsigned short monitor_mask;
 
-   strcpy(pasynRec->errs, "");
-   if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
-       strcpy(pasynRecPvt->old.errs, pasynRec->errs);
+   pasynRec->errs[0] = 0;
+   if (strncmp(pasynRec->errs, pasynRecPvt->old.errs,ERR_SIZE) != 0) {
+       strncpy(pasynRecPvt->old.errs, pasynRec->errs,ERR_SIZE);
        monitor_mask = DBE_VALUE | DBE_LOG;
        db_post_events(pasynRec, pasynRec->errs, monitor_mask);
    }
