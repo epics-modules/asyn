@@ -117,11 +117,9 @@ struct devGpibParmBlock {
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
-    /*The following are set by devSupportGpib*/
-    char *msg;   /*shared msg buffer for all gpibCmds*/
-    int  msgLen;/*size of msg*/
-    char *rsp;   /*shared rsp buffer for all respond2Writes*/
-    int  rspLen;/*size of rsp*/
+    /*The following are computed by devSupportGpib*/
+    int  msgLenMax;     /*max msgLen all commands*/
+    int  rspLenMax;     /*rsp rspLen all commands*/
 };
 
 /* EFAST tables must be defied as follows
