@@ -12,8 +12,8 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 DBD += testEpics.dbd
 
 LIBRARY_IOC += testEpicsSupport
-testEpicsSupport_SRCS += cacheInt32Driver.c
-testEpicsSupport_SRCS += interruptInt32Driver.c
+testEpicsSupport_SRCS += int32Driver.c
+testEpicsSupport_SRCS += uint32DigitalDriver.c
 testEpicsSupport_LIBS += asyn
 testEpicsSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
