@@ -551,12 +551,12 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
         pdevGpibParmBlock->rspLenMax = rspLenMax;
         pdevGpibParmBlock->msgLenMax = msgLenMax;
         if(pdevGpibParmBlock->rspLenMax > 0) {
-            if(pdevGpibParmBlock->respond2Writes) {
+            if(pdevGpibParmBlock->respond2Writes<0) {
                 printf("Warning -- %s has rspLen>0 but respond2Writes is not set.\n", pdevGpibParmBlock->name);
             }
         }
         else {
-            if(!pdevGpibParmBlock->respond2Writes) {
+            if(pdevGpibParmBlock->respond2Writes>=0) {
                 printf("Warning -- %s respond2Writes is set but has no command table entry with rspLen>0.\n", pdevGpibParmBlock->name);
             }
         }
