@@ -165,9 +165,13 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
         pPvt->float64Pvt,pPvt->pasynUser,
         interruptCallback,pPvt,&pPvt->registrarPvt);
     if(status!=asynSuccess) {
-        printf("%s devAsynFloat64 registerInterruptUser %s\n",
-            pr->name,pPvt->pasynUser->errorMessage);
+        /* The likely reason for an error is that this driver does not
+         * support interrupts on this interface.  Ignore for now
+         * printf("%s devAsynFloat64 registerInterruptUser %s\n",
+         *  pr->name,pPvt->pasynUser->errorMessage);
+         */
     }
+
     return 0;
 bad:
    pr->pact=1;
