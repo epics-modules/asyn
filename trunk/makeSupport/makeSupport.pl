@@ -5,7 +5,7 @@
 # Author: Andrew Johnson <anj@aps.anl.gov>
 # Date: 17 May 2004
 #
-# $Id: makeSupport.pl,v 1.1 2004-05-20 20:28:26 anj Exp $
+# $Id: makeSupport.pl,v 1.2 2004-05-21 23:31:30 anj Exp $
 #
 
 use strict;
@@ -19,23 +19,23 @@ Usage() unless getopts('A:B:dhlt:T:');
 # Handle the -h command
 Usage() if $opt_h;
 
-my $top = cwd();
+our $top = cwd();
 print "\$top = $top\n" if $opt_d;
 
-my $arch = $ENV{EPICS_HOST_ARCH};
+our $arch = $ENV{EPICS_HOST_ARCH};
 print "\$arch = $arch\n" if $opt_d;
 
-my $user = $ENV{USER} ||
+our $user = $ENV{USER} ||
 	   $ENV{USERNAME} ||
 	   Win32::LoginName()
     or die "Can't determine your username!\n";
 print "\$user = $user\n" if $opt_d;
 
-my $date = localtime;
+our $date = localtime;
 print "\$date = $date\n" if $opt_d;
 
 # Find asyn directory
-my $asyn;
+our $asyn;
 if ($opt_A) {
     $asyn = abs_path($opt_A);
 } else {
@@ -56,41 +56,38 @@ die "ASYN ($asyn) is missing a configure/RELEASE file!\n"
     unless -f "$asyn/configure/RELEASE";
 
 # Find templates directory
-my $templates = abs_path($opt_T ||
+our $templates = abs_path($opt_T ||
 			 $ENV{EPICS_ASYN_TEMPLATE_DIR} ||
 			 "$asyn/templates");
 print "\$templates = $templates\n" if $opt_d;
 die "Templates directory '$templates' does not exist\n"
     unless -d $templates;
 
+# Handle the -l command
+if ($opt_l) {
+    listTemplates($templates);
+    exit 0;
+}
+
 # Check the template type
-my $type = $opt_t ||
+our $type = $opt_t ||
 	   $ENV{EPICS_ASYN_TEMPLATE_DEFAULT} ||
 	   'default';
 print "\$type = $type\n" if $opt_d;
 print "The template '$type' does not exist.\n"
     unless $opt_l or -d "$templates/$type";
 
-# Handle the -l command or bad template type
-if ($opt_l or ! -d "$templates/$type") {
-    opendir TEMPLATES, $templates or die "opendir failed: $!";
-    my @templates = readdir TEMPLATES;
-    closedir TEMPLATES;
-    print "Templates available are:\n";
-    foreach (@templates) {
-	next if m/^\./;
-	next if m/^CVS$/;   # Shouldn't be necessary, but...
-	print "\t$_\n";
-    }
-    exit ! $opt_l;
+unless (-d "$templates/$type") {
+    listTemplates($templates);
+    exit 1;
 }
 
 # Check app name
-my $name = shift or die "You didn't name your application!\n";
+our $name = shift or die "You didn't name your application!\n";
 print "\$name = $name\n" if $opt_d;
 
-# Find EPICS_BASE
-my $base;
+# Find EPICS_BASE, and SNCSEQ if set;
+our ($base, $sncseq);
 if ($opt_B) {
     $base = abs_path($opt_B);
 } else {
@@ -99,6 +96,7 @@ if ($opt_B) {
     readRelease("$asyn/configure/RELEASE", \%release, \@apps);
     expandRelease(\%release);
     $base = abs_path($release{EPICS_BASE});
+    $sncseq = abs_path($release{SNCSEQ}) if exists $release{SNCSEQ};
 }
 print "\$base = $base\n" if $opt_d;
 die "EPICS_BASE directory '$base' does not exist\n"
@@ -107,24 +105,34 @@ die "EPICS_BASE directory '$base' does not exist\n"
 # Substitutions work like this:
 # key => val  in the hash causes  _key_ in the templateto become by val
 
-# Substitutions in filenames
-my %namesubs = (
+# Substitutions used in filenames
+our %namesubs = (
     NAME => $name
 );
 
-# Substitutions in file text
-my %textsubs = (
+# Substitutions used in file text
+our %textsubs = (
     NAME => $name,
     ASYN => $asyn,
     EPICSBASE => $base,
+    SNCSEQ => $sncseq,
     TOP  => $top,
+    ARCH => $arch,
     TYPE => $type,
     USER => $user,
     DATE => $date
 );
 
+# Load and run any template-specific script
+my $script = "$templates/$type.pl";
+require $script if -f $script;
+
 # Do it!
-copyTree("$templates/$type", $top, \%namesubs, \%textsubs);
+print "Copying ";
+copyTree("$templates/top", $top, \%namesubs, \%textsubs);
+copyTree("$templates/$type", $top, \%namesubs, \%textsubs) if $type ne "top";
+print "\nTemplate instanciation complete.\n";
+
 
 ##### File contains subroutines only below here
 
@@ -155,6 +163,20 @@ Example:
     <asyn>/bin/<arch>/makeSupport.pl -t devGpib K196
 EOF
     exit $opt_h ? 0 : 1;
+}
+
+sub listTemplates {
+    my ($templates) = @_;
+    opendir TEMPLATES, $templates or die "opendir failed: $!";
+    my @templates = readdir TEMPLATES;
+    closedir TEMPLATES;
+    print "Templates available are:\n";
+    foreach (@templates) {
+	next if m/^\./;
+	next if m/^CVS$/;   # Shouldn't be necessary, but...
+	next if -f "$templates/$_";
+	print "\t$_\n";
+    }
 }
 
 #
@@ -227,23 +249,22 @@ sub copyTree {
 	my $dstName = "$dst/$_";
 	
 	if (-d $srcName) {
+	    print ":" unless $opt_d;
 	    copyDir($srcName, $dstName, $Rnamesubs, $Rtextsubs);
 	} elsif (-f $srcName) {
+	    print "." unless $opt_d;
 	    copyFile($srcName, $dstName, $Rtextsubs);
 	} elsif (-l $srcName) {
-	    print "Soft link in template, ignored:\n\t$srcName\n";
+	    warn "\nSoft link in template, ignored:\n\t$srcName\n";
 	} else {
-	    print "Unknown file type in template, ignored:\n\t$srcName\n";
+	    warn "\nUnknown file type in template, ignored:\n\t$srcName\n";
 	}
     }
 }
 
 sub copyFile {
     my ($src, $dst, $Rtextsubs) = @_;
-    if (-e $dst) {
-	print "Target file exists, skipping:\n\t$dst\n";
-	return;
-    }
+    return if (-e $dst);
     print "Creating file '$dst'\n" if $opt_d;
     open(SRC, "<$src") and open(DST, ">$dst") or die "$! copying $src to $dst\n";
     while (<SRC>) {
@@ -258,7 +279,7 @@ sub copyFile {
 sub copyDir {
     my ($src, $dst, $Rnamesubs, $Rtextsubs) = @_;
     if (-e $dst && ! -d $dst) {
-	print "Target exists but is not a directory, skipping:\n\t$dst\n";
+	warn "\nTarget exists but is not a directory, skipping:\n\t$dst\n";
 	return;
     }
     print "Creating directory '$dst'\n" if $opt_d;
