@@ -2,6 +2,7 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 DIRS += configure
+DIRS += makeSupport
 DIRS += asyn
 DIRS += testApp
 DIRS += testGpibApp
