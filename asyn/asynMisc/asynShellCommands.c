@@ -455,18 +455,20 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     asynSetTraceIOMask(portName,addr,mask);
 }
 
-typedef struct setFilenameArgs {
-    const char   *filename;
-    epicsEventId done;
-}setFilenameArgs;
-
-static void setFilename(asynUser *pasynUser)
+int epicsShareAPI
+ asynSetTraceFile(const char *portName,int addr,const char *filename)
 {
-    setFilenameArgs *pargs = (setFilenameArgs *)pasynUser->userPvt;
-    const char      *filename = pargs->filename;
-    FILE            *fp;
+    asynUser        *pasynUser;
     asynStatus      status;
+    FILE            *fp;
 
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
+    if((status!=asynSuccess) && (strlen(portName)!=0)) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return -1;
+    }
     if(!filename) {
         fp = 0;
     } else if(strlen(filename)==0 || strcmp(filename,"stdout")==0) {
@@ -483,33 +485,6 @@ static void setFilename(asynUser *pasynUser)
         printf("%s\n",pasynUser->errorMessage);
     }
 done:
-    epicsEventSignal(pargs->done);
-}
-
-int epicsShareAPI
- asynSetTraceFile(const char *portName,int addr,const char *filename)
-{
-    asynUser        *pasynUser;
-    asynStatus      status;
-    setFilenameArgs args;
-    pasynUser = pasynManager->createAsynUser(setFilename,0);
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if((status!=asynSuccess) && (strlen(portName)!=0)) {
-        printf("%s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return -1;
-    }
-    args.filename = filename;
-    args.done = epicsEventMustCreate(epicsEventEmpty);
-    pasynUser->userPvt = &args;
-    status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.0);
-    if(status!=asynSuccess) {
-        printf("queueRequest failed %s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return asynError;
-    }
-    epicsEventWait(args.done);
-    epicsEventDestroy(args.done);
     pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
