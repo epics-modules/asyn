@@ -306,6 +306,7 @@ recordtype(asyn) {
 # asynInt32, asynUInt32Digital, and asynFloat64 data fields
     field(I32INP,DBF_LONG) {
         prompt("asynInt32 input")
+        special(SPC_NOMOD)
         interest(1)
     }
     field(I32OUT,DBF_LONG) {
@@ -315,6 +316,7 @@ recordtype(asyn) {
     }
     field(UI32INP,DBF_ULONG) {
         prompt("asynUInt32Digital input")
+        special(SPC_NOMOD)
         interest(1)
     }
     field(UI32OUT,DBF_ULONG) {
@@ -329,6 +331,7 @@ recordtype(asyn) {
     }
     field(F64INP,DBF_DOUBLE) {
         prompt("asynFloat64 input")
+        special(SPC_NOMOD)
         interest(1)
     }
     field(F64OUT,DBF_DOUBLE) {
