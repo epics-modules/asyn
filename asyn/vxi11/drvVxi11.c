@@ -109,7 +109,8 @@ static enum clnt_stat clientCall(vxiPort * pvxiPort,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
-static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout);
+static asynStatus vxiBusStatus(vxiPort * pvxiPort, int request,
+    double timeout,int *status);
 static int vxiInit(void);
 static void vxiCreateIrqChannel(vxiPort *pvxiPort);
 static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser);
@@ -134,10 +135,11 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
 static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser);
 static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static int vxiSrqStatus(void *pdrvPvt);
+static asynStatus vxiSrqStatus(void *pdrvPvt,int *srqStatus);
 static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff);
 static asynStatus vxiSerialPollBegin(void *pdrvPvt);
-static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout);
+static asynStatus vxiSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *statusByte);
 static asynStatus vxiSerialPollEnd(void *pdrvPvt);
 
 static char *vxiError(Device_ErrorCode error)
@@ -419,10 +421,9 @@ static int vxiWriteCmd(vxiPort * pvxiPort,asynUser *pasynUser,
  * or it can be 0 meaning all (exept the bus address) which will then be
  * combined into a bitfield according to the bit numbers+1 (1 corresponds to
  * bit 0, etc.).
- *
- * Return status if successful else ERROR.
  ******************************************************************************/
-static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout)
+static asynStatus vxiBusStatus(vxiPort * pvxiPort, int request,
+    double timeout,int *busStatus)
 {
     int status = 0, start, stop;
     devLink *pdevLink = vxiGetDevLink(pvxiPort,0,-1);
@@ -466,7 +467,7 @@ static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout)
             printf("%s vxiBusStatus error %s\n",
                 pvxiPort->portName, clnt_sperror(pvxiPort->rpcClient,""));
             xdr_free((const xdrproc_t)xdr_Device_DocmdResp,(char *) &devDocmdR);
-            return -1;
+            return (clntStat==RPC_TIMEDOUT) ? asynTimeout : asynError;
         }
         if(devDocmdR.error != VXI_OK) {
             if(devDocmdR.error != VXI_IOTIMEOUT) {
@@ -474,7 +475,7 @@ static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout)
                     pvxiPort->portName, vxiError(devDocmdR.error));
             }
             xdr_free((const xdrproc_t)xdr_Device_DocmdResp,(char *)&devDocmdR);
-            return -1;
+            return (devDocmdR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
         }
         result = ntohs(*(unsigned short *) devDocmdR.data_out.data_out_val);
         if(request) {
@@ -484,7 +485,8 @@ static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout)
         }
         xdr_free((const xdrproc_t) xdr_Device_DocmdResp,(char *) &devDocmdR);
     }
-    return status;
+    *busStatus = status;
+    return asynSuccess;
 }
 
 static enum clnt_stat clientCall(vxiPort * pvxiPort,
@@ -581,7 +583,8 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
 {
     int         isController;
     Device_Link link;
-    int sock = -1;
+    int         sock = -1;
+    asynStatus  status;
     struct sockaddr_in vxiServer;
 
     if(pvxiPort->server.connected) {
@@ -625,35 +628,35 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     pvxiPort->server.lid = link;
     pvxiPort->server.connected = TRUE;
     /* Ask the controller's gpib address.*/
-    pvxiPort->ctrlAddr = vxiBusStatus(pvxiPort,
-        VXI_BSTAT_BUS_ADDRESS,pvxiPort->defTimeout);
-    if(pvxiPort->ctrlAddr == -1) {
+    status = vxiBusStatus(pvxiPort,
+        VXI_BSTAT_BUS_ADDRESS,pvxiPort->defTimeout,&pvxiPort->ctrlAddr);
+    if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
        	    "%s vxiConnectPort cannot read bus status initialization aborted\n",
             pvxiPort->portName);
         clnt_destroy(pvxiPort->rpcClient);
-        return asynError;
+        return status;
     }
     /* initialize the vxiPort structure with the data we have got so far */
     pvxiPort->primary[pvxiPort->ctrlAddr].primary.lid = link;
     pvxiPort->primary[pvxiPort->ctrlAddr].primary.connected = TRUE;
     /* now we can use vxiBusStatus; if we are not the controller fail */
-    isController = vxiBusStatus(pvxiPort, VXI_BSTAT_SYSTEM_CONTROLLER,
-        pvxiPort->defTimeout);
-    if(isController < 0) {
+    status = vxiBusStatus(pvxiPort, VXI_BSTAT_SYSTEM_CONTROLLER,
+        pvxiPort->defTimeout,&isController);
+    if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiConnectPort vxiBusStatus error %d initialization aborted\n",
-            pvxiPort->portName,isController);
+            "%s vxiConnectPort vxiBusStatus error initialization aborted\n",
+            pvxiPort->portName);
         clnt_destroy(pvxiPort->rpcClient);
-        return asynError;
+        return status;
     }
     if(isController == 0) {
-        isController = vxiBusStatus(pvxiPort, VXI_BSTAT_CONTROLLER_IN_CHARGE,
-            pvxiPort->defTimeout);
-        if(isController < 0) {
+        status = vxiBusStatus(pvxiPort, VXI_BSTAT_CONTROLLER_IN_CHARGE,
+            pvxiPort->defTimeout,&isController);
+        if(status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiConnectPort vxiBusStatus error %d initialization aborted\n",
-                pvxiPort->portName,isController);
+                "%s vxiConnectPort vxiBusStatus error initialization aborted\n",
+                pvxiPort->portName);
             clnt_destroy(pvxiPort->rpcClient);
             return asynError;
         }
@@ -1341,13 +1344,14 @@ static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     return status;
 }
 
-static int vxiSrqStatus(void *pdrvPvt)
+static asynStatus vxiSrqStatus(void *pdrvPvt,int *srqStatus)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     status;
+    vxiPort    *pvxiPort = (vxiPort *)pdrvPvt;
+    asynStatus status;
 
     assert(pvxiPort);
-    status = vxiBusStatus(pvxiPort, VXI_BSTAT_SRQ, pvxiPort->defTimeout);
+    status = vxiBusStatus(pvxiPort, VXI_BSTAT_SRQ,
+        pvxiPort->defTimeout,srqStatus);
     return status;
 }
 
@@ -1402,28 +1406,28 @@ static asynStatus vxiSerialPollBegin(void *pdrvPvt)
     return asynSuccess;
 }
 
-static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
+static asynStatus vxiSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *statusByte)
 {
     vxiPort             *pvxiPort = (vxiPort *)pdrvPvt;
     devLink             *pdevLink;
     enum clnt_stat      clntStat;
     Device_GenericParms devGenP;
     Device_ReadStbResp  devGenR;
-    unsigned char       stb = 0;
 
     assert(pvxiPort);
     if(addr<0) {
         printf("%s vxiSerialPoll for illegal addr %d\n",pvxiPort->portName,addr);
-        return 0;
+        return asynError;
     }
     pdevLink = vxiGetDevLink(pvxiPort,0,addr);
-    if(!pdevLink) return 0;
+    if(!pdevLink) return asynError;
     if(!pdevLink->lid) {
         Device_Link lid;
         if(!vxiCreateDevLink(pvxiPort,addr,&lid)) {
             printf("%s vxiCreateDevLink failed for addr %d\n",
                 pvxiPort->portName,addr);
-            return 0;
+            return asynError;
         }
         pdevLink->lid = lid;
     }
@@ -1439,7 +1443,7 @@ static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
     if(clntStat != RPC_SUCCESS) {
         printf("%s vxiSerialPoll %d %s\n",
             pvxiPort->portName, addr, clnt_sperror(pvxiPort->rpcClient,""));
-        return 0;
+        return asynError;
     } else if(devGenR.error != VXI_OK) {
         if(devGenR.error == VXI_IOTIMEOUT) {
         /*HP 2050 doews not IBSPD,IBUNT on timeout*/
@@ -1450,12 +1454,11 @@ static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
             printf("%s vxiSerialPoll %d: %s\n",
                 pvxiPort->portName, addr, vxiError(devGenR.error));
         }
-        return 0;
-    } else {
-        stb = devGenR.stb;
+        return asynError;
     }
     xdr_free((const xdrproc_t) xdr_Device_ReadStbResp, (char *) &devGenR);
-    return stb;
+    *statusByte = (int)devGenR.stb;
+    return asynSuccess;
 }
 
 static asynStatus vxiSerialPollEnd(void *pdrvPvt)
@@ -1488,7 +1491,7 @@ int vxi11SetRpcTimeout(double timeout)
     int seconds,microseconds;
 
     seconds = (int)timeout;
-    microseconds = (int)(((timeout - (double)seconds))/1e6);
+    microseconds = (int)(((timeout - (double)seconds))*1e6);
     pvxiLocal->vxiRpcTimeout.tv_sec = seconds;
     pvxiLocal->vxiRpcTimeout.tv_usec = microseconds;
     return 0;
