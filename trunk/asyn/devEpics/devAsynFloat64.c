@@ -327,11 +327,10 @@ static long processAi(aiRecord *pr)
     int status;
 
     if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynFloat64 queueRequest %s\n",
@@ -377,11 +376,10 @@ static long processAo(aoRecord *pr)
         pr->val = pPvt->value; pr->udf = 0;
     } else if(pr->pact == 0) {
         pPvt->gotValue = 1; pPvt->value = pr->val;
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynFloat64:process error queuing request %s\n",
