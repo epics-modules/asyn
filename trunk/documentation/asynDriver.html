@@ -872,16 +872,15 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>lock/unlock</td>
-      <td>lock/unlock are only valid if port can block.
-
-        <p>lock/unlock are used to block other users from accessing a device
+      <td>
+        lock/unlock are used to block other users from accessing a device
         while a user is making a series of queueRequests. Only the addr
         specified in the connectDevice request is locked. asynManager locks
         when a queueRequest is taken from the queue. At that point all other
         entries in the queue must wait until unlock is called by the same
         pasynUser that locked. lock/unlock fail if a request is currently
         queued. The addr argument passed to connectDevice determines if the
-        port or only a device is locked.</p>
+        port or only a device is locked.
       </td>
     </tr>
     <tr>
