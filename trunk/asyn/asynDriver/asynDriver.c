@@ -71,7 +71,7 @@ struct asynUserPvt {
     BOOL         isQueued;
     unsigned int lockCount;
     epicsTimerId timer;
-    double       timeout;
+    double       timeout; /*For queueRequest*/
     asynPvt      *pasynPvt;
     asynUser     user;
 };
@@ -96,7 +96,7 @@ static deviceDriver *findDriver(asynUser *pasynUser,
     const char *driverType,int processModuleOK);
 static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout);
-static asynCancelStatus cancelRequest(asynUser *pasynUser);
+static void cancelRequest(asynUser *pasynUser);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static asynStatus registerDevice(
@@ -378,7 +378,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     return(asynSuccess);
 }
 
-static asynCancelStatus cancelRequest(asynUser *pasynUser)
+static void cancelRequest(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
     asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
@@ -401,12 +401,6 @@ static asynCancelStatus cancelRequest(asynUser *pasynUser)
 	if(pasynUserPvt) break;
     }
     epicsMutexUnlock(pasynPvt->lock);
-    if(!pasynUserPvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynQueueManager:cancelRequest: not queued\n");
-        return(asynError);
-    }
-    return(asynSuccess);
 }
 
 static asynStatus lock(asynUser *pasynUser)
