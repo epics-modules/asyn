@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">September 23,
+<p><span style="font-weight: bold; font-size: 14pt">October 13,
 2004</span></p>
 </center>
 <hr>
@@ -339,6 +339,18 @@ communicating information from a user to a driver</p>
 more of the message and/or register based interfaces described in later
 sections.</p>
 
+<h4>Comments</h4>
+<ol>
+  <li>STREAMS, devAscii, and mpfSerial need only asynManager and asynOctet.
+    devGpib needs only asynManager, asynCommon, asynOctet, and asynGpib.</li>
+  <li>It is expected that most users will connect to these interfaces via
+    device support. However, other code can call it. Examples are sequence
+    programs, test programs, utility commands, etc.</li>
+  <li>Device support can consist of more than one type of support. For
+    example most functions could be accessed via STREAMS, but asynGpib could
+    be used to handle SRQs (service requests).</li>
+</ol>
+
 <h3>Brief Theory of Operation</h3>
 
 <p>During initialization, port drivers register each communication port as
@@ -406,14 +418,14 @@ following steps:
   <li>The port thread removes the I/O request from the work queue.</li>
   <li>The port thread calls the processCallback located in Record device
     support.</li>
-  <li>processCallback calls the low-level driver.</li>
-  <li>The low-level driver read or write routine blocks until the I/O
+  <li>processCallback calls the low-level driver.
+  The low-level driver read or write routine blocks until the I/O
     completes or until a timeout occurs.  The low-level driver routine
     returns the results of the I/O operation to processCallback which
     completes record processing.</li>
   <li>processCallback calls the record support process method.</li>
-  <li>Record support calls Record device support again, this time with record.PACT=1.</li>
-  <li>Record device support updates files in the record and returns.</li>
+  <li>Record support calls Record device support again, this time with record.PACT=1.
+  Record device support updates files in the record and returns.</li>
 </ol>
 
 <p>The second example shows access to a port that can block.</p>
@@ -434,18 +446,6 @@ following steps:
   <li>processCallback calls the low-level driver read or write routine.</li>
   <li>The low-level driver routine returns the results of the I/O operation
     to processCallback which completes record processing.</li>
-</ol>
-
-<h3>Comments: MARTY AND ERIC THESE COMMENTS DO NOT BELONG HERE</h3>
-<ol>
-  <li>STREAMS, devAscii, and mpfSerial need only asynManager and asynOctet.
-    devGpib needs only asynManager, asynCommon, asynOctet, and asynGpib.</li>
-  <li>It is expected that most users will connect to these interfaces via
-    device support. However, other code can call it. Examples are sequence
-    programs, test programs, utility commands, etc.</li>
-  <li>Device support can consist of more than one type of support. For
-    example most functions could be accessed via STREAMS, but asynGpib could
-    be used to handle SRQs (service requests).</li>
 </ol>
 <hr>
 
@@ -804,8 +804,9 @@ epicsShareExtern asynManager *pasynManager;</pre>
     <tr>
       <td>disconnect</td>
       <td>Disconnect from the port,addr to which connectDevice is connected.
-        The call will fail  if the asynUser is queued or locked, or has an
-        exception callback (MARTY - WHAT ABOUT A PROCESS CALLBACK?). Note that asynManager:disconnect and
+        The call will fail  if the asynUser is queued or locked, or has 
+        a callback registered via exceptionCallbackAdd.
+        Note that asynManager:disconnect and
         asynCommon:disconnect are completely different.</td>
     </tr>
     <tr>
@@ -2093,8 +2094,7 @@ following features not provided by the string support:</p>
     device. A read is then issued and the result stored in the record. For
     asynSiOctetWriteRead, the value obtained from pvname is passed through
     dbTranslateEscape before sending it. For asynWfOctetWriteRead it is not
-    passed through dbTranslateEscape. MARTY THIS IS NOT BEING DONE. FIX
-  IT.</li>
+    passed through dbTranslateEscape.</li>
   <li>Write The INP(OUT) field is of the form:
     <pre>    field(INP,"@asyn(portName,addr,timeout) drvUser")</pre>
     drvUser is information that is passed to the portDriver if it implements
@@ -2124,9 +2124,11 @@ handled and what getAddr returns.</p>
   </li>
   <li>multiDevice true
     <p>If connectDevice is called with addr&lt;0, the connection is to the
-    port (MARTY - WHAT IS CONNECTION TO THE PORT USED FOR?) and getAddr always returns -1. If addr&gt;=0, then the caller is
+    port and getAddr always returns -1. If addr&gt;=0, then the caller is
     connected to the device at the specified address. getAddr will return
-    this address.</p>
+    this address. An asynUser connected to the port can issue requests
+    that affect all address on the port. For example disabling access
+    to the port prevents access to all addresses on the port.</p>
   </li>
 </ul>
 
