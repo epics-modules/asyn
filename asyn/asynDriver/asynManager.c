@@ -136,6 +136,7 @@ struct port {
           - ( (char *)&(((exceptionUser *)0)->notifyNode) - (char *)0 ) ) )
 
 /* internal methods */
+static void tracePvtInit(tracePvt *ptracePvt);
 static void asynInit(void);
 static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect);
 static dpCommon *findDpCommon(userPvt *puserPvt);
@@ -244,6 +245,15 @@ static asynTrace asynTraceManager = {
 epicsShareDef asynTrace *pasynTrace = &asynTraceManager;
 
 /*internal methods */
+static void tracePvtInit(tracePvt *ptracePvt)
+{
+    ptracePvt->traceBuffer = callocMustSucceed(
+        DEFAULT_TRACE_BUFFER_SIZE,sizeof(char),
+        "asynManager:tracePvtInit");
+    ptracePvt->traceMask = ASYN_TRACE_ERROR;
+    ptracePvt->traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
+    ptracePvt->traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
+}
 static void asynInit(void)
 {
     if(pasynBase) return;
@@ -252,31 +262,18 @@ static void asynInit(void)
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
     pasynBase->lockTrace = epicsMutexMustCreate();
-    pasynBase->trace.traceBuffer = callocMustSucceed(
-        DEFAULT_TRACE_BUFFER_SIZE,sizeof(char),
-        "asynManager:asynInit");
-    pasynBase->trace.traceMask = ASYN_TRACE_ERROR;
-    pasynBase->trace.fp = stdout;
-    pasynBase->trace.traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
-    pasynBase->trace.traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
+    tracePvtInit(&pasynBase->trace);
 }
 
 static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect)
 {
-    tracePvt *ptracePvt = &pdpCommon->trace;
-
     pdpCommon->enabled = TRUE;
     pdpCommon->connected = FALSE;
     pdpCommon->autoConnect = autoConnect;
     ellInit(&pdpCommon->interposeInterfaceList);
     ellInit(&pdpCommon->exceptionUserList);
     ellInit(&pdpCommon->exceptionNotifyList);
-    ptracePvt->traceBuffer = callocMustSucceed(
-        DEFAULT_TRACE_BUFFER_SIZE,sizeof(char),
-        "asynManager:dpCommonInit");
-    ptracePvt->traceMask = ASYN_TRACE_ERROR;
-    ptracePvt->traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
-    ptracePvt->traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
+    tracePvtInit(&pdpCommon->trace);
 }
 
 static dpCommon *findDpCommon(userPvt *puserPvt)
@@ -658,7 +655,7 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
     int      nbytes;
 
     if(!pasynBase) asynInit();
-    nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE +  + 11;
+    nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
     puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
     puserPvt->queueCallback = queue;
     pasynUser = userPvtToAsynUser(puserPvt);
@@ -1156,7 +1153,7 @@ static asynStatus exceptionDisconnect(asynUser *pasynUser)
     return asynSuccess;
     
 }
-
+
 static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev)
 {
@@ -1400,7 +1397,7 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
 }
-
+
 static int tracePrintIO(asynUser *pasynUser,int reason,
     const char *buffer, int len,const char *pformat, ...)
 {
