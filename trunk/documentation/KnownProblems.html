@@ -20,7 +20,27 @@ alink="#FF0000">
 <h2>Release 3-1</h2>
 </center>
 
-<h3>Solaris</h3>
+<h3>EPICS Base R3.14.6</h3>
+<p>When building with EPICS Base R3.14.6 or greater, comment out the
+ epicsInterruptibleSyscall.h and epicsInterruptibleSyscall.c lines
+in asyn/Makefile:
+<pre>
+@@ -19,10 +19,10 @@
+ SRC_DIRS += $(ASYN)/asynDriver
+ INC += asynDriver.h
+ INC += epicsInterruptibleSyscall.h
+-INC += epicsString1.h
++#INC += epicsString1.h
+ asyn_SRCS += asynManager.c
+ asyn_SRCS += epicsInterruptibleSyscall.c
+-asyn_SRCS += epicsString1.c
++#asyn_SRCS += epicsString1.c
+ 
+ SRC_DIRS += $(ASYN)/asynGpib
+ INC += asynGpibDriver.h
+</pre>
+
+
 
 <h3>Mac OS X (Darwin)</h3>
 
@@ -43,7 +63,7 @@ way to abort the call?</p>
 
 <p>Think about  creating generic support for connecting to EPICS records.</p>
 
-<h3>Network Protocals</h3>
+<h3>Network Protocols</h3>
 
 <p>Consider generic support for various network protocals: Modbus, etherIP,
 etc.</p>
