@@ -14,9 +14,9 @@ menu(asynTRACE) {
     choice(asynTRACE_Off,"Off")
     choice(asynTRACE_On,"On")
 }
-menu(asynNOYES) {
-    choice(asynNOYES_No,"No")
-    choice(asynNOYES_Yes,"Yes")
+menu(asynAUTOCONNECT) {
+    choice(asynAUTOCONNECT_noAutoConnect,"noAutoConnect")
+    choice(asynAUTOCONNECT_autoConnect,"autoConnect")
 }
 menu(asynCONNECTED) {
     choice(asynCONNECTED_Disconnected,"Disconnected")
@@ -368,14 +368,7 @@ recordtype(asyn) {
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
-        menu(asynNOYES)
-    }
-    field(CNTD,DBF_MENU) {
-        prompt("Connected")
-        promptgroup(GUI_DISPLAY)
-        special(SPC_MOD)
-        interest(1)
-        menu(asynCONNECTED)
+        menu(asynAUTOCONNECT)
     }
     field(CNCT,DBF_MENU) {
         prompt("Connect/Disconnect")
@@ -383,13 +376,6 @@ recordtype(asyn) {
         special(SPC_MOD)
         interest(1)
         menu(asynCONNECT)
-    }
-    field(ENBD,DBF_MENU) {
-        prompt("Enabled")
-        promptgroup(GUI_DISPLAY)
-        special(SPC_MOD)
-        interest(1)
-        menu(asynENABLED)
     }
     field(ENBL,DBF_MENU) {
         prompt("Enable/Disable")
