@@ -1,5 +1,6 @@
 include "base.dbd"
 include "devTestGpib.dbd"
+include "devGpib.dbd"
 #include "drvVxi11.dbd"
 #include "drvTermiosTtyGpib.dbd"
 registrar("echoDriverRegister")
