@@ -1575,35 +1575,34 @@ Interfaces</h2>
 
 <h3>Introduction</h3>
 
-<p>This section descibes interfaces for register based devices.
-Support is provided for three types of registers:
-</p>
+<p>This section descibes interfaces for register based devices. Support is
+provided for three types of registers:</p>
 <ul>
   <li>Int32 - registers appear as 32 integers</li>
-  <li>UInt32Digital - registers appear a 32 bit unsigned integers
-    and masks can be used to address specific bits.</li>
+  <li>UInt32Digital - registers appear a 32 bit unsigned integers and masks
+    can be used to address specific bits.</li>
   <li>Float64 - registers appear as double precision floats.</li>
   <li>Int32Array - Arrays of 32 bit integers.</li>
   <li>Float64Array - Arrays of double precision floats.</li>
 </ul>
-<p>For Int32, UInt32Digital, and Float64 three interfaces are provided.
-In addition a default implementation and a synchronous inplementation
-are provided. Lets use Int32 as an example.</p>
 
+<p>For Int32, UInt32Digital, and Float64 three interfaces are provided. In
+addition a default implementation and a synchronous inplementation are
+provided. Lets use Int32 as an example.</p>
+<ul>
+  <li>asynInt32 - An interface with methods: read, write, getBounds,
+    registerInterruptUser, and cancelInterruptUser.</li>
+  <li>asynInt32Base - An interface used by drivers that implement asynInt32.
+    It also has an implementation that:
     <ul>
-      <li>asynInt32 - An interface with methods: read, write, getBounds,
-        registerInterruptUser, and cancelInterruptUser.</li>
-      <li>asynInt32Base - An interface used by drivers that implement
-        asynInt32. It also has an implementation that:
-        <ul>
-          <li>registers the asynInt32 interface</li>
-          <li>has default methods for read, write, and getBounds</li>
-          <li>implements registerInterruptUser and cancelInterruptUser</li>
-        </ul>
-        Drivers that implement asynInt32 should use asynInt32Base and let it
-        handle registerInterruptUser and cancelInterruptUser.</li>
-      <li>asynInt32SyncIO - A synchronous interface to asynInt32</li>
+      <li>registers the asynInt32 interface</li>
+      <li>has default methods for read, write, and getBounds</li>
+      <li>implements registerInterruptUser and cancelInterruptUser</li>
     </ul>
+    Drivers that implement asynInt32 should use asynInt32Base and let it
+    handle registerInterruptUser and cancelInterruptUser.</li>
+  <li>asynInt32SyncIO - A synchronous interface to asynInt32</li>
+</ul>
 
 <h3>addr - What does it mean for register based interfaces?</h3>
 
@@ -1692,11 +1691,13 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     <tr>
       <td>registerInterruptUser</td>
       <td>Registers a callback that will be called whenever new data is
-        available.</td>
+        available. Since it can be called directly rather than via a
+        queueRequest this method must not block.</td>
     </tr>
     <tr>
       <td>cancelInterruptUser</td>
-      <td>Cancels the callback.</td>
+      <td>Cancels the callback. Since it can be called directly rather than
+        via a queueRequest this method must not block.</td>
     </tr>
   </tbody>
 </table>
@@ -1723,14 +1724,60 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
         Any null methods in the asynInterface are replaced by default
         implementations. It is expected that most drivers will leave
         registerInterruptUser and cancelInterruptUser null so that the
-        default implementations can be used.</td>
+        default implementations can be used. Since this method is called only
+        during initialization it is not called via a queueRequest
+      callback.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p></p>
+
+<p>The default implementation of each method does the following:</p>
+
+<table border="1">
+  <caption>asynInt32</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Reports an error "write is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Reports an error "read is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>getBounds</td>
+      <td>Reports an error "getBounds is not supported" and returns
+      asynError</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>calls pasynManager-&gt;registerInterruptUser to register a
+        callback. The callback is:
+        <pre>static void int32Callback(void *userPvt, void *pvalue)
+{
+    pvt        *ppvt = (pvt *)userPvt;
+    epicsInt32 value = *(epicsInt32 *)pvalue;
+
+    ppvt-&gt;callback(ppvt-&gt;userPvt,value);
+}</pre>
+        Thus it assumes that the driver has passed the address of an
+        epicsInt32. It then calls the callback specified in the call to
+        pasynInt32-&gt;registerInterruptUser, passing it the epicsInt32
+      value.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancels the callback by calling
+      pasynInt32-&gt;cancelInterruptUser</td>
     </tr>
   </tbody>
 </table>
 
 <h3>asynInt32SyncIO</h3>
 
-<p>asynInt32SyncIO describes a synchronous interrace to asynInt32. The code
+<p>asynInt32SyncIO describes a synchronous interface to asynInt32. The code
 that calls it must be willing to block.</p>
 <pre>#define asynInt32SyncIOType "asynInt32SyncIO"
 typedef struct asynInt32SyncIO {
@@ -1793,22 +1840,20 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
 
 <h3>asynInt32Array</h3>
 
-<p>THIS NEEDS UPDATING</p>
-
 <p>asynInt32Array describes the methods implemented by drivers that use
 arrays of integers for communicating with a device.</p>
-<pre>#define asynInt32ArrayType "asynInt32Array"
+<pre>typedef void (*interruptCallbackInt32Array)(
+             void *userPvt, epicsInt32 *value, size_t *nelements);
+#define asynInt32ArrayType "asynInt32Array"
 typedef struct asynInt32Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
                        epicsInt32 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        epicsInt32 *value, size_t nelements, size_t *nIn);
-    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
-             void (*callback)(void *userPvt,epicsInt32 *val,size_t nelem),
-             void *userPvt);
-    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
-             void (*callback)(void *userPvt,epicsInt32 *val,size_t nelem),
-             void *userPvt);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+             interruptCallbackInt32Array callback, void *userPvt,
+             void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
 } asynInt32Array;</pre>
 
 <table border="1">
@@ -1823,14 +1868,16 @@ typedef struct asynInt32Array {
       <td>Read an array of integers from a device.</td>
     </tr>
     <tr>
-      <td>registerCallback</td>
-      <td>Register a callback that is called whenever new data is
-      available.</td>
+      <td>registerInterruptUser</td>
+      <td>Register a callback that is called whenever new data is available.
+        Since it can be called directly rather than via a queueRequest this
+        method must not block.</td>
     </tr>
     <tr>
-      <td>cancelCallback</td>
+      <td>cancelInterruptUser</td>
       <td>Cancel the callback.  Callback and userPvt must match the values
-        passed to registerCallback.</td>
+        passed to registerInterruptUser. Since it can be called directly
+        rather than via a queueRequest this method must not block.</td>
     </tr>
   </tbody>
 </table>
@@ -1905,13 +1952,14 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
     <tr>
       <td>registerInterruptUser</td>
       <td>Register a callback that will be called whenever the driver detects
-        a change in any of the bits specified by mask.</td>
+        a change in any of the bits specified by mask. Since it can be called
+        directly rather than via a queueRequest this method must not
+      block.</td>
     </tr>
     <tr>
       <td>cancelInterruptUser</td>
-      <td>Cancels the registered callback.</td>
-    </tr>
-    <tr>
+      <td>Cancels the registered callback. Since it can be called directly
+        rather than via a queueRequest this method must not block.</td>
     </tr>
   </tbody>
 </table>
@@ -1940,6 +1988,66 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
         implementations. It is expected that most drivers will leave
         registerInterruptUser and cancelInterruptUser null so that the
         default implementations can be used.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The default implementation of each method does the following:</p>
+
+<table border="1">
+  <caption>asynUInt32Digital</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td></td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Reports an error "read is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>setInterrupt</td>
+      <td>Reports an error "setInterrupt is not supported" and returns
+        asynError</td>
+    </tr>
+    <tr>
+      <td>clearInterrupt</td>
+      <td>Reports an error "clearInterrupt is not supported" and returns
+        asynError</td>
+    </tr>
+    <tr>
+      <td>getInterrupt</td>
+      <td>Reports an error "getInterrupt is not supported" and returns
+        asynError</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>calls pasynManager-&gt;registerInterruptUser to register a
+        callback. The callback is:
+        <pre>static void uint32Callback(void *userPvt, void *pvalue)
+{
+    pvt        *ppvt = (pvt *)userPvt;
+    epicsUInt32 mask = ppvt-&gt;mask;
+    epicsUInt32 value = mask&amp;(*(epicsUInt32 *)pvalue);
+    epicsUInt32 prevValue = mask&amp;ppvt-&gt;prevValue;
+
+    if(value^prevValue) {
+        ppvt-&gt;callback(ppvt-&gt;userPvt,value);
+        ppvt-&gt;prevValue = value;
+    }
+}</pre>
+        Thus it assumes that the driver has passed the address of an
+        epicsUInt32.  It keeps the previous value. It compares the previous
+        value and current value and calls the callback specified in the call
+        to pasynInt32-&gt;registerInterruptUser only if bits in the mask
+        specified by the caller have changed.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancels the callback by calling
+      pasynInt32-&gt;cancelInterruptUser</td>
+    </tr>
+    <tr>
     </tr>
   </tbody>
 </table>
@@ -2061,12 +2169,14 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
     </tr>
     <tr>
       <td>registerInterruptUser</td>
-      <td>Register a callback that is called whenever new data is
-      available.</td>
+      <td>Register a callback that is called whenever new data is available.
+        Since it can be called directly rather than via a queueRequest this
+        method must not block.</td>
     </tr>
     <tr>
       <td>cancelInterruptUser</td>
-      <td>Cancel the callback.</td>
+      <td>Cancel the callback. Since it can be called directly rather than
+        via a queueRequest this method must not block.</td>
     </tr>
   </tbody>
 </table>
@@ -2094,6 +2204,43 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
         implementations. It is expected that most drivers will leave
         registerInterruptUser and cancelInterruptUser null so that the
         default implementations can be used.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The default implementation of each method does the following:</p>
+
+<table border="1">
+  <caption>asynFloat64</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Reports an error "write is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Reports an error "read is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>calls pasynManager-&gt;registerInterruptUser to register a
+        callback. The callback is:
+        <pre>static void int32Callback(void *userPvt, void *pvalue)
+{
+    pvt        *ppvt = (pvt *)userPvt;
+    epicsFloat64 value = *(epicsFloat64 *)pvalue;
+
+    ppvt-&gt;callback(ppvt-&gt;userPvt,value);
+}</pre>
+        Thus it assumes that the driver has passed the address of an
+        epicsFloat64. It then calls the callback specified in the call to
+        pasynFloat64-&gt;registerInterruptUser, passing it the epicsFloat64
+        value.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancels the callback by calling
+      pasynFloat64-&gt;cancelInterruptUser</td>
     </tr>
   </tbody>
 </table>
@@ -2152,18 +2299,18 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
 
 <p>asynFloat64Array  describes the methods for communicating via IEEE double
 precision float values.</p>
-<pre>#define asynFloat64ArrayType "asynFloat64Array"
-typedef struct asynFloat64Array {
+<pre>typedef void (*interruptCallbackFloat64Array)( 
+               void *userPvt, epicsFloat64 *data, size_t nelements);
+#define asynFloat64ArrayType "asynFloat64Array"
+typedef struct asynFloat64Array { 
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements, size_t *nIn);
-    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
-         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
-         void *userPvt);
-    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
-         void (callback)(void *userPvt, epicsFloat64 *data,epicsUInt32 nelems),
-         void *userPvt);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+         interruptCallbackFloat64Array callback,
+         void *userPvt,void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
 } asynFloat64Array;</pre>
 
 <table border="1">
@@ -2178,12 +2325,12 @@ typedef struct asynFloat64Array {
       <td>Read an array of values.</td>
     </tr>
     <tr>
-      <td>registerCallback</td>
+      <td>registerInterruptUser</td>
       <td>Register a callback that is called whenever new data is
       available.</td>
     </tr>
     <tr>
-      <td>cancelCallback</td>
+      <td>cancelInterruptUser</td>
       <td>Cancel the callback</td>
     </tr>
   </tbody>
@@ -2309,13 +2456,26 @@ a port</p>
 records</h2>
 </center>
 
-<p>NOTE: The generic device support for epics records is in an early stage of
-development. It will likely evolve rapidly over the next several releases of
+<p>NOTE: The generic device support for epics records is still being
+developed. It will likely evolve rapidly over the next several releases of
 asynDriver.</p>
 
 <p>Generic device support is provided for standard EPICS records. This
 support should be usable for a large class of low level register based
-drivers. For truly complicated devices other support is required.</p>
+drivers. For truly complicated devices other support is required. This
+release provides the following:</p>
+<ul>
+  <li>devAsynInt32 - support for drivers that implement interface
+  asynInt32</li>
+  <li>devAsynUInt32Digital - support for drivers that implement interface
+    asynUInt32Digital</li>
+  <li>devAsynFloat64 - support for drivers that implement interface
+    asynFloat64</li>
+  <li>devAsynOctet - support for drivers that implement interface
+  asynOctet</li>
+  <li>devEpics - This is just a single file devEpics.dbd that includes the
+    dbd files for the above support.</li>
+</ul>
 
 <p>The support uses the following conventions for DTYP and INP. OUT fields
 are the same as INP.</p>
@@ -2340,6 +2500,31 @@ are the same as INP.</p>
 <pre>    field(DTYP,"asynInt32")
     field(INP,"@asyn(portA,0,.1) thisIsForDriver")</pre>
 
+<h2>asynManager interrupts and EPICS device support</h2>
+
+<p>devAsynInt32, devAsynFloat64, and devAsynUInt32Digital call
+registerInterruptUser for all supported record types. The callback is used in
+one of three ways:</p>
+<ul>
+  <li>Input Records except Average
+    <p>It is used to support SCAN = "I/O Intr".</p>
+  </li>
+  <li>Input records that are averaged, i.e. asynInt32Average or
+    asynFloat64Average.
+    <p>These records are normally scanned periodically. The
+    registerInterruptUser callback is used to calculate an average value
+    since the last time the record was processed.</p>
+  </li>
+  <li>Output records
+    <p>Often an output can change for some reason other than the output
+    record being processed. An example is a device that can be switched to
+    local control. While it is in local control some of the outputs can be
+    changed. When the driver detects such changes it calls interrupt. EPICS
+    device support callback updates and processes the record. The process
+    does NOT cause a value to be written back to the device.</p>
+  </li>
+</ul>
+
 <h2>asynInt32 device support</h2>
 
 <p>The following support is available:</p>
@@ -2351,30 +2536,29 @@ device(mbbo,INST_IO,asynMbboInt32,"asynInt32")
 device(longin,INST_IO,asynLiInt32,"asynInt32")
 device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
 
-<p>Support for drivers that implement interface Int32.</p>
+<p>devAsynInt32.c provides EPICS device support for drivers that implement
+interface asynInt32.</p>
 <ul>
   <li>aiRecord
     <p>A value is given to rval. Linear conversions are supported if the
     driver properly implements getBounds.</p>
     <ul>
-      <li>asynInt32 - During record initialization,
-        pasynInt32-&gt;registerInterruptUser is called. This is so that SCAN
-        "I/O Intr" can be supported. If the record is "I/O Intr" scanned then
-        when the registerInterruptUser callback is called, it saves the value
-        and calls scanIoRequest. When the record is processed the saved value
-        is put into rval. If the record is not "I/O Intr" scanned then each
-        time the record is processed, a new value is read via a call to
-        pasynInt32-&gt;read.</li>
-      <li>asynInt32Average - During record initialization,
-        pasynInt32-&gt;registerInterruptUser is called. The callback adds the
-        new value to a sum and also increments the number of samples. When
-        the record is processed the average is computed and the sum and
-        number of set to zero.</li>
+      <li>asynInt32 - SCAN "I/O Intr" is supported. If the record is "I/O
+        Intr" scanned then when the registerInterruptUser callback is called,
+        it saves the value and calls scanIoRequest. When the record is
+        processed the saved value is put into rval. If the record is not "I/O
+        Intr" scanned then each time the record is processed, a new value is
+        read via a call to pasynInt32-&gt;read.</li>
+      <li>asynInt32Average - The registerInterruptUser callback adds the new
+        value to a sum and also increments the number of samples. When the
+        record is processed the average is computed and the sum and number of
+        set to zero.</li>
     </ul>
   </li>
   <li>aoRecord
     <p>rval is written. Linear conversions are supported if the driver
-    properly implements getBounds.</p>
+    properly implements getBounds. Update because of asynManager interrupt is
+    supported.</p>
   </li>
   <li>longinRecord
     <p>A value is given to val.</p>
@@ -2384,7 +2568,8 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     </ul>
   </li>
   <li>longoutRecord
-    <p>val is written.</p>
+    <p>val is written. Update because of asynManager interrupt is
+    supported.</p>
   </li>
   <li>mbbiRecord
     <p>A value is given to rval. mask is computed from nobt and shft</p>
@@ -2394,19 +2579,13 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     </ul>
   </li>
   <li>mbboRecord
-    <p>rval is written. mask is computed from nobt and shft.</p>
+    <p>rval is written. mask is computed from nobt and shft. Update because
+    of asynManager interrupt is supported.</p>
   </li>
 </ul>
 
 <p>Analog Input Example Records</p>
-<pre>    record(ai,"aiInt32") {
-        field(SCAN,"1 second")
-        field(DTYP,"asynInt32")
-        field(INP,"@asyn($(port),$(addr))")
-        field(EGUF,"10.0")
-        field(EGUL,"-10.0")
-   }
-   record(ai,"aiInt32Interrupt") {
+<pre>   record(ai,"aiInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
@@ -2430,12 +2609,7 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
    }</pre>
 
 <p>Long Input Example Records</p>
-<pre>    record(longin,"liInt32") {
-        field(SCAN,"1 second")
-        field(DTYP,"asynInt32")
-        field(INP,"@asyn($(port),$(addr))")
-   }
-   record(longin,"liInt32Interrupt") {
+<pre>   record(longin,"liInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
@@ -2448,18 +2622,7 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
    }</pre>
 
 <p>Multibit Binary Input Example Records</p>
-<pre>    record(mbbi,"mbbiInt32") {
-        field(SCAN,"1 second")
-        field(DTYP,"asynInt32")
-        field(INP,"@asyn($(port),$(addr))")
-        field(NOBT,"2")
-        field(SHFT,"0")
-        field(ZRST,"zeroVal")
-        field(ONST,"oneVal")
-        field(TWST,"twoVal")
-        field(THST,"threeVal")
-   }
-   record(mbbi,"mbbiInt32Interrupt") {
+<pre>   record(mbbi,"mbbiInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
@@ -2495,12 +2658,82 @@ device(mbbo,INST_IO,asynMbboUInt32Digital,"asynUInt32Digital")
 device(mbbiDirect,INST_IO,asynMbbiDirectUInt32Digital,"asynUInt32Digital")
 device(mbboDirect,INST_IO,asynMbboDirectUInt32Digital,"asynUInt32Digital")</pre>
 
+<p>devAsynUInt32Digital.c provides EPICS device support for drivers that
+implement interface asynUInt32Digital. The INP or OUT field must define
+asynMask. The mask specified in the argument to asynMask is used in the calls
+to asymUInt32Digital methods. In addition it is used to set the mask fields
+in bi and bo records and the mask and shft fields in mbbi, mbbo, mbbiDirect,
+and mbboDirect records.</p>
+mask
+<ul>
+  <li>biRecord
+    <p>A value is given to rval.</p>
+  </li>
+</ul>
+<ul>
+  <li>boRecord
+    <p>rval is written.  Update because of asynManager interrupt is
+    supported.</p>
+  </li>
+  <li>longinRecord
+    <p>A value is given to val.</p>
+    <ul>
+      <li>asynUInt32Digital - Each time the record is processed a new value
+        is read. SCAN "I/O Intr" is supported similar to biRecord.</li>
+    </ul>
+  </li>
+  <li>longoutRecord
+    <p>val is written. Update because of asynManager interrupt is
+    supported.</p>
+  </li>
+  <li>mbbiRecord
+    <p>A value is given to rval.</p>
+  </li>
+  <li>mbboRecord
+    <p>rval is written. Update because of asynManager interrupt is
+    supported.</p>
+  </li>
+  <li>mbbiDirectRecord
+    <p>A value is given to rval.</p>
+  </li>
+  <li>mbboDirectRecord
+    <p>rval is written. Update because of asynManager interrupt is
+    supported.</p>
+  </li>
+</ul>
+
 <h2>devAsynFloat64 device support</h2>
 
 <p>The following support is available:</p>
 <pre>device(ai,INST_IO,asynAiFloat64,"asynFloat64")
 device(ai,INST_IO,asynAiFloat64Average,"asynFloat64Average")
 device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
+
+<p>devAsynFloat64.c provides EPICS device support for drivers that implement
+interface asynFloat64.</p>
+<ul>
+  <li>aiRecord
+    <p>A value is given to rval. Linear conversions are supported if the
+    driver properly implements getBounds.</p>
+    <ul>
+      <li>asynFloat64 - SCAN "I/O Intr" is supported. If the record is "I/O
+        Intr" scanned then when the registerInterruptUser callback is called,
+        it saves the value and calls scanIoRequest. When the record is
+        processed the saved value is put into rval. If the record is not "I/O
+        Intr" scanned then each time the record is processed, a new value is
+        read via a call to pasynFloat64-&gt;read.</li>
+      <li>asynFloat64Average - The registerInterruptUser callback adds the
+        new value to a sum and also increments the number of samples. When
+        the record is processed the average is computed and the sum and
+        number of set to zero.</li>
+    </ul>
+  </li>
+  <li>aoRecord
+    <p>rval is written. Linear conversions are supported if the driver
+    properly implements getBounds. Update because of asynManager interrupt is
+    supported.</p>
+  </li>
+</ul>
 
 <h2>octet device support</h2>
 
