@@ -28,7 +28,7 @@ menu(asynENABLE) {
     choice(asynENABLE_Enable,"Enable")
 }
 menu(serialBAUD) {
-    choice(serialBAUD_unknown,"unknown")
+    choice(serialBAUD_unknown,"Unknown")
     choice(serialBAUD_300,"300")
     choice(serialBAUD_600,"600")
     choice(serialBAUD_1200,"1200")
@@ -42,25 +42,25 @@ menu(serialBAUD) {
     choice(serialBAUD_230400,"230400")
 }
 menu(serialPRTY) {
-    choice(serialPRTY_unknown,"unknown")
+    choice(serialPRTY_unknown,"Unknown")
     choice(serialPRTY_None,"None")
     choice(serialPRTY_Even,"Even")
     choice(serialPRTY_Odd,"Odd")
 }
 menu(serialDBIT) {
-    choice(serialDBIT_unknown,"unknown")
+    choice(serialDBIT_unknown,"Unknown")
     choice(serialDBIT_5,"5")
     choice(serialDBIT_6,"6")
     choice(serialDBIT_7,"7")
     choice(serialDBIT_8,"8")
 }
 menu(serialSBIT) {
-    choice(serialSBIT_unknown,"unknown")
+    choice(serialSBIT_unknown,"Unknown")
     choice(serialSBIT_1,"1")
     choice(serialSBIT_2,"2")
 }
 menu(serialFCTL) {
-    choice(serialFCTL_unknown,"unknown")
+    choice(serialFCTL_unknown,"Unknown")
     choice(serialFCTL_None,"None")
     choice(serialFCTL_Hardware,"Hardware")
 }
@@ -162,13 +162,13 @@ recordtype(asyn) {
         promptgroup(GUI_DISPLAY)
         special(SPC_NOMOD)
         interest(1)
-        initial("512")
+        initial("80")
     }
     field(NOWT,DBF_LONG) {
         prompt("Number of bytes to write")
         promptgroup(GUI_DISPLAY)
         interest(1)
-        initial("512")
+        initial("80")
     }
     field(NAWT,DBF_LONG) {
         prompt("Number of bytes actually written")
@@ -213,7 +213,7 @@ recordtype(asyn) {
         promptgroup(GUI_DISPLAY)
         special(SPC_NOMOD)
         interest(1)
-        initial("512")
+        initial("80")
     }
     field(NRRD,DBF_LONG) {
         prompt("Number of bytes to read")
@@ -290,6 +290,12 @@ recordtype(asyn) {
     }
 
 # Trace control fields
+    field(TMSK,DBF_LONG) {
+        prompt("Trace mask")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+    }
     field(TB0,DBF_MENU) {
         prompt("Trace error")
         promptgroup(GUI_DISPLAY)
@@ -324,6 +330,12 @@ recordtype(asyn) {
         special(SPC_MOD)
         interest(1)
         menu(asynTRACE)
+    }
+    field(TIOM,DBF_LONG) {
+        prompt("Trace I/O mask")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
     }
     field(TIB0,DBF_MENU) {
         prompt("Trace IO ASCII")
