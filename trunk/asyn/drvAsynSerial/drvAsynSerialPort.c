@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynLocalSerialPort.c,v 1.1 2004-04-05 19:43:54 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.1 2004-04-08 18:06:50 norume Exp $
  */
 
 #include <string.h>
