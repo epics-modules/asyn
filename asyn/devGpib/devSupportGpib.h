@@ -159,7 +159,7 @@ struct gpibDpvt {
 typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
-    long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
+    void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start, gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
