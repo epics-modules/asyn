@@ -387,52 +387,6 @@ static void asynShowOptionCall(const iocshArgBuf * args) {
     asynShowOption(args[0].sval,args[1].ival,args[2].sval);
 }
 
-static const iocshArg asynSetTraceFileArg0 = {"portName", iocshArgString};
-static const iocshArg asynSetTraceFileArg1 = {"addr", iocshArgInt};
-static const iocshArg asynSetTraceFileArg2 = {"filename", iocshArgString};
-static const iocshArg *const asynSetTraceFileArgs[] = {
-    &asynSetTraceFileArg0,&asynSetTraceFileArg1,&asynSetTraceFileArg2};
-static const iocshFuncDef asynSetTraceFileDef =
-    {"asynSetTraceFile", 3, asynSetTraceFileArgs};
-int epicsShareAPI
- asynSetTraceFile(const char *portName,int addr,const char *filename)
-{
-    asynUser *pasynUser;
-    asynStatus status;
-    FILE *fp;
-
-    if(!filename) {
-        fp = 0;
-    } else if(strlen(filename)==0 || strcmp(filename,"stdout")==0) {
-        fp = stdout;
-    } else {
-        fp = fopen(filename,"w");
-        if(!fp) {
-            printf("fopen failed %s\n",strerror(errno));
-            return 0;
-        }
-    }
-    pasynUser = pasynManager->createAsynUser(0,0);
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if((status!=asynSuccess) && (strlen(portName)!=0)) {
-        printf("%s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return -1;
-    }
-    status = pasynTrace->setTraceFile(pasynUser,fp);
-    if(status!=asynSuccess) {
-        printf("%s\n",pasynUser->errorMessage);
-    }
-    pasynManager->freeAsynUser(pasynUser);
-    return 0;
-}
-static void asynSetTraceFileCall(const iocshArgBuf * args) {
-    const char *portName = args[0].sval;
-    int addr = args[1].ival;
-    const char *filename = args[2].sval;
-    asynSetTraceFile(portName,addr,filename);
-}
-
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgInt};
@@ -500,7 +454,87 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     int mask = args[2].ival;
     asynSetTraceIOMask(portName,addr,mask);
 }
+
+static const iocshArg asynSetTraceFileArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceFileArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceFileArg2 = {"filename", iocshArgString};
+static const iocshArg *const asynSetTraceFileArgs[] = {
+    &asynSetTraceFileArg0,&asynSetTraceFileArg1,&asynSetTraceFileArg2};
+static const iocshFuncDef asynSetTraceFileDef =
+    {"asynSetTraceFile", 3, asynSetTraceFileArgs};
+int epicsShareAPI
+ asynSetTraceFile(const char *portName,int addr,const char *filename)
+{
+    asynUser *pasynUser;
+    asynStatus status;
+    FILE *fp;
 
+    if(!filename) {
+        fp = 0;
+    } else if(strlen(filename)==0 || strcmp(filename,"stdout")==0) {
+        fp = stdout;
+    } else {
+        fp = fopen(filename,"w");
+        if(!fp) {
+            printf("fopen failed %s\n",strerror(errno));
+            return 0;
+        }
+    }
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
+    if((status!=asynSuccess) && (strlen(portName)!=0)) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return -1;
+    }
+    status = pasynTrace->setTraceFile(pasynUser,fp);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+    return 0;
+}
+static void asynSetTraceFileCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    const char *filename = args[2].sval;
+    asynSetTraceFile(portName,addr,filename);
+}
+
+static const iocshArg asynSetTraceIOTruncateSizeArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceIOTruncateSizeArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceIOTruncateSizeArg2 = {"size", iocshArgInt};
+static const iocshArg *const asynSetTraceIOTruncateSizeArgs[] = {
+    &asynSetTraceIOTruncateSizeArg0,&asynSetTraceIOTruncateSizeArg1,&asynSetTraceIOTruncateSizeArg2};
+static const iocshFuncDef asynSetTraceIOTruncateSizeDef =
+    {"asynSetTraceIOTruncateSize", 3, asynSetTraceIOTruncateSizeArgs};
+int epicsShareAPI
+ asynSetTraceIOTruncateSize(const char *portName,int addr,int size)
+{
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
+    if((status!=asynSuccess) && (strlen(portName)!=0)) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return -1;
+    }
+    status = pasynTrace->setTraceIOTruncateSize(pasynUser,size);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+    return 0;
+}
+static void asynSetTraceIOTruncateSizeCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int size = args[2].ival;
+    asynSetTraceIOTruncateSize(portName,addr,size);
+}
+
 static const iocshArg asynEnableArg0 = {"portName", iocshArgString};
 static const iocshArg asynEnableArg1 = {"addr", iocshArgInt};
 static const iocshArg asynEnableArg2 = {"yesNo", iocshArgInt};
@@ -649,9 +683,10 @@ static void asynRegister(void)
     iocshRegister(&asynReportDef,asynReportCall);
     iocshRegister(&asynSetOptionDef,asynSetOptionCall);
     iocshRegister(&asynShowOptionDef,asynShowOptionCall);
-    iocshRegister(&asynSetTraceFileDef,asynSetTraceFileCall);
     iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
+    iocshRegister(&asynSetTraceFileDef,asynSetTraceFileCall);
+    iocshRegister(&asynSetTraceIOTruncateSizeDef,asynSetTraceIOTruncateSizeCall);
     iocshRegister(&asynEnableDef,asynEnableCall);
     iocshRegister(&asynAutoConnectDef,asynAutoConnectCall);
     iocshRegister(&asynConnectDef,asynConnectCall);
