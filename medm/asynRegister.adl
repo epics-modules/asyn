@@ -5,8 +5,8 @@ file {
 }
 display {
 	object {
-		x=261
-		y=74
+		x=570
+		y=110
 		width=510
 		height=345
 	}
@@ -805,4 +805,52 @@ text {
 		clr=14
 	}
 	textix="Float64"
+}
+text {
+	object {
+		x=364
+		y=310
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	textix="More..."
+}
+"related display" {
+	object {
+		x=439
+		y=310
+		width=56
+		height=20
+	}
+	display[0] {
+		label="Record parameters"
+		name="asynRecord.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[1] {
+		label="Register interfaces I/O"
+		name="asynRegister.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[2] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[3] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[4] {
+		label="Socket parameters"
+		name="asynSocketSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	clr=14
+	bclr=51
 }
