@@ -123,7 +123,7 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
                 if (c == peosPvt->eos[peosPvt->eosMatch]) {
                     if (++peosPvt->eosMatch == peosPvt->eoslen) {
                         peosPvt->eosMatch = 0;
-                        if(eomReason) *eomReason += EOMEOS;
+                        if(eomReason) *eomReason |= EOMEOS;
                         break;
                     }
                 }
