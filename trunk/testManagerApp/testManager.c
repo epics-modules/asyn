@@ -318,7 +318,7 @@ static int testInit(const char *port,int addr,
     return 0;
 }
 
-static void testManager(const char *port,int addr,const char *filename)
+static void testManager(const char *port,int addr,FILE *file)
 {
     cmdInfo    *pacmdInfo[2],*pcmdInfo;
     threadInfo *pathreadInfo[2],*pthreadInfo;
@@ -328,17 +328,7 @@ static void testManager(const char *port,int addr,const char *filename)
     int        isEnabled = 0;
     int        yesNo;
     int        i;
-    FILE       *file;
 
-    if(filename && strlen(filename)>0) {
-        file = fopen(filename,"a");
-        if(!file) {
-            printf("could not open %s %s\n",filename,strerror(errno));
-            return;
-        }
-    } else {
-        file = stdout;
-    }
     pasynUser = pasynManager->createAsynUser(workCallback,0);
     status = pasynManager->connectDevice(pasynUser,port,addr);
     if(status!=asynSuccess) {
@@ -460,29 +450,9 @@ static void testManager(const char *port,int addr,const char *filename)
             printf("freeAsynUser failed %s\n",pasynUser->errorMessage);
             return;
         }
-        if(file!=stdout) fclose(file);
         pasynManager->memFree(pthreadInfo,pthreadInfo->size);
         pasynManager->memFree(pcmdInfo,sizeof(cmdInfo));
     }
-}
-
-static void testManagerAllPorts(const char *filename)
-{
-    FILE       *file;
-
-    if(filename && strlen(filename)>0) {
-        /*create empty file*/
-        file = fopen(filename,"w");
-        if(!file) {
-            printf("could not open %s %s\n",filename,strerror(errno));
-            return;
-        }
-        fclose(file);
-    }
-    testManager("cantBlockSingle",0,filename);
-    testManager("cantBlockMulti",0,filename);
-    testManager("canBlockSingle",0,filename);
-    testManager("canBlockMulti",0,filename);
 }
 
 static const iocshArg testManagerArg0 = {"port", iocshArgString};
@@ -491,16 +461,46 @@ static const iocshArg testManagerArg2 = {"reportFile", iocshArgString};
 static const iocshArg *const testManagerArgs[] = {
     &testManagerArg0,&testManagerArg1,&testManagerArg2};
 static const iocshFuncDef testManagerDef = {"testManager", 3, testManagerArgs};
-static void testManagerCall(const iocshArgBuf * args) {
-    testManager(args[0].sval,args[1].ival,args[2].sval);
+static void testManagerCall(const iocshArgBuf * args)
+{
+    char *portName = args[0].sval;
+    int   addr = args[1].ival;
+    char *filename = args[2].sval;
+    FILE *file = stdout;
+
+    if(filename && strlen(filename)>0) {
+        file = fopen(filename,"w");
+        if(!file) {
+            printf("could not open %s %s\n",filename,strerror(errno));
+            return;
+        }
+    }
+    testManager(portName,addr,file);
+    if(file!=stdout) fclose(file);
 }
 
 static const iocshArg testManagerAllPortsArg0 = {"reportFile", iocshArgString};
 static const iocshArg *const testManagerAllPortsArgs[] = {
     &testManagerAllPortsArg0};
 static const iocshFuncDef testManagerAllPortsDef = {"testManagerAllPorts", 1, testManagerAllPortsArgs};
-static void testManagerAllPortsCall(const iocshArgBuf * args) {
-    testManagerAllPorts(args[0].sval);
+static void testManagerAllPortsCall(const iocshArgBuf * args)
+{
+    char *filename = args[0].sval;
+    FILE       *file = stdout;
+
+    if(filename && strlen(filename)>0) {
+        /*create empty file*/
+        file = fopen(filename,"w");
+        if(!file) {
+            printf("could not open %s %s\n",filename,strerror(errno));
+            return;
+        }
+    } 
+    testManager("cantBlockSingle",0,file);
+    testManager("cantBlockMulti",0,file);
+    testManager("canBlockSingle",0,file);
+    testManager("canBlockMulti",0,file);
+    if(file!=stdout) fclose(file);
 }
 
 static void testManagerRegister(void)
