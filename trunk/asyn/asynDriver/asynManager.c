@@ -80,29 +80,30 @@ typedef struct asynBase {
 }asynBase;
 static asynBase *pasynBase = 0;
 
-typedef struct interfaceNode {
-    ELLNODE       node;
-    asynInterface *pasynInterface;
-}interfaceNode;
-
-typedef struct callbackBase {
+typedef struct interruptBase {
     ELLLIST      callbackList;
     ELLLIST      addList;
     ELLLIST      removeList;
     BOOL         callbackActive;
     BOOL         listModified;
-}callbackBase;
+    port         *pport;
+    asynInterface *pasynInterface;
+}interruptBase;
 
-typedef struct callbackNode {
+typedef struct interruptNodePvt {
     ELLNODE  node;
     ELLNODE  addRemoveNode;
     BOOL     isOnList;
     int      addRemoveAction; /* (0,1,2) => (none,add,remove)*/
-    interruptCallback callback;
-    void     *userPvt;
-    asynUser *pasynUser;
-}callbackNode;
+    interruptBase *pinterruptBase;
+    interruptNode nodePublic;
+}interruptNodePvt;
 
+typedef struct interfaceNode {
+    ELLNODE       node;
+    asynInterface *pasynInterface;
+    interruptBase *pinterruptBase;
+}interfaceNode;
 
 typedef struct dpCommon { /*device/port common fields*/
     epicsMutexId   syncLock; /* lock/unlock for synchronousRequest*/
@@ -118,7 +119,6 @@ typedef struct dpCommon { /*device/port common fields*/
     unsigned long  numberConnects;
     tracePvt       trace;
     port           *pport;
-    callbackBase   callback;
 }dpCommon;
 
 typedef struct exceptionUser {
@@ -145,7 +145,6 @@ struct userPvt {
     unsigned int  lockCount;
     port          *pport;
     device        *pdevice;
-    callbackNode   callbackNode;
     asynUser      user;
 };
 
@@ -172,6 +171,9 @@ struct port {
     epicsThreadId threadid;
 };
 
+#define interruptNodeToPvt(pinterruptNode) \
+    ((interruptNodePvt *) ((char *)(pinterruptNode) \
+           - ( (char *)&(((interruptNodePvt *)0)->nodePublic) - (char *)0 ) ) )
 #define userPvtToAsynUser(p) (&p->user)
 #define asynUserToUserPvt(p) \
   ((userPvt *) ((char *)(p) \
@@ -239,12 +241,15 @@ static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
 static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
 static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
-static asynStatus registerInterruptSource(const char *portName,int addr,
-    void *callerPvt, void **pasynPvt);
-static void       interrupt(void *asynPvt,int addr,int reason,void *pvalue);
-static asynStatus registerInterruptUser(asynUser *pasynUser,
-           interruptCallback callback, void *userPvt);
-static asynStatus cancelInterruptUser(asynUser *pasynUser);
+static asynStatus registerInterruptSource(const char *portName,
+    asynInterface *pasynInterface);
+static asynStatus getInterruptPvt(const char *portName,
+    const char *interfaceType, void **pasynPvt);
+static interruptNode *createInterruptNode(void *pasynPvt);
+static asynStatus addInterruptUser(interruptNode*pinterruptNode);
+static asynStatus removeInterruptUser(interruptNode*pinterruptNode);
+static asynStatus interruptStart(void *pasynPvt,ELLLIST **plist);
+static asynStatus interruptEnd(void *pasynPvt);
 
 static asynManager manager = {
     report,
@@ -277,9 +282,12 @@ static asynManager manager = {
     isEnabled,
     isAutoConnect,
     registerInterruptSource,
-    interrupt,
-    registerInterruptUser,
-    cancelInterruptUser
+    getInterruptPvt,
+    createInterruptNode,
+    addInterruptUser,
+    removeInterruptUser,
+    interruptStart,
+    interruptEnd
 };
 epicsShareDef asynManager *pasynManager = &manager;
 
@@ -343,7 +351,6 @@ static void asynInit(void)
 
 static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect)
 {
-    callbackBase *pcallbackBase = &pdpCommon->callback;
     pdpCommon->syncLock = epicsMutexMustCreate();
     pdpCommon->enabled = TRUE;
     pdpCommon->connected = FALSE;
@@ -351,9 +358,6 @@ static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect)
     ellInit(&pdpCommon->interposeInterfaceList);
     ellInit(&pdpCommon->exceptionUserList);
     ellInit(&pdpCommon->exceptionNotifyList);
-    ellInit(&pcallbackBase->callbackList);
-    ellInit(&pcallbackBase->addList);
-    ellInit(&pcallbackBase->removeList);
     pdpCommon->pport = pport;
     tracePvtInit(&pdpCommon->trace);
 }
@@ -864,7 +868,6 @@ static asynUser *createAsynUser(userCallback process, userCallback timeout)
         puserPvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
         puserPvt->timer = epicsTimerQueueCreateTimer(
             pasynBase->timerQueue,queueTimeoutCallback,puserPvt);
-        puserPvt->callbackNode.pasynUser = &puserPvt->user;
     } else {
         ellDelete(&pasynBase->asynUserFreeList,&puserPvt->node);
         epicsMutexUnlock(pasynBase->lock);
@@ -1023,11 +1026,6 @@ static asynStatus disconnect(asynUser *pasynUser)
         return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
-    if(puserPvt->callbackNode.isOnList) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager::disconnect must cancelInterruptUser before disconnect\n");
-        status = asynError; goto unlock;
-    }
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::disconnect request queued\n");
@@ -1623,141 +1621,169 @@ static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo)
     return asynSuccess;
 }
 
-static asynStatus registerInterruptSource(const char *portName,int addr,
-    void *callerPvt, void **pasynPvt)
+static asynStatus registerInterruptSource(const char *portName,
+    asynInterface *pasynInterface)
 {
-    port    *pport = locatePort(portName);
-    device  *pdevice;
-    dpCommon *pdpc = 0;
+    port          *pport = locatePort(portName);
+    interfaceNode *pinterfaceNode;
+    interruptBase *pinterruptBase;
 
     if(!pport) {
-        printf("asynManager:registerInterruptSource port %s not found\n",
-           portName);
+       printf("asynManager:registerInterruptSource port %s not registered\n",
+          portName);
+       return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
+    while(pinterfaceNode) {
+        if(pinterfaceNode->pasynInterface==pasynInterface) break;
+        pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+    }
+    if(!pinterfaceNode) {
+       printf("%s asynManager:registerInterruptSource interface not registered\n",
+          portName);
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
-    if(addr>=0) {
-        pdevice = locateDevice(pport,addr,TRUE);
-        pdpc = &pdevice->dpc;
-    } else {
-        pdpc = &pport->dpc;
-    }
-    assert(pdpc);
-    *pasynPvt = pdpc;
-    return asynSuccess;
-}
-
-static void interrupt(void *asynPvt,int addr,int reason,void *pvalue)
-{
-    dpCommon *pdpc = (dpCommon *)asynPvt;
-    port *pport = pdpc->pport;
-    callbackBase *pcallbackBase = &pdpc->callback;
-    callbackNode *pcallbackNode;
-    char         *ptemp;
-
-    epicsMutexMustLock(pport->asynManagerLock);
-    pcallbackBase->callbackActive = TRUE;
-    pcallbackBase->listModified = FALSE;
-    epicsMutexUnlock(pport->asynManagerLock);
-    pcallbackNode = (callbackNode *)ellFirst(&pcallbackBase->callbackList);
-    while(pcallbackNode) {
-        if(pcallbackNode->pasynUser->reason==reason) {
-            pcallbackNode->callback(pcallbackNode->userPvt,pvalue);
-        }
-        pcallbackNode = (callbackNode *)ellNext(&pcallbackNode->node);
-    }
-    epicsMutexMustLock(pport->asynManagerLock);
-    pcallbackBase->callbackActive = FALSE;
-    if(!pcallbackBase->listModified) {
-        epicsMutexUnlock(pport->asynManagerLock);
-        return;
-    }
-    while((ptemp = (char *)ellFirst(&pcallbackBase->removeList))){
-        pcallbackNode = (callbackNode *)(ptemp - sizeof(ELLNODE));
-        ellDelete(&pcallbackBase->callbackList,&pcallbackNode->node);
-        pcallbackNode->isOnList = FALSE;
-        pcallbackNode->callback = 0;
-        pcallbackNode->userPvt = 0;
-    }
-    while((ptemp = (char *)ellFirst(&pcallbackBase->addList))){
-        pcallbackNode = (callbackNode *)(ptemp - sizeof(ELLNODE));
-        assert(pcallbackNode->isOnList);
-        ellAdd(&pcallbackBase->callbackList,&pcallbackNode->node);
-    }
-    epicsMutexUnlock(pport->asynManagerLock);
-}
-
-static asynStatus registerInterruptUser(asynUser *pasynUser,
-           interruptCallback callback, void *usrPvt)
-{
-    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    port     *pport = puserPvt->pport;
-    dpCommon *pdpc = findDpCommon(puserPvt);
-    callbackBase *pcallbackBase;
-    callbackNode *pcallbackNode;
-
-    if(!pport || !pdpc) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:registerInterruptUser asynUser not connected to device\n");
-        return asynError;
-    }
-    pcallbackBase = &pdpc->callback;
-    pcallbackNode = &puserPvt->callbackNode;
-    epicsMutexMustLock(pport->asynManagerLock);
-    if(pcallbackNode->isOnList) {
-        epicsMutexUnlock(pport->asynManagerLock);
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s asynManager:registerInterruptUser already registered\n",
+    if(pinterfaceNode->pinterruptBase) {
+       printf("%s asynManager:registerInterruptSource already registered\n",
             pport->portName);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:registerInterruptUser asynUser already registered\n");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
-    pcallbackNode->isOnList = TRUE;
-    pcallbackNode->callback = callback;
-    pcallbackNode->userPvt = usrPvt;
-    if(pcallbackBase->callbackActive) {
-        ellAdd(&pcallbackBase->addList,&pcallbackNode->addRemoveNode);
-        pcallbackBase->listModified = TRUE;
-    } else {
-        ellAdd(&pcallbackBase->callbackList,&pcallbackNode->node);
-    }
+    pinterruptBase = callocMustSucceed(1,sizeof(interruptBase),
+        "asynManager:registerInterruptSource");
+    pinterfaceNode->pinterruptBase = pinterruptBase;
+    ellInit(&pinterruptBase->callbackList);
+    ellInit(&pinterruptBase->addList);
+    ellInit(&pinterruptBase->removeList);
+    pinterruptBase->pasynInterface = pinterfaceNode->pasynInterface;
+    pinterruptBase->pport = pport;
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
 
-static asynStatus cancelInterruptUser(asynUser *pasynUser)
+static asynStatus getInterruptPvt(const char *portName,
+    const char *interfaceType, void **pasynPvt)
 {
-    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    port     *pport = puserPvt->pport;
-    dpCommon *pdpc = findDpCommon(puserPvt);
-    callbackBase *pcallbackBase;
-    callbackNode *pcallbackNode;
+    port          *pport = locatePort(portName);
+    interfaceNode *pinterfaceNode;
 
-    if(!pport || !pdpc) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:cancelInterruptUser asynUser not connected to device\n");
-        return asynError;
+    if(!pport) {
+       printf("asynManager:getInterruptPvt portName %s not registered\n",
+          portName);
+       return asynError;
     }
-    pcallbackBase = &pdpc->callback;
-    pcallbackNode = &puserPvt->callbackNode;
     epicsMutexMustLock(pport->asynManagerLock);
-    if(!pcallbackNode->isOnList) {
+    pinterfaceNode = locateInterfaceNode(
+        &pport->interfaceList,interfaceType,FALSE);
+    if(!pinterfaceNode) {
+        printf("%sinterface %s already registered for port %s\n",
+            interfaceType,pport->portName);
+       printf("%s asynManager:getInterruptPvt interface %s not registered\n",
+          portName,interfaceType);
         epicsMutexUnlock(pport->asynManagerLock);
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s asynManager:cancelInterruptUser not registered\n",
-            pport->portName);
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:cancelInterruptUser asynUser not registered\n");
         return asynError;
     }
-    if(pcallbackBase->callbackActive) {
-        ellAdd(&pcallbackBase->removeList,&pcallbackNode->addRemoveNode);
-        pcallbackBase->listModified = TRUE;
+    *pasynPvt = pinterfaceNode->pinterruptBase;
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static interruptNode *createInterruptNode(void *pasynPvt)
+{
+    interruptBase    *pinterruptBase = (interruptBase *)pasynPvt;
+    interruptNodePvt *pinterruptNodePvt;
+
+    pinterruptNodePvt = (interruptNodePvt *)
+         pasynManager->memMalloc(sizeof(interruptNodePvt));
+    pinterruptNodePvt->nodePublic.asynPvt = pinterruptNodePvt;
+    pinterruptNodePvt->pinterruptBase = pinterruptBase;
+    return(&pinterruptNodePvt->nodePublic);
+}
+
+static asynStatus addInterruptUser(interruptNode*pinterruptNode)
+{
+    interruptNodePvt *pinterruptNodePvt = interruptNodeToPvt(pinterruptNode);
+    interruptBase    *pinterruptBase = pinterruptNodePvt->pinterruptBase;
+    port             *pport = pinterruptBase->pport;
+    
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(pinterruptNodePvt->isOnList) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        printf("%s asynManager:addInterruptUser already on list\n",
+            pport->portName);
+        return asynError;
+    }
+    pinterruptNodePvt->isOnList = TRUE;
+    if(pinterruptBase->callbackActive) {
+         ellAdd(&pinterruptBase->addList,&pinterruptNodePvt->node);
+         pinterruptBase->listModified = TRUE;
     } else {
-        ellDelete(&pcallbackBase->callbackList,&pcallbackNode->node);
-        pcallbackNode->isOnList = FALSE;
-        pcallbackNode->callback = 0;
-        pcallbackNode->userPvt = 0;
+         ellAdd(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus removeInterruptUser(interruptNode*pinterruptNode)
+{
+    interruptNodePvt *pinterruptNodePvt = interruptNodeToPvt(pinterruptNode);
+    interruptBase    *pinterruptBase = pinterruptNodePvt->pinterruptBase;
+    port             *pport = pinterruptBase->pport;
+    
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(!pinterruptNodePvt->isOnList) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        printf("%s asynManager:removeInterruptUser not on list\n",
+            pport->portName);
+        return asynError;
+    }
+    if(pinterruptBase->callbackActive) {
+         ellAdd(&pinterruptBase->removeList,&pinterruptNodePvt->node);
+         pinterruptBase->listModified = TRUE;
+    } else {
+         ellDelete(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+         pinterruptNodePvt->isOnList = FALSE;
+    }
+    pasynManager->memFree(pinterruptNodePvt,sizeof(interruptNodePvt));
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus interruptStart(void *pasynPvt,ELLLIST **plist)
+{
+    interruptBase  *pinterruptBase = (interruptBase *)pasynPvt;
+    port *pport = pinterruptBase->pport;
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    pinterruptBase->callbackActive = TRUE;
+    pinterruptBase->listModified = FALSE;
+    epicsMutexUnlock(pport->asynManagerLock);
+    *plist = (&pinterruptBase->callbackList);
+    return asynSuccess;
+}
+
+static asynStatus interruptEnd(void *pasynPvt)
+{
+    interruptBase  *pinterruptBase = (interruptBase *)pasynPvt;
+    port *pport = pinterruptBase->pport;
+    interruptNodePvt *pinterruptNodePvt;
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    pinterruptBase->callbackActive = FALSE;
+    if(!pinterruptBase->listModified) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynSuccess;
+    }
+    while((pinterruptNodePvt = (interruptNodePvt *)ellFirst(
+    &pinterruptBase->removeList))){
+        ellDelete(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
+        pinterruptNodePvt->isOnList = FALSE;
+    }
+    while((pinterruptNodePvt = (interruptNodePvt *)ellFirst(
+    &pinterruptBase->addList))){
+        ellAdd(&pinterruptBase->callbackList,&pinterruptNodePvt->node);
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
