@@ -962,12 +962,12 @@ int asynSetPortOptions(const char *portName,
     char *a7,char *a8,char *a9)
 {
     int argc = 0;
-    char *argv[10];
+    char *argv[11];
     asynInterface *pasynInterface;
     asynCommon *pasynCommon;
     void *drvPvt;
 
-    argv[argc++] = "stty";
+    argv[argc++] = portName;
     if (a1) {
         argv[argc++] = a1;
         if (a2) {
