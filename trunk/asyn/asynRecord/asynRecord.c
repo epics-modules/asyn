@@ -85,9 +85,12 @@ static void monitorStatus(asynRecord * pasynRec);
 static asynStatus connectDevice(asynRecord * pasynRec);
 static asynStatus registerInterrupts(asynRecord * pasynRec);
 static asynStatus cancelInterrupts(asynRecord * pasynRec);
-static void callbackInterruptInt32(void *drvPvt, epicsInt32 value);
-static void callbackInterruptUInt32(void *drvPvt, epicsUInt32 value);
-static void callbackInterruptFloat64(void *drvPvt, epicsFloat64 value);
+static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value);
+static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value);
+static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value);
 static asynStatus cancelIOInterruptScan(asynRecord *pasynRec);
 static void gpibUniversalCmd(asynUser * pasynUser);
 static void gpibAddressedCmd(asynUser * pasynUser);
@@ -671,7 +674,8 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
     return(status);
 }
 
-static void callbackInterruptInt32(void *drvPvt, epicsInt32 value)
+static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -689,7 +693,8 @@ static void callbackInterruptInt32(void *drvPvt, epicsInt32 value)
     scanIoRequest(pasynRecPvt->ioScanPvt);
 }
 
-static void callbackInterruptUInt32(void *drvPvt, epicsUInt32 value)
+static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
+                epicsUInt32 value)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -707,7 +712,8 @@ static void callbackInterruptUInt32(void *drvPvt, epicsUInt32 value)
     scanIoRequest(pasynRecPvt->ioScanPvt);
 }
 
-static void callbackInterruptFloat64(void *drvPvt, epicsFloat64 value)
+static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
+                epicsFloat64 value)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -1393,8 +1399,14 @@ static void performOctetIO(asynUser * pasynUser)
         (pasynRec->tmod == asynTMOD_Write_Read)) {
         /* Send the message */
         nbytesTransfered = 0;
-        status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
-                               pasynUser, outptr, nwrite, &nbytesTransfered);
+        if(pasynRec->ofmt == asynFMT_Binary) {
+            status = pasynRecPvt->pasynOctet->writeRaw(pasynRecPvt->asynOctetPvt,
+                                 pasynUser, outptr, nwrite, &nbytesTransfered);
+        } else {
+            /* ASCII or Hybrid mode */
+            status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
+                                 pasynUser, outptr, nwrite, &nbytesTransfered);
+        }
         pasynRec->nawt = nbytesTransfered;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
            "%s: nwrite=%d, status=%d, nawt=%d, data=", pasynRec->name, nwrite,
