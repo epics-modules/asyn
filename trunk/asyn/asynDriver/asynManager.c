@@ -22,6 +22,7 @@
 #include <taskwd.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
+#include <epicsString1.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsThread.h>
@@ -1437,8 +1438,10 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
             if(fp) {
                 nout += epicsStrPrintEscaped(fp,buffer,nBytes);
             } else {
-/* NO funtion to translate escapes */
-                nout += errlogPrintf("%s\n",buffer);
+                nout += epicsSnStrPrintEscaped(ptracePvt->traceBuffer, buffer,
+                                               ptracePvt->traceBufferSize,
+                                               nBytes);
+                errlogPrintf("%s\n",ptracePvt->traceBuffer);
             }
         }
     }
