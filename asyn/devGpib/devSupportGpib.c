@@ -542,6 +542,20 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
         }
         pdevGpibParmBlock->rspLenMax = rspLenMax;
         pdevGpibParmBlock->msgLenMax = msgLenMax;
+        if(pdevGpibParmBlock->rspLenMax > 0) {
+            if(pdevGpibParmBlock->respond2Writes) {
+                printf("Warning -- %s has rspLen>0 but respond2Writes is not set.\n", pdevGpibParmBlock->name);
+            }
+        }
+        else {
+            if(!pdevGpibParmBlock->respond2Writes) {
+                printf("Warning -- %s respond2Writes is set but has no command table entry with rspLen>0.\n", pdevGpibParmBlock->name);
+            }
+        }
+        if(pdevGpibParmBlock->msgLenMax == 0) {
+            printf("Warning -- %s has no command table entry with msgLen>0.\n", pdevGpibParmBlock->name);
+        }
+
     }
     msgLenMax = pdevGpibParmBlock->msgLenMax;
     rspLenMax = pdevGpibParmBlock->rspLenMax;
@@ -748,11 +762,6 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     int nchars = 0, lenmsg = 0;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPrepareToRead\n",precord->name);
-    if((pgpibCmd->msgLen > 0) && !pgpibDpvt->msg) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s no msg buffer\n",precord->name);
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-        failure = 1;
-    }
     if(!failure && pdevGpibPvt->start)
         failure = pdevGpibPvt->start(pgpibDpvt,failure);
     if(failure)  goto done;
@@ -1268,6 +1277,8 @@ static void gpibTimeoutHappened(gpibDpvt *pgpibDpvt)
     epicsTimeGetCurrent(&pdeviceInstance->timeoutTime);
     ++pdeviceInstance->tmoCount;
     epicsMutexUnlock(pportInstance->lock);
+    asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR, "%s timeout.\n",
+                                                    pgpibDpvt->precord->name);
 }
 
 static int isTimeWindowActive(gpibDpvt *pgpibDpvt)
