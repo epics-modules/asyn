@@ -167,10 +167,15 @@ recordtype(asyn) {
         initial("512")
     }
     field(NOWT,DBF_LONG) {
-        prompt("Number of octets to write")
+        prompt("Number of bytes to write")
         promptgroup(GUI_DISPLAY)
         interest(1)
         initial("512")
+    }
+    field(NAWT,DBF_LONG) {
+        prompt("Number of bytes actually written")
+        promptgroup(GUI_DISPLAY)
+        interest(1)
     }
     field(OFMT,DBF_MENU) {
         prompt("Output format")
@@ -395,12 +400,6 @@ recordtype(asyn) {
     }
 
 # Miscellaneous fields
-    field(POLL,DBF_LONG) {
-        prompt("Poll status")
-        promptgroup(GUI_DISPLAY)
-        special(SPC_MOD)
-        interest(1)
-    }
     field(ERRS,DBF_STRING) {
         prompt("Error string")
         promptgroup(GUI_DISPLAY)

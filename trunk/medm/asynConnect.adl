@@ -1,14 +1,14 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynConnect.adl"
+	name="i:\epics\synApps5-1\asyn\2-2beta\medm\asynConnect.adl"
 	version=020306
 }
 display {
 	object {
-		x=176
-		y=72
-		width=350
-		height=250
+		x=175
+		y=93
+		width=320
+		height=140
 	}
 	clr=14
 	bclr=4
@@ -87,9 +87,26 @@ display {
 		1a7309,
 	}
 }
+text {
+	object {
+		x=33
+		y=56
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).CNTD"
+	}
+	textix="Connected"
+	align="horiz. right"
+}
 composite {
 	object {
-		x=74
+		x=69
 		y=8
 		width=203
 		height=29
@@ -98,7 +115,7 @@ composite {
 	children {
 		rectangle {
 			object {
-				x=74
+				x=69
 				y=8
 				width=203
 				height=29
@@ -109,7 +126,7 @@ composite {
 		}
 		text {
 			object {
-				x=77
+				x=72
 				y=12
 				width=199
 				height=21
@@ -122,63 +139,10 @@ composite {
 		}
 	}
 }
-text {
-	object {
-		x=4
-		y=123
-		width=56
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Connect"
-}
-text {
-	object {
-		x=7
-		y=101
-		width=88
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Autoconnect"
-}
 "choice button" {
 	object {
-		x=116
-		y=100
-		width=55
-		height=18
-	}
-	control {
-		chan="$(P)$(R).AUCT"
-		clr=14
-		bclr=51
-	}
-	stacking="column"
-}
-"text update" {
-	object {
-		x=9
-		y=76
-		width=117
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).CNTD"
-		clr=14
-		bclr=4
-	}
-	limits {
-	}
-}
-"choice button" {
-	object {
-		x=81
-		y=127
+		x=132
+		y=49
 		width=75
 		height=35
 	}
@@ -188,37 +152,10 @@ text {
 		bclr=51
 	}
 }
-text {
-	object {
-		x=178
-		y=122
-		width=48
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Enable"
-}
-"text update" {
-	object {
-		x=183
-		y=75
-		width=117
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).ENBD"
-		clr=14
-		bclr=4
-	}
-	limits {
-	}
-}
 "choice button" {
 	object {
-		x=247
-		y=123
+		x=132
+		y=97
 		width=75
 		height=35
 	}
@@ -226,5 +163,93 @@ text {
 		chan="$(P)$(R).ENBL"
 		clr=14
 		bclr=51
+	}
+}
+text {
+	object {
+		x=3
+		y=56
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).CNTD"
+	}
+	textix="Disconnected"
+	align="horiz. right"
+}
+text {
+	object {
+		x=53
+		y=104
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).ENBD"
+	}
+	textix="Enabled"
+	align="horiz. right"
+}
+text {
+	object {
+		x=43
+		y=104
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).ENBD"
+	}
+	textix="Disabled"
+	align="horiz. right"
+}
+composite {
+	object {
+		x=223
+		y=49
+		width=89
+		height=35
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=223
+				y=49
+				width=89
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Autoconnect"
+		}
+		"choice button" {
+			object {
+				x=241
+				y=66
+				width=56
+				height=18
+			}
+			control {
+				chan="$(P)$(R).AUCT"
+				clr=14
+				bclr=51
+			}
+			stacking="column"
+		}
 	}
 }
