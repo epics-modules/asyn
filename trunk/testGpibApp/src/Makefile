@@ -13,19 +13,23 @@ DBD += devTestGpib.dbd
 
 DBD += testGpib.dbd
 DBD += testGpibVx.dbd
+testGpib_DBD += commonInclude.dbd
 
 #=============================
+
+PROD_IOC_DEFAULT += testGpib
+PROD_IOC_vxWorks += testGpibVx
 
 LIBRARY_IOC += devTestGpib
 devTestGpib_SRCS += devTestGpib.c
 devTestGpib_LIBS += asyn
 ifdef IPAC
+testGpibVx_DBD += commonInclude.dbd ipacInclude.dbd
 devTestGpib_LIBS_vxWorks += Ipac
+else
+testGpibVx_DBD += commonInclude.dbd
 endif
 devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-PROD_IOC_DEFAULT += testGpib
-PROD_IOC_vxWorks += testGpibVx
 
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
@@ -54,3 +58,5 @@ include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
 
+#after 3.14.6 the following is no longer needed
+include $(TOP)/configure/RULES.DbExtra
