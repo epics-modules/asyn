@@ -50,6 +50,7 @@ typedef enum {
 typedef struct devPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
+    asynUser          *pasynUserSync;
     asynFloat64       *pfloat64;
     void              *float64Pvt;
     void              *registrarPvt;
@@ -60,6 +61,7 @@ typedef struct devPvt{
     int               gotValue;
     epicsFloat64      value;
     epicsFloat64      sum;
+    interruptCallbackFloat64 interruptCallback;
     int               numAverage;
     CALLBACK          callback;
     IOSCANPVT         ioScanPvt;
@@ -95,9 +97,9 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynAiFloat64 = {
-    6, 0, 0, initAi, getIoIntInfo, processAi, 0};
+    6, 0, 0, initAi,        getIoIntInfo, processAi, 0};
 analogDset asynAoFloat64 = {
-    6, 0, 0, initAo, getIoIntInfo, processAo, 0};
+    6, 0, 0, initAo,        getIoIntInfo, processAo, 0};
 analogDset asynAiFloat64Average = {
     6, 0, 0, initAiAverage, getIoIntInfo, processAiAverage, 0};
 
@@ -160,17 +162,18 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     }
     pPvt->pfloat64 = pasynInterface->pinterface;
     pPvt->float64Pvt = pasynInterface->drvPvt;
-    scanIoInit(&pPvt->ioScanPvt);
-    status = pPvt->pfloat64->registerInterruptUser(
-        pPvt->float64Pvt,pPvt->pasynUser,
-        interruptCallback,pPvt,&pPvt->registrarPvt);
-    if(status!=asynSuccess) {
-        /* The likely reason for an error is that this driver does not
-         * support interrupts on this interface.  Ignore for now
-         * printf("%s devAsynFloat64 registerInterruptUser %s\n",
-         *  pr->name,pPvt->pasynUser->errorMessage);
-         */
+
+    /* Initialize synchronous interface */
+    status = pasynFloat64SyncIO->connect(pPvt->portName, pPvt->addr,
+                 &pPvt->pasynUserSync, pPvt->userParam);
+    if (status != asynSuccess) {
+        printf("%s devAsynFloat64::initCommon Float64SyncIO->connect failed %s\n",
+               pr->name, pPvt->pasynUserSync->errorMessage);
+        goto bad;
     }
+
+    scanIoInit(&pPvt->ioScanPvt);
+    pPvt->interruptCallback = interruptCallback;
 
     return 0;
 bad:
@@ -181,10 +184,34 @@ bad:
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
+    asynStatus status;
 
+    if (cmd == 0) {
+        /* Add to scan list.  Register interrupts */
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynFloat64::getIoIntInfo registering interrupt\n",
+            pr->name);
+        status = pPvt->pfloat64->registerInterruptUser(
+           pPvt->float64Pvt,pPvt->pasynUser,
+           pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
+        if(status!=asynSuccess) {
+            printf("%s devAsynFloat64 registerInterruptUser %s\n",
+                   pr->name,pPvt->pasynUser->errorMessage);
+        }
+    } else {
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynFloat64::getIoIntInfo cancelling interrupt\n",
+             pr->name);
+        status = pPvt->pfloat64->cancelInterruptUser(pPvt->registrarPvt, pPvt->pasynUser);
+        if(status!=asynSuccess) {
+            printf("%s devAsynFloat64 cancelInterruptUser %s\n",
+                   pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
     *iopvt = pPvt->ioScanPvt;
     return 0;
 }
+
 
 static void processCallbackInput(asynUser *pasynUser)
 {
@@ -319,15 +346,13 @@ static long initAo(aoRecord *pao)
     if (status != asynSuccess) return 0;
     pPvt = pao->dpvt;
     /* Read the current value from the device */
-/*
-    status = pasynFloat64SyncIO->readOnce(pPvt->portName,pPvt->addr,
+    status = pasynFloat64SyncIO->read(pPvt->pasynUserSync,
                       &value,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pao->val = value;
         pao->udf = 0;
         return 0;
     }
-*/
     return 2; /* Do not convert */
 }
 
@@ -358,10 +383,19 @@ static long processAo(aoRecord *pr)
 static long initAiAverage(aiRecord *pai)
 {
     asynStatus status;
+    devPvt *pPvt;
 
     status = initCommon((dbCommon *)pai,&pai->inp,
         0,interruptCallbackInput);
     if (status != asynSuccess) return 0;
+    pPvt = pai->dpvt;
+    status = pPvt->pfloat64->registerInterruptUser(
+                 pPvt->float64Pvt,pPvt->pasynUser,
+                 pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
+    if(status!=asynSuccess) {
+        printf("%s devAsynFloat64 registerInterruptUser %s\n",
+               pai->name,pPvt->pasynUser->errorMessage);
+    }
     return(0);
 }
 
