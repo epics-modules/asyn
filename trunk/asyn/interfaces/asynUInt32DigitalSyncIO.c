@@ -32,7 +32,10 @@
 typedef enum {
    opConnect,
    opRead,
-   opWrite
+   opWrite,
+   opSetInterrupt,
+   opClearInterrupt,
+   opGetInterrupt
 } opType;
 
 typedef struct ioPvt{
@@ -45,7 +48,8 @@ typedef struct ioPvt{
    epicsUInt32  value;
    epicsUInt32  mask;
    double       timeout;
-   opType op;
+   opType       op;
+   interruptReason reason;
 }ioPvt;
 
 /*local functions*/
@@ -59,17 +63,35 @@ static asynStatus writeOp(asynUser *pasynUser,
                           epicsUInt32 value,epicsUInt32 mask, double timeout);
 static asynStatus readOp(asynUser *pasynUser,
                         epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+static asynStatus setInterrupt(asynUser *pasynUser,
+                       epicsUInt32 mask, interruptReason reason,double timeout);
+static asynStatus clearInterrupt(asynUser *pasynUser,
+                        epicsUInt32 mask,double timeout);
+static asynStatus getInterrupt(asynUser *pasynUser,
+                      epicsUInt32 *mask, interruptReason reason,double timeout);
 static asynStatus writeOpOnce(const char *port, int addr,
                           epicsUInt32 value,epicsUInt32 mask, double timeout);
 static asynStatus readOpOnce(const char *port, int addr,
                         epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+static asynStatus setInterruptOnce(const char *port, int addr,
+                      epicsUInt32 mask, interruptReason reason,double timeout);
+static asynStatus clearInterruptOnce(const char *port, int addr,
+                        epicsUInt32 mask,double timeout);
+static asynStatus getInterruptOnce(const char *port, int addr,
+                      epicsUInt32 *mask, interruptReason reason,double timeout);
 static asynUInt32DigitalSyncIO interface = {
     connect,
     disconnect,
     writeOp,
     readOp,
+    setInterrupt,
+    clearInterrupt,
+    getInterrupt,
     writeOpOnce,
-    readOpOnce
+    readOpOnce,
+    setInterruptOnce,
+    clearInterruptOnce,
+    getInterruptOnce
 };
 epicsShareDef asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO = &interface;
 
@@ -168,6 +190,42 @@ static void processCallback(asynUser *pasynUser)
                       "asynUInt32DigitalSyncIO read: %e",pPvt->value);
        }
        break;
+    case opSetInterrupt:
+       status = pasynUInt32Digital->setInterrupt(pdrvPvt, pasynUser,
+               pPvt->mask,pPvt->reason);
+       if(status==asynError) {
+          asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+                    "asynUInt32DigitalSyncIO setInterrupt failed %s\n",
+                    pasynUser->errorMessage);
+       } else {
+          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+                      "asynUInt32DigitalSyncIO setInterrupt: 0x%x ",pPvt->mask);
+       }
+       break;
+    case opClearInterrupt:
+       status = pasynUInt32Digital->clearInterrupt(pdrvPvt, pasynUser,
+               pPvt->mask);
+       if(status==asynError) {
+          asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+                    "asynUInt32DigitalSyncIO clearInterrupt failed %s\n",
+                    pasynUser->errorMessage);
+       } else {
+          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+                      "asynUInt32DigitalSyncIO clearInterrupt: 0x%x ",pPvt->mask);
+       }
+       break;
+    case opGetInterrupt:
+       status = pasynUInt32Digital->getInterrupt(pdrvPvt, pasynUser,
+               &pPvt->mask,pPvt->reason);
+       if(status==asynError) {
+          asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+                    "asynUInt32DigitalSyncIO getInterrupt failed %s\n",
+                    pasynUser->errorMessage);
+       } else {
+          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+                      "asynUInt32DigitalSyncIO getInterrupt: 0x%x ",pPvt->mask);
+       }
+       break;
     }
     pPvt->status = status;
     /* Signal the epicsEvent to let the waiting thread know we're done */
@@ -233,8 +291,7 @@ static asynStatus connect(const char *port, int addr,
        return(status);
     }
     if (!isConnected) {
-       status = queueAndWait(pasynUser,
-                          0.0,opConnect);
+       status = queueAndWait(pasynUser,0.0,opConnect);
        if (status != asynSuccess) {
           printf("Error connecting to device %s\n", pasynUser->errorMessage);
           return(status);
@@ -280,9 +337,43 @@ static asynStatus readOp(asynUser *pasynUser,
     asynStatus         status;
 
     pPvt->mask = mask;
-    status = queueAndWait(pasynUser,
-                                  timeout,opRead);
+    status = queueAndWait(pasynUser, timeout,opRead);
     if(status==asynSuccess) *pvalue = pPvt->value;
+    return(status);
+}
+
+static asynStatus setInterrupt(asynUser *pasynUser,
+                   epicsUInt32 mask, interruptReason reason,double timeout)
+{
+    ioPvt *pPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus         status;
+
+    pPvt->mask = mask;
+    pPvt->reason = reason;
+    status = queueAndWait(pasynUser,timeout,opSetInterrupt);
+    return(status);
+}
+
+static asynStatus clearInterrupt(asynUser *pasynUser,
+                        epicsUInt32 mask,double timeout)
+{
+    ioPvt *pPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus         status;
+
+    pPvt->mask = mask;
+    status = queueAndWait(pasynUser,timeout,opClearInterrupt);
+    return(status);
+}
+
+static asynStatus getInterrupt(asynUser *pasynUser,
+                    epicsUInt32 *mask, interruptReason reason,double timeout)
+{
+    ioPvt *pPvt = (ioPvt *)pasynUser->userPvt;
+    asynStatus         status;
+
+    pPvt->reason = reason;
+    status = queueAndWait(pasynUser,timeout,opGetInterrupt);
+    if(status==asynSuccess) *mask = pPvt->mask;
     return(status);
 }
 
@@ -309,6 +400,45 @@ static asynStatus readOpOnce(const char *port, int addr,
     status = connect(port,addr,&pasynUser);
     if(status!=asynSuccess) return -1;
     status = readOp(pasynUser,pvalue,mask,timeout);
+    disconnect(pasynUser);
+    return status;
+}
+
+static asynStatus setInterruptOnce(const char *port, int addr,
+                    epicsUInt32 mask, interruptReason reason,double timeout)
+{
+    asynStatus status;
+    asynUser   *pasynUser;
+
+    status = connect(port,addr,&pasynUser);
+    if(status!=asynSuccess) return -1;
+    status = setInterrupt(pasynUser,mask,reason,timeout);
+    disconnect(pasynUser);
+    return status;
+}
+
+static asynStatus clearInterruptOnce(const char *port, int addr,
+                        epicsUInt32 mask,double timeout)
+{
+    asynStatus status;
+    asynUser   *pasynUser;
+
+    status = connect(port,addr,&pasynUser);
+    if(status!=asynSuccess) return -1;
+    status = clearInterrupt(pasynUser,mask,timeout);
+    disconnect(pasynUser);
+    return status;
+}
+
+static asynStatus getInterruptOnce(const char *port, int addr,
+                  epicsUInt32 *mask, interruptReason reason,double timeout)
+{
+    asynStatus status;
+    asynUser   *pasynUser;
+
+    status = connect(port,addr,&pasynUser);
+    if(status!=asynSuccess) return -1;
+    status = getInterrupt(pasynUser,mask,reason,timeout);
     disconnect(pasynUser);
     return status;
 }

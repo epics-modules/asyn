@@ -22,6 +22,10 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+typedef enum {
+    interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
+} interruptReason;
+
 typedef void (*interruptCallbackUInt32Digital)(void *userPvt, epicsUInt32 data);
 #define asynUInt32DigitalType "asynUInt32Digital"
 typedef struct asynUInt32Digital {
@@ -29,6 +33,12 @@ typedef struct asynUInt32Digital {
          epicsUInt32 value, epicsUInt32 mask);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *value, epicsUInt32 mask);
+    asynStatus (*setInterrupt)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 mask, interruptReason reason);
+    asynStatus (*clearInterrupt)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 mask);
+    asynStatus (*getInterrupt)(void *drvPvt, asynUser *pasynUser,
+        epicsUInt32 *mask, interruptReason reason);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
         interruptCallbackUInt32Digital callback,void *userPvt,epicsUInt32 mask,
         void **registrarPvt);
