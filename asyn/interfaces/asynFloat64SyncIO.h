@@ -23,14 +23,15 @@ extern "C" {
 
 #define asynFloat64SyncIOType "asynFloat64SyncIO"
 typedef struct asynFloat64SyncIO {
-    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+    asynStatus (*connect)(const char *port, int addr, 
+                       asynUser **ppasynUser, char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,epicsFloat64 value,double timeout);
     asynStatus (*read)(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
-                       epicsFloat64 value,double timeout);
+                       epicsFloat64 value,double timeout,char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
-                       epicsFloat64 *pvalue,double timeout);
+                       epicsFloat64 *pvalue,double timeout,char *drvInfo);
 } asynFloat64SyncIO;
 epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;
 
