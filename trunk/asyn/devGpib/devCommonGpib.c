@@ -88,16 +88,18 @@ static void aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pai->name);
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pai->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         int result = 0;
         if(got_special_linconv) {
-            result = sscanf(pgpibDpvt->msg, pgpibCmd->format, &rawvalue);
+            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%ld";
+            result = sscanf(pgpibDpvt->msg, format, &rawvalue);
             if(result==1) {pai->rval = rawvalue; pai->udf = FALSE;}
         } else {
-            result = sscanf(pgpibDpvt->msg, pgpibCmd->format, &value);
+            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lf";
+            result = sscanf(pgpibDpvt->msg, format, &value);
             if(result==1) {pai->val = value; pai->udf = FALSE;}
         }
         if(result!=1) failure = -1;
@@ -156,9 +158,6 @@ long epicsShareAPI devGpib_writeAo(aoRecord * pao)
 
 static void aoGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
-    dbCommon *precord = pgpibDpvt->precord;
-
-    if(failure) recGblSetSevr(precord, WRITE_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
 }
 
@@ -214,16 +213,17 @@ static void biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else {
         if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
-            if(pgpibDpvt->efastVal>0) {
+            if(pgpibDpvt->efastVal>=0) {
                 pbi->rval = pgpibDpvt->efastVal;
             } else {
                 failure = -1;
             }
-        } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-            printf("%s Either no msg buffer or no format\n",pbi->name);
+        } else if (!pgpibDpvt->msg) {
+            printf("%s no msg buffer\n",pbi->name);
             failure = -1;
         } else {
-            if(sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
+            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
+            if(sscanf(pgpibDpvt->msg, format, &value) == 1) {
                 pbi->rval = value;
             } else {
                 /* sscanf did not find or assign the parameter*/
@@ -423,11 +423,12 @@ static void evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pev->name);
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pev->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
-        if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
+        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "hu";
+        if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
             pev->val = value;
             pev->udf = FALSE;
         } else { /* sscanf did not find or assign the parameter */
@@ -494,11 +495,12 @@ static void liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pli->name);
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pli->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
-        if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
+        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%ld";
+        if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
             pli->val = value; pli->udf = FALSE;
         } else { /* sscanf did not find or assign the parameter */
             failure = -1;
@@ -624,18 +626,19 @@ static void mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else {/* interpret msg with predefined format and write into rval */
+    } else {
         if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
             if(pgpibDpvt->efastVal>=0) {
                 pmbbi->rval = pgpibDpvt->efastVal;
             } else {
                 failure = -1;
             }
-        } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-            printf("%s Either no msg buffer or no format\n",pmbbi->name);
+        } else if (!pgpibDpvt->msg) {
+            printf("%s no msg buffer\n",pmbbi->name);
             failure = -1;
         } else {
-            if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
+            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
+            if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
                 pmbbi->rval = value;
             } else {
                 /*sscanf did not find or assign the parameter*/
@@ -695,11 +698,12 @@ static void mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
         failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",pmbbiDirect->name);
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pmbbiDirect->name);
         failure = -1;
     } else {
-        if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
+        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
+        if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
             pmbbiDirect->rval = value;
         } else {
             failure = -1;
@@ -879,7 +883,7 @@ static void siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",psi->name);
         failure = -1;
-    } else {/* interpret msg with predefined format and write into val */
+    } else {
         char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
         int lenVal = sizeof(psi->val);
         int nchars;
@@ -1017,7 +1021,6 @@ static void wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         } else {
             char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
             int lenDest = pwf->nelm;
-            int lenmsg = pgpibDpvt->msgInputLen;
             char *pdest = (char *)pwf->bptr;
             int nchars;
 
@@ -1027,10 +1030,10 @@ static void wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
                  printf("%s %d characters were truncated\n",
                      pwf->name,(nchars-lenDest+1));
                  failure = -1;
-                 lenmsg = lenDest;
+                 nchars = lenDest;
             }
             pwf->udf = FALSE;
-            pwf->nord = lenmsg;
+            pwf->nord = nchars;
         }
     }
     if(failure==-1) recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
