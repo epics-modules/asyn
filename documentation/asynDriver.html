@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 21 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">March 22 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -3452,13 +3452,14 @@ an example of how to interface to asynManager. The example resides in
 &lt;top&gt;/testApp and contains the following components:</p>
 <pre>Db/
    test.db
+   testBlock.db
 adl/
    test.adl
 src/
-   devAsynTest.c
-   devAsynTest.dbd
+   devTestBlock.dbd
    echoDriver.c
    addrChangeDriver.c
+   devTestBlock.c
    interposeInterface.c</pre>
 
 <p>echoDriver is a port driver that echos messages it receives. It implements
@@ -3497,10 +3498,58 @@ connects to a standard serial port.</p>
   <li>addr - The address to which addrChangeDriver connects</li>
 </ul>
 
+<p>devTestBlock is device support that tests blockProcessCallback. It has
+device support for stringin records. The INP field has the syntax:</p>
+<pre>    field(INP,"@asyn(port,addr,timeout) pvname)</pre>
+where:
+<ul>
+  <li>asyn(port,addr,timeout) is same as for devEpics support.</li>
+  <li>pvname - The name of a record in the same ioc.</li>
+</ul>
+
+<p>When the stringin record is processed the following occurs.</p>
+<ul>
+  <li>When process is called  and PACT is :
+    <ul>
+      <li>TRUE - then it just returns to record support.</li>
+      <li>FALSE - It does what follows.</li>
+    </ul>
+  </li>
+  <li>When processing starts the state is stateIdle.</li>
+  <li>blockProcessCallback is called.</li>
+  <li>callbackRequestDelayed is called (.1 second delay). The callback calls
+    queueRequest.</li>
+  <li>When processCallback is called it does the following:
+    <ul>
+      <li>calls unblockProcessCallback</li>
+      <li>If state is stateIdle
+        <ul>
+          <li>Calls dbGet to get a string value from pvname</li>
+          <li>calls pasynOctet-&gt;write to send the string</li>
+          <li>sets state to stateWrite</li>
+          <li>Calls blockProcessCallback</li>
+          <li>callbackRequestDelayed is called The callback calls
+            queueRequest.</li>
+          <li>completes.  processCallback will be called again</li>
+        </ul>
+      </li>
+      <li>If state is stateWrite
+        <ul>
+          <li>calls pasynOctet-&gt;read and puts the value in VAL.</li>
+          <li>Sets state = stateIdle</li>
+          <li>requests the the record be processed. This time PACT will be
+            TRUE</li>
+        </ul>
+      </li>
+    </ul>
+  </li>
+</ul>
+
 <p>test.db is a template containing three records: a calc record, which
 forward links to a stringout record which forward links to a stringin record.
 The stringOut record attaches to the device support supplied by
-devAsynTest.c.  When the calcRecord is processed the following happens:</p>
+asynOctetWriteRead.c.  When the calcRecord is processed the following
+happens:</p>
 <ul>
   <li>The calcRecord acts as a counter that overflows when the count reaches
     10. After counting to forward links ti the stringIn record.</li>
@@ -3517,6 +3566,9 @@ devAsynTest.c.  When the calcRecord is processed the following happens:</p>
   </li>
 </ul>
 
+<p>testBlock.db is a template similar to test.db except that it attached to
+device support testBlock instead of asynOctetWriteRead.</p>
+
 <p>Executing "medm -x test.adl"  produces the display:</p>
 
 <center>
@@ -3532,8 +3584,11 @@ single device port. port B acts as a multiDevice port that has two devices.
 For each of the three possible devices, the st.cmd file starts up two sets of
 records from test.db The st.cmd file also loads a set of records from
 asynTest.db for port A and for port B and for each of the two devices
-attached to port B. It also loads a set of records from asynGeneric.db. It
+attached to port B. It also loads a set of records from asynRecord.db. It
 starts one version of addrChangeDriver which connects to port A.</p>
+
+<p>It loads six versions of test.db and four versions of testBlock.db The
+test.adl file attaches to these database records.</p>
 <hr>
 
 <center>
