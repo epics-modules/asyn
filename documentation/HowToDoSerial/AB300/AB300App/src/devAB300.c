@@ -7,12 +7,8 @@
 * and higher are distributed subject to a Software License Agreement found
 * in file LICENSE that is included with this distribution. 
 \*************************************************************************/
-/* $Id: devAB300.c,v 1.1 2004-01-28 20:17:40 norume Exp $ */
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <alarm.h>
-#include <recGbl.h>
+/* $Id: devAB300.c,v 1.2 2004-01-29 19:33:55 norume Exp $ */
+#include <epicsStdio.h>
 #include <devCommonGpib.h>
 
 
@@ -44,10 +40,13 @@ convertPositionReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if( pdpvt->msg[2] == '\030')
-        pli->val = pdpvt->msg[0];
-    else
-        recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
+    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+                      pdpvt->pasynUser->errorMessageSize,
+                      "Invalid reply");
+        return -1;
+    }
+    pli->val = pdpvt->msg[0];
     return 0;
 }
 static int
@@ -55,10 +54,13 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if( pdpvt->msg[2] == '\030')
-        pli->val = pdpvt->msg[1];
-    else
-        recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
+    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+                      pdpvt->pasynUser->errorMessageSize,
+                      "Invalid reply");
+        return -1;
+    }
+    pli->val = pdpvt->msg[1];
     return 0;
 }
 
