@@ -34,16 +34,18 @@ INC += drvAsynIPPort.h
 asyn_SRCS += drvAsynIPPort.c
 DBD += drvAsynIPPort.dbd
 
-SRC_DIRS += $(ASYN)/asynMisc
-DBD += asyn.dbd
-INC += asynShellCommands.h
-INC += asynSyncIO.h
-INC += asynInterposeEos.h
+SRC_DIRS += $(ASYN)/interfaces
 INC += asynInt32.h asynFloat64.h
 INC += asynInt32Callback.h asynFloat64Callback.h
 INC += asynInt32Array.h asynFloat64Array.h
 INC += asynInt32ArrayCallback.h asynFloat64ArrayCallback.h
 INC += asynOctet.h asynOption.h
+
+SRC_DIRS += $(ASYN)/miscellaneous
+DBD += asyn.dbd
+INC += asynShellCommands.h
+INC += asynSyncIO.h
+INC += asynInterposeEos.h
 INC += asynUtils.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
