@@ -1,14 +1,14 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asynNew/medm/asynGeneric.adl"
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynGeneric.adl"
 	version=030004
 }
 display {
 	object {
-		x=257
+		x=63
 		y=24
 		width=365
-		height=300
+		height=320
 	}
 	clr=14
 	bclr=56
@@ -386,96 +386,15 @@ text {
 	clrmod="alarm"
 	stacking="column"
 }
-"choice button" {
-	object {
-		x=1
-		y=230
-		width=45
-		height=16
-	}
-	control {
-		chan="$(ioc)AutoConnect"
-		clr=14
-		bclr=51
-	}
-	clrmod="alarm"
-	stacking="column"
-}
-text {
-	object {
-		x=51
-		y=231
-		width=96
-		height=14
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="autoConnect"
-}
-"choice button" {
-	object {
-		x=193
-		y=230
-		width=45
-		height=16
-	}
-	control {
-		chan="$(ioc)Enable"
-		clr=14
-		bclr=51
-	}
-	clrmod="alarm"
-	stacking="column"
-}
-text {
-	object {
-		x=243
-		y=231
-		width=96
-		height=14
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Enable"
-}
-"choice button" {
-	object {
-		x=95
-		y=250
-		width=45
-		height=16
-	}
-	control {
-		chan="$(ioc)Connect"
-		clr=14
-		bclr=51
-	}
-	clrmod="alarm"
-	stacking="column"
-}
-text {
-	object {
-		x=145
-		y=251
-		width=96
-		height=14
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Connect"
-}
 "text entry" {
 	object {
-		x=150
+		x=100
 		y=0
-		width=150
+		width=100
 		height=18
 	}
 	control {
-		chan="$(ioc)PortAddr"
+		chan="$(ioc)ConnectDevice"
 		clr=14
 		bclr=4
 	}
@@ -486,7 +405,7 @@ text {
 }
 text {
 	object {
-		x=48
+		x=0
 		y=0
 		width=100
 		height=18
@@ -496,4 +415,259 @@ text {
 	}
 	textix="port,addr"
 	align="horiz. right"
+}
+"message button" {
+	object {
+		x=103
+		y=200
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=56
+	}
+	label="no"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=113
+		y=211
+		width=2
+		height=2
+	}
+	monitor {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=56
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=136
+		y=208
+		width=75
+		height=13
+	}
+	monitor {
+		chan="$(ioc)AutoConnectState"
+		clr=14
+		bclr=56
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=0
+		y=208
+		width=100
+		height=16
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="autoConnect"
+	align="horiz. right"
+}
+"message button" {
+	object {
+		x=103
+		y=216
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=56
+	}
+	label="yes"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=103
+		y=240
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)Connect"
+		clr=14
+		bclr=56
+	}
+	label="no"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=113
+		y=251
+		width=2
+		height=2
+	}
+	monitor {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=56
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=136
+		y=248
+		width=75
+		height=13
+	}
+	monitor {
+		chan="$(ioc)ConnectState"
+		clr=14
+		bclr=56
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=0
+		y=248
+		width=100
+		height=16
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="connect"
+	align="horiz. right"
+}
+"message button" {
+	object {
+		x=103
+		y=256
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)Connect"
+		clr=14
+		bclr=56
+	}
+	label="yes"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=103
+		y=280
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)Enable"
+		clr=14
+		bclr=56
+	}
+	label="no"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=113
+		y=291
+		width=2
+		height=2
+	}
+	monitor {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=56
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=136
+		y=288
+		width=75
+		height=13
+	}
+	monitor {
+		chan="$(ioc)EnableState"
+		clr=14
+		bclr=56
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=0
+		y=288
+		width=100
+		height=16
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="enable"
+	align="horiz. right"
+}
+"message button" {
+	object {
+		x=103
+		y=296
+		width=25
+		height=16
+	}
+	control {
+		chan="$(ioc)Enable"
+		clr=14
+		bclr=56
+	}
+	label="yes"
+	press_msg="1"
+}
+text {
+	object {
+		x=200
+		y=0
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="connected"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=300
+		y=0
+		width=65
+		height=18
+	}
+	monitor {
+		chan="$(ioc)Connected"
+		clr=14
+		bclr=56
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
 }

@@ -1,6 +1,6 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asynNew/testApp/adl/test.adl"
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/testApp/adl/test.adl"
 	version=030004
 }
 display {
@@ -303,118 +303,6 @@ display {
 	limits {
 	}
 }
-menu {
-	object {
-		x=0
-		y=60
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A-1:Enable"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=100
-		y=60
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A-1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=0
-		y=80
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A0:Enable"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=100
-		y=80
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A0:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=0
-		y=120
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A1:Enable"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=100
-		y=120
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=0
-		y=0
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PA:A0:Enable"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=100
-		y=0
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PA:A0:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
 text {
 	object {
 		x=300
@@ -508,62 +396,6 @@ text {
 }
 menu {
 	object {
-		x=200
-		y=0
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PA:A0:Connect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=200
-		y=60
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A-1:Connect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=200
-		y=80
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A0:Connect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
-		x=200
-		y=120
-		width=100
-		height=18
-	}
-	control {
-		chan="asynTest:PB:A1:Connect"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-}
-menu {
-	object {
 		x=450
 		y=0
 		width=100
@@ -638,5 +470,580 @@ menu {
 		chan="client2:PB:A1:calc.SCAN"
 		clr=14
 		bclr=4
+	}
+}
+composite {
+	object {
+		x=0
+		y=0
+		width=290
+		height=32
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=0
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:Enable"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=16
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:Enable"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=8
+				width=30
+				height=16
+			}
+			monitor {
+				chan="asynTest:PA:A0:EnableState"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=100
+				y=0
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:AutoConnect"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=100
+				y=16
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:AutoConnect"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=160
+				y=8
+				width=30
+				height=16
+			}
+			monitor {
+				chan="asynTest:PA:A0:AutoConnectState"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=200
+				y=0
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:Connect"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=200
+				y=16
+				width=60
+				height=16
+			}
+			control {
+				chan="asynTest:PA:A0:Connect"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=260
+				y=8
+				width=30
+				height=16
+			}
+			monitor {
+				chan="asynTest:PA:A0:ConnectState"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:Enable"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=62
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:Enable"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=54
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A-1:EnableState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=100
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=100
+		y=62
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=160
+		y=54
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A-1:AutoConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=200
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:Connect"
+		clr=14
+		bclr=4
+	}
+	label="connect"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=200
+		y=62
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1:Connect"
+		clr=14
+		bclr=4
+	}
+	label="disconnect"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=260
+		y=54
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A-1:ConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=80
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:Enable"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=96
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:Enable"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=88
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A0:EnableState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=100
+		y=80
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=100
+		y=96
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=160
+		y=88
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A0:AutoConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=200
+		y=80
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:Connect"
+		clr=14
+		bclr=4
+	}
+	label="connect"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=200
+		y=96
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0:Connect"
+		clr=14
+		bclr=4
+	}
+	label="disconnect"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=260
+		y=88
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A0:ConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=120
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:Enable"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=136
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:Enable"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=128
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A1:EnableState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=100
+		y=120
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=100
+		y=136
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:AutoConnect"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=160
+		y=128
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A1:AutoConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=200
+		y=120
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:Connect"
+		clr=14
+		bclr=4
+	}
+	label="connect"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=200
+		y=136
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1:Connect"
+		clr=14
+		bclr=4
+	}
+	label="disconnect"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=260
+		y=128
+		width=30
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A1:ConnectState"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
 	}
 }
