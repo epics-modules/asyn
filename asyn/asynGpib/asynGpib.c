@@ -70,6 +70,8 @@ typedef struct gpibPvt {
     asynInterface gpib;
     asynInterface int32;
     void          *asynInt32Pvt;
+    int           eoslen;
+    char          eos;
 }gpibPvt;
 
 #define GETgpibPvtasynGpibPort \
@@ -93,14 +95,16 @@ static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
-static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
+static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);
-static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
-static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
+static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
-static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
+static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
 /*asynGpib methods*/
 static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
@@ -121,7 +125,7 @@ static asynCommon common = {
    report,connect,disconnect
 };
 static asynOctet octet = {
-    0,gpibWrite,0,gpibRead,gpibFlush, 0,0,setEos, getEos,0,0
+    0,writeRaw,readIt,readRaw,gpibFlush, 0,0,setInputEos, getInputEos,0,0
 };
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren, pollAddr, registerPort, srqHappened
@@ -354,7 +358,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 /*asynOctet methods */
-static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
+static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
 {
     int nt;
@@ -367,7 +371,30 @@ static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
     return status;
 }
 
-static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+{
+    int nt;
+    asynStatus status;
+    GETgpibPvtasynGpibPort
+
+    status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
+               data,(int)maxchars,&nt,eomReason);
+    *nbytesTransfered = (size_t)nt;
+    if(status!=asynSuccess) return status;
+    if(pgpibPvt->eoslen==1 && nt>0) {
+        if(data[nt-1]==pgpibPvt->eos) nt--;
+    }
+    if(nt<maxchars && data[nt]!=0) data[nt] = 0;
+    if(nt==maxchars && data[nt-1]!=0) {
+        data[nt-1] = 0;
+        return asynOverflow;
+    }
+    *nbytesTransfered = (size_t)nt;
+    return status;
+}
+
+static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
     int nt;
@@ -386,14 +413,27 @@ static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser)
     return(pasynGpibPort->flush(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
 
-static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
+static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
+    asynStatus status;
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->setEos(pgpibPvt->asynGpibPortPvt,pasynUser,eos,eoslen));
+    
+    if(eoslen>1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s asynGpib:setInputEos eoslen %d too long. only 1 is allowed\n",
+             pgpibPvt->portName,eoslen);
+        return asynError;
+    }
+    status = pasynGpibPort->setEos(pgpibPvt->asynGpibPortPvt,
+        pasynUser,eos,eoslen);
+    if(status!=asynSuccess) return status;
+    pgpibPvt->eoslen = eoslen;
+    if(eoslen==1) pgpibPvt->eos = eos[0];
+    return status;
 }
 
-static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
+static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
     GETgpibPvtasynGpibPort
