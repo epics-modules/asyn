@@ -27,6 +27,7 @@
 
 #define epicsExportSharedSymbols
 #include <asynGpibDriver.h>
+#include <asynOctet.h>
 
 #define BOOL int
 #define TRUE 1
@@ -114,7 +115,7 @@ static void *registerPort(
 static void srqHappened(void *pgpibvt);
 
 static asynCommon asyn = {
-   report,connect,disconnect,setOption,getOption
+   report,connect,disconnect
 };
 static asynOctet octet = {
     gpibRead,gpibWrite,gpibFlush, setEos, getEos

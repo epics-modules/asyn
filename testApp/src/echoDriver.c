@@ -25,6 +25,7 @@
 #include <iocsh.h>
 
 #include <asynDriver.h>
+#include <asynOctet.h>
 
 #define BUFFERSIZE 4096
 #define NUM_INTERFACES 2
@@ -58,16 +59,10 @@ static int echoDriverInit(const char *dn, double delay,
 static void report(void *ppvt,FILE *fp,int details);
 static asynStatus connect(void *ppvt,asynUser *pasynUser);
 static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
-static asynStatus setOption(void *ppvt,asynUser *pasynUser,
-                                const char *key,const char *val);
-static asynStatus getOption(void *ppvt,asynUser *pasynUser,
-                                const char *key,char *val,int sizeval);
 static asynCommon asyn = {
     report,
     connect,
-    disconnect,
-    setOption,
-    getOption
+    disconnect
 };
 
 /* asynOctet methods */
@@ -247,26 +242,6 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
     return(asynSuccess);
 }
 
-static asynStatus setOption(void *ppvt,asynUser *pasynUser,
-                                const char *key,const char *val)
-{
-    echoPvt *pechoPvt = (echoPvt *)ppvt;
-
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:setOption nothing to do\n",pechoPvt->portName);
-    return(asynSuccess);
-}
-
-static asynStatus getOption(void *ppvt,asynUser *pasynUser,
-                                const char *key,char *val,int sizeval)
-{
-    echoPvt *pechoPvt = (echoPvt *)ppvt;
-
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s echoDriver:getOption nothing to do\n",pechoPvt->portName);
-    if (sizeval) *val = '\0';
-    return(asynSuccess);
-}
 
 /* asynOctet methods */
 static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
