@@ -1374,7 +1374,7 @@ static FILE *getTraceFile(asynUser *pasynUser)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    return ptracePvt->fp;
+    return (ptracePvt->fp) ? ptracePvt->fp : stdout;
 }
 
 static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
@@ -1434,7 +1434,7 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
 
     if(!(reason&ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
-    fp = ptracePvt->fp;
+    fp = ptracePvt->fp; if(!fp) fp = stdout;
     nout += printTime(fp);
     va_start(pvar,pformat);
     if(fp) {
@@ -1463,7 +1463,7 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     traceTruncateSize = ptracePvt->traceTruncateSize;
     if(!(reason&traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
-    fp = ptracePvt->fp;
+    fp = ptracePvt->fp; if(!fp) fp = stdout;
     nout += printTime(fp);
     va_start(pvar,pformat);
     if(fp) {
