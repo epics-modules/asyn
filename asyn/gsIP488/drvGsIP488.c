@@ -694,7 +694,7 @@ static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
 
     while(1) {
         actual = 0;
-        status = readGpib(pgpib,buffer,(int)sizeof(buffer),&actual,addr,.01);
+        status = readGpib(pgpib,buffer,(int)sizeof(buffer),&actual,addr,.02);
         if(actual<=0) break;
     }
     return(asynSuccess);
