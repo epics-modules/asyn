@@ -11,18 +11,18 @@ cd startup
 dbLoadDatabase("../../dbd/testGpibSerialVx.dbd")
 testGpibSerialVx_registerRecordDeviceDriver(pdbbase)
 
-dbLoadRecords("../../db/testGpibSerial.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
 
 drvGenericSerialDebug = 3
 #The following command is for a serial line terminal concentrator
 #drvGenericSerialConfigure("L0","164.54.9.93:4003",0,0)
 
-#The following commands are for a Greenspring octal UART and VIP16-01 carrier
+#The following commands are for a Greenspring octal UART and VIP616-01 carrier
 ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv 1
 octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
 port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
 tyGSOctalConfig(port0,9600,'N',1,8,'N')
-drvGenericSerialConfigure("L0","/tyGS/0/0")
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")
 
 iocInit()

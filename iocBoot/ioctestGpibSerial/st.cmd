@@ -3,7 +3,7 @@
 dbLoadDatabase("../../dbd/testGpibSerial.dbd")
 testGpibSerial_registerRecordDeviceDriver(pdbbase)
 
-dbLoadRecords("../../db/testGpibSerial.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
 
 var drvGenericSerialDebug 3
 #The following command is for a serial line terminal concentrator
