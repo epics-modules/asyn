@@ -1,4 +1,4 @@
-/*asynSyncIO.h*/
+/*asynOctetSyncIO.h*/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -16,8 +16,8 @@
  * 01-Mar-2004  Mark Rivers, created from old serialIO.h
  */
 
-#ifndef	INCasynSyncIOh
-#define	INCasynSyncIOh 1
+#ifndef	INCasynOctetSyncIOh
+#define	INCasynOctetSyncIOh 1
 
 #include <shareLib.h>
 #include "asynDriver.h"
@@ -26,7 +26,7 @@
 extern "C" {
 #endif /* __cplusplus */
 
-typedef struct asynSyncIO {
+typedef struct asynOctetSyncIO {
    asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
@@ -41,11 +41,22 @@ typedef struct asynSyncIO {
                   const char *ieos, int ieos_len, double timeout,
                   int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
-} asynSyncIO;
-epicsShareExtern asynSyncIO *pasynSyncIO;
+   int        (*writeOnce)(const char *port, int addr,
+                  char const *buffer, int buffer_len, double timeout);
+   int        (*readOnce)(const char *port, int addr,
+                  char *buffer, int buffer_len, 
+                  const char *ieos, int ieos_len, int flush, double timeout,
+                  int *eomReason);
+   int        (*writeReadOnce)(const char *port, int addr,
+                  const char *write_buffer, int write_buffer_len,
+                  char *read_buffer, int read_buffer_len,
+                  const char *ieos, int ieos_len, double timeout,
+                  int *eomReason);
+} asynOctetSyncIO;
+epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;
 
 #ifdef __cplusplus
 }
 #endif /* __cplusplus */
 
-#endif /* INCasynSyncIOh */
+#endif /* INCasynOctetSyncIOh */
