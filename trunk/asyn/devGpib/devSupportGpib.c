@@ -451,89 +451,124 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     char *buf = pgpibDpvt->msg;
     size_t bufSize = pgpibCmd->msgLen;
-    char saveEos[5];
+    char saveEosBuf[5];
+    char *saveEos;
     int saveEosLen;
+    int eomReason;
 
-    pasynOctet->getInputEos(asynOctetPvt,pasynUser,saveEos,sizeof saveEos,&saveEosLen);
-    pasynOctet->setInputEos(asynOctetPvt,pasynUser,"#",1);
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread,0);
-    if (status!=asynSuccess || nread == 0)
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                      "Error reading preamble");
-    pasynOctet->setInputEos(asynOctetPvt,pasynUser,saveEos,saveEosLen);
-    if (status!=asynSuccess || nread == 0)
-        return -1;
-    if (buf[nread - 1] != '#') {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                           "Preamble too long");
-        return -1;
-    }
-    buf += nread;
-    bufSize -= nread;
-    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,1,&nread,0);
-    if (status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                              "Error reading number of digits");
-        return -1;
-    }
-    if ((buf[0] <'0') || (buf[0] > '9')) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "Number of digits ('\\%.2x') is not numeric",(unsigned char)buf[0]);
-        return -1;
-    }
-    count = buf[0] - '0';
-    buf += nread;
-    bufSize -= nread;
-    if (count == 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                    "Number of digits is zero");
-        return -1;
-    }
-    if (count > bufSize) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                            "Buffer too small");
-        return -1;
-    }
-    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
-    if (status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                               "Error reading number of bytes");
-        return -1;
-    }
-    buf[nread] = '\0';
-    ltmp = strtol(buf,&endptr,10);
-    if ((endptr == buf) || (*endptr != '\0')) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                     "Number of bytes (%s) is not numeric",buf);
-        return -1;
-    }
-    if ((ltmp <= 0) || (ltmp >= bufSize)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                  "Number of bytes (%lu) is unreasonable",ltmp);
-        return -1;
-    }
-    buf += nread;
-    bufSize -= nread;
-    count = ltmp;
     if (pgpibCmd->eos) {
-        if (*pgpibCmd->eos)
-            count += strlen(pgpibCmd->eos);
+        if (*pgpibCmd->eos == '\0')
+            saveEosLen = 1;
         else
-            count++;
+            saveEosLen = strlen(pgpibCmd->eos);
+        saveEos = pgpibCmd->eos;
     }
-    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
-    if (status!=asynSuccess || nread != count) {
+    else {
+        status = pasynOctet->getInputEos(asynOctetPvt,pasynUser,saveEosBuf,sizeof saveEosBuf,&saveEosLen);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                      "Device EOS too long!");
+            return -1;
+        }
+        saveEos = saveEosBuf;
+    }
+    if (saveEosLen)
+        pasynOctet->setInputEos(asynOctetPvt,pasynUser,"#",1);
+
+    /*
+     * Read preamble (if we're using EOS to terminate messages) or the entire
+     * block (if we're using some other mechanism to terminate messages).
+     */
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread,&eomReason);
+    if (status!=asynSuccess || nread == 0)
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                             "Error reading waveform bytes%s",
-                                pgpibCmd->eos ? " (and trailing command EOS)" : "");
+                      "Error reading arbitrary block program data preamble");
+    if (saveEosLen)
+        pasynOctet->setInputEos(asynOctetPvt,pasynUser,saveEos,saveEosLen);
+    if (status!=asynSuccess || nread == 0)
         return -1;
-    }
     buf += nread;
     if (saveEosLen) {
-        status = pasynOctet->read(asynOctetPvt,pasynUser,saveEos,saveEosLen,&nread,0);
-        if (status!=asynSuccess || nread != saveEosLen) {
+        printf("read %d characters and ended because %d\n", nread, eomReason);
+        printf("---\"%.*s\"---\n", nread, buf-nread);
+        if ((eomReason & ASYN_EOM_EOS) == 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                         "Error reading EOS");
+                          "Didn't find '#' to begin arbitrary block program data");
+            return -1;
+        }
+        *buf++= '#';
+        bufSize -= nread + 1;
+        status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,1,&nread,0);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                 "Error reading arbitrary block program data number of digits");
+            return -1;
+        }
+        if ((*buf < '0') || (*buf > '9')) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "Arbitrary block program data number of digits ('\\%.2x') is not numeric",(unsigned char)*buf);
+            return -1;
+        }
+        count = *buf - '0';
+        buf += nread;
+        bufSize -= nread;
+        if (count == 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "Arbitrary block program data number of digits is zero");
+            return -1;
+        }
+        if (count > bufSize) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                      "Arbitrary block program data too long");
+            return -1;
+        }
+        status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
+        if (status!=asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                  "Error reading arbitrary block program data number of bytes");
+            return -1;
+        }
+        buf[nread] = '\0';
+        ltmp = strtol(buf,&endptr,10);
+        if ((endptr == buf) || (*endptr != '\0')) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                 "Arbitrary block program data number of bytes (%s) is not numeric",buf);
+            return -1;
+        }
+        if ((ltmp <= 0) || (ltmp >= bufSize)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+              "Arbitrary block program data number of bytes (%lu) exceeds buffer space",ltmp);
+            return -1;
+        }
+        buf += nread;
+        bufSize -= nread;
+        count = ltmp;
+        status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
+        if (status!=asynSuccess || nread != count) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                 "Error reading arbitrary block program data");
+            return -1;
+        }
+        buf += nread;
+        status = pasynOctet->read(asynOctetPvt,pasynUser,saveEos,1,&nread,0);
+        if (status!=asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                     "Error reading EOS after arbitrary block program data");
+            return -1;
+        }
+        if (nread != 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+             "Unexpected characters between arbitrary block program data and EOS");
+            return -1;
+        }
+    }
+    else {
+        /*
+         * No EOS -- just read entire END-terminated block
+         */
+        if ((eomReason & ASYN_EOM_END) == 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "Arbitrary block program data too long");
             return -1;
         }
     }
