@@ -10,9 +10,11 @@ ASYN_LIB = $(TOP)/lib/$(T_A)
 ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += testGpibSerial.dbd
-DBD += testGpibSerialVx.dbd
 testGpibSerial_DBD += commonInclude.dbd
+ifeq ($(OS_CLASS),vxWorks)
+DBD += testGpibSerialVx.dbd
 testGpibSerialVx_DBD += commonInclude.dbd
+endif
 
 #=============================
 
