@@ -1584,7 +1584,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
             recGblSetSevr(pasynRec,WRITE_ALARM, MAJOR_ALARM);
         }
         /* Read the response byte  */
-        status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynGpibPvt,
+        status = pasynRecPvt->pasynOctet->readRaw(pasynRecPvt->asynOctetPvt,
                 pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered,0);
         if(status != asynSuccess || nbytesTransfered != 1) {
             reportError(pasynRec, status,

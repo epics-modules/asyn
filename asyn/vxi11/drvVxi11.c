@@ -1349,7 +1349,7 @@ static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
 static asynStatus vxiUniversalCmd(void *drvPvt, asynUser *pasynUser, int cmd)
 {
     vxiPort    *pvxiPort = (vxiPort *)drvPvt;
-    long       nout;
+    int        nout;
     char       data[2];
     asynStatus status = asynSuccess;
 
