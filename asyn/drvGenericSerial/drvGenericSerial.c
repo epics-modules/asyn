@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.29 2004-03-29 16:12:15 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.30 2004-03-29 20:50:56 norume Exp $
  */
 
 #include <string.h>
@@ -568,6 +568,7 @@ static int
 drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int numchars)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    double timeout = pasynUser->timeout;
     int wrote;
 
     assert(tty);
@@ -576,9 +577,11 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     if (tty->fd < 0) return -1;
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                                "%s write %d ", tty->serialDeviceName, numchars);
-    epicsTimerStartDelay(tty->timer, pasynUser->timeout);
+    if (timeout >= 0)
+        epicsTimerStartDelay(tty->timer, timeout);
     wrote = write(tty->fd, (char *)data, numchars);
-    epicsTimerCancel(tty->timer);
+    if (timeout >= 0)
+        epicsTimerCancel(tty->timer);
     if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                     "%s write timeout", tty->serialDeviceName);
@@ -611,6 +614,7 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
     int nRead = 0;
+    double timeout = pasynUser->timeout;
     int didTimeout = 0;
 
     assert(tty);
@@ -659,9 +663,11 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
             thisRead = INBUFFER_SIZE - tty->inBufferHead;
         else
             thisRead = tty->inBufferTail;
-        epicsTimerStartDelay(tty->timer, pasynUser->timeout);
+        if (timeout >= 0)
+            epicsTimerStartDelay(tty->timer, timeout);
         thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
-        epicsTimerCancel(tty->timer);
+        if (timeout >= 0)
+            epicsTimerCancel(tty->timer);
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
                         tty->inBuffer + tty->inBufferHead, thisRead,
