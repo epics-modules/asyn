@@ -1044,9 +1044,10 @@ static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
 static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1};
 static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
-static void asynReportCall(const iocshArgBuf * args) {
+/*asynReport is an extern just for vxWorks*/
+int asynReport(const char *filename, int level)
+{
     FILE *fp;
-    const char *filename = args[0].sval;
 
     if(!filename || filename[0]==0) {
         fp = stdout;
@@ -1054,10 +1055,14 @@ static void asynReportCall(const iocshArgBuf * args) {
         fp = fopen(filename,"w+");
         if(!fp) {
             printf("fopen failed %s\n",strerror(errno));
-            return;
+            return(-1);
         }
     }
-    report(fp,args[1].ival);
+    report(fp,level);
+    return(0);
+}
+static void asynReportCall(const iocshArgBuf * args) {
+    asynReport(args[0].sval,args[1].ival);
 }
 
 static const iocshArg asynSetPortOptionArg0 = {"portName", iocshArgString};
@@ -1087,10 +1092,9 @@ static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
 static const iocshFuncDef asynSetTraceMaskDef =
     {"asynSetTraceMask", 3, asynSetTraceMaskArgs};
-static void asynSetTraceMaskCall(const iocshArgBuf * args) {
-    const char *portName = args[0].sval;
-    int addr = args[1].ival;
-    int mask = args[2].ival;
+/*asynSetTraceMask is an extern just for vxWorks*/
+int asynSetTraceMask(const char *portName,int addr,int mask)
+{
     asynUser *pasynUser;
     asynStatus status;
 
@@ -1099,13 +1103,20 @@ static void asynSetTraceMaskCall(const iocshArgBuf * args) {
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
-        return;
+        return(-1);
     }
     status = pasynTrace->setTraceMask(pasynUser,mask);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
     }
     pasynManager->freeAsynUser(pasynUser);
+    return(0);
+}
+static void asynSetTraceMaskCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int mask = args[2].ival;
+    asynSetTraceMask(portName,addr,mask);
 }
 
 static const iocshArg asynSetTraceIOMaskArg0 = {"portName", iocshArgString};
@@ -1115,10 +1126,9 @@ static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
 static const iocshFuncDef asynSetTraceIOMaskDef =
     {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs};
-static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
-    const char *portName = args[0].sval;
-    int addr = args[1].ival;
-    int mask = args[2].ival;
+/*asynSetTraceIOMask is an extern just for vxWorks*/
+int asynSetTraceIOMask(const char *portName,int addr,int mask)
+{
     asynUser *pasynUser;
     asynStatus status;
 
@@ -1127,13 +1137,20 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
-        return;
+        return(-1);
     }
     status = pasynTrace->setTraceIOMask(pasynUser,mask);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
     }
     pasynManager->freeAsynUser(pasynUser);
+    return(0);
+}
+static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int mask = args[2].ival;
+    asynSetTraceIOMask(portName,addr,mask);
 }
 
 static void asyn(void)
