@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.16 2004-01-19 16:39:48 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.17 2004-01-19 19:22:11 norume Exp $
  */
 
 #include <string.h>
@@ -699,7 +699,7 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
          * Don't completely fill the buffer -- a completely full
          * buffer is indisinguishable from a completely empty buffer.
          */
-        if (tty->inBufferEosTail == tty->inBufferTail)
+        if ((thisRead > 1) && (tty->inBufferEosTail == tty->inBufferTail))
             thisRead--;
         epicsTimerStartDelay(tty->timer, pasynUser->timeout);
         thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
