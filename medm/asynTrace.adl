@@ -8,7 +8,7 @@ display {
 		x=176
 		y=72
 		width=350
-		height=200
+		height=250
 	}
 	clr=14
 	bclr=4
@@ -242,86 +242,75 @@ text {
 	}
 	textix="traceIOHex"
 }
-composite {
+"choice button" {
 	object {
 		x=7
 		y=78
 		width=55
-		height=110
+		height=18
 	}
-	"composite name"=""
-	children {
-		"choice button" {
-			object {
-				x=7
-				y=78
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB0"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=7
-				y=147
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB3"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=7
-				y=170
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB4"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=7
-				y=124
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB2"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=7
-				y=101
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB1"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
+	control {
+		chan="$(P)$(R).TB0"
+		clr=14
+		bclr=51
 	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=147
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB3"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=170
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB4"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=124
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=101
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
 }
 composite {
 	object {
@@ -374,5 +363,59 @@ composite {
 			}
 			stacking="column"
 		}
+	}
+}
+text {
+	object {
+		x=6
+		y=194
+		width=104
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Truncate size"
+}
+"text entry" {
+	object {
+		x=116
+		y=193
+		width=50
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TSIZ"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=6
+		y=218
+		width=104
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Trace file"
+}
+"text entry" {
+	object {
+		x=94
+		y=217
+		width=250
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TFIL"
+		clr=14
+		bclr=51
+	}
+	limits {
 	}
 }
