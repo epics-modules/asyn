@@ -11,7 +11,8 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += testGpibSerial.dbd
 DBD += testGpibSerialVx.dbd
-testGpibSerial_DBD += serialInclude.dbd
+testGpibSerial_DBD += commonInclude.dbd
+testGpibSerialVx_DBD += commonInclude.dbd
 
 #=============================
 
@@ -28,10 +29,8 @@ testGpibSerial_LIBS += $(EPICS_BASE_IOC_LIBS)
 testGpibSerialVx_SRCS += testGpibSerialVx_registerRecordDeviceDriver.cpp
 testGpibSerialVx_SRCS += devTestGpibSerial.c
 ifdef IPAC
-testGpibSerialVx_DBD += serialVxInclude.dbd ipacInclude.dbd
+testGpibSerialVx_DBD += ipacInclude.dbd
 testGpibSerialVx_LIBS += Ipac TyGSOctal
-else
-testGpibSerialVx_DBD += serialVxInclude.dbd
 endif
 testGpibSerialVx_LIBS += testSupport asyn
 testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
