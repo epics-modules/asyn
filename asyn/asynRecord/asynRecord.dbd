@@ -258,10 +258,6 @@ recordtype(asyn) {
     }
 
 # Serial control fields
-    field(GOPT,DBF_UCHAR) {
-        prompt("Get Options")
-        special(SPC_MOD)
-    }
     field(BAUD,DBF_MENU) {
         prompt("Baud rate")
         promptgroup(GUI_COMMON)
