@@ -45,11 +45,11 @@ support file for a simple instrument can be found <a
 href="devKeithley196.c.diff.html">here</a>. 
 <ol>
   <li>Remove all <span style="font-family: courier">#include</span> lines
-    except <span style="font-family: courier; font-size: 12pt">#include
+    except <span style="font-family: courier">#include
     &lt;devCommonGpib.h&gt;</span>.</li>
-  <li>Add <span style="font-family: courier; font-size: 12pt">#include
+  <li>Add <span style="font-family: courier">#include
     &lt;devGpib.h&gt;</span> after <span
-    style="font-family: courier; font-size: 12pt">#include
+    style="font-family: courier">#include
     &lt;devCommonGpib.h&gt;</span>.</li>
   <li>Ensure that there is a definition for <span
     style="font-family: courier">DSET_AI</span>, even if the device has no
@@ -59,15 +59,15 @@ href="devKeithley196.c.diff.html">here</a>.
     of using devGpib.h, older device support created it's own DSET_xxx
     definitions. Remove all of these and use the devGpib.h technique</li>
   <li>Remove any <span
-    style="font-style: italic; font-size: 12pt">xxx</span><span
-    style="font-family: courier; font-size: 12pt">Debug</span>
+    style="font-style: italic">xxx</span><span
+    style="font-family: courier">Debug</span>
   definitions.</li>
   <li>Change the value of the <span
-    style="font-family: courier; font-size: 12pt">TIME_WINDOW</span> macro
+    style="font-family: courier">TIME_WINDOW</span> macro
     from 1/60th of a second units to seconds.</li>
   <li>Change the <span
-    style="font-family: courier; font-size: 12pt">DMA_TIME</span> macro to
-    <span style="font-family: courier; font-size: 12pt">TIMEOUT</span> and
+    style="font-family: courier">DMA_TIME</span> macro to
+    <span style="font-family: courier">TIMEOUT</span> and
     its value from 1/60th of a second units to seconds.</li>
   <li>Modify the command table entries: 
     <ul>
@@ -108,10 +108,10 @@ href="devKeithley196.c.diff.html">here</a>.
     </ul>
   </li>
   <li>Change the name of the device-support initialization function to <span
-    style="font-family: courier; font-size: 12pt">init_ai</span>.</li>
+    style="font-family: courier">init_ai</span>.</li>
   <li>Remove from the device-support initialization function any calls to
     <span
-    style="font-family: courier; font-size: 12pt">devGpibLib_init()</span>.
+    style="font-family: courier">devGpibLib_init()</span>.
     Simply return 0 from the device-support initialization function.</li>
   <li><p>The fields in devGpibParmBlock have been reordered and some have
     gone away.</p>
