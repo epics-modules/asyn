@@ -272,11 +272,13 @@ OUT links of records, see the EPICS Application Developers Guide.</p>
 
 <p>If you are writing a new instrument support module just:</p>
 <ul>
-  <li>Copy  &lt;top&gt;/asyn/devGpib/devSkeletonGpib.c to your source
-    directory</li>
-  <li>Change it's name.</li>
-  <li>Globally change "Skeleton" to a name of your choice.</li>
-  <li>Modify it to provide the functionality needed by your device.</li>
+  <li>Create a source directory and 'cd' to it.</li>
+  <li>Create a set of instrument support files by running the makeSupport.pl script:
+    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
+    -t devGpib <em>&lt;InstName&gt;</em></p>
+  <li>Modify the src/<em>&lt;InstName&gt;</em>.c,
+  src/<em>&lt;InstName&gt;</em>.dbd and src/<em>&lt;InstName&gt;</em>.db files
+  to provide the functionality needed by your device.</li>
 </ul>
 
 <p>An instrument device support module consists of DSET entries, an array of
@@ -426,7 +428,8 @@ definition must define field OUT as</p>
          conversion.  If a convert routine finds an error it should do the following:</p>
       <ul>
         <li>Generate an error message as follows:
-          <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"&lt;format&gt;",...);</pre>
+          <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,
+                                                    "&lt;format&gt;",...);</pre>
         </li>
         <li>return -1 to signify failure</li>
       </ul>
