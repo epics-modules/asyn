@@ -34,7 +34,8 @@ typedef struct processPvt {
     void *asynOctetPvt;
 }processPvt;
     
-static int processModuleInit(const char *processModuleName,const char *portName);
+static int processModuleInit(const char *processModuleName,
+    const char *portName,int addr);
 
 
 /* asynOctet methods */
@@ -48,7 +49,7 @@ static asynOctet octet = {
     processRead,processWrite,processFlush, setEos
 };
 
-static int processModuleInit(const char *pmn,const char *dn)
+static int processModuleInit(const char *pmn,const char *dn,int addr)
 {
     processPvt *pprocessPvt;
     char *processModuleName;
@@ -66,7 +67,7 @@ static int processModuleInit(const char *pmn,const char *dn)
     strcpy(portName,dn);
     pprocessPvt = callocMustSucceed(1,sizeof(processPvt),"processModuleInit");
     pprocessPvt->pasynUser = pasynUser = pasynManager->createAsynUser(0,0);
-    status = pasynManager->connectPort(pasynUser,portName);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
     if(status!=asynSuccess) {
         printf("processModuleInit connectPort failed %s\n",
             pasynUser->errorMessage);
@@ -88,7 +89,7 @@ static int processModuleInit(const char *pmn,const char *dn)
 	poctetasynInterface->pinterface;
     pprocessPvt->asynOctetPvt = poctetasynInterface->drvPvt;
     status = pasynManager->registerProcessModule(
-        processModuleName,portName,
+        processModuleName,portName,addr,
         paasynInterface,NUM_INTERFACES);
     if(status!=asynSuccess) {
         printf("processModuleInit registerDriver failed\n");
@@ -143,15 +144,17 @@ static asynStatus setEos(void *ppvt,asynUser *pasynUser,
 }
 
 /* register processModuleInit*/
-static const iocshArg processModuleInitArg0 = { "processModuleName", iocshArgString };
+static const iocshArg processModuleInitArg0 = {
+    "processModuleName", iocshArgString };
 static const iocshArg processModuleInitArg1 = { "portName", iocshArgString };
+static const iocshArg processModuleInitArg2 = { "addr", iocshArgInt };
 static const iocshArg *processModuleInitArgs[] = {
-    &processModuleInitArg0,&processModuleInitArg1};
+    &processModuleInitArg0,&processModuleInitArg1,&processModuleInitArg2};
 static const iocshFuncDef processModuleInitFuncDef = {
-    "processModuleInit", 2, processModuleInitArgs};
+    "processModuleInit", 3, processModuleInitArgs};
 static void processModuleInitCallFunc(const iocshArgBuf *args)
 {
-    processModuleInit(args[0].sval,args[1].sval);
+    processModuleInit(args[0].sval,args[1].sval,args[2].ival);
 }
 
 static void processModuleRegister(void)

@@ -28,9 +28,15 @@
 
 #define BUFSIZE 4096
 #define NUM_INTERFACES 2
-typedef struct echoPvt {
+#define NUM_DEVICES 2
+
+typedef struct deviceBuffer {
     char buffer[BUFSIZE];
     int  nchars;
+}deviceBuffer;
+
+typedef struct echoPvt {
+    deviceBuffer buffer[NUM_DEVICES];
     double delay;
     asynInterface *paasynInterface;
 }echoPvt;
@@ -39,7 +45,7 @@ typedef struct echoPvt {
 static int echoDriverInit(const char *portName, double delay);
 
 /* asynCommon methods */
-static void report(void *ppvt,int details);
+static void report(void *ppvt,FILE *fp,int details);
 static asynStatus connect(void *ppvt,asynUser *pasynUser);
 static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
 static asynCommon asyn = {report,connect,disconnect};
@@ -86,12 +92,12 @@ static int echoDriverInit(const char *dn, double delay)
 }
 
 /* asynCommon methods */
-static void report(void *ppvt,int details)
+static void report(void *ppvt,FILE *fp,int details)
 {
     echoPvt *pechoPvt = (echoPvt *)ppvt;
 
-    printf("echoDriver. nchars = %d delay = %f\n",
-        pechoPvt->nchars,pechoPvt->delay);
+    fprintf(fp,"echoDriver. nchars = %d %d delay = %f\n",
+        pechoPvt->buffer[0].nchars,pechoPvt->buffer[1].nchars,pechoPvt->delay);
 }
 
 static asynStatus connect(void *ppvt,asynUser *pasynUser)
@@ -107,11 +113,20 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
 {
     echoPvt *pechoPvt = (echoPvt *)ppvt;
-    int nchars = pechoPvt->nchars;
+    deviceBuffer *pdeviceBuffer;
+    int addr,nchars;
 
+    addr = pasynManager->getAddr(pasynUser);
+    if(addr<0 || addr >1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "addr %d is illegal. Must be 0 or 1\n",addr);
+        return(0);
+    }
+    pdeviceBuffer = &pechoPvt->buffer[addr];
+    nchars = pdeviceBuffer->nchars;
     if(nchars>maxchars) nchars = maxchars;
-    pechoPvt->nchars -= nchars;
-    if(nchars>0) memcpy(data,pechoPvt->buffer,nchars);
+    pdeviceBuffer->nchars -= nchars;
+    if(nchars>0) memcpy(data,pdeviceBuffer->buffer,nchars);
     epicsThreadSleep(pechoPvt->delay);
     return(nchars);
 }
@@ -119,11 +134,20 @@ static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
 static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars)
 {
     echoPvt *pechoPvt = (echoPvt *)ppvt;
+    deviceBuffer *pdeviceBuffer;
+    int addr;
     int nchars = numchars;
 
+    addr = pasynManager->getAddr(pasynUser);
+    if(addr<0 || addr >1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "addr %d is illegal. Must be 0 or 1\n",addr);
+        return(0);
+    }
+    pdeviceBuffer = &pechoPvt->buffer[addr];
     if(nchars>BUFSIZE) nchars = BUFSIZE;
-    if(nchars>0) memcpy(pechoPvt->buffer,data,nchars);
-    pechoPvt->nchars = nchars;
+    if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
+    pdeviceBuffer->nchars = nchars;
     epicsThreadSleep(pechoPvt->delay);
     return(nchars);
 }
@@ -131,8 +155,17 @@ static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchar
 static asynStatus echoFlush(void *ppvt,asynUser *pasynUser)
 {
     echoPvt *pechoPvt = (echoPvt *)ppvt;
+    deviceBuffer *pdeviceBuffer;
+    int addr;
 
-    pechoPvt->nchars = 0;
+    addr = pasynManager->getAddr(pasynUser);
+    if(addr<0 || addr >1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "addr %d is illegal. Must be 0 or 1\n",addr);
+        return(0);
+    }
+    pdeviceBuffer = &pechoPvt->buffer[addr];
+    pdeviceBuffer->nchars = 0;
     return(asynSuccess);
 }
 

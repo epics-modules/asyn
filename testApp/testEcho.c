@@ -59,7 +59,8 @@ void queueCallback(asynUser *pasynUser)
             printf("%s\n",pasynUser->errorMessage);
         }
     } else {
-        sprintf(ptestPvt->buffer,"%s%d",ptestPvt->prefix,ptestPvt->itimes);
+        sprintf(ptestPvt->buffer,"%s_ntime_%d",
+            ptestPvt->prefix,ptestPvt->itimes);
         nchars = pasynOctet->write(asynOctetPvt,
             pasynUser,ptestPvt->buffer,strlen(ptestPvt->buffer));
         printf("%s send %d chars |%s|\n",
@@ -105,16 +106,19 @@ static void writeReadThread(testPvt *ptestPvt)
         }
         epicsEventMustWait(ptestPvt->done);
     }
-    status = pasynManager->disconnectPort(pasynUser);
-    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
+    status = pasynManager->disconnectDevice(pasynUser);
+    if(status!=asynSuccess) printf("%s disconnectDevice %s\n",
+        ptestPvt->prefix,pasynUser->errorMessage);
     status = pasynManager->freeAsynUser(pasynUser);
-    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
+    if(status!=asynSuccess) printf("%s freeAsynUser %s\n",
+        ptestPvt->prefix,pasynUser->errorMessage);
     epicsEventDestroy(ptestPvt->done);
+    printf("%s exiting\n",ptestPvt->prefix);
     free(ptestPvt->prefix);
     free(ptestPvt);
 }
 
-static int testEcho(const char *portName,const char *pre,
+static int testEcho(const char *portName,int addr,const char *pre,
     int ntimes,double queueTimeout)
 {
     asynUser *pasynUser;
@@ -136,13 +140,12 @@ static int testEcho(const char *portName,const char *pre,
         queueCallback,timeoutCallback);
     pasynUser->userPvt = ptestPvt;
     ptestPvt->pasynUser = pasynUser;
-    status = pasynManager->connectPort(pasynUser,portName);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
-    pasynManager->report(3);
     pasynInterface = pasynManager->findInterface(
         pasynUser,asynCommonType,1);
     if(!pasynInterface) {
@@ -152,7 +155,6 @@ static int testEcho(const char *portName,const char *pre,
     }
     pasynCommon = (asynCommon *)pasynInterface->pinterface;
     asynCommonPvt = pasynInterface->drvPvt;
-    pasynCommon->report(asynCommonPvt,3);
     pasynInterface = pasynManager->findInterface(
         pasynUser,asynOctetType,1);
     if(!pasynInterface) {
@@ -170,16 +172,17 @@ static int testEcho(const char *portName,const char *pre,
 
 /* register testEcho*/
 static const iocshArg testEchoArg0 = { "portName", iocshArgString };
-static const iocshArg testEchoArg1 = { "prefix", iocshArgString };
-static const iocshArg testEchoArg2 = { "ntimes", iocshArgInt };
-static const iocshArg testEchoArg3 = { "queueTimeout", iocshArgDouble };
+static const iocshArg testEchoArg1 = { "addr", iocshArgInt };
+static const iocshArg testEchoArg2 = { "prefix", iocshArgString };
+static const iocshArg testEchoArg3 = { "ntimes", iocshArgInt };
+static const iocshArg testEchoArg4 = { "queueTimeout", iocshArgDouble };
 static const iocshArg *testEchoArgs[] = {
-    &testEchoArg0,&testEchoArg1,&testEchoArg2,&testEchoArg3 };
+    &testEchoArg0,&testEchoArg1,&testEchoArg2,&testEchoArg3,&testEchoArg4};
 static const iocshFuncDef testEchoFuncDef = {
-    "testEcho", 4, testEchoArgs};
+    "testEcho", 5, testEchoArgs};
 static void testEchoCallFunc(const iocshArgBuf *args)
 {
-    testEcho(args[0].sval,args[1].sval,args[2].ival,args[3].dval);
+    testEcho(args[0].sval,args[1].ival,args[2].sval,args[3].ival,args[4].dval);
 }
 
 static void testEchoRegister(void)
