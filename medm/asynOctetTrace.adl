@@ -117,7 +117,7 @@ composite {
 			"basic attribute" {
 				clr=14
 			}
-			textix="$(REC)"
+			textix="$(P)$(R)"
 			align="horiz. centered"
 		}
 	}
@@ -259,7 +259,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TB0"
+				chan="$(P)$(R).TB0"
 				clr=14
 				bclr=51
 			}
@@ -273,7 +273,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TB3"
+				chan="$(P)$(R).TB3"
 				clr=14
 				bclr=51
 			}
@@ -287,7 +287,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TB4"
+				chan="$(P)$(R).TB4"
 				clr=14
 				bclr=51
 			}
@@ -301,7 +301,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TB2"
+				chan="$(P)$(R).TB2"
 				clr=14
 				bclr=51
 			}
@@ -315,7 +315,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TB1"
+				chan="$(P)$(R).TB1"
 				clr=14
 				bclr=51
 			}
@@ -340,7 +340,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TIB0"
+				chan="$(P)$(R).TIB0"
 				clr=14
 				bclr=51
 			}
@@ -354,7 +354,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TIB1"
+				chan="$(P)$(R).TIB1"
 				clr=14
 				bclr=51
 			}
@@ -368,7 +368,7 @@ composite {
 				height=18
 			}
 			control {
-				chan="$(REC).TIB2"
+				chan="$(P)$(R).TIB2"
 				clr=14
 				bclr=51
 			}

@@ -116,7 +116,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).ADDR"
+				chan="$(P)$(R).ADDR"
 				clr=14
 				bclr=51
 			}
@@ -167,7 +167,7 @@ composite {
 						fill="outline"
 					}
 					"dynamic attribute" {
-						chan="$(REC).SEVR"
+						chan="$(P)$(R).SEVR"
 					}
 				}
 				"text update" {
@@ -178,7 +178,7 @@ composite {
 						height=20
 					}
 					monitor {
-						chan="$(REC).SPR"
+						chan="$(P)$(R).SPR"
 						clr=14
 						bclr=4
 					}
@@ -219,7 +219,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).UCMD"
+				chan="$(P)$(R).UCMD"
 				clr=14
 				bclr=51
 			}
@@ -255,7 +255,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).ACMD"
+				chan="$(P)$(R).ACMD"
 				clr=14
 				bclr=51
 			}
@@ -292,7 +292,7 @@ composite {
 			"basic attribute" {
 				clr=14
 			}
-			textix="$(REC)"
+			textix="$(P)$(R)"
 			align="horiz. centered"
 		}
 	}

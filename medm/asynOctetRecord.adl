@@ -116,7 +116,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).PORT"
+				chan="$(P)$(R).PORT"
 				clr=14
 				bclr=51
 			}
@@ -146,7 +146,7 @@ menu {
 		height=20
 	}
 	control {
-		chan="$(REC).TMOD"
+		chan="$(P)$(R).TMOD"
 		clr=14
 		bclr=51
 	}
@@ -181,7 +181,7 @@ composite {
 			"basic attribute" {
 				clr=14
 			}
-			textix="$(REC)"
+			textix="$(P)$(R)"
 			align="horiz. centered"
 		}
 	}
@@ -212,7 +212,7 @@ composite {
 						height=20
 					}
 					control {
-						chan="$(REC).AOUT"
+						chan="$(P)$(R).AOUT"
 						clr=14
 						bclr=51
 					}
@@ -251,7 +251,7 @@ composite {
 						height=20
 					}
 					control {
-						chan="$(REC).OFMT"
+						chan="$(P)$(R).OFMT"
 						clr=14
 						bclr=51
 					}
@@ -300,7 +300,7 @@ composite {
 						height=20
 					}
 					control {
-						chan="$(REC).OEOS"
+						chan="$(P)$(R).OEOS"
 						clr=14
 						bclr=51
 					}
@@ -329,7 +329,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).IEOS"
+				chan="$(P)$(R).IEOS"
 				clr=14
 				bclr=51
 			}
@@ -368,7 +368,7 @@ composite {
 				height=18
 			}
 			monitor {
-				chan="$(REC).AINP"
+				chan="$(P)$(R).AINP"
 				clr=14
 				bclr=4
 			}
@@ -395,7 +395,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).IFMT"
+				chan="$(P)$(R).IFMT"
 				clr=14
 				bclr=51
 			}
@@ -460,7 +460,7 @@ composite {
 				fill="outline"
 			}
 			"dynamic attribute" {
-				chan="$(REC).SEVR"
+				chan="$(P)$(R).SEVR"
 			}
 		}
 		text {
@@ -483,7 +483,7 @@ composite {
 				height=20
 			}
 			monitor {
-				chan="$(REC).NORD"
+				chan="$(P)$(R).NORD"
 				clr=14
 				bclr=4
 			}
@@ -498,7 +498,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).NRRD"
+				chan="$(P)$(R).NRRD"
 				clr=14
 				bclr=51
 			}
@@ -526,7 +526,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if zero"
-						chan="$(REC).SEVR"
+						chan="$(P)$(R).SEVR"
 					}
 					textix="OK"
 				}
@@ -542,7 +542,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if not zero"
-						chan="$(REC).SEVR"
+						chan="$(P)$(R).SEVR"
 					}
 					textix="Timeout"
 				}
@@ -558,7 +558,7 @@ composite {
 						fill="outline"
 					}
 					"dynamic attribute" {
-						chan="$(REC).SEVR"
+						chan="$(P)$(R).SEVR"
 					}
 				}
 				text {
@@ -581,7 +581,7 @@ composite {
 						height=20
 					}
 					control {
-						chan="$(REC).TMOT"
+						chan="$(P)$(R).TMOT"
 						clr=14
 						bclr=51
 					}
@@ -610,7 +610,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).PROC"
+				chan="$(P)$(R).PROC"
 				clr=14
 				bclr=51
 			}
@@ -640,22 +640,22 @@ composite {
 			display[0] {
 				label="Serial port parameters"
 				name="asynSerialPortSetup.adl"
-				args="REC=$(REC)"
+				args="P=$(P),R=$(R)"
 			}
 			display[1] {
 				label="GPIB parameters"
 				name="asynGPIBSetup.adl"
-				args="REC=$(REC)"
+				args="P=$(P),R=$(R)"
 			}
 			display[2] {
 				label="Socket parameters"
 				name="asynSocketSetup.adl"
-				args="REC=$(REC)"
+				args="P=$(P),R=$(R)"
 			}
 			display[3] {
 				label="Trace control"
 				name="asynOctetTrace.adl"
-				args="REC=$(REC)"
+				args="P=$(P),R=$(R)"
 			}
 			clr=14
 			bclr=51
@@ -668,7 +668,7 @@ composite {
 				height=20
 			}
 			control {
-				chan="$(REC).SCAN"
+				chan="$(P)$(R).SCAN"
 				clr=14
 				bclr=51
 			}
@@ -708,7 +708,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(REC).ADDR"
+		chan="$(P)$(R).ADDR"
 		clr=14
 		bclr=51
 	}
