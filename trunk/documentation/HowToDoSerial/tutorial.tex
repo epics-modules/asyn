@@ -533,13 +533,17 @@ drvTermiosTtyGpibConfigure and asynSetPortOption commands is
 the link identifier and must match the \verb@L@ value in the EPICS
 database record INP and OUT fields.
 
-\item Add lines to control the debugging level of the serial line 'GPIB' driver.
+\item (Optional) Add lines to control the debugging level of the serial line 'GPIB' driver.
 The following turns on full tracing of control flow and every I/O operation
 which is useful during initial debugging.
 \begin{verbatim}
 asynSetTraceMask("L0",0,0xff)
 asynSetTraceIOMask("L0",0,0x2)
 \end{verbatim}
+A better way to control the amount and type of diagnostic output is through
+the use of the
+\htmladdnormallink{asynTrace}{../../asynDriver.html#DiagnosticAids}
+facility.
 
 \end{enumerate}
 
@@ -575,7 +579,7 @@ asynSetTraceIOMask("L0",0,0x2)
 iocInit()
 ############################################################################
 ###  EPICS IOC CORE built on Jan 29 2004
-###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-02 20:30:01 $$
+###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-02-03 21:43:40 $$
 ############################################################################
 Starting iocInit
 iocInit: All initialization complete
