@@ -77,9 +77,12 @@ static long convertAi(aiRecord *pai, int pass);
 static long convertAo(aoRecord *pao, int pass);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
-static void interruptCallbackInput(void *drvPvt, epicsInt32 value);
-static void interruptCallbackOutput(void *drvPvt, epicsInt32 value);
-static void interruptCallbackAverage(void *drvPvt, epicsInt32 value);
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value);
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value);
+static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value);
 
 static long initAi(aiRecord *pai);
 static long initAiAverage(aiRecord *pai);
@@ -313,7 +316,8 @@ static void processCallbackOutput(asynUser *pasynUser)
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
-static void interruptCallbackInput(void *drvPvt, epicsInt32 value)
+static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
+                epicsInt32 value)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
@@ -327,7 +331,8 @@ static void interruptCallbackInput(void *drvPvt, epicsInt32 value)
     scanIoRequest(pPvt->ioScanPvt);
 }
 
-static void interruptCallbackOutput(void *drvPvt, epicsInt32 value)
+static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
@@ -341,7 +346,8 @@ static void interruptCallbackOutput(void *drvPvt, epicsInt32 value)
     epicsMutexUnlock(pPvt->mutexId);
     scanOnce(pr);
 }
-static void interruptCallbackAverage(void *drvPvt, epicsInt32 value)
+static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
+                epicsInt32 value)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     aiRecord *pai = (aiRecord *)pPvt->pr;

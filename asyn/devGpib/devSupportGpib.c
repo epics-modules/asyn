@@ -157,7 +157,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure);
 /*Callback routines*/
 static void queueCallback(asynUser *pasynUser);
 static void queueTimeoutCallback(asynUser *pasynUser);
-static void srqHandlerGpib(void *parm, epicsInt32 statusByte);
+static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte);
 static void srqWaitTimeoutCallback(void *parm);
 
 /*Utility routines*/
@@ -1123,7 +1123,7 @@ static void queueTimeoutCallback(asynUser *pasynUser)
     work(pgpibDpvt,-1);
 }
 
-static void srqHandlerGpib(void *parm, epicsInt32 statusByte)
+static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte)
 {
     deviceInstance *pdeviceInstance = (deviceInstance *)parm;
     portInstance *pportInstance = pdeviceInstance->pportInstance;
@@ -1138,7 +1138,7 @@ static void srqHandlerGpib(void *parm, epicsInt32 statusByte)
     } else if(pdeviceInstance->unsollicitedHandler) {
         epicsMutexUnlock(pportInstance->lock);
         pdeviceInstance->unsollicitedHandler(
-            pdeviceInstance->unsollicitedHandlerPvt,statusByte);
+            pdeviceInstance->unsollicitedHandlerPvt,pasynUser,statusByte);
         return;
     }
     epicsMutexUnlock(pportInstance->lock);

@@ -266,8 +266,9 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
             pinterrupt = pnode->drvPvt;
-            if(pinterrupt->reason==ASYN_REASON_SIGNAL)
-                pinterrupt->callback(pinterrupt->userPvt,statusByte);
+            if(pinterrupt->pasynUser->reason==ASYN_REASON_SIGNAL)
+                pinterrupt->callback(pinterrupt->userPvt,pinterrupt->pasynUser,
+                                     statusByte);
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(pgpibPvt->asynInt32Pvt);
