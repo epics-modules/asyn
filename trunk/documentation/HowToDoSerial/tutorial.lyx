@@ -385,8 +385,8 @@ CROSS_COMPILER_TARGET_ARCHS =
 Create the device support file
 \layout Standard
 
-The contents of the device support file provide all the details ofthe communicat
-ion between the device and EPICS.
+The contents of the device support file provide all the details of the communica
+tion between the device and EPICS.
  The makeSupport.pl command created a skeleton device support file in 
 \family typewriter 
 AB300Sup/devAB300.c
@@ -486,7 +486,7 @@ ahref{../devGpib.html}{GPIB documentation}
 Command array index 0 -- Device Reset
 \layout LyX-Code
 
-{&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "
+{&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "
 \backslash 
 377
 \backslash 
@@ -507,7 +507,7 @@ type A WRITE operation is to be performed.
  
 \layout Description
 
-pri This operation should be placed on the high-priority queue of I/O requests.
+pri This operation will be placed on the low-priority queue of I/O requests.
  
 \layout Description
 
@@ -582,7 +582,7 @@ type A WRITE operation is to be performed.
  
 \layout Description
 
-pri This operation should be placed on the high-priority queue of I/O requests.
+pri This operation will be placed on the low-priority queue of I/O requests.
  
 \layout Description
 
@@ -647,7 +647,7 @@ type A READ operation is to be performed.
  
 \layout Description
 
-pri This operation should be placed on the high-priority queue of I/O requests.
+pri This operation will be placed on the low-priority queue of I/O requests.
  
 \layout Description
 
@@ -1313,12 +1313,13 @@ In all of the above examples the first argument of the configure and set
 \family typewriter 
 L
 \family default 
- value in the EPICS database record INP and OUT fields. The second argument
- of the configure command identifies the port to which the connection is
- to be made. The third argument sets the priority of the worker thread which
- performs the I/O operations.
-  A value of zero directs the command to choose a reasonable default value. The
- fourth argument is zero to direct the device support layer to automatically
+ value in the EPICS database record INP and OUT fields.
+ The second argument of the configure command identifies the port to which
+ the connection is to be made.
+ The third argument sets the priority of the worker thread which performs
+ the I/O operations.
+  A value of zero directs the command to choose a reasonable default value.
+ The fourth argument is zero to direct the device support layer to automatically
  connect to the serial port on startup and whenever the serial port becomes
  disconnected.
  The final argument is zero to direct the device support layer to use standard
@@ -1417,7 +1418,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-10 20:54:57 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-15 15:08:02 $$
 \newline 
 ############################################################################
 \newline 
