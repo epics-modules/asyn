@@ -98,14 +98,14 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    status = pasynManager->getInterruptPvt(portName, asynInt32ArrayType,
+    status = pasynManager->getInterruptPvt(pasynUser, asynInt32ArrayType,
                                            &pinterruptPvt);
     if(status!=asynSuccess) return status;
     pasynInt32ArrayInterrupt = pasynManager->memMalloc(
                                              sizeof(asynInt32ArrayInterrupt));
     pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
     if(status!=asynSuccess) return status;
-    pasynInt32ArrayInterrupt = (asynInt32ArrayInterrupt *)pinterruptNode->drvPvt;
+    pinterruptNode->drvPvt = pasynInt32ArrayInterrupt;
     pasynInt32ArrayInterrupt->addr = addr;
     pasynInt32ArrayInterrupt->reason = pasynUser->reason;
     pasynInt32ArrayInterrupt->drvUser = pasynUser->drvUser;

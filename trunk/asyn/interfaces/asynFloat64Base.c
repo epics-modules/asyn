@@ -13,6 +13,7 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
+#include <epicsStdio.h>
 
 #define epicsExportSharedSymbols
 
@@ -95,13 +96,13 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    status = pasynManager->getInterruptPvt(portName, asynFloat64Type,
+    status = pasynManager->getInterruptPvt(pasynUser, asynFloat64Type,
                                            &pinterruptPvt);
     if(status!=asynSuccess) return status;
     pasynFloat64Interrupt = pasynManager->memMalloc(sizeof(asynFloat64Interrupt));
     pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
     if(status!=asynSuccess) return status;
-    pasynFloat64Interrupt = (asynFloat64Interrupt *)pinterruptNode->drvPvt;
+    pinterruptNode->drvPvt = pasynFloat64Interrupt;
     pasynFloat64Interrupt->addr = addr;
     pasynFloat64Interrupt->reason = pasynUser->reason;
     pasynFloat64Interrupt->drvUser = pasynUser->drvUser;
