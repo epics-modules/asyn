@@ -1260,7 +1260,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     if(respond2Writes>=0 && rspLen>0) {
         int nrsp;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
-        if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
+        if(respond2Writes>0) epicsThreadSleep(respond2Writes/1000.0);
         if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
         status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp);
         if (status!=asynSuccess) {
