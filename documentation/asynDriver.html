@@ -37,7 +37,7 @@ license</a> described at the end of this document.</p>
 <a href="#asynDriver">asynDriver Structures and Interfaces</a> <br>
 <a href="#asynSyncIO">Synchronous Interface to asynDriver</a> <br>
 <a href="#theoryOfOperation">Theory of Operation</a> <br>
-<a href="#asynRecordDeviceSupport">Generic Record/Device Support</a> <br>
+<a href="#asynRecord">asynRecord: Generic Record Support</a> <br>
 <a href="#Example">Example</a> <br>
 <a href="#Test">Test Example</a> <br>
 <a href="#asynGpib">asynGpib</a> <br>
@@ -108,10 +108,8 @@ based devices.</p>
 <ul>
   <li>asynManager, i.e. the software layer between device support and
   drivers.</li>
-  <li>asynOctetRecord: EPICS record support that provides a generic interface
-    to asynDriver.</li>
-  <li>devAsyn and devAsynGeneric: EPICS device support for connection
-    management and for the Trace Facility.</li>
+  <li>asynRecord: EPICS record support that provides a generic interface to
+    asynManager, asynCommon, asynOctet, and asynGpib.</li>
   <li>devGpib: EPICS device support that replaces the device support layer of
     the Winans/Franksen gpibCore support.</li>
   <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
@@ -461,8 +459,8 @@ pasynUser-&gt;errorMessage.</p>
     </tr>
     <tr>
       <td>asynQueuePriorityConnect</td>
-      <td>Queue a connect or disconnect request. This priority must be
-        used only for connect/disconnect requests.</td>
+      <td>Queue a connect or disconnect request. This priority must be used
+        only for connect/disconnect requests.</td>
     </tr>
   </tbody>
 </table>
@@ -1239,71 +1237,33 @@ exceptions may occur.</p>
 <hr>
 
 <center>
-<h2><a name="asynRecordDeviceSupport"></a>Generic EPICS Record and Device
-Support</h2>
+<h2><a name="asynRecord"></a>asynRecord: Generic EPICS Record Support</h2>
 </center>
 
-<p>A special record type asynOctetRecord is provided. It is described in <a
-href="asynOctetRecord.html">asynOctetRecord</a></p>
+<p>A special record type asynRecord is provided. Details are described in <a
+href="asynRecord.html">asynRecord</a>. This section provides a brief
+description of how to use it.</p>
 
-<p>Two EPICS device support modules are provided:</p>
-<ul>
-  <li>devAsyn
-    <p>Provides support for enable, autoConnect, and connect. The generic
-    database is instantiated for a specific port or device. This is intended
-    for use by a device instance, i.e. a dbLoadDatabase command must be
-    provided for each device instance.</p>
-  </li>
-  <li>devAsynGeneric
-    <p>Provides support for enable, autoConnect, connect, and trace. The
-    generic database is instantiated once for an ioc. The user can
-    dynamically specify the port,addr of the port or device.</p>
-  </li>
-</ul>
+<p></p>
 
-<p>The following components are provided:</p>
-<ul>
-  <li>devAsyn.dbd
-    <p>This should be included in the application xxxInclude.dbd file. This
-    includes definitions for asynOctetRecord, devAsyn, and devAsynGeneric.</p>
-  </li>
-  <li>asynOctetRecord.db
-    <p>A template database file for asynOctetRecord support. See the
-    asynOctetRecord documentation for details.</p>
-  </li>
-  <li>asyn.db
-    <p>A template database file for the devAsyn support. The st.cmd file has
-    statements like:</p>
-    <pre>dbLoadRecords("../../db/asyn.db","ioc=asynTest,port=A,addr=0")</pre>
-    where ioc specifies a name that is unique to channel access network, port
-    specifies the port name, and addr specifies the address. The above
-    dbLoadRecords generates the records:
-    <pre>    asynTest:PA:A0:AutoConnect
-    asynTest:PA:A0:Connect
-    asynTest:PA:A0:Enable
-       </pre>
-    These are all binary records. A menu choice controller can be created for
-    your favorite EPICS display manager.</li>
-  <li>asynGeneric.db
-    <p>This generates a database that is used with asynGeneric.adl. The
-    st.cmd file loads a single instance of this database as follows:</p>
-    <pre>dbLoadRecords("../../db/asynGeneric.db","ioc=asynTest")</pre>
-    where ioc is chosen so that the set of records are unique within the
-    Channel Access network.The medm display for this database can be started
-    via the command:
-    <pre>medm -macro "ioc=asynTest" asynGeneric.adl</pre>
-  </li>
-  <li>asynGeneric.adl
-    <p>The following is the medm display.</p>
-    <p><img src="./asynGeneric.gif" alt="asynGeneric" width="375"
-    height="329"></p>
-  </li>
-  <li>asynOctetRecord.adl
-    <p>A generic display for asynOctetRecord. See the asynOctetRecord for
-    details.</p>
-  </li>
-</ul>
-<hr>
+<p>Each IOC can load one or more instances of asynRecord. An example is:</p>
+<pre>cd ${ASYN}
+dbLoadRecords("db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=15,IMAX=0,OMAX=0")</pre>
+
+<p>The example creates a record with name "asynTest" that will connect to
+port "L0" and addr 15. After the ioc is started, it is possible to change
+PORT, ADDR, IMAX, and OMAX. Thus a single record can be used to access all
+asyn devices connected to the IOC. Multiple records are only needed if one or
+more devices need a dedicated record.</p>
+
+<p>An medm display is available for accessing an asynRecord. It is started as
+follows:</p>
+<pre>cd &lt;asyn&gt;/medm
+medm -x -macro "P=asyn,R=Test" asynRecordDebug.adl</pre>
+
+<p>The following medm display appears.</p>
+
+<p><img src="./asynRecordDebug.gif" alt="asynRecordDebug"></p>
 
 <center>
 <h2><a name="Example"></a>Example</h2>
@@ -1671,8 +1631,8 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>addr - This argument is ignored since serial devices are configured with
-  multiDevce=0.</li>
+  <li>addr - This argument is ignored since serial devices are configured
+    with multiDevce=0.</li>
 </ul>
 
 <p>The following table summarizes the generic serial driver asynSetOption
@@ -1844,8 +1804,9 @@ for the specified port and address. <code>asynSetOption</code> calls
     <code>stdout</code></li>
   <li>level - The report level.</li>
   <li>portName - An ascii string specifying the portName of the driver.</li>
-  <li>addr - In integer specifying the address of the device. For multiDevice ports a value of -1 means the port itself. For ports that support a single
-device addr is ignored.</li>
+  <li>addr - In integer specifying the address of the device. For multiDevice
+    ports a value of -1 means the port itself. For ports that support a
+    single device addr is ignored.</li>
   <li>mask - The mask value to set. See the mask bit definitions in
     asynDriver.h</li>
   <li>key - The key for the option desired.</li>
