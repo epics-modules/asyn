@@ -1088,10 +1088,10 @@ configure/RELEASE
  For example these might be:
 \layout LyX-Code
 
-AB300=/home/EPICS/modules/instrument/ab300
+AB300=/home/EPICS/modules/instrument/ab300/1-2
 \layout LyX-Code
 
-ASYN=/home/EPICS/modules/soft/asyn
+ASYN=/home/EPICS/modules/soft/asyn/3-2
 \layout LyX-Code
 
 EPICS_BASE=/home/EPICS/base
@@ -1408,7 +1408,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 18:54:54 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 19:29:29 $$
 \newline 
 ############################################################################
 \newline 

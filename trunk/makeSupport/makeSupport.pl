@@ -5,7 +5,7 @@
 # Author: Andrew Johnson <anj@aps.anl.gov>
 # Date: 17 May 2004
 #
-# $Id: makeSupport.pl,v 1.3 2004-05-24 15:40:36 anj Exp $
+# $Id: makeSupport.pl,v 1.4 2004-06-22 19:29:29 norume Exp $
 #
 
 use strict;
@@ -86,6 +86,7 @@ unless (-d "$templates/$type") {
 # Check app name
 our $name = shift or die "You didn't name your application!\n";
 print "\$name = $name\n" if $opt_d;
+our $lowername = lc($name);
 
 # Find EPICS_BASE, and SNCSEQ if set;
 our ($base, $sncseq);
@@ -116,6 +117,7 @@ our %namesubs = (
 # Substitutions used in file text
 our %textsubs = (
     NAME => $name,
+    LOWERNAME => $lowername,
     ASYN => $asyn,
     EPICSBASE => $base,
     SNCSEQ => $sncseq,

@@ -15,6 +15,7 @@ TEMPLATES += devGpib/_NAME_Sup/Makefile
 TEMPLATES += devGpib/_NAME_Sup/dev_NAME_.c
 TEMPLATES += devGpib/_NAME_Sup/dev_NAME_.db
 TEMPLATES += devGpib/_NAME_Sup/dev_NAME_.dbd
+TEMPLATES += devGpib/documentation/dev_NAME_.html
 
 TEMPLATES += app/_NAME_App/Db/Makefile
 TEMPLATES += app/_NAME_App/Db/_NAME_.db
