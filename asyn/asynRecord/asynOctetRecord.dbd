@@ -109,7 +109,7 @@ recordtype(asynOctet) {
     field(OEOS,DBF_STRING) {
         prompt("Output delimiter")
         promptgroup(GUI_DISPLAY)
-        size(10)
+        size(40)
         initial("\r")
     }
     field(BOUT,DBF_CHAR) {
@@ -155,7 +155,7 @@ recordtype(asynOctet) {
         prompt("Input Delimiter")
         promptgroup(GUI_DISPLAY)
         initial("\r")
-        size(10)
+        size(40)
     }
     field(BINP,DBF_CHAR) {
         prompt("Input binary data")
