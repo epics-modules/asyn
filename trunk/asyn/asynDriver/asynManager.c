@@ -1547,7 +1547,7 @@ static asynStatus interposeInterface(const char *portName, int addr,
             pasynInterface->interfaceType,FALSE);
         if(pinterfaceNodePort) pPrev = pinterfaceNodePort->pasynInterface;
     }
-    *ppPrev = pPrev;
+    if(ppPrev) *ppPrev = pPrev;
     pinterfaceNode->pasynInterface = pasynInterface;
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
@@ -1644,6 +1644,14 @@ static asynStatus registerInterruptSource(const char *portName,
     while(pinterfaceNode) {
         if(pinterfaceNode->pasynInterface==pasynInterface) break;
         pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+    }
+    if(!pinterfaceNode) {
+        pinterfaceNode = (interfaceNode *)ellFirst(
+            &pport->dpc.interposeInterfaceList);
+        while(pinterfaceNode) {
+             if(pinterfaceNode->pasynInterface==pasynInterface) break;
+             pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+        }
     }
     if(!pinterfaceNode) {
        printf("%s asynManager:registerInterruptSource interface not registered\n",
