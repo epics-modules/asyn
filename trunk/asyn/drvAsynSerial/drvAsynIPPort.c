@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.12 2004-12-02 05:38:38 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.13 2005-02-14 20:25:42 mrk Exp $
  */
 
 #include <string.h>
@@ -55,7 +55,7 @@
  * asyn link.  There is one for each serial line.
  */
 typedef struct {
-    asynUser          *pasynUser;
+    asynUser          *pasynUser;        /*Needed for timeoutHandler*/
     char              *serialDeviceName;
     char              *portName;
     int                socketType;
@@ -145,31 +145,11 @@ static int setNonBlock(int fd, int nonBlockFlag)
 }
 
 /*
- * Report link parameters
- */
-static void
-drvAsynIPPortReport(void *drvPvt, FILE *fp, int details)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-
-    assert(tty);
-    fprintf(fp, "Port %s: %sonnected\n",
-        tty->serialDeviceName,
-        tty->fd >= 0 ? "C" : "Disc");
-    if (details >= 1) {
-        fprintf(fp, "                    fd: %d\n", tty->fd);
-        fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
-        fprintf(fp, "       Characters read: %lu\n", tty->nRead);
-    }
-}
-
-/*
  * Close a connection
  */
 static void
-closeConnection(ttyController_t *tty)
+closeConnection(asynUser *pasynUser,ttyController_t *tty)
 {
-    asynUser *pasynUser = tty->pasynUser;
     if (tty->fd >= 0) {
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
                            "Close %s connection.\n", tty->serialDeviceName);
@@ -192,11 +172,31 @@ timeoutHandler(void *p)
     tty->timeoutFlag = 1;
 }
 
+/*Beginning of asynCommon methods*/
+/*
+ * Report link parameters
+ */
+static void
+report(void *drvPvt, FILE *fp, int details)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    assert(tty);
+    fprintf(fp, "Port %s: %sonnected\n",
+        tty->serialDeviceName,
+        tty->fd >= 0 ? "C" : "Disc");
+    if (details >= 1) {
+        fprintf(fp, "                    fd: %d\n", tty->fd);
+        fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
+        fprintf(fp, "       Characters read: %lu\n", tty->nRead);
+    }
+}
+
 /*
  * Create a link
  */
 static asynStatus
-drvAsynIPPortConnect(void *drvPvt, asynUser *pasynUser)
+connectIt(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int i;
@@ -266,7 +266,7 @@ drvAsynIPPortConnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvAsynIPPortDisconnect(void *drvPvt, asynUser *pasynUser)
+disconnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -274,14 +274,15 @@ drvAsynIPPortDisconnect(void *drvPvt, asynUser *pasynUser)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                                     "%s disconnect\n", tty->serialDeviceName);
     epicsTimerCancel(tty->timer);
-    closeConnection(tty);
+    closeConnection(pasynUser,tty);
     return asynSuccess;
 }
 
+/*Beginning of asynOctet methods*/
 /*
  * Write to the TCP port
  */
-static asynStatus drvAsynIPPortWrite(void *drvPvt, asynUser *pasynUser,
+static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -364,7 +365,7 @@ static asynStatus drvAsynIPPortWrite(void *drvPvt, asynUser *pasynUser,
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s write error: %s",
                                         tty->serialDeviceName, strerror(SOCKERRNO));
-            closeConnection(tty);
+            closeConnection(pasynUser,tty);
             status = asynError;
             break;
         }
@@ -378,7 +379,7 @@ static asynStatus drvAsynIPPortWrite(void *drvPvt, asynUser *pasynUser,
 /*
  * Read from the TCP port
  */
-static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
+static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -452,7 +453,7 @@ static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s read error: %s",
                                         tty->serialDeviceName, strerror(SOCKERRNO));
-                closeConnection(tty);
+                closeConnection(pasynUser,tty);
                 status = asynError;
                 break;
             }
@@ -479,7 +480,7 @@ static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
  * Flush pending input
  */
 static asynStatus
-drvAsynIPPortFlush(void *drvPvt,asynUser *pasynUser)
+flushIt(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     char cbuf[512];
@@ -503,41 +504,6 @@ drvAsynIPPortFlush(void *drvPvt,asynUser *pasynUser)
 }
 
 /*
- * Set the end-of-string message
- */
-static asynStatus
-drvAsynIPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-
-    assert(tty);
-    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
-            "%s set EOS %d: ", tty->serialDeviceName, eoslen);
-    if (eoslen > 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s: setEos not supported", tty->serialDeviceName);
-        return asynError;
-    }
-    return asynSuccess;
-}
-
-/*
- * Get the end-of-string message
- */
-static asynStatus
-drvAsynIPPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
-    int eossize, int *eoslen)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-
-    assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-            "%s get EOS\n", tty->serialDeviceName);
-    *eoslen = 0;
-    return asynSuccess;
-}
-
-/*
  * Clean up a ttyController
  */
 static void
@@ -556,24 +522,22 @@ ttyCleanup(ttyController_t *tty)
  * asynCommon methods
  */
 static const struct asynCommon drvAsynIPPortAsynCommon = {
-    drvAsynIPPortReport,
-    drvAsynIPPortConnect,
-    drvAsynIPPortDisconnect
+    report,
+    connectIt,
+    disconnect
 };
 
 /*
  * asynOctet methods
  */
 static struct asynOctet drvAsynIPPortAsynOctet = {
-    0,
-    drvAsynIPPortWrite,
-    0,
-    drvAsynIPPortRead,
-    drvAsynIPPortFlush,
-    0,0,
-    drvAsynIPPortSetEos,
-    drvAsynIPPortGetEos,
-    0,0
+    0,         
+    writeRaw,
+    0,        
+    readRaw,
+    flushIt,
+    0,0,     
+    0,0,0,0 
 };
 
 /*
