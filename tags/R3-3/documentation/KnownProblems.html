@@ -1,0 +1,86 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+  <title>asynDriver: Asynchronous Driver Support - Known Problems</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+</head>
+
+<body text="#000000" bgcolor="#FFFFFF" link="#0000EE" vlink="#551A8B"
+alink="#FF0000">
+
+<center>
+<h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
+
+<h1>June 22 2004</h1>
+</center>
+<hr>
+
+<center>
+<h2>Release 3-2</h2>
+</center>
+
+<h3>Mac OS X (Darwin)</h3>
+<p>The RPC library on Mac OS X 10.3.3 does not handle device timeouts properly and may cause core dumps.  A bug report has been filed with Apple.  A workaround
+is to use the GNU glibc RPC/XDR routines.</p>
+
+<h3>vxWorks</h3>
+<p>Attempting to change the trace file to "stdout" does not work becuase
+vxWorks has per-task standard output streams.</p>
+
+
+
+
+<center>
+<h2>Release 3-1</h2>
+</center>
+
+<h3>EPICS Base R3.14.6</h3>
+<p>When building with EPICS Base R3.14.6 or greater, comment out the
+ epicsInterruptibleSyscall.h and epicsInterruptibleSyscall.c lines
+in asyn/Makefile:
+<pre>
+@@ -19,10 +19,10 @@
+ SRC_DIRS += $(ASYN)/asynDriver
+ INC += asynDriver.h
+ INC += epicsInterruptibleSyscall.h
+-INC += epicsString1.h
++#INC += epicsString1.h
+ asyn_SRCS += asynManager.c
+ asyn_SRCS += epicsInterruptibleSyscall.c
+-asyn_SRCS += epicsString1.c
++#asyn_SRCS += epicsString1.c
+ 
+ SRC_DIRS += $(ASYN)/asynGpib
+ INC += asynGpibDriver.h
+</pre>
+
+
+
+<h3>Mac OS X (Darwin)</h3>
+
+<p>The RPC library on Mac OSD 10.3.3 does not handle device timeouts properly and may cause core dumps.  A bug report has been filed with Apple.  A workaround
+is to use the GNU glibc RPC/XDR routines.</p>
+
+
+<h3>Interrupt Callback</h3>
+<p>If a user callback calls a low level driver with an infinite or very long
+timeout, there is no way to make the call terminate. Is there a generic
+way to abort the call?</p>
+
+<h3>Greensprings IP488</h3>
+<p>Does not support GPIB specific functions.</p>
+<h3>NI1014 VME Gpib driver</h3>
+
+<p>This needs to be implemented for asynDriver.</p>
+
+<h3>Generic EPICS device support</h3>
+
+<p>Think about  creating generic support for connecting to EPICS records.</p>
+
+<h3>Network Protocols</h3>
+
+<p>Consider generic support for various network protocals: Modbus, etherIP,
+etc.</p>
+</body>
+</html>
