@@ -240,7 +240,17 @@ recordtype(asyn) {
         menu(asynFMT)
     }
 
+# Abort queueRequest
+    field(AQR,DBF_UCHAR) {
+        prompt("Abort queueRequest")
+        special(SPC_MOD)
+    }
+
 # Serial control fields
+    field(GOPT,DBF_UCHAR) {
+        prompt("Get Options")
+        special(SPC_MOD)
+    }
     field(BAUD,DBF_MENU) {
         prompt("Baud rate")
         promptgroup(GUI_COMMON)
