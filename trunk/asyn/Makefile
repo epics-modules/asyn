@@ -22,6 +22,7 @@ DBD += asyn.dbd
 asyn_SRCS += asynManager.c
 asyn_SRCS += asynShellCommands.c
 INC += epicsInterruptibleSyscall.h
+INC += asynShellCommands.h
 asyn_SRCS += epicsInterruptibleSyscall.c
 
 SRC_DIRS += $(ASYN)/devAsyn
