@@ -1,0 +1,11 @@
+#support for testing 
+device(ai,GPIB_IO,devAiTestGpib,"GPIB Test")
+device(ao,GPIB_IO,devAoTestGpib,"GPIB Test")
+device(bi,GPIB_IO,devBiTestGpib,"GPIB Test")
+device(bo,GPIB_IO,devBoTestGpib,"GPIB Test")
+device(longin,GPIB_IO,devLiTestGpib,"GPIB Test")
+device(longout,GPIB_IO,devLoTestGpib,"GPIB Test")
+device(mbbi,GPIB_IO,devMbbiTestGpib,"GPIB Test")
+device(mbbo,GPIB_IO,devMbboTestGpib,"GPIB Test")
+device(stringin,GPIB_IO,devSiTestGpib,"GPIB Test")
+device(stringout,GPIB_IO,devSoTestGpib,"GPIB Test")
