@@ -279,14 +279,14 @@ can be used by other code, e.g. a sequence program.</p>
   </li>
   <li><span style="font-weight: bold">asynOctet</span>
     <p>asynOctet is a set of methods implemented by any driver that accepts
-    octet messages (messages consisting of 8 bit bytes) and returns octet
+    octet messages (messages consisting of 8-bit bytes) and returns octet
     responses. This interface will be sufficient for most device specific
     code. For example the code for streams protocol files needs only this
-    interface. The term octet is used instead of ascii because the only
-    requirement is messages consist of 8 bit bytes. The methods are:</p>
+    interface. The term octet is used instead of ASCII because the only
+    requirement is messages consist of 8-bit bytes. The methods are:</p>
     <ul>
-      <li>read - read a message.</li>
-      <li>write - write a message.</li>
+      <li>read - read a message.  The routine should return the number of 8-bit bytes read from the device or -1 to indicate that some sort of error occurred.</li>
+      <li>write - write a message.  The routine should return the number of 8-bit bytes written ti the device or -1 to indicate that some sort of error occurred.</li>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
         input messages.</li>
@@ -579,8 +579,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
 
 <h3>asynOctet</h3>
 
-<p>NOTE: The name octet is used instead of ascii because it implys that
-communication is done via 8 bit bytes.</p>
+<p>NOTE: The name octet is used instead of ASCII because it implys that
+communication is done via 8-bit bytes.</p>
 
 <p>asynOctet describes the methods provided by drivers that use octet strings
 for sending commands and receiving responses from a device.</p>
@@ -590,11 +590,11 @@ for sending commands and receiving responses from a device.</p>
   <tbody>
     <tr>
       <td>read</td>
-      <td>Read a message from the device.</td>
+      <td>Read a message from the device.  The routine should return the number of 8-bit bytes read from the device or -1 to indicate that some sort of error occurred.</td>
     </tr>
     <tr>
       <td>write</td>
-      <td>Send a message to the device.</td>
+      <td>Send a message to the device.  The routine should return the number of 8-bit bytes sent to the device or -1 to indicate that some sort of error occurred.</td>
     </tr>
     <tr>
       <td>flush</td>
@@ -946,37 +946,32 @@ boxes.</p>
 <p>The generic serial support has been tested with the following:</p>
 <ul>
   <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME carrier.</li>
-  <li>Linux with PC hardware serial ports (COM1:).</li>
-  <li>Linux, Solaris and Darwin with a Moxa NPort Ethernet/Serial converter box.</li>
+  <li>Linux hardware serial port (/dev/ttyS0).</li>
+  <li>Solaris hardware serial port (/dev/cua/a).</li>
+  <li>Linux, Solaris and Darwin with a Moxa NPort Ethernet/Serial converter.</li>
 </ul>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt> command:
 <pre>
-   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)</pre>
-where
+   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect [,stty options])</pre>
+where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGib.</li>
   <li>ttyName - The name of the serial port.   This can specify a local hardware
-  serial port (e.g. "/dev/ttyS0") or the Internet host name and TCP port number of an Ethernet terminal concentrator (e.g. "164.54.9.90:4002").</li>
-  <li>priority - epicsThread priority. If this is 0, or missing, then a default is assigned.</li>
-  <li>openOnlyOnDisconnect - If zero the driver will automatically attempt to
-  reconnect after an error.  If non-zero the driver will not attempt to
-  reconnect until explicit disconnect/reconect commands have been issued.
-  A missing argument is taken to be 0.</li>
+  serial port (e.g. "/dev/ttyS0") or the Internet host name and TCP port number of an Ethernet terminal concentrator (e.g. "164.54.9.90:4002", or
+  "serials8n3:4002").</li>
+  <li>priority - Priority at which the asyn I/O thread will run. If this is zero or missing then epicsThreadPriorityMedium is used.</li>
+  <li>openOnlyOnDisconnect - If zero the driver will attempt to
+  reconnect to the serial port on the first I/O operation following an error.
+  If non-zero the driver will not attempt to
+  reconnect until explicit disconnect/reconnect commands have been issued.
+  A missing argument is taken to be zero.</li>
+  <li>stty options - Serial port configuration parameters for local
+  serial ports.  For example, the arguments which confirm the default
+  settings are <tt>9600, cs8, -parenb, -crtscts, clocal</tt>.
+  Note that if any stty arguments are present both the priority and
+  openaOnlyOnDisconnect arguments must also be present.
 </ul>
-
-<p>On non-vxWorks machines local serial port parameters can be set
-with the IOC shell <tt>stty</tt> command.  The syntax and arguments
-are similar to the UNIX command of the same name:
-<pre>
-stty --file=/dev/ttyS0 9600 cs8 -parenb -crtscts clocal
-drvGenericSerialConfigure L0 /dev/ttyS0
-</pre>
-or equivalently:
-<pre>
-stty("-F","/dev/ttyS0",9600,"cs8","-parenb","-crtscts","clocal")
-drvGenericSerialConfigure("L0","/dev/ttyS0")
-</pre>
 
 <p>
 Serial ports directly attached to a vxWorks IOC must be set up using

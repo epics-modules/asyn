@@ -41,4 +41,8 @@ asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 DBD += drvVxi11.dbd
 
+SRC_DIRS += $(ASYN)/drvGenericSerial
+asyn_SRCS += drvGenericSerial.c
+DBD += drvGenericSerial.dbd
+
 include $(TOP)/configure/RULES
