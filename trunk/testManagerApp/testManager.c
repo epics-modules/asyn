@@ -39,10 +39,12 @@ typedef struct cmdInfo {
     testType   test;
     epicsEventId callbackDone;
     char       message[80];
-    asynUser   *pasynUserBusy;
 }cmdInfo;
 
 struct threadInfo {
+    char          *portName;
+    int           addr;
+    int           size;
     char          *threadName;
     cmdInfo       *pcmdInfo;
     epicsEventId  work;
@@ -125,7 +127,32 @@ static void lockTest(asynUser *pasynUser)
 
 static void busyCallback(asynUser *pasynUser)
 {
+    asynStatus status;
+    status = pasynManager->freeAsynUser(pasynUser);
+    if(status) {
+        printf("freeAsynUserBusy failed %s\n",
+            pasynUser->errorMessage);
+    }
     epicsThreadSleep(.03);
+}
+
+static void startBusy(threadInfo *pthreadInfo)
+{
+    asynUser   *pasynUserBusy;
+    asynStatus status;
+
+    pasynUserBusy = pasynManager->createAsynUser(busyCallback,0);
+    status = pasynManager->connectDevice(
+        pasynUserBusy,pthreadInfo->portName,pthreadInfo->addr);
+    if(status!=asynSuccess) {
+        printf("%s busy failure connectDevice %s\n",
+            pthreadInfo->threadName,pasynUserBusy->errorMessage);
+    }
+    status = pasynManager->queueRequest(pasynUserBusy,asynQueuePriorityLow,0.0);
+    if(status!=asynSuccess) {
+        printf("%s busy failure queueRequest %s\n",
+            pthreadInfo->threadName,pasynUserBusy->errorMessage);
+    }
 }
 
 static void cancelCallback(asynUser *pasynUser)
@@ -148,8 +175,7 @@ static void cancelTest(asynUser *pasynUser)
 
     fprintf(pcmdInfo->file,"%s %s  cancelRequest should remove\n",
         pthreadInfo->threadName,pcmdInfo->message);
-    status = pasynManager->queueRequest(pcmdInfo->pasynUserBusy,asynQueuePriorityLow,0.0);
-    if(checkStatus(status,pthreadInfo,"testCancelRequest")) return;
+    startBusy(pthreadInfo);
     epicsEventTryWait(pcmdInfo->callbackDone);
     status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.0);
     if(checkStatus(status,pthreadInfo,"testCancelRequest")) return;
@@ -175,9 +201,8 @@ static void cancelTest(asynUser *pasynUser)
 
     fprintf(pcmdInfo->file,"%s %s should find timeout active\n",
         pthreadInfo->threadName,pcmdInfo->message);
+    startBusy(pthreadInfo);
     epicsEventTryWait(pcmdInfo->callbackDone);
-    status = pasynManager->queueRequest(pcmdInfo->pasynUserBusy,asynQueuePriorityLow,0.0);
-    if(checkStatus(status,pthreadInfo,"testCancelRequest")) return;
     status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.02);
     if(checkStatus(status,pthreadInfo,"testCancelRequest")) return;
     epicsThreadSleep(.03);
@@ -238,6 +263,7 @@ static void workThread(threadInfo *pthreadInfo)
     epicsEventSignal(pthreadInfo->done);
 }
 
+static const char *thread = "thread";
 static int testInit(const char *port,int addr,
     cmdInfo **ppcmdInfo, threadInfo **ppthreadInfo,int ind,FILE *file)
 {
@@ -246,15 +272,21 @@ static int testInit(const char *port,int addr,
     asynUser   *pasynUser;
     asynStatus status;
     asynInterface *pasynInterface;
+    int        size;
 
     pcmdInfo = (cmdInfo *)pasynManager->memMalloc(sizeof(cmdInfo));
     memset(pcmdInfo,0,sizeof(cmdInfo));
     *ppcmdInfo = pcmdInfo;
-    pthreadInfo = (threadInfo *)pasynManager->memMalloc(sizeof(threadInfo)+5);
+    size = sizeof(threadInfo) + (strlen(port)+ 1) + (strlen(thread) + 2);
+    pthreadInfo = (threadInfo *)pasynManager->memMalloc(size);
     memset(pthreadInfo,0,sizeof(threadInfo));
+    pthreadInfo->size = size;
     *ppthreadInfo = pthreadInfo;
-    pthreadInfo->threadName = (char *)(pthreadInfo + 1);
-    sprintf(pthreadInfo->threadName,"thread%1.1d",ind);
+    pthreadInfo->portName = (char *)(pthreadInfo +1);
+    strcpy(pthreadInfo->portName,port);
+    pthreadInfo->threadName = pthreadInfo->portName
+                              + strlen(pthreadInfo->portName) + 1;
+    sprintf(pthreadInfo->threadName,"%s%1.1d",thread,ind);
     pcmdInfo->callbackDone = epicsEventMustCreate(epicsEventEmpty);
     pthreadInfo->work = epicsEventMustCreate(epicsEventEmpty);
     pthreadInfo->done = epicsEventMustCreate(epicsEventEmpty);
@@ -282,14 +314,7 @@ static int testInit(const char *port,int addr,
     }
     pcmdInfo->pasynCommon = (asynCommon *) pasynInterface->pinterface;
     pcmdInfo->asynCommonPvt = pasynInterface->drvPvt;
-    pcmdInfo->pasynUserBusy = pasynManager->createAsynUser(busyCallback,0);
     pcmdInfo->file = file;
-    pasynUser = pcmdInfo->pasynUserBusy;
-    status = pasynManager->connectDevice(pasynUser,port,addr);
-    if(status!=asynSuccess) {
-        fprintf(pcmdInfo->file,"connectDevice failed %s\n",pasynUser->errorMessage);
-        return -1;
-    }
     return 0;
 }
 
@@ -435,14 +460,8 @@ static void testManager(const char *port,int addr,const char *filename)
             printf("freeAsynUser failed %s\n",pasynUser->errorMessage);
             return;
         }
-        status = pasynManager->freeAsynUser(pcmdInfo->pasynUserBusy);
-        if(status) {
-            printf("freeAsynUserBusy failed %s\n",
-                pcmdInfo->pasynUserBusy->errorMessage);
-            return;
-        }
         if(file!=stdout) fclose(file);
-        pasynManager->memFree(pthreadInfo,sizeof(threadInfo));
+        pasynManager->memFree(pthreadInfo,pthreadInfo->size);
         pasynManager->memFree(pcmdInfo,sizeof(cmdInfo));
     }
 }
