@@ -12,12 +12,12 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>July 1, 2004</h1>
+<h1>qApril 27, 2004</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release 2-2</h2>
+<h2>Release 3-1</h2>
 </center>
 
 <h3>Major New Features</h3>
@@ -31,6 +31,9 @@ alink="#FF0000">
   End-of-string processing has been moved to an interposed interface.</li>
   <li>The diagnostic facilities previously provided by asynTrace.db have been
   replaced with the much more general asynRecord.db</li>
+  <li>All asynManager,asynCommon, and asynOctet methods except report
+   now return asynStatus. Methods that previously returned a different value now
+   have an additional argument for this value.</li>
   <li>Low-level driver read and write methods now return asynStatus and
   are passed an additional  argument through which they store the actual number
   of characters read or written.</li>
