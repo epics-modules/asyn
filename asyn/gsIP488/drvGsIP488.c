@@ -789,7 +789,7 @@ static asynGpibPort gsTi9914 = {
 };
 
 int gsIP488Configure(char *portName,int carrier, int module, int intVec,
-    int priority, int noAutoConnect)
+    unsigned int priority, int noAutoConnect)
 {
     gpib *pgpib;
     int ipstatus;
