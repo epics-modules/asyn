@@ -1044,7 +1044,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0)
         return -1;
     nchars = pasynOctet->write(asynOctetPvt,pgpibDpvt->pasynUser,message,len);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt->msg,nchars,
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nchars,
         "%s writeIt\n",precord->name);
     if(nchars!=len) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
