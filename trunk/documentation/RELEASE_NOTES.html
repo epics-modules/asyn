@@ -26,9 +26,12 @@ alink="#FF0000">
 
 <h3>Changed and obsolete features</h3>
 <ul>
+  <li>The drvGenericSerial driver has been split into drvAsynSerialPort and
+  drvAsynTCPPort drivers for local and remote serial ports, respectively.
+  End-of-string processing has been moved to an interposed interface.</li>
   <li>The diagnostic facilities previously provided by asynTrace.db have been
   replaced with the much more general asynRecord.db</li>
-  <li>The low-level driver read and write methods now return asynStatus and
+  <li>Low-level driver read and write methods now return asynStatus and
   are passed an additional  argument through which they store the actual number
   of characters read or written.</li>
 </ul>
