@@ -47,17 +47,17 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
 static asynDriver asyn = {report,connect,disconnect};
 
 /* octetDriver methods */
-static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
-static int write(void *ppvt,asynUser *pasynUser,
+static int echoRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+static int echoWrite(void *ppvt,asynUser *pasynUser,
                 int addr,const char *data,int numchars);
-static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr);
+static asynStatus echoFlush(void *ppvt,asynUser *pasynUser,int addr);
 static asynStatus setTimeout(void *ppvt,asynUser *pasynUser,
                 asynTimeoutType type,double timeout);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,const char *eos,int eoslen);
 static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,peekHandler handler);
 static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser);
 static octetDriver octet = {
-    read,write,flush,
+    echoRead,echoWrite,echoFlush,
     setTimeout, setEos,
     installPeekHandler, removePeekHandler
 };
@@ -116,7 +116,7 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 }
 
 /* octetDriver methods */
-static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
+static int echoRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars = pdrvPvt->nchars;
@@ -135,7 +135,7 @@ static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
     return(nchars);
 }
 
-static int write(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
+static int echoWrite(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars = numchars;
@@ -154,7 +154,7 @@ static int write(void *ppvt,asynUser *pasynUser, int addr,const char *data,int n
     return(nchars);
 }
 
-static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr)
+static asynStatus echoFlush(void *ppvt,asynUser *pasynUser,int addr)
 {
     drvPvt *pdrvPvt = (drvPvt *)ppvt;
 
