@@ -63,6 +63,9 @@ typedef struct asynInterface{
 /*registerPort attributes*/
 #define ASYN_MULTIDEVICE  0x0001
 #define ASYN_CANBLOCK     0x0002
+
+/*standard values for asynUser.reason*/
+#define ASYN_REASON_SIGNAL -1
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
