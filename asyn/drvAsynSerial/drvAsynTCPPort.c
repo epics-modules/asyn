@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.11 2004-04-15 14:51:46 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.12 2004-04-15 21:17:03 norume Exp $
  */
 
 #include <string.h>
@@ -507,18 +507,17 @@ drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
     char cbuf[512];
 
     assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-            "%s flush\n", tty->serialDeviceName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", tty->serialDeviceName);
     if (tty->fd >= 0) {
         /*
          * Toss characters until there are none left
          */
-#ifdef USE_SOCKTIMEOUT
+#ifndef USE_POLL
         setNonBlock(tty->fd, 1);
 #endif
         while (read(tty->fd, cbuf, sizeof cbuf) > 0)
             continue;
-#ifdef USE_SOCKTIMEOUT
+#ifndef USE_POLL
         setNonBlock(tty->fd, 0);
 #endif
     }
