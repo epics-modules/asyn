@@ -998,16 +998,11 @@ static void siFinish(gpibDpvt * pgpibDpvt,int failure)
             "%s no msg buffer\n",psi->name);
         failure = -1;
     } else {
-        char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
-        int lenVal = sizeof(psi->val);
-        int nchars;
-
-        nchars = epicsSnprintf(psi->val,lenVal,format,pgpibDpvt->msg);
-        if(nchars>=lenVal) {
-            psi->val[lenVal-1] = 0;
-            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
-                "%s %d characters were truncated\n",psi->name,(nchars-lenVal+1));
+        char *format = (pgpibCmd->format) ? pgpibCmd->format : "%39c";
+        if(sscanf(pgpibDpvt->msg, format, psi->val) != 1) {
             failure = -1;
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't convert msg >%s<\n",
+                                                    psi->name, pgpibDpvt->msg);
         }
         psi->udf = FALSE;
     }
