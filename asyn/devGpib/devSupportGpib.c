@@ -271,11 +271,6 @@ static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish)
     dbCommon *precord = pgpibDpvt->precord;
     asynStatus status;
 
-    if(!pgpibDpvt->msg) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s no msg buffer\n",precord->name);
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-        return;
-    }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s queueReadRequest\n",precord->name);
     pdevGpibPvt->work = gpibPrepareToRead;
     pdevGpibPvt->start = start;
@@ -548,7 +543,7 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
         pdevGpibParmBlock->rspLenMax = rspLenMax;
         pdevGpibParmBlock->msgLenMax = msgLenMax;
     }
-    msgLenMax = pdevGpibParmBlock->rspLenMax;
+    msgLenMax = pdevGpibParmBlock->msgLenMax;
     rspLenMax = pdevGpibParmBlock->rspLenMax;
     if(pportInstance->rspLenMax<rspLenMax) pportInstance->rspLenMax = rspLenMax;
     if(pportInstance->msgLenMax<msgLenMax) pportInstance->msgLenMax = msgLenMax;
@@ -753,6 +748,11 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     int nchars = 0, lenmsg = 0;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPrepareToRead\n",precord->name);
+    if(!pgpibDpvt->msg) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s no msg buffer\n",precord->name);
+        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        failure = 1;
+    }
     if(!failure && pdevGpibPvt->start)
         failure = pdevGpibPvt->start(pgpibDpvt,failure);
     if(failure)  goto done;
