@@ -1,23 +1,76 @@
-record(calc, "asyndevCalcA$(ADDR)") {
+record(calc, "asyndevCalcA0") {
     field(DESC, "Counter")
     field(SCAN,"1 second")
-    field(FLNK, "asyndevAoInt32A$(ADDR)")
     field(CALC, "(A<B)?(A+C):D")
-    field(INPA, "asyndevCalcA$(ADDR).VAL  NPP NMS")
+    field(INPA, "asyndevCalcA0.VAL  NPP NMS")
     field(INPB, "9")
     field(INPC, "1")
     field(INPD, "0")
     field(EGU, "Counts")
     field(HOPR, "10")
 }
-record(ai,"asyndevAiInt32A$(ADDR)") {
+record(ai,"asyndevAiInt32A0") {
+    field(SCAN,"I/O Intr")
     field(DTYP,"asynInt32")
-    field(INP,"@asyn($(PORT),$(ADDR)) testParams")
+    field(INP,"@asyn( cacheInt32 , 0 , 1.0) testParams")
 }
-record(ao,"asyndevAoInt32A$(ADDR)") {
+record(ao,"asyndevAoInt32A0") {
     field(DTYP,"asynInt32")
-    field(OUT,"@asyn($(PORT),$(ADDR)) testParams")
-    field(FLNK,"asyndevAiInt32A$(ADDR)")
+    field(OUT,"@asyn(cacheInt32,0,1.0) testParams")
     field(OMSL,"closed_loop")
-    field(DOL,"asyndevCalcA$(ADDR)")
+    field(DOL,"asyndevCalcA0 CP")
+}
+record(calc, "asyndevCalcA1") {
+    field(DESC, "Counter")
+    field(SCAN,"1 second")
+    field(CALC, "(A<B)?(A+C):D")
+    field(INPA, "asyndevCalcA1.VAL  NPP NMS")
+    field(INPB, "9")
+    field(INPC, "1")
+    field(INPD, "0")
+    field(EGU, "Counts")
+    field(HOPR, "10")
+}
+record(ai,"asyndevAiInt32A1") {
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynInt32")
+    field(INP,"@asyn( cacheInt32 , 1 , 1.0) testParams")
+}
+record(ao,"asyndevAoInt32A1") {
+    field(DTYP,"asynInt32")
+    field(OUT,"@asyn(cacheInt32,1,1.0) testParams")
+    field(OMSL,"closed_loop")
+    field(DOL,"asyndevCalcA1 CP")
+}
+record(ai,"asyndevAiInt32ManualA2") {
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynInt32")
+    field(INP,"@asyn( cacheInt32 , 2 , 1.0) testParams")
+}
+record(ao,"asyndevAoInt32ManualA2") {
+    field(DTYP,"asynInt32")
+    field(OUT,"@asyn(cacheInt32,2,1.0) testParams")
+    field(HOPR,"10.0")
+    field(LOPR,"0.0")
+}
+record(ai,"asyndevAiInt32ManualA3") {
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynInt32")
+    field(INP,"@asyn( cacheInt32 , 3 , 1.0) testParams")
+}
+record(ao,"asyndevAoInt32ManualA3") {
+    field(DTYP,"asynInt32")
+    field(OUT,"@asyn(cacheInt32,3,1.0) testParams")
+    field(HOPR,"10.0")
+    field(LOPR,"0.0")
+}
+
+record(ai,"asyndevAiInt32Interrupt") {
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynInt32")
+    field(INP,"@asyn(interruptInt32)")
+}
+record(ai,"asyndevAiInt32Average") {
+    field(DTYP,"asynInt32Average")
+    field(INP,"@asyn(interruptInt32)")
 }
