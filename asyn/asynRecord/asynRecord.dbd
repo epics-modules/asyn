@@ -1,10 +1,10 @@
 # Menus
 menu(asynTMOD) {
-    choice(asynTMOD_NoIO,"NoI/O")
     choice(asynTMOD_Write_Read,"Write/Read")
     choice(asynTMOD_Write,"Write")
     choice(asynTMOD_Read,"Read")
     choice(asynTMOD_Flush,"Flush")
+    choice(asynTMOD_NoIO,"NoI/O")
 }
 menu(asynFMT) {
     choice(asynFMT_ASCII,"ASCII")
