@@ -396,15 +396,16 @@ static long processCommon(dbCommon *precord)
     asynStatus status;
 
     if (!pdevPvt->gotValue && precord->pact == 0) {
+        if(pdevPvt->canBlock) precord->pact = 1;
         status = pasynManager->queueRequest(
            pdevPvt->pasynUser, asynQueuePriorityMedium, 0.0);
+        if((status==asynSuccess) && pdevPvt->canBlock) return 0;
+        if(pdevPvt->canBlock) precord->pact = 0;
         if (status != asynSuccess) {
             asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynOctet::processCommon, error queuing request %s\n", 
                 precord->name,pdevPvt->pasynUser->errorMessage);
             recGblSetSevr(precord,READ_ALARM,INVALID_ALARM);
-        }else if(pdevPvt->canBlock) {
-            precord->pact = 1;
         }
     }
     return(0);

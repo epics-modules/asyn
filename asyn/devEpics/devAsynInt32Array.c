@@ -146,13 +146,16 @@ static long processCommon(dbCommon *pr)
     int status;
 
     if (pr->pact == 0) {   /* This is an initial call from record */
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if (status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s processCommon, error queuing request %s\n",
                  pr->name, pPvt->pasynUser->errorMessage);
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
-        }else if (pPvt->canBlock) pr->pact = 1;
+        }
     }
     return 0;
 } 

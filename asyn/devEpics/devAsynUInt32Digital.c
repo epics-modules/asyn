@@ -349,11 +349,10 @@ static long processBi(biRecord *pr)
     int status;
 
     if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n", 
@@ -400,11 +399,10 @@ static long processBo(boRecord *pr)
         pr->udf = 0;
     } else if(pr->pact == 0) {
         pPvt->value = pr->rval; pPvt->gotValue = 1;
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital:process error queuing request %s\n",
@@ -434,11 +432,10 @@ static long processLi(longinRecord *pr)
     int status;
 
     if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
@@ -479,11 +476,10 @@ static long processLo(longoutRecord *pr)
         pr->val = pPvt->value;
     } else if(pr->pact == 0) {
         pPvt->value = pr->val; pPvt->gotValue = 1;
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
@@ -515,11 +511,10 @@ static long processMbbi(mbbiRecord *pr)
     int status;
 
     if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
@@ -585,11 +580,10 @@ static long processMbbo(mbboRecord *pr)
         pr->udf = FALSE;
     } else if(pr->pact == 0) {
         pPvt->gotValue = 0; pPvt->value = pr->rval;
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
@@ -621,11 +615,10 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
     int status;
 
     if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
@@ -682,11 +675,10 @@ static long processMbboDirect(mbboDirectRecord *pr)
         }
     } else if(pr->pact == 0) {
         pPvt->gotValue = 0; pPvt->value = pr->rval;
+        if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-             pr->pact = 1;
-             return 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
