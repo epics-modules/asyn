@@ -1234,6 +1234,7 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
             pvxiPort->portName,addr,length,nWrite);
         status = asynError;
     }
+    vxiWriteCmd(pvxiPort,pasynUser, "_?", 2); /* UNT UNL*/
     return status;
 }
 

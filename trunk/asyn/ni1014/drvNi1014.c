@@ -698,6 +698,7 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     int        addr = 0;
     int        actual;
     asynStatus status;
+    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
@@ -716,6 +717,8 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     actual = length - pniport->bytesRemainingCmd;
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gpibPortAddressedCmd\n",pniport->portName);
+    if(status!=asynSuccess) return status;
+    writeCmd(pniport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
