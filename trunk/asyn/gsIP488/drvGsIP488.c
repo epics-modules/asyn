@@ -646,7 +646,7 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
     double     timeout = setTimeout(pasynUser);
     int        addr = pasynManager->getAddr(pasynUser);
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read nchar %d",
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read nchar %d\n",
         pgpib->portName,actual);
     pgpib->errorMessage[0] = 0;
     status = readGpib(pgpib,data,maxchars,&actual,addr,timeout);
@@ -673,7 +673,7 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
     double     timeout = setTimeout(pasynUser);
     int        addr = pasynManager->getAddr(pasynUser);
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d",
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d\n",
         pgpib->portName,numchars);
     pgpib->errorMessage[0] = 0;
     status = writeGpib(pgpib,data,numchars,&actual,addr,timeout);
@@ -731,7 +731,7 @@ static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
         *eoslen = 1;
     }
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s gsTi9914GetEos %d: ",pgpib->portName,eoslen);
+            "%s gsTi9914GetEos eoslen %d\n",pgpib->portName,eoslen);
     return asynSuccess;
 }
 
