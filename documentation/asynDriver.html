@@ -3750,7 +3750,8 @@ standards are defined.
   <li>VXI-11.2 - A standard for communicating with a IEEE 488.1 device. This
     means that the TCP/IP connection is talking to a GPIB controller that is
     talking to a GPIB bus. These devices have an vxiName that starts with
-    "gpib".</li>
+    "gpib". Note that the Agilent E2050A does not follow the standard. For
+    it the vxiName must be "hpib"</li>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 devices. This
     means that the TCP/IP connection is talking directly with an device.
     These devices have an vxiName that starts with "inst".</li>
@@ -3778,7 +3779,10 @@ where
   occurs.</li>
   <li>timeout - I/O operation timeout in seconds as datatype double. If 0.0,
     then a default is assigned.</li>
-  <li>vxiName - Must be chosen as specified above.</li>
+  <li>vxiName - Must be chosen as specified above.
+     NOTE: For the Agilent E2050 vxiName must be "hpib". For the
+     Agilent E5810 use the name "gpib0". For an instrument that supports
+     VXI11 try "inst0".</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing, then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
