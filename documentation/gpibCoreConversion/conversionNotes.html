@@ -14,13 +14,16 @@
 <h2>1. Create instrument support development area</h2>
 <ol>
   <li>Make a directory in modules/instrument/ for your instrument.</li>
-  <li>Create the instrument support by running the makeAsynSupport.pl script:
-    <p><em>
-    &lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeAsynSupport.pl
+  <li>'cd' to the directory created in the previous step and create a set of
+    instrument support files by running the makeAsynSupport.pl script:
+    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeAsynSupport.pl
     -t instrument <em>&lt;InstName&gt;</em></p>
+    <p>for example:</p>
+    <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeAsynSupport.pl
+    -t instrument Keithley196</p>
   </li>
-  <li>Edit configure/RELEASE and set the ASYN and EPICS_BASE values to
-  to the location of these packages on your system.</li>
+  <li>Edit configure/RELEASE and set the ASYN and EPICS_BASE values to to the
+    location of these packages on your system.</li>
   <li>Replace src/drv<em>&lt;InstName&gt;</em>.c with your existing
     instrument support.</li>
   <li>Replace src/drv<em>&lt;InstName&gt;</em>.dbd with your existing
@@ -30,7 +33,9 @@
 </ol>
 
 <h2>2. Modify instrument support C source file</h2>
-A side-by-side display of the results of applying the following changes to a support file for a simple instrument can be found <a href="devKeithley196.c.diff.html">here</a>.
+A side-by-side display of the results of applying the following changes to a
+support file for a simple instrument can be found <a
+href="devKeithley196.c.diff.html">here</a>.
 <ol>
   <li>Remove all <span style="font-family: courier">#include</span> lines
     except <span style="font-family: courier; font-size: 12pt">#include
@@ -55,15 +60,34 @@ A side-by-side display of the results of applying the following changes to a sup
     style="font-family: courier; font-size: 12pt">DMA_TIME</span> macro to
     <span style="font-family: courier; font-size: 12pt">TIMEOUT</span> and
     its value from 1/60th of a second units to seconds.</li>
-  <li>Change the end-of-string value (the last element of each command) of
-    the command table initializers from -1 to NULL or from a single character
-    constant to a string constant. For example:
-    <pre>       -1 <span style="font-family: times">becomes</span> NULL
-     '\r' <span style="font-family: times">becomes</span> "\r"
-    </pre>
-    <p>Remove any <span style="font-family: courier">GPIBEOS</span>
-    initializations from the command table entries. Input end-of-string
-    checking is now enabled by a non-NULL end-of-string value.</p>
+  <li>Modify the command table entries:
+  <ul>
+  <li>Change the end-of-string value (the last element) of
+    each command from -1 to NULL or from a single character
+    constant to a string constant:
+    <table border="1">
+      <tbody>
+        <tr>
+          <td align="center" colspan="2">Convert</td>
+        </tr>
+        <tr>
+          <td align="center">From</td>
+          <td align="center">To</td>
+        </tr>
+        <tr>
+          <td align="center"><span style="font-family: courier">-1</span></td>
+          <td align="center"><span style="font-family: courier">NULL</span></td>
+        </tr>
+        <tr>
+          <td align="center"><span style="font-family: courier">'\r'</span></td>
+          <td align="center"><span style="font-family: courier">"\r"</span></td>
+        </tr>
+      </tbody>
+    </table></li>
+    <li>Remove any <span style="font-family: courier">GPIBEOS</span>
+    from the command type (the second element) of each command. Input end-of-string
+    checking is now enabled by the presence of a non-NULL end-of-string value.</li>
+  </ul>
   </li>
   <li>Change the name of the device-support initialization function to <span
     style="font-family: courier; font-size: 12pt">init_ai</span>.</li>
@@ -107,12 +131,11 @@ A side-by-side display of the results of applying the following changes to a sup
     <ul>
       <li>All record names should begin with $(P).</li>
       <li>All GPIB INP/OUT fields should specify the link value as L$(L).</li>
-      <li>All GPIB INP/OUT fields should specify the address value as A$(A).
-      </li>
+      <li>All GPIB INP/OUT fields should specify the address value as
+      A$(A).</li>
     </ul>
-    If your instrument already has an associated database file (or
-    files) it may be useful to adapt it to follow these conventions.
-  </li>
+    If your instrument already has an associated database file (or files) it
+    may be useful to adapt it to follow these conventions.</li>
 </ol>
 </body>
 </html>
