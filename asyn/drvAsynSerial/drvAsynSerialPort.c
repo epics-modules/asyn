@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.7 2004-04-14 14:16:42 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.8 2004-04-14 17:48:24 norume Exp $
  */
 
 #include <string.h>
@@ -712,6 +712,7 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
         if (tty->cancelFlag) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                     "%s I/O cancelled", tty->serialDeviceName);
+            status = asynError;
             break;
         }
         if (tty->timeoutFlag)
