@@ -138,6 +138,12 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
+    status = pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    if (status != asynSuccess) {
+        printf("%s devAsynFloat64::initCommon canBlock failed %s\n",
+                     pr->name, pasynUser->errorMessage);
+        goto bad;
+    }
     /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
     if(pasynInterface && pPvt->userParam) {
@@ -306,7 +312,6 @@ static long initAi(aiRecord *pai)
         processCallbackInput,interruptCallbackInput);
     if(status != asynSuccess) return 0;
     pPvt = pai->dpvt;
-    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
     return(0);
 }
 

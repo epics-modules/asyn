@@ -160,6 +160,12 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
+    status = pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    if (status != asynSuccess) {
+        printf("%s devAsynInt32::initCommon canBlock failed %s\n",
+                     pr->name, pasynUser->errorMessage);
+        goto bad;
+    }
     /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
     if(pasynInterface && pPvt->userParam) {
@@ -360,7 +366,6 @@ static long initAi(aiRecord *pr)
     pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
                             &pPvt->deviceLow, &pPvt->deviceHigh);
     convertAi(pr, 1);
-    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
     return 0;
 }
 static long processAi(aiRecord *pr)
@@ -507,7 +512,6 @@ static long initLi(longinRecord *pr)
        processCallbackInput,interruptCallbackInput);
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
-    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
     return 0;
 }
 
@@ -585,7 +589,6 @@ static long initMbbi(mbbiRecord *pr)
         processCallbackInput,interruptCallbackInput);
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
-    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
     return 0;
