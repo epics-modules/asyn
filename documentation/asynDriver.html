@@ -1005,14 +1005,11 @@ where the arguments are:
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
 using hardware-specific commands. The following example shows the commands to
 set up and configure a port on a GreenSprings octal UART Industry-Pack module
-on a GreenSprings VIP616-01 carrier. Note that these are vxWorks shell
-commands and not IOC shell commands so all the drvGenericSerialConfigure
-‘stty’ parameters must be enclosed in double quotes.</p>
+on a GreenSprings VIP616-01 carrier.</p>
 <pre>ipacAddVIPC616_01("0x6000,B0000000")
-tyGSOctalDrv 1
-octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
-port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
-tyGSOctalConfig(port0,9600,'N',1,8,'N')
+tyGSOctalDrv(1)
+tyGSOctalModuleInit("RS232", 0x80, 0, 0)
+tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")</pre>
 
 <center>
