@@ -1,2 +1,0 @@
-registrar(drvGenericSerialRegisterCommands)
-include "asyn.dbd"
