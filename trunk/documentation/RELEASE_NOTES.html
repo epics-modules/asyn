@@ -36,6 +36,8 @@ alink="#FF0000">
     <p>All read and write methods now return asynStatus and
       have additional args to return the number of bytes send/reeceived.</p>
   </li>
+  <li>asynManager:report takes an additional parameter, portName.
+  </li>
 </ul>
 <h3>cancelRequest</h3>
 <p>If cancelRequest is called while either the process or timeout callback is
@@ -50,12 +52,12 @@ active, it now waits until the callback completes.</p>
   <li>MAY BE MORE - This release has major new features. Implementing the new
     features may have caused some imcompatibilities, This list is likely to
     grow as existing users report problems.</li>
-  <li>queueRequest - Of the portDriver does not block then the aeeue callback
+  <li>queueRequest - If the portDriver does not block then the queue callback
     is called by queueRequest rather than by a separate thread. User code can
     call canBlock to find out how the callback is called.</li>
   <li>registerPort - The argument multiDevice has been replaced by
     attributes. Attributes currently has two bits ASYN_MULTIDEVICE and
-    ASYN_CANBLOCK. The port drived is responsible for setting both bits
+    ASYN_CANBLOCK. The port driver is responsible for setting both bits
     correctly.</li>
   <li>setOption/getOption have been moved from asynCommon to a new interface
     asynOption.</li>
@@ -65,7 +67,6 @@ active, it now waits until the callback completes.</p>
 <ul>
   <li>Support for synchronous drivers.</li>
   <li>Support for register based drivers.</li>
-  with register based drivers.
   <ul>
     <li>Generic register based device support for EPICS records.</li>
     <li>Additional fields have been added to asynUser.</li>
@@ -86,7 +87,7 @@ active, it now waits until the callback completes.</p>
   <li>duplicateAsynUser - This is a new method that creates a new asynUser
     and initializes it with values from an existing asynUser. freeAsynUser
     now puts the asynUser of a free list rather than calling free.</li>
-  <li>memMalloc/memFree - New methods that manage storage. It uses a set if
+  <li>memMalloc/memFree - New methods that manage storage. It uses a set of
     free lists of different sizes.</li>
   <li>asynCommon no longer  has methods setOption/getOption.</li>
   <li>asynOctet is now defined in a separate header file.</li>
@@ -133,8 +134,7 @@ EOS read semantics match those of the low-level serial and IP drivers.</p>
 
 <h3>asynRecord</h3>
 
-<p>Two new fields have been added: GOPT (Get Options) and AQR (Abort Queue
-Reque st)</p>
+<p>A new field has beem added, AQR (Abort Queue Request)</p>
 
 <p>The semantics have been changed as follows: process is responsible for all
 and only for I/O operations. Only I/O operations cause the alarm status and
