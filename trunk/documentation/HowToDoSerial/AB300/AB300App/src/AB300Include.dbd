@@ -9,5 +9,12 @@ device(ai,      GPIB_IO, devAB300_ai, "AB300Gpib")
 
 #
 # Pull in the driver support
+# The following lines include support for both local and remote serial ports
 #
-include "drvGenericSerial.dbd"
+include "drvAsynTCPPort.dbd"
+include "drvAsynSerialPort.dbd"
+
+#
+# Pull in asynRecord support
+#
+#include "asynRecord.dbd"

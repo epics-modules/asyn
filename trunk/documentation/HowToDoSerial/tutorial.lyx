@@ -73,7 +73,7 @@ This tutorial provides step-by-step instructions on how to create EPICS
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -83,7 +83,7 @@ ahref{../../asynDriver.html}{asynDriver}
 
  and 
 \begin_inset ERT
-status Open
+status Collapsed
 
 \layout Standard
 
@@ -100,12 +100,12 @@ This document isn't for the absolute newcomer though.
  In particular you must have the following installed: 
 \layout Itemize
 
-EPICS R3.14.5 or higher 
+EPICS R3.14.6 or higher 
 \layout Itemize
 
 An up-to-date version of 
 \family typewriter 
-modules/asyn
+modules/soft/asyn
 \layout Standard
 
 Serial devices can now be treated in much the same way as GPIB (IEEE-488)
@@ -324,9 +324,9 @@ Now that the device operations and EPICS process variable types have been
 Here are the commands I ran.
  You'll have to change the 
 \family typewriter 
-/home/EPICS/R3.14.5
+/home/EPICS/R3.14.6
 \family default 
- to the path to where your EPICS is installed.
+ to the path to where your EPICS base is installed.
  If you're not running on Linux you'll also have to change all the 
 \family typewriter 
 linux-x86
@@ -363,7 +363,7 @@ cd AB300
 norume> 
 \family roman 
 \series bold 
-/home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -t ioc AB300
+/home/EPICS/R3.14.6/base/bin/linux-x86/makeBaseApp.pl -t ioc AB300
 \family default 
 \series default 
 
@@ -371,7 +371,7 @@ norume>
 norume> 
 \family roman 
 \series bold 
-/home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -i -t ioc AB300
+/home/EPICS/R3.14.6/base/bin/linux-x86/makeBaseApp.pl -i -t ioc AB300
 \family default 
 \series default 
 
@@ -405,7 +405,7 @@ configure/RELEASE
  where you installed the EPICS ASYN module:
 \layout LyX-Code
 
-ASYN=/home/EPICS/R3.14.5/modules/soft/asyn
+ASYN=/home/EPICS/R3.14.6/modules/soft/asyn
 \layout Standard
 
 Edit the 
@@ -445,7 +445,7 @@ cd AB300App/src
 norume> 
 \family roman 
 \series bold 
-cp /usr/EPICS/R3.14.5/modules/soft/asyn/devGpib/devSkeletonGpib.c devAB300.c
+cp /home/EPICS/R3.14.6/modules/soft/asyn/asyn/devGpib/devSkeletonGpib.c devAB300.c
 \layout LyX-Code
 
 \layout Standard
@@ -862,8 +862,10 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 Some points of interest: 
 \layout Enumerate
 
-The custom conversion function can pass back an error message by printing
- it to the 
+Custom conversion function indicate an error by returning -1.
+\layout Enumerate
+
+If an error status is returned an explanation should be left in the 
 \family typewriter 
 errorMessage
 \family default 
@@ -1066,13 +1068,12 @@ The DTYP fields must match the names specified in the AB300Include.dbd database
 Add the database file to the application
 \layout Standard
 
-The makeBaseApp.pl script put and exampl application database file into 
+The makeBaseApp.pl script creates an example 
 \family typewriter 
-AB300App/Db/Makefile
+Makefile
 \family default 
- as a comment.
- Replace the example name with the name of the database file created in
- the previous step, leaving:
+.
+ Add a line for the database file created in the previous step:
 \layout LyX-Code
 
 DB += AB300.db
@@ -1102,7 +1103,7 @@ dbLoadRecords("../../db/AB300.db","user=AB300")
 \end_deeper 
 \layout Enumerate
 
-Set up the 'link' between the IOC and the filter wheel.
+Set up the 'port' between the IOC and the filter wheel.
  
 \begin_deeper 
 \layout Itemize
@@ -1113,7 +1114,7 @@ If you're using an Ethernet/RS-232 converter or a device which communicates
 \begin_deeper 
 \layout LyX-Code
 
-drvGenericSerialConfigure("L0","164.54.9.91:4002",1,0)
+drvAsynTCPPortConfigure("L0","164.54.9.91:4002",0,0,0)
 \end_deeper 
 \layout Itemize
 
@@ -1122,19 +1123,19 @@ If you're using a serial line directly attached to the IOC you need something
 \begin_deeper 
 \layout LyX-Code
 
-drvGenericSerialConfigure("L0","/dev/ttyS0",1,0)
+drvAsynSerialPortConfigure("L0","/dev/ttyS0",0,0,0)
 \newline 
-asynSetPortOption("L0", "baud", "9600")
+asynSetOption("L0", -1, "baud", "9600")
 \newline 
-asynSetPortOption("L0", "bits", "8")
+asynSetOption("L0", -1, "bits", "8")
 \newline 
-asynSetPortOption("L0", "parity", "none")
+asynSetOption("L0", -1, "parity", "none")
 \newline 
-asynSetPortOption("L0", "stop", "1")
+asynSetOption("L0", -1, "stop", "1")
 \newline 
-asynSetPortOption("L0", "clocal", "Y")
+asynSetOption("L0", -1, "clocal", "Y")
 \newline 
-asynSetPortOption("L0", "crtscts", "N")
+asynSetOption("L0", -1, "crtscts", "N")
 \end_deeper 
 \layout Itemize
 
@@ -1153,28 +1154,26 @@ tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 \newline 
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 \newline 
-drvGenericSerialConfigure("L0","/tyGS/0/0",1,0)
+drvAsynSerialPortConfigure("L0","/tyGS/0/0",0,0,0)
 \newline 
-asynSetPortOption("L0","baud","9600")
+asynSetOption("L0",-1,"baud","9600")
 \end_deeper 
 \layout Standard
 
-In all of the above examples the first argument of the drvGenericSerialConfigure
- and asynSetPortOption commands is the link identifier and must match the
- 
+In all of the above examples the first argument of the configure and set
+ port option commands is the link identifier and must match the 
 \family typewriter 
 L
 \family default 
- value in the EPICS database record INP and OUT fields.
-
-The second argument of the drvGenericSerialConfigure command identifies
-the serial port to which the connection is to be made.
-The third argument sets the priority of the worker thread which performs
-the I/O operations.  A value of zero directs the command to choose a reasonable
-default value.
-The final argument is zero to
-direct the device support layer to automatically connect to the serial
-port on startup and whenever the serial port becomes disconnected.
+ value in the EPICS database record INP and OUT fields.The second argument
+ of the configure command identifiesthe port to which the connection is
+ to be made.The third argument sets the priority of the worker thread which
+ performsthe I/O operations.
+  A value of zero directs the command to choose a reasonabledefault value.The
+ fourth argument is zero todirect the device support layer to automatically
+ connect to the serialport on startup and whenever the serial port becomes
+ disconnected.The final argument is zero todirect the device support layer
+ to use standard end-of-string processingon input messages.
 \end_deeper 
 \layout Enumerate
 
@@ -1184,13 +1183,13 @@ port on startup and whenever the serial port becomes disconnected.
 \begin_deeper 
 \layout LyX-Code
 
-asynSetTraceMask("L0",0,0x3)
+asynSetTraceMask("L0",-1,0x9)
 \newline 
-asynSetTraceIOMask("L0",0,0x2)
+asynSetTraceIOMask("L0",-1,0x2)
 \layout Standard
 
-A better way to control the amount and type of diagnostic output is through
- the use of the 
+A better way to control the amount and type of diagnostic output is to add
+ an 
 \begin_inset ERT
 status Open
 
@@ -1199,10 +1198,10 @@ status Open
 \backslash 
 ahref{
 \backslash 
-url{../asynDriver.html#DiagnosticAids}}{asynTrace}
+url{../asynDriver.html#DiagnosticAids}}{asynRecord}
 \end_inset 
 
- facility.
+ to your application.
 \end_deeper 
 \layout Section
 
@@ -1259,39 +1258,29 @@ norume>
 \newline 
 dbLoadDatabase("../../dbd/AB300.dbd",0,0)
 \newline 
-AB300_registerRecordDeviceDriver(pdbbase) 
+AB300_registerRecordDeviceDriver(pdbbase)
 \newline 
 dbLoadRecords("../../db/AB300.db","user=AB300")
 \newline 
-drvGenericSerialConfigure("L0","164.54.9.91:4002",0,0)
+drvAsynTCPPortConfigure("L0","164.54.3.137:4001",0,0,0)
 \newline 
-asynSetTraceMask("L0",0,0x3)
+asynSetTraceMask("L0",-1,0x9)
 \newline 
-asynSetTraceIOMask("L0",0,0x2)
+asynSetTraceIOMask("L0",-1,0x2)
 \newline 
 iocInit()
 \newline 
 ############################################################################
 \newline 
-###  EPICS IOC CORE built on Jan 29 2004
+###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.5 
-\backslash 
-[Name:  
-\backslash 
-] 
-\backslash 
-[Date: 2004/02/13 20:04:36 
-\backslash 
-]
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-21 17:42:40 $$
 \newline 
 ############################################################################
 \newline 
 Starting iocInit
 \newline 
 iocInit: All initialization complete
-\newline 
-epics>
 \layout Standard
 
 Check the process variable names:
@@ -1326,13 +1315,9 @@ dbpf AB300:FilterWheel:reset 0
 \series default 
 
 \newline 
-DBR_LONG:           0         0x0                 
+DBR_LONG:           0         0x0
 \newline 
-drvGenericSerial set eos 1 
-\backslash 
-033
-\newline 
-drvGenericSerialWrite 3 
+2004/04/21 12:05:14.386 164.54.3.137:4001 write 3 
 \backslash 
 377
 \backslash 
@@ -1340,7 +1325,7 @@ drvGenericSerialWrite 3
 \backslash 
 033
 \newline 
-drvGenericSerialRead 1 
+2004/04/21 12:05:16.174 164.54.3.137:4001 read 1 
 \backslash 
 033
 \layout Standard
@@ -1388,15 +1373,11 @@ SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
 \newline 
 UDF: 1              VAL: 0
 \newline 
-drvGenericSerial set eos 1 
-\backslash 
-030
-\newline 
-drvGenericSerialWrite 1 
+2004/04/21 12:08:01.971 164.54.3.137:4001 write 1 
 \backslash 
 035
 \newline 
-drvGenericSerialRead 3 
+2004/04/21 12:08:01.994 164.54.3.137:4001 read 3 
 \backslash 
 001
 \backslash 
@@ -1436,19 +1417,19 @@ dbpf AB300:FilterWheel 4
 \series default 
 
 \newline 
-DBR_LONG:           4         0x4
+DBR_LONG:           4         0x4 
 \newline 
-drvGenericSerialWrite 2 
+2004/04/21 12:10:51.542 164.54.3.137:4001 write 2 
 \backslash 
 017
 \backslash 
 004
 \newline 
-drvGenericSerialRead 1 
+2004/04/21 12:10:51.562 164.54.3.137:4001 read 1 
 \backslash 
 020
 \newline 
-drvGenericSerialRead 1 
+2004/04/21 12:10:52.902 164.54.3.137:4001 read 1 
 \backslash 
 030
 \layout Standard
@@ -1466,7 +1447,7 @@ dbtr AB300:FilterWheel:fbk
 \newline 
 ACKS: NO_ALARM      ACKT: YES           ADEL: 0             ALST: 1
 \newline 
-ASG:                BKPT: 0x00          DESC: Filter Wheel Position
+ASG:                BKPT: 0x00          DESC: Filter Wheel Position 
 \newline 
 DISA: 0             DISP: 0             DISS: NO_ALARM      DISV: 1
 \newline 
@@ -1495,11 +1476,11 @@ SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
 \newline 
 UDF: 0              VAL: 1
 \newline 
-drvGenericSerialWrite 1 
+2004/04/21 12:11:43.372 164.54.3.137:4001 write 1 
 \backslash 
 035
 \newline 
-drvGenericSerialRead 3 
+2004/04/21 12:11:43.391 164.54.3.137:4001 read 3 
 \backslash 
 004
 \backslash 
@@ -1551,21 +1532,26 @@ verbatiminput{AB300/AB300App/src/devAB300.c}
 
 \layout Section
 
-asynTrace support
+asynRecord support
 \layout Standard
 
-The asynTrace facility provides a convenient mechanism for controlling the
- diagnostic messages produced by asyn drivers.
- To add asynTrace to your application: 
+The asynRecord provides a convenient mechanism for controlling the diagnostic
+ messages produced by asyn drivers.
+ To add an asynRecord to your application: 
 \layout Enumerate
 
 Add the line
-\begin_deeper 
-\layout LyX-Code
+\newline 
 
-include "devAsynTrace.dbd"
-\layout Standard
+\newline 
 
+\family typewriter 
+include "asynRecord.dbd"
+\newline 
+
+\newline 
+
+\family default 
 to the application 
 \shape italic 
 xxx
@@ -1574,32 +1560,39 @@ xxx
 Include.dbd
 \family default 
  file.
-\end_deeper 
 \layout Enumerate
 
 Add the line
-\begin_deeper 
-\layout LyX-Code
+\newline 
 
-DB_INSTALLS += $(ASYN)/db/asynTrace.db 
-\layout Standard
+\newline 
 
+\family typewriter 
+DB_INSTALLS += $(ASYN)/db/asynRecord.db 
+\family default 
+
+\newline 
+
+\newline 
 to an application 
 \family typewriter 
 Makefile
 \family default 
 .
-\end_deeper 
 \layout Enumerate
 
-For each port on which you wish to control diagnostic messages, add a line
- like
-\begin_deeper 
-\layout LyX-Code
+To create the diagnostic record, add a line like
+\newline 
 
-dbLoadRecords("db/asynTrace.db","ioc=ab300Test,port=L0,addr=0")
-\layout Standard
+\newline 
 
+\family typewriter 
+dbLoadRecords("../../db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
+\family default 
+
+\newline 
+
+\newline 
 to the application startup (
 \family typewriter 
 st.cmd
@@ -1607,11 +1600,15 @@ st.cmd
 ) script.
  The 
 \family typewriter 
-port
+PORT
 \family default 
  value must match the the value in the corresponding 
 \family typewriter 
-drvGenericSerialConfigure
+drvAsynTCPPortConfigure
+\family default 
+ or 
+\family typewriter 
+drvAsynSerialPortConfigure
 \family default 
  command.
  The 
@@ -1621,12 +1618,15 @@ addr
  value should be zero.
  The 
 \family typewriter 
-ioc
+P
 \family default 
- value is arbitrary and should be chosen so that the ioc/port/addr combination
- is unique among all IOCs on your network.
+ and 
+\family typewriter 
+R
+\family default 
+ values are arbitrary and are concatenated together to form the record names.
+ Choose values which are  unique among all IOCs on your network.
  
-\end_deeper 
 \layout Standard
 
 To run the asynTrace screen, add 
@@ -1642,15 +1642,19 @@ EPICS_DISPLAY_PATH
 \family default 
  environment variable and start medm with 
 \family typewriter 
-ioc
+P
 \family default 
 , 
 \family typewriter 
-port
+R
+\family default 
+, 
+\family typewriter 
+PORT
 \family default 
  and 
 \family typewriter 
-addr
+ADDR
 \family default 
  values matching those given in the 
 \family typewriter 
@@ -1659,5 +1663,5 @@ dbLoadRecords
  command:
 \layout LyX-Code
 
-medm -x -macro "ioc=ab300Test,port=L0,addr=0" asynTrace.adl &
+medm -x -macro "P=AB300,R=Test,PORT=L0,ADDR=0" asynRecord.adl
 \the_end

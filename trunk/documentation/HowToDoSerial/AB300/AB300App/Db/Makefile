@@ -13,6 +13,9 @@ include $(TOP)/configure/CONFIG
 # databases, templates, substitutions like this
 DB += AB300.db
 
+# asynRecord support
+#DB_INSTALLS += $(ASYN)/db/asynRecord.db
+
 #----------------------------------------------------
 # If <anyname>.db template is not named <anyname>*.template add
 # <anyname>_template = <templatename>
