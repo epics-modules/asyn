@@ -1,6 +1,6 @@
 <HTML><HEAD><TITLE>asyn - asyn Record</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=windows-1252">
-<META content="Microsoft FrontPage 4.0" name=GENERATOR></HEAD>
+<META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
 <BODY>
 <H1>asyn Record</H1>
 <ADDRESS>Mark Rivers</ADDRESS>
@@ -697,36 +697,26 @@ adapters like the Moxa units.<P>
     <TD>R/W</TD>
     <TD>&quot;Autoconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;No&quot; and &quot;Yes&quot;.</TD></TR>
-  <tr>
-    <TD>ENBD</TD>
-    <TD>R</TD>
-    <TD>&quot;Enabled&quot;</TD>
-    <TD>DBF_RECCHOICE</TD>
-    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enable&quot;.</TD>
-  </tr>
+    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;. 
+    The value read reflects current state of the enabled flag, i.e. the value 
+    returned from isAutoConnect().</TD></TR>
   <tr>
     <TD>ENBL</TD>
     <TD>R/W</TD>
     <TD>&quot;Disable/Enable&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>Disables or enables the port.&nbsp; Choices are &quot;Disable&quot; and
-      &quot;Enable.</TD>
-  </tr>
-  <tr>
-    <TD>CNTD</TD>
-    <TD>R</TD>
-    <TD>&quot;Connected&quot;</TD>
-    <TD>DBF_RECCHOICE</TD>
-    <TD>The current connected/disconnted status of the port.&nbsp; Values are &quot;Disconnected&quot; and &quot;Connected&quot;.</TD>
+      &quot;Enable&quot;. The value read reflects current state of the enabled flag, 
+    i.e. the value returned from isEnabled().</TD>
   </tr>
   <tr>
     <TD>CNCT</TD>
     <TD>R/W</TD>
     <TD>&quot;Connect/Disconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Disconnects or connects the device.&nbsp; Choices are
-      &quot;Disconnect&quot; and &quot;Connect:.</TD>
+    <TD>Disconnects or connects the device.&nbsp; Choices are &quot;Disconnect&quot; and 
+    &quot;Connect&quot;.&nbsp; The value read reflects current state of the connected 
+    flag, i.e. the value returned from isConnected().</TD>
   </tr>
 </TABLE>
 <p>&nbsp;</p>
@@ -846,19 +836,30 @@ and GPIB records</a></h2>
 <H2><a name="medm screens">medm screens</a></H2><p>The following are 
   screen shots of the medm screens provided for the asyn record.</p><p>&nbsp;</p>
   <h3 align="center">Main control screen, asynRecord.adl</h3>
-  <p align="center"><img border="0" src="asynRecord1.gif" width="448" height="350"></p>
+  <p align="center">
+  <img border="0" src="asynRecord.gif" width="449" height="427"></p>
+  <p align="center">
+  &nbsp;</p>
+  <h3 align="center">Debug screen, asynRecordDebug.adl</h3>
+  <p align="center">
+  <img border="0" src="asynRecordDebug.gif" width="450" height="637"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">Serial port setup screen, asynSerialPortSetup.adl</h3>
-  <p align="center"><img border="0" src="asynRecord2.gif" width="258" height="210"></p>
+  <p align="center"><img border="0" src="asynSerialPortSetup.gif" width="258" height="210"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">GPIB setup screen, asynGPIBSetup.adl</h3>
-  <p align="center"><img border="0" src="asynRecord3.gif" width="383" height="195"></p>
+  <p align="center"><img border="0" src="asynGPIBSetup.gif" width="383" height="195"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">Socket setup screen, asynSocketSetup.adl</h3>
-  <p align="center"><img border="0" src="asynRecord4.gif" width="358" height="150"></p>
+  <p align="center"><img border="0" src="asynSocketSetup.gif" width="358" height="150"></p>
   <p align="center">&nbsp;</p>
   <h3 align="center">Trace control screen, asynTrace.adl</h3>
-  <p align="center"><img border="0" src="asynRecord5.gif" width="358" height="230"></p>
+  <p align="center">
+  <img border="0" src="asynTrace.gif" width="358" height="277"></p>
+  <p align="center">&nbsp;</p>
+  <h3 align="center">Connection management screen, asynConnect.adl</h3>
+  <p align="center">
+  <img border="0" src="asynConnect.gif" width="278" height="197"></p>
   <P>
 <HR>
 <A name=Restrictions>
@@ -1098,4 +1099,4 @@ href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>:
 (rivers@cars.uchicago.edu) <BR>Last modified: March 30, 2004
 </ADDRESS>
 </BODY>
-</HTML> guaranteed that no other asyn I/O to the device 
+</HTML> guaranteed that no other asyn I/O to the device
