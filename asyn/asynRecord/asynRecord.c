@@ -868,7 +868,7 @@ static void performIO(asynUser *pasynUser)
             /* Nothing transfered */
             reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
                         "Timeout, nothing received, %s", 
-                        nbytesTransfered, pasynUser->errorMessage);
+                        pasynUser->errorMessage);
          } else {
             reportError(pasynRec, READ_ALARM, MINOR_ALARM,
                         "Timeout, read %d bytes, %s", 
