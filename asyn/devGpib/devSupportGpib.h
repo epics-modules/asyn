@@ -171,6 +171,7 @@ struct devSupportGpib {
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
+    int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
 
