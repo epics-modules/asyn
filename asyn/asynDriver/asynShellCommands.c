@@ -521,8 +521,8 @@ static void asynAutoConnectCall(const iocshArgBuf * args) {
 static const iocshArg asynConnectArg0 = {"device name", iocshArgString};
 static const iocshArg asynConnectArg1 = {"asyn portName", iocshArgString};
 static const iocshArg asynConnectArg2 = {"asyn addr (default=0)", iocshArgInt};
-static const iocshArg asynConnectArg3 = {"output eos (default=\r)", iocshArgString};
-static const iocshArg asynConnectArg4 = {"input eos (default=\r)", iocshArgString};
+static const iocshArg asynConnectArg3 = {"output eos (default=\\r)", iocshArgString};
+static const iocshArg asynConnectArg4 = {"input eos (default=\\r)", iocshArgString};
 static const iocshArg asynConnectArg5 = {"timeout (sec) (default=1)", iocshArgInt};
 static const iocshArg asynConnectArg6 = {"buffer length (default=80)", iocshArgInt};
 static const iocshArg *const asynConnectArgs[] = {
