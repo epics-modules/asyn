@@ -1673,7 +1673,7 @@ where the arguments are:
     issued.</li>
 </ul>
 
-<p>The following table summarizes the generic serial driver asynSetPortOption
+<p>The following table summarizes the generic serial driver asynSetOption
 keys and values. Default values are enclosed in square brackets.</p>
 
 <table border="1">
@@ -1726,7 +1726,7 @@ and clocal=N implies crtscts=Y.</p>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
 using hardware-specific commands. Once this is done the standard
-drvGenericSerialConfigure and asynSetPortOption commands can be issued.  For
+drvGenericSerialConfigure and asynSetOption commands can be issued.  For
 example, the following example shows the configuration procedure for a port
 on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01
 carrier.</p>
@@ -1735,7 +1735,7 @@ tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
-asynSetPortOption("L0","baud","9600")</pre>
+asynSetOption("L0","baud","9600")</pre>
 
 <h3><a name="vxi11"></a>vxi11</h3>
 VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is
@@ -1842,7 +1842,8 @@ for the specified port and address. <code>asynSetOption</code> calls
     <code>stdout</code></li>
   <li>level - The report level.</li>
   <li>portName - An ascii string specifying the portName of the driver.</li>
-  <li>addr - In integer specifying the address of the device.</li>
+  <li>addr - In integer specifying the address of the device. For multiDevice ports a value of -1 means the port itself. For ports that support a single
+device addr is ignored.</li>
   <li>mask - The mask value to set. See the mask bit definitions in
     asynDriver.h</li>
   <li>key - The key for the option desired.</li>
