@@ -1,0 +1,686 @@
+\documentclass[twoside]{article}
+
+\usepackage{epsfig}
+\usepackage{times}
+\usepackage{html}
+\usepackage{alltt}
+\usepackage{verbatimfiles}
+
+\textwidth=6.5in
+\topmargin=0pt
+\headheight=0pt
+\textheight=8.6truein
+\oddsidemargin=0in
+\evensidemargin=0in
+\footskip=40pt
+
+\parindent=0pt
+\parskip=0.5ex
+
+\setcounter{tocdepth}{2}
+
+\title{How to create EPICS device support for a simple serial device}
+\author{W. Eric Norum \\ $<$\htmladdnormallink{norume@aps.anl.gov}{mailto:norume@aps.anl.gov}$>$}
+
+\begin{document}
+\begin{latexonly}
+\pagenumbering{roman}
+\maketitle
+\tableofcontents
+\cleardoublepage
+\pagenumbering{arabic}
+\end{latexonly}
+
+\section{Introduction}
+This tutorial provides step-by-step instructions on how to create
+EPICS support for a simple serial device.
+The steps are presented in a way that should make it possible to apply
+them in
+cookbook fashion to create support for other serial devices.
+For comprehensive description of all the details of the I/O system
+used here, refer to the
+\htmladdnormallink{asynDriver}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/asynDriver.html}
+and
+\htmladdnormallink{devGpib}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/devGpib.html}
+documentation.
+
+This document isn't for the absolute newcomer though.  You must have
+EPICS installed on a system somewhere and know how
+to build and run the example application.
+In particular you must have the following 
+installed:
+\begin{itemize}
+\item EPICS R3.14.5 or higher
+\item An up-to-date version of {\tt modules/asyn}
+\end{itemize}
+Serial devices can now be treated in much the
+same way as GPIB (IEEE-488) devices.
+Current versions of the EPICS asynDriver devGpib module contain
+a special
+'GPIB' driver capable of communicating with devices connected to serial
+ports on the IOC or with devices connected through Ethernet/Serial converter
+boxes.
+
+I based this tutorial on the device support I wrote for a
+CVI Laser Corporation AB300 filter wheel.
+You're almost certainly interested in controlling some other device
+so you won't be able to use the information directly.
+I chose the AB300 as the basis for this tutorial since
+the AB300 has a very limited command set, which keeps this document small,
+and yet has commands which raise many
+of the issues that you'll have to consider
+when writing support for other devices.
+
+\begin{htmlonly}
+If you'd like to print this tutorial you can download a
+\htmladdnormallink{PDF version}{tutorial.pdf}.
+\end{htmlonly}
+
+\section{Determine the required I/O operations}
+The first order of business is to determine the set of operations the
+device will have to perform.
+A look at the AB300 documentation reveals that there are four
+commands that must be supported.
+Each command will
+be associated with an EPICS process variable (PV) whose type must be
+appropriate to the data transferred by the command.
+The AB300 commands and
+process variable record types I choose to associate with them are shown
+in table~\ref{commandList}.
+\begin{table}[bht]
+\caption{AB300 filter wheel commands\label{commandList}}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline
+\multicolumn{2}{|c|}{CVI Laser Corporation AB300 filter wheel} \\
+\hline
+\multicolumn{1}{|c|}{Command}  &\multicolumn{1}{c|}{EPICS record type} \\
+\hline
+Reset                &longout \\
+Go to new position   &longout \\
+Query position       &longin \\
+Query status         &longin \\
+\hline
+\end{tabular}
+\end{center}
+\end{table}
+There are lots of other ways that the AB300 could be handled.  It might
+be useful, for example,  to treat the filter position as
+multi-bit binary records instead.
+
+\section{Create a new application}
+Now that the device operations and EPICS process variable types have
+been chosen it's time to create a new EPICS application to provide
+a place to perform subsequent software development.
+The easiest way to do this is with the makeBaseApp.pl script supplied
+with EPICS.
+
+Here are the commands I ran.   You'll have to change the
+{\tt /home/EPICS/R3.14.5} to the path to where your EPICS is installed.
+If you're
+not running on Linux you'll also have to change all the {\tt linux-x86} to
+reflect the architecture you're using ({\tt solaris-sparc}, {\tt darwin-ppc}, etc.).
+I built the application as a 'soft' IOC running on the host machine, but
+the serial 'GPIB' driver also works on RTEMS and vxWorks.
+
+\begin{alltt}
+norume> {\bf mkdir AB300}
+norume> {\bf cd AB300}
+norume> {\bf /home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -t ioc AB300}
+norume> {\bf /home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -i -t ioc AB300}
+The following target architectures are available in base:
+    RTEMS-pc386
+    linux-x86
+    solaris-sparc
+    win32-x86-cygwin
+    vxWorks-ppc603
+What architecture do you want to use? {\bf linux-x86}
+\end{alltt}
+
+\section{Make some changes to the files in configure/}
+Edit the {\tt configure/RELEASE} file which makeBaseApp.pl created and add an
+entry describing the path to where you installed the EPICS ASYN module:
+\begin{alltt}
+ASYN=/home/EPICS/R3.14.5/modules/soft/asyn
+\end{alltt}
+
+Edit the {\tt configure/CONFIG} file which makeBaseApp.pl created and specify
+the IOC architectures on which the application is to run.
+I wanted the application to run as a soft IOC, so I uncommented the
+\verb@CROSS_COMPILER_TARGET_ARCHS@ definition and set the definition
+to be empty:
+\begin{verbatim}
+CROSS_COMPILER_TARGET_ARCHS =
+\end{verbatim}
+
+\section{Create the device support file}
+The contents of the device support
+file provide all the details of the communication between the device
+and EPICS.
+The easiest way to create a device support file is to copy
+the skeleton device support file from the gpibCore module source directory to
+your application source directory:
+\begin{alltt}
+norume> {\bf cd AB300App/src}
+norume> {\bf cp /usr/EPICS/R3.14.5/modules/soft/asyn/devGpib/devSkeletonGpib.c devAB300.c}
+\end{alltt}
+Of course, device support for a device similar
+to the one you're working with  provides an even easier starting point.
+
+The remainder this section describes the changes that I made to the skeleton
+file in order to support the AB300 filter wheel.
+You'll have to modify the steps as appropriate for your device.
+
+\subsection{Declare the DSET tables provided by the device support}
+Since the AB300
+provides only longin and longout records most of the \verb@DSET_@{\it xxx}
+define statements can
+be removed.  Because of the way that the device initialization is performed
+you must define an analog-in DSET even if the device provides no analog-in
+records (as is the case for the AB300).
+\begin{verbatim}
+#define DSET_AI    devAB300_ai
+#define DSET_LI    devAB300_li
+#define DSET_LO    devAB300_lo
+\end{verbatim}
+
+\subsection{Select timeout values}
+The default value of \verb@TIMEWINDOW@  (2 seconds) is
+reasonable for the AB300, but I increased the value of \verb@TIMEOUT@ to
+5~seconds since the filter wheel can be slow in responding.
+\begin{verbatim}
+#define TIMEOUT     5.0
+#define TIMEWINDOW  2.0
+\end{verbatim}
+
+
+\subsection{Clean up some unused values}
+The skeleton file provides a number of
+character string arrays.  None are needed for the AB300 so I just removed them.
+Not much space would be wasted by just leaving them in place however.
+
+\subsection{Declare the command array}
+This is the hardest part of the job.  Here's where you have to figure
+how to produce the command strings required to control the device
+and how to convert the device responses into EPICS process variable
+values.
+
+Each command array entry describes the details of a single
+I/O operation type.
+The application database uses the index of the entry in the command array to
+provide the link between the process variable and the I/O operation to
+read or write that value.
+
+The command array entries I created for the AB300 are shown below.  The
+elements of each entry are described using the names from
+the
+\htmladdnormallink{GPIB documentation}{http://www.aps.anl.gov/epics/modules/soft/asyn/documentation/devGgpib.html}.
+\subsubsection{Command array index 0 -- Device Reset}
+\begin{verbatim}
+   {&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "\377\377\033", 10, 10,
+       NULL, 0, 0, NULL, NULL, "\033"},
+\end{verbatim}
+\begin{description}
+\item[dset] This command is associated with an longout record.
+\item[type] A WRITE operation is to be performed.
+\item[pri] This operation should be placed on the high-priority queue
+of I/O requests.
+\item[cmd] Because this is a GPIBWRITE operation this element is unused.
+\item[format] The format string to generate the command to be sent to the device.  The first two bytes are
+the RESET command, the third byte is the ECHO command.
+The AB300 sends no response to a reset command
+so I send the 'ECHO' to verify that the
+device is responding.  The AB300 resets itself fast enough that it can see an
+echo command immediately following the reset command.
+
+Note that the process variable value is not used (there's no printf \verb@%@
+format character in the command string).  The AB300 is reset whenever the
+EPICS record is processed.
+\item[rspLen] The size of the readback buffer.  Although only one readback byte is
+expected I allow for a few extra bytes just in case.
+\item[msgLen] The size of the buffer into which the command string is placed.  I allowed
+a little extra space in case a longer command is used some day.
+\item[convert] No special conversion function is needed.
+\item[P1,P2,P3] There's no special conversion function so no arguments are needed.
+\item[pdevGpibNames] There's no name table.
+\item[eos] The end-of-string value used to mark the end of the readback operation.
+\end{description}
+
+
+
+
+\subsubsection{Command array index 1 -- Go to new filter position}
+\begin{verbatim}
+    {&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "\017%c", 10, 10,
+        NULL, 0, 0, NULL, NULL, "\030"},
+\end{verbatim}
+\begin{description}
+\item[dset] This command is associated with an longout record.
+\item[type] A WRITE operation is to be performed.
+\item[pri] This operation should be placed on the high-priority queue
+of I/O requests.
+\item[cmd] Because this is a GPIBWRITE operation this element is unused.
+\item[format] The format string to generate the command to be sent to the device.
+The filter
+position (1-6) can be converted to the
+required command byte with the printf \verb@%c@ format.
+\item[rspLen] The size of the readback buffer.  Although only two readback bytes are
+expected I allow for a few extra bytes just in case.
+\item[msgLen] The size of the buffer into which the command string is placed.  I allowed
+a little extra space in case a longer command is used some day.
+\item[convert] No special conversion function is needed.
+\item[P1,P2,P3] There's no special conversion function so no arguments are needed.
+\item[pdevGpibNames] There's no name table.
+\item[eos] The end-of-string value used to mark the end of the readback operation.
+\end{description}
+
+
+
+\subsubsection{Command array index 2 -- Query filter position}
+\begin{verbatim}
+    {&DSET_LI, GPIBREAD, IB_Q_LOW, "\035", NULL, 0, 10,
+        convertPositionReply, 0, 0, NULL, NULL, "\030"},
+\end{verbatim}
+\begin{description}
+\item[dset] This command is associated with an longin record.
+\item[type] A READ operation is to be performed.
+\item[pri] This operation should be placed on the high-priority queue
+of I/O requests.
+\item[cmd] The command string to be sent to the device.
+The AB300 responds to this command by sending back three bytes: the current
+position, the controller status, and a terminating \verb@'\030'@.
+\item[format] Because this is a GPIBREAD operation this element is unused.
+\item[rspLen] There is no command echo to be read.
+\item[msgLen] The size of the buffer into which the reply string is placed. 
+Although only three reply bytes are
+expected I allow for a few extra bytes just in case.
+\item[convert] There's no sscanf format that can convert the reply from the
+AB300 so a special conversion function must be provided.
+\item[P1,P2,P3] The special conversion function requires no arguments.
+\item[pdevGpibNames] There's no name table.
+\item[eos] The end-of-string value used to mark the end of the read operation.
+\end{description}
+
+
+
+\subsubsection{Command array index 3 -- Query controller status}
+This command array entry is almost identical to the previous entry.  The
+only change is that a different custom conversion function is used.
+\begin{verbatim}
+    {&DSET_LI, GPIBREAD, IB_Q_LOW, "\035", NULL, 0, 10,
+        convertStatusReply, 0, 0, NULL, NULL, "\030"},
+\end{verbatim}
+
+
+
+\subsection{Write the special conversion functions}
+As mentioned above, special conversion functions are need to convert reply
+messages from the AB300 into EPICS PV values.
+The easiest place to put these functions is just before the
+\verb@gpibCmds@ table.
+The conversion functions are passed a pointer to the \verb@gpibDpvt@ structure
+and three values from the command table entry.
+The \verb@gpibDpvt@ structure contains a pointer to the EPICS record.
+The custom conversion function uses this pointer
+to set the record's value field.
+
+Here are the custom conversion functions I wrote for the AB300.
+\begin{verbatim}
+/*
+ * Custom conversion routines
+ */
+static int
+convertPositionReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
+{
+    struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
+
+    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+                      pdpvt->pasynUser->errorMessageSize,
+                      "Invalid reply");
+        return -1;
+    }
+    pli->val = pdpvt->msg[0];
+    return 0;
+}
+static int
+convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
+{
+    struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
+
+    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+                      pdpvt->pasynUser->errorMessageSize,
+                      "Invalid reply");
+        return -1;
+    }
+    pli->val = pdpvt->msg[1];
+    return 0;
+}
+\end{verbatim}
+
+Some points of interest:
+\begin{enumerate}
+\item
+The custom conversion function can pass back an error message by printing
+it to the \verb@errorMessage@ buffer.
+\item
+I put in a sanity check to ensure that the end-of-string character is where
+it should be.
+\end{enumerate}
+
+
+
+
+
+\subsection{Provide the device support initialization}
+Because of way code is stored in object libraries on different systems
+the device support parameter table must be initialized at run-time.  The
+analog-in initializer is used to perform this operation.  This is why
+all device support files must declare an analog-in DSET.
+
+Here's the initialization for the AB300 device support.  As you can see, most of
+the skeleton file values are left unchanged:
+\begin{alltt}
+static long init_ai(int parm)
+\verb@{@
+  if(parm==0) \verb@{@
+    devSupParms.name = "devAB300";
+    devSupParms.gpibCmds = gpibCmds;
+    devSupParms.numparams = NUMPARAMS;
+    devSupParms.timeout = TIMEOUT;
+    devSupParms.timeWindow = TIMEWINDOW;
+    devSupParms.respond2Writes = 0;
+  \verb@}@
+  return(0);
+\verb@}@
+\end{alltt}
+Three values have been changed:
+\begin{enumerate}
+\item
+The AB300 sends back values in response to commands, but needs no time delay,
+so the respond2Writes entry is set to 0.
+\item
+The name entry is used for diagnostic purposes only.
+\end{enumerate}
+
+\section{Add the device support to the application}
+The makeBaseApp.pl script produces an application Makefile
+({\tt AB300App/src/Makefile})
+with a commented-out set of application example source files.
+Remove the comment character and change the example names to the
+name of the device support file created in the previous section:
+\begin{verbatim}
+AB300_SRCS += devAB300.c
+\end{verbatim}
+
+You must also link the GPIB support libraries with your application.  Add the following line
+\begin{verbatim}
+AB300_LIBS += asyn
+\end{verbatim}
+before the
+\begin{verbatim}
+AB300_LIBS += $(EPICS_BASE_IOC_LIBS)
+\end{verbatim}
+line in the application Makefile.
+
+
+
+
+
+\section{Modify the application database definition file}
+Here's where you specify the link between the DSET names defined in the
+device support file and the DTYP fields in the application database.
+The {\tt AB300App/src/AB300Include.dbd} file created by makeBaseApp.pl needs to
+be changed to include this information.
+I used \verb@"AB300Gpib"@ as the device type.
+
+The driver support for serial line 'GPIB' devices must also be included in
+the application as shown.
+
+\verbatimfile{AB300/AB300App/src/AB300Include.dbd}
+
+
+
+
+\section{Create the application database file}
+Now that the application includes the necessary device and driver support 
+it's possible to create the database describing the actual EPICS process
+variables associated with the filter wheel.  
+
+I created the file {\tt AB300App/Db/AB300.db} with the following contents:
+\verbatimfile{AB300/AB300App/Db/AB300.db}
+Notes:
+\begin{enumerate}
+\item The numbers following the \verb@L@ in
+the INP and OUT fields are the 
+number of the `link' used to communicate with the filter wheel.  This
+link is set up at run time by commands in the application startup script.
+\item The numbers following the \verb@A@ in
+the INP and OUT fields are unused by the device support but must be
+a valid GPIB address (0-30) since the GPIB address conversion routines
+check the value and the diagnostic display routines require a matching value.
+\item The numbers following the \verb|@| in
+the INP and OUT fields are the 
+indices into the GPIB command array.
+\item The DTYP fields must match the names specified in the AB300Include.dbd
+database definition.
+\end{enumerate}
+
+
+\section{Add the database file to the application}
+The makeBaseApp.pl script put and exampl application database file
+into {\tt AB300App/Db/Makefile} as a comment.  
+Replace the example name with the name of the database file created in the
+previous step, leaving:
+\begin{verbatim}
+DB += AB300.db
+\end{verbatim}
+
+
+
+\section{Modify the application startup script}
+The {\tt iocBoot/iocAB300/st.cmd} application startup script created by the
+makeBaseApp.pl script needs a few changes to get the application 
+working properly.
+
+\begin{enumerate}
+\item Ensure that the application database records are loaded.  Remove the
+\verb@#@
+and give a reasonable value to the 'user' macro:
+\begin{verbatim}
+dbLoadRecords("../../db/AB300.db","user=AB300")
+\end{verbatim}
+
+\item Set up the 'link' between the IOC and the filter wheel.
+\begin{itemize}
+\item If you're using
+an Ethernet/RS-232 converter or a device which communicates over
+a telnet-style socket connection you need to specify the Internet host and
+port number like:
+\begin{verbatim}
+drvTermiosTtyGpibConfigure("L0","164.54.9.91:4002",0,0)
+\end{verbatim}
+
+
+\item If you're using a serial line directly attached to the IOC you need
+something like:
+\begin{verbatim}
+drvGenericSerialConfigure("L0","/dev/ttyS0",0,0)
+asynSetPortOption("L0", "baud", "9600")
+asynSetPortOption("L0", "bits", "8")
+asynSetPortOption("L0", "parity", "none")
+asynSetPortOption("L0", "stop", "1")
+asynSetPortOption("L0", "clocal", "Y")
+asynSetPortOption("L0", "crtscts", "N")
+\end{verbatim}
+
+\item If you're using a serial line directly attached to a vxWorks IOC you must
+first configure the serial port interface hardware.  The following example shows the
+commands to configure a port on a GreenSprings UART Industry-Pack module.
+\begin{verbatim}
+ipacAddVIPC616_01("0x6000,B0000000")
+tyGSOctalDrv(1)
+tyGSOctalModuleInit("RS232", 0x80, 0, 0)
+tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
+asynSetPortOption("L0","9600")
+\end{verbatim}
+\end{itemize}
+
+In all of the above examples the first argument of the
+drvTermiosTtyGpibConfigure and asynSetPortOption commands is
+the link identifier and must match the \verb@L@ value in the EPICS
+database record INP and OUT fields.
+
+\item Add lines to control the debugging level of the serial line 'GPIB' driver.
+The following turns on full tracing of control flow and every I/O operation
+which is useful during initial debugging.
+\begin{verbatim}
+asynSetTraceMask("L0",0,0xff)
+asynSetTraceIOMask("L0",0,0x2)
+\end{verbatim}
+
+\end{enumerate}
+
+
+
+
+
+
+\section{Build the application}
+Change directories to the top-level directory of your application and:
+\begin{alltt}
+norume> {\bf make}
+\end{alltt}
+({\bf gmake} on solaris).
+
+If all goes well you'll be left with an executable program in
+{\tt bin/linux-x86/AB300}.
+
+
+
+\section{Run the application}
+Change directories to where makeBaseApp.pl put the application startup script
+and run the application:
+\begin{alltt}
+norume> {\bf cd iocBoot/iocAB300}
+norume> {\bf ../../bin/linux-x86/AB300 st.cmd}
+dbLoadDatabase("../../dbd/AB300.dbd",0,0)
+AB300_registerRecordDeviceDriver(pdbbase) 
+dbLoadRecords("../../db/AB300.db","user=AB300")
+drvGenericSerialConfigure("L0","164.54.9.91:4002",0,0)
+asynSetTraceMask("L0",0,0xff)
+asynSetTraceIOMask("L0",0,0x2)
+iocInit()
+############################################################################
+###  EPICS IOC CORE built on Jan 29 2004
+###  EPICS R3.14.5 $$Name: not supported by cvs2svn $$ $$Date: 2004-01-28 20:17:39 $$
+############################################################################
+Starting iocInit
+iocInit: All initialization complete
+epics>
+\end{alltt}
+
+Check the process variable names:
+\begin{alltt}
+epics> {\bf dbl}
+AB300:FilterWheel:fbk
+AB300:FilterWheel:status
+AB300:FilterWheel
+AB300:FilterWheel:reset
+\end{alltt}
+
+Reset the filter wheel.  The values sent between the IOC and the filter wheel
+are shown:
+\begin{alltt}
+epics> {\bf dbpf AB300:FilterWheel:reset 0}
+DBR_LONG:           0         0x0                 
+drvGenericSerial set eos 1 \verb@\@033
+drvGenericSerialWrite 3 \verb@\@377\verb@\@377\verb@\@033
+drvGenericSerialRead 1 \verb@\@033
+\end{alltt}
+
+Read back the filter wheel position.  The dbtr command prints the record
+before the I/O has a chance to occur:
+\begin{alltt}
+epics> {\bf dbtr AB300:FilterWheel:fbk}
+ACKS: NO_ALARM      ACKT: YES           ADEL: 0             ALST: 0
+ASG:                BKPT: 0x00          DESC: Filter Wheel Position
+DISA: 0             DISP: 0             DISS: NO_ALARM      DISV: 1
+DTYP: AB300Gpib     EGU:                EVNT: 0             FLNK:CONSTANT 0
+HHSV: NO_ALARM      HIGH: 0             HIHI: 0             HOPR: 6
+HSV: NO_ALARM       HYST: 0             INP:GPIB_IO #L0 A0 @2
+LALM: 0             LCNT: 0             LLSV: NO_ALARM      LOLO: 0
+LOPR: 1             LOW: 0              LSV: NO_ALARM       MDEL: 0
+MLST: 0             NAME: AB300:FilterWheel:fbk             NSEV: NO_ALARM
+NSTA: NO_ALARM      PACT: 1             PHAS: 0             PINI: NO
+PRIO: LOW           PROC: 0             PUTF: 0             RPRO: 0
+SCAN: Passive       SDIS:CONSTANT       SEVR: INVALID       SIML:CONSTANT
+SIMM: NO            SIMS: NO_ALARM      SIOL:CONSTANT       STAT: UDF
+SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
+UDF: 1              VAL: 0
+drvGenericSerial set eos 1 \verb@\@030
+drvGenericSerialWrite 1 \verb@\@035
+drvGenericSerialRead 3 \verb@\@001\verb@\@020\verb@\@030
+\end{alltt}
+
+Now the process variable should have that value:
+\begin{alltt}
+epics> {\bf dbpr AB300:FilterWheel:fbk}
+ASG:                DESC: Filter Wheel Position             DISA: 0
+DISP: 0             DISV: 1             NAME: AB300:FilterWheel:fbk
+SEVR: NO_ALARM      STAT: NO_ALARM      SVAL: 0             TPRO: 0
+VAL: 1
+\end{alltt}
+
+
+
+Move the wheel to position 4:
+
+\begin{alltt}
+epics> {\bf dbpf AB300:FilterWheel 4}
+DBR_LONG:           4         0x4
+drvGenericSerialWrite 2 \verb@\@017\verb@\@004
+drvGenericSerialRead 1 \verb@\@020
+drvGenericSerialRead 1 \verb@\@030
+\end{alltt}
+
+Read back the position:
+\begin{alltt}
+epics> {\bf dbtr AB300:FilterWheel:fbk}
+ACKS: NO_ALARM      ACKT: YES           ADEL: 0             ALST: 1
+ASG:                BKPT: 0x00          DESC: Filter Wheel Position
+DISA: 0             DISP: 0             DISS: NO_ALARM      DISV: 1
+DTYP: AB300Gpib     EGU:                EVNT: 0             FLNK:CONSTANT 0
+HHSV: NO_ALARM      HIGH: 0             HIHI: 0             HOPR: 6
+HSV: NO_ALARM       HYST: 0             INP:GPIB_IO #L0 A0 @2
+LALM: 1             LCNT: 0             LLSV: NO_ALARM      LOLO: 0
+LOPR: 1             LOW: 0              LSV: NO_ALARM       MDEL: 0
+MLST: 1             NAME: AB300:FilterWheel:fbk             NSEV: NO_ALARM
+NSTA: NO_ALARM      PACT: 1             PHAS: 0             PINI: NO
+PRIO: LOW           PROC: 0             PUTF: 0             RPRO: 0
+SCAN: Passive       SDIS:CONSTANT       SEVR: NO_ALARM      SIML:CONSTANT
+SIMM: NO            SIMS: NO_ALARM      SIOL:CONSTANT       STAT: NO_ALARM
+SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
+UDF: 0              VAL: 1
+drvGenericSerialWrite 1 \verb@\@035
+drvGenericSerialRead 3 \verb@\@004\verb@\@020\verb@\@030
+\end{alltt}
+
+And it really is 4:
+\begin{alltt}
+epics> {\bf dbpr AB300:FilterWheel:fbk}
+ASG:                DESC: Filter Wheel Position             DISA: 0
+DISP: 0             DISV: 1             NAME: AB300:FilterWheel:fbk
+SEVR: NO_ALARM      STAT: NO_ALARM      SVAL: 0             TPRO: 0
+VAL: 4
+\end{alltt}
+
+\newpage
+\section{Device Support File}
+Here is the complete device support file for the AB300 filter wheel
+({\tt AB300App/src/devAB300.c}):
+\verbatimfile{AB300/AB300App/src/devAB300.c}
+
+\end{document}
