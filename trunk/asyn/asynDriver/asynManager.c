@@ -811,8 +811,8 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
         return(0);
     }
     pasynTracePvt = &pasynDevice->trace;
-    epicsMutexMustLock(pasynBase->lockTrace);
     if(!(reason&pasynTracePvt->traceMask)) return(0);
+    epicsMutexMustLock(pasynBase->lockTrace);
     fd = (pasynTracePvt->fd) ? pasynTracePvt->fd : stdout;
     va_start(pvar,pformat);
     nout = vfprintf(fd,pformat,pvar);
