@@ -22,12 +22,12 @@ be macros and all PV names should be prefixed with a macro.
 <ol>
   <li>Make a directory in modules/instrument/ for your instrument.</li>
   <li>'cd' to the directory created in the previous step and create a set of
-    support files by running the makeSupport.pl script: 
-    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
-    -t devGpib <em>&lt;InstName&gt;</em></p>
-    <p>for example:</p>
-    <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
-    -t instrument Keithley196</p>
+    support files by running the makeSupport.pl script:<br></br>
+    <em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
+    -t devGpib <em>&lt;InstName&gt;</em><br></br>
+    for example:<br></br>
+    &nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
+    -t instrument Keithley196
   </li>
   <li>Check configure/RELEASE and confirm that the ASYN and EPICS_BASE values
     specify the location of these packages on your system.</li>
