@@ -32,6 +32,7 @@
 #include <stringoutRecord.h>
 #include <dbCommon.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <registryFunction.h>
 #include <epicsExport.h>
 

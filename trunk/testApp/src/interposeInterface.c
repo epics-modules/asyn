@@ -24,6 +24,7 @@
 #include <iocsh.h>
 
 #include <asynDriver.h>
+#include <asynOctet.h>
 
 #define NUM_INTERFACES 1
 
