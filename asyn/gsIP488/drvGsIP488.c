@@ -330,6 +330,7 @@ static void gpibInterruptHandler(int v)
             message_complete = 1;
         }
         if(!message_complete && pgpib->bytesRemaining == 0) {
+            pgpib->status = asynOverflow;
             message_complete = 1;
         }
         if(message_complete) {
@@ -509,7 +510,7 @@ static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
     status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
     if(status!=asynSuccess) return(status);
     status = readIpGpib(pgpib,buf,cnt,actual,timeout);
-    if(status!=asynSuccess) return(status);
+    if(status!=asynSuccess && status!=asynOverflow) return(status);
     status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
     return(status);
 }
@@ -615,7 +616,7 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     asynStatus status;
-    int        actual;
+    int        actual = 0;
     double     timeout = setTimeout(pasynUser);
     int        addr = pasynManager->getAddr(pasynUser);
 
@@ -624,9 +625,13 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
     pgpib->errorMessage[0] = 0;
     status = readGpib(pgpib,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib status %s error %s\n",
-            pgpib->portName,(int)status,pgpib->errorMessage);
-        return(-1);
+        if(status==asynOverflow) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib overflow\n",
+            pgpib->portName);
+        } else {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib error %s\n",
+            pgpib->portName,pgpib->errorMessage);
+        }
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gsTi9914Read\n",pgpib->portName);
