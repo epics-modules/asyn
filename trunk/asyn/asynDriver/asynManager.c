@@ -917,7 +917,6 @@ static int cancelRequest(asynUser *pasynUser)
     int      i;
 
     if(!pport) {
-        epicsMutexUnlock(pport->lock);
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "asynManager:cancelRequest but not connected\n");
         return -1;
@@ -1050,7 +1049,6 @@ static asynStatus registerPort(const char *portName,
     ellInit(&pport->deviceList);
     ellInit(&pport->interfaceList);
     pport->notifyPortThread = epicsEventMustCreate(epicsEventEmpty);
-    epicsMutexMustLock(pport->lock);
     ellAdd(&pasynBase->asynPortList,&pport->node);
     priority = priority ? priority : epicsThreadPriorityMedium;
     stackSize = stackSize ?
@@ -1063,7 +1061,6 @@ static asynStatus registerPort(const char *portName,
             portName);
         return asynError;
     }
-    epicsMutexUnlock(pport->lock);
     return asynSuccess;
 }
 
