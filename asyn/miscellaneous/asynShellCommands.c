@@ -399,7 +399,7 @@ epicsShareFunc int epicsShareAPI
     }
     eoslen = dbTranslateEscape(eos,eosin);
     if(eoslen>2) {
-        printf("translateted eos is too long\n");
+        printf("translated eos is too long\n");
         return -1;
     }
     status = pasynOctetSyncIO->setOutputEosOnce(portName,addr,
@@ -415,7 +415,7 @@ epicsShareFunc int epicsShareAPI
     int  tranlen = 0;
     asynStatus  status;
 
-    status = pasynOctetSyncIO->getInputEosOnce(portName,addr,
+    status = pasynOctetSyncIO->getOutputEosOnce(portName,addr,
        eos,2,&eoslen,drvInfo);
     if(status!=asynSuccess) return -1;
     if(eoslen==0) {
