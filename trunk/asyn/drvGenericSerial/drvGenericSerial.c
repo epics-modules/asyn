@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.15 2004-01-14 18:50:34 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.16 2004-01-19 16:39:48 norume Exp $
  */
 
 #include <string.h>
@@ -49,6 +49,8 @@
 # include <termios.h>
 #endif
 
+#define INBUFFER_SIZE   600
+
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each serial line.
@@ -61,6 +63,11 @@ typedef struct {
     char              *eos;
     int                eoslen;
     int                eosCapacity;
+    char               inBuffer[INBUFFER_SIZE];
+    unsigned int       inBufferHead;
+    unsigned int       inBufferTail;
+    unsigned int       inBufferEosTail;
+    int                eosMatch;
     osiSockAddr        farAddr;
     epicsTimerQueueId  timerQueue;
     epicsTimerId       timer;
@@ -91,9 +98,9 @@ drvGenericSerialReport(void *drvPvt, FILE *fp, int details)
     if (details >= 1) {
         if (tty->fd >= 0)
             fprintf(fp, "                    fd: %d\n", tty->fd);
-        fprintf(fp, "            Reconnects: %ld\n", tty->nReconnect);
-        fprintf(fp, "    Characters written: %ld\n", tty->nWritten);
-        fprintf(fp, "       Characters read: %ld\n", tty->nRead);
+        fprintf(fp, "            Reconnects: %lu\n", tty->nReconnect);
+        fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
+        fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }
 }
 
@@ -612,33 +619,19 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
 /*
  * Read from the serial line
  * It is tempting to consider the use of cooked (ICANON) termios mode
- * to read characters when the EOS is a single character valid, but
- * there are a couple of reasons why this isn't a good idea.
+ * to read characters when the EOS is a single character, but there
+ * are a couple of reasons why this isn't a good idea.
  *  1) The cooked data inside the kernel is a fixed size.  A long
  *     input message could end up being truncated.
- *  2) If the EOS character were changed to -1 there could be problem
+ *  2) If the EOS character were changed there could be problem
  *     with losing characters already on the cooked queue.
- * Question: When a read returns a positive value should we immediately
- *           return those character to our caller or should we loop
- *           until EOS is received or the character count is reached?
- *           For now I'm looping here.
- * Question: Given that we're looking for the EOS, if the EOS is found in
- *           the middle of a reply, what number of characters should be
- *           returned to our caller?  The total number of characters read
- *           or just the number up to and including the EOS?
- *               For now, I'm returning the latter.
- *           Should the extra characters be held till the next read?
- *               For now, I'm tossing them.
  */
 static int
 drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
-    int totalRead = 0;
-    int eosMatched = 0;
-    char *eosCheck = data;
-    int nleft = 0;
+    int nRead = 0;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -647,76 +640,91 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
       if (tty->openOnlyOnDisconnect) return asynError;
       if (openConnection(tty) != asynSuccess) return asynError;
     }
+    if (maxchars <= 0)
+        return 0;
     for (;;) {
+        while ((tty->inBufferTail != tty->inBufferHead)) {
+            char c = *data++ = tty->inBuffer[tty->inBufferTail++];
+            if (tty->inBufferTail == INBUFFER_SIZE)
+                tty->inBufferTail = 0;
+            nRead++;
+            tty->nRead++;
+            if (tty->eoslen != 0) {
+                if (c == tty->eos[tty->eosMatch]) {
+                    if (++tty->eosMatch == tty->eoslen) {
+                        tty->eosMatch = 0;
+                        tty->inBufferEosTail = tty->inBufferTail;
+                        return nRead;
+                    }
+                }
+                else {
+                    /*
+                     * Resynchronize the EOS search.  This can be a little
+                     * tricky since the situation could be a case like:
+                     *    End-of-string is "eeef"
+                     *    Input stream so far is "eeeeeeeee"
+                     */
+                    unsigned int i;
+                    for (;;) {
+                        if (++tty->inBufferEosTail == INBUFFER_SIZE)
+                            tty->inBufferEosTail = 0;
+                        if (tty->inBufferEosTail == tty->inBufferTail)
+                            break;
+                        tty->eosMatch = 0;
+                        i = tty->inBufferEosTail;
+                        for (;;) {
+                            if (tty->inBuffer[i] != tty->eos[tty->eosMatch]) {
+                                tty->eosMatch = 0;
+                                break;
+                            }
+                            tty->eosMatch++;
+                            if (++i == INBUFFER_SIZE)
+                                i = 0;
+                            if (i == tty->inBufferTail)
+                                break;
+                        }
+                        if (i == tty->inBufferTail)
+                            break;
+                    }
+                }
+            }
+            if (nRead >= maxchars)
+                return nRead;
+        }
+        if (tty->inBufferHead >= tty->inBufferEosTail)
+            thisRead = INBUFFER_SIZE - tty->inBufferHead;
+        else
+            thisRead = tty->inBufferEosTail;
+        /*
+         * Don't completely fill the buffer -- a completely full
+         * buffer is indisinguishable from a completely empty buffer.
+         */
+        if (tty->inBufferEosTail == tty->inBufferTail)
+            thisRead--;
         epicsTimerStartDelay(tty->timer, pasynUser->timeout);
-        thisRead = read(tty->fd, data, maxchars);
+        thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
         epicsTimerCancel(tty->timer);
         if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
             reportFailure(tty, "drvGenericSerialRead", "timeout");
-            closeConnection(tty);
-            return -1;
+            break;
         }
         if (thisRead < 0) {
             reportFailure(tty, "drvGenericSerialRead", strerror(errno));
-            closeConnection(tty);
-            return -1;
+            break;
         }
         if (thisRead == 0) {
             reportFailure(tty, "drvGenericSerialRead", "unexpected EOF");
-            closeConnection(tty);
-            return -1;
+            break;
         }
-        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
+        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
+                    tty->inBuffer + tty->inBufferHead, thisRead,
                    "drvGenericSerialRead %d ", thisRead);
-        totalRead += thisRead;
-        maxchars -= thisRead;
-        data += thisRead;
-        if (maxchars == 0) {
-            nleft = 0;
-        }
-        else if (tty->eoslen) {
-            nleft = data - eosCheck - eosMatched;
-            while (maxchars && nleft) {
-                if (eosMatched == 0) {
-                    char *cp = memchr(eosCheck, *tty->eos, nleft);
-                    if (cp == NULL) {
-                        eosCheck = data;
-                        break;
-                    }
-                    else {
-                        eosCheck = cp;
-                        nleft = data - eosCheck - 1;
-                        eosMatched = 1;
-                    }
-                }
-                for (;;) {
-                    if (eosMatched == tty->eoslen) {
-                        maxchars = 0;
-                        break;
-                    }
-                    if (nleft == 0) {
-                        break;
-                    }
-                    nleft--;
-                    if (tty->eos[eosMatched] != eosCheck[eosMatched]) {
-                        eosCheck++;
-                        eosMatched = 0;
-                        break;
-                    }
-                    eosMatched++;
-                }
-            }
-        }
-        if (maxchars == 0) {
-            if (nleft) {
-                errlogPrintf("Ignoring %d extra character%s from %s.\n",
-                          nleft, nleft == 1 ? "" : "s", tty->serialDeviceName);
-                totalRead -= nleft;
-            }
-            tty->nRead += totalRead;
-            return totalRead;
-        }
+        tty->inBufferHead += thisRead;
+        if (tty->inBufferHead == INBUFFER_SIZE)
+            tty->inBufferHead = 0;
     }
+    closeConnection(tty);
+    return -1;
 }
 
 /*
@@ -737,6 +745,8 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
         tcflush(tty->fd, TCIOFLUSH);
 #endif
     }
+    tty->inBufferHead = tty->inBufferTail = tty->inBufferEosTail = 0;
+    tty->eosMatch = 0;
     return asynSuccess;
 }
 
@@ -771,6 +781,8 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eos
             memcpy(tty->eos, eos, eoslen);
         }
         tty->eoslen = eoslen;
+        tty->inBufferEosTail = tty->inBufferTail;
+        tty->eosMatch = 0;
     }
     return asynSuccess;
 }
@@ -813,7 +825,6 @@ static const struct asynOctet drvGenericSerialAsynOctet = {
 /*
  * Configure and register a generic serial device
  */
-/* Dont make this statis so that it can be cxalled by vxWorks shell */
 int
 drvGenericSerialConfigure(char *portName,
                      char *ttyName,
