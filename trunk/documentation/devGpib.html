@@ -363,25 +363,25 @@ definition must define field OUT as</p>
 
 <p>gpibCmd is::</p>
 <pre>typedef struct gpibCmd {
-    gDset *dset;    /* address of DSET for specified record type */
-    int type;       /* enum - GPIBREAD...GPIBEFASTIW */
-    short pri;      /* request priority-- IB_Q_LOW, IB_Q_MEDIUM, or IB_Q_HIGH */
-    char *cmd;      /* CONSTANT STRING to send to instrument */
-    char *format;   /* string used to generate or interpret msg */
-    long rspLen;    /* room for response error message */
-    long msgLen;    /* room for return data message length */
+    gDset *dset; /* used to indicate record type supported */
+    int type;    /* enum - GPIBREAD...GPIBSRQHANDLER */
+    short pri;   /* request priority IB_Q_LOW, IB_G_MEDIUM, or IB_Q_HIGH */
+    char *cmd;   /* CONSTANT STRING to send to instrument */
+    char *format;/* string used to generate or interpret msg */
+    int rspLen;  /* room for response error message */
+    int msgLen;  /* room for return data message length */
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
-    int P1;         /* P1 plays a dual role: */
-                    /*      For EFAST it is set internally to the
-                    /*      number of entries in the EFAST table */
-                    /*      For convert it is passed to convert() */
-    int P2;         /* user defined parameter passed to convert() */
-    char **P3;      /* P3 plays a dual role: */
-                    /*      For EFAST it holds the address of the EFAST table */
-                    /*      For convert it is passed to convert() */
+    int P1;      /* P1 plays a dual role: */
+                 /*      For EFAST it is set internally to the
+                 /*      number of entries in the EFAST table */
+                 /*      For convert it is passed to convert() */
+    int P2;      /* user defined parameter passed to convert() */
+    char **P3;   /* P3 plays a dual role: */
+                 /*      For EFAST it holds the address of the EFAST table */
+                 /*      For convert it is passed to convert() */
     devGpibNames *pdevGpibNames; /* pointer to name strings */
-    int eosChar;    /* input end-of-string character */
+    int eosChar; /* input end-of-string character */
 } gpibCmd;</pre>
 
 <p>where</p>
