@@ -23,6 +23,7 @@
 #include <epicsStdio.h>
 #include <recGbl.h>
 #include <dbAccess.h>
+#include <dbScan.h>
 #include <alarm.h>
 #include <devSup.h>
 #include <recSup.h>
@@ -488,7 +489,7 @@ static void liSrqHandler(void *userPrivate,int gpibAddr,int statusByte)
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pli);
     pli->val = statusByte;
     pli->udf = FALSE;
-    requestProcessCallback(pgpibDpvt);
+    scanOnce(pgpibDpvt->precord);
 }
 
 long epicsShareAPI devGpib_initLi(longinRecord * pli)
