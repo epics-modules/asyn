@@ -82,20 +82,20 @@ static struct gpibCmd gpibCmds[] =
   /* Param 10 */
   {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld", 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 11 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 12 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 13 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 14 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
   /* Param 15 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  "%ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
 
   /* Param 16 (id)   */
-  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", "%s", 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", "%s", 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
   /* Param 18, */
   {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK",  0, 0, 0, 0, 0, 0, 0, 0, -1}
 };
