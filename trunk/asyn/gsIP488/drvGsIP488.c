@@ -53,6 +53,7 @@ static char *untalkUnlisten = "_?";
 #define GREEN_SPRING_ID  0xf0
 #define GSIP_488  0x14
 
+typedef volatile struct ip488RegisterMap ip488RegisterMap;
 typedef enum {
     transferStateIdle, transferStateRead, transferStateWrite, transferStateCntl
 } transferState_t;
@@ -73,24 +74,24 @@ typedef struct gpib {
     /*bytesRemaining and nextByte are used by gpibInterruptHandler*/
     int	        bytesRemaining;
     epicsUInt8  *nextByte;
-    /*buffer is holds data sent/received from user*/
+    /*buffer: data sent/received to/from user*/
     int         bufferSize;
     epicsUInt8  *buffer;
     epicsBoolean transferEoiOnLast;
     transferState_t transferState;
     int         eos;
-    volatile struct ip488RegisterMap	*regs;	/* hardware registers*/
+    ip488RegisterMap	*regs;	/* hardware registers*/
     asynStatus status; /*status of ip transfer*/
     epicsEventId waitForInterrupt;
     char errorMessage[ERROR_MESSAGE_BUFFER_SIZE];
 }gpib;
 
 static void printStatus(gpib *pgpib,const char *source);
-static epicsBoolean auxCmd(volatile struct ip488RegisterMap *regs,
+static epicsBoolean auxCmd(ip488RegisterMap *regs,
     epicsUInt16 outval, volatile epicsUInt16 *regin,
     epicsUInt16 mask, epicsUInt16 inval);
 /*auxCmdIH is called from interrupt handler*/
-static epicsBoolean auxCmdIH(volatile struct ip488RegisterMap *regs,
+static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
     epicsUInt16 outval, volatile epicsUInt16 *regin,
     epicsUInt16 mask, epicsUInt16 inval);
 static void sicIpGpib(gpib *pgpib);
@@ -104,9 +105,9 @@ static asynStatus cmdIpGpib(gpib *pgpib,
 static asynStatus readIpGpib(gpib *pgpib,
     char *buf, int cnt, int *actual, double timeout);
 static asynStatus writeIpGpib(gpib *pgpib,
-    const char *buf, int cnt, epicsBoolean raw_flag, double timeout);
+    const char *buf, int cnt, int *actual, epicsBoolean raw_flag, double timeout);
 /* Routines called by asynGpibPort methods */
-static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt,
+static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt, int *actual,
     int addr, double timeout);
 static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
     int addr, double timeout);
@@ -137,7 +138,7 @@ static asynStatus gsTi9914SerialPollBegin(void *pdrvPvt);
 static int gsTi9914SerialPoll(void *pdrvPvt, int addr, double timeout);
 static asynStatus gsTi9914SerialPollEnd(void *pdrvPvt);
 
-typedef volatile struct ip488RegisterMap {
+struct ip488RegisterMap {
   epicsUInt16 intStatusMask0;
   epicsUInt16 intStatusMask1;
   epicsUInt16 addressStatus;
@@ -148,7 +149,7 @@ typedef volatile struct ip488RegisterMap {
   epicsUInt16 data;
   epicsUInt16 addressSwitch;
   epicsUInt16 vectorRegister;
-} ip488RegisterMap;
+};
 
 /* intStatusMask0 */
 #define isr0MAC    0x01   /*My Address Change*/
@@ -217,7 +218,7 @@ static void printStatus(gpib *pgpib, const char *source)
         (readw(&pgpib->regs->busStatusAuxCmd)&0xff));
 }
 
-static epicsBoolean auxCmd(volatile struct ip488RegisterMap *regs,
+static epicsBoolean auxCmd(ip488RegisterMap *regs,
     epicsUInt16 outval, volatile epicsUInt16 *regin,
     epicsUInt16 mask, epicsUInt16 inval)
 {
@@ -235,7 +236,7 @@ static epicsBoolean auxCmd(volatile struct ip488RegisterMap *regs,
     return(epicsFalse);
 }
 
-static epicsBoolean auxCmdIH(volatile struct ip488RegisterMap *regs,
+static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
     epicsUInt16 outval, volatile epicsUInt16 *regin,
     epicsUInt16 mask, epicsUInt16 inval)
 {
@@ -377,6 +378,19 @@ static void gpibInterruptHandler(int v)
         }
         break;
     case transferStateCntl:
+        if (copyIsr1 & isr1ERR) {
+            /* Handshake failure -- we ain't got a listener */
+            writew(0,&regs->intStatusMask0);
+            ++(pgpib->bytesRemaining);
+            --(pgpib->nextByte);
+            logMsg("drvGsIP488::interruptHandler Handshake failure "
+                "ISR0 %x ISR1 %x\n",
+                copyIsr0&0xff,copyIsr1&0xff,0,0,0,0);
+            pgpib->transferState = transferStateIdle;
+    	    pgpib->status = asynError;
+            epicsEventSignal(pgpib->waitForInterrupt);
+            return ;
+        }
         if (copyIsr0 & isr0BO) { /* We are ready to send a byte now*/
             epicsUInt8 data;
             if (pgpib->bytesRemaining == 0) {
@@ -454,7 +468,7 @@ static asynStatus readIpGpib(gpib *pgpib,
 }
 
 static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
-    int cnt, epicsBoolean raw_flag, double timeout)
+    int cnt, int *actual, epicsBoolean raw_flag, double timeout)
 {
     ip488RegisterMap *regs = pgpib->regs;
 
@@ -478,21 +492,23 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
     writew(isr0BO,&regs->intStatusMask0);
     waitTimeout(pgpib,timeout);
     auxCmd(regs,auxCmdtonC,&regs->addressStatus,asrTADS,0);
+    *actual = cnt - pgpib->bytesRemaining;
     return(pgpib->status);
 
 }
 
-static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt,
+static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt, int *actual,
      int addr, double timeout)
 {
     char cmdbuf[3];
     asynStatus status;
 
+    *actual=0;
     strcpy(cmdbuf,untalkUnlisten);
     cmdbuf[2] = (char)(addr + 0x20);
     status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
     if(status!=asynSuccess) return(status);
-    status = writeIpGpib(pgpib,buf,cnt,epicsFalse,timeout);
+    status = writeIpGpib(pgpib,buf,cnt,actual,epicsFalse,timeout);
     if(status!=asynSuccess) return(status);
     status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
     return(status);
@@ -643,21 +659,27 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     asynStatus status;
+    int        actual = 0;
     double     timeout = setTimeout(pasynUser);
     int        addr = pasynManager->getAddr(pasynUser);
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d",
         pgpib->portName,numchars);
     pgpib->errorMessage[0] = 0;
-    status = writeGpib(pgpib,data,numchars,addr,timeout);
+    status = writeGpib(pgpib,data,numchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
             pgpib->portName,pgpib->errorMessage);
-        return(-1);
+        return(actual);
+    }
+    if(actual!=numchars) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s requested %d but sent %d\n",
+            pgpib->portName,numchars,actual);
+        return(actual);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
-        data,numchars,"%s gsTi9914Write\n",pgpib->portName);
-    return(numchars);
+        data,actual,"%s gsTi9914Write\n",pgpib->portName);
+    return(actual);
 }
 
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
@@ -799,7 +821,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
 {
     gpib *pgpib;
     int ipstatus;
-    volatile struct ip488RegisterMap *regs;
+    ip488RegisterMap *regs;
     int size;
 
     ipstatus = ipmValidate(carrier,module,GREEN_SPRING_ID,GSIP_488);
@@ -807,7 +829,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
         printf("gsIP488Configure Unable to validate IP module");
         return(0);
     }
-    regs = (volatile struct ip488RegisterMap*)ipmBaseAddr(
+    regs = (ip488RegisterMap*)ipmBaseAddr(
         carrier, module, ipac_addrIO);
     if(!regs) {
         printf("gsIP488Configure no memory allocated "
