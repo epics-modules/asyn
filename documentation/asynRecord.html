@@ -221,7 +221,7 @@ processes.</p>
     <TD>The output data which is sent to the device if OFMT=&quot;Binary&quot;
       or&nbsp; &quot;Hybrid&quot;. The 
       maximum length of this field is controlled by OMAX. The actual number of 
-      bytes to be sent to the device when OFMT=&quot;Hybrid&quot; will be&nbsp; <CODE>strlen(AOUT)</CODE> 
+      bytes to be sent to the device when OFMT=&quot;Hybrid&quot; will be&nbsp; <CODE>strlen(BOUT)</CODE> 
       plus <CODE>strlen(OEOS). </CODE> The actual number of 
       bytes to be sent to the device when OFMP=&quot;Binary&quot; will be NOWT.</TD></TR>
   <TR vAlign=top>
@@ -267,7 +267,7 @@ processes.</p>
       <TABLE>
         <TBODY>
         <TR vAlign=top>
-          <TD>"ASCII (default)"</TD>
+          <TD>"ASCII &quot;(default)</TD>
           <TD>The data sent to the device will be taken from the AOUT 
         field.</TD></TR>
         <TR vAlign=top>
@@ -387,7 +387,7 @@ not called.
 fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format) 
 field is used to select one or the other as the destination of data sent from 
 the  device. 
-<P>A read operation terminates when 1 of the following 4 conditions is 
+<P>A read operation terminates when any 1 of the following 4 conditions is 
 met: 
 <OL>
   <LI>The input terminator (IEOS) is found (if IFMT=&quot;ASCII&quot; or
@@ -462,7 +462,9 @@ IP-Octal on vxWorks.&nbsp; They cannot currently be set for Ethernet/serial
 adapters like the Moxa units.<P>
  The baud rates actually available are device dependent.&nbsp; For the SBS 
  IP-Octal module the maximum baud rate is 38400. 
-<p>&nbsp;</p>
+<P>
+ These record fields are set to the values currently in effect for the port when 
+ the connection to the port is made.<p>&nbsp;</p>
 <HR>
 
 <h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
@@ -654,7 +656,7 @@ adapters like the Moxa units.<P>
  The TFIL field is used to set the name of the trace file.&nbsp; It is not
  possible for the asyn record to determine the current file name if the record
  did not set it.&nbsp; In this case the file name is displayed as
- &quot;Unknown&quot;.&nbsp; Set this field to a string to a file name (including
+ &quot;Unknown&quot;.&nbsp; Set this field to a string  file name (including
  possibly a valid path from the IOC's current default directory) to have the
  output written to that file.&nbsp; Set the string to &quot;&quot; (null string)
  to set the output to stdout.
@@ -689,7 +691,7 @@ adapters like the Moxa units.<P>
     <TD>R</TD>
     <TD>&quot;Enabled&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enable&quot;.</TD>
+    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enabled&quot;.</TD>
   </tr>
   <tr>
     <TD>ENBL</TD>
@@ -711,8 +713,8 @@ adapters like the Moxa units.<P>
     <TD>R/W</TD>
     <TD>&quot;Connect/Disconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Disconnects or connects the device.&nbsp; Choices are
-      &quot;Disconnect&quot; and &quot;Connect:.</TD>
+    <TD>Disconnects or connects the device.&nbsp; Choices are &quot;Disconnect&quot; and 
+    &quot;Connect&quot;</TD>
   </tr>
 </TABLE>
 <p>&nbsp;</p>
