@@ -72,18 +72,19 @@ static long get_precision(struct dbAddr *paddr, long *precision);
 #define get_control_double NULL
 #define get_alarm_double NULL
 
-static void  monitor(asynRecord *pasynRec);
-static void  monitorStatus(asynRecord *pasynRec);
+static void monitor(asynRecord *pasynRec);
+static void monitorStatus(asynRecord *pasynRec);
 static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord);
-static void  GPIB_command(asynUser *pasynUser);
+static void GPIB_command(asynUser *pasynUser);
 
-static void  asynCallback(asynUser *pasynUser);
-static void  exceptCallback(asynUser *pasynUser, asynException exception);
-static void  performIO(asynUser *pasynUser);
-static void  setOption(asynUser *pasynUser);
-static void  getOptions(asynUser *pasynUser);
+static void asynCallback(asynUser *pasynUser);
+static void exceptCallback(asynUser *pasynUser, asynException exception);
+static void performIO(asynUser *pasynUser);
+static void setOption(asynUser *pasynUser);
+static void getOptions(asynUser *pasynUser);
 static void reportError(asynRecord *pasynRec, int status, int severity,
                         const char *errorMessage, const char *pformat, ...);
+static void resetError(asynRecord *pasynRec);
 
 struct rset asynRSET={
    RSETNUMBER,
@@ -257,8 +258,8 @@ static long special(struct dbAddr *paddr, int after)
 
     if (!after) return(status);
     epicsMutexMustLock(pasynRecPvt->lock);
-    /* Process trace flags without regard to state so we can change 
-     * debugging even when busy */
+    resetError(pasynRec);
+    /* The first set of fields can be handled even if state != stateIdle */
     switch (fieldIndex) {
        case asynRecordTB0: 
        case asynRecordTB1: 
@@ -503,6 +504,7 @@ static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord)
     asynUser *pasynUser = pasynRecPvt->pasynUser;
     asynStatus status;
 
+    resetError(pasynRec);
     /* Disconnect any connected device.  Ignore error if there
      * is no device currently connected.
      */
@@ -748,6 +750,7 @@ static void performIO(asynUser *pasynUser)
    int     eoslen;
    char eos[EOS_SIZE];
 
+   resetError(pasynRec);
    pasynUser->timeout = pasynRec->tmot;
 
    /* See if the record is processing because a GPIB Universal or Addressed 
@@ -1000,6 +1003,19 @@ static void reportError(asynRecord *pasynRec, int status, int severity,
    va_end(pvar);
  
    strcpy(pasynRec->errs, errorMessage);
+   if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
+       strcpy(pasynRecPvt->old.errs, pasynRec->errs);
+       monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+       db_post_events(pasynRec, pasynRec->errs, monitor_mask);
+   }
+}
+
+static void resetError(asynRecord *pasynRec)
+{
+   asynRecPvt* pasynRecPvt = pasynRec->dpvt;
+   unsigned short monitor_mask;
+
+   strcpy(pasynRec->errs, "");
    if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
        strcpy(pasynRecPvt->old.errs, pasynRec->errs);
        monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
