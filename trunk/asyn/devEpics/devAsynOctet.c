@@ -197,18 +197,17 @@ static void initDrvUser(devPvt *pdevPvt)
     asynInterface *pasynInterface;
     dbCommon      *precord = pdevPvt->precord;
 
-    /*call drvUserInit*/
+    /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
-    if(pasynInterface) {
+    if(pasynInterface && pdevPvt->userParam) {
         asynDrvUser *pasynDrvUser;
         void       *drvPvt;
 
         pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
         drvPvt = pasynInterface->drvPvt;
-        status = pasynDrvUser->create(drvPvt,pasynUser,
-            pdevPvt->userParam,0,0);
+        status = pasynDrvUser->create(drvPvt,pasynUser,pdevPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            printf("%s devAsynOctet drvUserInit failed %s\n",
+            printf("%s devAsynOctet drvUserCreate failed %s\n",
                      precord->name, pasynUser->errorMessage);
         }
     }

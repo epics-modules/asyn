@@ -211,18 +211,17 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         goto bad;
     }
 
-    /*call drvUserInit*/
+    /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
-    if(pasynInterface) {
+    if(pasynInterface && pPvt->userParam) {
         asynDrvUser *pasynDrvUser;
         void       *drvPvt;
 
         pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
         drvPvt = pasynInterface->drvPvt;
-        status = pasynDrvUser->create(drvPvt,pasynUser,
-            pPvt->userParam,0,0);
+        status = pasynDrvUser->create(drvPvt,pasynUser,pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            printf("devAsynAnalog::initCommon, %s drvUserInit failed %s\n",
+            printf("devAsynAnalog::initCommon, %s drvUserCreate failed %s\n",
                      pr->name, pasynUser->errorMessage);
             goto bad;
         }
