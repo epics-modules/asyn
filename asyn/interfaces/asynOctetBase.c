@@ -33,8 +33,9 @@
 #define overrideFlush        0x004
 
 typedef struct octetPvt {
+    char          *portName;
     asynInterface octetBase; /*Implemented by asynOctetBase*/
-    asynOctet     *pasynOctet; /* copy of driver with defaults*/
+    asynOctet     *pasynOctet; /*driver*/
     void          *drvPvt;
     int           override;
     void          *pasynPvt;   /*For registerInterruptSource*/
@@ -49,11 +50,11 @@ typedef struct interruptPvt {
 static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet);
 
 static asynStatus initialize(const char *portName,
-           asynInterface *pdriver,
+           asynInterface *poctetInterface,
            int processEosIn,int processEosOut,
            int interruptProcess);
 static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
-    char *data,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 
 static asynOctetBase octetBase = {initialize,callInterruptUsers};
 epicsShareDef asynOctetBase *pasynOctetBase = &octetBase;
@@ -128,45 +129,42 @@ static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
 }
 
 static asynStatus initialize(const char *portName,
-    asynInterface *pdriver,
+    asynInterface *pinterface,
     int processEosIn,int processEosOut,
     int interruptProcess)
 {
+    int        len;
     octetPvt   *poctetPvt;
+    asynOctet  *pasynOctetDriver;
     asynStatus status;
     asynUser   *pasynUser;
     int        yesNo;
-    asynOctet  *poctetDriver = (asynOctet *)pdriver->pinterface;
 
-    if(poctetDriver->registerInterruptUser
-    || poctetDriver->cancelInterruptUser) {
-        printf("asynOctetBase:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser");
-    }
-    poctetPvt = callocMustSucceed(1,sizeof(octetPvt),
-        "asynOctetBase:initialize");
+    pasynOctetDriver = (asynOctet *)pinterface->pinterface;
+    len = sizeof(octetPvt) + strlen(portName);
+    poctetPvt = callocMustSucceed(1,len,"asynOctetBase:initialize");
+    poctetPvt->portName = (char *)(poctetPvt + 1);
     poctetPvt->octetBase.interfaceType = asynOctetType;
     poctetPvt->octetBase.pinterface = &octet;
     poctetPvt->octetBase.drvPvt = poctetPvt;
-    poctetPvt->pasynOctet = (asynOctet *)pdriver->pinterface;
-    poctetPvt->drvPvt = pdriver->drvPvt;
-    initOverride(poctetPvt,poctetDriver);
+    poctetPvt->pasynOctet = pasynOctetDriver;
+    poctetPvt->drvPvt = pinterface->drvPvt;
+    initOverride(poctetPvt,pasynOctetDriver);
     pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->isMultiDevice(pasynUser,portName,&yesNo);
+    pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) {
         printf("isMultiDevice failed %s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
         free(poctetPvt);
         return status;
     }
-    pasynManager->freeAsynUser(pasynUser);
     if(yesNo && (processEosIn || processEosOut || interruptProcess)) {
         printf("Can not processEosIn, processEosOut,interruptProcess "
                "for multiDevice port\n");
         free(poctetPvt);
-        return asynError;
+        return status;
     }
-    status = pasynManager->registerInterface(portName,pdriver);
+    status = pasynManager->registerInterface(portName,pinterface);
     if(status!=asynSuccess) return status;
     status = pasynManager->interposeInterface(
         portName,-1,&poctetPvt->octetBase,0);
@@ -177,7 +175,7 @@ static asynStatus initialize(const char *portName,
             portName,&poctetPvt->octetBase,&poctetPvt->pasynPvt);
         if(status!=asynSuccess) {
             printf("registerInterruptSource failed\n");
-            return status;
+            return asynError;
         }
     }
     if(processEosIn || processEosOut) {
@@ -187,7 +185,7 @@ static asynStatus initialize(const char *portName,
 }
 
 static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
-    char *data,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
     asynStatus         status;
     ELLLIST            *plist;
@@ -240,7 +238,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
 static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
 {
-    octetPvt  *poctetPvt = (octetPvt *)drvPvt;
+    octetPvt *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
     return pasynOctet->writeRaw(poctetPvt->drvPvt,pasynUser,
@@ -264,14 +262,14 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     if(poctetPvt->interruptProcess)
         callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
-            data,nbytesTransfered,eomReason);
+            data,maxchars,nbytesTransfered,eomReason);
     return status;
 }
 
 static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
-    octetPvt  *poctetPvt = (octetPvt *)drvPvt;
+    octetPvt *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
     asynStatus status;
 
@@ -280,18 +278,18 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     if(poctetPvt->interruptProcess)
         callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
-            data,nbytesTransfered,eomReason);
+            data,maxchars,nbytesTransfered,eomReason);
     return asynSuccess;
 }
 
 static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
 {
     octetPvt   *poctetPvt = (octetPvt *)drvPvt;
-    asynOctet  *pasynOctet = poctetPvt->pasynOctet;
-    double     savetimeout = pasynUser->timeout;
-    char       buffer[100]; 
-    asynStatus status;
-    size_t     nbytesTransfered;
+    asynOctet *pasynOctet = poctetPvt->pasynOctet;
+    double    savetimeout = pasynUser->timeout;
+    char         buffer[100]; 
+    asynStatus   status;
+    size_t       nbytesTransfered;
 
 
     if(!(poctetPvt->override&overrideFlush)) {
@@ -344,7 +342,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
 {
-    interruptNode      *pinterruptNode = (interruptNode *)registrarPvt;
+    interruptNode *pinterruptNode = (interruptNode *)registrarPvt;
     asynOctetInterrupt *pinterrupt = (asynOctetInterrupt *)pinterruptNode->drvPvt;
     asynStatus    status;
     const char    *portName;

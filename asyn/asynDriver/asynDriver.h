@@ -38,7 +38,7 @@ typedef enum {
     asynQueuePriorityLow,asynQueuePriorityMedium,asynQueuePriorityHigh,
     asynQueuePriorityConnect
 }asynQueuePriority;
-
+
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
@@ -66,7 +66,7 @@ typedef struct asynInterface{
 
 /*standard values for asynUser.reason*/
 #define ASYN_REASON_SIGNAL -1
-
+
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
@@ -74,7 +74,7 @@ typedef struct interruptNode{
     ELLNODE node;
     void    *drvPvt;
 }interruptNode;
-
+
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
     asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
@@ -97,11 +97,9 @@ typedef struct asynManager {
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
-    asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
-    asynStatus (*unblockProcessCallback)(asynUser *pasynUser);
-    asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
-    asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
+    asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
     /* drivers call the following*/
@@ -165,7 +163,7 @@ typedef struct  asynCommon {
 /* asynPrint and asynPrintIO are macros that act like
    int asynPrint(asynUser *pasynUser,int reason, const char *format, ... ); 
    int asynPrintIO(asynUser *pasynUser,int reason,
-        const char *buffer, size_t len, const char *format, ... ); 
+        const char *buffer, int len, const char *format, ... ); 
 */
 typedef struct asynTrace {
     /* lock/unlock are only necessary if caller performs I/O other then*/
@@ -178,11 +176,11 @@ typedef struct asynTrace {
     int        (*getTraceIOMask)(asynUser *pasynUser);
     asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fp);
     FILE       *(*getTraceFile)(asynUser *pasynUser);
-    asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
-    size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
+    asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
+    int        (*getTraceIOTruncateSize)(asynUser *pasynUser);
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
     int        (*printIO)(asynUser *pasynUser,int reason,
-               const char *buffer, size_t len,const char *pformat, ...);
+               const char *buffer, int len,const char *pformat, ...);
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;
 

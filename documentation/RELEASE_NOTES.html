@@ -12,121 +12,52 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>March 16, 2005</h1>
+<h1>Febuary 14, 2005</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release 4-3</h2>
+<h2>Release 4-2-1</h2>
 </center>
-
-<h3>asynManager</h3>
-<ul>
-  <li>lock/unlock renamed to lockDevice/unlockDevice
-    <p>The names have been changed and now these methods only work for
-    asynchronous ports. An error is returned if lockDevice is called for a
-    synchronous port.</p>
-  </li>
-  <li>lockPort/unlockPort
-    <p>These are new asynManager methods. They can be used in place of
-    queueRequest if  the caller can block. They have been added to make it
-    easier to implement a driver with one addressing scheme that is a
-    asynUser of a driver with a different addressing scheme. For example a
-    multi-drop serial driver can be implemented that calls a standard serial
-    driver.</p>
-  </li>
-</ul>
-
-<h3>asynTrace</h3>
-
-<p>The length and size arguments now have type <span
-style="font-family: courier">size_t</span>.</p>
-
-<h3>devGpib</h3>
-
-<p>Several improvements were made to devSupportGpib.c. All changes should be
-transparent to code that uses devGpib.</p>
-
-<h3>asynOctetBase</h3>
-
-<p>The <span style="font-family: courier">maxchars</span> argument to <span
-style="font-family: courier">callInterruptUsers</span> has been removed.</p>
-
-<h3>asynReport</h3>
-
-<p>The filename argument has been removed.</p>
-
-<h3>devAsynFloat64&gt;/h3&gt;</h3>
-
-<p>For <span style="font-family: courier">asynAoFloat64</span> it now uses
-<span style="font-family: courier">oval</span> instead of <span
-style="font-family: courier">val</span>.</p>
-
-<h3>asynFloat64Array, asynInt32Array, asynOctet, asynOctetSyncIO</h3>
-
-<p>All length and size arguments now have type <span
-style="font-family: courier">size_t</span>.</p>
-
-<h3>asynFloat64SyncIO, asynInt32SyncIO, asynOctetSyncIO, and
-asynUInt32DigitalSyncIO</h3>
-
-<p>These all use <span
-style="font-family: courier">lockPort/unlockPort</span> instead of <span
-style="font-family: courier">queueRequest</span>.</p>
+<h3>devAsynFloat64</h3>
+<p>Device support was not returning 2 (do not convert) for ai records
+when it should.  This meant that the VAL field was being set back to 0
+by the record after device support wrote to it. This bug is fixed.</p>
+<h3>asynRecord</h3>
+<p>The record sometimes did not read the current input and output EOS 
+values from the driver when it connected. This bug is fixed.</p>
 
 <center>
 <h2>Release 4-2</h2>
 </center>
-
-<h3>Acknowledgement</h3>
-
-<p>Yevgeny A. Gusev has again reported some hard to recognize bugs. He must
-have spent many hours looking at the code. His extra set of very good eyes
-are much appreciated!!. He also thought of the way to handle support that
-uses one addressing scheme but wants to use support that has a different
-addressing scheme. For example support for mult-drop serial that wants to use
-the standard serial support</p>
-
-<center>
-<h2>Release 4-2</h2>
-</center>
-
 <h3>asynInterposeEos</h3>
-
-<p>If read reads maxchars, it forced the last character to be 0 and returned
-asynOverflow if it wasn't. This is fixed.</p>
-
+<p>If read reads maxchars, it forced the last character to be 0
+and returned asynOverflow if it wasn't. This is fixed.</p>
 <h3>drvAsynSerialPort,drvAsynIPPort - Error reporting</h3>
-
-<p>These did not properly set an error message in asynUser.errorMessage when
-they returned asynError. This is fixed.</p>
-
+<p>These did not properly set an error message in asynUser.errorMessage
+when they returned asynError. This is fixed.</p>
 <h3>drvAsynSerialPort - serial port options</h3>
-
 <p>Changes were made to the way serial port options are handled.</p>
 <ul>
-  <li>initial values
-    <p>Previosly defaults were assigned for all options. Now the initial
-    values are fetched from either the termios (POSIX) or sioLib
-    (vxWorks).</p>
-    <p></p>
-  </li>
-  <li>vxWorks clocal and crtscts
-    <p>The vxWorks sioLib uses clocal for what POSIX calls crtscts. The new
-    serial support for vxWorks accepts both clocal and crtscts to specify
-    RTSCTS (Request to send, Clear to send).</p>
-  </li>
+   <li>initial values
+      <p>Previosly defaults were assigned for all options. Now the
+       initial values are fetched from either the termios (POSIX) or
+       sioLib (vxWorks).<p>
+   </li>
+   <li>vxWorks clocal and crtscts
+      <p>The vxWorks sioLib uses clocal for what POSIX calls crtscts.
+       The new serial support for vxWorks accepts both clocal and crtscts
+       to specify RTSCTS (Request to send, Clear to send).</p>
+   </li>
 </ul>
-
 <h3>asynRecord - Serial Port Options</h3>
-
 <p>This has a new option to set Modem Control.</p>
 
 <center>
 <h2>Release 4-1</h2>
 </center>
-
-<p>The only code change was to fix the drvAsynIPPort and drvAsynSerialPort
+<p>
+The only code change was to fix the drvAsynIPPort and drvAsynSerialPort
 segmentation faults on cygwin-x86.</p>
 
 <center>
@@ -197,7 +128,7 @@ reason this release is called 4-0.</p>
         interface.</li>
       <li>Added support for register interfaces (asynInt32,
         asynUInt32Digital, and asynFloat64).  New I/O fields for this support
-        are I32INP, I32OUT, UI32INP, UI32OUT, UI32MASK, F64INP, and F64OUT.
+        are I32INP, I32OUT, UI32INP, UI32OUT, UI32MASK, F64INP, and F64OUT. 
         The new IFACE field is used to select the currently active
       interface.</li>
       <li>Added new fields to indicate if a particular interface is supported

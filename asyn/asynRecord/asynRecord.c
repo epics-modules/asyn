@@ -60,7 +60,7 @@ static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
-#define QUEUE_TIMEOUT 5.0    /* Timeout for queueRequest */
+#define QUEUE_TIMEOUT 10.0    /* Timeout for queueRequest */
 
 /* Create RSET - Record Support Entry Table*/
 #define report NULL
@@ -540,9 +540,7 @@ static long special(struct dbAddr * paddr, int after)
     status = pasynManager->queueRequest(pasynUser,
                                         priority,QUEUE_TIMEOUT);
     if(status!=asynSuccess) {
-        reportError(pasynRec,status,"queueRequest failed for special.");
-        reportError(pasynRec,status,pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
+        reportError(pasynRec,status,"queueRequest failed for special. Why?");
     }
     return 0;
 }
@@ -771,8 +769,11 @@ static void asynCallbackProcess(asynUser * pasynUser)
     else if(pasynRec->tmod != asynTMOD_NoIO) performIO(pasynUser);
     yesNo = 0;
     pasynManager->canBlock(pasynUser,&yesNo);
-    if(yesNo) callbackRequestProcessCallback(&pasynRecPvt->callback,
-                    pasynRec->prio, pasynRec);
+    if(yesNo) {
+        dbScanLock((dbCommon *) pasynRec);
+        process(pasynRec);
+        dbScanUnlock((dbCommon *) pasynRec);
+    }
 }
 
 static void asynCallbackSpecial(asynUser * pasynUser)
@@ -1051,6 +1052,7 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
+    asynUser *pasynUserConnect, *pasynUserEos;
     asynStatus status;
     callbackMessage *pmsg;
 
@@ -1176,20 +1178,20 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     /* Get the trace and connect flags */
     monitorStatus(pasynRec);
     /* Queue a request to get the options */
-    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
-                                                queueTimeoutCallbackSpecial);
-    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUser->userData;
+    pasynUserConnect = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
+                                                       queueTimeoutCallbackSpecial);
+    pasynUserConnect->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUserConnect->userData;
     pmsg->callbackType = callbackGetOption;
-    status = pasynManager->queueRequest(pasynUser,
+    status = pasynManager->queueRequest(pasynUserConnect,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
     /* Queue a request to get the EOS */
-    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
-                                                queueTimeoutCallbackSpecial);
-    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUser->userData;
+    pasynUserEos = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
+                                                   queueTimeoutCallbackSpecial);
+    pasynUserEos->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUserEos->userData;
     pmsg->callbackType = callbackGetEos;
-    status = pasynManager->queueRequest(pasynUser,
+    status = pasynManager->queueRequest(pasynUserEos,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
     pasynRec->pcnct = 1; 
     status = asynSuccess;
@@ -1261,7 +1263,7 @@ static void performInt32IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynInt32->write(pasynRecPvt->asynInt32Pvt,
                                                 pasynUser, pasynRec->i32out);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Int32 write data=%d\n", 
+                  "%s: status=%d, Int32 write data=%d", 
                   pasynRec->name, status, pasynRec->i32out);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 write error, %s",
@@ -1274,7 +1276,7 @@ static void performInt32IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynInt32->read(pasynRecPvt->asynInt32Pvt,
                                                pasynUser, &pasynRec->i32inp);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Int32 read data=%d\n", 
+                  "%s: status=%d, Int32 read data=%d", 
                   pasynRec->name, status, pasynRec->i32inp);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 read error, %s",
@@ -1297,7 +1299,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
                                                  pasynUser, pasynRec->ui32out,
                                                  pasynRec->ui32mask);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, UInt32 write data=%d, mask=%d\n",        
+                  "%s: status=%d, UInt32 write data=%d, mask=%d",        
                   pasynRec->name, status, pasynRec->ui32out, pasynRec->ui32mask);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 write error, %s",
@@ -1312,7 +1314,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
                                                 pasynRec->ui32mask);
         pasynRec->ui32inp = data;
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, UInt32 read data=%d, mask=%d\n",        
+                  "%s: status=%d, UInt32 read data=%d, mask=%d",        
                   pasynRec->name, status, pasynRec->i32inp, pasynRec->ui32mask);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 read error, %s",
@@ -1333,7 +1335,7 @@ static void performFloat64IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynFloat64->write(pasynRecPvt->asynFloat64Pvt,
                                                   pasynUser, pasynRec->f64out);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Float64 write data=%f\n",        
+                  "%s: status=%d, Float64 write data=%f",        
                   pasynRec->name, status, pasynRec->f64out);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 write error, %s",
@@ -1346,7 +1348,7 @@ static void performFloat64IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynFloat64->read(pasynRecPvt->asynFloat64Pvt,
                                                  pasynUser, &pasynRec->f64inp);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Float64 read data=%d\n",        
+                  "%s: status=%d, Float64 read data=%d",        
                   pasynRec->name, status, pasynRec->f64inp);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 read error, %s",
@@ -1418,7 +1420,7 @@ static void performOctetIO(asynUser * pasynUser)
         }
         pasynRec->nawt = nbytesTransfered;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
-           "%s: nwrite=%d, status=%d, nawt=%d\n", pasynRec->name, nwrite,
+           "%s: nwrite=%d, status=%d, nawt=%d, data=", pasynRec->name, nwrite,
                     status, nbytesTransfered);
         if(status != asynSuccess || nbytesTransfered != nwrite) {
             /* Something is wrong if we couldn't write everything */
@@ -1446,7 +1448,7 @@ static void performOctetIO(asynUser * pasynUser)
                 "Error %s", pasynUser->errorMessage);
         } else {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
-             "%s: inlen=%d, status=%d, ninp=%d\n", pasynRec->name, inlen,
+             "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen,
                     status, nbytesTransfered);
         }
         pasynRec->eomr = eomReason;

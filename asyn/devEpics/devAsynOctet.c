@@ -411,11 +411,15 @@ static long processCommon(dbCommon *precord)
     return(0);
 }
 
-static void finish(dbCommon *pr)
+static void finish(dbCommon *precord)
 {
-    devPvt     *pPvt = (devPvt *)pr->dpvt;
+    rset *prset = (rset *)precord->rset;
 
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if (precord->pact) {
+        dbScanLock(precord);
+        prset->process(precord);
+        dbScanUnlock(precord);
+    }
 }
 
 static long initSiCmdResponse(stringinRecord *psi)

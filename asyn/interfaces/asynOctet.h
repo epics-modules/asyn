@@ -72,7 +72,7 @@ typedef struct asynOctetBase {
         asynInterface *pint32Interface,
         int processEosIn,int processEosOut,int interruptProcess);
     void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
-        char *data,size_t *nbytesTransfered,int *eomReason);
+        char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 } asynOctetBase;
 epicsShareExtern asynOctetBase *pasynOctetBase;
 

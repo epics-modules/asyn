@@ -22,8 +22,8 @@ extern "C" {
 #endif  /* __cplusplus */
 
 typedef void (*interruptCallbackFloat64Array)(
-              void *userPvt, asynUser *pasynUser,
-              epicsFloat64 *data, size_t nelements);
+              void *userPvt, asynUser *pasynUser, epicsFloat64 *data, 
+              size_t nelements);
 typedef struct asynFloat64ArrayInterrupt {
     asynUser *pasynUser;
     int addr;

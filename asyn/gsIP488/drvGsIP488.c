@@ -465,12 +465,7 @@ static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s addr %d gpibPortConnect\n",pgsport->portName,addr);
-    if(addr==0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                        "%s Can't connect to address 0 since that's the controller!",pgsport->portName);
-        return asynError;
-    }
-    if(addr>0) {
+    if(addr>=0) {
         pasynManager->exceptionConnect(pasynUser);
         return asynSuccess;
     }

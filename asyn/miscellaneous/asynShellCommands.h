@@ -22,7 +22,7 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
  asynShowOption(const char *portName, int addr,const char *key);
 epicsShareFunc int epicsShareAPI
- asynReport(int level, const char *portName);
+ asynReport(const char *filename, int level, const char *portName);
 epicsShareFunc int epicsShareAPI
  asynSetTraceMask(const char *portName,int addr,int mask);
 epicsShareFunc int epicsShareAPI

@@ -12,17 +12,27 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>March 15 2005</h1>
+<h1>March 30, 2005</h1>
 </center>
+
 <hr>
 <center>
 <h2>Release 4-2</h2>
 </center>
-<h3>asynAoFloat64</h3>
-<p>This uses val instead of oval.</p>
+
+<h3>devAsynFloat64</h3>
+<p>Device support is not returning 2 (do not convert) for ai records
+when it should.  This means that the VAL field is being set back to 0
+by the record after device support writes to it.</p>
+<h3>asynRecord</h3>
+<p>The record sometimes does not read the current input and output EOS 
+values from the driver when it connects.</p>
+
+<hr>
 <center>
 <h2>Release 4-1</h2>
 </center>
+
 <h3>asynInterposeEos</h3>
 <p>If read reads maxchars, it forces the last character to be 0
 and returns asynOverflow if it wasn't.</p>

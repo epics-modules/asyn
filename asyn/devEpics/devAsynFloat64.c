@@ -342,7 +342,7 @@ static long processAi(aiRecord *pr)
         pr->val = pPvt->value; pr->udf=0;
     }
     pPvt->gotValue = 0; pPvt->status = asynSuccess;
-    return 0;
+    return 2;  /* Do not convert! */
 }
 
 
@@ -375,7 +375,7 @@ static long processAo(aoRecord *pr)
     if(pPvt->gotValue) {
         pr->val = pPvt->value; pr->udf = 0;
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->oval;
+        pPvt->gotValue = 1; pPvt->value = pr->val;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
@@ -423,5 +423,5 @@ static long processAiAverage(aiRecord *pai)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "%s devAsynAnalog::callbackAiAverage val=%f\n",
               pai->name, pai->val);
-    return 0;
+    return 2; /* Do not convert! */
 }

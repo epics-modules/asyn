@@ -25,25 +25,25 @@
 #ifdef __cplusplus
 extern "C" {
 #endif /* __cplusplus */
-
+
 typedef struct asynOctetSyncIO {
    asynStatus (*connect)(const char *port, int addr,
                          asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*openSocket)(const char *server, int port, char **portName);
-   asynStatus (*write)(asynUser *pasynUser, char const *buffer, size_t buffer_len,
-                  double timeout,size_t *nbytesTransfered);
-   asynStatus (*writeRaw)(asynUser *pasynUser,char const *buffer,size_t buffer_len,
-                  double timeout,size_t *nbytesTransfered);
-   asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len, 
-                  double timeout, size_t *nbytesTransfered,int *eomReason);
-   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, size_t buffer_len, 
-                  double timeout, size_t *nbytesTransfered,int *eomReason);
+   asynStatus (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
+                  double timeout,int *nbytesTransfered);
+   asynStatus (*writeRaw)(asynUser *pasynUser,char const *buffer,int buffer_len,
+                  double timeout,int *nbytesTransfered);
+   asynStatus (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
+                  double timeout, int *nbytesTransfered,int *eomReason);
+   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, int buffer_len, 
+                  double timeout, int *nbytesTransfered,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
-                  const char *write_buffer, size_t write_buffer_len,
-                  char *read_buffer, size_t read_buffer_len,
+                  const char *write_buffer, int write_buffer_len,
+                  char *read_buffer, int read_buffer_len,
                   double timeout,
-                  size_t *nbytesOut, size_t *nbytesIn, int *eomReason);
+                  int *nbytesOut, int *nbytesIn, int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
    asynStatus (*setInputEos)(asynUser *pasynUser,
                   const char *eos,int eoslen);
@@ -54,22 +54,22 @@ typedef struct asynOctetSyncIO {
    asynStatus (*getOutputEos)(asynUser *pasynUser,
                   char *eos, int eossize, int *eoslen);
    asynStatus (*writeOnce)(const char *port, int addr,
-                  char const *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered, const char *drvInfo);
+                  char const *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered, const char *drvInfo);
    asynStatus (*writeRawOnce)(const char *port, int addr,
-                  char const *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered, const char *drvInfo);
+                  char const *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
-                  char *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*readRawOnce)(const char *port, int addr,
-                  char *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                  char *buffer, int buffer_len, double timeout,
+                  int *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,
-                  const char *write_buffer, size_t write_buffer_len,
-                  char *read_buffer, size_t read_buffer_len,
+                  const char *write_buffer, int write_buffer_len,
+                  char *read_buffer, int read_buffer_len,
                   double timeout,
-                  size_t *nbytesOut, size_t *nbytesIn, int *eomReason,
+                  int *nbytesOut, int *nbytesIn, int *eomReason,
                   const char *drvInfo);
    asynStatus (*flushOnce)(const char *port, int addr,const char *drvInfo);
    asynStatus (*setInputEosOnce)(const char *port, int addr,

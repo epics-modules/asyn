@@ -119,7 +119,7 @@ href="devKeithley196.c.diff.html">devKeithley196.c.diff.html</a>.
       <li>It must be initialized in init_ai. For example:
         <pre>    static long init_ai(int parm)
     {
-        if (parm == 0) {
+        if (parm) {
             devSupParms.name = "<span style="font-weight: bold; font-size: 14pt">your device's name</span>";
             devSupParms.gpibCmds = gpibCmds;
             devSupParms.numparams = NUMPARAMS;
