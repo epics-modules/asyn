@@ -87,10 +87,14 @@ typedef enum {
 typedef struct {
     dbCommon          *pr;
     asynUser          *pasynUser;
-    void              *dataInterface;
-    void              *dataPvt;
-    void              *callbackInterface;
-    void              *callbackPvt;
+    asynInt32         *pint32;
+    void              *int32Pvt;
+    asynInt32Callback *pint32Callback;
+    void              *int32CallbackPvt;
+    asynFloat64       *pfloat64;
+    void              *float64Pvt;
+    asynFloat64Callback *pfloat64Callback;
+    void              *float64CallbackPvt;
     int               canBlock;
     asynAnalogDevType devType;
     epicsInt32        deviceLow;
@@ -103,7 +107,6 @@ typedef struct {
 } devAsynAnalogPvt;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
-                       char *dataInterfaceType, char *callbackInterfaceType,
                        asynAnalogDevType devType);
 static long queueRequest(dbCommon *pr);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
@@ -164,11 +167,11 @@ epicsExportAddress(dset, devAiAsynFloat64Interrupt);
 
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
-                       char *dataInterfaceType, char *callbackInterfaceType,
                        asynAnalogDevType devType)
 {
     devAsynAnalogPvt *pPvt;
     char *port, *userParam;
+    char *itype;
     int addr;
     asynStatus status;
     asynUser *pasynUser;
@@ -202,25 +205,55 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     }
 
     /* Get the appropriate interfaces */
-    pasynInterface = pasynManager->findInterface(pasynUser, dataInterfaceType, 1);
-    if (!pasynInterface) {
-        errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                     dataInterfaceType);
-        goto bad;
-    }
-    pPvt->dataInterface = pasynInterface->pinterface;
-    pPvt->dataPvt = pasynInterface->drvPvt;
-
-    if (callbackInterfaceType) {
-        pasynInterface = pasynManager->findInterface(pasynUser, 
-                                                     callbackInterfaceType, 1);
+    switch(devType) {
+    case typeAiInt32Average:
+    case typeAiInt32Interrupt:
+        itype = asynInt32CallbackType;
+        pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
         if (!pasynInterface) {
             errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
-                     callbackInterfaceType);
+                         itype);
             goto bad;
         }
-        pPvt->callbackInterface = pasynInterface->pinterface;
-        pPvt->callbackPvt = pasynInterface->drvPvt;
+        pPvt->pint32Callback = pasynInterface->pinterface;
+        pPvt->int32CallbackPvt = pasynInterface->drvPvt;
+        /* No break.  These need asynInt32 also */
+    case typeAoInt32:
+    case typeAiInt32:
+        itype = asynInt32Type;
+        pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
+        if (!pasynInterface) {
+            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
+                         itype);
+            goto bad;
+        }
+        pPvt->pint32 = pasynInterface->pinterface;
+        pPvt->int32Pvt = pasynInterface->drvPvt;
+        break;
+    case typeAiFloat64Average:
+    case typeAiFloat64Interrupt:
+        itype = asynFloat64CallbackType;
+        pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
+        if (!pasynInterface) {
+            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
+                         itype);
+            goto bad;
+        }
+        pPvt->pfloat64Callback = pasynInterface->pinterface;
+        pPvt->float64CallbackPvt = pasynInterface->drvPvt;
+        break;
+    case typeAoFloat64:
+    case typeAiFloat64:
+        itype = asynFloat64Type;
+        pasynInterface = pasynManager->findInterface(pasynUser, itype, 1);
+        if (!pasynInterface) {
+            errlogPrintf("devAsynAnalog::initCommon, find %s interface failed\n",
+                         itype);
+            goto bad;
+        }
+        pPvt->pfloat64 = pasynInterface->pinterface;
+        pPvt->float64Pvt = pasynInterface->drvPvt;
+        break;
     }
 
     /* Determine if device can block */
@@ -235,22 +268,20 @@ bad:
 
 static long initAoInt32(aoRecord *pao)
 {
-    asynInt32 *pasynInt32;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
     epicsInt32 value;
 
     status = initCommon((dbCommon *)pao, (DBLINK *)&pao->out, callbackAo, 
-                        asynInt32Type, 0, typeAoInt32);
+                        typeAoInt32);
     if (status == asynSuccess) {
         pPvt = pao->dpvt;
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        pasynInt32->getBounds(pPvt->dataPvt, pPvt->pasynUser,
-                              &pPvt->deviceLow, &pPvt->deviceHigh);
+        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser,
+                                &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAo(pao, 1);
         /* Read the current value from the device */
-        status = pasynInt32->read(pPvt->dataPvt, pPvt->pasynUser, &value);
+        status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &value);
         if (status == asynSuccess) {
             pao->rval = value;
             return(0);
@@ -264,23 +295,21 @@ static long initAoFloat64(aoRecord *pao)
     asynStatus status;
 
     status = initCommon((dbCommon *)pao, (DBLINK *)&pao->out, callbackAo,
-                        asynFloat64Type, 0, typeAoFloat64);
+                        typeAoFloat64);
     return(2); /* Do not convert */
 }
 
 static long initAiInt32(aiRecord *pai)
 {
-    asynInt32 *pasynInt32;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
 
     status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, callbackAi, 
-                        asynInt32Type, 0, typeAiInt32);
+                        typeAiInt32);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        pasynInt32->getBounds(pPvt->dataPvt, pPvt->pasynUser, 
-                              &pPvt->deviceLow, &pPvt->deviceHigh);
+        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
+                                &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
     }
@@ -289,24 +318,19 @@ static long initAiInt32(aiRecord *pai)
 
 static long initAiInt32Average(aiRecord *pai)
 {
-    asynInt32 *pasynInt32;
-    asynInt32Callback *pasynInt32Callback;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
 
     status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, 
-                        callbackAiAverage, asynInt32Type, asynInt32CallbackType,
-                        typeAiInt32Average);
+                        callbackAiAverage, typeAiInt32Average);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pasynInt32Callback = (asynInt32Callback *)pPvt->callbackInterface;
-        pasynInt32Callback->registerCallbacks(pPvt->callbackPvt, 
-                                              pPvt->pasynUser, 
-                                              dataCallbackInt32Average, 
-                                              0, pPvt);
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        pasynInt32->getBounds(pPvt->dataPvt, pPvt->pasynUser, 
-                              &pPvt->deviceLow, &pPvt->deviceHigh);
+        pPvt->pint32Callback->registerCallbacks(pPvt->int32CallbackPvt, 
+                                                pPvt->pasynUser, 
+                                                dataCallbackInt32Average, 
+                                                0, pPvt);
+        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
+                                &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
     }
@@ -315,24 +339,19 @@ static long initAiInt32Average(aiRecord *pai)
 
 static long initAiInt32Interrupt(aiRecord *pai)
 {
-    asynInt32 *pasynInt32;
-    asynInt32Callback *pasynInt32Callback;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
 
-    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, 
-                        callbackAiInterrupt, asynInt32Type, 
-                        asynInt32CallbackType, typeAiInt32Interrupt);
+    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, callbackAiInterrupt,
+                        typeAiInt32Interrupt);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pasynInt32Callback = (asynInt32Callback *)pPvt->callbackInterface;
-        pasynInt32Callback->registerCallbacks(pPvt->callbackPvt, 
-                                              pPvt->pasynUser,
-                                              dataCallbackInt32Interrupt, 
-                                              0, pPvt);
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        pasynInt32->getBounds(pPvt->dataPvt, pPvt->pasynUser, 
-                              &pPvt->deviceLow, &pPvt->deviceHigh);
+        pPvt->pint32Callback->registerCallbacks(pPvt->int32CallbackPvt, 
+                                                pPvt->pasynUser,
+                                                dataCallbackInt32Interrupt, 
+                                                0, pPvt);
+        pPvt->pint32->getBounds(pPvt->int32Pvt, pPvt->pasynUser, 
+                               &pPvt->deviceLow, &pPvt->deviceHigh);
         /* set linear conversion slope */
         convertAi(pai, 1);
         scanIoInit(&pPvt->ioScanPvt);
@@ -345,47 +364,40 @@ static long initAiFloat64(aiRecord *pai)
     asynStatus status;
 
     status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, callbackAi,
-                        asynFloat64Type, 0, typeAiFloat64);
+                        typeAiFloat64);
     return(0);
 }
 
 static long initAiFloat64Average(aiRecord *pai)
 {
-    asynFloat64Callback *pasynFloat64Callback;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
 
-    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp,
-                        callbackAiAverage, asynFloat64Type,
-                        asynFloat64CallbackType, typeAiFloat64Average);
+    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, callbackAiAverage,
+                        typeAiFloat64Average);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pasynFloat64Callback = (asynFloat64Callback *)pPvt->callbackInterface;
-        pasynFloat64Callback->registerCallbacks(pPvt->callbackPvt, 
-                                                pPvt->pasynUser,
-                                                dataCallbackFloat64Average, 
-                                                0, pPvt);
+        pPvt->pfloat64Callback->registerCallbacks(pPvt->float64CallbackPvt, 
+                                                  pPvt->pasynUser,
+                                                  dataCallbackFloat64Average, 
+                                                  0, pPvt);
     }
     return(0);
 }
 
 static long initAiFloat64Interrupt(aiRecord *pai)
 {
-    asynFloat64Callback *pasynFloat64Callback;
     devAsynAnalogPvt *pPvt;
     asynStatus status;
 
-    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp,
-                        callbackAiInterrupt, asynFloat64Type, 
-                        asynFloat64CallbackType,
+    status = initCommon((dbCommon *)pai, (DBLINK *)&pai->inp, callbackAiInterrupt,
                         typeAiFloat64Interrupt);
     if (status == asynSuccess) {
         pPvt = pai->dpvt;
-        pasynFloat64Callback = (asynFloat64Callback *)pPvt->callbackInterface;
-        pasynFloat64Callback->registerCallbacks(pPvt->callbackPvt, 
-                                                pPvt->pasynUser,
-                                                dataCallbackFloat64Interrupt, 
-                                                0, pPvt);
+        pPvt->pfloat64Callback->registerCallbacks(pPvt->float64CallbackPvt, 
+                                                  pPvt->pasynUser,
+                                                  dataCallbackFloat64Interrupt, 
+                                                  0, pPvt);
         scanIoInit(&pPvt->ioScanPvt);
      }
     return(0);
@@ -435,19 +447,15 @@ static void callbackAo(asynUser *pasynUser)
     devAsynAnalogPvt *pPvt = (devAsynAnalogPvt *)pasynUser->userPvt;
     aoRecord *pao = (aoRecord *)pPvt->pr;
     rset *prset = (rset *)pao->rset;
-    asynInt32 *pasynInt32;
-    asynFloat64 *pasynFloat64;
     int status;
 
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::callbackAo %s devType=%d, rval=%d, val=%f\n",
               pao->name, pPvt->devType, pao->rval, pao->val);
     if (pPvt->devType == typeAoInt32) {
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        status = pasynInt32->write(pPvt->dataPvt, pPvt->pasynUser, pao->rval);
+        status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser, pao->rval);
     } else {
-        pasynFloat64 = (asynFloat64 *)pPvt->dataInterface;
-        status = pasynFloat64->write(pPvt->dataPvt, pPvt->pasynUser, pao->val);
+        status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser, pao->val);
     }
     if (status == 0) {
         pPvt->ioStatus = 0;
@@ -468,16 +476,12 @@ static void callbackAi(asynUser *pasynUser)
     devAsynAnalogPvt *pPvt = (devAsynAnalogPvt *)pasynUser->userPvt;
     aiRecord *pai = (aiRecord *)pPvt->pr;
     rset *prset = (rset *)pai->rset;
-    asynInt32 *pasynInt32;
-    asynFloat64 *pasynFloat64;
     int status;
 
     if (pPvt->devType == typeAiInt32) {
-        pasynInt32 = (asynInt32 *)pPvt->dataInterface;
-        status = pasynInt32->read(pPvt->dataPvt, pPvt->pasynUser, &pai->rval);
+        status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pai->rval);
     } else {
-        pasynFloat64 = (asynFloat64 *)pPvt->dataInterface;
-        status = pasynFloat64->read(pPvt->dataPvt, pPvt->pasynUser, &pai->val);
+        status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pai->val);
     }
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::callbackAi %s devType=%d, rval=%d, val=%f\n",
