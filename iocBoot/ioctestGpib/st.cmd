@@ -1,8 +1,7 @@
 dbLoadDatabase("../../dbd/testGpib.dbd")
 testGpib_registerRecordDeviceDriver(pdbbase)
 
-#dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
-dbLoadRecords("temp.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
 
 #The following two commands are for the E2050
 #E2050Reboot("164.54.8.227")
@@ -17,5 +16,5 @@ vxi11Config("gpibL0","164.54.8.129",0,0,"gpib0",0)
 
 #echoDriverInit("gpibL0",1.0)
 
-#var vxi11Debug 10
+#var vxi11Debug 3
 iocInit()
