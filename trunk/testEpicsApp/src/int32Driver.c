@@ -214,7 +214,6 @@ static void interruptThread(drvPvt *pdrvPvt)
         }
     }
 }
-
 
 /* asynCommon methods */
 static void report(void *pvt,FILE *fp,int details)
@@ -309,7 +308,6 @@ static asynStatus int32Write(void *pvt,asynUser *pasynUser,
         if(addr==pinterrupt->addr) {
             pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
                 pdrvPvt->channel[addr].value);
-            break;
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
