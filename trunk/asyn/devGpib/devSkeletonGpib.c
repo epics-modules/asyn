@@ -1,5 +1,5 @@
 /* devSkeletonGpib.c */
-/* $Id: devSkeletonGpib.c,v 1.3 2003-11-14 15:20:31 mrk Exp $ */
+/* $Id: devSkeletonGpib.c,v 1.4 2003-11-14 15:31:20 norume Exp $ */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago,as Operator of Argonne
 * National Laboratory,and the Regents of the University of
@@ -116,13 +116,13 @@ static char *userOffOn[] = {"USER OFF;","USER ON;",0};
 
 static struct gpibCmd gpibCmds[] = {
     /* Param 0 */
-    {&DSET_BO,GPIBCMD,IB_Q_HIGH,"init",0,0,32,NULL,0,0,NULL,&initNames,-1},
+    {&DSET_BO,GPIBCMD,IB_Q_HIGH,"init",0,0,32,NULL,0,0,NULL,&initNames,0},
     /* Param 1 */
-    {&DSET_BO,GPIBEFASTO,IB_Q_HIGH,0,NULL,0,32,0,0,0,userOffOn,&offOn,-1},
+    {&DSET_BO,GPIBEFASTO,IB_Q_HIGH,0,NULL,0,32,0,0,0,userOffOn,&offOn,0},
     /* Param 2 */
-    {&DSET_BI,GPIBEFASTI,IB_Q_HIGH,"user?",0,0,32,0,0,0,userOffOn,&offOn,-1},
+    {&DSET_BI,GPIBEFASTI,IB_Q_HIGH,"user?",0,0,32,0,0,0,userOffOn,&offOn,0},
     /* Param 3 */
-    {&DSET_AI,GPIBREAD,IB_Q_LOW,"send","%lf",0,32,0,0,0,NULL,NULL,-1}
+    {&DSET_AI,GPIBREAD,IB_Q_LOW,"send","%lf",0,32,0,0,0,NULL,NULL,0}
 };
 
 /* The following is the number of elements in the command array above.  */
