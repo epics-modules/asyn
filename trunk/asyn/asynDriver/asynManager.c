@@ -1680,7 +1680,7 @@ static asynStatus registerInterruptSource(const char *portName,
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
-
+
 static asynStatus getInterruptPvt(asynUser *pasynUser,
     const char *interfaceType, void **pasynPvt)
 {
@@ -1722,11 +1722,13 @@ static interruptNode *createInterruptNode(void *pasynPvt)
 
     epicsMutexMustLock(pport->asynManagerLock);
     pinterruptNode = (interruptNode *)ellFirst(
-
         &pinterruptBase->interruptNodeFree);
     if(pinterruptNode) {
         pinterruptNodePvt = interruptNodeToPvt(pinterruptNode);
         ellDelete(&pinterruptBase->interruptNodeFree,&pinterruptNode->node);
+        pinterruptNodePvt->isOnList = 0;
+        pinterruptNodePvt->isOnAddList = pinterruptNodePvt->isOnRemoveList = 0;
+        memset(&pinterruptNodePvt->nodePublic,0,sizeof(interruptNode));
     } else {
         pinterruptNodePvt = (interruptNodePvt *)
             callocMustSucceed(1,sizeof(interruptNodePvt),
@@ -1742,16 +1744,21 @@ static interruptNode *createInterruptNode(void *pasynPvt)
 static asynStatus freeInterruptNode(asynUser *pasynUser,interruptNode *pnode)
 {
     interruptNodePvt *pinterruptNodePvt = interruptNodeToPvt(pnode);
+    interruptBase    *pinterruptBase = pinterruptNodePvt->pinterruptBase;
+    port             *pport = pinterruptBase->pport;
     
+    epicsMutexMustLock(pport->asynManagerLock);
     if(pinterruptNodePvt->isOnList) {
+        epicsMutexUnlock(pport->asynManagerLock);
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "freeInterruptNode requested but it is on a list\n");
         return asynError;
     }
-    pasynManager->memFree(pinterruptNodePvt,sizeof(interruptNodePvt));
+    ellAdd(&pinterruptBase->interruptNodeFree,&pnode->node);
+    epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
-
+
 static asynStatus addInterruptUser(asynUser *pasynUser,
                                    interruptNode*pinterruptNode)
 {
@@ -1822,7 +1829,7 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
-
+
 static asynStatus interruptStart(void *pasynPvt,ELLLIST **plist)
 {
     interruptBase  *pinterruptBase = (interruptBase *)pasynPvt;
@@ -1855,6 +1862,7 @@ static asynStatus interruptEnd(void *pasynPvt)
         ellDelete(&pinterruptBase->removeList,&pinterruptNodePvt->removeNode);
         ellDelete(&pinterruptBase->callbackList,&pinterruptNode->node);
         ellAdd(&pinterruptBase->interruptNodeFree,&pinterruptNode->node);
+        pinterruptNodePvt->isOnRemoveList = FALSE;
         pinterruptNodePvt->isOnList = FALSE;
         epicsEventSignal(pinterruptNodePvt->callbackDone);
     }
@@ -1864,6 +1872,8 @@ static asynStatus interruptEnd(void *pasynPvt)
 
         ellDelete(&pinterruptBase->addList,&pinterruptNodePvt->addNode);
         ellAdd(&pinterruptBase->callbackList,&pinterruptNode->node);
+        pinterruptNodePvt->isOnAddList = FALSE;
+        pinterruptNodePvt->isOnList = TRUE;
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
