@@ -22,18 +22,18 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+typedef void (*interruptCallbackInt32Array)(
+             void *userPvt, epicsInt32 *value, size_t *nelements);
 #define asynInt32ArrayType "asynInt32Array"
 typedef struct asynInt32Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
                        epicsInt32 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        epicsInt32 *value, size_t nelements, size_t *nIn);
-    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
-             void (*callback)(void *userPvt,epicsInt32 *val,size_t nelem),
-             void *userPvt);
-    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
-             void (*callback)(void *userPvt,epicsInt32 *val,size_t nelem),
-             void *userPvt);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+             interruptCallbackInt32Array callback, void *userPvt,
+             void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
 } asynInt32Array;
 
 #ifdef __cplusplus
