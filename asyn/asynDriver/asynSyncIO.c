@@ -15,7 +15,7 @@
 #include <string.h>
 #include <epicsEvent.h>
 #include <asynDriver.h>
-#include <asynDrvGenericSerial.h>
+#include <drvGenericSerial.h>
 #include <asynSyncIO.h>
 
 typedef enum {
@@ -130,7 +130,7 @@ static asynStatus
     strcpy(serverString, server);
     strcat(serverString, ":");
     strcat(serverString, portString);
-    status = asynDrvGenericSerialConfigure(serverString, serverString, 0, 0);
+    status = drvGenericSerialConfigure(serverString, serverString, 0, 0);
     status = asynSyncIOConnect(serverString, 0, ppasynUser);
     return(status);
 }
