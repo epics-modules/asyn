@@ -44,8 +44,8 @@ typedef struct asynUser {
     /* The following must be set by the user */
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt; 
-    /* The following are for additional information from method calls */
     void         *userData; 
+    /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
 }asynUser;
 
