@@ -46,7 +46,7 @@ static devGpibParmBlock devSupParms;
 static long init_ai(int pass);
 static gDset DSET_AI = {
     6,
-    {0, init_ai, devGpibLib_initAi, 0, devGpibLib_readAi, 0},
+    {devGpib_reportAi, init_ai, devGpib_initAi, 0, devGpib_readAi, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_AI);
@@ -54,34 +54,16 @@ epicsExportAddress(dset,DSET_AI);
 #ifdef DSET_AO
 static gDset DSET_AO = {
     6,
-    {0, 0, devGpibLib_initAo, 0, devGpibLib_writeAo, 0},
+    {0, 0, devGpib_initAo, 0, devGpib_writeAo, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_AO);
 #endif
 
-#ifdef DSET_LI
-static gDset DSET_LI = {
-    6,
-    {0, 0, devGpibLib_initLi, 0, devGpibLib_readLi, 0},
-    &devSupParms
-};
-epicsExportAddress(dset,DSET_LI);
-#endif
-
-#ifdef DSET_LO
-static gDset DSET_LO = {
-    6,
-    {0, 0, devGpibLib_initLo, 0, devGpibLib_writeLo,0},
-    &devSupParms
-};
-epicsExportAddress(dset,DSET_LO);
-#endif
-
 #ifdef DSET_BI
 static gDset DSET_BI = {
     6,
-    {0, 0, devGpibLib_initBi, 0, devGpibLib_readBi, 0},
+    {0, 0, devGpib_initBi, 0, devGpib_readBi, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_BI);
@@ -90,7 +72,7 @@ epicsExportAddress(dset,DSET_BI);
 #ifdef DSET_BO
 static gDset DSET_BO = {
     6,
-    {0, 0, devGpibLib_initBo, 0, devGpibLib_writeBo,0},
+    {0, 0, devGpib_initBo, 0, devGpib_writeBo,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_BO);
@@ -99,16 +81,34 @@ epicsExportAddress(dset,DSET_BO);
 #ifdef DSET_EV
 static gDset DSET_EV = {
     6,
-    {0, 0, devGpibLib_initEv, 0, devGpibLib_readEv, 0},
+    {0, 0, devGpib_initEv, 0, devGpib_readEv, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_EV);
+#endif
+
+#ifdef DSET_LI
+static gDset DSET_LI = {
+    6,
+    {0, 0, devGpib_initLi, 0, devGpib_readLi, 0},
+    &devSupParms
+};
+epicsExportAddress(dset,DSET_LI);
+#endif
+
+#ifdef DSET_LO
+static gDset DSET_LO = {
+    6,
+    {0, 0, devGpib_initLo, 0, devGpib_writeLo,0},
+    &devSupParms
+};
+epicsExportAddress(dset,DSET_LO);
 #endif
 
 #ifdef DSET_MBBI
 static gDset DSET_MBBI = {
     6,
-    {0, 0, devGpibLib_initMbbi, 0, devGpibLib_readMbbi, 0},
+    {0, 0, devGpib_initMbbi, 0, devGpib_readMbbi, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBI);
@@ -117,7 +117,7 @@ epicsExportAddress(dset,DSET_MBBI);
 #ifdef DSET_MBBO
 static gDset DSET_MBBO = {
     6,
-    {0, 0, devGpibLib_initMbbo, 0, devGpibLib_writeMbbo,0},
+    {0, 0, devGpib_initMbbo, 0, devGpib_writeMbbo,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBO);
@@ -126,7 +126,7 @@ epicsExportAddress(dset,DSET_MBBO);
 #ifdef DSET_MBBID
 static gDset DSET_MBBID = {
     6,
-    {0, 0, devGpibLib_initMbbiDirect, 0, devGpibLib_readMbbiDirect,0},
+    {0, 0, devGpib_initMbbiDirect, 0, devGpib_readMbbiDirect,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBID);
@@ -135,7 +135,7 @@ epicsExportAddress(dset,DSET_MBBID);
 #ifdef DSET_MBBOD
 static gDset DSET_MBBOD = {
     6,
-    {0, 0, devGpibLib_initMbboDirect, 0, devGpibLib_writeMbboDirect,0},
+    {0, 0, devGpib_initMbboDirect, 0, devGpib_writeMbboDirect,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBOD);
@@ -144,7 +144,7 @@ epicsExportAddress(dset,DSET_MBBOD);
 #ifdef DSET_SI
 static gDset DSET_SI = {
     6,
-    {0, 0, devGpibLib_initSi, 0, devGpibLib_readSi, 0},
+    {0, 0, devGpib_initSi, 0, devGpib_readSi, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_SI);
@@ -153,7 +153,7 @@ epicsExportAddress(dset,DSET_SI);
 #ifdef DSET_SO
 static gDset DSET_SO = {
     6,
-    {0, 0, devGpibLib_initSo, 0, devGpibLib_writeSo,0},
+    {0, 0, devGpib_initSo, 0, devGpib_writeSo,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_SO);
@@ -162,7 +162,7 @@ epicsExportAddress(dset,DSET_SO);
 #ifdef DSET_WF
 static gDset DSET_WF = {
     6,
-    {0, 0, devGpibLib_initWf, 0, devGpibLib_readWf, 0},
+    {0, 0, devGpib_initWf, 0, devGpib_readWf, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_WF);
