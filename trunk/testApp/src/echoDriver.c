@@ -90,6 +90,7 @@ static int echoDriverInit(const char *dn, double delay,
     char       *portName;
     asynStatus status;
     int        nbytes;
+    int        attributes;
 
     nbytes = sizeof(echoPvt) + strlen(dn) + 1;
     pechoPvt = callocMustSucceed(nbytes,sizeof(char),"echoDriverInit");
@@ -104,7 +105,10 @@ static int echoDriverInit(const char *dn, double delay,
     pechoPvt->octet.interfaceType = asynOctetType;
     pechoPvt->octet.pinterface  = (void *)&octet;
     pechoPvt->octet.drvPvt = pechoPvt;
-    status = pasynManager->registerPort(portName,multiDevice,!noAutoConnect,0,0);
+    attributes = 0;
+    if(multiDevice) attributes |= ASYN_MULTIDEVICE;
+    if(delay>0.0) attributes|=ASYN_CANBLOCK;
+    status = pasynManager->registerPort(portName,attributes,!noAutoConnect,0,0);
     if(status!=asynSuccess) {
         printf("echoDriverInit registerDriver failed\n");
         return 0;
