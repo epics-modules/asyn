@@ -84,7 +84,7 @@ typedef struct vxiLink {
 }vxiLink;
 
 /* global variables */
-int vxi11Debug = 10;
+int vxi11Debug = 0;
 epicsExportAddress(int,vxi11Debug);
 
 /* local variables */
@@ -558,7 +558,6 @@ s */
     i = pvxiLink->srqPort.ia.sin_port;
     pvxiLink->srqPort = osiLocalAddr(s); /* Gets address, but not port */
     pvxiLink->srqPort.ia.sin_port = i;
-    printf ("Listen.\n");
     if (listen (s, 2) < 0) {
         errlogPrintf ("SrqTask(): can't listen on socket: %s\n", strerror (errno
 ));
