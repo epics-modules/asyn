@@ -1211,7 +1211,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiLink->inAddr = inAddr;
     pvxiLink->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
-    pvxiLink->isSingleLink = (epicsStrCaseCmp("inst", vxiName, 4) == 0);
+    pvxiLink->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiLink->hostName, hostName);
     pvxiLink->asynGpibPvt = pasynGpib->registerPort(pvxiLink->portName,
         &vxi11,pvxiLink,priority,0);

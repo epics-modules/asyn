@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.11 2004-01-13 22:40:31 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.12 2004-01-13 23:11:08 norume Exp $
  */
 
 #include <string.h>
@@ -48,8 +48,6 @@
 # include <termios.h>
 #endif
 
-/* FIXME: */
-#define epicsStrCaseCmp strcasecmp
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each serial line.
