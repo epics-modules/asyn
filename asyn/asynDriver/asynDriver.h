@@ -22,6 +22,8 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+#define USER_DATA_SIZE 80
+
 typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError
 }asynStatus;
@@ -45,6 +47,7 @@ typedef struct asynUser {
     void         *userPvt; 
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
+    char         *userData[USER_DATA_SIZE];
 }asynUser;
 
 typedef struct asynInterface{
