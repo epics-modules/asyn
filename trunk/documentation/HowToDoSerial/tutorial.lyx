@@ -961,8 +961,8 @@ The DTYP fields must match the names specified in the devAB300.dbd database
 \layout Enumerate
 
 The device support database follows the ASYN convention that the macros
- $(P), $(L) and $(A) are used to specify the record name prefix, link number
- and GPIB address, respectively.
+ $(P), $(R), $(L) and $(A) are used to specify the record name prefixes,
+ link number and GPIB address, respectively.
 \layout Subsection
 
 Build the device support
@@ -1225,7 +1225,7 @@ Load the device support database records:
 \begin_deeper 
 \layout LyX-Code
 
-cd ${AB300}          
+cd $(AB300)          
 \family roman 
 (
 \family default 
@@ -1234,7 +1234,7 @@ cd AB300
 if using the vxWorks shell)
 \layout LyX-Code
 
-dbLoadRecords("db/devAB300.db","P=AB300:,L=0,A=0")
+dbLoadRecords("db/devAB300.db","P=AB300:,R=,L=0,A=0")
 \end_deeper 
 \layout Enumerate
 
@@ -1394,7 +1394,7 @@ AB300_registerRecordDeviceDriver(pdbbase)
 cd ${AB300}
 \layout LyX-Code
 
-dbLoadRecords("db/devAB300.db","P=AB300:,L=0,A=0")
+dbLoadRecords("db/devAB300.db","P=AB300:,R=,L=0,A=0")
 \newline 
 drvAsynIPPortConfigure("L0","164.54.3.137:4001",0,0,0)
 \newline 
@@ -1408,7 +1408,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 19:29:29 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-23 13:50:20 $$
 \newline 
 ############################################################################
 \newline 
@@ -1697,10 +1697,18 @@ Create the diagnostic record by adding a line like
 \newline 
 
 \newline 
-
+cd $(ASYN)          
+\family roman 
+(
+\family default 
+cd ASYN 
+\family roman 
+if using the vxWorks shell)
 \family typewriter 
 \size small 
-dbLoadRecords("../../db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
+
+\newline 
+dbLoadRecords("db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
 \family default 
 \size default 
 

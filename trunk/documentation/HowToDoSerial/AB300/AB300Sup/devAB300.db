@@ -1,11 +1,11 @@
-record(longout, "$(P)FilterWheel:reset")
+record(longout, "$(P)$(R)FilterWheel:reset")
 {
     field(DESC, "Reset AB300 Controller")
     field(SCAN, "Passive")
     field(DTYP, "AB300")
     field(OUT,  "#L$(L) A$(A) @0")
 }
-record(longout, "$(P)FilterWheel")
+record(longout, "$(P)$(R)FilterWheel")
 {
     field(DESC, "Set Filter Wheel Position")
     field(SCAN, "Passive")
@@ -14,7 +14,7 @@ record(longout, "$(P)FilterWheel")
     field(LOPR, 1)
     field(HOPR, 6)
 }
-record(longin, "$(P)FilterWheel:fbk")
+record(longin, "$(P)$(R)FilterWheel:fbk")
 {
     field(DESC, "Filter Wheel Position")
     field(SCAN, "Passive")
@@ -23,7 +23,7 @@ record(longin, "$(P)FilterWheel:fbk")
     field(LOPR, 1)
     field(HOPR, 6)
 }
-record(longin, "$(P)FilterWheel:status")
+record(longin, "$(P)$(R)FilterWheel:status")
 {
     field(DESC, "Filter Wheel Status")
     field(SCAN, "Passive")
