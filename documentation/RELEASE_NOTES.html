@@ -12,32 +12,60 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>September XX, 2004</h1>
+<h1>November 22, 2004</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release 3-4</h2>
+<h2>Release 4-0</h2>
 
 <p></p>
 </center>
 
 <h3>Incompatible Changes.</h3>
+<p>APOLOGY: Many interfaces have changed since release 3-3.
+This is the reason this release is called 4-0.
 <ul>
-  <li>devEpics device definitions have changed.
+  <li>asynManager - Only report has changed. Many new methods have been added.
+      asynManager:report takes an additional parameter, portName.
+  </li>
+  <li>asynOctet - The read/write methods are similar to before. The new
+     version has seperate end of string methods for input and output.</li>
+   <li>register based interfaces - Extensive changes have occured.</li>
+  <li>devGpib - Unless special conversion routines call low level
+   drivers, debGpib support should work without any changes.</li>
+  <li>devEpics -
+     <ul>
+        <li>Extensive changes have occured. The support naming now
+        follows the names of asyn interfaces. For example devAsynInt32
+        contains device support for interface asynInt32.</li>
+        <li> device definitions have changed.
     <p>Blanks no longer appear in the menu choices. For example.</p>
     <pre>    device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
        </pre>
     is now
     <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
        </pre>
+        </li>
+     <ul>
   </li>
-  <li>asynOctetSyncIO<
+  <li>asynOctetSyncIO
     <p>All read and write methods now return asynStatus and
       have additional args to return the number of bytes send/reeceived.</p>
   </li>
-  <li>asynManager:report takes an additional parameter, portName.
+</ul>
+<h3>New Features</h3>
+<ul>
+  <li>interrupt support# -
+    <p>A major new feature is support for interrupts. See asynDriver.html
+    for details.</p>
   </li>
+  <li>linuxGpib -
+     <p>This is support for the linusGpib open source project.
+       It contains support for many linux gpib kernel drivers.
+       The asyn support was provided by Rok Sabjan (cosyLab).
+     </p>
+   </li>
 </ul>
 <h3>cancelRequest</h3>
 <p>If cancelRequest is called while either the process or timeout callback is

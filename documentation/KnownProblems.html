@@ -12,35 +12,95 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>June 22 2004</h1>
+<h1>November 22 2004</h1>
 </center>
 <hr>
+
+<center>
+<h2>Release 4-0</h2>
+</center>
+
+<h3>asynManager</h3>
+<ul>
+  <li>removeInterruptUser - has not need tested</li>
+  <li>addInterruptUser/removeInterruptUser are not allowed to be called from
+    interrupt callbacks. This restriction should be removed.</li>
+</ul>
+
+<h3>vxi11</h3>
+<ul>
+  <li>E5810 reboot -
+    <p>John Sinclair (ONRL) reported that the IOC crashed if an E5810 was
+    power cycled. This could not be reproduced at APS. We will have to see if
+    it is still a problem.</p>
+  </li>
+  <li>E5810 serial port -
+    <p>Attempts to provide support for the serial port of a E5810 have not
+    been successful</p>
+  </li>
+</ul>
+
+<center>
+<h2>Release 3-3</h2>
+</center>
+
+<h3>vxi11Configure</h3>
+
+<p>If vxiName is specified as <span
+style="font-family: courier">"inst"</span> then the driver incorrectly says
+that it does not block.</p>
+
+<h3>asynRecord</h3>
+
+<p>If asynRecord is attached to a port that does not implement asynOctet,
+then asynRecord crashes of it attempt to send/receive a message.</p>
+
+<h3>asynManager</h3>
+<ul>
+  <li>a queueRequest timeout hangs if the timeout is canceled while the
+    timout callback is active.</li>
+  <li>cancelRequest also has possible race conditions</li>
+</ul>
+
+<p>The next release gaurantees that when queueRequest is called:</p>
+<ol>
+  <li>Exactly one of the following occurs:
+    <ul>
+      <li>queue callback is called</li>
+      <li>timeout callback is called</li>
+      <li>cancelRequest removes the request before either queue callback or
+        timeout callback is called.</li>
+    </ul>
+  </li>
+  <li>If either the queue or timeout callback is active when cancelRequest is
+    called, it will not return until the callback completes.</li>
+</ol>
 
 <center>
 <h2>Release 3-2</h2>
 </center>
 
 <h3>Mac OS X (Darwin)</h3>
-<p>The RPC library on Mac OS X 10.3.3 does not handle device timeouts properly and may cause core dumps.  A bug report has been filed with Apple.  A workaround
-is to use the GNU glibc RPC/XDR routines.</p>
+
+<p>The RPC library on Mac OS X 10.3.3 does not handle device timeouts
+properly and may cause core dumps.  A bug report has been filed with Apple. A
+workaround is to use the GNU glibc RPC/XDR routines.</p>
 
 <h3>vxWorks</h3>
+
 <p>Attempting to change the trace file to "stdout" does not work becuase
 vxWorks has per-task standard output streams.</p>
-
-
-
 
 <center>
 <h2>Release 3-1</h2>
 </center>
 
 <h3>EPICS Base R3.14.6</h3>
+
 <p>When building with EPICS Base R3.14.6 or greater, comment out the
- epicsInterruptibleSyscall.h and epicsInterruptibleSyscall.c lines
-in asyn/Makefile:
-<pre>
-@@ -19,10 +19,10 @@
+epicsInterruptibleSyscall.h and epicsInterruptibleSyscall.c lines in
+asyn/Makefile:</p>
+<pre>@@ -19,10 +19,10 @@
  SRC_DIRS += $(ASYN)/asynDriver
  INC += asynDriver.h
  INC += epicsInterruptibleSyscall.h
@@ -52,24 +112,24 @@ in asyn/Makefile:
 +#asyn_SRCS += epicsString1.c
  
  SRC_DIRS += $(ASYN)/asynGpib
- INC += asynGpibDriver.h
-</pre>
-
-
+ INC += asynGpibDriver.h</pre>
 
 <h3>Mac OS X (Darwin)</h3>
 
-<p>The RPC library on Mac OSD 10.3.3 does not handle device timeouts properly and may cause core dumps.  A bug report has been filed with Apple.  A workaround
-is to use the GNU glibc RPC/XDR routines.</p>
-
+<p>The RPC library on Mac OSD 10.3.3 does not handle device timeouts properly
+and may cause core dumps.  A bug report has been filed with Apple.  A
+workaround is to use the GNU glibc RPC/XDR routines.</p>
 
 <h3>Interrupt Callback</h3>
+
 <p>If a user callback calls a low level driver with an infinite or very long
-timeout, there is no way to make the call terminate. Is there a generic
-way to abort the call?</p>
+timeout, there is no way to make the call terminate. Is there a generic way
+to abort the call?</p>
 
 <h3>Greensprings IP488</h3>
+
 <p>Does not support GPIB specific functions.</p>
+
 <h3>NI1014 VME Gpib driver</h3>
 
 <p>This needs to be implemented for asynDriver.</p>
