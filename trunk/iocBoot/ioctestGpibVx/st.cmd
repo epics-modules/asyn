@@ -18,16 +18,16 @@ dbLoadRecords("../../db/asynGeneric.db","ioc=gpibTest")
 
 #The following command is for the E2050
 #E2050Reboot("164.54.8.227")
-#vxi11Configure("L0","164.54.8.227",0,0.0,"hpib",0,0)
+#vxi11Configure("L0","164.54.8.227",0,0.0,"hpib",1,0)
 
 #The following two commands are for the E5810
 #E5810Reboot("164.54.8.129",0)
-vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0,0)
+#vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",1,0)
 
 #The following command is for an ethernet TSD3014B scope
-#vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0,0)
+#vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",1,0)
 
 #The following is for the Greensprings IP488
 ipacAddMVME162("A:l=3,3 m=0xe0000000,64;B:m=e0000000,64 l=3,2")
-gsIP488Configure("L0",0,0,0x61,0,0)
+gsIP488Configure("L0",0,0,0x61,1,0)
 iocInit()
