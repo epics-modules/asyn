@@ -60,7 +60,7 @@ static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
-#define QUEUE_TIMEOUT 5.0    /* Timeout for queueRequest */
+#define QUEUE_TIMEOUT 10.0    /* Timeout for queueRequest */
 
 /* Create RSET - Record Support Entry Table*/
 #define report NULL
@@ -1051,6 +1051,7 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
+    asynUser *pasynUserConnect, *pasynUserEos;
     asynStatus status;
     callbackMessage *pmsg;
 
@@ -1176,20 +1177,20 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     /* Get the trace and connect flags */
     monitorStatus(pasynRec);
     /* Queue a request to get the options */
-    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
-                                                queueTimeoutCallbackSpecial);
-    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUser->userData;
+    pasynUserConnect = pasynManager->duplicateAsynUser(pasynUser,
+        asynCallbackSpecial, queueTimeoutCallbackSpecial);
+    pasynUserConnect->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUserConnect->userData;
     pmsg->callbackType = callbackGetOption;
-    status = pasynManager->queueRequest(pasynUser,
+    status = pasynManager->queueRequest(pasynUserConnect,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
     /* Queue a request to get the EOS */
-    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
-                                                queueTimeoutCallbackSpecial);
-    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUser->userData;
+    pasynUserEos = pasynManager->duplicateAsynUser(pasynUser,
+        asynCallbackSpecial, queueTimeoutCallbackSpecial);
+    pasynUserEos->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUserEos->userData;
     pmsg->callbackType = callbackGetEos;
-    status = pasynManager->queueRequest(pasynUser,
+    status = pasynManager->queueRequest(pasynUserEos,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
     pasynRec->pcnct = 1; 
     status = asynSuccess;
