@@ -65,9 +65,9 @@ asyn_SRCS += drvGenericSerial.c
 DBD += drvGenericSerial.dbd
 
 SRC_DIRS += $(ASYN)/drvAsynSerial
-INC += drvAsynLocalSerialPort.h
-asyn_SRCS += drvAsynLocalSerialPort.c
-DBD += drvAsynLocalSerialPort.dbd
+INC += drvAsynSerialPort.h
+asyn_SRCS += drvAsynSerialPort.c
+DBD += drvAsynSerialPort.dbd
 INC += drvAsynTCPPort.h
 asyn_SRCS += drvAsynTCPPort.c
 DBD += drvAsynTCPPort.dbd
