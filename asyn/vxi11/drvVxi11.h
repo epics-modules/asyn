@@ -27,7 +27,6 @@ extern int vxi11Config(char *portName,char *hostName,int recoverWithIFC,
         char *vxiName,
         unsigned int priority, unsigned int stackSize,
         int isSingleLink);
-extern int vxi11Debug;
 extern int vxi11SetRpcTimeout(double timeout);
 
 extern int E5810Reboot(char * inetAddr,char *password);
