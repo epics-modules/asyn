@@ -1,14 +1,14 @@
 
 file {
-	name="j:\epics\synApps5-1\asyn\2-2beta\medm\asynRecord.adl"
-	version=020306
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecordDebug.adl"
+	version=030004
 }
 display {
 	object {
-		x=136
-		y=114
-		width=441
-		height=400
+		x=230
+		y=408
+		width=442
+		height=610
 	}
 	clr=14
 	bclr=4
@@ -290,101 +290,6 @@ text {
 	limits {
 	}
 }
-"message button" {
-	object {
-		x=176
-		y=372
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)$(R).PROC"
-		clr=14
-		bclr=51
-	}
-	label="Process"
-	press_msg="1"
-}
-text {
-	object {
-		x=294
-		y=372
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-	textix="More..."
-}
-"related display" {
-	object {
-		x=369
-		y=372
-		width=56
-		height=20
-	}
-	display[0] {
-		label="Serial port parameters"
-		name="asynSerialPortSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[1] {
-		label="GPIB parameters"
-		name="asynGPIBSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[2] {
-		label="Socket parameters"
-		name="asynSocketSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[3] {
-		label="Trace control"
-		name="asynTrace.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[4] {
-		label="Connection management"
-		name="asynConnect.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[5] {
-		label="Debug screen"
-		name="asynRecordDebug.adl"
-		args="P=$(P),R=$(R)"
-		policy="replace display"
-	}
-	clr=14
-	bclr=51
-}
-menu {
-	object {
-		x=61
-		y=372
-		width=110
-		height=20
-	}
-	control {
-		chan="$(P)$(R).SCAN"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=6
-		y=372
-		width=50
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Scan:"
-	align="horiz. right"
-}
 composite {
 	object {
 		x=6
@@ -558,102 +463,12 @@ text {
 	}
 	textix="Error:"
 }
-composite {
-	object {
-		x=10
-		y=345
-		width=240
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=180
-				y=345
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=62
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).ENBD"
-			}
-			textix="Enabled"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=170
-				y=345
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=20
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).ENBD"
-			}
-			textix="Disabled"
-			align="horiz. right"
-		}
-		composite {
-			object {
-				x=10
-				y=345
-				width=120
-				height=20
-			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=40
-						y=345
-						width=90
-						height=20
-					}
-					"basic attribute" {
-						clr=62
-					}
-					"dynamic attribute" {
-						vis="if not zero"
-						chan="$(P)$(R).CNTD"
-					}
-					textix="Connected"
-					align="horiz. right"
-				}
-				text {
-					object {
-						x=10
-						y=345
-						width=120
-						height=20
-					}
-					"basic attribute" {
-						clr=20
-					}
-					"dynamic attribute" {
-						vis="if zero"
-						chan="$(P)$(R).CNTD"
-					}
-					textix="Disconnected"
-					align="horiz. right"
-				}
-			}
-		}
-	}
-}
 rectangle {
 	object {
 		x=6
 		y=296
 		width=430
-		height=70
+		height=93
 	}
 	"basic attribute" {
 		clr=14
@@ -905,5 +720,523 @@ text {
 		bclr=51
 	}
 	limits {
+	}
+}
+text {
+	object {
+		x=66
+		y=435
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceError"
+}
+text {
+	object {
+		x=66
+		y=504
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIODriver"
+}
+text {
+	object {
+		x=66
+		y=527
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceFlow"
+}
+text {
+	object {
+		x=66
+		y=481
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOFilter"
+}
+text {
+	object {
+		x=66
+		y=458
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIODevice"
+}
+text {
+	object {
+		x=30
+		y=403
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceMask"
+}
+text {
+	object {
+		x=194
+		y=403
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOMask"
+}
+text {
+	object {
+		x=243
+		y=435
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOAScii"
+}
+text {
+	object {
+		x=243
+		y=458
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOEscape"
+}
+text {
+	object {
+		x=243
+		y=481
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOHex"
+}
+"choice button" {
+	object {
+		x=7
+		y=435
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB0"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=504
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB3"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=527
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB4"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=481
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=7
+		y=458
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=184
+		y=435
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB0"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=184
+		y=458
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=184
+		y=481
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=243
+		y=504
+		width=104
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Truncate size"
+}
+"text entry" {
+	object {
+		x=184
+		y=504
+		width=50
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TSIZ"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=184
+		y=550
+		width=104
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Trace file"
+}
+"text entry" {
+	object {
+		x=184
+		y=527
+		width=250
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TFIL"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=6
+		y=580
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Scan:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=61
+		y=580
+		width=110
+		height=20
+	}
+	control {
+		chan="$(P)$(R).SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"message button" {
+	object {
+		x=176
+		y=580
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PROC"
+		clr=14
+		bclr=51
+	}
+	label="Process"
+	press_msg="1"
+}
+text {
+	object {
+		x=294
+		y=580
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	textix="More..."
+}
+"related display" {
+	object {
+		x=369
+		y=580
+		width=56
+		height=20
+	}
+	display[0] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[1] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[2] {
+		label="Socket parameters"
+		name="asynSocketSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	clr=14
+	bclr=51
+}
+rectangle {
+	object {
+		x=3
+		y=396
+		width=430
+		height=170
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+text {
+	object {
+		x=300
+		y=345
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=30
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).AUCT"
+	}
+	textix="noAutoConnect"
+	align="horiz. right"
+}
+text {
+	object {
+		x=310
+		y=345
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).AUCT"
+	}
+	textix="autoConnect"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=305
+		y=366
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).AUCT"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=180
+		y=345
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).ENBL"
+	}
+	textix="Enabled"
+	align="horiz. right"
+}
+text {
+	object {
+		x=175
+		y=345
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).ENBL"
+	}
+	textix="Disabled"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=155
+		y=367
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).ENBL"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=25
+		y=345
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).CNCT"
+	}
+	textix="Connected"
+	align="horiz. right"
+}
+text {
+	object {
+		x=10
+		y=345
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).CNCT"
+	}
+	textix="Disconnected"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=10
+		y=367
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).CNCT"
+		clr=14
+		bclr=51
 	}
 }
