@@ -59,6 +59,7 @@ DBD += drvVxi11.dbd
 
 
 SRC_DIRS += $(ASYN)/drvGenericSerial
+INC += drvGenericSerial.h
 asyn_SRCS += drvGenericSerial.c
 DBD += drvGenericSerial.dbd
 
