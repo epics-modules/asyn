@@ -127,6 +127,7 @@ typedef struct qrtWait {
 typedef enum {callbackIdle,callbackActive,callbackCanceled}callbackState;
 struct userPvt {
     ELLNODE       node;        /*For asynPort.queueList*/
+    BOOL          freeAfterCallback;
     exceptionUser *pexceptionUser;
     userCallback  callback;
     qrt           *pqrt;
@@ -703,6 +704,10 @@ static void portThread(port *pport)
             if(puserPvt->state==callbackCanceled)
                 epicsEventSignal(puserPvt->callbackDone);
             puserPvt->state = callbackIdle;
+            if(puserPvt->freeAfterCallback) {
+                puserPvt->freeAfterCallback = FALSE;
+                ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+            }
         }
         if(!pport->dpc.connected && pport->dpc.autoConnect) {
             epicsMutexUnlock(pport->asynManagerLock);
@@ -758,6 +763,10 @@ static void portThread(port *pport)
             if(puserPvt->state==callbackCanceled)
                 epicsEventSignal(puserPvt->callbackDone);
             puserPvt->state = callbackIdle;
+            if(puserPvt->freeAfterCallback) {
+                puserPvt->freeAfterCallback = FALSE;
+                ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+            }
             if(pport->queueStateChange) break;
         }
         epicsMutexUnlock(pport->asynManagerLock);
@@ -926,7 +935,11 @@ static asynStatus freeAsynUser(asynUser *pasynUser)
         if(status!=asynSuccess) return asynError;
     }
     epicsMutexMustLock(pasynBase->lock);
-    ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+    if(puserPvt->state==callbackIdle) {
+        ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+    } else {
+        puserPvt->freeAfterCallback = TRUE;
+    }
     epicsMutexUnlock(pasynBase->lock);
     return asynSuccess;
 }
@@ -1038,11 +1051,6 @@ static asynStatus disconnect(asynUser *pasynUser)
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::disconnect request queued\n");
-        status = asynError; goto unlock;
-    }
-    if(puserPvt->state!=callbackIdle) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager::disconnect userCallback active\n");
         status = asynError; goto unlock;
     }
     if(puserPvt->lockCount>0) {
