@@ -65,6 +65,6 @@ int E5810Reboot(char * inetAddr,char *password)
     if(nbytes!=3) printf("nbytes %d expected 3\n",nbytes);
     epicsThreadSleep(1.0);
     close(fd);
-    epicsThreadSleep(10.0);
+    epicsThreadSleep(20.0);
     return(0);
 }
