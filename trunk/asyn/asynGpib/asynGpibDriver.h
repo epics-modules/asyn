@@ -86,10 +86,10 @@ struct asynGpibPort {
     asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
     /*asynGpibPort specific methods */
-    int (*srqStatus) (void *drvPvt);
+    asynStatus (*srqStatus) (void *drvPvt,int *isSet);
     asynStatus (*srqEnable) (void *drvPvt, int onOff);
     asynStatus (*serialPollBegin) (void *drvPvt);
-    int (*serialPoll) (void *drvPvt, int addr, double timeout);
+    asynStatus (*serialPoll) (void *drvPvt, int addr, double timeout,int *status);
     asynStatus (*serialPollEnd) (void *drvPvt);
 };
 
