@@ -25,6 +25,10 @@
 
 #include <asynDriver.h>
 
+#define epicsExportSharedSymbols
+
+#include "asynShellCommands.h"
+
 #define NUM_INTERFACES 1
 
 typedef struct interposePvt {
@@ -37,7 +41,7 @@ typedef struct interposePvt {
     double        timeout;
 }interposePvt;
     
-static int interposeFlushConfig(const char *interposeInterfaceName,
+int epicsShareAPI interposeFlushConfig(const char *interposeInterfaceName,
     const char *portName,int addr,double timeout);
 
 
@@ -52,7 +56,7 @@ static asynOctet octet = {
     processRead,processWrite,processFlush, setEos
 };
 
-static int interposeFlushConfig(const char *pmn,
+int epicsShareAPI interposeFlushConfig(const char *pmn,
     const char *dn,int addr,double timeout)
 {
     interposePvt *pinterposePvt;
@@ -112,7 +116,6 @@ static asynStatus processFlush(void *ppvt,asynUser *pasynUser)
     asynOctet    *pasynOctet = pinterposePvt->pasynOctet;
     void         *drvPvt = pinterposePvt->asynOctetPvt;
     double       savetimeout = pasynUser->timeout;
-    asynStatus   status;
     char         buffer[100];
     int          nin;
 

@@ -44,6 +44,10 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
  asynFlush(const char *entry);
 
+epicsShareFunc int epicsShareAPI
+ interposeFlushConfig(const char *interposeInterfaceName,
+    const char *portName,int addr,double timeout);
+
 #ifdef __cplusplus
 }
 #endif
