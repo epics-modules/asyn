@@ -80,22 +80,23 @@ struct gpibCmd {
 /*Define so that it is easy to check for valid set of commands*/
 #define GPIBREAD        0x00000001
 #define GPIBWRITE       0x00000002
-#define GPIBCMD         0x00000004
-#define GPIBACMD        0x00000008
-#define GPIBSOFT        0x00000010
-#define GPIBREADW       0x00000020
-#define GPIBRAWREAD     0x00000040
-#define GPIBEFASTO      0x00000080
-#define GPIBEFASTI      0x00000100
-#define GPIBEFASTIW     0x00000200
-#define GPIBIFC         0x00000400
-#define GPIBREN         0x00000800
-#define GPIBDCL         0x00001000
-#define GPIBLLO         0x00002000
-#define GPIBSDC         0x00004000
-#define GPIBGTL         0x00008000
-#define GPIBRESETLNK    0x00010000
-#define GPIBSRQHANDLER  0x00020000
+#define GPIBCVTIO       0x00000004
+#define GPIBCMD         0x00000008
+#define GPIBACMD        0x00000010
+#define GPIBSOFT        0x00000020
+#define GPIBREADW       0x00000040
+#define GPIBRAWREAD     0x00000080
+#define GPIBEFASTO      0x00000100
+#define GPIBEFASTI      0x00000200
+#define GPIBEFASTIW     0x00000400
+#define GPIBIFC         0x00000800
+#define GPIBREN         0x00001000
+#define GPIBDCL         0x00002000
+#define GPIBLLO         0x00004000
+#define GPIBSDC         0x00008000
+#define GPIBGTL         0x00010000
+#define GPIBRESETLNK    0x00020000
+#define GPIBSRQHANDLER  0x00040000
 #define IB_Q_LOW     asynQueuePriorityLow
 #define IB_Q_MEDIUM  asynQueuePriorityMedium
 #define IB_Q_HIGH    asynQueuePriorityHigh
@@ -168,6 +169,7 @@ struct devSupportGpib {
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
+    int (*setEos)(gpibDpvt *pgpibDpvt,char *eos, int leneos);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
 

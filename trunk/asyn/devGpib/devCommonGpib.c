@@ -54,7 +54,7 @@ long epicsShareAPI devGpib_initAi(aiRecord * pai)
     if(result) return result;
     pgpibDpvt = gpibDpvtGet(pai);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for AI record in param %d\n",
             pai->name, pgpibDpvt->parm);
@@ -127,7 +127,7 @@ long epicsShareAPI devGpib_initAo(aoRecord * pao)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pao);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for AO record in param %d\n",
             pao->name, pgpibDpvt->parm);
@@ -187,7 +187,7 @@ long epicsShareAPI devGpib_initBi(biRecord * pbi)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pbi);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO|GPIBEFASTI|GPIBEFASTIW))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for BI record in param %d\n",
             pbi->name, pgpibDpvt->parm);
@@ -295,7 +295,7 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
             if (pbo->znam[0] == 0) strcpy(pbo->znam, papname[0]);
             if (pbo->onam[0] == 0) strcpy(pbo->onam, papname[1]);
         }
-    } else if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
+    } else if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for BO record in param %d\n",
             pbo->name, pgpibDpvt->parm);
@@ -416,7 +416,7 @@ long epicsShareAPI devGpib_initEv(eventRecord * pev)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pev);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for EV record in param %d\n",
             pev->name, pgpibDpvt->parm);
@@ -488,7 +488,7 @@ long epicsShareAPI devGpib_initLi(longinRecord * pli)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pli);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBSRQHANDLER))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO|GPIBSRQHANDLER))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for LI record in param %d\n",
             pli->name, pgpibDpvt->parm);
@@ -555,7 +555,7 @@ long epicsShareAPI devGpib_initLo(longoutRecord * plo)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(plo);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for LO record in param %d\n",
             plo->name, pgpibDpvt->parm);
@@ -613,7 +613,7 @@ long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
     pgpibDpvt = gpibDpvtGet(pmbbi);
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO|GPIBEFASTI|GPIBEFASTIW))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for MBBI record in param %d\n",
             pmbbi->name, pgpibDpvt->parm);
@@ -707,7 +707,7 @@ long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pmbbiDirect);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for MBBI_DIRECT record in param %d\n",
             pmbbiDirect->name, pgpibDpvt->parm);
@@ -777,7 +777,7 @@ long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pmbbo);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
+    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for MBBO record in param %d\n",
             pmbbo->name, pgpibDpvt->parm);
@@ -856,7 +856,7 @@ long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pmbboDirect);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for MBBO_DIRECT record in param %d\n",
             pmbboDirect->name, pgpibDpvt->parm);
@@ -909,7 +909,7 @@ long epicsShareAPI devGpib_initSi(stringinRecord * psi)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(psi);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for SI record in param %d\n",
             psi->name, pgpibDpvt->parm);
@@ -977,7 +977,7 @@ long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pso);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
+    if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for SO record in param %d\n",
             pso->name, pgpibDpvt->parm);
@@ -1040,7 +1040,7 @@ long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
             pwf->pact = 1;
             return S_db_badField;
         }
-    } else if(!(cmdType&(GPIBSOFT|GPIBWRITE|GPIBCMD|GPIBACMD))) {
+    } else if(!(cmdType&(GPIBSOFT|GPIBCVTIO|GPIBWRITE|GPIBCMD|GPIBACMD))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s invalid command type for WF record in param %d\n",
             pwf->name, pgpibDpvt->parm);
