@@ -37,11 +37,10 @@
 #include <epicsThread.h>
 #include <epicsEvent.h>
 #include <epicsTimer.h>
-#include <epicsExport.h>
 #include <asynDriver.h>
+#include <asynGpibDriver.h>
 #include <cantProceed.h>
-
-#include "asynGpibDriver.h"
+#include <epicsExport.h>
 
 static char *untalkUnlisten = "_?";
 
@@ -657,8 +656,7 @@ static asynStatus gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read nchar %d\n",
-        pgpib->portName,actual);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read\n",pgpib->portName);
     pgpib->errorMessage[0] = 0;
     status = readGpib(pgpib,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
