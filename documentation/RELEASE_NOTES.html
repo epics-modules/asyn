@@ -12,24 +12,42 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>July 27, 2004</h1>
+<h1>August 23, 2004</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release x-y</h2>
+<h2>Release 3-3</h2>
 </center>
+
+<h3>Incompatible Changes.</h3>
+<ul>
+  <li>MAY BE MORE - This release has major new features. Implementing the new
+    features may have caused some imcompatibilities, This list is likely to
+    grow as existing users report problems.</li>
+  <li>queueRequest - Of the portDriver does not block then the aeeue callback
+    is called by queueRequest rather than by a separate thread. User code can
+    call canBlock to find out how the callback is called.</li>
+  <li>registerPort - The argument multiDevice has been replaced by
+    attributes. Attributes currently has two bits ASYN_MULTIDEVICE and
+    ASYN_CANBLOCK. The port drived is responsible for setting both bits
+    correctly.</li>
+  <li>setOption/getOption have been moved from asynCommon to a new interface
+    asynOption.</li>
+</ul>
 
 <h3>Major New Features</h3>
 <ul>
-  <li>Added support for synchronous devices. Changes to
-    pasynManager-&gt;registerPort, and new pasynManager-&gt;canBlock()
-    function.</li>
-  <li>Added userData to asynUser structure.</li>
-  <li>Added pasynManager-&gt;memMalloc() and pasynManager-&gt;memFree() for
-    allocating and freeing memory with a freelist.  This is primarily meant
-    to be used with pasynManager-&gt;duplicateAsynUser() and the new
-    pasynUser-&gt;userData field.</li>
+  <li>Support for synchronous drivers.</li>
+  <li>Support for register based drivers.</li>
+  with register based drivers.<ul>
+    <li>Generic register based device support for EPICS records.</li>
+    <li>Additional fields have been added to asynUser.</li>
+    <li>Added pasynManager-&gt;memMalloc() and pasynManager-&gt;memFree() for
+      allocating and freeing memory with a freelist.  This is primarily meant
+      to be used with pasynManager-&gt;duplicateAsynUser() and the new
+      pasynUser-&gt;userData field.</li>
+  </ul>
 </ul>
 
 <h3>asynDriver.h</h3>
@@ -83,25 +101,9 @@ the record is busy. It is no longer possible to cancel a special request.</p>
 returns as many characters as the low-level method supplies.  This makes the
 EOS read semantics match those of the low-level serial and IP drivers.</p>
 
-<h3>Changed and obsolete features</h3>
-<ul>
-  <li>pasynManager-&gt;registerPort() has changed.  The second argument is
-    now a bit mask, and asynchronous drivers must set the ASYN_CANBLOCK
-  bit.</li>
-  <li>Removed setOption() and getOption() from the asynCommon interface. 
-    Moved them to a new interface, asynOption.</li>
-</ul>
-
 <h3>drvVxi11</h3>
 
 <p>vxi11SetRpcTimeout - now handles fractions of a second properly</p>
-
-<h1>June 25, 2004</h1>
-<hr>
-
-<center>
-<h2>Release 3-3</h2>
-</center>
 
 <h3>asynRecord</h3>
 
@@ -112,15 +114,6 @@ Reque st)</p>
 and only for I/O operations. Only I/O operations cause the alarm status and
 severity to change. Special is responsible for all other operations performed
 by asynRecord.</p>
-
-<h3>Changed and obsolete features</h3>
-<ul>
-  <li>Lots of documentation cleanups and clarifications.</li>
-</ul>
-
-<h3>Major New Features</h3>
-<ul>
-</ul>
 
 <center>
 <h2>Release 3-2</h2>
