@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.25 2004-11-18 18:55:33 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.26 2004-12-02 05:38:38 rivers Exp $
  */
 
 #include <string.h>
@@ -832,7 +832,7 @@ static const struct asynOption drvAsynSerialPortAsynOption = {
 /*
  * asynOctet methods
  */
-static const struct asynOctet drvAsynSerialPortAsynOctet = {
+static struct asynOctet drvAsynSerialPortAsynOctet = {
     0,
     drvAsynSerialPortWrite,
     0,

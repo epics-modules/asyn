@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.11 2004-11-18 18:55:33 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.12 2004-12-02 05:38:38 rivers Exp $
  */
 
 #include <string.h>
@@ -564,7 +564,7 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 /*
  * asynOctet methods
  */
-static const struct asynOctet drvAsynIPPortAsynOctet = {
+static struct asynOctet drvAsynIPPortAsynOctet = {
     0,
     drvAsynIPPortWrite,
     0,
