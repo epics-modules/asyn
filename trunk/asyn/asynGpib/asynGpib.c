@@ -418,7 +418,7 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     }
     *nbytesTransfered = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
-        data,maxchars,nbytesTransfered,eomReason);
+        data,nbytesTransfered,eomReason);
     return status;
 }
 
@@ -434,7 +434,7 @@ static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     if(nbytesTransfered) *nbytesTransfered = (size_t)nt;
     if(status==asynSuccess) {
         pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
-            data,maxchars,nbytesTransfered,eomReason);
+            data,nbytesTransfered,eomReason);
     }
     return status;
 }
