@@ -407,7 +407,7 @@ if low level drivers are only accessed by calling queueRequest.
 <p>Figure 1:  Asynchronous Control Flow</p>
 </center>
 The sequence of record device support events that occurs starting with an
-application thread is pictured above in figure 1, and explained below in the
+application thread is pictured above in Figure 1, and explained below in the
 following steps:
 <ol>
   <li>Record processing calls Record device support with record.PACT=0.</li>
@@ -429,7 +429,7 @@ following steps:
     returns to record support which completes record processing.</li>
 </ol>
 
-<p>The second example shows access to a port that can block.</p>
+<p>The second example shows access to a port that cannot block.</p>
 
 <center>
 <img name="AsynSynFlow" src="AsynSynFlow.jpg" border="1">
@@ -437,15 +437,15 @@ following steps:
 <p>Figure 2:  Synchronous Control Flow</p>
 </center>
 The sequence of record device support events that occurs starting with an
-application thread is pictured above in figure 1, and explained below in the
+application thread is pictured above in Figure 2, and explained below in the
 following steps:
 <ol>
   <li>Record processing calls Record device support.</li>
   <li>Record device support calls queueRequest.</li>
   <li>Since the port is synchronous, i.e. can not block, queueRequest calls
     processCallback.</li>
-  <li>processCallback calls the low-level driver read or write routine.</li>
-  <li>The low-level driver routine returns the results of the I/O operation
+  <li>processCallback calls the low-level driver read or write routine.
+    The low-level driver routine returns the results of the I/O operation
     to processCallback which completes record processing.</li>
 </ol>
 <hr>
