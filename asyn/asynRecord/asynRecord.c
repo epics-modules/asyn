@@ -1756,28 +1756,40 @@ static void getEos(asynUser * pasynUser)
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     char eosBuff[EOS_SIZE];
-    char eosTranslate[EOS_SIZE];
+    char outputEosTranslate[EOS_SIZE];
+    char inputEosTranslate[EOS_SIZE];
     int eosSize;
     int ntranslate;
+    asynStatus status;
     unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
-    /* If port does not have an asynOctet interface return */
-    if (!pasynRec->octetiv) return;
+    /* Set the eos strings to 0 length */
+    outputEosTranslate[0] = 0;
+    inputEosTranslate[0] = 0;
+    /* If port does not have an asynOctet interface skip */
+    if (!pasynRec->octetiv) goto post;
 
-    pasynRecPvt->pasynOctet->getInputEos(pasynRecPvt->asynOctetPvt, pasynUser,
-                                         eosBuff, EOS_SIZE, &eosSize);
-    ntranslate = epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
-                                        eosBuff, eosSize);
-    if (strcmp(eosTranslate, pasynRec->ieos) != 0) {
-        strncpy(pasynRec->ieos, eosTranslate, ntranslate);
+    status = pasynRecPvt->pasynOctet->getInputEos(pasynRecPvt->asynOctetPvt, 
+                                          pasynUser, eosBuff, EOS_SIZE, &eosSize);
+    if ((status == asynSuccess) && (eosSize > 0)) {
+        ntranslate = epicsStrSnPrintEscaped(inputEosTranslate, 
+                                            sizeof(inputEosTranslate),
+                                            eosBuff, eosSize);
+    }
+    status = pasynRecPvt->pasynOctet->getOutputEos(pasynRecPvt->asynOctetPvt, 
+                                          pasynUser, eosBuff, EOS_SIZE, &eosSize);
+    if ((status == asynSuccess) && (eosSize > 0)) {
+        ntranslate = epicsStrSnPrintEscaped(outputEosTranslate, 
+                                            sizeof(outputEosTranslate),
+                                            eosBuff, eosSize);
+    }
+    post:
+    if (strcmp(inputEosTranslate, pasynRec->ieos) != 0) {
+        strncpy(pasynRec->ieos, inputEosTranslate, sizeof(pasynRec->ieos));
         db_post_events(pasynRec, pasynRec->ieos, monitor_mask);
     }
-    pasynRecPvt->pasynOctet->getOutputEos(pasynRecPvt->asynOctetPvt, pasynUser,
-                                          eosBuff, EOS_SIZE, &eosSize);
-    ntranslate = epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
-                                        eosBuff, eosSize);
-    if (strcmp(eosTranslate, pasynRec->oeos) != 0) {
-        strncpy(pasynRec->oeos, eosTranslate, ntranslate);
+    if (strcmp(outputEosTranslate, pasynRec->oeos) != 0) {
+        strncpy(pasynRec->oeos, outputEosTranslate, sizeof(pasynRec->oeos));
         db_post_events(pasynRec, pasynRec->oeos, monitor_mask);
     }
 }
