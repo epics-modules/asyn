@@ -451,14 +451,18 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     char *buf = pgpibDpvt->msg;
     size_t bufSize = pgpibCmd->msgLen;
+    char saveEos[5];
+    int saveEosLen;
 
+    pasynOctet->getInputEos(asynOctetPvt,pasynUser,saveEos,sizeof saveEos,&saveEosLen);
     pasynOctet->setInputEos(asynOctetPvt,pasynUser,"#",1);
     status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread,0);
-    if (status!=asynSuccess || nread == 0) {
+    if (status!=asynSuccess || nread == 0)
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                       "Error reading preamble");
+    pasynOctet->setInputEos(asynOctetPvt,pasynUser,saveEos,saveEosLen);
+    if (status!=asynSuccess || nread == 0)
         return -1;
-    }
     if (buf[nread - 1] != '#') {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                            "Preamble too long");
@@ -466,8 +470,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     }
     buf += nread;
     bufSize -= nread;
-    pasynOctet->setInputEos(asynOctetPvt,pasynUser,NULL,0);
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,1,&nread,0);
+    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,1,&nread,0);
     if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                               "Error reading number of digits");
@@ -491,7 +494,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
                                                             "Buffer too small");
         return -1;
     }
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread,0);
+    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
     if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                "Error reading number of bytes");
@@ -518,14 +521,25 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         else
             count++;
     }
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread,0);
+    status = pasynOctet->readRaw(asynOctetPvt,pasynUser,buf,count,&nread,0);
     if (status!=asynSuccess || nread != count) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                             "Error reading waveform bytes (and trailing EOS)");
+                             "Error reading waveform bytes%s",
+                                pgpibCmd->eos ? " (and trailing command EOS)" : "");
         return -1;
     }
     buf += nread;
+    if (saveEosLen) {
+        status = pasynOctet->read(asynOctetPvt,pasynUser,saveEos,saveEosLen,&nread,0);
+        if (status!=asynSuccess || nread != saveEosLen) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                         "Error reading EOS");
+            return -1;
+        }
+    }
     pgpibDpvt->msgInputLen = buf - pgpibDpvt->msg;
+    if (pgpibDpvt->msgInputLen < pgpibCmd->msgLen)
+        *buf = '\0'; /* Add a hidden trailing NUL as a professional courtesy */
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt->msg,pgpibDpvt->msgInputLen,
         "%s readArbitraryBlockProgramData\n",pgpibDpvt->precord->name);
     return pgpibDpvt->msgInputLen;
