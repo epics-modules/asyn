@@ -533,7 +533,7 @@ text {
 		height=18
 	}
 	monitor {
-		chan="$(P)$(R).AINP"
+		chan="$(P)$(R).TINP"
 		clr=14
 		bclr=4
 	}
