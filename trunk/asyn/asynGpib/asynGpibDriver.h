@@ -27,7 +27,7 @@ extern "C" {
 #define IBSPE 0x18      /* Serial Poll Enable */
 #define IBSPD 0x19      /* Serial Poll Disable */
 #define IBUNT 0x5f      /* Untalk */
-#define IBUNL 0x3f      /* Untalk */
+#define IBUNL 0x3f      /* Unlisten */
 
 /* Talk, Listen, Secondary base addresses */
 #define TADBASE    0x40   /* offset to GPIB listen address 0 */
@@ -46,7 +46,7 @@ struct asynGpib{
     /*addressedCmd,...,ren are just passed to device handler*/
     asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
         const char *data, int length);
-    asynStatus (*universalCmd) (void *drvPvt,asynUser *pasynUser, int cmd);
+    asynStatus (*universalCmd) (void *drvPvt,asynUser *pasynUser,int cmd);
     asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
     /* The following are implemented by asynGpib */
@@ -63,19 +63,6 @@ struct asynGpib{
     void (*srqHappened)(void *asynGpibPvt);
 };
 epicsShareExtern asynGpib *pasynGpib;
-/*asynGpib is the driver called by user callbacks.
- * It handles SRQ processing, etc. It calls interface specific
- * drivers. The interface specific drivers register with asynGpib
- * which then registers with asynCommon.
- *
- * registerSrqHandler - registers an SRQ handler for addr.
- * addressedCmd - Issues an addressed command, i.e.send data with ATN true
- * universalCmd - Send a GPIB universial command
- * ifc - Issue an Interface clear
- * ren - if onOff = (0,1) set REN (off,on)
- * registerPort - A gpib interface driver calls this for each gpib interface.
- *                  asynGpib registers the same name with asynCommon
- */
 
 struct asynGpibPort {
     /*asynCommon methods */
@@ -109,14 +96,6 @@ struct asynGpibPort {
     int (*serialPoll) (void *drvPvt, int addr, double timeout);
     asynStatus (*serialPollEnd) (void *drvPvt);
 };
-/*asynGpibPort is implemented by an interface specific driver.
- *addressedCmd, ..., ren are just like for asynGpibUser.
- *srqStatus - Returns (0,1) if SRQ (is not, is) set
- *srqEnable - enables/disables SRQs
- *serialPollBegin - Start of a serial poll
- *serialPoll - Poll a specific addresss
- *serialPollEnd - End of serial poll
- */
 
 #ifdef __cplusplus
 }
