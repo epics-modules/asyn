@@ -336,6 +336,7 @@ static long processAi(aiRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynFloat64 queueRequest %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     if(pPvt->status==asynSuccess) {
@@ -385,6 +386,7 @@ static long processAo(aoRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynFloat64:process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
