@@ -1208,10 +1208,21 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     int     addr;
     devLink *pdevLink;
     Device_Link lid;
+    char    addrBuffer[2];
+    int     lenCmd = 0;
+    int     primary,secondary;
     asynStatus  status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
+    if(addr<100) {
+        addrBuffer[lenCmd++] = addr+LADBASE;
+    } else {
+        primary = addr / 100;
+        secondary = addr % 100;
+        addrBuffer[lenCmd++] = primary + LADBASE;
+        addrBuffer[lenCmd++] = secondary + SADBASE;
+    }
     assert(data);
     pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     if(!pdevLink) return asynError;
@@ -1222,12 +1233,18 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
         "%s %d vxiAddressedCmd %2.2x\n",pvxiPort->portName,addr,data);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,length,"%s %d vxiAddressedCmd\n",pvxiPort->portName,addr);
-    nWrite = vxiWriteAddressed(pvxiPort,pasynUser,lid,
-        (char *)data,length,pvxiPort->defTimeout);
-    if(nWrite!=length)asynPrint(pasynUser,ASYN_TRACE_ERROR,
+    nWrite = vxiWriteCmd(pvxiPort,pasynUser,addrBuffer,lenCmd);
+    if(nWrite!=lenCmd)asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
         pvxiPort->portName,addr,length,nWrite);
-    return nWrite;
+    nWrite = vxiWriteCmd(pvxiPort,pasynUser,(char *)data,length);
+    if(nWrite!=length) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
+            pvxiPort->portName,addr,length,nWrite);
+        status = asynError;
+    }
+    return status;
 }
 
 static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
