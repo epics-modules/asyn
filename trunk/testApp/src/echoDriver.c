@@ -49,8 +49,9 @@ typedef struct echoPvt {
     double        delay;
     asynInterface common;
     asynInterface octet;
-    char eos[2];
-    int  eoslen;
+    char          eos[2];
+    int           eoslen;
+    void          *pasynPvt;   /*For registerInterruptSource*/
 }echoPvt;
     
 /* init routine */
@@ -112,10 +113,13 @@ static int echoDriverInit(const char *dn, double delay,
         return 0;
     }
     if(multiDevice) {
-        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,0,0,1);
+        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,0,0,0);
     } else {
-        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,1,1,1);
+        status = pasynOctetBase->initialize(portName,&pechoPvt->octet,1,1,0);
     }
+    if(status==asynSuccess)
+        status = pasynManager->registerInterruptSource(
+            portName,&pechoPvt->octet,&pechoPvt->pasynPvt);
     if(status!=asynSuccess){
         printf("echoDriverInit registerInterface failed\n");
         return 0;
@@ -371,6 +375,8 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
         if(*nbytesTransfered>=maxchars) *eomReason |= ASYN_EOM_CNT;
         if(nremaining==0) *eomReason |= ASYN_EOM_END;
     }
+    pasynOctetBase->callInterruptUsers(pasynUser,pechoPvt->pasynPvt,
+        data,maxchars,nbytesTransfered,eomReason);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
         "echoRead nbytesTransfered %d ",*nbytesTransfered);
     return status;
