@@ -754,8 +754,14 @@ static void asynCallbackProcess(asynUser * pasynUser)
               pasynRec->name, pasynRecPvt->state);
     resetError(pasynRec);
     pasynUser->timeout = pasynRec->tmot;
-    if(pasynRec->ucmd != gpibUCMD_None) gpibUniversalCmd(pasynUser);
-    else if(pasynRec->acmd != gpibACMD_None) gpibAddressedCmd(pasynUser);
+    if(pasynRec->ucmd != gpibUCMD_None) {
+        gpibUniversalCmd(pasynUser);
+        pasynRec->ucmd = gpibUCMD_None;
+    }
+    else if(pasynRec->acmd != gpibACMD_None) {
+        gpibAddressedCmd(pasynUser);
+        pasynRec->acmd = gpibUCMD_None;
+    }
     else if(pasynRec->tmod != asynTMOD_NoIO) performIO(pasynUser);
     yesNo = 0;
     pasynManager->canBlock(pasynUser,&yesNo);
