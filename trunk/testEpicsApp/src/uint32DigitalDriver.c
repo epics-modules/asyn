@@ -201,7 +201,7 @@ static void interruptThread(drvPvt *pdrvPvt)
             while (pnode) {
                 pinterrupt = pnode->drvPvt;
                 addr = pinterrupt->addr;
-                pinterrupt->callback(pinterrupt->userPvt,
+                pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
                     pdrvPvt->channel[addr].value);
                 pnode = (interruptNode *)ellNext(&pnode->node);
             }
@@ -307,7 +307,7 @@ static asynStatus uint32Write(void *pvt,asynUser *pasynUser,
     while (pnode) {
         pinterrupt = pnode->drvPvt;
         if(addr==pinterrupt->addr) {
-            pinterrupt->callback(pinterrupt->userPvt,
+            pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
                 pdrvPvt->channel[addr].value);
             break;
         }
@@ -365,8 +365,8 @@ static asynStatus float64Write(void *pvt,asynUser *pasynUser,
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         pinterrupt = pnode->drvPvt;
-        if(addr==pinterrupt->addr && pinterrupt->reason==1) {
-            pinterrupt->callback(pinterrupt->userPvt,value);
+        if(addr==pinterrupt->addr && pinterrupt->pasynUser->reason==1) {
+            pinterrupt->callback(pinterrupt->userPvt,pinterrupt->pasynUser,value);
             break;
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
