@@ -3,5 +3,4 @@
 #  IPAC release V2-7 or later is required.
 #IPAC=/home/phoebus/MRK/epics/modules/bus/ipac
 #  EPICS_BASE 3.14.5 or later is required
-HOME=/home/phoebus/ANJ
-EPICS_BASE=$(HOME)/epics/base/3-14-dev
+EPICS_BASE=/usr/local/iocapps/R3.14.6/support/base/3-14-6-asd1
