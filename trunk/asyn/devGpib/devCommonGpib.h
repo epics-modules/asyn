@@ -11,13 +11,13 @@
 /*
  * Interface for GPIB device support library
  *
- * Current Author: Benjamin Franksen
- * Original Author: John Winans
+ * Current Author: Marty Kraimer
+ * Original Authors: John Winans and Benjamin Franksen
  */
 #ifndef INCdevCommonGpibh
 #define INCdevCommonGpibh
 
-#include <devGpibSupport.h>
+#include <devSupportGpib.h>
 #include "shareLib.h"
 
 #ifdef __cplusplus

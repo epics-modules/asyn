@@ -1,5 +1,5 @@
 /* devSkeletonGpib.c */
-/* $Id: devSkeletonGpib.c,v 1.1 2003-07-18 14:36:28 mrk Exp $ */
+/* $Id: devSkeletonGpib.c,v 1.2 2003-07-24 19:38:47 mrk Exp $ */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago,as Operator of Argonne
 * National Laboratory,and the Regents of the University of
@@ -9,9 +9,8 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 /*
- * Based on devXxSkeletonGpib.c:
- *      Original Author: John Winans
- *      Date:            02-18-92
+ * Current Author: Marty Kraimer
+ * Original Authors: John Winans and Benjamin Franksen
  */
 #include <stdlib.h>
 #include <stdio.h>
@@ -141,7 +140,7 @@ static long init_ai(int parm)
         devSupParms.numparams = NUMPARAMS;
         devSupParms.timeout = TIMEOUT;
         devSupParms.timeWindow = TIMEWINDOW;
-        devSupParms.respond2Writes = 0;
+        devSupParms.respond2Writes = -1;
         devSupParms.debugFlag = &SkeletonDebug;
     }
     return(0);
