@@ -17,12 +17,28 @@
 
 #include <epicsEvent.h>
 #include <epicsExport.h>
+#include <epicsString.h>
 #include <iocsh.h>
+#include <gpHash.h>
 #include "asynDriver.h"
+#include "asynSyncIO.h"
 
 #define epicsExportSharedSymbols
 
 #include "asynShellCommands.h"
+
+typedef struct asynIOPvt {
+   asynUser *pasynUser;
+   char *ieos;
+   int  ieos_len;
+   char *oeos;
+   int  oeos_len;
+   double timeout;
+   char *write_buffer;
+   int write_buffer_len;
+   char *read_buffer;
+   int read_buffer_len;
+} asynIOPvt;
 
 typedef struct setOptionArgs {
     const char     *key;
@@ -145,6 +161,172 @@ int epicsShareAPI
     pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
+
+/* Default timeout for reading */
+#define READ_TIMEOUT 1.0
+/* Default buffer size for reads */
+#define BUFFER_SIZE 80
+
+static void* asynHash=NULL;
+
+static asynIOPvt* asynFindEntry(const char *name)
+{
+    GPHENTRY *hashEntry = gphFind(asynHash, name, NULL);
+    if (hashEntry == NULL) return (NULL);
+    return((asynIOPvt *)hashEntry->userPvt);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynConnect(const char *entry, const char *port, int addr,
+             const char *oeos, const char *ieos, int timeout, int buffer_len)
+{
+    asynIOPvt *pPvt;
+    asynUser *pasynUser;
+    asynStatus status;
+    GPHENTRY *hashEntry;
+
+    status = asynSyncIOConnect(port, addr, &pasynUser);
+    if (status) {
+       printf("Error calling asynSyncIOConnect, status=%d\n", status);
+       return(-1);
+    }
+
+    /* Create hash table if it does not exist */
+    if (asynHash == NULL) gphInitPvt(&asynHash, 256);
+    hashEntry = gphAdd(asynHash, epicsStrDup(entry), NULL);
+
+    pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt)); 
+    hashEntry->userPvt = pPvt;
+    pPvt->pasynUser = pasynUser;
+    if (ieos == NULL) ieos =  "\r";
+    pPvt->ieos_len = dbTranslateEscape(pPvt->ieos, ieos);
+    if (oeos == NULL) oeos =  "\r";
+    pPvt->oeos_len = dbTranslateEscape(pPvt->oeos, oeos);
+    pPvt->timeout = timeout ? (double)timeout : READ_TIMEOUT;
+    pPvt->write_buffer_len = buffer_len ? buffer_len : BUFFER_SIZE;
+    pPvt->write_buffer = calloc(pPvt->write_buffer_len, 1);
+    pPvt->read_buffer_len = pPvt->write_buffer_len;
+    pPvt->read_buffer = calloc(pPvt->read_buffer_len, 1);
+    return(0);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynRead(const char *entry, int flush)
+{
+    asynUser *pasynUser;
+    asynIOPvt *pPvt;
+    int ninp;
+
+    pPvt = asynFindEntry(entry);
+    if (!pPvt) {
+       printf("Entry not found\n");
+       return(-1);
+    }
+    pasynUser = pPvt->pasynUser;
+
+    ninp = asynSyncIORead(pasynUser, pPvt->read_buffer, pPvt->read_buffer_len,
+                   pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout);
+    if (ninp <= 0) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error reading, ninp=%d\n", ninp);
+       return(-1);
+    }
+    epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
+    fprintf(stdout,"\n");
+    return(ninp);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynWrite(const char *entry, const char *output)
+{
+    asynUser *pasynUser;
+    asynIOPvt *pPvt;
+    int nout;
+    int len;
+
+    pPvt = asynFindEntry(entry);
+    if (!pPvt) {
+       printf("Entry not found\n");
+       return(-1);
+    }
+    pasynUser = pPvt->pasynUser;
+
+    if ((strlen(output) + pPvt->oeos_len) > pPvt->write_buffer_len) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error writing, buffer too small\n");
+       return(-1);
+    }
+    len = dbTranslateEscape(pPvt->write_buffer, output);
+    strcat(pPvt->write_buffer, pPvt->oeos);
+    len += pPvt->oeos_len;
+    nout = asynSyncIOWrite(pasynUser, pPvt->write_buffer, len, pPvt->timeout);
+    if (nout != len) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error in asynWrite, nout=%d, len=%d\n", nout, len);
+       return(-1);
+    }
+    return(nout);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynWriteRead(const char *entry, const char *output)
+{
+    asynUser *pasynUser;
+    asynIOPvt *pPvt;
+    int ninp;
+    int len;
+
+    pPvt = asynFindEntry(entry);
+    if (!pPvt) {
+       printf("Entry not found\n");
+       return(-1);
+    }
+    pasynUser = pPvt->pasynUser;
+
+    if ((strlen(output) + pPvt->oeos_len) > pPvt->write_buffer_len) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error writing, buffer too small\n");
+       return(-1);
+    }
+    len = dbTranslateEscape(pPvt->write_buffer, output);
+    strcat(pPvt->write_buffer, pPvt->oeos);
+    len += pPvt->oeos_len;
+    ninp = asynSyncIOWriteRead(pasynUser, pPvt->write_buffer, len,
+                                 pPvt->read_buffer, pPvt->read_buffer_len,
+                                 pPvt->ieos, pPvt->ieos_len, pPvt->timeout);
+    if (ninp <= 0) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error in WriteRead, ninp=%d\n", ninp);
+       return(-1);
+    }
+    epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
+    fprintf(stdout,"\n");
+    return(ninp);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynFlush(const char *entry)
+{
+    asynIOPvt *pPvt;
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pPvt = asynFindEntry(entry);
+    if (!pPvt) {
+       printf("Entry not found\n");
+       return(-1);
+    }
+    pasynUser = pPvt->pasynUser;
+
+    status = asynSyncIOFlush(pasynUser);
+    if (status) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "Error in asynFlush, status=%d\n", status);
+       return(-1);
+    }
+    return(0);
+}
+
 
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
@@ -336,6 +518,74 @@ static void asynAutoConnectCall(const iocshArgBuf * args) {
     asynAutoConnect(portName,addr,yesNo);
 }
 
+static const iocshArg asynConnectArg0 = {"device name", iocshArgString};
+static const iocshArg asynConnectArg1 = {"asyn portName", iocshArgString};
+static const iocshArg asynConnectArg2 = {"asyn addr (default=0)", iocshArgInt};
+static const iocshArg asynConnectArg3 = {"output eos (default=\r)", iocshArgString};
+static const iocshArg asynConnectArg4 = {"input eos (default=\r)", iocshArgString};
+static const iocshArg asynConnectArg5 = {"timeout (sec) (default=1)", iocshArgInt};
+static const iocshArg asynConnectArg6 = {"buffer length (default=80)", iocshArgInt};
+static const iocshArg *const asynConnectArgs[] = {
+    &asynConnectArg0, &asynConnectArg1, &asynConnectArg2, &asynConnectArg3,
+    &asynConnectArg4, &asynConnectArg5, &asynConnectArg6};
+static const iocshFuncDef asynConnectDef =
+    {"asynConnect", 7, asynConnectArgs};
+static void asynConnectCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    const char *portName   = args[1].sval;
+    int addr               = args[2].ival;
+    const char *oeos       = args[3].sval;
+    const char *ieos       = args[4].sval;
+    int timeout            = args[5].ival;
+    int buffer_len         = args[6].ival;
+    asynConnect(deviceName, portName, addr, oeos, ieos, timeout, buffer_len);
+}
+
+static const iocshArg asynReadArg0 = {"device name", iocshArgString};
+static const iocshArg asynReadArg1 = {"flush (1=yes)", iocshArgInt};
+static const iocshArg *const asynReadArgs[] = {
+    &asynReadArg0, &asynReadArg1};
+static const iocshFuncDef asynReadDef =
+    {"asynRead", 2, asynReadArgs};
+static void asynReadCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    int flush              = args[1].ival;
+    asynRead(deviceName, flush);
+}
+
+static const iocshArg asynWriteArg0 = {"device name", iocshArgString};
+static const iocshArg asynWriteArg1 = {"output string", iocshArgString};
+static const iocshArg *const asynWriteArgs[] = {
+    &asynWriteArg0, &asynWriteArg1};
+static const iocshFuncDef asynWriteDef =
+    {"asynWrite", 2, asynWriteArgs};
+static void asynWriteCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    const char *output     = args[1].sval;
+    asynWrite(deviceName, output);
+}
+
+static const iocshArg asynWriteReadArg0 = {"device name", iocshArgString};
+static const iocshArg asynWriteReadArg1 = {"output string", iocshArgString};
+static const iocshArg *const asynWriteReadArgs[] = {
+    &asynWriteReadArg0, &asynWriteReadArg1};
+static const iocshFuncDef asynWriteReadDef =
+    {"asynWriteRead", 2, asynWriteReadArgs};
+static void asynWriteReadCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    const char *output     = args[1].sval;
+    asynWriteRead(deviceName, output);
+}
+
+static const iocshArg asynFlushArg0 = {"device name", iocshArgString};
+static const iocshArg *const asynFlushArgs[] = {&asynFlushArg0};
+static const iocshFuncDef asynFlushDef =
+    {"asynFlush", 1, asynFlushArgs};
+static void asynFlushCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    asynFlush(deviceName);
+}
+
 static void asyn(void)
 {
     static int firstTime = 1;
@@ -348,5 +598,10 @@ static void asyn(void)
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
     iocshRegister(&asynEnableDef,asynEnableCall);
     iocshRegister(&asynAutoConnectDef,asynAutoConnectCall);
+    iocshRegister(&asynConnectDef,asynConnectCall);
+    iocshRegister(&asynReadDef,asynReadCall);
+    iocshRegister(&asynWriteDef,asynWriteCall);
+    iocshRegister(&asynWriteReadDef,asynWriteReadCall);
+    iocshRegister(&asynFlushDef,asynFlushCall);
 }
 epicsExportRegistrar(asyn);
