@@ -74,6 +74,7 @@ asyn_SRCS += devAsynFloat64.c
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
+DBD += devAsynRecord.dbd
 asyn_SRCS += asynRecord.c
 asyn_SRCS += drvAsyn.c
 DB += asynRecord.db
