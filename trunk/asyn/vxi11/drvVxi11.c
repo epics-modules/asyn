@@ -19,6 +19,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
+#include <limits.h>
 /* epics includes */
 #include <dbDefs.h>
 #include <taskwd.h>
@@ -48,12 +49,6 @@
 
 #define DEFAULT_RPC_TIMEOUT 4
 static const char *srqThreadName = "vxi11Srq";
-
-#define setIoTimeout(pvxiPort,pasynUser) \
-    ((u_long)(1000.0 * \
-    ((pasynUser->timeout > pvxiPort->defTimeout) ? \
-      (pasynUser->timeout) : (pvxiPort->defTimeout))))
-
 
 typedef struct devLink {
     Device_Link lid;
@@ -97,6 +92,7 @@ static vxiLocal *pvxiLocal = 0;
 
 /* Local routines */
 static char *vxiError(Device_ErrorCode error);
+static unsigned long getIoTimeout(asynUser *pasynUser,vxiPort *ppvxiPort);
 static BOOL vxiIsPortConnected(vxiPort * pvxiPort,asynUser *pasynUser);
 static void vxiDisconnectException(vxiPort *pvxiPort,int addr);
 static BOOL vxiCreateLink(vxiPort * pvxiPort,
@@ -108,6 +104,8 @@ static int vxiWriteAddressed(vxiPort * pvxiPort,asynUser *pasynUser,
 static int vxiWriteCmd(vxiPort * pvxiPort,asynUser *pasynUser,
     char *buffer, int length);
 static enum clnt_stat clientCall(vxiPort * pvxiPort,
+    u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
+static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static int vxiBusStatus(vxiPort * pvxiPort, int request, double timeout);
 static int vxiInit(void);
@@ -142,9 +140,6 @@ static asynStatus vxiSerialPollBegin(void *pdrvPvt);
 static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout);
 static asynStatus vxiSerialPollEnd(void *pdrvPvt);
 
-/******************************************************************************
- * Convert VXI error code to a string.
- ******************************************************************************/
 static char *vxiError(Device_ErrorCode error)
 {
     switch (error) {
@@ -167,6 +162,15 @@ static char *vxiError(Device_ErrorCode error)
         printf("vxiError error = %ld\n", error);
         return ("VXI: unknown error");
     }
+}
+
+static unsigned long getIoTimeout(asynUser *pasynUser,vxiPort *ppvxiPort)
+{
+    double timeout = pasynUser->timeout;
+
+    if(timeout<0.0) return ULONG_MAX;
+    if(timeout*1e3 >(double)ULONG_MAX) return ULONG_MAX;
+    return (unsigned long)(timeout*1e3);
 }
 
 static BOOL vxiIsPortConnected(vxiPort * pvxiPort,asynUser *pasynUser)
@@ -464,6 +468,36 @@ static enum clnt_stat clientCall(vxiPort * pvxiPort,
     if(stat!=RPC_SUCCESS || errno!=0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxi11 clientCall errno %d clnt_stat %d\n",
+            pvxiPort->portName,errno,stat);
+        if(stat!=RPC_TIMEDOUT) vxiDisconnectPort(pvxiPort);
+    }
+    return stat;
+}
+
+static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
+    u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2)
+{
+    enum clnt_stat stat;
+    struct timeval rpcTimeout;
+    double timeout = pasynUser->timeout;
+
+    rpcTimeout.tv_usec = 0;
+    if(timeout<0.0) {
+        rpcTimeout.tv_sec = ULONG_MAX;
+    } else if((timeout + 1.0)>((double)ULONG_MAX)) {
+        rpcTimeout.tv_sec = ULONG_MAX;
+    } else {
+        rpcTimeout.tv_sec = (unsigned long)(timeout+1.0);
+    }
+    errno = 0;
+    while(TRUE) {
+        stat = clnt_call(pvxiPort->rpcClient,
+            req, proc1, addr1, proc2, addr2, pvxiLocal->vxiRpcTimeout);
+        if(timeout>=0.0 || stat!=RPC_TIMEDOUT) break;
+    }
+    if(stat!=RPC_SUCCESS || errno!=0) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxi11 clientIoCall errno %d clnt_stat %d\n",
             pvxiPort->portName,errno,stat);
         if(stat!=RPC_TIMEDOUT) vxiDisconnectPort(pvxiPort);
     }
@@ -915,7 +949,7 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
     do {
         thisRead = -1;
         devReadP.requestSize = maxchars;
-        devReadP.io_timeout = setIoTimeout(pvxiPort,pasynUser);
+        devReadP.io_timeout = getIoTimeout(pasynUser,pvxiPort);
         devReadP.lock_timeout = 0;
         devReadP.flags = 0;
         if(pdevLink->eos != -1) {
@@ -925,32 +959,34 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
         /* initialize devReadR */
         memset((char *) &devReadR, 0, sizeof(Device_ReadResp));
         /* RPC call */
-        clntStat = clientCall(pvxiPort, device_read,
-            (const xdrproc_t) xdr_Device_ReadParms,(void *) &devReadP,
-            (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
+        while(TRUE) { /*Allow for very long or infinite timeout*/
+            clntStat = clientIoCall(pvxiPort, pasynUser, device_read,
+                (const xdrproc_t) xdr_Device_ReadParms,(void *) &devReadP,
+                (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
+            if(devReadP.io_timeout!=ULONG_MAX
+            || devReadR.error!=VXI_IOTIMEOUT
+            || devReadR.data.data_len>0) break;
+        }
         if(clntStat != RPC_SUCCESS) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                        "%s vxiRead %d, %s, %d %s\n",
-                                    pvxiPort->portName, addr, data, maxchars,
-                                    clnt_sperror(pvxiPort->rpcClient, ""));
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRead %d, %s, %d %s\n",
+                pvxiPort->portName, addr, data, maxchars,
+                clnt_sperror(pvxiPort->rpcClient,""));
         } else if(devReadR.error != VXI_OK) {
             if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
                 vxiIfc(pdrvPvt, pasynUser);
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                        "%s vxiRead %d, %s, %d %s\n",
-                                    pvxiPort->portName, addr, data, maxchars,
-                                    vxiError(devReadR.error));
-        } else {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRead %d, %s, %d %s\n",
+                pvxiPort->portName, addr, data, maxchars,
+                vxiError(devReadR.error));
+        } 
+        thisRead = devReadR.data.data_len;
+        if(thisRead>0) {
             asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
                 devReadR.data.data_val,devReadR.data.data_len,
                 "%s %d vxiRead\n",pvxiPort->portName,addr);
-            thisRead = devReadR.data.data_len;
-            if(thisRead>0) {
-                memcpy(data, devReadR.data.data_val, thisRead);
-                nRead += thisRead;
-                data += thisRead;
-                maxchars -= thisRead;
-            }
+            memcpy(data, devReadR.data.data_val, thisRead);
+            nRead += thisRead;
+            data += thisRead;
+            maxchars -= thisRead;
         }
         xdr_free((const xdrproc_t) xdr_Device_ReadResp, (char *) &devReadR);
     } while(!devReadR.reason && thisRead>0);
@@ -980,7 +1016,7 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     if(!vxiIsPortConnected(pvxiPort,pasynUser)) return -1;
     if(!pdevLink->connected) return -1;
     devWriteP.lid = pdevLink->lid;;
-    devWriteP.io_timeout = setIoTimeout(pvxiPort,pasynUser);
+    devWriteP.io_timeout = getIoTimeout(pasynUser,pvxiPort);
     devWriteP.lock_timeout = 0;
     /*write at most maxRecvSize bytes at a time */
     do {
@@ -996,14 +1032,13 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
         /* initialize devWriteR */
         memset((char *) &devWriteR, 0, sizeof(Device_WriteResp));
         /* RPC call */
-        clntStat = clientCall(pvxiPort, device_write,
+        clntStat = clientIoCall(pvxiPort, pasynUser, device_write,
             (const xdrproc_t) xdr_Device_WriteParms,(void *) &devWriteP,
             (const xdrproc_t) xdr_Device_WriteResp,(void *) &devWriteR);
         if(clntStat != RPC_SUCCESS) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s vxiWrite %d, \"%s\", %d)%s\n",
-                pvxiPort->portName,
-                addr, data, numchars,
+                pvxiPort->portName, addr, data, numchars,
                 clnt_sperror(pvxiPort->rpcClient, ""));
             status = -1;
         } else if(devWriteR.error != VXI_OK) {
@@ -1413,6 +1448,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
         (pvxiPort->isSingleLink ? 0 : 1),!noAutoConnect,
         &vxi11,pvxiPort,priority,0);
     pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
+    pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
     status = pasynManager->connectDevice(
         pvxiPort->pasynUser,pvxiPort->portName,-1);
     if(status!=asynSuccess) 
