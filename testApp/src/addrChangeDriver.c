@@ -47,10 +47,9 @@ typedef struct eosSave {
 typedef struct otherPort {
     char       *portName;
     int        addr;
-    int        isConnected;
     int        multiDevice;
-    int        autoConnect;
     int        canBlock;
+    int        autoConnect;
     asynUser   *pasynUser;
     asynCommon *pasynCommon;
     void       *commonPvt;
@@ -67,6 +66,7 @@ typedef struct addrChangePvt {
     asynInterface octet;
     otherPort     *potherPort;
     eosSave       *peosSave;
+    void          *pasynPvt;   /*For registerInterruptSource*/
 }addrChangePvt;
     
 /* private routines */
@@ -76,10 +76,6 @@ static int addrChangeDriverInit(const char *portName, const char *otherPort,
 static void exceptCallback(asynUser * pasynUser, asynException exception);
 static asynStatus lockPort(addrChangePvt *paddrChangePvt,asynUser *pasynUser);
 static void unlockPort(addrChangePvt *paddrChangePvt,asynUser *pasynUser);
-static void saveEosIn(addrChangePvt *paddrChangePvt);
-static void restoreEosIn(addrChangePvt *paddrChangePvt);
-static void saveEosOut(addrChangePvt *paddrChangePvt);
-static void restoreEosOut(addrChangePvt *paddrChangePvt);
 
 /* asynCommon methods */
 static void report(void *drvPvt,FILE *fp,int details);
@@ -96,11 +92,6 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus flushIt(void *drvPvt,asynUser *pasynUser);
-static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
-     interruptCallbackOctet callback, void *userPvt,
-     void **registrarPvt);
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
 static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
@@ -110,8 +101,9 @@ static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
 static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
 static asynOctet octet = {
-    writeIt,writeRaw,readIt,readRaw, flushIt,
-    registerInterruptUser,cancelInterruptUser,
+    writeIt,writeRaw,readIt,readRaw,
+    0, /* Let asynOctetBase handle flush*/
+    0,0, /*Let asynOctetBase handle registerInterruptUser/cancelInterruptUser*/
     setInputEos, getInputEos,setOutputEos,getOutputEos };
 
 static asynStatus otherPortInit(addrChangePvt *paddrChangePvt)
@@ -119,14 +111,13 @@ static asynStatus otherPortInit(addrChangePvt *paddrChangePvt)
     otherPort     *potherPort = paddrChangePvt->potherPort;
     asynUser      *pasynUser;
     asynStatus    status;
-    int           addr;
     asynInterface *pasynInterface;
 
     potherPort->pasynUser = pasynUser = pasynManager->createAsynUser(0,0);
     pasynUser->userPvt = paddrChangePvt;
     pasynUser->timeout = 1.0;
     status = pasynManager->connectDevice(pasynUser,
-        potherPort->portName,addr);
+        potherPort->portName,potherPort->addr);
     if (status != asynSuccess) {
         printf("connectDevice failed %s\n", pasynUser->errorMessage);
         goto freeAsynUser;
@@ -143,11 +134,6 @@ static asynStatus otherPortInit(addrChangePvt *paddrChangePvt)
         goto disconnect;
     }
     status = pasynManager->isAutoConnect(pasynUser,&potherPort->autoConnect);
-    if(status!=asynSuccess) {
-        printf("isAutoConnect failed %s\n",pasynUser->errorMessage);
-        goto disconnect;
-    }
-    status = pasynManager->isConnected(pasynUser,&potherPort->isConnected);
     if(status!=asynSuccess) {
         printf("isAutoConnect failed %s\n",pasynUser->errorMessage);
         goto disconnect;
@@ -224,9 +210,13 @@ static int addrChangeDriverInit(const char *portName, const char *otherPortName,
         printf("addrChangeDriverInit registerInterface failed\n");
         return 0;
     }
-    status = pasynManager->registerInterface(portName,&paddrChangePvt->octet);
+    status = pasynOctetBase->initialize(portName,&paddrChangePvt->octet,
+        0,0,0);
+    if(status==asynSuccess)
+        status = pasynManager->registerInterruptSource(
+            portName,&paddrChangePvt->octet,&paddrChangePvt->pasynPvt);
     if(status!=asynSuccess){
-        printf("addrChangeDriverInit registerInterface failed\n");
+        printf("addrChangeDriverInit pasynOctetBase->initialize failed\n");
         return 0;
     }
     paddrChangePvt->pasynUser = pasynUser = pasynManager->createAsynUser(0,0);
@@ -255,9 +245,8 @@ static void exceptCallback(asynUser * pasynUser, asynException exception)
             pasynUser->errorMessage);
         return;
     }
-    if(isConnected==potherPort->isConnected) return;
-    potherPort->isConnected = isConnected;
-    if(isConnected || !paddrChangePvt->isConnected) return;
+    if(isConnected) return;
+    if(!paddrChangePvt->isConnected) return;
     paddrChangePvt->isConnected = 0;
     pasynManager->exceptionDisconnect(paddrChangePvt->pasynUser);
 }
@@ -289,92 +278,10 @@ static void unlockPort(addrChangePvt *paddrChangePvt,asynUser *pasynUser)
 {
     otherPort *potherPort = paddrChangePvt->potherPort;
 
-    if((pasynManager->unlockPort(potherPort->pasynUser)) ) {
+    if((pasynManager->unlockPort(potherPort->pasynUser))!=asynSuccess ) {
         asynPrint(potherPort->pasynUser,ASYN_TRACE_ERROR,
             "%s unlockPort error %s\n",
             potherPort->portName,potherPort->pasynUser->errorMessage);
-    }
-}
-
-static void saveEosIn(addrChangePvt *paddrChangePvt)
-{
-    otherPort  *potherPort = paddrChangePvt->potherPort;
-    asynUser   *pasynUser = potherPort->pasynUser;
-    asynOctet  *pasynOctet = potherPort->pasynOctet;
-    void       *octetPvt = potherPort->octetPvt;
-    eosSave    *peosSave = paddrChangePvt->peosSave;
-    int        addr = peosSave->addr;
-    deviceInfo *pdeviceInfo = &paddrChangePvt->device[addr];
-    asynStatus status;
-
-    peosSave->restore = 0;
-    status = pasynOctet->getInputEos(octetPvt,pasynUser,
-        peosSave->eos,sizeof(peosSave->eos), &peosSave->len);
-    if(status!=asynSuccess) return;
-    status = pasynOctet->setInputEos(octetPvt,pasynUser,
-        pdeviceInfo->eosIn,pdeviceInfo->eosInLen);
-    if(status!=asynSuccess) return;
-    peosSave->restore = 1;
-}
-
-static void restoreEosIn(addrChangePvt *paddrChangePvt)
-{
-    otherPort  *potherPort = paddrChangePvt->potherPort;
-    asynUser   *pasynUser = potherPort->pasynUser;
-    asynOctet  *pasynOctet = potherPort->pasynOctet;
-    void       *octetPvt = potherPort->octetPvt;
-    eosSave    *peosSave = paddrChangePvt->peosSave;
-    int        addr = peosSave->addr;
-    deviceInfo *pdeviceInfo = &paddrChangePvt->device[addr];
-    asynStatus status;
-
-    if(!peosSave->restore) return;
-    status = pasynOctet->setInputEos(octetPvt,pasynUser,
-        peosSave->eos,peosSave->len);
-    if(status!=asynSuccess) {
-         printf("%s %d setInputEos while restoring %s\n",
-             paddrChangePvt->portName,addr,pasynUser->errorMessage);
-    }
-}
-
-static void saveEosOut(addrChangePvt *paddrChangePvt)
-{
-    otherPort  *potherPort = paddrChangePvt->potherPort;
-    asynUser   *pasynUser = potherPort->pasynUser;
-    asynOctet  *pasynOctet = potherPort->pasynOctet;
-    void       *octetPvt = potherPort->octetPvt;
-    eosSave    *peosSave = paddrChangePvt->peosSave;
-    int        addr = peosSave->addr;
-    deviceInfo *pdeviceInfo = &paddrChangePvt->device[addr];
-    asynStatus status;
-
-    peosSave->restore = 0;
-    status = pasynOctet->getOutputEos(octetPvt,pasynUser,
-        peosSave->eos,sizeof(peosSave->eos), &peosSave->len);
-    if(status!=asynSuccess) return;
-    status = pasynOctet->setOutputEos(octetPvt,pasynUser,
-        pdeviceInfo->eosIn,pdeviceInfo->eosInLen);
-    if(status!=asynSuccess) return;
-    peosSave->restore = 1;
-}
-
-static void restoreEosOut(addrChangePvt *paddrChangePvt)
-{
-    otherPort  *potherPort = paddrChangePvt->potherPort;
-    asynUser   *pasynUser = potherPort->pasynUser;
-    asynOctet  *pasynOctet = potherPort->pasynOctet;
-    void       *octetPvt = potherPort->octetPvt;
-    eosSave    *peosSave = paddrChangePvt->peosSave;
-    int        addr = peosSave->addr;
-    deviceInfo *pdeviceInfo = &paddrChangePvt->device[addr];
-    asynStatus status;
-
-    if(!peosSave->restore) return;
-    status = pasynOctet->setOutputEos(octetPvt,pasynUser,
-        peosSave->eos,peosSave->len);
-    if(status!=asynSuccess) {
-         printf("%s %d setOutputEos while restoring %s\n",
-             paddrChangePvt->portName,addr,pasynUser->errorMessage);
     }
 }
 
@@ -383,7 +290,6 @@ static void report(void *drvPvt,FILE *fp,int details)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
     otherPort     *potherPort = paddrChangePvt->potherPort;
-    int i;
 
     fprintf(fp,"    %s connected to %s\n",
          paddrChangePvt->portName,potherPort->portName);
@@ -568,6 +474,10 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
             " port %s error %s",potherPort->portName,
             potherPort->pasynUser->errorMessage);
     }
+    pasynOctetBase->callInterruptUsers(pasynUser,paddrChangePvt->pasynPvt,
+        data,nbytesTransfered,eomReason);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,*nbytesTransfered,
+        "addrChangeDriver\n");
     unlockPort(paddrChangePvt,pasynUser);
     return status;
 }
@@ -590,69 +500,10 @@ static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
             " port %s error %s",potherPort->portName,
             potherPort->pasynUser->errorMessage);
     }
-    unlockPort(paddrChangePvt,pasynUser);
-    return status;
-}
-
-static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
-    asynOctet     *pasynOctet = potherPort->pasynOctet;
-    void          *octetPvt = potherPort->octetPvt;
-    asynStatus    status;
-
-    status = lockPort(paddrChangePvt,pasynUser);
-    if(status!=asynSuccess) return status;
-    status = pasynOctet->flush(octetPvt,potherPort->pasynUser);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s error %s",potherPort->portName,
-            potherPort->pasynUser->errorMessage);
-    }
-    unlockPort(paddrChangePvt,pasynUser);
-    return status;
-}
-
-static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
-     interruptCallbackOctet callback, void *userPvt,
-     void **registrarPvt)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
-    asynOctet     *pasynOctet = potherPort->pasynOctet;
-    void          *octetPvt = potherPort->octetPvt;
-    asynStatus    status;
-
-    status = lockPort(paddrChangePvt,pasynUser);
-    if(status!=asynSuccess) return status;
-    status = pasynOctet->registerInterruptUser(octetPvt,potherPort->pasynUser,
-        callback,userPvt,registrarPvt);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s error %s",potherPort->portName,
-            potherPort->pasynUser->errorMessage);
-    }
-    unlockPort(paddrChangePvt,pasynUser);
-    return status;
-}
-
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)registrarPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
-    asynOctet     *pasynOctet = potherPort->pasynOctet;
-    void          *octetPvt = potherPort->octetPvt;
-    asynStatus    status;
-
-    status = lockPort(paddrChangePvt,pasynUser);
-    if(status!=asynSuccess) return status;
-    status = pasynOctet->cancelInterruptUser(octetPvt,potherPort->pasynUser);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s error %s",potherPort->portName,
-            potherPort->pasynUser->errorMessage);
-    }
+    pasynOctetBase->callInterruptUsers(pasynUser,paddrChangePvt->pasynPvt,
+        data,nbytesTransfered,eomReason);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,*nbytesTransfered,
+        "addrChangeDriver\n");
     unlockPort(paddrChangePvt,pasynUser);
     return status;
 }
@@ -661,7 +512,6 @@ static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
     int           addr;
     asynStatus    status;
     deviceInfo    *pdeviceInfo;
@@ -689,7 +539,6 @@ static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
     int           addr;
     asynStatus    status;
     deviceInfo    *pdeviceInfo;
@@ -717,7 +566,6 @@ static asynStatus setOutputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
     int           addr;
     asynStatus    status;
     deviceInfo    *pdeviceInfo;
@@ -745,7 +593,6 @@ static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    otherPort     *potherPort = paddrChangePvt->potherPort;
     int           addr;
     asynStatus    status;
     deviceInfo    *pdeviceInfo;
