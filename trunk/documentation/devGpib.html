@@ -1111,6 +1111,7 @@ struct devSupportGpib {
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
+    int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
@@ -1168,6 +1169,9 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
       entire response in pgpibDpvt-&gt;msg.  This routine is intended for use
       by custom input functions to read a block of arbitrary data from a
       serial-line device.</dd>
+  <dt><code>setEos</code></dt>
+    <dd>If the End of String terminator needs to be changed, it must be
+      changed by calling this rather than calling the low level driver.</dd>
   <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib.</dd>
 </dl>

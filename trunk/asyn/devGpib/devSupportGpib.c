@@ -116,6 +116,7 @@ static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str);
 static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt);
+static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd);
 
 static devSupportGpib gpibSupport = {
     initRecord,
@@ -128,7 +129,8 @@ static devSupportGpib gpibSupport = {
     writeMsgULong,
     writeMsgDouble,
     writeMsgString,
-    readArbitraryBlockProgramData
+    readArbitraryBlockProgramData,
+    gpibSetEOS
 };
 epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 
