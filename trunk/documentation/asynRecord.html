@@ -6,7 +6,6 @@
 <ADDRESS>Mark Rivers</ADDRESS>
 <HR>
 
-
 <H2>Contents</H2>
 <UL>
   <LI><a href="#Overview">Overview</a> 
@@ -70,9 +69,7 @@ the &quot;Access&quot; columns in the field description tables:
           <TD>No access allowed</TD></TR></TABLE><P>&nbsp;
 <HR>
 
-
 <h2 align="center"><a name="Device Address Control Fields">Device Address Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -121,9 +118,7 @@ with the same name as the SOCK field.&nbsp; This is done with
 drvGenericSerialConfigure.<p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Input/Output Control Fields">Input/Output Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -199,14 +194,10 @@ processes.</p>
             or read from the device.</TD></TR></TABLE>
 
 
-
-
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Output Control Fields">Output Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -305,14 +296,10 @@ sent to the device.&nbsp; The OEOS field is ignored, and dbTranslateEscape() is
 not called.
 
 
-
-
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Input Control Fields">Input Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -428,9 +415,7 @@ drivers permit 2 character end-of-message strings at most. The GPIB drivers only
 permit 1 character end-of-message strings.<br>
 &nbsp;<HR>
 
-
 <h2 align="center"><a name="Serial Control Fields">Serial Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <TR vAlign=top>
@@ -480,9 +465,7 @@ adapters like the Moxa units.<P>
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
-
 
 <table cellPadding="5" border="1">
   <tr>
@@ -580,9 +563,7 @@ adapters like the Moxa units.<P>
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Trace Control Fields">Trace Control Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <tr>
@@ -680,9 +661,7 @@ adapters like the Moxa units.<P>
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Connection Management Fields">Connection Management Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <tr>
@@ -692,39 +671,54 @@ adapters like the Moxa units.<P>
     <TH>Data type</TH>
     <TH>Description</TH>
   </tr>
+  <tr>
+    <TD>ACTD</TD>
+    <TD>R</TD>
+    <TD>&quot;Autoconnected&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The current autoconnect status of the port.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.</TD>
+  </tr>
   <TR vAlign=top>
     <TD>AUCT</TD>
     <TD>R/W</TD>
     <TD>&quot;Autoconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;. 
-    The value read reflects current state of the enabled flag, i.e. the value 
-    returned from isAutoConnect().</TD></TR>
+    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.&nbsp;</TD></TR>
+  <tr>
+    <TD>ENBD</TD>
+    <TD>R</TD>
+    <TD>&quot;Enabled&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enable&quot;.</TD>
+  </tr>
   <tr>
     <TD>ENBL</TD>
     <TD>R/W</TD>
     <TD>&quot;Disable/Enable&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>Disables or enables the port.&nbsp; Choices are &quot;Disable&quot; and
-      &quot;Enable&quot;. The value read reflects current state of the enabled flag, 
-    i.e. the value returned from isEnabled().</TD>
+      &quot;Enable.</TD>
+  </tr>
+  <tr>
+    <TD>CNTD</TD>
+    <TD>R</TD>
+    <TD>&quot;Connected&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The current connected/disconnted status of the port.&nbsp; Values are &quot;Disconnected&quot; and &quot;Connected&quot;.</TD>
   </tr>
   <tr>
     <TD>CNCT</TD>
     <TD>R/W</TD>
     <TD>&quot;Connect/Disconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Disconnects or connects the device.&nbsp; Choices are &quot;Disconnect&quot; and 
-    &quot;Connect&quot;.&nbsp; The value read reflects current state of the connected 
-    flag, i.e. the value returned from isConnected().</TD>
+    <TD>Disconnects or connects the device.&nbsp; Choices are
+      &quot;Disconnect&quot; and &quot;Connect:.</TD>
   </tr>
 </TABLE>
 <p>&nbsp;</p>
 <HR>
 
-
 <h2 align="center"><a name="Error Status Fields">Error Status Fields</a></h2>
-
 
 <TABLE cellPadding=5 border=1>
   <tr>
@@ -751,9 +745,7 @@ adapters like the Moxa units.<P>
  &nbsp;
 <HR>
 
-
 <h2 align="center"><a name="Private Fields">Private Fields</a></h2>
-
 
 <P>
  &nbsp;<TABLE cellPadding=5 border=1>
@@ -781,9 +773,7 @@ adapters like the Moxa units.<P>
 &nbsp;
 <HR>
 
-
 <h2 align="center"><a name="Record Processing">Record Processing</a></h2>
-
 
 <P>
  The asyn record processes, i.e. performs the I/O operation given by TMOD, 
@@ -796,10 +786,8 @@ adapters like the Moxa units.<P>
  below).<P>
 &nbsp;<HR>
 
-
 <h2 align="center"><a name="Obsolete serial and GPIB records">Obsolete serial 
 and GPIB records</a></h2>
-
 
 <P>
  The asyn record is designed to be a complete replacement for the older 
@@ -832,8 +820,8 @@ and GPIB records</a></h2>
 <p>&nbsp;</p>
 <HR>
 
-
-<H2><a name="medm screens">medm screens</a></H2><p>The following are 
+<H2><a name="medm screens">medm screens</a></H2>
+<p>The following are 
   screen shots of the medm screens provided for the asyn record.</p><p>&nbsp;</p>
   <h3 align="center">Main control screen, asynRecord.adl</h3>
   <p align="center">
@@ -841,6 +829,7 @@ and GPIB records</a></h2>
   <p align="center">
   &nbsp;</p>
   <h3 align="center">Debug screen, asynRecordDebug.adl</h3>
+
   <p align="center">
   <img border="0" src="asynRecordDebug.gif" width="450" height="637"></p>
   <p align="center">&nbsp;</p>
@@ -871,15 +860,17 @@ input delimiter (IEOS) and/or the requested number of input characters (NRRD),
 being received. The timeout field (TMOT) will not apply when SCAN="I/O Intr&quot;. 
 This will be added in the future.</p>
 <HR>
-<H2><a name="Example 1">Example #1</a></H2>The following is an IDL program that demonstrates the use 
+
+<H2><a name="Example 1">Example #1</a></H2>
+The following is an IDL program that demonstrates the use 
 of the asyn record. It transfers data in both ASCII and binary formats. 
 Hopefully the IDL syntax is clear enough to be understood by non-IDL users, and can 
-be translated into your favorite scripting language.<PRE>; This IDL program demonstrates the use of the EPICS asyn record.
+be translated into your favorite scripting language.
+<PRE>; This IDL program demonstrates the use of the EPICS asyn record.
 ; The program uses 2 asyn records.  The ports corresponding to these
 ; 2 records are connected with a null-modem cable
 ; Record 1 sends a message to record 2 in ASCII.
 ; Record 2 sends a message back to record 1 in binary.
-
 
 ; Record names
 rec1 = '13LAB:serial2'
@@ -898,7 +889,6 @@ for i=0, 1 do begin
     t = caput(rec+'.TMOT', 1.0)
 endfor
 
-
 ; Put record 1 in ASCII output mode, &lt;CR&gt; output delimiter,
 ;   binary input mode, no input delimiter
 t = caput(rec1+'.OFMT', 'ASCII')
@@ -910,7 +900,6 @@ t = casetmonitor(rec1+'.BINP')
 ; Clear the monitor by reading the value
 t = caget(rec1+'.BINP', junk)
 
-
 ; Put record 2 in Binary output mode, no output delimiter
 ;   ASCII input mode, &lt;CR&gt; input delimiter
 t = caput(rec2+'.OFMT', 'Binary')
@@ -918,14 +907,12 @@ t = caput(rec2+'.OEOS', '')
 t = caput(rec2+'.IFMT', 'ASCII')
 t = caput(rec2+'.IEOS', '\r')
 
-
 ; Put record 2 in read transfer mode
 t = caput(rec2+'.TMOD', 'Read')
 ; Put a monitor on record2 ASCII input field
 t = casetmonitor(rec2+'.AINP')
 ; Clear the monitor by reading the value
 t = caget(rec2+'.AINP', junk)
-
 
 ; Process record 2; this will cause it to wait for data
 t = caput(rec2+'.PROC', 1)
@@ -936,13 +923,11 @@ message = 'Request data: '+string(systime())
 print, 'Record 1 sent message: ' + message
 t = caput(rec1+'.AOUT', message)
 
-
 ; Wait for monitor on record2 ASCII input field
 while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
 ; Read data from record 2
 t = caget(rec2+'.AINP', input)
 print, 'Got a message from record 1: ', input
-
 
 size=256
 ; Put record 1 in read mode, expect &quot;size&quot; byte input
@@ -950,7 +935,6 @@ t = caput(rec1+'.TMOD', 'Read')
 t = caput(rec1+'.NRRD', size)
 ; Process record 1; this will cause it to wait for data
 t = caput(rec1+'.PROC', '1')
-
 
 ; Put record 2 in write mode
 t = caput(rec2+'.TMOD', 'Write')
@@ -960,10 +944,8 @@ send_data = byte(sin(findgen(size)/5)*126 + 127)
 t = caput(rec2+'.NOWT', size)
 t = caput(rec2+'.BOUT', send_data)
 
-
 ; Wait for monitor on channel 1 binary input
 while (not cacheckmonitor(rec1+'.BINP')) do wait, .1
-
 
 ; Record 1 should have received &quot;size&quot; bytes. Make sure NORD=size
 t = caget(rec1+'.NORD', nord)
@@ -972,20 +954,18 @@ if (nord eq size) then $
 else $
     print, 'Error reading array data!'
 
-
 ; Read data from record 1
 t = caget(rec1+'.BINP', rec_data, max=nord)
-
 
 ; Plot it
 plot, rec_data
 
-
 end
 </PRE>
 <HR>
-  <H2><a name="Example 2" #2>Example #2</a></H2>The following is an IDL 
-procedure that demonstrates the use 
+
+  <H2><a name="Example 2" #2>Example #2</a></H2>
+The following is an IDL procedure that demonstrates the use 
 of the asyn record to communicate with a Tektronix TDS200 Digital Oscilloscope. 
 It transfers data in both ASCII and binary formats.&nbsp; It will work with 
 either an RS-232 or GPIB connection to the scope.&nbsp; The record must be
@@ -997,7 +977,6 @@ parameters to the procedure can be used to read a subset of the waveform.
 can be translated into your favorite scripting language.</p>
 <PRE>pro read_tds200, record, data, start=start, stop=stop, chan=chan
 
-
 ; This procedure reads waveforms from the Tektronix TDS200 series scopes
 ; Mark Rivers
 ; Modifications: 
@@ -1005,12 +984,10 @@ can be translated into your favorite scripting language.</p>
 ;     Dec. 7,   2001 Set timeout to 2 seconds before read.
 ;     March 30, 2004 Change IFMT from Binary to Hybrid, other fixes.
 
-
 if (n_elements(start) eq 0) then start=1
 if (n_elements(stop) eq 0) then stop=2500
 if (n_elements(chan) eq 0) then chan=1
 chan = 'CH'+strtrim(chan,2)
-
 
 aout = record + '.AOUT'
 binp = record + '.BINP'
@@ -1022,15 +999,12 @@ tmot = record + '.TMOT'
 oeos = record + '.OEOS'
 ieos = record + '.IEOS'
 
-
 ; Set the terminators to newline (assumes scope is set up this way)
 t = caput(oeos, '\n', /wait)
 t = caput(ieos, '\n', /wait)
 
-
 ; Set the transfer mode to write
 t = caput(tmod, 'Write', /wait)
-
 
 ; Set the encoding to positive binary, start and stop readout channels
 ; Set the readout range.  Can't do as one command, exceed 40 characters
@@ -1039,16 +1013,13 @@ t = caput(aout, command, /wait)
 command = 'DATA:STOP ' + strtrim(stop,2)
 t = caput(aout, command, /wait)
 
-
 ;Set DATa:WIDth to 2
 ;command = 'DATA:WIDTH 2'
 ;t = caput(aout, command, /wait)
 
-
 ;Set channel number
 command = 'DATA:SOURCE '+ strtrim(chan,2)
 t = caput(aout, command, /wait)
-
 
 ; Set the input mode to hybrid. Large buffer but line-feed terminator
 t = caput(ifmt, 'Hybrid', /wait)
@@ -1057,19 +1028,15 @@ t = caput(ifmt, 'Hybrid', /wait)
 ; Set the transfer mode to write/read
 t = caput(tmod, 'Write/Read', /wait)
 
-
 ; Empirically the timeout needs to be about 5 seconds for
 ; 1024 channels with RS-232
 t = caput(tmot, 5.0)
 
-
 ; Read the scope
 t = caput(aout, 'Curve?', /wait)
 
-
 ; Get the data
 t = caget(binp, data)
-
 
 ; Check the number of bytes read.  See if it's what's expected
 n_data = stop-start+1
@@ -1084,15 +1051,13 @@ if (n ne n_expected) then $
 ; Data are offset by 127, convert to long
 data = data[n_header:n-2] - 127L
 
-
 return
 end
 </PRE>
 
-
-<ADDRESS>Suggestions and comments to: <A 
-href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>: 
-(rivers@cars.uchicago.edu) <BR>Last modified: March 30, 2004
+<ADDRESS>Suggestions and comments to: 
+<A href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>: 
+(rivers@cars.uchicago.edu) 
+<BR>
+Last modified: March 30, 2004
 </ADDRESS>
-</BODY>
-</HTML> guaranteed that no other asyn I/O to the device
