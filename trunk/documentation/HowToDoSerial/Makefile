@@ -12,20 +12,19 @@ tutorial.pdf: tutorial.tex
 	ps2pdf tutorial.ps
 	rm -f tutorial.log tutorial.out tutorial.toc tutorial.ps
 
-html: tutorial/tutorial.html
+html: tutorial.html
 
-tutorial/tutorial.html: tutorial.pdf Makefile init.pl
-	latex2html -html_version "4.0,unicode" -init_file init.pl \
-        -noaddress -info 0 -local_icons -transparent -split 0 \
-        -t "Diamond Prometheus EPICS Brick" tutorial.tex
-	cp tutorial.pdf tutorial
+tutorial.html: tutorial.pdf Makefile
+	sed -e '/\\textbackslash/s//$$\\backslash$$/g' tutorial.tex >htutorial.tex
+	hevea -v -o tutorial.html htutorial.tex
+	rm htutorial.tex
 
 install: html pdf
 	scp `find tutorial -type f -print -depth` \
 			$(WEB_BASE)
 
 clean:
-	rm -f *.dvi *.log *.aux *.bbl *.blg *.lof *.lot *.toc *.out
+	rm -f *.dvi *.log *.aux *.bbl *.blg *.lof *.lot *.toc *.out *.haux *.htoc
 	rm -f tutorial.ps tutorial.pdf
 
 realclean: clean
