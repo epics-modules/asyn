@@ -246,7 +246,6 @@ recordtype(asyn) {
         promptgroup(GUI_COMMON)
         special(SPC_MOD)
         menu(serialBAUD)
-        initial("5")
     }
     field(PRTY,DBF_MENU) {
         prompt("Parity")
@@ -259,7 +258,6 @@ recordtype(asyn) {
         promptgroup(GUI_COMMON)
         special(SPC_MOD)
         menu(serialDBIT)
-        initial("3")
     }
     field(SBIT,DBF_MENU) {
         prompt("Stop bits")
