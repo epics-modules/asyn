@@ -55,7 +55,6 @@ static void setOption(asynUser *pasynUser)
     setOptionArgs *poptionargs = (setOptionArgs *)pasynUser->userPvt;
     asynStatus status;
 
-printf("setOption (callback)\n");
     status = poptionargs->pasynCommon->setOption(poptionargs->drvPvt,
             pasynUser,poptionargs->key,poptionargs->val);
     if(status!=asynSuccess) 
