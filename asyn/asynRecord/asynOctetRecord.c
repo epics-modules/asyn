@@ -242,13 +242,37 @@ static long special(struct dbAddr *paddr, int after)
     asynStatus status=asynSuccess;
     unsigned short monitor_mask;
 
-   epicsMutexMustLock(pasynRecPvt->lock);
-   if(pasynRecPvt->state!=stateIdle) {
+    if (!after) return(status);
+    /* Process trace flags without regard to state so we can change 
+     * debugging even when busy */
+    switch (fieldIndex) {
+       case asynOctetRecordTB0: 
+       case asynOctetRecordTB1: 
+       case asynOctetRecordTB2: 
+       case asynOctetRecordTB3: 
+       case asynOctetRecordTB4: 
+          pasynTrace->setTraceMask(pasynUser, 
+                                   pasynRec->tb0    | pasynRec->tb1 << 1 |
+                                   pasynRec->tb2<<2 | pasynRec->tb3 << 3 |
+                                   pasynRec->tb4 << 4);
+          return(status);
+       case asynOctetRecordTIB0: 
+       case asynOctetRecordTIB1: 
+       case asynOctetRecordTIB2: 
+          pasynTrace->setTraceIOMask(pasynUser, 
+                                     pasynRec->tib0 | pasynRec->tib1 << 1 |
+                                     pasynRec->tib2 << 2);
+          return(status);
+    }
+
+    /* These cases require locking and idle state */
+    epicsMutexMustLock(pasynRecPvt->lock);
+    if(pasynRecPvt->state!=stateIdle) {
        printf("%s state!=stateIdle try again later\n",pasynRec->name);
        epicsMutexUnlock(pasynRecPvt->lock);
        return -1;
     } 
-    if(after) switch (fieldIndex) {
+    switch (fieldIndex) {
        case asynOctetRecordSOCK:
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
@@ -277,23 +301,6 @@ static long special(struct dbAddr *paddr, int after)
               "asynOctetRecord special() port=%s, addr=%d scanOnce request\n",
               pasynRec->port, pasynRec->addr);
           scanOnce(pasynRec);
-          break;
-       case asynOctetRecordTB0: 
-       case asynOctetRecordTB1: 
-       case asynOctetRecordTB2: 
-       case asynOctetRecordTB3: 
-       case asynOctetRecordTB4: 
-          pasynTrace->setTraceMask(pasynUser, 
-                                   pasynRec->tb0    | pasynRec->tb1 << 1 |
-                                   pasynRec->tb2<<2 | pasynRec->tb3 << 3 |
-                                   pasynRec->tb4 << 4);
-          break;
-       case asynOctetRecordTIB0: 
-       case asynOctetRecordTIB1: 
-       case asynOctetRecordTIB2: 
-          pasynTrace->setTraceIOMask(pasynUser, 
-                                     pasynRec->tib0 | pasynRec->tib1 << 1 |
-                                     pasynRec->tib2 << 2);
           break;
     }
     epicsMutexUnlock(pasynRecPvt->lock);
