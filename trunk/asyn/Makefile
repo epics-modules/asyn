@@ -49,11 +49,13 @@ DBD += asyn.dbd
 INC += asynShellCommands.h
 INC += asynSyncIO.h
 INC += asynInterposeEos.h
-INC += asynEpicsUtils.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
+
+SRC_DIRS += $(ASYN)/devEpics
+INC += asynEpicsUtils.h
 asyn_SRCS += devAsynAnalog.c
 asyn_SRCS += devAsynUInt32Digital.c
 asyn_SRCS += asynEpicsUtils.c
