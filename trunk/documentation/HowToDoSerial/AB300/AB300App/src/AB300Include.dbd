@@ -13,8 +13,3 @@ device(ai,      GPIB_IO, devAB300_ai, "AB300Gpib")
 #
 include "drvAsynTCPPort.dbd"
 include "drvAsynSerialPort.dbd"
-
-#
-# Pull in asynRecord support
-#
-include "asynRecord.dbd"

@@ -1271,7 +1271,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-29 13:53:48 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-12 16:18:47 $$
 \newline 
 ############################################################################
 \newline 
@@ -1534,29 +1534,7 @@ asynRecord support
 
 The asynRecord provides a convenient mechanism for controlling the diagnostic
  messages produced by asyn drivers.
- To add an asynRecord to your application: 
-\layout Enumerate
-
-Add the line
-\newline 
-
-\newline 
-
-\family typewriter 
-include "asynRecord.dbd"
-\newline 
-
-\newline 
-
-\family default 
-to the application 
-\shape italic 
-xxx
-\family typewriter 
-\shape default 
-Include.dbd
-\family default 
- file.
+ To use an asynRecord in your application: 
 \layout Enumerate
 
 Add the line
