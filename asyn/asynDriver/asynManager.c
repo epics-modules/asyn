@@ -850,7 +850,7 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
         int i;
         for(i=0; i<nBytes; i++) {
             if(i%20 == 0) nout += fprintf(fd,"\n");
-            nout += fprintf(fd,"%2.2x ",buffer[i]);
+            nout += fprintf(fd,"%2.2x ",(unsigned char)buffer[i]);
         }
         nout += fprintf(fd,"\n");
     }
