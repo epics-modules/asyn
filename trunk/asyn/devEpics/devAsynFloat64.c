@@ -375,7 +375,7 @@ static long processAo(aoRecord *pr)
     if(pPvt->gotValue) {
         pr->val = pPvt->value; pr->udf = 0;
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->val;
+        pPvt->gotValue = 1; pPvt->value = pr->oval;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
