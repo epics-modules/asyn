@@ -667,11 +667,15 @@ static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
     niport *pniport = (niport *)pdrvPvt;
+    int        addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(eossize<1) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s addr %d gpibPortGetEos eossize %d too small\n",
-            pniport->portName,eossize);
+            pniport->portName,addr,eossize);
         *eoslen = 0;
         return asynError;
     }
@@ -682,7 +686,7 @@ static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
         *eoslen = 1;
     }
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s gpibPortGetEos eoslen %d\n",pniport->portName,eoslen);
+        "%s addr %d gpibPortGetEos eoslen %d\n",pniport->portName,addr,eoslen);
     return asynSuccess;
 }
 
@@ -697,7 +701,8 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortAddressedCmd nchar %d\n",
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+       "%s addr %d gpibPortAddressedCmd nchar %d\n",
         pniport->portName,addr,length);
     pniport->errorMessage[0] = 0;
     status = writeAddr(pniport,0,addr,timeout,transferStateIdle);
