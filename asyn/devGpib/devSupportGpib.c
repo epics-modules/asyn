@@ -489,8 +489,6 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         return -1;
     buf += nread;
     if (saveEosLen) {
-        printf("read %d characters and ended because %d\n", nread, eomReason);
-        printf("---\"%.*s\"---\n", nread, buf-nread);
         if ((eomReason & ASYN_EOM_EOS) == 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Didn't find '#' to begin arbitrary block program data");
