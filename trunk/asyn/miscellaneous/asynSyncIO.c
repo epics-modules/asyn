@@ -1,3 +1,12 @@
+/*asynSyncIO.c*/
+/***********************************************************************
+* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
+* National Laboratory, and the Regents of the University of
+* California, as Operator of Los Alamos National Laboratory, and
+* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
+* asynDriver is distributed subject to a Software License Agreement
+* found in file LICENSE that is included with this distribution.
+***********************************************************************/
 /*
  * This package provide a simple, synchronous interface to the "asyn" package. 
  * It will work with any device that asyn supports, e.g. serial, GPIB, and 
