@@ -13,7 +13,7 @@
  * Current Author: Marty Kraimer
  * Original Author: Benjamin Franksen
  ******************************************************************************
- *	This file is included by GPIB device support modules.
+ *      This file is included by GPIB device support modules.
  *      A device support module must define one or more of the following:
  *
  *      DSET_AI
@@ -46,7 +46,7 @@ static devGpibParmBlock devSupParms;
 static long init_ai(int pass);
 static gDset DSET_AI = {
     6,
-    {devGpib_reportAi, init_ai, devGpib_initAi, 0, devGpib_readAi, 0},
+    {0, init_ai, devGpib_initAi, 0, devGpib_readAi, 0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_AI);
@@ -168,4 +168,4 @@ static gDset DSET_WF = {
 epicsExportAddress(dset,DSET_WF);
 #endif
 
-#endif	/* INCdevGpibh */
+#endif /* INCdevGpibh */

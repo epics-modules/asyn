@@ -24,7 +24,6 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-epicsShareFunc long epicsShareAPI devGpib_reportAi(int interest);
 epicsShareFunc long epicsShareAPI devGpib_initAi(struct aiRecord * pai);
 epicsShareFunc long epicsShareAPI devGpib_readAi(struct aiRecord * pai);
 epicsShareFunc long epicsShareAPI devGpib_initAo(struct aoRecord * pao);

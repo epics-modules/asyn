@@ -20,6 +20,7 @@
 #include <stdio.h>
 
 #include <epicsAssert.h>
+#include <epicsStdio.h>
 #include <recGbl.h>
 #include <dbAccess.h>
 #include <alarm.h>
@@ -40,11 +41,6 @@
 #include "devCommonGpib.h"
 
 
-long epicsShareAPI devGpib_reportAi(int interest)
-{
-    pdevSupportGpib->report(interest);
-    return 0;
-}
 
 static void aiGpibFinish(gpibDpvt *pgpibDpvt,int failure);
 long epicsShareAPI devGpib_initAi(aiRecord * pai)
@@ -60,9 +56,9 @@ long epicsShareAPI devGpib_initAi(aiRecord * pai)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
         printf("%s invalid command type for AI record in param %d\n",
-	    pai->name, pgpibDpvt->parm);
-	pai->pact = TRUE;
-	return (S_db_badField);
+            pai->name, pgpibDpvt->parm);
+        pai->pact = TRUE;
+        return (S_db_badField);
     }
     if(got_special_linconv) (*got_special_linconv)(pai,TRUE);
     return (0);
@@ -91,19 +87,19 @@ static void aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pai->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         int result = 0;
-	if(got_special_linconv) {
-	    result = sscanf(pgpibDpvt->msg, pgpibCmd->format, &rawvalue);
+        if(got_special_linconv) {
+            result = sscanf(pgpibDpvt->msg, pgpibCmd->format, &rawvalue);
             if(result==1) {pai->rval = rawvalue; pai->udf = FALSE;}
-	} else {
+        } else {
             result = sscanf(pgpibDpvt->msg, pgpibCmd->format, &value);
             if(result==1) {pai->val = value; pai->udf = FALSE;}
-	}
+        }
         if(result!=1) failure = -1;
     }
     if(failure==-1) recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
@@ -126,9 +122,9 @@ long epicsShareAPI devGpib_initAo(aoRecord * pao)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
         printf("%s invalid command type for AO record in param %d\n",
-	    pao->name, pgpibDpvt->parm);
-	pao->pact = TRUE;
-	return (S_db_badField);
+            pao->name, pgpibDpvt->parm);
+        pao->pact = TRUE;
+        return (S_db_badField);
     }
     if(got_special_linconv) (*got_special_linconv)(pao,TRUE);
     return(got_special_linconv ? 0 : 2);
@@ -182,9 +178,9 @@ long epicsShareAPI devGpib_initBi(biRecord * pbi)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
         printf("%s invalid command type for BI record in param %d\n",
-	    pbi->name, pgpibDpvt->parm);
-	pbi->pact = TRUE;
-	return (S_db_badField);
+            pbi->name, pgpibDpvt->parm);
+        pbi->pact = TRUE;
+        return (S_db_badField);
     }
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if(pdevGpibNames) {
@@ -215,11 +211,11 @@ static void biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pbi->name);
         failure = -1;
-    } else {/* interpret msg with predefined format and write into rval */
+    } else {
         if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
             if(pgpibDpvt->efastVal>0) {
                 pbi->rval = pgpibDpvt->efastVal;
@@ -287,9 +283,9 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
         }
     } else if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
         printf("%s invalid command type for BO record in param %d\n",
-	    pbo->name, pgpibDpvt->parm);
-	pbo->pact = TRUE;
-	return (S_db_badField);
+            pbo->name, pgpibDpvt->parm);
+        pbo->pact = TRUE;
+        return (S_db_badField);
     }
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if(pdevGpibNames) {
@@ -399,9 +395,9 @@ long epicsShareAPI devGpib_initEv(eventRecord * pev)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
         printf("%s invalid command type for EV record in param %d\n",
-	    pev->name, pgpibDpvt->parm);
-	pev->pact = TRUE;
-	return (S_db_badField);
+            pev->name, pgpibDpvt->parm);
+        pev->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -426,7 +422,7 @@ static void evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pev->name);
         failure = -1;
@@ -434,9 +430,9 @@ static void evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
             pev->val = value;
             pev->udf = FALSE;
-	} else { /* sscanf did not find or assign the parameter */
-	    failure = -1;
-	}
+        } else { /* sscanf did not find or assign the parameter */
+            failure = -1;
+        }
     }
     if(failure==-1) recGblSetSevr(pev, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
@@ -466,9 +462,9 @@ long epicsShareAPI devGpib_initLi(longinRecord * pli)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBSRQHANDLER))) {
         printf("%s invalid command type for LI record in param %d\n",
-	    pli->name, pgpibDpvt->parm);
-	pli->pact = TRUE;
-	return (S_db_badField);
+            pli->name, pgpibDpvt->parm);
+        pli->pact = TRUE;
+        return (S_db_badField);
     }
     if(cmdType&GPIBSRQHANDLER) {
         pdevSupportGpib->registerSrqHandler(pgpibDpvt,liSrqHandler,pli);
@@ -497,16 +493,16 @@ static void liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pli->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         if (sscanf(pgpibDpvt->msg, pgpibCmd->format, &value) == 1) {
             pli->val = value; pli->udf = FALSE;
-	} else { /* sscanf did not find or assign the parameter */
-	    failure = -1;
-	}
+        } else { /* sscanf did not find or assign the parameter */
+            failure = -1;
+        }
     }
     if(failure==-1) recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
     requestProcessCallback(pgpibDpvt);
@@ -527,9 +523,9 @@ long epicsShareAPI devGpib_initLo(longoutRecord * plo)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
         printf("%s invalid command type for LO record in param %d\n",
-	    plo->name, pgpibDpvt->parm);
-	plo->pact = TRUE;
-	return (S_db_badField);
+            plo->name, pgpibDpvt->parm);
+        plo->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -578,9 +574,9 @@ long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
         printf("%s invalid command type for MBBI record in param %d\n",
-	    pmbbi->name, pgpibDpvt->parm);
-	pmbbi->pact = TRUE;
-	return (S_db_badField);
+            pmbbi->name, pgpibDpvt->parm);
+        pmbbi->pact = TRUE;
+        return (S_db_badField);
     }
     if(pdevGpibNames) {
         if (pdevGpibNames->value == NULL) {
@@ -627,12 +623,12 @@ static void mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pmbbi->name);
-	failure = -1;
+        failure = -1;
     } else {/* interpret msg with predefined format and write into rval */
-	if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
+        if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
             if(pgpibDpvt->efastVal>=0) {
                 pmbbi->rval = pgpibDpvt->efastVal;
             } else {
@@ -643,7 +639,7 @@ static void mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
                 pmbbi->rval = value;
             } else {
                 /*sscanf did not find or assign the parameter*/
-	        failure = -1;
+                failure = -1;
                 if (*pdevGpibParmBlock->debugFlag) {
                         printf("%s can't convert msg >%s<\n",
                             pmbbi->name, pgpibDpvt->msg);
@@ -670,9 +666,9 @@ long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
         printf("%s invalid command type for MBBI_DIRECT record in param %d\n",
-	    pmbbiDirect->name, pgpibDpvt->parm);
-	pmbbiDirect->pact = TRUE;
-	return (S_db_badField);
+            pmbbiDirect->name, pgpibDpvt->parm);
+        pmbbiDirect->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -698,7 +694,7 @@ static void mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
     } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
         printf("%s Either no msg buffer or no format\n",pmbbiDirect->name);
         failure = -1;
@@ -736,9 +732,9 @@ long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
         printf("%s invalid command type for MBBO record in param %d\n",
-	    pmbbo->name, pgpibDpvt->parm);
-	pmbbo->pact = TRUE;
-	return (S_db_badField);
+            pmbbo->name, pgpibDpvt->parm);
+        pmbbo->pact = TRUE;
+        return (S_db_badField);
     }
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if (pdevGpibNames) {
@@ -806,9 +802,9 @@ long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
         printf("%s invalid command type for MBBO_DIRECT record in param %d\n",
-	    pmbboDirect->name, pgpibDpvt->parm);
-	pmbboDirect->pact = TRUE;
-	return (S_db_badField);
+            pmbboDirect->name, pgpibDpvt->parm);
+        pmbboDirect->pact = TRUE;
+        return (S_db_badField);
     }
     return (2);
 }
@@ -852,9 +848,9 @@ long epicsShareAPI devGpib_initSi(stringinRecord * psi)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
         printf("%s invalid command type for SI record in param %d\n",
-	    psi->name, pgpibDpvt->parm);
-	psi->pact = TRUE;
-	return (S_db_badField);
+            psi->name, pgpibDpvt->parm);
+        psi->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -878,13 +874,23 @@ static void siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-	failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else if (!pgpibDpvt->msg || ! pgpibCmd->format) {
-        printf("%s Either no msg buffer or no format\n",psi->name);
+        failure = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",psi->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val */
-        strncpy(psi->val, pgpibDpvt->msg, (sizeof(psi->val)-1));
-        psi->val[sizeof(psi->val)-1] = 0;
+        char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
+        int lenVal = sizeof(psi->val);
+        int nchars;
+
+        nchars = epicsSnprintf(psi->val,lenVal,format,pgpibDpvt->msg);
+        if(nchars>=lenVal) {
+            psi->val[lenVal-1] = 0;
+            printf("%s %d characters were truncated\n",
+                psi->name,(nchars-lenVal+1));
+            failure = -1;
+        }
         psi->udf = FALSE;
     }
     if(failure==-1) recGblSetSevr(psi, READ_ALARM, INVALID_ALARM);
@@ -906,9 +912,9 @@ long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
         printf("%s invalid command type for SO record in param %d\n",
-	    pso->name, pgpibDpvt->parm);
-	pso->pact = TRUE;
-	return (S_db_badField);
+            pso->name, pgpibDpvt->parm);
+        pso->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -954,17 +960,15 @@ long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         if((!pgpibCmd->convert) && (pwf->ftvl!=menuFtypeCHAR)) {
-            printf("%s ftvl != CHAR but "
-                "!pgpibCmd->convert) && (GPIBREAD|GPIBREADW|GPIBRAWREAD)\n",
-                pwf->name);
+            printf("%s ftvl != CHAR but no convert\n", pwf->name);
             pwf->pact = 1;
             return (S_db_badField);
         }
     } else if(!(cmdType&(GPIBSOFT|GPIBWRITE|GPIBCMD|GPIBACMD))) {
         printf("%s invalid command type for WF record in param %d\n",
-	    pwf->name, pgpibDpvt->parm);
-	pwf->pact = TRUE;
-	return (S_db_badField);
+            pwf->name, pgpibDpvt->parm);
+        pwf->pact = TRUE;
+        return (S_db_badField);
     }
     return (0);
 }
@@ -983,8 +987,7 @@ long epicsShareAPI devGpib_readWf(waveformRecord * pwf)
     } else { /*Must be Output Operation*/
         if(!pgpibCmd->convert && (pgpibCmd->type&GPIBWRITE)) {
             if(pwf->ftvl!=menuFtypeCHAR) {
-                printf("%s ftvl != CHAR but pgpibCmd->type is GPIBWRITE\n",
-                    pwf->name);
+                printf("%s ftvl != CHAR but no convert\n", pwf->name);
                 pwf->pact = 1;
                 failure = -1;
             } else {
@@ -1006,18 +1009,28 @@ static void wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         if(pgpibCmd->convert) {
-            failure = pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+            failure = pgpibCmd->convert(pgpibDpvt,
+                pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        } else if(pwf->ftvl!=menuFtypeCHAR) {
+            printf("%s ftvl != CHAR but no convert\n",pwf->name);
+            failure = -1; 
         } else {
-            int lenmsg = strlen(pgpibDpvt->msg);
-            if(lenmsg >= pwf->nelm) {
-                printf("%s message length %d but pwf->nelm %lu\n",
-                    pwf->name,lenmsg,pwf->nelm);
-                pgpibDpvt->msg[pwf->nelm-1] = 0;
-                failure = -1;
-                lenmsg = pwf->nelm - 1;
+            char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
+            int lenDest = pwf->nelm;
+            int lenmsg = pgpibDpvt->msgInputLen;
+            char *pdest = (char *)pwf->bptr;
+            int nchars;
+
+            nchars = epicsSnprintf(pdest,lenDest,format,pgpibDpvt->msg);
+            if(nchars>=lenDest) {
+                 pdest[lenDest-1] = 0;
+                 printf("%s %d characters were truncated\n",
+                     pwf->name,(nchars-lenDest+1));
+                 failure = -1;
+                 lenmsg = lenDest;
             }
-            strcpy((char *)pwf->bptr,pgpibDpvt->msg);
-            pwf->nord = lenmsg+1;
+            pwf->udf = FALSE;
+            pwf->nord = lenmsg;
         }
     }
     if(failure==-1) recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
