@@ -109,8 +109,6 @@ static struct gpibCmd gpibCmds[] =
  * value of 0.  And then again AFTER all record-level init is complete
  * with a param value of 1.
  *
- * This function will no longer be required after epics 3.3 is released
- *
  ******************************************************************************/
 static long init_ai(int parm)
 {
