@@ -7,7 +7,7 @@
 * and higher are distributed subject to a Software License Agreement found
 * in file LICENSE that is included with this distribution. 
 \*************************************************************************/
-/* $Id: devAB300.c,v 1.4 2004-02-24 15:57:38 norume Exp $ */
+/* $Id: devAB300.c,v 1.1 2004-05-13 15:37:53 norume Exp $ */
 #include <epicsStdio.h>
 #include <devCommonGpib.h>
 
@@ -20,9 +20,9 @@
  * database description file even if the device provides no AI records.
  *
  ******************************************************************************/
-#define DSET_AI     devAB300_ai
-#define DSET_LI     devAB300_li
-#define DSET_LO     devAB300_lo
+#define DSET_AI     devAiAB300
+#define DSET_LI     devLiAB300
+#define DSET_LO     devLoAB300
 
 #include <devGpib.h> /* must be included after DSET defines */
 

@@ -11,7 +11,7 @@ include $(TOP)/configure/CONFIG
 #----------------------------------------------------
 # Create and install (or just install)
 # databases, templates, substitutions like this
-DB += AB300.db
+#DB_INSTALLS += $(AB300)/db/devAB300.db
 
 # asynRecord support
 DB_INSTALLS += $(ASYN)/db/asynRecord.db
