@@ -226,12 +226,12 @@ static epicsBoolean auxCmd(ip488RegisterMap *regs,
     writew(outval,&regs->busStatusAuxCmd);
     /* Must wait 5 clock cycles. Lets just read busStatus 6 times*/
     for(i=0; i<6; i++) value = readw(&regs->busStatusAuxCmd);
-    if(!regin) return(epicsTrue);
+    if(!regin) return epicsTrue;
     value = readw(regin);
-    if((value & mask) == inval) return(epicsTrue);
+    if((value & mask) == inval) return epicsTrue;
     printf("auxCmd failed outval %2.2x regin %p mask %2.2x "
         "inval %2.2x value %2.2x\n",outval,regin,mask,inval,value);
-    return(epicsFalse);
+    return epicsFalse;
 }
 
 static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
@@ -244,12 +244,12 @@ static epicsBoolean auxCmdIH(ip488RegisterMap *regs,
     writew(outval,&regs->busStatusAuxCmd);
     /* Must wait 5 clock cycles. Lets just read busStatus 6 times*/
     for(i=0; i<6; i++) value = readw(&regs->busStatusAuxCmd);
-    if(!regin) return(epicsTrue);
+    if(!regin) return epicsTrue;
     value = readw(regin);
-    if((value & mask) == inval) return(epicsTrue);
+    if((value & mask) == inval) return epicsTrue;
     logMsg("auxCmdIH failed outval %2.2x regin %p mask %2.2x "
         "inval %2.2x value %2.2x\n",outval,(int)regin,mask,inval,value,0);
-    return(epicsFalse);
+    return epicsFalse;
 }
 
 static void sicIpGpib(gpib *pgpib) /* set Interface Clear */
@@ -428,11 +428,11 @@ static asynStatus cmdIpGpib(gpib *pgpib,
 
     if (cnt == 0) {
         sprintf(pgpib->errorMessage,"cmdIpGpib called with cnt=0\n");
-        return(asynError);
+        return asynError;
     }
     if(!auxCmd(regs,auxCmdtca,&regs->addressStatus,asrATN,asrATN)) {
         printStatus(pgpib,"cmdIpGpib auxCmdtca");
-        return(asynError);
+        return asynError;
     }
     auxCmd(regs,auxCmdnbaf,0,0,0);
     pgpib->bytesRemaining = cnt;
@@ -444,7 +444,7 @@ static asynStatus cmdIpGpib(gpib *pgpib,
     if(!auxCmd(regs,auxCmdgts,&regs->addressStatus,asrATN,0)) {
         printStatus(pgpib,"cmdIpGpib auxCmdgts");
     }
-    return(pgpib->status);
+    return pgpib->status ;
 }
 
 static asynStatus readIpGpib(gpib *pgpib,
@@ -454,13 +454,13 @@ static asynStatus readIpGpib(gpib *pgpib,
 
     if (cnt == 0) {
         sprintf(pgpib->errorMessage,"readIpGpib called with cnt=0\n");
-        return(asynError);
+        return asynError;
     }
     auxCmd(regs,auxCmdrhdf,0,0,0);
     auxCmd(regs,auxCmdhdfeS,0,0,0);
     if(!auxCmd(regs,auxCmdlonS,&regs->addressStatus,asrLADS,asrLADS)) {
         printStatus(pgpib,"readIpGpib auxCmdlonS");
-        return(asynError);
+        return asynError;
     }
     pgpib->bytesRemaining = cnt;
     pgpib->nextByte = buf;
@@ -472,7 +472,7 @@ static asynStatus readIpGpib(gpib *pgpib,
         printStatus(pgpib,"readIpGpib auxCmdlonC");
     }
     *actual = cnt - pgpib->bytesRemaining;
-    return(pgpib->status);
+    return pgpib->status ;
 }
 
 static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
@@ -482,11 +482,11 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
 
     if (cnt == 0) {
         sprintf(pgpib->errorMessage,"writeIpGpib called with cnt=0\n");
-        return (asynError);
+        return asynError;
     }
     if(!auxCmd(regs,auxCmdtonS,&regs->addressStatus,asrTADS,asrTADS)) {
         printStatus(pgpib,"writeIpGpib auxCmdtonS");
-        return(asynError);
+        return asynError;
     }
     auxCmd(regs,auxCmdnbaf,0,0,0);
     if(raw_flag) 
@@ -503,7 +503,7 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
         printStatus(pgpib,"writeIpGpib auxCmdtonC");
     }
     *actual = cnt - pgpib->bytesRemaining;
-    return(pgpib->status);
+    return pgpib->status;
 
 }
 
@@ -517,11 +517,11 @@ static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt, int *actual,
     strcpy(cmdbuf,untalkUnlisten);
     cmdbuf[2] = (char)(addr + 0x20);
     status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
-    if(status!=asynSuccess) return(status);
+    if(status!=asynSuccess) return status;
     status = writeIpGpib(pgpib,buf,cnt,actual,epicsFalse,timeout);
-    if(status!=asynSuccess) return(status);
+    if(status!=asynSuccess) return status;
     status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
-    return(status);
+    return status;
 }
 
 static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
@@ -534,11 +534,11 @@ static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
     strcpy(cmdbuf,untalkUnlisten);
     cmdbuf[2] = (char)(addr + 0x40);
     status = cmdIpGpib(pgpib,cmdbuf,3,timeout);
-    if(status!=asynSuccess) return(status);
+    if(status!=asynSuccess) return status;
     status = readIpGpib(pgpib,buf,cnt,actual,timeout);
-    if(status!=asynSuccess && status!=asynOverflow) return(status);
+    if(status!=asynSuccess && status!=asynOverflow) return status;
     status = cmdIpGpib(pgpib,untalkUnlisten, 2, timeout);
-    return(status);
+    return status;
 }
 
 static void gsTi9914Report(void *pdrvPvt,FILE *fd,int details)
@@ -563,14 +563,14 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
         "%s addr %d gsTi9914Connect\n",pgpib->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionConnect(pasynUser);
-        return(asynSuccess);
+        return asynSuccess;
     }
     ipstatus = ipmIntConnect(carrier,module,intVec,
         gpibInterruptHandler,(int)pgpib);
     if(ipstatus) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "gsIP488Configure ipmIntConnect failed\n");
-        return(asynError);
+        return asynError;
     }
     ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
     writew((epicsUInt16)pgpib->intVec,&regs->vectorRegister);
@@ -589,7 +589,7 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
     sicIpGpib(pgpib); /* assert IFC */
     auxCmd(regs,auxCmdsreS,0,0,0);
     pasynManager->exceptionConnect(pasynUser);
-    return(asynSuccess);
+    return asynSuccess;
 }
 
 static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
@@ -604,14 +604,14 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
         "%s addr %d gsTi9914Disconnect\n",pgpib->portName,addr);
     if(addr>=0) {
         pasynManager->exceptionDisconnect(pasynUser);
-        return(asynSuccess);
+        return asynSuccess;
     }
     /* Issue a software reset to the GPIB controller chip*/
     auxCmd(regs,auxCmdswrstS,0,0,0);
     epicsThreadSleep(.01);
     ipmIrqCmd(carrier, module, 0, ipac_irqDisable);
     pasynManager->exceptionDisconnect(pasynUser);
-    return(asynSuccess);
+    return asynSuccess;
 }
 
 static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
@@ -623,7 +623,7 @@ static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
         pgpib->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "%s gsTi9914 does not have any options\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
@@ -635,7 +635,7 @@ static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
         pgpib->portName);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "%s gsTi9914 does not have any options\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
@@ -661,7 +661,7 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gsTi9914Read\n",pgpib->portName);
-    return(actual);
+    return actual;
 }
 
 static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
@@ -680,32 +680,22 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
             pgpib->portName,pgpib->errorMessage);
-        return(actual);
+        return actual;
     }
     if(actual!=numchars) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s requested %d but sent %d\n",
             pgpib->portName,numchars,actual);
-        return(actual);
+        return actual;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gsTi9914Write\n",pgpib->portName);
-    return(actual);
+    return actual;
 }
 
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
 {
-    gpib *pgpib = (gpib *)pdrvPvt;
-    asynStatus status;
-    char buffer[100];
-    int actual = 0;
-    int addr = pasynManager->getAddr(pasynUser);
-
-    while(1) {
-        actual = 0;
-        status = readGpib(pgpib,buffer,(int)sizeof(buffer),&actual,addr,.05);
-        if(actual<=0) break;
-    }
-    return(asynSuccess);
+    /*Nothing to do */
+    return asynSuccess;
 }
 
 static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
@@ -718,10 +708,10 @@ static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
     if(eoslen>1 || eoslen<0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
            "%s gpibTi9914SetEos illegal eoslen %d\n",pgpib->portName,eoslen);
-        return(asynError);
+        return asynError;
     }
     pgpib->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
-    return(asynSuccess);
+    return asynSuccess;
 }
 static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
@@ -732,7 +722,7 @@ static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s gsTi9914GetEos eossize %d too small\n",eossize);
         *eoslen = 0;
-        return(asynError);
+        return asynError;
     }
     if(pgpib->eos==-1) {
         *eoslen = 0;
@@ -752,7 +742,7 @@ static asynStatus gsTi9914AddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
         "%s gsTi9914AddressedCmd not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynStatus gsTi9914UniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
@@ -760,7 +750,7 @@ static asynStatus gsTi9914UniversalCmd(void *pdrvPvt, asynUser *pasynUser, int c
     gpib *pgpib = (gpib *)pdrvPvt;
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
         "%s gsTi9914UniversalCmd not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
  
 static asynStatus gsTi9914Ifc(void *pdrvPvt, asynUser *pasynUser)
@@ -768,7 +758,7 @@ static asynStatus gsTi9914Ifc(void *pdrvPvt, asynUser *pasynUser)
     gpib *pgpib = (gpib *)pdrvPvt;
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
         "%s gsTi9914Ifc not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynStatus gsTi9914Ren(void *pdrvPvt,asynUser *pasynUser, int onOff)
@@ -776,42 +766,42 @@ static asynStatus gsTi9914Ren(void *pdrvPvt,asynUser *pasynUser, int onOff)
     gpib *pgpib = (gpib *)pdrvPvt;
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
         "%s gsTi9914Ren not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static int gsTi9914SrqStatus(void *pdrvPvt)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     printf("%s gsTi9914SrqStatus not implemented\n",pgpib->portName);
-    return(0);
+    return 0;
 }
 
 static asynStatus gsTi9914SrqEnable(void *pdrvPvt, int onOff)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     printf("%s gsTi9914SrqEnable not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynStatus gsTi9914SerialPollBegin(void *pdrvPvt)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     printf("%s gsTi9914SerialPollBegin not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static int gsTi9914SerialPoll(void *pdrvPvt, int addr, double timeout)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     printf("%s gsTi9914SerialPoll not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynStatus gsTi9914SerialPollEnd(void *pdrvPvt)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     printf("%s gsTi9914SerialPollEnd not implemented\n",pgpib->portName);
-    return(asynError);
+    return asynError;
 }
 
 static asynGpibPort gsTi9914 = {
@@ -847,14 +837,14 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
     ipstatus = ipmValidate(carrier,module,GREEN_SPRING_ID,GSIP_488);
     if(ipstatus) {
         printf("gsIP488Configure Unable to validate IP module");
-        return(0);
+        return 0;
     }
     regs = (ip488RegisterMap*)ipmBaseAddr(
         carrier, module, ipac_addrIO);
     if(!regs) {
         printf("gsIP488Configure no memory allocated "
             "for carrier %d module %d\n", carrier,module);
-        return(0);
+        return 0;
     }
     if((intVec&1)==0) {
         printf("gsIP488Configure intVec MUST be odd. "
@@ -872,7 +862,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
     pgpib->regs = regs;
     pgpib->asynGpibPvt = pasynGpib->registerPort(pgpib->portName,
         1,!noAutoConnect, &gsTi9914,pgpib,priority,0);
-    return(0);
+    return 0;
 }
 
 /* IOC shell command registration */

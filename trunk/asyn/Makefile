@@ -17,15 +17,16 @@ LIBRARY_IOC += asyn
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 SRC_DIRS += $(ASYN)/asynDriver
-INC += asynDriver.h
 DBD += asyn.dbd
-asyn_SRCS += asynManager.c
-asyn_SRCS += asynShellCommands.c
-INC += epicsInterruptibleSyscall.h
+INC += asynDriver.h
 INC += asynShellCommands.h
 INC += asynSyncIO.h
+INC += epicsInterruptibleSyscall.h
+asyn_SRCS += asynManager.c
+asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
+asyn_SRCS += interposeFlush.c
 
 SRC_DIRS += $(ASYN)/devAsyn
 DBD += devAsyn.dbd

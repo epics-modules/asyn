@@ -1,1 +1,2 @@
 registrar(asyn)
+registrar(interposeFlushRegister)
