@@ -620,31 +620,15 @@ eos The end-of-string value used to mark the end of the readback operation.
 \layout Subsubsection
 
 Command array index 1 -- Go to new filter position
-\layout Standard
+\layout LyX-Code
 
-
-\begin_inset ERT
-status Open
-
-\layout Standard
-
-\backslash 
-begin{verbatim}
-\newline 
-    {&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "
+{&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "
 \backslash 
 017%c", 10, 10,
 \newline 
         NULL, 0, 0, NULL, NULL, "
 \backslash 
 030"},
-\newline 
-
-\backslash 
-end{verbatim}
-\end_inset 
-
-
 \layout Description
 
 dset This command is associated with an longout record.
@@ -1187,8 +1171,7 @@ L
 
 (Optional) Add lines to control the debugging level of the serial line 'GPIB'
  driver.
- The following turns on full tracing of control flow and every I/O operation
- which is useful during initial debugging.
+ The following enables error messages and a description of every I/O operation.
 \begin_deeper 
 \layout LyX-Code
 
