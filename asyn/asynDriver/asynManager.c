@@ -735,6 +735,7 @@ static asynUser *duplicateAsynUser(asynUser *pasynUser,
     pnew->pdevice = pold->pdevice;
     pnew->user.timeout = pold->user.timeout;
     pnew->user.userPvt = pold->user.userPvt;
+    pnew->user.userData = pold->user.userData;
     return &pnew->user;
 }
 
