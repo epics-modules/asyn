@@ -193,7 +193,7 @@ static void portThread(port *pport);
     
 /* asynManager methods */
 static void report(FILE *fp,int details);
-static asynUser *createAsynUser(userCallback queue, userCallback timeout);
+static asynUser *createAsynUser(userCallback process, userCallback timeout);
 static asynUser *duplicateAsynUser(asynUser *pasynUser,
    userCallback queue, userCallback timeout);
 static asynStatus freeAsynUser(asynUser *pasynUser);
@@ -860,7 +860,7 @@ static void report(FILE *fp,int details)
     }
 }
 
-static asynUser *createAsynUser(userCallback queue, userCallback timeout)
+static asynUser *createAsynUser(userCallback process, userCallback timeout)
 {
     userPvt  *puserPvt;
     asynUser *pasynUser;
@@ -889,7 +889,7 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
         epicsMutexUnlock(pasynBase->lock);
         pasynUser = userPvtToAsynUser(puserPvt);
     }
-    puserPvt->callback = queue;
+    puserPvt->callback = process;
     puserPvt->isQueued = FALSE;
     puserPvt->state = callbackIdle;
     pasynUser->errorMessage[0] = 0;
@@ -903,10 +903,10 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
 }
 
 static asynUser *duplicateAsynUser(asynUser *pasynUser,
-   userCallback queue, userCallback timeout)
+   userCallback process, userCallback timeout)
 {
     userPvt *pold = asynUserToUserPvt(pasynUser);
-    userPvt *pnew = asynUserToUserPvt(createAsynUser(queue,timeout));
+    userPvt *pnew = asynUserToUserPvt(createAsynUser(process,timeout));
 
     pnew->pport = pold->pport;
     pnew->pdevice = pold->pdevice;
