@@ -11,11 +11,11 @@ record(calc, "asyndevCalcA$(ADDR)") {
     field(HOPR, "10")
 }
 record(ai,"asyndevAiInt32A$(ADDR)") {
-    field(DTYP,"asyn Int32")
+    field(DTYP,"asynInt32")
     field(INP,"@asyn($(PORT),$(ADDR)) testParams")
 }
 record(ao,"asyndevAoInt32A$(ADDR)") {
-    field(DTYP,"asyn Int32")
+    field(DTYP,"asynInt32")
     field(OUT,"@asyn($(PORT),$(ADDR)) testParams")
     field(FLNK,"asyndevAiInt32A$(ADDR)")
     field(OMSL,"closed_loop")

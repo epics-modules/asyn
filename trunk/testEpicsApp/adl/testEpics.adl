@@ -8,7 +8,7 @@ display {
 		x=99
 		y=76
 		width=400
-		height=100
+		height=300
 	}
 	clr=14
 	bclr=4
@@ -279,4 +279,245 @@ text {
 	}
 	textix="int32A1"
 	align="horiz. centered"
+}
+composite {
+	object {
+		x=0
+		y=120
+		width=400
+		height=78
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=120
+				width=100
+				height=20
+			}
+			control {
+				chan="devSiAsynCmdResponse.PROC"
+				clr=14
+				bclr=4
+			}
+			label="cmdResponse"
+			press_msg="1"
+		}
+		"text update" {
+			object {
+				x=100
+				y=120
+				width=200
+				height=20
+			}
+			monitor {
+				chan="devSiAsynCmdResponse"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"text entry" {
+			object {
+				x=0
+				y=140
+				width=200
+				height=20
+			}
+			control {
+				chan="devSiAsynCmdForWriteRead"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=200
+				y=140
+				width=200
+				height=20
+			}
+			monitor {
+				chan="devSiAsynWriteRead"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"text entry" {
+			object {
+				x=0
+				y=160
+				width=200
+				height=20
+			}
+			control {
+				chan="devSiAsynWrite"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=1
+				y=178
+				width=100
+				height=20
+			}
+			control {
+				chan="devSiAsynRead.PROC"
+				clr=14
+				bclr=4
+			}
+			label="read"
+			press_msg="1"
+		}
+		"text update" {
+			object {
+				x=101
+				y=178
+				width=200
+				height=20
+			}
+			monitor {
+				chan="devSiAsynRead"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=216
+		width=100
+		height=20
+	}
+	control {
+		chan="devWfAsynCmdResponse.PROC"
+		clr=14
+		bclr=4
+	}
+	label="cmdResponse"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=216
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devWfAsynCmdResponse"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=0
+		y=236
+		width=200
+		height=20
+	}
+	control {
+		chan="devWfAsynCmdForWriteRead"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=200
+		y=236
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devWfAsynWriteRead"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=0
+		y=256
+		width=200
+		height=20
+	}
+	control {
+		chan="devWfAsynWrite"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=274
+		width=100
+		height=20
+	}
+	control {
+		chan="devWfAsynRead.PROC"
+		clr=14
+		bclr=4
+	}
+	label="read"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=101
+		y=274
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devWfAsynRead"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
 }

@@ -24,6 +24,7 @@ testEpics_SRCS += testEpics_registerRecordDeviceDriver.cpp
 testEpics_SRCS += testEpicsMain.c
 
 testEpics_LIBS += testEpicsSupport
+testEpics_LIBS += testSupport
 testEpics_LIBS += asyn
 testEpics_LIBS += $(EPICS_BASE_IOC_LIBS)
 
