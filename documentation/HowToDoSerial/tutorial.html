@@ -37,7 +37,7 @@ the example application. In particular you must have the following
 installed: 
 <UL><LI>
 EPICS R3.14.6 or higher.
-<LI>EPICS modules/soft/asyn version 3.2 or higher.
+<LI>EPICS modules/soft/asyn version 3.4 or higher.
 </UL>
 Serial and GPIB devices can now be treated in much the same way. The
 EPICS 'asyn' driver devGpib module can use the low-level drivers which
@@ -232,7 +232,10 @@ are needed.
 <DT><B>pdevGpibNames</B><DD>There's no name table. 
 <DT><B>eos</B><DD>The end-of-string value used to mark the end of the readback
 operation. GPIB devices can usually leave this entry NULL since they
-use the End-Or-Identify (EOI) line to delimit messages.
+use the End-Or-Identify (EOI) line to delimit messages.Serial devices
+which have the same end-of-string value for all commands couldalso
+leave these entries NULL and set the end-of-string value with theiocsh
+asynOctetSetInputEos command.
 </DL>
 <!--TOC paragraph Command array index 1 -- Go to new filter position-->
 
@@ -672,7 +675,7 @@ asynSetTraceIOMask("L0",-1,0x2)&nbsp;<BR>
 iocInit()&nbsp;<BR>
 ############################################################################&nbsp;<BR>
 ###&nbsp;&nbsp;EPICS&nbsp;IOC&nbsp;CORE&nbsp;built&nbsp;on&nbsp;Apr&nbsp;23&nbsp;2004&nbsp;<BR>
-###&nbsp;&nbsp;EPICS&nbsp;R3.14.6&nbsp;$$Name: not supported by cvs2svn $$&nbsp;$$Date: 2004-07-26 14:40:32 $$&nbsp;<BR>
+###&nbsp;&nbsp;EPICS&nbsp;R3.14.6&nbsp;$$Name: not supported by cvs2svn $$&nbsp;$$Date: 2004-11-19 17:06:11 $$&nbsp;<BR>
 ############################################################################&nbsp;<BR>
 Starting&nbsp;iocInit&nbsp;<BR>
 iocInit:&nbsp;All&nbsp;initialization&nbsp;complete
@@ -897,7 +900,40 @@ to your <TT>EPICS_DISPLAY_PATH</TT> environment variable and start
 medm with <TT>P</TT>, <TT>R</TT>, <TT>PORT</TT> and <TT>ADDR</TT>
 values matching those given in the <TT>dbLoadRecords</TT> command:
 <DIV ALIGN=left><DL COMPACT=compact><DT><DD><TT>
-medm&nbsp;-x&nbsp;-macro&nbsp;"P=AB300,R=Test,PORT=L0,ADDR=0"&nbsp;asynRecord.adl</TT></DL></DIV>
+medm&nbsp;-x&nbsp;-macro&nbsp;"P=AB300,R=Test,PORT=L0,ADDR=0"&nbsp;asynRecord.adl
+</TT></DL></DIV>
+<!--TOC section Support for devices with common 'end-of-string' characters-->
+
+<H2><A NAME="htoc19">8</A>&nbsp;&nbsp;Support for devices with common 'end-of-string' characters</H2><!--SEC END -->
+
+Devices which use the same character, or characters, to mark the end
+of each command or response message need not specify these characters
+in the GPIB command table entries. They can, instead, specify the
+terminator sequences as part of the driver port configuration commands.
+This makes it possible for a single command table to provide support
+for devices which provide a serial or Ethernet interface (and require
+command/response terminators) and also provide a GPIB interface (which
+does not require command/response terminators).<BR>
+<BR>
+For example, the configuration commands for a TDS3000 digital oscilloscope
+connected through an Ethernet serial port adapter might look like:
+<DIV ALIGN=left><DL COMPACT=compact><DT><DD><TT>
+drvAsynIPPortConfigure("L0",&nbsp;"192.168.9.90:4003",&nbsp;0,&nbsp;0,&nbsp;0)&nbsp;<BR>
+asynOctetSetInputEos("L0",0,"\n")&nbsp;<BR>
+asynOctetSetOutputEos("L0",0,"\n")
+</TT></DL></DIV>
+The configuration command for the same oscilloscope connected to an
+Ethernet GPIB adapter would be:
+<DIV ALIGN=left><DL COMPACT=compact><DT><DD><TT>
+vxi11Configure("L0",&nbsp;"192.168.8.129",&nbsp;0,&nbsp;0.0,&nbsp;"gpib0",&nbsp;0)
+</TT></DL></DIV>
+An example command table entry for this device is shown below. Notice
+that there is no <TT>\n</TT> at the end of the command
+and that the table 'eos' field is <TT>NULL</TT>:
+<DIV ALIGN=left><DL COMPACT=compact><DT><DD><TT>
+/*&nbsp;2&nbsp;:&nbsp;read&nbsp;delay&nbsp;:&nbsp;AI&nbsp;*/&nbsp;<BR>
+&nbsp;&nbsp;{&amp;DSET_AI,&nbsp;GPIBREAD,&nbsp;IB_Q_LOW,&nbsp;"HOR:DEL:TIM?",&nbsp;"%lf",&nbsp;0,&nbsp;20,&nbsp;<BR>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;NULL,&nbsp;0,&nbsp;0,&nbsp;NULL,&nbsp;NULL,&nbsp;NULL},</TT></DL></DIV>
 <!--HTMLFOOT-->
 <!--ENDHTML-->
 <!--FOOTER-->

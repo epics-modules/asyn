@@ -103,7 +103,7 @@ This document isn't for the absolute newcomer though.
 EPICS R3.14.6 or higher.
 \layout Itemize
 
-EPICS modules/soft/asyn version 3.2 or higher.
+EPICS modules/soft/asyn version 3.4 or higher.
 \layout Standard
 
 Serial and GPIB devices can now be treated in much the same way.
@@ -559,7 +559,9 @@ pdevGpibNames There's no name table.
 
 eos The end-of-string value used to mark the end of the readback operation.
  GPIB devices can usually leave this entry NULL since they use the End-Or-Identi
-fy (EOI) line to delimit messages.
+fy (EOI) line to delimit messages.Serial devices which have the same end-of-strin
+g value for all commands couldalso leave these entries NULL and set the
+ end-of-string value with theiocsh asynOctetSetInputEos command.
 \layout Paragraph
 
 Command array index 1 -- Go to new filter position
@@ -1408,7 +1410,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-23 13:50:20 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-11-19 17:06:11 $$
 \newline 
 ############################################################################
 \newline 
@@ -1786,4 +1788,61 @@ dbLoadRecords
 \layout LyX-Code
 
 medm -x -macro "P=AB300,R=Test,PORT=L0,ADDR=0" asynRecord.adl
+\layout Section
+
+Support for devices with common 'end-of-string' characters
+\layout Standard
+
+Devices which use the same character, or characters, to mark the end of
+ each command or response message need not specify these characters in the
+ GPIB command table entries.
+ They can, instead, specify the terminator sequences as part of the driver
+ port configuration commands.
+ This makes it possible for a single command table to provide support for
+ devices which provide a serial or Ethernet interface (and require command/respo
+nse terminators) and also provide a GPIB interface (which does not require
+ command/response terminators).
+\layout Standard
+
+For example, the configuration commands for a TDS3000 digital oscilloscope
+ connected through an Ethernet serial port adapter might look like:
+\layout LyX-Code
+
+drvAsynIPPortConfigure("L0", "192.168.9.90:4003", 0, 0, 0)
+\newline 
+asynOctetSetInputEos("L0",0,"
+\backslash 
+n")
+\newline 
+asynOctetSetOutputEos("L0",0,"
+\backslash 
+n")
+\layout Standard
+
+The configuration command for the same oscilloscope connected to an Ethernet
+ GPIB adapter would be:
+\layout LyX-Code
+
+vxi11Configure("L0", "192.168.8.129", 0, 0.0, "gpib0", 0)
+\layout Standard
+
+An example command table entry for this device is shown below.
+ Notice that there is no 
+\family typewriter 
+
+\backslash 
+n
+\family default 
+ at the end of the command and that the table 'eos' field is 
+\family typewriter 
+NULL
+\family default 
+:
+\layout LyX-Code
+
+/* 2 : read delay : AI */
+\newline 
+  {&DSET_AI, GPIBREAD, IB_Q_LOW, "HOR:DEL:TIM?", "%lf", 0, 20,
+\newline 
+                                 NULL, 0, 0, NULL, NULL, NULL},
 \the_end
