@@ -1192,8 +1192,8 @@ support had definitions like:</p>
 #define DMA_TIME        60      /* 1 second   */</pre>
 
 <p>Now the definitions would be:</p>
-<pre>#define TIMEOUT     1.0
-#define TIMEWINDOW  2.0
+<pre>#define TIMEWINDOW  2.0  /* wait 2 seconds after device timeout */
+#define TIMEOUT     1.0  /* I/O must complete within 1 second */
 <br>
 </pre>
 
@@ -1216,7 +1216,8 @@ seconds. The following fields have disappeared:</p>
       if respond2Writes is &gt;=0.</dd>
 </dl>
 
-<p>Older device support initialized devGpibParmBlock with the statement:</p>
+<p>Older device support initialized devGpibParmBlock with a C initializer
+statement:</p>
 <pre>static struct devGpibParmBlock devSupParms = {
 &amp;xxxDebug,
 ... 
@@ -1228,14 +1229,22 @@ init_dev_sup(parm)
 int     parm;
 {
   if(parm==0)  {
-    devSupParms.debugFlag = &amp;xxxDebug;</pre>
+    devSupParms.debugFlag = &amp;xxxDebug;
+    ...</pre>
 
 <p>Now this is done via the function:</p>
 <pre>static long init_ai(int parm)
 {
   if(parm==0)  {
-    devSupParms.name = "name";
-...</pre>
+    devSupParms.name = "devAB300";
+    devSupParms.gpibCmds = gpibCmds;
+    devSupParms.numparams = NUMPARAMS;
+    devSupParms.timeout = TIMEOUT;
+    devSupParms.timeWindow = TIMEWINDOW;
+    devSupParms.respond2Writes = 0;
+  }
+  return 0;
+}</pre>
 
 <p>The older support must be modified to use drvGpib.h and to implement
 init_ai.</p>
