@@ -1,0 +1,3 @@
+asynSetTraceMask(echo,1,0xff)
+asynSetTraceIOMask(echo,1,0xff)
+testEcho(echo,1,oneA0,1,0.0)

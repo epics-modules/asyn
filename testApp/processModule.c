@@ -104,7 +104,7 @@ static int processRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
     processPvt *pprocessPvt = (processPvt *)ppvt;
     int nchars;
 
-    printf("entered processModule::read\n");
+    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered processModule::read\n");
     nchars = pprocessPvt->pasynOctet->read(pprocessPvt->asynOctetPvt,
         pasynUser,data,maxchars);
     return(nchars);
@@ -115,7 +115,7 @@ static int processWrite(void *ppvt,asynUser *pasynUser,const char *data,int numc
     processPvt *pprocessPvt = (processPvt *)ppvt;
     int nchars;
 
-    printf("entered processModule::write\n");
+    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered processModule::write\n");
     nchars = pprocessPvt->pasynOctet->write(pprocessPvt->asynOctetPvt,
         pasynUser,data,numchars);
     return(nchars);
@@ -126,7 +126,7 @@ static asynStatus processFlush(void *ppvt,asynUser *pasynUser)
     processPvt *pprocessPvt = (processPvt *)ppvt;
     asynStatus status;
 
-    printf("entered processModule::flush\n");
+    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered processModule::flush\n");
     status = pprocessPvt->pasynOctet->flush(pprocessPvt->asynOctetPvt,pasynUser);
     return(status);
 }
@@ -137,7 +137,7 @@ static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     processPvt *pprocessPvt = (processPvt *)ppvt;
     asynStatus status;
 
-    printf("entered processModule::setEos\n");
+    asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered processModule::setEos\n");
     status = pprocessPvt->pasynOctet->setEos(pprocessPvt->asynOctetPvt,
         pasynUser,eos,eoslen);
     return(status);

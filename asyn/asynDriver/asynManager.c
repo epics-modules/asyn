@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdarg.h>
 
 #include <ellLib.h>
 #include <errlog.h>
@@ -37,14 +38,25 @@
 #define FALSE 0
 #define ERROR_MESSAGE_SIZE 160
 #define NUMBER_QUEUE_PRIORITIES (asynQueuePriorityHigh + 1)
+#define DEFAULT_TRACE_TRUNCATE_SIZE 80
 
 typedef struct asynBase {
     ELLLIST asynPortList;
     epicsTimerQueueId timerQueue;
+    epicsMutexId  lockTrace;
 }asynBase;
 static asynBase *pasynBase = 0;
 
 typedef struct asynUserPvt asynUserPvt;
+
+typedef struct asynTracePvt {
+    int           traceMask;
+    int           traceIOMask;
+    FILE          *fd;
+    int           traceTruncateSize;
+    int           traceBufferSize;
+    char          *traceBuffer;
+}asynTracePvt;
 
 typedef struct asynDevice {
     ELLNODE       node;     /*For asynPort.asynDeviceList*/
@@ -53,6 +65,7 @@ typedef struct asynDevice {
     asynInterface *paprocessModule;
     int           nprocessModules;
     asynUserPvt   *plockHolder;
+    asynTracePvt  trace;
 }asynDevice;
 
 typedef struct asynPort {
@@ -69,7 +82,7 @@ typedef struct asynPort {
     ELLLIST       queueList[NUMBER_QUEUE_PRIORITIES];
     ELLLIST       asynDeviceList;
 }asynPort;
-
+
 struct asynUserPvt {
     ELLNODE      node;        /*For asynPort.queueList*/
     userCallback queueCallback;
@@ -82,11 +95,12 @@ struct asynUserPvt {
     asynDevice   *pasynDevice;
     asynUser     user;
 };
+
 #define asynUserPvtToAsynUser(p) (&p->user)
 #define asynUserToAsynUserPvt(p) \
   ((asynUserPvt *) ((char *)(p) \
           - ( (char *)&(((asynUserPvt *)0)->user) - (char *)0 ) ) )
-
+
 /* forward reference to internal methods */
 static void asynInit(void);
 static asynPort *locateAsynPort(const char *portName);
@@ -109,6 +123,7 @@ static int cancelRequest(asynUser *pasynUser);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static int getAddr(asynUser *pasynUser);
+
 static asynStatus registerPort(
     const char *portName,
     asynInterface *paasynInterface,int nasynInterface,
@@ -135,6 +150,36 @@ static asynManager queueManager = {
 };
 epicsShareDef asynManager *pasynManager = &queueManager;
 
+static asynStatus traceLock(asynUser *pasynUser);
+static asynStatus traceUnlock(asynUser *pasynUser);
+static asynStatus setTraceMask(asynUser *pasynUser,int mask);
+static int        getTraceMask(asynUser *pasynUser);
+static asynStatus setTraceIOMask(asynUser *pasynUser,int mask);
+static int        getTraceIOMask(asynUser *pasynUser);
+static asynStatus setTraceFILE(asynUser *pasynUser,FILE *fd);
+static FILE       *getTraceFILE(asynUser *pasynUser);
+static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size);
+static int        getTraceIOTruncateSize(asynUser *pasynUser);
+static int        tracePrint(asynUser *pasynUser,
+                      int reason, const char *pformat, ...);
+static int        tracePrintIO(asynUser *pasynUser,int reason,
+                      const char *buffer, int len,const char *pformat, ...);
+static asynTrace asynTraceManager = {
+    traceLock,
+    traceUnlock,
+    setTraceMask,
+    getTraceMask,
+    setTraceIOMask,
+    getTraceIOMask,
+    setTraceFILE,
+    getTraceFILE,
+    setTraceIOTruncateSize,
+    getTraceIOTruncateSize,
+    tracePrint,
+    tracePrintIO
+};
+epicsShareDef asynTrace *pasynTrace = &asynTraceManager;
+
 /*internal methods */
 static void asynInit(void)
 {
@@ -143,6 +188,7 @@ static void asynInit(void)
     ellInit(&pasynBase->asynPortList);
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
+    pasynBase->lockTrace = epicsMutexMustCreate();
 }
 
 /*locateAsynPort returns 0 if portName is not registered*/
@@ -168,9 +214,16 @@ static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr)
         pasynDevice = (asynDevice *)ellNext(&pasynDevice->node);
     }
     if(!pasynDevice) {
+        asynTracePvt *pasynTracePvt;
         pasynDevice = callocMustSucceed(1,sizeof(asynDevice),
             "asynManager:locateAsynDevice");
         pasynDevice->addr = addr;
+        pasynTracePvt = &pasynDevice->trace;
+        pasynTracePvt->traceBuffer = callocMustSucceed(
+            DEFAULT_TRACE_TRUNCATE_SIZE,sizeof(char),
+            "asynManager:locateAsynDevice");
+        pasynTracePvt->traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
+        pasynTracePvt->traceBufferSize = DEFAULT_TRACE_TRUNCATE_SIZE;
         ellAdd(&pasynPort->asynDeviceList,&pasynDevice->node);
     }
     return(pasynDevice);
@@ -569,6 +622,250 @@ static int getAddr(asynUser *pasynUser)
     return(pasynUserPvt->pasynDevice->addr);
 }
 
+static asynStatus traceLock(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+           "asynManager::lock but not connected\n");
+        return(asynError);
+    }
+    epicsMutexMustLock(pasynBase->lockTrace);
+    return(asynSuccess);
+}
+
+static asynStatus traceUnlock(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+           "asynManager::unlock but not connected\n");
+        return(asynError);
+    }
+    epicsMutexUnlock(pasynBase->lockTrace);
+    return(asynSuccess);
+}
+static asynStatus setTraceMask(asynUser *pasynUser,int mask)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::setTraceMask not connected\n");
+        return(asynError);
+    }
+    pasynDevice->trace.traceMask = mask;
+    return(asynSuccess);
+}
+
+static int getTraceMask(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        printf("asynManager::getTraceMask but not connected\n");
+        return(0);
+    }
+    return(pasynDevice->trace.traceMask);
+}
+static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::setTraceIOMask not connected\n");
+        return(asynError);
+    }
+    pasynDevice->trace.traceIOMask = mask;
+    return(asynSuccess);
+}
+
+static int getTraceIOMask(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        printf("asynManager::getTraceIOMask but not connected\n");
+        return(0);
+    }
+    return(pasynDevice->trace.traceIOMask);
+}
+
+static asynStatus setTraceFILE(asynUser *pasynUser,FILE *fd)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::setTraceFILE not connected\n");
+        return(asynError);
+    }
+    epicsMutexMustLock(pasynBase->lockTrace);
+    pasynDevice->trace.fd = fd;
+    epicsMutexUnlock(pasynBase->lockTrace);
+    return(asynSuccess);
+}
+
+static FILE *getTraceFILE(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        printf("asynManager::getTraceFILE but not connected\n");
+        return(0);
+    }
+    return(pasynDevice->trace.fd);
+}
+
+static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+    asynTracePvt *pasynTracePvt;
+
+    if(!pasynDevice) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::setTraceMask not connected\n");
+        return(asynError);
+    }
+    epicsMutexMustLock(pasynBase->lockTrace);
+    pasynTracePvt = &pasynDevice->trace;
+    if(size>pasynTracePvt->traceBufferSize) {
+        free(pasynTracePvt->traceBuffer);
+        pasynTracePvt->traceBuffer = callocMustSucceed(size,sizeof(char),
+            "asynTrace:setTraceIOTruncateSize");
+        pasynTracePvt->traceBufferSize = size;
+    }
+    pasynTracePvt->traceTruncateSize = size;
+    epicsMutexUnlock(pasynBase->lockTrace);
+    return(asynSuccess);
+}
+
+static int getTraceIOTruncateSize(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+
+    if(!pasynDevice) {
+        printf("asynManager::getTraceFILE but not connected\n");
+        return(0);
+    }
+    return pasynDevice->trace.traceTruncateSize;
+}
+
+/*WHEN epicsStrPrintEscaped is in EPICS base remove this*/
+#include <ctype.h>
+static int epicsStrPrintEscaped( FILE *fp, const char *s, int n)
+{
+   int nout=0;
+   while (n--) {
+       char c = *s++;
+       switch (c) {
+       case '\a':  nout += fprintf(fp, "\\a");  break;
+       case '\b':  nout += fprintf(fp, "\\b");  break;
+       case '\f':  nout += fprintf(fp, "\\f");  break;
+       case '\n':  nout += fprintf(fp, "\\n");  break;
+       case '\r':  nout += fprintf(fp, "\\r");  break;
+       case '\t':  nout += fprintf(fp, "\\t");  break;
+       case '\v':  nout += fprintf(fp, "\\v");  break;
+       case '\\':  nout += fprintf(fp, "\\\\"); break;
+       case '\?':  nout += fprintf(fp, "\\?");  break;
+       case '\'':  nout += fprintf(fp, "\\'");  break;
+       case '\"':  nout += fprintf(fp, "\\\"");  break;
+       default:
+           if (isprint(c))
+               nout += fprintf(fp, "%c", c);/* putchar(c) doesn't work on vxWorks */
+           else
+               nout += fprintf(fp, "\\%03o", (unsigned char)c);
+           break;
+       }
+   }
+   return nout;
+}
+
+static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+    asynTracePvt *pasynTracePvt;
+    va_list pvar;
+    int     nout = 0;
+    FILE *fd;
+
+    if(!pasynDevice) {
+        printf("asynManager::print but not connected\n");
+        return(0);
+    }
+    pasynTracePvt = &pasynDevice->trace;
+    epicsMutexMustLock(pasynBase->lockTrace);
+    if(!(reason&pasynTracePvt->traceMask)) return(0);
+    fd = (pasynTracePvt->fd) ? pasynTracePvt->fd : stdout;
+    va_start(pvar,pformat);
+    nout = vfprintf(fd,pformat,pvar);
+    va_end(pvar);
+    epicsMutexUnlock(pasynBase->lockTrace);
+    return(nout);
+}
+
+static int tracePrintIO(asynUser *pasynUser,int reason,
+    const char *buffer, int len,const char *pformat, ...)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
+    asynTracePvt *pasynTracePvt;
+    va_list pvar;
+    int     nout = 0;
+    FILE *fd;
+    int traceMask,traceIOMask,traceTruncateSize;
+
+    if(!pasynDevice) {
+        printf("asynManager::printIO but not connected\n");
+        return(0);
+    }
+    pasynTracePvt = &pasynDevice->trace;
+    traceMask = pasynTracePvt->traceMask;
+    traceIOMask = pasynTracePvt->traceIOMask;
+    traceTruncateSize = pasynTracePvt->traceTruncateSize;
+    if(!(reason&traceMask)) return(0);
+    epicsMutexMustLock(pasynBase->lockTrace);
+    fd = (pasynTracePvt->fd) ? pasynTracePvt->fd : stdout;
+    va_start(pvar,pformat);
+    nout += vfprintf(fd,pformat,pvar);
+    va_end(pvar);
+    if((traceIOMask&ASYN_TRACEIO_ASCII) && (len>0)) {
+        nout += fprintf(fd,"%s\n",buffer);
+    }
+    if(traceIOMask&ASYN_TRACEIO_ESCAPE) {
+        int n = (len<traceTruncateSize) ? len : traceTruncateSize;
+        if(n>0) {
+            nout += epicsStrPrintEscaped(fd,buffer,n);
+            nout += fprintf(fd,"\n");
+        }
+    }
+    if((traceIOMask&ASYN_TRACEIO_BINARY) && (traceTruncateSize>0)) {
+        int n = (len<traceTruncateSize) ? len : traceTruncateSize;
+        int i;
+        for(i=0; i<n; i++) {
+            if(i%20 == 0) nout += fprintf(fd,"\n");
+            nout += fprintf(fd,"%2.2x ",buffer[i]);
+        }
+        nout += fprintf(fd,"\n");
+    }
+    epicsMutexUnlock(pasynBase->lockTrace);
+    return(nout);
+}
+
 static asynStatus registerPort(
     const char *portName,
     asynInterface *paasynInterface,int nasynInterface,
@@ -658,11 +955,69 @@ static void asynReportCall(const iocshArgBuf * args) {
     }
     report(fp,args[1].ival);
 }
+
+static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg *const asynSetTraceMaskArgs[] = {
+    &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
+static const iocshFuncDef asynSetTraceMaskDef =
+    {"asynSetTraceMask", 3, asynSetTraceMaskArgs};
+static void asynSetTraceMaskCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int mask = args[2].ival;
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return;
+    }
+    status = pasynTrace->setTraceMask(pasynUser,mask);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+}
+static const iocshArg asynSetTraceIOMaskArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceIOMaskArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg *const asynSetTraceIOMaskArgs[] = {
+    &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
+static const iocshFuncDef asynSetTraceIOMaskDef =
+    {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs};
+static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int mask = args[2].ival;
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,addr);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return;
+    }
+    status = pasynTrace->setTraceIOMask(pasynUser,mask);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+}
+
 static void asyn(void)
 {
     static int firstTime = 1;
     if(!firstTime) return;
     firstTime = 0;
     iocshRegister(&asynReportDef,asynReportCall);
+    iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
+    iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
 }
 epicsExportRegistrar(asyn);

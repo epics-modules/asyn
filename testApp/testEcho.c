@@ -49,22 +49,26 @@ void queueCallback(asynUser *pasynUser)
     int nchars;
     asynStatus status;
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s queueCallback entered\n",ptestPvt->prefix);
     if(ptestPvt->isRead) {
         nchars = pasynOctet->read(asynOctetPvt,
              pasynUser,ptestPvt->buffer,80);
-        printf("%s received %d chars |%s|\n",
-            ptestPvt->prefix,nchars,ptestPvt->buffer);
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,ptestPvt->buffer,nchars,
+            "%s received %d chars",ptestPvt->prefix,nchars);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s calling unlock\n",ptestPvt->prefix);
         status = pasynManager->unlock(pasynUser);
         if(status!=asynSuccess) {
-            printf("%s\n",pasynUser->errorMessage);
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s\n",pasynUser->errorMessage);
         }
     } else {
         sprintf(ptestPvt->buffer,"%s_ntime_%d",
             ptestPvt->prefix,ptestPvt->itimes);
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,ptestPvt->buffer,
+           strlen(ptestPvt->buffer),"%s send %d chars",
+           ptestPvt->prefix,strlen(ptestPvt->buffer));
         nchars = pasynOctet->write(asynOctetPvt,
             pasynUser,ptestPvt->buffer,strlen(ptestPvt->buffer));
-        printf("%s send %d chars |%s|\n",
-            ptestPvt->prefix,nchars,ptestPvt->buffer);
     }
     epicsEventSignal(ptestPvt->done);
 }
@@ -73,7 +77,8 @@ void timeoutCallback(asynUser *pasynUser)
 {
     testPvt *ptestPvt = (testPvt *)pasynUser->userPvt;
 
-    printf("timeoutCallback. Will cancel request\n");
+    asynPrint(pasynUser,ASYN_TRACE_FLOW|ASYN_TRACE_ERROR,"%s timeoutCallback\n",
+        ptestPvt->prefix);
     pasynManager->cancelRequest(pasynUser);
     epicsEventSignal(ptestPvt->done);
 }
@@ -87,30 +92,34 @@ static void writeReadThread(testPvt *ptestPvt)
     while(1) {
         if(ptestPvt->isRead) {
             ptestPvt->itimes++;
-            if(ptestPvt->ntimes 
-            && ptestPvt->ntimes<ptestPvt->itimes) break;
+            if(ptestPvt->ntimes && ptestPvt->ntimes<ptestPvt->itimes) break;
             ptestPvt->isRead = 0;
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s calling lock\n",ptestPvt->prefix);
             status = pasynManager->lock(pasynUser);
             if(status!=asynSuccess) {
-                printf("%s\n",pasynUser->errorMessage);
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s\n",pasynUser->errorMessage);
             }
         } else {
             ptestPvt->isRead = 1;
         }
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            "%s calling queueRequest\n",ptestPvt->prefix);
         status = pasynManager->queueRequest(pasynUser,
             asynQueuePriorityLow,ptestPvt->queueTimeout);
         if(status!=asynSuccess) {
-            printf("%s\n",pasynUser->errorMessage);
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s\n",pasynUser->errorMessage);
             pasynManager->freeAsynUser(pasynUser);
             break;
         }
         epicsEventMustWait(ptestPvt->done);
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s calling disconnectDevice\n",
+        ptestPvt->prefix);
     status = pasynManager->disconnectDevice(pasynUser);
-    if(status!=asynSuccess) printf("%s disconnectDevice %s\n",
+    if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s disconnectDevice %s\n",
         ptestPvt->prefix,pasynUser->errorMessage);
     status = pasynManager->freeAsynUser(pasynUser);
-    if(status!=asynSuccess) printf("%s freeAsynUser %s\n",
+    if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s freeAsynUser %s\n",
         ptestPvt->prefix,pasynUser->errorMessage);
     epicsEventDestroy(ptestPvt->done);
     printf("%s exiting\n",ptestPvt->prefix);
@@ -146,10 +155,14 @@ static int testEcho(const char *portName,int addr,const char *pre,
         pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s connected and calling findInterface\n",
+        ptestPvt->prefix);
     pasynInterface = pasynManager->findInterface(
         pasynUser,asynCommonType,1);
     if(!pasynInterface) {
-        printf("%s %s\n",asynCommonType,pasynUser->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s %s\n",asynCommonType,pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }
@@ -158,7 +171,8 @@ static int testEcho(const char *portName,int addr,const char *pre,
     pasynInterface = pasynManager->findInterface(
         pasynUser,asynOctetType,1);
     if(!pasynInterface) {
-        printf("%s %s\n",asynOctetType,pasynUser->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s %s\n",
+            asynOctetType,pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
         return(-1);
     }

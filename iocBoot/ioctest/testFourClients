@@ -1,0 +1,7 @@
+asynSetTraceMask(echo,0,0x2)
+asynSetTraceMask(echo,1,0x2)
+testEcho(echo,0,oneA0,5,10.0)
+testEcho(echo,0,twoA0,3,10.0)
+testEcho(echo,1,oneA1,5,10.0)
+testEcho(echo,1,twoA1,3,10.0)
+asynReport("",3)

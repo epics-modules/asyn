@@ -127,6 +127,7 @@ static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
     if(nchars>maxchars) nchars = maxchars;
     pdeviceBuffer->nchars -= nchars;
     if(nchars>0) memcpy(data,pdeviceBuffer->buffer,nchars);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,"echoRead nchars %d ",nchars);
     epicsThreadSleep(pechoPvt->delay);
     return(nchars);
 }
@@ -147,6 +148,8 @@ static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchar
     pdeviceBuffer = &pechoPvt->buffer[addr];
     if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
     if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
+            "echoWrite nchars %d ",nchars);
     pdeviceBuffer->nchars = nchars;
     epicsThreadSleep(pechoPvt->delay);
     return(nchars);
@@ -164,6 +167,7 @@ static asynStatus echoFlush(void *ppvt,asynUser *pasynUser)
             "addr %d is illegal. Must be 0 or 1\n",addr);
         return(0);
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"echoFlush\n");
     pdeviceBuffer = &pechoPvt->buffer[addr];
     pdeviceBuffer->nchars = 0;
     return(asynSuccess);
