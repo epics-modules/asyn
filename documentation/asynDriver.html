@@ -11,13 +11,12 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p><span style="font-weight: bold; font-size: 14pt">Release 4.2</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">Release 4.3</span></p>
 
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">Febuary 15
-2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">March XX 2005</span></p>
 
 <h3>Other Contributers</h3>
 Rok Sanjan (cosyLab) - linuxGpib support.</center>
@@ -485,7 +484,8 @@ drivers. It provides the following services:</p>
     is called when the user is done with the device.</p>
   </li>
   <li>Queuing services
-    <p>Methods: queueRequest, cancelRequest, lock, unlock</p>
+    <p>Methods: queueRequest, cancelRequest, lockPort, unlockPort,
+lockDevice, unlockDevice</p>
     <p>These methods should only be called by the code that created the
     asynUser.</p>
     <p>queueRequest is a request to call either the processCallback or
@@ -504,13 +504,16 @@ drivers. It provides the following services:</p>
     is created for the port. queueRequest takes the mutex, calls the
     callback, and releases the mutex. The mutex guarantees that two callbacks
     to a port are not active at the same time.</p>
-    <p>Lock is a request to prevent acccess to a port by other asynUsers
-    between queueRequests. After lock is called, nothing happens until the
-    next time  processCallback is ready to be called. Starting at that time
-    no other asynUser's processCallback will be called until unlock is
-    called. It should be noted that lock/unlock works with non-blocking
-    drivers. The implementation depends on the fact that epicsMutex supports
-    recursive mutexs.</p>
+    <p>lockPort is a request to lock all access to low level drivers
+     until unlockPort is called. If the port can block then lockPort
+     and all calls to the port driver may block.</p>
+    <p>lockDevice is a request to prevent acccess to a port by other asynUsers
+    between queueRequests. After lockDevice is called, nothing happens until the
+    next time  processCallback has been called. Starting at that time
+    no other asynUser's processCallback will be called until unlockDevice is
+    called. lockDevice only works with drivers that can block.
+    If lockDevice is called for a port that does not block,
+    asynError is returned.</p>
   </li>
   <li>Basic Driver services
     <p>Methods: registerPort,registerInterface</p>
@@ -986,8 +989,10 @@ typedef struct asynManager {
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
-    asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
-    asynStatus (*unlock)(asynUser *pasynUser);
+    asynStatus (*lockDevice)(asynUser *pasynUser);   /*lock portName,addr */
+    asynStatus (*unlockDevice)(asynUser *pasynUser);
+    asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
+    asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
     /* drivers call the following*/
@@ -1143,8 +1148,11 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         <p>If the asynUser is already on a queue, asynError is returned. The
         timeout starts when the request is queued. A value less than or equal
         to 0.0 means no timeout. The request is removed from the queue before
-        the callback is called. Thus callbacks are allowed to unlock and
-        issue new queue requests. The priority asynQueuePriorityConnect must
+        the callback is called. Callbacks are allowed to make requests
+        to asynManager such as queueRequest, lockDevice, etc.
+        It is even permissible to call freeAsynUser from a callback but
+        the request will be delayed until after the callback completes.
+        The priority asynQueuePriorityConnect must
         be used for asynCommon:connect and asynCommon:disconnect calls, and
         must NOT be used for any other calls.</p>
 
@@ -1166,15 +1174,25 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         to registerPort.</td>
     </tr>
     <tr>
-      <td>lock/unlock</td>
-      <td>lock/unlock are used to block other users from accessing a device
+      <td>lockDevice/unlockDevice</td>
+      <td>lockDevice is used to block other users from accessing a device
         while a user is making a series of queueRequests. Only the addr
         specified in the connectDevice request is locked. asynManager locks
-        when a queueRequest is taken from the queue. At that point all other
-        entries in the queue must wait until unlock is called by the same
-        pasynUser that locked. lock/unlock fail if a request is currently
+        when a callback completes. At that point all other
+        entries in the queue must wait until unlockDevice is called by the same
+        pasynUser that called lockDevice.
+        lockDevice/unlockDevice fail if a request is currently
         queued. The addr argument passed to connectDevice determines if the
         port or only a device is locked.</td>
+    </tr>
+    <tr>
+      <td>lockPort/unlockPort</td>
+      <td>Lock access to a port driver. This is used by code that can
+       block while making calls to a port driver. The code can call
+       lockPort, make an arbitrary number of calls to the port driver,
+       and than call unlockPort. Other code that calls queueRequest
+       and or lockPort will be delayed between the calls to lockPort
+       and unlockPort.</td>
     </tr>
     <tr>
       <td>getAddr</td>
@@ -1751,13 +1769,13 @@ output.</p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynOctetBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynInt32Base always implements
+        implementations. asynOctetBase always implements
         registerInterruptUser and cancelInterruptUser. If the port is not
         multi-device and either processEosIn or processEosOut is specified,
         asynInterposeEosConfig is called. If the port is not multi-device and
         interruptProcess is specified, then whenever read or readRaw is
         called, asynBase calls all the registered interrupt users.
-        asynInt32Base can not implement processEosIn, processEosOut, and
+        asynOctetBase can not implement processEosIn, processEosOut, and
         interruptProcess if the port is a multi-device port. Since this
         method is called only during initialization it can be called directly
         rather than via queueRequest.</td>
@@ -3640,7 +3658,8 @@ limited by the specified count. asynInterposeEos can be used to support
 EOS.</p>
 
 <p>The following table summarizes the drvAsynSerialPort driver asynSetOption
-keys and values. When a serial port connects the current values are fetched.</p>
+keys and values. When a serial port connects the current values are
+fetched.</p>
 
 <table border="1">
   <tbody>
@@ -3683,11 +3702,9 @@ controls whether the hardware handshaking lines (Request To Send, Clear To
 Send) are used (crtscts=Y) or ignored (crtscts=N).</p>
 
 <p>The vxWorks sioLib serial support does not provide support for modem
-control lines. It also uses clocal for what is actually crtscts.
-For vxWorks the standard serial support accepts both clocal and
-crtscts for getOption and setOption.
-clocal=Y implies crtscts=N
-and clocal=N implies crtscts=Y.</p>
+control lines. It also uses clocal for what is actually crtscts. For vxWorks
+the standard serial support accepts both clocal and crtscts for getOption and
+setOption. clocal=Y implies crtscts=N and clocal=N implies crtscts=Y.</p>
 
 <p>vxWorks IOC serial ports may need to be set up using hardware-specific
 commands. Once this is done, the standard drvAsynSerialPortConfigure and
@@ -3728,11 +3745,10 @@ where the arguments are:
 </ul>
 
 <p>Only asynOctet methods writeRaw, readRaw, and flush are implemented.
-Calling the other methods will result in an error unless asynInterposeEos
-is used for the other asunOctet methods. 
-readRaw blocks until at least one character has been received or until a
-timeout occurs. readRaw transfers as many characters as possible,
-limited by the specified count.</p>
+Calling the other methods will result in an error unless asynInterposeEos is
+used for the other asunOctet methods. readRaw blocks until at least one
+character has been received or until a timeout occurs. readRaw transfers as
+many characters as possible, limited by the specified count.</p>
 
 <p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
 connections.</p>
@@ -3750,8 +3766,8 @@ standards are defined.
   <li>VXI-11.2 - A standard for communicating with a IEEE 488.1 device. This
     means that the TCP/IP connection is talking to a GPIB controller that is
     talking to a GPIB bus. These devices have an vxiName that starts with
-    "gpib". Note that the Agilent E2050A does not follow the standard. For
-    it the vxiName must be "hpib"</li>
+    "gpib". Note that the Agilent E2050A does not follow the standard. For it
+    the vxiName must be "hpib"</li>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 devices. This
     means that the TCP/IP connection is talking directly with an device.
     These devices have an vxiName that starts with "inst".</li>
@@ -3779,10 +3795,9 @@ where
   occurs.</li>
   <li>timeout - I/O operation timeout in seconds as datatype double. If 0.0,
     then a default is assigned.</li>
-  <li>vxiName - Must be chosen as specified above.
-     NOTE: For the Agilent E2050 vxiName must be "hpib". For the
-     Agilent E5810 use the name "gpib0". For an instrument that supports
-     VXI11 try "inst0".</li>
+  <li>vxiName - Must be chosen as specified above. NOTE: For the Agilent
+    E2050 vxiName must be "hpib". For the Agilent E5810 use the name "gpib0".
+    For an instrument that supports VXI11 try "inst0".</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing, then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
@@ -3911,7 +3926,7 @@ where
 </center>
 
 <h3>iocsh Commands</h3>
-<pre>    asynReport(filename,level,portName)
+<pre>    asynReport(level,portName)
     asynInterposeFlushConfig(portName,addr,timeout)
     asynInterposeEosConfig(portName,addr)
     asynSetTraceMask(portName,addr,mask)
@@ -3922,7 +3937,8 @@ where
     asynShowOption(portName,addr,key)
     asynAutoConnect(portName,addr,yesNo)
     asynEnable(portName,addr,yesNo)
-    asynOctetConnect(entry,portName,addr,oeos,ieos,timeout,buffer_len)
+    asynOctetConnect(entry,portName,addr,timeout,buffer_len,drvInfo)
+    asynOctetDisconnect(entry)
     asynOctetRead(entry,nread,flush)
     asynOctetWrite(entry,output)
     asynOctetWriteRead(entry,output,nread)
@@ -3987,15 +4003,19 @@ identifys the port,addr.</p>
   <li>yesNo - The value (0,1) means (no,yes).</li>
   <li>entry - A character string that identifies the asynOctetConnect
   request.</li>
-  <li>oeos,ieos - The output and input End of String terminator.</li>
   <li>timeout - timeout as an integer in milliseconds. The default is 1.</li>
-  <li>buffer_len - length of buffer for I/O. Default=80.</li>
+  <li>buffer_len - length of buffer for I/O. Default=160.
+NOTE: output strings passed to asynOctetWrite can have escape characters.
+The buffer_len must be large enough to handle escape characters.
+For example if \x02 appears in an output string it counts as four characters.
+</li>
+  <li>drvInfo - A string to pass to the driver via interface asynDrvUser.</li>
   <li>nread - max number of bytes to read. Default=buffer_len.</li>
   <li>flush - (0,1) means (don't, do) flush before reading. Default=0.</li>
   <li>output - output string.</li>
 </ul>
 
-<p>The commands asynOctetConnect, asynOctetRead, asynOctetWrite,
+<p>The commands asynOctetConnect, asynOctetDisconnect, asynOctetRead, asynOctetWrite,
 asynOctetWriteRead, asynOctetFlush allow I/O to a device from the ioc shell.
 Examples are:</p>
 <pre>asynOctetConnect("myid","A",0,"\n","\n",1,20)
@@ -4003,7 +4023,9 @@ asynOctetWrite("myid","testnew")
 asynOctetRead("myid")
 testnew\n
 asynOctetWriteRead("myid","this is test")
-this is test\n</pre>
+this is test\n
+asynOctetDisconnect("myid")
+</pre>
 <hr>
 
 <center>
