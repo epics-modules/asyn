@@ -29,23 +29,20 @@
 #include <asynDrvUser.h>
 #include <asynInt32.h>
 
-typedef struct drvUserInfo {
-    const char *drvInfo;
-}drvUserInfo;
-
-static const char *drvUserType = "cacheDriverType";
+#define NCHANNELS 16
 
 typedef struct cachePvt {
     const char    *portName;
     int           connected;
-    int           multiDevice;
     double        delay;
     asynInterface common;
-    asynInterface drvUser;
     asynInterface int32;
-    epicsInt32    value;
+    epicsInt32    value[NCHANNELS];
 }cachePvt;
-    
+
+/*Utility routine */
+static asynStatus getAddr(cachePvt *pcachePvt,asynUser *pasynUser,
+    int *paddr,int portOK);
 /* init routine */
 static int cacheInt32DriverInit(const char *dn, double delay,
     int noAutoConnect);
@@ -55,15 +52,6 @@ static void report(void *drvPvt,FILE *fp,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 static asynCommon asyn = { report, connect, disconnect };
-
-/* asynDrvUser methods */
-static asynStatus drvUserCreate(void *drvPvt,asynUser *pasynUser,
-    const char *drvInfo, const char **pptypeName,size_t *psize);
-static asynStatus drvUserGetType(void *drvPvt,asynUser *pasynUser,
-    const char **pptypeName,size_t *psize);
-static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser);
-static asynDrvUser drvUser = {drvUserCreate,drvUserGetType,drvUserDestroy};
-
 
 /* asynInt32 methods */
 static asynStatus cacheWrite(void *drvPvt,asynUser *pasynUser,
@@ -92,13 +80,10 @@ static int cacheInt32DriverInit(const char *dn, double delay,
     pcachePvt->common.interfaceType = asynCommonType;
     pcachePvt->common.pinterface  = (void *)&asyn;
     pcachePvt->common.drvPvt = pcachePvt;
-    pcachePvt->drvUser.interfaceType = asynDrvUserType;
-    pcachePvt->drvUser.pinterface  = (void *)&drvUser;
-    pcachePvt->drvUser.drvPvt = pcachePvt;
     pcachePvt->int32.interfaceType = asynInt32Type;
     pcachePvt->int32.pinterface  = (void *)&int32;
     pcachePvt->int32.drvPvt = pcachePvt;
-    attributes = 0;
+    attributes = ASYN_MULTIDEVICE;
     if(delay>0.0) attributes|=ASYN_CANBLOCK;
     status = pasynManager->registerPort(portName,attributes,!noAutoConnect,0,0);
     if(status!=asynSuccess) {
@@ -110,17 +95,28 @@ static int cacheInt32DriverInit(const char *dn, double delay,
         printf("cacheInt32DriverInit registerInterface failed\n");
         return 0;
     }
-    status = pasynManager->registerInterface(portName,&pcachePvt->drvUser);
-    if(status!=asynSuccess){
-        printf("cacheInt32DriverInit registerInterface failed\n");
-        return 0;
-    }
     status = pasynManager->registerInterface(portName,&pcachePvt->int32);
     if(status!=asynSuccess){
         printf("cacheInt32DriverInit registerInterface failed\n");
         return 0;
     }
     return(0);
+}
+
+static asynStatus getAddr(cachePvt *pcachePvt,asynUser *pasynUser,
+    int *paddr,int portOK)
+{
+    asynStatus status;  
+
+    status = pasynManager->getAddr(pasynUser,paddr);
+    if(status!=asynSuccess) return status;
+    if(*paddr>=-1 && *paddr<NCHANNELS) return asynSuccess;
+    if(!portOK && *paddr>=0) return asynSuccess;
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "%s addr %d is illegal; Must be >= %d and < %d\n",
+        pcachePvt->portName,*paddr,
+        (portOK ? -1 : 0),NCHANNELS);
+    return asynError;
 }
 
 /* asynCommon methods */
@@ -132,13 +128,21 @@ static void report(void *drvPvt,FILE *fp,int details)
         (pcachePvt->connected ? "Yes" : "No"),
         pcachePvt->delay);
 }
-
+
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
-    cachePvt    *pcachePvt = (cachePvt *)drvPvt;
+    cachePvt   *pcachePvt = (cachePvt *)drvPvt;
+    int        addr;
+    asynStatus status;  
 
+    status = getAddr(pcachePvt,pasynUser,&addr,1);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s cacheDriver:connect\n",pcachePvt->portName);
+        "%s cacheDriver:connect addr %d\n",pcachePvt->portName,addr);
+    if(addr>=0) {
+        pasynManager->exceptionConnect(pasynUser);
+        return asynSuccess;
+    }
     if(pcachePvt->connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
            "%s cacheDriver:connect port already connected\n",
@@ -153,9 +157,17 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
     cachePvt    *pcachePvt = (cachePvt *)drvPvt;
+    int        addr;
+    asynStatus status;  
 
+    status = getAddr(pcachePvt,pasynUser,&addr,1);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s cacheDriver:disconnect\n",pcachePvt->portName);
+        "%s cacheDriver:disconnect addr %d\n",pcachePvt->portName,addr);
+    if(addr>=0) {
+        pasynManager->exceptionDisconnect(pasynUser);
+        return asynSuccess;
+    }
     if(!pcachePvt->connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
            "%s cacheDriver:disconnect port not connected\n",
@@ -167,58 +179,15 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     return asynSuccess;
 }
 
-static asynStatus drvUserCreate(void *drvPvt,asynUser *pasynUser,
-    const char *drvInfo, const char **pptypeName,size_t *psize)
-{
-    cachePvt    *pcachePvt = (cachePvt *)drvPvt;
-    drvUserInfo *pdrvUserInfo;
-
-    pdrvUserInfo = callocMustSucceed(1,sizeof(drvUserInfo),"drvUserCreate");
-    pdrvUserInfo->drvInfo = drvInfo;
-    pasynUser->drvUser = pdrvUserInfo;
-    if(pptypeName) *pptypeName = drvUserType;
-    if(psize) *psize = sizeof(drvUserInfo);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s cacheDriver:drvUserCreate drvInfo %s\n",
-        pcachePvt->portName,
-        (drvInfo ? drvInfo : "null"));
-    return asynSuccess;
-}
-
-static asynStatus drvUserGetType(void *drvPvt,asynUser *pasynUser,
-    const char **pptypeName,size_t *psize)
-{
-    cachePvt    *pcachePvt = (cachePvt *)drvPvt;
-    if(pasynUser->drvUser) {
-        if(pptypeName) *pptypeName = drvUserType;
-        if(psize) *psize = sizeof(drvUserInfo);
-    } else {
-        if(pptypeName) *pptypeName = 0;
-        if(psize) *psize = 0;
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s cacheDriver:drvUserGetType\n", pcachePvt->portName);
-    return asynSuccess;
-}
-
-static asynStatus drvUserDestroy(void *drvPvt,asynUser *pasynUser)
-{
-    cachePvt    *pcachePvt = (cachePvt *)drvPvt;
-    void *drvUser = pasynUser->drvUser;
-    if(drvUser) {
-        pasynUser->drvUser = 0;
-        free(pasynUser->drvUser);
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s cacheDriver:drvUserDestroy\n", pcachePvt->portName);
-    return asynSuccess;
-}
-
 static asynStatus cacheWrite(void *drvPvt,asynUser *pasynUser,
                                  epicsInt32 value)
 {
     cachePvt   *pcachePvt = (cachePvt *)drvPvt;
+    int        addr;
+    asynStatus status;  
 
+    status = getAddr(pcachePvt,pasynUser,&addr,0);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s cacheDriver:writeInt32 value %d\n",
         pcachePvt->portName,value);
@@ -231,9 +200,9 @@ static asynStatus cacheWrite(void *drvPvt,asynUser *pasynUser,
             pcachePvt->portName);
         return asynError;
     }
-    pcachePvt->value = value;
+    pcachePvt->value[addr] = value;
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
-        "%s write %d\n",pcachePvt->portName,value);
+        "%s addr %d write %d\n",pcachePvt->portName,addr,value);
     return asynSuccess;
 }
 
@@ -241,7 +210,11 @@ static asynStatus cacheRead(void *drvPvt,asynUser *pasynUser,
                                  epicsInt32 *value)
 {
     cachePvt *pcachePvt = (cachePvt *)drvPvt;
+    int        addr;
+    asynStatus status;  
 
+    status = getAddr(pcachePvt,pasynUser,&addr,0);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s cacheDriver:readInt32 value %d\n",
         pcachePvt->portName,value);
@@ -254,7 +227,7 @@ static asynStatus cacheRead(void *drvPvt,asynUser *pasynUser,
             pcachePvt->portName);
         return asynError;
     }
-    *value = pcachePvt->value;
+    *value = pcachePvt->value[addr];
     asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
         "%s read %d\n",pcachePvt->portName,value);
     return asynSuccess;

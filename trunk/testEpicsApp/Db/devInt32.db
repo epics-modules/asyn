@@ -1,8 +1,23 @@
-record(ai,"asyndevAiInt32") {
+record(calc, "asyndevCalcA$(ADDR)") {
+    field(DESC, "Counter")
+    field(SCAN,"1 second")
+    field(FLNK, "asyndevAoInt32A$(ADDR)")
+    field(CALC, "(A<B)?(A+C):D")
+    field(INPA, "asyndevCalcA$(ADDR).VAL  NPP NMS")
+    field(INPB, "9")
+    field(INPC, "1")
+    field(INPD, "0")
+    field(EGU, "Counts")
+    field(HOPR, "10")
+}
+record(ai,"asyndevAiInt32A$(ADDR)") {
     field(DTYP,"asyn Int32")
     field(INP,"@asyn($(PORT),$(ADDR)) testParams")
 }
-record(ao,"asyndevAoInt32") {
+record(ao,"asyndevAoInt32A$(ADDR)") {
     field(DTYP,"asyn Int32")
     field(OUT,"@asyn($(PORT),$(ADDR)) testParams")
+    field(FLNK,"asyndevAiInt32A$(ADDR)")
+    field(OMSL,"closed_loop")
+    field(DOL,"asyndevCalcA$(ADDR)")
 }
