@@ -21,7 +21,6 @@
 typedef struct pvt {
     interruptCallbackInt32 callback;
     void       *userPvt;
-    epicsInt32 prevValue;
 } pvt;
 
 static void int32Callback(void *userPvt, void *pvalue);
@@ -46,12 +45,8 @@ static void int32Callback(void *userPvt, void *pvalue)
 {
     pvt        *ppvt = (pvt *)userPvt;
     epicsInt32 value = *(epicsInt32 *)pvalue;
-    epicsInt32 prevValue = ppvt->prevValue;
 
-    if(value!=prevValue) {
-        ppvt->callback(ppvt->userPvt,value);
-        ppvt->prevValue = value;
-    }
+    ppvt->callback(ppvt->userPvt,value);
 }
 
 asynStatus initialize(const char *portName, asynInterface *pint32Interface)
@@ -136,7 +131,6 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     ppvt->callback = callback;
     ppvt->userPvt = userPvt;
-    ppvt->prevValue = 0.0;
     *registrarPvt = ppvt;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d registerInterruptUser\n",portName,addr);
