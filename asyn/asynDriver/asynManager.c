@@ -1678,7 +1678,7 @@ static asynStatus getInterruptPvt(const char *portName,
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
     if(!pinterfaceNode) {
-        printf("%sinterface %s already registered for port %s\n",
+        printf("interface %s already registered for port %s\n",
             interfaceType,pport->portName);
        printf("%s asynManager:getInterruptPvt interface %s not registered\n",
           portName,interfaceType);
