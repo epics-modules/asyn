@@ -1673,16 +1673,16 @@ static asynStatus getInterruptPvt(asynUser *pasynUser,
     interfaceNode *pinterfaceNode;
 
     if(!pport) {
-       printf("asynManager:getInterruptPvt portName %s not registered\n",
-          pport->portName);
-       return asynError;
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+            "no connected to a port\n");
+        return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
     if(!pinterfaceNode) {
-       printf("%s asynManager:getInterruptPvt interface %s not registered\n",
-          pport->portName,interfaceType);
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+            "interface %s is not registered\n",interfaceType);
         epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
