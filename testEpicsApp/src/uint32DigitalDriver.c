@@ -309,7 +309,6 @@ static asynStatus uint32Write(void *pvt,asynUser *pasynUser,
         if(addr==pinterrupt->addr) {
             pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
                 pdrvPvt->channel[addr].value);
-            break;
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
