@@ -82,8 +82,11 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    /*The following is a generic method for setting port options*/
-    asynStatus (*setPortOption)(void *drvPvt, const char *key, const char *val);
+    /*The following are generic methods to set/get port options*/
+    asynStatus (*setPortOption)(void *drvPvt, asynUser *pasynUser,
+                                const char *key, const char *val);
+    asynStatus (*getPortOption)(void *drvPvt, asynUser *pasynUser,
+                                const char *key, char *val, int sizeval);
 }asynCommon;
 
 /* Methods supported by low level octet drivers. */
