@@ -1069,9 +1069,9 @@ the vxi11. It provides:</p>
 the IOC and devices connected through Ethernet/Serial converter boxes.</p>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
-and <tt>asynSetPortOptions</tt> commands:</p>
+and <tt>asynSetPortOption</tt> commands:</p>
 <pre>   drvGenericSerialConfigure("portName","ttyName",priority,openOnlyOnDisconnect)
-   asynSetPortOptions("portName",[stty options])</pre>
+   asynSetPortOption("portName","key","value")</pre>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGpib.</li>
@@ -1086,46 +1086,49 @@ where the arguments are:
     non-zero the driver will not attempt to reconnect until explicit
     disconnect/reconnect commands have been issued. A missing argument is
     taken to be zero.</li>
-  <li>stty options - Serial port configuration parameters for local serial
-    ports.  For example, the arguments which confirm the default settings are
-    <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. The complete list of
-    supported stty options is:
-    <dl>
-      <dt><tt>cs8</tt></dt>
-        <dd>Set number of bits per character to 8 (default).</dd>
-      <dt><tt>cs7</tt></dt>
-        <dd>Set number of bits per character to 7.</dd>
-      <dt><tt>cs6</tt></dt>
-        <dd>Set number of bits per character to 6.</dd>
-      <dt><tt>cs5</tt></dt>
-        <dd>Set number of bits per character to 5.</dd>
-      <dt><tt>parenb</tt></dt>
-        <dd>Enable parity generation/checking.</dd>
-      <dt><tt>-parenb</tt></dt>
-        <dd>Disable parity generation/checking (default).</dd>
-      <dt><tt>parodd</tt></dt>
-        <dd>Check/generate ODD parity if enabled.</dd>
-      <dt><tt>-parodd</tt></dt>
-        <dd>Check/generate EVEN parity if enabled (default).</dd>
-      <dt><tt>cstopb</tt></dt>
-        <dd>Generate two stop bits.</dd>
-      <dt><tt>-cstopb</tt></dt>
-        <dd>Generate one stop bit (default).</dd>
-      <dt><tt>crtscts</tt></dt>
-        <dd>Enable RTS/CTS hardware handshaking.</dd>
-      <dt><tt>-crtscts</tt></dt>
-        <dd>Disable RTS/CTS hardware handshaking (default).</dd>
-      <dt><tt>clocal</tt></dt>
-        <dd>Disable CD/DTR modem control (default).</dd>
-      <dt><tt>-clocal</tt></dt>
-        <dd>Enable CD/DTR modem control.</dd>
-    </dl>
-  </li>
 </ul>
+
+<p>The following table summarizes the generic serial driver asynSetPortOption
+keys and values. Default values are enclosed in square brackets.</p>
+
+<table border="1">
+  <tbody>
+    <tr>
+      <th>Key</th>
+      <th>Value</th>
+    </tr>
+    <tr>
+      <td>baud</td>
+      <td>[9600] 50 75 110 134 150 200 300 600 1200 ... 230400</td>
+    </tr>
+    <tr>
+      <td>bits</td>
+      <td>[8] 7 6 5</td>
+    </tr>
+    <tr>
+      <td>parity</td>
+      <td>[none] even odd</td>
+    </tr>
+    <tr>
+      <td>stop</td>
+      <td>[1] 2</td>
+    </tr>
+    <tr>
+      <td>clocal</td>
+      <td>[Y] N</td>
+    </tr>
+    <tr>
+      <td>ctrscts</td>
+      <td>[N] Y</td>
+    </tr>
+  </tbody>
+</table>
+
+<p></p>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
 using hardware-specific commands. Once this is done the standard
-drvGenericSerialConfigure and asynSetPortOptions commands can be issued.  For
+drvGenericSerialConfigure and asynSetPortOption commands can be issued.  For
 example, the following example shows the configuration procedure for a port
 on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01
 carrier.</p>
@@ -1134,18 +1137,18 @@ tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
-asynSetPortOptions("L0","9600","cs8","-parenb","-crtscts","clocal")</pre>
-If you're using the vxWorks shell you must include all the <code>stty</code>
-parameters in double quotes. The vxWorks serial driver does not provide
-independent control of the hardware handshaking and modem control lines thus
-<code>"clocal"</code> implies <code>"-crtscts"</code> and
-<code>"-clocal"</code> implies <code>"crtscts"</code>.
+asynSetPortOption("L0","baud","9600")
+</pre>
+The vxWorks serial driver does not provide independent control of the
+hardware handshaking and modem control lines thus <code>"clocal","Y"</code>
+implies <code>"crtscts","N"</code> and
+<code>"clocal","N"</code> implies <code>"crtscts","Y"</code>.
 
 <h3><a name="vxi11"></a>vxi11</h3>
 
-<p>VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
+VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
 is an RPC based protocol. In addition to the VXI-11 standard three additional
-standards are defined.</p>
+standards are defined.</pre>
 <ul>
   <li>VXI-11.1 - A standard for communicating with VXIbus instruments. These
     devices have a vxiName that starts with "vxi".</li>

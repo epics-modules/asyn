@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.10 2004-01-09 19:34:27 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.11 2004-01-13 22:40:31 norume Exp $
  */
 
 #include <string.h>
@@ -48,6 +48,8 @@
 # include <termios.h>
 #endif
 
+/* FIXME: */
+#define epicsStrCaseCmp strcasecmp
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each serial line.
@@ -72,12 +74,9 @@ typedef struct {
     unsigned long      nReconnect;
     unsigned long      nRead;
     unsigned long      nWritten;
-    int                setBaud;
     int                baud;
+    int                baudCode;
     int                cflag;
-#ifdef HAVE_TERMIOS
-    struct termios     termios;
-#endif
 } ttyController_t;
 
 /*
@@ -148,6 +147,56 @@ timeoutHandler(void *p)
      * again in a little while.
      */
     epicsTimerStartDelay(tty->timer, 10.0);
+}
+
+/*
+ * Set serial line I/O mode
+ */
+static asynStatus
+setMode(ttyController_t *tty)
+{
+#ifdef HAVE_TERMIOS
+    struct termios     termios;
+    termios.c_cflag = tty->cflag;
+    termios.c_iflag = IGNBRK | IGNPAR;
+    termios.c_oflag = 0;
+    termios.c_lflag = 0;
+    termios.c_cc[VMIN] = 1;
+    termios.c_cc[VTIME] = 0;
+    cfsetispeed(&termios,tty->baudCode);
+    cfsetospeed(&termios,tty->baudCode);
+    if (tcsetattr(tty->fd, TCSADRAIN, &termios) < 0) {
+        errlogPrintf("drvGenericSerial: Can't set `%s' attributes: %s\n", tty->serialDeviceName, strerror(errno));
+        return asynError;
+    }
+    return asynSuccess;
+#endif
+#ifdef vxWorks
+    if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
+        errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
+    return asynSuccess;
+#endif
+    errlogPrintf("Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
+    return asynSuccess;
+}
+
+/*
+ * Set serial line speed
+ */
+static asynStatus
+setBaud (ttyController_t *tty)
+{
+#ifdef HAVE_TERMIOS
+    return  setMode(tty);
+#endif
+#ifdef vxWorks
+    if ((ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
+     && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0))
+        errlogPrintf("Warning: `%s' supports neither FIOBAUDRATE nor SIO_BAUD_SET.\n", tty->serialDeviceName);
+    return asynSuccess;
+#endif
+    errlogPrintf("Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
+    return asynSuccess; 
 }
 
 /*
@@ -244,7 +293,7 @@ openConnection (ttyController_t *tty)
     }
     else {
         /*
-         * Open serial line and get configuration
+         * Open serial line and set configuration
          * Must open in non-blocking mode in case carrier detect is not
          * present and we plan to use the line in CLOCAL mode.
          */
@@ -253,26 +302,17 @@ openConnection (ttyController_t *tty)
             return asynError;
         }
         epicsInterruptibleSyscallArm(tty->interruptibleSyscallContext, tty->fd, epicsThreadGetIdSelf());
-#ifdef HAVE_TERMIOS
-        if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
-            errlogPrintf("drvGenericSerial: Can't set `%s' attributes: %s\n", tty->serialDeviceName, strerror(errno));
+        if ((setBaud(tty) != asynSuccess)
+         || (setMode(tty) != asynSuccess)) {
             close(tty->fd);
             tty->fd = -1;
             return asynError;
         }
-        tcflush(tty->fd, TCIOFLUSH);
-#endif
-#ifdef vxWorks
-        if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
-            errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
-        if ((tty->setBaud)
-         && (ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
-         && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0))
-            errlogPrintf("Warning: `%s' supports neither FIOBAUDRATE nor SIO_BAUD_SET.\n", tty->serialDeviceName);
-#else
+#ifndef vxWorks
         /*
          * Turn off non-blocking mode
          */
+        tcflush(tty->fd, TCIOFLUSH);
         if (fcntl(tty->fd, F_SETFL, 0) < 0) {
             errlogPrintf("drvGenericSerial: Can't set `%s' file flags: %s\n", tty->serialDeviceName, strerror(errno));
             close(tty->fd);
@@ -320,118 +360,136 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvGenericSerialSetPortOptions(void *drvPvt, int argc, char **argv)
+drvGenericSerialSetPortOption(void *drvPvt, const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    char *arg;
-    int i;
+    int baud = 0;
 
     assert(tty);
-    if ((argc > 1) && tty->isRemote)
-        printf ("Warning -- stty parameters are ignored for remote terminal connections.\n");
-    tty->cflag = CREAD | CLOCAL | CS8;
-    for (i = 1 ; i < argc ; i++) {
-        arg = argv[i];
-        if (isdigit(*arg)) {
-            tty->setBaud = 1;
-            tty->baud = 0;
-            while (isdigit(*arg)) {
-                if (tty->baud < 100000)
-                    tty->baud = tty->baud * 10 + (*arg - '0');
-                arg++;
-            }
-            if (*arg != '\0') {
-                errlogPrintf("Invalid speed\n");
-                return -1;
-            }
+    if (tty->isRemote) {
+        printf ("Warning -- port option parameters are ignored for remote terminal connections.\n");
+        return asynSuccess;
+    }
+    if (epicsStrCaseCmp(key, "baud") == 0) {
+        while (isdigit(*val)) {
+            if (baud < 100000)
+                baud = baud * 10 + (*val - '0');
+            val++;
         }
-        else if (strcmp(arg, "cs5") == 0) {
+        if (*val != '\0')
+            baud = 0;
+        switch (baud) {
+        case 50:    tty->baudCode = B50;     break;
+        case 75:    tty->baudCode = B75;     break;
+        case 110:   tty->baudCode = B110;    break;
+        case 134:   tty->baudCode = B134;    break;
+        case 150:   tty->baudCode = B150;    break;
+        case 200:   tty->baudCode = B200;    break;
+        case 300:   tty->baudCode = B300;    break;
+        case 600:   tty->baudCode = B600;    break;
+        case 1200:  tty->baudCode = B1200;   break;
+        case 1800:  tty->baudCode = B1800;   break;
+        case 2400:  tty->baudCode = B2400;   break;
+        case 4800:  tty->baudCode = B4800;   break;
+        case 9600:  tty->baudCode = B9600;   break;
+        case 19200: tty->baudCode = B19200;  break;
+        case 38400: tty->baudCode = B38400;  break;
+        case 57600: tty->baudCode = B57600;  break;
+        case 115200:tty->baudCode = B115200; break;
+        case 230400:tty->baudCode = B230400; break;
+        default:
+            errlogPrintf("Invalid speed.\n");
+            return asynError;
+        }
+        tty->baud = baud;
+    }
+    else if (epicsStrCaseCmp(key, "bits") == 0) {
+        if (epicsStrCaseCmp(val, "5") == 0) {
             tty->cflag = (tty->cflag & ~CSIZE) | CS5;
         }
-        else if (strcmp(arg, "cs6") == 0) {
+        else if (epicsStrCaseCmp(val, "6") == 0) {
             tty->cflag = (tty->cflag & ~CSIZE) | CS6;
         }
-        else if (strcmp(arg, "cs7") == 0) {
+        else if (epicsStrCaseCmp(val, "7") == 0) {
             tty->cflag = (tty->cflag & ~CSIZE) | CS7;
         }
-        else if (strcmp(arg, "cs8") == 0) {
+        else if (epicsStrCaseCmp(val, "8") == 0) {
             tty->cflag = (tty->cflag & ~CSIZE) | CS8;
         }
-        else if (strcmp(arg, "parenb") == 0) {
-            tty->cflag |= PARENB;
+        else {
+            errlogPrintf("Invalid number of bits.\n");
+            return asynError;
         }
-        else if (strcmp(arg, "-parenb") == 0) {
+    }
+    else if (epicsStrCaseCmp(key, "parity") == 0) {
+        if (epicsStrCaseCmp(val, "none") == 0) {
             tty->cflag &= ~PARENB;
         }
-        else if (strcmp(arg, "parodd") == 0) {
-            tty->cflag |= PARODD;
-        }
-        else if (strcmp(arg, "-parodd") == 0) {
+        else if (epicsStrCaseCmp(val, "even") == 0) {
+            tty->cflag |= PARENB;
             tty->cflag &= ~PARODD;
         }
-        else if (strcmp(arg, "clocal") == 0) {
-            tty->cflag |= CLOCAL;
+        else if (epicsStrCaseCmp(val, "arodd") == 0) {
+            tty->cflag |= PARENB;
+            tty->cflag |= PARODD;
         }
-        else if (strcmp(arg, "-clocal") == 0) {
-            tty->cflag &= ~CLOCAL;
+        else {
+            errlogPrintf("Invalid parity.\n");
+            return asynError;
         }
-        else if (strcmp(arg, "cstopb") == 0) {
-            tty->cflag |= CSTOPB;
-        }
-        else if (strcmp(arg, "-cstopb") == 0) {
+    }
+    else if (epicsStrCaseCmp(key, "stop") == 0) {
+        if (epicsStrCaseCmp(val, "1") == 0) {
             tty->cflag &= ~CSTOPB;
         }
-        else if (strcmp(arg, "crtscts") == 0) {
+        else if (epicsStrCaseCmp(val, "2") == 0) {
+            tty->cflag |= CSTOPB;
+        }
+        else {
+            errlogPrintf("Invalid number of stop bits.\n");
+            return asynError;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "clocal") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            tty->cflag |= CLOCAL;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            tty->cflag &= ~CLOCAL;
+        }
+        else {
+            errlogPrintf("Invalid clocal value.\n");
+            return asynError;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "crtscts") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
 #if defined(CRTSCTS)
             tty->cflag |= CRTSCTS;
 #else
             errlogPrintf("Warning -- RTS/CTS flow control is not available on this machine.\n");
 #endif
         }
-        else if (strcmp(arg, "-crtscts") == 0) {
+        else if (epicsStrCaseCmp(val, "N") == 0) {
 #if defined(CRTSCTS)
             tty->cflag &= ~CRTSCTS;
 #endif
         }
         else {
-            errlogPrintf("stty: Warning -- Unsupported option `%s'\n", arg);
+            errlogPrintf("Invalid crtscts value.\n");
+            return asynError;
         }
     }
-#ifdef HAVE_TERMIOS
-    tty->termios.c_cflag = tty->cflag;
-    tty->termios.c_iflag = IGNBRK | IGNPAR;
-    tty->termios.c_oflag = 0;
-    tty->termios.c_lflag = 0;
-    tty->termios.c_cc[VMIN] = 1;
-    tty->termios.c_cc[VTIME] = 0;
-    cfsetispeed(&tty->termios,B9600);
-    cfsetospeed(&tty->termios,B9600);
-    switch(tty->baud) {
-    case -1:    break;
-    case 50:    cfsetispeed(&tty->termios,B50);    cfsetospeed(&tty->termios,B50);     break;
-    case 75:    cfsetispeed(&tty->termios,B75);    cfsetospeed(&tty->termios,B75);     break;
-    case 110:   cfsetispeed(&tty->termios,B110);   cfsetospeed(&tty->termios,B110);    break;
-    case 134:   cfsetispeed(&tty->termios,B134);   cfsetospeed(&tty->termios,B134);    break;
-    case 150:   cfsetispeed(&tty->termios,B150);   cfsetospeed(&tty->termios,B150);    break;
-    case 200:   cfsetispeed(&tty->termios,B200);   cfsetospeed(&tty->termios,B200);    break;
-    case 300:   cfsetispeed(&tty->termios,B300);   cfsetospeed(&tty->termios,B300);    break;
-    case 600:   cfsetispeed(&tty->termios,B600);   cfsetospeed(&tty->termios,B600);    break;
-    case 1200:  cfsetispeed(&tty->termios,B1200);  cfsetospeed(&tty->termios,B1200);   break;
-    case 1800:  cfsetispeed(&tty->termios,B1800);  cfsetospeed(&tty->termios,B1800);   break;
-    case 2400:  cfsetispeed(&tty->termios,B2400);  cfsetospeed(&tty->termios,B2400);   break;
-    case 4800:  cfsetispeed(&tty->termios,B4800);  cfsetospeed(&tty->termios,B4800);   break;
-    case 9600:  cfsetispeed(&tty->termios,B9600);  cfsetospeed(&tty->termios,B9600);   break;
-    case 19200: cfsetispeed(&tty->termios,B19200); cfsetospeed(&tty->termios,B19200);  break;
-    case 38400: cfsetispeed(&tty->termios,B38400); cfsetospeed(&tty->termios,B38400);  break;
-    case 57600: cfsetispeed(&tty->termios,B57600); cfsetospeed(&tty->termios,B57600);  break;
-    case 115200:cfsetispeed(&tty->termios,B115200);cfsetospeed(&tty->termios,B115200); break;
-    case 230400:cfsetispeed(&tty->termios,B230400);cfsetospeed(&tty->termios,B230400); break;
-    default:
-        errlogPrintf("Invalid speed.\n");
-        return -1;
+    else {
+        errlogPrintf("stty: Warning -- Unsupported option `%s'\n", key);
+        return asynError;
     }
-#endif
-
+    if (tty->fd >= 0) {
+        if (baud)
+            return setBaud(tty);
+        else
+            return setMode(tty);
+    }
     return asynSuccess;
 }
 
@@ -657,7 +715,7 @@ static const struct asynCommon drvGenericSerialAsynCommon = {
     drvGenericSerialReport,
     drvGenericSerialConnect,
     drvGenericSerialDisconnect,
-    drvGenericSerialSetPortOptions
+    drvGenericSerialSetPortOption
 };
 
 /*
@@ -702,7 +760,9 @@ drvGenericSerialConfigure(char *portName,
     tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvGenericSerialConfigure()");
     tty->fd = -1;
     tty->serialDeviceName = epicsStrDup(ttyName);
-    tty->baud = -1;
+    tty->baud = 9600;
+    tty->baudCode = B9600;
+    tty->cflag = CREAD | CLOCAL | CS8;
 
     /*
      * Parse configuration parameters

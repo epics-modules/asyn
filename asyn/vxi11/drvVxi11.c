@@ -114,7 +114,7 @@ static void vxiSrqThread(void *pvxiLink);
 static void vxiReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiSetPortOptions(void *pdrvPvt,int argc, char **argv);
+static asynStatus vxiSetPortOption(void *pdrvPvt,const char *key, const char *val);
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
@@ -771,7 +771,7 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     return(0);
 }
 
-static asynStatus vxiSetPortOptions(void *pdrvPvt,int argc, char **argv)
+static asynStatus vxiSetPortOption(void *pdrvPvt,const char *key, const char *val)
 {
     /* Currently no need to set options*/
     return(asynSuccess);
@@ -1152,7 +1152,7 @@ static asynGpibPort vxi11 = {
     vxiReport,
     vxiConnect,
     vxiDisconnect,
-    vxiSetPortOptions,
+    vxiSetPortOption,
     vxiRead,
     vxiWrite,
     vxiFlush,
