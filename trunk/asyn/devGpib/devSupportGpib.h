@@ -66,12 +66,13 @@ struct gpibCmd {
     int msgLen;	/* room for return data message length */
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
-    /*P1 plays a dual role.  user defined parameter for convert. For EFAST
-      it is number of entries in EFAST table*/
+    /* P1 plays a dual role.  For EFAST it is set internally to the
+    /*                        number of entries in the EFAST table */
+    /*                        For convert it is passed to convert */
     int P1;
     int P2;	/* user defined parameter used in convert() */
-    /* P3 plays dual role. For EFAST address of EFAST table   */
-    /* For convert it is passed to convert */
+    /* P3 plays dual role.  For EFAST it holds the address of EFAST table */
+    /*                      For convert it is passed to convert */
     char **P3;
     devGpibNames *pdevGpibNames; /* pointer to name strings */
     int eosChar;
