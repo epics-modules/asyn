@@ -22,8 +22,8 @@
                 Output Control Fields for asynOctet</a></li>
   <li><a href="#Input Control Fields for asynOctet">
                 Input Control Fields for asynOctet</a></li>
-  <li><a href="#Control Fields for Register Interfaces">
-                Control Fields for Register Interfaces</a></li>
+  <li><a href="#Input/Output Control Fields for Register Interfaces">
+                Input/Output Control Fields for Register Interfaces</a></li>
   <li><a href="#Serial Control Fields">
                 Serial Control Fields</a></li>
   <li><a href="#GPIB Control Fields">
@@ -154,9 +154,7 @@ large blocks of arbitrary data, either ASCII or binary.</p>
       <td>"asyn address"</td>
       <td>DBF_LONG</td>
       <td>The asyn address.&nbsp; This field can be changed at any time to
-        connect the record to another asyn device.&nbsp; The asyn address
-        parameter is currently only used for GPIB devices, but in the future
-        it may be used for RS-485 and other applications.</td>
+        connect the record to another asyn device.</td>
     </tr>
     <tr>
       <td>PCNCT</td>
@@ -214,7 +212,7 @@ done.</p>
 <p>Note that since writing to the PORT, ADDR, or DRVINFO fields cause
 the record to automatically attempt to connect to the port, it is usually
 not necessary to write to the PCNCT field to connect to the port.  The PCNCT field is 
-useful for determining if the port is connected, and forcing a disconnect if desired.</p>
+useful for determining if the port is connected, and for forcing a disconnect if desired.</p>
 
 <p>Writing to the SOCK field causes the record to create a new asyn port with
 the same name as the SOCK field.&nbsp; This is done with
@@ -241,8 +239,9 @@ drvAsynIPPortConfigure.</p>
       <td>"Value field (unused)"</td>
       <td>DBF_STRING</td>
       <td>This field is unused. The functions normally assigned to the VAL
-        field in many records are performed by the AOUT, BOUT, AINP, and BINP
-        fields in the asyn record.</td>
+        field in many records are performed by the AOUT, BOUT, AINP, BINP,
+        I32OUT, I32INP, UI32OUT, UI32INP, F64OUT, and F64INP fields in 
+        the asyn record.</td>
     </tr>
     <tr valign="top">
       <td>TMOD</td>
@@ -685,10 +684,10 @@ only permit 1 character end-of-message strings.<br>
 
 &nbsp;</p>
 <hr>
-<h2 align="center"><a name="Control Fields for Register Interfaces">
-                            Control Fields for Register Interfaces</a></h2>
+<h2 align="center"><a name="Input/Output Control Fields for Register Interfaces">
+                            Input/Output Control Fields for Register Interfaces</a></h2>
 
-<p>These fields control input I/O when using the register interfaces 
+<p>These fields control I/O when using the register interfaces 
    (i.e. when IFACE="asynInt32", "asynUInt32Digital", or "asynFloat64").</p>
 
 <table cellpadding="5" border="1">
@@ -768,20 +767,12 @@ only permit 1 character end-of-message strings.<br>
 <table cellpadding="5" border="1">
   <tbody>
     <tr valign="top">
-      <td>GOPT</td>
-      <td>W</td>
-      <td>"Get Options"</td>
-      <td>DBF_UCHAR</td>
-      <td>Get the current values of Baud Rate, Data bits, Stop bits, and Flow
-        Control.</td>
-    </tr>
-    <tr valign="top">
       <td>BAUD</td>
       <td>R/W</td>
       <td>"Baud rate"</td>
       <td>DBF_RECCHOICE</td>
       <td>The baud rate for the port. Choices are "Unknown", "300", "600",
-        "1200", "2400", "4800", "9600", "19200", and "38400", "57600",
+        "1200", "2400", "4800", "9600", "19200", "38400", "57600",
         "115200", and "230400". Default="Unknown".</td>
     </tr>
     <tr valign="top">
@@ -850,14 +841,6 @@ when the connection to the port is made.</p>
       <th>Prompt</th>
       <th>Data type</th>
       <th>Description</th>
-    </tr>
-    <tr>
-      <td>ADDR</td>
-      <td>R/W</td>
-      <td>"GPIB address"</td>
-      <td>DBF_LONG</td>
-      <td>The GPIB address of the device. This field can be changed at any
-        time.</td>
     </tr>
     <tr valign="top">
       <td>SPR</td>
@@ -1164,7 +1147,7 @@ cases: </p>
 
 <p>The ERRS field is set to "" (null string) at the start of every operation,
 including trace and connection management operations.&nbsp; It contains the
-first 40 characters of any error message the record writes with
+first 100 characters of any error message the record writes with
 asynPrint(...ASYN_TRACE_ERROR...).&nbsp; </p>
 
 <p>The standard EPICS record fields STAT (status) and SEVR (severity) are
