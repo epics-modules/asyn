@@ -120,10 +120,11 @@ typedef struct asynManager {
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
     /*The following are methods for interrupts*/
     asynStatus (*registerInterruptSource)(const char *portName,
-        asynInterface *pasynInterface, void **pasynPvt);
+                               asynInterface *pasynInterface, void **pasynPvt);
     asynStatus (*getInterruptPvt)(asynUser *pasynUser,
-        const char *interfaceType, void **pasynPvt);
+                               const char *interfaceType, void **pasynPvt);
     interruptNode *(*createInterruptNode)(void *pasynPvt);
+    asynStatus (*freeInterruptNode)(asynUser *pasynUser,interruptNode *pnode);
     asynStatus (*addInterruptUser)(interruptNode*pinterruptNode);
     asynStatus (*removeInterruptUser)(interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
