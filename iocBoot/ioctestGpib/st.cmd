@@ -2,8 +2,7 @@ dbLoadDatabase("../../dbd/testGpib.dbd")
 testGpib_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
-dbLoadRecords("../../db/asynGeneric.db","ioc=gpibTest")
-dbLoadRecords("../../db/asynRecord.db","P=mrk,R=asyn1,PORT=L0,ADDR=3,OMAX=0,IMAX=0")
+dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=3,OMAX=0,IMAX=0")
 
 
 #The following two commands are for the E2050
