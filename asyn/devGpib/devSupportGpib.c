@@ -46,7 +46,7 @@
 #include "devSupportGpib.h"
 
 #define DEFAULT_QUEUE_TIMEOUT 60.0
-#define DEFAULT_SRQ_WAIT_TIMEOUT 60.0
+#define DEFAULT_SRQ_WAIT_TIMEOUT 5.0
 
 typedef struct commonGpibPvt {
     ELLLIST portInstanceList;
@@ -169,7 +169,6 @@ static long initRecord(dbCommon *precord, struct link *plink)
     int link,gpibAddr,parm;
     asynCommon *pasynCommon;
     asynOctet *pasynOctet;
-    
 
     if(plink->type!=GPIB_IO) {
         printf("%s: init_record : GPIB link type %d is invalid",
@@ -185,8 +184,7 @@ static long initRecord(dbCommon *precord, struct link *plink)
     precord->dpvt = pgpibDpvt;
     pdevGpibPvt = (devGpibPvt *)(pgpibDpvt + 1);
     pgpibDpvt->pdevGpibPvt = pdevGpibPvt;
-    pasynUser = pasynManager->createAsynUser(
-        queueCallback,queueTimeoutCallback);
+    pasynUser = pasynManager->createAsynUser(queueCallback,queueTimeoutCallback);
     pasynUser->userPvt = pgpibDpvt;
     pasynUser->timeout = pdevGpibParmBlock->timeout;
     pgpibDpvt->pdevGpibParmBlock = pdevGpibParmBlock;
@@ -280,6 +278,7 @@ static void queueWriteRequest(gpibDpvt *pgpibDpvt, gpibWork finish)
     pdevGpibPvt->finish = finish;
     queueIt(pgpibDpvt,0);
 }
+
 static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
 {
     dbCommon *precord = pgpibDpvt->precord;
@@ -291,6 +290,7 @@ static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
     pdevGpibPvt->finish = 0;
     queueIt(pgpibDpvt,0);
 }
+
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     srqHandler handler,void *unsollicitedHandlerPvt)
 {
