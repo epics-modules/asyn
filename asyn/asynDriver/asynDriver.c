@@ -27,6 +27,7 @@
 #include <epicsEvent.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
+#include <epicsTimer.h>
 #include <cantProceed.h>
 #include <epicsAssert.h>
 
@@ -41,14 +42,18 @@
 
 typedef struct asynBase {
     ELLLIST asynPvtList;
+    epicsTimerQueueId timerQueue;
 }asynBase;
 
 static asynBase *pasynBase = 0;
 
 typedef struct asynUserPvt {
     ELLNODE      node;
+    userCallback queueCallback;
+    userCallback timeoutCallback;
     BOOL         isQueued;
     unsigned int lockCount;
+    epicsTimerId timer;
     double       timeout;
     asynUser     user;
 }asynUserPvt;
@@ -79,14 +84,16 @@ static void deviceThread(asynPvt *pasynPvt);
     
 /* forward reference to asynQueueManager methods */
 static void report(int details);
-static asynUser *createAsynUser(userCallback callback, userPvt *puserPvt);
+static asynUser *createAsynUser(
+    userCallback queue, userCallback timeout,userPvt *puserPvt);
 static asynStatus freeAsynUser(asynUser *pasynUser);
 static asynStatus connectDevice(asynUser *pasynUser, const char *name);
 static asynStatus disconnectDevice(asynUser *pasynUser);
 static void *findDriver(asynUser *pasynUser,const char *driverType);
-static asynStatus queueRequest(asynUser *pasynUser,asynQueuePriority priority);
+static asynStatus queueRequest(asynUser *pasynUser,
+    asynQueuePriority priority,double timeout);
 static asynCancelStatus cancelRequest(asynUser *pasynUser);
-static asynStatus lock(asynUser *pasynUser,double timeout);
+static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static asynPvt *registerDriver(drvPvt *pdrvPvt, const char *name,
     driverInfo *padriverInfo,int ndriverTypes,
@@ -113,6 +120,8 @@ void asynInit(void)
     if(pasynBase) return;
     pasynBase = callocMustSucceed(1,sizeof(asynPvt),"asynInit");
     ellInit(&pasynBase->asynPvtList);
+    pasynBase-> timerQueue = epicsTimerQueueAllocate(
+        1,epicsThreadPriorityScanLow);
 }
 
 static asynPvt *locateAsynPvt(const char *name)
@@ -156,9 +165,14 @@ static void deviceThread(asynPvt *pasynPvt)
                 break;
             }
             pasynUser = asynUserPvtToAsynUser(pasynUserPvt);
-            if(pasynUserPvt->lockCount>0) pasynPvt->plockHolder = pasynUserPvt;
+            if(pasynUserPvt->lockCount>0) {
+                pasynPvt->plockHolder = pasynUserPvt;
+            }
+            if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
+                epicsTimerCancel(pasynUserPvt->timer);
+            }
             epicsMutexUnlock(pasynPvt->lock);
-            pasynUser->callback(pasynUser->puserPvt);
+            pasynUserPvt->queueCallback(pasynUser->puserPvt);
         }
     }
 }
@@ -189,19 +203,26 @@ static void report(int details)
     }
 }
 
-static asynUser *createAsynUser(userCallback callback, userPvt *puserPvt)
+static asynUser *createAsynUser(
+    userCallback queue, userCallback timeout,userPvt *puserPvt)
 {
     asynUserPvt *pasynUserPvt;
     asynUser *pasynUser;
     int nbytes;
 
+    if(!pasynBase) asynInit();
     nbytes = sizeof(asynUserPvt) + ERROR_MESSAGE_SIZE;
     pasynUserPvt = callocMustSucceed(1,nbytes,"asynDriver:registerDriver");
+    pasynUserPvt->queueCallback = queue;
+    pasynUserPvt->timeoutCallback = timeout;
+    if(timeout) {
+        pasynUserPvt->timer = epicsTimerQueueCreateTimer(
+            pasynBase->timerQueue,(epicsTimerCallback)timeout,puserPvt);
+    }
     pasynUser = asynUserPvtToAsynUser(pasynUserPvt);
-    pasynUser->callback = callback;
-    pasynUser->puserPvt = puserPvt;
     pasynUser->errorMessage = (char *)(pasynUser +1);
     pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
+    pasynUser->puserPvt = puserPvt;
     return(pasynUser);
 }
 
@@ -212,6 +233,11 @@ static asynStatus freeAsynUser(asynUser *pasynUser)
     if(pasynUserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynQueueManager:freeAsynUser asynUser is queued\n");
+        return(asynError);
+    }
+    if(pasynUserPvt->lockCount>0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynQueueManager::freeAsynUser: isLocked\n");
         return(asynError);
     }
     if(pasynUser->pdrvPvt) {
@@ -294,7 +320,8 @@ static void *findDriver(asynUser *pasynUser,const char *driverType)
     return(0);
 }
 
-static asynStatus queueRequest(asynUser *pasynUser,asynQueuePriority priority)
+static asynStatus queueRequest(asynUser *pasynUser,
+    asynQueuePriority priority,double timeout)
 {
     asynPvt *pasynPvt = pasynUser->pasynPvt;
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
@@ -317,6 +344,10 @@ static asynStatus queueRequest(asynUser *pasynUser,asynQueuePriority priority)
         ellAdd(&pasynPvt->queueList[priority],&pasynUserPvt->node);
     }
     pasynUserPvt->isQueued = TRUE;
+    pasynUserPvt->timeout = timeout;
+    if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
+         epicsTimerStartDelay(pasynUserPvt->timer,pasynUserPvt->timeout);
+    }
     epicsMutexUnlock(pasynPvt->lock);
     epicsEventSignal(pasynPvt->notifyDeviceThread);
     return(asynSuccess);
@@ -335,6 +366,9 @@ static asynCancelStatus cancelRequest(asynUser *pasynUser)
 	    if(pasynUser == &pasynUserPvt->user) {
 	        ellDelete(&pasynPvt->queueList[i],&pasynUserPvt->node);
                 pasynUserPvt->isQueued = FALSE;
+                if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
+                    epicsTimerCancel(pasynUserPvt->timer);
+                }
 	        break;
 	    }
 	    pasynUserPvt = (asynUserPvt *)ellNext(&pasynUserPvt->node);
@@ -350,7 +384,7 @@ static asynCancelStatus cancelRequest(asynUser *pasynUser)
     return(asynSuccess);
 }
 
-static asynStatus lock(asynUser *pasynUser,double timeout)
+static asynStatus lock(asynUser *pasynUser)
 {
     asynPvt *pasynPvt = pasynUser->pasynPvt;
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);

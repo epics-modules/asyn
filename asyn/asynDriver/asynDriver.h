@@ -48,11 +48,10 @@ typedef enum {
 typedef void (*userCallback)(userPvt *puserPvt);
 
 typedef struct asynUser {
-    userCallback callback;
-    userPvt *puserPvt;
     char *errorMessage;
     int errorMessageSize;
-    asynPvt *pasynPvt; /* private to asynQueueManager */
+    userPvt *puserPvt; 
+    asynPvt *pasynPvt;
     drvPvt *pdrvPvt; /* Set by asynQueueManager. Used by drivers*/
 }asynUser;
 
@@ -66,15 +65,19 @@ typedef struct driverInfo{
 
 typedef struct asynQueueManager {
     void (*report)(int details);
-    asynUser  *(*createAsynUser)(userCallback callback, userPvt *puserPvt);
+    asynUser  *(*createAsynUser)(userCallback queue,
+                                 userCallback timeout,
+                                 userPvt *puserPvt);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*connectDevice)(asynUser *pasynUser, const char *name);
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
     /*The following returns address of driver interface*/
     void       *(*findDriver)(asynUser *pasynUser,const char *driverType);
-    asynStatus (*queueRequest)(asynUser *pasynUser,asynQueuePriority priority);
+    asynStatus (*queueRequest)(asynUser *pasynUser,
+                               asynQueuePriority priority,
+                               double timeout);
     asynCancelStatus (*cancelRequest)(asynUser *pasynUser);
-    asynStatus (*lock)(asynUser *pasynUser,double timeout);
+    asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     /* drivers call the following*/
     asynPvt   *(*registerDriver)(drvPvt *pdrvPvt, const char *name,

@@ -18,12 +18,12 @@ Zimoch</p>
 </center>
 
 <center>
-<h2>Goals</h2>
+<h2>Goal</h2>
 </center>
 
 <p><span style="font-weight: bold">asynDriver is a general purpose facility
-for</span><span style="font-weight: bold">interfacing device specific code to
-low level communication drivers</span>.</p>
+</span><span style="font-weight: bold">for interfacing device specific code
+to low level communication drivers</span>.</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS IOC support.</p>
@@ -157,13 +157,12 @@ drivers.This determines the methods it can call.</p>
 <h3>asynDriver.h</h3>
 
 <p>Include file asynDriver.h contains the following definitions:</p>
-<pre>typedef void asynPvt;
-typedef void userPvt;
-typedef void drvPvt;
-typedef void lockPvt;
+<pre>typedef struct asynPvt asynPvt;
+typedef struct userPvt userPvt;
+typedef struct drvPvt drvPvt;
 
 typedef enum {
-asynSuccess,asynTimeout,asynError
+    asynSuccess,asynTimeout,asynError
 }asynStatus;
 
 typedef enum {
@@ -174,7 +173,7 @@ typedef enum {
     asynTimoutFirst, /*timeout for first input character.*/
     asynTimoutRead,
     asynTimeoutWrite
-}asynTimeout;
+}asynTimeoutType;
 
 typedef enum {
    asynCancelSuccess,
@@ -185,48 +184,51 @@ typedef enum {
 typedef void (*userCallback)(userPvt *puserPvt);
 
 typedef struct asynUser {
-    userCallback callback;
-    userPvt *puserPvt;
     char *errorMessage;
     int errorMessageSize;
+    userPvt *puserPvt;
     asynPvt *pasynPvt;
-    drvPvt *pdrvPvt;
+    drvPvt *pdrvPvt; /* Set by asynQueueManager. Used by drivers*/
 }asynUser;
+
 
 typedef void (*peekHandler)(userPvt *puserPvt,
     char byte,int isReceive,int gotEOI);
 
+typedef struct driverInfo{
+    void *pinterface;
+    const char *driverType;
+}driverInfo;
+
 typedef struct asynQueueManager {
     void (*report)(int details);
-    /* The following are called by user code */
-    asynUser *(*createAsynUser)(userCallback callback, userPvt *puserPvt);
-    void (*freeAsynUser)(asynUser *pasynUser);
+    asynUser  *(*createAsynUser)(userCallback queue,
+                                 userCallback timeout,
+                                 userPvt *puserPvt);
+    asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*connectDevice)(asynUser *pasynUser, const char *name);
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
-    /*The following is used to locate driver interface*/
-    void *(*findDriver)(asynUser *pasynUser,const char *driverType);
-    /*The following are non blocking methods for user code*/
+    /*The following returns address of driver interface*/
+    void       *(*findDriver)(asynUser *pasynUser,const char *driverType);
     asynStatus (*queueRequest)(asynUser *pasynUser,
-                               void *lockPvt,asynQueuePriority priority);
+                               asynQueuePriority priority,
+                               double timeout);
     asynCancelStatus (*cancelRequest)(asynUser *pasynUser);
-    lockPvt *(*createLock)(asynUser *pasynUser);
-    void (*freeLock)(asynUser *pasynUser,lockPvt *plockPvt)
-    void (*lock)(asynUser *pasynUser,lockPvt *plockPvt,double timeout);
-    void (*unlock)(asynUser *pasynUser,lockPvt *plockPvt);
-    /*peek only works if driver supports octetDriver interface*/
-    void (*peek)(asynUser *pasynUser,double seconds);
+    asynStatus (*lock)(asynUser *pasynUser);
+    asynStatus (*unlock)(asynUser *pasynUser);
     /* drivers call the following*/
-    asynPvt *(*registerDriver)(drvPvt *pdrvPvt, const char *name,
-                              char **papdriverType, /*all driver types*/
+    asynPvt   *(*registerDriver)(drvPvt *pdrvPvt, const char *name,
+                              driverInfo *padriverInfo,
+                              int ndriverTypes,
                               unsigned int priority,/*epicsThreadPriority*/
                               unsigned int stackSize);/*stack size*/
 }asynQueueManager;
-extern asynQueueManager *pasynQueueManager;
-^L
+epicsShareExtern asynQueueManager *pasynQueueManager;
+
 /*Methods supported by ALL asyn drivers*/
 #define asynDriverType "asynDriver"
 typedef struct  asynDriver {
-    void (*report)(asynUser *pasynUser,int details);
+    void       (*report)(asynUser *pasynUser,int details);
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(asynUser *pasynUser);
     asynStatus (*disconnect)(asynUser *pasynUser);
@@ -235,17 +237,16 @@ typedef struct  asynDriver {
 /* Methods supported by low level octet drivers. */
 #define octetDriverType "octetDriver"
 typedef struct octetDriver{
-    int (*read)(asynUser *pasynUser,int addr,char *data,int maxchars);
-    int (*write)(asynUser *pasynUser,
+    int        (*read)(asynUser *pasynUser,int addr,char *data,int maxchars);
+    int        (*write)(asynUser *pasynUser,
                         int addr,const char *data,int numchars);
     asynStatus (*flush)(asynUser *pasynUser,int addr);
     asynStatus (*setTimeout)(asynUser *pasynUser,
-                             asynTimeout type,double timeout);
+                             asynTimeoutType type,double timeout);
     asynStatus (*setEos)(asynUser *pasynUser,const char *eos,int eoslen);
     asynStatus (*installPeekHandler)(asynUser *pasynUser,peekHandler handler);
     asynStatus (*removePeekHandler)(asynUser *pasynUser);
-}octetDriver;
-</pre>
+}octetDriver;</pre>
 
 <h3>asynUser</h3>
 
@@ -256,18 +257,6 @@ by calling asynUserCalloc and asynUserFree.</p>
 <table border="1">
   <caption>asynUser</caption>
   <tbody>
-    <tr>
-      <td>callback</td>
-      <td>User callback. This can be specified on the call to asynUserCalloc.
-        The user can change it as long as asynUser is not currently
-      queued.</td>
-    </tr>
-    <tr>
-      <td>puserPvt</td>
-      <td>For use by the user. This can be specified on the call to
-        asynUserCalloc. The user can change it as long as asynUser is not
-        currently queued.</td>
-    </tr>
     <tr>
       <td>errorMessage</td>
       <td>When either asynQueueManager or a driver returns a
@@ -280,6 +269,11 @@ by calling asynUserCalloc and asynUserFree.</p>
       <td>errorMessageSize</td>
       <td>The size of errorMessage. asynQueueManager determines this. It can
         not be changed.</td>
+    </tr>
+    <tr>
+      <td>puserPvt</td>
+      <td>For use by the user. This can be specified on the call to
+        asynUserCalloc and should never be changed.</td>
     </tr>
     <tr>
       <td>pasynPvt</td>
@@ -307,18 +301,18 @@ by calling asynUserCalloc and asynUserFree.</p>
     </tr>
     <tr>
       <td>createAsynUser</td>
-      <td>Creates an asynUser. It sets userCallback and puserPvt to the
-        values the caller specifies. The caller can change these values as
-        long a the asynUser is not queued. errorMessageSize characters are
-        allocated for errorMessage. The amount of storage can not be changed.
-        This method doesn't return if it is unable to allocate the
-      storage.</td>
+      <td>Creates an asynUser. The caller specifies two callbacks, one for
+        successful queueRequests and one if a queueRequest has a timeout. The
+        timeout callback is optional. The caller also specifies puserPvt.
+        errorMessageSize characters are allocated for errorMessage. The
+        amount of storage can not be changed. This method doesn't return if
+        it is unable to allocate the storage.</td>
     </tr>
     <tr>
       <td>freeAsynUser</td>
-      <td>Free an asynUser. The user must free it only via this call. If the
-        asynUser is queued it will be removed from the queue. If the asynUser
-        is active the call will fail.</td>
+      <td>Free an asynUser. The user must free it only via this call. The
+        call will fail if the asynUser is queued or locked or connected to a
+        device.</td>
     </tr>
     <tr>
       <td>connectDevice</td>
@@ -328,8 +322,8 @@ by calling asynUserCalloc and asynUserFree.</p>
     </tr>
     <tr>
       <td>disconnectDevice</td>
-      <td>Disconnect. If the asynUser is queued it will be removed from the
-        queue. If the asynUser is active the call will fail.</td>
+      <td>Disconnect. If the asynUser is queued or locked this request will
+        fail.</td>
     </tr>
     <tr>
       <td>findDriver</td>
@@ -342,19 +336,15 @@ by calling asynUserCalloc and asynUserFree.</p>
         queueRequest. After the thread associated with the driver takes this
         request from the queue, it calls the user's callback. The callback
         makes calls to the driver. If the user attempts to call queueRequest,
-        but the asynUser is already on a queue, asynError is returned. It is
-        OK to call queueRequest from the users callback routine.</td>
+        but the asynUser is already on a queue, asynError is returned. The
+        timeout is from when the request is queued until it is taken from the
+        queue. A value of &lt;=0.0 means no timeout.</td>
     </tr>
     <tr>
       <td>cancelRequest</td>
       <td>If a asynUser is queued remove it from the queue. If it is not on a
-        queue nothing is done. In particular if the callback is active, this
+        queue nothing is done.. In particular if the callback is active, this
         call has no effect.</td>
-    </tr>
-    <tr>
-      <td>createLock/freeLock</td>
-      <td>createLock/freeLock create and free locks. The value returned by
-        createLock is what is passed to lock, unlock, and queueRequest.</td>
     </tr>
     <tr>
       <td>lock/unlock</td>
@@ -363,20 +353,13 @@ by calling asynUserCalloc and asynUserFree.</p>
         is made to lock, asynQueueManager "locks" as soon as the first
         queueRequest with the specified lock is taken from the queue. At that
         point all other entries in the queue must wait until unlock is
-        called. The timeout specifies how long to wait after a queue request
-        is made until obtaining the lock. If timeout is less than 0 then it
-        means forever.</td>
-    </tr>
-    <tr>
-      <td>peek</td>
-      <td>For the specified number of seconds report all characters send
-        to/from the device.</td>
+        called. These methods fail if a request is currently queued.</td>
     </tr>
     <tr>
       <td>registerDriver</td>
       <td>This method is called by drivers. A call is made for each
-        communication interrace. The asynQueueManager creates a thread for
-        each call to registerDriver.</td>
+        communication interface instance. The asynQueueManager creates a
+        thread for each call to registerDriver.</td>
     </tr>
   </tbody>
 </table>
@@ -413,8 +396,8 @@ by calling asynUserCalloc and asynUserFree.</p>
 <p>NOTES:</p>
 <ul>
   <li>This is just a guess at what methods octetDriver should provide.</li>
-  <li>Octet instead of ascii is used because it implys that communication is
-    done via 8 bit characters.</li>
+  <li>The name octet is used instead of ascii because it implys that
+    communication is done via 8 bit characters.</li>
 </ul>
 
 <p>octetDriver describes the methods provided by drivers that use octet
@@ -482,7 +465,7 @@ typedef struct myData {
     char buffer[BUFSIZE];
 }myData;
 
-void myCallback(userPvt *puserPvt)
+void queueCallback(userPvt *puserPvt)
     myData *pmydata = (myData *)puserPvt;
     octetDriver *poctetDriver = pmydata-&gt;poctetDriver;
     asynUser *pasynUser = pmydata-&gt;pasynUser;
@@ -492,13 +475,13 @@ void myCallback(userPvt *puserPvt)
 
     status = poctetDriver-&gt;setEos(pasynUser,"\n",1);
     if(status) {
-        printf("myCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
+        printf("queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
     }
     retlen = poctetDriver-&gt;read(pasynUser,0,pmydata-&gt;buffer,BUFSIZE);
     if(retlen&lt;=0) {
-        printf("myCallback read failed %s\n",pasynUser-&gt;errorMessage);
+        printf("queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
     } else {
-        printf("myCallback read returned: retlen %d data %s\n",
+        printf("queueCallback read returned: retlen %d data %s\n",
             retlen,pmydata-&gt;buffer);
     }
 }
@@ -510,7 +493,7 @@ void mainThread(void)
     asynStatus status;
 
     pmyData = calloc(1,sizeof(myData));
-    pasynUser = pasynQueueManager-&gt;createAsynUser(myCallback,pmyData);
+    pasynUser = pasynQueueManager-&gt;createAsynUser(queueCallback,0,pmyData);
     pmyData-&gt;pasynUser = pasynUser;
     status = pasynQueueManager-&gt;connectDevice(pasynUser,"serialPort1")
     if(status) {
@@ -530,8 +513,7 @@ void mainThread(void)
     }
     /*Note that callback will be called by another thread*/
     ...
-}
-</pre>
+}</pre>
 
 <p>The flow of control is as follows:</p>
 <ol>
@@ -540,8 +522,8 @@ void mainThread(void)
   <li>mainThread connects to a a device and to a driver for that device.</li>
   <li>When it is ready to communicate with the driver it calls
   queueRequest.</li>
-  <li>The thread associated with the device calls myCallback.</li>
-  <li>myCallback calls the driver's seteos and read methods.</li>
+  <li>The thread associated with the device calls queueCallback.</li>
+  <li>queueCallback calls the driver's seteos and read methods.</li>
 </ol>
 
 <center>
