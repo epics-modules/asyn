@@ -38,7 +38,6 @@ asyn_SRCS += devSupportGpib.c
 SRC_DIRS += $(ASYN)/vxi11
 asyn_SRCS += drvVxi11.c
 asyn_SRCS += vxi11core_xdr.c
-asyn_SRCS += vxi11intr_xdr.c
 asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 DBD += drvVxi11.dbd

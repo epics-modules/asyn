@@ -26,7 +26,7 @@
 
 int E2050Reboot(char * inetAddr)
 {
-    struct sockaddr_in	serverAddr;
+    struct sockaddr_in serverAddr;
     int fd;
     int status;
     int nbytes;
