@@ -1167,9 +1167,14 @@ L
 \family default 
  value in the EPICS database record INP and OUT fields.
 
-The second argument of the drvGenericSerialConfigure commannd non-zero to
+The second argument of the drvGenericSerialConfigure command identifies
+the serial port to which the connection is to be made.
+The third argument is non-zero to
 direct the device support layer to automatically connect to the serial
 port on startup and whenever the serial port becomes disconnected.
+The final argument sets the priority of the worker thread which performs
+the I/O operations.  A value of zero directs the command to choose a reasonable
+default value.
 \end_deeper 
 \layout Enumerate
 
