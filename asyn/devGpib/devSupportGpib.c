@@ -782,6 +782,8 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     }
     epicsMutexUnlock(pportInstance->lock);
     if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) {
+        if(cmdType&(GPIBREADW|GPIBEFASTIW)) 
+                epicsTimerCancel(pdeviceInstance->srqWaitTimer);
         failure = -1;
         goto done;
     }
