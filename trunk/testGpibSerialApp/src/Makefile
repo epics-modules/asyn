@@ -27,8 +27,7 @@ testGpibSerial_LIBS += $(EPICS_BASE_IOC_LIBS)
 testGpibSerialVx_SRCS += testGpibSerialVx_registerRecordDeviceDriver.cpp
 testGpibSerialVx_SRCS += testGpibSerialMain.c
 testGpibSerialVx_SRCS += devTestGpibSerial.c
-testGpibSerialVx_OBJS += $(IPAC)/bin/$(T_A)/tyGSOctal.o
-testGpibSerialVx_LIBS += Ipac
+testGpibSerialVx_LIBS += Ipac TyGSOctal
 testGpibSerialVx_LIBS += testSupport asyn
 testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 
