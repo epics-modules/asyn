@@ -605,6 +605,7 @@ static void monitorStatus(asynRecord *pasynRec)
     asynRecPvt* pasynRecPvt = pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
     int traceMask;
+    asynStatus status;
     FILE *traceFd;
     int yesNo;
 
@@ -640,12 +641,15 @@ static void monitorStatus(asynRecord *pasynRec)
     pasynRec->tib1 = (traceMask & ASYN_TRACEIO_ESCAPE) ? 1 : 0;
     pasynRec->tib2 = (traceMask & ASYN_TRACEIO_HEX)    ? 1 : 0;
 
-    pasynManager->isAutoConnect(pasynUser,&yesNo);
-    pasynRec->auct = yesNo;
-    pasynManager->isConnected(pasynUser,&yesNo);
-    pasynRec->cnct = yesNo;
-    pasynManager->isEnabled(pasynUser,&yesNo);
-    pasynRec->enbl = yesNo;
+    status = pasynManager->isAutoConnect(pasynUser,&yesNo);
+    if (status == asynSuccess) pasynRec->auct = yesNo;
+    else pasynRec->auct = 0;
+    status = pasynManager->isConnected(pasynUser,&yesNo);
+    if (status == asynSuccess) pasynRec->cnct = yesNo;
+    else pasynRec->cnct = 0;
+    status = pasynManager->isEnabled(pasynUser,&yesNo);
+    if (status == asynSuccess) pasynRec->enbl = yesNo;
+    else pasynRec->enbl = 0;
     pasynRec->tsiz = pasynTrace->getTraceIOTruncateSize(pasynUser);
     traceFd        = pasynTrace->getTraceFile(pasynUser);
     POST_IF_NEW(tmsk);
