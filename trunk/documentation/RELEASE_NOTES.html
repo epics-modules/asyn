@@ -23,80 +23,79 @@ alink="#FF0000">
 </center>
 
 <h3>Incompatible Changes.</h3>
-<p>APOLOGY: Many interfaces have changed since release 3-3.
-This is the reason this release is called 4-0.
+
+<p>APOLOGY: Many interfaces have changed since release 3-3. This is the
+reason this release is called 4-0.</p>
 <ul>
-  <li>asynManager - Only report has changed. Many new methods have been added.
-      asynManager:report takes an additional parameter, portName.
-  </li>
+  <li>asynManager - Only report has changed. Many new methods have been
+    added. asynManager:report takes an additional parameter, portName.</li>
   <li>asynOctet - The read/write methods are similar to before. The new
-     version has seperate end of string methods for input and output.</li>
-   <li>register based interfaces - Extensive changes have occured.</li>
-  <li>devGpib - Unless special conversion routines call low level
-   drivers, debGpib support should work without any changes.</li>
+    version has sepearate end of string methods for input and output.</li>
+  <li>register based interfaces - Extensive changes have occured.</li>
+  <li>devGpib - Unless special conversion routines call low level drivers,
+    debGpib support should work without any changes.</li>
   <li>devEpics -
-     <ul>
-        <li>Extensive changes have occured. The support naming now
-        follows the names of asyn interfaces. For example devAsynInt32
-        contains device support for interface asynInt32.</li>
-        <li> device definitions have changed.
-    <p>Blanks no longer appear in the menu choices. For example.</p>
-    <pre>    device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
+    <ul>
+      <li>Extensive changes have occured. The support naming now follows the
+        names of asyn interfaces. For example devAsynInt32 contains device
+        support for interface asynInt32.</li>
+      <li>device definitions have changed.
+        <p>Blanks no longer appear in the menu choices. For example.</p>
+        <pre>    device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
        </pre>
-    is now
-    <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
+        is now
+        <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
        </pre>
-        </li>
-     </ul>
+      </li>
+    </ul>
   </li>
   <li>asynOctetSyncIO
-    <ul><li>All read and write methods now return asynStatus and
-      have additional args to return the number of bytes sent/received.</p>
+    <ul>
+      <li>All read and write methods now return asynStatus and have
+        additional args to return the number of bytes sent/received.</li>
+    </ul>
   </li>
-  </ul>
   <li>asynRecord
-  <ul>
-  <li>The IEOS and OEOS fields are set to the current values for the port when the record connects to the 
-port.  If they are modified after the record connects to the port, then the 
-EOS strings will be changed using asynOctet-&gt;setOutputEos or asynOctet-&gt;setIbputEos. IMPORTANT: 
-The values of IEOS and OEOS in the database file are never used, because they are modified 
-when the record connects to the port.
+    <ul>
+      <li>The IEOS and OEOS fields are set to the current values for the port
+        when the record connects to the port.  If they are modified after the
+        record connects to the port, then the EOS strings will be changed
+        using asynOctet-&gt;setOutputEos or asynOctet-&gt;setIbputEos.
+        IMPORTANT: The values of IEOS and OEOS in the database file are never
+        used, because they are modified when the record connects to the
+      port.</li>
+    </ul>
   </li>
-  </ul>
 </ul>
+
 <h3>New Features</h3>
 <ul>
-  <li>interrupt support -A major new feature is support for interrupts. See asynDriver.html
-    for details.
+  <li>interrupt support -A major new feature is support for interrupts. See
+    asynDriver.html for details.</li>
+  <li>linuxGpib - This is support for the linuxGpib open source project. It
+    contains support for many linux gpib kernel drivers. The asyn support was
+    provided by Rok Sabjan (cosyLab).</li>
+  <li>cancelRequest - If cancelRequest is called while either the process or
+    timeout callback is active, it now waits until the callback
+  completes.</li>
+  <li>asynRecord
+    <ul>
+      <li>Added PCNCT field to connect/disconnect from port, and to indicate
+        if port is currently connected.</li>
+      <li>Added DRVINFO and REASON fields to provide control for the drvUser
+        interface.</li>
+      <li>Added support for register interfaces (asynInt32,
+        asynUInt32Digital, and asynFloat64).  New I/O fields for this support
+        are I32INP, I32OUT, UI32INP, UI32OUT, UI32MASK, F64INP, and F64OUT. 
+        The new IFACE field is used to select the currently active
+      interface.</li>
+      <li>Added new fields to indicate if a particular interface is supported
+        by the driver.  These fields are OCTETIV, I32IV, UI32IV, F64IV,
+        OPTIONIV, and GPIBIV.</li>
+      <li>Added support for I/O Intr scanning for any driver/interface that
+        supports callbacks. asynOctet does not yet support callbacks.</li>
+    </ul>
   </li>
-  <li>linuxGpib - This is support for the linuxGpib open source project.
-       It contains support for many linux gpib kernel drivers.
-       The asyn support was provided by Rok Sabjan (cosyLab).
-   </li>
-<li>cancelRequest - If cancelRequest is called while either the process or timeout callback is
-active, it now waits until the callback completes.
-</li>
-<li>asynRecord
-<ul>
-  <li>Added PCNCT field to connect/disconnect from port, and to indicate if
-    port is currently connected.
-  </li>
-  <li>Added DRVINFO and REASON fields to provide control for the drvUser
-    interface.
-  </li>
-  <li>Added support for register interfaces (asynInt32, asynUInt32Digital,
-    and asynFloat64).  New I/O fields for this support are I32INP, I32OUT, 
-    UI32INP, UI32OUT, UI32MASK, F64INP, and F64OUT.  The new IFACE field is used
-    to select the currently active interface.
-  </li>
-  <li>Added new fields to indicate if a particular interface is supported
-    by the driver.  These fields are OCTETIV, I32IV, UI32IV, F64IV, OPTIONIV,
-    and GPIBIV.
-  </li>
-  <li>Added support for I/O Intr scanning for any driver/interface that supports
-    callbacks. asynOctet does not yet support callbacks.
-  </li>
-</ul>
 </ul>
 
 <center>
@@ -122,15 +121,16 @@ active, it now waits until the callback completes.
 <h3>Major New Features</h3>
 <ul>
   <li>Support for synchronous drivers.</li>
-  <li>Support for register based drivers.</li>
-  <ul>
-    <li>Generic register based device support for EPICS records.</li>
-    <li>Additional fields have been added to asynUser.</li>
-    <li>Added pasynManager-&gt;memMalloc() and pasynManager-&gt;memFree() for
-      allocating and freeing memory with a freelist.  This is primarily meant
-      to be used with pasynManager-&gt;duplicateAsynUser() and the new
-      pasynUser-&gt;userData field.</li>
-  </ul>
+  <li>Support for register based drivers.
+    <ul>
+      <li>Generic register based device support for EPICS records.</li>
+      <li>Additional fields have been added to asynUser.</li>
+      <li>Added pasynManager-&gt;memMalloc() and pasynManager-&gt;memFree()
+        for allocating and freeing memory with a freelist.  This is primarily
+        meant to be used with pasynManager-&gt;duplicateAsynUser() and the
+        new pasynUser-&gt;userData field.</li>
+    </ul>
+  </li>
 </ul>
 
 <h3>asynDriver.h</h3>
@@ -403,4 +403,5 @@ tested with the following vxi11 controllers:</p>
     NPort Ethernet/Serial converter.</li>
 </ul>
 Two Device Support modules have been converted from the 3.13 gpib support:
-DG535 and TDS3014B Scope.</body></html>
+DG535 and TDS3014B Scope.</body>
+</html>
