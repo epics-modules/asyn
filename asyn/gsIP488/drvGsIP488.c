@@ -210,7 +210,7 @@ typedef volatile struct ip488RegisterMap {
 
 static void printStatus(gpib *pgpib, const char *source)
 {
-    sprintf(pgpib->errorMessage, "%s auxCmd failed "
+    sprintf(pgpib->errorMessage, "%s "
         "intStatus0 %x intStatus1 %x addressStatus %x busStatus %x\n",
         source, (pgpib->copyIsr0&0xff),(pgpib->copyIsr1&0xff),
         (readw(&pgpib->regs->addressStatus)&0xff),
@@ -330,7 +330,6 @@ static void gpibInterruptHandler(int v)
             message_complete = 1;
         }
         if(!message_complete && pgpib->bytesRemaining == 0) {
-            pgpib->status = asynOverflow;
             message_complete = 1;
         }
         if(message_complete) {
@@ -622,10 +621,11 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read nchar %d",
         pgpib->portName,actual);
+    pgpib->errorMessage[0] = 0;
     status = readGpib(pgpib,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib error %s\n",
-            pgpib->portName,pgpib->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib status %s error %s\n",
+            pgpib->portName,(int)status,pgpib->errorMessage);
         return(-1);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
@@ -643,6 +643,7 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d",
         pgpib->portName,numchars);
+    pgpib->errorMessage[0] = 0;
     status = writeGpib(pgpib,data,numchars,addr,timeout);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
