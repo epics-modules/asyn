@@ -24,6 +24,7 @@ testGpib_SRCS += testGpibMain.c
 testGpib_SRCS += devTestGpib.c
 
 testGpib_LIBS += testSupport asyn
+SYS_PROD_LIBS_cygwin32 += rpc
 testGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 testGpibVx_SRCS += testGpibVx_registerRecordDeviceDriver.cpp
