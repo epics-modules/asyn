@@ -75,6 +75,11 @@ menu(serialSBIT) {
     choice(serialSBIT_1,"1")
     choice(serialSBIT_2,"2")
 }
+menu(serialMCTL) {
+    choice(serialMCTL_unknown,"Unknown")
+    choice(serialMCTL_CLOCAL,"CLOCAL")
+    choice(serialMCTL_Yes,"YES")
+}
 menu(serialFCTL) {
     choice(serialFCTL_unknown,"Unknown")
     choice(serialFCTL_None,"None")
@@ -364,6 +369,12 @@ recordtype(asyn) {
         promptgroup(GUI_COMMON)
         special(SPC_MOD)
         menu(serialSBIT)
+    }
+    field(MCTL,DBF_MENU) {
+        prompt("Modem control")
+        promptgroup(GUI_COMMON)
+        special(SPC_MOD)
+        menu(serialMCTL)
     }
     field(FCTL,DBF_MENU) {
         prompt("Flow control")

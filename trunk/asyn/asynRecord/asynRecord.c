@@ -53,8 +53,10 @@ static char *parity_choices[NUM_PARITY_CHOICES] = {"Unknown", "none", "even", "o
 static char *data_bit_choices[NUM_DBIT_CHOICES] = {"Unknown", "5", "6", "7", "8"};
 #define NUM_SBIT_CHOICES 3
 static char *stop_bit_choices[NUM_SBIT_CHOICES] = {"Unknown", "1", "2"};
+#define NUM_MODEM_CHOICES 3
+static char *modem_control_choices[NUM_MODEM_CHOICES] = {"Unknown", "Y", "N"};
 #define NUM_FLOW_CHOICES 3
-static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "Y", "N"};
+static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
@@ -159,6 +161,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 prty;       /* Parity */
     epicsEnum16 dbit;       /* Data bits */
     epicsEnum16 sbit;       /* Stop bits */
+    epicsEnum16 mctl;       /* Modem control */
     epicsEnum16 fctl;       /* Flow control */
     epicsEnum16 ucmd;       /* Universal command */
     epicsEnum16 acmd;       /* Addressed command */
@@ -518,6 +521,7 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordPRTY:
     case asynRecordDBIT:
     case asynRecordSBIT:
+    case asynRecordMCTL:
     case asynRecordFCTL:
         pmsg->fieldIndex = fieldIndex;
         pmsg->callbackType = callbackSetOption;
@@ -1648,9 +1652,13 @@ static void setOption(asynUser * pasynUser)
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
            pasynUser, "bits", data_bit_choices[pasynRec->dbit]);
         break;
+    case asynRecordMCTL:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+           pasynUser, "clocal", modem_control_choices[pasynRec->mctl]);
+        break;
     case asynRecordFCTL:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
-           pasynUser, "clocal", flow_control_choices[pasynRec->fctl]);
+           pasynUser, "crtscts", flow_control_choices[pasynRec->fctl]);
         break;
     }
     if(status != asynSuccess) {
@@ -1679,6 +1687,7 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(prty);
     REMEMBER_STATE(sbit);
     REMEMBER_STATE(dbit);
+    REMEMBER_STATE(mctl);
     REMEMBER_STATE(fctl);
     /* Get port options */
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
@@ -1707,6 +1716,12 @@ static void getOptions(asynUser * pasynUser)
             pasynRec->dbit = i;
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
                                         "clocal", optbuff, OPT_SIZE);
+    pasynRec->mctl = 0;
+    for (i = 0; i < NUM_MODEM_CHOICES; i++)
+        if(strcmp(optbuff, modem_control_choices[i]) == 0)
+            pasynRec->mctl = i;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+                                        "crtscts", optbuff, OPT_SIZE);
     pasynRec->fctl = 0;
     for (i = 0; i < NUM_FLOW_CHOICES; i++)
         if(strcmp(optbuff, flow_control_choices[i]) == 0)
@@ -1715,6 +1730,7 @@ static void getOptions(asynUser * pasynUser)
     POST_IF_NEW(prty);
     POST_IF_NEW(sbit);
     POST_IF_NEW(dbit);
+    POST_IF_NEW(mctl);
     POST_IF_NEW(fctl);
 }
 
