@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.17 2004-07-14 17:58:09 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.18 2004-07-15 21:43:26 norume Exp $
  */
 
 #include <string.h>
@@ -782,7 +782,12 @@ drvAsynSerialPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eos
     assert(tty);
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
             "%s set EOS %d: ", tty->serialDeviceName, eoslen);
-    return asynError;
+    if (eoslen > 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s: setEos not supported", tty->serialDeviceName);
+        return asynError;
+    }
+    return asynSuccess;
 }
 
 /*
@@ -797,7 +802,8 @@ drvAsynSerialPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s get EOS\n", tty->serialDeviceName);
-    return asynError;
+    *eoslen = 0;
+    return asynSuccess;
 }
 
 /*
