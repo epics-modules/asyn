@@ -56,7 +56,7 @@ typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct asynManager {
-    void      (*report)(FILE *fd,int details);
+    void      (*report)(FILE *fp,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
@@ -99,7 +99,7 @@ epicsShareExtern asynManager *pasynManager;
 /* Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
-    void       (*report)(void *drvPvt,FILE *fd,int details);
+    void       (*report)(void *drvPvt,FILE *fp,int details);
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
@@ -153,7 +153,7 @@ typedef struct asynTrace {
     int        (*getTraceMask)(asynUser *pasynUser);
     asynStatus (*setTraceIOMask)(asynUser *pasynUser,int mask);
     int        (*getTraceIOMask)(asynUser *pasynUser);
-    asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fd);
+    asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fp);
     FILE       *(*getTraceFile)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
     int        (*getTraceIOTruncateSize)(asynUser *pasynUser);

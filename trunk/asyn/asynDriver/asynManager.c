@@ -50,7 +50,7 @@ typedef struct device device;
 struct tracePvt {
     int  traceMask;
     int  traceIOMask;
-    FILE *fd;
+    FILE *fp;
     int  traceTruncateSize;
     int  traceBufferSize;
     char *traceBuffer;
@@ -149,7 +149,7 @@ static void autoConnect(port *pport,int addr);
 static void portThread(port *pport);
     
 /* asynManager methods */
-static void report(FILE *fd,int details);
+static void report(FILE *fp,int details);
 static asynUser *createAsynUser(userCallback queue, userCallback timeout);
 static asynStatus freeAsynUser(asynUser *pasynUser);
 static asynStatus isMultiDevice(asynUser *pasynUser,
@@ -218,7 +218,7 @@ static asynStatus setTraceMask(asynUser *pasynUser,int mask);
 static int        getTraceMask(asynUser *pasynUser);
 static asynStatus setTraceIOMask(asynUser *pasynUser,int mask);
 static int        getTraceIOMask(asynUser *pasynUser);
-static asynStatus setTraceFile(asynUser *pasynUser,FILE *fd);
+static asynStatus setTraceFile(asynUser *pasynUser,FILE *fp);
 static FILE       *getTraceFile(asynUser *pasynUser);
 static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size);
 static int        getTraceIOTruncateSize(asynUser *pasynUser);
@@ -255,6 +255,7 @@ static void asynInit(void)
         DEFAULT_TRACE_BUFFER_SIZE,sizeof(char),
         "asynManager:asynInit");
     pasynBase->trace.traceMask = ASYN_TRACE_ERROR;
+    pasynBase->trace.fp = stdout;
     pasynBase->trace.traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
     pasynBase->trace.traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
 }
@@ -556,21 +557,21 @@ static void portThread(port *pport)
 
 /* asynManager methods */
 
-static void reportPrintInterfaceList(FILE *fd,ELLLIST *plist,const char *title)
+static void reportPrintInterfaceList(FILE *fp,ELLLIST *plist,const char *title)
 {
     interfaceNode *pinterfaceNode = (interfaceNode *)ellFirst(plist);
 
-    if(pinterfaceNode) fprintf(fd,"    %s\n",title);
+    if(pinterfaceNode) fprintf(fp,"    %s\n",title);
     while(pinterfaceNode) {
         asynInterface *pasynInterface = pinterfaceNode->pasynInterface;
-        fprintf(fd,"        %s pinterface %p drvPvt %p\n",
+        fprintf(fp,"        %s pinterface %p drvPvt %p\n",
             pasynInterface->interfaceType, pasynInterface->pinterface,
             pasynInterface->drvPvt);
         pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
     }
 }
 
-static void report(FILE *fd,int details)
+static void report(FILE *fp,int details)
 {
     port *pport;
 
@@ -589,7 +590,7 @@ static void report(FILE *fd,int details)
 	for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
 	    nQueued += ellCount(&pport->queueList[i]);
         pdpc = &pport->dpc;
-	fprintf(fd,"%s multiDevice:%s autoConnect:%s enabled:%s connected:%s"
+	fprintf(fp,"%s multiDevice:%s autoConnect:%s enabled:%s connected:%s"
             " numberConnects %lu\n",
             pport->portName,(pport->multiDevice ? "Yes" : "No"),
             (pdpc->autoConnect ? "Yes" : "No"),
@@ -599,21 +600,21 @@ static void report(FILE *fd,int details)
         epicsMutexMustLock(pport->lock);
         lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
         epicsMutexUnlock(pport->lock);
-        fprintf(fd,"    nDevices %d nQueued %d lockCount %d\n",
+        fprintf(fp,"    nDevices %d nQueued %d lockCount %d\n",
             ellCount(&pport->deviceList),nQueued,lockCount);
-        fprintf(fd,"    exceptionActive: %s "
+        fprintf(fp,"    exceptionActive: %s "
             "exceptionUsers %d exceptionNotifys %d\n",
             (pdpc->exceptionActive ? "Yes" : "No"),
             ellCount(&pdpc->exceptionUserList),
             ellCount(&pdpc->exceptionNotifyList));
-        reportPrintInterfaceList(fd,&pdpc->interposeInterfaceList,
+        reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
             "interposeInterfaceList");
-        reportPrintInterfaceList(fd,&pport->interfaceList,"interfaceList");
+        reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
         pdevice = (device *)ellFirst(&pport->deviceList);
         while(pdevice) {
             pdpc = &pdevice->dpc;
-            fprintf(fd,"    addr:%d",pdevice->addr);
-	    fprintf(fd," autoConnect:%s enabled:%s "
+            fprintf(fp,"    addr:%d",pdevice->addr);
+	    fprintf(fp," autoConnect:%s enabled:%s "
                 "connected:%s exceptionActive:%s\n",
                 (pdpc->autoConnect ? "Yes" : "No"),
                 (pdpc->enabled ? "Yes" : "No"),
@@ -622,12 +623,12 @@ static void report(FILE *fd,int details)
             epicsMutexMustLock(pport->lock);
             lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
             epicsMutexUnlock(pport->lock);
-            fprintf(fd,"    exceptionActive: %s "
+            fprintf(fp,"    exceptionActive: %s "
                 "exceptionUsers %d exceptionNotifys %d lockCount %d\n",
                 (pdpc->exceptionActive ? "Yes" : "No"),
                 ellCount(&pdpc->exceptionUserList),
                 ellCount(&pdpc->exceptionNotifyList),lockCount);
-            reportPrintInterfaceList(fd,&pdpc->interposeInterfaceList,
+            reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
                 "interposeInterfaceList");
             pdevice = (device *)ellNext(&pdevice->node);
         }
@@ -642,8 +643,8 @@ static void report(FILE *fd,int details)
             pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
         }
         if(pasynCommon) {
-            fprintf(fd,"    Calling asynCommon.report\n");
-            pasynCommon->report(drvPvt,fd,details);
+            fprintf(fp,"    Calling asynCommon.report\n");
+            pasynCommon->report(drvPvt,fp,details);
         }
         pport = (port *)ellNext(&pport->node);
     }
@@ -1299,23 +1300,23 @@ static int getTraceIOMask(asynUser *pasynUser)
     return ptracePvt->traceIOMask;
 }
 
-static asynStatus setTraceFile(asynUser *pasynUser,FILE *fd)
+static asynStatus setTraceFile(asynUser *pasynUser,FILE *fp)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
     epicsMutexMustLock(pasynBase->lockTrace);
-    if(ptracePvt->fd!=0 && ptracePvt->fd!=stdout && ptracePvt->fd!=stderr) {
+    if(ptracePvt->fp!=0 && ptracePvt->fp!=stdout && ptracePvt->fp!=stderr) {
         int status;
 
         errno = 0;
-        status = fclose(ptracePvt->fd);
+        status = fclose(ptracePvt->fp);
         if(status) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager:setTraceFile fclose error %s\n",strerror(errno));
         }
     }
-    ptracePvt->fd = fd;
+    ptracePvt->fp = fp;
     if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceFile);
     epicsMutexUnlock(pasynBase->lockTrace);
     return asynSuccess;
@@ -1326,7 +1327,7 @@ static FILE *getTraceFile(asynUser *pasynUser)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    return ptracePvt->fd;
+    return ptracePvt->fp;
 }
 
 static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
@@ -1355,19 +1356,45 @@ static int getTraceIOTruncateSize(asynUser *pasynUser)
     return ptracePvt->traceTruncateSize;
 }
 
+static size_t printTime(FILE *fp)
+{
+    epicsTimeStamp now;
+    char nowText[40];
+    size_t rtn;
+
+    rtn = epicsTimeGetCurrent(&now);
+    if(rtn) {
+        printf("epicsTimeGetCurrent failed\n");
+        return 0;
+    }
+    nowText[0] = 0;
+    epicsTimeToStrftime(nowText,sizeof(nowText),
+         "%Y/%m/%d %H:%M:%S.%03f",&now);
+    if(fp) {
+        return fprintf(fp,"%s ",nowText);
+    } else {
+        return errlogPrintf("%s ",nowText);
+    }
+}
+
 static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
     va_list  pvar;
     int      nout = 0;
-    FILE     *fd;
+    FILE     *fp;
 
     if(!(reason&ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
-    fd = (ptracePvt->fd) ? ptracePvt->fd : stdout;
+    fp = ptracePvt->fp;
+    nout += printTime(fp);
     va_start(pvar,pformat);
-    nout = vfprintf(fd,pformat,pvar);
+    if(fp) {
+        nout = vfprintf(fp,pformat,pvar);
+    } else {
+        nout += errlogVprintf(pformat,pvar);
+    }
     va_end(pvar);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
@@ -1380,7 +1407,7 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     tracePvt *ptracePvt  = findTracePvt(puserPvt);
     va_list  pvar;
     int      nout = 0;
-    FILE     *fd;
+    FILE     *fp;
     int traceMask,traceIOMask,traceTruncateSize,nBytes;
 
     traceMask = ptracePvt->traceMask;
@@ -1388,26 +1415,54 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     traceTruncateSize = ptracePvt->traceTruncateSize;
     if(!(reason&traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
-    fd = (ptracePvt->fd) ? ptracePvt->fd : stdout;
+    fp = ptracePvt->fp;
+    nout += printTime(fp);
     va_start(pvar,pformat);
-    nout += vfprintf(fd,pformat,pvar);
+    if(fp) {
+        nout = vfprintf(fp,pformat,pvar);
+    } else {
+        nout += errlogVprintf(pformat,pvar);
+    }
     va_end(pvar);
     nBytes = (len<traceTruncateSize) ? len : traceTruncateSize;
     if((traceIOMask&ASYN_TRACEIO_ASCII) && (nBytes>0)) {
-        nout += fprintf(fd,"%.*s\n",nBytes,buffer);
+       if(fp) {
+           nout += fprintf(fp,"%.*s\n",nBytes,buffer);
+       } else {
+           nout += errlogPrintf("%.*s\n",nBytes,buffer);
+       }
     }
     if(traceIOMask&ASYN_TRACEIO_ESCAPE) {
-        if(nBytes>0)
-            nout += epicsStrPrintEscaped(fd,buffer,nBytes);
-        nout += fprintf(fd,"\n");
+        if(nBytes>0) {
+            if(fp) {
+                nout += epicsStrPrintEscaped(fp,buffer,nBytes);
+            } else {
+/* NO funtion to translate escapes */
+                nout += errlogPrintf("%s\n",buffer);
+            }
+        }
     }
     if((traceIOMask&ASYN_TRACEIO_HEX) && (traceTruncateSize>0)) {
         int i;
         for(i=0; i<nBytes; i++) {
-            if(i%20 == 0) nout += fprintf(fd,"\n");
-            nout += fprintf(fd,"%2.2x ",(unsigned char)buffer[i]);
+            if(i%20 == 0) {
+                if(fp) {
+                    nout += fprintf(fp,"\n");
+                } else {
+                    nout += errlogPrintf("\n");
+                }
+            }
+            if(fp) {
+                nout += fprintf(fp,"%2.2x ",(unsigned char)buffer[i]);
+            } else {
+                nout += errlogPrintf("%2.2x ",(unsigned char)buffer[i]);
+            }
         }
-        nout += fprintf(fd,"\n");
+        if(fp) {
+            nout += fprintf(fp,"\n");
+        } else {
+            nout += errlogPrintf("\n");
+        }
     }
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;

@@ -574,7 +574,7 @@ asynManager:interposeInterface.</p>
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct asynManager {
-    void      (*report)(FILE *fd,int details);
+    void      (*report)(FILE *fp,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
@@ -814,7 +814,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
 <pre>/* Device Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
-    void       (*report)(void *drvPvt,FILE *fd,int details);
+    void       (*report)(void *drvPvt,FILE *fp,int details);
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
@@ -940,7 +940,7 @@ typedef struct asynTrace {
     int        (*getTraceMask)(asynUser *pasynUser);
     asynStatus (*setTraceIOMask)(asynUser *pasynUser,int mask);
     int        (*getTraceIOMask)(asynUser *pasynUser);
-    asynStatus (*setTraceFILE)(asynUser *pasynUser,FILE *fd);
+    asynStatus (*setTraceFILE)(asynUser *pasynUser,FILE *fp);
     FILE       *(*getTraceFILE)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
     int        (*getTraceIOTruncateSize)(asynUser *pasynUser);
@@ -1053,7 +1053,8 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
     <tr>
       <td>setTraceFILE</td>
       <td>Set the file descriptor to use for output. A null value means
-        stdout. Normally set by the user requesting it via a shell command or
+        use errlog.
+        Normally set by the user requesting it via a shell command or
         the devTrace device support. If the current file descriptor is none
         of (0, stdout, stderr) then the file is closed before the file
         descriptor is changed.</td>
@@ -1063,7 +1064,8 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
       <td>Get the file descriptor to use for output. Support that wants to
         issue it's own IO messages instead of calling asynPrintIO should call
         this and honor the mask settings. In this case lock must have been
-        called first. Most code will not need it.</td>
+        called first. Most code will not need it.
+        If return value is 0 then ouput should be directed to errlog</td>
     </tr>
     <tr>
       <td>setTraceIOTruncateSize</td>
@@ -1507,7 +1509,7 @@ struct asynGpib{
 };
 struct asynGpibPort {
     /*asynCommon methods */
-    void (*report)(void *drvPvt,FILE *fd,int details);
+    void (*report)(void *drvPvt,FILE *fp,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
