@@ -88,11 +88,11 @@ write new support.</p>
     devCommonGpib/devSupportGpib routines.</li>
   <li>devCommonGpib provides support for individual record types.</li>
   <li>devSupportGpib provides record independent support.</li>
-  <li>devCommonGpib/devSupportGpib use asynDriver, octetDriver, and
-    gpibDriverUser. Thus the support will work with any driver that
+  <li>devCommonGpib/devSupportGpib use asynCommon, asynOctet, and
+    asynGpibUser. Thus the support will work with any driver that
     implements these interraces. If instrument support does not use gpib
     specific features, e.g. SRQs, then the support will work with any driver
-    that implements asynDriver and octetDriver. In particular communication
+    that implements asynCommon and asynOctet. In particular communication
     via serial and ethernet ports is possible.</li>
   <li>devCommonGpib should satisfy most requirements but it is also possible
     to provide custom support that uses devSupportGpib.</li>
@@ -843,7 +843,7 @@ processing if the debug flag in the parm block is set to a non-zero value.
 <h2>SRQ Processing</h2>
 
 <p>If the low level device driver implements interface
-<code>gpibDriverUser</code> then devSupportGpib registers itself to handle
+<code>asynGpibUser</code> then devSupportGpib registers itself to handle
 SRQs. It defines two types of SRQs: sollicited and unsollicited. Sollicited
 SRQs are for GPIBREADW and GPIBEFASTIW commands. If an SRQ is raised for a
 gpibAddr that does not have an outstanding GPIBREADW or GPIBEFASTIW command,
@@ -940,12 +940,12 @@ address of a gpibDpvt.</p>
     CALLBACK callback;
     dbCommon *precord;
     asynUser *pasynUser;
-    asynDriver *pasynDriver;
-    void *pasynDriverPvt;
-    octetDriver *poctetDriver;
-    void *poctetDriverPvt;
-    gpibDriverUser *pgpibDriverUser;
-    void *pgpibDriverUserPvt;
+    asynCommon *pasynCommon;
+    void *pasynCommonPvt;
+    asynOctet *pasynOctet;
+    void *pasynOctetPvt;
+    asynGpibUser *pasynGpibUser;
+    void *pasynGpibUserPvt;
     int parm;                 /* parameter index into gpib commands */
     char *rsp;                /* for read/write message error responses */
     char *msg;                /* for read/write messages */
@@ -972,16 +972,16 @@ address of a gpibDpvt.</p>
     <dd>Address of the record.</dd>
   <dt>pasynUser</dt>
     <dd>Address of an asynUser which is needed to call asyn support.</dd>
-  <dt>pasynDriver,pasynDriverPvt</dt>
-    <dd>Used to call asynDriver. If initialization is successful these will
+  <dt>pasynCommon,pasynCommonPvt</dt>
+    <dd>Used to call asynCommon. If initialization is successful these will
       have a value.</dd>
-  <dt>poctetDriver,poctetDriverPvt</dt>
-    <dd>Used to call octetDriver. If initialization is successful these will
+  <dt>pasynOctet,pasynOctetPvt</dt>
+    <dd>Used to call asynOctet. If initialization is successful these will
       have a value.</dd>
-  <dt>pgpibDriverUser,pgpibDriverUserPvt</dt>
-    <dd>Used to call gpibDriverUser. These may be NULL even if initialization
-      is successful. If a record that requires gpibDriverUser is processed
-      and pgpibDriverUser is NULL then an error message is generated and the
+  <dt>pasynGpibUser,pasynGpibUserPvt</dt>
+    <dd>Used to call asynGpibUser. These may be NULL even if initialization
+      is successful. If a record that requires asynGpibUser is processed
+      and pasynGpibUser is NULL then an error message is generated and the
       record put into alarm.</dd>
   <dt>parm</dt>
     <dd>The value of the parm field of INP or OUT. It locates the gpibCmd for
@@ -1028,8 +1028,8 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
   <dt>gpibWork</dt>
     <dd>Prototype of function that is called when a request is dequeued by
-      the thread created for low level gpib driver. It can call asynDriver,
-      octetDriver, and gpibDriverUser.</dd>
+      the thread created for low level gpib driver. It can call asynCommon,
+      asynOctet, and asynGpibUser.</dd>
   <dt>initRecord</dt>
     <dd>This initializes all the devGpib structues attached to the record
       starting with dbCommon.dpvt.</dd>
