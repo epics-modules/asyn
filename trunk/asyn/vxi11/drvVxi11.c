@@ -76,6 +76,7 @@ typedef struct vxiPort {
     struct in_addr inAddr; /* ip address of gateway */
     CLIENT        *rpcClient; /* returned by clnttcp_create() */
     unsigned long maxRecvSize; /* max. # of bytes accepted by link */
+    unsigned short abortPort;   /* TCP port for abort channel */
     double        defTimeout;
     devLink       server;
     linkPrimary   primary[NUM_GPIB_ADDRESSES];
@@ -248,6 +249,17 @@ static BOOL vxiCreateLink(vxiPort * pvxiPort,
         rtnVal = TRUE;
         if(pvxiPort->maxRecvSize==0) {
             pvxiPort->maxRecvSize = crLinkR.maxRecvSize;
+        } else if(pvxiPort->maxRecvSize!=crLinkR.maxRecvSize) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiCreateLink maxRecvSize changed from %lu to %lu",
+                            devName,pvxiPort->maxRecvSize,crLinkR.maxRecvSize);
+        }
+        if(pvxiPort->abortPort==0) {
+            pvxiPort->abortPort = crLinkR.abortPort;
+        } else if(pvxiPort->abortPort!=crLinkR.abortPort) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiCreateLink abort channel TCP port changed from %u to %u",
+                                devName,pvxiPort->abortPort,crLinkR.abortPort);
         }
     }
     xdr_free((const xdrproc_t) xdr_Create_LinkResp, (char *) &crLinkR);
