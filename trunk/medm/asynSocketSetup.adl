@@ -95,7 +95,7 @@ display {
 		height=20
 	}
 	control {
-		chan="$(REC).SOCK"
+		chan="$(P)$(R).SOCK"
 		clr=14
 		bclr=51
 	}
@@ -168,7 +168,7 @@ composite {
 			"basic attribute" {
 				clr=14
 			}
-			textix="$(REC)"
+			textix="$(P)$(R)"
 			align="horiz. centered"
 		}
 	}
