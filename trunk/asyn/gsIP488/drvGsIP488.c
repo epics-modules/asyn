@@ -779,6 +779,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int vector,
     pgsport->carrier = carrier;
     pgsport->module = module;
     pgsport->vector = vector;
+    pgsport->eos = -1;
     pgsport->portName = (char *)(pgsport+1);
     strcpy(pgsport->portName,portName);
     pgsport->waitForInterrupt = epicsEventMustCreate(epicsEventEmpty);

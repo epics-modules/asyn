@@ -352,6 +352,7 @@ static asynStatus getInputEos(void *ppvt,asynUser *pasynUser,
     case 0: break;
     }
     *eoslen = peosPvt->eosInLen;
+    if(peosPvt->eosInLen<eossize) eos[peosPvt->eosInLen] = 0;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
             "%s get Eos %d: ", peosPvt->portName, *eoslen);
     return asynSuccess;
