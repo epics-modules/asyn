@@ -62,8 +62,8 @@ struct gpibCmd {
     short pri;   /* request priority IB_Q_LOW, IB_G_MEDIUM, or IB_Q_HIGH */
     char *cmd;   /* CONSTANT STRING to send to instrument */
     char *format;/* string used to generate or interpret msg */
-    int rspLen;  /* room for response error message */
-    int msgLen;  /* room for return data message length */
+    int rspLen;  /* room for respond2Writes response message*/
+    int msgLen;  /* room for return data message */
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
     int P1;      /* P1 plays a dual role: */
@@ -75,7 +75,7 @@ struct gpibCmd {
                  /*      For EFAST it holds the address of the EFAST table */
                  /*      For convert it is passed to convert() */
     devGpibNames *pdevGpibNames; /* pointer to name strings */
-    int eosChar; /* input end-of-string character */
+    char * eos; /* input end-of-string */
 };
 /*Define so that it is easy to check for valid set of commands*/
 #define GPIBREAD        0x00000001
@@ -96,9 +96,6 @@ struct gpibCmd {
 #define GPIBGTL         0x00008000
 #define GPIBRESETLNK    0x00010000
 #define GPIBSRQHANDLER  0x00020000
-/*GPIBEOS can be combined with some of the above commands*/
-/*If set gpibCmd.eosChar is end of message terminator*/
-#define GPIBEOS         0x80000000
 #define IB_Q_LOW     asynQueuePriorityLow
 #define IB_Q_MEDIUM  asynQueuePriorityMedium
 #define IB_Q_HIGH    asynQueuePriorityHigh
@@ -120,9 +117,9 @@ struct devGpibParmBlock {
     int respond2Writes; /* set to true if a device responds to writes */
     /*The following are set by devSupportGpib*/
     char *msg;   /*shared msg buffer for all gpibCmds*/
-    int  msgSize;/*size of msg*/
-    char *rsp;   /*shared msg buffer for all gpibCmds*/
-    int  rspSize;/*size of msg*/
+    int  msgLen;/*size of msg*/
+    char *rsp;   /*shared rsp buffer for all respond2Writes*/
+    int  rspLen;/*size of rsp*/
     /*Are the following still needed? Marty thinks not */
     char *name;         /* Name of this device support*/
     int *debugFlag; /* pointer to debug flag */
@@ -159,8 +156,8 @@ struct gpibDpvt {
     devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
 };
 
+/* If a method retuns int then 0,-1) => (OK, failure) */
 typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
-/* If a method retuns int then 0,1) => (OK, failure) */
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
@@ -183,7 +180,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
     (&(pgpibDpvt)->pdevGpibParmBlock->gpibCmds[(pgpibDpvt)->parm])
 #define gpibCmdGetType(pdpvt) \
     ((pdpvt)->pdevGpibParmBlock->gpibCmds[((pdpvt))->parm].type)
-#define gpibCmdTypeNoEOS(type) ((type) & ~GPIBEOS)
 #define devGpibNamesGet(pdpvt) \
     ((pdpvt)->pdevGpibParmBlock->gpibCmds[((pdpvt))->parm].pdevGpibNames)
 #define requestProcessCallback(pgpibDpvt) \
@@ -261,8 +257,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  ******************************************************************************/
 
 /*    devGpibParmBlock ****************************************************
- * name:
- *   Name of this device support.
  * gpibCmds:
  *   Pointer to the gpibCmds array.
  * numparams:
@@ -275,6 +269,12 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * respond2Writes:
  *   Set to TRUE if the device responds to write operations.  This causes
  *   a read operation to follow each write operation.
+ * msg msgLen
+ *   Set by devSupportGpib. The msg size is the largest msgLen in all gppibCmds
+ * rsp rspLen
+ *   Set by devSupportGpib. The rsp size is the largest rspLen in all gppibCmds
+ * name:
+ *   Name of this device support.
  * debugFlag:
  *   Must point to a flag used to request debugging traces for the device
  *   while executing library code.
@@ -289,7 +289,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
 
 /* gpibDpvt - dbCommon.dpvt is the address of a gpibDpvt***************
  *
- * node - For private use by devSupportGpib
  * pdevGpibParmBlock - address of the devGpibParmBlock for the instrument
  * gpibAddr - gpib address of instrument
  * callback - For use by requestProcessCallback
@@ -301,6 +300,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * parm - The index of the gpibCmd in the gpibCmd array
  * rsp - Response buffer of length gpibCmd.rspLen
  * msg - Message buffer of length gpibCmd.msgLen
+ * msgInputLen - Number of characters in last read.
  * efastVal - For EFAST requests this is the index
  * pupvt - For use by specialized code. e.g. conversions.
  * pdevGpibPvt - For private use by devSupportGpib.c

@@ -87,7 +87,8 @@ static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+            failure = -1;
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",pai->name);
         failure = -1;
@@ -218,28 +219,27 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else {
-        if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
-            if(pgpibDpvt->efastVal>=0) {
-                pbi->rval = pgpibDpvt->efastVal;
-            } else {
-                failure = -1;
-            }
-        } else if (!pgpibDpvt->msg) {
-            printf("%s no msg buffer\n",pbi->name);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
+    } else if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
+        if(pgpibDpvt->efastVal>=0) {
+            pbi->rval = pgpibDpvt->efastVal;
         } else {
-            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
-            if(sscanf(pgpibDpvt->msg, format, &value) == 1) {
-                pbi->rval = value;
-            } else {
-                /* sscanf did not find or assign the parameter*/
-                failure = -1;
-                if (*pdevGpibParmBlock->debugFlag) {
-                        printf("%s can't convert msg >%s<\n",
-                            pbi->name, pgpibDpvt->msg);
-                }
+            failure = -1;
+        }
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pbi->name);
+        failure = -1;
+    } else {
+        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
+        if(sscanf(pgpibDpvt->msg, format, &value) == 1) {
+            pbi->rval = value;
+        } else {
+            /* sscanf did not find or assign the parameter*/
+            failure = -1;
+            if (*pdevGpibParmBlock->debugFlag) {
+                    printf("%s can't convert msg >%s<\n",
+                        pbi->name, pgpibDpvt->msg);
             }
         }
     }
@@ -363,7 +363,7 @@ static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
     asynStatus status = asynSuccess;
 
     if(failure) {; /*do nothing*/
-    } else if(gpibCmdTypeNoEOS(cmdType) == GPIBRESETLNK) {
+    } else if(cmdType == GPIBRESETLNK) {
         asynCommon *pasynCommon = pgpibDpvt->pasynCommon;
         void *asynCommonPvt = pgpibDpvt->asynCommonPvt;
 
@@ -374,7 +374,7 @@ static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
     } else if(!pasynGpib) {
         failure = -1;
         printf("%s pasynGpib is 0\n",precord->name);
-    } else switch(gpibCmdTypeNoEOS(cmdType)) {
+    } else switch(cmdType) {
         case GPIBIFC: status = pasynGpib->ifc(drvPvt,pasynUser); break;
         case GPIBREN: status = pasynGpib->ren(drvPvt,pasynUser,val); break;
         case GPIBDCL:
@@ -439,7 +439,8 @@ static int evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+            failure = -1;
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",pev->name);
         failure = -1;
@@ -512,7 +513,8 @@ static int liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+            failure = -1;
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",pli->name);
         failure = -1;
@@ -651,28 +653,27 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-    } else {
-        if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
-            if(pgpibDpvt->efastVal>=0) {
-                pmbbi->rval = pgpibDpvt->efastVal;
-            } else {
-                failure = -1;
-            }
-        } else if (!pgpibDpvt->msg) {
-            printf("%s no msg buffer\n",pmbbi->name);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
+    } else if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
+        if(pgpibDpvt->efastVal>=0) {
+            pmbbi->rval = pgpibDpvt->efastVal;
         } else {
-            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
-            if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
-                pmbbi->rval = value;
-            } else {
-                /*sscanf did not find or assign the parameter*/
-                failure = -1;
-                if (*pdevGpibParmBlock->debugFlag) {
-                        printf("%s can't convert msg >%s<\n",
-                            pmbbi->name, pgpibDpvt->msg);
-                }
+            failure = -1;
+        }
+    } else if (!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",pmbbi->name);
+        failure = -1;
+    } else {
+        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
+        if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
+            pmbbi->rval = value;
+        } else {
+            /*sscanf did not find or assign the parameter*/
+            failure = -1;
+            if (*pdevGpibParmBlock->debugFlag) {
+                    printf("%s can't convert msg >%s<\n",
+                        pmbbi->name, pgpibDpvt->msg);
             }
         }
     }
@@ -724,7 +725,8 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+            failure = -1;
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",pmbbiDirect->name);
         failure = -1;
@@ -920,8 +922,8 @@ static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        failure = pgpibCmd->convert(pgpibDpvt,
-            pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+            failure = -1;
     } else if (!pgpibDpvt->msg) {
         printf("%s no msg buffer\n",psi->name);
         failure = -1;
@@ -1069,8 +1071,8 @@ static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     if(failure) {; /*do nothing*/
     } else if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         if(pgpibCmd->convert) {
-            failure = pgpibCmd->convert(pgpibDpvt,
-                pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+            if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+                failure = -1;
         } else if(pwf->ftvl!=menuFtypeCHAR) {
             printf("%s ftvl != CHAR but no convert\n",pwf->name);
             failure = -1; 

@@ -1,2 +1,1 @@
-registrar(devGpib)
-device(ai,GPIB_IO,devGpibReport,"GPIB report")
+device(ai,GPIB_IO,devGpib,"GPIB init/report")
