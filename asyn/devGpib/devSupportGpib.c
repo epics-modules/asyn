@@ -543,6 +543,11 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
     int i,msgLenMax=0,rspLenMax=0;
 
     if(pdevGpibParmBlock->msgLenMax==0 && pdevGpibParmBlock->rspLenMax==0) {
+        if (pdevGpibParmBlock->respond2Writes > 4)
+            printf("Warning -- %s respond2Writes is quite large (%g seconds).\n"
+                   "           Perhaps this value is still being set as\n"
+                   "           milliseconds rather than seconds?\n",
+                    pdevGpibParmBlock->respond2Writes, pdevGpibParmBlock->name);
         for(i=0; i<pdevGpibParmBlock->numparams; i++) {
             pgpibCmd = &pdevGpibParmBlock->gpibCmds[i];
             if(pgpibCmd->rspLen > rspLenMax) rspLenMax = pgpibCmd->rspLen;
@@ -1260,7 +1265,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     if(respond2Writes>=0 && rspLen>0) {
         int nrsp;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
-        if(respond2Writes>0) epicsThreadSleep(respond2Writes/1000.0);
+        if(respond2Writes>0) epicsThreadSleep(respond2Writes);
         if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
         status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp);
         if (status!=asynSuccess) {

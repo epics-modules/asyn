@@ -871,7 +871,7 @@ structure.  For example:
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
-    int respond2Writes; /* milliseconds to wait if a device responds to writes */
+    double respond2Writes; /* set >= 0 if device responds to writes */
     /*The following are set by devSupportGpib*/
     int  msgLenMax;     /*max msgLen all commands*/
     int  rspLenMax;     /*max rspLen all commands*/
