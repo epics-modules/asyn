@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.12 2004-04-15 21:17:03 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.13 2004-05-10 18:32:42 norume Exp $
  */
 
 #include <string.h>
@@ -20,10 +20,7 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
+#include <osiUnistd.h>
 #include <osiSock.h>
 #include <cantProceed.h>
 #include <errlog.h>
@@ -44,7 +41,9 @@
 # define USE_SOCKTIMEOUT
 #else
 # define USE_POLL
-# if !defined(vxWorks)
+# if defined(vxWorks) || defined(_WIN32)
+#  define FAKE_POLL
+# else
 #  include <sys/poll.h>
 # endif
 #endif
@@ -88,7 +87,7 @@ static void serialBaseInit(void)
         1,epicsThreadPriorityScanLow);
 }
 
-#ifdef vxWorks
+#ifdef FAKE_POLL
 /*
  * Use select() to simulate enough of poll() to get by.
  */
