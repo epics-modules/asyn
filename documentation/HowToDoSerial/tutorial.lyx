@@ -1113,7 +1113,7 @@ If you're using an Ethernet/RS-232 converter or a device which communicates
 \begin_deeper 
 \layout LyX-Code
 
-drvGenericSerialConfigure("L0","164.54.9.91:4002",0,0)
+drvGenericSerialConfigure("L0","164.54.9.91:4002",1,0)
 \end_deeper 
 \layout Itemize
 
@@ -1122,7 +1122,7 @@ If you're using a serial line directly attached to the IOC you need something
 \begin_deeper 
 \layout LyX-Code
 
-drvGenericSerialConfigure("L0","/dev/ttyS0",0,0)
+drvGenericSerialConfigure("L0","/dev/ttyS0",1,0)
 \newline 
 asynSetPortOption("L0", "baud", "9600")
 \newline 
@@ -1153,7 +1153,7 @@ tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 \newline 
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 \newline 
-drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
+drvGenericSerialConfigure("L0","/tyGS/0/0",1,0)
 \newline 
 asynSetPortOption("L0","baud","9600")
 \end_deeper 
@@ -1166,6 +1166,10 @@ In all of the above examples the first argument of the drvGenericSerialConfigure
 L
 \family default 
  value in the EPICS database record INP and OUT fields.
+
+The second argument of the drvGenericSerialConfigure commannd non-zero to
+direct the device support layer to automatically connect to the serial
+port on startup and whenever the serial port becomes disconnected.
 \end_deeper 
 \layout Enumerate
 
