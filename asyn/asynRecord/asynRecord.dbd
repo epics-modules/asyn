@@ -1,5 +1,6 @@
 # Menus
 menu(asynTMOD) {
+    choice(asynTMOD_NoIO,"NoI/O")
     choice(asynTMOD_Write_Read,"Write/Read")
     choice(asynTMOD_Write,"Write")
     choice(asynTMOD_Read,"Read")
