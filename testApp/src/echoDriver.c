@@ -48,8 +48,8 @@ static int echoDriverInit(const char *portName, double delay);
 static void report(void *ppvt,FILE *fp,int details);
 static asynStatus connect(void *ppvt,asynUser *pasynUser);
 static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
-static asynStatus setPortOptions(void *ppvt,int argc, char **argv);
-static asynCommon asyn = {report,connect,disconnect,setPortOptions};
+static asynStatus setPortOption(void *ppvt,const char *key,const char *val);
+static asynCommon asyn = {report,connect,disconnect,setPortOption};
 
 /* asynOctet methods */
 static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars);
@@ -109,7 +109,7 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 {
     return(asynSuccess);
 }
-static asynStatus setPortOptions(void *drvPvt, int argc, char **argv)
+static asynStatus setPortOption(void *drvPvt,const char *key,const char *val)
 {
     return(asynSuccess);
 }

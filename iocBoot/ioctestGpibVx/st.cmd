@@ -1,6 +1,6 @@
 # Following must be added for many board support packages
 #cd <full path to target bin directory>
-#cd "src/EPICS/modules/soft/asyn/iocBoot/ioctestGpibVx"
+cd "src/EPICS/modules/soft/asyn/iocBoot/ioctestGpibVx"
 
 < cdCommands
 
@@ -22,7 +22,7 @@ dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
 
 #The following two commands are for the E5810
 #E5810Reboot("164.54.8.129",0)
-#vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0)
+vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0)
 
 #The following command is for an ethernet TSD3014B scope
 #vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0)
