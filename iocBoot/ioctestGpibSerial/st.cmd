@@ -4,10 +4,10 @@ dbLoadDatabase("../../dbd/testGpibSerial.dbd")
 testGpibSerial_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
-dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
+dbLoadRecords("../../db/asynGeneric.db","ioc=gpibTest")
 
 #The following command is for a serial line terminal concentrator
-drvGenericSerialConfigure("L0","164.54.9.93:4003",0,0)
+drvGenericSerialConfigure("L0","164.54.9.93:4003",0,0,0)
 
 #The following commands are for a local serial line
 #drvGenericSerialConfigure("L0","/dev/cua/a",0,0)
