@@ -95,7 +95,6 @@ struct devGpibPvt {
     gpibWork work;
     gpibWork start;
     gpibWork finish;
-    char eos[2];
 };
 
 static long initRecord(dbCommon* precord, struct link * plink);
@@ -157,6 +156,7 @@ static void devGpibQueueTimeoutSet(
     const char *portName, int gpibAddr, double timeout);
 static void devGpibSrqWaitTimeoutSet(
     const char *portName, int gpibAddr, double timeout);
+static long init(int pass);
 static long report(int interest);
 
 static long initRecord(dbCommon *precord, struct link *plink)
@@ -395,28 +395,29 @@ static void commonGpibPvtInit(void)
 static void setMsgRsp(gpibDpvt *pgpibDpvt)
 {
     devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
-    gpibCmd *pgpibCmds;
-    int i,msgSize=0,rspSize=0;
+    gpibCmd *pgpibCmd;
+    int i,msgLen=0,rspLen=0;
 
     if(!pdevGpibParmBlock->msg && !pdevGpibParmBlock->rsp) {
         for(i=0; i<pdevGpibParmBlock->numparams; i++) {
-            pgpibCmds = &pdevGpibParmBlock->gpibCmds[i];
-            if(pgpibCmds->rspLen > rspSize) rspSize = pgpibCmds->rspLen;
-            if(pgpibCmds->msgLen > msgSize) msgSize = pgpibCmds->msgLen;
+            pgpibCmd = &pdevGpibParmBlock->gpibCmds[i];
+            if(pgpibCmd->rspLen > rspLen) rspLen = pgpibCmd->rspLen;
+            if(pgpibCmd->msgLen > msgLen) msgLen = pgpibCmd->msgLen;
         }
-        if(rspSize) {
+        if(rspLen) {
             pdevGpibParmBlock->rsp = callocMustSucceed(
-                rspSize,sizeof(char),"devSupportGpib::setMsgRsp");
-            pdevGpibParmBlock->rspSize = rspSize;
+                rspLen,sizeof(char),"devSupportGpib::setMsgRsp");
+            pdevGpibParmBlock->rspLen = rspLen;
         }
-        if(msgSize) {
+        if(msgLen) {
             pdevGpibParmBlock->msg = callocMustSucceed(
-                msgSize,sizeof(char),"devSupportGpib::setMsgRsp");
-            pdevGpibParmBlock->msgSize = msgSize;
+                msgLen,sizeof(char),"devSupportGpib::setMsgRsp");
+            pdevGpibParmBlock->msgLen = msgLen;
         }
     }
-    pgpibDpvt->rsp = pdevGpibParmBlock->rsp;
-    pgpibDpvt->msg = pdevGpibParmBlock->msg;
+    pgpibCmd =  &pdevGpibParmBlock->gpibCmds[pgpibDpvt->parm];
+    if(pgpibCmd->rspLen>0) pgpibDpvt->rsp = pdevGpibParmBlock->rsp;
+    if(pgpibCmd->msgLen>0) pgpibDpvt->msg = pdevGpibParmBlock->msg;
 }
 
 static portInstance *createPortInstance(
@@ -552,7 +553,7 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
+    int cmdType = pgpibCmd->type;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     portInstance *pportInstance = pdevGpibPvt->pportInstance;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
@@ -582,14 +583,14 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
             pdeviceInstance->srqWaitTimeout);
     }
     epicsMutexUnlock(pportInstance->lock);
-    if(pgpibCmd->type&GPIBEOS) {
-        pdevGpibPvt->eos[0] = (char)pgpibCmd->eosChar;
-        lenEos = 1;
+    if(pgpibCmd->eos) {
+        lenEos = strlen(pgpibCmd->eos);
+        if(lenEos==0) lenEos = 1;
     } else {
         lenEos = 0;
     }
     status = pgpibDpvt->pasynOctet->setEos(
-        pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pdevGpibPvt->eos,lenEos);
+        pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,lenEos);
     if(status!=asynSuccess) {
         printf("%s pasynOctet->setEos failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
@@ -656,7 +657,7 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
+    int cmdType = pgpibCmd->type;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
@@ -684,7 +685,8 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
     if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
-    pdevGpibPvt->finish(pgpibDpvt,failure);
+    if(pdevGpibPvt->finish)
+        failure = pdevGpibPvt->finish(pgpibDpvt,failure);
     status = pasynManager->unlock(pgpibDpvt->pasynUser);
     if(status!=asynSuccess) {
         printf("%s pasynManager->unlock failed %s\n",
@@ -700,7 +702,7 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynGpib *pasynGpib = pgpibDpvt->pasynGpib;
     void *asynGpibPvt = pgpibDpvt->asynGpibPvt;
-    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
+    int cmdType = pgpibCmd->type;
     int nchars = 0, lenMessage = 0;
     char *efasto, *msg;
 
@@ -710,7 +712,6 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         failure = pdevGpibPvt->start(pgpibDpvt,failure);
     if(failure) {
         recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
-        pdevGpibPvt->finish(pgpibDpvt,-1);
         goto done;
     }
     if (pgpibCmd->convert) {
@@ -796,7 +797,9 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
     if(nchars!=lenMessage) failure = -1;
 done:
     if(failure) recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
-    return pdevGpibPvt->finish(pgpibDpvt,failure);
+    if(pdevGpibPvt->finish)
+        failure =  pdevGpibPvt->finish(pgpibDpvt,failure);
+    return(failure);
 }
 
 static void queueCallback(asynUser *pasynUser)
@@ -1089,7 +1092,36 @@ static void devGpibSrqWaitTimeoutSet(
     pdeviceInstance->srqWaitTimeout = timeout;
 }
 
-/* Support for dbior */
+static const iocshArg devGpibQueueTimeoutArg0 = {"portName",iocshArgString};
+static const iocshArg devGpibQueueTimeoutArg1 = {"gpibAddr",iocshArgInt};
+static const iocshArg devGpibQueueTimeoutArg2 = {"timeout",iocshArgDouble};
+static const iocshArg *const devGpibQueueTimeoutArgs[3] =
+ {&devGpibQueueTimeoutArg0,&devGpibQueueTimeoutArg1,&devGpibQueueTimeoutArg2};
+static const iocshFuncDef devGpibQueueTimeoutDef =
+    {"devGpibQueueTimeout", 3, devGpibQueueTimeoutArgs};
+static void devGpibQueueTimeoutCall(const iocshArgBuf * args) {
+    devGpibQueueTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
+}
+
+static const iocshArg devGpibSrqWaitTimeoutArg0 = {"portName",iocshArgString};
+static const iocshArg devGpibSrqWaitTimeoutArg1 = {"gpibAddr",iocshArgInt};
+static const iocshArg devGpibSrqWaitTimeoutArg2 = {"timeout",iocshArgDouble};
+static const iocshArg *const devGpibSrqWaitTimeoutArgs[3] =
+ {&devGpibSrqWaitTimeoutArg0,&devGpibSrqWaitTimeoutArg1,&devGpibSrqWaitTimeoutArg2};
+static const iocshFuncDef devGpibSrqWaitTimeoutDef =
+    {"devGpibSrqWaitTimeout", 3, devGpibSrqWaitTimeoutArgs};
+static void devGpibSrqWaitTimeoutCall(const iocshArgBuf * args) {
+    devGpibSrqWaitTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
+}
+
+static long init(int pass)
+{
+    if(pass!=0) return(0);
+    iocshRegister(&devGpibQueueTimeoutDef,devGpibQueueTimeoutCall);
+    iocshRegister(&devGpibSrqWaitTimeoutDef,devGpibSrqWaitTimeoutCall);
+    return(0);
+}
+
 static long report(int interest)
 {
     asynUser *pasynUser;
@@ -1113,8 +1145,9 @@ static long report(int interest)
         pdeviceInstance = (deviceInstance *)ellFirst(
             &pportInstance->deviceInstanceList);
         while(pdeviceInstance) {
-            printf("    gpibAddr %d timeouts %lu errors %lu "
-                   "queueTimeout %f srqWaitTimeout %f\n",
+            printf("    gpibAddr %d\n"
+                   "        timeouts %lu errors %lu\n"
+                   "        queueTimeout %f srqWaitTimeout %f\n",
                 pdeviceInstance->gpibAddr,
                 pdeviceInstance->tmoCount,pdeviceInstance->errorCount,
                 pdeviceInstance->queueTimeout,pdeviceInstance->srqWaitTimeout);
@@ -1126,52 +1159,9 @@ static long report(int interest)
     return 0;
 }
 
-static gDset devGpibReport = {
+static gDset devGpib= {
     6,
     {report,0,0,0,0,0},
     0
 };
-epicsExportAddress(dset,devGpibReport);
-
-static const iocshArg devGpibReportArg0 = {"level", iocshArgInt};
-static const iocshArg *const devGpibReportArgs[1] = {&devGpibReportArg0};
-static const iocshFuncDef devGpibReportDef =
-    {"devGpibReport", 1, devGpibReportArgs};
-static void devGpibReportCall(const iocshArgBuf * args) {
-        report(args[0].ival);
-}
-
-static const iocshArg devGpibQueueTimeoutArg0 =
- {"portName",iocshArgString};
-static const iocshArg devGpibQueueTimeoutArg1 = {"gpibAddr",iocshArgInt};
-static const iocshArg devGpibQueueTimeoutArg2 = {"timeout",iocshArgDouble};
-static const iocshArg *const devGpibQueueTimeoutArgs[3] =
- {&devGpibQueueTimeoutArg0,&devGpibQueueTimeoutArg1,&devGpibQueueTimeoutArg2};
-static const iocshFuncDef devGpibQueueTimeoutDef =
-    {"devGpibQueueTimeout", 3, devGpibQueueTimeoutArgs};
-static void devGpibQueueTimeoutCall(const iocshArgBuf * args) {
-    devGpibQueueTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
-}
-
-static const iocshArg devGpibSrqWaitTimeoutArg0 =
- {"portName",iocshArgString};
-static const iocshArg devGpibSrqWaitTimeoutArg1 = {"gpibAddr",iocshArgInt};
-static const iocshArg devGpibSrqWaitTimeoutArg2 = {"timeout",iocshArgDouble};
-static const iocshArg *const devGpibSrqWaitTimeoutArgs[3] =
- {&devGpibSrqWaitTimeoutArg0,&devGpibSrqWaitTimeoutArg1,&devGpibSrqWaitTimeoutArg2};
-static const iocshFuncDef devGpibSrqWaitTimeoutDef =
-    {"devGpibSrqWaitTimeout", 3, devGpibSrqWaitTimeoutArgs};
-static void devGpibSrqWaitTimeoutCall(const iocshArgBuf * args) {
-    devGpibSrqWaitTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
-}
-
-static void devGpib(void)
-{
-    static int firstTime = 1;
-    if(!firstTime) return;
-    firstTime = 0;
-    iocshRegister(&devGpibReportDef,devGpibReportCall);
-    iocshRegister(&devGpibQueueTimeoutDef,devGpibQueueTimeoutCall);
-    iocshRegister(&devGpibSrqWaitTimeoutDef,devGpibSrqWaitTimeoutCall);
-}
-epicsExportRegistrar(devGpib);
+epicsExportAddress(dset,devGpib);

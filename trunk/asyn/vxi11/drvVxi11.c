@@ -641,14 +641,14 @@ static void vxiReport(void *pdrvPvt,FILE *fd,int details)
 {
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     assert(pvxiLink);
-    fprintf(fd,"  HP link, host name: %s\n", pvxiLink->hostName);
+    fprintf(fd,"    HP link, host name: %s\n", pvxiLink->hostName);
     if(details > 1) {
 	char nameBuf[60];
 	if(ipAddrToHostName(&pvxiLink->inAddr, nameBuf, sizeof nameBuf) > 0)
-	    fprintf(fd," ip address: %s\n", nameBuf);
-	fprintf(fd,"  vxi name: %s\n", pvxiLink->vxiName);
-	fprintf(fd,"  maxRecvSize: %lu\n", pvxiLink->maxRecvSize);
-	fprintf(fd,"  isSingleLink: %s\n", ((pvxiLink->isSingleLink) ? "yes" : "no"));
+	    fprintf(fd,"    ip address: %s\n", nameBuf);
+	fprintf(fd,"    vxi name: %s", pvxiLink->vxiName);
+	fprintf(fd," maxRecvSize: %lu", pvxiLink->maxRecvSize);
+	fprintf(fd," isSingleLink: %s\n", ((pvxiLink->isSingleLink) ? "yes" : "no"));
     }
 }
 
