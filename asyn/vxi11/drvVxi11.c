@@ -87,6 +87,7 @@ typedef struct vxiPort {
     asynInterface option;
     epicsEventId  srqThreadDone;
     int           srqBindSock; /*socket for bind*/
+    osiSockAddr   vxiServerAddr; /*addess of vxi11 server*/
     char          *srqThreadName;
     epicsInterruptibleSyscallContext *srqInterrupt;
 }vxiPort;
@@ -566,7 +567,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     return stat;
 }
 
-/*srqBindAddr notes
+/*
    In order to create_intr_chan the inet address and port for srqBindSock
    is required.
    Until vxiSrqThread has accepted a connection from the vxiii server
@@ -574,6 +575,11 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
    Thus the following code creats a UDP connection to the portmapper
    on the vxi11 server just to determine the local net address for
    connections to the server.
+
+   the srq connection is done as follows:
+
+   bind is only done to the network interface connected to the vxi server
+   accept (in vxiSrqThread) is only accepted from the vxi server address
 */
 static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
 {
@@ -619,9 +625,19 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
             pvxiPort->portName,strerror(errno));
         return;
     }
-    close(tempSock);
-    /*Now we have the local address*/
+    /*we have the local address*/
     srqBindAddr.ia.sin_addr.s_addr = tempAddr.ia.sin_addr.s_addr;
+    /*Get address of vxi11 server*/
+    addrlen = sizeof tempAddr;
+    memset((void *)&tempAddr, 0, addrlen);
+    if (getpeername(tempSock, &tempAddr.sa, &addrlen)) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiCreateIrqChannel getsockname failed %s\n",
+            pvxiPort->portName,strerror(errno));
+        return;
+    }
+    pvxiPort->vxiServerAddr.ia.sin_addr.s_addr = tempAddr.ia.sin_addr.s_addr;
+    close(tempSock);
 
     /* bind for receiving srq messages*/
     pvxiPort->srqBindSock = epicsSocketCreate (PF_INET, SOCK_STREAM, 0);
@@ -635,7 +651,7 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
     memset((void *)&tempAddr, 0, addrlen);
     tempAddr.ia.sin_family = AF_INET;
     tempAddr.ia.sin_port = htons (0);
-    tempAddr.ia.sin_addr.s_addr = INADDR_ANY;
+    tempAddr.ia.sin_addr.s_addr = srqBindAddr.ia.sin_addr.s_addr;
     if (bind (pvxiPort->srqBindSock, &tempAddr.sa, sizeof tempAddr.ia) < 0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiCreateIrqChannel bind failed %s\n",
@@ -759,25 +775,35 @@ static void vxiSrqThread(void *arg)
     asynUser *pasynUser = pvxiPort->pasynUser;
     epicsThreadId myTid;
     int srqSock;
-    osiSockAddr farAddr;
-    osiSocklen_t addrlen;
     char buf[512];
     int i;
 
     myTid = epicsThreadGetIdSelf();
     taskwdInsert(myTid, NULL, NULL);
-    epicsInterruptibleSyscallArm(
-        pvxiPort->srqInterrupt, pvxiPort->srqBindSock, myTid);
-    addrlen = sizeof farAddr;
-    srqSock = epicsSocketAccept(pvxiPort->srqBindSock, &farAddr.sa, &addrlen);
-    if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt)) {
-        if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
-            close(pvxiPort->srqBindSock);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s terminating\n",
-            pvxiPort->srqThreadName);
-        taskwdRemove(myTid);
-        epicsEventSignal(pvxiPort->srqThreadDone);
-        return;
+    while(1) {
+        osiSockAddr farAddr;
+        osiSocklen_t addrlen;
+
+        epicsInterruptibleSyscallArm(
+            pvxiPort->srqInterrupt, pvxiPort->srqBindSock, myTid);
+        addrlen = sizeof farAddr;
+        srqSock = epicsSocketAccept(pvxiPort->srqBindSock,&farAddr.sa,&addrlen);
+        if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt)) {
+            if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
+                close(pvxiPort->srqBindSock);
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiSrqThread terminating\n",
+                pvxiPort->portName);
+            taskwdRemove(myTid);
+            epicsEventSignal(pvxiPort->srqThreadDone);
+            return;
+        }
+        if(srqSock < 0) break;
+        if(pvxiPort->vxiServerAddr.ia.sin_addr.s_addr==farAddr.ia.sin_addr.s_addr)
+            break;
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+             "%s vxiSrqThread accept but not from vxiServer\n",
+              pvxiPort->portName);
+        close(srqSock);
     }
     close(pvxiPort->srqBindSock);
     if(srqSock < 0) {
@@ -810,7 +836,7 @@ static void vxiSrqThread(void *arg)
     if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
         close(srqSock);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
-        "%s terminating\n",pvxiPort->srqThreadName);
+        "%s vxiSrqThread terminating\n",pvxiPort->srqThreadName);
     taskwdRemove(myTid);
     epicsEventSignal(pvxiPort->srqThreadDone);
 }
