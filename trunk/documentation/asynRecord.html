@@ -35,8 +35,8 @@
   <li><a href="#Example 1">Example 1</a></li>
   <li><a href="#Example 2">Example 2</a></li>
 </ul>
-<h2><a name="Overview">Overview</a></h2>
 
+<h2><a name="Overview">Overview</a></h2>
 
 <p>The asyn record is designed to provide access to nearly all of the
 features of the asyn facility.&nbsp; It includes the ability to:</p>
@@ -302,7 +302,7 @@ Fields</a></h2>
       <td>"Output string"</td>
       <td>DBF_STRING</td>
       <td>The output string which is sent to the device if OFMT="ASCII". The
-        number of bytes sent to the device will be <code>strlen(AOUT)</code> 
+        number of bytes sent to the device will be <code>strlen(AOUT)</code>
         plus <code>strlen(OEOS)</code>.</td>
     </tr>
     <tr valign="top">
@@ -571,8 +571,8 @@ Fields</a></h2>
       <td>W</td>
       <td>"Get Options"</td>
       <td>DBF_UCHAR</td>
-      <td>Get the current values of Baud Rate, Data bits, Stop bits, and
-         Flow Control.</td>
+      <td>Get the current values of Baud Rate, Data bits, Stop bits, and Flow
+        Control.</td>
     </tr>
     <tr valign="top">
       <td>BAUD</td>
@@ -868,8 +868,13 @@ possible for the asyn record to determine the current file name if the record
 did not set it.&nbsp; In this case the file name is displayed as
 "Unknown".&nbsp; Set this field to a string  file name (including possibly a
 valid path from the IOC's current default directory) to have the output
-written to that file.&nbsp; Set the string to "" (null string) to set the
-output to the EPICS error logging facility.</p>
+written to that file.&nbsp; The following values are handled as special
+cases: </p>
+<ul>
+  <li>&lt;stdout&gt; - Write to standard out.</li>
+  <li>&lt;stderr&gt; - Write to standard error.</li>
+  <li>&lt;errlog&gt; - Use the errlog facility.</li>
+</ul>
 
 <p>&nbsp;</p>
 <hr>
@@ -944,11 +949,10 @@ Management Fields</a></h2>
       <td>W</td>
       <td>"About queueRequest"</td>
       <td>DBF_CHAR</td>
-      <td>Abort queueRequest. If either a process or special request has
-        been queued but not delivered it is canceled. If it is a process
-        request the record is put into alarm and record completion
-        occurs.
-        If a special request is outstanding it is silently canceled.</td>
+      <td>Abort queueRequest. If either a process or special request has been
+        queued but not delivered it is canceled. If it is a process request
+        the record is put into alarm and record completion occurs. If a
+        special request is outstanding it is silently canceled.</td>
     </tr>
   </tbody>
 </table>
@@ -1093,8 +1097,8 @@ height="150"></p>
 
 <p></p>
 <hr>
-<h2><a name="Restrictions">Restrictions</a></h2>
 
+<h2><a name="Restrictions">Restrictions</a></h2>
 
 <p>I/O Event Scanning (SCAN="I/O Intr") should be supported when the transfer
 mode (TMOD) is "Read". In this case the record should process whenever a
