@@ -19,42 +19,36 @@
 #define epicsExportSharedSymbols
 #include "epicsString1.h"
 
-#define BUFF_SIZE 10
-
-epicsShareFunc int epicsShareAPI epicsSnStrPrintEscaped(
-    char *outbuff, const char *inbuff, int outlen, int inlen)
+epicsShareFunc int epicsShareAPI epicsStrSnPrintEscaped(
+    char *outbuf, int outsize, const char *inbuf, int inlen)
 {
-   int nout=0;
-   char buffer[BUFF_SIZE];
+   int outCapacity = outsize;
    int len;
 
-   *outbuff = '\0';
-   while (inlen--) {
-       char c = *inbuff++;
+   while (inlen-- && (outsize > 0))  {
+       char c = *inbuf++;
        switch (c) {
-       case '\a':  epicsSnprintf(buffer, BUFF_SIZE, "\\a"); break;
-       case '\b':  epicsSnprintf(buffer, BUFF_SIZE, "\\b"); break;
-       case '\f':  epicsSnprintf(buffer, BUFF_SIZE, "\\f"); break;
-       case '\n':  epicsSnprintf(buffer, BUFF_SIZE, "\\n"); break;
-       case '\r':  epicsSnprintf(buffer, BUFF_SIZE, "\\r"); break;
-       case '\t':  epicsSnprintf(buffer, BUFF_SIZE, "\\t"); break;
-       case '\v':  epicsSnprintf(buffer, BUFF_SIZE, "\\v"); break;
-       case '\\':  epicsSnprintf(buffer, BUFF_SIZE, "\\\\"); ; break;
+       case '\a':  len = epicsSnprintf(outbuf, outsize, "\\a"); break;
+       case '\b':  len = epicsSnprintf(outbuf, outsize, "\\b"); break;
+       case '\f':  len = epicsSnprintf(outbuf, outsize, "\\f"); break;
+       case '\n':  len = epicsSnprintf(outbuf, outsize, "\\n"); break;
+       case '\r':  len = epicsSnprintf(outbuf, outsize, "\\r"); break;
+       case '\t':  len = epicsSnprintf(outbuf, outsize, "\\t"); break;
+       case '\v':  len = epicsSnprintf(outbuf, outsize, "\\v"); break;
+       case '\\':  len = epicsSnprintf(outbuf, outsize, "\\\\"); ; break;
        /*? does not follow C convention because trigraphs no longer important*/
-       case '\?':  epicsSnprintf(buffer, BUFF_SIZE, "?"); break;
-       case '\'':  epicsSnprintf(buffer, BUFF_SIZE, "\\'"); break;
-       case '\"':  epicsSnprintf(buffer, BUFF_SIZE, "\\\""); break;
+       case '\?':  len = epicsSnprintf(outbuf, outsize, "?"); break;
+       case '\'':  len = epicsSnprintf(outbuf, outsize, "\\'"); break;
+       case '\"':  len = epicsSnprintf(outbuf, outsize, "\\\""); break;
        default:
            if (isprint(c))
-               epicsSnprintf(buffer, BUFF_SIZE, "%c", c);
+               len = epicsSnprintf(outbuf, outsize, "%c", c);
            else
-               epicsSnprintf(buffer, BUFF_SIZE, "\\%03o", (unsigned char)c);
+               len = epicsSnprintf(outbuf, outsize, "\\%03o", (unsigned char)c);
            break;
        }
-       len = strlen(buffer);
-       if ((nout + len) > (outlen-1)) return(nout);
-       nout += len;
-       strcat(outbuff, buffer);
+       outsize -= len;
+       outbuf += len;
    }
-   return(nout);
+   return(outCapacity - outsize);
 }

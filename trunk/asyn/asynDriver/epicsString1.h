@@ -10,20 +10,14 @@
 /*epicsString.h*/
 /*Authors: Jun-ichi Odagiri and Marty Kraimer*/
 
-/* int dbTranslateEscape(char *s,const char *ct);
- *
- * copies ct to s while substituting escape sequences
- * returns the length of the resultant string (may contain nulls)
-*/
-
 #include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-epicsShareFunc int epicsShareAPI epicsSnStrPrintEscaped(
-    char *outbuff, const char *inbuff, int outlen, int inlen);
+epicsShareFunc int epicsShareAPI epicsStrSnPrintEscaped(
+    char *outbuf, int outsize, const char *inbuf, int inlen);
 
 #ifdef __cplusplus
 }
