@@ -50,6 +50,8 @@ typedef struct echoPvt {
     double        delay;
     asynInterface common;
     asynInterface octet;
+    char eos[2];
+    int  eoslen;
 }echoPvt;
     
 /* init routine */
@@ -246,10 +248,15 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     echoPvt      *pechoPvt = (echoPvt *)drvPvt;
     deviceInfo   *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
-    int          nchars,prevNchars;
+    char         *pnext;
+    char         thisChar;
+    int          nremaining;
+    int          nout = 0;
     int          addr;
     asynStatus   status;
 
+    if(eomReason) *eomReason=0;
+    if(nbytesTransfered) *nbytesTransfered = 0;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     if(!pechoPvt->multiDevice) addr = 0;
@@ -271,19 +278,40 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
         return asynError;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
-    prevNchars = nchars = pdeviceBuffer->nchars;
-    if(nchars>maxchars) nchars = maxchars;
+    nremaining = pdeviceBuffer->nchars;
     pdeviceBuffer->nchars = 0;
-    if(nchars>0) memcpy(data,pdeviceBuffer->buffer,nchars);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
-        "echoRead nchars %d ",nchars);
-    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
-    *nbytesTransfered = nchars;
-    if(eomReason) {
-        *eomReason = 0;
-        if(prevNchars>=maxchars) *eomReason |= ASYN_EOM_CNT;
-        *eomReason |= ASYN_EOM_END;
+    pnext = pdeviceBuffer->buffer;
+    while(nremaining>0 && nout<maxchars) {
+        thisChar = *data++ = *pnext++; nremaining--; nout++;
+        if(pechoPvt->eoslen>0) {
+            if(thisChar==pechoPvt->eos[0]) {
+                if(pechoPvt->eoslen==1) {
+                    if(eomReason) *eomReason |= ASYN_EOM_EOS;
+                    break;
+                }
+                if(nremaining==0) {
+                    if(eomReason) *eomReason |= ASYN_EOM_CNT;
+                    break;
+                }
+                if(*pnext==pechoPvt->eos[1]) {
+                    *data++ = *pnext++; nremaining--; nout++;
+                    if(eomReason) {
+                        *eomReason |= ASYN_EOM_EOS;
+                        if(nremaining==0) *eomReason |= ASYN_EOM_CNT;
+                        break;
+                    }
+                }
+            }
+       }
     }
+    if(nbytesTransfered) *nbytesTransfered = nout;
+    if(eomReason) {
+        if(*nbytesTransfered>=maxchars) *eomReason |= ASYN_EOM_CNT;
+        if(nremaining==0) *eomReason |= ASYN_EOM_END;
+    }
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
+        "echoRead nbytesTransfered %d ",*nbytesTransfered);
+    if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     return status;
 }
 
@@ -353,7 +381,8 @@ static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser)
         return -1;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"echoFlush\n");
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s echoFlush\n",pechoPvt->portName);
     pdeviceBuffer->nchars = 0;
     return(asynSuccess);
 }
@@ -361,14 +390,29 @@ static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser)
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
      const char *eos,int eoslen)
 {
+    echoPvt *pechoPvt = (echoPvt *)drvPvt;
+    int     i;
+
+    if(eoslen>2 || eoslen<0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "setEos illegal eoslen %d\n",eoslen);
+        return(asynError);
+    }
+    pechoPvt->eoslen = eoslen;
+    for(i=0; i<eoslen; i++) pechoPvt->eos[i] = eos[i];
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s setEos\n",pechoPvt->portName);
     return(asynSuccess);
 }
 
 static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen)
 {
-    *eoslen = 0;
-    eos[0] = 0;
+    echoPvt *pechoPvt = (echoPvt *)drvPvt;
+    int     i;
+
+    *eoslen = pechoPvt->eoslen;
+    for(i=0; i<*eoslen; i++) eos[i] = pechoPvt->eos[i];
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s setEos\n",pechoPvt->portName);
     return(asynSuccess);
 }
 
