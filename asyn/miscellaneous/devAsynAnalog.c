@@ -67,6 +67,7 @@
 #include <devSup.h>
 
 #include "asynDriver.h"
+#include "asynDrvUser.h"
 #include "asynInt32.h"
 #include "asynInt32Callback.h"
 #include "asynFloat64.h"
@@ -104,6 +105,9 @@ typedef struct {
     int               numAverage;
     IOSCANPVT         ioScanPvt;
     int               ioStatus;
+    char              *portName;
+    char              *userParam;
+    int               addr;
 } devAsynAnalogPvt;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -170,9 +174,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                        asynAnalogDevType devType)
 {
     devAsynAnalogPvt *pPvt;
-    char *port, *userParam;
     char *itype;
-    int addr;
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
@@ -184,13 +186,14 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     /* Create asynUser */
     pasynUser = pasynManager->createAsynUser(callback, 0);
     pasynUser->userPvt = pPvt;
+    pasynUser->timeout = 2.0; /*IS THIS SUFFICIENT???*/
     pPvt->pasynUser = pasynUser;
     pPvt->mutexId = epicsMutexCreate();
     pPvt->devType = devType;
 
     /* Parse the link to get addr and port */
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
-                                        &port, &addr, &userParam);
+                &pPvt->portName, &pPvt->addr, &pPvt->userParam);
     if (status != asynSuccess) {
         errlogPrintf("devAsynAnalog::initCommon, error in link %s\n",
                      pasynUser->errorMessage);
@@ -198,12 +201,29 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     }
 
     /* Connect to device */
-    status = pasynManager->connectDevice(pasynUser, port, addr);
+    status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        errlogPrintf("devAsynAnalog::initCommon, connectDevice failed\n");
+        errlogPrintf("devAsynAnalog::initCommon, connectDevice failed %s\n",
+                     pasynUser->errorMessage);
         goto bad;
     }
 
+    /*call drvUserInit*/
+    pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
+    if(pasynInterface) {
+        asynDrvUser *pasynDrvUser;
+        void       *drvPvtCommon;
+
+        pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
+        drvPvtCommon = pasynInterface->drvPvt;
+        status = pasynDrvUser->create(drvPvtCommon,pasynUser,
+            pPvt->userParam,0,0);
+        if(status!=asynSuccess) {
+            errlogPrintf("devAsynAnalog::initCommon, drvUserInit failed %s\n",
+                     pasynUser->errorMessage);
+            goto bad;
+        }
+    }
     /* Get the appropriate interfaces */
     switch(devType) {
     case typeAiInt32Average:
@@ -241,6 +261,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         }
         pPvt->pfloat64Callback = pasynInterface->pinterface;
         pPvt->float64CallbackPvt = pasynInterface->drvPvt;
+/*SHOULD BREAK BE HERE????*/
         break;
     case typeAoFloat64:
     case typeAiFloat64:
@@ -621,7 +642,10 @@ static long convertAo(aoRecord *pao, int pass)
 
     if (pass==0) return(0);
     /* set linear conversion slope */
-    pao->eslo = (pao->eguf - pao->egul)/(pPvt->deviceHigh - pPvt->deviceLow);
+    if(pPvt->deviceHigh!=pPvt->deviceLow) {
+        pao->eslo = (pao->eguf - pao->egul)/
+            (double)(pPvt->deviceHigh - pPvt->deviceLow);
+    }
     return 0;
 }
 
@@ -631,7 +655,10 @@ static long convertAi(aiRecord *pai, int pass)
 
     if (pass==0) return(0);
     /* set linear conversion slope */
-    pai->eslo = (pai->eguf - pai->egul)/(pPvt->deviceHigh - pPvt->deviceLow);
+    if(pPvt->deviceHigh!=pPvt->deviceLow) {
+        pai->eslo = (pai->eguf - pai->egul)/
+            (double)(pPvt->deviceHigh - pPvt->deviceLow);
+    }
     return 0;
 }
 

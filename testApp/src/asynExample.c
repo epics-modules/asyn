@@ -28,9 +28,9 @@
 #define BUFFER_SIZE 80
 typedef struct myData {
     epicsEventId done;
-    asynOctet *pasynOctet;
-    void *drvPvt;
-    char buffer[BUFFER_SIZE];
+    asynOctet    *pasynOctet;
+    void         *drvPvt;
+    char         buffer[BUFFER_SIZE];
 }myData;
 
 static void queueCallback(asynUser *pasynUser) {

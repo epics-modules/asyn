@@ -60,6 +60,8 @@ typedef struct asynSyncIOPvt {
 static asynStatus 
    asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser);
 static asynStatus 
+   asynSyncIODisconnect(asynUser *pasynUser);
+static asynStatus 
    asynSyncIOOpenSocket(const char *server, int port, char **portName);
 static int
     asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len, 
@@ -81,6 +83,7 @@ static asynStatus
 
 static asynSyncIO asynSyncIOManager = {
     asynSyncIOConnect,
+    asynSyncIODisconnect,
     asynSyncIOOpenSocket,
     asynSyncIOWrite,
     asynSyncIORead,
@@ -170,6 +173,24 @@ static asynStatus
        }
     }
     return(asynSuccess);
+}
+
+static asynStatus 
+   asynSyncIODisconnect(asynUser *pasynUser)
+{
+    asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
+    asynStatus    status;
+    int           canBlock = 0;
+
+    status = pasynManager->canBlock(pasynUser,&canBlock);
+    if(status!=asynSuccess) return status;
+    status = pasynManager->disconnect(pasynUser);
+    if(status!=asynSuccess) return status;
+    if(canBlock) epicsEventDestroy(pPvt->event);
+    status = pasynManager->freeAsynUser(pasynUser);
+    if(status!=asynSuccess) return status;
+    free(pPvt);
+    return asynSuccess;
 }
 
 static asynStatus 

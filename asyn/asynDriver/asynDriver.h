@@ -45,6 +45,8 @@ typedef struct asynUser {
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt; 
     void         *userData; 
+    /*The following is for user specific driver communication*/
+    void         *drvUser;
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
 }asynUser;
@@ -111,8 +113,8 @@ epicsShareExtern asynManager *pasynManager;
 /* Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
+    /*report does not have to be called from queueRequest*/
     void       (*report)(void *drvPvt,FILE *fp,int details);
-    /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
 }asynCommon;
