@@ -46,6 +46,6 @@ epicsExportAddress(drvet,drvAsyn);
 
 static long drvAsynReport(int level)
 {
-    pasynManager->report(stdout,level);
+    pasynManager->report(stdout,level,0);
     return(0);
 }
