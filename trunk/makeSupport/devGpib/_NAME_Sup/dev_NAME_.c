@@ -2,6 +2,7 @@
  * _NAME_ device support
  */
 
+#include <epicsStdio.h>
 #include <devCommonGpib.h>
 
 /******************************************************************************
