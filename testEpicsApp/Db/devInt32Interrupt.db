@@ -1,0 +1,9 @@
+record(ai,"asyndevAiInt32Interrupt") {
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asyn Int32Interrupt")
+    field(INP,"@asyn($(PORT))")
+}
+record(ai,"asyndevAiInt32Average") {
+    field(DTYP,"asyn Int32Average")
+    field(INP,"@asyn($(PORT))")
+}
