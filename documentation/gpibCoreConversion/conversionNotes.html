@@ -8,8 +8,8 @@
 <body>
 <h1 align="center">Updating devGpib instrument support to ASYN</h1>
 
-<p align="center"><span style="font-weight: bold; font-size: 14pt">
-May 17, 2004</span></p>
+<p align="center"><span style="font-weight: bold; font-size: 14pt">May 17,
+2004</span></p>
 This tutorial provides basic instructions on converting 'devGpib' device
 support from R3.13 to R3.14/ASYN. If possible, R3.14/ASYN device support
 modules should be placed in the EPICS CVS repository in a directory within
@@ -29,14 +29,14 @@ be macros and all PV names should be prefixed with a macro.
     <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
     -t instrument Keithley196</p>
   </li>
-  <li>Edit configure/RELEASE and set the ASYN and EPICS_BASE values to to the
-    location of these packages on your system.</li>
-  <li>Replace src/dev<em>&lt;InstName&gt;</em>.c with your existing
-    instrument support.</li>
-  <li>Replace src/dev<em>&lt;InstName&gt;</em>.dbd with your existing
-    instrument support.</li>
-  <li>Replace src/dev<em>&lt;InstName&gt;</em>.db with your existing
-    instrument support, if any.</li>
+  <li>Check configure/RELEASE and confirm that the ASYN and EPICS_BASE values
+    specify the location of these packages on your system.</li>
+  <li>Replace <em>&lt;InstName&gt;</em>Sup/dev<em>&lt;InstName&gt;</em>.c
+    with your existing instrument support.</li>
+  <li>Replace <em>&lt;InstName&gt;</em>Sup/dev<em>&lt;InstName&gt;</em>.dbd
+    with your existing instrument support.</li>
+  <li>Replace <em>&lt;InstName&gt;</em>Sup/dev<em>&lt;InstName&gt;</em>.db
+    with your existing instrument support, if any.</li>
 </ol>
 
 <h2>2. Modify instrument support C source file</h2>
@@ -169,6 +169,8 @@ href="devKeithley196.c.diff.html">here</a>.
   <li>Check your instrument support database definition file and see if it
     contains an entry for analog-in (ai) record device support. Add such an
     entry if the file does not already contain one.</li>
+  <li>Add the line
+  <pre>include "asyn.dbd"</pre></li>
 </ol>
 
 <h2>4. (Optional) Create an example database</h2>
