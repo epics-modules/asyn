@@ -90,7 +90,7 @@ display {
 composite {
 	object {
 		x=86
-		y=9
+		y=8
 		width=203
 		height=29
 	}
@@ -99,7 +99,7 @@ composite {
 		rectangle {
 			object {
 				x=86
-				y=9
+				y=8
 				width=203
 				height=29
 			}
@@ -110,7 +110,7 @@ composite {
 		text {
 			object {
 				x=89
-				y=13
+				y=12
 				width=199
 				height=21
 			}
@@ -126,184 +126,136 @@ composite {
 	object {
 		x=4
 		y=68
-		width=355
-		height=103
+		width=210
+		height=20
 	}
 	"composite name"=""
 	children {
-		composite {
+		text {
 			object {
 				x=4
 				y=68
-				width=210
+				width=130
 				height=20
 			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=4
-						y=68
-						width=130
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="GPIB address:"
-				}
-				"text entry" {
-					object {
-						x=139
-						y=68
-						width=75
-						height=20
-					}
-					control {
-						chan="$(P)$(R).ADDR"
-						clr=14
-						bclr=51
-					}
-					limits {
-					}
-				}
+			"basic attribute" {
+				clr=14
 			}
+			textix="GPIB address:"
 		}
-		composite {
+		"text entry" {
 			object {
-				x=4
-				y=93
-				width=284
-				height=28
+				x=139
+				y=68
+				width=75
+				height=20
 			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=4
-						y=97
-						width=210
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Serial poll response:"
-				}
-				composite {
-					object {
-						x=219
-						y=93
-						width=69
-						height=28
-					}
-					"composite name"=""
-					children {
-						rectangle {
-							object {
-								x=219
-								y=93
-								width=69
-								height=28
-							}
-							"basic attribute" {
-								clr=14
-								fill="outline"
-							}
-							"dynamic attribute" {
-								chan="$(P)$(R).SEVR"
-							}
-						}
-						"text update" {
-							object {
-								x=224
-								y=98
-								width=56
-								height=20
-							}
-							monitor {
-								chan="$(P)$(R).SPR"
-								clr=14
-								bclr=4
-							}
-							format="hexadecimal"
-							limits {
-							}
-						}
-					}
-				}
+			control {
+				chan="$(P)$(R).ADDR"
+				clr=14
+				bclr=51
+			}
+			limits {
 			}
 		}
-		composite {
+	}
+}
+text {
+	object {
+		x=4
+		y=97
+		width=210
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Serial poll response:"
+}
+"text update" {
+	object {
+		x=224
+		y=97
+		width=56
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).SPR"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+composite {
+	object {
+		x=4
+		y=126
+		width=355
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
 			object {
 				x=4
 				y=126
-				width=355
+				width=170
 				height=20
 			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=4
-						y=126
-						width=170
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Universal Command"
-				}
-				menu {
-					object {
-						x=179
-						y=126
-						width=180
-						height=20
-					}
-					control {
-						chan="$(P)$(R).UCMD"
-						clr=14
-						bclr=51
-					}
-				}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Universal Command"
+		}
+		menu {
+			object {
+				x=179
+				y=126
+				width=180
+				height=20
+			}
+			control {
+				chan="$(P)$(R).UCMD"
+				clr=14
+				bclr=51
 			}
 		}
-		composite {
+	}
+}
+composite {
+	object {
+		x=4
+		y=151
+		width=355
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
 			object {
 				x=4
 				y=151
-				width=355
+				width=170
 				height=20
 			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=4
-						y=151
-						width=170
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Addressed Command"
-				}
-				menu {
-					object {
-						x=179
-						y=151
-						width=180
-						height=20
-					}
-					control {
-						chan="$(P)$(R).ACMD"
-						clr=14
-						bclr=51
-					}
-				}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Addressed Command"
+		}
+		menu {
+			object {
+				x=179
+				y=151
+				width=180
+				height=20
+			}
+			control {
+				chan="$(P)$(R).ACMD"
+				clr=14
+				bclr=51
 			}
 		}
 	}
