@@ -7,481 +7,798 @@
 * asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
-/*  Author:  Mark Rivers
-
-   This file provides device support for the following records for the
-   asynUInt32Digital and asynUInt32DigitalCallback interfaces.
-      longin
-      longout
-      binary input (bi)
-      binary output (bo)
+/*
+    Authors:  Mark Rivers and Marty Kraimer
+    15-OCT-2004
 */
 
 #include <stdlib.h>
 #include <stddef.h>
 #include <stdio.h>
-#include <ctype.h>
 
 #include <alarm.h>
 #include <recGbl.h>
 #include <dbAccess.h>
 #include <dbDefs.h>
 #include <link.h>
+#include <epicsPrint.h>
+#include <epicsExport.h>
+#include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
 #include <dbScan.h>
-#include <recSup.h>
-#include <devSup.h>
+#include <callback.h>
 #include <biRecord.h>
 #include <boRecord.h>
+#include <longinRecord.h>
+#include <longoutRecord.h>
 #include <mbbiRecord.h>
 #include <mbboRecord.h>
 #include <mbbiDirectRecord.h>
 #include <mbboDirectRecord.h>
-#include <longinRecord.h>
-#include <longoutRecord.h>
-#include <epicsPrint.h>
-#include <epicsExport.h>
+#include <recSup.h>
+#include <devSup.h>
 
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynUInt32Digital.h"
-#include "asynUInt32DigitalCallback.h"
+#include "asynUInt32DigitalSyncIO.h"
 #include "asynEpicsUtils.h"
 
-typedef struct {
-   asynUser *pasynUser;
-   asynUInt32Digital *pasynUInt32D;
-   void              *asynUInt32DPvt;
-   asynUInt32DigitalCallback *pasynUInt32DCb;
-   void                      *asynUInt32DCbPvt;
-   epicsUInt32 value;
-   epicsUInt32 mask;
-   int         callbacksSupported;
-   int         callbacksEnabled;
-   IOSCANPVT   ioScanPvt;
-   char        *portName;
-   char        *userParam;
-} devDigitalPvt;
+typedef struct devPvt{
+    dbCommon          *pr;
+    asynUser          *pasynUser;
+    asynUInt32Digital *puint32;
+    void              *uint32Pvt;
+    void              *registrarPvt;
+    int               canBlock;
+    epicsMutexId      mutexId;
+    int               gotValue;
+    epicsUInt32        value;
+    epicsUInt32        mask;
+    CALLBACK          callback;
+    IOSCANPVT         ioScanPvt;
+    char              *portName;
+    char              *userParam;
+    int               addr;
+}devPvt;
 
-typedef struct  {
-    long       number;
-    DEVSUPFUN  report;
-    DEVSUPFUN  init;
-    DEVSUPFUN  init_record;
-    DEVSUPFUN  get_ioint_info;
-    DEVSUPFUN  io;
-} dsetDigital;
-
-typedef enum {recTypeBi, recTypeBo, recTypeLi, recTypeLo, 
-    recTypeMbbi, recTypeMbbo,recTypeMbbiDirect, recTypeMbboDirect
-}recType;
-
-static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
-                       recType rt);
-static long processCallback(dbCommon *pr);
+#define NUM_BITS 16
+
+static long initCommon(dbCommon *pr, DBLINK *plink,
+    userCallback processCallback,interruptCallbackUInt32Digital interruptCallback);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
-static void dataCallback(void *v, epicsUInt32 value);
+/* asyn callbacks */
+static void interruptCallbackInput(void *drvPvt, epicsUInt32 value);
+static void interruptCallbackOutput(void *drvPvt, epicsUInt32 value);
+static int computeShift(epicsUInt32 mask);
+
 static long initBi(biRecord *pbi);
-static void callbackBi(asynUser *pasynUser);
-static long initLi(longinRecord *pli);
-static void callbackLi(asynUser *pasynUser);
 static long initBo(boRecord *pbo);
-static void callbackBo(asynUser *pasynUser);
+static long initLi(longinRecord *pli);
 static long initLo(longoutRecord *plo);
-static void callbackLo(asynUser *pasynUser);
 static long initMbbi(mbbiRecord *pmbbi);
-static void callbackMbbi(asynUser *pasynUser);
 static long initMbbo(mbboRecord *pmbbo);
-static void callbackMbbo(asynUser *pasynUser);
 static long initMbbiDirect(mbbiDirectRecord *pmbbiDirect);
-static void callbackMbbiDirect(asynUser *pasynUser);
 static long initMbboDirect(mbboDirectRecord *pmbboDirect);
-static void callbackMbboDirect(asynUser *pasynUser);
+/* process callbacks */
+static long processBi(biRecord *pr);
+static long processBo(boRecord *pr);
+static long processLi(longinRecord *pr);
+static long processLo(longoutRecord *pr);
+static long processMbbi(mbbiRecord *pr);
+static long processMbbo(mbboRecord *pr);
+static long processMbbiDirect(mbbiDirectRecord *pr);
+static long processMbboDirect(mbboDirectRecord *pr);
+/*queue process Callbacks*/
+static void processCallbackBi(asynUser *pasynUser);
+static void processCallbackBo(asynUser *pasynUser);
+static void processCallbackLi(asynUser *pasynUser);
+static void processCallbackLo(asynUser *pasynUser);
+static void processCallbackMbbi(asynUser *pasynUser);
+static void processCallbackMbbo(asynUser *pasynUser);
+static void processCallbackMbbiDirect(asynUser *pasynUser);
+static void processCallbackMbboDirect(asynUser *pasynUser);
 
+typedef struct analogDset { /* analog  dset */
+    long          number;
+    DEVSUPFUN     dev_report;
+    DEVSUPFUN     init;
+    DEVSUPFUN     init_record; 
+    DEVSUPFUN     get_ioint_info;
+    DEVSUPFUN     processCommon;/*(0)=>(success ) */
+} analogDset;
 
-dsetDigital asynBiUInt32Digital = {5, 0, 0, initBi, getIoIntInfo, processCallback};
-dsetDigital asynLiUInt32Digital = {5, 0, 0, initLi, getIoIntInfo, processCallback};
-dsetDigital asynBoUInt32Digital = {5, 0, 0, initBo, 0,            processCallback};
-dsetDigital asynLoUInt32Digital = {5, 0, 0, initLo, 0,            processCallback};
-dsetDigital asynMbbiUInt32Digital = {5, 0, 0, initMbbi, 0,        processCallback};
-dsetDigital asynMbboUInt32Digital = {5, 0, 0, initMbbo, 0,        processCallback};
-dsetDigital asynMbbiDirectUInt32Digital = {5, 0, 0, initMbbiDirect, 0,        processCallback};
-dsetDigital asynMbboDirectUInt32Digital = {5, 0, 0, initMbboDirect, 0,        processCallback};
+analogDset asynBiUInt32Digital = {
+    6,0,0,initBi,       getIoIntInfo,processBi};
+analogDset asynBoUInt32Digital = {
+    6,0,0,initBo,       0,           processBo};
+analogDset asynLiUInt32Digital = {
+    5,0,0,initLi,       getIoIntInfo, processLi};
+analogDset asynLoUInt32Digital = {
+    5,0,0,initLo,       0,            processLo};
+analogDset asynMbbiUInt32Digital = {
+    5,0,0,initMbbi,     getIoIntInfo, processMbbi};
+analogDset asynMbboUInt32Digital = {
+    5,0,0,initMbbo,     0,            processMbbo};
+analogDset asynMbbiDirectUInt32Digital = {
+    5,0,0,initMbbiDirect,     getIoIntInfo, processMbbiDirect};
+analogDset asynMbboDirectUInt32Digital = {
+    5,0,0,initMbboDirect,     0,            processMbboDirect};
 
 epicsExportAddress(dset, asynBiUInt32Digital);
-epicsExportAddress(dset, asynLiUInt32Digital);
 epicsExportAddress(dset, asynBoUInt32Digital);
+epicsExportAddress(dset, asynLiUInt32Digital);
 epicsExportAddress(dset, asynLoUInt32Digital);
 epicsExportAddress(dset, asynMbbiUInt32Digital);
 epicsExportAddress(dset, asynMbboUInt32Digital);
 epicsExportAddress(dset, asynMbbiDirectUInt32Digital);
 epicsExportAddress(dset, asynMbboDirectUInt32Digital);
-
 
-static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
-                       recType rt)
+static long initCommon(dbCommon *pr, DBLINK *plink,
+    userCallback processCallback,interruptCallbackUInt32Digital interruptCallback)
 {
-    devDigitalPvt *pPvt;
-    asynStatus    status;
-    asynUser      *pasynUser;
+    devPvt *pPvt;
+    asynStatus status;
+    asynUser *pasynUser;
     asynInterface *pasynInterface;
-    int           addr;
 
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynUInt32Digital::initCommon");
     pr->dpvt = pPvt;
+    pPvt->pr = pr;
     /* Create asynUser */
-    pasynUser = pasynManager->createAsynUser(callback, 0);
-    pasynUser->userPvt = pr;
+    pasynUser = pasynManager->createAsynUser(processCallback, 0);
+    pasynUser->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
-
-    status = pasynEpicsUtils->parseLink(pasynUser, plink,
-                &pPvt->portName, &addr, &pPvt->userParam);
+    pPvt->mutexId = epicsMutexCreate();
+    /* Parse the link to get addr and port */
+    status = pasynEpicsUtils->parseLinkMask(pasynUser, plink, 
+                &pPvt->portName, &pPvt->addr, &pPvt->mask,&pPvt->userParam);
     if (status != asynSuccess) {
-        printf("devAsynUInt32Digital::initCommon, %s error parsing link %s\n",
+        printf("devAsynUInt32Digital::initCommon, %s error in link %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
-    if ((rt == recTypeBi) || (rt == recTypeBo)) {
-        if(addr<0 || addr>31) {
-            printf("%s devAsynUInt32Digital::initCommon: Illegal addr field"
-                         " (0-31)=%d\n",
-                         pr->name, addr);
-            goto bad;
-        }
-        pPvt->mask =  1 << addr;
-    } else {
-        pPvt->mask = 0xffffffff;
-    }
     /* Connect to device */
-    status = pasynManager->connectDevice(pasynUser, pPvt->portName, addr);
+    status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s devAsynUInt32Digital::initCommon connectDevice failed %s\n",
-            pr->name, pasynUser->errorMessage);
+        printf("devAsynUInt32Digital::initCommon, %s connectDevice failed %s\n",
+                     pr->name, pasynUser->errorMessage);
         goto bad;
     }
     /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
     if(pasynInterface && pPvt->userParam) {
         asynDrvUser *pasynDrvUser;
-        void       *drvPvtCommon;
+        void       *drvPvt;
 
         pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
-        drvPvtCommon = pasynInterface->drvPvt;
-        status = pasynDrvUser->create(drvPvtCommon,pasynUser,
-            pPvt->userParam,0,0);
+        drvPvt = pasynInterface->drvPvt;
+        status = pasynDrvUser->create(drvPvt,pasynUser,pPvt->userParam,0,0);
         if(status!=asynSuccess) {
             printf("devAsynUInt32Digital::initCommon, %s drvUserCreate failed %s\n",
                      pr->name, pasynUser->errorMessage);
             goto bad;
         }
     }
-
-    /* Get the asynUInt32Digital interface */
-    pasynInterface = pasynManager->findInterface(pasynUser, 
-                                                 asynUInt32DigitalType, 1);
+    /* Get interface asynUInt32Digital */
+    pasynInterface = pasynManager->findInterface(pasynUser, asynUInt32DigitalType, 1);
     if (!pasynInterface) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s devAsynUInt32Digital::initCommon find asynUInt32Digital"
-            " interface failed\n", pr->name);
+        printf("devAsynUInt32Digital::initCommon, %s findInterface asynUInt32DigitalType failed\n",
+                     pr->name);
         goto bad;
     }
-    pPvt->pasynUInt32D = (asynUInt32Digital *)pasynInterface->pinterface;
-    pPvt->asynUInt32DPvt = pasynInterface->drvPvt;
-
-    /* Get the asynUInt32DigitalCallback interface */
-    pasynInterface = pasynManager->findInterface(pasynUser, 
-                                                 asynUInt32DigitalCallbackType, 1);
-    if (pasynInterface == 0) {
-        pPvt->callbacksSupported = 0;
-        pPvt->pasynUInt32DCb = 0;
-        pPvt->asynUInt32DCbPvt = 0;
-    } else {
-        pPvt->callbacksSupported = 1;
-        pPvt->pasynUInt32DCb = (asynUInt32DigitalCallback *)
-                                                    pasynInterface->pinterface;
-        pPvt->asynUInt32DCbPvt = pasynInterface->drvPvt;
+    pPvt->puint32 = pasynInterface->pinterface;
+    pPvt->uint32Pvt = pasynInterface->drvPvt;
+    scanIoInit(&pPvt->ioScanPvt);
+    status = pPvt->puint32->registerInterruptUser(
+        pPvt->uint32Pvt,pPvt->pasynUser,
+        interruptCallback,pPvt,pPvt->mask,&pPvt->registrarPvt);
+    if(status!=asynSuccess) {
+        printf("%s devAsynUInt32Digital registerInterruptUser failed %s\n",
+            pr->name,pPvt->pasynUser->errorMessage);
     }
-    if (pPvt->callbacksSupported && 
-        ((rt == recTypeBi) || (rt == recTypeLi) || (rt == recTypeMbbi)
-        || (rt == recTypeMbbiDirect))) {
-        scanIoInit(&pPvt->ioScanPvt);
-    }
-    return(0);
+    return 0;
 
 bad:
-    pr->pact=1;
-    return(-1);
-}
-
-
-static long initBi(biRecord *pbi)
-{
-    initCommon((dbCommon *)pbi, &pbi->inp, callbackBi, recTypeBi);
-    return(0);
-}
-
-static long initBo(boRecord *pbo)
-{
-    initCommon((dbCommon *)pbo, &pbo->out, callbackBo, recTypeBo);
-    return(2); /* Do not convert */
-}
-
-static long initLi(longinRecord *pli)
-{
-    initCommon((dbCommon *)pli, &pli->inp, callbackLi, recTypeLi);
-    return(0);
-}
-
-static long initLo(longoutRecord *plo)
-{
-    initCommon((dbCommon *)plo, &plo->out, callbackLo, recTypeLo);
-    return(2); /* Do not convert */
-}
-
-static long initMbbi(mbbiRecord *pmbbi)
-{
-    initCommon((dbCommon *)pmbbi, &pmbbi->inp, callbackMbbi, recTypeMbbi);
-    if(pmbbi->nobt == 0) pmbbi->mask = 0xffffffff;
-    pmbbi->mask <<= pmbbi->shft;
-    return(0);
-}
-
-static long initMbbo(mbboRecord *pmbbo)
-{
-    initCommon((dbCommon *)pmbbo, &pmbbo->out, callbackMbbo, recTypeMbbo);
-    if(pmbbo->nobt == 0) pmbbo->mask = 0xffffffff;
-    pmbbo->mask <<= pmbbo->shft;
-    /* don't convert */
-    return(2);
-}
-
-static long initMbbiDirect(mbbiDirectRecord *pmbbiDirect)
-{
-    initCommon((dbCommon *)pmbbiDirect, &pmbbiDirect->inp,
-        callbackMbbiDirect, recTypeMbbiDirect);
-    if(pmbbiDirect->nobt == 0) pmbbiDirect->mask = 0xffffffff;
-    pmbbiDirect->mask <<= pmbbiDirect->shft;
-    return(0);
-}
-
-static long initMbboDirect(mbboDirectRecord *pmbboDirect)
-{
-    initCommon((dbCommon *)pmbboDirect, &pmbboDirect->out,
-        callbackMbboDirect, recTypeMbboDirect);
-    if(pmbboDirect->nobt == 0) pmbboDirect->mask = 0xffffffff;
-    pmbboDirect->mask <<= pmbboDirect->shft;
-    /* don't convert */
-    return(2);
+   pr->pact=1;
+   return(-1);
 }
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
-    devDigitalPvt *pPvt = (devDigitalPvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
 
-    if (!pPvt->callbacksSupported) return(0);
-    if (cmd == 0) {
-        /* Add to scan list.  Enable callbacks */
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s devAsynUInt32Digital::getIoIntInfo registering callback\n",
-            pr->name);
-        pPvt->callbacksEnabled = 1;
-        pPvt->pasynUInt32DCb->registerCallback(pPvt->asynUInt32DCbPvt, 
-                                               pPvt->pasynUser,
-                                               dataCallback,
-                                               pPvt->mask, pr);
-    } else {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s devAsynUInt32Digital::getIoIntInfo cancelling callback\n",
-             pr->name);
-        pPvt->callbacksEnabled = 0;
-        pPvt->pasynUInt32DCb->cancelCallback(pPvt->asynUInt32DCbPvt, 
-                                             pPvt->pasynUser,
-                                             dataCallback,
-                                             pPvt->mask, pr);
-    }
     *iopvt = pPvt->ioScanPvt;
     return 0;
 }
 
-static long processCallback(dbCommon *pr)
+static void interruptCallbackInput(void *drvPvt, epicsUInt32 value)
 {
-    devDigitalPvt *pPvt = (devDigitalPvt *)pr->dpvt;
-    asynStatus status;
+    devPvt *pPvt = (devPvt *)drvPvt;
+    dbCommon *pr = pPvt->pr;
+    epicsUInt32 oldvalue = pPvt->value;
+    epicsUInt32 mask = pPvt->mask;
 
-    status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-    if (status != asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, 
-            "%s devAsynUInt32Digital::queueRequest error %s\n",
-            pr->name, pPvt->pasynUser->errorMessage);
-        recGblSetSevr(pr, COMM_ALARM, INVALID_ALARM);
-        return(-1);
-    }
-    return(0);
-}
-
-static void callbackBi(asynUser *pasynUser)
-{
-    biRecord *pbi = (biRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pbi->dpvt;
-    asynStatus status;
-
-    /* If callbacks not enabled, need to read value */
-    if (!pPvt->callbacksEnabled) {
-        status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser,
-                                          &pPvt->value, pPvt->mask);
-        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s devAsynUInt32Digital::callbackBi read=%x\n", 
-                   pbi->name, pPvt->value);
-        if (status == asynSuccess) {
-            pbi->udf=0;
-        } else {
-            recGblSetSevr(pbi, READ_ALARM, INVALID_ALARM);
-        }
-    }
-    pbi->rval = (pPvt->value & pPvt->mask) ? 1 : 0;
+    if(oldvalue&mask == value&mask) return;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackBi value=%d\n",pbi->name, pbi->rval);
-}
-
-static void callbackLi(asynUser *pasynUser)
-{
-    longinRecord *pli = (longinRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pli->dpvt;
-    asynStatus status;
-
-    /* If callbacks not enabled, need to read value */
-    if (!pPvt->callbacksEnabled) {
-        status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser, 
-                                          &pPvt->value, pPvt->mask);
-        if (status == asynSuccess) {
-            pli->udf=0;
-        } else {
-            recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
-        }
-    }
-    pli->val = pPvt->value;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackLi value=%x\n", pli->name, pli->val);
-}
-
-static void callbackMbbi(asynUser *pasynUser)
-{
-    mbbiRecord *pmbbi = (mbbiRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pmbbi->dpvt;
-    asynStatus status;
-
-    /* If callbacks not enabled, need to read value */
-    if (!pPvt->callbacksEnabled) {
-        status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser, 
-                                          &pPvt->value, pPvt->mask);
-        if (status == asynSuccess) {
-            pmbbi->udf=0;
-        } else {
-            recGblSetSevr(pmbbi, READ_ALARM, INVALID_ALARM);
-        }
-    }
-    pmbbi->rval = pPvt->value & pmbbi->mask;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackMbbi value=%x\n", pmbbi->name, pmbbi->rval);
-}
-
-static void callbackMbbiDirect(asynUser *pasynUser)
-{
-    mbbiDirectRecord *pmbbiDirect = (mbbiDirectRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pmbbiDirect->dpvt;
-    asynStatus status;
-
-    /* If callbacks not enabled, need to read value */
-    if (!pPvt->callbacksEnabled) {
-        status = pPvt->pasynUInt32D->read(pPvt->asynUInt32DPvt, pasynUser, 
-                                          &pPvt->value, pPvt->mask);
-        if (status == asynSuccess) {
-            pmbbiDirect->udf=0;
-        } else {
-            recGblSetSevr(pmbbiDirect, READ_ALARM, INVALID_ALARM);
-        }
-    }
-    pmbbiDirect->rval = pPvt->value & pmbbiDirect->mask;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackMbbiDirect value=%x\n",
-        pmbbiDirect->name, pmbbiDirect->rval);
-}
-
-static void callbackBo(asynUser *pasynUser)
-{
-    boRecord *pbo = (boRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pbo->dpvt;
-    asynStatus status;
-    epicsUInt32 data;
-
-    if (pbo->val == 0) data = 0;
-    else               data = 0xffffffff & pPvt->mask;
-    status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt, 
-                                       pPvt->pasynUser, data, pPvt->mask);
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackBo write=%x\n", pbo->name, data);
-    if (status != asynSuccess)
-        recGblSetSevr(pbo, WRITE_ALARM, INVALID_ALARM);
-}
-
-
-static void callbackLo(asynUser *pasynUser)
-{
-    longoutRecord *plo = (longoutRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)plo->dpvt;
-    asynStatus status;
-
-    status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt,
-                                       pPvt->pasynUser, plo->val, pPvt->mask);
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackLo write=%x\n", plo->name, plo->val);
-    if (status != asynSuccess)
-        recGblSetSevr(plo, WRITE_ALARM, INVALID_ALARM);
-}
-
-static void callbackMbbo(asynUser *pasynUser)
-{
-    mbboRecord *pmbbo = (mbboRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pmbbo->dpvt;
-    asynStatus status;
-    epicsUInt32 value;
-
-    value = pmbbo->rval & pmbbo->mask;
-    status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt,
-                                       pPvt->pasynUser, value, pmbbo->mask);
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackMbbo write=%x\n", pmbbo->name, value);
-    if (status != asynSuccess)
-        recGblSetSevr(pmbbo, WRITE_ALARM, INVALID_ALARM);
-}
-
-static void callbackMbboDirect(asynUser *pasynUser)
-{
-    mbboDirectRecord *pmbboDirect = (mbboDirectRecord *)pasynUser->userPvt;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pmbboDirect->dpvt;
-    asynStatus status;
-    epicsUInt32 value;
-
-    value = pmbboDirect->rval & pmbboDirect->mask;
-    status = pPvt->pasynUInt32D->write(pPvt->asynUInt32DPvt,
-                                pPvt->pasynUser, value, pmbboDirect->mask);
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::callbackMbboDirect write=%x\n",
-        pmbboDirect->name, value);
-    if (status != asynSuccess)
-        recGblSetSevr(pmbboDirect, WRITE_ALARM, INVALID_ALARM);
-}
-
-static void dataCallback(void *v, epicsUInt32 value)
-{
-    dbCommon *pr = (dbCommon *)v;
-    devDigitalPvt *pPvt = (devDigitalPvt *)pr->dpvt;
-
-    pPvt->value = value;
-    pr->udf = 0;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::dataCallback, new value=%x\n",pr->name,value);
+        "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
+        pr->name, value);
+    epicsMutexLock(pPvt->mutexId);
+    pPvt->gotValue = 1; pPvt->value = value;
+    epicsMutexUnlock(pPvt->mutexId);
     scanIoRequest(pPvt->ioScanPvt);
+}
+
+static void interruptCallbackOutput(void *drvPvt, epicsUInt32 value)
+{
+    devPvt *pPvt = (devPvt *)drvPvt;
+    dbCommon *pr = pPvt->pr;
+
+    if(pPvt->gotValue) return;
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
+        pr->name, value);
+    epicsMutexLock(pPvt->mutexId);
+    pPvt->gotValue = 1; pPvt->value = value;
+    epicsMutexUnlock(pPvt->mutexId);
+    scanOnce(pr);
+}
+
+static int computeShift(epicsUInt32 mask)
+{
+    epicsUInt32 bit=1;
+    int i;
+    int shift = 0;
+
+    for(i=0; i<NUM_BITS; i++, bit <<= 1 ) {
+        if((mask&bit) == 1) break;
+        shift += 1;
+    }
+    return shift;
+}
+
+static long initBi(biRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+
+    status = initCommon((dbCommon *)pr,&pr->inp,
+        processCallbackBi,interruptCallbackInput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pr->mask = pPvt->mask;
+    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    return 0;
+}
+static long processBi(biRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pr->rval = pPvt->value;
+        pPvt->gotValue = 0;
+    } else {
+        if(pr->pact == 0) {
+            status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+            if((status==asynSuccess) && pPvt->canBlock) {
+                 pr->pact = 1;
+                 return 0;
+            }
+            if(status != asynSuccess) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::process error queuing request %s\n", 
+                    pr->name,pPvt->pasynUser->errorMessage);
+            }
+        }
+    }
+    return 0;
+}
+
+static void processCallbackBi(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = (dbCommon *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
+        &pPvt->value,pPvt->mask);
+    if (status == asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::process rval=%lu\n",
+            pr->name,pPvt->value);
+        pr->udf=0;
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s devAsynUInt32Digital::process read error %s\n",
+            pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initBo(boRecord *pbo)
+{
+    devPvt *pPvt;
+    asynStatus status;
+    epicsUInt32 value;
+
+    status = initCommon((dbCommon *)pbo,&pbo->out,
+        processCallbackBo,interruptCallbackOutput);
+    if (status != asynSuccess) return 0;
+    pPvt = pbo->dpvt;
+    pbo->mask = pPvt->mask;
+    /* Read the current value from the device */
+    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+                      &value, pPvt->mask,pPvt->pasynUser->timeout);
+    if (status == asynSuccess) {
+        pbo->rval = value;
+        return 0;
+    }
+    return 2; /* Do not convert */
+}
+
+static long processBo(boRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pr->rval = pPvt->value & pr->mask;
+        pr->val = (pr->rval) ? 1 : 0;
+        pr->udf = 0;
+    } else if(pr->pact == 0) {
+        pPvt->gotValue = 1;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) {
+             pr->pact = 1;
+             return 0;
+        }
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital:process error queuing request %s\n",
+                pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+    pPvt->gotValue = 0;
+    return 0;
+}
+
+static void processCallbackBo(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = pPvt->pr;
+    boRecord *pbo = (boRecord *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
+        pbo->rval,pPvt->mask);
+    if(status == asynSuccess) {
+        pr->udf=0;
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynIn432 process rval %lu\n",pr->name,pbo->rval);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynIn432 process error %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initLi(longinRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+
+    status = initCommon((dbCommon *)pr,&pr->inp,
+        processCallbackLi,interruptCallbackInput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    return 0;
+}
+
+static long processLi(longinRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pPvt->gotValue = 0;
+    } else {
+        if(pr->pact == 0) {
+            status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+            if((status==asynSuccess) && pPvt->canBlock) {
+                 pr->pact = 1;
+                 return 0;
+            }
+            if(status != asynSuccess) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::process error queuing request %s\n", 
+                    pr->name,pPvt->pasynUser->errorMessage);
+            }
+        }
+    }
+    pr->val = pPvt->value;
+    return 0;
+}
+
+
+static void processCallbackLi(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = (dbCommon *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
+       &pPvt->value,pPvt->mask);
+    if (status == asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::process val=%lu\n", pr->name, pPvt->value);
+        pr->udf=0;
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s devAsynUInt32Digital::process read error %s\n",
+              pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initLo(longoutRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+    epicsUInt32 value;
+
+    status = initCommon((dbCommon *)pr,&pr->out,
+       processCallbackLo,interruptCallbackOutput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    /* Read the current value from the device */
+    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+                      &value, pPvt->mask,pPvt->pasynUser->timeout);
+    if (status == asynSuccess) pr->val = value;
+    return 0;
+}
+
+static long processLo(longoutRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pr->val = pPvt->value;
+    } else if(pr->pact == 0) {
+        pPvt->gotValue = 0;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) {
+             pr->pact = 1;
+             return 0;
+        }
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital::process error queuing request %s\n",
+                pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+    pPvt->gotValue = 0;
+    return 0;
+}
+
+static void processCallbackLo(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = pPvt->pr;
+    longoutRecord *plo = (longoutRecord *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
+        plo->val,pPvt->mask);
+    if(status == asynSuccess) {
+        pr->udf=0;
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynIn432 process val %ld\n",pr->name,plo->val);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynIn432 processBoUInt32Digital error %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initMbbi(mbbiRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+
+    status = initCommon((dbCommon *)pr,&pr->inp,
+        processCallbackMbbi,interruptCallbackInput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pr->mask = pPvt->mask;
+    pr->shft = computeShift(pPvt->mask);
+    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    return 0;
+}
+
+static long processMbbi(mbbiRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pPvt->gotValue = 0;
+    } else {
+        if(pr->pact == 0) {
+            status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+            if((status==asynSuccess) && pPvt->canBlock) {
+                 pr->pact = 1;
+                 return 0;
+            }
+            if(status != asynSuccess) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::process error queuing request %s\n", 
+                    pr->name,pPvt->pasynUser->errorMessage);
+            } 
+        }
+    }
+    pr->rval = pPvt->value & pr->mask;
+    return 0;
+}
+
+static void processCallbackMbbi(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    mbbiRecord *pmbbi = (mbbiRecord *)pPvt->pr;
+    dbCommon *pr = (dbCommon *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
+       &pPvt->value,pPvt->mask);
+    if (status == asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::process val=%lu\n",
+            pr->name, pPvt->value&pmbbi->mask);
+        pr->udf=0;
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s devAsynUInt32Digital::process read error %s\n",
+              pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initMbbo(mbboRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+    epicsUInt32 value;
+
+    status = initCommon((dbCommon *)pr,&pr->out,
+        processCallbackMbbo,interruptCallbackOutput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pr->mask = pPvt->mask;
+    pr->shft = computeShift(pPvt->mask);
+    /* Read the current value from the device */
+    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+                      &value, pPvt->mask, pPvt->pasynUser->timeout);
+    if (status == asynSuccess) {
+        pr->rval = value & pr->mask;
+        return 0;
+    }
+    return 2;
+}
+static long processMbbo(mbboRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        epicsUInt32 rval = pPvt->value;
+
+        pr->rval = rval;
+        if(pr->shft>0) rval >>= pr->shft;
+        if(pr->sdef){
+            unsigned long *pstate_values;
+            int           i;
+
+            pstate_values = &(pr->zrvl);
+            pr->val = 65535;        /* initalize to unknown state*/
+            for (i = 0; i < 16; i++){
+                    if (*pstate_values == rval){
+                            pr->val = i;
+                            break;
+                    }
+                    pstate_values++;
+            }
+        }else{
+            /* the raw  is the desired val */
+            pr->val =  (unsigned short)rval;
+        }
+        pr->udf = FALSE;
+    } else if(pr->pact == 0) {
+        pPvt->gotValue = 0;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) {
+             pr->pact = 1;
+             return 0;
+        }
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital::process error queuing request %s\n",
+                pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+    pPvt->gotValue = 0;
+    return 0;
+}
+
+static void processCallbackMbbo(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = pPvt->pr;
+    mbboRecord *pmbbo = (mbboRecord *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
+        pmbbo->rval,pPvt->mask);
+    if(status == asynSuccess) {
+        pr->udf=0;
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynIn432 process rval %lu\n",pr->name,pmbbo->rval);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynIn432 process error %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initMbbiDirect(mbbiDirectRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+
+    status = initCommon((dbCommon *)pr,&pr->inp,
+        processCallbackMbbiDirect,interruptCallbackInput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pr->mask = pPvt->mask;
+    pr->shft = computeShift(pPvt->mask);
+    pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
+    return 0;
+}
+
+static long processMbbiDirect(mbbiDirectRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pPvt->gotValue = 0;
+    } else {
+        if(pr->pact == 0) {
+            status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+            if((status==asynSuccess) && pPvt->canBlock) {
+                 pr->pact = 1;
+                 return 0;
+            }
+            if(status != asynSuccess) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::process error queuing request %s\n", 
+                    pr->name,pPvt->pasynUser->errorMessage);
+            } 
+        }
+    }
+    pr->rval = pPvt->value & pr->mask;
+    return 0;
+}
+
+static void processCallbackMbbiDirect(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    mbbiDirectRecord *pmbbiDirect = (mbbiDirectRecord *)pPvt->pr;
+    dbCommon *pr = (dbCommon *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
+       &pPvt->value,pPvt->mask);
+    if (status == asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::process val=%lu\n",
+            pr->name, pPvt->value&pmbbiDirect->mask);
+        pr->udf=0;
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+              "%s devAsynUInt32Digital::process read error %s\n",
+              pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+}
+
+static long initMbboDirect(mbboDirectRecord *pr)
+{
+    devPvt *pPvt;
+    asynStatus status;
+    epicsUInt32 value;
+
+    status = initCommon((dbCommon *)pr,&pr->out,
+        processCallbackMbboDirect,interruptCallbackOutput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    pr->mask = pPvt->mask;
+    pr->shft = computeShift(pPvt->mask);
+    /* Read the current value from the device */
+    status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
+                      &value, pPvt->mask, pPvt->pasynUser->timeout);
+    if (status == asynSuccess) {
+        pr->rval = value & pr->mask;
+        return 0;
+    }
+    return 2;
+}
+static long processMbboDirect(mbboDirectRecord *pr)
+{
+    devPvt *pPvt = (devPvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        epicsUInt32 rval = pPvt->value;
+        unsigned char *bit = &(pr->b0);
+        int i, offset=1;
+
+        pr->rval = rval;
+        if(pr->shft>0) rval >>= pr->shft;
+        for (i=0; i<NUM_BITS; i++, offset <<= 1, bit++ ) {
+            if(*bit) {
+                pr->val |= offset;
+            } else {
+                pr->val &= ~offset;
+            }
+        }
+    } else if(pr->pact == 0) {
+        pPvt->gotValue = 0;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) {
+             pr->pact = 1;
+             return 0;
+        }
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital::process error queuing request %s\n",
+                pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+    pPvt->gotValue = 0;
+    return 0;
+}
+
+static void processCallbackMbboDirect(asynUser *pasynUser)
+{
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon *pr = pPvt->pr;
+    mbboDirectRecord *pmbboDirect = (mbboDirectRecord *)pPvt->pr;
+    int status=asynSuccess;
+
+    status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
+        pmbboDirect->rval,pPvt->mask);
+    if(status == asynSuccess) {
+        pr->udf=0;
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynIn432 process rval %lu\n",pr->name,pmbboDirect->rval);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynIn432 process error %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }

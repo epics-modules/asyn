@@ -1,3 +1,4 @@
-include "devAsynAnalog.dbd"
 include "devAsynOctet.dbd"
+include "devAsynInt32.dbd"
+include "devAsynFloat64.dbd"
 include "devAsynUInt32Digital.dbd"

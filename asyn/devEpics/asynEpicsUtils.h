@@ -13,6 +13,7 @@
 #define asynEpicsUtilsH
 
 #include <link.h>
+#include <epicsTypes.h>
 #include "asynDriver.h"
 
 #ifdef __cplusplus
@@ -22,6 +23,8 @@ extern "C" {
 typedef struct asynEpicsUtils {
     asynStatus (*parseLink)(asynUser *pasynUser, DBLINK *plink, 
                 char **port, int *addr, char **userParam);
+    asynStatus (*parseLinkMask)(asynUser *pasynUser, DBLINK *plink, 
+                char **port, int *addr, epicsUInt32 *mask,char **userParam);
     asynStatus (*parseLinkFree)(asynUser *pasynUser, 
                 char **port, char **userParam);
 } asynEpicsUtils;

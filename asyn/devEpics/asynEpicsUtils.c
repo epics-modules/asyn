@@ -27,20 +27,29 @@
 #define epicsExportSharedSymbols
 
 static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink, 
-                            char **port, int *addr, char **userParam);
+                   char **port, int *addr, char **userParam);
+static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink, 
+                   char **port, int *addr, epicsUInt32 *mask,char **userParam);
 static asynStatus parseLinkFree(asynUser *pasynUser,
-                            char **port, char **userParam);
+                   char **port, char **userParam);
 
 static asynEpicsUtils utils = {
-    parseLink,parseLinkFree
+    parseLink,parseLinkMask,parseLinkFree
 };
 
 epicsShareDef asynEpicsUtils *pasynEpicsUtils = &utils;
 
 /* parseLink syntax is:
    VME_IO "C<ignore> S<addr> @<portName> userParams
-   INST_IO @asyn(<portName>ws<addr>ws<timeout>)usetParams
+   INST_IO @asyn(<portName>ws<addr>ws<timeout>)userParams
 */
+
+static char *skipWhite(char *pstart,int commaOk){
+    char *p = pstart;
+    while(*p && (isspace(*p) || (commaOk && (*p==',')))) p++;
+    return p;
+}
+
 static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink, 
                              char **port, int *addr, char **userParam)
 {
@@ -58,8 +67,9 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         pvmeio=(struct vmeio*)&(plink->value);
         *addr = pvmeio->signal;
         p = pvmeio->parm;
+        p = skipWhite(p,0);
+        for(len=0; *p && !isspace(*p) && *p!=','  ; len++, p++){}
         /* first field of parm is always the asyn port name */
-        for(len=0; *p && !isspace(*p) && *p!=','; len++, p++) {}
         if(len==0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "parm is null. Must be <port> <addr> ...");
@@ -70,7 +80,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         strncpy(*port,pvmeio->parm,len);
         *userParam = 0; /*initialize to null string*/
         if(*p) {
-            for(len=0; *p && (isspace(*p) || *p==','); len++, p++){} /*skip whitespace*/
+            p = skipWhite(p,0);
             if(*p) {
                 len = strlen(p);
                 *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");	
@@ -87,8 +97,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         pnext = strchr(pnext,'(');
         if(!pnext) goto error;
         pnext++;
-        while(*pnext && isspace(*pnext)) pnext++; /*skip white space*/
-        if(!pnext) goto error;
+        pnext = skipWhite(pnext,0);
         p = pnext;
         for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
         if(*p==0) goto error;
@@ -97,11 +106,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         strncpy(*port,pnext,len);
         /*next is addr*/
         pnext = p;
-        while(*pnext && isspace(*pnext)) pnext++;
-        if(*pnext==',') {
-            pnext++;
-            while(*pnext && isspace(*pnext)) pnext++;
-        }
+        pnext = skipWhite(pnext,1);
         if(*pnext==0) goto error;
         if(*pnext==')') {
             *addr = 0;
@@ -113,12 +118,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         if(errno) goto error;
         /*next is timeout*/
         pnext = endp;
-        if(*pnext==0) goto error;
-        while(*pnext && isspace(*pnext)) pnext++;
-        if(*pnext==',') {
-            pnext++;
-            while(*pnext && isspace(*pnext)) pnext++;
-        }
+        pnext = skipWhite(pnext,1);
         if(*pnext==0) goto error;
         if(*pnext==')') {
             pasynUser->timeout = 1.0;
@@ -128,15 +128,14 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         pasynUser->timeout = strtod(pnext,&endp);
         if(errno) goto error;
         pnext = endp;
-        while(*pnext && isspace(*pnext)) pnext++;
+        pnext = skipWhite(pnext,0);
         if(*pnext!=')') goto error;
-        pnext = endp;
 userParams:
         if(userParam) *userParam = 0; /*initialize to null string*/
         pnext++; /*skip over )*/
         p = pnext;
         if(*p) {
-            for(len=0; *p && isspace(*p) ; len++, p++){} /*skip whitespace*/
+            p = skipWhite(p,0);
             if(userParam&& *p) {
                 len = strlen(p);
                 *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");	
@@ -151,10 +150,88 @@ error:
         return(asynError);
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                     "Link must be INST_IO, VME_IO or GPIB_IO");
+                     "Link must be INST_IO or VME_IO");
         return(asynError);
     }
     return(asynSuccess);
+}
+
+static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink, 
+                   char **port, int *addr, epicsUInt32 *mask,char **userParam)
+{
+    struct instio *pinstio;
+    int len;
+    char *p;
+    char *endp;
+    char *pnext;
+
+    assert(addr && port && userParam);
+    *addr=0; *port=NULL; *userParam=NULL;
+    if(plink->type!=INST_IO) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                     "Link must be INST_IO");
+        return(asynError);
+    }
+    pinstio=(struct instio*)&(plink->value);
+    p = pinstio->string;
+    pnext = strstr(p,"asynMask");
+    if(!pnext) goto error;
+    pnext = strchr(pnext,'(');
+    if(!pnext) goto error;
+    pnext++;
+    pnext = skipWhite(pnext,0);
+    p = pnext;
+    for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
+    if(*p==0) goto error;
+    *port = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
+    (*port)[len] = 0;
+    strncpy(*port,pnext,len);
+    /*next is addr*/
+    pnext = p;
+    pnext = skipWhite(pnext,1);
+    if(*pnext==0 || *pnext==')') goto error;
+    errno = 0;
+    *addr = strtol(pnext,&endp,0);
+    if(errno) goto error;
+    /*next is mask*/
+    pnext = endp;
+    pnext = skipWhite(pnext,1);
+    if(*pnext==0 || *pnext==')') goto error;
+    errno = 0;
+    *mask = strtoul(pnext,&endp,0);
+    if(errno) goto error;
+    /*next is timeout*/
+    pnext = endp;
+    pnext = skipWhite(pnext,1);
+    if(*pnext==0) goto error;
+    if(*pnext==')') {
+        pasynUser->timeout = 1.0;
+        goto userParams;
+    }
+    errno = 0;
+    pasynUser->timeout = strtod(pnext,&endp);
+    if(errno) goto error;
+    pnext = endp;
+    pnext = skipWhite(pnext,0);
+    if(*pnext!=')') goto error;
+userParams:
+    if(userParam) *userParam = 0; /*initialize to null string*/
+    pnext++; /*skip over )*/
+    p = pnext;
+    if(*p) {
+        p = skipWhite(p,0);
+        if(userParam&& *p) {
+            len = strlen(p);
+            *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");	
+            strncpy(*userParam,p,len);
+            (*userParam)[len] = 0;
+        }
+    }
+    return(asynSuccess);
+error:
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "invalid INST_IO Must be asyn(<port> <addr> <mask> <timeout>)userParams");
+        return(asynError);
 }
 
 static asynStatus parseLinkFree(asynUser *pasynUser,
