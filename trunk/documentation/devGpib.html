@@ -784,12 +784,13 @@ this:</p>
         "OFF",      /* set RVAL to 0 */
         "ON",      /* set RVAL to 1 */
         0};     /* list terminator */</pre>
-The 0 field is <em>extremely</em> important.  If the instrument gets confused
+The 0 field is <em>extremely</em> important.  If it is omitted and
+the instrument gets confused
 and responds with something that does not start with an "OFF" or "ON", the
 GPIB support library code will end up running off the end of the table.
 
 <p>In the case when none of the choices in an efast table match for an input
-operation, The record is placed into a INVALID alarm state.</p>
+operation the record is placed into a INVALID alarm state.</p>
 
 <h2>devGpibNames - Name Table</h2>
 For binary and multibit binary records the choice fields of a record can be
