@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.14 2004-05-20 15:01:04 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.15 2004-07-06 14:41:03 norume Exp $
  */
 
 #include <string.h>
@@ -710,6 +710,7 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
                        "%s read %d ", tty->serialDeviceName, thisRead);
             tty->consecutiveReadTimeouts = 0;
             nRead = thisRead;
+            tty->nRead += thisRead;
             break;
         }
         else {

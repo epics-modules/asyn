@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.1 2004-06-21 18:03:59 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.2 2004-07-06 14:41:02 norume Exp $
  */
 
 #include <string.h>
@@ -154,7 +154,7 @@ drvAsynIPPortReport(void *drvPvt, FILE *fp, int details)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    fprintf(fp, "Serial line %s: %sonnected\n",
+    fprintf(fp, "Port %s: %sonnected\n",
         tty->serialDeviceName,
         tty->fd >= 0 ? "C" : "Disc");
     if (details >= 1) {
@@ -464,6 +464,7 @@ static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
                        "%s read %d ", tty->serialDeviceName, thisRead);
             tty->consecutiveReadTimeouts = 0;
             nRead = thisRead;
+            tty->nRead += thisRead;
             break;
         }
         else {
