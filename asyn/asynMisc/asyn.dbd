@@ -7,4 +7,7 @@ registrar(asynInterposeEosRegister)
 # Applications which wish to use ASYN without EPICS
 # records can comment out the following lines.
 include "asynRecord.dbd"
+
+device(ao,VME_IO,devAoAsynInt32,"asyn Int32")
+
 driver(drvAsyn)
