@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">August 30, 2004</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">August 23, 2004</span></p>
 </center>
 <hr>
 
@@ -233,8 +233,7 @@ asynDriver defines the following terminology:</p>
     examples are serial, gpib, and network based drivers.</p>
   </li>
   <li>synchronous Driver
-    <p>A driver that does not block while communicating with a device. Many
-    register based drivers are be non-blocking</p>
+    <p>A driver that does not block while communicating with a device.</p>
   </li>
   <li>Message Based Interfaces
     <p>Interfaces that use octet arrays for read/write operations.</p>
@@ -258,9 +257,9 @@ drivers that accept 32 bit integers or 64 bit floats. Additional interfaces
 can be defined, and it is expected that additional standard interfaces will
 be defined.</p>
 
-<p>Examples of ports that require drivers that can block are GPIB
-controllers, serial ports, Ethernet ports, etc. Examples of ports that
-require drivers that do not block are VME register based devices.</p>
+<p>Examples of portDrivers that block are GPIB controllers, serial ports,
+Ethernet ports, etc. Examples of portDrivers that do not block are VME
+register based devices.</p>
 
 <p>One or more devices can be attached to a port. For example, only one
 device can be attached to an RS-232 port, but up to 15 devices can be
@@ -341,23 +340,28 @@ well as all supported interfaces.</p>
 style="font-family: courier">pasynManager-&gt;createAsynUser(processCallback,...)</span>.
 The address of the asynUser is passed to most other asynDriver methods.
 processCallback is the addresss of a caller supplied callback routine, which
-will be described shortly.</p>
+will be described shortly. An asynUser is a "handle" for accessing asynDriver
+facilities. It is the means by which asynManager manages multiple requests
+for access to a port. Device support code should NOT try to share an asynUser
+between multiple sources of requsts for access to a port. For example device
+support for EPICS records should normally allocate a separate asynUser for
+each record instance.</p>
 
 <p>User code connects to a low level driver via a call to <span
-style="font-family: courier">pasynManager-&gt;connectDevice(portName,addr)</span>.
+style="font-family: courier">pasynManager-&gt;connectDevice(pasynUser,portName,addr)</span>.
 This call must specify the name of the port and the address of the device. It
 then calls findInterface to locate the interfaces with which it calls the
 driver.</p>
 
 <p>User code makes calls to the low level driver via an interface. All calls
-must be made from the processCallback passed to createAsynUser. A request to
-call processCallback is made by calling queueRequest. A thread that calls
+must be made from the queue callback passed to createAsynUser. A request to
+call queue callback is made by calling queueRequest. A thread that calls
 queueRequest is guaranteed not to block. If queueRequest is called for a port
 that can block the request is queued to a thread dedicated to the port. If
-queueRequest is called for a port does not block it just calls
-processCallback. In either case asynManager guarantees that multiple threads
-do not simultaneously call a low level driver. This guarantee is valid only
-if low level drivers are only accessed by calling queueRequest.</p>
+queueRequest is called for a port does not block it just calls queue
+callback. In either case asynManager guarantees that multiple threads do not
+simultaneously call a low level driver. This guarantee is valid only if low
+level drivers are only accessed by calling queueRequest.</p>
 
 <p>The following examples are based on EPICS IOC record/device support.</p>
 
@@ -569,8 +573,8 @@ asynManager:createAsynUser and asynManager:freeAsynUser.</p>
   <tbody>
     <tr>
       <td>errorMessage</td>
-      <td>When either asynManager or a driver returns an error,it should put
-        an error message into errorMessage via a call to:
+      <td>When a method returns asynError ,it should put an error message
+        into errorMessage via a call to:
         <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,</pre>
         <pre>              "&lt;format&gt;",...)</pre>
       </td>
@@ -585,7 +589,7 @@ asynManager:createAsynUser and asynManager:freeAsynUser.</p>
         by the user and can be changed between calls to drivers.
 
         <p>The user must provide a non zero value or many low level drivers
-        will timeout. A timeout value &lt; 0.0 means wait forever.</p>
+        will timeout. A timeout value &lt;= 0.0 means wait forever.</p>
       </td>
     </tr>
     <tr>
@@ -734,11 +738,11 @@ epicsShareExtern asynManager *pasynManager;</pre>
         If the disconnect fails, this call will also fail. The storage for
         the asynUser is saved on a free list and will be reused in later
         calls to createAsynUser. Thus continually calling createAsynUser and
-        freeAsynUser is efficient..</td>
+        freeAsynUser is efficient.</td>
     </tr>
     <tr>
       <td>memMalloc</td>
-      <td>Allocate memory. memMalloc/memFree maintains a set of freelists of
+      <td>Allocate memory. memMalloc/memFree maintain a set of freelists of
         different sizes. Thus any application that needs storage for a short
         time can use memMalloc/memFree to allocate and free the storage
         without causing memory fragmentation.</td>
@@ -816,7 +820,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         port has been registered with ASYN_CANBLOCK true then the request is
         put on a queue for the thread associated with the queue. If the port
         has been registered with ASYN_CANBLOCK false then queueRequest just
-        locks the port and calls the user callback.. If either case the queue
+        locks the port and calls the user callback. If either case the queue
         callback specified in the call to createAsynUser is called.
 
         <p>If the asynUser is already on a queue, asynError is returned. The
@@ -871,7 +875,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>This method is called by drivers. A call is made for each
         communication interface instance. Attributes is a set of bits.
         Currently two bits are defined: ASYN_MULTIDEVICE and ASYN_CANBLOCK.
-        The driver must specify these properly.. autoConnect, which is (0,1)
+        The driver must specify these properly. autoConnect, which is (0,1)
         for (no,yes), provides the initial value for the port and all devices
         connected to the port. If priority is 0, then a default will be
         assigned. If stackSize is 0, a default is assigned. The portName
@@ -1015,48 +1019,6 @@ typedef struct asynTrace {
                const char *buffer, int len,const char *pformat, ...);
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;</pre>
-
-<h3>asynDrvUser</h3>
-<pre>#define asynDrvUserType "asynDrvUser"
-typedef struct  asynDrvUser {
-    /*The following do not have to be called via queueRequest callback*/
-    asynStatus (*create)(void *drvPvt,asynUser *pasynUser,
-        const char *drvInfo, const char **pptypeName,size_t *psize);
-    asynStatus (*getType)(void *drvPvt,asynUser *pasynUser,
-        const char **pptypeName,size_t *psize);
-    asynStatus (*destroy)(void *drvPvt,asynUser *pasynUser);
-}asynDrvUser;</pre>
-
-<p>asynDrvUser provides methods that allow an asynUser to communicate user
-specific information to/from a port driver</p>
-
-<table border="1">
-  <caption>asynDrvUser</caption>
-  <tbody>
-    <tr>
-      <td>create</td>
-      <td>The driver can create any resources it needs. It can use
-        asynUser.drvUser to provide access to the resources. If the asynUser
-        and the driver both know about how to access the resources they must
-        agree and a name for the resource and a size. If pptypeName is not
-        null the the driver can give a value to *pptypeName. If psize is not
-        null the driver can give a value to *psize. Unless asynUser receives
-        a typeName and size that it recognizes it must not access
-        asynUser.drvUser.</td>
-    </tr>
-    <tr>
-      <td>getType</td>
-      <td>If other code, e.g. an interposeInterface wants to access
-        asynUser.drvUser it must call this and verify that typeName and size
-        are what it expects.</td>
-    </tr>
-    <tr>
-      <td>destroy</td>
-      <td>Destroy the resources created by create and set asynUser.drvUser
-        null.</td>
-    </tr>
-  </tbody>
-</table>
 
 <h3>asynTrace</h3>
 
@@ -1204,7 +1166,8 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
 <hr>
 
 <center>
-<h2><a name="standardMessageInterfaces"></a>Standard Message Based Interfaces</h2>
+<h2><a name="standardMessageInterfaces"></a>Standard Message Based
+Interfaces</h2>
 </center>
 
 <p>These are interfaces for communicating with message based devices, where
@@ -1212,7 +1175,7 @@ message based means that the device accepts octet strings, i.e. an array of 8
 bit bytes, and responds with octet strings. Three interfaces are provided:
 asynOctet, asynOctetSyncIO, and asynOctetTrapReadWrite. asynOctetSyncIO
 provides a synchronous inteface to asynOctet and can be used by code that is
-willing to block. asynOctetTrapReadWrite is actually an interposeInterface
+willing to block. asynOctetTrapReadWrite is an interposeInterface
 that can be used to intercept calls to asynOctet.</p>
 
 <h3>asynOctet</h3>
@@ -1424,7 +1387,8 @@ all registered callbacks for read and write messages.</p>
 <hr>
 
 <center>
-<h2><a name="standardRegisterInterfaces"></a>Standard Register Based Interfaces</h2>
+<h2><a name="standardRegisterInterfaces"></a>Standard Register Based
+Interfaces</h2>
 </center>
 
 <h3>Introduction</h3>
@@ -1436,19 +1400,19 @@ all registered callbacks for read and write messages.</p>
     <ul>
       <li>asynInt32 - read, write, getBounds.</li>
       <li>asynInt32Callback - registerCallback/cancelCallback to receive
-        Int32 value. This is for interrupt driven drivers.</li>
+        Int32 value.</li>
       <li>asynInt32Array - read/write arrays of Int32 values.</li>
       <li>asynInt32ArrayCallback - registerCallback/cancelCallback to receive
-        arrays of Int32. This is for interrupt driven drivers.</li>
+        arrays of Int32.</li>
       <li>asynInt32SyncIO - A synchronous interface to asynInt32</li>
     </ul>
   </li>
-  <li>UInt32Digital - Data is passed as 32 unsigned integers and a mask that
+  <li>UInt32Digital - Data is passed as 32 bit unsigned integers and a mask that
     selects bits from the integer.
     <ul>
       <li>asynUInt32Digital - read/write.</li>
       <li>asynUInt32DigitalCallback - registerCallback/cancelCallback to
-        receive UInt32 value. This is for interrupt driven drivers. It also
+        receive UInt32 value. It also
         has methods to setInterrupt/getInterrupt.</li>
     </ul>
   </li>
@@ -1457,10 +1421,10 @@ all registered callbacks for read and write messages.</p>
     <ul>
       <li>asynFloat64 - read/write.</li>
       <li>asynFloat64Callback - registerCallback/cancelCallback to receive
-        Float64 value. This is for interrupt driven drivers.</li>
+        Float64 value.</li>
       <li>asynFloat64Array - read/write arrays of Float64 values.</li>
       <li>asynFloat64ArrayCallback - registerCallback/cancelCallback to
-        receive arrays of Float64. This is for interrupt driven drivers.</li>
+        receive arrays of Float64.</li>
     </ul>
   </li>
 </ul>
@@ -1538,9 +1502,9 @@ typedef struct asynInt32Callback {
 } asynInt32Callback;
  </pre>
 
-<p>asynInt32Callback provides methods for drivers that collect data
-and make it available to registered clients.
-An example is an interrupt based driver.</p>
+<p>asynInt32Callback provides methods for drivers that collect data and make
+it available to registered clients. An example is an interrupt based
+driver.</p>
 
 <table border="1">
   <caption>asynInt32Callback</caption>
@@ -1595,9 +1559,9 @@ typedef struct asynInt32ArrayCallback {
              void *userPvt);
 } asynInt32ArrayCallback;</pre>
 
-<p>asynInt32ArrayCallback provides methods for drivers that collect data
-and make it available to registered clients.
-An example is an interrupt based driver.</p>
+<p>asynInt32ArrayCallback provides methods for drivers that collect data and
+make it available to registered clients. An example is an interrupt based
+driver.</p>
 
 <table border="1">
   <caption>asynInt32ArrayCallback</caption>
@@ -1678,38 +1642,35 @@ that calls it must be willing to block.</p>
 </table>
 
 <h3>asynUInt32Digital</h3>
-<pre>
-#define asynUInt32DigitalType "asynUInt32Digital"
+<pre>#define asynUInt32DigitalType "asynUInt32Digital"
 typedef struct asynUInt32Digital {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
          epicsUInt32 value, epicsUInt32 mask);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *value, epicsUInt32 mask);
-} asynUInt32Digital;
-</pre>
+} asynUInt32Digital;</pre>
 
-<p>asynUInt32Digital  describes the methods for communicating via
-bits of an Int32 register.</p>
+<p>asynUInt32Digital  describes the methods for communicating via bits of an
+Int32 register.</p>
 
 <table border="1">
   <caption>asynUInt32Digital</caption>
   <tbody>
     <tr>
       <td>write</td>
-      <td>Modify the bits specified by mask
-         with the corresponding bits in value.</td>
+      <td>Modify the bits specified by mask with the corresponding bits in
+        value.</td>
     </tr>
     <tr>
       <td>read</td>
-      <td>Read the bits specified by mask into value. The other bits
-         of value will be set to 0.</td>
+      <td>Read the bits specified by mask into value. The other bits of value
+        will be set to 0.</td>
     </tr>
   </tbody>
 </table>
 
 <h3>asynUInt32DigitalCallback</h3>
-<pre>
-typedef enum {
+<pre>typedef enum {
     interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
 } interruptReason;
 
@@ -1728,24 +1689,23 @@ typedef struct asynUInt32DigitalCallback {
         epicsUInt32 mask);
     asynStatus (*getInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *mask, interruptReason reason);
-} asynUInt32DigitalCallback;
-</pre>
+} asynUInt32DigitalCallback;</pre>
 
-<p>asynUInt32Digital  describes methods for communicating
-with interupt driven drivers.</p>
+<p>asynUInt32Digital  describes methods for communicating with interupt
+driven drivers.</p>
 
 <table border="1">
   <caption>asynUInt32DigitalCallback</caption>
   <tbody>
     <tr>
       <td>registerCallback</td>
-      <td>Register a callback that will be called whenever the driver
-         detects a change in any of the bits specified by mask.</td>
+      <td>Register a callback that will be called whenever the driver detects
+        a change in any of the bits specified by mask.</td>
     </tr>
     <tr>
       <td>cancelCallback</td>
-      <td>Cancels the registered callback. Callback, mask and userPvt
-         must all match the values passed to registerCallback.</td>
+      <td>Cancels the registered callback. Callback, mask and userPvt must
+        all match the values passed to registerCallback.</td>
     </tr>
     <tr>
       <td>setInterrupt</td>
@@ -1876,6 +1836,48 @@ array of Float64 values</p>
 <center>
 <h2><a name="otherInterfaces"></a>Other Standard Interfaces</h2>
 </center>
+
+<h3>asynDrvUser</h3>
+<pre>#define asynDrvUserType "asynDrvUser"
+typedef struct  asynDrvUser {
+    /*The following do not have to be called via queueRequest callback*/
+    asynStatus (*create)(void *drvPvt,asynUser *pasynUser,
+        const char *drvInfo, const char **pptypeName,size_t *psize);
+    asynStatus (*getType)(void *drvPvt,asynUser *pasynUser,
+        const char **pptypeName,size_t *psize);
+    asynStatus (*destroy)(void *drvPvt,asynUser *pasynUser);
+}asynDrvUser;</pre>
+
+<p>asynDrvUser provides methods that allow an asynUser to communicate user
+specific information to/from a port driver</p>
+
+<table border="1">
+  <caption>asynDrvUser</caption>
+  <tbody>
+    <tr>
+      <td>create</td>
+      <td>The driver can create any resources it needs. It can use
+        asynUser.drvUser to provide access to the resources. If the asynUser
+        and the driver both know about how to access the resources they must
+        agree and a name for the resource and a size. If pptypeName is not
+        null the the driver can give a value to *pptypeName. If psize is not
+        null the driver can give a value to *psize. Unless asynUser receives
+        a typeName and size that it recognizes it must not access
+        asynUser.drvUser.</td>
+    </tr>
+    <tr>
+      <td>getType</td>
+      <td>If other code, e.g. an interposeInterface wants to access
+        asynUser.drvUser it must call this and verify that typeName and size
+        are what it expects.</td>
+    </tr>
+    <tr>
+      <td>destroy</td>
+      <td>Destroy the resources created by create and set asynUser.drvUser
+        null.</td>
+    </tr>
+  </tbody>
+</table>
 
 <h3>asynOption</h3>
 <pre>#define asynOptionType "asynOption"
@@ -2053,7 +2055,7 @@ handled and what getAddr returns.</p>
   </li>
   <li>autoConnect
     <p>Does asynManager call connect if it finds the port or device
-    disconnected. This is initialized to the state specified in the call to
+    disconnected? This is initialized to the state specified in the call to
     registerPort.</p>
   </li>
 </ul>
@@ -2197,33 +2199,22 @@ static void queueCallback(asynUser *pasynUser) {
             "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
             readBytes,eomReason,pmydata-&gt;buffer);
     }
-    if(pmydata-&gt;done) {
-        epicsEventSignal(pmydata-&gt;done);
-    } else {
-        pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
-    }
-    status = pasynManager-&gt;freeAsynUser(pasynUser);
-    if(status) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
-    }
+    if(pmydata-&gt;done) epicsEventSignal(pmydata-&gt;done);
 }
 
 static void asynExample(const char *port,int addr,const char *message)
 {
-    myData        *pmyData1,*pmyData2;
-    asynUser      *pasynUser,*pasynUserDuplicate;
+    myData        *pmyData;
+    asynUser      *pasynUser;
     asynStatus    status;
     asynInterface *pasynInterface;
     int           canBlock;
 
-    pmyData1 = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
-    memset(pmyData1,0,sizeof(myData));
-    pmyData2 = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
-    memset(pmyData2,0,sizeof(myData));
-    strcpy(pmyData1-&gt;buffer,message);
+    pmyData = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
+    memset(pmyData,0,sizeof(myData));
+    strcpy(pmyData-&gt;buffer,message);
     pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
-    pasynUser-&gt;userPvt = pmyData1;
+    pasynUser-&gt;userPvt = pmyData;
     status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
     if(status!=asynSuccess) {
         printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
@@ -2235,32 +2226,24 @@ static void asynExample(const char *port,int addr,const char *message)
         printf("%s driver not supported\n",asynOctetType);
         exit(-1);
     }
-    pmyData1-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
-    pmyData1-&gt;drvPvt = pasynInterface-&gt;drvPvt;
-    *pmyData2 = *pmyData1; /*structure copy*/
-    strcat(pmyData2-&gt;buffer," repeated");
+    pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
+    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
     canBlock = 0;
     pasynManager-&gt;canBlock(pasynUser,&amp;canBlock);
-    if(canBlock) pmyData2-&gt;done = epicsEventCreate(epicsEventEmpty);
-    pasynUserDuplicate = pasynManager-&gt;duplicateAsynUser(
-        pasynUser,queueCallback,0);
-    pasynUserDuplicate-&gt;userPvt = pmyData2;
+    if(canBlock) pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
     status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
     }
-    status = pasynManager-&gt;queueRequest(pasynUserDuplicate,asynQueuePriorityLow,
- 0.0);
+    if(canBlock) epicsEventWait(pmyData-&gt;done);
+    status = pasynManager-&gt;freeAsynUser(pasynUser);
     if(status) {
-        asynPrint(pasynUserDuplicate,ASYN_TRACE_ERROR,
-            "queueRequest failed %s\n",pasynUserDuplicate-&gt;errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
     }
-    if(canBlock) {
-        epicsEventWait(pmyData2-&gt;done);
-        pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
-        epicsEventDestroy(pmyData2-&gt;done);
-    }
+    epicsEventDestroy(pmyData-&gt;done);
+    pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
 }</pre>
 
 <p>The flow of control is as follows:</p>
@@ -2879,7 +2862,8 @@ identifys the port,addr.</p>
   <li>key - The key for the option desired.</li>
   <li>val - The value for the option.</li>
   <li>yesNo - The value (0,1) means (no,yes).</li>
-  <li>entry - A character string that identifies the asynOctetConnect request.</li>
+  <li>entry - A character string that identifies the asynOctetConnect
+  request.</li>
   <li>oeos,ieos - The output and input End of String terminator.&nbsp;
     Default="\r"</li>
   <li>timeout - timeout as an integer in milliseconds. The default is 1.</li>
