@@ -53,7 +53,6 @@ struct niport {
     CALLBACK    callback;
     epicsUInt8  isr1; 
     epicsUInt8  isr2;
-    epicsBoolean srqHappened;
     epicsBoolean srqEnabled;
     transferState_t transferState;
     transferState_t nextTransferState;
@@ -106,10 +105,11 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
 static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser);
 static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static int gpibPortSrqStatus(void *pdrvPvt);
+static asynStatus gpibPortSrqStatus(void *pdrvPvt,int *isSet);
 static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff);
 static asynStatus gpibPortSerialPollBegin(void *pdrvPvt);
-static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout);
+static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *status);
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt);
 
 static asynGpibPort gpibPort = {
@@ -146,6 +146,9 @@ static asynGpibPort gpibPort = {
 
 #define CFG1    0x101 /*Configuration Register 1*/
 #define CFG2    0x105 /*Configuration Register 2*/
+#define GPIBSR  0x101 /*GPIB Status Register*/
+
+#define GPIBSRSRQ 0x20 /*SRQ is asserted*/
 
 #define SFL     0x08  /*System Fail Bit*/
 #define SUP     0x04  /*Supervisor Bit*/
@@ -305,7 +308,6 @@ static void srqCallback(CALLBACK *pcallback)
 
     callbackGetUser(pniport,pcallback);
     if(!pniport->srqEnabled) return;
-    pniport->srqHappened = epicsTrue;
     pasynGpib->srqHappened(pniport->asynGpibPvt);
 }
 
@@ -739,13 +741,12 @@ static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     return asynSuccess;
 }
 
-static int gpibPortSrqStatus(void *pdrvPvt)
+static asynStatus gpibPortSrqStatus(void *pdrvPvt,int *isSet)
 {
     niport *pniport = (niport *)pdrvPvt;
-    int    srqHappened = pniport->srqHappened;
 
-    pniport->srqHappened = epicsFalse;
-    return srqHappened;
+    *isSet = ((readRegister(pniport,GPIBSR)&GPIBSRSRQ)==0) ? 0 : 1;
+    return asynSuccess;
 }
 
 static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff)
@@ -769,7 +770,8 @@ static asynStatus gpibPortSerialPollBegin(void *pdrvPvt)
     return status;
 }
 
-static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
+static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *statusByte)
 {
     niport     *pniport = (niport *)pdrvPvt;
     epicsUInt8 buffer[1];
@@ -780,7 +782,8 @@ static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
     pniport->status = asynSuccess;
     writeRegister(pniport,AUXMR,AUXFH);
     writeAddr(pniport,addr,-1,timeout,transferStateRead);
-    return buffer[0];
+    *statusByte = buffer[0];
+    return asynSuccess;
 }
 
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)

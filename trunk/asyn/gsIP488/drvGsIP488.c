@@ -53,7 +53,6 @@ typedef struct gsport {
     CALLBACK    callback;
     epicsUInt8  isr0; 
     epicsUInt8  isr1;
-    epicsBoolean srqHappened;
     epicsBoolean srqEnabled;
     transferState_t transferState;
     transferState_t nextTransferState;
@@ -105,10 +104,11 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
 static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser);
 static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static int gpibPortSrqStatus(void *pdrvPvt);
+static asynStatus gpibPortSrqStatus(void *pdrvPvt,int *isSet);
 static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff);
 static asynStatus gpibPortSerialPollBegin(void *pdrvPvt);
-static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout);
+static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *status);
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt);
 
 static asynGpibPort gpibPort = {
@@ -177,6 +177,9 @@ static asynGpibPort gpibPort = {
 #define ATN     0x20 /*ATN*/
 #define LADS    0x04 /*Addressed to Listen*/
 #define TADS    0x02 /*Addressed to Talk*/
+
+/*Definitions for BSR*/
+#define BSRSRQ  0x04 /*SRQ request*/
 
 static epicsUInt8 readRegister(gsport *pgsport, int offset)
 {
@@ -262,7 +265,6 @@ static void srqCallback(CALLBACK *pcallback)
 
     callbackGetUser(pgsport,pcallback);
     if(!pgsport->srqEnabled) return;
-    pgsport->srqHappened = epicsTrue;
     pasynGpib->srqHappened(pgsport->asynGpibPvt);
 }
 
@@ -670,13 +672,12 @@ static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     return asynSuccess;
 }
 
-static int gpibPortSrqStatus(void *pdrvPvt)
+static asynStatus gpibPortSrqStatus(void *pdrvPvt,int *isSet)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
-    int    srqHappened = pgsport->srqHappened;
 
-    pgsport->srqHappened = epicsFalse;
-    return srqHappened;
+    *isSet = ((readRegister(pgsport,BSR)&BSRSRQ)==0) ? 0 : 1;
+    return asynSuccess;
 }
 
 static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff)
@@ -700,7 +701,8 @@ static asynStatus gpibPortSerialPollBegin(void *pdrvPvt)
     return status;
 }
 
-static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
+static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
+    double timeout,int *statusByte)
 {
     gsport     *pgsport = (gsport *)pdrvPvt;
     epicsUInt8 buffer[1];
@@ -711,7 +713,8 @@ static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
     writeRegister(pgsport,AUXMR,RHDF);
     pgsport->status = asynSuccess;
     writeAddr(pgsport,addr,-1,timeout,transferStateRead);
-    return buffer[0];
+    *statusByte = buffer[0];
+    return asynSuccess;
 }
 
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
