@@ -222,6 +222,7 @@ static long process(asynRecord * pasynRec)
     asynRecPvt    *pasynRecPvt = pasynRec->dpvt;
     callbackState state = pasynRecPvt->state;
     asynStatus    status;
+    int           yesNo;
 
     /* If the asynOctet interface does not exist then report error and return */
     if (pasynRecPvt->pasynOctet == NULL) {
@@ -244,9 +245,15 @@ static long process(asynRecord * pasynRec)
             status = pasynManager->queueRequest(pasynRecPvt->pasynUser,
                                       asynQueuePriorityLow, QUEUE_TIMEOUT);
             if(status==asynSuccess) {
-                pasynRecPvt->state = state = stateIO;
-                pasynRec->pact = TRUE;
-                return 0;
+                yesNo = 0;
+                pasynManager->canBlock(pasynRecPvt->pasynUser,&yesNo);
+                if(yesNo) {
+                    pasynRecPvt->state = state = stateIO;
+                    pasynRec->pact = TRUE;
+                    return 0;
+                } else {
+                    goto done;
+                }
             }
             reportError(pasynRec, asynSuccess,"queueRequest failed");
         } else if(state==stateNoDevice){
@@ -258,6 +265,7 @@ static long process(asynRecord * pasynRec)
     } else {
         pasynRecPvt->state = stateIdle;
     }
+done:
     recGblGetTimeStamp(pasynRec);
     monitor(pasynRec);
     recGblFwdLink(pasynRec);
@@ -352,9 +360,14 @@ static long special(struct dbAddr * paddr, int after)
         pasynTrace->setTraceIOTruncateSize(pasynUser, pasynRec->tsiz);
         return 0;
     case asynRecordTFIL:
-        if(strlen(pasynRec->tfil) == 0) {
-            /* Zero length, use stdout */
+        if(strlen(pasynRec->tfil)==0) {
+            fd = stdout;
+        } else if(strcmp(pasynRec->tfil,"<errlog>")==0) {
             fd = 0;
+        } else if(strcmp(pasynRec->tfil,"<stdout>")==0) {
+            fd = stdout;
+        } else if(strcmp(pasynRec->tfil,"<stderr>")==0) {
+            fd = stderr;
         } else {
             fd = fopen(pasynRec->tfil, "a+");
             if(!fd) {
@@ -431,6 +444,8 @@ static void asynCallbackProcess(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
+    int        yesNo = 0;
+
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s: asynCallbackProcess, state=%d\n",
               pasynRec->name, pasynRecPvt->state);
@@ -439,9 +454,13 @@ static void asynCallbackProcess(asynUser * pasynUser)
     if(pasynRec->ucmd != gpibUCMD_None) gpibUniversialCmd(pasynUser);
     if(pasynRec->acmd != gpibACMD_None) gpibAddressedCmd(pasynUser);
     if(pasynRec->tmod != asynTMOD_NoIO) performIO(pasynUser);
-    dbScanLock((dbCommon *) pasynRec);
-    process(pasynRec);
-    dbScanUnlock((dbCommon *) pasynRec);
+    yesNo = 0;
+    pasynManager->canBlock(pasynUser,&yesNo);
+    if(yesNo) {
+        dbScanLock((dbCommon *) pasynRec);
+        process(pasynRec);
+        dbScanUnlock((dbCommon *) pasynRec);
+    }
 }
 
 static void asynCallbackSpecial(asynUser * pasynUser)
