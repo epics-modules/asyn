@@ -963,7 +963,7 @@ typedef struct setPortOptionArgs {
     epicsEventId  done;
 }setPortOptionArgs;
 
-static void setPortOptions(asynUser *pasynUser)
+static void setPortOption(asynUser *pasynUser)
 {
     setPortOptionArgs *poptionargs = (setPortOptionArgs *)pasynUser->userPvt;
     asynStatus status;
@@ -971,7 +971,7 @@ static void setPortOptions(asynUser *pasynUser)
     status = poptionargs->pasynCommon->setPortOption(poptionargs->drvPvt,
         pasynUser,poptionargs->key,poptionargs->val);
     if(status!=asynSuccess) 
-        printf("setPortOptions failed %s\n",pasynUser->errorMessage);
+        printf("setPortOption failed %s\n",pasynUser->errorMessage);
     epicsEventSignal(poptionargs->done);
 }
 
@@ -986,7 +986,7 @@ int asynSetPortOption(const char *portName, const char *key, const char *val)
         printf("Missing argument\n");
         return asynError;
     }
-    pasynUser = pasynManager->createAsynUser(setPortOptions,0);
+    pasynUser = pasynManager->createAsynUser(setPortOption,0);
     pasynUser->userPvt = &optionargs;
     status = pasynManager->connectDevice(pasynUser,portName,0);
     if(status!=asynSuccess) {
@@ -1018,7 +1018,7 @@ typedef struct showPortOptionArgs {
     epicsEventId  done;
 }showPortOptionArgs;
 
-static void showPortOptions(asynUser *pasynUser)
+static void showPortOption(asynUser *pasynUser)
 {
     showPortOptionArgs *poptionargs = (showPortOptionArgs *)pasynUser->userPvt;
     asynStatus status;
@@ -1027,7 +1027,7 @@ static void showPortOptions(asynUser *pasynUser)
     status = poptionargs->pasynCommon->getPortOption(poptionargs->drvPvt,
         pasynUser,poptionargs->key,val,sizeof(val));
     if(status!=asynSuccess) {
-        printf("getPortOptions failed %s\n",pasynUser->errorMessage);
+        printf("getPortOption failed %s\n",pasynUser->errorMessage);
     } else {
         printf("%s=%s\n",poptionargs->key,val);
     }
@@ -1045,7 +1045,7 @@ int asynShowPortOption(const char *portName, const char *key)
         printf("Missing argument\n");
         return asynError;
     }
-    pasynUser = pasynManager->createAsynUser(showPortOptions,0);
+    pasynUser = pasynManager->createAsynUser(showPortOption,0);
     pasynUser->userPvt = &optionargs;
     status = pasynManager->connectDevice(pasynUser,portName,0);
     if(status!=asynSuccess) {
