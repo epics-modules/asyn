@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.2 2003-11-04 20:58:20 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.3 2003-11-05 15:08:54 norume Exp $
  */
 
 #include <string.h>
@@ -41,6 +41,8 @@
 #ifdef vxWorks
 # include <tyLib.h>
 # include <ioLib.h>
+# include <sioLib.h>
+# define CSTOPB STOPB
 #else
 # define HAVE_TERMIOS
 # include <termios.h>
@@ -72,6 +74,7 @@ typedef struct {
     unsigned long      nWritten;
     int                setBaud;
     int                baud;
+    int                cflag;
 #ifdef HAVE_TERMIOS
     struct termios     termios;
 #endif
@@ -338,16 +341,12 @@ openConnection (ttyController_t *tty)
         tcflush(tty->fd, TCIOFLUSH);
 #endif
 #ifdef vxWorks
-        /*
-         * About all we can do is set the serial line rate
-         */
-        if (tty->setBaud) {
-            if (ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0) {
-                errlogPrintf("stty: Can't get `%s' rate: %s\n", tty->serialDeviceName, strerror(errno));
-                close(tty->fd);
-                return -1;
-            }
-        }
+        if ((tty->setBaud)
+         && (ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
+         && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0))
+            errlogPrintf("Warning: `%s' supports neither FIOBAUDRATE nor SIO_BAUD_SET.\n", tty->serialDeviceName);
+        if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
+            errlogPrintf("Warning: `%s' does not support SIO_HW_OPTS_SET.\n", tty->serialDeviceName);
 #else
         /*
          * Turn off non-blocking mode
@@ -385,6 +384,8 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
+    if (drvGenericSerialDebug >= 1)
+        printf("drvGenericSerial disconnect %s\n", tty->serialDeviceName);
     if (tty->timer)
         epicsTimerCancel(tty->timer);
     closeConnection(tty);
@@ -687,16 +688,7 @@ drvGenericSerialConfigure(char *portName,
      */
     if ((argc > 1) && tty->isRemote)
         printf ("Warning -- stty parameters are ignored for remote terminal connections.\n");
-#ifdef HAVE_TERMIOS
-    tty->termios.c_cflag = CREAD | CLOCAL | CS8;
-    tty->termios.c_iflag = IGNBRK | IGNPAR;
-    tty->termios.c_oflag = 0;
-    tty->termios.c_lflag = 0;
-    tty->termios.c_cc[VMIN] = 1;
-    tty->termios.c_cc[VTIME] = 0;
-    cfsetispeed(&tty->termios,B9600);
-    cfsetospeed(&tty->termios,B9600);
-#endif
+    tty->cflag = CREAD | CLOCAL | CS8;
     for (i = 1 ; i < argc ; i++) {
         arg = argv[i];
         if (isdigit(*arg)) {
@@ -707,65 +699,71 @@ drvGenericSerialConfigure(char *portName,
                 arg++;
             }
             if (*arg != '\0') {
-                errlogPrintf("stty: Invalid speed\n");
+                errlogPrintf("Invalid speed\n");
                 return -1;
             }
         }
-#ifdef HAVE_TERMIOS
         else if (strcmp(arg, "cs5") == 0) {
-            tty->termios.c_cflag = (tty->termios.c_cflag & ~CSIZE) | CS5;
+            tty->cflag = (tty->cflag & ~CSIZE) | CS5;
         }
         else if (strcmp(arg, "cs6") == 0) {
-            tty->termios.c_cflag = (tty->termios.c_cflag & ~CSIZE) | CS6;
+            tty->cflag = (tty->cflag & ~CSIZE) | CS6;
         }
         else if (strcmp(arg, "cs7") == 0) {
-            tty->termios.c_cflag = (tty->termios.c_cflag & ~CSIZE) | CS7;
+            tty->cflag = (tty->cflag & ~CSIZE) | CS7;
         }
         else if (strcmp(arg, "cs8") == 0) {
-            tty->termios.c_cflag = (tty->termios.c_cflag & ~CSIZE) | CS8;
+            tty->cflag = (tty->cflag & ~CSIZE) | CS8;
         }
         else if (strcmp(arg, "parenb") == 0) {
-            tty->termios.c_cflag |= PARENB;
+            tty->cflag |= PARENB;
         }
         else if (strcmp(arg, "-parenb") == 0) {
-            tty->termios.c_cflag &= ~PARENB;
+            tty->cflag &= ~PARENB;
         }
         else if (strcmp(arg, "parodd") == 0) {
-            tty->termios.c_cflag |= PARODD;
+            tty->cflag |= PARODD;
         }
         else if (strcmp(arg, "-parodd") == 0) {
-            tty->termios.c_cflag &= ~PARODD;
+            tty->cflag &= ~PARODD;
         }
         else if (strcmp(arg, "clocal") == 0) {
-            tty->termios.c_cflag |= CLOCAL;
+            tty->cflag |= CLOCAL;
         }
         else if (strcmp(arg, "-clocal") == 0) {
-            tty->termios.c_cflag &= ~CLOCAL;
+            tty->cflag &= ~CLOCAL;
         }
         else if (strcmp(arg, "cstopb") == 0) {
-            tty->termios.c_cflag |= CSTOPB;
+            tty->cflag |= CSTOPB;
         }
         else if (strcmp(arg, "-cstopb") == 0) {
-            tty->termios.c_cflag &= ~CSTOPB;
+            tty->cflag &= ~CSTOPB;
         }
         else if (strcmp(arg, "crtscts") == 0) {
 #if defined(CRTSCTS)
-            tty->termios.c_cflag |= CRTSCTS;
+            tty->cflag |= CRTSCTS;
 #else
-            errlogPrintf("stty: Warning -- RTS/CTS flow control is not available on this machine.\n");
+            errlogPrintf("Warning -- RTS/CTS flow control is not available on this machine.\n");
 #endif
         }
         else if (strcmp(arg, "-crtscts") == 0) {
 #if defined(CRTSCTS)
-            tty->termios.c_cflag &= ~CRTSCTS;
+            tty->cflag &= ~CRTSCTS;
 #endif
         }
-#endif
         else {
             errlogPrintf("stty: Warning -- Unsupported option `%s'\n", arg);
         }
     }
 #ifdef HAVE_TERMIOS
+    tty->termios.c_cflag = tty->cflag;
+    tty->termios.c_iflag = IGNBRK | IGNPAR;
+    tty->termios.c_oflag = 0;
+    tty->termios.c_lflag = 0;
+    tty->termios.c_cc[VMIN] = 1;
+    tty->termios.c_cc[VTIME] = 0;
+    cfsetispeed(&tty->termios,B9600);
+    cfsetospeed(&tty->termios,B9600);
     switch(tty->baud) {
     case -1:    break;
     case 50:    cfsetispeed(&tty->termios,B50);    cfsetospeed(&tty->termios,B50);     break;
@@ -787,7 +785,7 @@ drvGenericSerialConfigure(char *portName,
     case 115200:cfsetispeed(&tty->termios,B115200);cfsetospeed(&tty->termios,B115200); break;
     case 230400:cfsetispeed(&tty->termios,B230400);cfsetospeed(&tty->termios,B230400); break;
     default:
-        errlogPrintf("stty: Invalid speed.\n");
+        errlogPrintf("Invalid speed.\n");
         return -1;
     }
 #endif
