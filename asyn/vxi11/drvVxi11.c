@@ -253,14 +253,14 @@ static BOOL vxiCreateLink(vxiPort * pvxiPort,
             pvxiPort->maxRecvSize = crLinkR.maxRecvSize;
         } else if(pvxiPort->maxRecvSize!=crLinkR.maxRecvSize) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiCreateLink maxRecvSize changed from %lu to %lu",
+                "%s vxiCreateLink maxRecvSize changed from %lu to %lu\n",
                             devName,pvxiPort->maxRecvSize,crLinkR.maxRecvSize);
         }
         if(pvxiPort->abortPort==0) {
             pvxiPort->abortPort = crLinkR.abortPort;
         } else if(pvxiPort->abortPort!=crLinkR.abortPort) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiCreateLink abort channel TCP port changed from %u to %u",
+                "%s vxiCreateLink abort channel TCP port changed from %u to %u\n",
                                 devName,pvxiPort->abortPort,crLinkR.abortPort);
         }
     }
@@ -740,10 +740,13 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
                 break;
             }
             if(i == 10) {
-                printf("WARNING -- %s SRQ thread will not terminate!\n",
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                            "WARNING -- %s SRQ thread will not terminate!\n",
                                                            pvxiPort->portName);
                 break;
             }
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s: unwedge SRQ thread.\n",
+                                                           pvxiPort->portName);
             epicsInterruptibleSyscallInterrupt(pvxiPort->srqInterrupt);
         }
         pvxiPort->srqInterrupt = NULL;
@@ -758,6 +761,7 @@ static asynStatus vxiDisconnectPort(vxiPort *pvxiPort)
 static void vxiSrqThread(void *arg)
 {
     vxiPort *pvxiPort = arg;
+    asynUser *pasynUser = pvxiPort->pasynUser;
     epicsThreadId myTid;
     int s, s1;
     osiSockAddr farAddr;
@@ -776,7 +780,8 @@ static void vxiSrqThread(void *arg)
     memset (pvxiPort->srqPort.ia.sin_zero, '\0',
         sizeof pvxiPort->srqPort.ia.sin_zero);
     if (bind (s, &pvxiPort->srqPort.sa, sizeof pvxiPort->srqPort.ia) < 0) {
-        printf ("SrqThread(): can't bind socket: %s\n", strerror (errno));
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "SrqThread(): can't bind socket: %s\n", strerror (errno));
         close(s);
         return;
     }
@@ -787,8 +792,8 @@ s */
     pvxiPort->srqPort = osiLocalAddr(s); /* Gets address, but not port */
     pvxiPort->srqPort.ia.sin_port = i;
     if (listen (s, 2) < 0) {
-        printf ("SrqThread(): can't listen on socket: %s\n", strerror (errno
-));
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "SrqThread(): can't listen on socket: %s\n", strerror (errno));
         close(s);
         return;
     }
@@ -801,13 +806,15 @@ s */
     if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt)) {
         if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
             close(s);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): terminating\n");
         taskwdRemove(myTid);
         epicsEventSignal(pvxiPort->srqThreadReady);
         return;
     }
     close(s);
     if(s1 < 0) {
-        printf("SrqThread(): can't accept connection: %s\n", strerror(errno));
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "SrqThread(): can't accept connection: %s\n", strerror(errno));
         taskwdRemove(myTid);
         epicsEventSignal(pvxiPort->srqThreadReady);
         return;
@@ -820,18 +827,20 @@ s */
         if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt))
             break;
         if(i < 0) {
-            printf("SrqThread(): read error: %s\n", strerror(errno));
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                            "SrqThread(): read error: %s\n", strerror(errno));
             break;
         }
         else if (i == 0) {
-            printf("SrqThread(): read EOF\n");
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"SrqThread(): read EOF\n");
             break;
         }
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): SRQ\n");
         pasynGpib->srqHappened(pvxiPort->asynGpibPvt);
     }
     if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
         close(s1);
-    printf("SrqThread(): terminating\n");
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"SrqThread(): terminating\n");
     taskwdRemove(myTid);
     epicsEventSignal(pvxiPort->srqThreadReady);
 }

@@ -13,7 +13,7 @@
 /*
  * These routines provide an operating-system-independent mechanism
  * for interrupting a thread which is performing a 'slow' system call
- * such as a read from a socket or serial port.
+ * such as a read from a socket.
  *
  * Once epicsInterruptibleSyscallWasInterrupted() returns TRUE it will
  * continue to do so until epicsInterruptibleSyscallArm() has been called
