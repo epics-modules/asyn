@@ -396,7 +396,7 @@ text {
 	control {
 		chan="$(ioc)ConnectDevice"
 		clr=14
-		bclr=4
+		bclr=51
 	}
 	clrmod="alarm"
 	format="string"
