@@ -108,7 +108,7 @@ static long initRecord(dbCommon* precord, struct link * plink);
 static void processGPIBSOFT(gpibDpvt *pgpibDpvt);
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
 static void queueWriteRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
-static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work);
+static int queueRequest(gpibDpvt *pgpibDpvt, gpibWork work);
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     srqHandler handler,void *unsollicitedHandlerPvt);
 static int writeMsgLong(gpibDpvt *pgpibDpvt,long val);
@@ -141,7 +141,7 @@ static portInstance *createPortInstance(
 static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr);
 
 /*Process routines */
-static void queueIt(gpibDpvt *pgpibDpvt,int isLocked);
+static int queueIt(gpibDpvt *pgpibDpvt,int isLocked);
 static void prepareToRead(gpibDpvt *pgpibDpvt,int failure);
 static void readWait(gpibDpvt *pgpibDpvt,int failure);
 static void gpibRead(gpibDpvt *pgpibDpvt,int failure);
@@ -282,7 +282,14 @@ static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish fini
         recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
         return;
     }
-    queueIt(pgpibDpvt,0);
+    if(queueIt(pgpibDpvt,0)) return;
+    status = pasynManager->unlock(pgpibDpvt->pasynUser);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynManager->unlock failed %s\n",
+            precord->name,pgpibDpvt->pasynUser->errorMessage);
+    }
+    recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
 }
 
 static void queueWriteRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish)
@@ -298,7 +305,7 @@ static void queueWriteRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish fin
     queueIt(pgpibDpvt,0);
 }
 
-static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
+static int queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
 {
     dbCommon *precord = pgpibDpvt->precord;
     asynUser *pasynUser = pgpibDpvt->pasynUser;
@@ -308,7 +315,7 @@ static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
     pdevGpibPvt->work = work;
     pdevGpibPvt->start = 0;
     pdevGpibPvt->finish = 0;
-    queueIt(pgpibDpvt,0);
+    return queueIt(pgpibDpvt,0);
 }
 
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
@@ -689,7 +696,7 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
     return 0;
 }
 
-static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
+static int queueIt(gpibDpvt *pgpibDpvt,int isLocked)
 {
     asynUser *pasynUser = pgpibDpvt->pasynUser; 
     dbCommon *precord = pgpibDpvt->precord;
@@ -708,7 +715,7 @@ static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s queueRequest failed timeWindow active\n",
                 precord->name);
-            return;
+            return 0;
         }
     }
     precord->pact = TRUE;
@@ -721,9 +728,10 @@ static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s queueRequest failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
-        return;
+        return 0;
     }
     if(!isLocked)epicsMutexUnlock(pportInstance->lock);
+    return 1;
 }
 
 static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
@@ -802,7 +810,6 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
         if(nchars!=lenmsg) {
             if(cmdType&(GPIBREADW|GPIBEFASTIW)) {
                 epicsTimerCancel(pdeviceInstance->srqWaitTimer);
-                readWait(pgpibDpvt,-1);
             }
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s lenmsg %d but nchars written %d\n",

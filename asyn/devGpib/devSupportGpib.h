@@ -161,7 +161,8 @@ struct devSupportGpib {
     void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibStart start, gpibFinish finish);
-    void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
+    /* queueRequest returns (0,1) for (failure,success) */
+    int (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
         srqHandler handler,void *unsollicitedHandlerPvt);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
