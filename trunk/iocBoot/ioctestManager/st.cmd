@@ -15,8 +15,6 @@ testManagerDriverInit("canBlockMulti",1,0,1)
 #asynSetTraceMask("cantBlockSingle",0,0xff)
 #asynSetTraceMask("canBlockSingle",-1,0xff)
 #asynSetTraceMask("canBlockSingle",1,0xff)
-#asynSetTraceMask("canBlockMulti",0,0xff)
-#asynSetTraceIOMask("A",0,0x2)
 
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=cantBlockSingle,ADDR=0,OMAX=0,IMAX=0")
 iocInit()
