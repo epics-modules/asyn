@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.10 2004-04-15 21:17:03 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.11 2004-05-10 18:30:57 norume Exp $
  */
 
 #include <string.h>
@@ -170,7 +170,6 @@ setMode(ttyController_t *tty)
     asynUser *pasynUser = tty->pasynUser;
 
 #if defined(USE_TERMIOS)
-    struct termios termios;
     int baudCode;
     switch (tty->baud) {
     case 50:    baudCode = B50;     break;
@@ -201,10 +200,10 @@ setMode(ttyController_t *tty)
     tty->termios.c_lflag = 0;
     tty->termios.c_cc[VMIN] = 0;
     tty->termios.c_cc[VTIME] = 0;
-    cfsetispeed(&termios,baudCode);
-    cfsetospeed(&termios,baudCode);
+    cfsetispeed(&tty->termios,baudCode);
+    cfsetospeed(&tty->termios,baudCode);
     tty->readPollmsec = -1;
-    if (tcsetattr(tty->fd, TCSADRAIN, &termios) < 0) {
+    if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                   "Can't set \"%s\" attributes: %s",
                                        tty->serialDeviceName, strerror(errno));
