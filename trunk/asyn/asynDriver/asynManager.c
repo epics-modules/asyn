@@ -1046,6 +1046,10 @@ static asynStatus registerPort(const char *portName,
     pport->notifyPortThread = epicsEventMustCreate(epicsEventEmpty);
     epicsMutexMustLock(pport->lock);
     ellAdd(&pasynBase->asynPortList,&pport->node);
+    priority = priority ? priority : epicsThreadPriorityMedium;
+    stackSize = stackSize ?
+                   stackSize :
+                   epicsThreadGetStackSize(epicsThreadStackMedium);
     pport->threadid = epicsThreadCreate(portName,priority,stackSize,	
          (EPICSTHREADFUNC)portThread,pport);
     if(!pport->threadid){
