@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.28 2004-03-28 21:55:33 rivers Exp $
+ * $Id: drvGenericSerial.c,v 1.29 2004-03-29 16:12:15 mrk Exp $
  */
 
 #include <string.h>
@@ -195,12 +195,12 @@ setMode(ttyController_t *tty)
     return asynSuccess;
 #elif defined(vxWorks)
     if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->cflag) < 0)
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "Warning: `%s' does not support SIO_HW_OPTS_SET.\n",
                                                         tty->serialDeviceName);
     return asynSuccess;
 #else
-    asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+    asynPrint(pasynUser, ASYN_TRACE_ERROR,
               "Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
     return asynSuccess;
 #endif
