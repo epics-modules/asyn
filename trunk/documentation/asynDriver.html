@@ -1716,10 +1716,11 @@ struct asynGpibPort {
     asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
     asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
     /*asynGpibPort specific methods */
-    int (*srqStatus) (void *drvPvt);
+    asynStatus (*srqStatus) (void *drvPvt,int *isSet);
     asynStatus (*srqEnable) (void *drvPvt, int onOff);
     asynStatus (*serialPollBegin) (void *drvPvt);
-    int (*serialPoll) (void *drvPvt, int addr, double timeout);
+    asynStatus (*serialPoll) (void *drvPvt, int addr,
+                double timeout,int *statusByte);
     asynStatus (*serialPollEnd) (void *drvPvt);
 };</pre>
 
@@ -1805,8 +1806,8 @@ the VXI-11. It provides:</p>
     </tr>
     <tr>
       <td>srqStatus</td>
-      <td>Returns (0,1) if SRQ (is not, is) set. Normally only called by
-        asynGpib.</td>
+      <td>If return is asynSuccess then isSet is (0,1) if SRQ (is not, is) 
+       active. Normally only called by asynGpib.</td>
     </tr>
     <tr>
       <td>srqEnable</td>
@@ -1818,8 +1819,8 @@ the VXI-11. It provides:</p>
     </tr>
     <tr>
       <td>serialPoll</td>
-      <td>Poll the specified address and return its response. Normally only
-        called by asynGpib.</td>
+      <td>Poll the specified address and set status to the response.
+         Normally only called by asynGpib.</td>
     </tr>
     <tr>
       <td>serialPollEnd</td>
