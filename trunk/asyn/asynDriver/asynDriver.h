@@ -73,7 +73,6 @@ typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 typedef struct interruptNode{
     ELLNODE node;
     void    *drvPvt;
-    void    *asynPvt;
 }interruptNode;
 
 typedef struct asynManager {
