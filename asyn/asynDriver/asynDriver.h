@@ -57,6 +57,7 @@ typedef struct asynManager {
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
                                 const char *portName,int *yesNo);
+    /* addr = (-1,>=0) => connect to (port,device) */
     asynStatus (*connectDevice)(asynUser *pasynUser,
                                 const char *portName,int addr);
     asynStatus (*disconnect)(asynUser *pasynUser);
