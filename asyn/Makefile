@@ -28,9 +28,10 @@ INC += gpibDriver.h
 
 SRC_DIRS += $(ASYN)/devGpib
 INC += devGpib.h
-INC += devGpibSupport.h
+INC += devSupportGpib.h
 INC += devCommonGpib.h
+DBD += devGpib.dbd
 asyn_SRCS += devCommonGpib.c
-asyn_SRCS += devGpibSupport.c
+asyn_SRCS += devSupportGpib.c
 
 include $(TOP)/configure/RULES
