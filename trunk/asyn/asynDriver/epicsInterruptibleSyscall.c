@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.6 2004-03-11 14:42:55 mrk Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.7 2004-03-19 15:37:42 norume Exp $
  */
 
 #include <stdio.h>
@@ -47,13 +47,6 @@ struct epicsInterruptibleSyscallContext {
     int            wasClosed;
 };
 
-static epicsThreadOnceId installOnce = EPICS_THREAD_ONCE_INIT;
-static void
-installSigAlarmIgnore(void *p)
-{
-    epicsSignalInstallSigAlarmIgnore();
-}
-
 epicsInterruptibleSyscallContext *
 epicsInterruptibleSyscallCreate(void)
 {
@@ -63,7 +56,6 @@ epicsInterruptibleSyscallCreate(void)
     if (c != NULL) {
         c->fd = -1;
         c->mutex = epicsMutexMustCreate();
-        epicsThreadOnce(&installOnce, installSigAlarmIgnore, NULL);
     }
     return c;
 }
@@ -94,6 +86,7 @@ epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsT
         c->isatty = isatty(c->fd);
     c->wasClosed = 0;
     epicsMutexUnlock(c->mutex);
+    epicsSignalInstallSigAlarmIgnore();
     return 0;
 }
 
