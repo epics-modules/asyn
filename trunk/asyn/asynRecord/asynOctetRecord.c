@@ -28,8 +28,6 @@
 #include        <stdio.h>
 #include        <stdlib.h>
 
-#include        <asynDriver.h>
-#include        <asynGpibDriver.h>
 #include        <alarm.h>
 #include        <dbDefs.h>
 #include        <dbEvent.h>
@@ -39,9 +37,12 @@
 #include        <drvSup.h>
 #include        <errMdef.h>
 #include        <recSup.h>
-#include        <epicsString.h>
 #include        <recGbl.h>
+#include        <epicsString.h>
 #include        <epicsExport.h>
+#include        <asynGpibDriver.h>
+#include        <asynDriver.h>
+#include        <drvGenericSerial.h>
 #define GEN_SIZE_OFFSET
 #include        "asynOctetRecord.h"
 #undef GEN_SIZE_OFFSET
@@ -67,14 +68,6 @@ static long get_precision(struct dbAddr *paddr, long *precision);
 #define get_control_double NULL
 #define get_alarm_double NULL
 
-/* There are no header files for the following definition.  
- * Must be careful to make sure these following remains consistent with the 
- * source files
- */
-int drvGenericSerialConfigure(char *portName,
-                     char *ttyName,
-                     unsigned int priority,
-                     int openOnlyOnDisconnect);
 static void  asynOctetCallback(asynUser *pasynUser);
 static void  setPortCallback(asynUser *pasynUser);
 static int   getOptions(asynOctetRecord *pasynRec);
