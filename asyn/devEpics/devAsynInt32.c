@@ -18,6 +18,7 @@
 
 #include <alarm.h>
 #include <recGbl.h>
+#include "epicsMath.h"
 #include <dbAccess.h>
 #include <dbDefs.h>
 #include <link.h>
@@ -29,7 +30,9 @@
 #include <dbScan.h>
 #include <callback.h>
 #include <aiRecord.h>
+#include <cvtTable.h>
 #include <aoRecord.h>
+#include <menuConvert.h>
 #include <longinRecord.h>
 #include <longoutRecord.h>
 #include <mbbiRecord.h>
@@ -420,10 +423,31 @@ static long processAo(aoRecord *pr)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
     asynStatus status;
+    double     value;
 
     if(pPvt->gotValue) {
         pr->rval = pPvt->value;
         pr->udf = 0;
+        value = (double)pr->rval + (double)pr->roff;
+        if(pr->aslo!=0.0) value *= pr->aslo;
+        value += pr->aoff;
+        if (pr->linr == menuConvertNO_CONVERSION){
+            ; /*do nothing*/
+        } else if ((pr->linr == menuConvertLINEAR) ||
+                  (pr->linr == menuConvertSLOPE)) {
+            value = value*pr->eslo + pr->eoff;
+        }else{
+            if(cvtRawToEngBpt(&value,pr->linr,pr->init,
+                    (void *)&pr->pbrk,&pr->lbrk)!=0) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynInt32 cvtRawToEngBpt failed\n",
+                    pr->name);
+                recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+                goto done;
+            }
+        }
+        pr->val = value;
+        pr->udf = isnan(value);
     } else if(pr->pact == 0) {
         pPvt->gotValue = 1; pPvt->value = pr->rval;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
@@ -437,6 +461,7 @@ static long processAo(aoRecord *pr)
                 pr->name,pPvt->pasynUser->errorMessage);
         }
     }
+done:
     pPvt->gotValue = 0;
     return 0;
 }
