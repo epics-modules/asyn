@@ -1352,3 +1352,18 @@ composite {
 		}
 	}
 }
+"message button" {
+	object {
+		x=10
+		y=73
+		width=150
+		height=20
+	}
+	control {
+		chan="$(P)$(R).AQR"
+		clr=14
+		bclr=4
+	}
+	label="cancel queueRequest"
+	press_msg="1"
+}
