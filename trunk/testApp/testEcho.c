@@ -34,12 +34,13 @@ struct userPvt {
     int ntimes;
     int itimes;
     int isRead;
+    double queueTimeout;
     char buffer[80];
     octetDriver *poctetDriver;
     epicsEventId done;
 };
 
-void myCallback(userPvt *puserPvt)
+void queueCallback(userPvt *puserPvt)
 {
     int nchars;
     asynUser *pasynUser = puserPvt->pasynUser;
@@ -62,6 +63,17 @@ void myCallback(userPvt *puserPvt)
     }
     epicsEventSignal(puserPvt->done);
 }
+
+void timeoutCallback(userPvt *puserPvt)
+{
+    asynUser *pasynUser = puserPvt->pasynUser;
+    asynStatus status;
+
+    printf("timeoutCallback. Will cancel request\n");
+    status = pasynQueueManager->cancelRequest(pasynUser);
+    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
+    epicsEventSignal(puserPvt->done);
+}
 
 static void writeRead(userPvt *puserPvt)
 {
@@ -75,14 +87,15 @@ static void writeRead(userPvt *puserPvt)
             if(puserPvt->ntimes 
             && puserPvt->ntimes<puserPvt->itimes) break;
             puserPvt->isRead = 0;
-            status = pasynQueueManager->lock(pasynUser,10);
+            status = pasynQueueManager->lock(pasynUser);
             if(status!=asynSuccess) {
                 printf("%s\n",pasynUser->errorMessage);
             }
         } else {
             puserPvt->isRead = 1;
         }
-        status = pasynQueueManager->queueRequest(pasynUser,asynQueuePriorityLow);
+        status = pasynQueueManager->queueRequest(pasynUser,
+            asynQueuePriorityLow,puserPvt->queueTimeout);
         if(status!=asynSuccess) {
             printf("%s\n",pasynUser->errorMessage);
             pasynQueueManager->freeAsynUser(pasynUser);
@@ -90,13 +103,17 @@ static void writeRead(userPvt *puserPvt)
         }
         epicsEventMustWait(puserPvt->done);
     }
-    pasynQueueManager->freeAsynUser(pasynUser);
+    status = pasynQueueManager->disconnectDevice(pasynUser);
+    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
+    status = pasynQueueManager->freeAsynUser(pasynUser);
+    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
     epicsEventDestroy(puserPvt->done);
     free(puserPvt->prefix);
     free(puserPvt);
 }
 
-static int testEcho(const char *name,const char *pre,int ntimes)
+static int testEcho(const char *name,const char *pre,
+    int ntimes,double queueTimeout)
 {
     asynUser *pasynUser;
     userPvt *puserPvt;
@@ -108,9 +125,11 @@ static int testEcho(const char *name,const char *pre,int ntimes)
     strcpy(prefix,pre);
     puserPvt = calloc(1,sizeof(userPvt));
     puserPvt->prefix = prefix;
+    puserPvt->queueTimeout = queueTimeout;
     puserPvt->ntimes = ntimes;
     puserPvt->done = epicsEventMustCreate(epicsEventEmpty);
-    pasynUser = pasynQueueManager->createAsynUser(myCallback,puserPvt);
+    pasynUser = pasynQueueManager->createAsynUser(
+        queueCallback,timeoutCallback,puserPvt);
     puserPvt->pasynUser = pasynUser;
     status = pasynQueueManager->connectDevice(pasynUser,name);
     if(status!=asynSuccess) {
@@ -144,13 +163,14 @@ static int testEcho(const char *name,const char *pre,int ntimes)
 static const iocshArg testEchoArg0 = { "name", iocshArgString };
 static const iocshArg testEchoArg1 = { "prefix", iocshArgString };
 static const iocshArg testEchoArg2 = { "ntimes", iocshArgInt };
+static const iocshArg testEchoArg3 = { "queueTimeout", iocshArgDouble };
 static const iocshArg *testEchoArgs[] = {
-    &testEchoArg0,&testEchoArg1,&testEchoArg2 };
+    &testEchoArg0,&testEchoArg1,&testEchoArg2,&testEchoArg3 };
 static const iocshFuncDef testEchoFuncDef = {
-    "testEcho", 3, testEchoArgs};
+    "testEcho", 4, testEchoArgs};
 static void testEchoCallFunc(const iocshArgBuf *args)
 {
-    testEcho(args[0].sval,args[1].sval,args[2].ival);
+    testEcho(args[0].sval,args[1].sval,args[2].ival,args[3].dval);
 }
 
 static void testEchoRegister(void)
