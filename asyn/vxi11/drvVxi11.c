@@ -48,7 +48,6 @@
 #define BOOL int
 
 #define DEFAULT_RPC_TIMEOUT 4
-static const char *srqThreadName = "vxi11Srq";
 
 typedef struct devLink {
     Device_Link lid;
@@ -566,6 +565,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     Device_Link link;
     int sock = -1;
     struct sockaddr_in vxiServer;
+    char srqThreadName[25];
 
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -657,6 +657,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
             pvxiPort->portName);
         return asynError;
     }
+    sprintf(srqThreadName,"%.*sSRQ",(int)sizeof(srqThreadName)-4,pvxiPort->portName);
     epicsThreadCreate(srqThreadName, 46,
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiPort);
