@@ -32,7 +32,7 @@ typedef struct {
 
 static long init_record(aoRecord *pao);
 static long convert(aoRecord *pao, int pass);
-static long write(aoRecord *pao);
+static long write_ao(aoRecord *pao);
 
 struct aodset { /* analog input dset */
     long          number;
@@ -48,7 +48,7 @@ struct aodset { /* analog input dset */
     NULL,
     init_record,
     NULL,
-    write,
+    write_ao,
     convert
 };
 
@@ -111,7 +111,7 @@ bad:
    return(2);
 }
 
-static long write(aoRecord *pao)
+static long write_ao(aoRecord *pao)
 {
     devAoAsynInt32Pvt *pPvt = (devAoAsynInt32Pvt *)pao->dpvt;
     int status;
