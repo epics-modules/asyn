@@ -257,7 +257,8 @@ can be used by other code, e.g. a sequence program.</p>
       <li>report - Report status of device.</li>
       <li>connect - Open the port.</li>
       <li>disconnect - Close the port.</li>
-      <li>setPortOptions - Specify port options.</li>
+      <li>setPortOption - Set port option.</li>
+      <li>showPortOption - Show port option.</li>
     </ul>
   </li>
   <li><span style="font-weight: bold">asynOctet</span>
@@ -382,8 +383,11 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    /*The following is a generic method for setting port options*/
-    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
+    /*The following are generic methods to set/get port options*/
+    asynStatus (*setPortOption)(void *drvPvt, asynUser *pasynUser,
+                                const char *key, const char *val);
+    asynStatus (*getPortOption)(void *drvPvt, asynUser *pasynUser,
+                                const char *key, char *val, int sizeval);
 }asynCommon;
 
 /* Methods supported by low level octet drivers. */
@@ -613,10 +617,14 @@ drivers.</p>
         a device.</td>
     </tr>
     <tr>
-      <td>setPortOptions</td>
-      <td>This is a generic routine for setting port options. argc/argv are
-        just like the arguments to the main routine of a C program. The
-        meaning is port driver specific.</td>
+      <td>setPortOption</td>
+      <td>This is a generic routine for setting a port option. The arguments
+        are a key,value pairs. The meaning is port driver specific.</td>
+    </tr>
+    <tr>
+      <td>getPortOption</td>
+      <td>This is a generic routine for getting a port option. The value for
+        the key is written into val.</td>
     </tr>
   </tbody>
 </table>
@@ -932,7 +940,10 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setPortOptions)(void *drvPvt, int argc, char **argv);
+    asynStatus (*setPortOption)(void *drvPvt,asynUser *pasynUser,
+                                const char *key,const char *val);
+    asynStatus (*getPortOption)(void *drvPvt,asynUser *pasynUser,
+                                const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
     int (*write)(void *drvPvt,asynUser *pasynUser,const char *data,int numchars);
@@ -1137,18 +1148,16 @@ tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
-asynSetPortOption("L0","baud","9600")
-</pre>
+asynSetPortOption("L0","baud","9600")</pre>
 The vxWorks serial driver does not provide independent control of the
 hardware handshaking and modem control lines thus <code>"clocal","Y"</code>
-implies <code>"crtscts","N"</code> and
-<code>"clocal","N"</code> implies <code>"crtscts","Y"</code>.
+implies <code>"crtscts","N"</code> and <code>"clocal","N"</code> implies
+<code>"crtscts","Y"</code>.
 
 <h3><a name="vxi11"></a>vxi11</h3>
-
-VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
-is an RPC based protocol. In addition to the VXI-11 standard three additional
-standards are defined.</pre>
+VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is
+an RPC based protocol. In addition to the VXI-11 standard three additional
+standards are defined.
 <ul>
   <li>VXI-11.1 - A standard for communicating with VXIbus instruments. These
     devices have a vxiName that starts with "vxi".</li>
@@ -1223,14 +1232,16 @@ gsIP488Configure("L0",0,0,0x61,0)</pre>
 <pre>    asynReport(filename,level)
     asynSetTraceMask(portName,addr,mask)
     asynSetTraceIOMask(portName,addr,mask)
-    asynSetPortOptions(portName,"[options]")</pre>
+    asynSetPortOption(portName,key,val)
+    asynShowPortOption(portName,key)</pre>
 
 <p><code>asynReport</code> calls <code>asynCommon:report</code> for all
 registered drivers and processModules. <code>asynSetTraceMask</code> calls
 <code>asynTrace:setTraceMask</code> for the specified port and address.
 <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code>
-for the specified port and address. <code>asynSetPortOptions calls
-<code>asynCommon:setPortOptions</code></code></p>
+for the specified port and address. <code>asynSetPortOption</code> calls
+<code>asynCommon:setPortOption</code>. <code>asynShowPortOption</code> calls
+<code>asynCommon:getPortOption</code>.</p>
 
 <p>where</p>
 <dl>
@@ -1246,9 +1257,10 @@ for the specified port and address. <code>asynSetPortOptions calls
   <dt>mask</dt>
     <dd>The mask value to set. See the mask bit definitions in
     asynDriver.h</dd>
-  <dt>[options]</dt>
-    <dd>The options are driver dependent. Consult the driver documentation
-      for details.</dd>
+  <dt>key</dt>
+    <dd>The key for the option desired.</dd>
+  <dt>val</dt>
+    <dd>The value for the option.</dd>
 </dl>
 
 <h3>devAsynTrace</h3>
