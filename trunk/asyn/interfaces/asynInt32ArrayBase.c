@@ -18,13 +18,6 @@
 
 #include "asynInt32Array.h"
 
-typedef struct pvt {
-    interruptCallbackInt32Array callback;
-    void       *userPvt;
-} pvt;
-
-static void int32ArrayCallback(void *userPvt, void *pvalue, size_t *nelem);
-
 static asynStatus initialize(const char *portName, asynInterface *pint32ArrayInterface);
 
 static asynInt32ArrayBase int32ArrayBase = {initialize};
@@ -39,13 +32,6 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                void **registrarPvt);
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
 
-
-static void int32ArrayCallback(void *userPvt, void *pvalue, size_t *nelem)
-{
-    pvt        *ppvt = (pvt *)userPvt;
-
-    ppvt->callback(ppvt->userPvt,pvalue,nelem);
-}
 
 asynStatus initialize(const char *portName, asynInterface *pint32ArrayInterface)
 {
@@ -101,26 +87,39 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32Array callback, void *userPvt,
                                void **registrarPvt)
 {
-    pvt *ppvt = pasynManager->memMalloc(sizeof(pvt));
     const char *portName;
     asynStatus status;
     int        addr;
-    
+    interruptNode *pinterruptNode;
+    asynInt32ArrayInterrupt *pasynInt32ArrayInterrupt;
+    void *pinterruptPvt;
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    ppvt->callback = callback;
-    ppvt->userPvt = userPvt;
-    *registrarPvt = ppvt;
+    status = pasynManager->getInterruptPvt(portName, asynInt32ArrayType,
+                                           &pinterruptPvt);
+    if(status!=asynSuccess) return status;
+    pasynInt32ArrayInterrupt = pasynManager->memMalloc(
+                                             sizeof(asynInt32ArrayInterrupt));
+    pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
+    if(status!=asynSuccess) return status;
+    pasynInt32ArrayInterrupt = (asynInt32ArrayInterrupt *)pinterruptNode->drvPvt;
+    pasynInt32ArrayInterrupt->addr = addr;
+    pasynInt32ArrayInterrupt->reason = pasynUser->reason;
+    pasynInt32ArrayInterrupt->drvUser = pasynUser->drvUser;
+    pasynInt32ArrayInterrupt->callback = callback;
+    pasynInt32ArrayInterrupt->userPvt = userPvt;
+    *registrarPvt = pinterruptNode;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d registerInterruptUser\n",portName,addr);
-    return pasynManager->registerInterruptUser(pasynUser,int32ArrayCallback,ppvt);
+    return pasynManager->addInterruptUser(pinterruptNode);
 }
 
 static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
 {
-    pvt *ppvt = (pvt *)registrarPvt;
+    interruptNode *pinterruptNode = (interruptNode *)registrarPvt;
     asynStatus status;
     const char *portName;
     int        addr;
@@ -131,7 +130,7 @@ static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d cancelInterruptUser\n",portName,addr);
-    status = pasynManager->cancelInterruptUser(pasynUser);
-    pasynManager->memFree(ppvt,sizeof(pvt));
+    pasynManager->memFree(pinterruptNode->drvPvt, sizeof(asynInt32ArrayInterrupt));
+    status = pasynManager->removeInterruptUser(pinterruptNode);
     return status;
 }
