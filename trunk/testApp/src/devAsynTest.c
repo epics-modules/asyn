@@ -163,7 +163,7 @@ writedone:
         }
         pasynOctet->setEos(octetPvt,pasynUser,"",1);
         status = pasynOctet->read(octetPvt,pasynUser,
-            pdpvtSi->buffer,sizeof(pdpvtSi->buffer),&nin);
+            pdpvtSi->buffer,sizeof(pdpvtSi->buffer),&nin,0);
         if(status!=asynSuccess || nin==0) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s pasynOctet->read failed %s\n",

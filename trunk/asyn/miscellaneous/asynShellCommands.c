@@ -218,6 +218,7 @@ epicsShareFunc int epicsShareAPI
     asynUser *pasynUser;
     asynIOPvt *pPvt;
     int ninp;
+    int eomReason;
 
     pPvt = asynFindEntry(entry);
     if (!pPvt) {
@@ -229,12 +230,13 @@ epicsShareFunc int epicsShareAPI
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     ninp = pasynSyncIO->read(pasynUser, pPvt->read_buffer, nread,
-                   pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout);
+                   pPvt->ieos, pPvt->ieos_len, flush, pPvt->timeout,&eomReason);
     if (ninp <= 0) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error reading, ninp=%d\n", ninp);
        return(-1);
     }
+    fprintf(stdout,"eomReason 0x%x\n",eomReason);
     epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
     fprintf(stdout,"\n");
     return(ninp);
@@ -279,6 +281,7 @@ epicsShareFunc int epicsShareAPI
     asynIOPvt *pPvt;
     int ninp;
     int len;
+    int eomReason;
 
     pPvt = asynFindEntry(entry);
     if (!pPvt) {
@@ -299,12 +302,14 @@ epicsShareFunc int epicsShareAPI
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     ninp = pasynSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
                                   pPvt->read_buffer, nread,
-                                  pPvt->ieos, pPvt->ieos_len, pPvt->timeout);
+                                  pPvt->ieos, pPvt->ieos_len, pPvt->timeout,
+                                  &eomReason);
     if (ninp <= 0) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error in WriteRead, ninp=%d\n", ninp);
        return(-1);
     }
+    fprintf(stdout,"eomReason 0x%x\n",eomReason);
     epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
     fprintf(stdout,"\n");
     return(ninp);

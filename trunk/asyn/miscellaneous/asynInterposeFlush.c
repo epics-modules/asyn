@@ -43,7 +43,7 @@ typedef struct interposePvt {
     
 /* asynOctet methods */
 static asynStatus processRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus processWrite(void *ppvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus processFlush(void *ppvt,asynUser *pasynUser);
@@ -85,12 +85,12 @@ asynInterposeFlushConfig(const char *portName,int addr,int timeout)
 
 /* asynOctet methods */
 static asynStatus processRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     return pinterposePvt->pasynOctetDrv->read(pinterposePvt->drvPvt,
-        pasynUser,data,maxchars,nbytesTransfered);
+        pasynUser,data,maxchars,nbytesTransfered,eomReason);
 }
 
 static asynStatus processWrite(void *ppvt,asynUser *pasynUser,
@@ -117,7 +117,7 @@ static asynStatus processFlush(void *ppvt,asynUser *pasynUser)
     while(1) {
         nbytesTransfered = 0;
         status = pasynOctetDrv->read(drvPvt,pasynUser,
-            buffer,sizeof(buffer),&nbytesTransfered);
+            buffer,sizeof(buffer),&nbytesTransfered,0);
         if(nbytesTransfered==0) break;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
             buffer,nbytesTransfered,"asynInterposeFlush:flush ");

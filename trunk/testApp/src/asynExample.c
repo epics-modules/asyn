@@ -39,6 +39,7 @@ static void queueCallback(asynUser *pasynUser) {
     void       *drvPvt = pmydata->drvPvt;
     asynStatus status;
     int        writeBytes,readBytes;
+    int        eomReason;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
     status = pasynOctet->write(drvPvt,pasynUser,pmydata->buffer,
@@ -52,15 +53,15 @@ static void queueCallback(asynUser *pasynUser) {
             "queueCallback write sent %d bytes\n",writeBytes);
     }
     status = pasynOctet->read(drvPvt,pasynUser,pmydata->buffer,
-         BUFFER_SIZE,&readBytes);
+         BUFFER_SIZE,&readBytes,&eomReason);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueCallback read failed %s\n",pasynUser->errorMessage);
     } else {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
             pmydata->buffer,BUFFER_SIZE,
-            "queueCallback read returned: retlen %d data %s\n",
-            readBytes,pmydata->buffer);
+            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
+            readBytes,eomReason,pmydata->buffer);
     }
     if(pmydata->done) {
         epicsEventSignal(pmydata->done);

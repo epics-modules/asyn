@@ -28,6 +28,7 @@
 #include <devLib.h>
 #include <taskwd.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <asynGpibDriver.h>
 
 #include <epicsExport.h>
@@ -63,6 +64,7 @@ typedef struct gsport {
     epicsUInt8  *nextByteWrite;
     int         bytesRemainingRead;
     epicsUInt8  *nextByteRead;
+    int         eomReason;
     int         eos; /* -1 means no end of string character*/
     asynStatus  status; /*status of ip transfer*/
     epicsEventId waitForInterrupt;
@@ -85,13 +87,13 @@ static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
 static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
     int *actual, int addr, double timeout);
 static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
-    int addr, double timeout);
+    int addr, double timeout,int *eomReason);
 /* asynGpibPort methods */
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser);
@@ -326,8 +328,11 @@ void gsip488(void *pvt)
         octet = readRegister(pgsport,DIR);
         *pgsport->nextByteRead = octet;
         --(pgsport->bytesRemainingRead); ++(pgsport->nextByteRead);
-        if(((pgsport->eos != -1 ) && (octet == pgsport->eos)) 
-        || (END&isr0) || (pgsport->bytesRemainingRead == 0)) {
+        if((pgsport->eos != -1 ) && (octet == pgsport->eos))
+            pgsport->eomReason |= EOMEOS;
+        if(END&isr0) pgsport->eomReason |= EOMEND;
+        if(pgsport->bytesRemainingRead == 0) pgsport->eomReason |= EOMCNT;
+        if(pgsport->eomReason) {
             pgsport->transferState = transferStateIdle;
             writeRegister(pgsport,AUXMR,LONC);
             epicsEventSignal(pgsport->waitForInterrupt);
@@ -412,7 +417,7 @@ static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
 }
 
 static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
-    int addr, double timeout)
+    int addr, double timeout,int *eomReason)
 {
     epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
@@ -420,11 +425,13 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     *actual=0; *buf=0;
     pgsport->bytesRemainingRead = cnt;
     pgsport->nextByteRead = buf;
+    pgsport->eomReason = 0;
     writeRegister(pgsport,AUXMR,RHDF);
     pgsport->status = asynSuccess;
     status = writeAddr(pgsport,addr,0,timeout,transferStateRead);
     if(status!=asynSuccess) return status;
     *actual = cnt - pgsport->bytesRemainingRead;
+    if(eomReason) *eomReason = pgsport->eomReason;
     writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
@@ -496,7 +503,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 }
 
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
     int        actual = 0;
@@ -509,7 +516,7 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortRead\n",
         pgsport->portName,addr);
     pgsport->errorMessage[0] = 0;
-    status = readGpib(pgsport,data,maxchars,&actual,addr,timeout);
+    status = readGpib(pgsport,data,maxchars,&actual,addr,timeout,eomReason);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s readGpib failed %s\n",pgsport->portName,pgsport->errorMessage);
@@ -710,6 +717,7 @@ static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
     buffer[0] = 0;
     pgsport->bytesRemainingRead = 1;
     pgsport->nextByteRead = buffer;
+    pgsport->eomReason = 0;
     writeRegister(pgsport,AUXMR,RHDF);
     pgsport->status = asynSuccess;
     writeAddr(pgsport,addr,-1,timeout,transferStateRead);

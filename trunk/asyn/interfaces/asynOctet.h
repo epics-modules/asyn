@@ -16,10 +16,15 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+#define EOMCNT 0x0001 /*Request count reached*/
+#define EOMEOS 0x0002 /*End of String detected*/
+#define EOMEND 0x0004 /*End indicator detected*/
+
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered);
+                       char *data,int maxchars,int *nbytesTransfered,
+                       int *eomReason);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
                         const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);

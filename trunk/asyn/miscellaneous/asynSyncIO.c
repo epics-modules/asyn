@@ -54,6 +54,7 @@ typedef struct asynSyncIOPvt {
    int  flush;
    asynSyncIOOp op;
    int nbytesTransfered;
+   int eomReason;
 } asynSyncIOPvt;
 
 static asynStatus 
@@ -65,12 +66,14 @@ static int
                     double timeout);
 static int 
     asynSyncIORead(asynUser *pasynUser, char *buffer, int buffer_len, 
-                   const char *ieos, int ieos_len, int flush, double timeout);
+                   const char *ieos, int ieos_len, int flush, double timeout,
+                   int *eomReason);
 static int 
     asynSyncIOWriteRead(asynUser *pasynUser, 
                         const char *write_buffer, int write_buffer_len,
                         char *read_buffer, int read_buffer_len,
-                        const char *ieos, int ieos_len, double timeout);
+                        const char *ieos, int ieos_len, double timeout,
+                        int *eomReason);
 static asynStatus 
     asynSyncIOFlush(asynUser *pasynUser);
 static asynStatus 
@@ -285,13 +288,16 @@ static asynStatus
 
 static int 
     asynSyncIORead(asynUser *pasynUser, char *buffer, int buffer_len, 
-                   const char *ieos, int ieos_len, int flush, double timeout)
+                   const char *ieos, int ieos_len, int flush, double timeout,
+                   int *eomReason)
 {
+    asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
     int ninp;
 
     ninp = asynSyncIOQueueAndWait(pasynUser, NULL, 0, buffer, buffer_len, 
                                   ieos, ieos_len, flush, timeout, 
                                   asynSyncIO_READ);
+    if(eomReason) *eomReason = pPvt->eomReason;
     return(ninp);
 }
 
@@ -300,14 +306,17 @@ static int
     asynSyncIOWriteRead(asynUser *pasynUser, 
                         const char *write_buffer, int write_buffer_len,
                         char *read_buffer, int read_buffer_len,
-                        const char *ieos, int ieos_len, double timeout)
+                        const char *ieos, int ieos_len, double timeout,
+                        int *eomReason)
 {
+    asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
     int ninp;
 
     ninp = asynSyncIOQueueAndWait(pasynUser, write_buffer, write_buffer_len, 
                                   read_buffer, read_buffer_len, 
                                   ieos, ieos_len, 1, timeout, 
                                   asynSyncIO_WRITE_READ);
+    if(eomReason) *eomReason = pPvt->eomReason;
     return(ninp);
 }
 
@@ -353,7 +362,7 @@ static void asynSyncIOCallback(asynUser *pasynUser)
     if ((pPvt->op == asynSyncIO_READ) || (pPvt->op == asynSyncIO_WRITE_READ)) {
        pasynOctet->setEos(pdrvPvt, pasynUser, pPvt->ieos, pPvt->ieos_len);
        status = pasynOctet->read(pdrvPvt, pasynUser, 
-                   pPvt->input_buff, pPvt->input_len,&nbytesTransfered);
+          pPvt->input_buff, pPvt->input_len,&nbytesTransfered,&pPvt->eomReason);
        if(status==asynError) {
           asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                     "asynSyncIO read failed %s\n",

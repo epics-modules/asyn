@@ -67,7 +67,7 @@ static asynCommon asyn = {
 
 /* asynOctet methods */
 static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus echoWrite(void *ppvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus echoFlush(void *ppvt,asynUser *pasynUser);
@@ -249,7 +249,7 @@ static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 
 /* asynOctet methods */
 static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     echoPvt      *pechoPvt = (echoPvt *)ppvt;
     deviceInfo   *pdeviceInfo;
@@ -287,6 +287,10 @@ static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
         "echoRead nchars %d ",nchars);
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     *nbytesTransfered = nchars;
+    if(eomReason) {
+        if(nchars>=maxchars) *eomReason |= EOMCNT;
+        *eomReason |= EOMEND;
+    }
     return status;
 }
 

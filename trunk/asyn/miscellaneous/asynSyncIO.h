@@ -32,11 +32,13 @@ typedef struct asynSyncIO {
    int        (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
                   double timeout);
    int        (*read)(asynUser *pasynUser, char *buffer, int buffer_len, 
-                  const char *ieos, int ieos_len, int flush, double timeout);
+                  const char *ieos, int ieos_len, int flush, double timeout,
+                  int *eomReason);
    int        (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, int write_buffer_len,
                   char *read_buffer, int read_buffer_len,
-                  const char *ieos, int ieos_len, double timeout);
+                  const char *ieos, int ieos_len, double timeout,
+                  int *eomReason);
    asynStatus (*flush)(asynUser *pasynUser);
 } asynSyncIO;
 epicsShareExtern asynSyncIO *pasynSyncIO;

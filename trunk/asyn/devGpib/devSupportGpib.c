@@ -450,7 +450,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     int bufSize = pgpibCmd->msgLen;
 
     pasynOctet->setEos(asynOctetPvt,pasynUser,"#",1);
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread);
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,bufSize,&nread,0);
     if (status!=asynSuccess || nread == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                       "Error reading preamble");
@@ -464,7 +464,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     buf += nread;
     bufSize -= nread;
     pasynOctet->setEos(asynOctetPvt,pasynUser,NULL,0);
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,1,&nread);
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,1,&nread,0);
     if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                               "Error reading number of digits");
@@ -488,7 +488,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
                                                             "Buffer too small");
         return -1;
     }
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread);
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread,0);
     if (status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                "Error reading number of bytes");
@@ -515,7 +515,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         else
             count++;
     }
-    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread);
+    status = pasynOctet->read(asynOctetPvt,pasynUser,buf,count,&nread,0);
     if (status!=asynSuccess || nread != count) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                              "Error reading waveform bytes (and trailing EOS)");
@@ -912,7 +912,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
         nchars = 0; failure = -1; goto done;
     } else {
         status = pasynOctet->read(asynOctetPvt,pasynUser,
-            pgpibDpvt->msg,pgpibCmd->msgLen,&nchars);
+            pgpibDpvt->msg,pgpibCmd->msgLen,&nchars,0);
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibRead nchars %d\n",
         precord->name,nchars);
@@ -1291,7 +1291,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
         if(respond2Writes>0) epicsThreadSleep(respond2Writes);
         if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
-        status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp);
+        status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp,0);
         if (status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s respond2Writes read failed\n", precord->name);

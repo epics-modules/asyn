@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.7 2004-07-29 13:48:03 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.8 2004-07-29 20:00:06 mrk Exp $
  */
 
 #include <string.h>
@@ -379,7 +379,7 @@ static asynStatus drvAsynIPPortWrite(void *drvPvt, asynUser *pasynUser,
  * Read from the TCP port
  */
 static asynStatus drvAsynIPPortRead(void *drvPvt, asynUser *pasynUser,
-    char *data, int maxchars,int *nbytesTransfered)
+    char *data, int maxchars,int *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
