@@ -124,6 +124,8 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,const char *data,int numch
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
+static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen);
 static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length);
 static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
@@ -957,6 +959,29 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     return asynSuccess;
 }
 
+static asynStatus vxiGetEos(void *pdrvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen)
+{
+    vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
+
+    assert(pvxiLink);
+    if(eossize<1) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s vxiGetEos eossize %d too small\n",eossize);
+        *eoslen = 0;
+        return(asynError);
+    }
+    if(pvxiLink->eos==-1) {
+        *eoslen = 0;
+    } else {
+        eos[0] = pvxiLink->eos;
+        *eoslen = 1;
+    }
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
+            "%s vxiGetEos %d: ",pvxiLink->portName,eoslen);
+    return asynSuccess;
+}
+
 static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
@@ -1181,6 +1206,7 @@ static asynGpibPort vxi11 = {
     vxiWrite,
     vxiFlush,
     vxiSetEos,
+    vxiGetEos,
     vxiAddressedCmd,
     vxiUniversalCmd,
     vxiIfc,

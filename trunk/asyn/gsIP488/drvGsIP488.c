@@ -124,6 +124,8 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,const char *data,int 
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
+static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen);
 static asynStatus gsTi9914AddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length);
 static asynStatus gsTi9914UniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
@@ -646,6 +648,27 @@ static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
     pgpib->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
     return(asynSuccess);
 }
+static asynStatus gsTi9914GetEos(void *pdrvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen)
+{
+    gpib *pgpib = (gpib *)pdrvPvt;
+
+    if(eossize<1) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s gsTi9914GetEos eossize %d too small\n",eossize);
+        *eoslen = 0;
+        return(asynError);
+    }
+    if(pgpib->eos==-1) {
+        *eoslen = 0;
+    } else {
+        eos[0] = (unsigned int)pgpib->eos;
+        *eoslen = 1;
+    }
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
+            "%s gsTi9914GetEos %d: ",pgpib->portName,eoslen);
+    return asynSuccess;
+}
 
 static asynStatus gsTi9914AddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
@@ -726,6 +749,7 @@ static asynGpibPort gsTi9914 = {
     gsTi9914Write,
     gsTi9914Flush,
     gsTi9914SetEos,
+    gsTi9914GetEos,
     gsTi9914AddressedCmd,
     gsTi9914UniversalCmd,
     gsTi9914Ifc,

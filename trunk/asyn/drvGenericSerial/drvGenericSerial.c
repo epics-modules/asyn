@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.20 2004-01-22 18:53:00 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.21 2004-01-26 13:43:31 mrk Exp $
  */
 
 #include <string.h>
@@ -778,6 +778,39 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eosl
 }
 
 /*
+ * Get the end-of-string message
+ */
+static asynStatus
+drvGenericSerialGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
+    int eossize, int *eoslen)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    assert(tty);
+    if(tty->eoslen>eossize) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+           "%s drvGenericSerialGetEos eossize %d < tty->eoslen %d\n",
+            tty->serialDeviceName,eossize,tty->eoslen);
+        *eoslen = 0;
+        return(asynError);
+    }
+    switch (tty->eoslen) {
+    default:
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+           "%s drvGenericSerialGetEos illegal tty->eoslen %d\n",
+            tty->serialDeviceName,tty->eoslen);
+        return asynError;
+    case 2: eos[1] = tty->eos[1]; /* fall through to case 1 */
+    case 1: eos[0] = tty->eos[0]; break;
+    case 0: break;
+    }
+    *eoslen = tty->eoslen;
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
+            "drvGenericSerialGetEos %d: ", eoslen);
+    return asynSuccess;
+}
+
+/*
  * Clean up a ttyController
  */
 static void
@@ -809,7 +842,8 @@ static const struct asynOctet drvGenericSerialAsynOctet = {
     drvGenericSerialRead,
     drvGenericSerialWrite,
     drvGenericSerialFlush,
-    drvGenericSerialSetEos
+    drvGenericSerialSetEos,
+    drvGenericSerialGetEos
 };
 
 /*

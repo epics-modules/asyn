@@ -60,8 +60,10 @@ static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchar
 static asynStatus echoFlush(void *ppvt,asynUser *pasynUser);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen);
+static asynStatus getEos(void *ppvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen);
 static asynOctet octet = {
-    echoRead,echoWrite,echoFlush,setEos
+    echoRead,echoWrite,echoFlush,setEos,getEos
 };
 
 static int echoDriverInit(const char *dn, double delay)
@@ -194,6 +196,14 @@ static asynStatus setEos(void *ppvt,asynUser *pasynUser,
 {
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "echoDriver:setEos not implemented\n");
+    return(asynError);
+}
+
+static asynStatus getEos(void *ppvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen)
+{
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "echoDriver:getEos not implemented\n");
     return(asynError);
 }
 

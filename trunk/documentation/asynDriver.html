@@ -23,9 +23,8 @@
 <h2>License Agreement</h2>
 </center>
 
-<p>This product is available via
-<a href="#LicenseAgreement">open source license</a>
-described at the end of this document.</p>
+<p>This product is available via <a href="#LicenseAgreement">open source
+license</a> described at the end of this document.</p>
 <hr>
 
 <center>
@@ -276,6 +275,7 @@ can be used by other code, e.g. a sequence program.</p>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
         input messages.</li>
+      <li>getEos - Get the currect end of message string.&gt;/li&gt;</li>
     </ul>
   </li>
   <li><span style="font-weight: bold">asynTrace</span>
@@ -400,6 +400,8 @@ typedef struct asynOctet{
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                          const char *eos,int eoslen);
+    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
+                         char *eos, int eossize, int *eoslen);
 }asynOctet;
 
 /*asynTrace is implemented by asynManager*/
@@ -644,20 +646,28 @@ strings for sending commands and receiving responses from a device.</p>
       <td>read</td>
       <td>Read a message from the device.  The routine returns the number of
         8-bit bytes read from the device or -1 to indicate error.</td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>write</td>
       <td>Send a message to the device.  The routine returns the number of
         8-bit bytes sent to the device or -1 to indicate error.</td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>flush</td>
       <td>Flush the input buffer.</td>
+      <td></td>
+      <td></td>
     </tr>
     <tr>
       <td>setEos</td>
-      <td>Set End Of String message. For example "\n". Note that gpib drivers
-        often accept at most a one character string.</td>
+      <td>Set End Of String. For example "\n". Note that gpib drivers often
+        accept at most a one character string.</td>
+      <td>getEos</td>
+      <td>Get the current end of string.</td>
     </tr>
   </tbody>
 </table>
@@ -949,6 +959,8 @@ struct asynGpibPort {
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                 const char *eos,int eoslen);
+    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
+                char *eos, int eossize, int *eoslen);
     /*asynGpib methods passed thrtough from asynGpib*/
     asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
                 const char *data, int length);
@@ -1270,7 +1282,8 @@ consists of the following components:</p>
   <dt><code>devAsynTrace.c</code></dt>
     <dd>An EPICS IOC device support module for setting trace options. It has
       an associated <code>devAsynTrace.dbd</code> file that must be included
-      by any application that wants to use this facility.</dd>
+      by any application that wants to use this facility. This also provides
+      a driver(drvAsyn) that has a report method called by dbior.</dd>
   <dt><code>asynTrace.db</code></dt>
     <dd>A generic database that uses devAsynTrace. It has the following macro
       definitions: <code>$(ioc):$(port)$(addr)</code>.</dd>
