@@ -9,5 +9,9 @@ registrar(asynInterposeEosRegister)
 include "asynRecord.dbd"
 
 device(ao,VME_IO,devAoAsynInt32,"asyn Int32")
+device(bi,VME_IO,devBiAsynUInt32Digital,"asyn UInt32Digital")
+device(bo,VME_IO,devBoAsynUInt32Digital,"asyn UInt32Digital")
+device(longin,VME_IO,devLiAsynUInt32Digital,"asyn UInt32Digital")
+device(longout,VME_IO,devLoAsynUInt32Digital,"asyn UInt32Digital")
 
 driver(drvAsyn)
