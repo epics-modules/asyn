@@ -446,7 +446,11 @@ following steps:
     processCallback.</li>
   <li>processCallback calls the low-level driver read or write routine.
     The low-level driver routine returns the results of the I/O operation
-    to processCallback which completes record processing.</li>
+    to processCallback.</li>
+  <li>processCallback calls the record support process method.</li>
+  <li>Record support calls Record device support again, this time with
+    record.PACT=1. Record device support updates fields in the record and
+    returns to record support which completes record processing.</li>
 </ol>
 <hr>
 
