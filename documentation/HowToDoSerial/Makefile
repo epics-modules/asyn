@@ -3,7 +3,7 @@ all: pdf html
 pdf: tutorial.pdf
 
 tutorial.tex: tutorial.lyx
-	/Applications/LyX.app//Contents/MacOS/LyX --export latex tutorial.lyx
+	lyx --export latex tutorial.lyx
 
 tutorial.pdf: tutorial.tex
 	latex tutorial.tex
@@ -26,7 +26,7 @@ install: html pdf
 
 clean:
 	rm -f *.dvi *.log *.aux *.bbl *.blg *.lof *.lot *.toc *.out *.haux *.htoc
-	rm -f tutorial.ps
+	rm -f tutorial.ps tutorial.tex
 
 realclean: clean
-	rm -rf tutorial.tex tutorial.html tutorial.lyx~ tutorial.pdf
+	rm -rf tutorial.html tutorial.lyx~ tutorial.pdf
