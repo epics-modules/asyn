@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.15 2004-07-06 14:41:03 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.16 2004-07-12 05:48:29 rivers Exp $
  */
 
 #include <string.h>
@@ -34,6 +34,8 @@
 #include <osiUnistd.h>
 #include <epicsExport.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
+#include <asynOption.h>
 #include <asynInterposeEos.h>
 #include <drvAsynSerialPort.h>
 
@@ -87,6 +89,7 @@ typedef struct {
     int                timeoutFlag;
     int                cancelFlag;
     asynInterface      common;
+    asynInterface      option;
     asynInterface      octet;
 } ttyController_t;
 
@@ -818,7 +821,13 @@ ttyCleanup(ttyController_t *tty)
 static const struct asynCommon drvAsynSerialPortAsynCommon = {
     drvAsynSerialPortReport,
     drvAsynSerialPortConnect,
-    drvAsynSerialPortDisconnect,
+    drvAsynSerialPortDisconnect
+};
+
+/*
+ * asynOption methods
+ */
+static const struct asynOption drvAsynSerialPortAsynOption = {
     drvAsynSerialPortSetPortOption,
     drvAsynSerialPortGetPortOption
 };
@@ -887,6 +896,9 @@ drvAsynSerialPortConfigure(char *portName,
     tty->common.interfaceType = asynCommonType;
     tty->common.pinterface  = (void *)&drvAsynSerialPortAsynCommon;
     tty->common.drvPvt = tty;
+    tty->option.interfaceType = asynOptionType;
+    tty->option.pinterface  = (void *)&drvAsynSerialPortAsynOption;
+    tty->option.drvPvt = tty;
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = (void *)&drvAsynSerialPortAsynOctet;
     tty->octet.drvPvt = tty;
@@ -901,6 +913,11 @@ drvAsynSerialPortConfigure(char *portName,
     }
     if(pasynManager->registerInterface(tty->portName,&tty->common)!= asynSuccess) {
         errlogPrintf("drvAsynSerialPortConfigure: Can't register common.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    if(pasynManager->registerInterface(tty->portName,&tty->option)!= asynSuccess) {
+        errlogPrintf("drvAsynSerialPortConfigure: Can't register option.\n");
         ttyCleanup(tty);
         return -1;
     }

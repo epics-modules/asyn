@@ -21,6 +21,7 @@
 #include <iocsh.h>
 #include <gpHash.h>
 #include "asynDriver.h"
+#include "asynOption.h"
 #include "asynSyncIO.h"
 
 #define epicsExportSharedSymbols
@@ -44,14 +45,14 @@ typedef struct asynIOPvt {
 typedef struct setOptionArgs {
     const char     *key;
     const char     *val;
-    asynCommon     *pasynCommon;
+    asynOption     *pasynOption;
     void           *drvPvt;
     epicsEventId   done;
 }setOptionArgs;
 
 typedef struct showOptionArgs {
     const char     *key;
-    asynCommon     *pasynCommon;
+    asynOption     *pasynOption;
     void           *drvPvt;
     epicsEventId   done;
 }showOptionArgs;
@@ -61,7 +62,7 @@ static void setOption(asynUser *pasynUser)
     setOptionArgs *poptionargs = (setOptionArgs *)pasynUser->userPvt;
     asynStatus status;
 
-    status = poptionargs->pasynCommon->setOption(poptionargs->drvPvt,
+    status = poptionargs->pasynOption->setOption(poptionargs->drvPvt,
             pasynUser,poptionargs->key,poptionargs->val);
     if(status!=asynSuccess) 
         printf("setOption failed %s\n",pasynUser->errorMessage);
@@ -88,12 +89,12 @@ int epicsShareAPI
         pasynManager->freeAsynUser(pasynUser);
         return asynError;
     }
-    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
+    pasynInterface = pasynManager->findInterface(pasynUser,asynOptionType,1);
     if(!pasynInterface) {
-        printf("port %s not found\n",portName);
+        printf("port %s does not support get/set option\n",portName);
         return asynError;
     }
-    optionargs.pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
     optionargs. drvPvt = pasynInterface->drvPvt;
     optionargs.key = key;
     optionargs.val = val;
@@ -117,7 +118,7 @@ static void showOption(asynUser *pasynUser)
     char val[100];
 
     pasynUser->errorMessage[0] = '\0';
-    status = poptionargs->pasynCommon->getOption(poptionargs->drvPvt,
+    status = poptionargs->pasynOption->getOption(poptionargs->drvPvt,
         pasynUser,poptionargs->key,val,sizeof(val));
     if(status!=asynSuccess) {
         printf("getOption failed %s\n",pasynUser->errorMessage);
@@ -147,12 +148,12 @@ int epicsShareAPI
         pasynManager->freeAsynUser(pasynUser);
         return 1;
     }
-    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,0);
+    pasynInterface = pasynManager->findInterface(pasynUser,asynOptionType,0);
     if(!pasynInterface) {
-        printf("port %s not found\n",portName);
+        printf("port %s does not support get/set option\n",portName);
         return asynError;
     }
-    optionargs.pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
     optionargs. drvPvt = pasynInterface->drvPvt;
     optionargs.key = key;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
