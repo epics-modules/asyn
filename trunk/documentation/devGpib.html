@@ -14,7 +14,7 @@ Instrument Device Support</h1>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>January 2004</h2>
+<h2>February 2004</h2>
 </center>
 <hr>
 
@@ -414,8 +414,9 @@ definition must define field OUT as</p>
       associated with a port instance and allocates storage of that size.</dd>
   <dt><code>msgLen</code></dt>
     <dd>Size needed to read or write from a device. If not needed set it to
-      zero. When devGpib initializes it finds the maximum msgLen of all commands
-      associated with a port instance and allocates storage of that size.</dd>
+      zero. When devGpib initializes it finds the maximum msgLen of all
+      commands associated with a port instance and allocates storage of that
+      size.</dd>
   <dt><code>convert</code></dt>
     <dd>A conversion function that has the prototype:
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
@@ -581,20 +582,17 @@ support it must to document its changes.</p>
   <dt></dt>
     <dd><p>Supports record types: ai,ao,bi,bo,event,longin.longout,
       mbbi,mbbo,mbbiDirect,mmboDirect,stringin,stringout,waveform.</p>
-      <p></p>
       <p>All I/O is done by the <code>convert</code> routine, which must be
-      defined. <code>convert</code> is called by callback routune and thus
+      defined. <code>convert</code> is called by a callback routine and thus
       can make an arbitrary number of calls to low level drivers. It is
-      passed the address of <code>gpibDpvtcode&gt; which contains the
+      passed the address of <code>gpibDpvt</code> which contains the
       information needed to call the low level drivers: <code>asynCommon,
       asynOctet, and asynGpib.</code> Note that <code> asynGpib</code> may
       not be present, i.e. <code>pasynGpib</code> is null.
       <code>gpibDpvt</code> also contains a field <code>pupvt</code> which
       can be used by the convert routine. Is is initialized to null. The
       macro <code>gpibCmdGet</code> can be used to get the address of
-      <code>gpibCmd</code> which contains other usefull
-      information.</code></p>
-      <p></p>
+      <code>gpibCmd</code> which contains other usefull information.</p>
       <p>If the end of string terminator needs to be changed, it must be
       changed by calling <code>pdevSupportGpib-&gt;setEos</code> rather than
       calling <code>pgpibDpvt-&gt;pasynOctet-&gt;setEos</code></p>
@@ -776,10 +774,10 @@ this:</p>
         "OFF",      /* set RVAL to 0 */
         "ON",      /* set RVAL to 1 */
         0};     /* list terminator */</pre>
-The 0 field is <em>extremely</em> important.  If it is omitted and
-the instrument gets confused
-and responds with something that does not start with an "OFF" or "ON", the
-GPIB support library code will end up running off the end of the table.
+The 0 field is <em>extremely</em> important.  If it is omitted and the
+instrument gets confused and responds with something that does not start with
+an "OFF" or "ON", the GPIB support library code will end up running off the
+end of the table.
 
 <p>In the case when none of the choices in an efast table match for an input
 operation the record is placed into a INVALID alarm state.</p>
@@ -880,7 +878,8 @@ structure.
 <dl>
   <dt><code>gpibCmds</code></dt>
   <dt><code>name</code></dt>
-    <dd>The device support module type name. Used only to generate diagnostic messages.</dd>
+    <dd>The device support module type name. Used only to generate diagnostic
+      messages.</dd>
     <dd>Address of an array of gpibCmd definitions..</dd>
   <dt><code>numparams</code></dt>
     <dd>The number of gpibCmds defined. A macro should be used to set it's
@@ -902,15 +901,16 @@ structure.
           way to override respond2Writes for specific commands.</li>
         <li>If respond2Writes is &gt;0 then a wait of respond2Writes
           milliseconds occurs.</li>
-        <li>A read of up to len bytes (terminated by GPIB EOI or by the terminator string, if any) is read into pgpibDpvt-&gt;rsp.</li>
+        <li>A read of up to len bytes (terminated by GPIB EOI or by the
+          terminator string, if any) is read into pgpibDpvt-&gt;rsp.</li>
       </ul>
     </dd>
   <dt><code>msgLenMax</code></dt>
-    <dd>This is set by devGpibSupport. The value is that of the maximum
-    size input message, i.e. the largest msgLen defined in gpibCmds.</dd>
+    <dd>This is set by devGpibSupport. The value is that of the maximum size
+      input message, i.e. the largest msgLen defined in gpibCmds.</dd>
   <dt><code>rspLenMax</code></dt>
-    <dd>This is set by devGpibSupport. The value is that of the maximum
-    size response message, i.e. the largest rspLen defined in gpibCmds.</dd>
+    <dd>This is set by devGpibSupport. The value is that of the maximum size
+      response message, i.e. the largest rspLen defined in gpibCmds.</dd>
 </dl>
 
 <h2>SRQ Processing</h2>
@@ -1076,13 +1076,17 @@ address of a gpibDpvt</p>
 <h3>devSupportGpib</h3>
 
 <p>describes methods implemented by devSupportGpib.c.</p>
-<pre>/* If a method retuns int then 0,-1) =&gt; (OK, failure) */
+<pre>/* If a method returns int then (0,-1) =&gt; (OK, failure) */
+typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
+typedef int (*gpibStart)(gpibDpvt *pgpibDpvt,int failure);
+typedef void (*gpibFinish)(gpibDpvt *pgpibDpvt,int failure);
+
 typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
-    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
-    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
+    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
+    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibStart start, gpibFinish finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)(
         gpibDpvt *pgpibDpvt,srqHandler handler,void *userRivate);
@@ -1095,9 +1099,18 @@ struct devSupportGpib {
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
   <dt><code>gpibWork</code></dt>
-    <dd>Prototype of function that is called when a request is dequeued by
-      the thread created for low level gpib driver. It can call asynCommon,
-      asynOctet, and asynGpib.</dd>
+    <dd>Prototype of a function that is called when a request is dequeued by
+      asynManager. This can be either a function passed to queueRequest or an
+      internal function that devGpibSupport uses to implement
+      queueReadRequest and queueWriteRequest</dd>
+  <dt><code>gpibStart</code></dt>
+    <dd>If queueReadRequest or queueWriteRequest is called the internal
+      gpibWork function calls the start routine before it processes the
+      request.</dd>
+  <dt><code>gpibFinish</code></dt>
+    <dd>If queueReadRequest or queueWriteRequest is called the internal
+      gpibWork function calls the finish routine when it is done
+    processing.</dd>
   <dt><code>initRecord</code></dt>
     <dd>This initializes all the devGpib structures attached to the record
       starting with dbCommon.dpvt.</dd>
@@ -1132,13 +1145,12 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
     <dd>pgpibDpvt-&gt;msg is written from pgpibCmd-&gt;format and the value
       passed by the caller.</dd>
   <dt><code>readArbitraryBlockProgramData</code></dt>
-    <dd>Reads zero or more preamble (non-<code>#</code>) characters followed by
-    IEEE-488.2 definite-length arbitrary block program data followed by the
-    end-of-string specified by the active gpibCmd entry and stores the
-    entire response in pgpibDpvt-&gt;msg.  This routine is intended for use
-    by custom input functions to read a block of arbitrary data from a
-    serial-line device.
-      </dd>
+    <dd>Reads zero or more preamble (non-<code>#</code>) characters followed
+      by IEEE-488.2 definite-length arbitrary block program data followed by
+      the end-of-string specified by the active gpibCmd entry and stores the
+      entire response in pgpibDpvt-&gt;msg.  This routine is intended for use
+      by custom input functions to read a block of arbitrary data from a
+      serial-line device.</dd>
   <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib</dd>
 </dl>
