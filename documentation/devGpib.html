@@ -14,7 +14,7 @@ Instrument Device Support</h1>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>April 1, 2004</h2>
+<h2>February 2004</h2>
 </center>
 <hr>
 
@@ -403,9 +403,9 @@ definition must define field OUT as</p>
       <code>type</code>. See the discussion of <code>type</code> below. Set
       this field to 0 if not used.</dd>
   <dt><code>format</code></dt>
-    <dd>Printf/scanf format string that is used differently depending on the
-      value of <code>type</code>. See the discussion of <code>type</code>.
-      Set this field to 0 if not used.</dd>
+    <dd>Printf/scanf format string that is used differently depending on the value of
+      <code>type</code>. See the discussion of <code>type</code>. Set this
+      field to 0 if not used.</dd>
   <dt><code>rspLen</code></dt>
     <dd>Size needed to read back from a device when performing a
       respond2Writes read operation. If a gpibCmd is a read operation or a
@@ -518,7 +518,8 @@ support it must to document its changes.</p>
         <li>stringin
           <p><code>pgpibDpvt-&gt;msg</code> is converted and the result put
           into field VAL. If pgpibCmd-&gt;format is defined it is used for
-          the conversion, otherwise "%39c" is used.</p>
+          the conversion, otherwise "%39c"
+          is used.</p>
         </li>
         <li>waveform
           <p>Unless FTVL is menuFtypeCHAR an error is generated and the
@@ -712,6 +713,13 @@ support it must to document its changes.</p>
           <p>If a device has local control locked out,  local control can be
           temporarily granted by issuing this command. However the next time
           the device is addressed it will again disable local control.</p>
+          <p>Only define <code>dset</code>, <code>type</code>, and
+          <code>pri</code>. A default pdevGpibNames is provided.</p>
+        </dd>
+      <dt>GPIBRESETLNK Valid only for BO records.</dt>
+        <dd><p>If rval = (0,1) then (do nothing, reset link task).  This
+          completely restarts the link thread. This is a very drastic
+          action.</p>
           <p>Only define <code>dset</code>, <code>type</code>, and
           <code>pri</code>. A default pdevGpibNames is provided.</p>
         </dd>
@@ -1080,8 +1088,7 @@ struct devSupportGpib {
     void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibStart start, gpibFinish finish);
-    /* queueRequest returns (0,1) for (failure,success) */
-    int (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
+    void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)(
         gpibDpvt *pgpibDpvt,srqHandler handler,void *userRivate);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
@@ -1130,8 +1137,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
       depending on the <code>pgpibCmd-&gt;type</code>.</dd>
   <dt><code>queueRequest</code></dt>
     <dd>The device support provides a work function that is called when the
-      request is dequeued. queueRequest returns (0,1) if the request (was
-      not, was) queued.</dd>
+      request is dequeued.</dd>
   <dt><code>report</code></dt>
     <dd>This generates a report or all devGpib devices.</dd>
   <dt><code>registerSrqHandler</code></dt>

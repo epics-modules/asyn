@@ -12,86 +12,38 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>April 1, 2004</h1>
+<h1>Febuary 13, 2004</h1>
 </center>
 <hr>
-
-<center>
-<h2>Release 2-1</h2>
-</center>
-
-<h3>Major New Features</h3>
-<ul>
-  <li>Connection Management - A framework for connection management is
-    provided. It provides the ability to connect/disconnect to/from a port or
-    port,addr. It also provides enable/disable and autoConnect/noAutoConnect.
-    See the asynDriver for details.</li>
-  <li>devAsyn - Generic device support for connect management for a specific
-    device.</li>
-  <li>devAsynGeneric - Generic support for connection management and
-    traceing. This support dynamically attaches to a port,addr. Thus one set
-    of records and one medm display can be used for all devices connected to
-    an ioc.</li>
-  <li>asynOctetRecord - A generic record and medm display that allows
-    interactive access to many asynDriver features.</li>
-  <li>asynSyncIO - A synchronous interface to asynDriver. This can be used
-    by code, e.g. SNC programs, that are willing to wait instead of following
-    an asynchronous model.</li>
-</ul>
-
-<h3>Changed and obsolete features</h3>
-<ul>
-  <li>devAsynTrace is replaced by devAsyn and devAsynGeneric.</li>
-  <li>asynManager.h
-    <ul>
-      <li>disconnectDevice has been renamed to disconnect.</li>
-      <li>The interface to low level drivers has been drastically modified in
-        order to support the new connection management features. See the
-        asynDriver documentation for details.</li>
-    </ul>
-  </li>
-  <li>asynGpib
-    <ul>
-      <li>registerPort has additional arguments multiDevice and
-      autoConnect.</li>
-      <li>setPortOption,getPortOption are setOption,getOption</li>
-    </ul>
-  </li>
-</ul>
 
 <center>
 <h2>Release 1-2</h2>
 </center>
 <ul>
-  <li>Promote VXI-11 RPC definition files to vxi11 directory.  Use rpcgen to
-    build RPC support files for targets for which this is possible.</li>
-  <li>Run rpcgen on Solaris with 'multi-thread' flag.</li>
-  <li>Use separate GPIB message/response buffer for each port instance.</li>
-  <li>Use sscanf to convert GPIB stringin response.</li>
-  <li>Fix race condition in GPIB finish routines.</li>
+<li>Promote VXI-11 RPC definition files to vxi11 directory.  Use rpcgen to build
+RPC support files for targets for which this is possible.
+<li>Run rpcgen on Solaris with 'multi-thread' flag.</li>
+<li>Use separate GPIB message/response buffer for each port instance.</li>
+<li>Use sscanf to convert GPIB stringin response.</li>
+<li>Fix race condition in GPIB finish routines.</li>
 </ul>
 
 <center>
 <h2>Release 1-1</h2>
 </center>
-
 <p>This release includes support for the following:</p>
 <ul>
-  <li>asynTrace - A trace facility is now implemented.</li>
-  <li>gsIP488 - The Greensprings Industry Pack IP488 is now supported</li>
+   <li>asynTrace - A trace facility is now implemented.</li>
+   <li>gsIP488 - The Greensprings Industry Pack IP488 is now supported</li>
 </ul>
-
 <p>Modifications include:</p>
 <ol>
-  <li>Added asynSetPortOption and asynGetPortOption to manipulate port
-    options.</li>
-  <li>Changed serial support to use asynSetPortOption/asynGetPortOption.</li>
-  <li>Added devGPIB GPIBCVTIO commmand type to allow custom conversion
-    routine to perform all I/O operations.</li>
-  <li>Changed rules for return value from devGPIB custom conversion
-  routines.</li>
-  <li>Added dbior support.</li>
-  <li>Changed devGPIB to no longer cache EOS.</li>
+   <li>Added asynSetPortOption and asynGetPortOption to manipulate port options.</li>
+   <li>Changed serial support to use asynSetPortOption/asynGetPortOption.</li>
+   <li>Added devGPIB GPIBCVTIO commmand type to allow custom conversion routine to perform all I/O operations.</li>
+   <li>Changed rules for return value from devGPIB custom conversion routines.</li>
+   <li>Added dbior support.</li>
+   <li>Changed devGPIB to no longer cache EOS.</li>
 </ol>
 
 <center>

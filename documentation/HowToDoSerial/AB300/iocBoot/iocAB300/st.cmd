@@ -3,7 +3,7 @@ AB300_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords("../../db/AB300.db","user=AB300")
 
 #The following command is for a serial line terminal concentrator
-drvGenericSerialConfigure("L0","164.54.3.137:4001",1,0)
+drvGenericSerialConfigure("L0","164.54.3.137:4001",0,0)
 
 #The following commands are for a local serial line
 #drvGenericSerialConfigure("L0","/dev/ttyS0",0,0)
@@ -14,7 +14,7 @@ drvGenericSerialConfigure("L0","164.54.3.137:4001",1,0)
 #asynSetPortOption("L0", "clocal", "Y")
 #asynSetPortOption("L0", "crtscts", "N")
 
-asynSetTraceMask("L0",-1,0xff)
-asynSetTraceIOMask("L0",-1,0x2)
+asynSetTraceMask("L0",0,0xff)
+asynSetTraceIOMask("L0",0,0x2)
 
 iocInit()

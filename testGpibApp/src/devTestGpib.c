@@ -69,8 +69,7 @@ static struct gpibCmd gpibCmds[] =
   /* Param 5, */
   {&DSET_BO, GPIBGTL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 6, */
-  /* This was deleted */
-  {&DSET_BO, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+  {&DSET_BO, GPIBRESETLNK, IB_Q_HIGH, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 
   /* Param 7, */
   {&DSET_LI, GPIBSRQHANDLER, IB_Q_HIGH, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0},

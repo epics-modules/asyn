@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.8 2004-03-19 15:58:55 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.5 2003-11-14 15:20:30 mrk Exp $
  */
 
 #include <stdio.h>
@@ -47,6 +47,13 @@ struct epicsInterruptibleSyscallContext {
     int            wasClosed;
 };
 
+static epicsThreadOnceId installOnce = EPICS_THREAD_ONCE_INIT;
+static void
+installSigAlarmIgnore(void *p)
+{
+    epicsSignalInstallSigAlarmIgnore();
+}
+
 epicsInterruptibleSyscallContext *
 epicsInterruptibleSyscallCreate(void)
 {
@@ -56,6 +63,7 @@ epicsInterruptibleSyscallCreate(void)
     if (c != NULL) {
         c->fd = -1;
         c->mutex = epicsMutexMustCreate();
+        epicsThreadOnce(&installOnce, installSigAlarmIgnore, NULL);
     }
     return c;
 }
@@ -78,12 +86,9 @@ resetInterruptibleSyscall(epicsInterruptibleSyscallContext *c)
 int
 epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsThreadId tid)
 {
-    epicsMutexMustLock(c->mutex);
+    epicsMutexLock(c->mutex);
     c->fd = fd;
-    if (tid != c->tid) {
-        c->tid = tid;
-        epicsSignalInstallSigAlarmIgnore();
-    }
+    c->tid = tid;
     c->interruptCount = 0;
     if(c->fd >= 0)
         c->isatty = isatty(c->fd);
@@ -95,7 +100,7 @@ epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsT
 int
 epicsInterruptibleSyscallDelete(epicsInterruptibleSyscallContext *c)
 {
-    epicsMutexMustLock(c->mutex);
+    epicsMutexLock(c->mutex);
     epicsMutexUnlock(c->mutex);
     epicsMutexDestroy(c->mutex);
     free(c);
@@ -105,7 +110,7 @@ epicsInterruptibleSyscallDelete(epicsInterruptibleSyscallContext *c)
 int
 epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
 {
-    epicsMutexMustLock(c->mutex);
+    epicsMutexLock(c->mutex);
     if (++c->interruptCount == 2)
         errlogPrintf("Warning -- Multiple calls to epicsInterruptibleSyscallInterrupt().\n");
     /*
@@ -157,7 +162,7 @@ epicsInterruptibleSyscallWasInterrupted(epicsInterruptibleSyscallContext *c)
 {
     int i;
 
-    epicsMutexMustLock(c->mutex);
+    epicsMutexLock(c->mutex);
     i = (c->interruptCount > 0);
     epicsMutexUnlock(c->mutex);
     return i;
@@ -168,7 +173,7 @@ epicsInterruptibleSyscallWasClosed(epicsInterruptibleSyscallContext *c)
 {
     int i;
 
-    epicsMutexMustLock(c->mutex);
+    epicsMutexLock(c->mutex);
     i = c->wasClosed;
     epicsMutexUnlock(c->mutex);
     return i;

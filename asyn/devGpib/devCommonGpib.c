@@ -279,6 +279,7 @@ static char *dclName[] = {"noop", "DCL", "0"};
 static char *lloName[] = {"noop", "LLO", "0"};
 static char *sdcName[] = {"noop", "SDC", "0"};
 static char *gtlName[] = {"noop", "GTL", "0"};
+static char *resetName[] = {"noop", "resetLink", "0"};
 
 long epicsShareAPI devGpib_initBo(boRecord * pbo)
 {
@@ -293,7 +294,7 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
     /* make sure the command type makes sense for the record type */
     pgpibDpvt = gpibDpvtGet(pbo);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL)) {
+    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
         /* supply defaults for menus */
         char **papname = 0;
         switch (cmdType) {
@@ -303,6 +304,7 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
         case GPIBLLO: papname = lloName; break;
         case GPIBSDC: papname = sdcName; break;
         case GPIBGTL: papname = gtlName; break;
+        case GPIBRESETLNK: papname = resetName; break;
         default:
             asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
                 "%s devGpib_initBo logic error\n",pbo->name);
@@ -335,7 +337,7 @@ long epicsShareAPI devGpib_writeBo(boRecord * pbo)
     if(cmdType&GPIBSOFT) {
         pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
     } else
-    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL)) {
+    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
         writeBoSpecial(pbo);
     } else {
         pdevSupportGpib->queueWriteRequest(pgpibDpvt,boStart,genericFinish);
@@ -364,7 +366,7 @@ static void writeBoSpecial(boRecord * pbo)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pbo->pact) return;
-    if(cmdType&(GPIBIFC|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL)) {
+    if(cmdType&(GPIBIFC|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
         if(pbo->val==0) return;
     }
     pdevSupportGpib->queueRequest(pgpibDpvt,boWorkSpecial);
@@ -382,6 +384,14 @@ static void boWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
     asynStatus status = asynSuccess;
 
     if(failure) {; /*do nothing*/
+    } else if(cmdType == GPIBRESETLNK) {
+        asynCommon *pasynCommon = pgpibDpvt->pasynCommon;
+        void *asynCommonPvt = pgpibDpvt->asynCommonPvt;
+
+        assert(pasynCommon);
+        status = pgpibDpvt->pasynCommon->disconnect(asynCommonPvt,pasynUser);
+        if(status==asynSuccess)
+            status = pgpibDpvt->pasynCommon->connect(asynCommonPvt,pasynUser);
     } else if(!pasynGpib) {
         failure = -1;
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,

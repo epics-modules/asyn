@@ -26,21 +26,18 @@ typedef enum {
 }asynStatus;
 
 typedef enum {
-    asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect
-} asynException;
-
-typedef enum {
-    asynQueuePriorityLow,asynQueuePriorityMedium,asynQueuePriorityHigh,
-    asynQueuePriorityConnect
+    asynQueuePriorityLow,asynQueuePriorityMedium,asynQueuePriorityHigh
 }asynQueuePriority;
 
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
-    /* The following must be set by the user */
+    /* The following can be set by the user */
     double timeout;  /*Timeout for I/O operations*/
     void *userPvt; 
 }asynUser;
+
+typedef void (*userCallback)(asynUser *pasynUser);
 
 typedef struct asynInterface{
     const char *interfaceType; /*For example asynCommonType*/
@@ -48,67 +45,51 @@ typedef struct asynInterface{
     void *drvPvt;
 }asynInterface;
 
-typedef void (*userCallback)(asynUser *pasynUser);
-typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
-
 typedef struct asynManager {
-    void      (*report)(FILE *fd,int details);
+    void       (*report)(FILE *fd,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
-    asynStatus (*isMultiDevice)(asynUser *pasynUser,
-                                const char *portName,int *yesNo);
-    /* addr = (-1,>=0) => connect to (port,device) */
     asynStatus (*connectDevice)(asynUser *pasynUser,
                                 const char *portName,int addr);
-    asynStatus (*disconnect)(asynUser *pasynUser);
-    asynStatus (*exceptionCallbackAdd)(asynUser *pasynUser,
-                                       exceptionCallback callback);
-    asynStatus (*exceptionCallbackRemove)(asynUser *pasynUser);
+    asynStatus (*disconnectDevice)(asynUser *pasynUser);
     asynInterface *(*findInterface)(asynUser *pasynUser,
-                            const char *interfaceType,int interposeInterfaceOK);
+                                const char *interfaceType,int processModuleOK);
+    asynInterface *(*findPortInterface)(const char *portName,
+                                const char *interfaceType);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
-    /*cancelRequest returns (-1,0,1) if request (had error, was not, was) queued*/
+    /*cancelRequest returns (0,-1) if request (was, was not) queued*/
     int        (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
-    /*getAddr returns -1 if !multiPort or connected to port */
     int        (*getAddr)(asynUser *pasynUser);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
-                              int multiDevice,int autoConnect,
+                              asynInterface *paasynInterface,int nasynInterface,
                               unsigned int priority,unsigned int stackSize);
-    asynStatus (*registerInterface)(const char *portName,
-                              asynInterface *pasynInterface);
-    asynStatus (*exceptionConnect)(asynUser *pasynUser);
-    asynStatus (*exceptionDisconnect)(asynUser *pasynUser);
-    /*any code can call the following*/
-    asynStatus (*interposeInterface)(const char *portName, int addr,
-                              asynInterface *pasynInterface,
-                              asynInterface **ppPrev);
-    asynStatus (*enable)(asynUser *pasynUser,int yesNo);
-    asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
-    int        (*isConnected)(asynUser *pasynUser);
-    int        (*isEnabled)(asynUser *pasynUser);
-    int        (*isAutoConnect)(asynUser *pasynUser);
+    /* paasynInterface is pointer to array of asynInterface */
+    /*process modules call the following */
+    asynStatus (*registerProcessModule)(
+                    const char *processModuleName,const char *portName,int addr,
+                    asynInterface *paasynInterface,int nasynInterface);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
 
-/* Interface supported by ALL asyn drivers*/
+/*Methods supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
     void       (*report)(void *drvPvt,FILE *fd,int details);
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    /*The following are generic methods to set/get device options*/
-    asynStatus (*setOption)(void *drvPvt, asynUser *pasynUser,
+    /*The following are generic methods to set/get port options*/
+    asynStatus (*setPortOption)(void *drvPvt, asynUser *pasynUser,
                                 const char *key, const char *val);
-    asynStatus (*getOption)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*getPortOption)(void *drvPvt, asynUser *pasynUser,
                                 const char *key, char *val, int sizeval);
 }asynCommon;
 
-/* Interface supported by low level octet drivers. */
+/* Methods supported by low level octet drivers. */
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
     int        (*read)(void *drvPvt,asynUser *pasynUser,
@@ -151,8 +132,8 @@ typedef struct asynTrace {
     int        (*getTraceMask)(asynUser *pasynUser);
     asynStatus (*setTraceIOMask)(asynUser *pasynUser,int mask);
     int        (*getTraceIOMask)(asynUser *pasynUser);
-    asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fd);
-    FILE       *(*getTraceFile)(asynUser *pasynUser);
+    asynStatus (*setTraceFILE)(asynUser *pasynUser,FILE *fd);
+    FILE       *(*getTraceFILE)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,int size);
     int        (*getTraceIOTruncateSize)(asynUser *pasynUser);
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);

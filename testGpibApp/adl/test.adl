@@ -1,7 +1,7 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/testGpibApp/adl/test.adl"
-	version=030004
+	name="/home/phoebus3/MRK/epics/modules/bus/gpib/gpibCore/testApp/adl/test.adl"
+	version=030003
 }
 display {
 	object {
@@ -175,6 +175,38 @@ display {
 	}
 	monitor {
 		chan="$(name)L$(L):gtl"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=140
+		width=100
+		height=20
+	}
+	control {
+		chan="$(name)L$(L):resetLink"
+		clr=14
+		bclr=4
+	}
+	label="resetLink"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=140
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(name)L$(L):resetLink"
 		clr=14
 		bclr=4
 	}

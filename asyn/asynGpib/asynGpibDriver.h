@@ -25,11 +25,6 @@ extern "C" {
 #define IBSPE 0x18      /* Serial Poll Enable */
 #define IBSPD 0x19      /* Serial Poll Disable */
 
-/* Talk, Listen, Secondary base addresses */
-#define TADBASE    0x40   /* offset to GPIB listen address 0 */
-#define LADBASE    0x20   /* offset to GPIB talk address 0 */
-#define SADBASE    0x60   /* offset to GPIB secondary address 0 */
-
 #define NUM_GPIB_ADDRESSES    32
 #include "asynDriver.h"
 #define asynGpibType "asynGpib"
@@ -53,7 +48,6 @@ struct asynGpib{
     /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
-        int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
     void (*srqHappened)(void *asynGpibPvt);
@@ -78,9 +72,9 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*setPortOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,const char *val);
-    asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*getPortOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);

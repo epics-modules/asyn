@@ -1,9 +1,9 @@
 include "base.dbd"
 include "asyn.dbd"
-include "devAsyn.dbd"
+include "devAsynTrace.dbd"
 include "devTestGpib.dbd"
 include "devGpib.dbd"
 include "drvVxi11.dbd"
-include "drvGsIP488.dbd"
-include "drvIpac.dbd"
+#include "drvGsIP488.dbd"
+#include "drvIpac.dbd"
 registrar(mv162ipRegistrar)

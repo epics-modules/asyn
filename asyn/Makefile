@@ -20,22 +20,13 @@ SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
 DBD += asyn.dbd
 asyn_SRCS += asynManager.c
-asyn_SRCS += asynShellCommands.c
 INC += epicsInterruptibleSyscall.h
-INC += asynShellCommands.h
-INC += asynSyncIO.h
-asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
 
-SRC_DIRS += $(ASYN)/devAsyn
-DBD += devAsyn.dbd
-DBDINC += asynOctetRecord
-asyn_SRCS += devAsyn.c
-asyn_SRCS += asynOctetRecord.c
-asyn_SRCS += devAsynGeneric.c
-DB += asyn.db
-DB += asynOctetRecord.db
-DB += asynGeneric.db
+SRC_DIRS += $(ASYN)/devAsynTrace
+DBD += devAsynTrace.dbd
+asyn_SRCS += devAsynTrace.c
+DB += asynTrace.db
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
@@ -59,7 +50,6 @@ DBD += drvVxi11.dbd
 
 
 SRC_DIRS += $(ASYN)/drvGenericSerial
-INC += drvGenericSerial.h
 asyn_SRCS += drvGenericSerial.c
 DBD += drvGenericSerial.dbd
 
