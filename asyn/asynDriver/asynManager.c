@@ -21,6 +21,7 @@
 #include <errlog.h>
 #include <taskwd.h>
 #include <epicsStdio.h>
+#include <epicsString.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsThread.h>
@@ -183,35 +184,6 @@ static asynTrace asynTraceManager = {
     tracePrintIO
 };
 epicsShareDef asynTrace *pasynTrace = &asynTraceManager;
-
-/*WHEN epicsStrPrintEscaped is in EPICS base remove this*/
-static int epicsStrPrintEscaped( FILE *fp, const char *s, int n)
-{
-   int nout=0;
-   while (n--) {
-       char c = *s++;
-       switch (c) {
-       case '\a':  nout += fprintf(fp, "\\a");  break;
-       case '\b':  nout += fprintf(fp, "\\b");  break;
-       case '\f':  nout += fprintf(fp, "\\f");  break;
-       case '\n':  nout += fprintf(fp, "\\n");  break;
-       case '\r':  nout += fprintf(fp, "\\r");  break;
-       case '\t':  nout += fprintf(fp, "\\t");  break;
-       case '\v':  nout += fprintf(fp, "\\v");  break;
-       case '\\':  nout += fprintf(fp, "\\\\"); break;
-       case '\?':  nout += fprintf(fp, "\\?");  break;
-       case '\'':  nout += fprintf(fp, "\\'");  break;
-       case '\"':  nout += fprintf(fp, "\\\"");  break;
-       default:
-           if (isprint(c))
-               nout += fprintf(fp, "%c", c);/* putchar(c) doesn't work on vxWorks */
-           else
-               nout += fprintf(fp, "\\%03o", (unsigned char)c);
-           break;
-       }
-   }
-   return nout;
-}
 
 
 /*internal methods */
