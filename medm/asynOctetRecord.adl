@@ -1,0 +1,701 @@
+
+file {
+	name="C:\Program Files\EPICS\adls\asynOctet.adl"
+	version=020306
+}
+display {
+	object {
+		x=324
+		y=26
+		width=440
+		height=320
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+composite {
+	object {
+		x=6
+		y=77
+		width=430
+		height=65
+	}
+	"composite name"=""
+	children {
+		"text entry" {
+			object {
+				x=78
+				y=113
+				width=350
+				height=20
+			}
+			control {
+				chan="$(REC).AOUT"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=13
+				y=84
+				width=60
+				height=20
+			}
+			"basic attribute" {
+				clr=25
+			}
+			textix="Output"
+		}
+		text {
+			object {
+				x=91
+				y=84
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Format:"
+		}
+		menu {
+			object {
+				x=166
+				y=84
+				width=80
+				height=20
+			}
+			control {
+				chan="$(REC).OFMT"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=13
+				y=111
+				width=60
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="ASCII:"
+		}
+		rectangle {
+			object {
+				x=6
+				y=77
+				width=430
+				height=65
+			}
+			"basic attribute" {
+				clr=14
+				fill="outline"
+			}
+		}
+		text {
+			object {
+				x=256
+				y=84
+				width=110
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Terminator:"
+		}
+		"text entry" {
+			object {
+				x=371
+				y=84
+				width=60
+				height=20
+			}
+			control {
+				chan="$(REC).OEOS"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=253
+		y=156
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Terminator:"
+}
+"text entry" {
+	object {
+		x=368
+		y=156
+		width=60
+		height=20
+	}
+	control {
+		chan="$(REC).IEOS"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+rectangle {
+	object {
+		x=74
+		y=184
+		width=360
+		height=29
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+text {
+	object {
+		x=16
+		y=156
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=25
+	}
+	textix="Input"
+}
+"text update" {
+	object {
+		x=81
+		y=190
+		width=350
+		height=18
+	}
+	monitor {
+		chan="$(REC).AINP"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=86
+		y=156
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Format:"
+}
+menu {
+	object {
+		x=161
+		y=156
+		width=80
+		height=20
+	}
+	control {
+		chan="$(REC).IFMT"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=88
+		y=221
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Requested:"
+}
+text {
+	object {
+		x=13
+		y=188
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="ASCII:"
+}
+rectangle {
+	object {
+		x=6
+		y=147
+		width=430
+		height=105
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+text {
+	object {
+		x=10
+		y=221
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Length:"
+}
+rectangle {
+	object {
+		x=356
+		y=217
+		width=69
+		height=28
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	"dynamic attribute" {
+		chan="$(REC).SEVR"
+	}
+}
+text {
+	object {
+		x=280
+		y=221
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Actual:"
+}
+"text update" {
+	object {
+		x=362
+		y=221
+		width=56
+		height=20
+	}
+	monitor {
+		chan="$(REC).NORD"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=193
+		y=221
+		width=70
+		height=20
+	}
+	control {
+		chan="$(REC).NRRD"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+composite {
+	object {
+		x=6
+		y=257
+		width=418
+		height=30
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=336
+				y=262
+				width=20
+				height=20
+			}
+			"basic attribute" {
+				clr=63
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(REC).SEVR"
+			}
+			textix="OK"
+		}
+		text {
+			object {
+				x=336
+				y=262
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=20
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(REC).SEVR"
+			}
+			textix="Timeout"
+		}
+		rectangle {
+			object {
+				x=332
+				y=257
+				width=92
+				height=30
+			}
+			"basic attribute" {
+				clr=14
+				fill="outline"
+			}
+			"dynamic attribute" {
+				chan="$(REC).SEVR"
+			}
+		}
+		text {
+			object {
+				x=6
+				y=262
+				width=140
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Timeout (sec):"
+		}
+		"text entry" {
+			object {
+				x=151
+				y=262
+				width=75
+				height=20
+			}
+			control {
+				chan="$(REC).TMOT"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=242
+				y=262
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Status:"
+		}
+	}
+}
+"message button" {
+	object {
+		x=176
+		y=292
+		width=80
+		height=20
+	}
+	control {
+		chan="$(REC).PROC"
+		clr=14
+		bclr=51
+	}
+	label="Process"
+	press_msg="1"
+}
+text {
+	object {
+		x=294
+		y=292
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	textix="More..."
+}
+"related display" {
+	object {
+		x=369
+		y=292
+		width=56
+		height=20
+	}
+	display[0] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="REC=$(REC)"
+	}
+	display[1] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="REC=$(REC)"
+	}
+	display[2] {
+		label="Socket parameters"
+		name="asynSocketSetup.adl"
+		args="REC=$(REC)"
+	}
+	display[3] {
+		label="Trace control"
+		name="asynOctetTrace.adl"
+		args="REC=$(REC)"
+	}
+	clr=14
+	bclr=51
+}
+menu {
+	object {
+		x=61
+		y=292
+		width=110
+		height=20
+	}
+	control {
+		chan="$(REC).SCAN"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=6
+		y=292
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Scan:"
+	align="horiz. right"
+}
+composite {
+	object {
+		x=6
+		y=47
+		width=427
+		height=20
+	}
+	"composite name"=""
+	children {
+		composite {
+			object {
+				x=6
+				y=47
+				width=205
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=6
+						y=47
+						width=50
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Port:"
+				}
+				"text entry" {
+					object {
+						x=61
+						y=47
+						width=150
+						height=20
+					}
+					control {
+						chan="$(REC).PORT"
+						clr=14
+						bclr=51
+					}
+					limits {
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=228
+				y=47
+				width=205
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=228
+						y=47
+						width=90
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Transfer:"
+					align="horiz. right"
+				}
+				menu {
+					object {
+						x=323
+						y=47
+						width=110
+						height=20
+					}
+					control {
+						chan="$(REC).TMOD"
+						clr=14
+						bclr=51
+					}
+				}
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=119
+		y=8
+		width=203
+		height=29
+	}
+	"composite name"=""
+	children {
+		rectangle {
+			object {
+				x=119
+				y=8
+				width=203
+				height=29
+			}
+			"basic attribute" {
+				clr=2
+			}
+		}
+		text {
+			object {
+				x=122
+				y=12
+				width=199
+				height=21
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="$(REC)"
+			align="horiz. centered"
+		}
+	}
+}
