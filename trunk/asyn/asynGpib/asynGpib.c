@@ -41,14 +41,17 @@ typedef struct gpibBase {
 }gpibBase;
 static gpibBase *pgpibBase = 0;
 
-typedef struct pollListNode {
-    int pollIt;
-    int statusByte;
-}pollListNode;
+typedef struct pollNode {
+    int      pollIt;
+    int      statusByte;
+    asynUser *pasynUser;
+    asynCommon *pasynCommon;
+    void     *drvPvt;
+}pollNode;
 
 typedef struct pollListPrimary {
-    pollListNode primary;
-    pollListNode secondary[NUM_GPIB_ADDRESSES];
+    pollNode primary;
+    pollNode secondary[NUM_GPIB_ADDRESSES];
 }pollListPrimary;
 
 typedef struct gpibPvt {
@@ -67,14 +70,14 @@ typedef struct gpibPvt {
     asynInterface octet;
     asynInterface gpib;
 }gpibPvt;
-
+
 #define GETgpibPvtasynGpibPort \
     gpibPvt *pgpibPvt = (gpibPvt *)drvPvt; \
     asynGpibPort *pasynGpibPort; \
     assert(pgpibPvt); \
     pasynGpibPort = pgpibPvt->pasynGpibPort; \
     assert(pasynGpibPort);
-
+
 /* forward reference to internal methods */
 static void gpibInit(void);
 static gpibPvt *locateGpibPvt(const char *portName);
@@ -143,6 +146,60 @@ static gpibPvt *locateGpibPvt(const char *portName)
     }
     return(0);
 }
+
+static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
+    asynGpibPort *pasynGpibPort,pollNode *ppollNode,int addr)
+{
+    asynStatus status;
+    int statusByte = 0;
+    int isConnected=0, isEnabled=0, isAutoConnect = 0;
+    
+    status = pasynManager->isEnabled(ppollNode->pasynUser,&isEnabled);
+    if(status==asynSuccess)
+        status = pasynManager->isConnected(ppollNode->pasynUser,&isConnected);
+    if(status==asynSuccess)
+        status = pasynManager->isAutoConnect(ppollNode->pasynUser,&isAutoConnect);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s addr %d asynGpib:srqPoll %s\n",
+            pgpibPvt->portName,addr,pasynUser->errorMessage);
+        return;
+    }
+    if(isEnabled && (!isConnected && isAutoConnect)) {
+        status = ppollNode->pasynCommon->connect(
+            ppollNode->drvPvt,ppollNode->pasynUser);
+        if(status==asynSuccess)
+            status = pasynManager->isConnected(ppollNode->pasynUser,&isConnected);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s addr %d asynGpib:srqPoll %s\n",
+                pgpibPvt->portName,addr,pasynUser->errorMessage);
+            return;
+        }
+    }
+    if(!isEnabled || !isConnected) {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            "%s addr %d asynGpib:srqPoll but can not connect\n",
+            pgpibPvt->portName,addr);
+        return;
+    }
+    status = pasynGpibPort->serialPoll(
+        pgpibPvt->asynGpibPortPvt,addr,SRQTIMEOUT,&statusByte);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s addr %d asynGpib:srqPoll serialPoll %s\n",
+            pgpibPvt->portName,addr,
+            (status==asynTimeout ? "timeout" : "error"));
+        return;
+    }
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
+        pgpibPvt->portName,addr,statusByte);
+    if(statusByte&0x40) {
+        pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
+            addr,statusByte);
+    }
+}
 
 static void srqPoll(asynUser *pasynUser)
 {
@@ -174,49 +231,15 @@ static void srqPoll(asynUser *pasynUser)
         pasynGpibPort->serialPollBegin(pgpibPvt->asynGpibPortPvt);
         for(primary=0; primary<NUM_GPIB_ADDRESSES; primary++) {
             pollListPrimary *ppollListPrimary = &pgpibPvt->pollList[primary];
-            pollListNode *ppollListNode = &ppollListPrimary->primary;
-            int statusByte;
-    
-            if(ppollListNode->pollIt) {
-                statusByte = 0;
-                status = pasynGpibPort->serialPoll(
-                    pgpibPvt->asynGpibPortPvt,primary,SRQTIMEOUT,&statusByte);
-                if(status!=asynSuccess) {
-                    asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                        "%s asynGpib:srqPoll serialPoll error %s\n",
-                        pgpibPvt->portName,
-                        (status==asynTimeout ? "timeout" : "error"));
-                    continue;
-                }
-                asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                    "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
-                    pgpibPvt->portName,primary,statusByte);
-                if(statusByte&0x40) {
-                    pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
-                        primary,statusByte);
-                }
+            pollNode *ppollNode = &ppollListPrimary->primary;
+            if(ppollNode->pollIt) {
+                pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,primary);
             }
             for(secondary=0; secondary<NUM_GPIB_ADDRESSES; secondary++) {
-                ppollListNode = &ppollListPrimary->secondary[secondary];
-                if(ppollListNode->pollIt) {
-                    int addr = primary*100+secondary;
-                    statusByte = 0;
-                    status = pasynGpibPort->serialPoll(
-                        pgpibPvt->asynGpibPortPvt,addr,SRQTIMEOUT,&statusByte);
-                    if(status!=asynSuccess) {
-                        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                            "%s asynGpib:srqPoll serialPoll error %s\n",
-                            pgpibPvt->portName,
-                            (status==asynTimeout ? "timeout" : "error"));
-                        continue;
-                    }
-                    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                        "%s asynGpib:srqPoll serialPoll addr %d statusByte %2.2x\n",
-                        pgpibPvt->portName,addr,statusByte);
-                    if(statusByte&0x40) {
-                        pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
-                            addr,statusByte);
-                    }
+                ppollNode = &ppollListPrimary->secondary[secondary];
+                int addr = primary*100+secondary;
+                if(ppollNode->pollIt) {
+                    pollOne(pasynUser,pgpibPvt,pasynGpibPort,ppollNode,addr);
                 }
             }
         }
@@ -322,7 +345,7 @@ static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->ren(pgpibPvt->asynGpibPortPvt,pasynUser,onOff));
 }
-
+
 static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
      srqHandler handler, void *srqHandlerPvt)
 {
@@ -342,11 +365,12 @@ static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
     status = pasynGpibPort->srqEnable(pgpibPvt->asynGpibPortPvt,1);
     return(status);
 }
-
+
 static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 {
     int primary,secondary,addr;
     asynStatus status;
+    pollNode *pnode;
     GETgpibPvtasynGpibPort
 
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -359,19 +383,73 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
             pgpibPvt->portName,pasynUser->errorMessage);
         return;
     }
-    if(!(pgpibPvt->attributes&ASYN_MULTIDEVICE) && addr==-1) {
-        pgpibPvt->pollList[0].primary.pollIt = onOff;
+    if(addr==-1) {
+        if(pgpibPvt->attributes&ASYN_MULTIDEVICE) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollAddr addr %d is illegal\n",
+                 pgpibPvt->portName,addr);
+            return;
+        }
+        pnode = &pgpibPvt->pollList[0].primary;
+    } else if(addr<100) {
+        if(addr>=NUM_GPIB_ADDRESSES) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollAddr addr %d is illegal\n",
+                 pgpibPvt->portName,addr);
+            return;
+        }
+        pnode = &pgpibPvt->pollList[addr].primary;
+    } else {
+        primary = addr/100; secondary = primary%100;
+        if(primary>=NUM_GPIB_ADDRESSES || secondary>=NUM_GPIB_ADDRESSES) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollAddr addr %d is illegal\n",
+                 pgpibPvt->portName,addr);
+            return;
+        }
+        pnode = &pgpibPvt->pollList[addr].secondary[secondary];
+    }
+    if(pnode->pollIt==onOff) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s asynGpib:pollAddr addr %d poll state not changed\n",
+             pgpibPvt->portName,addr);
         return;
     }
-    if(addr<100) {
-	assert(addr>=0 && addr<NUM_GPIB_ADDRESSES);
-	pgpibPvt->pollList[addr].primary.pollIt = onOff;
-	return;
+    if(onOff) {
+        asynInterface *pasynInterface;
+
+        pnode->pollIt = 0; /*initialize to 0 in case of failure*/
+        pnode->pasynUser = pasynManager->createAsynUser(0,0);
+        pnode->pasynUser->userPvt = pgpibPvt;
+        status = pasynManager->connectDevice(pnode->pasynUser,
+            pgpibPvt->portName,addr);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollAddr %s\n",
+                pgpibPvt->portName,pasynUser->errorMessage);
+                return;
+        }
+        pasynInterface = pasynManager->findInterface(pnode->pasynUser,
+                 asynCommonType,0);
+        if(!pasynInterface) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollIt cant find interface asynCommon\n",
+                pgpibPvt->portName);
+            return;
+        }
+        pnode->pasynCommon = (asynCommon *)pasynInterface->pinterface;
+        pnode->drvPvt = pasynInterface->drvPvt;
+        pnode->pollIt = 1;
+    } else {
+        pnode->pollIt = 0;
+        status = pasynManager->freeAsynUser(pnode->pasynUser);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s asynGpib:pollAddr %s\n",
+                pgpibPvt->portName,pasynUser->errorMessage);
+        }
+        pnode->pasynUser = 0;
     }
-    primary = addr/100; secondary = primary%100;
-    assert(primary>=0 && primary<NUM_GPIB_ADDRESSES);
-    assert(secondary>=0 && secondary<NUM_GPIB_ADDRESSES);
-    pgpibPvt->pollList[addr].secondary[secondary].pollIt = onOff;
 }
 
 /* The following are called by low level gpib drivers */
