@@ -99,14 +99,14 @@ printf("pasynUser %p\n",pasynUser);
     pmyData->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pmyData->drvPvt = pasynInterface->drvPvt;
     pmyData->done = epicsEventCreate(epicsEventEmpty);
+    pasynUserDuplicate = pasynManager->duplicateAsynUser(pasynUser,queueCallback,0);
+printf("pasynUserDuplicate %p\n",pasynUserDuplicate);
+    pasynUserDuplicate->userPvt = pmyData;
     status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueRequest failed %s\n",pasynUser->errorMessage);
     }
-    pasynUserDuplicate = pasynManager->duplicateAsynUser(pasynUser,queueCallback,0);
-printf("pasynUserDuplicate %p\n",pasynUserDuplicate);
-    pasynUserDuplicate->userPvt = pmyData;
     status = pasynManager->queueRequest(pasynUserDuplicate,asynQueuePriorityLow, 0.0);
     if(status) {
         asynPrint(pasynUserDuplicate,ASYN_TRACE_ERROR,
