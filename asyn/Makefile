@@ -42,11 +42,13 @@ INC += asynInterposeEos.h
 INC += asynInt32.h asynFloat64.h asynInt32Callback.h asynFloat64Callback.h
 INC += asynInt32ArrayCallback.h asynFloat64ArrayCallback.h
 INC += asynOctet.h asynOption.h
+INC += asynUtils.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 asyn_SRCS += devAoAsynInt32.c
+asyn_SRCS += asynUtils.c
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
