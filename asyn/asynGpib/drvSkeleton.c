@@ -146,7 +146,8 @@ int skeletonDriverConfig(const char *name, /*Start of device dependent args*/)
         "skeletonDriverConfig");
     pskeletonPvt->portName = portName;
     pskeletonPvt->pgpibPvt = pasynGpibUser->registerPort(
-        pskeletonPvt,portName,
+        portName,
+        ASYN_MULTIDEVICE|ASYN_CANBLOCK, autoConnect,
         &skeletonDriver,pskeletonPvt,
         epicsThreadPriorityLow,epicsThreadGetStackSize(epicsThreadStackSmall));
 }
