@@ -1,0 +1,7 @@
+include "base.dbd"
+include "asyn.dbd"
+include "devAsyn.dbd"
+#include "drvIpac.dbd"
+#include "tyGSOctal.dbd"
+include "testGpibSerialInclude.dbd"
+registrar(vipc616Registrar)
