@@ -57,6 +57,7 @@ typedef struct devPvt{
     int               gotValue;
     epicsUInt32        value;
     epicsUInt32        mask;
+    interruptCallbackUInt32Digital interruptCallback;
     CALLBACK          callback;
     IOSCANPVT         ioScanPvt;
     char              *portName;
@@ -185,17 +186,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     }
     pPvt->puint32 = pasynInterface->pinterface;
     pPvt->uint32Pvt = pasynInterface->drvPvt;
+    pPvt->interruptCallback = interruptCallback;
     scanIoInit(&pPvt->ioScanPvt);
-    status = pPvt->puint32->registerInterruptUser(
-        pPvt->uint32Pvt,pPvt->pasynUser,
-        interruptCallback,pPvt,pPvt->mask,&pPvt->registrarPvt);
-    if(status!=asynSuccess) {
-        /* The likely reason for an error is that this driver does not
-         * support interrupts on this interface.  Ignore for now
-         * printf("%s devAsynUInt32Digital registerInterruptUser %s\n",
-         *  pr->name,pPvt->pasynUser->errorMessage);
-         */
-    }
     return 0;
 bad:
    pr->pact=1;
@@ -205,7 +197,30 @@ bad:
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
+    asynStatus status;
 
+    if (cmd == 0) {
+        /* Add to scan list.  Register interrupts */
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynUInt32Digital::getIoIntInfo registering interrupt\n",
+            pr->name);
+        status = pPvt->puint32->registerInterruptUser(
+            pPvt->uint32Pvt,pPvt->pasynUser,
+            pPvt->interruptCallback,pPvt,pPvt->mask,&pPvt->registrarPvt);
+        if(status!=asynSuccess) {
+            printf("%s devAsynUInt32Digital registerInterruptUser %s\n",
+                   pr->name,pPvt->pasynUser->errorMessage);
+        }
+    } else {
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynUInt32Digital::getIoIntInfo cancelling interrupt\n",
+             pr->name);
+        status = pPvt->puint32->cancelInterruptUser(pPvt->registrarPvt, pPvt->pasynUser);
+        if(status!=asynSuccess) {
+            printf("%s devAsynUInt32Digital cancelInterruptUser %s\n",
+                   pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
     *iopvt = pPvt->ioScanPvt;
     return 0;
 }
@@ -347,14 +362,12 @@ static long initBo(boRecord *pbo)
     pPvt = pbo->dpvt;
     pbo->mask = pPvt->mask;
     /* Read the current value from the device */
-/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pbo->rval = value;
         return 0;
     }
-*/
     return 2; /* Do not convert */
 }
 
@@ -432,11 +445,9 @@ static long initLo(longoutRecord *pr)
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
-/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
     if (status == asynSuccess) pr->val = value;
-*/
     return 0;
 }
 
@@ -516,14 +527,12 @@ static long initMbbo(mbboRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
-/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
         return 0;
     }
-*/
     return 2;
 }
 static long processMbbo(mbboRecord *pr)
@@ -623,14 +632,12 @@ static long initMbboDirect(mbboDirectRecord *pr)
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
     /* Read the current value from the device */
-/*
     status = pasynUInt32DigitalSyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
         return 0;
     }
-*/
     return 2;
 }
 static long processMbboDirect(mbboDirectRecord *pr)
