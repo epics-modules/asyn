@@ -1223,7 +1223,11 @@ static asynStatus isConnected(asynUser *pasynUser,int *yesNo)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    assert(pdpCommon);
+    if(!pdpCommon) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:isConnected asynUser not connected to device\n");
+        return asynError;
+    }
     *yesNo = pdpCommon->connected;
     return asynSuccess;
 }
@@ -1233,7 +1237,11 @@ static asynStatus isEnabled(asynUser *pasynUser,int *yesNo)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    assert(pdpCommon);
+    if(!pdpCommon) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:isEnabled asynUser not connected to device\n");
+        return asynError;
+    }
     *yesNo = pdpCommon->enabled;
     return asynSuccess;
 }
@@ -1243,7 +1251,11 @@ static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo)
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     dpCommon *pdpCommon = findDpCommon(puserPvt);
 
-    assert(pdpCommon);
+    if(!pdpCommon) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:isAutoConnect asynUser not connected to device\n");
+        return asynError;
+    }
     *yesNo = pdpCommon->autoConnect;
     return asynSuccess;
 }
