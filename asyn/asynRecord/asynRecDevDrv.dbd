@@ -1,2 +1,0 @@
-include "asynRecord.dbd"
-driver(drvAsyn)
