@@ -1125,8 +1125,6 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     int nchars;
 
-    if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0)
-        return -1;
     nchars = pasynOctet->write(asynOctetPvt,pgpibDpvt->pasynUser,message,len);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nchars,
         "%s writeIt\n",precord->name);
@@ -1143,6 +1141,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     if(respond2Writes>=0 && rspLen>0) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
         if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
+        if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
         if (pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,rsp,rspLen) < 0){
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s respond2Writes read failed\n", precord->name);
