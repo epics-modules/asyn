@@ -1,0 +1,12 @@
+#after 3.14.6 the following is no longer needed
+$(COMMON_DIR)/%.dbd: $(COMMON_DIR)/%Include.dbd
+	@$(RM) $@$(DEP)
+	@$(DBDDEPENDS_CMD)
+	@echo "Expanding dbd"
+	@$(RM) $@
+	$(DBEXPAND) $(DBDFLAGS) -o $@ $<
+
+$(COMMON_DIR)/%Include.dbd:
+	@$(RM) $@
+	$(PERL) $(TOP)/configure/makeIncludeDbd.pl $($*_DBD) $@
+
