@@ -130,7 +130,7 @@ epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 static void commonGpibPvtInit(void);
 static deviceInterface *createDeviceInteface(
     int link,asynUser *pasynUser,const char *interfaceName);
-static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link);
+static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link,int gpibAddr);
 
 /*Process routines */
 static void queueIt(gpibDpvt *pgpibDpvt,int isLocked);
@@ -198,10 +198,9 @@ static long initRecord(dbCommon *precord, struct link *plink)
     pasynUser->timeout = pdevGpibParmBlock->timeout;
     pgpibDpvt->pasynUser = pasynUser;
     pgpibDpvt->pdevGpibParmBlock = pdevGpibParmBlock;
-    pgpibDpvt->pasynUser->addr = gpibAddr;
     pgpibDpvt->precord = precord;
     pgpibDpvt->parm = parm;
-    if(getDeviceInterface(pgpibDpvt,link)) {
+    if(getDeviceInterface(pgpibDpvt,link,gpibAddr)) {
         printf("%s: init_record : no driver for link %d\n",precord->name,link);
         precord->pact = TRUE;	/* keep record from being processed */
 	free(pasynUser);
@@ -323,7 +322,7 @@ static void report(int interest)
             pdeviceInterface->pasynGpib);
         if(pdeviceInterface->pasynCommon) {
             pdeviceInterface->pasynCommon->report(
-                pdeviceInterface->asynCommonPvt,interest);
+                pdeviceInterface->asynCommonPvt,stdout,interest);
         }
         pdeviceInstance = (deviceInstance *)ellFirst(
             &pdeviceInterface->deviceInstanceList);
@@ -477,11 +476,10 @@ static deviceInterface *createDeviceInteface(
     return(pdeviceInterface);
 }
 
-static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
+static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     asynUser *pasynUser = pgpibDpvt->pasynUser;
-    int gpibAddr = pasynUser->addr;
     char interfaceName[80];
     deviceInterface *pdeviceInterface;
     deviceInstance *pdeviceInstance;
@@ -489,7 +487,7 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
    
     if(!pcommonGpibPvt) commonGpibPvtInit();
     sprintf(interfaceName,"gpibL%d",link);
-    status = pasynManager->connectPort(pasynUser,interfaceName);
+    status = pasynManager->connectDevice(pasynUser,interfaceName,gpibAddr);
     if(status!=asynSuccess) {
        printf("devSupportGpib:getDeviceInterface link %d %s failed %s\n",
 	   link,interfaceName,pasynUser->errorMessage);
