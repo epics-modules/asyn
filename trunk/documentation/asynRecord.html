@@ -43,7 +43,7 @@ device support code in many applications.
   <li>Control the the baud rate, parity, etc. for local serial ports.</li>
   <li>Control the GPIB address and execute global and addressed commands for 
   GPIB devices.</li>
-  <li>Create asyn socket ports  dynamically at run time for new TCP/IP 
+  <li>Create asyn socket ports  dynamically at run time for new TCP/IP or UDP/IP
   connections.</li>
   </ul>
 <P>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The
@@ -106,11 +106,12 @@ the &quot;Access&quot; columns in the field description tables:
     <TD>R/W</TD>
     <TD>&quot;Socket address&quot;</TD>
     <TD>DBF_STRING</TD>
-    <TD>The name of a server:port for a TCP/IP socket connection.&nbsp; This 
-    field can be changed at any time to connect to a new TCP/IP socket.&nbsp; It 
+    <TD>The name of a server:port for a TCP/IP or UDP/IP socket
+    connection.&nbsp; This field can be changed at any time to connect to a new socket.&nbsp; It 
     creates a new port with the same name as the socket string, and connects the 
-    record to that port.&nbsp; Syntax is server:port, e.g. corvette:21 or 
-    164.54.160.50:21</TD>
+    record to that port.&nbsp; Syntax is "server:port [protocol]",
+    e.g. "corvette:21",  "164.54.160.50:21", or "corvette:21 udp".  The protocol
+    specifier is optional.  TCP is used by default.</TD>
   </tr>
 </TABLE>
 <P>The asyn record does not have traditional INP or OUT fields for input 
