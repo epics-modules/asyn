@@ -475,7 +475,7 @@ static void monitorStatus(asynRecord *pasynRec)
     FILE *traceFd;
     int yesNo;
 
-    monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+    monitor_mask = DBE_VALUE | DBE_LOG;
     
     trace_mask = pasynTrace->getTraceMask(pasynUser);
     pasynRec->tb0 = (trace_mask & ASYN_TRACE_ERROR)    ? 1 : 0;
