@@ -1085,7 +1085,7 @@ text {
 		args="P=$(P),R=$(R)"
 	}
 	display[3] {
-		label="Small display"
+		label="Normal screen"
 		name="asynRecord.adl"
 		args="P=$(P),R=$(R)"
 		policy="replace display"

@@ -89,7 +89,7 @@ display {
 }
 composite {
 	object {
-		x=19
+		x=34
 		y=8
 		width=203
 		height=29
@@ -98,7 +98,7 @@ composite {
 	children {
 		rectangle {
 			object {
-				x=19
+				x=34
 				y=8
 				width=203
 				height=29
@@ -109,7 +109,7 @@ composite {
 		}
 		text {
 			object {
-				x=22
+				x=37
 				y=12
 				width=199
 				height=21
