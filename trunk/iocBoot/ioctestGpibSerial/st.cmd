@@ -12,12 +12,12 @@ drvAsynTCPPortConfigure("L0","164.54.9.90:4004",0,0)
 
 #The following commands are for a local serial line
 #drvAsynLocalSerialPortConfigure("L0","/dev/cua/a",0,0)
-#asynSetPortOption("L0", "baud", "9600")
-#asynSetPortOption("L0", "bits", "8")
-#asynSetPortOption("L0", "parity", "none")
-#asynSetPortOption("L0", "stop", "1")
-#asynSetPortOption("L0", "clocal", "Y")
-#asynSetPortOption("L0", "crtscts", "N")
+#asynSetOption("L0", -1, "baud", "9600")
+#asynSetOption("L0", -1, "bits", "8")
+#asynSetOption("L0", -1, "parity", "none")
+#asynSetOption("L0", -1, "stop", "1")
+#asynSetOption("L0", -1, "clocal", "Y")
+#asynSetOption("L0", -1, "crtscts", "N")
 
 #asynSetTraceMask("L0",-1,0xff)
 #asynSetTraceIOMask("L0",-1,0x2)
