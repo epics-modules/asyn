@@ -1,5 +1,5 @@
 /**********************************************************************
-* Asyn device support using local serial interface                    *
+* Asyn device support using TCP stream port                           *
 **********************************************************************/       
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.2 2004-04-05 20:56:31 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.3 2004-04-08 22:17:58 norume Exp $
  */
 
 #include <string.h>
@@ -204,6 +204,8 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
     tty->readPollmsec = -1;
     tty->writePollmsec = -1;
     tty->consecutiveReadTimeouts = 0;
+    tty->inBufferHead = tty->inBufferTail = 0;
+    tty->eosMatch = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->serialDeviceName);
     pasynManager->exceptionConnect(pasynUser);
@@ -376,8 +378,6 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
     for (;;) {
         if ((tty->inBufferTail != tty->inBufferHead)) {
             char c = *data++ = tty->inBuffer[tty->inBufferTail++];
-            if (tty->inBufferTail == INBUFFER_SIZE)
-                tty->inBufferTail = 0;
             nRead++;
             tty->nRead++;
             if (tty->eoslen != 0) {
@@ -417,10 +417,6 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
                 closeConnection(tty);
             break;
         }
-        if (tty->inBufferHead >= tty->inBufferTail)
-            thisRead = INBUFFER_SIZE - tty->inBufferHead;
-        else
-            thisRead = tty->inBufferTail;
         if (!timerStarted && (tty->readTimeout > 0)) {
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
@@ -433,14 +429,13 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
         poll(&pollfd, 1, tty->readPollmsec);
         }
 #endif
-        thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
+        thisRead = read(tty->fd, tty->inBuffer, INBUFFER_SIZE);
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
-                        tty->inBuffer + tty->inBufferHead, thisRead,
+                        tty->inBuffer, thisRead,
                        "%s read %d ", tty->serialDeviceName, thisRead);
-            tty->inBufferHead += thisRead;
-            if (tty->inBufferHead == INBUFFER_SIZE)
-                tty->inBufferHead = 0;
+            tty->inBufferHead = thisRead;
+            tty->inBufferTail = 0;
             tty->consecutiveReadTimeouts = 0;
         }
         else {
