@@ -1,4 +1,4 @@
-registerRecordDeviceDriver(pdbbase)
+test_registerRecordDeviceDriver(pdbbase)
 
 echoDriverInit(echo,1.0)
 testEcho(echo,one,5,10.0)

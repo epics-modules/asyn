@@ -20,27 +20,23 @@
 #include <epicsExport.h>
 #include <iocsh.h>
 
-#include <drvGpib.h>
+#include <gpibDriver.h>
 
 typedef struct skeletonPvt {
     char *deviceName;
     void *pgpibPvt;
 }skeletonPvt;
 
-static void report(void *pdrvPvt,asynUser *pasynUser,int details);
-static void connect(void *pdrvPvt,asynUser *pasynUser);
-static void disconnect(void *pdrvPvt,asynUser *pasynUser);
+static void report(void *pdrvPvt,int details);
+static asynStatus connect(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser);
 /*octetDriver methods */
-static int read(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
-static int write(void *pdrvPvt,asynUser *pasynUser,
+static int gpibRead(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
                     int addr,const char *data,int numchars;
-static asynStatus flush(void *pdrvPvt,asynUser *pasynUser,int addr);
+static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser,int addr);
 static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
-static asynStatus installPeekHandler(void *pdrvPvt,asynUser *pasynUser,peekHandler handler);
-static asynStatus removePeekHandler(void *pdrvPvt,asynUser *pasynUser);
 /*gpibDriver methods*/
-static asynStatus registerSrqHandler(void *pdrvPvt,asynUser *pasynUser,
-     srqHandler handler, void *userPrivate;
 static asynStatus addressedCmd (void *pdrvPvt,asynUser *pasynUser,
     int addr, char *data, int length;
 static asynStatus universalCmd (void *pdrvPvt, asynUser *pasynUser, int cmd);
@@ -52,47 +48,33 @@ static asynStatus serialPollBegin (void *pdrvPvt);
 static int serialPoll (void *pdrvPvt, int addr, double timeout);
 static asynStatus serialPollEnd (void *pdrvPvt);
 
-static void report(void *pdrvPvt,asynUser *pasynUser,int details)
+static void report(void *pdrvPvt,int details)
 {
 }
 
-static void connect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 {
 }
 
-static void disconnect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser)
 {
 }
 
 /*octetDriver methods */
-static int read(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars)
+static int gpibRead(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars)
 {
 }
 
-static int write(void *pdrvPvt,asynUser *pasynUser,
+static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
                     int addr,const char *data,int numchars
 {
 }
 
-static asynStatus flush(void *pdrvPvt,asynUser *pasynUser,int addr)
+static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser,int addr)
 {
 }
 
 static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen)
-{
-}
-
-static asynStatus installPeekHandler(void *pdrvPvt,asynUser *pasynUser,peekHandler handler)
-{
-}
-
-static asynStatus removePeekHandler(void *pdrvPvt,asynUser *pasynUser)
-{
-}
-
-/*gpibDriver methods*/
-static asynStatus registerSrqHandler(void *pdrvPvt,asynUser *pasynUser,
-    srqHandler handler, void *userPrivate
 {
 }
 
@@ -137,9 +119,9 @@ static gpibDriver skeletonDriver = {
     report,
     connect,
     disconnect,
-    read,
-    write,
-    flush,
+    gpibRead,
+    gpibWrite,
+    gpibFlush,
     setEos,
     installPeekHandler,
     removePeekHandler,

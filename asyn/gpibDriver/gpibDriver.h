@@ -11,41 +11,37 @@
 #define IBSPE 0x18      /* Serial Poll Enable */
 #define IBSPD 0x19      /* Serial Poll Disable */
 
+#define NUM_GPIB_ADDRESSES    32
 #include "asynDriver.h"
-#define gpibDriverUserType "gpibDriverUser"
+#define gpibDriverType "gpibDriver"
 /* GPIB drivers */
 typedef void (*srqHandler)(void *userPrivate,int gpibAddr,int statusByte);
-typedef struct gpibDriverUser gpibDriverUser;
 typedef struct gpibDriver gpibDriver;
-struct gpibDriverUser{
-    /* The following are called by gpib aware users*/
-    asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
-        srqHandler handler, void *userPrivate);
-    asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
+typedef struct gpibDevice gpibDevice;
+/*gpibDriver defines methods called by gpib aware users*/
+struct gpibDriver{
+    /*addressedCmd,...,ren are just passed to device handler*/
+    asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
         int addr, const char *data, int length);
-    asynStatus (*universalCmd) (void *pdrvPvt,asynUser *pasynUser, int cmd);
-    asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
-    asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
-    void (*pollAddr)(void *pdrvPvt,asynUser *pasynUser,int addr, int onOff);
-    void (*srqProcessing)(void *pdrvPvt,asynUser *pasynUser, int onOff);
-    void (*srqSet)(void *pdrvPvt,asynUser *pasynUser,
-        double srqTimeout,double pollTimeout,double pollRate,
-        int srqMaxEvents);
-    void (*srqGet)(void *pdrvPvt,asynUser *pasynUser,
-        double *srqTimeout,double *pollTimeout,double *pollRate,
-        int *srqMaxEvents);
+    asynStatus (*universalCmd) (void *drvPvt,asynUser *pasynUser, int cmd);
+    asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
+    asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
+    /* The following are implemented by gpibDriver */
+    asynStatus (*registerSrqHandler)(void *drvPvt,asynUser *pasynUser,
+        srqHandler handler, void *srqHandlerPvt);
+    void (*pollAddr)(void *drvPvt,asynUser *pasynUser,int addr, int onOff);
     /* The following are called by low level gpib drivers */
     /*registerDevice returns pointer passed to srqHappened*/
     void *(*registerDevice)(
         const char *deviceName,
-        gpibDriver *pgpibDriver, void *pdrvPvt,
+        gpibDevice *pgpibDevice, void *gpibDevicePvt,
         unsigned int priority, unsigned int stackSize);
-    void (*srqHappened)(void *pgpibPvt);
+    void (*srqHappened)(void *gpibDriverPvt);
 };
-epicsShareExtern gpibDriverUser *pgpibDriverUser;
-/*gpibDriverUser is the driver called by user callbacks.
+epicsShareExtern gpibDriver *pgpibDriver;
+/*gpibDriver is the driver called by user callbacks.
  * It handles SRQ processing, etc. It calls interface specific
- * drivers. The interface specific drivers register with gpibDriverUser
+ * drivers. The interface specific drivers register with gpibDriver
  * which then registers with asynDriver.
  *
  * registerSrqHandler - registers an SRQ handler for addr.
@@ -54,43 +50,39 @@ epicsShareExtern gpibDriverUser *pgpibDriverUser;
  * ifc - Issue an Interface clear
  * ren - if onOff = (0,1) set REN (off,on)
  * registerDevice - A gpib interface driver calls this for each gpib interface.
- *                  gpibDriverUser registers the same name with asynDriver
+ *                  gpibDriver registers the same name with asynDriver
  */
 
-struct gpibDriver {
-    void (*report)(void *pdrvPvt,asynUser *pasynUser,int details);
-    asynStatus (*connect)(void *pdrvPvt,asynUser *pasynUser);
-    asynStatus (*disconnect)(void *pdrvPvt,asynUser *pasynUser);
-    /*octetDriver methods */
-    int (*read)(void *pdrvPvt,asynUser *pasynUser,
+struct gpibDevice {
+    /*asynDriver methods */
+    void (*report)(void *drvPvt,int details);
+    asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
+    /*octetDriver methods passed through from gpibDriver*/
+    int (*read)(void *drvPvt,asynUser *pasynUser,
                 int addr,char *data,int maxchars);
-    int (*write)(void *pdrvPvt,asynUser *pasynUser,
+    int (*write)(void *drvPvt,asynUser *pasynUser,
                 int addr,const char *data,int numchars);
-    asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser,
-                asynTimeoutType type,double timeout);
-    asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,peekHandler handler);
-    asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
-    /*gpibDriver methods*/
-    asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
-        srqHandler handler, void *userPrivate);
-    asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
+    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser,int addr);
+    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
+                int addr,const char *eos,int eoslen);
+    /*gpibDriver methods passed thrtough from gpibDriver*/
+    asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
         int addr, const char *data, int length);
-    asynStatus (*universalCmd) (void *pdrvPvt, asynUser *pasynUser, int cmd);
-    asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
-    asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
-    int (*srqStatus) (void *pdrvPvt);
-    asynStatus (*srqEnable) (void *pdrvPvt, int onOff);
-    asynStatus (*serialPollBegin) (void *pdrvPvt);
-    int (*serialPoll) (void *pdrvPvt, int addr, double timeout);
-    asynStatus (*serialPollEnd) (void *pdrvPvt);
+    asynStatus (*universalCmd) (void *drvPvt, asynUser *pasynUser, int cmd);
+    asynStatus (*ifc) (void *drvPvt,asynUser *pasynUser);
+    asynStatus (*ren) (void *drvPvt,asynUser *pasynUser, int onOff);
+    /*gpibDevice specific methods */
+    int (*srqStatus) (void *drvPvt);
+    asynStatus (*srqEnable) (void *drvPvt, int onOff);
+    asynStatus (*serialPollBegin) (void *drvPvt);
+    int (*serialPoll) (void *drvPvt, int addr, double timeout);
+    asynStatus (*serialPollEnd) (void *drvPvt);
 };
-/*gpibDriver is implemented by an interface specific driver.
- *registerSrqHandler, ..., ren are just like for gpibDriverUser.
+/*gpibDevice is implemented by an interface specific driver.
+ *addressedCmd, ..., ren are just like for gpibDriverUser.
  *srqStatus - Returns (0,1) if SRQ (is not, is) set
- *srqEnable - enables SRQs
- *srqDisable - disables SRQs
+ *srqEnable - enables/disables SRQs
  *serialPollBegin - Start of a serial poll
  *serialPoll - Poll a specific addresss
  *serialPollEnd - End of serial poll

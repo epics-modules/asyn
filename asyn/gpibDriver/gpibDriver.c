@@ -30,6 +30,7 @@
 #define BOOL int
 #define TRUE 1
 #define FALSE 0
+#define SRQTIMEOUT 2.0
 
 typedef struct gpibBase {
     ELLLIST gpibPvtList;
@@ -37,79 +38,92 @@ typedef struct gpibBase {
 }gpibBase;
 static gpibBase *pgpibBase = 0;
 
+typedef struct pollListNode {
+    int pollIt;
+    int statusByte;
+}pollListNode;
+
+typedef struct pollListPrimary {
+    pollListNode primary;
+    pollListNode secondary[NUM_GPIB_ADDRESSES];
+}pollListPrimary;
+
 typedef struct gpibPvt {
     ELLNODE node;
+    pollListPrimary pollList[NUM_GPIB_ADDRESSES];
     epicsMutexId lock;
     const char *deviceName;
-    gpibDriver *pgpibDriver;
-    void *pdrvPvt;
+    gpibDevice *pgpibDevice;
+    void *gpibDevicePvt;
+    asynUser *pasynUser;
+    peekHandler peek_handler;
+    void * peekHandlerPvt;
+    srqHandler srq_handler;
+    void *srqHandlerPvt;
 }gpibPvt;
+
+#define GETgpibPvtgpibDevice \
+    gpibPvt *pgpibPvt = (gpibPvt *)drvPvt; \
+    gpibDevice *pgpibDevice; \
+    assert(pgpibPvt); \
+    pgpibDevice = pgpibPvt->pgpibDevice; \
+    assert(pgpibDevice);
 
 /* forward reference to internal methods */
 static void gpibInit(void);
 static gpibPvt *locateGpibPvt(const char *deviceName);
+static void srqPoll(void *drvPvt);
 /*asynDriver methods */
-static void report(void *pdrvPvt,asynUser *pasynUser,int details);
-static asynStatus connect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser);
+static void report(void *drvPvt,int details);
+static asynStatus connect(void *drvPvt,asynUser *pasynUser);
+static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*octetDriver methods */
-static int gpibRead(void *pdrvPvt,asynUser *pasynUser,
+static int gpibRead(void *drvPvt,asynUser *pasynUser,
     int addr,char *data,int maxchars);
-static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
+static int gpibWrite(void *drvPvt,asynUser *pasynUser,
     int addr,const char *data,int numchars);
-static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser,int addr);
-static asynStatus setTimeout(void *pdrvPvt,asynUser *pasynUser,
-    asynTimeoutType type,double timeout);
-static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen);
-static asynStatus installPeekHandler(void *pdrvPvt,asynUser *pasynUser,
-    peekHandler handler);
-static asynStatus removePeekHandler(void *pdrvPvt,asynUser *pasynUser);
+static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser,int addr);
+static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
+    int addr, const char *eos,int eoslen);
+static asynStatus installPeekHandler(void *drvPvt,asynUser *pasynUser,
+    peekHandler handler, void *peekHandlerPvt);
+static asynStatus removePeekHandler(void *drvPvt,asynUser *pasynUser);
 /*gpibDriver methods*/
-static asynStatus registerSrqHandler(void *pdrvPvt,asynUser *pasynUser,
-    srqHandler handler, void *userPrivate);
-static asynStatus addressedCmd(void *pdrvPvt,asynUser *pasynUser,
+static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
     int addr, const char *data, int length);
-static asynStatus universalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd);
-static asynStatus ifc (void *pdrvPvt,asynUser *pasynUser);
-static asynStatus ren (void *pdrvPvt,asynUser *pasynUser, int onOff);
-static void pollAddr(void *pdrvPvt,asynUser *pasynUser,int addr, int onOff);
-static void srqProcessing(void *pdrvPvt,asynUser *pasynUser, int onOff);
-static void srqSet(void *pdrvPvt,asynUser *pasynUser,
-    double srqTimeout,double pollTimeout,double pollRate,
-    int srqMaxEvents);
-static void srqGet(void *pdrvPvt,asynUser *pasynUser,
-    double *srqTimeout,double *pollTimeout,double *pollRate,
-    int *srqMaxEvents);
+static asynStatus universalCmd(void *drvPvt, asynUser *pasynUser, int cmd);
+static asynStatus ifc (void *drvPvt,asynUser *pasynUser);
+static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff);
+static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
+    srqHandler handler, void *srqHandlerPvt);
+static void pollAddr(void *drvPvt,asynUser *pasynUser,int addr, int onOff);
 /* The following are called by low level gpib drivers */
 static void *registerDevice(
         const char *deviceName,
-        gpibDriver *pgpibDriver, void *pdrvPvt,
+        gpibDevice *pgpibDevice, void *gpibDevicePvt,
         unsigned int priority, unsigned int stackSize);
 static void srqHappened(void *pgpibvt);
 
 #define NUM_INTERFACES 3
-
-static asynDriver asyn = {report,connect,disconnect};
+static asynDriver asyn = {
+   report,connect,disconnect
+};
 static octetDriver octet = {
-    gpibRead,gpibWrite,gpibFlush,
-    setTimeout, setEos,
+    gpibRead,gpibWrite,gpibFlush, setEos,
     installPeekHandler, removePeekHandler
 };
-
-static gpibDriverUser gpib = {
-    registerSrqHandler, addressedCmd, universalCmd, ifc, ren,
-    pollAddr, srqProcessing, srqSet, srqGet,
+static gpibDriver gpib = {
+    addressedCmd, universalCmd, ifc, ren,
+    registerSrqHandler, pollAddr,
     registerDevice, srqHappened
 };
-
-static driverInterface mydriverInterface[NUM_INTERFACES] = {
+static driverInterface gpibDriverInterface[NUM_INTERFACES] = {
     {asynDriverType,&asyn},
     {octetDriverType,&octet},
-    {gpibDriverUserType,&gpib}
+    {gpibDriverType,&gpib}
 };
 
-epicsShareDef gpibDriverUser *pgpibDriverUser = &gpib;
+epicsShareDef gpibDriver *pgpibDriver = &gpib;
 
 /*internal methods */
 static void gpibInit(void)
@@ -130,162 +144,197 @@ static gpibPvt *locateGpibPvt(const char *deviceName)
     }
     return(0);
 }
+static void srqPoll(void *drvPvt)
+{
+    GETgpibPvtgpibDevice
+    int srqStatus,primary,secondary;
+
+    srqStatus = pgpibDevice->srqStatus(pgpibPvt->gpibDevicePvt);
+    while(srqStatus) {
+        pgpibDevice->serialPollBegin(pgpibPvt->gpibDevicePvt);
+        for(primary=0; primary<NUM_GPIB_ADDRESSES; primary++) {
+            pollListPrimary *ppollListPrimary = &pgpibPvt->pollList[primary];
+            pollListNode *ppollListNode = &ppollListPrimary->primary;
+            int statusByte;
+    
+            if(ppollListNode->pollIt) {
+                statusByte = pgpibDevice->serialPoll(
+                    pgpibPvt->gpibDevicePvt,primary,SRQTIMEOUT);
+                if(statusByte) {
+                    pgpibPvt->srq_handler(pgpibPvt->srqHandlerPvt,
+                        primary,statusByte);
+                }
+            }
+            for(secondary=0; secondary<NUM_GPIB_ADDRESSES; secondary++) {
+                ppollListNode = &ppollListPrimary->secondary[secondary];
+                if(ppollListNode->pollIt) {
+                    int addr = primary*100+secondary;
+                    statusByte = pgpibDevice->serialPoll(
+                        pgpibPvt->gpibDevicePvt,addr,SRQTIMEOUT);
+                    if(statusByte) {
+                        pgpibPvt->srq_handler(pgpibPvt->peekHandlerPvt,
+                            addr,statusByte);
+                    }
+                }
+            }
+        }
+        pgpibDevice->serialPollBegin(pgpibPvt->gpibDevicePvt);
+        srqStatus = pgpibDevice->srqStatus(pgpibPvt->gpibDevicePvt);
+        if(!srqStatus) break;
+        printf("%s after srqPoll srqStatus is %x Why?\n",
+            pgpibPvt->deviceName,srqStatus);
+    }
+}
 
 /*asynDriver methods */
-static void report(void *pdrvPvt,asynUser *pasynUser,int details)
+static void report(void *drvPvt,int details)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    pgpibDriver->report(pgpibPvt->pdrvPvt,pasynUser,details);
+    GETgpibPvtgpibDevice
+    pgpibDevice->report(pgpibPvt->gpibDevicePvt,details);
 }
 
-static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->connect(pgpibPvt->pdrvPvt,pasynUser));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->connect(pgpibPvt->gpibDevicePvt,pasynUser));
 }
 
-static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser)
+static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->disconnect(pgpibPvt->pdrvPvt,pasynUser));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->disconnect(pgpibPvt->gpibDevicePvt,pasynUser));
 }
 
 /*octetDriver methods */
-static int gpibRead(void *pdrvPvt,asynUser *pasynUser,
+static int gpibRead(void *drvPvt,asynUser *pasynUser,
     int addr,char *data,int maxchars)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->read(pgpibPvt->pdrvPvt,pasynUser,
-           addr,data,maxchars));
+    GETgpibPvtgpibDevice
+    int nchars;
+    nchars = pgpibDevice->read(pgpibPvt->gpibDevicePvt,pasynUser,
+           addr,data,maxchars);
+    if(nchars>0 && pgpibPvt->peek_handler) {
+        int i;
+        for(i=0; i<nchars; i++) {
+            pgpibPvt->peek_handler(pgpibPvt->peekHandlerPvt,
+                data[i],1,(i==(nchars-1) ? 1 : 0));
+        }
+    }
+    return(nchars);
 }
 
-static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
+static int gpibWrite(void *drvPvt,asynUser *pasynUser,
                     int addr,const char *data,int numchars)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->write(pgpibPvt->pdrvPvt,pasynUser,
-           addr,data,numchars));
+    GETgpibPvtgpibDevice
+    int nchars;
+    nchars = pgpibDevice->write(pgpibPvt->gpibDevicePvt,pasynUser,
+           addr,data,numchars);
+    if(nchars>0 && pgpibPvt->peek_handler) {
+        int i;
+        for(i=0; i<nchars; i++) {
+            pgpibPvt->peek_handler(pgpibPvt->peekHandlerPvt,
+                data[i],0,(i==(nchars-1) ? 1 : 0));
+        }
+    }
+    return(nchars);
 }
 
-static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser,int addr)
+static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser,int addr)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->flush(pgpibPvt->pdrvPvt,pasynUser,addr));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->flush(pgpibPvt->gpibDevicePvt,pasynUser,addr));
 }
 
-static asynStatus setTimeout(void *pdrvPvt,asynUser *pasynUser,
-    asynTimeoutType type,double timeout)
+static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
+    int addr, const char *eos,int eoslen)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->setTimeout(pgpibPvt->pdrvPvt,pasynUser,type,timeout));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->setEos(pgpibPvt->gpibDevicePvt,pasynUser,addr,eos,eoslen));
 }
 
-static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,
-    const char *eos,int eoslen)
+static asynStatus installPeekHandler(void *drvPvt,asynUser *pasynUser,
+    peekHandler handler, void *peekHandlerPvt)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->setEos(pgpibPvt->pdrvPvt,pasynUser,eos,eoslen));
+    GETgpibPvtgpibDevice
+    pgpibPvt->peekHandlerPvt = peekHandlerPvt;
+    pgpibPvt->peek_handler = handler;
+    return(asynSuccess);
 }
 
-static asynStatus installPeekHandler(void *pdrvPvt,asynUser *pasynUser,
-    peekHandler handler)
+static asynStatus removePeekHandler(void *drvPvt,asynUser *pasynUser)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->installPeekHandler(pgpibPvt->pdrvPvt,pasynUser,handler));
-}
-
-static asynStatus removePeekHandler(void *pdrvPvt,asynUser *pasynUser)
-{
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->removePeekHandler(pgpibPvt->pdrvPvt,pasynUser));
+    GETgpibPvtgpibDevice
+    pgpibPvt->peek_handler = 0;
+    pgpibPvt->peekHandlerPvt = 0;
+    return(asynSuccess);
 }
 
-/*gpibDriverUser methods */
-static asynStatus registerSrqHandler(void *pdrvPvt,asynUser *pasynUser,
-     srqHandler handler, void *userPrivate)
-{
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->registerSrqHandler(pgpibPvt->pdrvPvt,pasynUser,
-           handler,userPrivate));
-}
-
-static asynStatus addressedCmd(void *pdrvPvt,asynUser *pasynUser,
+/*gpibDriver methods */
+static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
     int addr, const char *data, int length)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->addressedCmd(pgpibPvt->pdrvPvt,pasynUser,
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->addressedCmd(pgpibPvt->gpibDevicePvt,pasynUser,
            addr,data,length));
 }
 
-static asynStatus universalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
+static asynStatus universalCmd(void *drvPvt, asynUser *pasynUser, int cmd)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->universalCmd(pgpibPvt->pdrvPvt,pasynUser,cmd));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->universalCmd(pgpibPvt->gpibDevicePvt,pasynUser,cmd));
 }
 
-static asynStatus ifc (void *pdrvPvt,asynUser *pasynUser)
+static asynStatus ifc (void *drvPvt,asynUser *pasynUser)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->ifc(pgpibPvt->pdrvPvt,pasynUser));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->ifc(pgpibPvt->gpibDevicePvt,pasynUser));
 }
 
-static asynStatus ren (void *pdrvPvt,asynUser *pasynUser, int onOff)
+static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-    gpibDriver *pgpibDriver = pgpibPvt->pgpibDriver;
-    return(pgpibDriver->ren(pgpibPvt->pdrvPvt,pasynUser,onOff));
+    GETgpibPvtgpibDevice
+    return(pgpibDevice->ren(pgpibPvt->gpibDevicePvt,pasynUser,onOff));
+}
+
+static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
+     srqHandler handler, void *srqHandlerPvt)
+{
+    GETgpibPvtgpibDevice
+    asynStatus status;
+
+    if(pgpibPvt->srq_handler) {
+        printf("%s gpibDriver:registerSrqHandler. handler already registered\n",
+            pgpibPvt->deviceName);
+        return(asynError);
+    }
+    pgpibPvt->srq_handler = handler;
+    pgpibPvt->srqHandlerPvt = srqHandlerPvt;
+    status = pgpibDevice->srqEnable(pgpibPvt->gpibDevicePvt,1);
+    return(status);
 }
 
-static void pollAddr(void *pdrvPvt,asynUser *pasynUser,int addr, int onOff)
+static void pollAddr(void *drvPvt,asynUser *pasynUser,int addr, int onOff)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
+    GETgpibPvtgpibDevice
 
-    printf("gpibDriver:pollAddr not implemented %p\n",pgpibPvt);
-}
+    int primary,secondary;
 
-static void srqProcessing(void *pdrvPvt,asynUser *pasynUser, int onOff)
-{
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-
-    printf("gpibDriver:srqProcessing not implemented %p\n",pgpibPvt);
-}
-
-static void srqSet(void *pdrvPvt,asynUser *pasynUser,
-    double srqTimeout,double pollTimeout,double pollRate,
-    int srqMaxEvents)
-{
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-
-    printf("gpibDriver:srqSet not implemented %p\n",pgpibPvt);
-}
-
-static void srqGet(void *pdrvPvt,asynUser *pasynUser,
-    double *srqTimeout,double *pollTimeout,double *pollRate,
-    int *srqMaxEvents)
-{
-    gpibPvt *pgpibPvt = (gpibPvt *)pdrvPvt;
-
-    printf("gpibDriver:srqGet not implemented %p\n",pgpibPvt);
+    if(addr<100) {
+	assert(addr>=0 && addr<NUM_GPIB_ADDRESSES);
+	pgpibPvt->pollList[addr].primary.pollIt = onOff;
+	return;
+    }
+    primary = addr/100; secondary = primary%100;
+    assert(primary>=0 && primary<NUM_GPIB_ADDRESSES);
+    assert(secondary>=0 && secondary<NUM_GPIB_ADDRESSES);
+    pgpibPvt->pollList[addr].secondary[secondary].pollIt = onOff;
 }
 
 /* The following are called by low level gpib drivers */
 static void *registerDevice(
         const char *deviceName,
-        gpibDriver *pgpibDriver, void *pdrvPvt,
+        gpibDevice *pgpibDevice, void *gpibDevicePvt,
         unsigned int priority, unsigned int stackSize)
 {
     gpibPvt *pgpibPvt;
@@ -303,24 +352,35 @@ static void *registerDevice(
         "gpibDriver:registerDevice");
     pgpibPvt->lock = epicsMutexMustCreate();
     pgpibPvt->deviceName = deviceName;
-    pgpibPvt->pgpibDriver = pgpibDriver;
-    pgpibPvt->pdrvPvt = pdrvPvt;
+    pgpibPvt->pgpibDevice = pgpibDevice;
+    pgpibPvt->gpibDevicePvt = gpibDevicePvt;
     padeviceDriver = callocMustSucceed(NUM_INTERFACES,sizeof(deviceDriver),
         "echoDriverInit");
     for(i=0; i<NUM_INTERFACES; i++) {
-        padeviceDriver[i].pdriverInterface = &mydriverInterface[i];
-        padeviceDriver[i].pdrvPvt = pgpibPvt;
+        padeviceDriver[i].pdriverInterface = &gpibDriverInterface[i];
+        padeviceDriver[i].drvPvt = pgpibPvt;
     }
     ellAdd(&pgpibBase->gpibPvtList,&pgpibPvt->node);
     status = pasynQueueManager->registerDevice(deviceName,
          padeviceDriver,NUM_INTERFACES,priority,stackSize);
+    if(status==asynSuccess) {
+        pgpibPvt->pasynUser = pasynQueueManager->createAsynUser(
+            srqPoll,0,pgpibPvt);
+        status = pasynQueueManager->connectDevice(pgpibPvt->pasynUser,deviceName);
+    }
     if(status!=asynSuccess) return(0);
     return((void *)pgpibPvt);
 }
 
-static void srqHappened(void *pvt)
+static void srqHappened(void *drvPvt)
 {
-    gpibPvt *pgpibPvt = (gpibPvt *)pvt;
+    GETgpibPvtgpibDevice
+    asynStatus status;
 
-    printf("gpibDriver:srqHappened not implemented %p\n",pgpibPvt);
+    status = pasynQueueManager->queueRequest(pgpibPvt->pasynUser,
+        asynQueuePriorityLow,0.0);
+    if(status!=asynSuccess) {
+        printf("%s gpibDriver:srqHappened queueRequest failed %s\n",
+            pgpibPvt->deviceName,pgpibPvt->pasynUser->errorMessage);
+    }
 } 

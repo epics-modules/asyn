@@ -67,7 +67,7 @@ typedef struct deviceInstance {
     epicsTimeStamp timeoutTime;
     /*Following fields are for GPIBSRQHANDLER*/
     srqHandler unsollicitedHandler;
-    void *userPrivate;
+    void *unsollicitedHandlerPvt;
     /*Following fields are for GPIBREADW and GPIBEFASTIW*/
     epicsTimerId srqWaitTimer;  /*to wait for SRQ*/
     int waitForSRQ;
@@ -82,11 +82,11 @@ typedef struct deviceInterface {
     int link;
     char *interfaceName;
     asynDriver *pasynDriver;
-    void *pasynDriverPvt;
+    void *asynDriverPvt;
     octetDriver *poctetDriver;
-    void *poctetDriverPvt;
-    gpibDriverUser *pgpibDriverUser;
-    void *pgpibDriverUserPvt;
+    void *octetDriverPvt;
+    gpibDriver *pgpibDriver;
+    void *gpibDriverPvt;
     void *pupvt;                /* user defined pointer */
 }deviceInterface;
 
@@ -96,7 +96,6 @@ struct devGpibPvt {
     gpibWork work;
     gpibWork finish;
     char eos[2]; /*If GPIBEOS is specified*/
-    /*Following are used in respond2Writes is true*/
 };
 
 static long initRecord(dbCommon* precord, struct link * plink);
@@ -106,7 +105,7 @@ static void queueWriteRequest(gpibDpvt *pgpibDpvt, gpibWork finish);
 static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work);
 static void report(int level);
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
-    srqHandler handler,void *userPrivate);
+    srqHandler handler,void *unsollicitedHandlerPvt);
 static int writeMsgLong(gpibDpvt *pgpibDpvt,long val);
 static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
@@ -134,14 +133,14 @@ static deviceInterface *createDeviceInteface(
 static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link);
 
 /*Process routines */
-static void queueIt(gpibDpvt *pgpibDpvt);
+static void queueIt(gpibDpvt *pgpibDpvt,int isLocked);
 static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured);
 static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int timeoutOccured);
 static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured);
 
 /*Callback routines*/
-static void queueCallback(void *puserPvt);
-static void timeoutCallback(void *puserPvt);
+static void queueCallback(void *userPvt);
+static void timeoutCallback(void *userPvt);
 void srqHandlerGpib(void *parm, int gpibAddr, int statusByte);
 void srqWaitTimeout(void *parm);
 
@@ -149,6 +148,7 @@ void srqWaitTimeout(void *parm);
 static int checkEnums(char * msg, char **enums);
 static int waitForSRQClear(gpibDpvt *pgpibDpvt,
     deviceInterface *pdeviceInterface,deviceInstance *pdeviceInstance);
+static int isTimeWindowActive(gpibDpvt *pgpibDpvt);
 static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len);
 
 /*iocsh routines */
@@ -218,21 +218,21 @@ static long initRecord(dbCommon *precord, struct link *plink)
         return(0);
     }
     pgpibDpvt->pasynDriver = pasynDriver;
-    pgpibDpvt->pasynDriverPvt = pdeviceInterface->pasynDriverPvt;
+    pgpibDpvt->asynDriverPvt = pdeviceInterface->asynDriverPvt;
     pgpibDpvt->poctetDriver = poctetDriver;
-    pgpibDpvt->poctetDriverPvt = pdeviceInterface->poctetDriverPvt;
+    pgpibDpvt->octetDriverPvt = pdeviceInterface->octetDriverPvt;
     if(pgpibCmd->type&GPIBEOS) {
         pdevGpibPvt->eos[0] = (char)pgpibCmd->eosChar;
         status = pgpibDpvt->poctetDriver->setEos(
-            pgpibDpvt->poctetDriverPvt,pgpibDpvt->pasynUser,
-            pdevGpibPvt->eos,1);
+            pgpibDpvt->octetDriverPvt,pgpibDpvt->pasynUser,
+            gpibAddr,pdevGpibPvt->eos,1);
         if(status!=asynSuccess) {
             printf("%s poctetDriver->setEos failed %s\n",
                 precord->name,pgpibDpvt->pasynUser->errorMessage);
         }
     }
-    pgpibDpvt->pgpibDriverUser = pdeviceInterface->pgpibDriverUser;
-    pgpibDpvt->pgpibDriverUserPvt = pdeviceInterface->pgpibDriverUserPvt;
+    pgpibDpvt->pgpibDriver = pdeviceInterface->pgpibDriver;
+    pgpibDpvt->gpibDriverPvt = pdeviceInterface->gpibDriverPvt;
     if (pgpibCmd->msgLen > 0) {
 	pgpibDpvt->msg = (char *)callocMustSucceed(
             pgpibCmd->msgLen,sizeof(char),"devSupportGpib");
@@ -262,8 +262,13 @@ static void queueReadRequest(gpibDpvt *pgpibDpvt, gpibWork finish)
     dbCommon *precord = pgpibDpvt->precord;
     asynStatus status;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s queueReadRequest\n",precord->name);
+    if(!pgpibDpvt->msg) {
+        printf("%s no msg buffer\n",precord->name);
+        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        return;
+    }
     pdevGpibPvt->work = gpibRead;
     pdevGpibPvt->finish = finish;
     status = pasynQueueManager->lock(pgpibDpvt->pasynUser);
@@ -273,7 +278,7 @@ static void queueReadRequest(gpibDpvt *pgpibDpvt, gpibWork finish)
         recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
         return;
     }
-    queueIt(pgpibDpvt);
+    queueIt(pgpibDpvt,0);
 }
 
 static void queueWriteRequest(gpibDpvt *pgpibDpvt, gpibWork finish)
@@ -281,22 +286,22 @@ static void queueWriteRequest(gpibDpvt *pgpibDpvt, gpibWork finish)
     dbCommon *precord = pgpibDpvt->precord;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s queueWriteRequest\n",precord->name);
     pdevGpibPvt->work = gpibWrite;
     pdevGpibPvt->finish = finish;
-    queueIt(pgpibDpvt);
+    queueIt(pgpibDpvt,0);
 }
 static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
 {
     dbCommon *precord = pgpibDpvt->precord;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s queueRequest\n",precord->name);
     pdevGpibPvt->work = work;
     pdevGpibPvt->finish = 0;
-    queueIt(pgpibDpvt);
+    queueIt(pgpibDpvt,0);
 }
 
 static void report(int interest)
@@ -312,12 +317,12 @@ static void report(int interest)
     while(pdeviceInterface) {
         printf("link %d interfaceName %s\n",
             pdeviceInterface->link,pdeviceInterface->interfaceName);
-        printf("    pasynDriver %p poctetDriver %p pgpibDriverUser %p\n",
+        printf("    pasynDriver %p poctetDriver %p pgpibDriver %p\n",
             pdeviceInterface->pasynDriver,pdeviceInterface->poctetDriver,
-            pdeviceInterface->pgpibDriverUser);
+            pdeviceInterface->pgpibDriver);
         if(pdeviceInterface->pasynDriver) {
             pdeviceInterface->pasynDriver->report(
-                pdeviceInterface->pasynDriverPvt,pasynUser,interest);
+                pdeviceInterface->asynDriverPvt,interest);
         }
         pdeviceInstance = (deviceInstance *)ellFirst(
             &pdeviceInterface->deviceInstanceList);
@@ -335,27 +340,36 @@ static void report(int interest)
 }
 
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
-    srqHandler handler,void *userPrivate)
+    srqHandler handler,void *unsollicitedHandlerPvt)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     dbCommon *precord = (dbCommon *)pgpibDpvt->precord;
-    gpibDriverUser *pgpibDriverUser = pgpibDpvt->pgpibDriverUser;
+    gpibDriver *pgpibDriver = pgpibDpvt->pgpibDriver;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
     int failure=0;
     
-    if(!pgpibDriverUser) {
-	printf("%s gpibDriverUser not supported\n",precord->name);
+    if(!pgpibDriver) {
+	printf("%s gpibDriver not supported\n",precord->name);
 	failure = 1;
     }
     if(pdeviceInstance->unsollicitedHandler) {
 	printf("%s an unsollicitedHandler already registered\n",precord->name);
 	failure = 1;
+    } else if (!pdeviceInterface->pgpibDriver) {
+        printf("%s gpibDriver not supported\n",precord->name);
+        failure = 1;
     }
     if(failure) {
 	precord->pact = TRUE;
     }else {
+	pdeviceInstance->unsollicitedHandlerPvt = unsollicitedHandlerPvt;
 	pdeviceInstance->unsollicitedHandler = handler;
-	pdeviceInstance->userPrivate = userPrivate;
+        if(!pdeviceInstance->waitForSRQ) {
+            pdeviceInterface->pgpibDriver->pollAddr(
+                pdeviceInterface->gpibDriverPvt,pgpibDpvt->pasynUser,
+                pdeviceInstance->gpibAddr,1);
+        }
     }
 }
 
@@ -438,21 +452,21 @@ static deviceInterface *createDeviceInteface(
     }
     pdeviceInterface->pasynDriver =
         (asynDriver *)pdeviceDriver->pdriverInterface->pinterface;
-    pdeviceInterface->pasynDriverPvt = pdeviceDriver->pdrvPvt;
+    pdeviceInterface->asynDriverPvt = pdeviceDriver->drvPvt;
     pdeviceDriver = pasynQueueManager->findDriver(pasynUser,octetDriverType,1);
     if(pdeviceDriver) {
         pdeviceInterface->poctetDriver = 
             (octetDriver *)pdeviceDriver->pdriverInterface->pinterface;
-        pdeviceInterface->poctetDriverPvt = pdeviceDriver->pdrvPvt;
+        pdeviceInterface->octetDriverPvt = pdeviceDriver->drvPvt;
     }
     pdeviceDriver = pasynQueueManager->findDriver(
-        pasynUser,gpibDriverUserType,1);
+        pasynUser,gpibDriverType,1);
     if(pdeviceDriver) {
-        pdeviceInterface->pgpibDriverUser = 
-            (gpibDriverUser *)pdeviceDriver->pdriverInterface->pinterface;
-        pdeviceInterface->pgpibDriverUserPvt = pdeviceDriver->pdrvPvt;
-        status = pdeviceInterface->pgpibDriverUser->registerSrqHandler(
-            pdeviceInterface->pgpibDriverUserPvt,pasynUser,
+        pdeviceInterface->pgpibDriver = 
+            (gpibDriver *)pdeviceDriver->pdriverInterface->pinterface;
+        pdeviceInterface->gpibDriverPvt = pdeviceDriver->drvPvt;
+        status = pdeviceInterface->pgpibDriver->registerSrqHandler(
+            pdeviceInterface->gpibDriverPvt,pasynUser,
             srqHandlerGpib,pdeviceInterface);
         if(status!=asynSuccess) {
             printf("%s registerSrqHandler failed %s\n",
@@ -487,8 +501,10 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
 	if(link==pdeviceInterface->link) break;
         pdeviceInterface = (deviceInterface *)ellNext(&pdeviceInterface->node);
     }
-    if(!pdeviceInterface) 
+    if(!pdeviceInterface) {
         pdeviceInterface = createDeviceInteface(link,pasynUser,interfaceName);
+        if(!pdeviceInterface) return(1);
+    }
     pdeviceInstance = (deviceInstance *)
         ellFirst(&pdeviceInterface->deviceInstanceList);
     while(pdeviceInstance) {
@@ -511,7 +527,7 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
     return(0);
 }
 
-static void queueIt(gpibDpvt *pgpibDpvt)
+static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
 {
     dbCommon *precord = pgpibDpvt->precord;
     devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
@@ -521,59 +537,67 @@ static void queueIt(gpibDpvt *pgpibDpvt)
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     asynStatus status;
 
-    epicsMutexMustLock(pdeviceInterface->lock);
+    if(!isLocked)epicsMutexMustLock(pdeviceInterface->lock);
+    if(pdeviceInstance->timeoutActive) {
+        if(isTimeWindowActive(pgpibDpvt)) {
+            precord->pact = FALSE;
+            recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
+            if(!isLocked)epicsMutexUnlock(pdeviceInterface->lock);
+            printf("%s queueRequest failed timeWindow active\n",
+                precord->name);
+            return;
+        }
+    }
     if(pdeviceInstance->waitForSRQ && !pdeviceInstance->queueRequestFromSrq) {
-	ellAdd(&pdeviceInstance->waitList,&pgpibDpvt->node);
-	epicsMutexUnlock(pdeviceInterface->lock);
         precord->pact = TRUE;
+	ellAdd(&pdeviceInstance->waitList,&pgpibDpvt->node);
+	if(!isLocked)epicsMutexUnlock(pdeviceInterface->lock);
         return;
     }
+    precord->pact = TRUE;
     status = pasynQueueManager->queueRequest(pgpibDpvt->pasynUser,
         pgpibCmd->pri,pdeviceInstance->queueTimeout);
     if(status!=asynSuccess) {
-        epicsMutexUnlock(pdeviceInterface->lock);
+        precord->pact = FALSE;
+        recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
+        if(!isLocked)epicsMutexUnlock(pdeviceInterface->lock);
         printf("%s queueRequest failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
-        recGblSetSevr(precord, SOFT_ALARM, INVALID_ALARM);
         return;
     }
-    epicsMutexUnlock(pdeviceInterface->lock);
-    precord->pact = TRUE;
+    if(!isLocked)epicsMutexUnlock(pdeviceInterface->lock);
 }
 
 static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
-    asynStatus status;
     octetDriver *poctetDriver = pgpibDpvt->poctetDriver;
-    void *poctetDriverPvt = pgpibDpvt->poctetDriverPvt;
-    int nchars,lenmsg;
-    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
+    void *octetDriverPvt = pgpibDpvt->octetDriverPvt;
+    int nchars = 0,lenmsg = 0;
+    asynStatus status;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibRead\n",precord->name);
     if(timeoutOccured) {
         pdevGpibPvt->finish(pgpibDpvt,1);
-        return;
-    }
-    if(!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",precord->name);
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-        return;
+        goto done;
     }
     epicsMutexMustLock(pdeviceInterface->lock);
-    if(pdeviceInstance->waitForSRQ) {
-	ellAdd(&pdeviceInstance->waitList,&pgpibDpvt->node);
-	epicsMutexUnlock(pdeviceInterface->lock);
-	return;
-    }
-    if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) {
+    /*Since queueReadRequest calls lock waitForSRQ should not be true*/
+    assert(!pdeviceInstance->waitForSRQ);
+    if(cmdType&(GPIBREADW|GPIBEFASTIW)) {
         pdeviceInstance->waitForSRQ = 1;
         pdeviceInstance->pgpibDpvt = pgpibDpvt;
+        if(!pdeviceInstance->unsollicitedHandler) {
+            pdeviceInterface->pgpibDriver->pollAddr(
+                pdeviceInterface->gpibDriverPvt,pgpibDpvt->pasynUser,
+                pdeviceInstance->gpibAddr,1);
+        }
         pdevGpibPvt->work = gpibReadWaitComplete;
         epicsTimerStartDelay(pdeviceInstance->srqWaitTimer,
             pdeviceInstance->srqWaitTimeout);
@@ -584,9 +608,14 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
     case GPIBEFASTIW:
     case GPIBREAD:
     case GPIBEFASTI:
-	lenmsg = strlen(pgpibCmd->cmd);
-        nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenmsg);
-        if(nchars!=lenmsg) {
+        if(!pgpibCmd->cmd) {
+            printf("%s pgpibCmd->cmd is null\n",precord->name);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        } else {
+	    lenmsg = strlen(pgpibCmd->cmd);
+            nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenmsg);
+        }
+        if(!pgpibCmd->cmd || nchars!=lenmsg) {
             if(cmdType&(GPIBREADW|GPIBEFASTIW)) {
                 epicsTimerCancel(pdeviceInstance->srqWaitTimer);
                 srqWaitTimeout(pdeviceInstance);
@@ -595,11 +624,17 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
             pdevGpibPvt->finish(pgpibDpvt,1);
             break;
         }
-        if(cmdType&(GPIBREADW|GPIBEFASTIW)) break;
+        if(cmdType&(GPIBREADW|GPIBEFASTIW)) goto done;
     case GPIBRAWREAD:
-        nchars = poctetDriver->read(poctetDriverPvt,pgpibDpvt->pasynUser,
-            pgpibDpvt->gpibAddr,pgpibDpvt->msg,pgpibCmd->msgLen);
-        if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+        if(!pgpibDpvt->msg) {
+            printf("%s pgpibDpvt->msg is null\n",precord->name);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            nchars = 0;
+        } else {
+            nchars = poctetDriver->read(octetDriverPvt,pgpibDpvt->pasynUser,
+                pgpibDpvt->gpibAddr,pgpibDpvt->msg,pgpibCmd->msgLen);
+        }
+        if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
             printf("%s msg %s nchars %d\n",precord->name,pgpibDpvt->msg,nchars);
         if(nchars==0) {
 	    ++pdeviceInstance->tmoCount;
@@ -607,7 +642,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
 	    break;
 	}
         if(nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
-        if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
+        if(cmdType&GPIBEFASTI) 
             pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
         pdevGpibPvt->finish(pgpibDpvt,0);
         break;
@@ -615,45 +650,51 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
         printf("%s gpibRead can't handle cmdType %d"
                " record left with PACT true\n",precord->name,cmdType);
     }
+done:
     status = pasynQueueManager->unlock(pgpibDpvt->pasynUser);
     if(status!=asynSuccess) {
         printf("%s pasynQueueManager->unlock failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
     }
 }
-
+
 static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int timeoutOccured)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     octetDriver *poctetDriver = pgpibDpvt->poctetDriver;
-    void *poctetDriverPvt = pgpibDpvt->poctetDriverPvt;
-    int nchars;
-    int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
-    int failure;
+    void *octetDriverPvt = pgpibDpvt->octetDriverPvt;
+    int nchars,failure;
+    asynStatus status;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibReadWaitComplete\n",precord->name);
     if(timeoutOccured) {
         pdevGpibPvt->finish(pgpibDpvt,1);
         return;
     }
+    if(!pdeviceInstance->unsollicitedHandler) {
+        pdeviceInterface->pgpibDriver->pollAddr(
+            pdeviceInterface->gpibDriverPvt,pgpibDpvt->pasynUser,
+            pdeviceInstance->gpibAddr,0);
+    }
     failure = waitForSRQClear(pgpibDpvt,pdeviceInterface,pdeviceInstance);
     if(failure) return;
-    nchars = poctetDriver->read(poctetDriverPvt,pgpibDpvt->pasynUser,
+    nchars = poctetDriver->read(octetDriverPvt,pgpibDpvt->pasynUser,
         pgpibDpvt->gpibAddr,pgpibDpvt->msg,pgpibCmd->msgLen);
     if(nchars==0) {
         ++pdeviceInstance->tmoCount;
         pdevGpibPvt->finish(pgpibDpvt,1);
         return;
     }
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s msg %s nchars %d\n",precord->name,pgpibDpvt->msg,nchars);
     if(nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
-    if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
+    if(cmdType&GPIBEFASTIW) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
     pdevGpibPvt->finish(pgpibDpvt,0);
 }
@@ -665,15 +706,13 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
-    gpibDriverUser *pgpibDriverUser = pgpibDpvt->pgpibDriverUser;
-    void *pgpibDriverUserPvt = pgpibDpvt->pgpibDriverUserPvt;
+    gpibDriver *pgpibDriver = pgpibDpvt->pgpibDriver;
+    void *gpibDriverPvt = pgpibDpvt->gpibDriverPvt;
     int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
-    int nchars = 0;
-    int lenMessage = 0;
-    int failure = 0;
+    int nchars = 0, lenMessage = 0, failure = 0;
     char *efasto1, *efasto2;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibWrite\n",precord->name);
     if(timeoutOccured) {
         pdevGpibPvt->finish(pgpibDpvt,1);
@@ -682,25 +721,50 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
     epicsMutexMustLock(pdeviceInterface->lock);
     if(pdeviceInstance->waitForSRQ) {
 	ellAdd(&pdeviceInstance->waitList,&pgpibDpvt->node);
+        epicsMutexUnlock(pdeviceInterface->lock);
 	return;
     }
     epicsMutexUnlock(pdeviceInterface->lock);
-    switch(cmdType) {
+    if (pgpibCmd->convert) {
+        int cnvrtStat;
+        cnvrtStat = pgpibCmd->convert(
+            pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
+        if(cnvrtStat==-1) failure = 1;
+    }
+    if(!failure) switch(cmdType) {
     case GPIBWRITE:
+        if(!pgpibDpvt->msg) {
+            printf("%s pgpibDpvt->msg is null\n",precord->name);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        } else {
+            lenMessage = strlen(pgpibDpvt->msg);
+	    nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
+        }
+	break;
     case GPIBCMD:
-        lenMessage = strlen(pgpibDpvt->msg);
-	nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
+        if(!pgpibCmd->cmd) {
+            printf("%s pgpibCmd->cmd is null\n",precord->name);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        } else {
+            lenMessage = strlen(pgpibCmd->cmd);
+	    nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenMessage);
+        }
 	break;
     case GPIBACMD:
-        if(!pgpibDriverUser) {
-            printf("%s gpibWrite got GPIBRAWREAD but pgpibDriverUser = 0"
+        if(!pgpibDriver) {
+            printf("%s gpibWrite got GPIBACMD but pgpibDriver = 0"
                " record left with PACT true\n",precord->name);
             break;
         }
-        lenMessage = strlen(pgpibDpvt->msg);
-        nchars = pgpibDriverUser->addressedCmd(
-            pgpibDriverUserPvt,pgpibDpvt->pasynUser,
-            pgpibDpvt->gpibAddr,pgpibDpvt->msg,strlen(pgpibDpvt->msg));
+        if(!pgpibCmd->cmd) {
+            printf("%s pgpibCmd->cmd is null\n",precord->name);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        } else {
+            lenMessage = strlen(pgpibCmd->cmd);
+            nchars = pgpibDriver->addressedCmd(
+                gpibDriverPvt,pgpibDpvt->pasynUser,
+                pgpibDpvt->gpibAddr,pgpibCmd->cmd,strlen(pgpibDpvt->msg));
+        }
         break;
     case GPIBEFASTO:    /* write the enumerated cmd from the P3 array */
         /* bfr added: cmd is not ignored but evaluated as prefix to
@@ -729,45 +793,45 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
     pdevGpibPvt->finish(pgpibDpvt,failure);
 }
 
-static void queueCallback(void *puserPvt)
+static void queueCallback(void *userPvt)
 {
-    gpibDpvt *pgpibDpvt = (gpibDpvt *)puserPvt;
+    gpibDpvt *pgpibDpvt = (gpibDpvt *)userPvt;
     dbCommon *precord = pgpibDpvt->precord;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
+    gpibWork work;
     int failure = 0;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s queueCallback\n",precord->name);
+    epicsMutexMustLock(pdeviceInterface->lock);
+    if(pdeviceInstance->timeoutActive) failure = isTimeWindowActive(pgpibDpvt);
+    epicsMutexUnlock(pdeviceInterface->lock);
     if(!precord->pact) {
 	printf("%s devSupportGpib:queueCallback but pact 0. Request ignored.\n",
             precord->name);
 	return;
     }
-    if(pdeviceInstance->timeoutActive){
-	epicsTimeStamp timeNow;
-	double diff;
-
-	epicsTimeGetCurrent(&timeNow);
-	diff = epicsTimeDiffInSeconds(&timeNow,&pdeviceInstance->timeoutTime);
-	if(diff < pgpibDpvt->pdevGpibParmBlock->timeWindow) {
-            failure = 1;
-	}else {
-	    pdeviceInstance->timeoutActive = 0;
-	}
-    }
     assert(pdevGpibPvt->work);
-    (pdevGpibPvt->work)(pgpibDpvt,failure);
+    work = pdevGpibPvt->work;
+    pdevGpibPvt->work = 0;
+    work(pgpibDpvt,failure);
 }
 
-static void timeoutCallback(void *puserPvt)
+static void timeoutCallback(void *userPvt)
 {
-    gpibDpvt *pgpibDpvt = (gpibDpvt *)puserPvt;
+    gpibDpvt *pgpibDpvt = (gpibDpvt *)userPvt;
     dbCommon *precord = pgpibDpvt->precord;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    deviceInterface *pdeviceInterface = pdevGpibPvt->pdeviceInterface;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag)
         printf("%s timeoutCallback\n",precord->name);
+    epicsMutexMustLock(pdeviceInterface->lock);
+    if(pdeviceInstance->timeoutActive) isTimeWindowActive(pgpibDpvt);
+    epicsMutexUnlock(pdeviceInterface->lock);
     if(!precord->pact) {
 	printf("%s devSupportGpib:timeoutCallback but pact 0. Request ignored.\n",
             precord->name);
@@ -775,6 +839,7 @@ static void timeoutCallback(void *puserPvt)
     }
     assert(pdevGpibPvt->work);
     (pdevGpibPvt->work)(pgpibDpvt,1);
+    pdevGpibPvt->work = 0;
 }
 
 void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
@@ -793,7 +858,7 @@ void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
         if(pdeviceInstance->waitForSRQ) {
             epicsTimerCancel(pdeviceInstance->srqWaitTimer);
 	    pdeviceInstance->queueRequestFromSrq = 1;
-            queueIt(pdeviceInstance->pgpibDpvt);
+            queueIt(pdeviceInstance->pgpibDpvt,1);
 	    /*Must unlock after queueIt to prevent possible race condition*/
 	    pdeviceInstance->queueRequestFromSrq = 0;
             epicsMutexUnlock(pdeviceInterface->lock);
@@ -801,7 +866,7 @@ void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
         } else if(pdeviceInstance->unsollicitedHandler) {
             epicsMutexUnlock(pdeviceInterface->lock);
 	    pdeviceInstance->unsollicitedHandler(
-                pdeviceInstance->userPrivate,gpibAddr,statusByte);
+                pdeviceInstance->unsollicitedHandlerPvt,gpibAddr,statusByte);
             return;
 	}
 	break;
@@ -834,7 +899,7 @@ static int checkEnums(char *msg, char **enums)
 	if (enums[i][j] == 0) return (i);
 	i++;
     }
-    return 0;
+    return -1;
 }
 
 static int waitForSRQClear(gpibDpvt *pgpibDpvt,
@@ -850,7 +915,6 @@ static int waitForSRQClear(gpibDpvt *pgpibDpvt,
     }
     pdeviceInstance->waitForSRQ = 0;
     pdeviceInstance->pgpibDpvt = 0;
-    pdeviceInstance->pgpibDpvt = 0;
     pdeviceInstance->queueRequestFromSrq = 0;
     pgpibDpvtWait = (gpibDpvt *)ellFirst(&pdeviceInstance->waitList);
     while(pgpibDpvtWait) {
@@ -858,8 +922,7 @@ static int waitForSRQClear(gpibDpvt *pgpibDpvt,
          
         pnext = (gpibDpvt *)ellNext(&pgpibDpvtWait->node);
         ellDelete(&pdeviceInstance->waitList,&pgpibDpvtWait->node);
-        /*Note that this requires recursive lock*/
-	queueIt(pgpibDpvtWait);
+	queueIt(pgpibDpvtWait,1);
         pgpibDpvtWait = pnext;
     }
     epicsMutexUnlock(pdeviceInterface->lock);
@@ -874,14 +937,14 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     int rspLen = pgpibCmd->rspLen;
     dbCommon *precord = pgpibDpvt->precord;
     octetDriver *poctetDriver = pgpibDpvt->poctetDriver;
-    void *poctetDriverPvt = pgpibDpvt->poctetDriverPvt;
+    void *octetDriverPvt = pgpibDpvt->octetDriverPvt;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
     int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     int nchars;
 
-    if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+    if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s writeIt message %s len %d\n",precord->name,message,len);
-    nchars = poctetDriver->write(poctetDriverPvt,pgpibDpvt->pasynUser,
+    nchars = poctetDriver->write(octetDriverPvt,pgpibDpvt->pasynUser,
         pgpibDpvt->gpibAddr,message,len);
     if(nchars!=len) {
         if(nchars==0) {
@@ -897,10 +960,10 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
             printf("%s respond2Writes but rspLen %d < len %d\n",
                 precord->name,rspLen,len);
         } else {
-            if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+            if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
                 printf("%s respond2Writes\n",precord->name);
-            if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes*1000));
-            nread = poctetDriver->read(poctetDriverPvt,pgpibDpvt->pasynUser,
+            if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
+            nread = poctetDriver->read(octetDriverPvt,pgpibDpvt->pasynUser,
                 pgpibDpvt->gpibAddr,rsp,len);
             if(nread!=rspLen) {
                 printf("%s respond2Writes but nread %d for %d length message\n",
@@ -909,6 +972,24 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
         }
     }
     return(nchars);
+}
+
+static int isTimeWindowActive(gpibDpvt *pgpibDpvt)
+{
+    devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    epicsTimeStamp timeNow;
+    double diff;
+    int stillActive = 0;
+
+    epicsTimeGetCurrent(&timeNow);
+    diff = epicsTimeDiffInSeconds(&timeNow,&pdeviceInstance->timeoutTime);
+    if(diff < pgpibDpvt->pdevGpibParmBlock->timeWindow) {
+        stillActive = 1;
+    }else {
+        pdeviceInstance->timeoutActive = 0;
+    }
+    return(stillActive);
 }
 
 #define devGpibDeviceInterfaceSetCommon \

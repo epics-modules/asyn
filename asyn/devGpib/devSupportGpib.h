@@ -130,18 +130,18 @@ struct gDset {
 };
 
 struct gpibDpvt {
-    ELLNODE node; /*For use by devGpibCommon*/
+    ELLNODE node; /*For use by devSupportGpib*/
     devGpibParmBlock *pdevGpibParmBlock; 
     int gpibAddr;
     CALLBACK callback;
     dbCommon *precord;
     asynUser *pasynUser;
     asynDriver *pasynDriver;
-    void *pasynDriverPvt;
+    void *asynDriverPvt;
     octetDriver *poctetDriver;
-    void *poctetDriverPvt;
-    gpibDriverUser *pgpibDriverUser;
-    void *pgpibDriverUserPvt;
+    void *octetDriverPvt;
+    gpibDriver *pgpibDriver;
+    void *gpibDriverPvt;
     int parm;                 /* parameter index into gpib commands */
     char *rsp;                /* for read/write message error responses */
     char *msg;                /* for read/write messages */
@@ -159,8 +159,8 @@ struct devSupportGpib {
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*report)(int interest);
-    void (*registerSrqHandler)(
-        gpibDpvt *pgpibDpvt,srqHandler handler,void *userRivate);
+    void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
+        srqHandler handler,void *unsollicitedHandlerPvt);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
@@ -259,6 +259,8 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  *   Pointer to the gpibCmds array.
  * numparams:
  *   The number of parameters described in the gpibCmds array.
+ * timeout:
+ *   number of seconds to wait for I/O completion.
  * timeWindow:
  *   Number of seconds that should be skipped after a timeout. All commands
  *   issued within this time window will be aborted and returned as errors.
@@ -285,9 +287,9 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * callback - For use by requestProcessCallback
  * precord - address of record with dbCommon.dpvt pointing to this
  * pasynUser - For calling asynDriver methods
- * pasynDriver,pasynDriverPvt - For calling asynDriver
- * poctetDriver,poctetDriverPvt - For calling octetDriver
- * pgpibDriverUser,pgpibDriverUserPvt - For calling gpibDriver. May be null.
+ * pasynDriver,asynDriverPvt - For calling asynDriver
+ * poctetDriver,octetDriverPvt - For calling octetDriver
+ * pgpibDriver,gpibDriverPvt - For calling gpibDriver. May be null.
  * parm - The index of the gpibCmd in the gpibCmd array
  * rsp - Response buffer of length gpibCmd.rspLen
  * msg - Message buffer of length gpibCmd.msgLen

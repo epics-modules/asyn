@@ -35,16 +35,16 @@ typedef enum {
     asynTimeoutWrite
 }asynTimeoutType;
 
-typedef void (*userCallback)(void *puserPvt);
+typedef void (*userCallback)(void *userPvt);
 
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
     double timeout;  /*Timeout for I/O operations*/
-    void *puserPvt; 
+    void *userPvt; 
 }asynUser;
 
-typedef void (*peekHandler)(void *puserPvt,
+typedef void (*peekHandler)(void *peekHandlerPvt,
     char byte,int isReceive,int gotEOI);
 
 typedef struct driverInterface{
@@ -54,13 +54,13 @@ typedef struct driverInterface{
 
 typedef struct deviceDriver{
     driverInterface *pdriverInterface;
-    void *pdrvPvt;
+    void *drvPvt;
 }deviceDriver;
 
 typedef struct asynQueueManager {
     void (*report)(int details);
     asynUser  *(*createAsynUser)(
-        userCallback queue,userCallback timeout,void *puserPvt);
+        userCallback queue,userCallback timeout,void *userPvt);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*connectDevice)(asynUser *pasynUser, const char *deviceName);
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
@@ -86,26 +86,24 @@ epicsShareExtern asynQueueManager *pasynQueueManager;
 /*Methods supported by ALL asyn drivers*/
 #define asynDriverType "asynDriver"
 typedef struct  asynDriver {
-    void       (*report)(void *pdrvPvt,asynUser *pasynUser,int details);
+    void       (*report)(void *drvPvt,int details);
     /*following are to connect/disconnect to/from hardware*/
-    asynStatus (*connect)(void *pdrvPvt,asynUser *pasynUser);
-    asynStatus (*disconnect)(void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
 }asynDriver;
 
 /* Methods supported by low level octet drivers. */
 #define octetDriverType "octetDriver"
 typedef struct octetDriver{
-    int        (*read)(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
-    int        (*write)(void *pdrvPvt,asynUser *pasynUser,
+    int        (*read)(void *drvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+    int        (*write)(void *drvPvt,asynUser *pasynUser,
                         int addr,const char *data,int numchars);
-    asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser, 
-                             asynTimeoutType type,double timeout);
-    asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,
-                         const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,
-                                    peekHandler handler);
-    asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser,int addr);
+    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
+                         int addr,const char *eos,int eoslen);
+    asynStatus (*installPeekHandler)(void *drvPvt,asynUser *pasynUser,
+                         peekHandler handler,void *peekHandlerPvt);
+    asynStatus (*removePeekHandler)(void *drvPvt,asynUser *pasynUser);
 }octetDriver;
 
 

@@ -126,7 +126,7 @@ epicsExportAddress(dset,DSET_MBBO);
 #ifdef DSET_MBBID
 static gDset DSET_MBBID = {
     6,
-    {0, 0, devGpibLib_initMbbi, 0, devGpibLib_readMbbi,0},
+    {0, 0, devGpibLib_initMbbiDirect, 0, devGpibLib_readMbbiDirect,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBID);
@@ -135,7 +135,7 @@ epicsExportAddress(dset,DSET_MBBID);
 #ifdef DSET_MBBOD
 static gDset DSET_MBBOD = {
     6,
-    {0, 0, devGpibLib_initMbbo, 0, devGpibLib_writeMbbo,0},
+    {0, 0, devGpibLib_initMbboDirect, 0, devGpibLib_writeMbboDirect,0},
     &devSupParms
 };
 epicsExportAddress(dset,DSET_MBBOD);
