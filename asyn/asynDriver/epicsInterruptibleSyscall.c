@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.7 2004-03-19 15:37:42 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.8 2004-03-19 15:58:55 norume Exp $
  */
 
 #include <stdio.h>
@@ -80,13 +80,15 @@ epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsT
 {
     epicsMutexMustLock(c->mutex);
     c->fd = fd;
-    c->tid = tid;
+    if (tid != c->tid) {
+        c->tid = tid;
+        epicsSignalInstallSigAlarmIgnore();
+    }
     c->interruptCount = 0;
     if(c->fd >= 0)
         c->isatty = isatty(c->fd);
     c->wasClosed = 0;
     epicsMutexUnlock(c->mutex);
-    epicsSignalInstallSigAlarmIgnore();
     return 0;
 }
 
