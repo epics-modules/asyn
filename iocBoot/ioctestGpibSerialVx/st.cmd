@@ -19,10 +19,9 @@ drvGenericSerialDebug = 3
 
 #The following commands are for a Greenspring octal UART and VIP616-01 carrier
 ipacAddVIPC616_01("0x6000,B0000000")
-tyGSOctalDrv 1
-octalUart0 = tyGSOctalModuleInit("GSIP_OCTAL232", 0x80, 0, 0)
-port0 = tyGSOctalDevCreate("/tyGS/0/0",octalUart0,0,1000,1000)
-tyGSOctalConfig(port0,9600,'N',1,8,'N')
+tyGSOctalDrv(1)
+tyGSOctalModuleInit("RS232", 0x80, 0, 0)
+tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",0,0,"9600","cs8","-parenb","-crtscts","clocal")
 
 iocInit()
