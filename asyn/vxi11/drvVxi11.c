@@ -745,23 +745,6 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
 
     assert(pvxiLink);
     if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
-    if(pvxiLink->srqInterrupt) {
-        if (epicsEventTryWait(pvxiLink->srqThreadReady) != epicsEventWaitOK) {
-            int i;
-            for (i = 0 ; ; i++) {
-                if(i == 10) {
-                    errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
-                                                               pvxiLink->portName);
-                    break;
-                }
-                epicsInterruptibleSyscallInterrupt(pvxiLink->srqInterrupt);
-                if (epicsEventWaitWithTimeout(pvxiLink->srqThreadReady,2.0) == epicsEventWaitOK)
-                    break;
-            }
-        }
-        epicsInterruptibleSyscallDelete(pvxiLink->srqInterrupt);
-        pvxiLink->srqInterrupt = NULL;
-    }
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
 	int link;
 	link = pvxiLink->devLink[addr].primary;
@@ -786,6 +769,22 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     }
     xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
     clnt_destroy(pvxiLink->rpcClient);
+    if(pvxiLink->srqInterrupt) {
+        int i;
+        for (i = 0 ; ; i++) {
+            if (epicsEventWaitWithTimeout(pvxiLink->srqThreadReady,2.0) == epicsEventWaitOK) {
+                epicsInterruptibleSyscallDelete(pvxiLink->srqInterrupt);
+                break;
+            }
+            if(i == 10) {
+                errlogPrintf("WARNING -- %s SRQ thread will not terminate!\n",
+                                                           pvxiLink->portName);
+                break;
+            }
+            epicsInterruptibleSyscallInterrupt(pvxiLink->srqInterrupt);
+        }
+        pvxiLink->srqInterrupt = NULL;
+    }
     return(0);
 }
 
