@@ -1,4 +1,4 @@
-/* devGpibSupport.h */
+/* devSupportGpib.h */
 
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
@@ -14,8 +14,8 @@
  * Current Author: Marty Kraimer
  * Original Authors: John Winans and Benjamin Franksen
  */
-#ifndef INCdevGpibSupporth
-#define INCdevGpibSupporth
+#ifndef INCdevSupportGpibh
+#define INCdevSupportGpibh
 
 #include <callback.h>
 #include <dbScan.h>
@@ -50,11 +50,11 @@ extern "C" {
 typedef struct gpibCmd gpibCmd;
 typedef struct devGpibNames devGpibNames;
 typedef struct devGpibParmBlock devGpibParmBlock;
-/*structures used by devGpibCommon, devGpibSupport, or other support*/
+/*structures used by devGpibCommon, devSupportGpib, or other support*/
 typedef struct gDset gDset;
 typedef struct gpibDpvt gpibDpvt;
 typedef struct devGpibPvt devGpibPvt;
-typedef struct devGpibSupport devGpibSupport;
+typedef struct devSupportGpib devSupportGpib;
 
 struct gpibCmd {
     gDset *dset;/* used to indicate record type supported */
@@ -70,7 +70,7 @@ struct gpibCmd {
     /* P3 plays dual role. For EFAST address of EFAST table   */
     /* For convert it is passed to convert */
     char **P3;
-    devGpibNames *pdevGpibNames;	/* pointer to name strings */
+    devGpibNames *pdevGpibNames; /* pointer to name strings */
     int eosChar;
 };
 /*Define so that it is easy to check for valid set of commands*/
@@ -152,7 +152,7 @@ struct gpibDpvt {
 
 typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int timeoutOccured);
 /* If a method retuns int then 0,1) => (OK, failure) */
-struct devGpibSupport {
+struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
@@ -166,7 +166,7 @@ struct devGpibSupport {
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
 };
-epicsShareExtern devGpibSupport *pdevGpibSupport;
+epicsShareExtern devSupportGpib *pdevSupportGpib;
 
 /* macros for accessing some commonly used fields*/
 #define gpibDpvtGet(precord) ((gpibDpvt *)(precord)->dpvt)
@@ -279,7 +279,7 @@ epicsShareExtern devGpibSupport *pdevGpibSupport;
 
 /* gpibDpvt - dbCommon.dpvt is the address of a gpibDpvt***************
  *
- * node - For private use by devGpibSupport
+ * node - For private use by devSupportGpib
  * pdevGpibParmBlock - address of the devGpibParmBlock for the instrument
  * gpibAddr - gpib address of instrument
  * callback - For use by requestProcessCallback
@@ -293,10 +293,10 @@ epicsShareExtern devGpibSupport *pdevGpibSupport;
  * msg - Message buffer of length gpibCmd.msgLen
  * efastVal - For EFAST requests this is the index
  * pupvt - For use by specialized code. e.g. conversions.
- * pdevGpibPvt - For private use by devGpibSupport.c
+ * pdevGpibPvt - For private use by devSupportGpib.c
  ****************************************************************************/
 
-/* devGpibSupport - support methods for dbCommonGpib of special support
+/* devSupportGpib - support methods for dbCommonGpib of special support
  * initRecord - Perform common initialization for a record instance
  * processGPIBSOFT - Perform operation for GPIBSOFT
  * queueReadRequest - Handle READ, READW, EFASTI, EFASTIW, and RAWREAD
@@ -314,4 +314,4 @@ epicsShareExtern devGpibSupport *pdevGpibSupport;
 }
 #endif  /* __cplusplus */
 
-#endif	/* INCdevGpibSupporth */
+#endif	/* INCdevSupportGpibh */

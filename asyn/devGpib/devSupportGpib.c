@@ -1,4 +1,4 @@
-/* devGpibSupport.c */
+/* devSupportGpib.c */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -8,17 +8,8 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 /*
- *		Common library for device specific support modules
- *
- * Current Author: Benjamin Franksen
- * Original Author: John Winans
- *
- ******************************************************************************
- *
- * Notes:
- *
- * This module should be still compatible to the original (JW's) version,
- * although this gets increasingly cumbersome.
+ * Current Author: Marty Kraimer
+ * Original Authors: John Winans and Benjamin Franksen
  *
  */
 
@@ -38,21 +29,24 @@
 #include <devSup.h>
 #include <recSup.h>
 #include <link.h>
+#include <epicsThread.h>
 #include <epicsMutex.h>
 #include <epicsTimer.h>
 #include <epicsTime.h>
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <shareLib.h>
+#include <epicsExport.h>
+#include <iocsh.h>
 
 #include <asynDriver.h>
 #include <gpibDriver.h>
 
 #define epicsExportSharedSymbols
-#include "devGpibSupport.h"
+#include "devSupportGpib.h"
 
-#define QUEUE_TIMEOUT 20.0
-#define SRQ_WAIT_TIMEOUT 20.0
+#define DEFAULT_QUEUE_TIMEOUT 60.0
+#define DEFAULT_SRQ_WAIT_TIMEOUT 60.0
 
 typedef struct commonGpibPvt {
     ELLLIST deviceInterfaceList;
@@ -66,6 +60,8 @@ typedef struct deviceInstance {
     int gpibAddr;
     unsigned long tmoCount;     /* total number of timeouts since boot time */
     unsigned long errorCount;   /* total number of errors since boot time */
+    double queueTimeout;
+    double srqWaitTimeout;
     /*Following fields are for timeWindow*/
     int timeoutActive;
     epicsTimeStamp timeoutTime;
@@ -101,8 +97,6 @@ struct devGpibPvt {
     gpibWork finish;
     char eos[2]; /*If GPIBEOS is specified*/
     /*Following are used in respond2Writes is true*/
-    char *respondBuf;
-    int respondBufLen;
 };
 
 static long initRecord(dbCommon* precord, struct link * plink);
@@ -118,7 +112,7 @@ static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str);
 
-static devGpibSupport gpibSupport = {
+static devSupportGpib gpibSupport = {
     initRecord,
     processGPIBSOFT,
     queueReadRequest,
@@ -131,7 +125,7 @@ static devGpibSupport gpibSupport = {
     writeMsgDouble,
     writeMsgString
 };
-epicsShareDef devGpibSupport *pdevGpibSupport = &gpibSupport;
+epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 
 /*Initialization routines*/
 static void commonGpibPvtInit(void);
@@ -156,6 +150,12 @@ static int checkEnums(char * msg, char **enums);
 static int waitForSRQClear(gpibDpvt *pgpibDpvt,
     deviceInterface *pdeviceInterface,deviceInstance *pdeviceInstance);
 static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len);
+
+/*iocsh routines */
+static void devGpibQueueTimeoutSet(
+    const char *interfaceName, int gpibAddr, double timeout);
+static void devGpibSrqWaitTimeoutSet(
+    const char *interfaceName, int gpibAddr, double timeout);
 
 static long initRecord(dbCommon *precord, struct link *plink)
 {
@@ -188,7 +188,7 @@ static long initRecord(dbCommon *precord, struct link *plink)
 	return (0);
     }
     pgpibDpvt = (gpibDpvt *) callocMustSucceed(1,
-	    (sizeof(gpibDpvt)+ sizeof(devGpibPvt)),"devGpibSupport");
+	    (sizeof(gpibDpvt)+ sizeof(devGpibPvt)),"devSupportGpib");
     precord->dpvt = pgpibDpvt;
     pdevGpibPvt = (devGpibPvt *)(pgpibDpvt + 1);
     pgpibDpvt->pdevGpibPvt = pdevGpibPvt;
@@ -235,11 +235,11 @@ static long initRecord(dbCommon *precord, struct link *plink)
     pgpibDpvt->pgpibDriverUserPvt = pdeviceInterface->pgpibDriverUserPvt;
     if (pgpibCmd->msgLen > 0) {
 	pgpibDpvt->msg = (char *)callocMustSucceed(
-            pgpibCmd->msgLen,sizeof(char),"devGpibSupport");
+            pgpibCmd->msgLen,sizeof(char),"devSupportGpib");
     }
     if (pgpibCmd->rspLen > 0) {
 	pgpibDpvt->rsp = (char *)callocMustSucceed(
-            pgpibCmd->rspLen,sizeof(char),"devGpibSupport");
+            pgpibCmd->rspLen,sizeof(char),"devSupportGpib");
     }
     if (pgpibCmd->dset != (gDset *) precord->dset) {
         printf("%s : init_record : record type invalid for spec'd "
@@ -322,9 +322,11 @@ static void report(int interest)
         pdeviceInstance = (deviceInstance *)ellFirst(
             &pdeviceInterface->deviceInstanceList);
         while(pdeviceInstance) {
-            printf("    gpibAddr %d timeouts %lu errors %lu\n",
+            printf("    gpibAddr %d timeouts %lu errors %lu "
+		   "queueTimeout %f srqWaitTimeout %f\n",
                 pdeviceInstance->gpibAddr,
-                pdeviceInstance->tmoCount,pdeviceInstance->errorCount);
+                pdeviceInstance->tmoCount,pdeviceInstance->errorCount,
+		pdeviceInstance->queueTimeout,pdeviceInstance->srqWaitTimeout);
             pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);
         }
         pdeviceInterface = (deviceInterface *)ellNext(&pdeviceInterface->node);
@@ -406,7 +408,7 @@ static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
 static void commonGpibPvtInit(void) 
 {
     pcommonGpibPvt = (commonGpibPvt *)callocMustSucceed(1,sizeof(commonGpibPvt),
-        "devGpibSupport:commonGpibPvtInit");
+        "devSupportGpib:commonGpibPvtInit");
     ellInit(&pcommonGpibPvt->deviceInterfaceList);
     pcommonGpibPvt->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
@@ -422,7 +424,7 @@ static deviceInterface *createDeviceInteface(
 
     interfaceNameSize = strlen(interfaceName) + 1;
     pdeviceInterface = (deviceInterface *)callocMustSucceed(
-        1,sizeof(deviceInterface) + interfaceNameSize,"devGpibSupport");
+        1,sizeof(deviceInterface) + interfaceNameSize,"devSupportGpib");
     ellInit(&pdeviceInterface->deviceInstanceList);
     pdeviceInterface->lock = epicsMutexMustCreate();
     pdeviceInterface->link = link;
@@ -430,7 +432,7 @@ static deviceInterface *createDeviceInteface(
     strcpy(pdeviceInterface->interfaceName,interfaceName);
     pdeviceDriver = pasynQueueManager->findDriver(pasynUser,asynDriverType,1);
     if(!pdeviceDriver) {
-        printf("devGpibSupport: link %d %s not found\n",link,asynDriverType);
+        printf("devSupportGpib: link %d %s not found\n",link,asynDriverType);
         free(pdeviceInterface);
         return(0);
     }
@@ -457,6 +459,7 @@ static deviceInterface *createDeviceInteface(
                 interfaceName,pasynUser->errorMessage);
         }
     }
+    ellAdd(&pcommonGpibPvt->deviceInterfaceList,&pdeviceInterface->node);
     return(pdeviceInterface);
 }
 
@@ -474,7 +477,7 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
     sprintf(interfaceName,"gpibL%d",link);
     status = pasynQueueManager->connectDevice(pasynUser,interfaceName);
     if(status!=asynSuccess) {
-       printf("devGpibSupport:getDeviceInterface link %d %s failed %s\n",
+       printf("devSupportGpib:getDeviceInterface link %d %s failed %s\n",
 	   link,interfaceName,pasynUser->errorMessage);
        return(1);
     }
@@ -494,9 +497,11 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link)
     }
     if(!pdeviceInstance) {
         pdeviceInstance = (deviceInstance *)callocMustSucceed(
-            1,sizeof(deviceInstance),"devGpibSupport");
-        pdeviceInstance->gpibAddr = gpibAddr;
+            1,sizeof(deviceInstance),"devSupportGpib");
         ellInit(&pdeviceInstance->waitList);
+        pdeviceInstance->gpibAddr = gpibAddr;
+        pdeviceInstance->queueTimeout = DEFAULT_QUEUE_TIMEOUT;
+        pdeviceInstance->srqWaitTimeout = DEFAULT_SRQ_WAIT_TIMEOUT;
 	pdeviceInstance->srqWaitTimer = epicsTimerQueueCreateTimer(
             pcommonGpibPvt->timerQueue,srqWaitTimeout,pdeviceInstance);
         ellAdd(&pdeviceInterface->deviceInstanceList,&pdeviceInstance->node);
@@ -524,7 +529,7 @@ static void queueIt(gpibDpvt *pgpibDpvt)
         return;
     }
     status = pasynQueueManager->queueRequest(pgpibDpvt->pasynUser,
-        pgpibCmd->pri,QUEUE_TIMEOUT);
+        pgpibCmd->pri,pdeviceInstance->queueTimeout);
     if(status!=asynSuccess) {
         epicsMutexUnlock(pdeviceInterface->lock);
         printf("%s queueRequest failed %s\n",
@@ -570,7 +575,8 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
         pdeviceInstance->waitForSRQ = 1;
         pdeviceInstance->pgpibDpvt = pgpibDpvt;
         pdevGpibPvt->work = gpibReadWaitComplete;
-        epicsTimerStartDelay(pdeviceInstance->srqWaitTimer,SRQ_WAIT_TIMEOUT);
+        epicsTimerStartDelay(pdeviceInstance->srqWaitTimer,
+            pdeviceInstance->srqWaitTimeout);
     }
     epicsMutexUnlock(pdeviceInterface->lock);
     switch(cmdType) {
@@ -734,7 +740,7 @@ static void queueCallback(void *puserPvt)
     if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
         printf("%s queueCallback\n",precord->name);
     if(!precord->pact) {
-	printf("%s devGpibSupport:queueCallback but pact 0. Request ignored.\n",
+	printf("%s devSupportGpib:queueCallback but pact 0. Request ignored.\n",
             precord->name);
 	return;
     }
@@ -763,7 +769,7 @@ static void timeoutCallback(void *puserPvt)
     if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
         printf("%s timeoutCallback\n",precord->name);
     if(!precord->pact) {
-	printf("%s devGpibSupport:timeoutCallback but pact 0. Request ignored.\n",
+	printf("%s devSupportGpib:timeoutCallback but pact 0. Request ignored.\n",
             precord->name);
 	return;
     }
@@ -802,7 +808,7 @@ void srqHandlerGpib(void *parm, int gpibAddr, int statusByte)
     }
     epicsMutexUnlock(pdeviceInterface->lock);
     printf("interfaceName %s link %d gpibAddr %d "
-           "SRQ happened but no records attached to the gpibAddr\n",
+           "SRQ happened but no record is attached to the gpibAddr\n",
             pdeviceInterface->interfaceName,pdeviceInterface->link,gpibAddr);
 }
 
@@ -863,10 +869,14 @@ static int waitForSRQClear(gpibDpvt *pgpibDpvt,
 static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    char *rsp = pgpibDpvt->rsp;
+    int rspLen = pgpibCmd->rspLen;
     dbCommon *precord = pgpibDpvt->precord;
     octetDriver *poctetDriver = pgpibDpvt->poctetDriver;
     void *poctetDriverPvt = pgpibDpvt->poctetDriverPvt;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     int nchars;
 
     if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
@@ -880,27 +890,108 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
             ++pdeviceInstance->errorCount;
         }
     }
-    if(pgpibDpvt->pdevGpibParmBlock->respond2Writes) {
-        char *respondBuf = pdevGpibPvt->respondBuf;
-        int respondBufLen = pdevGpibPvt->respondBufLen;
+    if(respond2Writes>=0 && rspLen>0) {
         int nread;
 
-        if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
-            printf("%s respond2Writes\n",precord->name);
-        if(respondBufLen < len) {
-            if(respondBufLen) free(pdevGpibPvt->respondBuf);
-            respondBufLen = (len<80) ? 80 : len;
-            respondBuf = (char *)callocMustSucceed(
-                respondBufLen,sizeof(char),"devGpibSupport");
-            pdevGpibPvt->respondBuf = respondBuf;
-            pdevGpibPvt->respondBufLen = respondBufLen;
-        }
-        nread = poctetDriver->read(poctetDriverPvt,pgpibDpvt->pasynUser,
-            pgpibDpvt->gpibAddr,respondBuf,len);
-        if(nread!=len) {
-            printf("%s respond2Writes but only read %d for %d length message\n",
-                precord->name,nread,len);
+        if(rspLen<len) {
+            printf("%s respond2Writes but rspLen %d < len %d\n",
+                precord->name,rspLen,len);
+        } else {
+            if(pgpibDpvt->pdevGpibParmBlock->debugFlag)
+                printf("%s respond2Writes\n",precord->name);
+            if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes*1000));
+            nread = poctetDriver->read(poctetDriverPvt,pgpibDpvt->pasynUser,
+                pgpibDpvt->gpibAddr,rsp,len);
+            if(nread!=rspLen) {
+                printf("%s respond2Writes but nread %d for %d length message\n",
+                    precord->name,nread,len);
+            }
         }
     }
     return(nchars);
 }
+
+#define devGpibDeviceInterfaceSetCommon \
+    deviceInterface  *pdeviceInterface;\
+    deviceInstance *pdeviceInstance;\
+\
+    if(!pcommonGpibPvt) commonGpibPvtInit();\
+    pdeviceInterface = (deviceInterface *)ellFirst(\
+        &pcommonGpibPvt->deviceInterfaceList);\
+    while(pdeviceInterface) {\
+        if(strcmp(interfaceName,pdeviceInterface->interfaceName)==0) break;\
+	pdeviceInterface = (deviceInterface *)ellNext(&pdeviceInterface->node);\
+    }\
+    if(!pdeviceInterface) {\
+	printf("%s no found\n",interfaceName);\
+	return;\
+    }\
+    pdeviceInstance = (deviceInstance *)ellFirst(\
+         &pdeviceInterface->deviceInstanceList);\
+    while(pdeviceInstance) {\
+	if(gpibAddr==pdeviceInstance->gpibAddr) break;\
+	pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);\
+    }\
+    if(!pdeviceInstance) {\
+	printf("gpibAddr %d not found\n",gpibAddr);\
+	return;\
+    }
+
+static void devGpibQueueTimeoutSet(
+    const char *interfaceName, int gpibAddr, double timeout)
+{
+    devGpibDeviceInterfaceSetCommon
+
+    pdeviceInstance->queueTimeout = timeout;
+}
+
+static void devGpibSrqWaitTimeoutSet(
+    const char *interfaceName, int gpibAddr, double timeout)
+{
+    devGpibDeviceInterfaceSetCommon
+
+    pdeviceInstance->srqWaitTimeout = timeout;
+}
+
+static const iocshArg devGpibReportArg0 = {"level", iocshArgInt};
+static const iocshArg *const devGpibReportArgs[1] = {&devGpibReportArg0};
+static const iocshFuncDef devGpibReportDef =
+    {"devGpibReport", 1, devGpibReportArgs};
+static void devGpibReportCall(const iocshArgBuf * args) {
+        pdevSupportGpib->report(args[0].ival);
+}
+
+static const iocshArg devGpibQueueTimeoutArg0 =
+ {"interfaceName",iocshArgString};
+static const iocshArg devGpibQueueTimeoutArg1 = {"gpibAddr",iocshArgInt};
+static const iocshArg devGpibQueueTimeoutArg2 = {"timeout",iocshArgDouble};
+static const iocshArg *const devGpibQueueTimeoutArgs[3] =
+ {&devGpibQueueTimeoutArg0,&devGpibQueueTimeoutArg1,&devGpibQueueTimeoutArg2};
+static const iocshFuncDef devGpibQueueTimeoutDef =
+    {"devGpibQueueTimeout", 3, devGpibQueueTimeoutArgs};
+static void devGpibQueueTimeoutCall(const iocshArgBuf * args) {
+    devGpibQueueTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
+}
+
+static const iocshArg devGpibSrqWaitTimeoutArg0 =
+ {"interfaceName",iocshArgString};
+static const iocshArg devGpibSrqWaitTimeoutArg1 = {"gpibAddr",iocshArgInt};
+static const iocshArg devGpibSrqWaitTimeoutArg2 = {"timeout",iocshArgDouble};
+static const iocshArg *const devGpibSrqWaitTimeoutArgs[3] =
+ {&devGpibSrqWaitTimeoutArg0,&devGpibSrqWaitTimeoutArg1,&devGpibSrqWaitTimeoutArg2};
+static const iocshFuncDef devGpibSrqWaitTimeoutDef =
+    {"devGpibSrqWaitTimeout", 3, devGpibSrqWaitTimeoutArgs};
+static void devGpibSrqWaitTimeoutCall(const iocshArgBuf * args) {
+    devGpibSrqWaitTimeoutSet(args[0].sval,args[1].ival,args[2].dval);
+}
+
+static void devGpib(void)
+{
+    static int firstTime = 1;
+    if(!firstTime) return;
+    firstTime = 0;
+    iocshRegister(&devGpibReportDef,devGpibReportCall);
+    iocshRegister(&devGpibQueueTimeoutDef,devGpibQueueTimeoutCall);
+    iocshRegister(&devGpibSrqWaitTimeoutDef,devGpibSrqWaitTimeoutCall);
+}
+epicsExportRegistrar(devGpib);

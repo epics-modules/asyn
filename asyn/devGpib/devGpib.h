@@ -10,7 +10,8 @@
 /*
  * Header file to be included in gpib device support modules
  *
- * Author: Benjamin Franksen
+ * Current Author: Marty Kraimer
+ * Original Author: Benjamin Franksen
  ******************************************************************************
  *	This file is included by GPIB device support modules.
  *      A device support module must define one or more of the following:
