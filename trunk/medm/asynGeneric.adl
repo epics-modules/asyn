@@ -1,14 +1,14 @@
 
 file {
-	name="/home/phoebus/NORUME/src/EPICS/modules/soft/asyn/medm/asynTrace.adl"
-	version=030003
+	name="/home/phoebus3/MRK/epics/modules/soft/asynNew/medm/asynGeneric.adl"
+	version=030004
 }
 display {
 	object {
-		x=341
-		y=206
+		x=257
+		y=24
 		width=365
-		height=200
+		height=300
 	}
 	clr=14
 	bclr=56
@@ -87,19 +87,6 @@ display {
 		1a7309,
 	}
 }
-text {
-	object {
-		x=0
-		y=6
-		width=365
-		height=16
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="ioc: $(ioc) port: $(port) addr: $(addr)"
-	align="horiz. centered"
-}
 "text entry" {
 	object {
 		x=141
@@ -108,10 +95,11 @@ text {
 		height=18
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIOTruncateSize"
+		chan="$(ioc)traceIOTruncateSize"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	limits {
 	}
 }
@@ -136,10 +124,11 @@ text {
 		height=18
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceFile"
+		chan="$(ioc)traceFile"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	format="string"
 	limits {
 	}
@@ -156,48 +145,6 @@ text {
 	}
 	textix="traceIOFile"
 	align="horiz. right"
-}
-text {
-	object {
-		x=60
-		y=66
-		width=96
-		height=14
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="traceError"
-}
-"choice button" {
-	object {
-		x=10
-		y=65
-		width=45
-		height=16
-	}
-	control {
-		chan="$(ioc):$(port)$(addr)traceError"
-		clr=14
-		bclr=51
-	}
-	stacking="column"
-}
-"text update" {
-	object {
-		x=10
-		y=46
-		width=45
-		height=12
-	}
-	monitor {
-		chan="$(ioc):$(port)$(addr)traceSet"
-		clr=14
-		bclr=32
-	}
-	format="hexadecimal"
-	limits {
-	}
 }
 text {
 	object {
@@ -219,10 +166,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIODriver"
+		chan="$(ioc)traceIODriver"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -245,10 +193,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceFlow"
+		chan="$(ioc)traceFlow"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -271,10 +220,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIOFilter"
+		chan="$(ioc)traceIOFilter"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -297,10 +247,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIODevice"
+		chan="$(ioc)traceIODevice"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -335,10 +286,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIOAscii"
+		chan="$(ioc)traceIOAscii"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -361,10 +313,11 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIOEscape"
+		chan="$(ioc)traceIOEscape"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
 }
 text {
@@ -387,27 +340,12 @@ text {
 		height=16
 	}
 	control {
-		chan="$(ioc):$(port)$(addr)traceIOHex"
+		chan="$(ioc)traceIOHex"
 		clr=14
 		bclr=51
 	}
+	clrmod="alarm"
 	stacking="column"
-}
-"text update" {
-	object {
-		x=193
-		y=46
-		width=45
-		height=12
-	}
-	monitor {
-		chan="$(ioc):$(port)$(addr)traceIOSet"
-		clr=14
-		bclr=32
-	}
-	format="hexadecimal"
-	limits {
-	}
 }
 text {
 	object {
@@ -420,4 +358,142 @@ text {
 		clr=14
 	}
 	textix="traceIOMask"
+}
+text {
+	object {
+		x=60
+		y=66
+		width=96
+		height=14
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceError"
+}
+"choice button" {
+	object {
+		x=10
+		y=65
+		width=45
+		height=16
+	}
+	control {
+		chan="$(ioc)traceError"
+		clr=14
+		bclr=51
+	}
+	clrmod="alarm"
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=1
+		y=230
+		width=45
+		height=16
+	}
+	control {
+		chan="$(ioc)AutoConnect"
+		clr=14
+		bclr=51
+	}
+	clrmod="alarm"
+	stacking="column"
+}
+text {
+	object {
+		x=51
+		y=231
+		width=96
+		height=14
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="autoConnect"
+}
+"choice button" {
+	object {
+		x=193
+		y=230
+		width=45
+		height=16
+	}
+	control {
+		chan="$(ioc)Enable"
+		clr=14
+		bclr=51
+	}
+	clrmod="alarm"
+	stacking="column"
+}
+text {
+	object {
+		x=243
+		y=231
+		width=96
+		height=14
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Enable"
+}
+"choice button" {
+	object {
+		x=95
+		y=250
+		width=45
+		height=16
+	}
+	control {
+		chan="$(ioc)Connect"
+		clr=14
+		bclr=51
+	}
+	clrmod="alarm"
+	stacking="column"
+}
+text {
+	object {
+		x=145
+		y=251
+		width=96
+		height=14
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Connect"
+}
+"text entry" {
+	object {
+		x=150
+		y=0
+		width=150
+		height=18
+	}
+	control {
+		chan="$(ioc)PortAddr"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=48
+		y=0
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="port,addr"
+	align="horiz. right"
 }

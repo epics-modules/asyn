@@ -1,0 +1,137 @@
+record(stringout,"$(ioc)PortAddr")
+{
+    field(FLNK,"$(ioc)ConnectDevice")
+}
+record(sub,"$(ioc)ConnectDevice")
+{
+    field(INAM,"asynConnectDeviceInit")
+    field(SNAM,"asynConnectDevice")
+    field(DESC,"$(ioc)PortAddr")
+    field(FLNK,"$(ioc)fan0")
+}
+record(fanout,"$(ioc)fan0")
+{
+    field(LNK1,"$(ioc)fan1")
+    field(LNK2,"$(ioc)fan2")
+}
+record(fanout,"$(ioc)fan1")
+{
+    field(LNK1,"$(ioc)Enable")
+    field(LNK2,"$(ioc)AutoConnect")
+    field(LNK3,"$(ioc)Connect")
+    field(LNK4,"$(ioc)traceError")
+    field(LNK5,"$(ioc)traceIODevice")
+    field(LNK6,"$(ioc)traceIOFilter")
+}
+record(fanout,"$(ioc)fan2")
+{
+    field(LNK1,"$(ioc)traceIODriver")
+    field(LNK2,"$(ioc)traceFlow")
+    field(LNK3,"$(ioc)traceIOAscii")
+    field(LNK4,"$(ioc)traceIOEscape")
+    field(LNK5,"$(ioc)traceIOHex")
+    field(FLNK,"$(ioc)Connected")
+}
+record(sub,"$(ioc)Connected")
+{
+    field(INAM,"asynConnectedInit")
+    field(SNAM,"asynConnected")
+    field(DESC,"$(ioc)ConnectDevice")
+}
+record(bo,"$(ioc)Enable")
+{
+    field(DTYP,"asynEnableG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+}
+record(bo,"$(ioc)AutoConnect")
+{
+    field(DTYP,"asynAutoConnectG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+}
+record(bo,"$(ioc)Connect")
+{
+    field(DTYP,"asynConnectG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+}
+
+record(bo,"$(ioc)traceError")
+{
+    field(DTYP,"asynTraceG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x1")
+}
+record(bo,"$(ioc)traceIODevice")
+{
+    field(DTYP,"asynTraceG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x2")
+}
+record(bo,"$(ioc)traceIOFilter")
+{
+    field(DTYP,"asynTraceG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x4")
+}
+record(bo,"$(ioc)traceIODriver")
+{
+    field(DTYP,"asynTraceG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x8")
+}
+record(bo,"$(ioc)traceFlow")
+{
+    field(DTYP,"asynTraceG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x10")
+}
+
+record(bo,"$(ioc)traceIOAscii")
+{
+    field(DTYP,"asynTraceIOG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x1")
+}
+record(bo,"$(ioc)traceIOEscape")
+{
+    field(DTYP,"asynTraceIOG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x2")
+}
+record(bo,"$(ioc)traceIOHex")
+{
+    field(DTYP,"asynTraceIOG")
+    field(OUT,"@$(ioc)ConnectDevice")
+    field(ZNAM,"off")
+    field(ONAM,"on")
+    field(MASK,"0x2")
+}
+record(longout,"$(ioc)traceIOTruncateSize")
+{
+    field(DTYP,"asynTraceIOTrunG")
+    field(OUT,"@$(ioc)ConnectDevice")
+}
+record(stringout,"$(ioc)traceFile")
+{
+    field(DTYP,"asynTraceFileG")
+    field(OUT,"@$(ioc)ConnectDevice")
+}

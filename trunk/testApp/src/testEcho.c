@@ -114,7 +114,7 @@ static void writeReadThread(testPvt *ptestPvt)
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s calling disconnectDevice\n",
         ptestPvt->prefix);
-    status = pasynManager->disconnectDevice(pasynUser);
+    status = pasynManager->disconnect(pasynUser);
     if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s disconnectDevice %s\n",
         ptestPvt->prefix,pasynUser->errorMessage);
     status = pasynManager->freeAsynUser(pasynUser);

@@ -1,6 +1,0 @@
-#support for testing 
-device(longout,INST_IO,devAsynTrace,"asynDriver Trace")
-device(longout,INST_IO,devAsynTraceIO,"asynDriver Trace IO")
-device(longout,INST_IO,devAsynTraceIOTruncateSize,"asynDriver TraceIOTruncateSize")
-device(stringout,INST_IO,devAsynTraceFile,"asynDriver Trace File")
-driver(drvAsyn)

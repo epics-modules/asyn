@@ -1,0 +1,5 @@
+#!/usr/bin/bash
+medm=medm
+asynTrace=../../medm/asynGeneric.adl
+${medm} -cleanup -x -macro "ioc=asynTest" ${asynTrace} &
+${medm} -attach -x test.adl &

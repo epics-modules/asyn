@@ -528,12 +528,18 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
     int intVec = pgpib->intVec;
     ip488RegisterMap *regs = pgpib->regs;
     int ipstatus;
+    int addr = pasynManager->getAddr(pasynUser);
 
+    if(addr>=0) {
+        pasynManager->exceptionConnect(pasynUser);
+        return(asynSuccess);
+    }
     ipstatus = ipmIntConnect(carrier,module,intVec,
         gpibInterruptHandler,(int)pgpib);
     if(ipstatus) {
-        printf("gsIP488Configure ipmIntConnect failed\n");
-        return(0);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "gsIP488Configure ipmIntConnect failed\n");
+        return(asynError);
     }
     ipmIrqCmd(carrier, module, 0, ipac_irqEnable);
     writew((epicsUInt16)pgpib->intVec,&regs->vectorRegister);
@@ -551,6 +557,7 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
     auxCmd(regs,auxCmdswrstC,0,0,0);
     sicIpGpib(pgpib); /* assert IFC */
     auxCmd(regs,auxCmdsreS,0,0,0);
+    pasynManager->exceptionConnect(pasynUser);
     return(asynSuccess);
 }
 
@@ -560,10 +567,17 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
     int carrier = pgpib->carrier;
     int module = pgpib->module;
     ip488RegisterMap *regs = pgpib->regs;
+    int addr = pasynManager->getAddr(pasynUser);
+
+    if(addr>=0) {
+        pasynManager->exceptionDisconnect(pasynUser);
+        return(asynSuccess);
+    }
     /* Issue a software reset to the GPIB controller chip*/
     auxCmd(regs,auxCmdswrstS,0,0,0);
     epicsThreadSleep(.01);
     ipmIrqCmd(carrier, module, 0, ipac_irqDisable);
+    pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
 }
 
@@ -762,7 +776,7 @@ static asynGpibPort gsTi9914 = {
 };
 
 int gsIP488Configure(char *portName,int carrier, int module, int intVec,
-    int priority)
+    int autoConnect,int priority)
 {
     gpib *pgpib;
     int ipstatus;
@@ -796,7 +810,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
     pgpib->waitForInterrupt = epicsEventMustCreate(epicsEventEmpty);
     pgpib->regs = regs;
     pgpib->asynGpibPvt = pasynGpib->registerPort(pgpib->portName,
-        &gsTi9914,pgpib,priority,0);
+        1,autoConnect, &gsTi9914,pgpib,priority,0);
     return(0);
 }
 
@@ -806,20 +820,22 @@ static const iocshArg gsIP488ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg gsIP488ConfigureArg1 = { "carrier",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg2 = { "module",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg3 = { "intVec",iocshArgInt};
-static const iocshArg gsIP488ConfigureArg4 = { "priority",iocshArgInt};
+static const iocshArg gsIP488ConfigureArg4 = { "autoConnect",iocshArgInt};
+static const iocshArg gsIP488ConfigureArg5 = { "priority",iocshArgInt};
 static const iocshArg *gsIP488ConfigureArgs[] = {&gsIP488ConfigureArg0,
     &gsIP488ConfigureArg1, &gsIP488ConfigureArg2, &gsIP488ConfigureArg3,
-    &gsIP488ConfigureArg4};
-static const iocshFuncDef gsIP488ConfigureFuncDef = {"gsIP488Configure",5,gsIP488ConfigureArgs};
+    &gsIP488ConfigureArg4,&gsIP488ConfigureArg5};
+static const iocshFuncDef gsIP488ConfigureFuncDef = {"gsIP488Configure",6,gsIP488ConfigureArgs};
 static void gsIP488ConfigureCallFunc(const iocshArgBuf *args)
 {
-    char *portName = args[0].sval;
-    int    carrier = args[1].ival;
-    int     module = args[2].ival;
-    int     intVec = args[3].ival;
-    int   priority = args[4].ival;
+    char  *portName = args[0].sval;
+    int     carrier = args[1].ival;
+    int      module = args[2].ival;
+    int      intVec = args[3].ival;
+    int autoConnect = args[4].ival;
+    int    priority = args[5].ival;
 
-    gsIP488Configure (portName, carrier, module, intVec, priority);
+    gsIP488Configure (portName, carrier, module, intVec, autoConnect, priority);
 }
 
 
