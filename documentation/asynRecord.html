@@ -38,10 +38,10 @@ device support code in many applications.
   </li>
   <li>Dynamically change the asyn device &quot;port&quot; and &quot;address&quot;, so a single asyn 
   record can be switched from talking to one device to another at run time.</li>
-  <li>Provide access to asynTrace for the device, controlling debugging output 
+  <li>Provide access to asynTrace, controlling debugging output 
   for any asyn device.</li>
   <li>Control the the baud rate, parity, etc. for local serial ports.</li>
-  <li>Control the GPIB address and exectute global and addressed commands for 
+  <li>Control the GPIB address and execute global and addressed commands for 
   GPIB devices.</li>
   <li>Create asyn socket ports  dynamically at run time for new TCP/IP 
   connections.</li>
@@ -714,14 +714,17 @@ addressed devices. If the UCMD field is set to any value except &quot;None&quot;
     <TD>R/W</TD>
     <TD>&quot;Autoconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
-    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.&nbsp;</TD></TR>
+    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;noAutoConnect&quot; and &quot;autoConnect&quot;.&nbsp;The 
+    value read reflects current state of the autoconnect flag, i.e. the value 
+    returned from isAutoConnect().</TD></TR>
   <tr>
     <TD>ENBL</TD>
     <TD>R/W</TD>
     <TD>&quot;Disable/Enable&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>Disables or enables the port.&nbsp; Choices are &quot;Disable&quot; and
-      &quot;Enable&quot;.</TD>
+      &quot;Enable&quot;. The value read reflects current state of the enabled 
+    flag, i.e. the value returned from isEnabled().</TD>
   </tr>
   <tr>
     <TD>CNCT</TD>
@@ -729,7 +732,8 @@ addressed devices. If the UCMD field is set to any value except &quot;None&quot;
     <TD>&quot;Connect/Disconnect&quot;</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>Disconnects or connects the device.&nbsp; Choices are &quot;Disconnect&quot; and 
-    &quot;Connect&quot;</TD>
+    &quot;Connect&quot;. The value read reflects current state of the connected 
+    flag, i.e. the value returned from isConnected().</TD>
   </tr>
 </TABLE>
 <p>&nbsp;</p>
