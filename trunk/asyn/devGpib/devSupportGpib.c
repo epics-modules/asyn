@@ -99,7 +99,7 @@ struct devGpibPvt {
 };
 
 static long initRecord(dbCommon* precord, struct link * plink);
-static long processGPIBSOFT(gpibDpvt *pgpibDpvt);
+static void processGPIBSOFT(gpibDpvt *pgpibDpvt);
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
 static void queueWriteRequest(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
 static void queueRequest(gpibDpvt *pgpibDpvt, gpibWork work);
@@ -231,17 +231,28 @@ static long initRecord(dbCommon *precord, struct link *plink)
     return 0;
 }
 
-static long processGPIBSOFT(gpibDpvt *pgpibDpvt)
+static void processGPIBSOFT(gpibDpvt *pgpibDpvt)
 {
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     asynUser *pasynUser = pgpibDpvt->pasynUser;
     dbCommon *precord = pgpibDpvt->precord;
+    int status = 0;
 
-    asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s processGPIBSOFT but no convert\n",
-        precord->name);
-    if(!pgpibCmd->convert) return -1;
+    if(!pgpibCmd->convert) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s processGPIBSOFT but no convert\n",precord->name);
+        recGblSetSevr(pgpibDpvt->precord,READ_ALARM,INVALID_ALARM);
+        return;
+    }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s processGPIBSOFT\n",precord->name);
-    return pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+    pasynUser->errorMessage[0] = 0;
+    status = pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+            precord->name,pasynUser->errorMessage);
+        recGblSetSevr(pgpibDpvt->precord,READ_ALARM,INVALID_ALARM);
+    }
+    return;
 }
 
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish)
@@ -802,11 +813,12 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
     }
     if (pgpibCmd->convert) {
         int cnvrtStat;
+        pasynUser->errorMessage[0] = 0;
         cnvrtStat = pgpibCmd->convert(
             pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
         if(cnvrtStat==-1) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s convert failed\n",precord->name);
+                "%s convert failed %s\n",precord->name,pasynUser->errorMessage);
             failure = -1;
         } else {
             lenMessage = cnvrtStat;
@@ -1267,7 +1279,7 @@ static long report(int interest)
 
 static gDset devGpib= {
     6,
-    {report,0,0,0,0,0},
+    {report,init,0,0,0,0},
     0
 };
 epicsExportAddress(dset,devGpib);

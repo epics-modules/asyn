@@ -73,8 +73,11 @@ long epicsShareAPI devGpib_readAi(aiRecord * pai)
  
     if(pai->pact) return (got_special_linconv ? 0 : 2);
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,aiGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,aiGpibFinish);
+    }
     return (got_special_linconv ? 0 : 2);
 }
 
@@ -85,13 +88,21 @@ static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     aiRecord *pai = ((aiRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     DEVSUPFUN got_special_linconv = ((gDset *) pai->dset)->funPtr[5];
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pai->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if (!pgpibDpvt->msg) {
-        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",pai->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
@@ -144,8 +155,11 @@ long epicsShareAPI devGpib_writeAo(aoRecord * pao)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pao->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,aoGpibStart,aoGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,aoGpibStart,aoGpibFinish);
+    }
     return 0;
 }
 
@@ -209,8 +223,11 @@ long epicsShareAPI devGpib_readBi(biRecord * pbi)
  
     if(pbi->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,biGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,biGpibFinish);
+    }
     return 0;
 }
 
@@ -218,13 +235,20 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     biRecord *pbi = ((biRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    asynUser *pasynUser = pgpibDpvt->pasynUser;
     unsigned long value;
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pbi->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
         if(pgpibDpvt->efastVal>=0) {
             pbi->rval = pgpibDpvt->efastVal;
@@ -253,7 +277,7 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 
 static int boGpibStart(gpibDpvt *pgpibDpvt,int failure);
 static int boGpibFinish(gpibDpvt *pgpibDpvt,int failure);
-static long writeBoSpecial(boRecord * pbo);
+static void writeBoSpecial(boRecord * pbo);
 static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure);
 static char *ifcName[] = {"noop", "IFC", 0};
 static char *renName[] = {"drop REN", "assert REN", 0};
@@ -316,10 +340,14 @@ long epicsShareAPI devGpib_writeBo(boRecord * pbo)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pbo->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) 
-        return writeBoSpecial(pbo);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,boGpibStart,boGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else
+    if(cmdType&(GPIBIFC|GPIBREN|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
+        writeBoSpecial(pbo);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,boGpibStart,boGpibFinish);
+    }
     return 0;
 }
 
@@ -344,17 +372,17 @@ static int boGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     return failure;
 }
 
-static long writeBoSpecial(boRecord * pbo)
+static void writeBoSpecial(boRecord * pbo)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pbo);
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
-    if(pbo->pact) return 0;
+    if(pbo->pact) return;
     if(cmdType&(GPIBIFC|GPIBDCL|GPIBLLO|GPIBSDC|GPIBGTL|GPIBRESETLNK)) {
-        if(pbo->val==0) return 0;
+        if(pbo->val==0) return;
     }
     pdevSupportGpib->queueRequest(pgpibDpvt,boGpibWorkSpecial);
-    return 0;
+    return;
 }
 
 static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
@@ -433,8 +461,11 @@ long epicsShareAPI devGpib_readEv(eventRecord * pev)
  
     if(pev->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,evGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,evGpibFinish);
+    }
     return 0;
 }
 
@@ -443,11 +474,19 @@ static int evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     unsigned short value;
     eventRecord *pev = ((eventRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pev->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if (!pgpibDpvt->msg) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",pev->name);
@@ -509,8 +548,11 @@ long epicsShareAPI devGpib_readLi(longinRecord * pli)
     if(pli->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(cmdType&GPIBSRQHANDLER)  return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,liGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,liGpibFinish);
+    }
     return 0;
 }
 
@@ -519,11 +561,19 @@ static int liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     long value;
     longinRecord *pli = ((longinRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pli->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if (!pgpibDpvt->msg) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",pli->name);
@@ -571,8 +621,11 @@ long epicsShareAPI devGpib_writeLo(longoutRecord * plo)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(plo->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,loGpibStart,loGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,loGpibStart,loGpibFinish);
+    }
     return 0;
 }
 
@@ -652,8 +705,11 @@ long epicsShareAPI devGpib_readMbbi(mbbiRecord * pmbbi)
  
     if(pmbbi->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiGpibFinish);
+    }
     return 0;
 }
 
@@ -661,13 +717,20 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     mbbiRecord *pmbbi = ((mbbiRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    asynUser *pasynUser = pgpibDpvt->pasynUser;
     unsigned long value;
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pmbbi->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if(pgpibCmd->type&(GPIBEFASTI|GPIBEFASTIW)) {
         if(pgpibDpvt->efastVal>=0) {
             pmbbi->rval = pgpibDpvt->efastVal;
@@ -724,8 +787,11 @@ long epicsShareAPI devGpib_readMbbiDirect(mbbiDirectRecord * pmbbiDirect)
  
     if(pmbbiDirect->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiDirectGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,mbbiDirectGpibFinish);
+    }
     return 0;
 }
 
@@ -734,12 +800,19 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     unsigned long value;
     mbbiDirectRecord *pmbbiDirect = ((mbbiDirectRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cnvrtStat;
     asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pmbbiDirect->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if (!pgpibDpvt->msg) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",pmbbiDirect->name);
@@ -816,8 +889,11 @@ long epicsShareAPI devGpib_writeMbbo(mbboRecord * pmbbo)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pmbbo->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,mbboGpibStart,mbboGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,mbboGpibStart,mbboGpibFinish);
+    }
     return 0;
 }
 
@@ -872,8 +948,12 @@ long epicsShareAPI devGpib_writeMbboDirect(mbboDirectRecord * pmbboDirect)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pmbboDirect->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,mbboDirectGpibStart,mbboDirectGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,
+            mbboDirectGpibStart,mbboDirectGpibFinish);
+    }
     return 0;
 }
 
@@ -926,8 +1006,11 @@ long epicsShareAPI devGpib_readSi(stringinRecord * psi)
  
     if(psi->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueReadRequest(pgpibDpvt,0,siGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueReadRequest(pgpibDpvt,0,siGpibFinish);
+    }
     return 0;
 }
 
@@ -935,11 +1018,19 @@ static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     stringinRecord *psi = ((stringinRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
-        if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
+        pasynUser->errorMessage[0] = 0;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                psi->name,pasynUser->errorMessage);
             failure = -1;
+        }
     } else if (!pgpibDpvt->msg) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",psi->name);
@@ -993,8 +1084,11 @@ long epicsShareAPI devGpib_writeSo(stringoutRecord * pso)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pso->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
-    pdevSupportGpib->queueWriteRequest(pgpibDpvt,soGpibStart,soGpibFinish);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    } else {
+        pdevSupportGpib->queueWriteRequest(pgpibDpvt,soGpibStart,soGpibFinish);
+    }
     return 0;
 }
 
@@ -1056,7 +1150,10 @@ long epicsShareAPI devGpib_readWf(waveformRecord * pwf)
     int cmdType = gpibCmdGetType(pgpibDpvt);
  
     if(pwf->pact) return 0;
-    if(cmdType&GPIBSOFT) return pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+    if(cmdType&GPIBSOFT) {
+        pdevSupportGpib->processGPIBSOFT(pgpibDpvt);
+        return 0;
+    }
     if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         pdevSupportGpib->queueReadRequest(pgpibDpvt,0,wfGpibFinish);
     } else { /*Must be Output Operation*/
@@ -1088,12 +1185,19 @@ static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     waveformRecord *pwf = (waveformRecord *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = gpibCmdGetType(pgpibDpvt);
+    int cnvrtStat;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         if(pgpibCmd->convert) {
-            if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
-                failure = -1;
+        cnvrtStat = pgpibCmd->convert(pgpibDpvt,
+            pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
+        if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s convert failed %s\n",
+                pwf->name,pasynUser->errorMessage);
+            failure = -1;
+        }
         } else if(pwf->ftvl!=menuFtypeCHAR) {
             asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
                 "%s ftvl != CHAR but no convert\n",pwf->name);
