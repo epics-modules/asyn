@@ -159,7 +159,7 @@ report could have problems. Does this matter?</p>
 interrupt mechanism be provided? Perhaps is is best to wait until a need
 arises.</p>
 <h3>Planned additions</h3>
-<p>Hopefully Dirk Ziomoch will get time soon to convert streams to
+<p>Hopefully Dirk Zimoch will get time soon to convert streams to
 use asynDriver.</p>
 <p>Additional low level support</p>
 <ul>
@@ -909,7 +909,7 @@ the vxi11. It provides:</p>
 
 <p>VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It
 is an RPC based protocol. In addition to the VXI-11 standard three additional
-standard are defined.</p>
+standards are defined.</p>
 <ul>
   <li>VXI-11.1 - A standard for communicating with VXIbus instruments. These
     devices have a vxiName that starts with "vxi".</li>
@@ -920,7 +920,6 @@ standard are defined.</p>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 instruments.
     This means that the TCP/IP connection is talking directly with an
     instrument. These devices have an vxiName that starts with "inst".</li>
-  <li></li>
 </ul>
 
 <p>Consult the following documents (available on-line for free) for
@@ -940,11 +939,11 @@ details.</p>
   <li>Tektronix TDS3014B Scope.
     <p>When communicating with the Ethernet port it acts like a VXI-11.2
     rather than a VXI-11.3 device. It seems to just accept any GPIB
-    address</p>
+    address.</p>
   </li>
 </ul>
 
-<p>The following commands are specified in the st.cmd file</p>
+<p>The following commands may be specified in the st.cmd file</p>
 <pre>    E2050Reboot("inet_addr")
     E5810Reboot("inet_addr","password")
     vxi11Configure("portName","inet_addr",recoverWithIFC,timeout,"vxiName",priority)</pre>
@@ -955,7 +954,7 @@ where
   <li>portName - The portName that is registered with asynGib.</li>
   <li>recoverWithIFC - (0,1) =&gt; (don't, do) issue IFC when error
   occurs.</li>
-  <li>timeout - timeout in seconds as a double. If 0.0 then a default is
+  <li>timeout - I/O operation timeout in seconds as a double. If 0.0 then a default is
     assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
@@ -999,12 +998,15 @@ where the arguments are:
     ports.  For example, the arguments which confirm the default settings are
     <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. Note that if any stty
     arguments are present both the priority and openOnlyOnDisconnect
-    arguments must also be present.</li>
+    arguments must also be present but other than that the order of the stty arguments is not
+    important.k</li>
 </ul>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
-using hardware-specific commands. The following example shows the commands to
-set up and configure a port on a GreenSprings octal UART Industry-Pack module
+using hardware-specific commands. Once this is done the standard drvGenericSerialConfigure
+command can be issued.  For example, the following example shows the
+configuration
+procedure for a port on a GreenSprings octal UART Industry-Pack module
 on a GreenSprings VIP616-01 carrier.</p>
 <pre>ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv(1)
