@@ -118,6 +118,11 @@ struct devGpibParmBlock {
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
+    /*The following are set by devSupportGpib*/
+    char *msg;   /*shared msg buffer for all gpibCmds*/
+    int  msgSize;/*size of msg*/
+    char *rsp;   /*shared msg buffer for all gpibCmds*/
+    int  rspSize;/*size of msg*/
     /*Are the following still needed? Marty thinks not */
     char *name;         /* Name of this device support*/
     int *debugFlag; /* pointer to debug flag */
@@ -154,13 +159,13 @@ struct gpibDpvt {
     devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
 };
 
-typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
+typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 /* If a method retuns int then 0,1) => (OK, failure) */
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
-    void (*queueReadRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
-    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
+    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
+    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start, gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)( gpibDpvt *pgpibDpvt,
         srqHandler handler,void *unsollicitedHandlerPvt);
