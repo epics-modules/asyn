@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.1 2004-04-08 18:06:50 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.2 2004-04-08 21:35:36 rivers Exp $
  */
 
 #include <string.h>
@@ -35,7 +35,7 @@
 #include <osiUnistd.h>
 #include <epicsExport.h>
 #include <asynDriver.h>
-#include <drvAsynLocalSerialPort.h>
+#include <drvAsynSerialPort.h>
 
 #if !defined(vxWorks) && !defined(__rtems__)
 # include <sys/poll.h>
