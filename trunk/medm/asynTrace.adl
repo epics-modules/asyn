@@ -1,6 +1,6 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynOctetTrace.adl"
+	name="C:\Program Files\EPICS\adls\asynTrace.adl"
 	version=020306
 }
 display {
