@@ -20,6 +20,12 @@ alink="#FF0000">
 <h2>Release 4-0</h2>
 </center>
 
+<h3>asynRecord</h3>
+<p>asynRecord (and other code) use epicsStrSnPrintEscaped.  The version
+in base 3.14.6 has a buffer overflow problem that can lead to
+corruption.  In fact it is guaranteed to lead to corruption in
+asynRecord if the received string is longer than 40 characters.<p>
+
 <h3>asynManager</h3>
 <ul>
   <li>removeInterruptUser - has not been tested</li>
