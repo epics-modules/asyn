@@ -41,12 +41,29 @@ asyn_SRCS += devCommonGpib.c
 asyn_SRCS += devSupportGpib.c
 
 SRC_DIRS += $(ASYN)/vxi11
-asyn_SRCS += drvVxi11.c
 asyn_SRCS += vxi11core_xdr.c
+asyn_SRCS += drvVxi11.c
 asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
+
+ifeq ($(OS_CLASS),vxWorks)
+vxi11core_xdr.c: $(ASYN)/vxi11/rpc/vxi11core_xdr.c
+	cp $(ASYN)/vxi11/rpc/*.[ch] .
+else
+ifeq ($(OS_CLASS),RTEMS)
+vxi11core_xdr.c: $(ASYN)/vxi11/rpc/vxi11core_xdr.c
+	cp $(ASYN)/vxi11/rpc/*.[ch] .
+else
+RPCGEN_FLAGS_solaris = -M
+vxi11core_xdr.c: $(ASYN)/vxi11/vxi11core.rpcl $(ASYN)/vxi11/vxi11intr.rpcl
+	cp $(ASYN)/vxi11/vxi11core.rpcl .
+	cp $(ASYN)/vxi11/vxi11intr.rpcl .
+	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11core.rpcl
+	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11intr.rpcl
+endif
+endif
 
 SRC_DIRS += $(ASYN)/drvGenericSerial
 asyn_SRCS += drvGenericSerial.c
