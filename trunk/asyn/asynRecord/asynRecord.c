@@ -273,6 +273,12 @@ static long special(struct dbAddr * paddr, int after)
                 reportError(pasynRec, asynSuccess, "busy  try again later");
                 return -1;
             }
+        } else if(fieldIndex==asynRecordSOCK) {
+            if(state!=stateNoDevice) {
+                reportError(pasynRec, asynSuccess,
+                        "PORT has already been configured");
+                return -1;
+            }
         } else if(fieldIndex!=asynRecordAQR && state==stateNoDevice) {
             reportError(pasynRec, asynSuccess,
                         "no device specify valid PORT,ADDR");
@@ -281,6 +287,14 @@ static long special(struct dbAddr * paddr, int after)
         return 0;
     }
     resetError(pasynRec);
+    if(fieldIndex == asynRecordSOCK) {
+        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0);
+        if(status) {
+            reportError(pasynRec,asynSuccess,"drvAsynIPPortConfigure failed\n");
+            return 0;
+        }
+        fieldIndex = asynRecordPORT;
+    }
     /* The first set of fields can be handled even if state != stateIdle */
     switch (fieldIndex) {
     case asynRecordAQR:
@@ -376,13 +390,6 @@ static long special(struct dbAddr * paddr, int after)
             reportError(pasynRec, asynSuccess,
                 "connectDevice failed: %s", pasynUser->errorMessage);
         }
-        return 0;
-    }
-    if(fieldIndex == asynRecordSOCK) {
-        strcpy(pasynRec->port, pasynRec->sock);
-        pasynRec->addr = 0;
-        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0);
-        pasynRecPvt->state = stateNoDevice;
         return 0;
     }
     /* remaining cases must be handled by asynCallbackSpecial*/
