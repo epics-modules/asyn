@@ -314,8 +314,8 @@ Create a new device support module
 Now that the device operations and EPICS process variable types have been
  chosen it's time to create a new EPICS application to provide a place to
  perform subsequent software development.
- The easiest way to do this is with the makeBaseApp.pl script supplied with
- EPICS.
+ The easiest way to do this is with the makeSupport.pl script supplied with
+ the EPICS ASYN package.
 \layout Standard
 
 Here are the commands I ran.
@@ -345,7 +345,7 @@ cd AB300
 norume> 
 \family roman 
 \series bold 
-/home/EPICS/modules/soft/asyn/bin/linux-x86/makeAsynSupport.pl -t instrument
+/home/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl -t devGpib
  AB300
 \layout Subsection
 
@@ -356,7 +356,7 @@ Edit the
 \family typewriter 
 configure/RELEASE
 \family default 
- file which makeBaseApp.pl created and modify the entries describing the
+ file which makeSupport.pl created and modify the entries describing the
  paths to where you installed EPICS base and ASYN:
 \layout LyX-Code
 
@@ -370,7 +370,7 @@ Edit the
 \family typewriter 
 configure/CONFIG
 \family default 
- file which makeBaseApp.pl created and specify the IOC architectures on which
+ file which makeSupport.pl created and specify the IOC architectures on which
  the application is to run.
  I wanted the application to run as a soft IOC, so I uncommented the 
 \family typewriter 
@@ -387,7 +387,7 @@ Create the device support file
 
 The contents of the device support file provide all the details of the communica
 tion between the device and EPICS.
- The makeAsynSupport.pl command created a skeleton device support file in
+ The makeSupport.pl command created a skeleton device support file in
  
 \family typewriter 
 src/devAB300.c
@@ -882,7 +882,7 @@ Modify the device support database definition file
 
 This file specifies the link between the DSET names defined in the device
  support file and the DTYP fields in the application database.
- The makeAsynSupport.pl command created an example file in 
+ The makeSupport.pl command created an example file in 
 \family typewriter 
 src/devAB300.dbd
 \family default 
@@ -1081,8 +1081,6 @@ What architecture do you want to use?
 linux-x86
 \layout Standard
 
-If you're just building in instrument support library you can leave off
- the two makeBaseApp.pl commands.
 \layout Subsection
 
 Modify the application database definition file
@@ -1334,7 +1332,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-13 15:39:31 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-05-18 16:10:16 $$
 \newline 
 ############################################################################
 \newline 
