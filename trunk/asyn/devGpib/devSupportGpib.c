@@ -622,7 +622,6 @@ static int restoreEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
     asynOctet   *pasynOctet = pgpibDpvt->pasynOctet;
     void        *drvPvt = pgpibDpvt->asynOctetPvt;
     asynStatus  status;
-    int eosLen;
 
     if(!pgpibCmd->eos) return 0;
     status = pasynOctet->setInputEos(drvPvt,pasynUser,
