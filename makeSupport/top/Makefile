@@ -6,12 +6,9 @@
 TOP = .
 include $(TOP)/configure/CONFIG
 
-DIRS += configure
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *Sup))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *sup))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *App))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard *app))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocBoot))
-DIRS := $(DIRS) $(filter-out $(DIRS), $(wildcard iocboot))
+DIRS := configure
+DIRS += $(wildcard *[Ss]up)
+DIRS += $(wildcard *[Aa]pp)
+DIRS += $(wildcard ioc[Bb]oot)
 
 include $(TOP)/configure/RULES_TOP

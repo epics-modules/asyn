@@ -1,7 +1,6 @@
-# Makefile
+## configure/Makefile
 
 TOP=..
-
 include $(TOP)/configure/CONFIG
 
 # Set the following to NO to disable consistency checking of
@@ -12,4 +11,3 @@ TARGETS = $(CONFIG_TARGETS)
 CONFIGS += $(subst ../,,$(wildcard $(CONFIG_INSTALLS)))
 
 include $(TOP)/configure/RULES
-
