@@ -59,17 +59,22 @@ code to low level communication drivers</p>
 than using libCom, it is independent of EPICS.</p>
 
 <p>The following are some of the existing EPICS general purpose device
+support systems that have been converted to use asynDriver.</p>
+<ul>
+  <li>gpibCore is the operating-system-independent version of the
+    Winans/Franksen GPIB support.</li>
+  <li>mpfSerial is the serial support provided with MPF (Message Passing
+    Facility)</li>
+</ul>
+
+<p>The following are some of the existing EPICS general purpose device
 support systems that could be converted to use asynDriver.</p>
 <ul>
-  <li>gpibCore is the Operating System Independent version of the
-    Winans/Franksen GPIB support.</li>
-  <li>streams is the protocol file based support for serial/GPIB/can from
+  <li>streams is the protocol file based support for serial/GPIB/CAN from
     Dirk Zimoch.</li>
   <li>devAscii/drvAscii is serial support from KECK Observatory.</li>
   <li>devOrnl is serial support from John Sinclair at Oak Ridge National
   Lab.</li>
-  <li>mpfSerial is the serial support provided with MPF (Message Passing
-    Facility)</li>
 </ul>
 
 <p>Each of these systems is used at EPICS facilities for accessing GPIB
@@ -1313,7 +1318,7 @@ and/or the other required modules are needed).
     (Unix style)</li>
   <pre>gunzip &lt;file&gt;.tar.gz
 tar xvf &lt;file&gt;.tar</pre>
-  <li>This creates a &lt;top&gt; application.</li>
+  <li>This creates a support &lt;top&gt;.</li>
   <pre>.../support/asyn/X-Y</pre>
   where X-Y is the release. For example.
   <pre>.../support/asyn/1-1</pre>
