@@ -518,7 +518,7 @@ dbTranslateEscape() to convert control characters (e.g. "\r", "\021") to
 bytes, these fields are combined into a single buffer, the length of the
 output is determined with strlen(), and the string is sent to the device.</p>
 
-<p>If OFMT="Binary" then the NOWT bytes from the BOUT field are sent to the
+<p>If OFMT="Binary" then NOWT bytes from the BOUT field are sent to the
 device.&nbsp; The OEOS field is ignored, and dbTranslateEscape() is not
 called. </p>
 
@@ -1137,10 +1137,9 @@ cases: </p>
       <td>W</td>
       <td>"About queueRequest"</td>
       <td>DBF_CHAR</td>
-      <td>Abort queueRequest. If either a process or special request has been
-        queued but not delivered it is canceled. If it is a process request
-        the record is put into alarm and record completion occurs. If a
-        special request is outstanding it is silently canceled.</td>
+      <td>Abort queueRequest. If a process request has been
+        queued but not delivered it is canceled,
+        the record is put into alarm and record completion occurs.</td>
     </tr>
   </tbody>
 </table>
