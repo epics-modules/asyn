@@ -1438,8 +1438,9 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
             if(fp) {
                 nout += epicsStrPrintEscaped(fp,buffer,nBytes);
             } else {
-                nout += epicsSnStrPrintEscaped(ptracePvt->traceBuffer, buffer,
+                nout += epicsStrSnPrintEscaped(ptracePvt->traceBuffer,
                                                ptracePvt->traceBufferSize,
+                                               buffer,
                                                nBytes);
                 errlogPrintf("%s\n",ptracePvt->traceBuffer);
             }
