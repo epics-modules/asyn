@@ -115,8 +115,8 @@ based devices.</p>
     the Winans/Franksen gpibCore support.</li>
   <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
     gpibCore support.</li>
-  <li>genericSerial: Support for devices connected to serial ports and
-    devices connected through Ethernet/Serial converter boxes.</li>
+  <li>genericSerial: Support for devices connected to serial ports, devices 
+  connected through Ethernet/Serial converter boxes, and TCP/IP sockets.</li>
   <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
     support.</li>
   <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack
@@ -293,6 +293,28 @@ thread associated with each port.</p>
   </li>
   <li><span style="font-weight: bold">asynTrace</span> asynTrace is a set of
     methods for generating diagnostic messages.</li>
+  <li><span style="font-weight: bold">asyn</span><span style="font-weight: 700">SyncIO</span> 
+  asynSyncIO is a set of
+    methods for performing synchronous I/O using asynManager and asynOctet. This interface
+    is convenient for code that is running in a thread that is allowed to wait.&nbsp; 
+  Examples include motor drivers, SNL programs and the shell commands described 
+  later in this document. The methods are:
+    <ul>
+      <li>connect - connect to a device and port, create asynUser for use by 
+      other methods.</li>
+      <li>connectSocket- connect to a TCP/IP socket and port, create an asyn 
+      port, create asynUser for use by other methods.</li>
+      <li>read - read device, wait for response. Optionally flush input before 
+      the read, and optionally set end of message string. The routine returns 
+      the number of 8-bit bytes read from the device or -1 to indicate error.</li>
+      <li>write - write device, wait for response.&nbsp; The routine returns the 
+      number of 8-bit bytes written to the device or -1 to indicate error.</li>
+      <li>writeRead - perform a &quot;write&quot; and then a &quot;read&quot; as an atomic 
+      operation. The routine returns the number of 8-bit bytes read from the 
+      device or -1 to indicate error.</li>
+      <li>flush - if input is buffered flush the buffer, wait for completion.</li>
+    </ul>
+  </li>
 </ul>
 
 <h3>Overview</h3>
@@ -349,6 +371,12 @@ and one or more interfaces.</p>
     drivers implement.</li>
   <li>asynTrace - An interface plus associated functions and definitions that
     implement the trace facility.</li>
+</ul>
+
+<p>asynSyncIO.h describes the following:</p>
+<ul>
+  <li>asynSyncIO - An interface for performing synchronous I/O using the 
+  asynManager and asynOctet interfaces.</li>
 </ul>
 
 <h3>asynStatus</h3>
@@ -1039,6 +1067,71 @@ calling asynUserCalloc and asynUserFree.
     </tr>
   </tbody>
 </table>
+
+<h3>asynSyncIO</h3>
+<pre>/* Synchronous Interface to the asynManager and asynOctet interfaces. */
+typedef struct asynSyncIO {
+   asynStatus (*connect)(const char *port, int addr, asynUser **ppasynUser);
+   asynStatus (*connectSocket)(const char *server, int port,
+                  asynUser **ppasynUser);
+   int        (*write)(asynUser *pasynUser, char const *buffer, int buffer_len,
+                  double timeout);
+   int        (*read)(asynUser *pasynUser, char *buffer, int buffer_len,
+                  const char *ieos, int ieos_len, int flush, double timeout);
+   int        (*writeRead)(asynUser *pasynUser,
+                  const char *write_buffer, int write_buffer_len,
+                  char *read_buffer, int read_buffer_len,
+                  const char *ieos, int ieos_len, double timeout);
+   asynStatus (*flush)(asynUser *pasynUser);
+} asynSyncIO;
+epicsShareExtern asynSyncIO *pasynSyncIO;
+</pre>
+
+<p>asynSyncIO provides a convenient interface for software that needs to perform 
+&quot;synchronous&quot; I/O to an asyn device, i.e. that starts an I/O operation and then 
+blocks while waiting for the response.&nbsp; The code does not need to handle 
+callbacks or the understand the details of the asynManager and asynOctet 
+interfaces. Examples include motor drivers running in their own threads, SNL 
+programs, and the shell commands described later in this document.</p>
+
+<table border="1">
+  <caption>asynSyncIO</caption>
+  <tbody>
+    <tr>
+      <td>connect</td>
+      <td>Connects to an asyn port and address, returns a pointer to an asynUser 
+      structure.</td>
+    </tr>
+    <tr>
+      <td>connectSocket</td>
+      <td>Makes a new connection to a TCP/IP socket, creating a new asyn port.&nbsp; 
+      Syntax is server:port, i.e. corvette:21 or 164.54.160.50:21.&nbsp; Returns 
+      a pointer to an asynUser structure.</td>
+    </tr>
+    <tr>
+      <td>write</td>
+      <td>Calls asynOctet-&gt;write and waits for the operation to complete or time 
+      out.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Calls asynOctet-&gt;setEos (if ieos_len is non-zero), asynOctet flush (if 
+      flush=1), and asynOctet-&gt;read. Waits for the operation to complete or time 
+      out.</td>
+    </tr>
+    <tr>
+      <td>writeRead</td>
+      <td>Calls asynOcter-&gt;write, asynOctet-&gt;setEos (if ieos_len is non-zero), 
+      asynOctet flush (if flush=1), and asynOctet-&gt;read. Waits for the 
+      operations to complete or time out.</td>
+    </tr>
+    <tr>
+      <td>flush</td>
+      <td>Calls asynOctet-&gt;flush and waits for the operation to complete.</td>
+    </tr>
+  </tbody>
+</table>
+
 <hr>
 
 <center>
@@ -1202,7 +1295,7 @@ href="asynOctetRecord.html">asynOctetRecord</a></p>
 
 <p>The following is the medm display.</p>
 
-<p><img src="./asynGeneric.gif" alt="asynGeneric"></p>
+<p><img src="./asynGeneric.gif" alt="asynGeneric" width="375" height="329"></p>
 <hr>
     </li>
     <li>asynOctetRecord.adl
@@ -1354,7 +1447,7 @@ enable/disable.</p>
 
 <p>Executing startmedm produces the display:</p>
 
-<p><img src="./asynTest.gif" alt="asynTest"></p>
+<p><img src="./asynTest.gif" alt="asynTest" width="760" height="189"></p>
 
 <p>It assumes that an ioc has been started via:</p>
 <pre>cd &lt;top&gt;/iocBoot/ioctest/st.cmd</pre>
@@ -1756,21 +1849,21 @@ for the specified port and address. <code>asynSetOption</code> calls
   <li>val - The value for the option.</li>
   <li>yesNo - The value (0,1) means (no,yes).</li>
   <li>entry - A character string that identifies the asynConnect request.</li>
-  <li>oeos,ieos - The output and input end of string terminator.</li>
-  <li>timeout - timeout as an integer.</li>
-  <li>buffer_len - length of buffer for I/O.</li>
-  <li>nread - max number of bytes to read.</li>
-  <li>flush - (0,1) means (don't, do) flush before reading.</li>
+  <li>oeos,ieos - The output and input end of string terminator.&nbsp; 
+  Default=&quot;\r&quot;</li>
+  <li>timeout - timeout as an integer.&nbsp; Default=1.0.</li>
+  <li>buffer_len - length of buffer for I/O. Default=80.</li>
+  <li>nread - max number of bytes to read. Default=buffer_len.</li>
+  <li>flush - (0,1) means (don't, do) flush before reading. Default=0.</li>
   <li>output - output string.</li>
 </ul>
 <p>The commands asynConnect, asynRead, asynWrite, asynWriteRead, asynFlush
 allow I/O to a device from the ioc shell. Examples are:</p>
-<pre>
-asynConnect("myid","A",0,"\n","\n",1,20)
+<pre>asynConnect("myid","A",0,"\n","\n",1,20)
 asynWrite("myid","testnew")
-asynRead("myid",20)
+asynRead("myid")
 testnew\n
-asynWriteRead("myid","this is test",20)
+asynWriteRead("myid","this is test")
 this is test\n
 </pre>
 <hr>
@@ -1816,6 +1909,7 @@ explains how to include asynDriver components.</p>
 <ul>
   <li>Add the following to <code>Makefile</code>
     <pre>        &lt;app&gt;_LIBS += asyn
+        &lt;app&gt;_LIBS += asynSyncIO (for synchronous applications)
     </pre>
   </li>
   <li>Add the following to <code>&lt;app&gt;Include.dbd</code>
@@ -1826,22 +1920,20 @@ explains how to include asynDriver components.</p>
 </ul>
 
 <p>In the <code>st.cmd</code> file add.</p>
-<pre>
-dbLoadRecords("db/asynGeneric.db","ioc=&lt;ioc&gt;")
-dbLoadRecords("db/asynOctetRecord.db","ioc=&lt;ioc&gt;,PORT=&lt;port&gt;,ADDRESS=&lt;addr&gt;")
+<pre>dbLoadRecords("db/asynGeneric.db","ioc=&lt;ioc&gt;")
+dbLoadRecords("db/asynOctetRecord.db",&quot;P=&lt;ioc&gt;,R=&lt;record&gt;, PORT=&lt;port&gt;,ADDRESS=&lt;addr&gt;")
 </pre>
 
-<p>You must provide correct values for &lt;ioc&gt;.</p>
+<p>You must provide correct values for &lt;ioc&gt;, &lt;record&gt;, &lt;port&gt; and &lt;addr&gt;.</p>
 
 <p>Once the application is running, medm displays for an ioc can
 be started by:</p>
-<pre>
-medm -x -macro "ioc=&lt;ioc&gt;" &lt;asyntop&gt;/medm/asynGeneric.adl &amp;
-medm -x -macro "rec=&lt;rec&gt;" &lt;asyntop&gt;/medm/asynOctetRecord.adl &amp;
+<pre>medm -x -macro "ioc=&lt;ioc&gt;" &lt;asyntop&gt;/medm/asynGeneric.adl &amp;
+medm -x -macro "REC=&lt;ioc&gt;&lt;record&gt;" &lt;asyntop&gt;/medm/asynOctetRecord.adl &amp;
 </pre>
 
 <p>Again this done for each device. You must provide correct values for
-&lt;ioc&gt;.</p>
+&lt;ioc&gt; and &lt;record&gt;.</p>
 <hr>
 
 <center>
