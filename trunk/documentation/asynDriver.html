@@ -1175,8 +1175,8 @@ message based means that the device accepts octet strings, i.e. an array of 8
 bit bytes, and responds with octet strings. Three interfaces are provided:
 asynOctet, asynOctetSyncIO, and asynOctetTrapReadWrite. asynOctetSyncIO
 provides a synchronous inteface to asynOctet and can be used by code that is
-willing to block. asynOctetTrapReadWrite is an interposeInterface
-that can be used to intercept calls to asynOctet.</p>
+willing to block. asynOctetTrapReadWrite is an interposeInterface that can be
+used to intercept calls to asynOctet.</p>
 
 <h3>asynOctet</h3>
 <pre>#define ASYN_EOM_CNT 0x0001 /*Request count reached*/
@@ -1407,13 +1407,13 @@ Interfaces</h2>
       <li>asynInt32SyncIO - A synchronous interface to asynInt32</li>
     </ul>
   </li>
-  <li>UInt32Digital - Data is passed as 32 bit unsigned integers and a mask that
-    selects bits from the integer.
+  <li>UInt32Digital - Data is passed as 32 bit unsigned integers and a mask
+    that selects bits from the integer.
     <ul>
       <li>asynUInt32Digital - read/write.</li>
       <li>asynUInt32DigitalCallback - registerCallback/cancelCallback to
-        receive UInt32 value. It also
-        has methods to setInterrupt/getInterrupt.</li>
+        receive UInt32 value. It also has methods to
+        setInterrupt/getInterrupt.</li>
     </ul>
   </li>
   <li>Float64 - data is passed as double precision floats.
@@ -1981,15 +1981,17 @@ drivers. For truly complicated devices other support is required.</p>
 <pre>    field(DTYP,"asyn Int32")
     field(INP,"@asyn(portA,0,.1) thisIsForDriver")</pre>
 
-<h2>aiRecord generic device support</h2>
+<h2>analog device support</h2>
 
 <p>The following support is available:</p>
-<pre>device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
-device(ai,INST_IO,devAiAsynFloat64,"asyn Float64")
-device(ai,INST_IO,devAiAsynInt32Average,"asyn Int32Average")
-device(ai,INST_IO,devAiAsynFloat64Average,"asyn Float64Average")
-device(ai,INST_IO,devAiAsynInt32Interrupt,"asyn Int32Interrupt")
-device(ai,INST_IO,devAiAsynFloat64Interrupt,"asyn Float64Interrupt")</pre>
+<pre>device(ai,INST_IO,asynAiInt32,"asynInt32")
+device(ai,INST_IO,asynAiFloat64,"asynFloat64")
+device(ai,INST_IO,asynAiInt32Average,"asynInt32Average")
+device(ai,INST_IO,asynAiFloat64Average,"asynFloat64Average")
+device(ai,INST_IO,asynAiInt32Interrupt,"asynInt32Interrupt")
+device(ai,INST_IO,asynAiFloat64Interrupt,"asynFloat64Interrupt")
+device(ao,INST_IO,asynAoInt32,"asynInt32")
+device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
 
 <p>Support for drivers the implement interface Int32 and/or Float64. The
 Interrupt and Average support requires that the driver supports the
@@ -1999,24 +2001,68 @@ the Average supports is normally periodically scanned. Each time the record
 processes it receives the average of all the values obtained since the last
 time the record processed.</p>
 
-<h2>aoRecord generic device support</h2>
+<h2>digital device support</h2>
 
 <p>The following support is available:</p>
-<pre>device(ao,INST_IO,devAoAsynInt32,"asyn Int32")
-device(ao,INST_IO,devAoAsynFloat64,"asyn Float64")</pre>
+<pre>device(bi,INST_IO,asynBiUInt32Digital,"asynUInt32Digital")
+device(bo,INST_IO,asynBoUInt32Digital,"asynUInt32Digital")
+device(longin,INST_IO,asynLiUInt32Digital,"asynUInt32Digital")
+device(longout,INST_IO,asynLoUInt32Digital,"asynUInt32Digital")</pre>
 
-<p>Support for port drivers that implement interface asynInt32 or
-asynFloat64.</p>
+<p>This needs documentation. Also support is needed for mbbi, mbbo,
+mbbiDirect, and mbboDirect.</p>
 
-<h2>Other generic device support</h2>
+<h2>octet device support</h2>
 
 <p>The following support is available:</p>
-<pre>device(bi,INST_IO,devBiAsynUInt32Digital,"asyn UInt32Digital")
-device(bo,INST_IO,devBoAsynUInt32Digital,"asyn UInt32Digital")
-device(longin,INST_IO,devLiAsynUInt32Digital,"asyn UInt32Digital")
-device(longout,INST_IO,devLoAsynUInt32Digital,"asyn UInt32Digital")</pre>
+<pre>device(stringin,INST_IO,asynSiOctetCmdResponse,"asynOctetCmdResponse")
+device(stringin,INST_IO,asynSiOctetWriteRead,"asynOctetWriteRead")
+device(stringin,INST_IO,asynSiOctetRead,"asynOctetRead")
+device(stringout,INST_IO,asynSoOctetWrite,"asynOctetWrite")
+device(waveform,INST_IO,asynWfOctetCmdResponse,"asynOctetCmdResponse")
+device(waveform,INST_IO,asynWfOctetWriteRead,"asynOctetWriteRead")
+device(waveform,INST_IO,asynWfOctetRead,"asynOctetRead")
+device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
 
-<p>This needs documentation</p>
+<p>Support for drivers the implement interface asynOctet. The support is for
+stringin/stringout and waveform records. The waveform support is similar to
+the string support. The waveform records must define FTVL to be CHAR or
+UCHAR, i.e. it must be an array of octets. The waveform provides the
+following features not provided by the string support:</p>
+<ul>
+  <li>unlimited size - string records hold a maximum of 40 characters.</li>
+  <li>non ascii - Thus arbitrary octet arrays are supported.</li>
+</ul>
+
+<p>Four types of support are provided:</p>
+<ul>
+  <li>CmdResponse The INP field is of the form:
+    <pre>    field(INP,"@asyn(portName,addr,timeout) cmd")</pre>
+    During record initialization, cmd is converted by dbTranslateEscape. The
+    resultant string is the command to send to the device. When the record is
+    processed the command is sebt to the device and the response read into
+    the record.</li>
+  <li>WriteRead The INP field is of the form:
+    <pre>    field(INP,"@asyn(portName,addr,timeout) pvname")</pre>
+    pvname must refer to a field in a record in the same IOC. During record
+    initialization the pvname is locatedd. When the record is processed dbGet
+    is called to read the current value of pvname. This value is sent to the
+    device. A read is then issued and the result soored in the record. For
+    asynSiOctetWriteRead, the value obtained from pvname is passed through
+    dbTranslateEscape before sending it. For asynWfOctetWriteRead is is not
+    passed through dbTranslateEscape. MARTY THIS IS NOT BEING DONE. FIX
+  IT.</li>
+  <li>Write The INP(OUT) field is of the form:
+    <pre>    field(INP,"@asyn(portName,addr,timeout) drvUser")</pre>
+    drvUser is information that is passed to the portDriver if it implements
+    interface asynDrvUser. When the record is processed the value stored in
+    the record is sent to the device.</li>
+  <li>Read The INP field is of the form:
+    <pre>    field(INP,"@asyn(portName,addr,timeout) drvUser")</pre>
+    drvUser is information that is passed to the portDriver if it implements
+    interface asynDrvUser. When the record is processed a read request is
+    made. The result is read into the record.</li>
+</ul>
 <hr>
 
 <center>

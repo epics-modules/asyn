@@ -12,9 +12,27 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>August 23, 2004</h1>
+<h1>September XX, 2004</h1>
 </center>
 <hr>
+
+<center>
+<h2>Release 3-4</h2>
+
+<p></p>
+</center>
+
+<h3>Incompatible Changes.</h3>
+<ul>
+  <li>devEpics device definitions have changed.
+    <p>Blanks no longer appear in the menu choices. For example.</p>
+    <pre>    device(ai,INST_IO,devAiAsynInt32,"asyn Int32")
+       </pre>
+    is now
+    <pre>    device(ai,INST_IO,asynAiInt32,"asynInt32")
+       </pre>
+  </li>
+</ul>
 
 <center>
 <h2>Release 3-3</h2>
@@ -40,7 +58,8 @@ alink="#FF0000">
 <ul>
   <li>Support for synchronous drivers.</li>
   <li>Support for register based drivers.</li>
-  with register based drivers.<ul>
+  with register based drivers.
+  <ul>
     <li>Generic register based device support for EPICS records.</li>
     <li>Additional fields have been added to asynUser.</li>
     <li>Added pasynManager-&gt;memMalloc() and pasynManager-&gt;memFree() for
