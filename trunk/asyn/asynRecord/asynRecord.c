@@ -340,11 +340,12 @@ static long special(struct dbAddr *paddr, int after)
     }
     if(fieldIndex==asynRecordCNCT) {
         if(pasynRec->pact) {
+            int wasQueued;
             asynPrint(pasynUser,ASYN_TRACE_FLOW,
                 "%s:special connect/disconnect calling cancelRequest\n",
                 pasynRec->name);
-            status = pasynManager->cancelRequest(pasynUser);
-            if(status!=asynSuccess || !pasynUser->auxStatus) {
+            status = pasynManager->cancelRequest(pasynUser,&wasQueued);
+            if(status!=asynSuccess || !wasQueued) {
                 reportError(pasynRec, COMM_ALARM, MINOR_ALARM,
                     "special connect/disconnect",
                     "asynCallback is active");
