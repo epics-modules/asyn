@@ -376,22 +376,22 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
 
     assert(peosPvt);
-    if(peosPvt->eosInLen>eossize) {
+    if(peosPvt->eosOutLen>eossize) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "%s eossize %d < peosPvt->eosInLen %d",
-                                peosPvt->portName,eossize,peosPvt->eosInLen);
+           "%s eossize %d < peosPvt->eosOutLen %d",
+                                peosPvt->portName,eossize,peosPvt->eosOutLen);
         return(asynError);
     }
-    switch (peosPvt->eosInLen) {
+    switch (peosPvt->eosOutLen) {
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s illegal peosPvt->eosInLen %d", peosPvt->portName,peosPvt->eosInLen);
+            "%s illegal peosPvt->eosOutLen %d", peosPvt->portName,peosPvt->eosOutLen);
         return asynError;
-    case 2: eos[1] = peosPvt->eosIn[1]; /* fall through to case 1 */
-    case 1: eos[0] = peosPvt->eosIn[0]; break;
+    case 2: eos[1] = peosPvt->eosOut[1]; /* fall through to case 1 */
+    case 1: eos[0] = peosPvt->eosOut[0]; break;
     case 0: break;
     }
-    *eoslen = peosPvt->eosInLen;
+    *eoslen = peosPvt->eosOutLen;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
             "%s get Eos %d: ", peosPvt->portName, *eoslen);
     return asynSuccess;
