@@ -29,6 +29,7 @@
 #define epicsExportSharedSymbols
 
 #include "asynShellCommands.h"
+#include "asynInterposeFlush.h"
 
 typedef struct interposePvt {
     char          *portName;
@@ -54,7 +55,7 @@ static asynOctet octet = {
 };
 
 int epicsShareAPI
-asynInterposeFlushConfig(const char *portName,int addr,double timeout)
+asynInterposeFlushConfig(const char *portName,int addr,int timeout)
 {
     interposePvt *pinterposePvt;
     asynStatus status;
@@ -66,7 +67,8 @@ asynInterposeFlushConfig(const char *portName,int addr,double timeout)
     pinterposePvt->octet.interfaceType = asynOctetType;
     pinterposePvt->octet.pinterface = &octet;
     pinterposePvt->octet.drvPvt = pinterposePvt;
-    pinterposePvt->timeout = timeout;
+    if(timeout<=0) timeout = 1;
+    pinterposePvt->timeout = ((double)timeout)*.001;
     status = pasynManager->interposeInterface(portName,addr,
         &pinterposePvt->octet,&poctetasynInterface);
     if((status!=asynSuccess) || !poctetasynInterface) {

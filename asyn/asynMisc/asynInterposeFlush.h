@@ -17,7 +17,8 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-epicsShareFunc int epicsShareAPI asynInterposeFlushConfig(const char *portName,int addr);
+epicsShareFunc int epicsShareAPI asynInterposeFlushConfig(
+    const char *portName,int addr, int timeout);
 
 #ifdef __cplusplus
 }
