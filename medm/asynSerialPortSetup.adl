@@ -1,7 +1,7 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynSerialPortSetup.adl"
-	version=030004
+	name="C:\Program Files\EPICS\adls\asynSerialPortSetup.adl"
+	version=020306
 }
 display {
 	object {
@@ -236,18 +236,47 @@ text {
 	textix="$(P)$(R)"
 	align="horiz. centered"
 }
-"message button" {
+text {
 	object {
-		x=7
-		y=24
-		width=100
+		x=148
+		y=25
+		width=90
 		height=20
 	}
-	control {
-		chan="$(P)$(R).GOPT"
-		clr=14
-		bclr=4
+	"basic attribute" {
+		clr=17
 	}
-	label="get Options"
-	press_msg="1"
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).OPTIONIV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=138
+		y=25
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).OPTIONIV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=8
+		y=25
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="asynOption:"
 }
