@@ -29,10 +29,7 @@
 
 #include "asynShellCommands.h"
 
-#define NUM_INTERFACES 1
-
 typedef struct interposePvt {
-    const char    *interposeName;
     const char    *portName;
     int           addr;
     asynInterface octet;
@@ -41,8 +38,7 @@ typedef struct interposePvt {
     double        timeout;
 }interposePvt;
     
-int epicsShareAPI interposeFlushConfig(const char *interposeInterfaceName,
-    const char *portName,int addr,double timeout);
+int epicsShareAPI interposeFlushConfig(const char *portName,int addr,double timeout);
 
 
 /* asynOctet methods */
@@ -52,24 +48,22 @@ static int processWrite(void *ppvt,asynUser *pasynUser,
 static asynStatus processFlush(void *ppvt,asynUser *pasynUser);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen);
+static asynStatus setEos(void *ppvt,asynUser *pasynUser,
+    const char *eos,int eossize,int *eoslen);
 static asynOctet octet = {
-    processRead,processWrite,processFlush, setEos
+    processRead,processWrite,processFlush,setEos,getEos
 };
 
-int epicsShareAPI interposeFlushConfig(const char *pmn,
-    const char *dn,int addr,double timeout)
+int epicsShareAPI
+interposeFlushConfig(const char *portName,int addr,double timeout)
 {
     interposePvt *pinterposePvt;
-    char *interposeName;
-    char *portName;
     asynStatus status;
     asynInterface *poctetasynInterface;
 
-    interposeName = epicsStrDup(pmn);
     portName = epicsStrDup(dn);
     pinterposePvt = callocMustSucceed(1,sizeof(interposePvt),"interposeInterfaceInit");
-    pinterposePvt->interposeName = interposeName;
-    pinterposePvt->portName = portName;
+    pinterposePvt->portName = epicsStrDup(portName);
     pinterposePvt->addr = addr;
     pinterposePvt->octet.interfaceType = asynOctetType;
     pinterposePvt->octet.pinterface = &octet;
@@ -79,10 +73,9 @@ int epicsShareAPI interposeFlushConfig(const char *pmn,
         &pinterposePvt->octet,&poctetasynInterface);
     if((status!=asynSuccess) || !poctetasynInterface) {
 	printf("%s interposeInterface failed.\n",portName);
+        free(pinterposePvt->portName);
         free(pinterposePvt);
-        free(portName);
-        free(interposeName);
-        return(0);
+        return(-1);
     }
     pinterposePvt->pasynOctet = (asynOctet *)poctetasynInterface->pinterface;
     pinterposePvt->asynOctetPvt = poctetasynInterface->drvPvt;
@@ -120,9 +113,8 @@ static asynStatus processFlush(void *ppvt,asynUser *pasynUser)
     while(1) {
         nin = pasynOctet->read(drvPvt,pasynUser,buffer,sizeof(buffer));
         if(nin<=0) break;
-        buffer[nin] = 0;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
-            buffer,nin,"interposeFlush:flush after read\n");
+            buffer,nin,"interposeFlush:flush ");
     }
     pasynUser->timeout = savetimeout;
     return(asynSuccess);
@@ -136,24 +128,31 @@ static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     return pinterposePvt->pasynOctet->setEos(pinterposePvt->asynOctetPvt,
         pasynUser,eos,eoslen);
 }
+
+static asynStatus getEos(void *ppvt,asynUser *pasynUser,
+    const char *eos,int eossize,int *eoslen)
+{
+    interposePvt *pinterposePvt = (interposePvt *)ppvt;
+
+    return pinterposePvt->pasynOctet->getEos(pinterposePvt->asynOctetPvt,
+        pasynUser,eos,eossize,eoslen);
+}
 
 /* register interposeFlushConfig*/
 static const iocshArg interposeFlushConfigArg0 =
-    {"interposeFlushName", iocshArgString };
-static const iocshArg interposeFlushConfigArg1 =
     { "portName", iocshArgString };
-static const iocshArg interposeFlushConfigArg2 =
+static const iocshArg interposeFlushConfigArg1 =
     { "addr", iocshArgInt };
-static const iocshArg interposeFlushConfigArg3 =
+static const iocshArg interposeFlushConfigArg2 =
     { "timeout", iocshArgDouble };
 static const iocshArg *interposeFlushConfigArgs[] = 
     {&interposeFlushConfigArg0,&interposeFlushConfigArg1,
     &interposeFlushConfigArg2};
 static const iocshFuncDef interposeFlushConfigFuncDef =
-    {"interposeFlushConfig", 4, interposeFlushConfigArgs};
+    {"interposeFlushConfig", 3, interposeFlushConfigArgs};
 static void interposeFlushConfigCallFunc(const iocshArgBuf *args)
 {
-    interposeFlushConfig(args[0].sval,args[1].sval,args[2].ival,args[3].dval);
+    interposeFlushConfig(args[0].sval,args[1].ival,args[2].dval);
 }
 
 static void interposeFlushRegister(void)
