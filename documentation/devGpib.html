@@ -14,7 +14,7 @@ Instrument Device Support</h1>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>November 2003</h2>
+<h2>Janurary 2004</h2>
 </center>
 <hr>
 
@@ -78,7 +78,7 @@ write new support.</p>
   <li>devCommonGpib/devSupportGpib use asynCommon, asynOctet, and asynGpib.
     Thus the support will work with any driver that implements these
     interfaces. If instrument support does not use GPIB specific features,
-    e.g. SRQs, then the support will work with any driver that implements
+    then the support will work with any driver that implements
     asynCommon and asynOctet. In particular communication via serial ports is
     possible.</li>
   <li>devCommonGpib should satisfy most requirements but it is also possible
@@ -237,7 +237,7 @@ Once this mapping is complete, an instrument support module can be written.
 For each operating parameter a gpibCmd must be created.</p>
 
 <h2>device DBD definition</h2>
-For each instrument support module a device definition must be defined:
+For each instrument support module device definitions must be defined:
 <pre>device(&lt;record type&gt;,&lt;link type&gt;,&lt;DSET name&gt;,"&lt;DTYP name&gt;")</pre>
 
 <p>where:</p>
@@ -578,6 +578,26 @@ support it must to document its changes.</p>
         <li><code>pgpibDpvt-&gt;msg</code> is sent to the instrument.</li>
       </ul>
     </dd>
+  <dt>GPIBCVTIO<dt>
+    <dd><p>Supports record types: ai,ao,bi,bo,event,longin.longout,
+      mbbi,mbbo,mbbiDirect,mmboDirect,stringin,stringout,waveform.<p>
+      <p>All I/O is done by the <code>convert</code> routine, which must
+      be defined. <code>convert</code> is called by callback routune and thus
+      can make an arbitrary number of calls to low level drivers.
+      It is passed the address of <code>gpibDpvt<</code>
+      which contains the information needed to call the low level drivers:
+      <code>asynCommon, asynOctet, and asynGpib.</code> Note that <code>
+       asynGpib</code> may not be present, i.e. <code>pasynGpib</code> is
+       null. <code>gpibDpvt</code> also contains a field <code>pupvt</code>
+       which can be used by the convert routine. Is is initialized to null.
+       The macro <code>gpibCmdGet</code> can be used to get the address of
+       <code>gpibCmd</code> which contains other usefull information.<p>
+       <p>If the end of string terminator needs to be changed,
+       it must be changed by calling <code>pdevSupportGpib->setEos</code>
+       rather than calling <code>pgpibDpvt->pasynOctet->setEos</code></p>
+   </dd>
+
+      <ul>
   <dt>GPIBCMD</dt>
     <dd><p>Supports record types: ao, bo, longout, mbbo, mbboDirect,
       stringout, and waveform.</p>

@@ -112,6 +112,7 @@ static int writeMsgLong(gpibDpvt *pgpibDpvt,long val);
 static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str);
+static int setEos(gpibDpvt *pgpibDpvt, char *eos, int eoslen);
 
 static devSupportGpib gpibSupport = {
     initRecord,
@@ -123,7 +124,8 @@ static devSupportGpib gpibSupport = {
     writeMsgLong,
     writeMsgULong,
     writeMsgDouble,
-    writeMsgString
+    writeMsgString,
+    setEos
 };
 epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 
@@ -408,6 +410,41 @@ static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
     writeMsgPostLog
 }
 
+static int setEos(gpibDpvt *pgpibDpvt, char *eos, int eoslen)
+{
+    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    dbCommon *precord = pgpibDpvt->precord;
+    devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    asynStatus status;
+    int callSetEos = 0;
+
+    if(eoslen!=pdeviceInstance->eosLen) {
+        callSetEos = 1;
+    } else if(eoslen>2) {
+        callSetEos = 1;
+    } else if(eoslen>0) {
+        if(strcmp(eos,pdeviceInstance->eos)!=0) callSetEos = 1;
+    }
+    if(callSetEos) {
+        status = pgpibDpvt->pasynOctet->setEos(
+            pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,eos,eoslen);
+        if(status!=asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s pasynOctet->setEos failed %s\n",
+                precord->name,pgpibDpvt->pasynUser->errorMessage);
+            return -1;
+        } else {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "%s pasynOctet->setEos eos %s eoslen %d\n",
+                precord->name,eos,eoslen);
+        }
+        pdeviceInstance->eosLen = eoslen;
+        if(eoslen!=0 && eoslen<=2) strcpy(pdeviceInstance->eos,eos);
+    }
+    return 0;
+}
+
 static void commonGpibPvtInit(void) 
 {
     if(pcommonGpibPvt) return;
@@ -608,14 +645,10 @@ static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
     }
     if(!isLocked)epicsMutexUnlock(pportInstance->lock);
 }
+
 static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
-    dbCommon *precord = pgpibDpvt->precord;
-    devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
-    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
-    int eosLen = 0, callSetEos = 0;
-    asynStatus status;
+    int eosLen = 0;
 
     if(pgpibCmd->eos) {
         eosLen = strlen(pgpibCmd->eos);
@@ -623,30 +656,7 @@ static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
     } else {
         eosLen = 0;
     }
-    if(eosLen!=pdeviceInstance->eosLen) {
-        callSetEos = 1;
-    } else if(eosLen>2) {
-        callSetEos = 1;
-    } else if(eosLen>0) {
-        if(strcmp(pgpibCmd->eos,pdeviceInstance->eos)!=0) callSetEos = 1;
-    }
-    if(callSetEos) {
-        status = pgpibDpvt->pasynOctet->setEos(
-            pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,eosLen);
-        if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s pasynOctet->setEos failed %s\n",
-                precord->name,pgpibDpvt->pasynUser->errorMessage);
-            return -1;
-        } else {
-            asynPrint(pasynUser,ASYN_TRACE_FLOW,
-                "%s pasynOctet->setEos eos %s eosLen %d\n",
-                precord->name,pgpibCmd->eos,eosLen);
-        }
-        pdeviceInstance->eosLen = eosLen;
-        if(eosLen!=0 && eosLen<=2) strcpy(pdeviceInstance->eos,pgpibCmd->eos);
-    }
-    return 0;
+    return pdevSupportGpib->setEos(pgpibDpvt,pgpibCmd->eos,eosLen);
 }
 
 static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
@@ -664,6 +674,7 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     if(!failure && pdevGpibPvt->start)
         failure = pdevGpibPvt->start(pgpibDpvt,failure);
     if(failure)  goto done;
+    if(cmdType&GPIBCVTIO) goto done;
     epicsMutexMustLock(pportInstance->lock);
     /*Since queueReadRequest calls lock waitForSRQ should not be true*/
     assert(!pdeviceInstance->waitForSRQ);
@@ -763,6 +774,7 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
     asynStatus status;
 
     if(failure) goto done;
+    if(cmdType&GPIBCVTIO) goto done;
     if(!pgpibDpvt->msg) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pgpibDpvt->msg is null\n",precord->name);
@@ -829,7 +841,9 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
             lenMessage = cnvrtStat;
         }
     }
-    if(!failure) switch(cmdType) {
+    if(failure)  goto done;
+    if(cmdType&GPIBCVTIO) goto done;
+    switch(cmdType) {
     case GPIBWRITE:
         if(!pgpibDpvt->msg) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
