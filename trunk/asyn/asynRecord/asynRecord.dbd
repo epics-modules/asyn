@@ -401,11 +401,10 @@ recordtype(asyn) {
     }
 
 # Miscellaneous fields
-    field(ERRS,DBF_STRING) {
+    field(ERRS,DBF_NOACCESS) {
         prompt("Error string")
-        promptgroup(GUI_DISPLAY)
-        special(SPC_MOD)
+        special(SPC_DBADDR)
         interest(1)
-        size(40)
+        extra("char *errs")
     }
 }
