@@ -106,26 +106,8 @@ typedef struct  asynCommon {
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    /*The following are generic methods to set/get device options*/
-    asynStatus (*setOption)(void *drvPvt, asynUser *pasynUser,
-                                const char *key, const char *val);
-    asynStatus (*getOption)(void *drvPvt, asynUser *pasynUser,
-                                const char *key, char *val, int sizeval);
 }asynCommon;
 
-/* Interface supported by low level octet drivers. */
-#define asynOctetType "asynOctet"
-typedef struct asynOctet{
-    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered);
-    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
-    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
-                         const char *eos,int eoslen);
-    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
-                        char *eos, int eossize, int *eoslen);
-}asynOctet;
 
 /*asynTrace is implemented by asynManager*/
 /*All asynTrace methods can be called from any thread*/
