@@ -11,15 +11,26 @@
 
 <h2 align="center">Eric Norum, May 17, 2004</h2>
 
+This tutorial provides basic instructions on converting 'devGpibCommon'  device
+support from R3.13 to R3.14/ASYN. 
+If possible, 
+R3.14/ASYN device support modules should be placed in the EPICS CVS
+repository in a directory within the modules/instrument directory.
+Files placed in the modules/instrument directory should
+be as flexible as possible to ease their use by others.
+For example, device support database file
+GPIB link numbers and addresses should be macros
+and all PV names should be prefixed with a macro.
+
 <h2>1. Create instrument support development area</h2>
 <ol>
   <li>Make a directory in modules/instrument/ for your instrument.</li>
   <li>'cd' to the directory created in the previous step and create a set of
-    instrument support files by running the makeAsynSupport.pl script:
-    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeAsynSupport.pl
+    instrument support files by running the makeSupport.pl script:
+    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
     -t instrument <em>&lt;InstName&gt;</em></p>
     <p>for example:</p>
-    <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeAsynSupport.pl
+    <p>&nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
     -t instrument Keithley196</p>
   </li>
   <li>Edit configure/RELEASE and set the ASYN and EPICS_BASE values to to the
@@ -115,6 +126,8 @@ href="devKeithley196.c.diff.html">here</a>.
     are unique to your implementation. All the rest should appear exactly as
     shown above.</li>
   <li>Remove any report function.</li>
+  <li>If the instrument device support contains custom conversion routines
+  ensure that they return proper success/failure (0/<0) values.</li>
   <li>(Optional) Update copyright/license comments.</li>
 </ol>
 
