@@ -9,8 +9,7 @@
 ***********************************************************************/
 
 /*test driver for asyn support*/
-/* Generic asynchronous driver
- *
+/* 
  * Author: Marty Kraimer
  */
 
@@ -29,81 +28,97 @@
 #include <asynDriver.h>
 
 #define BUFSIZE 4096
-struct drvPvt {
+#define NUM_INTERFACES 2
+typedef struct drvPvt {
     char buffer[BUFSIZE];
     int  nchars;
     double delay;
-    asynPvt *pasynPvt;
     peekHandler peek_handler;
-};
-
+    deviceDriver *padeviceDriver;
+}drvPvt;
+    
 /* init routine */
-static int echoDriverInit(const char *name, double delay);
+static int echoDriverInit(const char *deviceName, double delay);
 
 /* asynDriver methods */
-static void report(asynUser *pasynUser,int details);
-static asynStatus connect(asynUser *pasynUser);
-static asynStatus disconnect(asynUser *pasynUser);
+static void report(void *ppvt,asynUser *pasynUser,int details);
+static asynStatus connect(void *ppvt,asynUser *pasynUser);
+static asynStatus disconnect(void *ppvt,asynUser *pasynUser);
 static asynDriver asyn = {report,connect,disconnect};
 
 /* octetDriver methods */
-static int read(asynUser *pasynUser,int addr,char *data,int maxchars);
-static int write(asynUser *pasynUser,
+static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+static int write(void *ppvt,asynUser *pasynUser,
                 int addr,const char *data,int numchars);
-static asynStatus flush(asynUser *pasynUser,int addr);
-static asynStatus setTimeout(asynUser *pasynUser,
+static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr);
+static asynStatus setTimeout(void *ppvt,asynUser *pasynUser,
                 asynTimeoutType type,double timeout);
-static asynStatus setEos(asynUser *pasynUser,const char *eos,int eoslen);
-static asynStatus installPeekHandler(asynUser *pasynUser,peekHandler handler);
-static asynStatus removePeekHandler(asynUser *pasynUser);
-/* create driverInfo */
+static asynStatus setEos(void *ppvt,asynUser *pasynUser,const char *eos,int eoslen);
+static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,peekHandler handler);
+static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser);
 static octetDriver octet = {
     read,write,flush,
     setTimeout, setEos,
     installPeekHandler, removePeekHandler
 };
-static driverInfo mydriverInfo[2] = {
-    {&asyn,asynDriverType},
-    {&octet,octetDriverType}
+
+static driverInterface mydriverInterface[NUM_INTERFACES] = {
+    {asynDriverType,&asyn},
+    {octetDriverType,&octet}
 };
 
-static int echoDriverInit(const char *name, double delay)
+static int echoDriverInit(const char *dn, double delay)
 {
     drvPvt *pdrvPvt;
-    char *myname;
+    char *deviceName;
+    asynStatus status;
+    deviceDriver *padeviceDriver;
+    int i;
 
-    myname = callocMustSucceed(strlen(name)+1,sizeof(char),"echoDriverInit");
-    strcpy(myname,name);
+    deviceName = callocMustSucceed(strlen(dn)+1,sizeof(char),
+        "echoDriverInit");
+    strcpy(deviceName,dn);
     pdrvPvt = callocMustSucceed(1,sizeof(drvPvt),"echoDriverInit");
     pdrvPvt->delay = delay;
-    pdrvPvt->pasynPvt = pasynQueueManager->registerDriver(pdrvPvt,
-        myname,mydriverInfo,2,epicsThreadPriorityLow,
-         epicsThreadGetStackSize(epicsThreadStackSmall));
+    padeviceDriver = callocMustSucceed(NUM_INTERFACES,sizeof(deviceDriver),
+        "echoDriverInit");
+    for(i=0; i<NUM_INTERFACES; i++) {
+        padeviceDriver[i].pdriverInterface = &mydriverInterface[i];
+        padeviceDriver[i].pdrvPvt = pdrvPvt;
+    }
+    pdrvPvt->padeviceDriver = padeviceDriver;
+    status = pasynQueueManager->registerDevice(
+        deviceName,padeviceDriver,NUM_INTERFACES,
+        epicsThreadPriorityLow,
+        epicsThreadGetStackSize(epicsThreadStackSmall));
+    if(status!=asynSuccess) {
+        printf("echoDriverInit registerDriver failed\n");
+    }
     return(0);
 }
 
 /* asynDriver methods */
-static void report(asynUser *pasynUser,int details)
+static void report(void *ppvt,asynUser *pasynUser,int details)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
 
     printf("echoDriver. nchars = %d delay = %f\n",
         pdrvPvt->nchars,pdrvPvt->delay);
 }
 
-static asynStatus connect(asynUser *pasynUser)
+static asynStatus connect(void *ppvt,asynUser *pasynUser)
 {
     return(asynSuccess);
 }
-static asynStatus disconnect(asynUser *pasynUser)
+static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 {
     return(asynSuccess);
 }
 
 /* octetDriver methods */
-static int read(asynUser *pasynUser,int addr,char *data,int maxchars)
+static int read(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars = pdrvPvt->nchars;
     int i;
 
@@ -120,9 +135,9 @@ static int read(asynUser *pasynUser,int addr,char *data,int maxchars)
     return(nchars);
 }
 
-static int write(asynUser *pasynUser, int addr,const char *data,int numchars)
+static int write(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
     int nchars = numchars;
     int i;
 
@@ -139,46 +154,46 @@ static int write(asynUser *pasynUser, int addr,const char *data,int numchars)
     return(nchars);
 }
 
-static asynStatus flush(asynUser *pasynUser,int addr)
+static asynStatus flush(void *ppvt,asynUser *pasynUser,int addr)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
 
     pdrvPvt->nchars = 0;
     return(asynSuccess);
 }
 
-static asynStatus setTimeout(asynUser *pasynUser,
+static asynStatus setTimeout(void *ppvt,asynUser *pasynUser,
                 asynTimeoutType type,double timeout)
 {
     return(asynSuccess);
 }
 
-static asynStatus setEos(asynUser *pasynUser,const char *eos,int eoslen)
+static asynStatus setEos(void *ppvt,asynUser *pasynUser,const char *eos,int eoslen)
 {
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
         "echoDriver:setEos not implemented\n");
     return(asynError);
 }
-
-static asynStatus installPeekHandler(asynUser *pasynUser,peekHandler handler)
+
+static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,peekHandler handler)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
     pdrvPvt->peek_handler = handler;
     return(asynSuccess);
 }
 
-static asynStatus removePeekHandler(asynUser *pasynUser)
+static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser)
 {
-    drvPvt *pdrvPvt = pasynUser->pdrvPvt;
+    drvPvt *pdrvPvt = (drvPvt *)ppvt;
     pdrvPvt->peek_handler = 0;
     return(asynSuccess);
 }
-
+
 /* register echoDriverInit*/
-static const iocshArg echoDriverInitArg0 = { "name", iocshArgString };
+static const iocshArg echoDriverInitArg0 = { "deviceName", iocshArgString };
 static const iocshArg echoDriverInitArg1 = { "delay", iocshArgDouble };
 static const iocshArg *echoDriverInitArgs[] = {
-    &echoDriverInitArg0,&echoDriverInitArg1 };
+    &echoDriverInitArg0,&echoDriverInitArg1};
 static const iocshFuncDef echoDriverInitFuncDef = {
     "echoDriverInit", 2, echoDriverInitArgs};
 static void echoDriverInitCallFunc(const iocshArgBuf *args)
