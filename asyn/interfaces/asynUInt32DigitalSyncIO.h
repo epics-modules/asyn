@@ -29,10 +29,22 @@ typedef struct asynUInt32DigitalSyncIO {
                        epicsUInt32 value,epicsUInt32 mask,double timeout);
     asynStatus (*read)(asynUser *pasynUser,
                        epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+    asynStatus (*setInterrupt)(asynUser *pasynUser,
+                       epicsUInt32 mask, interruptReason reason,double timeout);
+    asynStatus (*clearInterrupt)(asynUser *pasynUser,
+                       epicsUInt32 mask,double timeout);
+    asynStatus (*getInterrupt)(asynUser *pasynUser,
+                      epicsUInt32 *mask, interruptReason reason,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
                        epicsUInt32 value,epicsUInt32 mask,double timeout);
     asynStatus (*readOnce)(const char *port, int addr,
                        epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+    asynStatus (*setInterruptOnce)(const char *port, int addr,
+                      epicsUInt32 mask, interruptReason reason,double timeout);
+    asynStatus (*clearInterruptOnce)(const char *port, int addr,
+                       epicsUInt32 mask,double timeout);
+    asynStatus (*getInterruptOnce)(const char *port, int addr,
+                      epicsUInt32 *mask, interruptReason reason,double timeout);
 } asynUInt32DigitalSyncIO;
 epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;
 
