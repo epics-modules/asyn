@@ -1,14 +1,14 @@
 
 file {
-	name="i:\epics\synApps5-1\ip\ipApp\op\adl\asynSocketSetup.adl"
-	version=020306
+	name="/private/var/automount/Network/Servers/phoebus/export/phoebus/NORUME/src/EPICS/modules/soft/asyn/medm/asynSocketSetup.adl"
+	version=030004
 }
 display {
 	object {
 		x=105
 		y=613
 		width=350
-		height=120
+		height=132
 	}
 	clr=14
 	bclr=4
@@ -124,19 +124,19 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="Format: server:port"
+	textix="Format: server:port [protocol]"
 }
 text {
 	object {
 		x=12
 		y=95
-		width=171
+		width=320
 		height=15
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="e.g. phoebus:21 or 164.54.160.12:22"
+	textix="e.g. phoebus:21, 164.54.160.12:22,"
 }
 composite {
 	object {
@@ -172,4 +172,16 @@ composite {
 			align="horiz. centered"
 		}
 	}
+}
+text {
+	object {
+		x=12
+		y=112
+		width=320
+		height=15
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="  or phoebus:22 UDP"
 }
