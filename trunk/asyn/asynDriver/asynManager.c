@@ -1,5 +1,4 @@
 /* asynManager.c */
-
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -8,16 +7,13 @@
 * gpibCore is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
-
-/* Generic asynchronous driver
- *
- * Author: Marty Kraimer
- */
+/* Author: Marty Kraimer */
 
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <errno.h>
 
 #include <ellLib.h>
 #include <errlog.h>
@@ -43,38 +39,46 @@
 #define NUMBER_QUEUE_PRIORITIES (asynQueuePriorityHigh + 1)
 
 typedef struct asynBase {
-    ELLLIST asynPvtList;
+    ELLLIST asynPortList;
     epicsTimerQueueId timerQueue;
 }asynBase;
 static asynBase *pasynBase = 0;
 
 typedef struct asynUserPvt asynUserPvt;
-typedef struct asynPvt {
-    ELLNODE node;
-    epicsMutexId lock;
-    asynUser *pasynUser;
-    const char *portName;
-    asynInterface *paasynInterface;
-    int nasynInterface;
-    const char *processModuleName;
+
+typedef struct asynDevice {
+    ELLNODE       node;     /*For asynPort.asynDeviceList*/
+    int           addr;
+    const char    *processModuleName;
     asynInterface *paprocessModule;
-    int nprocessModules;
-    epicsEventId notifyDeviceThread;
-    unsigned int priority;
-    unsigned int stackSize;
+    int           nprocessModules;
+    asynUserPvt   *plockHolder;
+}asynDevice;
+
+typedef struct asynPort {
+    ELLNODE       node;  /*For asynBase.asynPortList*/
+    epicsMutexId  lock;
+    asynUser      *pasynUser;
+    const char    *portName;
+    asynInterface *paasynInterface;
+    int           nasynInterface;
+    epicsEventId  notifyDeviceThread;
+    unsigned int  priority;
+    unsigned int  stackSize;
     epicsThreadId threadid;
-    ELLLIST queueList[NUMBER_QUEUE_PRIORITIES];
-    asynUserPvt *plockHolder;
-}asynPvt;
+    ELLLIST       queueList[NUMBER_QUEUE_PRIORITIES];
+    ELLLIST       asynDeviceList;
+}asynPort;
 
 struct asynUserPvt {
-    ELLNODE      node;
+    ELLNODE      node;        /*For asynPort.queueList*/
     userCallback queueCallback;
     BOOL         isQueued;
     unsigned int lockCount;
     epicsTimerId timer;
     double       timeout; /*For queueRequest*/
-    asynPvt      *pasynPvt;
+    asynPort     *pasynPort;
+    asynDevice   *pasynDevice;
     asynUser     user;
 };
 #define asynUserPvtToAsynUser(p) (&p->user)
@@ -84,15 +88,17 @@ struct asynUserPvt {
 
 /* forward reference to internal methods */
 static void asynInit(void);
-static asynPvt *locateAsynPvt(const char *portName);
-static void deviceThread(asynPvt *pasynPvt);
+static asynPort *locateAsynPort(const char *portName);
+static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr);
+static void portThread(asynPort *pasynPort);
     
 /* forward reference to asynManager methods */
-static void report(int details);
+static void report(FILE *fd,int details);
 static asynUser *createAsynUser(userCallback queue, userCallback timeout);
 static asynStatus freeAsynUser(asynUser *pasynUser);
-static asynStatus connectPort(asynUser *pasynUser, const char *portName);
-static asynStatus disconnectPort(asynUser *pasynUser);
+static asynStatus connectDevice(asynUser *pasynUser,
+    const char *portName,int addr);
+static asynStatus disconnectDevice(asynUser *pasynUser);
 static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int processModuleOK);
 static asynStatus queueRequest(asynUser *pasynUser,
@@ -100,12 +106,13 @@ static asynStatus queueRequest(asynUser *pasynUser,
 static void cancelRequest(asynUser *pasynUser);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
+static int getAddr(asynUser *pasynUser);
 static asynStatus registerPort(
     const char *portName,
     asynInterface *paasynInterface,int nasynInterface,
     unsigned int priority,unsigned int stackSize);
 static asynStatus registerProcessModule(
-    const char *processModuleName,const char *portName,
+    const char *processModuleName,const char *portName,int addr,
     asynInterface *paasynInterface,int nasynInterface);
 
 
@@ -113,13 +120,14 @@ static asynManager queueManager = {
     report,
     createAsynUser,
     freeAsynUser,
-    connectPort,
-    disconnectPort,
+    connectDevice,
+    disconnectDevice,
     findInterface,
     queueRequest,
     cancelRequest,
     lock,
     unlock,
+    getAddr,
     registerPort,
     registerProcessModule
 };
@@ -129,34 +137,56 @@ epicsShareDef asynManager *pasynManager = &queueManager;
 static void asynInit(void)
 {
     if(pasynBase) return;
-    pasynBase = callocMustSucceed(1,sizeof(asynPvt),"asynInit");
-    ellInit(&pasynBase->asynPvtList);
+    pasynBase = callocMustSucceed(1,sizeof(asynPort),"asynInit");
+    ellInit(&pasynBase->asynPortList);
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
 }
 
-static asynPvt *locateAsynPvt(const char *portName)
+/*locateAsynPort returns 0 if portName is not registered*/
+static asynPort *locateAsynPort(const char *portName)
 {
-    asynPvt *pasynPvt = (asynPvt *)ellFirst(&pasynBase->asynPvtList);
-    while(pasynPvt) {
-        if(strcmp(portName,pasynPvt->portName)==0) return(pasynPvt);
-        pasynPvt = (asynPvt *)ellNext(&pasynPvt->node);
+    asynPort *pasynPort = (asynPort *)ellFirst(&pasynBase->asynPortList);
+    while(pasynPort) {
+        if(strcmp(portName,pasynPort->portName)==0) return(pasynPort);
+        pasynPort = (asynPort *)ellNext(&pasynPort->node);
     }
     return(0);
 }
+
+/*locateAsynDevice creates asynDevice if it doesn't already exist*/
+static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr)
+{
+    asynDevice *pasynDevice;
+
+    assert(pasynPort);
+    pasynDevice = (asynDevice *)ellFirst(&pasynPort->asynDeviceList);
+    while(pasynDevice) {
+        if(pasynDevice->addr == addr) return(pasynDevice);
+        pasynDevice = (asynDevice *)ellNext(&pasynDevice->node);
+    }
+    if(!pasynDevice) {
+        pasynDevice = callocMustSucceed(1,sizeof(asynDevice),
+            "asynManager:locateAsynDevice");
+        pasynDevice->addr = addr;
+        ellAdd(&pasynPort->asynDeviceList,&pasynDevice->node);
+    }
+    return(pasynDevice);
+}
 
-static void deviceThread(asynPvt *pasynPvt)
+static void portThread(asynPort *pasynPort)
 {
     asynUserPvt *pasynUserPvt;
     asynUser *pasynUser;
-    int i;
     asynCommon *pasynCommon = 0;
+    asynDevice *pasynDevice = 0;
     void *drvPvt = 0;
+    int i;
 
-    taskwdInsert(pasynPvt->threadid,0,0);
+    taskwdInsert(pasynPort->threadid,0,0);
     /* find and call pasynCommon->connect */
-    for(i=0; i<pasynPvt->nasynInterface; i++) {
-        asynInterface *pasynInterface = &pasynPvt->paasynInterface[i];
+    for(i=0; i<pasynPort->nasynInterface; i++) {
+        asynInterface *pasynInterface = &pasynPort->paasynInterface[i];
         if(strcmp(pasynInterface->interfaceType,asynCommonType)==0) {
             pasynCommon = (asynCommon *)pasynInterface->pinterface;
             drvPvt = pasynInterface->drvPvt;
@@ -165,25 +195,27 @@ static void deviceThread(asynPvt *pasynPvt)
     }
     if(pasynCommon) {
         asynStatus status;
-        status = pasynCommon->connect(drvPvt,pasynPvt->pasynUser);
+        status = pasynCommon->connect(drvPvt,pasynPort->pasynUser);
         if(status!=asynSuccess) {
-            printf("asynManager:deviceThread could not connect %s\n",
-                pasynPvt->pasynUser->errorMessage);
+            printf("asynManager:portThread could not connect %s\n",
+                pasynPort->pasynUser->errorMessage);
             return;
         }
     }
     while(1) {
-        if(epicsEventWait(pasynPvt->notifyDeviceThread)!=epicsEventWaitOK) {
-            errlogPrintf("asynManager::deviceThread epicsEventWait error");
+        if(epicsEventWait(pasynPort->notifyDeviceThread)!=epicsEventWaitOK) {
+            errlogPrintf("asynManager::portThread epicsEventWait error");
         }
         while(1) {
-            epicsMutexMustLock(pasynPvt->lock);
+            epicsMutexMustLock(pasynPort->lock);
             for(i=asynQueuePriorityHigh; i>=asynQueuePriorityLow; i--) {
-                pasynUserPvt = (asynUserPvt *)ellFirst(&pasynPvt->queueList[i]);
+                pasynUserPvt = (asynUserPvt *)ellFirst(&pasynPort->queueList[i]);
                 while(pasynUserPvt){
-                    if(!pasynPvt->plockHolder
-                    || pasynPvt->plockHolder==pasynUserPvt) {
-                        ellDelete(&pasynPvt->queueList[i],&pasynUserPvt->node);
+		    pasynDevice = pasynUserPvt->pasynDevice;
+		    assert(pasynDevice);
+                    if(!pasynDevice->plockHolder
+                    || pasynDevice->plockHolder==pasynUserPvt) {
+                        ellDelete(&pasynPort->queueList[i],&pasynUserPvt->node);
                         pasynUserPvt->isQueued = FALSE;
                         break;
                     }
@@ -192,46 +224,47 @@ static void deviceThread(asynPvt *pasynPvt)
                 if(pasynUserPvt) break;
             }
             if(!pasynUserPvt) {
-                epicsMutexUnlock(pasynPvt->lock);
+                epicsMutexUnlock(pasynPort->lock);
                 break;
             }
             pasynUser = asynUserPvtToAsynUser(pasynUserPvt);
+	    assert(pasynDevice);
             if(pasynUserPvt->lockCount>0) {
-                pasynPvt->plockHolder = pasynUserPvt;
+                pasynDevice->plockHolder = pasynUserPvt;
             }
             if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
                 epicsTimerCancel(pasynUserPvt->timer);
             }
-            epicsMutexUnlock(pasynPvt->lock);
+            epicsMutexUnlock(pasynPort->lock);
             pasynUserPvt->queueCallback(pasynUser);
         }
     }
 }
 
 /* asynManager methods */
-static void report(int details)
+static void report(FILE *fd,int details)
 {
-    asynPvt *pasynPvt;
+    asynPort *pasynPort;
 
     if(!pasynBase) asynInit();
-    pasynPvt = (asynPvt *)ellFirst(&pasynBase->asynPvtList);
-    while(pasynPvt) {
-	int nInQueue, i;
+    pasynPort = (asynPort *)ellFirst(&pasynBase->asynPortList);
+    while(pasynPort) {
+	int nQueued, i;
         asynCommon *pasynCommon;
         void *asynCommonPvt;
+        asynDevice *pasynDevice;
 
         pasynCommon = 0;
-        epicsMutexMustLock(pasynPvt->lock);
-	nInQueue = 0;
+	nQueued = 0;
 	for(i=asynQueuePriorityLow; i<=asynQueuePriorityHigh; i++) {
-	    nInQueue += ellCount(&pasynPvt->queueList[i]);
+	    nQueued += ellCount(&pasynPort->queueList[i]);
 	}
-        epicsMutexUnlock(pasynPvt->lock);
-	printf("%s thread %p priority %d queue requests %d\n",
-            pasynPvt->portName,pasynPvt->threadid,pasynPvt->priority,nInQueue);
-	for(i=0; i<pasynPvt->nasynInterface; i++) {
-	    asynInterface *pasynInterface = &pasynPvt->paasynInterface[i];
-	    printf("    %s pinterface %p drvPvt %p\n",
+	fprintf(fd,"%s thread %p nDevices %d nQueued %d\n",
+            pasynPort->portName,pasynPort->threadid,
+            ellCount(&pasynPort->asynDeviceList),nQueued);
+	for(i=0; i<pasynPort->nasynInterface; i++) {
+	    asynInterface *pasynInterface = &pasynPort->paasynInterface[i];
+	    fprintf(fd,"    %s pinterface %p drvPvt %p\n",
                 pasynInterface->interfaceType,
                 pasynInterface->pinterface,
                 pasynInterface->drvPvt);
@@ -240,22 +273,36 @@ static void report(int details)
                 asynCommonPvt = pasynInterface->drvPvt;
             }
 	}
-	if(pasynPvt->nprocessModules>0) {
-	    printf("    %s is process module\n",pasynPvt->processModuleName);
-	}
-	for(i=0; i<pasynPvt->nprocessModules; i++) {
-	    asynInterface *pasynInterface = &pasynPvt->paprocessModule[i];
-	    printf("    %s pinterface %p drvPvt %p\n",
-                pasynInterface->interfaceType,
-                pasynInterface->pinterface,
-                pasynInterface->drvPvt);
-            if(strcmp(pasynInterface->interfaceType, asynCommonType)==0) {
-                pasynCommon = pasynInterface->pinterface;
-                asynCommonPvt = pasynInterface->drvPvt;
+        if(pasynCommon) {
+            fprintf(fd,"    Calling asynCommon.report\n");
+            pasynCommon->report(asynCommonPvt,fd,details);
+        }
+        pasynDevice = (asynDevice *)ellFirst(&pasynPort->asynDeviceList);
+        while(pasynDevice) {
+            fprintf(fd,"    addr %d\n",pasynDevice->addr);
+	    if(pasynDevice->nprocessModules>0) {
+	        fprintf(fd,"    %s is process module\n",
+                    pasynDevice->processModuleName);
+	    }
+            pasynCommon = 0;
+	    for(i=0; i<pasynDevice->nprocessModules; i++) {
+	        asynInterface *pasynInterface = &pasynDevice->paprocessModule[i];
+	        fprintf(fd,"        %s pinterface %p drvPvt %p\n",
+                    pasynInterface->interfaceType,
+                    pasynInterface->pinterface,
+                    pasynInterface->drvPvt);
+                if(strcmp(pasynInterface->interfaceType, asynCommonType)==0) {
+                    pasynCommon = pasynInterface->pinterface;
+                    asynCommonPvt = pasynInterface->drvPvt;
+                }
+	    }
+            if(pasynCommon) {
+                fprintf(fd,"    Calling asynCommon.report\n");
+                pasynCommon->report(asynCommonPvt,fd,details);
             }
-	}
-        if(pasynCommon) pasynCommon->report(asynCommonPvt,details);
-        pasynPvt = (asynPvt *)ellNext(&pasynPvt->node);
+            pasynDevice = (asynDevice *)ellNext(&pasynDevice->node);
+        }
+        pasynPort = (asynPort *)ellNext(&pasynPort->node);
     }
 }
 
@@ -283,50 +330,49 @@ static asynStatus freeAsynUser(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
 
-    if(pasynUserPvt->isQueued) {
+    if(pasynUserPvt->pasynPort) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager:freeAsynUser asynUser is queued\n");
-        return(asynError);
-    }
-    if(pasynUserPvt->lockCount>0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager::freeAsynUser: isLocked\n");
+                "asynManager:freeAsynUser asynUser is connected\n");
         return(asynError);
     }
     free(pasynUserPvt);
     return(asynSuccess);
 }
 
-static asynStatus connectPort(asynUser *pasynUser, const char *portName)
+static asynStatus connectDevice(asynUser *pasynUser,
+    const char *portName, int addr)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = locateAsynPvt(portName);
+    asynPort *pasynPort = locateAsynPort(portName);
+    asynDevice *pasynDevice;
 
-    assert(pasynUser);
-    if(!pasynBase) asynInit();
-    if(pasynUserPvt->pasynPvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager:connectPort already connected to device\n");
-        return(asynError);
-    }
-    if(!pasynPvt) {
+    assert(addr>=0);
+    if(!pasynPort) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager:connectPort %s not found\n",portName);
         return(asynError);
     }
-    epicsMutexMustLock(pasynPvt->lock);
-    pasynUserPvt->pasynPvt = pasynPvt;
-    epicsMutexUnlock(pasynPvt->lock);
+    if(pasynUserPvt->pasynPort) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:connectPort already connected to device\n");
+        return(asynError);
+    }
+    epicsMutexMustLock(pasynPort->lock);
+    pasynUserPvt->pasynPort = pasynPort;
+    pasynDevice = locateAsynDevice(pasynPort,addr);
+    pasynUserPvt->pasynDevice = pasynDevice;
+    epicsMutexUnlock(pasynPort->lock);
     return(asynSuccess);
 }
 
-static asynStatus disconnectPort(asynUser *pasynUser)
+static asynStatus disconnectDevice(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
 
     if(!pasynBase) asynInit();
-    if(!pasynPvt) {
+    if(!pasynPort || !pasynDevice) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::disconnectPort: not connected\n");
         return(asynError);
@@ -341,9 +387,10 @@ static asynStatus disconnectPort(asynUser *pasynUser)
                 "asynManager::disconnectPort: isLocked\n");
         return(asynError);
     }
-    epicsMutexMustLock(pasynPvt->lock);
-    pasynUserPvt->pasynPvt = 0;
-    epicsMutexUnlock(pasynPvt->lock);
+    epicsMutexMustLock(pasynPort->lock);
+    pasynUserPvt->pasynPort = 0;
+    pasynUserPvt->pasynDevice = 0;
+    epicsMutexUnlock(pasynPort->lock);
     return(asynSuccess);
 }
 
@@ -351,24 +398,25 @@ static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int processModuleOK)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
     asynInterface *pasynInterface;
     int i;
 
-    if(!pasynPvt) {
+    if(!pasynPort) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager:findInterface: not connected\n");
         return(0);
     }
     /*Look first for processModule then for asynInterface*/
-    if(processModuleOK) for(i=0; i<pasynPvt->nprocessModules; i++) {
-        pasynInterface = &pasynPvt->paprocessModule[i];
+    if(processModuleOK) for(i=0; i<pasynDevice->nprocessModules; i++) {
+        pasynInterface = &pasynDevice->paprocessModule[i];
         if(strcmp(interfaceType,pasynInterface->interfaceType)==0) {
             return(pasynInterface);
         }
     }
-    for(i=0; i<pasynPvt->nasynInterface; i++) {
-        pasynInterface = &pasynPvt->paasynInterface[i];
+    for(i=0; i<pasynPort->nasynInterface; i++) {
+        pasynInterface = &pasynPort->paasynInterface[i];
         if(strcmp(interfaceType,pasynInterface->interfaceType)==0) {
             return(pasynInterface);
         }
@@ -380,47 +428,57 @@ static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
 
+    assert(pasynPort&&pasynDevice);
     assert(priority>=asynQueuePriorityLow && priority<=asynQueuePriorityHigh);
-    if(!pasynPvt) {
+    if(!pasynPort || !pasynDevice) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::queueRequest not connected\n");
         return(asynError);
     }
+    epicsMutexMustLock(pasynPort->lock);
     if(pasynUserPvt->isQueued) {
+        epicsMutexUnlock(pasynPort->lock);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::queueRequest is already queued\n");
         return(asynError);
     }
-    epicsMutexMustLock(pasynPvt->lock);
-    if(pasynPvt->plockHolder && pasynPvt->plockHolder==pasynUserPvt) {
-        ellInsert(&pasynPvt->queueList[priority],0,&pasynUserPvt->node);
+    if(pasynDevice->plockHolder && pasynDevice->plockHolder==pasynUserPvt) {
+        /*Add to front of list*/
+        ellInsert(&pasynPort->queueList[priority],0,&pasynUserPvt->node);
     } else {
-        ellAdd(&pasynPvt->queueList[priority],&pasynUserPvt->node);
+        /*Add to end of list*/
+        ellAdd(&pasynPort->queueList[priority],&pasynUserPvt->node);
     }
     pasynUserPvt->isQueued = TRUE;
     pasynUserPvt->timeout = timeout;
-    if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
-         epicsTimerStartDelay(pasynUserPvt->timer,pasynUserPvt->timeout);
+    if(pasynUserPvt->timeout>0.0) {
+        if(!pasynUserPvt->timer) {
+            printf("%s,%d queueRequest with timeout but no timeout callback\n",
+                pasynPort->portName,pasynDevice->addr);
+        } else {
+            epicsTimerStartDelay(pasynUserPvt->timer,pasynUserPvt->timeout);
+        }
     }
-    epicsMutexUnlock(pasynPvt->lock);
-    epicsEventSignal(pasynPvt->notifyDeviceThread);
+    epicsMutexUnlock(pasynPort->lock);
+    epicsEventSignal(pasynPort->notifyDeviceThread);
     return(asynSuccess);
 }
 
 static void cancelRequest(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
     int i;
 
-    epicsMutexMustLock(pasynPvt->lock);
+    epicsMutexMustLock(pasynPort->lock);
     for(i=asynQueuePriorityHigh; i>=asynQueuePriorityLow; i--) {
-        pasynUserPvt = (asynUserPvt *)ellFirst(&pasynPvt->queueList[i]);
+        pasynUserPvt = (asynUserPvt *)ellFirst(&pasynPort->queueList[i]);
 	while(pasynUserPvt) {
 	    if(pasynUser == &pasynUserPvt->user) {
-	        ellDelete(&pasynPvt->queueList[i],&pasynUserPvt->node);
+	        ellDelete(&pasynPort->queueList[i],&pasynUserPvt->node);
                 pasynUserPvt->isQueued = FALSE;
                 if(pasynUserPvt->timer && pasynUserPvt->timeout>0.0) {
                     epicsTimerCancel(pasynUserPvt->timer);
@@ -431,15 +489,15 @@ static void cancelRequest(asynUser *pasynUser)
 	}
 	if(pasynUserPvt) break;
     }
-    epicsMutexUnlock(pasynPvt->lock);
+    epicsMutexUnlock(pasynPort->lock);
 }
 
 static asynStatus lock(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
 
-    if(!pasynPvt) {
+    if(!pasynPort) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::lock not connected\n");
         return(asynError);
@@ -449,19 +507,20 @@ static asynStatus lock(asynUser *pasynUser)
                 "asynManager::lock is queued\n");
         return(asynError);
     }
-    epicsMutexMustLock(pasynPvt->lock);
+    epicsMutexMustLock(pasynPort->lock);
     pasynUserPvt->lockCount++;
-    epicsMutexUnlock(pasynPvt->lock);
+    epicsMutexUnlock(pasynPort->lock);
     return(asynSuccess);
 }
 
 static asynStatus unlock(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
-    asynPvt *pasynPvt = pasynUserPvt->pasynPvt;
+    asynPort *pasynPort = pasynUserPvt->pasynPort;
+    asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
     BOOL wasOwner = FALSE;
 
-    if(!pasynPvt) {
+    if(!pasynPort || !pasynDevice) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::unlock not connected\n");
         return(asynError);
@@ -476,15 +535,23 @@ static asynStatus unlock(asynUser *pasynUser)
                 "asynManager::unlock but not locked\n");
         return(asynError);
     }
-    epicsMutexMustLock(pasynPvt->lock);
+    epicsMutexMustLock(pasynPort->lock);
     pasynUserPvt->lockCount--;
-    if(pasynPvt->plockHolder==pasynUserPvt) {
-        pasynPvt->plockHolder = 0;
+    if(pasynDevice->plockHolder==pasynUserPvt) {
+        pasynDevice->plockHolder = 0;
         wasOwner = TRUE;
     }
-    epicsMutexUnlock(pasynPvt->lock);
-    if(wasOwner) epicsEventSignal(pasynPvt->notifyDeviceThread);
+    epicsMutexUnlock(pasynPort->lock);
+    if(wasOwner) epicsEventSignal(pasynPort->notifyDeviceThread);
     return(asynSuccess);
+}
+
+static int getAddr(asynUser *pasynUser)
+{
+    asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
+
+    if(!pasynUserPvt->pasynDevice) return(-1);
+    return(pasynUserPvt->pasynDevice->addr);
 }
 
 static asynStatus registerPort(
@@ -492,63 +559,87 @@ static asynStatus registerPort(
     asynInterface *paasynInterface,int nasynInterface,
     unsigned int priority,unsigned int stackSize)
 {
-    asynPvt *pasynPvt;
+    asynPort *pasynPort;
+    int      i;
 
     if(!pasynBase) asynInit();
-    pasynPvt = locateAsynPvt(portName);
-    if(pasynPvt) {
+    pasynPort = locateAsynPort(portName);
+    if(pasynPort) {
         printf("asynCommon:registerDriver %s already registered\n",portName);
         return(asynError);
     }
-    pasynPvt = callocMustSucceed(1,sizeof(asynPvt),"asynCommon:registerDriver");
-    pasynPvt->lock = epicsMutexMustCreate();
-    pasynPvt->pasynUser = createAsynUser(0,0);
-    pasynPvt->portName = portName;
-    pasynPvt->paasynInterface = paasynInterface;
-    pasynPvt->nasynInterface = nasynInterface;
-    pasynPvt->notifyDeviceThread = epicsEventMustCreate(epicsEventEmpty);
-    pasynPvt->priority = priority;
-    pasynPvt->stackSize = stackSize;
-    pasynPvt->threadid = epicsThreadCreate(portName,priority,stackSize,
-        (EPICSTHREADFUNC)deviceThread,pasynPvt);
-    if(!pasynPvt->threadid){
+    pasynPort = callocMustSucceed(1,sizeof(asynPort),"asynCommon:registerDriver");
+    pasynPort->lock = epicsMutexMustCreate();
+    pasynPort->pasynUser = createAsynUser(0,0);
+    pasynPort->portName = portName;
+    pasynPort->paasynInterface = paasynInterface;
+    pasynPort->nasynInterface = nasynInterface;
+    pasynPort->notifyDeviceThread = epicsEventMustCreate(epicsEventEmpty);
+    pasynPort->priority = priority;
+    pasynPort->stackSize = stackSize;
+    for(i=0; i<NUMBER_QUEUE_PRIORITIES; i++) ellInit(&pasynPort->queueList[i]);
+    ellInit(&pasynPort->asynDeviceList);
+    epicsMutexMustLock(pasynPort->lock);
+    ellAdd(&pasynBase->asynPortList,&pasynPort->node);
+    pasynPort->threadid = epicsThreadCreate(portName,priority,stackSize,
+        (EPICSTHREADFUNC)portThread,pasynPort);
+    if(!pasynPort->threadid){
         printf("asynCommon:registerDriver %s epicsThreadCreate failed \n",
             portName);
         return(asynError);
     }
-    ellAdd(&pasynBase->asynPvtList,&pasynPvt->node);
+    epicsMutexUnlock(pasynPort->lock);
     return(asynSuccess);
 }
 
 static asynStatus registerProcessModule(
-    const char *processModuleName,const char *portName,
+    const char *processModuleName,const char *portName,int addr,
     asynInterface *paasynInterface,int nasynInterface)
 {
-    asynPvt *pasynPvt;
+    asynPort *pasynPort;
+    asynDevice *pasynDevice;
 
     if(!pasynBase) asynInit();
-    pasynPvt = locateAsynPvt(portName);
-    if(!pasynPvt) {
+    pasynPort = locateAsynPort(portName);
+    if(!pasynPort) {
         printf("asynCommon:registerProcessModule %s not found\n",portName);
         return(asynError);
     }
-    if(pasynPvt->nprocessModules>0) {
-        printf("asynCommon:registerProcessModule %s already "
-		"has a process module registered\n",portName);
+    epicsMutexMustLock(pasynPort->lock);
+    pasynDevice = locateAsynDevice(pasynPort,addr);
+    if(pasynDevice->nprocessModules>0) {
+        epicsMutexUnlock(pasynPort->lock);
+        printf("asynCommon:registerProcessModule %s addr %d already "
+		"has a process module registered\n",portName,addr);
         return(asynError);
     }
-    pasynPvt->processModuleName = processModuleName;
-    pasynPvt->paprocessModule = paasynInterface;
-    pasynPvt->nprocessModules = nasynInterface;
+    pasynDevice->processModuleName = processModuleName;
+    pasynDevice->paprocessModule = paasynInterface;
+    pasynDevice->nprocessModules = nasynInterface;
+    epicsMutexUnlock(pasynPort->lock);
     return(asynSuccess);
 }
 
-static const iocshArg asynReportArg0 = {"level", iocshArgInt};
-static const iocshArg *const asynReportArgs[1] = {&asynReportArg0};
+static const iocshArg asynReportArg0 = {"filename", iocshArgString};
+static const iocshArg asynReportArg1 = {"level", iocshArgInt};
+static const iocshArg *const asynReportArgs[] = {
+    &asynReportArg0,&asynReportArg1};
 static const iocshFuncDef asynReportDef =
-    {"asynReport", 1, asynReportArgs};
+    {"asynReport", 2, asynReportArgs};
 static void asynReportCall(const iocshArgBuf * args) {
-        report(args[0].ival);
+    FILE *fp;
+    const char *filename = args[0].sval;
+
+    if(!filename || filename[0]==0) {
+        fp = stdout;
+    } else {
+        fp = fopen(filename,"w+");
+        if(!fp) {
+            printf("fopen failed %s\n",strerror(errno));
+            return;
+        }
+    }
+    report(fp,args[1].ival);
 }
 static void asyn(void)
 {
