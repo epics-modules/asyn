@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.3 2004-04-08 22:17:58 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.4 2004-04-09 20:38:36 norume Exp $
  */
 
 #include <string.h>
@@ -37,6 +37,7 @@
 #include <osiUnistd.h>
 #include <epicsExport.h>
 #include <asynDriver.h>
+#include <asynInterposeEos.h>
 #include <drvAsynTCPPort.h>
 
 #if !defined(vxWorks) && !defined(__rtems__)
@@ -56,12 +57,6 @@ typedef struct {
     char              *serialDeviceName;
     char              *portName;
     int                fd;
-    char               eos[2];
-    int                eoslen;
-    char               inBuffer[INBUFFER_SIZE];
-    unsigned int       inBufferHead;
-    unsigned int       inBufferTail;
-    int                eosMatch;
     unsigned long      nRead;
     unsigned long      nWritten;
     osiSockAddr        farAddr;
@@ -204,8 +199,6 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
     tty->readPollmsec = -1;
     tty->writePollmsec = -1;
     tty->consecutiveReadTimeouts = 0;
-    tty->inBufferHead = tty->inBufferTail = 0;
-    tty->eosMatch = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->serialDeviceName);
     pasynManager->exceptionConnect(pasynUser);
@@ -374,49 +367,7 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
     }
     tty->cancelFlag = 0;
     tty->timeoutFlag = 0;
-    tty->timeoutFlag = 0;
     for (;;) {
-        if ((tty->inBufferTail != tty->inBufferHead)) {
-            char c = *data++ = tty->inBuffer[tty->inBufferTail++];
-            nRead++;
-            tty->nRead++;
-            if (tty->eoslen != 0) {
-                if (c == tty->eos[tty->eosMatch]) {
-                    if (++tty->eosMatch == tty->eoslen) {
-                        tty->eosMatch = 0;
-                        break;
-                    }
-                }
-                else {
-                    /*
-                     * Resynchronize the EOS search.  Since the driver
-                     * allows a maximum two-character EOS it doesn't
-                     * have to worry about cases like:
-                     *    End-of-string is "eeef"
-                     *    Input stream so far is "eeeeeeeee"
-                     */
-                    if (c == tty->eos[0])
-                        tty->eosMatch = 1;
-                    else
-                        tty->eosMatch = 0;
-                }
-            }
-            if (nRead >= maxchars)
-                break;
-            continue;
-        }
-        if (tty->cancelFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s I/O cancelled", tty->serialDeviceName);
-            break;
-        }
-        if (tty->timeoutFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s timeout", tty->serialDeviceName);
-            if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
-                closeConnection(tty);
-            break;
-        }
         if (!timerStarted && (tty->readTimeout > 0)) {
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
@@ -429,14 +380,13 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
         poll(&pollfd, 1, tty->readPollmsec);
         }
 #endif
-        thisRead = read(tty->fd, tty->inBuffer, INBUFFER_SIZE);
+        thisRead = read(tty->fd, data, maxchars);
         if (thisRead > 0) {
-            asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
-                        tty->inBuffer, thisRead,
+            asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
                        "%s read %d ", tty->serialDeviceName, thisRead);
-            tty->inBufferHead = thisRead;
-            tty->inBufferTail = 0;
             tty->consecutiveReadTimeouts = 0;
+            nRead = thisRead;
+            break;
         }
         else {
             if ((thisRead < 0) && (errno != EWOULDBLOCK)
@@ -451,6 +401,18 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
             }
             if (tty->readTimeout == 0)
                 tty->timeoutFlag = 1;
+        }
+        if (tty->cancelFlag) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                    "%s I/O cancelled", tty->serialDeviceName);
+            break;
+        }
+        if (tty->timeoutFlag) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                    "%s timeout", tty->serialDeviceName);
+            if (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)
+                closeConnection(tty);
+            break;
         }
     }
     if (timerStarted)
@@ -493,8 +455,6 @@ drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
 #endif
             }
     }
-    tty->inBufferHead = tty->inBufferTail = 0;
-    tty->eosMatch = 0;
     return asynSuccess;
 }
 
@@ -509,18 +469,7 @@ drvAsynTCPPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen
     assert(tty);
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
             "%s set EOS %d: ", tty->serialDeviceName, eoslen);
-    switch (eoslen) {
-    default:
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                        "%s illegal eoslen %d", tty->serialDeviceName,eoslen);
-        return asynError;
-    case 2: tty->eos[1] = eos[1]; /* fall through to case 1 */
-    case 1: tty->eos[0] = eos[0]; break;
-    case 0: break;
-    }
-    tty->eoslen = eoslen;
-    tty->eosMatch = 0;
-    return asynSuccess;
+    return asynError;
 }
 
 /*
@@ -533,26 +482,9 @@ drvAsynTCPPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    if(tty->eoslen>eossize) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "%s eossize %d < tty->eoslen %d",
-                                tty->serialDeviceName,eossize,tty->eoslen);
-                            *eoslen = 0;
-        return(asynError);
-    }
-    switch (tty->eoslen) {
-    default:
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s illegal tty->eoslen %d", tty->serialDeviceName,tty->eoslen);
-        return asynError;
-    case 2: eos[1] = tty->eos[1]; /* fall through to case 1 */
-    case 1: eos[0] = tty->eos[0]; break;
-    case 0: break;
-    }
-    *eoslen = tty->eoslen;
-    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s get EOS %d: ", tty->serialDeviceName, eoslen);
-    return asynSuccess;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "%s get EOS\n", tty->serialDeviceName);
+    return asynError;
 }
 
 /*
@@ -689,9 +621,15 @@ drvAsynTCPPortConfigure(char *portName,
     }
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
-    if(status!=asynSuccess)
+    if(status!=asynSuccess) {
         printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
-
+        ttyCleanup(tty);
+        return -1;
+    }
+    if (asynInterposeEosConfig(tty->portName, -1) < 0) {
+        ttyCleanup(tty);
+        return -1;
+    }
     return 0;
 }
 

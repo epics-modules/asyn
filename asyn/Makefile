@@ -22,10 +22,12 @@ INC += asynDriver.h
 INC += asynShellCommands.h
 INC += asynSyncIO.h
 INC += epicsInterruptibleSyscall.h
+INC += asynInterposeEos.h
 asyn_SRCS += asynManager.c
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynSyncIO.c
 asyn_SRCS += epicsInterruptibleSyscall.c
+asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += interposeFlush.c
 
 SRC_DIRS += $(ASYN)/asynRecord
