@@ -58,8 +58,8 @@ than using libCom, it is independent of EPICS.</p>
     gpibCore support.</li>
   <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
     support.</li>
-  <li>genericSerial: Support for any serial port that is accessed by fopen,
-    fread, fwrite, fclose.</li>
+  <li>genericSerial: Support for devices connected to serial ports and
+    devices connected through Ethernet/Serial converter boxes.</li>
   <li>Can be used by streams, devAscii/drvAscii, devOrnl, and mpfSerial.
     <ul>
       <li>Each will have to be modified so that the device support component
@@ -158,22 +158,6 @@ report could have problems. Does this matter?</p>
 <p>Interface asynGpib defines methods to handle SRQs. Should a more general
 interrupt mechanism be provided? Perhaps is is best to wait until a need
 arises.</p>
-
-<h3>Planned additions</h3>
-
-<p>Hopefully Dirk Zimoch will get time soon to convert streams to use
-asynDriver.</p>
-
-<p>Additional low level support</p>
-<ul>
-  <li>A replacement for GI (Gpib Interact). GI, which is available with the
-    base 3.13 gpib support and with gpibCore, is a command line tool that
-    allows the user to compose commands to send to
-  instruments.&gt;/li&gt;</li>
-  <li>Convert National Instruments NI1014 VME to GPIB driver to
-  asynDriver.</li>
-  <li>Convert Industry Pack IP488 driver to asynDriver.</li>
-</ul>
 
 <center>
 <h2><a name="Acknowledgments"></a>Acknowledgments</h2>
@@ -937,20 +921,6 @@ details.</p>
     VXI-11.2 TCP/IP-IEEE 488.1 Interface Specification
     VXI-11.3 TCP/IP-IEEE 488.2 Instrument Interface Specification</pre>
 
-<p>The vxi11 support has been tested with the following vxi11 controllers:</p>
-<ul>
-  <li>Agilent E2050A LAN/GPIB Gateway.
-    <p>It's vxiName must start with "hpib" rather than "gpib".</p>
-  </li>
-  <li>Agilent E5810A LAN/GPIB Gateway.</li>
-  <li>Tektronix TDS3014B Scope.
-    <p>When communicating with the Ethernet port it acts like a VXI-11.2
-    rather than a VXI-11.3 device. It seems to just accept any GPIB address.
-    SRQs did not work when connecting via the ethernet port but did when
-    communicating via a LAN/GPIB gateway.</p>
-  </li>
-</ul>
-
 <p>The following commands may be specified in the st.cmd file</p>
 <pre>    E2050Reboot("inet_addr")
     E5810Reboot("inet_addr","password")
@@ -974,17 +944,6 @@ where
 
 <p>The generic serial driver supports devices connected to serial ports on
 the IOC and devices connected through Ethernet/Serial converter boxes.</p>
-
-<p>The generic serial support has been tested with the following:</p>
-<ul>
-  <li>xvWorks with a GreenSprings Octal UART Industry-Pack module on a VME
-    carrier.</li>
-  <li>Linux and Windows XP (Cygwin) with PC hardware serial port
-  (/dev/ttyS0).</li>
-  <li>Solaris hardware serial port (/dev/cua/a).</li>
-  <li>Linux, Solaris, Darwin, vxWorks, and Windows XP (Cygwin) with a Moxa
-    NPort Ethernet/Serial converter.</li>
-</ul>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
 command:</p>
