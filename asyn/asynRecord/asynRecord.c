@@ -771,11 +771,8 @@ static void asynCallbackProcess(asynUser * pasynUser)
     else if(pasynRec->tmod != asynTMOD_NoIO) performIO(pasynUser);
     yesNo = 0;
     pasynManager->canBlock(pasynUser,&yesNo);
-    if(yesNo) {
-        dbScanLock((dbCommon *) pasynRec);
-        process(pasynRec);
-        dbScanUnlock((dbCommon *) pasynRec);
-    }
+    if(yesNo) callbackRequestProcessCallback(&pasynRecPvt->callback,
+                    pasynRec->prio, pasynRec);
 }
 
 static void asynCallbackSpecial(asynUser * pasynUser)
@@ -1264,7 +1261,7 @@ static void performInt32IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynInt32->write(pasynRecPvt->asynInt32Pvt,
                                                 pasynUser, pasynRec->i32out);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Int32 write data=%d", 
+                  "%s: status=%d, Int32 write data=%d\n", 
                   pasynRec->name, status, pasynRec->i32out);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 write error, %s",
@@ -1277,7 +1274,7 @@ static void performInt32IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynInt32->read(pasynRecPvt->asynInt32Pvt,
                                                pasynUser, &pasynRec->i32inp);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Int32 read data=%d", 
+                  "%s: status=%d, Int32 read data=%d\n", 
                   pasynRec->name, status, pasynRec->i32inp);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 read error, %s",
@@ -1300,7 +1297,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
                                                  pasynUser, pasynRec->ui32out,
                                                  pasynRec->ui32mask);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, UInt32 write data=%d, mask=%d",        
+                  "%s: status=%d, UInt32 write data=%d, mask=%d\n",        
                   pasynRec->name, status, pasynRec->ui32out, pasynRec->ui32mask);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 write error, %s",
@@ -1315,7 +1312,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
                                                 pasynRec->ui32mask);
         pasynRec->ui32inp = data;
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, UInt32 read data=%d, mask=%d",        
+                  "%s: status=%d, UInt32 read data=%d, mask=%d\n",        
                   pasynRec->name, status, pasynRec->i32inp, pasynRec->ui32mask);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 read error, %s",
@@ -1336,7 +1333,7 @@ static void performFloat64IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynFloat64->write(pasynRecPvt->asynFloat64Pvt,
                                                   pasynUser, pasynRec->f64out);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Float64 write data=%f",        
+                  "%s: status=%d, Float64 write data=%f\n",        
                   pasynRec->name, status, pasynRec->f64out);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 write error, %s",
@@ -1349,7 +1346,7 @@ static void performFloat64IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynFloat64->read(pasynRecPvt->asynFloat64Pvt,
                                                  pasynUser, &pasynRec->f64inp);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Float64 read data=%d",        
+                  "%s: status=%d, Float64 read data=%d\n",        
                   pasynRec->name, status, pasynRec->f64inp);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 read error, %s",
@@ -1421,7 +1418,7 @@ static void performOctetIO(asynUser * pasynUser)
         }
         pasynRec->nawt = nbytesTransfered;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
-           "%s: nwrite=%d, status=%d, nawt=%d, data=", pasynRec->name, nwrite,
+           "%s: nwrite=%d, status=%d, nawt=%d\n", pasynRec->name, nwrite,
                     status, nbytesTransfered);
         if(status != asynSuccess || nbytesTransfered != nwrite) {
             /* Something is wrong if we couldn't write everything */
@@ -1449,7 +1446,7 @@ static void performOctetIO(asynUser * pasynUser)
                 "Error %s", pasynUser->errorMessage);
         } else {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
-             "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen,
+             "%s: inlen=%d, status=%d, ninp=%d\n", pasynRec->name, inlen,
                     status, nbytesTransfered);
         }
         pasynRec->eomr = eomReason;
