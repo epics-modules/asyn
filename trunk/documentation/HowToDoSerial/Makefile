@@ -24,7 +24,7 @@ install: html pdf
 
 clean:
 	rm -f *.dvi *.log *.aux *.bbl *.blg *.lof *.lot *.toc *.out *.haux *.htoc
-	rm -f tutorial.ps tutorial.tex
+	rm -f tutorial.ps tutorial.tex tutorial.lyx~
 
 realclean: clean
 	rm -rf tutorial.html tutorial.lyx~ tutorial.pdf
