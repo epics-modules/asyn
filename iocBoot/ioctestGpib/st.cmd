@@ -11,7 +11,7 @@ dbLoadRecords("../../db/asynGeneric.db","ioc=gpibTest")
 
 #The following two commands are for the E5810
 #E5810Reboot("164.54.8.129",0)
-vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",1,0)
+vxi11Configure("L0","164.54.8.129",0,0.0,"gpib0",0,0)
 
 #The following command is for an ethernet TSD3014B scope
 #vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0,0)

@@ -52,7 +52,7 @@ typedef struct echoPvt {
     
 /* init routine */
 static int echoDriverInit(const char *dn, double delay,
-    int autoConnect,int multiDevice);
+    int noAutoConnect,int multiDevice);
 
 /* asynCommon methods */
 static void report(void *ppvt,FILE *fp,int details);
@@ -87,7 +87,7 @@ static asynOctet octet = {
 };
 
 static int echoDriverInit(const char *dn, double delay,
-    int autoConnect,int multiDevice)
+    int noAutoConnect,int multiDevice)
 {
     echoPvt    *pechoPvt;
     char       *portName;
@@ -107,7 +107,7 @@ static int echoDriverInit(const char *dn, double delay,
     pechoPvt->octet.interfaceType = asynOctetType;
     pechoPvt->octet.pinterface  = (void *)&octet;
     pechoPvt->octet.drvPvt = pechoPvt;
-    status = pasynManager->registerPort(portName,multiDevice,autoConnect,0,0);
+    status = pasynManager->registerPort(portName,multiDevice,!noAutoConnect,0,0);
     if(status!=asynSuccess) {
         printf("echoDriverInit registerDriver failed\n");
         return 0;
@@ -374,7 +374,7 @@ static asynStatus getEos(void *ppvt,asynUser *pasynUser,
 /* register echoDriverInit*/
 static const iocshArg echoDriverInitArg0 = { "portName", iocshArgString };
 static const iocshArg echoDriverInitArg1 = { "delay", iocshArgDouble };
-static const iocshArg echoDriverInitArg2 = { "autoConnect", iocshArgInt };
+static const iocshArg echoDriverInitArg2 = { "disable auto-connect", iocshArgInt };
 static const iocshArg echoDriverInitArg3 = { "multiDevice", iocshArgInt };
 static const iocshArg *echoDriverInitArgs[] = {
     &echoDriverInitArg0,&echoDriverInitArg1,

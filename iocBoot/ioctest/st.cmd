@@ -1,11 +1,11 @@
 dbLoadDatabase("../../dbd/test.dbd")
 test_registerRecordDeviceDriver(pdbbase)
 
-#drvGenericSerialConfigure("A","164.54.9.90:4001",1,0)
-echoDriverInit("A",0.05,1,0)
+#drvGenericSerialConfigure("A","164.54.9.90:4001",0,0)
+echoDriverInit("A",0.05,0,0)
 interposeInterfaceInit("interpose","A",0)
-#drvGenericSerialConfigure("B","164.54.9.90:4002",1,0)
-echoDriverInit("B",0.05,1,1)
+#drvGenericSerialConfigure("B","164.54.9.90:4002",0,0)
+echoDriverInit("B",0.05,0,1)
 
 dbLoadRecords("../../db/asyn.db","ioc=asynTest,port=A,addr=0")
 dbLoadRecords("../../db/test.db","name=client1,port=A,addr=0")
