@@ -57,12 +57,6 @@ asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
-
-SRC_DIRS += $(ASYN)/drvGenericSerial
-INC += drvGenericSerial.h
-asyn_SRCS += drvGenericSerial.c
-DBD += drvGenericSerial.dbd
-
 SRC_DIRS += $(ASYN)/drvAsynSerial
 INC += drvAsynSerialPort.h
 asyn_SRCS += drvAsynSerialPort.c
