@@ -55,6 +55,7 @@ static void setOption(asynUser *pasynUser)
     setOptionArgs *poptionargs = (setOptionArgs *)pasynUser->userPvt;
     asynStatus status;
 
+printf("setOption (callback)\n");
     status = poptionargs->pasynCommon->setOption(poptionargs->drvPvt,
             pasynUser,poptionargs->key,poptionargs->val);
     if(status!=asynSuccess) 
@@ -92,6 +93,11 @@ int asynSetOption(const char *portName, int addr, const char *key, const char *v
     optionargs.val = val;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
     status = pasynManager->queueRequest(pasynUser,0,0.0);
+    if(status!=asynSuccess) {
+        printf("queueRequest failed %s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return asynError;
+    }
     epicsEventWait(optionargs.done);
     epicsEventDestroy(optionargs.done);
     pasynManager->freeAsynUser(pasynUser);
