@@ -152,7 +152,6 @@ typedef enum {stateIdle,stateConnect,stateIO,stateGetOption,stateSetOption} call
 typedef struct asynRecPvt {
     CALLBACK        callback;
     asynRecord      *prec;  /* Pointer to record */
-    epicsMutexId    lock;
     callbackState   state; 
     int             callbackShouldProcess; 
     int             fieldIndex; /* For special */
@@ -178,7 +177,6 @@ static long init_record(asynRecord *pasynRec, int pass)
     /* Allocate and initialize private structure used by this record */
     pasynRecPvt = (asynRecPvt*) callocMustSucceed(
         1, sizeof(asynRecPvt),"asynRecord");
-    pasynRecPvt->lock = epicsMutexMustCreate();
     pasynRec->dpvt = pasynRecPvt;
 
     pasynRecPvt->prec = pasynRec;
@@ -214,7 +212,6 @@ static long process(asynRecord *pasynRec)
 {
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
 
-   epicsMutexMustLock(pasynRecPvt->lock);
    if(!pasynRec->pact && pasynRecPvt->state==stateIdle) { 
       pasynRecPvt->state = stateIO;
       /* Need to store state of fields that could have been changed from
@@ -224,7 +221,6 @@ static long process(asynRecord *pasynRec)
       REMEMBER_STATE(acmd);
       REMEMBER_STATE(nowt);
    }
-   epicsMutexUnlock(pasynRecPvt->lock);
    /* If pact is FALSE then queue message to driver and return */
    if (!pasynRec->pact) {
       /* Make sure nrrd and nowt are valid */
@@ -238,6 +234,8 @@ static long process(asynRecord *pasynRec)
       pasynRec->pact = TRUE;
       return(0);
    } else if(pasynRecPvt->state==stateConnect) {
+       /*special cancelRequest and callbackRequestProcessCallback*/
+       /*Just process the record again */
        scanOnce(pasynRec);
    } 
    recGblGetTimeStamp(pasynRec);
@@ -261,7 +259,6 @@ static long special(struct dbAddr *paddr, int after)
     FILE *fd;
 
     if (!after) return(status);
-    epicsMutexMustLock(pasynRecPvt->lock);
     /* The first set of fields can be handled even if state != stateIdle */
     switch (fieldIndex) {
        case asynRecordTB0: 
@@ -275,7 +272,7 @@ static long special(struct dbAddr *paddr, int after)
                       (pasynRec->tb3 ? ASYN_TRACEIO_DRIVER : 0) |
                       (pasynRec->tb4 ? ASYN_TRACE_FLOW     : 0);
           pasynTrace->setTraceMask(pasynUser, traceMask);
-          goto unlock;
+          goto done;
        case asynRecordTIB0: 
        case asynRecordTIB1: 
        case asynRecordTIB2: 
@@ -283,10 +280,10 @@ static long special(struct dbAddr *paddr, int after)
                       (pasynRec->tib1 ? ASYN_TRACEIO_ESCAPE : 0) |
                       (pasynRec->tib2 ? ASYN_TRACEIO_HEX    : 0);
           pasynTrace->setTraceIOMask(pasynUser, traceMask);
-          goto unlock;
+          goto done;
        case asynRecordTSIZ:
           pasynTrace->setTraceIOTruncateSize(pasynUser, pasynRec->tsiz);
-          goto unlock;
+          goto done;
        case asynRecordTFIL:
           if (strlen(pasynRec->tfil) == 0) {
              /* Zero length, use stdout */
@@ -312,36 +309,43 @@ static long special(struct dbAddr *paddr, int after)
                          "Error opening trace file",
                          "fopen failed for %s", pasynRec->tfil);
           }
-          goto unlock;
+          goto done;
        case asynRecordAUCT:
           pasynManager->autoConnect(pasynUser, pasynRec->auct);
-          goto unlock;
+          goto done;
        case asynRecordENBL:
           pasynManager->enable(pasynUser, pasynRec->enbl);
-          goto unlock;
+          goto done;
     }
     if(fieldIndex==asynRecordCNCT) {
         if(pasynRec->pact) {
             asynPrint(pasynUser,ASYN_TRACE_FLOW,
                 "%s:special connect/disconnect calling cancelRequest\n",
                 pasynRec->name);
-            pasynManager->cancelRequest(pasynUser);
+            status = pasynManager->cancelRequest(pasynUser);
+            if(status!=asynSuccess || !pasynUser->auxStatus) {
+                reportError(pasynRec, COMM_ALARM, MINOR_ALARM,
+                    "special connect/disconnect",
+                    "asynCallback is active\n");
+                return 0;
+            }
             pasynRecPvt->state = stateConnect;
             callbackRequestProcessCallback(&pasynRecPvt->callback,
                 pasynRec->prio,pasynRec);
-            goto unlock;
+            goto done;
          }
          asynPrint(pasynUser,ASYN_TRACE_FLOW,
              "%s:special connect/disconnect\n", pasynRec->name);
          pasynRecPvt->state = stateConnect;
          scanOnce(pasynRec);
-         goto unlock;
+         goto done;
     }
     /* These cases require idle state */
     if(pasynRecPvt->state!=stateIdle) {
-       printf("%s state!=stateIdle, state=%d, try again later\n",
-              pasynRec->name, pasynRecPvt->state);
-       goto unlock;
+       reportError(pasynRec, COMM_ALARM, MINOR_ALARM,
+           "special",
+           " state!=stateIdle, state=%d, try again later\n",pasynRecPvt->state);
+       goto done;
     } 
     switch (fieldIndex) {
        case asynRecordSOCK:
@@ -349,7 +353,7 @@ static long special(struct dbAddr *paddr, int after)
           pasynRec->addr = 0;
           status = drvAsynTCPPortConfigure(pasynRec->port, pasynRec->sock, 
                                              0, 0);
-          if (status != asynSuccess) goto unlock;
+          if (status != asynSuccess) goto done;
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
           db_post_events(pasynRec, pasynRec->port, monitor_mask);
           db_post_events(pasynRec, &pasynRec->addr, monitor_mask);
@@ -376,8 +380,7 @@ static long special(struct dbAddr *paddr, int after)
           scanOnce(pasynRec);
           break;
     }
-unlock:
-    epicsMutexUnlock(pasynRecPvt->lock);
+done:
     return(status);
 }
 
@@ -739,10 +742,10 @@ static void exceptCallback(asynUser *pasynUser,asynException exception)
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s: exception %d\n",
         pasynRec->name,(int)exception);
-    epicsMutexMustLock(pasynRecPvt->lock);
+    dbScanLock( (dbCommon*) pasynRec);
     /* There has been a changed in connect or enable status */
     monitorStatus(pasynRec);
-    epicsMutexUnlock(pasynRecPvt->lock);
+    dbScanUnlock( (dbCommon*) pasynRec);
 }
 
 static void performIO(asynUser *pasynUser)
