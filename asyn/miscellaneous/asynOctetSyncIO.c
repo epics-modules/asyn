@@ -365,7 +365,6 @@ static asynStatus asynOctetSyncIORead(asynUser *pasynUser,
 {
     asynOctetSyncIOPvt *pPvt = (asynOctetSyncIOPvt *)pasynUser->userPvt;
     asynStatus status;
-    int        ninp = 0;
 
     status = asynOctetSyncIOQueueAndWait(pasynUser,
                                   NULL, 0, buffer, buffer_len, 
