@@ -15,10 +15,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsMutex.h>
+#include <epicsEvent.h>
 #include <epicsThread.h>
 #include <epicsExport.h>
 #include <iocsh.h>
@@ -26,6 +28,7 @@
 #include <asynDriver.h>
 #include <asynDrvUser.h>
 #include <asynInt32.h>
+#include <asynFloat64.h>
 
 #define NCHANNELS 16
 
@@ -37,16 +40,19 @@ typedef struct chanPvt {
 typedef struct drvPvt {
     const char    *portName;
     epicsMutexId  lock;
+    epicsEventId  waitWork;
     int           connected;
     double        interruptDelay;
     asynInterface common;
+    asynInterface asynDrvUser;
     asynInterface asynInt32;
+    asynInterface asynFloat64;
     epicsInt32    low;
     epicsInt32    high;
     chanPvt       channel[NCHANNELS];
 }drvPvt;
 
-static int int32DriverInit(const char *dn, double interruptDelay,int low,int high);
+static int int32DriverInit(const char *dn,int low,int high);
 static asynStatus getAddr(drvPvt *pdrvPvt,asynUser *pasynUser,
     int *paddr,int portOK);
 static void interruptThread(drvPvt *pdrvPvt);
@@ -57,17 +63,33 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 static asynCommon common = { report, connect, disconnect };
 
+/* asynDrvUser */
+static asynStatus create(void *drvPvt,asynUser *pasynUser,
+    const char *drvInfo, const char **pptypeName,size_t *psize);
+static asynStatus getType(void *drvPvt,asynUser *pasynUser,
+    const char **pptypeName,size_t *psize);
+static asynStatus destroy(void *drvPvt,asynUser *pasynUser);
+static asynDrvUser drvUser = {create,getType,destroy};
+
+
 /* asynInt32 methods */
 static asynStatus int32Write(void *drvPvt,asynUser *pasynUser,epicsInt32 value);
 static asynStatus int32Read(void *drvPvt,asynUser *pasynUser,epicsInt32 *value);
 static asynStatus int32GetBounds(void *drvPvt, asynUser *pasynUser,
                                 epicsInt32 *low, epicsInt32 *high);
 /*use default for registerCallback,cancelCallback*/
-static asynInt32 int32Cache = { int32Write, int32Read, int32GetBounds, 0, 0 };
-/*use default for write,registerCallback,cancelCallback*/
-static asynInt32 int32Interrupt = { 0, int32Read, int32GetBounds, 0, 0 };
+static asynInt32 int32 = { int32Write, int32Read, int32GetBounds, 0, 0 };
+
+/* asynFloat64 methods */
+static asynStatus float64Write(void *drvPvt,asynUser *pasynUser,
+    epicsFloat64 value);
+static asynStatus float64Read(void *drvPvt,asynUser *pasynUser,
+    epicsFloat64 *value);
+/*use default for registerCallback,cancelCallback*/
+static asynFloat64 float64= { float64Write, float64Read, 0, 0 };
+
 
-static int int32DriverInit(const char *dn, double interruptDelay,int low,int high)
+static int int32DriverInit(const char *dn,int low,int high)
 {
     drvPvt    *pdrvPvt;
     char       *portName;
@@ -81,12 +103,18 @@ static int int32DriverInit(const char *dn, double interruptDelay,int low,int hig
     strcpy(portName,dn);
     pdrvPvt->portName = portName;
     pdrvPvt->lock = epicsMutexMustCreate();
+    pdrvPvt->waitWork = epicsEventCreate(epicsEventEmpty);
     pdrvPvt->common.interfaceType = asynCommonType;
     pdrvPvt->common.pinterface  = (void *)&common;
     pdrvPvt->common.drvPvt = pdrvPvt;
+    pdrvPvt->asynDrvUser.interfaceType = asynDrvUserType;
+    pdrvPvt->asynDrvUser.pinterface = (void *)&drvUser;
+    pdrvPvt->asynDrvUser.drvPvt = pdrvPvt;
     pdrvPvt->asynInt32.interfaceType = asynInt32Type;
-    pdrvPvt->asynInt32.pinterface  =
-        (interruptDelay>0.0) ? (void *)&int32Interrupt : (void *)&int32Cache;
+    pdrvPvt->asynFloat64.interfaceType = asynFloat64Type;
+    pdrvPvt->asynFloat64.pinterface  =(void *)&float64;
+    pdrvPvt->asynFloat64.drvPvt = pdrvPvt;
+    pdrvPvt->asynInt32.pinterface  = (void *)&int32;
     pdrvPvt->asynInt32.drvPvt = pdrvPvt;
     pdrvPvt->low = low;
     pdrvPvt->high = high;
@@ -100,9 +128,17 @@ static int int32DriverInit(const char *dn, double interruptDelay,int low,int hig
         printf("int32DriverInit registerInterface failed\n");
         return 0;
     }
+    status = pasynManager->registerInterface(portName,&pdrvPvt->asynDrvUser);
+    if(status!=asynSuccess){
+        printf("int32DriverInit registerInterface failed\n");
+        return 0;
+    }
     status = pasynInt32Base->initialize(pdrvPvt->portName, &pdrvPvt->asynInt32);
     if(status!=asynSuccess) return 0;
-    pdrvPvt->interruptDelay = interruptDelay;
+    status = pasynFloat64Base->initialize(pdrvPvt->portName,
+        &pdrvPvt->asynFloat64);
+    if(status!=asynSuccess) return 0;
+    pdrvPvt->interruptDelay = 0.0;
     for(addr=0; addr<NCHANNELS; addr++) {
         pdrvPvt->channel[addr].value = pdrvPvt->low;
         status = pasynManager->registerInterruptSource(portName,addr,
@@ -111,12 +147,10 @@ static int int32DriverInit(const char *dn, double interruptDelay,int low,int hig
             printf("int32DriverInit registerCallbackDriver failed\n");
         }
     }
-    if(interruptDelay>0.0) {
-        epicsThreadCreate("driverInt32",
-            epicsThreadPriorityHigh,
-            epicsThreadGetStackSize(epicsThreadStackSmall),
-            (EPICSTHREADFUNC)interruptThread,pdrvPvt);
-    }
+    epicsThreadCreate("driverInt32",
+        epicsThreadPriorityHigh,
+        epicsThreadGetStackSize(epicsThreadStackSmall),
+        (EPICSTHREADFUNC)interruptThread,pdrvPvt);
     return(0);
 }
 
@@ -138,24 +172,28 @@ static asynStatus getAddr(drvPvt *pdrvPvt,asynUser *pasynUser,
 static void interruptThread(drvPvt *pdrvPvt)
 {
     while(1) {
-        int addr;
-        epicsInt32 value;
-
-        for(addr=0; addr<NCHANNELS; addr++) {
-            chanPvt *pchannel = &pdrvPvt->channel[addr];
-            epicsMutexMustLock(pdrvPvt->lock);
-            value = pchannel->value;
-            if(value>=pdrvPvt->high) {
-                value = pdrvPvt->low;
-            } else {
-                value++;
+        epicsEventMustWait(pdrvPvt->waitWork);
+        while(1) {
+            int addr;
+            epicsInt32 value;
+    
+            if(pdrvPvt->interruptDelay <= .0001) break;
+            for(addr=0; addr<NCHANNELS; addr++) {
+                chanPvt *pchannel = &pdrvPvt->channel[addr];
+                epicsMutexMustLock(pdrvPvt->lock);
+                value = pchannel->value;
+                if(value>=pdrvPvt->high) {
+                    value = pdrvPvt->low;
+                } else {
+                    value++;
+                }
+                pchannel->value = value;
+                epicsMutexUnlock(pdrvPvt->lock);
+                pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,
+                    addr,0,&value);
             }
-            pchannel->value = value;
-            epicsMutexUnlock(pdrvPvt->lock);
-            pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,
-                addr,0,&value);
+            epicsThreadSleep(pdrvPvt->interruptDelay);
         }
-        epicsThreadSleep(pdrvPvt->interruptDelay);
     }
 }
 
@@ -283,19 +321,122 @@ static asynStatus int32GetBounds(void *pvt, asynUser *pasynUser,
     return asynSuccess;
 }
 
+static asynStatus float64Write(void *pvt,asynUser *pasynUser,
+                              epicsFloat64 value)
+{
+    drvPvt   *pdrvPvt = (drvPvt *)pvt;
+    int        addr;
+    asynStatus status;
+
+    status = getAddr(pdrvPvt,pasynUser,&addr,0);
+    if(status!=asynSuccess) return status;
+    epicsMutexMustLock(pdrvPvt->lock);
+    pdrvPvt->interruptDelay = value;
+    epicsMutexUnlock(pdrvPvt->lock);
+    epicsEventSignal(pdrvPvt->waitWork);
+    asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
+        "%s addr %d write %d\n",pdrvPvt->portName,addr,value);
+    pasynManager->interrupt(pdrvPvt->channel[addr].asynPvt,addr,1,&value);
+    return asynSuccess;
+}
+
+static asynStatus float64Read(void *pvt,asynUser *pasynUser,
+                              epicsFloat64 *value)
+{
+    drvPvt *pdrvPvt = (drvPvt *)pvt;
+    int        addr;
+    asynStatus status;
+
+    status = getAddr(pdrvPvt,pasynUser,&addr,0);
+    if(status!=asynSuccess) return status;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s %d uint32DigitalDriver:float64Read\n",pdrvPvt->portName,addr);
+    if(!pdrvPvt->connected) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s uint32DigitalDriver:read  not connected\n",pdrvPvt->portName);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s uint32DigitalDriver:read not connected\n",pdrvPvt->portName);
+        return asynError;
+    }
+    epicsMutexMustLock(pdrvPvt->lock);
+    *value = pdrvPvt->interruptDelay;
+    epicsMutexUnlock(pdrvPvt->lock);
+    asynPrint(pasynUser,ASYN_TRACEIO_DRIVER,
+        "%s read %d\n",pdrvPvt->portName,value);
+    return asynSuccess;
+}
+
+static const char *testDriverReason = "testDriverReason";
+static const char *skipWhite(const char *pstart)
+{
+    const char *p = pstart;
+    while(*p && isspace(*p)) p++;
+    return p;
+}
+
+static asynStatus create(void *drvPvt,asynUser *pasynUser,
+    const char *drvInfo, const char **pptypeName,size_t *psize)
+{
+    const char *pnext;
+    long  reason = 0;
+
+    if(!drvInfo) {
+        reason = 0;
+    } else {
+        char *endp;
+
+        pnext = skipWhite(drvInfo);
+        if(strlen(pnext)==0) {
+            reason = 0;
+        } else {
+            pnext = strstr(pnext,"reason");
+            if(!pnext) goto error;
+            pnext += strlen("reason");
+            pnext = skipWhite(pnext);
+            if(*pnext!='(') goto error;
+            pnext++;
+            pnext = skipWhite(pnext);
+            errno = 0;
+            reason = strtol(pnext,&endp,0);
+            if(errno) {
+                printf("strtol failed %s\n",strerror(errno));
+                goto error;
+            }
+        }
+    }
+    pasynUser->reason = reason;
+    if(pptypeName) *pptypeName = testDriverReason;
+    if(psize) *psize = sizeof(int);
+    return asynSuccess;
+error:
+    printf("asynDrvUser failed. got |%s| expecting reason(<int>)\n",drvInfo);
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "asynDrvUser failed. got |%s| expecting reason(<int>)\n",drvInfo);
+    return asynError;
+}
+
+static asynStatus getType(void *drvPvt,asynUser *pasynUser,
+    const char **pptypeName,size_t *psize)
+{
+    *pptypeName = testDriverReason;
+    *psize = sizeof(int);
+    return asynSuccess;
+}
+
+static asynStatus destroy(void *drvPvt,asynUser *pasynUser)
+{ return asynSuccess;}
+
 /* register int32DriverInit*/
 static const iocshArg int32DriverInitArg0 = { "portName", iocshArgString };
-static const iocshArg int32DriverInitArg1 = { "interruptDelay", iocshArgDouble };
-static const iocshArg int32DriverInitArg2 = { "low", iocshArgInt };
-static const iocshArg int32DriverInitArg3 = { "high", iocshArgInt };
+static const iocshArg int32DriverInitArg1 = { "low", iocshArgInt };
+static const iocshArg int32DriverInitArg2 = { "high", iocshArgInt };
 static const iocshArg *int32DriverInitArgs[] = {
-    &int32DriverInitArg0,&int32DriverInitArg1,
-    &int32DriverInitArg2,&int32DriverInitArg3};
+    &int32DriverInitArg0,&int32DriverInitArg1,&int32DriverInitArg2};
 static const iocshFuncDef int32DriverInitFuncDef = {
-    "int32DriverInit", 4, int32DriverInitArgs};
+    "int32DriverInit", 3, int32DriverInitArgs};
 static void int32DriverInitCallFunc(const iocshArgBuf *args)
 {
-    int32DriverInit(args[0].sval,args[1].dval,args[2].ival,args[3].ival);
+    int32DriverInit(args[0].sval,args[1].ival,args[2].ival);
 }
 
 static void int32DriverRegister(void)

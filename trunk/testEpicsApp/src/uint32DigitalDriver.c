@@ -75,7 +75,7 @@ static asynStatus uint32Write(void *drvPvt,asynUser *pasynUser,
 static asynStatus uint32Read(void *drvPvt,asynUser *pasynUser,
                               epicsUInt32 *value,epicsUInt32 mask);
 /*use default for registerCallback,cancelCallback*/
-static asynUInt32Digital uint32= { uint32Write, uint32Read, 0, 0 };
+static asynUInt32Digital uint32= { uint32Write, uint32Read, 0,0,0,0, 0 };
 
 /* asynFloat64 methods */
 static asynStatus float64Write(void *drvPvt,asynUser *pasynUser, epicsFloat64 value);
