@@ -576,6 +576,41 @@ static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
     }
     if(!isLocked)epicsMutexUnlock(pportInstance->lock);
 }
+static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
+{
+    dbCommon *precord = pgpibDpvt->precord;
+    devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
+    int eosLen = 0, callSetEos = 0;
+    asynStatus status;
+
+    if(pgpibCmd->eos) {
+        eosLen = strlen(pgpibCmd->eos);
+        if(eosLen==0) eosLen = 1;
+    } else {
+        eosLen = 0;
+    }
+    if(eosLen!=pdeviceInstance->eosLen) {
+        callSetEos = 1;
+    } else if(eosLen>2) {
+        callSetEos = 1;
+    } else if(eosLen>0) {
+        if(strcmp(pgpibCmd->eos,pdeviceInstance->eos)!=0) callSetEos = 1;
+    }
+    if(callSetEos) {
+        status = pgpibDpvt->pasynOctet->setEos(
+            pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,eosLen);
+        if(status!=asynSuccess) {
+            printf("%s pasynOctet->setEos failed %s\n",
+                precord->name,pgpibDpvt->pasynUser->errorMessage);
+            return -1;
+        }
+        pdeviceInstance->eosLen = eosLen;
+        if(eosLen!=0 && eosLen<=2) strcpy(pdeviceInstance->eos,pgpibCmd->eos);
+    }
+    return 0;
+}
+
 
 static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
 {
@@ -585,8 +620,7 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     portInstance *pportInstance = pdevGpibPvt->pportInstance;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
-    int nchars = 0, lenmsg = 0, eosLen = 0, callSetEos = 0;
-    asynStatus status;
+    int nchars = 0, lenmsg = 0;
 
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibPrepareToRead\n",precord->name);
@@ -608,29 +642,9 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
             pdeviceInstance->srqWaitTimeout);
     }
     epicsMutexUnlock(pportInstance->lock);
-    if(pgpibCmd->eos) {
-        eosLen = strlen(pgpibCmd->eos);
-        if(eosLen==0) eosLen = 1;
-    } else {
-        eosLen = 0;
-    }
-    if(eosLen!=pdeviceInstance->eosLen) {
-        callSetEos = 1;
-    } else if(eosLen>2) {
-        callSetEos = 1;
-    } else if(eosLen>0) {
-        if(strcmp(pgpibCmd->eos,pdeviceInstance->eos)!=0) callSetEos = 1;
-    }
-    if(callSetEos) {
-        status = pgpibDpvt->pasynOctet->setEos(
-            pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,eosLen);
-        if(status!=asynSuccess) {
-            printf("%s pasynOctet->setEos failed %s\n",
-                precord->name,pgpibDpvt->pasynUser->errorMessage);
-            failure = -1; goto done;
-        }
-        pdeviceInstance->eosLen = eosLen;
-        if(eosLen!=0 && eosLen<=2) strcpy(pdeviceInstance->eos,pgpibCmd->eos);
+    if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) {
+        failure = -1;
+        goto done;
     }
     switch(cmdType) {
     case GPIBREADW:
@@ -1025,6 +1039,8 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
     int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     int nchars;
 
+    if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0)
+        return -1;
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s writeIt message %s len %d\n",precord->name,message,len);
     nchars = pasynOctet->write(asynOctetPvt,pgpibDpvt->pasynUser,message,len);
@@ -1036,20 +1052,12 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
         }
     }
     if(respond2Writes>=0 && rspLen>0) {
-        int nread;
-
-        if(rspLen<len) {
-            printf("%s respond2Writes but rspLen %d < len %d\n",
-                precord->name,rspLen,len);
-        } else {
-            if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
-                printf("%s respond2Writes\n",precord->name);
-            if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
-            nread = pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,rsp,len);
-            if(nread!=len) {
-                printf("%s respond2Writes but nread %d for %d length message\n",
-                    precord->name,nread,len);
-            }
+        if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
+            printf("%s respond2Writes\n",precord->name);
+        if(respond2Writes>0) epicsThreadSleep((double)(respond2Writes));
+        if (pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,rsp,rspLen) < 0) {
+            printf("%s respond2Writes read failed\n", precord->name);
+            nchars = -1;
         }
     }
     return nchars;
