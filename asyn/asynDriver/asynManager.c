@@ -164,7 +164,7 @@ static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int interposeInterfaceOK);
 static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout);
-static asynStatus cancelRequest(asynUser *pasynUser);
+static asynStatus cancelRequest(asynUser *pasynUser,int *wasQueued);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static asynStatus getAddr(asynUser *pasynUser,int *addr);
@@ -350,15 +350,16 @@ static interfaceNode *locateInterfaceNode(
 
 static void queueTimeoutCallback(void *pvt)
 {
-    userPvt *puserPvt = (userPvt *)pvt;
-    asynUser *pasynUser = &puserPvt->user;
+    userPvt    *puserPvt = (userPvt *)pvt;
+    asynUser   *pasynUser = &puserPvt->user;
     asynStatus status;
+    int        wasQueued;
 
-    status = cancelRequest(pasynUser);
+    status = cancelRequest(pasynUser,&wasQueued);
     if(status!=asynSuccess) {
          asynPrint(pasynUser,ASYN_TRACE_ERROR,
              "asynManager:queueTimeoutCallback cancelRequest error. Why?\n");
-    } else if(pasynUser->auxStatus && puserPvt->timeoutCallback){
+    } else if(wasQueued && puserPvt->timeoutCallback){
         puserPvt->timeoutCallback(pasynUser);
     }
 }
@@ -917,7 +918,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     return asynSuccess;
 }
 
-static asynStatus cancelRequest(asynUser *pasynUser)
+static asynStatus cancelRequest(asynUser *pasynUser,int *wasQueued)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
@@ -925,7 +926,7 @@ static asynStatus cancelRequest(asynUser *pasynUser)
     int      addr = (pdevice ? pdevice->addr : -1);
     int      i;
 
-    pasynUser->auxStatus = 0; /*Initialize to not removed*/
+    *wasQueued = 0; /*Initialize to not removed*/
     if(!pport) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "asynManager:cancelRequest but not connected\n");
@@ -944,7 +945,7 @@ static asynStatus cancelRequest(asynUser *pasynUser)
 	while(puserPvt) {
 	    if(pasynUser == &puserPvt->user) {
 	        ellDelete(&pport->queueList[i],&puserPvt->node);
-                pasynUser->auxStatus = 1;
+                *wasQueued = 1;
 	        break;
 	    }
 	    puserPvt = (userPvt *)ellNext(&puserPvt->node);

@@ -388,11 +388,6 @@ pasynUser-&gt;errorMessage.</p>
     asynSuccess,asynTimeout,asynOverflow,asynError
 }asynStatus;
 
-/* Define generic error masks */
-#define ASYN_ERROR_TIMEOUT 0x0001
-#define ASYN_ERROR_PARITY  0x0002
-#define ASYN_ERROR_FRAMING 0x0004</pre>
-
 <table border="1">
   <caption>asynStatus</caption>
   <tbody>
@@ -503,7 +498,6 @@ calling asynManager:createAsynUser and asynManager:freeAsynUser.</p>
     void *userPvt;
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
-    unsigned int errorMask; /*Normally some combination of ASYN_ERROR... */
 }asynUser;</pre>
 
 <table border="1">
@@ -538,16 +532,7 @@ calling asynManager:createAsynUser and asynManager:freeAsynUser.</p>
     <tr>
       <td>auxStatus</td>
       <td>Any method can provide additional return information in auxStatus.
-        The meaning is determined by the method. For example
-        asynManager:cancelRequest sets auxStatus = (0,1) it it (does not,
-        does) remove a request from a queue.</td>
-    </tr>
-    <tr>
-      <td>errorMask</td>
-      <td>Methods can also provide additional return information in
-        errorMask. It is expected that the ASYN_ERROR_xxx definitions will
-        evolve to be a usefull sets of conditions. Currently this is not
-      used.</td>
+        The meaning is determined by the method.</td>
     </tr>
   </tbody>
 </table>
@@ -605,8 +590,7 @@ typedef struct asynManager {
                             const char *interfaceType,int interposeInterfaceOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
-    /*cancelRequest sets auxStatus= (0,1) if request (was not, was) queued*/
-    asynStatus (*cancelRequest)(asynUser *pasynUser);
+    asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
@@ -732,7 +716,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       <td>If a asynUser is queued remove it from the queue. If it is not on a
         queue nothing is done. In particular if the callback is active, this
         call has no effect. If the return value is asynSuccess, then
-        pasynUser-&gt;auxStatus is (0,1) if a request (was not, was)
+        wasQueued (0,1) if a request (was not, was)
         canceled, i.e. removed from the queue.</td>
     </tr>
     <tr>
