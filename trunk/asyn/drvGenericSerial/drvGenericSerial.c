@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.17 2004-01-19 19:22:11 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.18 2004-01-21 13:17:09 norume Exp $
  */
 
 #include <string.h>
@@ -60,13 +60,11 @@ typedef struct {
     char              *serialDeviceName;
     int                fd;
     int                isRemote;
-    char              *eos;
+    char               eos[2];
     int                eoslen;
-    int                eosCapacity;
     char               inBuffer[INBUFFER_SIZE];
     unsigned int       inBufferHead;
     unsigned int       inBufferTail;
-    unsigned int       inBufferEosTail;
     int                eosMatch;
     osiSockAddr        farAddr;
     epicsTimerQueueId  timerQueue;
@@ -653,54 +651,30 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
                 if (c == tty->eos[tty->eosMatch]) {
                     if (++tty->eosMatch == tty->eoslen) {
                         tty->eosMatch = 0;
-                        tty->inBufferEosTail = tty->inBufferTail;
                         return nRead;
                     }
                 }
                 else {
                     /*
-                     * Resynchronize the EOS search.  This can be a little
-                     * tricky since the situation could be a case like:
+                     * Resynchronize the EOS search.  Since the driver
+                     * allows a maximum two-character EOS it doesn't
+                     * have to worry about cases like:
                      *    End-of-string is "eeef"
                      *    Input stream so far is "eeeeeeeee"
                      */
-                    unsigned int i;
-                    for (;;) {
-                        if (++tty->inBufferEosTail == INBUFFER_SIZE)
-                            tty->inBufferEosTail = 0;
-                        if (tty->inBufferEosTail == tty->inBufferTail)
-                            break;
+                    if (c == tty->eos[0])
+                        tty->eosMatch = 1;
+                    else
                         tty->eosMatch = 0;
-                        i = tty->inBufferEosTail;
-                        for (;;) {
-                            if (tty->inBuffer[i] != tty->eos[tty->eosMatch]) {
-                                tty->eosMatch = 0;
-                                break;
-                            }
-                            tty->eosMatch++;
-                            if (++i == INBUFFER_SIZE)
-                                i = 0;
-                            if (i == tty->inBufferTail)
-                                break;
-                        }
-                        if (i == tty->inBufferTail)
-                            break;
-                    }
                 }
             }
             if (nRead >= maxchars)
                 return nRead;
         }
-        if (tty->inBufferHead >= tty->inBufferEosTail)
+        if (tty->inBufferHead >= tty->inBufferTail)
             thisRead = INBUFFER_SIZE - tty->inBufferHead;
         else
-            thisRead = tty->inBufferEosTail;
-        /*
-         * Don't completely fill the buffer -- a completely full
-         * buffer is indisinguishable from a completely empty buffer.
-         */
-        if ((thisRead > 1) && (tty->inBufferEosTail == tty->inBufferTail))
-            thisRead--;
+            thisRead = tty->inBufferTail;
         epicsTimerStartDelay(tty->timer, pasynUser->timeout);
         thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
         epicsTimerCancel(tty->timer);
@@ -745,7 +719,7 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
         tcflush(tty->fd, TCIOFLUSH);
 #endif
     }
-    tty->inBufferHead = tty->inBufferTail = tty->inBufferEosTail = 0;
+    tty->inBufferHead = tty->inBufferTail = 0;
     tty->eosMatch = 0;
     return asynSuccess;
 }
@@ -762,28 +736,13 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser, const char *eos,int eos
     assert(eoslen >= 0);
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
             "drvGenericSerial set eos %d ", eoslen);
-    if ((tty->eos == NULL)
-     || (tty->eoslen != eoslen)
-     || (memcmp(tty->eos, eos, eoslen) != 0)) {
-        if (eoslen) {
-            if (tty->eosCapacity < eoslen) {
-                free(tty->eos);
-                tty->eos = malloc(eoslen);
-                if (tty->eos == NULL) {
-                    tty->eosCapacity = 0;
-                    tty->eoslen = 0;
-                    errlogPrintf("devGenericSerial: Can't allocate memory for %s EOS\n", tty->serialDeviceName);
-                    closeConnection(tty);
-                    return asynError;
-                }
-                tty->eosCapacity = eoslen;
-            }
-            memcpy(tty->eos, eos, eoslen);
-        }
-        tty->eoslen = eoslen;
-        tty->inBufferEosTail = tty->inBufferTail;
-        tty->eosMatch = 0;
+    if (eoslen > sizeof tty->eos) {
+        errlogPrintf("devGenericSerial: EOS can be at most %d characters.\n", sizeof tty->eos);
+        return asynError;
     }
+    memcpy(tty->eos, eos, eoslen);
+    tty->eoslen = eoslen;
+    tty->eosMatch = 0;
     return asynSuccess;
 }
 
