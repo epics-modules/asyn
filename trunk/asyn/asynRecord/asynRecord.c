@@ -76,7 +76,7 @@ static long get_precision(struct dbAddr *paddr, long *precision);
 
 static void monitor(asynRecord *pasynRec);
 static void monitorStatus(asynRecord *pasynRec);
-static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord);
+static asynStatus connectDevice(asynRecord *pasynRec);
 static void GPIB_command(asynUser *pasynUser);
 
 static void asynCallback(asynUser *pasynUser);
@@ -147,7 +147,10 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
         db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 
-typedef enum {stateIdle,stateConnect,stateIO,stateGetOption,stateSetOption} callbackState;
+typedef enum {
+    stateIdle,stateConnectDevice,stateConnect,
+    stateIO,stateGetOption,stateSetOption
+} callbackState;
 
 typedef struct asynRecPvt {
     CALLBACK        callback;
@@ -170,7 +173,6 @@ static long init_record(asynRecord *pasynRec, int pass)
 {
     asynRecPvt *pasynRecPvt;
     asynUser *pasynUser;
-    asynStatus status;
 
     if (pass != 0) return(0);
 
@@ -186,11 +188,8 @@ static long init_record(asynRecord *pasynRec, int pass)
     pasynRecPvt->pasynUser = pasynUser;
     pasynUser->userPvt = pasynRecPvt;
     if (strlen(pasynRec->port) != 0) {
-       status = connectDevice(pasynRec,1);
-       if (status!=asynSuccess) {
-          printf("asynRecord, error connecting to port %s, status=%d\n", 
-                  pasynRec->port, status);
-       }
+       pasynRecPvt->state = stateConnectDevice;
+       pasynRec->pini = 1;
     }
     /* Allocate the space for the binary/hybrid output and binary/hybrid 
      * input arrays */
@@ -204,25 +203,30 @@ static long init_record(asynRecord *pasynRec, int pass)
         pasynRec->omax, sizeof(char),"asynRecord");
     strcpy(pasynRec->tfil, "Unknown");
     pasynRec->udf = 0;
-    monitorStatus(pasynRec);
     return(0);
 }
 
 static long process(asynRecord *pasynRec)
 {
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
+   asynStatus status;
 
-   if(!pasynRec->pact && pasynRecPvt->state==stateIdle) { 
-      pasynRecPvt->state = stateIO;
-      /* Need to store state of fields that could have been changed from
-       * outside since the last time the values were posted by monitor()
-       * and which process() or routines it calls can also change */
-      REMEMBER_STATE(ucmd);
-      REMEMBER_STATE(acmd);
-      REMEMBER_STATE(nowt);
-   }
-   /* If pact is FALSE then queue message to driver and return */
-   if (!pasynRec->pact) {
+   if(pasynRecPvt->state==stateConnectDevice) {
+        /*This can only happen once at PINI */
+        pasynRecPvt->state = stateIdle;
+        status = connectDevice(pasynRec);
+        if(status!=asynSuccess) 
+            printf("%s connectDevice failed\n",pasynRec->name);
+   } else if(!pasynRec->pact) {
+       if(pasynRecPvt->state==stateIdle && pasynRec->tmod!=asynTMOD_NoIO) { 
+          pasynRecPvt->state = stateIO;
+          /* Need to store state of fields that could have been changed from
+           * outside since the last time the values were posted by monitor()
+           * and which process() or routines it calls can also change */
+          REMEMBER_STATE(ucmd);
+          REMEMBER_STATE(acmd);
+          REMEMBER_STATE(nowt);
+       }
       /* Make sure nrrd and nowt are valid */
       if (pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
       if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
@@ -361,7 +365,7 @@ static long special(struct dbAddr *paddr, int after)
        case asynRecordPORT: 
        case asynRecordADDR: 
           /* If the PORT or ADDR fields changed then reconnect to new device */
-          status = connectDevice(pasynRec,0);
+          status = connectDevice(pasynRec);
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
              "%s: special() port=%s, addr=%d, connect status=%d\n",
              pasynRec->name, pasynRec->port, pasynRec->addr, status);
@@ -512,7 +516,7 @@ static void monitorStatus(asynRecord *pasynRec)
     POST_IF_NEW(enbl);
 }
 
-static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord)
+static asynStatus connectDevice(asynRecord *pasynRec)
 {
     asynInterface *pasynInterface;
     asynRecPvt *pasynRecPvt=pasynRec->dpvt;
@@ -571,19 +575,9 @@ static asynStatus connectDevice(asynRecord *pasynRec,int isInitRecord)
 
     /* Add exception callback */
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
-
     pasynRecPvt->state = stateGetOption;
-    if(isInitRecord) {
-        pasynRecPvt->callbackShouldProcess = 0;
-        pasynManager->queueRequest(pasynUser, asynQueuePriorityLow, 0.0);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-               "%s: getOptions() port=%s, addr=%d queued request\n",
-               pasynRec->name, pasynRec->port, pasynRec->addr);
-        return(asynSuccess);
-    } else {
-        scanOnce(pasynRec);
-    }
     monitorStatus(pasynRec);
+    scanOnce(pasynRec);
     return(asynSuccess);
 }
 
