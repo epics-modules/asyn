@@ -166,14 +166,19 @@ int epicsShareAPI
 
 /* Default timeout for reading */
 #define READ_TIMEOUT 1.0
-/* Default buffer size for reads */
-#define BUFFER_SIZE 80
+/* Default buffer size  */
+#define BUFFER_SIZE 160
 
 static void* asynHash=NULL;
 
 static asynIOPvt* asynFindEntry(const char *name)
 {
-    GPHENTRY *hashEntry = gphFind(asynHash, name, NULL);
+    GPHENTRY *hashEntry;
+
+    /* Create hash table if it does not exist */
+    if (asynHash == NULL) gphInitPvt(&asynHash, 256);
+    if(name==0) return NULL;
+    hashEntry = gphFind(asynHash, name, NULL);
     if (hashEntry == NULL) return (NULL);
     return((asynIOPvt *)hashEntry->userPvt);
 }
@@ -190,10 +195,12 @@ epicsShareFunc int epicsShareAPI
     status = pasynOctetSyncIO->connect(port, addr, &pasynUser,drvInfo);
     if (status) return(-1);
 
-    /* Create hash table if it does not exist */
-    if (asynHash == NULL) gphInitPvt(&asynHash, 256);
+    pPvt = asynFindEntry(entry);
+    if (pPvt) {
+       printf("Entry already connected\n");
+       return(-1);
+    }
     hashEntry = gphAdd(asynHash, epicsStrDup(entry), NULL);
-
     pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt)); 
     hashEntry->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
@@ -202,6 +209,39 @@ epicsShareFunc int epicsShareAPI
     pPvt->write_buffer = calloc(1, pPvt->write_buffer_len);
     pPvt->read_buffer_len = pPvt->write_buffer_len;
     pPvt->read_buffer = calloc(1, pPvt->read_buffer_len);
+    return(0);
+}
+
+epicsShareFunc int epicsShareAPI
+    asynOctetDisconnect(const char *entry)
+{
+    asynIOPvt *pPvt;
+    asynUser *pasynUser;
+    asynStatus status;
+    GPHENTRY *hashEntry;
+
+    /* Create hash table if it does not exist */
+    if (asynHash == NULL) gphInitPvt(&asynHash, 256);
+    if(entry==0) {
+        printf("device name not specified\n");
+        return -1;
+    }
+    hashEntry = gphFind(asynHash, entry, NULL);
+    if (hashEntry == NULL) {
+        printf("device name not specified\n");
+        return -1;
+    }
+    pPvt = (asynIOPvt *)hashEntry->userPvt;
+    pasynUser = pPvt->pasynUser;
+    status = pasynOctetSyncIO->disconnect(pasynUser);
+    if (status) {
+        printf("disconnect failed %s\n",pasynUser->errorMessage);
+        return(-1);
+    }
+    gphDelete(asynHash,entry,NULL);
+    free(pPvt->write_buffer);
+    free(pPvt->read_buffer);
+    free(pPvt);
     return(0);
 }
 
@@ -428,38 +468,19 @@ epicsShareFunc int epicsShareAPI
     return -1;
 }
 
-static const iocshArg asynReportArg0 = {"filename", iocshArgString};
-static const iocshArg asynReportArg1 = {"level", iocshArgInt};
-static const iocshArg asynReportArg2 = {"port", iocshArgString};
-static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1,
-                                                 &asynReportArg2};
-static const iocshFuncDef asynReportDef = {"asynReport", 3, asynReportArgs};
+static const iocshArg asynReportArg0 = {"level", iocshArgInt};
+static const iocshArg asynReportArg1 = {"port", iocshArgString};
+static const iocshArg *const asynReportArgs[] = {
+    &asynReportArg0,&asynReportArg1};
+static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
 int epicsShareAPI
- asynReport(const char *filename, int level, const char *portName)
+ asynReport(int level, const char *portName)
 {
-    FILE *fp;
-
-    if(!filename || filename[0]==0) {
-        fp = stdout;
-    } else {
-        fp = fopen(filename,"w+");
-        if(!fp) {
-            printf("fopen failed %s\n",strerror(errno));
-            return -1;
-        }
-    }
-    pasynManager->report(fp,level,portName);
-    if(fp!=stdout)  {
-        int status;
-
-        errno = 0;
-        status = fclose(fp);
-        if(status) fprintf(stderr,"asynReport fclose error %s\n",strerror(errno));
-    }
+    pasynManager->report(stdout,level,portName);
     return 0;
 }
 static void asynReportCall(const iocshArgBuf * args) {
-    asynReport(args[0].sval,args[1].ival,args[2].sval);
+    asynReport(args[0].ival,args[1].sval);
 }
 
 static const iocshArg asynSetOptionArg0 = {"portName", iocshArgString};
@@ -723,6 +744,15 @@ static void asynOctetConnectCall(const iocshArgBuf * args) {
     asynOctetConnect(deviceName, portName, addr, timeout, buffer_len,drvInfo);
 }
 
+static const iocshArg asynOctetDisconnectArg0 = {"device name", iocshArgString};
+static const iocshArg *const asynOctetDisconnectArgs[] = { &asynOctetDisconnectArg0};
+static const iocshFuncDef asynOctetDisconnectDef =
+    {"asynOctetDisconnect", 1, asynOctetDisconnectArgs};
+static void asynOctetDisconnectCall(const iocshArgBuf * args) {
+    const char *deviceName = args[0].sval;
+    asynOctetDisconnect(deviceName);
+}
+
 static const iocshArg asynOctetReadArg0 = {"device name", iocshArgString};
 static const iocshArg asynOctetReadArg1 = {"max. bytes", iocshArgInt};
 static const iocshArg *const asynOctetReadArgs[] = {
@@ -849,6 +879,7 @@ static void asynRegister(void)
     iocshRegister(&asynEnableDef,asynEnableCall);
     iocshRegister(&asynAutoConnectDef,asynAutoConnectCall);
     iocshRegister(&asynOctetConnectDef,asynOctetConnectCall);
+    iocshRegister(&asynOctetDisconnectDef,asynOctetDisconnectCall);
     iocshRegister(&asynOctetReadDef,asynOctetReadCall);
     iocshRegister(&asynOctetWriteDef,asynOctetWriteCall);
     iocshRegister(&asynOctetWriteReadDef,asynOctetWriteReadCall);
