@@ -1021,7 +1021,7 @@ static void setOption(asynUser *pasynUser)
    case asynRecordDBIT:
       status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
                                           pasynRecPvt->pasynUser, "bits", 
-                                          stop_bit_choices[pasynRec->dbit]);
+                                          data_bit_choices[pasynRec->dbit]);
       break;
    case asynRecordFCTL:
       status = pasynRecPvt->pasynCommon->setOption(pasynRecPvt->asynCommonPvt, 
