@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.12 2004-01-13 23:11:08 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.13 2004-01-14 14:45:44 norume Exp $
  */
 
 #include <string.h>
@@ -29,6 +29,7 @@
 #include <errlog.h>
 #include <iocsh.h>
 #include <epicsAssert.h>
+#include <epicsStdio.h>
 #include <epicsString.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
@@ -358,7 +359,66 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvGenericSerialSetPortOption(void *drvPvt, const char *key, const char *val)
+drvGenericSerialGetPortOption(void *drvPvt, asynUser *pasynUser,
+                              const char *key, char *val, int valSize)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+    int l;
+
+    if (tty->isRemote)
+        printf ("Warning -- port option parameters are ignored for remote terminal connections.\n");
+    if (epicsStrCaseCmp(key, "baud") == 0) {
+        l = epicsSnprintf(val, valSize, "%d", tty->baud);
+    }
+    else if (epicsStrCaseCmp(key, "bits") == 0) {
+        switch (tty->cflag & CSIZE) {
+        case CS5: l = epicsSnprintf(val, valSize, "5"); break;
+        case CS6: l = epicsSnprintf(val, valSize, "6"); break;
+        case CS7: l = epicsSnprintf(val, valSize, "7"); break;
+        case CS8: l = epicsSnprintf(val, valSize, "8"); break;
+        default:  l = epicsSnprintf(val, valSize, "?"); break;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "parity") == 0) {
+        if (tty->cflag & PARENB) {
+            if (tty->cflag & PARODD)
+                l = epicsSnprintf(val, valSize, "odd");
+            else
+                l = epicsSnprintf(val, valSize, "even");
+        }
+        else {
+            l = epicsSnprintf(val, valSize, "none");
+        }
+    }
+    else if (epicsStrCaseCmp(key, "stop") == 0) {
+        l = epicsSnprintf(val, valSize, "%d",  (tty->cflag & CSTOPB) ? 2 : 1);
+    }
+    else if (epicsStrCaseCmp(key, "clocal") == 0) {
+        l = epicsSnprintf(val, valSize, "%c",  (tty->cflag & CLOCAL) ? 'Y' : 'N');
+    }
+    else if (epicsStrCaseCmp(key, "crtscts") == 0) {
+        char c;
+#if defined(CRTSCTS)
+            c = (tty->cflag & CRTSCTS) ? 'Y' : 'N';
+#else
+            c = 'N';
+#endif
+        l = epicsSnprintf(val, valSize, "%c", c);
+    }
+    else {
+        errlogPrintf("Unsupported key `%s'\n", key);
+        return asynError;
+    }
+    if (l >= valSize) {
+        errlogPrintf("Value buffer for key '%s' is too small.\n", key);
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+static asynStatus
+drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
+                              const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int baud = 0;
@@ -479,7 +539,7 @@ drvGenericSerialSetPortOption(void *drvPvt, const char *key, const char *val)
         }
     }
     else {
-        errlogPrintf("stty: Warning -- Unsupported option `%s'\n", key);
+        errlogPrintf("Unsupported key `%s'\n", key);
         return asynError;
     }
     if (tty->fd >= 0) {
