@@ -29,6 +29,7 @@
 #include <epicsThread.h>
 #include <epicsTime.h>
 #include <cantProceed.h>
+#include <epicsString.h>
 #include <epicsExport.h>
 /* local includes */
 #include "drvVxi11.h"
@@ -68,7 +69,7 @@ typedef struct vxiLink {
     epicsEventId srqTaskReady;   /* wait for srqTask to be ready*/
     const char *portName;
     char *hostName;	   /* ip address of VXI-11 server */
-    char vxiName[20];	   /* Holds name of logical link */
+    char *vxiName;	   /* Holds name of logical link */
     int ctrlAddr;
     int eos;
     Device_Link serverAddr;
@@ -1103,11 +1104,10 @@ int vxi11SetRpcTimeout(double timeout)
     return(0);
 }
 
-int vxi11Config(char *dn, char *hostName, int recoverWithIFC,
+int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     double defTimeout,
     char *vxiName,
-    unsigned int priority,unsigned int stackSize,
-    int isSingleLink)
+    unsigned int priority)
 {
     char *portName;
     vxiLink *pvxiLink;
@@ -1118,7 +1118,7 @@ int vxi11Config(char *dn, char *hostName, int recoverWithIFC,
     /* Force registration */
     if(vxiInit() != 0) return -1;
     portName = callocMustSucceed(strlen(dn)+1,sizeof(char),
-        "vxi11Config");
+        "vxi11Configure");
     strcpy(portName,dn);
     if(aToIPAddr(hostName, 0, &ip) < 0) {
         errlogPrintf("%s Unknown host: \"%s\"\n", portName, hostName);
@@ -1126,21 +1126,20 @@ int vxi11Config(char *dn, char *hostName, int recoverWithIFC,
     }
     inAddr.s_addr = ip.sin_addr.s_addr;
     /* allocate vxiLink structure */
-    pvxiLink = (vxiLink *)callocMustSucceed(1,sizeof(vxiLink),"vxi11Config");
+    pvxiLink = (vxiLink *)callocMustSucceed(1,sizeof(vxiLink),"vxi11Configure");
     pvxiLink->portName = portName;
     pvxiLink->eos = -1;
-    assert(strlen(vxiName)<sizeof(pvxiLink->vxiName));
-    strcpy(pvxiLink->vxiName, vxiName);
+    pvxiLink->vxiName = epicsStrDup(vxiName);
     pvxiLink->defTimeout = (defTimeout>.0001) ? 
         defTimeout : (double)DEFAULT_RPC_TIMEOUT ;
     if(recoverWithIFC) pvxiLink->recoverWithIFC = TRUE;
     pvxiLink->inAddr = inAddr;
     pvxiLink->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
-        "vxi11Config");
-    pvxiLink->isSingleLink = (isSingleLink ? 1 : 0 );
+        "vxi11Configure");
+    pvxiLink->isSingleLink = (epicsStrCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiLink->hostName, hostName);
     pvxiLink->asynGpibPvt = pasynGpib->registerPort(pvxiLink->portName,
-        &vxi11,pvxiLink,priority,stackSize);
+        &vxi11,pvxiLink,priority,0);
     return 0;
 }
 
@@ -1148,20 +1147,17 @@ int vxi11Config(char *dn, char *hostName, int recoverWithIFC,
  * IOC shell command registration
  */
 #include <iocsh.h>
-static const iocshArg vxi11ConfigArg0 = { "portName",iocshArgString};
-static const iocshArg vxi11ConfigArg1 = { "host name",iocshArgString};
-static const iocshArg vxi11ConfigArg2 = { "recover with IFC?",iocshArgInt};
-static const iocshArg vxi11ConfigArg3 = { "default timeout",iocshArgDouble};
-static const iocshArg vxi11ConfigArg4 = { "vxiName",iocshArgString};
-static const iocshArg vxi11ConfigArg5 = { "priority",iocshArgInt};
-static const iocshArg vxi11ConfigArg6 = { "stackSize",iocshArgInt};
-static const iocshArg vxi11ConfigArg7 = { "isSingleLink",iocshArgInt};
-static const iocshArg *vxi11ConfigArgs[] = {&vxi11ConfigArg0,
-    &vxi11ConfigArg1, &vxi11ConfigArg2, &vxi11ConfigArg3,
-    &vxi11ConfigArg4, &vxi11ConfigArg5, &vxi11ConfigArg6,
-    &vxi11ConfigArg7};
-static const iocshFuncDef vxi11ConfigFuncDef = {"vxi11Config",8,vxi11ConfigArgs};
-static void vxi11ConfigCallFunc(const iocshArgBuf *args)
+static const iocshArg vxi11ConfigureArg0 = { "portName",iocshArgString};
+static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
+static const iocshArg vxi11ConfigureArg2 = { "recover with IFC?",iocshArgInt};
+static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
+static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
+static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
+static const iocshArg *vxi11ConfigureArgs[] = {&vxi11ConfigureArg0,
+    &vxi11ConfigureArg1, &vxi11ConfigureArg2, &vxi11ConfigureArg3,
+    &vxi11ConfigureArg4, &vxi11ConfigureArg5};
+static const iocshFuncDef vxi11ConfigureFuncDef = {"vxi11Configure",6,vxi11ConfigureArgs};
+static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
 {
     char *portName = args[0].sval;
     char *hostName = args[1].sval;
@@ -1169,11 +1165,9 @@ static void vxi11ConfigCallFunc(const iocshArgBuf *args)
     double defTimeout = args[3].dval;
     char *vxiName = args[4].sval;
     int priority = args[5].ival;
-    int stackSize = args[6].ival;
-    int isSingleLink = args[7].ival;
 
-    vxi11Config (portName, hostName, recoverWithIFC,
-        defTimeout, vxiName, priority, stackSize, isSingleLink);
+    vxi11Configure (portName, hostName, recoverWithIFC,
+                    defTimeout, vxiName, priority);
 }
 
 extern int E5810Reboot(char * inetAddr,char *password);
@@ -1214,7 +1208,7 @@ static void vxi11RegisterCommands (void)
     static int firstTime = 1;
     if (firstTime) {
         firstTime = 0;
-        iocshRegister(&vxi11ConfigFuncDef,vxi11ConfigCallFunc);
+        iocshRegister(&vxi11ConfigureFuncDef,vxi11ConfigureCallFunc);
         iocshRegister(&E2050RebootFuncDef,E2050RebootCallFunc);
         iocshRegister(&E5810RebootFuncDef,E5810RebootCallFunc);
         iocshRegister(&vxi11SetRpcTimeoutFuncDef,vxi11SetRpcTimeoutCallFunc);
