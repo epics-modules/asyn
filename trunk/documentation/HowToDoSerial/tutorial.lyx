@@ -1210,23 +1210,6 @@ Makefile
 .
 \layout Subsection
 
-Add the device support database file to the application
-\layout Standard
-
-The makeBaseApp.pl script creates 
-\shape italic 
-xxx
-\family typewriter 
-\shape default 
-App/Db/Makefile
-\family default 
-.
- Add a line for the device support database file:
-\layout LyX-Code
-
-DB_INSTALLS += devAB300.db
-\layout Subsection
-
 Modify the application startup script
 \layout Standard
 
@@ -1242,7 +1225,16 @@ Load the device support database records:
 \begin_deeper 
 \layout LyX-Code
 
-dbLoadRecords("../../db/devAB300.db","P=AB300:,L=0,A=0")
+cd ${AB300}          
+\family roman 
+(
+\family default 
+cd AB300 
+\family roman 
+if using the vxWorks shell)
+\layout LyX-Code
+
+dbLoadRecords("db/devAB300.db","P=AB300:,L=0,A=0")
 \end_deeper 
 \layout Enumerate
 
@@ -1399,7 +1391,10 @@ dbLoadDatabase("../../dbd/AB300.dbd",0,0)
 \newline 
 AB300_registerRecordDeviceDriver(pdbbase)
 \newline 
-dbLoadRecords("../../db/devAB300.db","P=AB300:,L=0,A=0")
+cd ${AB300}
+\layout LyX-Code
+
+dbLoadRecords("db/devAB300.db","P=AB300:,L=0,A=0")
 \newline 
 drvAsynIPPortConfigure("L0","164.54.3.137:4001",0,0,0)
 \newline 
@@ -1413,7 +1408,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 17:25:06 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-22 18:54:54 $$
 \newline 
 ############################################################################
 \newline 
