@@ -1,4 +1,4 @@
-/*                          <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+/*                                  <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -49,7 +49,8 @@ of this document</p>
 <p>devGpib is the successor to the GPIB support that came with EPICS base
 3.13. The 3.13 code was unbundled by Benjamin Franksen, and ultimately became
 gpibCore which is the 3.14 version of Benjamin's support. devGpib is the
-successor to the device support portion of gpibCore.</p>
+successor to the device support portion of gpibCore. The driver part of
+gpibCore is replaced by asynDriver and asynGpib.</p>
 
 <p>This manual assumes that the reader is familiar with EPICS IOC record and
 device support and also with asynDriver.</p>
@@ -91,15 +92,15 @@ write new support.</p>
 <dl>
   <dt>John Winans</dt>
     <dd>John provided the original EPICS GPIB support. Most databases using
-      John's support can be used without modification. With small
-      modifications, device support modules written for John's support can be
+      John's support can be used without modification. With some
+      modification, device support modules written for John's support can be
       used.</dd>
   <dt>Benjamin Franksen</dt>
     <dd>John's support only worked on vxWorks. In addition the driver support
       was implement as a single source file. Benjamin defined an interface
       between drvCommon and low level controllers. The low level drivers
       became separate source modules that implemented the interface. He also
-      created the support for VXI11.</dd>
+      created the original support for VXI11.</dd>
   <dt>Eric Norum</dt>
     <dd>Eric started with Benjamin's code and converted it to use the
       Operating System Independent features of EPICS 3.14.</dd>
@@ -115,10 +116,11 @@ write new support.</p>
 <h2><a name="InstallAndBuild"></a>Install and Build</h2>
 </center>
 
-<p>devGpib is bundled with the asyn support. The code is in library asyn.
-Thus once asyn is included as part of an application debGpib will also be
+<p>devGpib is bundled with the asynDriver. The code is in library asyn. Thus
+once asyn is included as part of an application devGpib will also be
 available. It is only necessary to include <code>devGpib.dbd</code> in your
-&lt;app&gt;Include.dbd file.</p>
+<code>&lt;app&gt;Include.dbd</code> file. In addition device support for your
+specific instruments must be installed.</p>
 <hr>
 
 <center>
@@ -139,8 +141,8 @@ section assume that an instrument support is available.</p>
 
 <p>where</p>
 
-<p>&lt;device support name&gt; - The name from a device database definition,
-i.e. a definition of the form:</p>
+<p><code>&lt;device support name&gt;</code> - The name from a device database
+definition, i.e. a definition of the form:</p>
 <pre>    device(&lt;record type&gt;,GPIB_IO,&lt;dsetName&gt;,"&lt;device support name&gt;")</pre>
 
 <p>The INP or OUT field has the format:</p>
@@ -149,12 +151,12 @@ i.e. a definition of the form:</p>
     field(OUT,"#L&lt;link&gt; A&lt;addr&gt; @&lt;number&gt;")</pre>
 where:
 <dl>
-  <dt>&lt;link&gt;</dt>
+  <dt><code>&lt;link&gt;</code></dt>
     <dd>Link number. Low level drivers name device instances. In order to
       keep compatibility with using link numbers, the name MUST be Lxxx where
       xxx is the value that appears in the #Lxxx portion of the INP or OUT
       fields of record instances.</dd>
-  <dt>&lt;addr&gt;</dt>
+  <dt><code>&lt;addr&gt;</code></dt>
     <dd>GPIB address of your device, which can  be a primary address or an
       extended address. A primary address has a value &lt;=31. An extended
       address is of the form: PSS,where P represents the primary address and
@@ -164,7 +166,7 @@ where:
 A900  extended address: primary address is 9, secondary address is 0
 A906  extended address: primary address is 9, secondary address is 6. </pre>
     </dd>
-  <dt>&lt;number&gt;</dt>
+  <dt><code>&lt;number&gt;</code></dt>
     <dd>An integer that identifies a gpibCmd definition in a GPIB device
       support module. If the implementer is nice documentation like the
       following is provided:
@@ -189,8 +191,8 @@ A906  extended address: primary address is 9, secondary address is 6. </pre>
 <p>In order to have these commands available, <code>devGpib.dbd</code> must
 be included as part of the applications<code> xxxInclude.dbd</code> file.</p>
 
-<p>An <code>iocsh</code> command <cade><code>devGpibReport(int
-level)</code>is available.</p>
+<p>A report of all devGpib devices can be generated via the command:</p>
+<pre>    dbior("devGpib",level)</pre>
 
 <p>Three timeouts are defined:</p>
 <ul>
@@ -204,7 +206,7 @@ level)</code>is available.</p>
   </li>
   <li><code>srqWaitTimeout</code> - Maximum time to wait for and SRQ after a
     GPIBREADW or GPIBEFASTIW has sent a commmand to the device. The default
-    is 60 seconds and can be changed with the <code>iocsh</code> command:
+    is 5 seconds and can be changed with the <code>iocsh</code> command:
     <pre>devGpibSrqWaitTimeout(interfaceName,gpibAddr,timeout)
     </pre>
   </li>
@@ -294,10 +296,11 @@ int SkeletonDebug = 0;
 #define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
 /* example choices for BI */
-static  char    *offOnList[] = { "Off", "On" };
-static  struct  devGpibNames   offOn = { 2, offOnList, NULL, 1 };
 /* example EFAST table */
-static char *(userOffOn[]) = {"USER OFF;", "USER ON;", NULL};
+static char *userOffOn[] = {"USER OFF;", "USER ON;", 0};
+/* example devGpibNames */
+static  char    *offOnList[] = { "Off", "On" };
+static  struct  devGpibNames   offOn = { 2, offOnList, 0, 1 };
 /* Array of structures that define all GPIB messages */
 static struct gpibCmd gpibCmds[] =
 {
@@ -334,9 +337,9 @@ the following sections:</p>
 #include &lt;devGpib.h&gt;    /* must be included after DSET defines */</pre>
 
 <p>The actual DSETs are created by devGpib.h based on which DSET_xx
-definitions are defined. Thus you must have a #define for each record type
-your support uses.  DSET_AI must be defined because you must also supply an
-init_ai routine as described below.</p>
+definitions are defined. A #define must appear for each record type required.
+DSET_AI must be defined because an init_ai routine must be implemented as
+described below.</p>
 
 <p>devCommonGpib provides device support for many standard record types. It
 is also possible to create custom support but this is more difficult.</p>
@@ -360,7 +363,7 @@ field.</p>
 definition must define field OUT as</p>
 <pre>field(OUT,,"#L&lt;link&gt; A&lt;addr&gt; @0")</pre>
 
-<p>gpibCmd is::</p>
+<p>gpibCmd is</p>
 <pre>typedef struct gpibCmd {
     gDset *dset; /* used to indicate record type supported */
     int type;    /* enum - GPIBREAD...GPIBSRQHANDLER */
@@ -380,71 +383,95 @@ definition must define field OUT as</p>
                  /*      For EFAST it holds the address of the EFAST table */
                  /*      For convert it is passed to convert() */
     devGpibNames *pdevGpibNames; /* pointer to name strings */
-    int eosChar; /* input end-of-string character */
+    char * eos; /* input end-of-string */
 } gpibCmd;</pre>
 
 <p>where</p>
 <dl>
-  <dt>dset</dt>
+  <dt><code>dset</code></dt>
     <dd>Address of the Device Support Entry Table (DSET) that describes the
       record type supported by the table entry..</dd>
-  <dt>type</dt>
+  <dt><code>type</code></dt>
     <dd>Type of GPIB I/O operation that is to be performed. The
       <code>type</code> field must be set to one of the enumerated values
-      declared in devSupportGpib.h, i.e. GPIBREAD,...,GPIBEOS. See next
-      section for the definitions.</dd>
-  <dt>pri</dt>
+      declared in devSupportGpib.h, i.e. GPIBREAD,...,GPIBSRQHANDLER. See
+      next section for the definitions.</dd>
+  <dt><code>pri</code></dt>
     <dd>Processing priority of the I/O operation. Must be
       <code>IB_Q_HIGH</code>, <code>IB_Q_MEDIUM</code>, or
       <code>IB_Q_LOW</code>.</dd>
-  <dt>cmd</dt>
+  <dt><code>cmd</code></dt>
     <dd>Constant string that is used differently depending on the value of
       <code>type</code>. See the discussion of <code>type</code> below. Set
-      this field to NULL if not used.</dd>
-  <dt>format</dt>
+      this field to 0 if not used.</dd>
+  <dt><code>format</code></dt>
     <dd>Format string that is used differently depending on the value of
       <code>type</code>. See the discussion of <code>type</code>. Set this
-      field to NULL if not used.</dd>
-  <dt>rspLen</dt>
-    <dd>Length of the buffer pointed to by <code>pgpibDpvt-&gt;rsp</code>.
-      Holds the message read back from a device when performing a
-      respond2Writes read operation. Set this field to zero when not
-    used.</dd>
-  <dt>msgLen</dt>
-    <dd>Length of <code>pgpibDpvt-&gt;msg</code>.  It is used for
-      <code>GPIBWRITE</code>, <code>GPIBREAD</code>, or
-      <code>GPIBREADW</code>. Set this field to zero when not used.</dd>
-  <dt>convert</dt>
+      field to 0 if not used.</dd>
+  <dt><code>rspLen</code></dt>
+    <dd>Size needed to read back from a device when performing a
+      respond2Writes read operation. If a gpibCmd is a read operation or a
+      write operation that does not respond then set this field to zero. When
+      devGpib initialize it finds the maximum rspLen of all commands,
+      allocates storage for the maximum in
+      <code>pdevGpibParmBlock-&gt;rsp</code>, and then, if rspLen is &gt;0,
+      sets <code>pgpibDpvt-&gt;rsp</code> to
+      <code>pdevGpibParmBlock-&gt;rsp</code>. Thus ALL records use the same
+      rsp buffer.</dd>
+  <dt><code>msgLen</code></dt>
+    <dd>Size needed to read or write from a device. If not needed set it to
+      0. When devGpib initialize it finds the maximum msgLen of all commands,
+      allocates storage for the maximum in
+      <code>pdevGpibParmBlock-&gt;msg</code>, and then, if msgLen is &gt;0,
+      sets <code>pgpibDpvt-&gt;msg</code> to
+      <code>pdevGpibParmBlock-&gt;msg</code>. Thus ALL records use the same
+      msg buffer.</dd>
+  <dt><code>convert</code></dt>
     <dd>A conversion function that has the prototype:
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
       The use depends on the pgpibCmd-&gt;type. See below for details. Set to
-      NULL when no conversion function is present.</dd>
-  <dt>P1</dt>
+      0 when no conversion function is present.</dd>
+  <dt><code>P1</code></dt>
     <dd>This plays a dual role.
       <p>For EFAST operations it is set equal to the number of entries in the
-      efast table by devSupportGpib:init_record.</p>
+      efast table by <code>devSupportGpib:init_record</code>.</p>
       <p>For other operations, it is an integer  passed to the conversion
       function specified in <code>convert.</code></p>
     </dd>
-  <dt>P2</dt>
+  <dt><code>P2</code></dt>
     <dd>Integer  passed to the conversion function specified in
       <code>convert</code>.</dd>
-  <dt>P3</dt>
-    <dd>This field plays a double role.
+  <dt><code>P3</code></dt>
+    <dd>This field plays a dual role.
       <p>When <code>type</code> is one of the EFAST operations, this field
       points to the EFAST table. See the EFAST operation descriptions under
       the <code>type</code> field definitions and the section "Efast Tables"
-      for more on the use of this field. Set this field to NULL when it is
-      not used.</p>
+      for more on the use of this field. Set this field to 0 when it is not
+      used.</p>
       <p>For other operations, it is passed to the conversion function
-      specified in convert. It has a char** value.</p>
+      specified in <code>convert</code>. It has a <code>char**</code>
+      value.</p>
     </dd>
-  <dt>pdevGpibNames</dt>
+  <dt><code>pdevGpibNames</code></dt>
     <dd>Pointer to a Name Table. Name tables are described in the section
-      "Name Tables". Set this to NULL when no Name Table is used.</dd>
-  <dt>eosChar</dt>
-    <dd>If GPIBEOS is specified then eosChar (interpeted as an unsigned 8 bit
-      value) is the end of message character.</dd>
+      "Name Tables". Set this to 0 when no Name Table is used.</dd>
+  <dt><code>eos</code></dt>
+    <dd>Input message termination string. It can be:
+      <ul>
+        <li>0
+          <p>A null pointer  means that the read operation does not look for
+          end of message termination characters.</p>
+        </li>
+        <li>""
+          <p>A null string signifies that a null character is the
+          terminator.</p>
+        </li>
+        <li>non null string
+          <p>The termination characters not including the null. Some drivers,
+          e.g. the vxi11, only allow a single termination character.</p>
+        </li>
+      </ul>
+    </dd>
 </dl>
 
 <h3>Definitions for pgpibCmd-&gt;type</h3>
@@ -467,25 +494,28 @@ support it must to document its changes.</p>
       <ul>
         <li><code>convert</code> is called. It is expected to give a value to
           the appropriate field of the record or return -1.</li>
-        <li>If the return indicates failure (-1) the convert routine must
-          also have called recGblSetSevr.</li>
+        <li>The field <code>pgpibDpvt-&gt;msgInputLen</code> contains the
+          number of bytes in the last read msg. This allows messages with
+          null characters can be processed.</li>
         <li>record completion occurs.</li>
       </ul>
       <p>If <code>convert</code> is not defined then what is done depends on
       the record type.</p>
       <ul>
         <li>bi, event, longin, mbbi, and mbbiDirect.
-          <p><code>pgpibDpvt-&gt;msg</code> is converted via
-          <code>pgpibCmd-&gt;format</code> and the result put into field VAL.
-          The format must be appropriate for the specified record type.</p>
+          <p><code>pgpibDpvt-&gt;msg</code> is converted and the result put
+          into field VAL. If pgpibCmd-&gt;format is defined it is used for
+          the conversion, otherwise a format appropriate to the data type of
+          VAL is used.</p>
         </li>
         <li>ai
           <p><code>pgpibDpvt-&gt;msg</code> is converted via
           <code>pgpibCmd-&gt;format</code> and the result put into field VAL
           or RVAL, VAL is used if the DSET does NOT define special_linconv
-          and RVAL is used if special_linconv is defined. The format must be
-          appropriate for the field. The DSET generated by devGpib.h does not
-          define special_linconv.</p>
+          and RVAL is used if special_linconv is defined.  If
+          pgpibCmd-&gt;format is defined it is used for the conversion,
+          otherwise a format appropriate to the field is used. The DSET
+          generated by devGpib.h does not define special_linconv.</p>
         </li>
         <li>stringin
           <p>epicsSnprintf is used to convert  <code>pgpibDpvt-&gt;msg</code>
@@ -669,13 +699,6 @@ support it must to document its changes.</p>
       the record is processed. It is expected that the record will forward
       link to records that issue GPIB commands to read the information that
       caused the SRQ.</dd>
-  <dt>GPIBEOS</dt>
-    <dd>This is NOT a separate request type but is or'd with another
-      operation type, e.g. GPIBREAD|GPIBEOS. It signifies that eosChar
-      contains an end of message character. This is for devices that don't
-      use EOL to signify end of message. Most GPIB devices should not require
-      this feature but serial devices will most likely require it.</dd>
-  <dt></dt>
 </dl>
 
 <h2>Efast (Enumerated Fast I/O) Tables</h2>
@@ -690,10 +713,10 @@ string value for each of the possible states of the VAL field of the record.
         "ON",    /* when VAL = 1 */
         0        /* list terminator */</pre>
 }; And is referenced in an output parameter table entry like this:
-<pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, NULL, NULL, 0, 0,NULL, 0, 0, tableName, NULL, -1},</pre>
+<pre>    {&amp;DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 0,0, 0, 0, tableName, 0, -1},</pre>
 For an input entry, it would look like this:
-<pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", NULL, 0, 50, NULL, 0, 0, tableName, NULL, -1},</pre>
-The efast table MUST be NULL terminated.
+<pre>    {&amp;DSET_BI, GPIBEFASTI, IB_Q_HIGH, "&lt;command&gt;", 0, 0, 50, 0, 0, 0, tableName, 0, -1},</pre>
+The efast table MUST be 0 terminated.
 
 <p>For outputs the VAL field is used to index into the efast table and select
 a string to send to the instrument. The string is sent to the instrument
@@ -706,7 +729,7 @@ starting at the zeroth entry. The slot number of the first table entry that
 matches the response string is used as the setting for the RVAL field of the
 record. When strings are compared, they are compared from left to right until
 the number of characters in the efast table are checked. When ALL of the
-characters up to but <b>NOT</b> including the NULL of the string in the efast
+characters up to but <b>NOT</b> including the 0 of the string in the efast
 table match the corresponding characters of the response string, it is
 considered a valid match. This allows the user to check response strings
 fairly fast. For example, it a device returns something like "ON;XOFF;9600"
@@ -716,11 +739,10 @@ this:</p>
 <pre>    static char *statCheck[] = {
         "OFF",      /* set RVAL to 0 */
         "ON",      /* set RVAL to 1 */
-        NULL};     /* list terminator */</pre>
-The NULL field is <em>extremely</em> important.  If the instrument gets
-confused and responds with something that does not start with an "OFF" or
-"ON", the GPIB support library code will end up running off the end of the
-table.
+        0};     /* list terminator */</pre>
+The 0 field is <em>extremely</em> important.  If the instrument gets confused
+and responds with something that does not start with an "OFF" or "ON", the
+GPIB support library code will end up running off the end of the table.
 
 <p>In the case when none of the choices in an efast table match for an input
 operation, The record is placed into a INVALID alarm state.</p>
@@ -770,7 +792,7 @@ The table format for a binary record type looks like this:
     static devGpibNames disableEnable = {
         2,                  /* number of elements */
         disableEnableList,  /* pointer to strings */
-        NULL,               /* pointer to value list */
+        0,               /* pointer to value list */
         1};                 /* number of valid bits */</pre>
 <code>devGpibNames</code>  is defined in <code>devSupportGpib.h</code>. For
 binary records, the strings are placed into the name fields in order from
@@ -814,27 +836,31 @@ structure.
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
+    /*The following are set by devSupportGpib*/
+    char *msg;   /*shared msg buffer for all gpibCmds*/
+    int  msgSize;/*size of msg*/
+    char *rsp;   /*shared msg buffer for all gpibCmds*/
+    int  rspSize;/*size of msg*/
     /*Are the following still needed? Marty thinks not */
     char *name;         /* Name of this device support*/
     int *debugFlag; /* pointer to debug flag */
-};
-</pre>
+};</pre>
 <dl>
-  <dt>gpibCmds</dt>
+  <dt><code>gpibCmds</code></dt>
     <dd>Address of an array of gpibCmd definitions..</dd>
-  <dt>numparams</dt>
-    <dd>The number of gpibCmds defined. A macro should be used to
-      set it's value.</dd>
-  <dt>timeout</dt>
+  <dt><code>numparams</code></dt>
+    <dd>The number of gpibCmds defined. A macro should be used to set it's
+      value.</dd>
+  <dt><code>timeout</code></dt>
     <dd>timeout in seconds for an individual I/O operation.</dd>
-  <dt>timeWindow</dt>
+  <dt><code>timeWindow</code></dt>
     <dd>The number of seconds after a timeout before a new I/O operation will
       issued to the device.  During this time window, any I/O operations
       directed to the timed out device will result in an error and the
       appropriate alarm status will be raised for the record (either
       READ_ALARM or WRITE_ALARM depending on the record type and VALID_ALARM
       in all cases.)</dd>
-  <dt>respond2Writes</dt>
+  <dt><code>respond2Writes</code></dt>
     <dd>This field is for devices that echo writes. If respond2Writes  is
       &gt;=0 then after an output command the following is done:
       <ul>
@@ -848,9 +874,23 @@ structure.
         <li>A read of len bytes is read into pgpibDpvt-&gt;rsp.</li>
       </ul>
     </dd>
-  <dt>name</dt>
+  <dt><code>msg</code></dt>
+    <dd>This is set by devGpibSupport. The storage allocated is large enough
+      to hold the maximum size input message, i.e. the largest msgLen defined
+      in gpibCmds. Each <code>pdevGpibPvt-&gt;msg</code> points to this same
+      buffer. Thus all records share the same buffer.</dd>
+  <dt><code>msgLen</code></dt>
+    <dd>The size of msg.</dd>
+  <dt><code>rsp</code></dt>
+    <dd>This is set by devGpibSupport. The storage allocated is large enough
+      to hold the maximum size input message, i.e. the largest rspLen defined
+      in gpibCmds. Each <code>pdevGpibPvt-&gt;rsp</code> points to this same
+      buffer. Thus all records share the same buffer.</dd>
+  <dt><code>rspLen</code></dt>
+    <dd>The size of rsp.</dd>
+  <dt><code>name</code></dt>
     <dd>The device support module type name. NOTHING curently uses this.</dd>
-  <dt>debugFlag</dt>
+  <dt><code>debugFlag</code></dt>
     <dd>Must point to a integer that is set to a non-zero value if you want
       the GPIB device support library to provide debugging output for
     you.</dd>
@@ -938,13 +978,13 @@ devGpibParmBlock.</p>
 
 <p>where</p>
 <dl>
-  <dt>number</dt>
+  <dt><code>number</code></dt>
     <dd>This is required for a DSET. It should always be initialized to
     6.</dd>
-  <dt>funPtr</dt>
+  <dt><code>funPtr</code></dt>
     <dd>Pointers to device support functions. Allowing for 6 is sufficient
       for all the standard types in EPICS base.</dd>
-  <dt>pdevGpibParmBlock</dt>
+  <dt><code>pdevGpibParmBlock</code></dt>
     <dd>The address of the devGpibParmBlock for this instrument.</dd>
 </dl>
 
@@ -976,47 +1016,50 @@ address of a gpibDpvt</p>
 
 <p>where</p>
 <dl>
-  <dt>pdevGpibParmBlock</dt>
+  <dt><code>pdevGpibParmBlock</code></dt>
     <dd>Address of the devGpibParmBlock. It is the same value as
-      gDset.pdevGpibPvt</dd>
-  <dt>gpibAddr</dt>
+      <code>pgDset-&gt;pdevGpibPvt</code?</dd></code></dd>
+  <dt><code>gpibAddr</code></dt>
     <dd>The gpibAddr. It is obtained from INP or OUT during
     initialization.</dd>
-  <dt>callback</dt>
+  <dt><code>callback</code></dt>
     <dd>For use by requestProcessCallback.</dd>
-  <dt>precord</dt>
+  <dt><code>precord</code></dt>
     <dd>Address of the record.</dd>
-  <dt>pasynUser</dt>
-    <dd>Address of an asynUser which is needed to call asyn support.</dd>
-  <dt>pasynCommon,pasynCommonPvt</dt>
+  <dt><code>pasynUser</code></dt>
+    <dd>Address of an asynUser which is needed to call asynDriver
+    support.</dd>
+  <dt><code>pasynCommon,pasynCommonPvt</code></dt>
     <dd>Used to call asynCommon. If initialization is successful these will
       have a value.</dd>
-  <dt>pasynOctet,pasynOctetPvt</dt>
+  <dt><code>pasynOctet,pasynOctetPvt</code></dt>
     <dd>Used to call asynOctet. If initialization is successful these will
       have a value.</dd>
-  <dt>pasynGpib,pasynGpibPvt</dt>
-    <dd>Used to call asynGpib. These may be NULL even if initialization is
+  <dt><code>pasynGpib,pasynGpibPvt</code></dt>
+    <dd>Used to call asynGpib. These may be 0 even if initialization is
       successful. If a record that requires asynGpib is processed and
-      pasynGpib is NULL then an error message is generated and the record put
+      pasynGpib is 0 then an error message is generated and the record put
       into alarm.</dd>
-  <dt>parm</dt>
+  <dt><code>parm</code></dt>
     <dd>The value of the parm field of INP or OUT. It locates the gpibCmd for
       its record.</dd>
-  <dt>rsp</dt>
+  <dt><code>rsp</code></dt>
     <dd>If respond2Writes is &gt;=0 and rspLen is &gt;0, this is the buffer
       that holds the read after each write..</dd>
-  <dt>msg</dt>
+  <dt><code>msg</code></dt>
     <dd>A buffer of length msgLen. It is used by several GPIBXXX request
       types.</dd>
-  <dt>efastVal</dt>
+  <dt><code>msgInputLen</code></dt>
+    <dd>The length of the last input message.</dd>
+  <dt><code>efastVal</code></dt>
     <dd>Used for GPIBEFASTO, GPIBEFASTI, GPIBEFASTIW. For GPIBEFASTO the
       device support sets efastVal from RVAL or VAL before queuing an I/O
       request. For GPIBEFASTI and GPIBEFASTIW the device support set RVAL or
       VAL from efastVal after an I/O request completes.</dd>
-  <dt>pupvt</dt>
+  <dt><code>pupvt</code></dt>
     <dd>This is a private pointer for use by specialized instrument
     support.</dd>
-  <dt>pdevGpibPvt</dt>
+  <dt><code>pdevGpibPvt</code></dt>
     <dd>This is used by devSupportGpib. Note that the structure is described
       in devSupportGpib.c, i.e. it is private.</dd>
 </dl>
@@ -1024,13 +1067,13 @@ address of a gpibDpvt</p>
 <h3>devSupportGpib</h3>
 
 <p>describes methods implemented by devSupportGpib.c.</p>
-<pre>typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
-/* If a method retuns int then 0,1) =&gt; (OK, failure) */
+<pre>/* If a method retuns int then 0,-1) =&gt; (OK, failure) */
+typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);
     long (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
-    void (*queueReadRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
-    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt, gpibWork finish);
+    void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
+    void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibWork start,gpibWork finish);
     void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)(
         gpibDpvt *pgpibDpvt,srqHandler handler,void *userRivate);
@@ -1041,34 +1084,44 @@ struct devSupportGpib {
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
-  <dt>gpibWork</dt>
+  <dt><code>gpibWork</code></dt>
     <dd>Prototype of function that is called when a request is dequeued by
       the thread created for low level gpib driver. It can call asynCommon,
       asynOctet, and asynGpib.</dd>
-  <dt>initRecord</dt>
+  <dt><code>initRecord</code></dt>
     <dd>This initializes all the devGpib structures attached to the record
       starting with dbCommon.dpvt.</dd>
-  <dt>processGPIBSOFT</dt>
+  <dt><code>processGPIBSOFT</code></dt>
     <dd>If pgpibCmd-&gt;type is GPIBSOFT just call this method.</dd>
-  <dt>queueReadRequest</dt>
+  <dt><code>queueReadRequest</code></dt>
     <dd>This handles GPIBREADW, GPIBEFASTIW, GPIBREAD, GPIBEFASTI, and
-      GPIBRAWREAD. The only thing device support needs to provide is a work
-      function to do record specific processing of the received message.</dd>
-  <dt>queueWriteRequest</dt>
-    <dd>The handles GPIBWRITE, GPIBCMD, GPIBACMD, and GPIBEFASTO. Before the
-      queue request, the device support code must set msg or efastVal
-      depending on the pgpibCmd-&gt;type.</dd>
-  <dt>queueRequest</dt>
+      GPIBRAWREAD. The only thing device support needs to provide is work
+      functions to do record specific processing of the received message. The
+      <code>start</code> function is called before devGpibSupport issues
+      write/reads and <code>finish</code> is called after the read.
+      <code>start</code> is optional and not usually required for read
+      operations. The <code>msg</code> buffer MUST not be accessed except via
+      the start or finish work functions.</dd>
+  <dt><code>queueWriteRequest</code></dt>
+    <dd>The handles GPIBWRITE, GPIBCMD, GPIBACMD, and GPIBEFASTO. Device
+      support provides a <code>start</code> and <code>finish</code> work
+      function. The <code>start</code> function is called before
+      devGpibSupport issues a write and <code>finish</code> is called after
+      the write. The msg buffer MUST not be accessed except via the
+      <code>start</code> or <code>finish</code> work functions.
+      <code>start</code> must set <code>msg</code> or <code>efastVal</code>
+      depending on the <code>pgpibCmd-&gt;type</code>.</dd>
+  <dt><code>queueRequest</code></dt>
     <dd>The device support provides a work function that is called when the
       request is dequeued.</dd>
-  <dt>report</dt>
+  <dt><code>report</code></dt>
     <dd>This generates a report or all devGpib devices.</dd>
-  <dt>registerSrqHandler</dt>
+  <dt><code>registerSrqHandler</code></dt>
     <dd>Registers an SRQ handler for gpibAddr.</dd>
-  <dt>writeMsgLong,writeMsgULong,writeMsgDouble,writeMsgString</dt>
+  <dt><code>writeMsgLong,writeMsgULong,writeMsgDouble,writeMsgString</code></dt>
     <dd>pgpibDpvt-&gt;msg is written from pgpibCmd-&gt;format and the value
       passed by the caller.</dd>
-  <dt>pdevSupportGpib</dt>
+  <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib</dd>
 </dl>
 <hr>
@@ -1077,6 +1130,15 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <h2><a name="ChangesToPrevious"></a>Changes to previous EPICS GPIB
 support</h2>
 </center>
+
+<h3>gpibCmd</h3>
+
+<p>GPIBEOS is no longer an option and the last field of gpibCmd is now called
+eos. Previously the last field was an <code>int</code> that was supposed to
+be initialized to -1 or to a single termination character for reads. Eos is a
+<code>char *</code>. If no terminator is desired then eos should be 0, i.e. a
+null pointer. If old support initilizes this to -1 compiler warnings will be
+generated.</p>
 
 <h3>devGpibParmBlock</h3>
 
@@ -1143,10 +1205,10 @@ shown above</p>
 <p>In a device support module used GPIBIOCTL it will have to be changed to
 use one on the new GPIBxxx command types.</p>
 
-<p>The old drvGpib support is replaced by asyn support.</p>
+<p>The old drvGpib support is replaced by asynDriver and asynGpib.</p>
 
 <p>If old support makes calls to the old devGpibLib_xxx routines then they
-must be replaced by calls to devSupport routines.</p>
+must be replaced by calls to devSupportGpib routines.</p>
 <hr>
 
 <center>
