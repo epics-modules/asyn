@@ -1,2 +1,3 @@
+include "drvIpac.dbd"
 include "testGpibSerialInclude.dbd"
 registrar(vipc616Registrar)
