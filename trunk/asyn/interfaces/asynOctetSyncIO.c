@@ -593,7 +593,7 @@ static asynStatus getOutputEos(asynUser *pasynUser,
 
     status = queueAndWait(pasynUser, NULL, 0, NULL, 0, 
                        eos, eossize, eoslen,
-                       0,0., asynOctetSyncIO_GET_INPUT_EOS);
+                       0,0., asynOctetSyncIO_GET_OUTPUT_EOS);
     return(status);
 }
 
