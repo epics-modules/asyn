@@ -446,7 +446,6 @@ static asynStatus queueRequest(asynUser *pasynUser,
     asynPort *pasynPort = pasynUserPvt->pasynPort;
     asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
 
-    assert(pasynPort&&pasynDevice);
     assert(priority>=asynQueuePriorityLow && priority<=asynQueuePriorityHigh);
     if(!pasynPort || !pasynDevice) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
