@@ -579,7 +579,7 @@ composite {
 			}
 			"dynamic attribute" {
 				vis="if not zero"
-				chan="$(P)$(R).ENBL"
+				chan="$(P)$(R).ENBD"
 			}
 			textix="Enabled"
 			align="horiz. right"
@@ -596,7 +596,7 @@ composite {
 			}
 			"dynamic attribute" {
 				vis="if zero"
-				chan="$(P)$(R).ENBL"
+				chan="$(P)$(R).ENBD"
 			}
 			textix="Disabled"
 			align="horiz. right"
@@ -622,7 +622,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if not zero"
-						chan="$(P)$(R).CNCT"
+						chan="$(P)$(R).CNTD"
 					}
 					textix="Connected"
 					align="horiz. right"
@@ -639,7 +639,7 @@ composite {
 					}
 					"dynamic attribute" {
 						vis="if zero"
-						chan="$(P)$(R).CNCT"
+						chan="$(P)$(R).CNTD"
 					}
 					textix="Disconnected"
 					align="horiz. right"
