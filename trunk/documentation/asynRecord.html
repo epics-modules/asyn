@@ -1,12 +1,11 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<!-- saved from url=(0058)http://cars9.uchicago.edu/software/epics/serialRecord.html -->
-<HTML><HEAD><TITLE>serial - Generic Serial Record</TITLE>
+<HTML><HEAD><TITLE>asyn - asyn Record</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=windows-1252">
-<META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
+<META content="Microsoft FrontPage 4.0" name=GENERATOR></HEAD>
 <BODY>
 <H1>asyn Record</H1>
 <ADDRESS>Mark Rivers</ADDRESS>
 <HR>
+
 
 <H2>Contents</H2>
 <UL>
@@ -18,6 +17,8 @@
   <a href="#Serial Control Fields">Serial Control Fields</a><LI>
   <a href="#GPIB Control Fields">GPIB Control Fields</a><LI>
   <a href="#Trace Control Fields">Trace Control Fields</a><LI>
+  <a href="#Connection Management Fields">Connection Management Fields</a><LI>
+  <a href="#Error Status Fields">Error Status Fields</a><LI>
   <a href="#Private Fields">Private Fields</a><LI>
   <a href="#Record Processing">Record Processing</a><LI><a href="#Restrictions">Restrictions</a><LI>
   <a href="#Obsolete serial and GPIB records">Obsolete serial and GPIB records</a><LI><a href="#medm screens">medm 
@@ -69,7 +70,9 @@ the &quot;Access&quot; columns in the field description tables:
           <TD>No access allowed</TD></TR></TABLE><P>&nbsp;
 <HR>
 
+
 <h2 align="center"><a name="Device Address Control Fields">Device Address Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -113,12 +116,14 @@ dynamically changing what asyn device the record is connected to.
 from the current device and connect to the specified asyn port and address.&nbsp; 
 This permits a single asyn record to be used to control any asyn device.&nbsp; 
 Writing to these fields does not cause the record to process, i.e. no I/O is 
-done.<P>Writing to the SOCK fields causes the record to create a new asyn port 
+done.<P>Writing to the SOCK field causes the record to create a new asyn port 
 with the same name as the SOCK field.&nbsp; This is done with 
 drvGenericSerialConfigure.<p>&nbsp;</p>
 <HR>
 
+
 <h2 align="center"><a name="Input/Output Control Fields">Input/Output Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -194,10 +199,14 @@ processes.</p>
             or read from the device.</TD></TR></TABLE>
 
 
+
+
 <p>&nbsp;</p>
 <HR>
 
+
 <h2 align="center"><a name="Output Control Fields">Output Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -241,13 +250,23 @@ processes.</p>
     <TD>DBF_LONG</TD>
     <TD>The allocated length of the BOUT array. This value cannot be changed 
       after IOC initialization. Default=512.</TD></TR>
-  <TR vAlign=top>
+  <tr>
     <TD>NOWT</TD>
     <TD>R/W</TD>
     <TD>"Number of bytes to write"</TD>
     <TD>DBF_LONG</TD>
-    <TD>The actual number of bytes to send from the BOUT array to the  device if OFMT=&quot;Binary&quot;. This value must be less than or equal to OMAX. 
-  Default=512.</TD></TR>
+    <TD>The number of bytes to send from the BOUT array to the  device if OFMT=&quot;Binary&quot;. This value must be less than or equal to
+      OMAX. 
+  Default=512.</TD>
+  </tr>
+  <TR vAlign=top>
+    <TD>NAWT</TD>
+    <TD>R/W</TD>
+    <TD>"Number of bytes actually written&quot;</TD>
+    <TD>DBF_LONG</TD>
+    <TD>The actual number of bytes written in the last write operation. This field 
+      is valid for all OFMT modes. This number includes 
+      the output terminator, if any.</TD></TR>
   <TR vAlign=top>
     <TD>OFMT</TD>
     <TD>R/W</TD>
@@ -286,10 +305,14 @@ sent to the device.&nbsp; The OEOS field is ignored, and dbTranslateEscape() is
 not called.
 
 
+
+
 <p>&nbsp;</p>
 <HR>
 
+
 <h2 align="center"><a name="Input Control Fields">Input Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -351,7 +374,7 @@ not called.
     <TD>"Number of bytes read"</TD>
     <TD>DBF_LONG</TD>
     <TD>The actual number of bytes read in the last read operation. This field 
-      is valid for IFMT modes. This number includes 
+      is valid for all IFMT modes. This number includes 
       the input terminator, if any.</TD></TR>
   <TR vAlign=top>
     <TD>IFMT</TD>
@@ -377,10 +400,11 @@ not called.
 fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format) 
 field is used to select one or the other as the destination of data sent from 
 the  device. 
-<P>A read operation on input terminates when 1 of the following 4 conditions is 
+<P>A read operation terminates when 1 of the following 4 conditions is 
 met: 
 <OL>
-  <LI>The input terminator (IEOS) is found
+  <LI>The input terminator (IEOS) is found (if IFMT=&quot;ASCII&quot; or
+    &quot;Hybrid&quot;)
   <LI>EOI asserted (GPIB only) 
   <LI>The desired number of input characters (NRRD) are received 
   <LI>The timeout (TMOT) expires </LI></OL>
@@ -404,7 +428,9 @@ drivers permit 2 character end-of-message strings at most. The GPIB drivers only
 permit 1 character end-of-message strings.<br>
 &nbsp;<HR>
 
+
 <h2 align="center"><a name="Serial Control Fields">Serial Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <TR vAlign=top>
@@ -454,7 +480,9 @@ adapters like the Moxa units.<P>
 <p>&nbsp;</p>
 <HR>
 
+
 <h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
+
 
 <table cellPadding="5" border="1">
   <tr>
@@ -552,7 +580,9 @@ adapters like the Moxa units.<P>
 <p>&nbsp;</p>
 <HR>
 
+
 <h2 align="center"><a name="Trace Control Fields">Trace Control Fields</a></h2>
+
 
 <TABLE cellPadding=5 border=1>
   <tr>
@@ -617,6 +647,21 @@ adapters like the Moxa units.<P>
     <TD>DBF_RECCHOICE</TD>
     <TD>The ASYN_TRACEIO_HEX bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
   </tr>
+  <tr>
+    <TD>TSIZ</TD>
+    <TD>R/W</TD>
+    <TD>"TraceIO truncate size&quot;</TD>
+    <TD>DBF_LONG</TD>
+    <TD>The parameter passed to asynTraceSetTraceIOTruncateSize(). This value is
+      used to limit the number of I/O bytes printed by traceIO.&nbsp;</TD>
+  </tr>
+  <tr>
+    <TD>TFIL</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO file&quot;</TD>
+    <TD>DBF_STRING</TD>
+    <TD>The name of the file to which trace information is printed.</TD>
+  </tr>
 </TABLE>
 <P>
  The above fields are used to control the asynTrace facility.&nbsp; They allow 
@@ -624,10 +669,101 @@ adapters like the Moxa units.<P>
  trace file.<P>
  When the asyn record is connected to a new device with the PORT and ADDR 
  fields the above trace fields are automatically updated to reflect the current 
- asynTrace and asynTraceIO masks for that device.<p>&nbsp;</p>
+ asynTrace and asynTraceIO masks for that device.<P>
+ The TFIL field is used to set the name of the trace file.&nbsp; It is not
+ possible for the asyn record to determine the current file name if the record
+ did not set it.&nbsp; In this case the file name is displayed as
+ &quot;Unknown&quot;.&nbsp; Set this field to a string to a file name (including
+ possibly a valid path from the IOC's current default directory) to have the
+ output written to that file.&nbsp; Set the string to &quot;&quot; (null string)
+ to set the output to stdout.
+<p>&nbsp;</p>
 <HR>
 
+
+<h2 align="center"><a name="Connection Management Fields">Connection Management Fields</a></h2>
+
+
+<TABLE cellPadding=5 border=1>
+  <tr>
+    <TH>Name</TH>
+    <TH>Access</TH>
+    <TH>Prompt</TH>
+    <TH>Data type</TH>
+    <TH>Description</TH>
+  </tr>
+  <TR vAlign=top>
+    <TD>AUCT</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Autoconnect&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>Sets the autoconnect option.&nbsp; Choices are &quot;No&quot; and &quot;Yes&quot;.</TD></TR>
+  <tr>
+    <TD>ENBD</TD>
+    <TD>R</TD>
+    <TD>&quot;Enabled&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The current enable/disable status of the port.&nbsp; Values are &quot;Disabled&quot; and &quot;Enable&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>ENBL</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Disable/Enable&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>Disables or enables the port.&nbsp; Choices are &quot;Disable&quot; and
+      &quot;Enable.</TD>
+  </tr>
+  <tr>
+    <TD>CNTD</TD>
+    <TD>R</TD>
+    <TD>&quot;Connected&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The current connected/disconnted status of the port.&nbsp; Values are &quot;Disconnected&quot; and &quot;Connected&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>CNCT</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Connect/Disconnect&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>Disconnects or connects the device.&nbsp; Choices are
+      &quot;Disconnect&quot; and &quot;Connect:.</TD>
+  </tr>
+</TABLE>
+<p>&nbsp;</p>
+<HR>
+
+
+<h2 align="center"><a name="Error Status Fields">Error Status Fields</a></h2>
+
+
+<TABLE cellPadding=5 border=1>
+  <tr>
+    <TH>Name</TH>
+    <TH>Access</TH>
+    <TH>Prompt</TH>
+    <TH>Data type</TH>
+    <TH>Description</TH>
+  </tr>
+  <TR vAlign=top>
+    <TD>ERRS</TD>
+    <TD>R</TD>
+    <TD>&quot;Error status&quot;</TD>
+    <TD>DBF_STRING</TD>
+    <TD>Error status string for the most recent operation. This string is set to
+      &quot;&quot; (null string) at the start of each connection and I/O
+      operation.</TD></TR>
+</TABLE>
+<P>
+ In addition to ERRS, the standard EPICS record fields STAT (status) and SEVR
+ (severity) are used to report error status.&nbsp; For example status field may
+ be set to NO_ALARM, WRITE, READ, or COMM, and the SEVR field may be set to NO_ALARM,
+ MINOR, or MAJOR.<P>
+ &nbsp;
+<HR>
+
+
 <h2 align="center"><a name="Private Fields">Private Fields</a></h2>
+
 
 <P>
  &nbsp;<TABLE cellPadding=5 border=1>
@@ -655,7 +791,9 @@ adapters like the Moxa units.<P>
 &nbsp;
 <HR>
 
+
 <h2 align="center"><a name="Record Processing">Record Processing</a></h2>
+
 
 <P>
  The asyn record processes, i.e. performs the I/O operation given by TMOD, 
@@ -668,14 +806,16 @@ adapters like the Moxa units.<P>
  below).<P>
 &nbsp;<HR>
 
+
 <h2 align="center"><a name="Obsolete serial and GPIB records">Obsolete serial 
 and GPIB records</a></h2>
+
 
 <P>
  The asyn record is designed to be a complete replacement for the older 
  generic serial (&quot;serial&quot;) and generic GPIB (&quot;gpib&quot;) records.&nbsp; These 
  records are no longer needed, and will not be supported in the future.&nbsp; 
- The following is a list of differences between the old serial and GPIB records 
+ The following is a list of the differences between the old serial and GPIB records 
  and the new asyn record which may require changes to databases or 
  applications.<ul>
   <li>The ODEL field has been replaced by OEOS.&nbsp; It has changed from a 
@@ -693,7 +833,7 @@ and GPIB records</a></h2>
   on the AINP field if the value was the same as the previous read.&nbsp; This 
   caused problems for some SNL programs and data acquisition applications.</li>
   <li>The ODEL and IDEL fields were used even when OFMT or IFMT were in &quot;Binary&quot; 
-  mode.&nbsp; OEOS and IEOS are ignored when OFMT or IFMT respectively are in 
+  mode.&nbsp; OEOS and IEOS are now ignored when OFMT or IFMT respectively are in 
   &quot;Binary&quot; mode.</li>
   <li>The TMOT field has changed from DBF_LONG to DBF_DOUBLE, and the units have 
   changed from milliseconds to seconds.&nbsp; TMOT=-1.0 now means wait forever. 
@@ -701,6 +841,7 @@ and GPIB records</a></h2>
   </ul>
 <p>&nbsp;</p>
 <HR>
+
 
 <H2><a name="medm screens">medm screens</a></H2><p>The following are 
   screen shots of the medm screens provided for the asyn record.</p><p>&nbsp;</p>
@@ -733,14 +874,15 @@ added in the future.</p>
 <p>Enable, autoconnect, and connect should be supported.&nbsp; These will be 
 added in the future.</p>
 <HR>
-<H2><a name="Example 1">Example #1</a></H2>The following is an IDL program which demonstrates the use 
+<H2><a name="Example 1">Example #1</a></H2>The following is an IDL program that demonstrates the use 
 of the asyn record. It transfers data in both ASCII and binary formats. 
-Hopefully the IDL syntax is clear enough to understand by non-IDL users, and can 
+Hopefully the IDL syntax is clear enough to be understood by non-IDL users, and can 
 be translated into your favorite scripting language.<PRE>; This IDL program demonstrates the use of the EPICS asyn record.
 ; The program uses 2 asyn records.  The ports corresponding to these
 ; 2 records are connected with a null-modem cable
 ; Record 1 sends a message to record 2 in ASCII.
 ; Record 2 sends a message back to record 1 in binary.
+
 
 ; Record names
 rec1 = '13LAB:serial2'
@@ -750,14 +892,15 @@ recs = [rec1, rec2] ; Array with both record names
 ;   19,200 baud, 8 data bits, 1 stop bit, no parity, no flow control
 ;   Timeout=1 second
 for i=0, 1 do begin
-    rec = recs(i)
+    rec = recs[i]
     t = caput(rec+'.BAUD', '19200')
     t = caput(rec+'.DBIT', '8')
     t = caput(rec+'.SBIT', '1')
     t = caput(rec+'.PRTY', 'None')
     t = caput(rec+'.FCTL', 'None')
-    t = caput(rec+'.TMOT', 1000)
+    t = caput(rec+'.TMOT', 1.0)
 endfor
+
 
 ; Put record 1 in ASCII output mode, &lt;CR&gt; output delimiter,
 ;   binary input mode, no input delimiter
@@ -770,12 +913,14 @@ t = casetmonitor(rec1+'.BINP')
 ; Clear the monitor by reading the value
 t = caget(rec1+'.BINP', junk)
 
+
 ; Put record 2 in Binary output mode, no output delimiter
 ;   ASCII input mode, &lt;CR&gt; input delimiter
 t = caput(rec2+'.OFMT', 'Binary')
 t = caput(rec2+'.OEOS', '')
 t = caput(rec2+'.IFMT', 'ASCII')
 t = caput(rec2+'.IEOS', '\r')
+
 
 ; Put record 2 in read transfer mode
 t = caput(rec2+'.TMOD', 'Read')
@@ -784,13 +929,16 @@ t = casetmonitor(rec2+'.AINP')
 ; Clear the monitor by reading the value
 t = caget(rec2+'.AINP', junk)
 
+
 ; Process record 2; this will cause it to wait for data
-t = caput(rec2+'.PROC', 1)fer mode
+t = caput(rec2+'.PROC', 1)
+; Put record 1 in Write transfer mode
 t = caput(rec1+'.TMOD', 'Write')
 ; Send a message to port 2
 message = 'Request data: '+string(systime())
 print, 'Record 1 sent message: ' + message
 t = caput(rec1+'.AOUT', message)
+
 
 ; Wait for monitor on record2 ASCII input field
 while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
@@ -798,12 +946,14 @@ while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
 t = caget(rec2+'.AINP', input)
 print, 'Got a message from record 1: ', input
 
+
 size=256
 ; Put record 1 in read mode, expect &quot;size&quot; byte input
 t = caput(rec1+'.TMOD', 'Read')
 t = caput(rec1+'.NRRD', size)
 ; Process record 1; this will cause it to wait for data
 t = caput(rec1+'.PROC', '1')
+
 
 ; Put record 2 in write mode
 t = caput(rec2+'.TMOD', 'Write')
@@ -813,8 +963,10 @@ send_data = byte(sin(findgen(size)/5)*126 + 127)
 t = caput(rec2+'.NOWT', size)
 t = caput(rec2+'.BOUT', send_data)
 
+
 ; Wait for monitor on channel 1 binary input
 while (not cacheckmonitor(rec1+'.BINP')) do wait, .1
+
 
 ; Record 1 should have received &quot;size&quot; bytes. Make sure NORD=size
 t = caget(rec1+'.NORD', nord)
@@ -823,11 +975,14 @@ if (nord eq size) then $
 else $
     print, 'Error reading array data!'
 
+
 ; Read data from record 1
 t = caget(rec1+'.BINP', rec_data, max=nord)
 
+
 ; Plot it
 plot, rec_data
+
 
 end
 </PRE>
@@ -841,9 +996,10 @@ loaded with IMAX at least large enough to read the waveform.&nbsp; The entire
 waveform readout is 2500 channels on the TDS220.&nbsp; The buffer size required
 is 1 byte per channel + 7 bytes header/checksum.&nbsp; The start and stop
 parameters to the procedure can be used to read a subset of the waveform.
-<p>Hopefully the IDL syntax is clear enough to understand by non-IDL users, and 
+<p>Hopefully the IDL syntax is clear enough to be understood by non-IDL users, and 
 can be translated into your favorite scripting language.</p>
 <PRE>pro read_tds200, record, data, start=start, stop=stop, chan=chan
+
 
 ; This procedure reads waveforms from the Tektronix TDS200 series scopes
 ; Mark Rivers
@@ -852,10 +1008,12 @@ can be translated into your favorite scripting language.</p>
 ;     Dec. 7,   2001 Set timeout to 2 seconds before read.
 ;     March 30, 2004 Change IFMT from Binary to Hybrid, other fixes.
 
+
 if (n_elements(start) eq 0) then start=1
 if (n_elements(stop) eq 0) then stop=2500
 if (n_elements(chan) eq 0) then chan=1
 chan = 'CH'+strtrim(chan,2)
+
 
 aout = record + '.AOUT'
 binp = record + '.BINP'
@@ -867,12 +1025,15 @@ tmot = record + '.TMOT'
 oeos = record + '.OEOS'
 ieos = record + '.IEOS'
 
+
 ; Set the terminators to newline (assumes scope is set up this way)
 t = caput(oeos, '\n', /wait)
 t = caput(ieos, '\n', /wait)
 
+
 ; Set the transfer mode to write
 t = caput(tmod, 'Write', /wait)
+
 
 ; Set the encoding to positive binary, start and stop readout channels
 ; Set the readout range.  Can't do as one command, exceed 40 characters
@@ -881,29 +1042,37 @@ t = caput(aout, command, /wait)
 command = 'DATA:STOP ' + strtrim(stop,2)
 t = caput(aout, command, /wait)
 
+
 ;Set DATa:WIDth to 2
 ;command = 'DATA:WIDTH 2'
 ;t = caput(aout, command, /wait)
+
 
 ;Set channel number
 command = 'DATA:SOURCE '+ strtrim(chan,2)
 t = caput(aout, command, /wait)
 
+
 ; Set the input mode to hybrid. Large buffer but line-feed terminator
 t = caput(ifmt, 'Hybrid', /wait)
+
 
 ; Set the transfer mode to write/read
 t = caput(tmod, 'Write/Read', /wait)
 
+
 ; Empirically the timeout needs to be about 5 seconds for
 ; 1024 channels with RS-232
-t = caput(tmot, 2.0)
+t = caput(tmot, 5.0)
+
 
 ; Read the scope
 t = caput(aout, 'Curve?', /wait)
 
+
 ; Get the data
 t = caget(binp, data)
+
 
 ; Check the number of bytes read.  See if it's what's expected
 n_data = stop-start+1
@@ -911,19 +1080,22 @@ n_header = 2 + strlen(strtrim(n_data, 2))
 n_checksum = 1
 n_expected = n_header + n_data + n_checksum
 t = caget(nord, n)
-if (n ne n_expected) then print, 'Scope returned:', n, ' bytes, expected: ', n_expected
+if (n ne n_expected) then $
+   print, 'Scope returned:', n, $' bytes, expected: ', n_expected
 
-; The first n_header bytes are header, the last byte is checksum.  Data are offset by
-; 127, convert to long
+; The first n_header bytes are header, the last byte is checksum.
+; Data are offset by 127, convert to long
 data = data[n_header:n-2] - 127L
+
 
 return
 end
 </PRE>
+
 
 <ADDRESS>Suggestions and comments to: <A 
 href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>: 
 (rivers@cars.uchicago.edu) <BR>Last modified: March 30, 2004
 </ADDRESS>
 </BODY>
-</HTML>NG</TD>
+</HTML> guaranteed that no other asyn I/O to the device 
