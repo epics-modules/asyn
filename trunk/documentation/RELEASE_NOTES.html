@@ -12,9 +12,32 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>December 20, 2004</h1>
+<h1>Febuary 14, 2005</h1>
 </center>
 <hr>
+
+<center>
+<h2>Release 4-2</h2>
+</center>
+<h3>drvAsynSerialPort,drvAsynIPPort - Error reporting</h3>
+<p>These did not properly set an error message in asynUser.errorMessage
+when they returned asynError. This is fixed.</p>
+<h3>drvAsynSerialPort - serial port options</h3>
+<p>Changes were made to the way serial port options are handled.</p>
+<ul>
+   <li>initial values
+      <p>Previosly defaults were assigned for all options. Now the
+       initial values are fetched from either the termios (POSIX) or
+       sioLib (vxWorks).<p>
+   </li>
+   <li>vxWorks clocal and crtscts
+      <p>The vxWorks sioLib uses clocal for what POSIX calls crtscts.
+       The new serial support for vxWorks accepts both clocal and crtscts
+       to specify RTSCTS (Request to send, Clear to send).</p>
+   </li>
+</ul>
+<h3>asynRecord - Serial Port Options</h3>
+<p>This has a new option to set Modem Control.</p>
 
 <center>
 <h2>Release 4-1</h2>

@@ -3640,7 +3640,7 @@ limited by the specified count. asynInterposeEos can be used to support
 EOS.</p>
 
 <p>The following table summarizes the drvAsynSerialPort driver asynSetOption
-keys and values. Default values are enclosed in square brackets.</p>
+keys and values. When a serial port connects the current values are fetched.</p>
 
 <table border="1">
   <tbody>
@@ -3650,44 +3650,43 @@ keys and values. Default values are enclosed in square brackets.</p>
     </tr>
     <tr>
       <td>baud</td>
-      <td>[9600] 50 75 110 134 150 200 300 600 1200 ... 230400</td>
+      <td>9600 50 75 110 134 150 200 300 600 1200 ... 230400</td>
     </tr>
     <tr>
       <td>bits</td>
-      <td>[8] 7 6 5</td>
+      <td>8 7 6 5</td>
     </tr>
     <tr>
       <td>parity</td>
-      <td>[none] even odd</td>
+      <td>none even odd</td>
     </tr>
     <tr>
       <td>stop</td>
-      <td>[1] 2</td>
+      <td>1 2</td>
     </tr>
     <tr>
       <td>clocal</td>
-      <td>[Y] N</td>
+      <td>Y N</td>
     </tr>
     <tr>
       <td>ctrscts</td>
-      <td>[N] Y</td>
+      <td>N Y</td>
     </tr>
   </tbody>
 </table>
-
-<p></p>
 
 <p>The clocal and crtscts parameter names are taken from the POSIX termios
 serial interface definition. The clocal parameter controls whether the modem
 control lines (Data Terminal Ready, Carrier Detect/Received Line Signal
 Detect) are used (clocal=N) or ignored (clocal=Y). The crtscts parameter
 controls whether the hardware handshaking lines (Request To Send, Clear To
-Send) are used (crtscts=Y) or ignored (crtscts=N). The default parameter
-values (clocal=Y, crtscts=N) are those of a 'data-leads-only' serial
-interface.</p>
+Send) are used (crtscts=Y) or ignored (crtscts=N).</p>
 
-<p>The vxWorks serial driver does not provide independent control of the
-hardware handshaking and modem control lines, thus clocal=Y implies crtscts=N
+<p>The vxWorks sioLib serial support does not provide support for modem
+control lines. It also uses clocal for what is actually crtscts.
+For vxWorks the standard serial support accepts both clocal and
+crtscts for getOption and setOption.
+clocal=Y implies crtscts=N
 and clocal=N implies crtscts=Y.</p>
 
 <p>vxWorks IOC serial ports may need to be set up using hardware-specific
@@ -3728,9 +3727,11 @@ where the arguments are:
     processEosIn and processEosOut.</li>
 </ul>
 
-<p>The setEos and getEos methods have no effect and return asynError.  The
-read method blocks until at least one character has been received or until a
-timeout occurs.  The read method transfers as many characters as possible,
+<p>Only asynOctet methods writeRaw, readRaw, and flush are implemented.
+Calling the other methods will result in an error unless asynInterposeEos
+is used for the other asunOctet methods. 
+readRaw blocks until at least one character has been received or until a
+timeout occurs. readRaw transfers as many characters as possible,
 limited by the specified count.</p>
 
 <p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
