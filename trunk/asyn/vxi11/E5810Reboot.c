@@ -27,7 +27,7 @@
 char *defaultPassword = "E5810";
 int E5810Reboot(char * inetAddr,char *password)
 {
-    struct sockaddr_in	serverAddr;
+    struct sockaddr_in serverAddr;
     int fd;
     int status;
     int nbytes;
