@@ -111,7 +111,6 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
     int thisRead;
     int nRead = 0;
-    int readDone = 0;
     asynStatus status = asynSuccess;
 
     for (;;) {
@@ -142,14 +141,11 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
             if (nRead >= maxchars) break;
             continue;
         }
-        if ((peosPvt->eoslen == 0) && readDone)
-            break;
         status = peosPvt->plowerLevelMethods->read(peosPvt->lowerLevelPvt,
                         pasynUser,peosPvt->inBuffer,INBUFFER_SIZE,&thisRead);
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufferTail = 0;
         peosPvt->inBufferHead = thisRead;
-        readDone = 1;
     }
     *nbytesTransfered = nRead;
     return status;
@@ -180,12 +176,8 @@ static asynStatus eosSetEos(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
 
     assert(peosPvt);
-    if (eoslen > 0)
-        asynPrintIO(pasynUser,ASYN_TRACE_FLOW,eos,eoslen,
-                "%s set Eos %d: ",peosPvt->portName, eoslen);
-    else
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-                "%s set Eos %d\n",peosPvt->portName, eoslen);
+    asynPrintIO(pasynUser,ASYN_TRACE_FLOW,eos,eoslen,
+            "%s set Eos %d: ",peosPvt->portName, eoslen);
     switch (eoslen) {
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -194,7 +186,6 @@ static asynStatus eosSetEos(void *ppvt,asynUser *pasynUser,
     case 2: peosPvt->eos[1] = eos[1]; /* fall through to case 1 */
     case 1: peosPvt->eos[0] = eos[0]; break;
     case 0: break;
-    case -1: break;
     }
     peosPvt->eoslen = eoslen;
     peosPvt->eosMatch = 0;
@@ -207,7 +198,7 @@ static asynStatus eosGetEos(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
 
     assert(peosPvt);
-    if((peosPvt->eoslen>=0) && (peosPvt->eoslen>eossize)) {
+    if(peosPvt->eoslen>eossize) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
            "%s eossize %d < peosPvt->eoslen %d",
                                 peosPvt->portName,eossize,peosPvt->eoslen);
@@ -221,15 +212,10 @@ static asynStatus eosGetEos(void *ppvt,asynUser *pasynUser,
     case 2: eos[1] = peosPvt->eos[1]; /* fall through to case 1 */
     case 1: eos[0] = peosPvt->eos[0]; break;
     case 0: break;
-    case -1: break;
     }
     *eoslen = peosPvt->eoslen;
-    if (peosPvt->eoslen > 0)
-        asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-                "%s get Eos %d: ", peosPvt->portName, eoslen);
-    else
-        asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                "%s get Eos %d\n", peosPvt->portName, eoslen);
+    asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
+            "%s get Eos %d: ", peosPvt->portName, eoslen);
     return asynSuccess;
 }
 
