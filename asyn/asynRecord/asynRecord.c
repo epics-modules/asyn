@@ -200,6 +200,7 @@ static long init_record(asynRecord *pasynRec, int pass)
     pasynRec->iptr = (char *)calloc(pasynRec->imax, sizeof(char));
     pasynRecPvt->outbuff =  (char *)calloc(pasynRec->omax, sizeof(char));
     strcpy(pasynRec->tfil, "Unknown");
+    pasynRec->udf = 0;
     monitorStatus(pasynRec);
     return(0);
 }
@@ -456,7 +457,7 @@ static void monitorStatus(asynRecord *pasynRec)
     FILE *traceFd;
     int yesNo;
 
-    monitor_mask = DBE_VALUE | DBE_LOG;
+    monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
     
     trace_mask = pasynTrace->getTraceMask(pasynUser);
     pasynRec->tb0 = (trace_mask & ASYN_TRACE_ERROR)    ? 1 : 0;
