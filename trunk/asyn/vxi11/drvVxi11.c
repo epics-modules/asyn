@@ -1509,7 +1509,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     /* Force registration */
     if(vxiInit() != 0) return -1;
     if(aToIPAddr(hostName, 0, &ip) < 0) {
-        printf("%s Unknown host: \"%s\"\n", portName, hostName);
+        printf("%s Unknown host: \"%s\"\n", dn, hostName);
         return 0;
     }
     inAddr.s_addr = ip.sin_addr.s_addr;
