@@ -1,13 +1,13 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecordDebug.adl"
-	version=030004
+	name="j:\epics\synApps5-1\asyn\2-2beta\medm\asynRecordDebug.adl"
+	version=020306
 }
 display {
 	object {
-		x=124
-		y=24
-		width=441
+		x=230
+		y=408
+		width=442
 		height=610
 	}
 	clr=14
@@ -462,74 +462,6 @@ text {
 		clr=14
 	}
 	textix="Error:"
-}
-text {
-	object {
-		x=180
-		y=345
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).ENBD"
-	}
-	textix="Enabled"
-	align="horiz. right"
-}
-text {
-	object {
-		x=170
-		y=345
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=20
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).ENBD"
-	}
-	textix="Disabled"
-	align="horiz. right"
-}
-text {
-	object {
-		x=40
-		y=345
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).CNTD"
-	}
-	textix="Connected"
-	align="horiz. right"
-}
-text {
-	object {
-		x=10
-		y=345
-		width=120
-		height=20
-	}
-	"basic attribute" {
-		clr=20
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).CNTD"
-	}
-	textix="Disconnected"
-	align="horiz. right"
 }
 rectangle {
 	object {
@@ -1078,40 +1010,6 @@ text {
 }
 text {
 	object {
-		x=270
-		y=344
-		width=140
-		height=20
-	}
-	"basic attribute" {
-		clr=30
-	}
-	"dynamic attribute" {
-		vis="if zero"
-		chan="$(P)$(R).AUCT"
-	}
-	textix="noAutoConnect"
-	align="horiz. right"
-}
-text {
-	object {
-		x=280
-		y=341
-		width=140
-		height=20
-	}
-	"basic attribute" {
-		clr=62
-	}
-	"dynamic attribute" {
-		vis="if not zero"
-		chan="$(P)$(R).AUCT"
-	}
-	textix="autoConnect"
-	align="horiz. right"
-}
-text {
-	object {
 		x=6
 		y=580
 		width=50
@@ -1186,47 +1084,14 @@ text {
 		name="asynSocketSetup.adl"
 		args="P=$(P),R=$(R)"
 	}
+	display[3] {
+		label="Small display"
+		name="asynRecord.adl"
+		args="P=$(P),R=$(R)"
+		policy="replace display"
+	}
 	clr=14
 	bclr=51
-}
-menu {
-	object {
-		x=10
-		y=367
-		width=120
-		height=20
-	}
-	control {
-		chan="$(P)$(R).CNCT"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=144
-		y=367
-		width=120
-		height=20
-	}
-	control {
-		chan="$(P)$(R).ENBL"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=283
-		y=366
-		width=120
-		height=20
-	}
-	control {
-		chan="$(P)$(R).AUCT"
-		clr=14
-		bclr=51
-	}
 }
 rectangle {
 	object {
@@ -1238,5 +1103,179 @@ rectangle {
 	"basic attribute" {
 		clr=14
 		fill="outline"
+	}
+}
+composite {
+	object {
+		x=300
+		y=345
+		width=130
+		height=41
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=300
+				y=345
+				width=130
+				height=20
+			}
+			"basic attribute" {
+				clr=30
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).AUCT"
+			}
+			textix="noAutoConnect"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=310
+				y=345
+				width=110
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).AUCT"
+			}
+			textix="autoConnect"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=305
+				y=366
+				width=120
+				height=20
+			}
+			control {
+				chan="$(P)$(R).AUCT"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=155
+		y=345
+		width=120
+		height=42
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=180
+				y=345
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).ENBL"
+			}
+			textix="Enabled"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=175
+				y=345
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=20
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).ENBL"
+			}
+			textix="Disabled"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=155
+				y=367
+				width=120
+				height=20
+			}
+			control {
+				chan="$(P)$(R).ENBL"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=10
+		y=345
+		width=120
+		height=42
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=25
+				y=345
+				width=90
+				height=20
+			}
+			"basic attribute" {
+				clr=62
+			}
+			"dynamic attribute" {
+				vis="if not zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Connected"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=10
+				y=345
+				width=120
+				height=20
+			}
+			"basic attribute" {
+				clr=20
+			}
+			"dynamic attribute" {
+				vis="if zero"
+				chan="$(P)$(R).CNCT"
+			}
+			textix="Disconnected"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=10
+				y=367
+				width=120
+				height=20
+			}
+			control {
+				chan="$(P)$(R).CNCT"
+				clr=14
+				bclr=51
+			}
+		}
 	}
 }
