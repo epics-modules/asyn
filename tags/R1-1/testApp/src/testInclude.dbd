@@ -1,0 +1,6 @@
+include "base.dbd"
+include "devAsynTrace.dbd"
+registrar("echoDriverRegister")
+registrar("processModuleRegister")
+registrar("testEchoRegister")
+include "asyn.dbd"

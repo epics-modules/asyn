@@ -1,0 +1,146 @@
+record(bo,"$(name)L$(L):ifc") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @0")
+    field(HIGH,"1.0")
+}
+record(bo,"$(name)L$(L):ren") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @1")
+    field(VAL,"1")
+}
+record(bo,"$(name)L$(L):dcl") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @2")
+    field(HIGH,"1.0")
+}
+record(bo,"$(name)L$(L):llo") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @3")
+    field(HIGH,"1.0")
+}
+record(bo,"$(name)L$(L):sdc") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @4")
+    field(HIGH,"1.0")
+}
+record(bo,"$(name)L$(L):gtl") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @5")
+    field(HIGH,"1.0")
+}
+record(bo,"$(name)L$(L):resetLink") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @6")
+    field(HIGH,"1.0")
+}
+record(longout,"$(name)L$(L):setDESE") {
+    field(DESC,"DESE = CME|EXE|DDE")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @8")
+    field(VAL,"0x36")
+    field(PINI,"1")
+    field(FLNK,"$(name)L$(L):getDESE")
+}
+record(longout,"$(name)L$(L):setESE") {
+    field(DESC,"*ESE = CME|EXE|DDE")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @9")
+    field(VAL,"0x36")
+    field(PINI,"1")
+    field(FLNK,"$(name)L$(L):getESE")
+}
+record(longout,"$(name)L$(L):setSRE") {
+    field(DESC,"*SRE = ESB")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @10")
+    field(VAL,"0x20")
+    field(PINI,"1")
+    field(FLNK,"$(name)L$(L):getSRE")
+}
+record(longin,"$(name)L$(L):getDESE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @11")
+}
+record(longin,"$(name)L$(L):getESR") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @12")
+    field(PINI,"1")
+}
+record(longin,"$(name)L$(L):getESE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @13")
+}
+record(longin,"$(name)L$(L):getSTB") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @14")
+    field(PINI,"1")
+}
+record(longin,"$(name)L$(L):getSRE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @15")
+}
+record(longin,"$(name)L$(L):srqHandler") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @7")
+    field(FLNK,"$(name)L$(L):fanout")
+}
+record(fanout,"$(name)L$(L):fanout") {
+    field(LNK1,"$(name)L$(L):getESR")
+    field(LNK2,"$(name)L$(L):srqCount")
+}
+record(calc,"$(name)L$(L):srqCount") {
+    field(DESC, "Count unsollicited SRQs")
+    field(CALC, "A+B")
+    field(INPA, "$(name)L$(L):srqCount")
+    field(INPB,"1")
+    field(EGU, "interrupts")
+}
+
+record(bo,"$(name)L$(L):XXXJUNK") {
+    field(DESC,"Cause illegal command SRQ")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @18")
+}
+
+record(stringin,"$(name)L$(L):idn") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @16")
+    field(FLNK,"$(name)L$(L):putidnvalue")
+}
+record(stringout,"$(name)L$(L):putidnvalue") {
+    field(DOL,"$(name)L$(L):idn")
+    field(OUT,"$(name)L$(L):idnvalue PP")
+    field(OMSL,"closed_loop")
+}
+record(stringin,"$(name)L$(L):idnvalue") {
+}
+
+record(longin,"$(name)L$(L):saveSRE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @15")
+    field(FLNK,"$(name)L$(L):setSRE1")
+}
+record(longout,"$(name)L$(L):setSRE1") {
+    field(DESC,"*SRE = ESB|MAV")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#L$(L) A$(A) @10")
+    field(VAL,"0x30")
+    field(FLNK,"$(name)L$(L):idnWait")
+}
+record(stringin,"$(name)L$(L):idnWait") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#L$(L) A$(A) @17")
+    field(FLNK,"$(name)L$(L):restore")
+}
+record(fanout,"$(name)L$(L):restore") {
+    field(LNK1,"$(name)L$(L):getSTB")
+    field(LNK2,"$(name)L$(L):setSRE")
+    field(LNK3,"$(name)L$(L):putidnvalueWait")
+}
+record(stringout,"$(name)L$(L):putidnvalueWait") {
+    field(DOL,"$(name)L$(L):idnWait")
+    field(OUT,"$(name)L$(L):idnvalueWait PP")
+    field(OMSL,"closed_loop")
+}
+record(stringin,"$(name)L$(L):idnvalueWait") {
+}
