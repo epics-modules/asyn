@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.20 2004-07-27 17:45:24 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.21 2004-07-29 13:48:03 norume Exp $
  */
 
 #include <string.h>
@@ -56,7 +56,6 @@
 #endif
 
 #define CANCEL_CHECK_INTERVAL 5.0 /* Interval between checks for I/O cancel */
-#define CONSECUTIVE_READ_TIMEOUT_LIMIT  5   /* Disconnect after this many */
 
 #if !defined(USE_TERMIOS)
 /*
@@ -80,7 +79,6 @@ typedef struct {
     unsigned long      nWritten;
     int                baud;
     struct termios     termios;
-    int                consecutiveReadTimeouts;
     double             readTimeout;
     int                readPollmsec;
     double             writeTimeout;
@@ -314,7 +312,6 @@ drvAsynSerialPortConnect(void *drvPvt, asynUser *pasynUser)
 
     tty->readPollmsec = -1;
     tty->writePollmsec = -1;
-    tty->consecutiveReadTimeouts = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->serialDeviceName);
     pasynManager->exceptionConnect(pasynUser);
@@ -711,7 +708,6 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
                        "%s read %d ", tty->serialDeviceName, thisRead);
-            tty->consecutiveReadTimeouts = 0;
             nRead = thisRead;
             tty->nRead += thisRead;
             break;
@@ -740,16 +736,8 @@ static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
             break;
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
-    if (tty->timeoutFlag && (status == asynSuccess)) {
+    if (tty->timeoutFlag && (status == asynSuccess))
         status = asynTimeout;
-        if ((nRead == 0)
-         && (++tty->consecutiveReadTimeouts >= CONSECUTIVE_READ_TIMEOUT_LIMIT)) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s too many timeouts", tty->serialDeviceName);
-            closeConnection(tty);
-            status = asynError;
-        }
-    }
     *nbytesTransfered = nRead;
     return status;
 }
