@@ -57,25 +57,25 @@ typedef struct devGpibPvt devGpibPvt;
 typedef struct devSupportGpib devSupportGpib;
 
 struct gpibCmd {
-    gDset *dset;/* used to indicate record type supported */
-    int type;	/* enum - GPIBREAD...GPIBSRQHANDLER */
-    short pri;	/* request priority IB_Q_LOW, IB_G_MEDIUM, or IB_Q_HIGH */
-    char *cmd;	/* CONSTANT STRING to send to instrument */
-    char *format;	/* string used to generate or interpret msg */
-    int rspLen;	/* room for response error message */
-    int msgLen;	/* room for return data message length */
+    gDset *dset; /* used to indicate record type supported */
+    int type;    /* enum - GPIBREAD...GPIBSRQHANDLER */
+    short pri;   /* request priority IB_Q_LOW, IB_G_MEDIUM, or IB_Q_HIGH */
+    char *cmd;   /* CONSTANT STRING to send to instrument */
+    char *format;/* string used to generate or interpret msg */
+    int rspLen;  /* room for response error message */
+    int msgLen;  /* room for return data message length */
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
-    /* P1 plays a dual role.  For EFAST it is set internally to the
-    /*                        number of entries in the EFAST table */
-    /*                        For convert it is passed to convert */
-    int P1;
-    int P2;	/* user defined parameter used in convert() */
-    /* P3 plays dual role.  For EFAST it holds the address of EFAST table */
-    /*                      For convert it is passed to convert */
-    char **P3;
+    int P1;      /* P1 plays a dual role: */
+                 /*      For EFAST it is set internally to the
+                 /*      number of entries in the EFAST table */
+                 /*      For convert it is passed to convert() */
+    int P2;      /* user defined parameter passed to convert() */
+    char **P3;   /* P3 plays a dual role: */
+                 /*      For EFAST it holds the address of the EFAST table */
+                 /*      For convert it is passed to convert() */
     devGpibNames *pdevGpibNames; /* pointer to name strings */
-    int eosChar;
+    int eosChar; /* input end-of-string character */
 };
 /*Define so that it is easy to check for valid set of commands*/
 #define GPIBREAD        0x00000001
@@ -85,9 +85,9 @@ struct gpibCmd {
 #define GPIBSOFT        0x00000010
 #define GPIBREADW       0x00000020
 #define GPIBRAWREAD     0x00000040
-#define	GPIBEFASTO      0x00000080
-#define	GPIBEFASTI      0x00000100
-#define	GPIBEFASTIW     0x00000200
+#define GPIBEFASTO      0x00000080
+#define GPIBEFASTI      0x00000100
+#define GPIBEFASTIW     0x00000200
 #define GPIBIFC         0x00000400
 #define GPIBREN         0x00000800
 #define GPIBDCL         0x00001000
@@ -98,28 +98,28 @@ struct gpibCmd {
 #define GPIBSRQHANDLER  0x00020000
 /*GPIBEOS can be combined with some of the above commands*/
 /*If set gpibCmd.eosChar is end of message terminator*/
-#define GPIBEOS	        0x80000000
+#define GPIBEOS         0x80000000
 #define IB_Q_LOW     asynQueuePriorityLow
 #define IB_Q_MEDIUM  asynQueuePriorityMedium
 #define IB_Q_HIGH    asynQueuePriorityHigh
-#define FILL	{NULL,0,0,NULL,NULL,0,0,NULL,0,0,NULL,NULL,-1}
-#define FILL10	FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL
+#define FILL    {NULL,0,0,NULL,NULL,0,0,NULL,0,0,NULL,NULL,-1}
+#define FILL10  FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL
 
 struct devGpibNames {
-    int count;	          /* CURRENTLY only used for MBBI and MBBO */
+    int count;            /* CURRENTLY only used for MBBI and MBBO */
     char **item;
     unsigned long *value; /* CURRENTLY only used for MBBI and MBBO */
-    short nobt;	          /* CURRENTLY only used for MBBI and MBBO */
+    short nobt;           /* CURRENTLY only used for MBBI and MBBO */
 };
 
 struct devGpibParmBlock {
-    char *name;	        /* Name of this device support*/
-    gpibCmd *gpibCmds;	/* pointer to gpib command list */
-    int numparams;	/* number of elements in the command list */
-    double timeout;	/* seconds to wait for I/O */
+    char *name;         /* Name of this device support*/
+    gpibCmd *gpibCmds;  /* pointer to gpib command list */
+    int numparams;  /* number of elements in the command list */
+    double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
-    int *debugFlag;	/* pointer to debug flag */
+    int *debugFlag; /* pointer to debug flag */
 };
 
 /* EFAST tables must be defied as follows
@@ -202,7 +202,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * GPIBRAWREAD:(1) data is read from the inst into gpibDpvt.msg
  *           (2) data is read from the buffer using gpibCmd.format
  * The following is only supported on mbbo and bo record types.
- * GPIBEFASTO: (1) sends the string pointed to by p3[VAL] w/o formating
+ * GPIBEFASTO: (1) sends the string pointed to by P3[VAL] w/o formating
  * The following are only supported on mbbi and bi record types.
  * GPIBEFASTI: (1) gpibDpvt.cmd is sent to the instrument
  *             (2) data is read from the inst into gpibDpvt.msg
@@ -319,4 +319,4 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
 }
 #endif  /* __cplusplus */
 
-#endif	/* INCdevSupportGpibh */
+#endif  /* INCdevSupportGpibh */
