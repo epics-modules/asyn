@@ -17,4 +17,4 @@ include "drvAsynSerialPort.dbd"
 #
 # Pull in asynRecord support
 #
-#include "asynRecord.dbd"
+include "asynRecord.dbd"
