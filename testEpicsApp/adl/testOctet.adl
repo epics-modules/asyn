@@ -8,7 +8,7 @@ display {
 		x=352
 		y=24
 		width=400
-		height=200
+		height=300
 	}
 	clr=14
 	bclr=4
@@ -173,7 +173,7 @@ display {
 "message button" {
 	object {
 		x=1
-		y=58
+		y=60
 		width=100
 		height=20
 	}
@@ -188,7 +188,7 @@ display {
 "text update" {
 	object {
 		x=101
-		y=58
+		y=60
 		width=200
 		height=20
 	}
@@ -205,7 +205,7 @@ display {
 "message button" {
 	object {
 		x=0
-		y=96
+		y=150
 		width=100
 		height=20
 	}
@@ -220,7 +220,7 @@ display {
 "text update" {
 	object {
 		x=100
-		y=96
+		y=150
 		width=200
 		height=20
 	}
@@ -237,7 +237,7 @@ display {
 "text entry" {
 	object {
 		x=0
-		y=116
+		y=170
 		width=200
 		height=20
 	}
@@ -251,27 +251,10 @@ display {
 	limits {
 	}
 }
-"text update" {
-	object {
-		x=200
-		y=116
-		width=200
-		height=20
-	}
-	monitor {
-		chan="devWfAsynWriteRead"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
 "text entry" {
 	object {
 		x=0
-		y=136
+		y=190
 		width=200
 		height=20
 	}
@@ -287,8 +270,8 @@ display {
 }
 "message button" {
 	object {
-		x=1
-		y=154
+		x=0
+		y=210
 		width=100
 		height=20
 	}
@@ -303,12 +286,63 @@ display {
 "text update" {
 	object {
 		x=101
-		y=154
+		y=210
 		width=200
 		height=20
 	}
 	monitor {
 		chan="devWfAsynRead"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=200
+		y=170
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devWfAsynWriteRead"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=101
+		y=80
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devSiAsynReadIntr"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=101
+		y=230
+		width=200
+		height=20
+	}
+	monitor {
+		chan="devWfAsynReadIntr"
 		clr=14
 		bclr=4
 	}

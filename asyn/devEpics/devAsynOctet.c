@@ -44,6 +44,7 @@
 #include <cantProceed.h>
 #include <dbCommon.h>
 #include <dbScan.h>
+#include <callback.h>
 #include <stringinRecord.h>
 #include <stringoutRecord.h>
 #include <waveformRecord.h>
@@ -71,10 +72,21 @@ typedef struct devPvt{
     size_t      bufLen;
     /* Following for writeRead */
     DBADDR      dbAddr;
+    /* Following are for I/O Intr*/
+    CALLBACK    callback;
+    IOSCANPVT   ioScanPvt;
+    void        *registrarPvt;
+    int         gotValue; /*For interruptCallback*/
+    interruptCallbackOctet asynCallback;
 }devPvt;
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback);
 static long initWfCommon(waveformRecord *pwf);
+static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
+static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
+       char *data,size_t numchars, int eomReason);
+static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
+       char *data,size_t numchars, int eomReason);
 static void initDrvUser(devPvt *pdevPvt);
 static void initCmdBuffer(devPvt *pdevPvt);
 static void initDbAddr(devPvt *pdevPvt);
@@ -112,14 +124,22 @@ typedef struct commonDset {
     DEVSUPFUN     processCommon;
 } commonDset;
 
-commonDset asynSiOctetCmdResponse = {5,0,0,initSiCmdResponse,0,processCommon};
-commonDset asynSiOctetWriteRead   = {5,0,0,initSiWriteRead,  0,processCommon};
-commonDset asynSiOctetRead        = {5,0,0,initSiRead,       0,processCommon};
-commonDset asynSoOctetWrite       = {5,0,0,initSoWrite,      0,processCommon};
-commonDset asynWfOctetCmdResponse = {5,0,0,initWfCmdResponse,0,processCommon};
-commonDset asynWfOctetWriteRead   = {5,0,0,initWfWriteRead,  0,processCommon};
-commonDset asynWfOctetRead        = {5,0,0,initWfRead,       0,processCommon};
-commonDset asynWfOctetWrite       = {5,0,0,initWfWrite,      0,processCommon};
+commonDset asynSiOctetCmdResponse = {
+    5,0,0,initSiCmdResponse,0,            processCommon};
+commonDset asynSiOctetWriteRead   = {
+    5,0,0,initSiWriteRead,  0            ,processCommon};
+commonDset asynSiOctetRead        = {
+    5,0,0,initSiRead,       getIoIntInfo,processCommon};
+commonDset asynSoOctetWrite       = {
+    5,0,0,initSoWrite,      0,           processCommon};
+commonDset asynWfOctetCmdResponse = {
+    5,0,0,initWfCmdResponse,0,           processCommon};
+commonDset asynWfOctetWriteRead   = {
+    5,0,0,initWfWriteRead,  0,           processCommon};
+commonDset asynWfOctetRead        = {
+    5,0,0,initWfRead,       getIoIntInfo,processCommon};
+commonDset asynWfOctetWrite       = {
+    5,0,0,initWfWrite,      0,           processCommon};
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);
 epicsExportAddress(dset, asynSiOctetWriteRead);
@@ -136,6 +156,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback)
     asynStatus    status;
     asynUser      *pasynUser;
     asynInterface *pasynInterface;
+    commonDset    *pdset = (commonDset *)precord->dset;
+    asynOctet     *poctet;
 
     pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
     precord->dpvt = pdevPvt;
@@ -165,10 +187,13 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback)
             precord->name,asynOctetType);
         goto bad;
     }
-    pdevPvt->poctet = pasynInterface->pinterface;
+    pdevPvt->poctet = poctet = pasynInterface->pinterface;
     pdevPvt->octetPvt = pasynInterface->drvPvt;
     /* Determine if device can block */
     pasynManager->canBlock(pasynUser, &pdevPvt->canBlock);
+    if(pdset->get_ioint_info) {
+        scanIoInit(&pdevPvt->ioScanPvt);
+    }
     return(0);
 
 bad:
@@ -189,6 +214,74 @@ static long initWfCommon(waveformRecord *pwf)
        return -1;
     } 
     return 0;
+}
+
+static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
+{
+    devPvt *pdevPvt = (devPvt *)pr->dpvt;
+    asynStatus status;
+
+    if (cmd == 0) {
+        /* Add to scan list.  Register interrupts */
+        asynPrint(pdevPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynOctet::getIoIntInfo registering interrupt\n",
+            pr->name);
+        status = pdevPvt->poctet->registerInterruptUser(
+           pdevPvt->octetPvt,pdevPvt->pasynUser,
+           pdevPvt->asynCallback,pdevPvt,&pdevPvt->registrarPvt);
+        if(status!=asynSuccess) {
+            printf("%s devAsynOctet registerInterruptUser %s\n",
+                   pr->name,pdevPvt->pasynUser->errorMessage);
+        }
+    } else {
+        asynPrint(pdevPvt->pasynUser, ASYN_TRACE_FLOW,
+            "%s devAsynOctet::getIoIntInfo cancelling interrupt\n",
+             pr->name);
+        status = pdevPvt->poctet->cancelInterruptUser(
+             pdevPvt->registrarPvt, pdevPvt->pasynUser);
+        if(status!=asynSuccess) {
+            printf("%s devAsynOctet cancelInterruptUser %s\n",
+                   pr->name,pdevPvt->pasynUser->errorMessage);
+        }
+    }
+    *iopvt = pdevPvt->ioScanPvt;
+    return 0;
+}
+
+static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
+       char *data,size_t numchars, int eomReason)
+{
+    devPvt         *pdevPvt = (devPvt *)drvPvt;
+    stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
+    int            num;
+    
+    pdevPvt->gotValue = 1; 
+    num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
+    if(num>0) {
+        strncpy(psi->val,data,num);
+        if(num<MAX_STRING_SIZE) psi->val[num] = 0;
+        psi->udf = 0;
+    }
+    scanIoRequest(pdevPvt->ioScanPvt);
+}
+
+static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
+       char *data,size_t numchars, int eomReason)
+{
+    devPvt         *pdevPvt = (devPvt *)drvPvt;
+    waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
+    int            num;
+    
+    pdevPvt->gotValue = 1; 
+    num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
+    if(num>0) {
+        char *pbuf = (char *)pwf->bptr;
+        memcpy(pbuf,data,num);
+        if(num<pwf->nelm) pbuf[num] = 0;
+        pwf->nord = num;
+        pwf->udf = 0;
+    }
+    scanIoRequest(pdevPvt->ioScanPvt);
 }
 
 static void initDrvUser(devPvt *pdevPvt)
@@ -302,7 +395,7 @@ static long processCommon(dbCommon *precord)
     devPvt     *pdevPvt = (devPvt *)precord->dpvt;
     asynStatus status;
 
-    if (precord->pact == 0) {   /* This is an initial call from record */
+    if (!pdevPvt->gotValue && precord->pact == 0) {
         status = pasynManager->queueRequest(
            pdevPvt->pasynUser, asynQueuePriorityMedium, 0.0);
         if (status != asynSuccess) {
@@ -410,6 +503,7 @@ static long initSiRead(stringinRecord *psi)
     status = initCommon((dbCommon *)psi,&psi->inp,callbackSiRead);
     if(status!=asynSuccess) return 0;
     pdevPvt = (devPvt *)psi->dpvt;
+    pdevPvt->asynCallback = interruptCallbackSi;
     initDrvUser((devPvt *)psi->dpvt);
     return 0;
 }
@@ -529,6 +623,7 @@ static long initWfRead(waveformRecord *pwf)
     status = initCommon((dbCommon *)pwf,&pwf->inp,callbackWfRead);
     if(status!=asynSuccess) return 0;
     pdevPvt = (devPvt *)pwf->dpvt;
+    pdevPvt->asynCallback = interruptCallbackWaveform;
     initDrvUser((devPvt *)pwf->dpvt);
     return 0;
 }
