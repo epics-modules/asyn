@@ -73,11 +73,9 @@ void timeoutCallback(void *ppvt)
 {
     userPvt *puserPvt = (userPvt *)ppvt;
     asynUser *pasynUser = puserPvt->pasynUser;
-    asynStatus status;
 
     printf("timeoutCallback. Will cancel request\n");
-    status = pasynQueueManager->cancelRequest(pasynUser);
-    if(status!=asynSuccess) printf("%s\n",pasynUser->errorMessage);
+    pasynQueueManager->cancelRequest(pasynUser);
     epicsEventSignal(puserPvt->done);
 }
 

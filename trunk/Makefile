@@ -4,5 +4,6 @@ include $(TOP)/configure/CONFIG
 DIRS += configure
 DIRS += asyn
 DIRS += testApp
+DIRS += testGpibApp
 DIRS += iocBoot
 include $(TOP)/configure/RULES_TOP

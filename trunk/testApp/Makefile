@@ -12,21 +12,22 @@ asyn_DIR = $(ASYN_LIB)
 
 DBD += test.dbd
 
-#=============================
+LIBRARY_IOC += testSupport
+testSupport_SRCS += echoDriver.c
+testSupport_SRCS += testEcho.c
+testSupport_SRCS += processModule.c
+testSupport_LIBS += asyn
+testSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 PROD_IOC += test
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 test_SRCS += test_registerRecordDeviceDriver.cpp
 test_SRCS += testMain.c
-test_SRCS += echoDriver.c
-test_SRCS += testEcho.c
-test_SRCS += processModule.c
 
+test_LIBS += testSupport
 test_LIBS += asyn
 test_LIBS += $(EPICS_BASE_IOC_LIBS)
-
-#===========================
 
 include $(TOP)/configure/RULES
 #----------------------------------------
