@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.2 2004-04-08 21:35:36 rivers Exp $
+ * $Id: drvAsynSerialPort.c,v 1.3 2004-04-08 22:17:58 norume Exp $
  */
 
 #include <string.h>
@@ -110,7 +110,7 @@ static void serialBaseInit(void)
  * Report link parameters
  */
 static void
-drvAsynLocalSerialPortReport(void *drvPvt, FILE *fp, int details)
+drvAsynSerialPortReport(void *drvPvt, FILE *fp, int details)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -224,7 +224,7 @@ setMode(ttyController_t *tty)
     return asynSuccess;
 #else
     asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "Warning: drvAsynLocalSerialPort doesn't know how to set serial port mode on this machine.\n");
+              "Warning: drvAsynSerialPort doesn't know how to set serial port mode on this machine.\n");
     return asynSuccess;
 #endif
 }
@@ -256,7 +256,7 @@ setBaud (ttyController_t *tty)
  * Create a link
  */
 static asynStatus
-drvAsynLocalSerialPortConnect(void *drvPvt, asynUser *pasynUser)
+drvAsynSerialPortConnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -319,6 +319,8 @@ drvAsynLocalSerialPortConnect(void *drvPvt, asynUser *pasynUser)
     tty->readPollmsec = -1;
     tty->writePollmsec = -1;
     tty->consecutiveReadTimeouts = 0;
+    tty->inBufferHead = tty->inBufferTail = 0;
+    tty->eosMatch = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->serialDeviceName);
     pasynManager->exceptionConnect(pasynUser);
@@ -326,7 +328,7 @@ drvAsynLocalSerialPortConnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvAsynLocalSerialPortDisconnect(void *drvPvt, asynUser *pasynUser)
+drvAsynSerialPortDisconnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -339,7 +341,7 @@ drvAsynLocalSerialPortDisconnect(void *drvPvt, asynUser *pasynUser)
 }
 
 static asynStatus
-drvAsynLocalSerialPortGetPortOption(void *drvPvt, asynUser *pasynUser,
+drvAsynSerialPortGetPortOption(void *drvPvt, asynUser *pasynUser,
                               const char *key, char *val, int valSize)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -397,7 +399,7 @@ drvAsynLocalSerialPortGetPortOption(void *drvPvt, asynUser *pasynUser,
 }
 
 static asynStatus
-drvAsynLocalSerialPortSetPortOption(void *drvPvt, asynUser *pasynUser,
+drvAsynSerialPortSetPortOption(void *drvPvt, asynUser *pasynUser,
                               const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -539,7 +541,7 @@ drvAsynLocalSerialPortSetPortOption(void *drvPvt, asynUser *pasynUser,
  * Write to the serial line
  */
 static int
-drvAsynLocalSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int numchars)
+drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int numchars)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
@@ -605,7 +607,9 @@ drvAsynLocalSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data,
                                     "%s timeout", tty->serialDeviceName);
             break;
         }
-        if ((thisWrite < 0) && (errno != EWOULDBLOCK) && (errno != EINTR)) {
+        if ((thisWrite < 0) && (errno != EWOULDBLOCK)
+                            && (errno != EINTR)
+                            && (errno != EAGAIN)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s write error: %s",
                                         tty->serialDeviceName, strerror(errno));
@@ -622,7 +626,7 @@ drvAsynLocalSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data,
  * Read from the serial line
  */
 static int
-drvAsynLocalSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
+drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
@@ -665,8 +669,6 @@ drvAsynLocalSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int ma
     for (;;) {
         if ((tty->inBufferTail != tty->inBufferHead)) {
             char c = *data++ = tty->inBuffer[tty->inBufferTail++];
-            if (tty->inBufferTail == INBUFFER_SIZE)
-                tty->inBufferTail = 0;
             nRead++;
             tty->nRead++;
             if (tty->eoslen != 0) {
@@ -714,10 +716,6 @@ drvAsynLocalSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int ma
                 closeConnection(tty);
             break;
         }
-        if (tty->inBufferHead >= tty->inBufferTail)
-            thisRead = INBUFFER_SIZE - tty->inBufferHead;
-        else
-            thisRead = tty->inBufferTail;
         if (!timerStarted && (tty->readTimeout > 0)) {
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
@@ -730,18 +728,19 @@ drvAsynLocalSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int ma
         poll(&pollfd, 1, tty->readPollmsec);
         }
 #endif
-        thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
+        thisRead = read(tty->fd, tty->inBuffer, INBUFFER_SIZE);
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
-                        tty->inBuffer + tty->inBufferHead, thisRead,
+                        tty->inBuffer, thisRead,
                        "%s read %d ", tty->serialDeviceName, thisRead);
-            tty->inBufferHead += thisRead;
-            if (tty->inBufferHead == INBUFFER_SIZE)
-                tty->inBufferHead = 0;
+            tty->inBufferHead = thisRead;
+            tty->inBufferTail = 0;
             tty->consecutiveReadTimeouts = 0;
         }
         else {
-            if ((thisRead < 0) && (errno != EWOULDBLOCK) && (errno != EINTR)) {
+            if ((thisRead < 0) && (errno != EWOULDBLOCK)
+                               && (errno != EINTR)
+                               && (errno != EAGAIN)) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s read error: %s",
                                         tty->serialDeviceName, strerror(errno));
@@ -762,7 +761,7 @@ drvAsynLocalSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int ma
  * Flush pending input
  */
 static asynStatus
-drvAsynLocalSerialPortFlush(void *drvPvt,asynUser *pasynUser)
+drvAsynSerialPortFlush(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -785,7 +784,7 @@ drvAsynLocalSerialPortFlush(void *drvPvt,asynUser *pasynUser)
  * Set the end-of-string message
  */
 static asynStatus
-drvAsynLocalSerialPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
+drvAsynSerialPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eoslen)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
@@ -810,7 +809,7 @@ drvAsynLocalSerialPortSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,in
  * Get the end-of-string message
  */
 static asynStatus
-drvAsynLocalSerialPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
+drvAsynSerialPortGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
     int eossize, int *eoslen)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -856,30 +855,30 @@ ttyCleanup(ttyController_t *tty)
 /*
  * asynCommon methods
  */
-static const struct asynCommon drvAsynLocalSerialPortAsynCommon = {
-    drvAsynLocalSerialPortReport,
-    drvAsynLocalSerialPortConnect,
-    drvAsynLocalSerialPortDisconnect,
-    drvAsynLocalSerialPortSetPortOption,
-    drvAsynLocalSerialPortGetPortOption
+static const struct asynCommon drvAsynSerialPortAsynCommon = {
+    drvAsynSerialPortReport,
+    drvAsynSerialPortConnect,
+    drvAsynSerialPortDisconnect,
+    drvAsynSerialPortSetPortOption,
+    drvAsynSerialPortGetPortOption
 };
 
 /*
  * asynOctet methods
  */
-static const struct asynOctet drvAsynLocalSerialPortAsynOctet = {
-    drvAsynLocalSerialPortRead,
-    drvAsynLocalSerialPortWrite,
-    drvAsynLocalSerialPortFlush,
-    drvAsynLocalSerialPortSetEos,
-    drvAsynLocalSerialPortGetEos
+static const struct asynOctet drvAsynSerialPortAsynOctet = {
+    drvAsynSerialPortRead,
+    drvAsynSerialPortWrite,
+    drvAsynSerialPortFlush,
+    drvAsynSerialPortSetEos,
+    drvAsynSerialPortGetEos
 };
 
 /*
  * Configure and register a generic serial device
  */
 int
-drvAsynLocalSerialPortConfigure(char *portName,
+drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
                      int noAutoConnect)
@@ -904,14 +903,14 @@ drvAsynLocalSerialPortConfigure(char *portName,
     /*
      * Create a driver
      */
-    tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvAsynLocalSerialPortConfigure()");
+    tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvAsynSerialPortConfigure()");
     /*
      * Create timeout mechanism
      */
      tty->timer = epicsTimerQueueCreateTimer(
          pserialBase->timerQueue, timeoutHandler, tty);
      if(!tty->timer) {
-        errlogPrintf("drvAsynLocalSerialPortConfigure: Can't create timer.\n");
+        errlogPrintf("drvAsynSerialPortConfigure: Can't create timer.\n");
         return -1;
     }
     tty->fd = -1;
@@ -923,29 +922,29 @@ drvAsynLocalSerialPortConfigure(char *portName,
     /*
      *  Link with higher level routines
      */
-    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynLocalSerialPortConfigure");
+    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynSerialPortConfigure");
     tty->common.interfaceType = asynCommonType;
-    tty->common.pinterface  = (void *)&drvAsynLocalSerialPortAsynCommon;
+    tty->common.pinterface  = (void *)&drvAsynSerialPortAsynCommon;
     tty->common.drvPvt = tty;
     tty->octet.interfaceType = asynOctetType;
-    tty->octet.pinterface  = (void *)&drvAsynLocalSerialPortAsynOctet;
+    tty->octet.pinterface  = (void *)&drvAsynSerialPortAsynOctet;
     tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    0, /*not multiDevice*/
                                    !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
-        errlogPrintf("drvAsynLocalSerialPortConfigure: Can't register myself.\n");
+        errlogPrintf("drvAsynSerialPortConfigure: Can't register myself.\n");
         ttyCleanup(tty);
         return -1;
     }
     if(pasynManager->registerInterface(tty->portName,&tty->common)!= asynSuccess) {
-        errlogPrintf("drvAsynLocalSerialPortConfigure: Can't register common.\n");
+        errlogPrintf("drvAsynSerialPortConfigure: Can't register common.\n");
         ttyCleanup(tty);
         return -1;
     }
     if(pasynManager->registerInterface(tty->portName,&tty->octet)!= asynSuccess) {
-        errlogPrintf("drvAsynLocalSerialPortConfigure: Can't register octet.\n");
+        errlogPrintf("drvAsynSerialPortConfigure: Can't register octet.\n");
         ttyCleanup(tty);
         return -1;
     }
@@ -961,18 +960,18 @@ drvAsynLocalSerialPortConfigure(char *portName,
  * IOC shell command registration
  */
 #include <iocsh.h>
-static const iocshArg drvAsynLocalSerialPortConfigureArg0 = { "port name",iocshArgString};
-static const iocshArg drvAsynLocalSerialPortConfigureArg1 = { "tty name",iocshArgString};
-static const iocshArg drvAsynLocalSerialPortConfigureArg2 = { "priority",iocshArgInt};
-static const iocshArg drvAsynLocalSerialPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg *drvAsynLocalSerialPortConfigureArgs[] = {
-    &drvAsynLocalSerialPortConfigureArg0, &drvAsynLocalSerialPortConfigureArg1,
-    &drvAsynLocalSerialPortConfigureArg2, &drvAsynLocalSerialPortConfigureArg3};
-static const iocshFuncDef drvAsynLocalSerialPortConfigureFuncDef =
-                      {"drvAsynLocalSerialPortConfigure",4,drvAsynLocalSerialPortConfigureArgs};
-static void drvAsynLocalSerialPortConfigureCallFunc(const iocshArgBuf *args)
+static const iocshArg drvAsynSerialPortConfigureArg0 = { "port name",iocshArgString};
+static const iocshArg drvAsynSerialPortConfigureArg1 = { "tty name",iocshArgString};
+static const iocshArg drvAsynSerialPortConfigureArg2 = { "priority",iocshArgInt};
+static const iocshArg drvAsynSerialPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
+static const iocshArg *drvAsynSerialPortConfigureArgs[] = {
+    &drvAsynSerialPortConfigureArg0, &drvAsynSerialPortConfigureArg1,
+    &drvAsynSerialPortConfigureArg2, &drvAsynSerialPortConfigureArg3};
+static const iocshFuncDef drvAsynSerialPortConfigureFuncDef =
+                      {"drvAsynSerialPortConfigure",4,drvAsynSerialPortConfigureArgs};
+static void drvAsynSerialPortConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvAsynLocalSerialPortConfigure(args[0].sval, args[1].sval, args[2].ival,
+    drvAsynSerialPortConfigure(args[0].sval, args[1].sval, args[2].ival,
                                                                 args[3].ival);
 }
 
@@ -981,12 +980,12 @@ static void drvAsynLocalSerialPortConfigureCallFunc(const iocshArgBuf *args)
  * no race condition in the test/set of firstTime.
  */
 static void
-drvAsynLocalSerialPortRegisterCommands(void)
+drvAsynSerialPortRegisterCommands(void)
 {
     static int firstTime = 1;
     if (firstTime) {
-        iocshRegister(&drvAsynLocalSerialPortConfigureFuncDef,drvAsynLocalSerialPortConfigureCallFunc);
+        iocshRegister(&drvAsynSerialPortConfigureFuncDef,drvAsynSerialPortConfigureCallFunc);
         firstTime = 0;
     }
 }
-epicsExportRegistrar(drvAsynLocalSerialPortRegisterCommands);
+epicsExportRegistrar(drvAsynSerialPortRegisterCommands);
