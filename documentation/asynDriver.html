@@ -12,13 +12,13 @@
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
 <p><span style="font-weight: bold; font-size: 14pt">
-Release 3.1
+Release 3.2
 </span></p>
 <p><span style="font-weight: bold; font-size: 14pt">
 Marty Kraimer, Eric Norum and Mark Rivers
 </span></p>
 <p><span style="font-weight: bold; font-size: 14pt">
-May 19, 2004
+June 16, 2004
 </span></p>
 </center>
 <hr>
@@ -51,6 +51,7 @@ license</a> described at the end of this document.</p>
   <li><a href="#drvAsynTCPPort">TCP Port</a></li>
   <li><a href="#vxi11">vxi11</a></li>
   <li><a href="#gsIP488">Green Springs IP488</a></li>
+  <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
 </ul>
 <a href="#DiagnosticAids">Diagnostic Aids</a> <br>
 <a href="#InstallBuild">Install and Build</a> <br>
@@ -375,9 +376,9 @@ and one or more interfaces.</p>
     "handle" for calling most methods.</li>
   <li>asynInterface - a structure that describes an interface.</li>
   <li>asynManager - An interface for communicating with asynDriver.</li>
-  <li>asynCommon - An interface providing device methods invoked by queue
-    callbacks. All low level drivers should implement these methods.</li>
-  <li>asynOctet - An interface providing device methods that most low level
+  <li>asynCommon - An interface providing methods that
+    must be implemented by all low level drivers.</li>
+  <li>asynOctet - An interface providing I/O methods that most low level
     drivers implement.</li>
   <li>asynTrace - An interface plus associated functions and definitions that
     implement the trace facility.</li>
@@ -385,7 +386,7 @@ and one or more interfaces.</p>
 
 <h3>asynStatus</h3>
 
-<p>Thus defines the status returned by most methods If a method returns a
+<p>Defines the status returned by most methods If a method returns a
 status other than asynSuccess and one of the arguments to the method is
 pasynUser then the method is expected to write a message into
 pasynUser-&gt;errorMessage.</p>
@@ -419,7 +420,7 @@ pasynUser-&gt;errorMessage.</p>
 
 <h3>asynException</h3>
 
-<p>This defines a set of exceptions for method exceptionOccurred</p>
+<p>Defines the exceptions for method exceptionOccurred</p>
 <pre>typedef enum {
     asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
     asynExceptionTraceMask,asynExceptionTraceIOMask,
@@ -492,7 +493,7 @@ pasynUser-&gt;errorMessage.</p>
 
 <h3>asynUser</h3>
 
-<p>asynUser describes a structure that user code must provide for most
+<p>Describes a structure that user code passes to most
 asynManager and driver methods. Code must allocate and free an asynUser by
 calling asynManager:createAsynUser and asynManager:freeAsynUser.</p>
 <pre>typedef struct asynUser {
@@ -660,7 +661,10 @@ epicsShareExtern asynManager *pasynManager;</pre>
         connectDevice only connects a user to the port driver for the
         portName,addr. The port driver may or may not be connected to the
         actual device. Thus connectDevice and asynCommon:connect are
-        completely different.</td>
+        completely different.
+        <p>See the Theory of Operation section for a description of the
+        difference between single and multi-device port drivers.</p>
+        </td>
     </tr>
     <tr>
       <td>disconnect</td>
@@ -737,8 +741,12 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>getAddr</td>
-      <td>*addr is set to -1 if the port does not support multiple devices or
-        else  the addr that was specified in the call to connectDevice.</td>
+      <td>
+        *addr is set equal to the address to which the user connected
+        in the call to connectDevice.
+        <p>See the Theory of Operation section for a description of the
+        difference between single and multi-device port drivers.</p>
+       </td>
     </tr>
     <tr>
       <td>registerPort</td>
@@ -830,7 +838,7 @@ typedef struct  asynCommon {
                                 const char *key, char *val, int sizeval);
 }asynCommon;</pre>
 
-<p>asynCommon describes the methods that are optionally implemented by
+<p>asynCommon describes the methods that must be implemented by
 drivers.</p>
 
 <table border="1">
@@ -855,12 +863,16 @@ drivers.</p>
     <tr>
       <td>setOption</td>
       <td>This is a generic routine for setting a device option. The
-        arguments are a key,value pairs. The meaning is driver specific.</td>
+        arguments are a key,value pairs. The meaning is driver specific.
+       If a driver does not accept options it can return asynError.
+       </td>
     </tr>
     <tr>
       <td>getOption</td>
       <td>This is a generic routine for getting a device option. The value
-        for the key is written into val.</td>
+        for the key is written into val.
+       If a driver does not accept options it can return asynError.
+       </td>
     </tr>
   </tbody>
 </table>
@@ -993,8 +1005,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
 </ul>
 
 <p>In order for the trace facility to perform properly, device support, and
-all drivers must use the trace facility according to the above guidelines.
-Device and driver support can directly call the asynManager methods. The
+all drivers must use the trace facility.
+Device and driver support can directly call the asynTrace methods. The
 asynPrint and asynPrintIO macros are provided so that it is easier for
 device/driver support. Support can have calls like.</p>
 <pre>    asynPrintIO(pasynUser,ASYN_TRACE_FLOW,"%s Calling queueRequest\n",
@@ -1014,11 +1026,6 @@ example:</p>
     fd = pasynTrace-&gt;getTraceFILE(pasunUser);
     /*perform I/O of fd */
     pasynTrace-&gt;unlock(pasunUser);</pre>
-methods can be called by any thread. If some code wants to do it's own I/O
-instead of calling print or printIO, then it must call lock before
-asynManager and driver methods. Code must allocate and free an asynUser by
-calling asynUserCalloc and asynUserFree.
-
 <p>If the asynUser is not connected to a port, i.e.
 pasynManager-&gt;connectDevice has not been called, then a "global" device is
 assumed. This is usefull when asynPrint is called before connectDevice.</p>
@@ -1217,7 +1224,7 @@ handled and what getAddr returns.</p>
 are the same. If the port does support multiple devices than asynManager
 keeps the states for the port and for every device connected to the port.</p>
 
-<p>Whenever any of the states change for a port or device than all user that
+<p>Whenever any of the states change for a port or device than all users that
 called exceptionCallbackAdd for that port or device are called.</p>
 
 <p>Low level drivers must call pasynManager:exceptionConnect whenever they
@@ -1246,7 +1253,7 @@ algorithm:</p>
 <ol>
   <li>Wait for work by calling epicsEventMustWait. Other code such as
     queueRequest call epicsEventSignal.</li>
-  <li>If the port is disabled it returns to 1.</li>
+  <li>If the port is disabled return 1.</li>
   <li>For every element in queue asynQueuePriorityConnect:
     <ul>
       <li>Remove the element from the queue.</li>
@@ -1255,7 +1262,7 @@ algorithm:</p>
   </li>
   <li>If the port is not connected and autoConnect is true for the port then
     attempt to connect to the port.</li>
-  <li>If the port is still not connected it returns to 1.</li>
+  <li>If the port is still not connected return 1.</li>
   <li>For each element of the queues
     asynQueuePriorityHigh,...,asynQueuePriorityLow.
     <ul>
@@ -1839,6 +1846,44 @@ where
 <pre>#The following is for the Greensprings IP488 on an MV162 
 ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
 gsIP488Configure("L0",0,0,0x61,0,0)</pre>
+
+<h3><a name="ni1014"></a>National Instruments GPIB-1014D</h3>
+<p>This is support for a National Instruments VME GPIB interface. The
+configuration command is:</p>
+<pre>    gsIP488Configure(portNameA,portNameB,base,vector,level,priority,noAutoConnect)</pre>
+where
+<ul>
+  <li>portNameA - An ascii string specifying the port name that will be
+    registered with asynDriver for portA.</li>
+  <li>portNameB - An ascii string specifying the port name that will be
+    registered with asynDriver for portB.
+    If only one port should be registered than leave this as a null string.
+    The support should also work for a single port NI1014 butb has not been
+    tested.</li>
+  <li>base - VME A16 base address.</li>
+  <li>vector - VME interrupt vector.</li>
+  <li>level - An integer specifying the interrupt level.</li>
+  <li>priority - In integer specifying the priority of the port thread. A
+    value of 0 will result in a defalt value being assigned</li>
+  <li>noAutoConnect - Zero or missing indicates that portThread should
+    automatically connect.  Non-zero if explicit connect command must be
+    issued.</li>
+</ul>
+
+<p>An example is:</p>
+<pre>#The following is for the Greensprings IP488 on an MV162 
+ni1014Config("L0","L1",0x5000,0x64,5,0,0)</pre>
+<p>NOTES:</p>
+<ul>
+   <li>Ports A and B are almost but not quite completely duplicates.
+       Thus the code for connecting to port A is slightly different
+       than the code for portB.</li>
+   <li>In order to disconnect and reconnect either port BOTH ports must
+       be disconnected and reconnected.</li>
+   <li>When the ports are connected portA MUST be connected before portB.</li>
+   <li>Interrupt driver Programmed I/O is used rather than DMA. Thus no
+       A14 address space is required.</li>
+</ul>
 <hr>
 
 <center>

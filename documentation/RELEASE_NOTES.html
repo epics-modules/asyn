@@ -12,17 +12,13 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>????? 2004</h1>
+<h1>June 16, 2004</h1>
 </center>
 <hr>
 
 <center>
-<h2>Release 3-3</h2>
+<h2>Release 3-2</h2>
 </center>
-
-<h3>Major New Features</h3>
-<ul>
-</ul>
 
 <h3>Changed and obsolete features</h3>
 <ul>
@@ -32,31 +28,21 @@ alink="#FF0000">
       so that all time values set in the instrument support
       initialization routine are specified in units of seconds.  Very
       few instrument support files should be affected by this change</li>
-</ul>
-
-
-<h1>April 2004</h1>
-</center>
-<hr>
-
-<center>
-<h2>Release 3-2</h2>
-</center>
-
-<h3>Major New Features</h3>
-<ul>
-  <li>Added makeSupport script and template instrument support.  Updated
-      tutorials to reflect these additions.</li>
-</ul>
-
-<h3>Changed and obsolete features</h3>
-<ul>
   <li>The contents of asynRecDevDrv.dbd have been placed in asyn.dbd and 
       asynRecDevDrv.dbd has been removed.  This allows applications to
       get correct dbior reports and access to asynRecords by including
       any low-level driver .dbd file.</li>
 </ul>
-
+<h3>Major New Features</h3>
+<ul>
+   <li>National Instruments NI1014 VME GPIB interface is now supported.</li>
+   <li>GPIB - All low level GPIB support (vxi11, gsip88, and ni1014) now
+       fully support the GPIB specific features defined by asynGpibDriver.h</li>
+   <li>Implementation of asynTrace is more consistent across the low level
+       drivers.</li>
+  <li>Added makeSupport script and template instrument support.  Updated
+      tutorials to reflect these additions.</li>
+</ul>
 
 <center>
 <h2>Release 3-1</h2>
