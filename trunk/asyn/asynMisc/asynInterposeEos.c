@@ -110,6 +110,7 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
     int thisRead;
     int nRead = 0;
+    int readDone = 0;
     asynStatus status = asynSuccess;
 
     for (;;) {
@@ -140,11 +141,14 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
             if (nRead >= maxchars) break;
             continue;
         }
+        if ((peosPvt->eoslen == 0) && readDone)
+            break;
         status = peosPvt->plowerLevelMethods->read(peosPvt->lowerLevelPvt,
-            pasynUser,peosPvt->inBuffer,INBUFFER_SIZE,&thisRead);
+                        pasynUser,peosPvt->inBuffer,INBUFFER_SIZE,&thisRead);
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufferTail = 0;
         peosPvt->inBufferHead = thisRead;
+        readDone = 1;
     }
     *nbytesTransfered = nRead;
     return status;
