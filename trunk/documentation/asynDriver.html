@@ -4100,7 +4100,7 @@ where
 <h3>iocsh Commands</h3>
 <pre>    asynReport(level,portName)
     asynInterposeFlushConfig(portName,addr,timeout)
-    asynInterposeEosConfig(portName,addr)
+    asynInterposeEosConfig(portName,addr,processIn,processOut)
     asynSetTraceMask(portName,addr,mask)
     asynSetTraceIOMask(portName,addr,mask)
     asynSetTraceFile(portName,addr,filename)
@@ -4110,8 +4110,7 @@ where
     asynAutoConnect(portName,addr,yesNo)
     asynEnable(portName,addr,yesNo)
     asynOctetConnect(entry,portName,addr,timeout,buffer_len,drvInfo)
-    asynOctetDisconnect(entry)
-    asynOctetRead(entry,nread,flush)
+    asynOctetRead(entry,nread)
     asynOctetWrite(entry,output)
     asynOctetWriteRead(entry,output,nread)
     asynOctetFlush(entry)
