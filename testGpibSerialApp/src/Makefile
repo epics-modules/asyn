@@ -11,6 +11,7 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += testGpibSerial.dbd
 DBD += testGpibSerialVx.dbd
+testGpibSerial_DBD += serialInclude.dbd
 
 #=============================
 
@@ -27,7 +28,10 @@ testGpibSerial_LIBS += $(EPICS_BASE_IOC_LIBS)
 testGpibSerialVx_SRCS += testGpibSerialVx_registerRecordDeviceDriver.cpp
 testGpibSerialVx_SRCS += devTestGpibSerial.c
 ifdef IPAC
+testGpibSerialVx_DBD += serialVxInclude.dbd ipacInclude.dbd
 testGpibSerialVx_LIBS += Ipac TyGSOctal
+else
+testGpibSerialVx_DBD += serialVxInclude.dbd
 endif
 testGpibSerialVx_LIBS += testSupport asyn
 testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
@@ -37,4 +41,7 @@ testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE
+
+#after 3.14.6 the following is no longer needed
+include $(TOP)/configure/RULES.DbExtra
 

@@ -1,8 +1,0 @@
-include "base.dbd"
-include "asyn.dbd"
-include "asynRecDevDrv.dbd"
-include "devTestGpib.dbd"
-include "devGpib.dbd"
-include "drvVxi11.dbd"
-#include "drvTermiosTtyGpib.dbd"
-registrar("echoDriverRegister")
