@@ -15,11 +15,11 @@
 #include <stddef.h>
 #include <string.h>
 #include <stdlib.h>
-#include <stddef.h>
 #include <stdio.h>
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
+
 /* epics includes */
 #include <dbDefs.h>
 #include <taskwd.h>
@@ -33,14 +33,14 @@
 #include <cantProceed.h>
 #include <epicsString.h>
 #include <epicsInterruptibleSyscall.h>
-#include <epicsExport.h>
 /* local includes */
-#include "drvVxi11.h"
 #include "asynGpibDriver.h"
 #include "vxi11.h"
 #include "osiRpc.h"
 #include "vxi11core.h"
 #include "vxi11intr.h"
+#include <epicsExport.h>
+#include "drvVxi11.h"
 
 #ifdef BOOL
 #undef BOOL
