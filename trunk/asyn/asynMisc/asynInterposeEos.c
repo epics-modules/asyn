@@ -26,6 +26,7 @@
 #include <iocsh.h>
 
 #include <asynDriver.h>
+#include <asynOctet.h>
 
 #define INBUFFER_SIZE         600
 
