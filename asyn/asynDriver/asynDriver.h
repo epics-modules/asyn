@@ -36,12 +36,20 @@ typedef enum {
     asynQueuePriorityConnect
 }asynQueuePriority;
 
+/* Define generic error masks */
+#define ASYN_ERROR_TIMEOUT 0x0001
+#define ASYN_ERROR_PARITY  0x0002
+#define ASYN_ERROR_FRAMING 0x0004
+
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
     /* The following must be set by the user */
-    double timeout;  /*Timeout for I/O operations*/
-    void *userPvt; 
+    double       timeout;  /*Timeout for I/O operations*/
+    void         *userPvt; 
+    /* The following are for additional information from method calls */
+    int          auxStatus; /*For auxillary status*/
+    unsigned int errorMask; /*Normally some combination of ASYN_ERROR... */
 }asynUser;
 
 typedef struct asynInterface{
@@ -70,12 +78,11 @@ typedef struct asynManager {
                             const char *interfaceType,int interposeInterfaceOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
-    /*cancelRequest returns (-1,0,1) if request (had error, was not, was) queued*/
-    int        (*cancelRequest)(asynUser *pasynUser);
+    /*cancelRequest sets auxStatus= (0,1) if request (was not, was) queued*/
+    asynStatus (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);
-    /*getAddr returns -1 if !multiPort or connected to port */
-    int        (*getAddr)(asynUser *pasynUser);
+    asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
                               int multiDevice,int autoConnect,
@@ -90,9 +97,9 @@ typedef struct asynManager {
                               asynInterface **ppPrev);
     asynStatus (*enable)(asynUser *pasynUser,int yesNo);
     asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
-    int        (*isConnected)(asynUser *pasynUser);
-    int        (*isEnabled)(asynUser *pasynUser);
-    int        (*isAutoConnect)(asynUser *pasynUser);
+    asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
 
@@ -113,10 +120,10 @@ typedef struct  asynCommon {
 /* Interface supported by low level octet drivers. */
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
-    int        (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars);
-    int        (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars);
+    asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
+                       char *data,int maxchars,int *nbytesTransfered);
+    asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
+                        const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                          const char *eos,int eoslen);
