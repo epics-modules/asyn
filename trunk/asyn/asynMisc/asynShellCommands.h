@@ -28,6 +28,10 @@ epicsShareFunc int epicsShareAPI
 epicsShareFunc int epicsShareAPI
  asynSetTraceIOMask(const char *portName,int addr,int mask);
 epicsShareFunc int epicsShareAPI
+ asynSetTraceFile(const char *portName,int addr,const char *filename);
+epicsShareFunc int epicsShareAPI
+ asynSetTraceIOTruncateSize(const char *portName,int addr,int size);
+epicsShareFunc int epicsShareAPI
  asynAutoConnect(const char *portName,int addr,int yesNo);
 epicsShareFunc int epicsShareAPI
  asynEnable(const char *portName,int addr,int yesNo);
