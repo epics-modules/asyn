@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.27 2004-03-26 16:05:25 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.28 2004-03-28 21:55:33 rivers Exp $
  */
 
 #include <string.h>
@@ -38,6 +38,7 @@
 #include <osiUnistd.h>
 #include <epicsExport.h>
 #include <asynDriver.h>
+#include <drvGenericSerial.h>
 
 #ifdef vxWorks
 # include <tyLib.h>
