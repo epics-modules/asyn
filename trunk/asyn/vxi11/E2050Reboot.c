@@ -53,7 +53,7 @@ int E2050Reboot(char * inetAddr)
         return(-1);
     }
     nbytes = send(fd,"reboot\ny\n",9,0);
-    if(nbytes!=9) printf("nbytes %d expected 7\n",nbytes);
+    if(nbytes!=9) printf("nbytes %d expected 9\n",nbytes);
     close(fd);
     epicsThreadSleep(10.0);
     return(0);
