@@ -111,7 +111,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     u_long req,xdrproc_t proc1, caddr_t addr1,xdrproc_t proc2, caddr_t addr2);
 static asynStatus vxiBusStatus(vxiPort * pvxiPort, int request,
     double timeout,int *status);
-static void vxiCreateIrqChannel(vxiPort *pvxiPort,osiSockAddr *plocalAddr);
+static void vxiCreateIrqChannel(vxiPort *pvxiPort);
 static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser);
 static asynStatus vxiDisconnectPort(vxiPort *pvxiPort);
 static void vxiSrqThread(void *pvxiPort);
@@ -565,14 +565,48 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     return stat;
 }
 
-static void vxiCreateIrqChannel(vxiPort *pvxiPort,osiSockAddr *plocalAddr)
+static void vxiCreateIrqChannel(vxiPort *pvxiPort)
 {
-    enum clnt_stat clntStat;
-    Device_Error devErr;
-    Device_RemoteFunc devRemF;
+    enum clnt_stat     clntStat;
+    Device_Error       devErr;
+    Device_RemoteFunc  devRemF;
+    osiSockAddr         tempAddr;
+    int                tempSock;
+    osiSockAddr        vxiClnt;
+    int                addrlen;
 
+    /*Must find the local address when connected to vxi11 server*/
+    /*The following connects to server portmapper to find local address*/
+    memset((void *)&tempAddr, 0, sizeof tempAddr);
+    tempAddr.ia.sin_family = AF_INET;
+    tempAddr.ia.sin_port = htons(111); /*111 is port ob portmapper*/
+    if (hostToIPAddr(pvxiPort->hostName, &tempAddr.ia.sin_addr) < 0) {
+        printf("%s vxiCreateIrqChannel can't get IP address of %s\n",
+            pvxiPort->portName, pvxiPort->hostName);
+        return ;
+    }
+    tempSock = epicsSocketCreate(PF_INET, SOCK_DGRAM, 0);
+    if (tempSock < 0) {
+        printf("%s vxiCreateIrqChannel can't create socket\n",
+            pvxiPort->portName);
+        return ;
+    }
+    if((connect(tempSock,(struct sockaddr *)&tempAddr,sizeof tempAddr)<0)) {
+        printf("%s can't connext to %s\n",
+             pvxiPort->portName, pvxiPort->hostName);
+        return ;
+    }
+    memset((void *)&vxiClnt, 0, sizeof vxiClnt);
+    addrlen = sizeof vxiClnt;
+    if (getsockname(tempSock, &vxiClnt.sa, &addrlen)) {
+        printf("%s vxiConnectPort can't get address of local interface\n",
+            pvxiPort->portName);
+        return;
+    }
+    close(tempSock);
+    /*Now we have the local address in vxiClnt.ia.sin_addr.s_addr*/
     /* create the interrupt channel */
-    devRemF.hostAddr = ntohl(plocalAddr->ia.sin_addr.s_addr);
+    devRemF.hostAddr = ntohl(vxiClnt.ia.sin_addr.s_addr);
     devRemF.hostPort = ntohs(pvxiPort->srqPort.ia.sin_port);
     devRemF.progNum = DEVICE_INTR;
     devRemF.progVers = DEVICE_INTR_VERSION;
@@ -607,7 +641,6 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     asynStatus  status;
     struct sockaddr_in vxiServer;
     osiSocklen_t addrlen;
-    osiSockAddr vxiClnt;
 
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -703,15 +736,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiPort);
     epicsEventMustWait(pvxiPort->srqThreadReady);
-    memset((void *)&vxiClnt, 0, sizeof vxiClnt);
-    addrlen = sizeof vxiClnt;
-    if (getsockname(sock, &vxiClnt.sa, &addrlen)) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiConnectPort can't get address of local interface\n",
-            pvxiPort->portName);
-        return asynError;
-    }
-    vxiCreateIrqChannel(pvxiPort, &vxiClnt); 
+    vxiCreateIrqChannel(pvxiPort);
     pasynManager->exceptionConnect(pvxiPort->pasynUser);
     return asynSuccess;
 }
