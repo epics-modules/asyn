@@ -15,7 +15,7 @@
 #include "shareLib.h"
 #ifdef __cplusplus
 extern "C" {
-#endif
+#endif /*__cplusplus*/
 
 epicsShareFunc int epicsShareAPI
  asynSetOption(const char *portName, int addr, const char *key, const char *val);
@@ -50,6 +50,6 @@ epicsShareFunc int epicsShareAPI
 
 #ifdef __cplusplus
 }
-#endif
+#endif /* __cplusplus */
 
 #endif /*INCasynShellCommandsh*/
