@@ -1594,6 +1594,20 @@ keys and values. Default values are enclosed in square brackets.</p>
 
 <p></p>
 
+<p>The clocal and crtscts parameter names are taken from the POSIX 
+termios serial interface definition.
+The clocal parameter controls whether the modem control lines (Data
+Terminal Ready, Carrier Detect/Received Line Signal Detect) are used (clocal=N)
+or ignored (clocal=Y).
+The crtscts parameter controls whether the hardware handshaking lines (Request
+To Send, Clear To Send) are used (crtscts=Y) or ignored (crtscts=N).
+The default parameter values (clocal=Y, crtscts=N) are those of a
+'data-leads-only' serial interface.</p>
+<p>
+The vxWorks serial driver does not provide independent control of the
+hardware handshaking and modem control lines thus clocal=Y
+implies crtscts=N and clocal=N implies crtscts=Y.</p>
+
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
 using hardware-specific commands. Once this is done the standard
 drvGenericSerialConfigure and asynSetPortOption commands can be issued.  For
@@ -1606,10 +1620,6 @@ tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
 drvGenericSerialConfigure("L0","/tyGS/0/0",1,0,0)
 asynSetPortOption("L0","baud","9600")</pre>
-The vxWorks serial driver does not provide independent control of the
-hardware handshaking and modem control lines thus <code>"clocal","Y"</code>
-implies <code>"crtscts","N"</code> and <code>"clocal","N"</code> implies
-<code>"crtscts","Y"</code>.
 
 <h3><a name="vxi11"></a>vxi11</h3>
 VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is
