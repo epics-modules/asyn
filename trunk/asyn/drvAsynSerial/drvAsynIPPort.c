@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.9 2004-11-09 15:40:23 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.10 2004-11-10 02:11:29 rivers Exp $
  */
 
 #include <string.h>
@@ -678,21 +678,21 @@ drvAsynIPPortConfigure(const char *portName,
         return -1;
     }
     status = pasynManager->registerInterface(tty->portName,&tty->common);
-    if(status!= asynSuccess) {
+    if(status != asynSuccess) {
         printf("drvAsynIPPortConfigure: Can't register common.\n");
         ttyCleanup(tty);
         return -1;
     }
     status = pasynOctetBase->initialize(tty->portName,&tty->octet,
         (processEosIn ? 1 : 0),(processEosOut ? 1 : 0),1);
-    if(status == asynSuccess) {
+    if(status != asynSuccess) {
         printf("drvAsynIPPortConfigure: pasynOctetBase->initialize failed.\n");
         ttyCleanup(tty);
         return -1;
     }
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
-    if(status!=asynSuccess) {
+    if(status != asynSuccess) {
         printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
         ttyCleanup(tty);
         return -1;
