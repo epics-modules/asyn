@@ -3,9 +3,8 @@
     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <title>asynDriver</title>
-  <meta name="GENERATOR" content="amaya 5.1" />
+  <meta name="GENERATOR" content="amaya 6.4, see http://www.w3.org/Amaya/" />
 </head>
 
 <body>
@@ -15,15 +14,17 @@
 
 <p>Marty Kraimer, Benjamin Franksen, Pete Owens, Eric Norum, and Dirk
 Zimoch</p>
+
+<p>June 27, 2003</p>
 </center>
 
 <center>
 <h2>Goal</h2>
 </center>
 
-<p><span style="font-weight: bold">asynDriver is a general purpose facility
-</span><span style="font-weight: bold">for interfacing device specific code
-to low level communication drivers</span>.</p>
+<p><span style="font-weight: bold">asynDriver is a general purpose
+facility</span><span style="font-weight: bold">for interfacing device
+specific code to low level communication drivers</span>.</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS IOC support.</p>
@@ -79,9 +80,15 @@ drivers.</p>
 </center>
 
 <p>Multiple layers can exist between the asynchronous driver support and an
-actual low level driver. For example gpib support is implemented as a
-gpibDriverUser interface which is called by user code and a gpibDriver
-interface which is called by gpibDriverUser.</p>
+actual low level driver. For drivers that register directly with the
+asynQueueManager, a process module can be registered with the queue manager.
+Just like a driver a process module implements interfaces. The queue manager
+findDriver method looks first for process module interfaces and then for
+driver interfaces. A process module normally calls drivers as part of it's
+processing. For more complicated protocals additional layers can be created.
+For example gpib support is implemented as a gpibDriverUser interface which
+is called by user code and a gpibDriver interface which is called by
+gpibDriverUser.</p>
 
 <p>A driver can implement multiple interfaces. For example gpib implements
 asynDriver, octetDriver, and gpibDriverUser.</p>
@@ -96,11 +103,10 @@ can be used by other code, e.g. a sequence program.</p>
     <p>Provides the following services.</p>
     <ul>
       <li>A thread for each communication interface.</li>
-      <li>For user code it provides queueRequest. This is a non-blocking
-        method, i.e. it can be called from scan threads. A callback specified
-        by the user is called by the interface thread. The user callback can
-        then make an arbitray number of calls to the driver. These calls may
-        be blocking calls.</li>
+      <li>queueRequest. This is a non-blocking method, i.e. it can be called
+        from scan threads. A callback specified by the user is called by the
+        interface thread. The user callback can then make an arbitray number
+        of calls to the driver. These calls may be blocking calls.</li>
       <li>It provides a transaction service, i.e. user code can lock out
         other users while it makes multiple queueRequests.</li>
     </ul>
@@ -113,18 +119,16 @@ can be used by other code, e.g. a sequence program.</p>
     <p>octetDriver is a set of methods implemented by any driver that accepts
     octet messages (messages consisting of 8 bit bytes) and returns octet
     responses. This interface will be sufficient for lots of device specific
-    code. For example the code for streams protocal files probably needs only
-    this interface. The term octet is used instead of ascii because the only
-    requirement is messages consist of 8 bit bytes. It is expected that most
-    uses will use ascii characters.</p>
+    code. For example the code for streams protocal files needs only this
+    interface. The term octet is used instead of ascii because the only
+    requirement is messages consist of 8 bit bytes.</p>
   </li>
 </ul>
 
 <h3>Overview of implementation</h3>
 
-<p>During initialization each driver registers each hardware interface with a
-more generic layer. For example a gpibDriver reqisters with gpibDriverUser,
-which in turn registers with asynQueueManager.</p>
+<p>During initialization a driver registers each hardware interface with
+asynQueueManager.</p>
 
 <p>User code connects to a combination of asynQueueManager and one or more
 drivers.This determines the methods it can call.</p>
@@ -158,9 +162,6 @@ drivers.This determines the methods it can call.</p>
 
 <p>Include file asynDriver.h contains the following definitions:</p>
 <pre>typedef struct asynPvt asynPvt;
-typedef struct userPvt userPvt;
-typedef struct drvPvt drvPvt;
-
 typedef enum {
     asynSuccess,asynTimeout,asynError
 }asynStatus;
@@ -181,71 +182,76 @@ typedef enum {
    asynCancelError
 }asynCancelStatus;
 
-typedef void (*userCallback)(userPvt *puserPvt);
+typedef void (*userCallback)(void *puserPvt);
 
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
-    userPvt *puserPvt;
-    asynPvt *pasynPvt;
-    drvPvt *pdrvPvt; /* Set by asynQueueManager. Used by drivers*/
+    void *puserPvt;
 }asynUser;
 
-
-typedef void (*peekHandler)(userPvt *puserPvt,
+typedef void (*peekHandler)(void *puserPvt,
     char byte,int isReceive,int gotEOI);
 
-typedef struct driverInfo{
-    void *pinterface;
+typedef struct driverInterface{
     const char *driverType;
-}driverInfo;
+    void *pinterface;
+}driverInterface;
+
+typedef struct deviceDriver{
+    driverInterface *pdriverInterface;
+    void *pdrvPvt;
+}deviceDriver;
 
 typedef struct asynQueueManager {
     void (*report)(int details);
-    asynUser  *(*createAsynUser)(userCallback queue,
-                                 userCallback timeout,
-                                 userPvt *puserPvt);
+    asynUser  *(*createAsynUser)(
+        userCallback queue,userCallback timeout,void *puserPvt);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
-    asynStatus (*connectDevice)(asynUser *pasynUser, const char *name);
+    asynStatus (*connectDevice)(asynUser *pasynUser, const char *deviceName);
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
-    /*The following returns address of driver interface*/
-    void       *(*findDriver)(asynUser *pasynUser,const char *driverType);
+    deviceDriver *(*findDriver)(asynUser *pasynUser,
+        const char *driverType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
-                               asynQueuePriority priority,
-                               double timeout);
+        asynQueuePriority priority,double timeout);
     asynCancelStatus (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     /* drivers call the following*/
-    asynPvt   *(*registerDriver)(drvPvt *pdrvPvt, const char *name,
-                              driverInfo *padriverInfo,
-                              int ndriverTypes,
-                              unsigned int priority,/*epicsThreadPriority*/
-                              unsigned int stackSize);/*stack size*/
+    asynStatus (*registerDevice)(
+        const char *deviceName,
+        deviceDriver *padeviceDriver,int ndeviceDrivers,
+        unsigned int priority,unsigned int stackSize);
+    /*process modules call the following */
+    asynStatus (*registerProcessModule)(
+        const char *processModuleName,const char *deviceName,
+        deviceDriver *padeviceDriver,int ndeviceDrivers);
 }asynQueueManager;
 epicsShareExtern asynQueueManager *pasynQueueManager;
 
 /*Methods supported by ALL asyn drivers*/
 #define asynDriverType "asynDriver"
 typedef struct  asynDriver {
-    void       (*report)(asynUser *pasynUser,int details);
+    void       (*report)(void *pdrvPvt,asynUser *pasynUser,int details);
     /*following are to connect/disconnect to/from hardware*/
-    asynStatus (*connect)(asynUser *pasynUser);
-    asynStatus (*disconnect)(asynUser *pasynUser);
+    asynStatus (*connect)(void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*disconnect)(void *pdrvPvt,asynUser *pasynUser);
 }asynDriver;
 
 /* Methods supported by low level octet drivers. */
 #define octetDriverType "octetDriver"
 typedef struct octetDriver{
-    int        (*read)(asynUser *pasynUser,int addr,char *data,int maxchars);
-    int        (*write)(asynUser *pasynUser,
+    int        (*read)(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+    int        (*write)(void *pdrvPvt,asynUser *pasynUser,
                         int addr,const char *data,int numchars);
-    asynStatus (*flush)(asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(asynUser *pasynUser,
+    asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
+    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser,
                              asynTimeoutType type,double timeout);
-    asynStatus (*setEos)(asynUser *pasynUser,const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(asynUser *pasynUser,peekHandler handler);
-    asynStatus (*removePeekHandler)(asynUser *pasynUser);
+    asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,
+                         const char *eos,int eoslen);
+    asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,
+                                    peekHandler handler);
+    asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
 }octetDriver;</pre>
 
 <h3>asynUser</h3>
@@ -275,15 +281,6 @@ by calling asynUserCalloc and asynUserFree.</p>
       <td>For use by the user. This can be specified on the call to
         asynUserCalloc and should never be changed.</td>
     </tr>
-    <tr>
-      <td>pasynPvt</td>
-      <td>For private use by asynQueueManager</td>
-    </tr>
-    <tr>
-      <td>pdrvPvt</td>
-      <td>For private use by driver. It is the value the driver passes to
-        registerDriver.</td>
-    </tr>
   </tbody>
 </table>
 
@@ -296,7 +293,7 @@ by calling asynUserCalloc and asynUserFree.</p>
   <tbody>
     <tr>
       <td>report</td>
-      <td>This reports status about the asynQueueManager. It in turn calls
+      <td>Reports status about the asynQueueManager. It in turn calls
         asynDriver report.</td>
     </tr>
     <tr>
@@ -318,7 +315,10 @@ by calling asynUserCalloc and asynUserFree.</p>
       <td>connectDevice</td>
       <td>User level code calls this at initialization to connect to a
         communication interface.. It passes the name of the device. This is
-        the name specified in the call to registerDriver.</td>
+        the name specified in the call to registerDevice. If processModuleOK
+        is true and a processModule is reqistered for the device and
+        driverType then it's deviceDriver is returned; otherwise the
+        deviceDriver of the actual device driver is returned.</td>
     </tr>
     <tr>
       <td>disconnectDevice</td>
@@ -327,8 +327,23 @@ by calling asynUserCalloc and asynUserFree.</p>
     </tr>
     <tr>
       <td>findDriver</td>
-      <td>Find a driver interface. It returns the address of the interface or
-        0 if the driverType is not supported.</td>
+      <td>Find a driver interface. It returns the address of a deviceDriver
+        or 0 if the driverType is not supported. The user will need the
+        address of the drivers interface and the address of pdrvPvt so that
+        calls can be made to the driver. For example: 
+        <pre>deviceDriver *pdeviceDriver;
+octetDriver *poctetDriver;
+void *poctetDriverPvt;
+...
+pdeviceDriver = pasynQueueManager-&gt;findDriver(
+        pasynUser,octetDriverType,1);
+if(!pdeviceDriver) { /*error do something*/}
+poctetDriver = (octetDriver *)pdeviceDriver-&gt;pdriverInterface-&gt;pinterface;
+poctetDriverPvt = pdeviceDriver-&gt;pdrvPvt;
+...
+poctetDriver-&gt;read(poctetDriverPvt,pasynUser,...
+        </pre>
+      </td>
     </tr>
     <tr>
       <td>queueRequest</td>
@@ -338,28 +353,35 @@ by calling asynUserCalloc and asynUserFree.</p>
         makes calls to the driver. If the user attempts to call queueRequest,
         but the asynUser is already on a queue, asynError is returned. The
         timeout is from when the request is queued until it is taken from the
-        queue. A value of &lt;=0.0 means no timeout.</td>
+        queue. A value less than or equal to 0.0 means no timeout.</td>
     </tr>
     <tr>
       <td>cancelRequest</td>
       <td>If a asynUser is queued remove it from the queue. If it is not on a
-        queue nothing is done.. In particular if the callback is active, this
+        queue nothing is done. In particular if the callback is active, this
         call has no effect.</td>
     </tr>
     <tr>
       <td>lock/unlock</td>
       <td>lock/unlock are used to block other users from calling a driver
         while a user is making a series of queueRequest calls. After a call
-        is made to lock, asynQueueManager "locks" as soon as the first
+        is made to lock, asynQueueManager locks as soon as the first
         queueRequest with the specified lock is taken from the queue. At that
         point all other entries in the queue must wait until unlock is
         called. These methods fail if a request is currently queued.</td>
     </tr>
     <tr>
-      <td>registerDriver</td>
+      <td>registerDevice</td>
       <td>This method is called by drivers. A call is made for each
-        communication interface instance. The asynQueueManager creates a
-        thread for each call to registerDriver.</td>
+        communication interface instance.</td>
+    </tr>
+    <tr>
+      <td>registerProcessModule</td>
+      <td>This method is called by a process manager, i.e. code that wants to
+        be called instead of the low level driver itself. Normally it adds
+        additional functionality to the low level driver, It in turn normally
+        calls the low level driver. It must be called after the driver calls
+        registerDriver and before the client code calls findDriver.</td>
     </tr>
   </tbody>
 </table>
@@ -444,14 +466,16 @@ strings for sending commands and receiving responses from a device.</p>
 
 <p>File asynDriver.h describes four structures:</p>
 <ul>
-  <li>asynUser - A structure for interfacing between user code and
+  <li>asynUser - Structure for interfacing between user code and
     asynQueueManager or drivers.</li>
-  <li>asynQueueManager - An interface describing the asynQueueManager
+  <li>driverInterface and deviceDriver - Structures for registering and
+    location driver interfaces and a pdrvPvt.</li>
+  <li>asynQueueManager - Interface describing the asynQueueManager
   methods.</li>
-  <li>asynDriver - An interface describing methods implemented by all
+  <li>asynDriver - Interface describing methods implemented by all
   drivers</li>
-  <li>octetDriver - An interface describing methods implemented by all
-    drivers that handle octet messages</li>
+  <li>octetDriver - Interface describing methods implemented by all drivers
+    that handle octet messages</li>
 </ul>
 
 <p>The following is the skeleton for code that communicates with a device via
@@ -462,6 +486,7 @@ octet messages..</p>
 typedef struct myData {
     asynUser    *pasynUser;
     octetDriver *poctetDriver;
+    void *pdrvPvt;
     char buffer[BUFSIZE];
 }myData;
 
@@ -473,11 +498,11 @@ void queueCallback(userPvt *puserPvt)
     int retlen;
 
 
-    status = poctetDriver-&gt;setEos(pasynUser,"\n",1);
+    status = poctetDriver-&gt;setEos(pmyData-&gt;pdrvPvt,pasynUser,"\n",1);
     if(status) {
         printf("queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
     }
-    retlen = poctetDriver-&gt;read(pasynUser,0,pmydata-&gt;buffer,BUFSIZE);
+    retlen = poctetDriver-&gt;read(pmyData-&gt;pdrvPvt,pasynUser,0,pmydata-&gt;buffer,BUFSIZE);
     if(retlen&lt;=0) {
         printf("queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
     } else {
@@ -491,6 +516,7 @@ void mainThread(void)
     myData *pmyData;
     asynUser *pasynUser;
     asynStatus status;
+    deviceDriver *pdeviceDriver;
 
     pmyData = calloc(1,sizeof(myData));
     pasynUser = pasynQueueManager-&gt;createAsynUser(queueCallback,0,pmyData);
@@ -500,13 +526,15 @@ void mainThread(void)
         printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
         exit(1);
     }
-    pmyData-&gt;poctetDriver = (octetDriver *)pasynQueueManager-&gt;findDriver(
-        pasynUser,octetDriverType);
-    if(!myData-&gt;poctetDriver) {
+    pdeviceDriver = (octetDriver *)pasynQueueManager-&gt;findDriver(
+        pasynUser,octetDriverType,1);
+    if(!pdeviceDriver) {
         printf("%s driver not supported\n",octetDriverType);
         exit(-1);
     }
-    status = pasynQueueManager-&gt;queueRequest(pasynUser,0);
+    pmyData-&gt;poctetDriver = (octetDriver *)pdeviceDriver-&gt;pdriverInterface-&gt;pinterface;
+    pmyData-&gt;pdrvPvt = pdeviceDriver-&gt;pdrvPvt;
+    status = pasynQueueManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
         printf("queueRequest failed %s\n",pasynUser-&gt;errorMessage);
         exit(1);
@@ -523,7 +551,7 @@ void mainThread(void)
   <li>When it is ready to communicate with the driver it calls
   queueRequest.</li>
   <li>The thread associated with the device calls queueCallback.</li>
-  <li>queueCallback calls the driver's seteos and read methods.</li>
+  <li>queueCallback calls the driver's setEos and read methods.</li>
 </ol>
 
 <center>
@@ -551,57 +579,55 @@ defines two interfaces.</p>
 <pre>#include "asynDriver.h"
 #define gpibDriverUserType "gpibDriverUser"
 /* GPIB drivers */
+typedef void (*srqHandler)(void *userPrivate,int statusByte);
 typedef struct gpibDriverUser{
     /* The following are called by gpib aware users*/
-    asynStatus (*registerSrqHandler)(asynUser *pasynUser,
-        int addr, srqHandlerFunc handler, void *parm);
-    asynStatus (*addressedCmd) (asynUser *pasynUser,
+    asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
+        int addr, srqHandler handler, void *userPrivate);
+    asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
         int addr, char *data, int length, int timeout);
-    asynStatus (*universalCmd) (drvPvt * pvt, int cmd);
-    asynStatus (*ifc) (drvPvt * pvt);
-    asynStatus (*ren) (drvPvt * pvt, int onOff);
-    void (*pollAddr)(drvPvt *pvt,int addr, int onOff);
-    void (*srqProcessing)(drvPvt *pvt, int onOff);
-    void (*srqSet)(drvPvt *pvt,
+    asynStatus (*universalCmd) (void *pdrvPvt,asynUser *pasynUser, int cmd);
+    asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
+    void (*pollAddr)(void *pdrvPvt,asynUser *pasynUser,int addr, int onOff);
+    void (*srqProcessing)(void *pdrvPvt,asynUser *pasynUser, int onOff);
+    void (*srqSet)(void *pdrvPvt,asynUser *pasynUser,
         double srqTimeout,double pollTimeout,double pollRate,
         int srqMaxEvents);
-    void (*srqGet)(drvPvt *pvt,
+    void (*srqGet)(void *pdrvPvt,asynUser *pasynUser,
         double *srqTimeout,double *pollTimeout,double *pollRate,
         int *srqMaxEvents);
     /* The following are called by low level gpib drivers */
-    drvPvt *(*registerDriver)(drvPvt pvt,const char *name);
-    void (*srqHappened)(drvPvt pvt); /*pvt is gpibDriverUser pvt*/
+    drvPvt *(*registerDriver)(void *pdrvPvt,const char *name);
+    void (*srqHappened)(void *pdrvPvt); /*pvt is gpibDriverUser pvt*/
 }gpibDriverUser;
 
-
 typedef struct gpibDriver {
-    /*asynDriver methods */
-    void (*report)(asynUser *pasynUser,int details);
-    void (*connect)(drvPvt *pdrvPvt);
-    void (*disconnect)(drvPvt *pdrvPvt);
+    void (*report)(void *pdrvPvt,asynUser *pasynUser,int details);
+    void (*connect)(void *pdrvPvt,asynUser *pasynUser);
+    void (*disconnect)(void *pdrvPvt,asynUser *pasynUser);
     /*octetDriver methods */
-    int (*read)(asynUser *pasynUser,int addr,char *data,int maxchars);
-    int (*write)(asynUser *pasynUser,
+    int (*read)(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+    int (*write)(void *pdrvPvt,asynUser *pasynUser,
                         int addr,const char *data,int numchars);
-    asynStatus (*flush)(asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(asynUser *pasynUser,
-                             asynTimeout type,double timeout);
-    asynStatus (*setEos)(asynUser *pasynUser,const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(asynUser *pasynUser,peekHandler handler);
-    asynStatus (*removePeekHandler)(asynUser *pasynUser);
+    asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
+    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser, double timeout);
+    asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
+    asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,peekHandler handler);
+    asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
     /*gpibDriver methods*/
-    asynStatus (*registerSrqHandler)(drvPvt pvt,
-        int addr, srqHandlerFunc handler, void *parm);
-    asynStatus (*addressedCmd) (drvPvt pvt,
+    asynStatus (*registerSrqHandler)(void *pdrvPvt,
+        int addr, srqHandler handler, void *userPrivate);
+    asynStatus (*addressedCmd) (void *pdrvPvt,
         int addr, char *data, int length, int timeout);
-    asynStatus (*universalCmd) (drvPvt * pvt, int cmd);
-    asynStatus (*ifc) (drvPvt * pvt);
-    asynStatus (*ren) (drvPvt * pvt, int onOff);
-    int (*srqStatus) (drvPvt * pvt);
-    asynStatus (*srqEnable) (drvPvt * pvt, int onOff);
-    asynStatus (*serialPollBegin) (drvPvt * pvt);
-    int (*serialPoll) (drvPvt * pibLink, int addr, double timeout);
-    asynStatus (*serialPollEnd) (drvPvt * pibLink);
+    asynStatus (*universalCmd) (void *pdrvPvt, int cmd);
+    asynStatus (*ifc) (void *pdrvPvt);
+    asynStatus (*ren) (void *pdrvPvt, int onOff);
+    int (*srqStatus) (void *pdrvPvt);
+    asynStatus (*srqEnable) (void *pdrvPvt, int onOff);
+    asynStatus (*serialPollBegin) (void *pdrvPvt);
+    int (*serialPoll) (void *pdrvPvt, int addr, double timeout);
+    asynStatus (*serialPollEnd) (void *pdrvPvt);
 }gpibDriver;</pre>
 
 <h3>gpibDriverUser</h3>

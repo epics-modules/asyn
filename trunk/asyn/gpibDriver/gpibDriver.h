@@ -1,26 +1,27 @@
 #include "asynDriver.h"
 #define gpibDriverUserType "gpibDriverUser"
 /* GPIB drivers */
+typedef void (*srqHandler)(void *userPrivate,int statusByte);
 typedef struct gpibDriverUser{
     /* The following are called by gpib aware users*/
-    asynStatus (*registerSrqHandler)(asynUser *pasynUser,
-        int addr, srqHandlerFunc handler, void *parm);
-    asynStatus (*addressedCmd) (asynUser *pasynUser,
+    asynStatus (*registerSrqHandler)(void *pdrvPvt,asynUser *pasynUser,
+        int addr, srqHandler handler, void *userPrivate);
+    asynStatus (*addressedCmd) (void *pdrvPvt,asynUser *pasynUser,
         int addr, char *data, int length, int timeout);
-    asynStatus (*universalCmd) (drvPvt * pvt, int cmd);
-    asynStatus (*ifc) (drvPvt * pvt);
-    asynStatus (*ren) (drvPvt * pvt, int onOff);
-    void (*pollAddr)(drvPvt *pvt,int addr, int onOff);
-    void (*srqProcessing)(drvPvt *pvt, int onOff);
-    void (*srqSet)(drvPvt *pvt,
+    asynStatus (*universalCmd) (void *pdrvPvt,asynUser *pasynUser, int cmd);
+    asynStatus (*ifc) (void *pdrvPvt,asynUser *pasynUser);
+    asynStatus (*ren) (void *pdrvPvt,asynUser *pasynUser, int onOff);
+    void (*pollAddr)(void *pdrvPvt,asynUser *pasynUser,int addr, int onOff);
+    void (*srqProcessing)(void *pdrvPvt,asynUser *pasynUser, int onOff);
+    void (*srqSet)(void *pdrvPvt,asynUser *pasynUser,
         double srqTimeout,double pollTimeout,double pollRate,
         int srqMaxEvents);
-    void (*srqGet)(drvPvt *pvt,
+    void (*srqGet)(void *pdrvPvt,asynUser *pasynUser,
         double *srqTimeout,double *pollTimeout,double *pollRate,
         int *srqMaxEvents);
     /* The following are called by low level gpib drivers */
-    drvPvt *(*registerDriver)(drvPvt pvt,const char *name);
-    void (*srqHappened)(drvPvt pvt); /*pvt is gpibDriverUser pvt*/
+    drvPvt *(*registerDriver)(void *pdrvPvt,const char *name);
+    void (*srqHappened)(void *pdrvPvt); /*pvt is gpibDriverUser pvt*/
 }gpibDriverUser;
 /*gpibDriverUser is the driver called by user callbacks.
  * It handles SRQ processing, etc. It calls interface specific
@@ -35,35 +36,33 @@ typedef struct gpibDriverUser{
  * registerDriver - A gpib interface driver calls this for each gpib interface.
  *                  gpibDriverUser registers the same name with asynDriver
  */
-
+
 typedef struct gpibDriver {
-    /*asynDriver methods */
-    void (*report)(asynUser *pasynUser,int details);
-    void (*connect)(drvPvt *pdrvPvt);
-    void (*disconnect)(drvPvt *pdrvPvt);
+    void (*report)(void *pdrvPvt,asynUser *pasynUser,int details);
+    void (*connect)(void *pdrvPvt,asynUser *pasynUser);
+    void (*disconnect)(void *pdrvPvt,asynUser *pasynUser);
     /*octetDriver methods */
-    int (*read)(asynUser *pasynUser,int addr,char *data,int maxchars);
-    int (*write)(asynUser *pasynUser,
+    int (*read)(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+    int (*write)(void *pdrvPvt,asynUser *pasynUser,
                         int addr,const char *data,int numchars);
-    asynStatus (*flush)(asynUser *pasynUser,int addr);
-    asynStatus (*setTimeout)(asynUser *pasynUser,
-                             asynTimeout type,double timeout);
-    asynStatus (*setEos)(asynUser *pasynUser,const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(asynUser *pasynUser,peekHandler handler);
-    asynStatus (*removePeekHandler)(asynUser *pasynUser);
+    asynStatus (*flush)(void *pdrvPvt,asynUser *pasynUser,int addr);
+    asynStatus (*setTimeout)(void *pdrvPvt,asynUser *pasynUser, double timeout);
+    asynStatus (*setEos)(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
+    asynStatus (*installPeekHandler)(void *pdrvPvt,asynUser *pasynUser,peekHandler handler);
+    asynStatus (*removePeekHandler)(void *pdrvPvt,asynUser *pasynUser);
     /*gpibDriver methods*/
-    asynStatus (*registerSrqHandler)(drvPvt pvt,
-        int addr, srqHandlerFunc handler, void *parm);
-    asynStatus (*addressedCmd) (drvPvt pvt,
+    asynStatus (*registerSrqHandler)(void *pdrvPvt,
+        int addr, srqHandler handler, void *userPrivate);
+    asynStatus (*addressedCmd) (void *pdrvPvt,
         int addr, char *data, int length, int timeout);
-    asynStatus (*universalCmd) (drvPvt * pvt, int cmd);
-    asynStatus (*ifc) (drvPvt * pvt);
-    asynStatus (*ren) (drvPvt * pvt, int onOff);
-    int (*srqStatus) (drvPvt * pvt);
-    asynStatus (*srqEnable) (drvPvt * pvt, int onOff);
-    asynStatus (*serialPollBegin) (drvPvt * pvt);
-    int (*serialPoll) (drvPvt * pibLink, int addr, double timeout);
-    asynStatus (*serialPollEnd) (drvPvt * pibLink);
+    asynStatus (*universalCmd) (void *pdrvPvt, int cmd);
+    asynStatus (*ifc) (void *pdrvPvt);
+    asynStatus (*ren) (void *pdrvPvt, int onOff);
+    int (*srqStatus) (void *pdrvPvt);
+    asynStatus (*srqEnable) (void *pdrvPvt, int onOff);
+    asynStatus (*serialPollBegin) (void *pdrvPvt);
+    int (*serialPoll) (void *pdrvPvt, int addr, double timeout);
+    asynStatus (*serialPollEnd) (void *pdrvPvt);
 }gpibDriver;
 /*gpibDriver is implemented by an interface specific driver.
  *registerSrqHandler, ..., ren are just like for gpibDriverUser.

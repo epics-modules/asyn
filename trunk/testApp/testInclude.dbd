@@ -1,2 +1,3 @@
 registrar("echoDriverRegister")
+registrar("processModuleRegister")
 registrar("testEchoRegister")
