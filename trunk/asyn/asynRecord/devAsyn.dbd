@@ -1,3 +1,4 @@
+include "asynOctetRecord.dbd"
 #support for enable, autoConnect, connect
 device(bi,INST_IO,devAsynBiState,"asynState")
 device(bo,INST_IO,devAsynBoState,"asynState")
