@@ -59,6 +59,8 @@ typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
+    asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
+                                 userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
                                 const char *portName,int *yesNo);

@@ -58,6 +58,7 @@ struct tracePvt {
 
 typedef struct asynBase {
     ELLLIST           asynPortList;
+    ELLLIST           asynUserFreeList;
     epicsTimerQueueId timerQueue;
     epicsMutexId      lockTrace;
     tracePvt          trace;
@@ -152,6 +153,8 @@ static void portThread(port *pport);
 /* asynManager methods */
 static void report(FILE *fp,int details);
 static asynUser *createAsynUser(userCallback queue, userCallback timeout);
+static asynUser *duplicateAsynUser(asynUser *pasynUser,
+   userCallback queue, userCallback timeout);
 static asynStatus freeAsynUser(asynUser *pasynUser);
 static asynStatus isMultiDevice(asynUser *pasynUser,
     const char *portName,int *yesNo);
@@ -187,6 +190,7 @@ static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
 static asynManager manager = {
     report,
     createAsynUser,
+    duplicateAsynUser,
     freeAsynUser,
     isMultiDevice,
     connectDevice,
@@ -258,6 +262,7 @@ static void asynInit(void)
     if(pasynBase) return;
     pasynBase = callocMustSucceed(1,sizeof(asynBase),"asynInit");
     ellInit(&pasynBase->asynPortList);
+    ellInit(&pasynBase->asynUserFreeList);
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
     pasynBase->lockTrace = epicsMutexMustCreate();
@@ -654,32 +659,57 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
     int      nbytes;
 
     if(!pasynBase) asynInit();
-    nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
-    puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
+    puserPvt = (userPvt *)ellFirst(&pasynBase->asynUserFreeList);
+    if(!puserPvt) {
+        nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
+        puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
+        pasynUser = userPvtToAsynUser(puserPvt);
+        pasynUser->errorMessage = (char *)(pasynUser +1);
+        pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
+    } else {
+        ellDelete(&pasynBase->asynUserFreeList,&puserPvt->node);
+        pasynUser = userPvtToAsynUser(puserPvt);
+    }
     puserPvt->queueCallback = queue;
-    pasynUser = userPvtToAsynUser(puserPvt);
-    pasynUser->errorMessage = (char *)(pasynUser +1);
-    pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
-    if(timeout) {
-        puserPvt->timeoutCallback = timeout;
+    puserPvt->timeoutCallback = timeout;
+    pasynUser->errorMessage[0] = 0;
+    pasynUser->timeout = 0;
+    pasynUser->userPvt = 0;
+    pasynUser->auxStatus = 0;
+    if(timeout && !puserPvt->timer) {
         puserPvt->timer = epicsTimerQueueCreateTimer(
             pasynBase->timerQueue,queueTimeoutCallback,puserPvt);
     }
     return pasynUser;
 }
 
+static asynUser *duplicateAsynUser(asynUser *pasynUser,
+   userCallback queue, userCallback timeout)
+{
+    userPvt *pold = asynUserToUserPvt(pasynUser);
+    userPvt *pnew = asynUserToUserPvt(createAsynUser(queue,timeout));
+
+    pnew->pport = pold->pport;
+    pnew->pdevice = pold->pdevice;
+    pnew->user.timeout = pold->user.timeout;
+    pnew->user.userPvt = pold->user.userPvt;
+    return &pnew->user;
+}
+
 static asynStatus freeAsynUser(asynUser *pasynUser)
 {
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
+    asynStatus status;
 
     if(puserPvt->pport) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager:freeAsynUser asynUser is connected\n");
-        return asynError;
+        status = disconnect(pasynUser);
+        if(status!=asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "asynManager:freeAsynUser asynUser is connected\n");
+            return asynError;
+        }
     }
-    if(puserPvt->timer)
-        epicsTimerQueueDestroyTimer(pasynBase->timerQueue,puserPvt->timer);
-    free(puserPvt);
+    ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
     return asynSuccess;
 }
 
