@@ -7,7 +7,7 @@
 * and higher are distributed subject to a Software License Agreement found
 * in file LICENSE that is included with this distribution. 
 \*************************************************************************/
-/* $Id: devAB300.c,v 1.2 2004-01-29 19:33:55 norume Exp $ */
+/* $Id: devAB300.c,v 1.3 2004-01-30 17:26:32 norume Exp $ */
 #include <epicsStdio.h>
 #include <devCommonGpib.h>
 
@@ -40,7 +40,7 @@ convertPositionReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+    if (pdpvt->msgInputLen != 3) {
         epicsSnprintf(pdpvt->pasynUser->errorMessage,
                       pdpvt->pasynUser->errorMessageSize,
                       "Invalid reply");
@@ -54,7 +54,7 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 {
     struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
 
-    if ((pdpvt->msgInputLen != 3) || (pdpvt->msg[2] != '\030')) {
+    if (pdpvt->msgInputLen != 3) {
         epicsSnprintf(pdpvt->pasynUser->errorMessage,
                       pdpvt->pasynUser->errorMessageSize,
                       "Invalid reply");
