@@ -11,17 +11,14 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.8 2004-03-19 15:58:55 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.9 2004-05-10 18:32:42 norume Exp $
  */
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <unistd.h>
-
+#include <osiUnistd.h>
 #include <osiSock.h>
 #include <epicsInterruptibleSyscall.h>
 #include <cantProceed.h>
@@ -35,8 +32,12 @@
 # include <tyLib.h>
 # include <ioLib.h>
 #else
-# include <termios.h>
+# ifndef _WIN32
+#  include <sys/ioctl.h>
+#  include <termios.h>
+# endif
 #endif
+
 
 struct epicsInterruptibleSyscallContext {
     int            fd;
@@ -52,7 +53,7 @@ epicsInterruptibleSyscallCreate(void)
 {
     epicsInterruptibleSyscallContext *c;
 
-    c = calloc(1, sizeof *c);
+    c = callocMustSucceed(1, sizeof *c, "epicsInterruptibleSyscallCreate");
     if (c != NULL) {
         c->fd = -1;
         c->mutex = epicsMutexMustCreate();
