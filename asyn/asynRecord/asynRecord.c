@@ -359,24 +359,24 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordTFIL:
         if(strlen(pasynRec->tfil) == 0) {
             /* Zero length, use stdout */
-            fd = stdout;
+            fd = 0;
         } else {
             fd = fopen(pasynRec->tfil, "a+");
-        }
-        if(fd) {
-            /* Set old value to this, so monitorStatus won't think another
-             * thread changed it */
-            /* Must do this before calling setTraceFile, because it generates
-             * an exeception, which calls monitorStatus() */
-            pasynRecPvt->old.traceFd = fd;
-            status = pasynTrace->setTraceFile(pasynUser, fd);
-            if(status != asynSuccess) {
+            if(!fd) {
                 reportError(pasynRec, status,
-                    "Error setting trace file: %s", pasynUser->errorMessage);
+                    "Error opening trace file: %s", pasynRec->tfil);
             }
-        } else {
+            return 0;
+        }
+        /* Set old value to this, so monitorStatus won't think another
+         * thread changed it */
+        /* Must do this before calling setTraceFile, because it generates
+         * an exeception, which calls monitorStatus() */
+        pasynRecPvt->old.traceFd = fd;
+        status = pasynTrace->setTraceFile(pasynUser, fd);
+        if(status != asynSuccess) {
             reportError(pasynRec, status,
-                "Error opening trace file: %s", pasynRec->tfil);
+                "Error setting trace file: %s", pasynUser->errorMessage);
         }
         return 0;
     case asynRecordAUCT:
