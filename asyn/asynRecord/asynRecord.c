@@ -117,6 +117,7 @@ typedef struct oldValues {	/* Used in monitor() and monitorStatus() */
     epicsInt32 nawt;	/* Number of bytes actually written */
     epicsInt32 nrrd;	/* Number of bytes to read */
     epicsInt32 nord;	/* Number of bytes read */
+    epicsEnum16 eomr;	/* Baud rate */
     epicsEnum16 baud;	/* Baud rate */
     epicsEnum16 prty;	/* Parity */
     epicsEnum16 dbit;	/* Data bits */
@@ -634,6 +635,7 @@ static void monitor(asynRecord * pasynRec)
     POST_IF_NEW(spr);
     POST_IF_NEW(ucmd);
     POST_IF_NEW(acmd);
+    POST_IF_NEW(eomr);
 }
 
 static void monitorStatus(asynRecord * pasynRec)
@@ -802,6 +804,7 @@ static void performIO(asynUser * pasynUser)
     int nwrite;
     int eoslen;
     char eos[EOS_SIZE];
+    int  eomReason;
 
     if(pasynRec->ofmt == asynFMT_ASCII) {
         /* ASCII output mode */
@@ -882,10 +885,11 @@ static void performIO(asynUser * pasynUser)
         }
         nbytesTransfered = 0;
         status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                                 pasynUser, inptr, nread, &nbytesTransfered,0);
+                  pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
              "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen,
                     status, nbytesTransfered);
+        pasynRec->eomr = eomReason;
         inlen = nbytesTransfered;
         if(status != asynSuccess) {
             reportError(pasynRec, status,

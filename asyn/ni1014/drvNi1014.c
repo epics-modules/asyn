@@ -368,9 +368,9 @@ void ni1014(void *pvt)
         *pniport->nextByteRead = octet;
         --(pniport->bytesRemainingRead); ++(pniport->nextByteRead);
         if((pniport->eos != -1 ) && (octet == pniport->eos))
-            pniport->eomReason |= EOMEOS;
-        if(ENDRX&isr1) pniport->eomReason |= EOMEOS;
-        if(pniport->bytesRemainingRead == 0) pniport->eomReason |= EOMCNT;
+            pniport->eomReason |= ASYN_EOM_EOS;
+        if(ENDRX&isr1) pniport->eomReason |= ASYN_EOM_END;
+        if(pniport->bytesRemainingRead == 0) pniport->eomReason |= ASYN_EOM_CNT;
         if(pniport->eomReason) {
             pniport->transferState = transferStateIdle;
             writeRegister(pniport,AUXMR,AUXTCS);
