@@ -21,7 +21,7 @@ extern "C" {
 #define IBGET "\x08"    /* Group Execute Trigger */
 #define IBTCT "\x09"    /* Take Control */
 
-/* GPIB Universial Commands*/
+/* GPIB Universal Commands*/
 #define IBDCL 0x14      /* Device Clear */
 #define IBLLO 0x11      /* Local Lockout */
 #define IBSPE 0x18      /* Serial Poll Enable */
