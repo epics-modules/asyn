@@ -96,8 +96,9 @@ static char *vxiError(Device_ErrorCode error);
 static unsigned long getIoTimeout(asynUser *pasynUser,vxiPort *ppvxiPort);
 static BOOL vxiIsPortConnected(vxiPort * pvxiPort,asynUser *pasynUser);
 static void vxiDisconnectException(vxiPort *pvxiPort,int addr);
-static BOOL vxiCreateLink(vxiPort * pvxiPort,
+static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
     char *devName,Device_Link *pDevice_Link);
+static BOOL vxiCreateDevLink(vxiPort * pvxiPort,int addr,Device_Link *plid);
 static devLink *vxiGetDevLink(vxiPort * pvxiPort, asynUser *pasynUser,int addr);
 static BOOL vxiDestroyDevLink(vxiPort * pvxiPort, Device_Link devLink);
 static int vxiWriteAddressed(vxiPort * pvxiPort,asynUser *pasynUser,
@@ -218,7 +219,7 @@ static void vxiDisconnectException(vxiPort *pvxiPort,int addr)
     assert(status==asynSuccess);
 }
 
-static BOOL vxiCreateLink(vxiPort * pvxiPort,
+static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
     char *devName,Device_Link *pDevice_Link)
 {
     enum clnt_stat   clntStat;
@@ -240,11 +241,11 @@ static BOOL vxiCreateLink(vxiPort * pvxiPort,
         pvxiLocal->vxiRpcTimeout);
     if(clntStat != RPC_SUCCESS) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiCreateLink RPC error %s\n",
+            "%s vxiCreateDeviceLink RPC error %s\n",
             devName,clnt_sperror(pvxiPort->rpcClient,""));
     } else if(crLinkR.error != VXI_OK) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiCreateLink error %s\n",
+            "%s vxiCreateDeviceLink error %s\n",
             devName,vxiError(crLinkR.error));
     } else {
         *pDevice_Link = crLinkR.lid;
@@ -253,19 +254,39 @@ static BOOL vxiCreateLink(vxiPort * pvxiPort,
             pvxiPort->maxRecvSize = crLinkR.maxRecvSize;
         } else if(pvxiPort->maxRecvSize!=crLinkR.maxRecvSize) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiCreateLink maxRecvSize changed from %lu to %lu\n",
+                "%s vxiCreateDeviceLink maxRecvSize changed from %lu to %lu\n",
                             devName,pvxiPort->maxRecvSize,crLinkR.maxRecvSize);
         }
         if(pvxiPort->abortPort==0) {
             pvxiPort->abortPort = crLinkR.abortPort;
         } else if(pvxiPort->abortPort!=crLinkR.abortPort) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiCreateLink abort channel TCP port changed from %u to %u\n",
+                "%s vxiCreateDeviceLink abort channel TCP port changed from %u to %u\n",
                                 devName,pvxiPort->abortPort,crLinkR.abortPort);
         }
     }
     xdr_free((const xdrproc_t) xdr_Create_LinkResp, (char *) &crLinkR);
     return rtnVal;
+}
+
+static BOOL vxiCreateDevLink(vxiPort * pvxiPort,int addr,Device_Link *plid)
+{
+    int         primary,secondary;
+    char        devName[40];
+
+    if(addr<100) {
+        primary = addr; secondary = 0;
+    } else {
+        primary = addr / 100;
+        secondary = addr % 100;
+    }
+    assert(primary<NUM_GPIB_ADDRESSES && secondary<NUM_GPIB_ADDRESSES);
+    if(addr<100) {
+        sprintf(devName, "%s,%d", pvxiPort->vxiName, primary);
+    } else {
+        sprintf(devName, "%s,%d,%d", pvxiPort->vxiName, primary, secondary);
+    }
+    return vxiCreateDeviceLink(pvxiPort,devName,plid);
 }
 
 static devLink *vxiGetDevLink(vxiPort *pvxiPort, asynUser *pasynUser,int addr)
@@ -604,7 +625,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         return asynError;
     }
     /* now establish a link to the gateway (for docmds etc.) */
-    if(!vxiCreateLink(pvxiPort,pvxiPort->vxiName,&link)) return asynError;
+    if(!vxiCreateDeviceLink(pvxiPort,pvxiPort->vxiName,&link)) return asynError;
     pvxiPort->server.lid = link;
     pvxiPort->server.connected = TRUE;
     /* Ask the controller's gpib address.*/
@@ -871,11 +892,8 @@ static void vxiReport(void *pdrvPvt,FILE *fd,int details)
 static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
 {
     vxiPort     *pvxiPort = (vxiPort *)pdrvPvt;
-    Device_Link lid;
     int         addr;
     devLink     *pdevLink;
-    int         primary,secondary;
-    char        devName[40];
     asynStatus  status;
 
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -895,23 +913,17 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
         return asynSuccess;
     }
     if(addr==-1) return vxiConnectPort(pvxiPort,pasynUser);
-    if(addr<100) {
-        primary = addr; secondary = 0;
-    } else {
-        primary = addr / 100;
-        secondary = addr % 100;
+    if(!pdevLink->lid) {
+        Device_Link lid;
+
+        if(!vxiCreateDevLink(pvxiPort,addr,&lid)) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiCreateDevLink failed for addr %d\n",
+                pvxiPort->portName,addr);
+            return asynError;
+        }
+        pdevLink->lid = lid;
     }
-    if(addr<100) {
-        sprintf(devName, "%s,%d", pvxiPort->vxiName, primary);
-    } else {
-        sprintf(devName, "%s,%d,%d", pvxiPort->vxiName, primary, secondary);
-    }
-    if(!vxiCreateLink(pvxiPort,devName,&lid)) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiCreateLink failed for addr %d\n",pvxiPort->portName,addr);
-        return asynError;
-    }
-    pdevLink->lid = lid;
     pdevLink->connected = TRUE;
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
@@ -1278,7 +1290,7 @@ static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
     /* initialize devDocmdP */
     devDocmdP.lid = pdevLink->lid;
     devDocmdP.flags = 0; /* no timeout on a locked gateway */
-    devDocmdP.io_timeout = (u_long)(1000.0*pvxiPort->defTimeout);
+    devDocmdP.io_timeout = getIoTimeout(pasynUser,pvxiPort);
     devDocmdP.lock_timeout = 0;
     devDocmdP.network_order = NETWORK_ORDER;
     devDocmdP.cmd = VXI_CMD_IFC;
@@ -1324,7 +1336,7 @@ static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     /* initialize devDocmdP */
     devDocmdP.lid = pdevLink->lid;
     devDocmdP.flags = 0; /* no timeout on a locked gateway */
-    devDocmdP.io_timeout = (u_long)(1000.0*pvxiPort->defTimeout);
+    devDocmdP.io_timeout = getIoTimeout(pasynUser,pvxiPort);
     devDocmdP.lock_timeout = 0;
     devDocmdP.network_order = NETWORK_ORDER;
     devDocmdP.cmd = VXI_CMD_REN;
@@ -1414,22 +1426,32 @@ static asynStatus vxiSerialPollBegin(void *pdrvPvt)
 
 static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    devLink *pdevLink = vxiGetDevLink(pvxiPort,0,addr);
+    vxiPort             *pvxiPort = (vxiPort *)pdrvPvt;
+    devLink             *pdevLink;
     enum clnt_stat      clntStat;
     Device_GenericParms devGenP;
     Device_ReadStbResp  devGenR;
-    unsigned char       stb;
+    unsigned char       stb = 0;
 
-    if(!pdevLink) return asynError;
-    if(!vxiIsPortConnected(pvxiPort,0)) return asynError;
-    if(!pdevLink->connected) {
-        printf("%s vxiSerialPoll port not connected\n",pvxiPort->portName);
+    assert(pvxiPort);
+    if(addr<0) {
+        printf("%s vxiSerialPoll for illegal addr %d\n",pvxiPort->portName,addr);
         return 0;
+    }
+    pdevLink = vxiGetDevLink(pvxiPort,0,addr);
+    if(!pdevLink) return 0;
+    if(!pdevLink->lid) {
+        Device_Link lid;
+        if(!vxiCreateDevLink(pvxiPort,addr,&lid)) {
+            printf("%s vxiCreateDevLink failed for addr %d\n",
+                pvxiPort->portName,addr);
+            return 0;
+        }
+        pdevLink->lid = lid;
     }
     devGenP.lid = pdevLink->lid;
     devGenP.flags = 0; /* no timeout on a locked gateway */
-    devGenP.io_timeout = (u_long)(1000.0*pvxiPort->defTimeout);
+    devGenP.io_timeout = (unsigned long)(timeout*1e3);
     devGenP.lock_timeout = 0;
     /* initialize devGenR */
     memset((char *) &devGenR, 0, sizeof(Device_ReadStbResp));
@@ -1439,13 +1461,18 @@ static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
     if(clntStat != RPC_SUCCESS) {
         printf("%s vxiSerialPoll %d %s\n",
             pvxiPort->portName, addr, clnt_sperror(pvxiPort->rpcClient,""));
-        return -1;
+        return 0;
     } else if(devGenR.error != VXI_OK) {
-        if(devGenR.error != VXI_IOTIMEOUT) {
+        if(devGenR.error == VXI_IOTIMEOUT) {
+        /*HP 2050 doews not IBSPD,IBUNT on timeout*/
+            char data[2];
+            data[0] = IBSPD; data[1] = IBUNT;
+            vxiWriteCmd(pvxiPort,pvxiPort->pasynUser,data,2);
+        } else {
             printf("%s vxiSerialPoll %d: %s\n",
                 pvxiPort->portName, addr, vxiError(devGenR.error));
         }
-        return -1;
+        return 0;
     } else {
         stb = devGenR.stb;
     }

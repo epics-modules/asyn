@@ -414,14 +414,18 @@ static asynStatus writeAddr(niport *pniport,int talk, int listen,
     int        lenCmd = 0;
     int        primary,secondary;
 
-    if(talk<100) {
+    if(talk<0) {
+        ; /*do nothing*/
+    } else if(talk<100) {
         cmdbuf[lenCmd++] = talk + TADBASE;
     } else {
         primary = talk / 100; secondary = talk % 100;
         cmdbuf[lenCmd++] = primary + TADBASE;
         cmdbuf[lenCmd++] = secondary + SADBASE;
     }
-    if(listen<100) {
+    if(listen<0) {
+        ; /*do nothing*/
+    } else if(listen<100) {
         cmdbuf[lenCmd++] = listen + LADBASE;
     } else {
         primary = listen / 100; secondary = listen % 100;
@@ -788,10 +792,10 @@ static asynStatus gpibPortSerialPollBegin(void *pdrvPvt)
     niport     *pniport = (niport *)pdrvPvt;
     double     timeout = 1.0;
     asynStatus status;
-    char       cmd[1];
+    char       cmd[3];
 
-    cmd[0] = IBSPE;
-    status = writeCmd(pniport,cmd,1,timeout,transferStateIdle);
+    cmd[0] = IBUNL;  cmd[1] = LADBASE; cmd[2] = IBSPE;
+    status = writeCmd(pniport,cmd,3,timeout,transferStateIdle);
     return status;
 }
 
@@ -799,10 +803,14 @@ static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout)
 {
     niport     *pniport = (niport *)pdrvPvt;
     epicsUInt8 buffer[1];
-    int        actual = 0;
 
-    readGpib(pniport,buffer,1,&actual,addr,timeout);
-    return (actual==1 ? buffer[0] : 0);
+    buffer[0] = 0;
+    pniport->bytesRemainingRead = 1;
+    pniport->nextByteRead = buffer;
+    pniport->status = asynSuccess;
+    writeRegister(pniport,AUXMR,AUXFH);
+    writeAddr(pniport,addr,-1,timeout,transferStateRead);
+    return buffer[0];
 }
 
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
@@ -810,10 +818,10 @@ static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
     niport     *pniport = (niport *)pdrvPvt;
     double     timeout = 1.0;
     asynStatus status;
-    char       cmd[1];
+    char       cmd[2];
 
-    cmd[0] = IBSPD;
-    status = writeCmd(pniport,cmd,1,timeout,transferStateIdle);
+    cmd[0] = IBSPD; cmd[1] = IBUNT;
+    status = writeCmd(pniport,cmd,2,timeout,transferStateIdle);
     return status;
 }
 
