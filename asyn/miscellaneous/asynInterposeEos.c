@@ -266,9 +266,35 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
+    size_t thisRead;
+    int nRead = 0;
+    asynStatus status = asynSuccess;
 
-    return peosPvt->poctet->readRaw(peosPvt->octetPvt,
-        pasynUser,data,maxchars,nbytesTransfered,eomReason);
+    if(!peosPvt->processEosIn) {
+        return peosPvt->poctet->readRaw(peosPvt->octetPvt,
+            pasynUser,data,maxchars,nbytesTransfered,eomReason);
+    }
+    if(eomReason) *eomReason = 0;
+    for (;;) {
+        if ((peosPvt->inBufTail != peosPvt->inBufHead)) {
+            char c = *data++ = peosPvt->inBuf[peosPvt->inBufTail++];
+            nRead++;
+            if (nRead >= maxchars) break;
+            continue;
+        }
+        if(eomReason && *eomReason) break;
+        status = peosPvt->poctet->readRaw(peosPvt->octetPvt,
+             pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,eomReason);
+        if(status==asynSuccess) {
+            asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->inBuf,thisRead,
+                "%s read ",peosPvt->portName);
+        }
+        if(status!=asynSuccess || thisRead==0) break;
+        peosPvt->inBufTail = 0;
+        peosPvt->inBufHead = thisRead;
+    }
+    *nbytesTransfered = nRead;
+    return status;
 }
 
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser)
