@@ -12,12 +12,23 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>December 17 2004</h1>
+<h1>February 14 2005</h1>
 </center>
 <hr>
 <center>
 <h2>Release 4-1</h2>
 </center>
+<h3>drvAsynSerialPort,drvAsynIPPort - Error reporting</h3>
+<p>These do not properly set an error message in asynUser.errorMessage
+when they return asynError.</p>
+<h3>asynRecordFCTL</h3>
+<p>This calls setOption for clocal. This only works on
+vxWorks because vxWorks uses the name CLOCAL for what POSIX calls CRTSCTS.</p>
+
+<h3>devEpics</h3>
+<p>If a call to a low level driver, which registered itself as canBlock,
+completes without blocking then the asynchronous completion may never occur.
+This will be fixed in the next release.</p>
 <h3>drvAsynIPPort and drvAsynSerialPort</h3>
 <p>The problem reported for version 4 about segmentation faults on cygwin-x86
 has been fixed.</p>

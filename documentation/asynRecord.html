@@ -808,12 +808,21 @@ Fields</a></h2>
         Default="Unknown".</td>
     </tr>
     <tr valign="top">
+      <td>MCTL</td>
+      <td>R/W</td>
+      <td>"Modem Control"</td>
+      <td>DBF_RECCHOICE</td>
+      <td>Modem control. Choices are "Unknown", "CLOCAL" and "YES".
+        Default="Unknown".</td>
+    </tr>
+    <tr valign="top">
       <td>FCTL</td>
       <td>R/W</td>
-      <td>"Flow control"</td>
+      <td>"Flow control (cts rts)"</td>
       <td>DBF_RECCHOICE</td>
-      <td>The flow control. Choices are "Unknown", "None" and "Hardware".
-        Default="Unknown".</td>
+      <td>Flow control. Choices are "Unknown", "None" and "Hardware".
+        Default="Unknown". Hardware means to use the cts (clear to send)
+       and rts (request to send) signals</td>
     </tr>
   </tbody>
 </table>
@@ -836,7 +845,13 @@ when the connection to the port is made. IMPORTANT: The value of these fields
 in the database file is never used, because it is modified when the record
 connects to the port.</p>
 
-<p> </p>
+<p>vxWorks and MCTL,FCTL. The sioLib serial support for vxWorks uses CLOCAL
+for what POSIX calls CTSRTS (Clear to send and request to send). It does not
+appear that sioLib has any concept of modem control, which is what POSIX
+calls CLOCAL. For vxWorks the standard serial support for asynDriver supplied
+in drvAsynSerialPort.c, accepts both MCTL and FCTL. MCTL=(CLOCAL,YES)
+is the same as FCTL=(None,Hardware).</p>
+
 <hr>
 
 <h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
