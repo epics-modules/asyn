@@ -1,4 +1,2 @@
 include "base.dbd"
-include "asyn.dbd"
-include "asynRecDevDrv.dbd"
 include "testGpibSerialInclude.dbd"
