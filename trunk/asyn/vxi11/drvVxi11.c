@@ -722,7 +722,7 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     assert(pvxiLink);
     if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
     if(pvxiLink->srqInterrupt) {
-        if (epicsEventTryWait(pvxiLink->srqThreadReady,2.0) != epicsEventWaitOK) {
+        if (epicsEventTryWait(pvxiLink->srqThreadReady) != epicsEventWaitOK) {
             int i;
             for (i = 0 ; ; i++) {
                 if(i == 10) {
