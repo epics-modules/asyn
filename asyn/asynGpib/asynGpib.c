@@ -78,6 +78,7 @@ static void srqPoll(asynUser *pasynUser);
 static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
+static asynStatus setPortOptions(void *drvPvt,int argc, char **argv);
 /*asynOctet methods */
 static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int gpibWrite(void *drvPvt,asynUser *pasynUser,
@@ -103,7 +104,7 @@ static void srqHappened(void *pgpibvt);
 
 #define NUM_INTERFACES 3
 static asynCommon asyn = {
-   report,connect,disconnect
+   report,connect,disconnect,setPortOptions
 };
 static asynOctet octet = {
     gpibRead,gpibWrite,gpibFlush, setEos
@@ -135,6 +136,7 @@ static gpibPvt *locateGpibPvt(const char *portName)
     }
     return(0);
 }
+
 static void srqPoll(asynUser *pasynUser)
 {
     void *drvPvt = pasynUser->userPvt;
@@ -143,12 +145,16 @@ static void srqPoll(asynUser *pasynUser)
 
     epicsMutexMustLock(pgpibPvt->lock);
     if(!pgpibPvt->pollRequestIsQueued) 
-        printf("%s srqPoll but !pollRequestIsQueued. Why?\n",pgpibPvt->portName);
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s asynGpib:srqPoll but !pollRequestIsQueued. Why?\n",
+            pgpibPvt->portName);
     pgpibPvt->pollRequestIsQueued = 0;
     epicsMutexUnlock(pgpibPvt->lock);
     for(ntrys=0; ntrys<MAX_POLL; ntrys++) {
         srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
         if(!srqStatus) break;
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "%s asynGpib:srqPoll serialPollBegin\n",pgpibPvt->portName);
         pasynGpibPort->serialPollBegin(pgpibPvt->asynGpibPortPvt);
         for(primary=0; primary<NUM_GPIB_ADDRESSES; primary++) {
             pollListPrimary *ppollListPrimary = &pgpibPvt->pollList[primary];
@@ -156,6 +162,9 @@ static void srqPoll(asynUser *pasynUser)
             int statusByte;
     
             if(ppollListNode->pollIt) {
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                    "%s asynGpib:srqPoll serialPoll addr %d\n",
+                    pgpibPvt->portName,primary);
                 statusByte = pasynGpibPort->serialPoll(
                     pgpibPvt->asynGpibPortPvt,primary,SRQTIMEOUT);
                 if(statusByte) {
@@ -167,6 +176,9 @@ static void srqPoll(asynUser *pasynUser)
                 ppollListNode = &ppollListPrimary->secondary[secondary];
                 if(ppollListNode->pollIt) {
                     int addr = primary*100+secondary;
+                    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                        "%s asynGpib:srqPoll serialPoll addr %d\n",
+                        pgpibPvt->portName,addr);
                     statusByte = pasynGpibPort->serialPoll(
                         pgpibPvt->asynGpibPortPvt,addr,SRQTIMEOUT);
                     if(statusByte) {
@@ -176,13 +188,15 @@ static void srqPoll(asynUser *pasynUser)
                 }
             }
         }
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "%s asynGpib:srqPoll serialPollEnd\n",pgpibPvt->portName);
         pasynGpibPort->serialPollEnd(pgpibPvt->asynGpibPortPvt);
         srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
         if(!srqStatus) break;
     }
     if(srqStatus) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s srqPoll srqStatus is %x after ntrys %dWhy?\n",
+            "%s asynGpib:srqPoll srqStatus is %x after ntrys %dWhy?\n",
             pgpibPvt->portName,srqStatus,ntrys);
     }
 }
@@ -204,6 +218,12 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->disconnect(pgpibPvt->asynGpibPortPvt,pasynUser));
+}
+
+static asynStatus setPortOptions(void *drvPvt, int argc, char **argv)
+{
+    GETgpibPvtasynGpibPort
+    return(pasynGpibPort->setPortOptions(drvPvt,argc,argv));
 }
 
 /*asynOctet methods */
@@ -275,10 +295,13 @@ static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
     GETgpibPvtasynGpibPort
 
     if(pgpibPvt->srq_handler) {
-        printf("%s asynGpib:registerSrqHandler. handler already registered\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s asynGpib:registerSrqHandler. handler already registered\n",
             pgpibPvt->portName);
         return(asynError);
     }
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s asynGpib:registerSrqHandler.\n",pgpibPvt->portName);
     pgpibPvt->srq_handler = handler;
     pgpibPvt->srqHandlerPvt = srqHandlerPvt;
     status = pasynGpibPort->srqEnable(pgpibPvt->asynGpibPortPvt,1);
@@ -296,6 +319,9 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 	pgpibPvt->pollList[addr].primary.pollIt = onOff;
 	return;
     }
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s asynGpib:pollAddr addr %d onOff %d\n",
+        pgpibPvt->portName,addr,onOff);
     primary = addr/100; secondary = primary%100;
     assert(primary>=0 && primary<NUM_GPIB_ADDRESSES);
     assert(secondary>=0 && secondary<NUM_GPIB_ADDRESSES);
@@ -350,8 +376,10 @@ static void *registerPort(
 static void srqHappened(void *drvPvt)
 {
     asynStatus status;
+    asynUser *pasynUser;
     GETgpibPvtasynGpibPort
 
+    pasynUser = pgpibPvt->pasynUser;
     epicsMutexMustLock(pgpibPvt->lock);
     if(pgpibPvt->pollRequestIsQueued) {
         epicsMutexUnlock(pgpibPvt->lock);
@@ -362,7 +390,8 @@ static void srqHappened(void *drvPvt)
     status = pasynManager->queueRequest(pgpibPvt->pasynUser,
         asynQueuePriorityMedium,0.0);
     if(status!=asynSuccess) {
-        printf("%s asynGpib:srqHappened queueRequest failed %s\n",
-            pgpibPvt->portName,pgpibPvt->pasynUser->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s asynGpib:srqHappened queueRequest failed %s\n",
+            pgpibPvt->portName,pasynUser->errorMessage);
     }
 } 
