@@ -748,7 +748,7 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     int nchars = 0, lenmsg = 0;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPrepareToRead\n",precord->name);
-    if(!pgpibDpvt->msg) {
+    if((pgpibCmd->msgLen > 0) && !pgpibDpvt->msg) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s no msg buffer\n",precord->name);
         recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
         failure = 1;
