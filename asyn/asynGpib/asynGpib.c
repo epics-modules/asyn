@@ -240,8 +240,12 @@ static void report(void *drvPvt,FILE *fd,int details)
 
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
+    asynStatus status;
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->connect(pgpibPvt->asynGpibPortPvt,pasynUser));
+
+    status = pasynGpibPort->connect(pgpibPvt->asynGpibPortPvt,pasynUser);
+    if(status==asynSuccess) srqHappened(pgpibPvt);
+    return(status);
 }
 
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
