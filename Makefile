@@ -4,7 +4,6 @@ include $(TOP)/configure/CONFIG
 DIRS += configure
 DIRS += makeSupport
 DIRS += asyn
-DIRS += testManagerApp
 DIRS += testApp
 DIRS += testGpibApp
 DIRS += testGpibSerialApp
