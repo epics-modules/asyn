@@ -51,9 +51,10 @@ typedef struct pollListPrimary {
 
 typedef struct gpibPvt {
     ELLNODE node;
-    pollListPrimary pollList[NUM_GPIB_ADDRESSES];
-    epicsMutexId lock;
     const char *portName;
+    epicsMutexId lock;
+    pollListPrimary pollList[NUM_GPIB_ADDRESSES];
+    int pollRequestIsQueued;
     asynGpibPort *pasynGpibPort;
     void *asynGpibPortPvt;
     asynUser *pasynUser;
@@ -139,6 +140,11 @@ static void srqPoll(asynUser *pasynUser)
     int srqStatus,primary,secondary;
     GETgpibPvtasynGpibPort
 
+    epicsMutexMustLock(pgpibPvt->lock);
+    if(!pgpibPvt->pollRequestIsQueued) 
+        printf("%s srqPoll but !pollRequestIsQueued. Why?\n",pgpibPvt->portName);
+    pgpibPvt->pollRequestIsQueued = 0;
+    epicsMutexUnlock(pgpibPvt->lock);
     srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
     while(srqStatus) {
         pasynGpibPort->serialPollBegin(pgpibPvt->asynGpibPortPvt);
@@ -168,7 +174,7 @@ static void srqPoll(asynUser *pasynUser)
                 }
             }
         }
-        pasynGpibPort->serialPollBegin(pgpibPvt->asynGpibPortPvt);
+        pasynGpibPort->serialPollEnd(pgpibPvt->asynGpibPortPvt);
         srqStatus = pasynGpibPort->srqStatus(pgpibPvt->asynGpibPortPvt);
         if(!srqStatus) break;
         printf("%s after srqPoll srqStatus is %x Why?\n",
@@ -341,8 +347,15 @@ static void srqHappened(void *drvPvt)
     asynStatus status;
     GETgpibPvtasynGpibPort
 
+    epicsMutexMustLock(pgpibPvt->lock);
+    if(pgpibPvt->pollRequestIsQueued) {
+        epicsMutexUnlock(pgpibPvt->lock);
+        return;
+    }
+    pgpibPvt->pollRequestIsQueued = 1;
+    epicsMutexUnlock(pgpibPvt->lock);
     status = pasynManager->queueRequest(pgpibPvt->pasynUser,
-        asynQueuePriorityLow,0.0);
+        asynQueuePriorityMedium,0.0);
     if(status!=asynSuccess) {
         printf("%s asynGpib:srqHappened queueRequest failed %s\n",
             pgpibPvt->portName,pgpibPvt->pasynUser->errorMessage);
