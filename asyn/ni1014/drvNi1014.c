@@ -20,7 +20,6 @@
 #include <stdio.h>
 
 #include <epicsTypes.h>
-#include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsThread.h>
 #include <epicsInterrupt.h>
@@ -48,7 +47,7 @@ struct niport {
     void        *asynGpibPvt;
     int         isPortA;
     epicsUInt32 base;
-    volatile epicsUInt16 *registers;
+    volatile epicsUInt8 *registers;
     int         vector;
     int         level;
     CALLBACK    callback;
@@ -80,15 +79,15 @@ static void waitTimeout(niport *pniport,double seconds);
 void ni1014Err(void *pvt);
 static void srqCallback(CALLBACK *pcallback);
 void ni1014(void *pvt);
+/*Routines that with interrupt handler perform I/O*/
 static asynStatus writeCmd(niport *pniport,const char *buf, int cnt,
     double timeout,transferState_t nextState);
 static asynStatus writeAddr(niport *pniport,int talk, int listen,
     double timeout,transferState_t nextState);
 static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
     int *actual, int addr, double timeout);
-asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
+static asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
     int addr, double timeout);
-
 /* asynGpibPort methods */
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
@@ -117,31 +116,43 @@ static asynStatus gpibPortSerialPollBegin(void *pdrvPvt);
 static int gpibPortSerialPoll(void *pdrvPvt, int addr, double timeout);
 static asynStatus gpibPortSerialPollEnd(void *pdrvPvt);
 
-/*configuration commands*/
-int ni1014Config(char *portNameA,char *portNameB,
-    int base, int vector, int level, int priority, int noAutoConnect);
+static asynGpibPort gpibPort = {
+    gpibPortReport,
+    gpibPortConnect,
+    gpibPortDisconnect,
+    gpibPortSetPortOptions,
+    gpibPortGetPortOptions,
+    gpibPortRead,
+    gpibPortWrite,
+    gpibPortFlush,
+    gpibPortSetEos,
+    gpibPortGetEos,
+    gpibPortAddressedCmd,
+    gpibPortUniversalCmd,
+    gpibPortIfc,
+    gpibPortRen,
+    gpibPortSrqStatus,
+    gpibPortSrqEnable,
+    gpibPortSerialPollBegin,
+    gpibPortSerialPoll,
+    gpibPortSerialPollEnd
+};
 
 /* Register definitions */
 /* All registers will be addressed as 16 bit integers */
 #define PORT_REGISTER_SIZE 0x200
 
-#define CSR0    0x000 /*Channel Status Register*/
-#define DCR0    0x004 /*Device Control Register*/
 #define CCR0    0x007 /*Channel Control Register*/
 #define CSR1    0x040 /*Channel Status Register*/
 #define DCR1    0x044 /*Device Control Register*/
 #define CCR1    0x047 /*Channel Control Register*/
 #define EINT    0x08  /*Enable Interrupts       */
-#define NIVR0   0x025 /*Normal Interrupt Vector*/
-#define EIVR0   0x027 /*Error Interrupt Vector*/
 #define NIVR1   0x065 /*Normal Interrupt Vector*/
 #define EIVR1   0x067 /*Error Interrupt Vector*/
 
-#define GSR     0x101 /*GPIB Status Register*/
-#define EOI     0x80
-
 #define CFG1    0x101 /*Configuration Register 1*/
 #define CFG2    0x105 /*Configuration Register 2*/
+
 #define SFL     0x08  /*System Fail Bit*/
 #define SUP     0x04  /*Supervisor Bit*/
 #define LMR     0x02  /*Local Master Reset Bit*/
@@ -150,15 +161,17 @@ int ni1014Config(char *portNameA,char *portNameB,
 /* TLC (Talker Listener Control register */
 #define DIR     0x111 /*Data In Register*/
 #define CDOR    0x111 /*Command/Data Out Register*/
-
 #define ISR1    0x113 /*Interrupt Status Register 1*/
 #define IMR1    0x113 /*Interrupt Mask Register 1*/
-#define CPT     0x80  /*Command Pass Through Bit */
-#define CPTIE   0x80  /*Command Pass Through Interrupt Enable Bit */
-#define APT     0x40  /*Address Pass Through Bit */
-#define APTIE   0x40  /*Address Pass Through Interrupt Enable Bit */
+#define ISR2    0x115 /*Interrupt Status Register 2*/
+#define IMR2    0x115 /*Interrupt Mask Register 2*/
+#define ADSR    0x119 /*Address Status Register*/
+#define ADMR    0x119 /*Address Mode Register*/
+#define CPTR    0x11B  /*Command Pass Through Register*/
+#define AUXMR   0x11B  /*Auxiliary Mode Register*/
+
+/* ISR1 IMR1*/
 #define ENDRX   0x10  /*End Received Bit */
-#define ENDIE   0x10  /*End Received Interrupt Enable Bit */
 #define ERR     0x04  /*Error Bit */
 #define ERRIE   0x04  /*Error Interrupt Enable Bit */
 #define DO      0x02  /*Data Out Bit */
@@ -168,29 +181,18 @@ int ni1014Config(char *portNameA,char *portNameB,
 #define DI      0x01  /*Data In Bit */
 #define DIIE    0x01  /*Data In Interrupt Enable Bit */
 
-#define ISR2    0x115 /*Interrupt Status Register 2*/
-#define IMR2    0x115 /*Interrupt Mask Register 2*/
-#define INT     0x80  /*Interrupt Bit */
+/* ISR2 IMR2*/
 #define SRQI    0x40  /*Service Request Input Bit */
 #define SRQIE   0x40  /*Service Request Input Interrupt Enable Bit */
-#define LOK     0x20  /*Lockout Bit */
 #define REM     0x10  /*Remote Bit */
 #define CO      0x08  /*Command Out Bit */
 #define COIE    0x08  /*Command Out Interrupt Enable Bit */
 
-#define SPSR    0x117 /*Serial Poll Status Register*/
-#define SPMR    0x117 /*Serial Poll Mode Register*/
-
-#define ADSR    0x119 /*Address Status Register*/
-#define NATN    0x40  /*Not ATN */
-#define ADMR    0x119 /*Address Mode Register*/
-#define ton     0x80  /*Talk Only Bit*/
-#define lon     0x40  /*Listen Only Bit*/
+/* ADMR */
 #define TRM     0x30  /*Transmit/Receive Mode Bits. Leave both on*/
 #define MODE1   0x01  /*Address mod 1. Normal Dual addressing*/
 
-#define CPTR    0x11B  /*Command Pass Through Register*/
-#define AUXMR   0x11B  /*Auxiliary Mode Register*/
+/*AUXMR*/
 #define AUXPON  0x00    /*Immediate Execute PON*/
 #define AUXCR   0x02    /*Chip Reset*/
 #define AUXFH   0x03    /*Finish Handshake*/
@@ -198,8 +200,6 @@ int ni1014Config(char *portNameA,char *portNameB,
 #define AUXGTS  0x10    /*Go To Standby*/
 #define AUXTCA  0x11    /*Take Control Asynchronously*/
 #define AUXTCS  0x12    /*Take Control Asynchronously*/
-#define AUXLN   0x13    /*Listen*/
-#define AUXULN  0x1C    /*Local Unlisten*/
 #define AUXSIFC 0x1E    /*Set Interface Clear*/
 #define AUXCIFC 0x16    /*Clear Interface Clear*/
 #define AUXSREN 0x1F    /*Set Remote Enable*/
@@ -207,27 +207,16 @@ int ni1014Config(char *portNameA,char *portNameB,
 #define AUXICR  0x20   /*Internal Counter Clock*/
 #define AUXPPR  0x50   /*Parallel Poll Register*/
 #define AUXRA   0x80   /*Auxilary Register A*/
-#define AUXRB   0xA0   /*Auxilary Register B*/
-#define AUXRE   0xC0   /*Auxilary Register E*/
 
 #define PPRU    0x10   /*AUXPPR Unconfigure*/
 #define RABIN   0x10   /*AUXRA BIN, i.e. EOS is 8 bit*/
-#define RABHLDE 0x02   /*AUXRA RFD holdoff on END*/
 #define RABHLDA 0x01   /*AUXRA RFD holdoff on All Data*/
-#define ADR0    0x11D  /*Primary address*/
-#define ADR1    0x11F  /*Secondary address*/
 #define ADR     0x11D  /*Write address*/
 #define ARS     0x80   /* (0,1)=>(primary,secondary) */
 #define DT      0x40   /* Disable Talker*/
 #define DL      0x20   /* Disable Listener*/
 
 #define EOSR    0x11F  /*End Of String Register*/
-
-/*GPIB Addressed Commands*/
-#define GTL     0x01   /*Go To Local*/
-#define SDC     0x04   /*Selective Device Clear */
-#define GET     0x08   /*Group Execute Trigger */
-#define TCT     0x09   /*Take Control */
 
 static epicsUInt8 readRegister(niport *pniport, int offset)
 {
@@ -321,6 +310,7 @@ static void srqCallback(CALLBACK *pcallback)
     niport *pniport;
 
     callbackGetUser(pniport,pcallback);
+    if(!pniport->srqEnabled) return;
     pniport->srqHappened = epicsTrue;
     pasynGpib->srqHappened(pniport->asynGpibPvt);
 }
@@ -330,6 +320,7 @@ void ni1014(void *pvt)
     niport          *pniport = (niport *)pvt;
     transferState_t state = pniport->transferState;
     epicsUInt8      isr1,isr2,octet;
+    char            message[80];
 
     pniport->isr2 = isr2 = readRegister(pniport,ISR2);
     pniport->isr1 = isr1 = readRegister(pniport,ISR1);
@@ -379,8 +370,7 @@ void ni1014(void *pvt)
         *pniport->nextByteRead = octet;
         --(pniport->bytesRemainingRead); ++(pniport->nextByteRead);
         if(((pniport->eos != -1 ) && (octet == pniport->eos)) 
-        || (EOI&readRegister(pniport,GSR))
-        || (pniport->bytesRemainingRead == 0)) {
+        || (ENDRX&isr1) || (pniport->bytesRemainingRead == 0)) {
             pniport->transferState = transferStateIdle;
             writeRegister(pniport,AUXMR,AUXTCS);
             epicsEventSignal(pniport->waitForInterrupt);
@@ -388,14 +378,12 @@ void ni1014(void *pvt)
         }
         writeRegister(pniport,AUXMR,AUXFH);
         break;
-    case transferStateIdle: {
-        char message[80];
+    case transferStateIdle:
         if(!isr1&DI) return;
         octet = readRegister(pniport,DIR);
         sprintf(message,"%s ni1014IH transferStateIdle received %2.2x\n",
              pniport->portName,octet);
         epicsInterruptContextMessage(message);
-        }
     }
 }
 
@@ -427,20 +415,16 @@ static asynStatus writeAddr(niport *pniport,int talk, int listen,
     int        primary,secondary;
 
     if(talk<100) {
-        primary = talk; secondary = 0;
         cmdbuf[lenCmd++] = talk + TADBASE;
     } else {
-        primary = talk / 100;
-        secondary = talk % 100;
+        primary = talk / 100; secondary = talk % 100;
         cmdbuf[lenCmd++] = primary + TADBASE;
         cmdbuf[lenCmd++] = secondary + SADBASE;
     }
     if(listen<100) {
-        primary = listen; secondary = 0;
         cmdbuf[lenCmd++] = listen + LADBASE;
     } else {
-        primary = listen / 100;
-        secondary = listen % 100;
+        primary = listen / 100; secondary = listen % 100;
         cmdbuf[lenCmd++] = primary + LADBASE;
         cmdbuf[lenCmd++] = secondary + SADBASE;
     }
@@ -461,7 +445,7 @@ static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
     if(status!=asynSuccess) return status;
     *actual = cnt - pniport->bytesRemainingWrite;
     status = pniport->status;
-    if(status!=asynSuccess && status!=asynOverflow) return status;
+    if(status!=asynSuccess) return status;
     writeCmd(pniport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
@@ -615,13 +599,8 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     pniport->errorMessage[0] = 0;
     status = readGpib(pniport,data,maxchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
-        if(status==asynOverflow) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d readGpib overflow\n",
-            pniport->portName,addr);
-        } else {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d readGpib error %s\n",
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d readGpib error %s\n",
             pniport->portName,addr,pniport->errorMessage);
-        }
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s readGpib failed %s\n",pniport->portName,pniport->errorMessage);
     }
@@ -839,28 +818,6 @@ static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
     status = writeCmd(pniport,cmd,1,timeout,transferStateIdle);
     return status;
 }
-
-static asynGpibPort gpibPort = {
-    gpibPortReport,
-    gpibPortConnect,
-    gpibPortDisconnect,
-    gpibPortSetPortOptions,
-    gpibPortGetPortOptions,
-    gpibPortRead,
-    gpibPortWrite,
-    gpibPortFlush,
-    gpibPortSetEos,
-    gpibPortGetEos,
-    gpibPortAddressedCmd,
-    gpibPortUniversalCmd,
-    gpibPortIfc,
-    gpibPortRen,
-    gpibPortSrqStatus,
-    gpibPortSrqEnable,
-    gpibPortSerialPollBegin,
-    gpibPortSerialPoll,
-    gpibPortSerialPollEnd
-};
 
 int ni1014Config(char *portNameA,char *portNameB,
     int base, int vector, int level, int priority, int noAutoConnect)
