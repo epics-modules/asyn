@@ -27,13 +27,15 @@
 
 #ifdef __APPLE__
 #define rpcTaskInit() 0
-#define connectWithTimeout(arg1,arg2,arg3,arg4) connect((arg1),(arg2),(arg3))
+#endif
+
+#ifdef __CYGWIN__
+#define rpcTaskInit() 0
 #endif
 
 #ifdef __linux__
 #include <rpc/pmap_clnt.h>
 #define rpcTaskInit() 0
-#define connectWithTimeout(arg1,arg2,arg3,arg4) connect((arg1),(arg2),(arg3))
 #endif
 
 #ifdef SOLARIS
@@ -42,7 +44,6 @@
 #include <rpc/pmap_clnt.h>
 #include <arpa/inet.h>
 #define rpcTaskInit() 0
-#define connectWithTimeout(arg1,arg2,arg3,arg4) connect((arg1),(arg2),(arg3))
 #endif
 
 #endif /* _osiRpcH_ */
