@@ -14,7 +14,7 @@ Instrument Device Support</h1>
 
 <h2>Marty Kraimer and Eric Norum</h2>
 
-<h2>February 2004</h2>
+<h2>April 2004</h2>
 </center>
 <hr>
 
@@ -403,9 +403,9 @@ definition must define field OUT as</p>
       <code>type</code>. See the discussion of <code>type</code> below. Set
       this field to 0 if not used.</dd>
   <dt><code>format</code></dt>
-    <dd>Printf/scanf format string that is used differently depending on the value of
-      <code>type</code>. See the discussion of <code>type</code>. Set this
-      field to 0 if not used.</dd>
+    <dd>Printf/scanf format string that is used differently depending on the
+      value of <code>type</code>. See the discussion of <code>type</code>.
+      Set this field to 0 if not used.</dd>
   <dt><code>rspLen</code></dt>
     <dd>Size needed to read back from a device when performing a
       respond2Writes read operation. If a gpibCmd is a read operation or a
@@ -518,8 +518,7 @@ support it must to document its changes.</p>
         <li>stringin
           <p><code>pgpibDpvt-&gt;msg</code> is converted and the result put
           into field VAL. If pgpibCmd-&gt;format is defined it is used for
-          the conversion, otherwise "%39c"
-          is used.</p>
+          the conversion, otherwise "%39c" is used.</p>
         </li>
         <li>waveform
           <p>Unless FTVL is menuFtypeCHAR an error is generated and the
@@ -1081,7 +1080,8 @@ struct devSupportGpib {
     void (*processGPIBSOFT)(gpibDpvt *pgpibDpvt);
     void (*queueReadRequest)(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
     void (*queueWriteRequest)(gpibDpvt *pgpibDpvt,gpibStart start, gpibFinish finish);
-    void (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
+    /* queueRequest returns (0,1) for (failure,success) */
+    int (*queueRequest)(gpibDpvt *pgpibDpvt, gpibWork work);
     void (*registerSrqHandler)(
         gpibDpvt *pgpibDpvt,srqHandler handler,void *userRivate);
     int (*writeMsgLong)(gpibDpvt *pgpibDpvt,long val);
@@ -1130,7 +1130,8 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
       depending on the <code>pgpibCmd-&gt;type</code>.</dd>
   <dt><code>queueRequest</code></dt>
     <dd>The device support provides a work function that is called when the
-      request is dequeued.</dd>
+      request is dequeued. queueRequest returns (0,1) if the request (was
+      not, was) queued.</dd>
   <dt><code>report</code></dt>
     <dd>This generates a report or all devGpib devices.</dd>
   <dt><code>registerSrqHandler</code></dt>
