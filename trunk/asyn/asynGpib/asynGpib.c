@@ -78,7 +78,7 @@ static void srqPoll(asynUser *pasynUser);
 static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
-static asynStatus setPortOptions(void *drvPvt,int argc, char **argv);
+static asynStatus setPortOption(void *drvPvt,const char *key,const char *val);
 /*asynOctet methods */
 static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int gpibWrite(void *drvPvt,asynUser *pasynUser,
@@ -104,7 +104,7 @@ static void srqHappened(void *pgpibvt);
 
 #define NUM_INTERFACES 3
 static asynCommon asyn = {
-   report,connect,disconnect,setPortOptions
+   report,connect,disconnect,setPortOption
 };
 static asynOctet octet = {
     gpibRead,gpibWrite,gpibFlush, setEos
@@ -220,10 +220,10 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     return(pasynGpibPort->disconnect(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
 
-static asynStatus setPortOptions(void *drvPvt, int argc, char **argv)
+static asynStatus setPortOption(void *drvPvt, const char *key, const char *val)
 {
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->setPortOptions(drvPvt,argc,argv));
+    return(pasynGpibPort->setPortOption(drvPvt,key,val));
 }
 
 /*asynOctet methods */
