@@ -1,4 +1,0 @@
-include "base.dbd"
-include "devTestGpibSerial.dbd"
-include "drvAsynSerialPort.dbd"
-include "drvAsynIPPort.dbd"
