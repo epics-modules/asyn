@@ -461,6 +461,9 @@ static long special(struct dbAddr * paddr, int after)
         cancelIOInterruptScan(pasynRec);
         monitorStatus(pasynRec);
         return 0;
+    case asynRecordIFACE:
+        cancelIOInterruptScan(pasynRec);
+        return 0;
     case asynRecordUI32MASK:
         cancelIOInterruptScan(pasynRec);
         return 0;
