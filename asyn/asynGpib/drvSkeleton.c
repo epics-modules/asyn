@@ -27,7 +27,7 @@ typedef struct skeletonPvt {
     void *pgpibPvt;
 }skeletonPvt;
 
-static void report(void *pdrvPvt,int details);
+static void report(void *pdrvPvt,FILE *fd,int details);
 static asynStatus connect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser);
 /*asynOctet methods */
@@ -48,7 +48,7 @@ static asynStatus serialPollBegin (void *pdrvPvt);
 static int serialPoll (void *pdrvPvt, int addr, double timeout);
 static asynStatus serialPollEnd (void *pdrvPvt);
 
-static void report(void *pdrvPvt,int details)
+static void report(void *pdrvPvt,FILE *fd,int details)
 {
 }
 

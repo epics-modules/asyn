@@ -26,12 +26,12 @@
 
 #include <asynDriver.h>
 
-#define BUFSIZE 4096
+#define BUFFERSIZE 4096
 #define NUM_INTERFACES 2
 #define NUM_DEVICES 2
 
 typedef struct deviceBuffer {
-    char buffer[BUFSIZE];
+    char buffer[BUFFERSIZE];
     int  nchars;
 }deviceBuffer;
 
@@ -145,7 +145,7 @@ static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchar
         return(0);
     }
     pdeviceBuffer = &pechoPvt->buffer[addr];
-    if(nchars>BUFSIZE) nchars = BUFSIZE;
+    if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
     if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
     pdeviceBuffer->nchars = nchars;
     epicsThreadSleep(pechoPvt->delay);
