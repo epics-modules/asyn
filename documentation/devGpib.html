@@ -12,10 +12,15 @@
 <h1>EPICS: asynDriver devGpib<br>
 Instrument Device Support</h1>
 
+<h1>asynManager R4.0</h1>
+
+<p></p>
+
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer and Eric
 Norum</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">May 19, 2004</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">November 19,
+2004</span></p>
 </center>
 <hr>
 
@@ -606,7 +611,9 @@ support, it must document its changes.</p>
       <code>gpibCmd</code> which contains other usefull information.</p>
       <p>If the End of String terminator needs to be changed, it must be
       changed by calling <code>pdevSupportGpib-&gt;setEos</code> rather than
-      calling <code>pgpibDpvt-&gt;pasynOctet-&gt;setEos</code></p>
+      calling <code>pgpibDpvt-&gt;pasynOctet-&gt;setEos</code> Also when the
+      <code>convert</code> routine has finished with read operations it must
+      call <code>pdevSupportGpib-&gt;restoreEos</code></p>
     </dd>
   <dt></dt>
   <dt>GPIBCMD</dt>
@@ -943,12 +950,12 @@ issues a message that it received an unsolicited SRQ.</p>
 
 <p>The device support for the longinRecord supports gpibCmd type
 GPIBSRQHANDLER. It calls the devSupportGpib registerSrqHandler method. When
-its interruptCallbackInt32 gets called, it puts the SRQ status byte into the VAL field
-and then makes a request to process the record. By forward linking this
-record to other records, the user can handle SRQs from specific devices.
+its interruptCallbackInt32 gets called, it puts the SRQ status byte into the
+VAL field and then makes a request to process the record. By forward linking
+this record to other records, the user can handle SRQs from specific devices.
 Note that the callback is an interruptCallbackInt32 since asynGpib handles
-SRQ callbacks via the asynInt32 interface and using asynUser.reason = ASYN_REASON_SIGNAL.
-</p>
+SRQ callbacks via the asynInt32 interface and using asynUser.reason =
+ASYN_REASON_SIGNAL.</p>
 <hr>
 
 <center>
@@ -1115,6 +1122,7 @@ struct devSupportGpib {
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
     int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
+    int (*restoreEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
     void (*completeProcess)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
@@ -1176,11 +1184,13 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
   <dt><code>setEos</code></dt>
     <dd>If the End of String terminator needs to be changed, it must be
       changed by calling this rather than calling the low level driver.</dd>
+  <dt><code>restoreEos</code></dt>
+    <dd>If code calls setEos it must call restoreEos after all reads are
+    done.</dd>
   <dt><code>completeProcess</code></dt>
-    <dd>If the port can block, callbackRequestProcessCallback is called.
-    If the port can not block then PACT is set false. Thus before calling
-    queueRequest, the caller should set PACT true.
-    </dd>
+    <dd>If the port can block, callbackRequestProcessCallback is called. If
+      the port can not block then PACT is set false. Thus before calling
+      queueRequest, the caller should set PACT true.</dd>
   <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib.</dd>
 </dl>
