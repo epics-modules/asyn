@@ -882,11 +882,10 @@ static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
 
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    int     status = 0;
+    vxiLink *pvxiPort = (vxiPort *)pdrvPvt;
+    int     nRead = 0, thisRead;
     int     addr = pasynManager->getAddr(pasynUser);
-    devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
-    int     lennow;
+    devLink *pdevLink = vxiSetDevLink(pvxiPort,pasynUser,addr);
     enum clnt_stat   clntStat;
     Device_ReadParms devReadP;
     Device_ReadResp  devReadR;
@@ -897,8 +896,8 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
     if(!pdevLink->connected) return -1;
     devReadP.lid = pdevLink->lid;
     /* device link is created; do the read */
-    do{
-        lennow = 0;
+    do {
+        thisRead = -1;
         devReadP.requestSize = maxchars;
         devReadP.io_timeout = setIoTimeout(pvxiPort,pasynUser);
         devReadP.lock_timeout = 0;
@@ -915,41 +914,34 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
             (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
         if(clntStat != RPC_SUCCESS) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiRead %d, %s, %d %s\n",
-                pvxiPort->portName, addr, data, maxchars,
-                clnt_sperror(pvxiPort->rpcClient, ""));
-            status = -1;
+                        "%s vxiRead %d, %s, %d %s\n",
+                                    pvxiLink->portName, addr, data, maxchars,
+                                    clnt_sperror(pvxiPort->rpcClient, ""));
         } else if(devReadR.error != VXI_OK) {
-            if(devReadR.error != VXI_IOTIMEOUT) {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "%s vxiRead %d, %s, %d %s\n",
-                    pvxiPort->portName, addr, data, maxchars,
-                    vxiError(devReadR.error));
-            }
-            if(devReadR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC){
-                /* try to recover */
-                vxiAddressedCmd(pvxiPort,pasynUser,IBSDC,1);
-            }
-            status = -1;
+            if((devReadR.error == VXI_IOTIMEOUT) && (pvxiLink->recoverWithIFC))
+                vxiIfc(pdrvPvt, pasynUser);
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "%s vxiRead %d, %s, %d %s\n",
+                                    pvxiPort->portName, addr, data, maxchars,
+                                    vxiError(devReadR.error));
         } else {
             asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
                 devReadR.data.data_val,devReadR.data.data_len,
                 "%s %d vxiRead\n",pvxiPort->portName,addr);
-            lennow = devReadR.data.data_len;
-            if(lennow>0) {
-                memcpy(data, devReadR.data.data_val, devReadR.data.data_len);
-                status += devReadR.data.data_len;
-                data += devReadR.data.data_len;
-                maxchars -= devReadR.data.data_len;
+            thisRead = devReadR.data.data_len;
+            if(thisRead>0) {
+                memcpy(data, devReadR.data.data_val, thisRead);
+                nRead += thisRead;
+                data += thisRead;
+                maxchars -= thisRead;
             }
         }
         xdr_free((const xdrproc_t) xdr_Device_ReadResp, (char *) &devReadR);
-    }
-    while(status != -1 && !devReadR.reason && lennow>0);
+    } while(!devReadR.reason && thisRead>0);
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
     if(vxiWriteCmd(pvxiPort,pasynUser, "_?", 2) != 2) return -1;
-    return status;
+    return nRead ? nRead : -1;
 }
 
 static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
@@ -1006,7 +998,7 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
                     vxiError(devWriteR.error));
             }
             if(devWriteR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC) 
-            vxiAddressedCmd(pvxiPort,pasynUser,IBSDC,1);
+                vxiIfc(pdrvPvt, pasynUser);
             status = -1;
         } else {
             status = devWriteR.size;
