@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.5 2004-04-12 18:02:13 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.6 2004-04-13 18:44:57 norume Exp $
  */
 
 #include <string.h>
@@ -821,7 +821,8 @@ int
 drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
-                     int noAutoConnect)
+                     int noAutoConnect,
+                     int noEosProcessing)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -895,7 +896,7 @@ drvAsynSerialPortConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    if (asynInterposeEosConfig(tty->portName, -1) < 0) {
+    if (!noEosProcessing && (asynInterposeEosConfig(tty->portName, -1) < 0)) {
         ttyCleanup(tty);
         return -1;
     }
@@ -910,15 +911,17 @@ static const iocshArg drvAsynSerialPortConfigureArg0 = { "port name",iocshArgStr
 static const iocshArg drvAsynSerialPortConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvAsynSerialPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynSerialPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
+static const iocshArg drvAsynSerialPortConfigureArg4 = { "disable EOS processing",iocshArgInt};
 static const iocshArg *drvAsynSerialPortConfigureArgs[] = {
     &drvAsynSerialPortConfigureArg0, &drvAsynSerialPortConfigureArg1,
-    &drvAsynSerialPortConfigureArg2, &drvAsynSerialPortConfigureArg3};
+    &drvAsynSerialPortConfigureArg2, &drvAsynSerialPortConfigureArg3,
+    &drvAsynSerialPortConfigureArg4};
 static const iocshFuncDef drvAsynSerialPortConfigureFuncDef =
-                      {"drvAsynSerialPortConfigure",4,drvAsynSerialPortConfigureArgs};
+                      {"drvAsynSerialPortConfigure",5,drvAsynSerialPortConfigureArgs};
 static void drvAsynSerialPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynSerialPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                                                                args[3].ival);
+                                                args[3].ival, args[4].ival);
 }
 
 /*

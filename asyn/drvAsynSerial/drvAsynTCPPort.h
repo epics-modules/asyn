@@ -17,8 +17,9 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-int drvAsynTCPPortConfigure(char *portName, char *ttyName,
-                              unsigned int priority, int noAutoConnect);
+int drvAsynTCPPortConfigure(char *portName, char *hostInfo,
+                            unsigned int priority, int noAutoConnect,
+                            int noEosProcessing);
 
 #ifdef __cplusplus
 }

@@ -130,7 +130,7 @@ static asynStatus
     strcpy(serverString, server);
     strcat(serverString, ":");
     strcat(serverString, portString);
-    status = drvAsynTCPPortConfigure(serverString, serverString, 0, 0);
+    status = drvAsynTCPPortConfigure(serverString, serverString, 0, 0, 0);
     status = asynSyncIOConnect(serverString, 0, ppasynUser);
     return(status);
 }
