@@ -1064,11 +1064,11 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
     </tr>
     <tr>
       <td>setTraceFILE</td>
-      <td>Set the file descriptor to use for output. A null value means use
+      <td>Set the stream to use for output. A NULL argument means use
         errlog. Normally set by the user requesting it via a shell command or
-        the devTrace device support. If the current file descriptor is none
-        of (0, stdout, stderr) then the file is closed before the file
-        descriptor is changed.</td>
+        by the devTrace device support. If the current output stream is none
+        of (NULL, stdout, stderr) then the current output stream is closed
+        before the new stream is used.</td>
     </tr>
     <tr>
       <td>getTraceFILE</td>
@@ -1928,12 +1928,12 @@ for the specified port and address.</p>
 <p><code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>.
 filename is handled as follows:</p>
 <ul>
-  <li>Not specified - A null file pointer is passed to setTraceFile. In this
-    case messages are sent top errlog.</li>
-  <li>A null string, i.e. "" or "stdout" - stdout is passed to
+  <li>Not specified - A NULL pointer is passed to setTraceFile. Subsequent 
+    messages are sent to errlog.</li>
+  <li>An empty string ("") or "stdout" - stdout is passed to
   setTraceFile.</li>
   <li>Any other string - The specified file is opened with an option of "w"
-    and the file pointer passed to setTraceFile.</li>
+    and the file pointer is passed to setTraceFile.</li>
 </ul>
 
 <p><code>asynSetTraceIOTruncateSize</code> calls
