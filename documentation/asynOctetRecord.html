@@ -2,7 +2,7 @@
 <!-- saved from url=(0058)http://cars9.uchicago.edu/software/epics/serialRecord.html -->
 <HTML><HEAD><TITLE>serial - Generic Serial Record</TITLE>
 <META http-equiv=Content-Type content="text/html; charset=windows-1252">
-<META content="Microsoft FrontPage 4.0" name=GENERATOR></HEAD>
+<META content="Microsoft FrontPage 5.0" name=GENERATOR></HEAD>
 <BODY>
 <H1>asynOctet Record</H1>
 <ADDRESS>Mark Rivers</ADDRESS>
@@ -10,27 +10,24 @@
 
 <H2>Contents</H2>
 <UL>
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Overview">Overview</A> 
+  <LI><a href="#Overview">Overview</a> 
 
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Fields">Field 
-  Descriptions</A> 
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Files">Files</A> 
-
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Restrictions">Restrictions</A> 
-
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Release">Release 
-  Notes</A> 
-  <LI><A 
-  href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Example">Example</A> 
-  </LI></UL><A name=Overview>
+  <LI><a href="#Device Address Control Fields">Device Address Control Fields</a><LI>
+  <a href="#Input/Output Control Fields">Input/Output Control Fields</a><LI>
+  <a href="#Output Control Fields">Output Control Fields</a><LI>
+  <a href="#Input Control Fields">Input Control Fields</a><LI>
+  <a href="#Serial Control Fields">Serial Control Fields</a><LI>
+  <a href="#GPIB Control Fields">GPIB Control Fields</a><LI>
+  <a href="#Trace Control Fields">Trace Control Fields</a><LI>
+  <a href="#Private Fields">Private Fields</a><LI>
+  <a href="#Record Processing">Record Processing</a><LI><a href="#Restrictions">Restrictions</a><LI>
+  <a href="#Obsolete serial and GPIB records">Obsolete serial and GPIB records</a><LI><a href="#medm screens">medm 
+  screens</a><LI>
+  <a href="#Example 1">Example 1</a><LI><a href="#Example 2">Example 2</a></UL><A name=Overview>
 <H2>Overview</H2></A>
-<P>The asynOctet record is designed to perform generic I/O to any device that
-the asyn module supports. It is intended to allow EPICS to communicate with a new
+<P>The asynOctet record is designed to perform generic I/O to any asyn device that
+
+supports the asynOctet interface. It is intended to allow EPICS to communicate with a new
 device without rebooting the IOC, i.e. without writing any C code or 
 changing the database. The asynOctet record is thus very useful for allowing 
 Channel Access clients to communicate with devices for which no EPICS 
@@ -39,23 +36,24 @@ strings and to parse response strings, it can actually eliminate the need for C
 device support code in many applications. It is also useful for diagnostics. The
 asyn device &quot;port&quot; and &quot;address&quot; can be dynamically changed
 in the record, so a single asynOctet record can be switched from talking to one
-device to another at run time. It provides access to asynTrace for the device,
-controlling debugging output at the shell.
+device to another at run time. It provides access to asynTrace for the device, 
+controlling debugging output.
 <P>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The
 OFMT (Output Format) field is used to select one of these fields or the other as
-the output source to the serial device. Similarly, there are two input fields,
-AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format) field is used
-to select one or the other as the destination of data sent from the serial
+the output source to the  device. Similarly, there are two input fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT 
+(Input Format) field is used to select one or the other as the destination of 
+data sent from the
 device. The ASCII fields are type DBF_STRING, and are very convenient for
-typical communication with many serial devices. They permit, for example, <code>medm</code>
+typical communication with many  devices. They permit, for example, <code>medm</code>
 screens where the user can type a string and observe the response from the
 instrument. The ASCII fields, however are limited to 40 characters in length,
-and cannot be used to read or write binary data. The binary input and output
+and cannot be used to read or write binary data. The byte input and output
 fields are DBF_CHAR arrays, and can be used to transfer large blocks of
 arbitrary data, either ASCII or binary.<P>For local serial ports the baud 
 rate, parity, etc. can be controlled by fields in the record.&nbsp; For GPIB
 devices the GPIB address can be changed, and global and addressed commands can
-be executed.&nbsp; asyn socket ports can be dynamically created at run time.<P>&nbsp;
+be executed.&nbsp; asyn socket ports can be dynamically created at run time.<P>&nbsp;In 
+the &quot;Access&quot; columns in the field description tables:
       <TABLE>
         <TR>
           <TD colSpan=3>Note: In the Access columns in the field description
@@ -76,7 +74,56 @@ be executed.&nbsp; asyn socket ports can be dynamically created at run time.<P>&
           <TD>No access allowed</TD></TR></TABLE><P>&nbsp;
 <HR>
 
-<h2 align="center">Input/Output Control Fields</h2>
+<h2 align="center"><a name="Device Address Control Fields">Device Address Control Fields</a></h2>
+
+<TABLE cellPadding=5 border=1>
+  <TR>
+    <TH>Name</TH>
+    <TH>Access</TH>
+    <TH>Prompt</TH>
+    <TH>Data type</TH>
+    <TH>Description</TH></TR>
+  <TR vAlign=top>
+    <TD>PORT</TD>
+    <TD>R/W</TD>
+    <TD>"asyn port&quot;</TD>
+    <TD>DBF_STRING</TD>
+    <TD>The asyn &quot;port&quot; name.&nbsp; This field can be changed at any time to 
+    connect the record to another asyn device.</TD></TR>
+  <TR vAlign=top>
+    <TD>ADDR</TD>
+    <TD>R/W</TD>
+    <TD>&quot;asyn address&quot;</TD>
+    <TD>DBF_LONG</TD>
+    <TD>The asyn address.&nbsp; This field can be changed at any time to connect 
+    the record to another asyn device.&nbsp; The asyn address parameter is 
+    currently only used for GPIB devices, but in the future it may be used for 
+    RS-485 and other applications.</TD></TR>
+  <tr>
+    <TD>SOCK</TD>
+    <TD>R/W</TD>
+    <TD>&quot;Socket address&quot;</TD>
+    <TD>DBF_STRING</TD>
+    <TD>The name of a server:port for a TCP/IP socket connection.&nbsp; This 
+    field can be changed at any time to connect to a new TCP/IP socket.&nbsp; It 
+    creates a new port with the same name as the socket string, and connects the 
+    record to that port.&nbsp; Syntax is server:port, e.g. corvette:21 or 
+    164.54.160.50:21</TD>
+  </tr>
+</TABLE>
+<P>The asynOctet record does not have traditional INP or OUT fields for input 
+and output links.&nbsp; Rather it provides the PORT and ADDR fields to allow 
+dynamically changing what asyn device the record is connected to.
+<P>Writing to the PORT or ADDR fields causes the asynOctet record to disconnect 
+from the current device and connect to the specified asyn port and address.&nbsp; 
+This permits a single asynOctet record to be used to control any asyn device.&nbsp; 
+Writing to these fields does not cause the record to process, i.e. no I/O is 
+done.<P>Writing to the SOCK fields causes the record to create a new asyn port 
+with the same name as the SOCK field.&nbsp; This is done with 
+drvGenericSerialConfigure.<p>&nbsp;</p>
+<HR>
+
+<h2 align="center"><a name="Input/Output Control Fields">Input/Output Control Fields</a></h2>
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -133,7 +180,9 @@ processes.</p>
             the device. A response is then read back into AINP or BINP 
             (as selected by IFMT). The response must be received within the time 
             specified by TMOT. The input buffer is flushed before the write operation, so that any characters received prior to the write 
-            operation are discarded.</TD></TR>
+            operation are discarded.&nbsp; The Write/Read operation is &quot;atomic&quot;, 
+          meaning that it is guaranteed that no other asyn I/O to the device 
+          will occur between the write and read operations.</TD></TR>
         <TR vAlign=top>
           <TD>"Write"</TD>
           <TD>The output source (AOUT or BOUT as selected by OFMT) is sent to 
@@ -152,7 +201,7 @@ processes.</p>
 <p>&nbsp;</p>
 <HR>
 
-<h2 align="center">Output Control Fields</h2>
+<h2 align="center"><a name="Output Control Fields">Output Control Fields</a></h2>
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -201,8 +250,7 @@ processes.</p>
     <TD>R/W</TD>
     <TD>"Number of bytes to write"</TD>
     <TD>DBF_LONG</TD>
-    <TD>The actual number of bytes to send from the BOUT array to the serial 
-      device if OFMT=&quot;Binary&quot;. This value must be less than or equal to OMAX. 
+    <TD>The actual number of bytes to send from the BOUT array to the  device if OFMT=&quot;Binary&quot;. This value must be less than or equal to OMAX. 
   Default=512.</TD></TR>
   <TR vAlign=top>
     <TD>OFMT</TD>
@@ -225,7 +273,7 @@ processes.</p>
           <TD>The data sent to the device will be taken from the BOUT 
         field.</TD></TR></TBODY></TABLE></TD></TR>
 </TABLE>
-<P>There are two output fields, AOUT (ASCII Output) and BOUT (Binary Output). 
+<P>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). 
 The OFMT (Output Format) field is used to select one of these fields or the 
 other as the output source to the device.&nbsp; 
 <P>If OFMT=&quot;ASCII&quot; then the AOUT fields and OEOS fields are processed
@@ -244,7 +292,7 @@ not called.
 <p>&nbsp;</p>
 <HR>
 
-<h2 align="center">Input Control Fields</h2>
+<h2 align="center"><a name="Input Control Fields">Input Control Fields</a></h2>
 
 <TABLE cellPadding=5 border=1>
   <TR>
@@ -331,7 +379,7 @@ not called.
 <P>There are two input 
 fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format) 
 field is used to select one or the other as the destination of data sent from 
-the serial device. 
+the  device. 
 <P>A read operation on input continues until 1 of the following 4 conditions is 
 met: 
 <OL>
@@ -357,7 +405,7 @@ null terminated.
 <p>&nbsp;</p>
 <HR>
 
-<h2 align="center">Serial Control Fields</h2>
+<h2 align="center"><a name="Serial Control Fields">Serial Control Fields</a></h2>
 
 <TABLE cellPadding=5 border=1>
   <TR vAlign=top>
@@ -366,7 +414,7 @@ null terminated.
     <TD>"Baud rate"</TD>
     <TD>DBF_RECCHOICE</TD>
     <TD>The baud rate for the port. Choices are "300", "600", "1200", "2400", 
-      "4800", "9600", "19200", and "38400". Default="9600".</TD></TR>
+      "4800", "9600", "19200", and "38400", &quot;57600&quot;, &quot;115200&quot;, and &quot;230400&quot;. Default="9600".</TD></TR>
   <TR vAlign=top>
     <TD>PRTY</TD>
     <TD>R/W</TD>
@@ -401,29 +449,196 @@ null terminated.
       be changed immediately, but does not cause the record to process.&nbsp;
 The port parameters can currently be set only for local serial ports, including
 IP-Octal on vxWorks.&nbsp; They cannot currently be set for Ethernet/serial
-adapters like the Moxa units. 
-<P>
-&nbsp;
+adapters like the Moxa units.<P>
+ The baud rates actually available with be device dependent.&nbsp; For the SBS 
+ IP-Octal module the maximum baud rate is 38400. 
+<p>&nbsp;</p>
 <HR>
 
-<TABLE cellPadding=5 border=1><A name=Fields>
-  <CAPTION>
-  <H2>Record Field Descriptions</H2></CAPTION></A>
-  <TBODY>
-  <TR>
+<h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
+
+<table cellPadding="5" border="1">
+  <tr>
     <TH>Name</TH>
     <TH>Access</TH>
     <TH>Prompt</TH>
     <TH>Data type</TH>
-    <TH>Description</TH></TR>
+    <TH>Description</TH>
+  </tr>
+  <tr>
+    <td>ADDR</td>
+    <td>R/W</td>
+    <td>&quot;GPIB address&quot;</td>
+    <td>DBF_LONG</td>
+    <td>The GPIB address of the device. This field can be changed at any time.
+    </td>
+  </tr>
+  <tr vAlign="top">
+    <td>SPR</td>
+    <td>R</td>
+    <td>&quot;Serial Poll Response&quot;</td>
+    <td>DBF_UCHAR</td>
+    <td>The device status byte, which is read during a Serial Poll operation.</td>
+  </tr>
+  <tr vAlign="top">
+    <td>UCMD</td>
+    <td>R/W*</td>
+    <td>&quot;Universal command&quot;</td>
+    <td>DBF_RECCHOICE</td>
+    <td>A GPIB Universal Command to be executed. GPIB Universal Commands are 
+    commands which are directed to all devices on the GPIB bus, not just 
+    addressed devices. The choices are:
+    <table>
+      <tr vAlign="top">
+        <td>&quot;None&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Device Clear (DCL)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Local Lockout (LL0)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Serial Poll Disable (SPD)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Serial Poll Enable (SPE)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Unlisten (UNL)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Untalk (UNT)&quot;</td>
+      </tr>
+    </table>
+    <p>If the UCMD field is set to any value except &quot;None&quot; then the appropriate 
+    Universal Command is executed, and UCMD is set back to &quot;None&quot;. The record 
+    processing only performs the Universal Command, i.e. it does not also 
+    perform the GPIB operation indicated by TMOD.</td>
+  </tr>
+  <tr vAlign="top">
+    <td>ACMD</td>
+    <td>R/W*</td>
+    <td>&quot;Addressed command&quot;</td>
+    <td>DBF_RECCHOICE</td>
+    <td>A GPIB Addressed Command to be executed. GPIB Addressed Commands are 
+    commands which are directed to only the addressed devices on the GPIB bus. 
+    The choices are:
+    <table>
+      <tr vAlign="top">
+        <td>&quot;None&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Group Execute Trig. (GET)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Go To Local (GTL)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Selected Dev. Clear (SDC)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Take Control (TCT)&quot;</td>
+      </tr>
+      <tr vAlign="top">
+        <td>&quot;Serial Poll&quot;</td>
+      </tr>
+    </table>
+    <p>If the ACMD field is set to any value except &quot;None&quot; then the appropriate 
+    Addressed Command is executed, and ACMD is set back to &quot;None&quot;. The record 
+    processing only performs the Addressed Command, i.e. it does not also 
+    perform the GPIB operation indicated by TMOD.</td>
+  </tr>
+</table>
+<p>&nbsp;</p>
+<HR>
+
+<h2 align="center"><a name="Trace Control Fields">Trace Control Fields</a></h2>
+
+<TABLE cellPadding=5 border=1>
+  <tr>
+    <TH>Name</TH>
+    <TH>Access</TH>
+    <TH>Prompt</TH>
+    <TH>Data type</TH>
+    <TH>Description</TH>
+  </tr>
   <TR vAlign=top>
-    <TH colSpan=5>Special Fields</TH></TR>
-  <TR vAlign=top>
-    <TD colSpan=5>Note: The following fields are used to set the serial port 
-      parameters. A write to any of these fields causes the port parameters to 
-      be changed immediately, but does not cause the record to process.</TD></TR>
-  <TR vAlign=top>
-    <TH colSpan=5>Private Fields</TH></TR>
+    <TD>TB0</TD>
+    <TD>R/W</TD>
+    <TD>"Trace error&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACE_ERROR bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD></TR>
+  <tr>
+    <TD>TB1</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO device&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_DEVICE bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TB2</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO filter&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_FILTER bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TB3</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO driver&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_DRIVER bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TB4</TD>
+    <TD>R/W</TD>
+    <TD>"Trace flow&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_FLOW bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TIB0</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO ASCII&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_ASCII bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TIB1</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO escape&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_ESCAPE bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+  <tr>
+    <TD>TIB2</TD>
+    <TD>R/W</TD>
+    <TD>"Trace IO hex&quot;</TD>
+    <TD>DBF_RECCHOICE</TD>
+    <TD>The ASYN_TRACEIO_HEX bit.&nbsp; Choices are &quot;Off&quot; and &quot;On&quot;.</TD>
+  </tr>
+</TABLE>
+<P>
+ The above fields are used to control the asynTrace facility.&nbsp; They allow 
+ one to turn on and off debugging output printed at the shell or written to the 
+ trace file.<P>
+ When the asynOctet record is connected to a new device with the PORT and ADDR 
+ fields the above trace fields are automatically updated to reflect the current 
+ asynTrace and asynTraceIO masks for that device.<p>&nbsp;</p>
+<HR>
+
+<h2 align="center"><a name="Private Fields">Private Fields</a></h2>
+
+<P>
+ &nbsp;<TABLE cellPadding=5 border=1>
+  <tr>
+    <TH>Name</TH>
+    <TH>Access</TH>
+    <TH>Prompt</TH>
+    <TH>Data type</TH>
+    <TH>Description</TH>
+  </tr>
   <TR vAlign=top>
     <TD>IPTR</TD>
     <TD>N</TD>
@@ -436,131 +651,104 @@ adapters like the Moxa units.
     <TD>"Output buffer pointer"</TD>
     <TD>DBF_NOACCESS</TD>
     <TD>The pointer to the buffer for the BOUT field.</TD></TR>
-  <TR vAlign=top>
-    <TD align=left colSpan=5>
-      <TABLE>
-        <TBODY>
-        <TR>
-          <TD colSpan=3>Note: In the Access column above: </TD>
-        <TR vAlign=top>
-          <TD>R</TD>
-          <TD>Read only
-          <TD></TD>
-        <TR vAlign=top>
-          <TD>R/W</TD>
-          <TD>Read and write are allowed</TD></TR>
-        <TR vAlign=top>
-          <TD>R/W*</TD>
-          <TD>Read and write are allowed; write triggers record processing if 
-            the record's SCAN field is set to "Passive".</TD></TR>
-        <TR vAlign=top>
-          <TD>N</TD>
-          <TD>No access allowed</TD></TR></TBODY></TABLE></TD></TR></TBODY></TABLE>
+  </TABLE>
+<P>
+&nbsp;
 <HR>
 
-<P><A name=Files>
-<H2>Files</H2></A>The following table briefly describes all of the files 
-required to implement the asynOctet record. The reader is assumed to be familiar 
-with the <A 
-href="http://www.aps.anl.gov/asd/controls/epics/EpicsDocumentation/AppDevManuals/iocAppBuildSRcontrol.html">EPICS 
-Application Source/Release Control document</A> which describes how to build an 
-EPICS application tree into which these files are to be placed, and how to run 
-"gnumake" to build the record support. These files can all be obtained in a <A 
-href="http://cars9.uchicago.edu/software/epics/pub/serial_record.tar.Z">compressed 
-tar file</A>. This file should be untarred in a <CODE>&lt;top&gt;/xxxApp/</CODE> 
-directory. 
-<P>
-<TABLE cellPadding=5 border=1>
-  <TBODY>
-  <TR>
-    <TH colSpan=2>Files to be placed in <CODE>&lt;top&gt;/xxxApp/src/</CODE> 
-    </TH></TR>
-  <TR vAlign=top>
-    <TD>serialRecord.c</TD>
-    <TD>The source file for the record</TD></TR>
-  <TR>
-    <TD>serialRecord.dbd</TD>
-    <TD>The database definition file for the record</TD></TR>
-  <TR>
-    <TD>devSerial.cc</TD>
-    <TD>The Hideos device support code for the record</TD></TR>
-  <TR vAlign=top>
-    <TD>Makefile.Vx</TD>
-    <TD>This file is not included in the distribution. However, the user must 
-      edit this file and add lines similar to the following: <PRE>RECTYPES += serialRecord.h
-SRCS.c   += ../serialRecord.c 
-SRCS.c   += ../devSerial.cc
-LIBOBJS  += serialRecord.o
-LIBOBJS  += devSerial.o
-USR_INCLUDES += -I$(HIDEOS_DIR)/include
+<h2 align="center"><a name="Record Processing">Record Processing</a></h2>
 
-</PRE></TD></TR>
-  <TR>
-    <TH colSpan=2>Files to be placed in 
-      <CODE>&lt;top&gt;/xxxApp/op/adl/</CODE> </TH></TR>
-  <TR vAlign=top>
-    <TD>asynOctet_IO.adl</TD>
-    <TD>This file builds an <CODE>medm</CODE> screen to access the asynOctet record. The <CODE>medm</CODE> screen is most useful for communicating with 
-      serial devices in ASCII. To use it from the command line, type the 
-      following: <PRE>cars&gt; medm -x -macro REC=my_serial_record Serial_IO.adl
-</PRE>
-      <P>where <CODE>my_serial_record</CODE> is the name of a asynOctet record in 
-      an IOC. 
-      <P>This file can also be used as a related display from other 
-      <CODE>medm</CODE> screens by passing the argument 
-      <CODE>REC=my_serial_record</CODE>. </P></TD></TR></TBODY></TABLE>
+<P>
+ The asynOctet record processes, i.e. performs the I/O operation given by TMOD, 
+ according to the normal rules for EPICS records.&nbsp; The AOUT and BOUT fields 
+ are Process Passive, so the record will process if these fields are written to 
+ and the SCAN field of the record is Passive.&nbsp; The scan field of the record 
+ can be set to any of the periodic scan rates (e.g. &quot;1 second&quot;) for periodic 
+ processing, or to &quot;Event&quot; for event processing.&nbsp; &quot;I/O Intr&quot; scanning is 
+ currently not supported (but see <a href="#Restrictions">Restrictions</a> 
+ below).<P>
+&nbsp;<HR>
+
+<h2 align="center"><a name="Obsolete serial and GPIB records">Obsolete serial 
+and GPIB records</a></h2>
+
+<P>
+ The asynOctet record is designed to be a complete replacement for the older 
+ generic serial (&quot;serial&quot;) and generic GPIB (&quot;gpib&quot;) records.&nbsp; These 
+ records are no longer needed, and will not be supported in the future.&nbsp; 
+ The following is a list of differences between the old serial and GPIB records 
+ and the new asynOctet record which may require changes to databases or 
+ applications.<ul>
+  <li>The ODEL field has been replaced by OEOS.&nbsp; It has changed from a 
+  DBF_LONG to DBF_STRING in order to support multi-character terminators.</li>
+  <li>The IDEL (serial) and EOS (gpib) fields have been replaced by IEOS.&nbsp; 
+  They have changed from a DBF_LONG to DBF_STRING in order to support 
+  multi-character terminators.</li>
+  <li>The INP field has been replaced by the PORT and ADDR fields in order to 
+  support run-time connection to different devices.</li>
+  <li>The AOUT and OEOS fields are processed by dbTranslateEscape before being 
+  sent to the device.&nbsp; In rare cases this may require changing the output 
+  strings if these contained the &quot;\&quot; character.</li>
+  <li>The asynOctet record always posts monitors on the input field (AINP or 
+  BINP) when the record processes.&nbsp; The older records did not post monitors 
+  on the AINP field if the value was the same as the previous read.&nbsp; This 
+  caused problems for some SNL programs and data acquisition applications.</li>
+  <li>The ODEL and IDEL fields were used even when OFMT or IFMT were in &quot;Binary&quot; 
+  mode.&nbsp; OEOS and IEOS are ignored when OFMT or IFMT respectively are in 
+  &quot;Binary&quot; mode.</li>
+  <li>The TMOT field has changed from DBF_LONG to DBF_DOUBLE, and the units have 
+  changed from milliseconds to seconds.&nbsp; TMOT=-1.0 now means wait forever. 
+  </li>
+  </ul>
+<p>&nbsp;</p>
+<HR>
+
+<H2><a name="medm screens">medm screens</a></H2><p>The following are 
+  screen shots of the medm screens provided for the asynOctet record.</p><p>&nbsp;</p>
+  <h3 align="center">Main control screen, asynOctet.adl</h3>
+  <p align="center"><img border="0" src="asynOc1.gif" width="448" height="350"></p>
+  <p align="center">&nbsp;</p>
+  <h3 align="center">Serial port setup screen, asynSerialPortSetup.adl</h3>
+  <p align="center"><img border="0" src="asynOc2.gif" width="258" height="210"></p>
+  <p align="center">&nbsp;</p>
+  <h3 align="center">GPIB setup screen, asynGPIBSetup.adl</h3>
+  <p align="center"><img border="0" src="asynOc3.gif" width="383" height="195"></p>
+  <p align="center">&nbsp;</p>
+  <h3 align="center">Socket setup screen, asynSocketSetup.adl</h3>
+  <p align="center"><img border="0" src="asynOc4.gif" width="358" height="150"></p>
+  <p align="center">&nbsp;</p>
+  <h3 align="center">Trace control screen, asynOctetTrace.adl</h3>
+  <p align="center"><img border="0" src="asynOc5.gif" width="358" height="230"></p>
+  <P>
 <HR>
 <A name=Restrictions>
-<H2>Restrictions</H2></A>There should be a way to optionally force the input 
-ring buffer to be flushed on a "Read" operation, as it is on "Write/Read". This 
-may be added in the future.
-<p>The HiDEOS device support permits I/O Event Scanning (SCAN="I/O Intr&quot;) when 
-the transfer mode (TMOD) is "Read". In this case the record will be processed 
+<H2>Restrictions</H2></A>
+<p>I/O Event Scanning (SCAN="I/O Intr&quot;) should be supported when 
+the transfer mode (TMOD) is &quot;Read&quot;. In this case the record should process 
 whenever a complete message is received. A complete message is defined by the 
-input delimiter (IDEL) and/or the requested number of input characters (NRRD), 
-being received. The timeout field (TMOT) does not apply when SCAN="I/O Intr&quot;. 
-For more information see the note under <A 
-href="http://cars9.uchicago.edu/software/epics/serialRecord.html#Restrictions">Restrictions</A> 
-below.</p>
-<P>There are two bugs in the HiDEOS device support when using I/O Event 
-Scanning. If the SCAN field is changed from "I/O Intr" to any other value then 
-the record will "hang-up" until at least one more input message is received. The 
-reason for this is that "I/O Intr" scanning is implemented by passing a HiDEOS 
-"Read" request with infinite time out. There is presently no way to abort this 
-request, and the HiDEOS task will wait until the request is satisfied. The 
-second bug is that specifying an infinite timeout actually does not work, so the 
-record actually requests 10^9 milliseconds = 1 million seconds. Thus, in I/O 
-Event Scanning mode the record will actually time out about every 10 days if the 
-device does not send any messages. Both of these bugs should be fixed in the 
-near future. 
-<P>The HiDEOS input ring buffer is limited to 500 characters. This is thus an 
-upper limit on the maximum message size which can be received. If a device sends 
-a larger message it will need to be read by processing the record multiple 
-times. This will probably require using flow control. 
+input delimiter (IEOS) and/or the requested number of input characters (NRRD), 
+being received. The timeout field (TMOT) will not apply when SCAN="I/O Intr&quot;. 
+This will be added in the future.</p>
+<p>Trace file and trace truncate size should be supported.&nbsp; These will be 
+added in the future.</p>
+<p>Enable, autoconnect, and connect should be supported.&nbsp; These will be 
+added in the future.</p>
 <HR>
-<A name=Release>
-<H2>Release Notes</H2></A>
-<UL>
-  <LI>Version 1.0, March 1996. Initial release for R3.12 by Mark Rivers. 
-  <LI>Version 1.1, December 1997. Conversion to EPICS R3.13 by Tim Mooney. 
-</LI></UL>
-<HR>
-<A name=Example>
-<H2>Example</H2></A>The following is an IDL program which demonstrates the use 
-of the asynOctet record. It transfers data in both ASCII and binary formats. <PRE>; This IDL program demonstrates the use of the EPICS asynOctet record.
-; The program uses 2 serial records.  The ports corresponding to these
+<H2><a name="Example 1">Example #1</a></H2>The following is an IDL program which demonstrates the use 
+of the asynOctet record. It transfers data in both ASCII and binary formats. 
+<PRE>; This IDL program demonstrates the use of the EPICS asynOctet record.
+; The program uses 2 asynOctet records.  The ports corresponding to these
 ; 2 records are connected with a null-modem cable
 ; Record 1 sends a message to record 2 in ASCII.
 ; Record 2 sends a message back to record 1 in binary.
 
 ; Record names
-rec1 = 'test_serial1'
-rec2 = 'test_serial2'
+rec1 = '13LAB:serial2'
+rec2 = '13LAB:serial3'
 recs = [rec1, rec2] ; Array with both record names
 ; Set up port parameters for both records:
 ;   19,200 baud, 8 data bits, 1 stop bit, no parity, no flow control
 ;   Timeout=1 second
-castartgroup
 for i=0, 1 do begin
     rec = recs(i)
     t = caput(rec+'.BAUD', '19200')
@@ -574,36 +762,36 @@ endfor
 ; Put record 1 in ASCII output mode, &lt;CR&gt; output delimiter,
 ;   binary input mode, no input delimiter
 t = caput(rec1+'.OFMT', 'ASCII')
-t = caput(rec1+'.ODEL', 13)
+t = caput(rec1+'.OEOS', '\r')
 t = caput(rec1+'.IFMT', 'Binary')
-t = caput(rec1+'.IDEL', -1)
+t = caput(rec1+'.IEOS', '')
 ; Put a monitor on record 1 Binary input field
 t = casetmonitor(rec1+'.BINP')
+; Clear the monitor by reading the value
+t = caget(rec1+'.BINP', junk)
 
 ; Put record 2 in Binary output mode, no output delimiter
 ;   ASCII input mode, &lt;CR&gt; input delimiter
 t = caput(rec2+'.OFMT', 'Binary')
-t = caput(rec2+'.ODEL', -1)
+t = caput(rec2+'.OEOS', '')
 t = caput(rec2+'.IFMT', 'ASCII')
-t = caput(rec2+'.IDEL', 13)
+t = caput(rec2+'.IEOS', '\r')
 
 ; Put record 2 in read transfer mode
 t = caput(rec2+'.TMOD', 'Read')
 ; Put a monitor on record2 ASCII input field
 t = casetmonitor(rec2+'.AINP')
+; Clear the monitor by reading the value
+t = caget(rec2+'.AINP', junk)
+
 ; Process record 2; this will cause it to wait for data
 t = caput(rec2+'.PROC', 1)
-
 ; Put record 1 in write transfer mode
 t = caput(rec1+'.TMOD', 'Write')
 ; Send a message to port 2
 message = 'Request data: '+string(systime())
 print, 'Record 1 sent message: ' + message
 t = caput(rec1+'.AOUT', message)
-; End the group - this causes all of the above channel access
-; commands to actually be sent to the IOC
-t = caendgroup()
-
 
 ; Wait for monitor on record2 ASCII input field
 while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
@@ -611,7 +799,6 @@ while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
 t = caget(rec2+'.AINP', input)
 print, 'Got a message from record 1: ', input
 
-castartgroup
 size=256
 ; Put record 1 in read mode, expect &quot;size&quot; byte input
 t = caput(rec1+'.TMOD', 'Read')
@@ -626,7 +813,6 @@ t = caput(rec2+'.TMOD', 'Write')
 send_data = byte(sin(findgen(size)/5)*126 + 127)
 t = caput(rec2+'.NOWT', size)
 t = caput(rec2+'.BOUT', send_data)
-t = caendgroup()
 
 ; Wait for monitor on channel 1 binary input
 while (not cacheckmonitor(rec1+'.BINP')) do wait, .1
@@ -647,8 +833,77 @@ plot, rec_data
 end
 </PRE>
 <HR>
+  <H2><a name="Example 2" #2>Example #2</a></H2>The following is an IDL program 
+  that demonstrates the use 
+of the asynOctet record to communicate with a Tektronix 2432A Digital Oscilloscope. 
+It transfers data in both ASCII and binary formats.&nbsp; It will work with 
+  either an RS-232 or GPIB connection to the scope.<PRE>; This IDL program demonstrates the use of the asynOctet record to
+; communicate with a Tektronix 2432A Digital Oscilloscope.
 
+; The name of the asynOctet record which is communicating 
+; with the either an RS-232 port or GPIB bus to which the scope is connected
+rec = 'asynOctet1'
+aout = rec+'.AOUT'   ; Shorthand for the ASCII output field
+ainp = rec+'.AINP'   ; Shorthand for the ASCII input field
+
+; Make sure the record is set up for ASCII input and output 
+; and Write/Read mode
+t = caput(rec+'.OFMT', 'ASCII')
+t = caput(rec+'.IFMT', 'ASCII')
+t = caput(rec+'.TMOD', 'Write/Read')
+
+; Set Channel 1 to 100 mV per division
+t = caput(aout, 'CH1 VOLTS:0.1')
+
+; Confirm that this worked
+t = caput(aout, 'CH1? VOLTS')
+t = caget(ainp, response)
+    print, 'Channel 1 volts=', float(response)
+
+; Set the horizontal time scale to 2 msec/div
+t = caput(aout, 'HOR ASECDIV:2E-3')
+
+; Set the waveform readout format to positive binary
+t = caput(aout, 'DATA ENC:RPB')
+
+; Switch the record to binary input mode
+t = caput(rec+'.IFMT', 'Binary')
+
+; Tell the scope to send the waveform data
+t = caput(aout, 'CURVE?')
+
+; The scope always sends 1028 bytes of data.
+; Make sure the NORD field is 1028.
+t = caget(rec+'.NORD', nord)
+    if (nord eq 1028) then $
+        print, 'Got good data from scope' $
+    else $
+        print, 'Error reading data from scope'
+
+; Read from binary input field, reading only valid data
+t = caget(rec+'.BINP', data, max=nord) 
+
+; The first 3 points and last point are header and checksum.
+data = data(3:1026)
+
+; The data are in offset binary, subtract 127
+data = data - 127
+
+; Plot the data. 
+plot, data
+
+; Put the record back in ASCII input mode
+t = caput(rec+'.IFMT', 'ASCII')
+
+; Ask the scope to report the minimum and maximum values of 
+; the current waveform
+t = caput(aout, 'MINIMUM?; MAXIMUM?')
+t = caget(ainp, response)
+print, 'Range of values in waveform:', response
+
+end
+</PRE>
 <ADDRESS>Suggestions and comments to: <A 
 href="mailto:rivers@cars.uchicago.edu">Mark Rivers </A>: 
-(rivers@cars.uchicago.edu) <BR>Last modified: December 14, 1997 
+(rivers@cars.uchicago.edu) <BR>Last modified: March 30, 2004
 </ADDRESS></BODY></HTML>
