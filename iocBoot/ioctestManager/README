@@ -8,6 +8,7 @@ regression test instructions:
    diff temp test20040823
 
    there should be no differences
+   NOT TRUE: May be subtle timing diffs if workstation is busy
 
 NOTES:
 
