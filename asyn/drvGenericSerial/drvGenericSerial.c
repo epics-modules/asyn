@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.1 2003-11-03 22:11:20 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.2 2003-11-04 20:58:20 norume Exp $
  */
 
 #include <string.h>
@@ -348,7 +348,7 @@ openConnection (ttyController_t *tty)
                 return -1;
             }
         }
-#endif
+#else
         /*
          * Turn off non-blocking mode
          */
@@ -358,6 +358,7 @@ openConnection (ttyController_t *tty)
             tty->fd = -1;
             return asynError;
         }
+#endif
     }
     if (tty->wasClosed)
         tty->nReconnect++;
