@@ -1003,7 +1003,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
                 "asynManager::queueRequest not connected\n");
         return asynError;
     }
-    if(!pport->attributes&&ASYN_CANBLOCK) {
+    if(!pport->attributes&ASYN_CANBLOCK) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
             "%s asynManager:queueRequest calling synchronousRequest\n",
             pport->portName);
