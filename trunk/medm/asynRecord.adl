@@ -1,14 +1,14 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynRecord.adl"
-	version=030004
+	name="i:\epics\synApps5-1\asyn\3-3beta\medm\asynRecord.adl"
+	version=030003
 }
 display {
 	object {
-		x=166
-		y=24
+		x=133
+		y=514
 		width=442
-		height=670
+		height=430
 	}
 	clr=14
 	bclr=4
@@ -187,314 +187,58 @@ text {
 	limits {
 	}
 }
-composite {
-	object {
-		x=296
-		y=73
-		width=131
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=296
-				y=73
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-				fill="outline"
-			}
-			textix="More..."
-		}
-		"related display" {
-			object {
-				x=371
-				y=73
-				width=56
-				height=20
-			}
-			display[0] {
-				label="Serial port parameters"
-				name="asynSerialPortSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[1] {
-				label="GPIB parameters"
-				name="asynGPIBSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			display[2] {
-				label="Socket parameters"
-				name="asynSocketSetup.adl"
-				args="P=$(P),R=$(R)"
-			}
-			clr=14
-			bclr=51
-		}
-	}
-}
-rectangle {
-	object {
-		x=6
-		y=184
-		width=430
-		height=5
-	}
-	"basic attribute" {
-		clr=14
-	}
-}
-composite {
-	object {
-		x=6
-		y=193
-		width=424
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=6
-				y=193
-				width=140
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Timeout (sec):"
-		}
-		"text entry" {
-			object {
-				x=151
-				y=193
-				width=50
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TMOT"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		composite {
-			object {
-				x=225
-				y=193
-				width=205
-				height=20
-			}
-			"composite name"=""
-			children {
-				menu {
-					object {
-						x=320
-						y=193
-						width=110
-						height=20
-					}
-					control {
-						chan="$(P)$(R).TMOD"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=225
-						y=193
-						width=90
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Transfer:"
-					align="horiz. right"
-				}
-			}
-		}
-	}
-}
-"text entry" {
-	object {
-		x=78
-		y=252
-		width=350
-		height=20
-	}
-	control {
-		chan="$(P)$(R).AOUT"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
 text {
 	object {
-		x=13
-		y=223
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=25
-	}
-	textix="Output"
-}
-text {
-	object {
-		x=91
-		y=223
+		x=294
+		y=108
 		width=70
 		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Format:"
-}
-menu {
-	object {
-		x=166
-		y=223
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)$(R).OFMT"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=13
-		y=250
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="ASCII:"
-}
-rectangle {
-	object {
-		x=6
-		y=216
-		width=430
-		height=85
 	}
 	"basic attribute" {
 		clr=14
 		fill="outline"
 	}
+	textix="More..."
 }
-text {
+"related display" {
 	object {
-		x=256
-		y=223
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Terminator:"
-}
-"text entry" {
-	object {
-		x=371
-		y=223
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R).OEOS"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=88
-		y=276
-		width=100
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Requested:"
-}
-text {
-	object {
-		x=10
-		y=276
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Length:"
-}
-text {
-	object {
-		x=280
-		y=276
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Actual:"
-}
-"text update" {
-	object {
-		x=355
-		y=276
+		x=369
+		y=108
 		width=56
 		height=20
 	}
-	monitor {
-		chan="$(P)$(R).NAWT"
-		clr=14
-		bclr=4
+	display[0] {
+		label="asynOctet Interface I/O"
+		name="asynOctet.adl"
+		args="P=$(P),R=$(R)"
 	}
-	limits {
+	display[1] {
+		label="Register interfaces I/O"
+		name="asynRegister.adl"
+		args="P=$(P),R=$(R)"
 	}
-}
-"text entry" {
-	object {
-		x=193
-		y=276
-		width=70
-		height=20
+	display[4] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="P=$(P),R=$(R)"
 	}
-	control {
-		chan="$(P)$(R).NOWT"
-		clr=14
-		bclr=51
+	display[5] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="P=$(P),R=$(R)"
 	}
-	limits {
+	display[6] {
+		label="Socket parameters"
+		name="asynSocketSetup.adl"
+		args="P=$(P),R=$(R)"
 	}
+	clr=14
+	bclr=51
 }
 "text update" {
 	object {
 		x=34
-		y=97
+		y=135
 		width=2
 		height=2
 	}
@@ -508,7 +252,7 @@ text {
 "text update" {
 	object {
 		x=75
-		y=102
+		y=140
 		width=359
 		height=16
 	}
@@ -524,7 +268,7 @@ text {
 text {
 	object {
 		x=10
-		y=101
+		y=139
 		width=70
 		height=20
 	}
@@ -536,7 +280,7 @@ text {
 rectangle {
 	object {
 		x=6
-		y=98
+		y=136
 		width=430
 		height=25
 	}
@@ -548,7 +292,7 @@ rectangle {
 text {
 	object {
 		x=300
-		y=132
+		y=170
 		width=130
 		height=20
 	}
@@ -565,7 +309,7 @@ text {
 text {
 	object {
 		x=310
-		y=132
+		y=170
 		width=110
 		height=20
 	}
@@ -582,7 +326,7 @@ text {
 menu {
 	object {
 		x=305
-		y=153
+		y=191
 		width=120
 		height=20
 	}
@@ -595,7 +339,7 @@ menu {
 text {
 	object {
 		x=180
-		y=132
+		y=170
 		width=70
 		height=20
 	}
@@ -612,7 +356,7 @@ text {
 text {
 	object {
 		x=175
-		y=132
+		y=170
 		width=80
 		height=20
 	}
@@ -629,7 +373,7 @@ text {
 menu {
 	object {
 		x=155
-		y=154
+		y=192
 		width=120
 		height=20
 	}
@@ -642,7 +386,7 @@ menu {
 text {
 	object {
 		x=25
-		y=132
+		y=170
 		width=90
 		height=20
 	}
@@ -659,7 +403,7 @@ text {
 text {
 	object {
 		x=10
-		y=132
+		y=170
 		width=120
 		height=20
 	}
@@ -676,7 +420,7 @@ text {
 menu {
 	object {
 		x=10
-		y=154
+		y=192
 		width=120
 		height=20
 	}
@@ -689,7 +433,7 @@ menu {
 rectangle {
 	object {
 		x=6
-		y=130
+		y=168
 		width=430
 		height=49
 	}
@@ -700,8 +444,8 @@ rectangle {
 }
 "message button" {
 	object {
-		x=10
-		y=73
+		x=9
+		y=110
 		width=150
 		height=20
 	}
@@ -713,141 +457,10 @@ rectangle {
 	label="cancel queueRequest"
 	press_msg="1"
 }
-text {
-	object {
-		x=10
-		y=421
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="I/O Status:"
-}
-text {
-	object {
-		x=217
-		y=421
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="I/O Severity:"
-}
-"text update" {
-	object {
-		x=122
-		y=421
-		width=85
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).STAT"
-		clr=14
-		bclr=2
-	}
-	clrmod="alarm"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=349
-		y=421
-		width=85
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).SEVR"
-		clr=14
-		bclr=2
-	}
-	clrmod="alarm"
-	limits {
-	}
-}
-rectangle {
-	object {
-		x=6
-		y=416
-		width=430
-		height=25
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-}
 composite {
 	object {
-		x=9
-		y=447
-		width=250
-		height=20
-	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=9
-				y=447
-				width=50
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Scan:"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=64
-				y=447
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R).SCAN"
-				clr=14
-				bclr=51
-			}
-		}
-		"message button" {
-			object {
-				x=179
-				y=447
-				width=80
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PROC"
-				clr=14
-				bclr=51
-			}
-			label="Process"
-			press_msg="1"
-		}
-	}
-}
-rectangle {
-	object {
-		x=6
-		y=472
-		width=430
-		height=5
-	}
-	"basic attribute" {
-		clr=14
-	}
-}
-composite {
-	object {
-		x=6
-		y=480
+		x=5
+		y=225
 		width=430
 		height=185
 	}
@@ -855,8 +468,8 @@ composite {
 	children {
 		text {
 			object {
-				x=69
-				y=529
+				x=68
+				y=274
 				width=96
 				height=18
 			}
@@ -867,8 +480,8 @@ composite {
 		}
 		text {
 			object {
-				x=69
-				y=598
+				x=68
+				y=343
 				width=96
 				height=18
 			}
@@ -879,8 +492,8 @@ composite {
 		}
 		text {
 			object {
-				x=69
-				y=621
+				x=68
+				y=366
 				width=96
 				height=18
 			}
@@ -891,8 +504,8 @@ composite {
 		}
 		text {
 			object {
-				x=69
-				y=575
+				x=68
+				y=320
 				width=96
 				height=18
 			}
@@ -903,8 +516,8 @@ composite {
 		}
 		text {
 			object {
-				x=69
-				y=552
+				x=68
+				y=297
 				width=96
 				height=18
 			}
@@ -915,8 +528,8 @@ composite {
 		}
 		text {
 			object {
-				x=10
-				y=482
+				x=9
+				y=227
 				width=100
 				height=20
 			}
@@ -927,8 +540,8 @@ composite {
 		}
 		text {
 			object {
-				x=184
-				y=482
+				x=183
+				y=227
 				width=100
 				height=20
 			}
@@ -939,8 +552,8 @@ composite {
 		}
 		text {
 			object {
-				x=243
-				y=529
+				x=242
+				y=274
 				width=100
 				height=18
 			}
@@ -951,8 +564,8 @@ composite {
 		}
 		text {
 			object {
-				x=243
-				y=552
+				x=242
+				y=297
 				width=100
 				height=18
 			}
@@ -963,8 +576,8 @@ composite {
 		}
 		text {
 			object {
-				x=243
-				y=575
+				x=242
+				y=320
 				width=100
 				height=18
 			}
@@ -975,8 +588,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=10
-				y=529
+				x=9
+				y=274
 				width=55
 				height=18
 			}
@@ -989,8 +602,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=10
-				y=598
+				x=9
+				y=343
 				width=55
 				height=18
 			}
@@ -1003,8 +616,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=10
-				y=621
+				x=9
+				y=366
 				width=55
 				height=18
 			}
@@ -1017,8 +630,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=10
-				y=575
+				x=9
+				y=320
 				width=55
 				height=18
 			}
@@ -1031,8 +644,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=10
-				y=552
+				x=9
+				y=297
 				width=55
 				height=18
 			}
@@ -1045,8 +658,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=184
-				y=529
+				x=183
+				y=274
 				width=55
 				height=18
 			}
@@ -1059,8 +672,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=184
-				y=552
+				x=183
+				y=297
 				width=55
 				height=18
 			}
@@ -1073,8 +686,8 @@ composite {
 		}
 		"choice button" {
 			object {
-				x=184
-				y=575
+				x=183
+				y=320
 				width=55
 				height=18
 			}
@@ -1087,8 +700,8 @@ composite {
 		}
 		text {
 			object {
-				x=243
-				y=598
+				x=242
+				y=343
 				width=104
 				height=18
 			}
@@ -1099,8 +712,8 @@ composite {
 		}
 		"text entry" {
 			object {
-				x=184
-				y=598
+				x=183
+				y=343
 				width=50
 				height=20
 			}
@@ -1114,8 +727,8 @@ composite {
 		}
 		text {
 			object {
-				x=10
-				y=644
+				x=9
+				y=389
 				width=80
 				height=18
 			}
@@ -1126,8 +739,8 @@ composite {
 		}
 		"text entry" {
 			object {
-				x=100
-				y=642
+				x=99
+				y=387
 				width=330
 				height=20
 			}
@@ -1141,8 +754,8 @@ composite {
 		}
 		rectangle {
 			object {
-				x=6
-				y=480
+				x=5
+				y=225
 				width=430
 				height=185
 			}
@@ -1153,8 +766,8 @@ composite {
 		}
 		"text entry" {
 			object {
-				x=10
-				y=506
+				x=9
+				y=251
 				width=70
 				height=20
 			}
@@ -1169,8 +782,8 @@ composite {
 		}
 		"text entry" {
 			object {
-				x=184
-				y=506
+				x=183
+				y=251
 				width=70
 				height=20
 			}
@@ -1185,214 +798,29 @@ composite {
 		}
 	}
 }
-text {
-	object {
-		x=253
-		y=313
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Terminator:"
-}
-"text entry" {
-	object {
-		x=368
-		y=313
-		width=60
-		height=20
-	}
-	control {
-		chan="$(P)$(R).IEOS"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-rectangle {
-	object {
-		x=74
-		y=342
-		width=360
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-		fill="outline"
-	}
-}
-text {
-	object {
-		x=16
-		y=313
-		width=50
-		height=20
-	}
-	"basic attribute" {
-		clr=25
-	}
-	textix="Input"
-}
-"text update" {
-	object {
-		x=81
-		y=341
-		width=350
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R).TINP"
-		clr=14
-		bclr=4
-	}
-	format="string"
-	limits {
-	}
-}
-text {
-	object {
-		x=86
-		y=315
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Format:"
-}
 menu {
 	object {
-		x=161
-		y=313
-		width=80
+		x=109
+		y=79
+		width=132
 		height=20
 	}
 	control {
-		chan="$(P)$(R).IFMT"
+		chan="$(P)$(R).IFACE"
 		clr=14
 		bclr=51
 	}
 }
 text {
 	object {
-		x=13
-		y=340
-		width=60
+		x=4
+		y=80
+		width=70
 		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="ASCII:"
-}
-rectangle {
-	object {
-		x=6
-		y=306
-		width=430
-		height=105
 	}
 	"basic attribute" {
 		clr=14
 		fill="outline"
 	}
-}
-text {
-	object {
-		x=88
-		y=366
-		width=100
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Requested:"
-}
-text {
-	object {
-		x=10
-		y=366
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Length:"
-}
-text {
-	object {
-		x=280
-		y=366
-		width=70
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Actual:"
-}
-"text update" {
-	object {
-		x=355
-		y=366
-		width=56
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).NORD"
-		clr=14
-		bclr=4
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=193
-		y=366
-		width=70
-		height=20
-	}
-	control {
-		chan="$(P)$(R).NRRD"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-text {
-	object {
-		x=10
-		y=386
-		width=170
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="EOM reason:"
-	align="horiz. right"
-}
-"text update" {
-	object {
-		x=195
-		y=389
-		width=180
-		height=20
-	}
-	monitor {
-		chan="$(P)$(R).EOMR"
-		clr=14
-		bclr=4
-	}
-	format="string"
-	limits {
-	}
+	textix="Interface:"
 }
