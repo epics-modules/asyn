@@ -1,8 +1,8 @@
 dbLoadDatabase("../../dbd/test.dbd")
 test_registerRecordDeviceDriver(pdbbase)
 
-drvGenericSerialConfigure("A","164.54.9.90:4001",1,0)
-#echoDriverInit("A",0.05,1,0)
+#drvGenericSerialConfigure("A","164.54.9.90:4001",1,0)
+echoDriverInit("A",0.05,1,0)
 interposeInterfaceInit("interpose","A",0)
 #drvGenericSerialConfigure("B","164.54.9.90:4002",1,0)
 echoDriverInit("B",0.05,1,1)
