@@ -154,7 +154,7 @@ int epicsShareAPI
         return asynError;
     }
     optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
-    optionargs. drvPvt = pasynInterface->drvPvt;
+    optionargs.drvPvt = pasynInterface->drvPvt;
     optionargs.key = key;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
     status = pasynManager->queueRequest(pasynUser,0,0.0);
@@ -379,7 +379,7 @@ static void asynSetOptionCall(const iocshArgBuf * args) {
 }
 
 static const iocshArg asynShowOptionArg0 = {"portName", iocshArgString};
-static const iocshArg asynShowOptionArg1 = {"addr", iocshArgString};
+static const iocshArg asynShowOptionArg1 = {"addr", iocshArgInt};
 static const iocshArg asynShowOptionArg2 = {"key", iocshArgString};
 static const iocshArg *const asynShowOptionArgs[] = {
               &asynShowOptionArg0, &asynShowOptionArg1,&asynShowOptionArg2};
