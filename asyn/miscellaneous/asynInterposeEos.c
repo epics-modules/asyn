@@ -198,7 +198,6 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
-    char   *originalData = data;
     size_t thisRead;
     int nRead = 0;
     asynStatus status = asynSuccess;
@@ -251,13 +250,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
         peosPvt->inBufTail = 0;
         peosPvt->inBufHead = thisRead;
     }
-    if(nRead==maxchars) {
-        if(originalData[nRead-1]!=0) {
-            originalData[nRead-1] = 0;
-            status = asynOverflow;
-        }
-        nRead--;
-    }
+    if(nRead<maxchars) *data = 0; /*null terminate string if room*/
     *nbytesTransfered = nRead;
     return status;
 }
