@@ -5,10 +5,10 @@ file {
 }
 display {
 	object {
-		x=99
-		y=76
-		width=400
-		height=300
+		x=352
+		y=24
+		width=600
+		height=500
 	}
 	clr=14
 	bclr=4
@@ -173,57 +173,6 @@ menu {
 		bclr=4
 	}
 }
-"text update" {
-	object {
-		x=202
-		y=21
-		width=100
-		height=20
-	}
-	monitor {
-		chan="asyndevAoInt32A1"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=202
-		y=1
-		width=100
-		height=20
-	}
-	monitor {
-		chan="asyndevAoInt32A0"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=302
-		y=20
-		width=100
-		height=20
-	}
-	monitor {
-		chan="asyndevAiInt32A1"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
 menu {
 	object {
 		x=101
@@ -235,23 +184,6 @@ menu {
 		chan="asyndevCalcA0.SCAN"
 		clr=14
 		bclr=4
-	}
-}
-"text update" {
-	object {
-		x=302
-		y=0
-		width=100
-		height=20
-	}
-	monitor {
-		chan="asyndevAiInt32A0"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
 	}
 }
 text {
@@ -282,22 +214,295 @@ text {
 }
 composite {
 	object {
-		x=0
-		y=120
-		width=400
-		height=78
+		x=202
+		y=0
+		width=200
+		height=41
 	}
 	"composite name"=""
 	children {
+		"text update" {
+			object {
+				x=202
+				y=21
+				width=100
+				height=20
+			}
+			monitor {
+				chan="asyndevAoInt32A1"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=202
+				y=1
+				width=100
+				height=20
+			}
+			monitor {
+				chan="asyndevAoInt32A0"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=302
+				y=20
+				width=100
+				height=20
+			}
+			monitor {
+				chan="asyndevAiInt32A1"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=302
+				y=0
+				width=100
+				height=20
+			}
+			monitor {
+				chan="asyndevAiInt32A0"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+"text update" {
+	object {
+		x=500
+		y=20
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAiInt32ManualA3"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=500
+		y=0
+		width=100
+		height=20
+	}
+	monitor {
+		chan="asyndevAiInt32ManualA2"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+valuator {
+	object {
+		x=400
+		y=0
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevAoInt32ManualA2"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	dPrecision=1.000000
+	limits {
+	}
+}
+valuator {
+	object {
+		x=400
+		y=20
+		width=100
+		height=20
+	}
+	control {
+		chan="asyndevAoInt32ManualA3"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	dPrecision=1.000000
+	limits {
+	}
+}
+composite {
+	object {
+		x=0
+		y=320
+		width=400
+		height=174
+	}
+	"composite name"=""
+	children {
+		composite {
+			object {
+				x=0
+				y=320
+				width=400
+				height=78
+			}
+			"composite name"=""
+			children {
+				"message button" {
+					object {
+						x=0
+						y=320
+						width=100
+						height=20
+					}
+					control {
+						chan="devSiAsynCmdResponse.PROC"
+						clr=14
+						bclr=4
+					}
+					label="cmdResponse"
+					press_msg="1"
+				}
+				"text update" {
+					object {
+						x=100
+						y=320
+						width=200
+						height=20
+					}
+					monitor {
+						chan="devSiAsynCmdResponse"
+						clr=14
+						bclr=4
+					}
+					clrmod="alarm"
+					format="string"
+					limits {
+					}
+				}
+				"text entry" {
+					object {
+						x=0
+						y=340
+						width=200
+						height=20
+					}
+					control {
+						chan="devSiAsynCmdForWriteRead"
+						clr=14
+						bclr=4
+					}
+					clrmod="alarm"
+					format="string"
+					limits {
+					}
+				}
+				"text update" {
+					object {
+						x=200
+						y=340
+						width=200
+						height=20
+					}
+					monitor {
+						chan="devSiAsynWriteRead"
+						clr=14
+						bclr=4
+					}
+					clrmod="alarm"
+					format="string"
+					limits {
+					}
+				}
+				"text entry" {
+					object {
+						x=0
+						y=360
+						width=200
+						height=20
+					}
+					control {
+						chan="devSiAsynWrite"
+						clr=14
+						bclr=4
+					}
+					clrmod="alarm"
+					format="string"
+					limits {
+					}
+				}
+				"message button" {
+					object {
+						x=1
+						y=378
+						width=100
+						height=20
+					}
+					control {
+						chan="devSiAsynRead.PROC"
+						clr=14
+						bclr=4
+					}
+					label="read"
+					press_msg="1"
+				}
+				"text update" {
+					object {
+						x=101
+						y=378
+						width=200
+						height=20
+					}
+					monitor {
+						chan="devSiAsynRead"
+						clr=14
+						bclr=4
+					}
+					clrmod="alarm"
+					format="string"
+					limits {
+					}
+				}
+			}
+		}
 		"message button" {
 			object {
 				x=0
-				y=120
+				y=416
 				width=100
 				height=20
 			}
 			control {
-				chan="devSiAsynCmdResponse.PROC"
+				chan="devWfAsynCmdResponse.PROC"
 				clr=14
 				bclr=4
 			}
@@ -307,12 +512,12 @@ composite {
 		"text update" {
 			object {
 				x=100
-				y=120
+				y=416
 				width=200
 				height=20
 			}
 			monitor {
-				chan="devSiAsynCmdResponse"
+				chan="devWfAsynCmdResponse"
 				clr=14
 				bclr=4
 			}
@@ -324,12 +529,12 @@ composite {
 		"text entry" {
 			object {
 				x=0
-				y=140
+				y=436
 				width=200
 				height=20
 			}
 			control {
-				chan="devSiAsynCmdForWriteRead"
+				chan="devWfAsynCmdForWriteRead"
 				clr=14
 				bclr=4
 			}
@@ -341,12 +546,12 @@ composite {
 		"text update" {
 			object {
 				x=200
-				y=140
+				y=436
 				width=200
 				height=20
 			}
 			monitor {
-				chan="devSiAsynWriteRead"
+				chan="devWfAsynWriteRead"
 				clr=14
 				bclr=4
 			}
@@ -358,12 +563,12 @@ composite {
 		"text entry" {
 			object {
 				x=0
-				y=160
+				y=456
 				width=200
 				height=20
 			}
 			control {
-				chan="devSiAsynWrite"
+				chan="devWfAsynWrite"
 				clr=14
 				bclr=4
 			}
@@ -375,12 +580,12 @@ composite {
 		"message button" {
 			object {
 				x=1
-				y=178
+				y=474
 				width=100
 				height=20
 			}
 			control {
-				chan="devSiAsynRead.PROC"
+				chan="devWfAsynRead.PROC"
 				clr=14
 				bclr=4
 			}
@@ -390,12 +595,12 @@ composite {
 		"text update" {
 			object {
 				x=101
-				y=178
+				y=474
 				width=200
 				height=20
 			}
 			monitor {
-				chan="devSiAsynRead"
+				chan="devWfAsynRead"
 				clr=14
 				bclr=4
 			}
@@ -404,120 +609,5 @@ composite {
 			limits {
 			}
 		}
-	}
-}
-"message button" {
-	object {
-		x=0
-		y=216
-		width=100
-		height=20
-	}
-	control {
-		chan="devWfAsynCmdResponse.PROC"
-		clr=14
-		bclr=4
-	}
-	label="cmdResponse"
-	press_msg="1"
-}
-"text update" {
-	object {
-		x=100
-		y=216
-		width=200
-		height=20
-	}
-	monitor {
-		chan="devWfAsynCmdResponse"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=0
-		y=236
-		width=200
-		height=20
-	}
-	control {
-		chan="devWfAsynCmdForWriteRead"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=200
-		y=236
-		width=200
-		height=20
-	}
-	monitor {
-		chan="devWfAsynWriteRead"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=0
-		y=256
-		width=200
-		height=20
-	}
-	control {
-		chan="devWfAsynWrite"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=1
-		y=274
-		width=100
-		height=20
-	}
-	control {
-		chan="devWfAsynRead.PROC"
-		clr=14
-		bclr=4
-	}
-	label="read"
-	press_msg="1"
-}
-"text update" {
-	object {
-		x=101
-		y=274
-		width=200
-		height=20
-	}
-	monitor {
-		chan="devWfAsynRead"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
 	}
 }
