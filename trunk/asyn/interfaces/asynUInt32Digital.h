@@ -22,13 +22,32 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+typedef void (*interruptCallbackUInt32Digital)(void *userPvt, epicsUInt32 data);
 #define asynUInt32DigitalType "asynUInt32Digital"
 typedef struct asynUInt32Digital {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
          epicsUInt32 value, epicsUInt32 mask);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *value, epicsUInt32 mask);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+        interruptCallbackUInt32Digital callback,void *userPvt,epicsUInt32 mask,
+        void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
 } asynUInt32Digital;
+
+/* asynUInt32DigitalBase does the following:
+   calls  registerInterface for asynUInt32Digital.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of getBounds, write, and read
+*/
+
+#define asynUInt32DigitalBaseType "asynUInt32DigitalBase"
+typedef struct asynUInt32DigitalBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pasynUInt32DigitalInterface);
+} asynUInt32DigitalBase;
+epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;
+
 
 #ifdef __cplusplus
 }

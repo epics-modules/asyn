@@ -27,6 +27,12 @@ typedef struct asynFloat64Array {
                        epicsFloat64 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements, size_t *nIn);
+    asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,size_t nelems),
+         void *userPvt);
+    asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
+         void (callback)(void *userPvt, epicsFloat64 *data,size_t nelems),
+         void *userPvt);
 } asynFloat64Array;
 
 #ifdef __cplusplus
