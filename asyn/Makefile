@@ -42,19 +42,22 @@ INC += asynInt32ArrayCallback.h asynFloat64ArrayCallback.h
 INC += asynUInt32Digital.h asynUInt32DigitalCallback.h
 INC += asynOctet.h
 INC += asynOption.h
+INC += asynInt32SyncIO.h
+INC += asynOctetSyncIO.h
 INC += asynDrvUser.h
 
 SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd
 INC += asynShellCommands.h
-INC += asynSyncIO.h
 INC += asynInterposeEos.h
 asyn_SRCS += asynShellCommands.c
-asyn_SRCS += asynSyncIO.c
+asyn_SRCS += asynOctetSyncIO.c
+asyn_SRCS += asynInt32SyncIO.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 
 SRC_DIRS += $(ASYN)/devEpics
+DBD += devEpics.dbd
 INC += asynEpicsUtils.h
 asyn_SRCS += devAsynAnalog.c
 asyn_SRCS += devAsynUInt32Digital.c
