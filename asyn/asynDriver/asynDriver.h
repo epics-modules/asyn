@@ -16,7 +16,8 @@
 #define ASYNDRIVER_H
 
 #include <epicsStdio.h>
-#include "shareLib.h"
+#include <ellLib.h>
+#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,12 +54,6 @@ typedef struct asynUser {
     int          auxStatus; /*For auxillary status*/
 }asynUser;
 
-typedef struct interruptNode{
-    ELLNODE node;
-    void    *drvPvt;
-    void    *asynPvt;
-}interruptNode;
-
 typedef struct asynInterface{
     const char *interfaceType; /*For example asynCommonType*/
     void *pinterface;          /*For example pasynCommon */
@@ -71,6 +66,12 @@ typedef struct asynInterface{
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
+
+typedef struct interruptNode{
+    ELLNODE node;
+    void    *drvPvt;
+    void    *asynPvt;
+}interruptNode;
 
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
@@ -117,13 +118,13 @@ typedef struct asynManager {
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
     /*The following are methods for interrupts*/
-    asynStatus (*registerInterruptSource)(const char *portName,void **pasynPvt);
-    asynStatus (*createInterruptNode)(
-                       interruptNode**ppinterruptNode,size_t drvPvtSize);
-    asynStatus (*addInterruptUser)(void *pasynPvt,
-                       interruptNode*pinterruptNode);
-    asynStatus (*removeInterruptUser)(void *pasynPvt,
-                       interruptNode*pinterruptNode);
+    asynStatus (*registerInterruptSource)(const char *portName,
+        asynInterface *pasynInterface);
+    asynStatus (*getInterruptPvt)(const char *portName,
+        const char *interfaceType, void **pasynPvt);
+    interruptNode *(*createInterruptNode)(void *pasynPvt,size_t drvPvtSize);
+    asynStatus (*addInterruptUser)(interruptNode*pinterruptNode);
+    asynStatus (*removeInterruptUser)(interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
     asynStatus (*interruptEnd)(void *pasynPvt);
 }asynManager;
