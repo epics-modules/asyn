@@ -115,7 +115,10 @@ static asynStatus readGpib(gpib *pgpib,char *buf, int cnt, int *actual,
 static void gsTi9914Report(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,int argc, char **argv);
+static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, const char *val);
+static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, char *val, int sizeval);
 static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser);
@@ -562,10 +565,22 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
     return(asynSuccess);
 }
 
-static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,int argc, char **argv)
+static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, const char *val);
 {
-    /* Currently no need to set options*/
-    return(asynSuccess);
+    gpib *pgpib = (gpib *)pdrvPvt;
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "%s gsTi9914 does not have any options\n",pgpib->portName);
+    return(asynError);
+}
+
+static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, char *val,int sizeval);
+{
+    gpib *pgpib = (gpib *)pdrvPvt;
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "%s gsTi9914 does not have any options\n",pgpib->portName);
+    return(asynError);
 }
 
 static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
@@ -706,6 +721,7 @@ static asynGpibPort gsTi9914 = {
     gsTi9914Connect,
     gsTi9914Disconnect,
     gsTi9914SetPortOptions,
+    gsTi9914GetPortOptions,
     gsTi9914Read,
     gsTi9914Write,
     gsTi9914Flush,

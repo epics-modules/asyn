@@ -26,6 +26,7 @@
 #include <epicsMutex.h>
 #include <epicsEvent.h>
 #include <epicsSignal.h>
+#include <epicsStdio.h>
 #include <osiSock.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
@@ -114,7 +115,10 @@ static void vxiSrqThread(void *pvxiLink);
 static void vxiReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser);
-static asynStatus vxiSetPortOption(void *pdrvPvt,const char *key, const char *val);
+static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, const char *val);
+static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, char *val, int sizeval);
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
 static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
 static asynStatus vxiFlush(void *pdrvPvt,asynUser *pasynUser);
@@ -771,10 +775,22 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     return(0);
 }
 
-static asynStatus vxiSetPortOption(void *pdrvPvt,const char *key, const char *val)
+static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, const char *val)
 {
-    /* Currently no need to set options*/
-    return(asynSuccess);
+    vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "%s vxi11 does not have any options\n",pvxiLink->portName);
+    return(asynError);
+}
+
+static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
+    const char *key, char *val, int sizeval)
+{
+    vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
+    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+        "%s vxi11 does not have any options\n",pvxiLink->portName);
+    return(asynError);
 }
 
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
@@ -1153,6 +1169,7 @@ static asynGpibPort vxi11 = {
     vxiConnect,
     vxiDisconnect,
     vxiSetPortOption,
+    vxiGetPortOption,
     vxiRead,
     vxiWrite,
     vxiFlush,

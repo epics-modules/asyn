@@ -955,25 +955,118 @@ static asynStatus registerProcessModule(
     return(asynSuccess);
 }
 
-/* version of asynSetPortOption that can be called from vxWorks shell */
+typedef struct setPortOptionArgs {
+    const char *key;
+    const char *val;
+    asynCommon *pasynCommon;
+    void *drvPvt;
+    epicsEventId  done;
+}setPortOptionArgs;
+
+static void setPortOptions(asynUser *pasynUser)
+{
+    setPortOptionArgs *poptionargs = (setPortOptionArgs *)pasynUser->userPvt;
+    asynStatus status;
+
+    status = poptionargs->pasynCommon->setPortOption(poptionargs->drvPvt,
+        pasynUser,poptionargs->key,poptionargs->val);
+    if(status!=asynSuccess) 
+        printf("setPortOptions failed %s\n",pasynUser->errorMessage);
+    epicsEventSignal(poptionargs->done);
+}
+
 int asynSetPortOption(const char *portName, const char *key, const char *val)
 {
     asynInterface *pasynInterface;
-    asynCommon *pasynCommon;
-    void *drvPvt;
+    setPortOptionArgs optionargs;
+    asynUser *pasynUser;
+    asynStatus status;
 
     if ((portName == NULL) || (key == NULL) || (val == NULL)) {
         printf("Missing argument\n");
         return asynError;
     }
-    pasynInterface = pasynManager->findPortInterface(portName,asynCommonType);
+    pasynUser = pasynManager->createAsynUser(setPortOptions,0);
+    pasynUser->userPvt = &optionargs;
+    status = pasynManager->connectDevice(pasynUser,portName,0);
+    if(status!=asynSuccess) {
+        printf("connectDevice failed %s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return 1;
+    }
+    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,0);
     if(!pasynInterface) {
         printf("port %s not found\n",portName);
         return asynError;
     }
-    pasynCommon = (asynCommon *)pasynInterface->pinterface;
-    drvPvt = pasynInterface->drvPvt;
-    return(pasynCommon->setPortOption(drvPvt,key,val));
+    optionargs.key = key;
+    optionargs.val = val;
+    optionargs.pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    optionargs. drvPvt = pasynInterface->drvPvt;
+    optionargs.done = epicsEventMustCreate(epicsEventEmpty);
+    status = pasynManager->queueRequest(pasynUser,0,0.0);
+    epicsEventWait(optionargs.done);
+    epicsEventDestroy(optionargs.done);
+    pasynManager->freeAsynUser(pasynUser);
+    return(0);
+}
+
+typedef struct getPortOptionArgs {
+    const char *key;
+    asynCommon *pasynCommon;
+    void *drvPvt;
+    epicsEventId  done;
+}getPortOptionArgs;
+
+static void getPortOptions(asynUser *pasynUser)
+{
+    getPortOptionArgs *poptionargs = (getPortOptionArgs *)pasynUser->userPvt;
+    asynStatus status;
+    char val[100];
+
+    status = poptionargs->pasynCommon->getPortOption(poptionargs->drvPvt,
+        pasynUser,poptionargs->key,val,sizeof(val));
+    if(status!=asynSuccess) {
+        printf("getPortOptions failed %s\n",pasynUser->errorMessage);
+    } else {
+        printf("%s=%s\n",poptionargs->key,val);
+    }
+    epicsEventSignal(poptionargs->done);
+}
+
+int asynGetPortOption(const char *portName, const char *key)
+{
+    asynInterface *pasynInterface;
+    getPortOptionArgs optionargs;
+    asynUser *pasynUser;
+    asynStatus status;
+
+    if ((portName == NULL) || (key == NULL) ) {
+        printf("Missing argument\n");
+        return asynError;
+    }
+    pasynUser = pasynManager->createAsynUser(getPortOptions,0);
+    pasynUser->userPvt = &optionargs;
+    status = pasynManager->connectDevice(pasynUser,portName,0);
+    if(status!=asynSuccess) {
+        printf("connectDevice failed %s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return 1;
+    }
+    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,0);
+    if(!pasynInterface) {
+        printf("port %s not found\n",portName);
+        return asynError;
+    }
+    optionargs.key = key;
+    optionargs.pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    optionargs. drvPvt = pasynInterface->drvPvt;
+    optionargs.done = epicsEventMustCreate(epicsEventEmpty);
+    status = pasynManager->queueRequest(pasynUser,0,0.0);
+    epicsEventWait(optionargs.done);
+    epicsEventDestroy(optionargs.done);
+    pasynManager->freeAsynUser(pasynUser);
+    return(0);
 }
 
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
@@ -1005,6 +1098,15 @@ static const iocshArg *const asynSetPortOptionArgs[] = {
 static const iocshFuncDef asynSetPortOptionDef = {"asynSetPortOption", 3, asynSetPortOptionArgs};
 static void asynSetPortOptionCall(const iocshArgBuf * args) {
     asynSetPortOption(args[0].sval,args[1].sval,args[2].sval);
+}
+
+static const iocshArg asynGetPortOptionArg0 = {"portName", iocshArgString};
+static const iocshArg asynGetPortOptionArg1 = {"key", iocshArgString};
+static const iocshArg *const asynGetPortOptionArgs[] = {
+              &asynGetPortOptionArg0, &asynGetPortOptionArg1};
+static const iocshFuncDef asynGetPortOptionDef = {"asynGetPortOption", 2, asynGetPortOptionArgs};
+static void asynGetPortOptionCall(const iocshArgBuf * args) {
+    asynGetPortOption(args[0].sval,args[1].sval);
 }
 
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
@@ -1070,6 +1172,7 @@ static void asyn(void)
     firstTime = 0;
     iocshRegister(&asynReportDef,asynReportCall);
     iocshRegister(&asynSetPortOptionDef,asynSetPortOptionCall);
+    iocshRegister(&asynGetPortOptionDef,asynGetPortOptionCall);
     iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
 }
