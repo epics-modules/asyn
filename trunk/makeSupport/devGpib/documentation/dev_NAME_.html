@@ -46,7 +46,7 @@ Where <tt>&lt;release&gt;</tt> is the release number of of the _NAME_ support.</
     <em>xxx</em><tt>_LIBS += $(EPICS_BASE_IOC_LIBS)</tt><br />
     in the application Makefile.</li>
   <li>Load the _NAME_ support database records in the application startup script:<br />
-    <tt>cd ${_NAME_}&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt>(<tt>cd _NAME_</tt> if using the vxWorks shell)<br />
+    <tt>cd $(_NAME_)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt>(<tt>cd _NAME_</tt> if using the vxWorks shell)<br />
     <tt>dbLoadRecords("db/dev_NAME_.db,"P=</tt><em>&lt;P&gt;</em><tt>,R=</tt><em>&lt;R&gt;</em><tt>,L=</tt><em>&lt;L&gt;</em><tt>,A=</tt><em>&lt;A&gt;</em><tt>")</tt><br />
     You'll have to provide appropriate values for the PV name prefixes
     (<em>&lt;P&gt;</em> and <em>&lt;R&gt;</em>), the link number (<em>&lt;L&gt;</em>) and the device address
