@@ -373,7 +373,7 @@ static long special(struct dbAddr * paddr, int after)
     }
     resetError(pasynRec);
     if(fieldIndex == asynRecordSOCK) {
-        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0,0);
+        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0);
         if(status) {
             reportError(pasynRec,asynSuccess,"drvAsynIPPortConfigure failed\n");
             return 0;

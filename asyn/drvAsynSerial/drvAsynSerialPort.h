@@ -23,7 +23,7 @@ extern "C" {
 
 int drvAsynSerialPortConfigure(char *portName, char *ttyName,
                                unsigned int priority, int noAutoConnect,
-                               int processEosIn,int processEosOut);
+                               int noProcessEos);
 
 #ifdef __cplusplus
 }

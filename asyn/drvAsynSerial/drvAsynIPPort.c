@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.10 2004-11-10 02:11:29 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.11 2004-11-18 18:55:33 mrk Exp $
  */
 
 #include <string.h>
@@ -584,7 +584,7 @@ drvAsynIPPortConfigure(const char *portName,
                      const char *hostInfo,
                      unsigned int priority,
                      int noAutoConnect,
-                     int processEosIn,int processEosOut)
+                     int noProcessEos)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -684,7 +684,7 @@ drvAsynIPPortConfigure(const char *portName,
         return -1;
     }
     status = pasynOctetBase->initialize(tty->portName,&tty->octet,
-        (processEosIn ? 1 : 0),(processEosOut ? 1 : 0),1);
+        (noProcessEos ? 0 : 1), (noProcessEos ? 0 : 1), 1);
     if(status != asynSuccess) {
         printf("drvAsynIPPortConfigure: pasynOctetBase->initialize failed.\n");
         ttyCleanup(tty);
@@ -708,18 +708,17 @@ static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString}
 static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocshArgString};
 static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynIPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynIPPortConfigureArg4 = { "processEosIn",iocshArgInt};
-static const iocshArg drvAsynIPPortConfigureArg5 = { "processEosOut",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg4 = { "noProcessEos",iocshArgInt};
 static const iocshArg *drvAsynIPPortConfigureArgs[] = {
     &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
     &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
-    &drvAsynIPPortConfigureArg4,&drvAsynIPPortConfigureArg5};
+    &drvAsynIPPortConfigureArg4};
 static const iocshFuncDef drvAsynIPPortConfigureFuncDef =
-                      {"drvAsynIPPortConfigure",6,drvAsynIPPortConfigureArgs};
+                      {"drvAsynIPPortConfigure",5,drvAsynIPPortConfigureArgs};
 static void drvAsynIPPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynIPPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                           args[3].ival, args[4].ival, args[5].ival);
+                           args[3].ival, args[4].ival);
 }
 
 /*
