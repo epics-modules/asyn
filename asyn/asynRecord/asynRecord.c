@@ -37,18 +37,19 @@
 #undef GEN_SIZE_OFFSET
 
 /* These should be in a header file*/
-#define NUM_BAUD_CHOICES 11
-static char *baud_choices[NUM_BAUD_CHOICES]={"300","600","1200","2400","4800",
+#define NUM_BAUD_CHOICES 12
+static char *baud_choices[NUM_BAUD_CHOICES]={"unknown",
+                                             "300","600","1200","2400","4800",
                                              "9600","19200","38400","57600",
                                              "115200","230400"};
-#define NUM_PARITY_CHOICES 3
-static char *parity_choices[NUM_PARITY_CHOICES]={"none","even","odd"};
-#define NUM_DBIT_CHOICES 4
-static char *data_bit_choices[NUM_DBIT_CHOICES]={"5","6","7","8"};
-#define NUM_SBIT_CHOICES 2
-static char *stop_bit_choices[NUM_SBIT_CHOICES]={"1","2"};
-#define NUM_FLOW_CHOICES 2
-static char *flow_control_choices[NUM_FLOW_CHOICES]={"Y","N"};
+#define NUM_PARITY_CHOICES 4
+static char *parity_choices[NUM_PARITY_CHOICES]={"unknown","none","even","odd"};
+#define NUM_DBIT_CHOICES 5
+static char *data_bit_choices[NUM_DBIT_CHOICES]={"unknown","5","6","7","8"};
+#define NUM_SBIT_CHOICES 3
+static char *stop_bit_choices[NUM_SBIT_CHOICES]={"unknown","1","2"};
+#define NUM_FLOW_CHOICES 3
+static char *flow_control_choices[NUM_FLOW_CHOICES]={"unknown","Y","N"};
 
 #define OPT_SIZE 80  /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10  /* Size of buffer for EOS */
@@ -144,11 +145,11 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
 #define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
 #define POST_IF_NEW(FIELD) \
     if (pasynRec->FIELD != pasynRecPvt->old.FIELD) { \
-        db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
+        if(interruptAccept) db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 
 typedef enum {
-    stateIdle,stateConnectDevice,stateConnect,
+    stateIdle,stateInitalIO,stateConnect,
     stateIO,stateGetOption,stateSetOption
 } callbackState;
 
@@ -156,7 +157,6 @@ typedef struct asynRecPvt {
     CALLBACK        callback;
     asynRecord      *prec;  /* Pointer to record */
     callbackState   state; 
-    int             callbackShouldProcess; 
     int             fieldIndex; /* For special */
     asynUser        *pasynUser;
     asynOctet       *pasynOctet;
@@ -172,7 +172,8 @@ typedef struct asynRecPvt {
 static long init_record(asynRecord *pasynRec, int pass)
 {
     asynRecPvt *pasynRecPvt;
-    asynUser *pasynUser;
+    asynUser   *pasynUser;
+    asynStatus status;
 
     if (pass != 0) return(0);
 
@@ -188,8 +189,12 @@ static long init_record(asynRecord *pasynRec, int pass)
     pasynRecPvt->pasynUser = pasynUser;
     pasynUser->userPvt = pasynRecPvt;
     if (strlen(pasynRec->port) != 0) {
-       pasynRecPvt->state = stateConnectDevice;
-       pasynRec->pini = 1;
+        status = connectDevice(pasynRec);
+        if(status==asynSuccess) {
+           pasynRecPvt->state =
+               (pasynRec->pini) ? stateInitalIO : stateGetOption;
+           pasynRec->pini = 1;
+        }
     }
     /* Allocate the space for the binary/hybrid output and binary/hybrid 
      * input arrays */
@@ -213,9 +218,6 @@ static long process(asynRecord *pasynRec)
 
    /* This routine is called under the following possible states:
     * state                 pact
-    * stateConnectDevice    0     Once at iocInit, if PINI is true.
-    *                             Connect to device.  This is bad, can't
-    *                             actually do I/O using PINI.
     * stateIdle             0     Queue request, callback will performIOi
     *                             unless TMOD=NoI/O
     * stateSetOption        0     Queue request, callback will setOption
@@ -228,13 +230,7 @@ static long process(asynRecord *pasynRec)
     * Any                   1     Callback, finish record processing
     */
 
-   if(pasynRecPvt->state==stateConnectDevice) {
-        /*This can only happen once at PINI */
-        pasynRecPvt->state = stateIdle;
-        status = connectDevice(pasynRec);
-        if(status!=asynSuccess) 
-            printf("%s connectDevice failed\n",pasynRec->name);
-   } else if(!pasynRec->pact) {
+   if(!pasynRec->pact) {
        if(pasynRecPvt->state==stateIdle && pasynRec->tmod!=asynTMOD_NoIO) { 
           pasynRecPvt->state = stateIO;
           /* Need to store state of fields that could have been changed from
@@ -247,7 +243,6 @@ static long process(asynRecord *pasynRec)
       /* Make sure nrrd and nowt are valid */
       if (pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
       if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
-      pasynRecPvt->callbackShouldProcess = 1;
       pasynManager->queueRequest(pasynRecPvt->pasynUser, 
           ((pasynRecPvt->state==stateConnect)
            ? asynQueuePriorityConnect : asynQueuePriorityLow),
@@ -387,6 +382,7 @@ static long special(struct dbAddr *paddr, int after)
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
              "%s: special() port=%s, addr=%d, connect status=%d\n",
              pasynRec->name, pasynRec->port, pasynRec->addr, status);
+          if(status==asynSuccess) getOptions(pasynUser);
           break;
        case asynRecordBAUD: 
        case asynRecordPRTY: 
@@ -540,6 +536,7 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     asynRecPvt *pasynRecPvt=pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
     asynStatus status;
+    unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
     resetError(pasynRec);
     /* Disconnect any connected device.  Ignore error if there
@@ -547,6 +544,12 @@ static asynStatus connectDevice(asynRecord *pasynRec)
      */
     pasynManager->exceptionCallbackRemove(pasynUser);
     pasynManager->disconnect(pasynUser);
+    /*set all option fields to unknown*/
+    pasynRec->baud = 0; POST_IF_NEW(baud);
+    pasynRec->prty = 0; POST_IF_NEW(prty);
+    pasynRec->sbit = 0; POST_IF_NEW(sbit);
+    pasynRec->dbit = 0; POST_IF_NEW(dbit);
+    pasynRec->fctl = 0; POST_IF_NEW(fctl);
 
     /* Connect to the new device */
     status = pasynManager->connectDevice(pasynUser,pasynRec->port,
@@ -593,9 +596,6 @@ static asynStatus connectDevice(asynRecord *pasynRec)
 
     /* Add exception callback */
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
-    pasynRecPvt->state = stateGetOption;
-    monitorStatus(pasynRec);
-    scanOnce(pasynRec);  /* WHY ARE WE PROCESSING RECORD HERE? */
     return(asynSuccess);
 }
 
@@ -724,6 +724,9 @@ static void asynCallback(asynUser *pasynUser)
       case stateIdle:
          /* This happens when TMOD=NoI/O */
          break;    
+      case stateInitalIO:
+         getOptions(pasynUser);
+         /* no break */
       case stateIO:
          performIO(pasynUser); 
          break;
@@ -747,26 +750,25 @@ static void asynCallback(asynUser *pasynUser)
                 pasynRec->name,pasynRecPvt->state);
           return;
    }
-   if(pasynRecPvt->callbackShouldProcess) {
-      dbScanLock( (dbCommon*) pasynRec);
-      process(pasynRec);
-      pasynRecPvt->state = stateIdle;
-      dbScanUnlock( (dbCommon*) pasynRec);
-   }
+   dbScanLock( (dbCommon*) pasynRec);
+   process(pasynRec);
+   pasynRecPvt->state = stateIdle;
+   dbScanUnlock( (dbCommon*) pasynRec);
 }
 
 static void exceptCallback(asynUser *pasynUser,asynException exception)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
+   int        callLock = interruptAccept;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s: exception %d\n",
         pasynRec->name,(int)exception);
-    dbScanLock( (dbCommon*) pasynRec);
+    if(callLock) dbScanLock( (dbCommon*) pasynRec);
     /* There has been a changed in connect or enable status */
     monitorStatus(pasynRec);
-    dbScanUnlock( (dbCommon*) pasynRec);
+    if(callLock) dbScanUnlock( (dbCommon*) pasynRec);
 }
 
 static void performIO(asynUser *pasynUser)

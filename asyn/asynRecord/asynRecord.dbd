@@ -28,6 +28,7 @@ menu(asynENABLE) {
     choice(asynENABLE_Enable,"Enable")
 }
 menu(serialBAUD) {
+    choice(serialBAUD_unknown,"unknown")
     choice(serialBAUD_300,"300")
     choice(serialBAUD_600,"600")
     choice(serialBAUD_1200,"1200")
@@ -41,21 +42,25 @@ menu(serialBAUD) {
     choice(serialBAUD_230400,"230400")
 }
 menu(serialPRTY) {
+    choice(serialPRTY_unknown,"unknown")
     choice(serialPRTY_None,"None")
     choice(serialPRTY_Even,"Even")
     choice(serialPRTY_Odd,"Odd")
 }
 menu(serialDBIT) {
+    choice(serialDBIT_unknown,"unknown")
     choice(serialDBIT_5,"5")
     choice(serialDBIT_6,"6")
     choice(serialDBIT_7,"7")
     choice(serialDBIT_8,"8")
 }
 menu(serialSBIT) {
+    choice(serialSBIT_unknown,"unknown")
     choice(serialSBIT_1,"1")
     choice(serialSBIT_2,"2")
 }
 menu(serialFCTL) {
+    choice(serialFCTL_unknown,"unknown")
     choice(serialFCTL_None,"None")
     choice(serialFCTL_Hardware,"Hardware")
 }
