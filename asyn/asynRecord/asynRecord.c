@@ -19,6 +19,7 @@
 #include <dbEvent.h>
 #include <dbAccess.h>
 #include <dbFldTypes.h>
+#include <menuScan.h>
 #include <devSup.h>
 #include <drvSup.h>
 #include <errMdef.h>
@@ -54,10 +55,10 @@ static char *data_bit_choices[NUM_DBIT_CHOICES] = {"Unknown", "5", "6", "7", "8"
 static char *stop_bit_choices[NUM_SBIT_CHOICES] = {"Unknown", "1", "2"};
 #define NUM_FLOW_CHOICES 3
 static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "Y", "N"};
-#define OPT_SIZE 80	/* Size of buffer for setting and getting port options */
-#define EOS_SIZE 10	/* Size of buffer for EOS */
-#define ERR_SIZE 100	/* Size of buffer for error message */
-#define QUEUE_TIMEOUT 5.0	/* Timeout for queueRequest */
+#define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
+#define EOS_SIZE 10    /* Size of buffer for EOS */
+#define ERR_SIZE 100    /* Size of buffer for error message */
+#define QUEUE_TIMEOUT 5.0    /* Timeout for queueRequest */
 
 /* Create RSET - Record Support Entry Table*/
 #define report NULL
@@ -78,9 +79,16 @@ static long get_precision(struct dbAddr * paddr, long *precision);
 #define get_graphic_double NULL
 #define get_control_double NULL
 #define get_alarm_double NULL
+static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void monitor(asynRecord * pasynRec);
 static void monitorStatus(asynRecord * pasynRec);
 static asynStatus connectDevice(asynRecord * pasynRec);
+static asynStatus registerInterrupts(asynRecord * pasynRec);
+static asynStatus cancelInterrupts(asynRecord * pasynRec);
+static void callbackInterruptInt32(void *drvPvt, epicsInt32 value);
+static void callbackInterruptUInt32(void *drvPvt, epicsUInt32 value);
+static void callbackInterruptFloat64(void *drvPvt, epicsFloat64 value);
+static asynStatus cancelIOInterruptScan(asynRecord *pasynRec);
 static void gpibUniversalCmd(asynUser * pasynUser);
 static void gpibAddressedCmd(asynUser * pasynUser);
 static void asynCallbackProcess(asynUser * pasynUser);
@@ -126,44 +134,47 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsInt32 i32iv;       /* asynInt32 is valid */
     epicsInt32 ui32iv;      /* asynUInt32Digital is valid */
     epicsInt32 f64iv;       /* asynFloat64 is valid */
-    epicsInt32 addr;	    /* asyn address */
+    epicsInt32 addr;        /* asyn address */
+    epicsEnum16 pcnct;      /* Port Connect/Disconnect */
+    char drvinfo[40];       /* Driver info string */
+    epicsInt32 reason;      /* asynUser->reason */
     epicsInt32 i32inp;      /* asynInt32 input */
     epicsInt32 i32out;      /* asynInt32 output */
     unsigned long ui32inp;  /* asynUInt32Digital input */
     unsigned long ui32out;  /* asynUInt32Digital output */
     unsigned long ui32mask; /* asynUInt32Digital mask */
-    double f64inp;      /* asynFloat64 input */
-    double f64out;      /* asynFloat64 output */
-    epicsInt32 nowt;	/* Number of bytes to write */
-    epicsInt32 nawt;	/* Number of bytes actually written */
-    epicsInt32 nrrd;	/* Number of bytes to read */
-    epicsInt32 nord;	/* Number of bytes read */
-    epicsEnum16 eomr;	/* EOM reason */
-    epicsEnum16 baud;	/* Baud rate */
-    epicsEnum16 prty;	/* Parity */
-    epicsEnum16 dbit;	/* Data bits */
-    epicsEnum16 sbit;	/* Stop bits */
-    epicsEnum16 fctl;	/* Flow control */
-    epicsEnum16 ucmd;	/* Universal command */
-    epicsEnum16 acmd;	/* Addressed command */
-    unsigned char spr;	/* Serial poll response */
-    epicsInt32 tmsk;	/* Trace mask */
-    epicsEnum16 tb0;	/* Trace error */
-    epicsEnum16 tb1;	/* Trace IO device */
-    epicsEnum16 tb2;	/* Trace IO filter */
-    epicsEnum16 tb3;	/* Trace IO driver */
-    epicsEnum16 tb4;	/* Trace flow */
-    epicsInt32 tiom;	/* Trace I/O mask */
-    epicsEnum16 tib0;	/* Trace IO ASCII */
-    epicsEnum16 tib1;	/* Trace IO escape */
-    epicsEnum16 tib2;	/* Trace IO hex */
-    epicsInt32 tsiz;	/* Trace IO truncate size */
-    char tfil[40];	/* Trace IO file */
-    FILE *traceFd;	/* Trace file descriptor */
-    epicsEnum16 auct;	/* Autoconnect */
-    epicsEnum16 cnct;	/* Connect/Disconnect */
-    epicsEnum16 enbl;	/* Enable/Disable */
-    char errs[ERR_SIZE + 1];	/* Error string */
+    double f64inp;          /* asynFloat64 input */
+    double f64out;          /* asynFloat64 output */
+    epicsInt32 nowt;        /* Number of bytes to write */
+    epicsInt32 nawt;        /* Number of bytes actually written */
+    epicsInt32 nrrd;        /* Number of bytes to read */
+    epicsInt32 nord;        /* Number of bytes read */
+    epicsEnum16 eomr;       /* EOM reason */
+    epicsEnum16 baud;       /* Baud rate */
+    epicsEnum16 prty;       /* Parity */
+    epicsEnum16 dbit;       /* Data bits */
+    epicsEnum16 sbit;       /* Stop bits */
+    epicsEnum16 fctl;       /* Flow control */
+    epicsEnum16 ucmd;       /* Universal command */
+    epicsEnum16 acmd;       /* Addressed command */
+    unsigned char spr;      /* Serial poll response */
+    epicsInt32 tmsk;        /* Trace mask */
+    epicsEnum16 tb0;        /* Trace error */
+    epicsEnum16 tb1;        /* Trace IO device */
+    epicsEnum16 tb2;        /* Trace IO filter */
+    epicsEnum16 tb3;        /* Trace IO driver */
+    epicsEnum16 tb4;        /* Trace flow */
+    epicsInt32 tiom;        /* Trace I/O mask */
+    epicsEnum16 tib0;       /* Trace IO ASCII */
+    epicsEnum16 tib1;       /* Trace IO escape */
+    epicsEnum16 tib2;       /* Trace IO hex */
+    epicsInt32 tsiz;        /* Trace IO truncate size */
+    char tfil[40];          /* Trace IO file */
+    FILE *traceFd;          /* Trace file descriptor */
+    epicsEnum16 auct;       /* Autoconnect */
+    epicsEnum16 cnct;       /* Connect/Disconnect */
+    epicsEnum16 enbl;       /* Enable/Disable */
+    char errs[ERR_SIZE + 1];/* Error string */
 }   oldValues;
 #define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
 #define POST_IF_NEW(FIELD) \
@@ -183,7 +194,12 @@ typedef struct callbackMessage {
 } callbackMessage;
 typedef struct asynRecPvt {
     CALLBACK callback;
-    asynRecord *prec;	/* Pointer to record */
+    IOSCANPVT ioScanPvt;
+    void *interruptPvt;
+    epicsMutexId interruptLock;
+    int gotValue;
+    struct dbAddr scanAddr;
+    asynRecord *prec;    /* Pointer to record */
     callbackState state;
     asynUser *pasynUser;
     asynCommon *pasynCommon;
@@ -205,12 +221,28 @@ typedef struct asynRecPvt {
     char *outbuff;
     oldValues old;
 }   asynRecPvt;
+
+/* We need to define a DSET for I/O interrupt scanning */
+typedef struct asynRecordDset {
+    long          number;
+    DEVSUPFUN     dev_report;
+    DEVSUPFUN     init;
+    DEVSUPFUN     init_record;
+    DEVSUPFUN     get_ioint_info;
+    DEVSUPFUN     do_io;
+} asynRecordDset;
+
+asynRecordDset asynRecordDevice = {
+    5,0,0,0,getIoIntInfo,0};
+epicsExportAddress(dset, asynRecordDevice);
+
 
 static long init_record(asynRecord * pasynRec, int pass)
 {
     asynRecPvt *pasynRecPvt;
     asynUser *pasynUser;
     asynStatus status;
+    char fieldName[100];
 
     if(pass != 0) return (0);
     /* Allocate and initialize private structure used by this record */
@@ -230,7 +262,7 @@ static long init_record(asynRecord * pasynRec, int pass)
     pasynRec->errs = (char *) callocMustSucceed(
                                    ERR_SIZE + 1, sizeof(char), "asynRecord");
     pasynRec->udf = 0;
-    recGblResetAlarms(pasynRec);	/* let initial state be no alarm */
+    recGblResetAlarms(pasynRec);    /* let initial state be no alarm */
     strcpy(pasynRec->tfil, "Unknown");
     /* Initialize asyn, connect to device */
     pasynUser = pasynManager->createAsynUser(
@@ -242,6 +274,12 @@ static long init_record(asynRecord * pasynRec, int pass)
         status = connectDevice(pasynRec);
         if(status == asynSuccess) pasynRecPvt->state = stateIdle;
     }
+    pasynRecPvt->interruptLock = epicsMutexCreate();
+    /* Get the dbaddr field of this record's SCAN field */
+    strcpy(fieldName, pasynRec->name);
+    strcat(fieldName, ".SCAN");
+    dbNameToAddr(fieldName, &pasynRecPvt->scanAddr);
+    scanIoInit(&pasynRecPvt->ioScanPvt);
     /* Get initial values of trace and connect bits */
     monitorStatus(pasynRec);
     return (0);
@@ -266,8 +304,10 @@ static long process(asynRecord * pasynRec)
             if(pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
             if(pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
             resetError(pasynRec);
+            /* If we got value from interrupt no need to read */
+            if(pasynRecPvt->gotValue) goto done;  
             status = pasynManager->queueRequest(pasynRecPvt->pasynUser,
-                                      asynQueuePriorityLow, QUEUE_TIMEOUT);
+                                    asynQueuePriorityLow, QUEUE_TIMEOUT);
             if(status==asynSuccess) {
                 yesNo = 0;
                 pasynManager->canBlock(pasynRecPvt->pasynUser,&yesNo);
@@ -294,6 +334,7 @@ done:
     monitor(pasynRec);
     recGblFwdLink(pasynRec);
     pasynRec->pact = FALSE;
+    pasynRecPvt->gotValue = 0;
     return (0);
 }
 
@@ -317,11 +358,11 @@ static long special(struct dbAddr * paddr, int after)
                         "PORT has already been configured");
                 return -1;
             }
-        } else if(fieldIndex!=asynRecordAQR && state==stateNoDevice) {
+        } /* else if(fieldIndex!=asynRecordAQR && state==stateNoDevice) {
             reportError(pasynRec, asynSuccess,
                         "no device specify valid PORT,ADDR");
             return -1;
-        }
+        } */
         return 0;
     }
     resetError(pasynRec);
@@ -414,6 +455,15 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordENBL:
         pasynManager->enable(pasynUser, pasynRec->enbl);
         return 0;
+    case asynRecordREASON:
+        pasynUser->reason = pasynRec->reason;
+        strcpy(pasynRec->drvinfo, "");
+        cancelIOInterruptScan(pasynRec);
+        monitorStatus(pasynRec);
+        return 0;
+    case asynRecordUI32MASK:
+        cancelIOInterruptScan(pasynRec);
+        return 0;
     default:
         break; /*handle other cases below*/
     }
@@ -434,6 +484,17 @@ static long special(struct dbAddr * paddr, int after)
         }
         return 0;
     }
+    if(fieldIndex == asynRecordPCNCT) { 
+        if (pasynRec->pcnct) {
+            status = connectDevice(pasynRec);
+        } else {
+            pasynManager->exceptionCallbackRemove(pasynUser);
+            pasynManager->disconnect(pasynUser);
+            cancelIOInterruptScan(pasynRec);
+        }
+        return 0;
+    }
+            
     /* remaining cases must be handled by asynCallbackSpecial*/
     pasynUser = pasynManager->duplicateAsynUser(pasynUser,
                                                 asynCallbackSpecial, 
@@ -464,6 +525,205 @@ static long special(struct dbAddr * paddr, int after)
         reportError(pasynRec,status,"queueRequest failed for special. Why?");
     }
     return 0;
+}
+
+static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
+{
+    asynRecord *pasynRec = (asynRecord *) pr;
+    asynRecPvt *pasynRecPvt = pasynRec->dpvt;
+    asynStatus status;
+
+    if (cmd == 0) {
+        pasynRecPvt->gotValue = 0;  /* Clear the new data flag */
+        status = registerInterrupts(pasynRec);
+        if (status != asynSuccess) return(-1);
+    } else {
+        status = cancelInterrupts(pasynRec);
+    }
+    *iopvt = pasynRecPvt->ioScanPvt;
+    return 0;
+}
+
+static asynStatus registerInterrupts(asynRecord *pasynRec)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)pasynRec->dpvt;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
+    asynStatus status = asynError;
+
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACE_FLOW,
+        "%s getIoIntInfo registering interrupt\n",
+        pasynRec->name);
+    /* Add to scan list.  Register interrupts */
+    switch(pasynRec->iface) {
+    case asynINTERFACE_OCTET:
+        if (pasynRec->octetiv) {
+           /* status = pasynRecPvt->pasynOctet->registerInterruptUser(
+                        pasynRecPvt->asynOctetPvt, pasynUser,
+                        callbackInterruptOctet,pasynRecPvt,
+                        &pasynRecPvt->interruptPvt);
+           */
+            reportError(pasynRec, asynError, 
+                "asynOctet does not yet support interrupts");
+        } else {
+            reportError(pasynRec, asynError, "No asynOctet interface");
+        }
+        break;
+    case asynINTERFACE_INT32:
+        if (pasynRec->i32iv) {
+           status = pasynRecPvt->pasynInt32->registerInterruptUser(
+                        pasynRecPvt->asynInt32Pvt, pasynUser,
+                        callbackInterruptInt32,pasynRecPvt,
+                        &pasynRecPvt->interruptPvt);
+        } else {
+            reportError(pasynRec, asynError, "No asynInt32 interface");
+        }
+        break;
+    case asynINTERFACE_UINT32:
+        if (pasynRec->ui32iv) {
+           status = pasynRecPvt->pasynUInt32->registerInterruptUser(
+                        pasynRecPvt->asynUInt32Pvt, pasynUser,
+                        callbackInterruptUInt32,pasynRecPvt,
+                        pasynRec->ui32mask, &pasynRecPvt->interruptPvt);
+        } else {
+            reportError(pasynRec, asynError, "No asynUInt32Digital interface");
+        }
+        break;
+    case asynINTERFACE_FLOAT64:
+        if (pasynRec->f64iv) {
+           status = pasynRecPvt->pasynFloat64->registerInterruptUser(
+                        pasynRecPvt->asynFloat64Pvt, pasynUser,
+                        callbackInterruptFloat64,pasynRecPvt,
+                        &pasynRecPvt->interruptPvt);
+        } else {
+            reportError(pasynRec, asynError, "No asynFloat64 interface");
+        }
+        break;
+    }
+    if(status!=asynSuccess) {
+        printf("%s registerInterrupts %s\n",
+               pasynRec->name, pasynUser->errorMessage);
+    }
+    return(status);
+}
+
+static asynStatus cancelInterrupts(asynRecord *pasynRec)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)pasynRec->dpvt;
+    asynUser *pasynUser = pasynRecPvt->pasynUser;
+    asynStatus status = asynError;
+
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACE_FLOW,
+        "%s getIoIntInfo cancelling interrupt\n",
+        pasynRec->name);
+
+    switch(pasynRec->iface) {
+    case asynINTERFACE_OCTET:
+        if (pasynRec->octetiv) {
+            /* status = pasynRecPvt->pasynOctet->cancelInterruptUser(
+                         pasynRecPvt->interruptPvt, pasynUser);
+             */
+            reportError(pasynRec, asynError, 
+                "asynOctet does not yet support interrupts");
+        } else {
+            reportError(pasynRec, asynError, "No asynOctet interface");
+        }
+        break;
+    case asynINTERFACE_INT32:
+        if (pasynRec->i32iv) {
+            status = pasynRecPvt->pasynInt32->cancelInterruptUser(
+                         pasynRecPvt->interruptPvt, pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynInt32 interface");
+        }
+        break;
+    case asynINTERFACE_UINT32:
+        if (pasynRec->ui32iv) {
+            status = pasynRecPvt->pasynUInt32->cancelInterruptUser(
+                         pasynRecPvt->interruptPvt, pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynUInt32Digital interface");
+        }
+        break;
+    case asynINTERFACE_FLOAT64:
+        if (pasynRec->f64iv) {
+            status = pasynRecPvt->pasynFloat64->cancelInterruptUser(
+                         pasynRecPvt->interruptPvt, pasynUser);
+        } else {
+            reportError(pasynRec, asynError, "No asynFloat64 interface");
+        }
+        break;
+    }
+    if(status!=asynSuccess) {
+        printf("%s cancelInterrupts %s\n",
+               pasynRec->name, pasynUser->errorMessage);
+    }
+    return(status);
+}
+
+static void callbackInterruptInt32(void *drvPvt, epicsInt32 value)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+
+    /* If gotValue==1 then the record has not yet finished processing
+     * the previous interrupt, just return */
+    if (pasynRecPvt->gotValue == 1) return;
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s callbackInterruptInt32 new value=%d\n",
+        pasynRec->name, value);
+    epicsMutexLock(pasynRecPvt->interruptLock);
+    pasynRecPvt->gotValue = 1;
+    pasynRec->i32inp = value;
+    epicsMutexUnlock(pasynRecPvt->interruptLock);
+    scanIoRequest(pasynRecPvt->ioScanPvt);
+}
+
+static void callbackInterruptUInt32(void *drvPvt, epicsUInt32 value)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+
+    /* If gotValue==1 then the record has not yet finished processing
+     * the previous interrupt, just return */
+    if (pasynRecPvt->gotValue == 1) return;
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s callbackInterruptUInt32 new value=%x\n",
+        pasynRec->name, value);
+    epicsMutexLock(pasynRecPvt->interruptLock);
+    pasynRecPvt->gotValue = 1;
+    pasynRec->ui32inp = value;
+    epicsMutexUnlock(pasynRecPvt->interruptLock);
+    scanIoRequest(pasynRecPvt->ioScanPvt);
+}
+
+static void callbackInterruptFloat64(void *drvPvt, epicsFloat64 value)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+
+    /* If gotValue==1 then the record has not yet finished processing
+     * the previous interrupt, just return */
+    if (pasynRecPvt->gotValue == 1) return;
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s callbackInterruptFloat64 new value=%f\n",
+        pasynRec->name, value);
+    epicsMutexLock(pasynRecPvt->interruptLock);
+    pasynRecPvt->gotValue = 1;
+    pasynRec->f64inp = value;
+    epicsMutexUnlock(pasynRecPvt->interruptLock);
+    scanIoRequest(pasynRecPvt->ioScanPvt);
+}
+
+static asynStatus cancelIOInterruptScan(asynRecord *pasynRec)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)pasynRec->dpvt;
+    int passiveScan = menuScanPassive;
+    asynStatus status=asynSuccess;
+
+    if (pasynRec->scan != menuScanI_O_Intr) return(status);
+    /* Change to passive */
+    dbPutField(&pasynRecPvt->scanAddr,DBR_LONG,&passiveScan,1);
+    return(asynSuccess);
 }
 
 static void asynCallbackProcess(asynUser * pasynUser)
@@ -739,6 +999,12 @@ static void monitorStatus(asynRecord * pasynRec)
     }
     POST_IF_NEW(auct);
     POST_IF_NEW(cnct);
+    POST_IF_NEW(pcnct);
+    POST_IF_NEW(reason);
+    if (strcmp(pasynRec->drvinfo, pasynRecPvt->old.drvinfo) != 0) {
+        strcpy(pasynRecPvt->old.drvinfo, pasynRec->drvinfo);
+        db_post_events(pasynRec, pasynRec->drvinfo, monitor_mask);
+    }
     POST_IF_NEW(enbl);
     POST_IF_NEW(octetiv);
     POST_IF_NEW(optioniv);
@@ -767,7 +1033,7 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     if(status != asynSuccess) {
         reportError(pasynRec, status, "Connect error, status=%d, %s",
                     status, pasynUser->errorMessage);
-        return (status);
+        goto bad;
     }
     /* Get asynCommon interface */
     pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
@@ -776,7 +1042,8 @@ static asynStatus connectDevice(asynRecord * pasynRec)
         pasynRecPvt->asynCommonPvt = 0;
         reportError(pasynRec, status, "findInterface common: %s",
                     pasynUser->errorMessage);
-        return (asynError);
+        status = asynError;
+        goto bad;
     }
     pasynRecPvt->pasynCommon = (asynCommon *) pasynInterface->pinterface;
     pasynRecPvt->asynCommonPvt = pasynInterface->drvPvt;
@@ -856,13 +1123,21 @@ static asynStatus connectDevice(asynRecord * pasynRec)
             status = pasynRecPvt->pasynDrvUser->create(pasynRecPvt->asynDrvUserPvt,
                                                        pasynUser, pasynRec->drvinfo,
                                                        0, 0);
-            if (status != asynSuccess) {
+            if (status == asynSuccess) {
+                pasynRec->reason = pasynUser->reason;
+            } else {
                 reportError(pasynRec, status, "Error in asynDrvUser->create()");
             }
         }
     } else {
         pasynRecPvt->pasynDrvUser = 0;
         pasynRecPvt->asynDrvUserPvt = 0;
+        pasynRec->reason = 0;
+        /* If the DRVINFO field is not zero-length then print error */
+        if (strlen(pasynRec->drvinfo) > 0) {
+            reportError(pasynRec, asynError, 
+                        "asynDrvUser not supported but drvInfo not blank");
+        }
     }
     /* Add exception callback */
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
@@ -876,7 +1151,22 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     pmsg->callbackType = callbackGetOption;
     status = pasynManager->queueRequest(pasynUser,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
-    return (asynSuccess);
+    pasynRec->pcnct = 1; 
+    status = asynSuccess;
+    goto done;
+
+    bad:
+    /* Disconnect any connected device again, since failure could have happened
+       after connect succeeded.  Ignore error if there is no device
+     * currently connected. */
+    pasynManager->exceptionCallbackRemove(pasynUser);
+    pasynManager->disconnect(pasynUser);
+    pasynRec->pcnct = 0;
+
+    done:
+    cancelIOInterruptScan(pasynRec);
+    monitorStatus(pasynRec); 
+    return(status);
 }
 
 static void performIO(asynUser * pasynUser)
@@ -890,6 +1180,7 @@ static void performIO(asynUser * pasynUser)
            performOctetIO(pasynUser);
         } else {
             reportError(pasynRec, asynError, "No asynOctet interface");
+            recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         }
         break;
     case asynINTERFACE_INT32:
@@ -897,6 +1188,7 @@ static void performIO(asynUser * pasynUser)
            performInt32IO(pasynUser);
         } else {
             reportError(pasynRec, asynError, "No asynInt32 interface");
+            recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         }
         break;
     case asynINTERFACE_UINT32:
@@ -904,6 +1196,7 @@ static void performIO(asynUser * pasynUser)
            performUInt32DigitalIO(pasynUser);
         } else {
             reportError(pasynRec, asynError, "No asynUInt32Digital interface");
+            recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         }
         break;
     case asynINTERFACE_FLOAT64:
@@ -911,6 +1204,7 @@ static void performIO(asynUser * pasynUser)
            performFloat64IO(pasynUser);
         } else {
             reportError(pasynRec, asynError, "No asynFloat64 interface");
+            recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         }
         break;
     }
@@ -932,6 +1226,7 @@ static void performInt32IO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 write error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
         }
     }
     if((pasynRec->tmod == asynTMOD_Read) ||
@@ -944,6 +1239,7 @@ static void performInt32IO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Int32 read error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);
         }
     }
 }
@@ -966,6 +1262,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 write error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
         }
     }
     if((pasynRec->tmod == asynTMOD_Read) ||
@@ -980,6 +1277,7 @@ static void performUInt32DigitalIO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "UInt32 read error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);
         }
     }
 }
@@ -1000,6 +1298,7 @@ static void performFloat64IO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 write error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, WRITE_ALARM, MAJOR_ALARM);
         }
     }
     if((pasynRec->tmod == asynTMOD_Read) ||
@@ -1012,6 +1311,7 @@ static void performFloat64IO(asynUser * pasynUser)
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 read error, %s",
                         pasynUser->errorMessage);
+            recGblSetSevr(pasynRec, READ_ALARM, MAJOR_ALARM);
         }
     }
 }
@@ -1155,7 +1455,7 @@ static void performOctetIO(asynUser * pasynUser)
                 inlen -= eoslen;
             }
         }
-        pasynRec->nord = nbytesTransfered;	/* Number of bytes read */
+        pasynRec->nord = nbytesTransfered;    /* Number of bytes read */
         /* Copy to tinp with dbTranslateEscape */
         ntranslate = epicsStrSnPrintEscaped(pasynRec->tinp, 
                                            sizeof(pasynRec->tinp),
@@ -1177,6 +1477,7 @@ static void gpibUniversalCmd(asynUser * pasynUser)
 
     if (!pasynRec->gpibiv) {
         reportError(pasynRec, asynError, "No asynGpib interface");
+        recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         return;
     }
     switch (pasynRec->ucmd) {
@@ -1222,10 +1523,11 @@ static void gpibAddressedCmd(asynUser * pasynUser)
 
     if (!pasynRec->gpibiv) {
         reportError(pasynRec, asynError, "No asynGpib interface");
+        recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         return;
     }
     acmd[0] = IBUNT; acmd[1] = IBUNL;
-    acmd[2] = pasynRec->addr + LADBASE;	/* GPIB address + Listen Base */
+    acmd[2] = pasynRec->addr + LADBASE;    /* GPIB address + Listen Base */
     acmd[4] = IBUNT; acmd[5] = IBUNL;
     switch (pasynRec->acmd) {
     case gpibACMD_Group_Execute_Trig___GET_:
@@ -1294,6 +1596,7 @@ static void setOption(asynUser * pasynUser)
     /* If port does not have an asynOption interface report error and return */
     if (!pasynRec->optioniv) {
         reportError(pasynRec, asynError, "No asynOption interface");
+        recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
         return;
     }
 
