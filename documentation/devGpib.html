@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+/*                        <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
     "http://www.w3.org/TR/html4/loose.dtd">
 <html>
 <head>
@@ -362,9 +362,8 @@ definition must define field OUT as</p>
 <pre>field(OUT,,"#L&lt;link&gt; A&lt;addr&gt; @0")</pre>
 
 <p>gpibCmd is::</p>
-<pre>typedef struct gpibCmd
-{
-    gDset *dset; /* address of DSET for specified record type */
+<pre>typedef struct gpibCmd {
+    gDset *dset;    /* address of DSET for specified record type */
     int type;       /* enum - GPIBREAD...GPIBEFASTIW */
     short pri;      /* request priority-- IB_Q_LOW, IB_Q_MEDIUM, or IB_Q_HIGH */
     char *cmd;      /* CONSTANT STRING to send to instrument */
@@ -373,14 +372,17 @@ definition must define field OUT as</p>
     long msgLen;    /* room for return data message length */
     /*convert is optional custom routine for conversions */
     int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
-    int P1;             /* user defined parameter used in convert() */
-    int P2;             /* user defined parameter used in convert() */
-    /* P3 plays dual role. For EFAST address of EFAST table   */
-    /*                     For convert it is passed to convert*/
-    char **P3;
+    int P1;         /* P1 plays a dual role: */
+                    /*      For EFAST it is set internally to the
+                    /*      number of entries in the EFAST table */
+                    /*      For convert it is passed to convert() */
+    int P2;         /* user defined parameter passed to convert() */
+    char **P3;      /* P3 plays a dual role: */
+                    /*      For EFAST it holds the address of the EFAST table */
+                    /*      For convert it is passed to convert() */
     devGpibNames *pdevGpibNames; /* pointer to name strings */
-    int eosChar;
-}gpibCmd;</pre>
+    int eosChar;    /* input end-of-string character */
+} gpibCmd;</pre>
 
 <p>where</p>
 <dl>
