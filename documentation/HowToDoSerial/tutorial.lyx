@@ -103,7 +103,7 @@ This document isn't for the absolute newcomer though.
 EPICS R3.14.6 or higher.
 \layout Itemize
 
-EPICS modules/soft/asyn version 3.4 or higher.
+EPICS modules/soft/asyn version 4.0 or higher.
 \layout Standard
 
 Serial and GPIB devices can now be treated in much the same way.
@@ -1410,7 +1410,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-11-19 17:06:11 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-11-19 19:00:09 $$
 \newline 
 ############################################################################
 \newline 
