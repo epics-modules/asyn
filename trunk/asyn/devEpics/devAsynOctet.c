@@ -144,7 +144,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback)
     pasynUser->userPvt = pdevPvt;
     pdevPvt->pasynUser = pasynUser;
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
-                &pdevPvt->portName, &pdevPvt->addr, &pdevPvt->userParam);
+                &pdevPvt->portName, &pdevPvt->addr,&pdevPvt->userParam);
     if (status != asynSuccess) {
         printf("%s devAsynOctet::initCommon error in link %s\n",
                      precord->name, pasynUser->errorMessage);
