@@ -23,12 +23,12 @@
         Uses asynInt32 interface
     devAiAsynInt32Average: 
         Analog input, averages into rval, supports LINEAR conversion
-        Uses asynInt32Callback interface
+        Uses asynInt32 and asynInt32Callback interfaces
         Each callback adds to an accumulator for averaging
         Processing the record resets the accumulator
     devAiAsynInt32Interrupt:
         Analog input, reads into rval, supports LINEAR conversion
-        Uses asynInt32Callback interface
+        Uses asynInt32 and asynInt32Callback interfaces
         If record scan is I/O interrupt then record will process on 
         each callback
     devAiAsynFloat64:
@@ -99,6 +99,7 @@ typedef struct {
     double            sum;
     int               numAverage;
     IOSCANPVT         ioScanPvt;
+    int               ioStatus;
 } devAsynAnalogPvt;
 
 static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
@@ -395,26 +396,30 @@ static long queueRequest(dbCommon *pr)
     devAsynAnalogPvt *pPvt = (devAsynAnalogPvt *)pr->dpvt;
     int status;
 
-    if (pr->pact) {
-        /* This is second call from record after I/O is complete. Nothing
-         * to do, return */
-        switch (pPvt->devType) {
-        case typeAiFloat64:
-        case typeAiFloat64Average:
-        case typeAiFloat64Interrupt:
-            return(2);  /* Do not convert */
-        default:
-            return(0);
+    if (pr->pact == 0) {   /* This is an initial call from record */
+        if (pPvt->canBlock) pr->pact = 1;
+        pPvt->ioStatus = 0;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if (status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                      "devAsynAnalog::queueRequest, error queuing request %s\n", 
+                      pPvt->pasynUser->errorMessage);
+            return(-1);
         }
+        if (pPvt->canBlock) return(0);
     }
-    if (pPvt->canBlock) pr->pact = 1;
-    status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-    if (status != asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                  "devAsynAnalog::queueRequest, error queuing request %s\n", 
-                  pPvt->pasynUser->errorMessage);
+    /* This is either a second call from record or the device is synchronous.
+     * In either case the I/O is complete.
+     * Return the appropriate status */
+    if (pPvt->ioStatus != 0) return(pPvt->ioStatus);
+    switch (pPvt->devType) {
+    case typeAiFloat64:
+    case typeAiFloat64Average:
+    case typeAiFloat64Interrupt:
+        return(2);  /* Do not convert */
+    default:
+        return(0);
     }
-    return status;
 }
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
@@ -444,10 +449,13 @@ static void callbackAo(asynUser *pasynUser)
         pasynFloat64 = (asynFloat64 *)pPvt->dataInterface;
         status = pasynFloat64->write(pPvt->dataPvt, pPvt->pasynUser, pao->val);
     }
-    if (status == 0)
+    if (status == 0) {
+        pPvt->ioStatus = 0;
         pao->udf=0;
-    else
-        recGblSetSevr(pao,WRITE_ALARM,INVALID_ALARM);
+    } else {
+        pPvt->ioStatus = -1;
+        recGblSetSevr(pao, WRITE_ALARM, INVALID_ALARM);
+    }
     if (pao->pact) {
         dbScanLock((dbCommon *)pao);
         prset->process(pao);
@@ -474,10 +482,13 @@ static void callbackAi(asynUser *pasynUser)
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::callbackAi %s devType=%d, rval=%d, val=%f\n",
               pai->name, pPvt->devType, pai->rval, pai->val);
-    if (status == 0)
+    if (status == 0) {
+        pPvt->ioStatus = 0;
         pai->udf=0;
-    else
-        recGblSetSevr(pai,WRITE_ALARM,INVALID_ALARM);
+    } else {
+        pPvt->ioStatus = -1;
+        recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
+    }
     if (pai->pact) {
         dbScanLock((dbCommon *)pai);
         prset->process(pai);
@@ -500,7 +511,6 @@ static void callbackAiAverage(asynUser *pasynUser)
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->mutexId);
-    pai->udf=0;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::callbackAiAverage %s rval=%d val=%f\n",
               pai->name, pai->rval, pai->val);
@@ -517,11 +527,12 @@ static void callbackAiInterrupt(asynUser *pasynUser)
     aiRecord *pai = (aiRecord *)pPvt->pr;
     rset *prset = (rset *)pai->rset;
 
+    epicsMutexLock(pPvt->mutexId);
     if (pPvt->devType == typeAiInt32Interrupt)
         pai->rval = pPvt->sum;
     else
         pai->val = pPvt->sum;
-    pai->udf=0;
+    epicsMutexUnlock(pPvt->mutexId);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::callbackAiInterrupt %s rval=%d val=%f\n",
               pai->name, pai->rval, pai->val);
@@ -540,6 +551,7 @@ static void dataCallbackInt32Average(void *drvPvt, epicsInt32 value)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackInt32Average %s new value=%d\n",
               pr->name, value);
+    pr->udf = 0;
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++;
     pPvt->sum += (double)value;
@@ -554,6 +566,7 @@ static void dataCallbackFloat64Average(void *drvPvt, epicsFloat64 value)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackFloat64Average %s new value=%f\n",
               pr->name, value);
+    pr->udf = 0;
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++;
     pPvt->sum += value;
@@ -569,8 +582,9 @@ static void dataCallbackInt32Interrupt(void *drvPvt, epicsInt32 value)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackInt32Interrupt %s new value=%d\n",
               pr->name, value);
-
+    epicsMutexLock(pPvt->mutexId);
     pPvt->sum = value;
+    epicsMutexUnlock(pPvt->mutexId);
     pai->udf = 0;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackInt32Interrupt, new value=%d\n", 
@@ -587,8 +601,9 @@ static void dataCallbackFloat64Interrupt(void *drvPvt, epicsFloat64 value)
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackFloat64Interrupt %s new value=%f\n",
               pr->name, value);
-
+    epicsMutexLock(pPvt->mutexId);
     pPvt->sum = value;
+    epicsMutexUnlock(pPvt->mutexId);
     pai->udf = 0;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "devAsynAnalog::dataCallbackFloat64Interrupt, new value=%d\n", 
