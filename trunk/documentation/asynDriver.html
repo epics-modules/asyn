@@ -390,7 +390,6 @@ if low level drivers are only accessed by calling queueRequest.
 
 <center>
 <img name="AsynFlow" src="AsynFlow.jpg" border="1">
-MARTY AND ERIC: THIS FIGURE NEEDS UPDATING TO SHOW STEPS 8 AND 9 BELOW.
 
 <p>Figure 1:  Asynchronous Control Flow</p>
 </center>
@@ -414,6 +413,7 @@ following steps:
     completes record processing.</li>
   <li>processCallback calls the record support process method.</li>
   <li>Record support calls Record device support again, this time with record.PACT=1.</li>
+  <li>Record device support updates files in the record and returns.</li>
 </ol>
 
 <p>The second example shows access to a port that can block.</p>
