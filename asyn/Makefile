@@ -29,12 +29,12 @@ asyn_SRCS += epicsInterruptibleSyscall.c
 
 SRC_DIRS += $(ASYN)/devAsyn
 DBD += devAsyn.dbd
-DBDINC += asynOctetRecord
+DBDINC += asynRecord
 asyn_SRCS += devAsyn.c
-asyn_SRCS += asynOctetRecord.c
+asyn_SRCS += asynRecord.c
 asyn_SRCS += devAsynGeneric.c
 DB += asyn.db
-DB += asynOctetRecord.db
+DB += asynRecord.db
 DB += asynGeneric.db
 
 SRC_DIRS += $(ASYN)/asynGpib
