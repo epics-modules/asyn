@@ -345,10 +345,12 @@ epicsShareFunc int epicsShareAPI
 
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
-static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1};
-static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
+static const iocshArg asynReportArg2 = {"port", iocshArgString};
+static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1,
+                                                 &asynReportArg2};
+static const iocshFuncDef asynReportDef = {"asynReport", 3, asynReportArgs};
 int epicsShareAPI
- asynReport(const char *filename, int level)
+ asynReport(const char *filename, int level, const char *portName)
 {
     FILE *fp;
 
@@ -361,7 +363,7 @@ int epicsShareAPI
             return -1;
         }
     }
-    pasynManager->report(fp,level);
+    pasynManager->report(fp,level,portName);
     if(fp!=stdout)  {
         int status;
 
@@ -372,7 +374,7 @@ int epicsShareAPI
     return 0;
 }
 static void asynReportCall(const iocshArgBuf * args) {
-    asynReport(args[0].sval,args[1].ival);
+    asynReport(args[0].sval,args[1].ival,args[2].sval);
 }
 
 static const iocshArg asynSetOptionArg0 = {"portName", iocshArgString};
