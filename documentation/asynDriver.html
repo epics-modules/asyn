@@ -113,7 +113,7 @@ showing debug  information.</p>
     fine on vxWorks because the vxWorks shell has access to external
     variables. It is somewhat of a pain to make the debug variables available
     on other platforms.</p>
-    <p>A problem is that the debug flag appliess to ALL instances of the
+    <p>A problem is that the debug flag applys to ALL instances of the
     supported device/driver. If multiple instances of a device are controlled
     from a single IOC then the debug flags can be almost useless. The user
     normally wants debug information for a device that is having trouble  not
@@ -158,16 +158,21 @@ report could have problems. Does this matter?</p>
 <p>Interface asynGpib defines methods to handle SRQs. Should a more general
 interrupt mechanism be provided? Perhaps is is best to wait until a need
 arises.</p>
+
 <h3>Planned additions</h3>
-<p>Hopefully Dirk Zimoch will get time soon to convert streams to
-use asynDriver.</p>
+
+<p>Hopefully Dirk Zimoch will get time soon to convert streams to use
+asynDriver.</p>
+
 <p>Additional low level support</p>
 <ul>
-<li>A replacement for GI (Gpib Interact). GI, which is available
-with the base 3.13 gpib support and with gpibCore, is a command line
-tool that allows the user to compose commands to send to instruments.>/li>
-<li>Convert National Instruments NI1014 VME to GPIB driver to asynDriver.</li>
-<li>Convert Industry Pack IP488 driver to asynDriver.</li>
+  <li>A replacement for GI (Gpib Interact). GI, which is available with the
+    base 3.13 gpib support and with gpibCore, is a command line tool that
+    allows the user to compose commands to send to
+  instruments.&gt;/li&gt;</li>
+  <li>Convert National Instruments NI1014 VME to GPIB driver to
+  asynDriver.</li>
+  <li>Convert Industry Pack IP488 driver to asynDriver.</li>
 </ul>
 
 <center>
@@ -186,14 +191,13 @@ individuals have been most influential.</p>
   <dt>Benjamin Franksen</dt>
     <dd>John's support only worked on vxWorks. In addition the driver support
       was implement as a single source file, i.e. what is now asynGpib,
-      drvNI1014, and drvBitBusGpib were all mixed together. Benjamin defined
-      an interface between drvCommon and low level controllers and split the
+      drvNI1014, and drvBitBusGpib were  mixed together. Benjamin defined an
+      interface between drvCommon and low level controllers and split the
       code into drvGpib and the low level drivers. He also created the
       support for drvVxi11.</dd>
   <dt>Eric Norum</dt>
     <dd>Eric started with Benjamin's code and converted it to use the
-      Operating System Independent features of EPICS 3.14. This is the basis
-      of the existing version.</dd>
+      Operating System Independent features of EPICS 3.14.</dd>
   <dt>Marty Kraimer</dt>
     <dd>Marty started with Eric's version and made changes to support
       secondary addressing and to replace ioctl with code to support general
@@ -254,7 +258,7 @@ interfaces. A process module normally calls drivers as part of it's
 processing.</p>
 
 <p>For more complicated protocols additional layers can be created. For
-example GPIB support is implemented as a asynGpib interface which is called
+example GPIB support is implemented as an asynGpib interface which is called
 by user code and a asynGpibPort interface which is called by asynGpib.</p>
 
 <p>A driver can implement multiple interfaces. For example asynGpib
@@ -297,12 +301,12 @@ can be used by other code, e.g. a sequence program.</p>
     interface. The term octet is used instead of ASCII because the only
     requirement is messages consist of 8-bit bytes. The methods are:</p>
     <ul>
-      <li>read - read a message.  The routine should return the number of
-        8-bit bytes read from the device or -1 to indicate that some sort of
-        error occurred.</li>
-      <li>write - write a message.  The routine should return the number of
-        8-bit bytes written ti the device or -1 to indicate that some sort of
-        error occurred.</li>
+      <li>read - read a message.  The routine returns the number of 8-bit
+        bytes read from the device or -1 to indicate that some sort of error
+        occurred.</li>
+      <li>write - write a message.  The routine returns the number of 8-bit
+        bytes written to the device or -1 to indicate that some sort of error
+        occurred.</li>
       <li>flush - if input is buffered flush the buffer.</li>
       <li>setEos - Specify an end of message string for detecting the end of
         input messages.</li>
@@ -334,7 +338,7 @@ and one or more interfaces.</p>
 <h3>Comments:</h3>
 <ol>
   <li>Streams, devAscii, and mpfSerial need only asynManager and asynOctet.
-    gpibCore needs only asynManager, asynCommon, asynOctet, and asynGpib.</li>
+    devGpib needs only asynManager, asynCommon, asynOctet, and asynGpib.</li>
   <li>It is expected that most users will connect to these interfaces via
     device support. However other code can call it. Examples are sequence
     programs, test programs, utility commands, etc.</li>
@@ -477,7 +481,7 @@ calling asynUserCalloc and asynUserFree.</p>
       <td>createAsynUser</td>
       <td>Creates an asynUser. The caller specifies two callbacks, one for
         successful queueRequests and one if a queueRequest has a timeout. The
-        timeout callback is optional.. errorMessageSize characters are
+        timeout callback is optional. errorMessageSize characters are
         allocated for errorMessage. The amount of storage can not be changed.
         This method doesn't return if it is unable to allocate the
       storage.</td>
@@ -485,19 +489,19 @@ calling asynUserCalloc and asynUserFree.</p>
     <tr>
       <td>freeAsynUser</td>
       <td>Free an asynUser. The user must free it only via this call. The
-        call will fail if the asynUser connected to a device.</td>
+        call will fail if the asynUser is connected to a device.</td>
     </tr>
     <tr>
       <td>connectDevice</td>
-      <td>Device code calls this to connect to a device.. It passes the name
+      <td>Device code calls this to connect to a device. It passes the name
         of the communication port and the address of the device.. The port
-        Name is the same as that specified in the call to registerPort. If
-        the pasynUser is already connected this request fails.</td>
+        Name is the same as that specified in the call to registerPort. The
+        call will fail if the asynUser is connected to a device.</td>
     </tr>
     <tr>
       <td>disconnectDevice</td>
-      <td>Disconnect. If the asynUser is queued or locked this request will
-        fail.</td>
+      <td>Disconnect. The call will fail  if the asynUser is queued or
+      locked.</td>
     </tr>
     <tr>
       <td>findInterface</td>
@@ -524,16 +528,16 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>queueRequest</td>
-      <td>A device support thread never calls a driver directly. Instead it
-        calls queueRequest. After the thread associated with the port takes
-        this request from the queue, it calls queue callback specified in the
-        call to createAsynUser. The callback makes calls to the driver. If
-        the asynUser is already on a queue, asynError is returned. The
-        timeout is from when the request is queued until it is taken from the
-        queue. A value less than or equal to 0.0 means no timeout. The
-        request is removed from the queue before the callback is called. Thus
-        callbacks are allowed to lock, unlock, and issue new queue
-      requests.</td>
+      <td>Except for method report, a device support thread never calls a
+        driver directly. Instead it calls queueRequest. After the thread
+        associated with the port takes this request from the queue, it calls
+        the queue callback specified in the call to createAsynUser. The
+        callback makes calls to the driver. If the asynUser is already on a
+        queue, asynError is returned. The timeout is from when the request is
+        queued until it is taken from the queue. A value less than or equal
+        to 0.0 means no timeout. The request is removed from the queue before
+        the callback is called. Thus callbacks are allowed to lock, unlock,
+        and issue new queue requests.</td>
     </tr>
     <tr>
       <td>cancelRequest</td>
@@ -545,8 +549,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     <tr>
       <td>lock/unlock</td>
       <td>lock/unlock are used to block other users from calling a driver
-        while a user is making a series of queueRequest calls. Only the addr
-        specified in the connectDevice request is locked. asynManager lock
+        while a user is making a series of queueRequests. Only the addr
+        specified in the connectDevice request is locked. asynManager locks
         when a queueRequest for a locked asynUser is taken from the queue. At
         that point all other entries in the queue must wait until unlock is
         called. lock/unlock fail if a request is currently queued.</td>
@@ -610,15 +614,13 @@ for sending commands and receiving responses from a device.</p>
   <tbody>
     <tr>
       <td>read</td>
-      <td>Read a message from the device.  The routine should return the
-        number of 8-bit bytes read from the device or -1 to indicate that
-        some sort of error occurred.</td>
+      <td>Read a message from the device.  The routine returns the number of
+        8-bit bytes read from the device or -1 to indicate error.</td>
     </tr>
     <tr>
       <td>write</td>
-      <td>Send a message to the device.  The routine should return the number
-        of 8-bit bytes sent to the device or -1 to indicate that some sort of
-        error occurred.</td>
+      <td>Send a message to the device.  The routine returns the number of
+        8-bit bytes sent to the device or -1 to indicate error.</td>
     </tr>
     <tr>
       <td>flush</td>
@@ -826,11 +828,14 @@ interraces.</p>
     </tr>
     <tr>
       <td>registerSrqHandler</td>
-      <td>The request is passed to the low level driver.</td>
+      <td>Register an srq handler is registered for the port,addr. The
+        handler will be called when an SRQ is detected for that
+      port,addr.</td>
     </tr>
     <tr>
       <td>pollAddr</td>
-      <td>Enable or disable SRQ polling of specified address.</td>
+      <td>Set SRQ polling on or off. onOff = (0,1) means (disable, enable)
+        SRQ polling of specified address.</td>
     </tr>
     <tr>
       <td>registerPort</td>
@@ -879,23 +884,25 @@ the vxi11. It provides:</p>
     </tr>
     <tr>
       <td>srqStatus</td>
-      <td>Returns (0,1) if SRQ (is not, is) set</td>
+      <td>Returns (0,1) if SRQ (is not, is) set. Normally only called by
+        asynGpib.</td>
     </tr>
     <tr>
       <td>srqEnable</td>
-      <td>Enable or disable SRQs.</td>
+      <td>Enable or disable SRQs. Normally only called by asynGpib.</td>
     </tr>
     <tr>
       <td>serialPollBegin</td>
-      <td>Start of serial poll.</td>
+      <td>Start of serial poll. Normally only called by asynGpib.</td>
     </tr>
     <tr>
       <td>serialPoll</td>
-      <td>Poll the specified address and return its response.</td>
+      <td>Poll the specified address and return its response. Normally only
+        called by asynGpib.</td>
     </tr>
     <tr>
       <td>serialPollEnd</td>
-      <td>End of serial poll.</td>
+      <td>End of serial poll. Normally only called by asynGpib.</td>
     </tr>
   </tbody>
 </table>
@@ -938,8 +945,9 @@ details.</p>
   <li>Agilent E5810A LAN/GPIB Gateway.</li>
   <li>Tektronix TDS3014B Scope.
     <p>When communicating with the Ethernet port it acts like a VXI-11.2
-    rather than a VXI-11.3 device. It seems to just accept any GPIB
-    address.</p>
+    rather than a VXI-11.3 device. It seems to just accept any GPIB address.
+    SRQs did not work when connecting via the ethernet port but did when
+    communicating via a LAN/GPIB gateway.</p>
   </li>
 </ul>
 
@@ -952,10 +960,11 @@ where
   <li>inet_addr - Internet Address</li>
   <li>password - password. If given as 0 the default E5810 is used.</li>
   <li>portName - The portName that is registered with asynGib.</li>
+  <li>inet_addr - Internet address.</li>
   <li>recoverWithIFC - (0,1) =&gt; (don't, do) issue IFC when error
   occurs.</li>
-  <li>timeout - I/O operation timeout in seconds as a double. If 0.0 then a default is
-    assigned.</li>
+  <li>timeout - I/O operation timeout in seconds as a double. If 0.0 then a
+    default is assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
@@ -998,16 +1007,15 @@ where the arguments are:
     ports.  For example, the arguments which confirm the default settings are
     <tt>9600, cs8, -parenb, -crtscts, clocal</tt>. Note that if any stty
     arguments are present both the priority and openOnlyOnDisconnect
-    arguments must also be present but other than that the order of the stty arguments is not
-    important.k</li>
+    arguments must also be present but other than that the order of the stty
+    arguments is not important.k</li>
 </ul>
 
 <p>Serial ports directly attached to a vxWorks IOC may need to be set up
-using hardware-specific commands. Once this is done the standard drvGenericSerialConfigure
-command can be issued.  For example, the following example shows the
-configuration
-procedure for a port on a GreenSprings octal UART Industry-Pack module
-on a GreenSprings VIP616-01 carrier.</p>
+using hardware-specific commands. Once this is done the standard
+drvGenericSerialConfigure command can be issued.  For example, the following
+example shows the configuration procedure for a port on a GreenSprings octal
+UART Industry-Pack module on a GreenSprings VIP616-01 carrier.</p>
 <pre>ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
@@ -1025,7 +1033,7 @@ asynDriver is distributed subject to the following license conditions:
 SOFTWARE LICENSE AGREEMENT
 Software: asynDriver
 
- 1. The "Software", below, refers to devGpib (in either source code, or
+ 1. The "Software", below, refers to asynDriver (in either source code, or
     binary form and accompanying documentation). Each licensee is
     addressed as "you" or "Licensee."
 
