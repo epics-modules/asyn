@@ -99,6 +99,8 @@ typedef struct asynOctet{
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                          const char *eos,int eoslen);
+    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
+                        char *eos, int eossize, int *eoslen);
 }asynOctet;
 
 /*asynTrace is implemented by asynManager*/

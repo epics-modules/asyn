@@ -89,6 +89,8 @@ static int gpibWrite(void *drvPvt,asynUser *pasynUser,
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
+static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen);
 /*asynGpib methods*/
 static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
     const char *data, int length);
@@ -110,7 +112,7 @@ static asynCommon asyn = {
    report,connect,disconnect,setPortOption,getPortOption
 };
 static asynOctet octet = {
-    gpibRead,gpibWrite,gpibFlush, setEos
+    gpibRead,gpibWrite,gpibFlush, setEos, getEos
 };
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren,
@@ -271,6 +273,16 @@ static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->setEos(pgpibPvt->asynGpibPortPvt,pasynUser,eos,eoslen));
 }
+
+static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
+    char *eos, int eossize, int *eoslen)
+{
+    GETgpibPvtasynGpibPort
+    return(pasynGpibPort->getEos(pgpibPvt->asynGpibPortPvt,pasynUser,
+        eos,eossize, eoslen)
+);
+}
+
 
 /*asynGpib methods */
 static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,

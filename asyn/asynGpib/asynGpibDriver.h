@@ -82,6 +82,8 @@ struct asynGpibPort {
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                 const char *eos,int eoslen);
+    asynStatus (*getEos)(void *drvPvt,asynUser *pasynUser,
+                char *eos, int eossize, int *eoslen);
     /*asynGpib methods passed thrtough from asynGpib*/
     asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
                 const char *data, int length);
