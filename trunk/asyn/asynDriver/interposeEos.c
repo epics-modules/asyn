@@ -32,11 +32,10 @@
 #include <interposeEos.h>
 
 typedef struct eosPvt {
-    const char    *interposeName;
     const char    *portName;
-    asynInterface octet;
-    asynOctet     *pasynOctet;  /* The methods we're overriding */
-    void          *asynOctetPvt;
+    asynInterface eosInterfae;
+    asynOctet     *plowerLevelMethods;  /* The methods we're overriding */
+    void          *lowerLevelPvt;
     asynUser      *pasynUser;     /* For connect/disconnect reporting *
     char          inBuffer[INBUFFER_SIZE];
     unsigned int  inBufferHead;
@@ -52,40 +51,39 @@ static int eosWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars
 static asynStatus eosEos(void *ppvt,asynUser *pasynUser);
 static asynStatus eosSetEos(void *ppvt,asynUser *pasynUser,const char *eos,int eoslen);
 static asynStatus eosGetEos(void *ppvt,asynUser *pasynUser,const char *eos,int eossize,int *eoslen);
-static asynOctet octet = {
+static asynOctet eosMethods = {
     eosRead,eosWrite,eosFlush,eosSetEos,eosGetEos
 };
 
-int epicsShareAPI interposeEosConfig(const char *pnm,const char *dn,int addr)
+int epicsShareAPI interposeEosConfig(const char *portName,int addr)
 {
     eosPvt *peosPvt;
     asynStatus status;
-    asynInterface *poctetasynInterface;
+    asynInterface *plowerLevelInterface;
 
     peosPvt = callocMustSucceed(1,sizeof(eosPvt),"interposeEosConfig");
-    peosPvt->interposeName = epicsStrDup(pnm);
-    peosPvt->portName = epicsStrDup(dn);
+    peosPvt->portName = epicsStrDup( portName);
     peosPvt->addr = addr;
-    peosPvt->octet.interfaceType = asynOctetType;
-    peosPvt->octet.pinterface = &octet;
-    peosPvt->octet.drvPvt = peosPvt;
+    peosPvt->eosInterfae.interfaceType = asynOctetType;
+    peosPvt->eosInterfae.pinterface = &eosMethods;
+    peosPvt->eosInterfae.drvPvt = peosPvt;
     peosPvt->pasynuser = pasynManager->createAsynUser(0,0);
     peosPvt->pasynuser->devPvt = peosPvt;
-    status = pasynManager->connectDevice(peosPvt->pasynuser,peosPvt->portName,peosPvt->addr);
-    if(status!=asynSyccess) ???
-    status = pasynManager->exceptionCallbackAdd(pasynuser,myCallback);
-    status = pasynManager->interposeInterface(portName,addr,
-        &peosPvt->octet,&poctetasynInterface);
-    if((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface failed.\n",portName);
+    if ((pasynManager->connectDevice(peosPvt->pasynuser,peosPvt->portName,
+                                           peosPvt->addr) != asynSuccess)
+     || (pasynManager->exceptionCallbackAdd(pasynuser,
+                                           eosCallback) != asynSuccess)
+     || (pasynManager->interposeInterface(portName,addr,&peosPvt->eosInterfae,
+                                           &plowerLevelInterface) != asynSuccess)
+     || (plowerLevelInterface == NULL))
+        printf("%s interposeInterface failed.\n",portName);
         free(peosPvt->asynUser);
         free(peosPvt->portName);
-        free(peosPvt->interposeName);
         free(peosPvt);
-        return(0);
+        return(-1);
     }
-    peosPvt->pasynOctet = (asynOctet *)poctetasynInterface->pinterface;
-    peosPvt->asynOctetPvt = poctetasynInterface->drvPvt;
+    peosPvt->plowerLevelMethods = (asynOctet *)plowerLevelInterface->pinterface;
+    peosPvt->lowerLevelPvt = plowerLevelInterface->drvPvt;
     return(0);
 }
 
@@ -123,7 +121,7 @@ static int eosRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
             if (nRead >= maxchars)
                 break;
             continue;
-            if (peosPvt->pasynOctet->read(peosPvt->asynOctetPvt,pasynUser,peosPvt->inBuffer,INBUFFERSIZE) <= 0)
+            if (peosPvt->plowerLevelMethods->read(peosPvt->lowerLevelPvt,pasynUser,peosPvt->inBuffer,INBUFFERSIZE) <= 0)
                 return -1;
         }
     }
@@ -134,13 +132,13 @@ static int eosWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
 
-    return peosPvt->pasynOctet->write(peosPvt->asynOctetPvt,
+    return peosPvt->plowerLevelMethods->write(peosPvt->lowerLevelPvt,
         pasynUser,data,numchars);
 }
 
 static asynStatus eosFlush(void *ppvt,asynUser *pasynUser)
 {
-    return peosPvt->pasynOctet->flush(peosPvt->asynOctetPvt,
+    return peosPvt->plowerLevelMethods->flush(peosPvt->lowerLevelPvt,
         pasynUser,data,numchars);
 }
 
@@ -198,19 +196,16 @@ static asynStatus eosGetEos(void *ppvt,asynUser *pasynUser,
 
 /* register interposeEosConfig*/
 static const iocshArg interposeEosConfigArg0 =
-    {"interposeEosName", iocshArgString };
-static const iocshArg interposeEosConfigArg1 =
     { "portName", iocshArgString };
-static const iocshArg interposeEosConfigArg2 =
+static const iocshArg interposeEosConfigArg1 =
     { "addr", iocshArgInt };
 static const iocshArg *interposeEosConfigArgs[] = 
-    {&interposeEosConfigArg0,&interposeEosConfigArg1,
-    &interposeEosConfigArg2};
+    {&interposeEosConfigArg0,&interposeEosConfigArg1};
 static const iocshFuncDef interposeEosConfigFuncDef =
-    {"interposeEosConfig", 3, interposeEosConfigArgs};
+    {"interposeEosConfig", 2, interposeEosConfigArgs};
 static void interposeEosConfigCallFunc(const iocshArgBuf *args)
 {
-    interposeEosConfig(args[0].sval,args[1].sval,args[2].ival);
+    interposeEosConfig(args[0].sval,args[1].ival);
 }
 
 static void interposeEosRegister(void)
