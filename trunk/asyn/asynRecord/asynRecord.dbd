@@ -165,6 +165,7 @@ recordtype(asyn) {
     field(IFACE,DBF_MENU) {
         prompt("Interface")
         menu(asynINTERFACE)
+        special(SPC_MOD)
     }
     field(OCTETIV, DBF_LONG) {
         prompt("asynOctet is valid")
