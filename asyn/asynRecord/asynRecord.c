@@ -211,6 +211,23 @@ static long process(asynRecord *pasynRec)
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
    asynStatus status;
 
+   /* This routine is called under the following possible states:
+    * state                 pact
+    * stateConnectDevice    0     Once at iocInit, if PINI is true.
+    *                             Connect to device.  This is bad, can't
+    *                             actually do I/O using PINI.
+    * stateIdle             0     Queue request, callback will performIOi
+    *                             unless TMOD=NoI/O
+    * stateSetOption        0     Queue request, callback will setOption
+    * stateGetOption        0     Queue request, callback will getOption
+    * stateConnect          0     Queue request with asynQueuePriorityConnect,
+    *                             callback will connect or disconnect
+    * stateConnect          1     Connect/disconnect request when there is
+    *                             already a queueRequest.  Set pact=0 and
+    *                             process record again.
+    * Any                   1     Callback, finish record processing
+    */
+
    if(pasynRecPvt->state==stateConnectDevice) {
         /*This can only happen once at PINI */
         pasynRecPvt->state = stateIdle;
@@ -577,7 +594,7 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
     pasynRecPvt->state = stateGetOption;
     monitorStatus(pasynRec);
-    scanOnce(pasynRec);
+    scanOnce(pasynRec);  /* WHY ARE WE PROCESSING RECORD HERE? */
     return(asynSuccess);
 }
 
@@ -703,9 +720,18 @@ static void asynCallback(asynUser *pasynUser)
         "%s: asynCallback, state=%d\n",
         pasynRec->name, pasynRecPvt->state);
    switch(pasynRecPvt->state) {
-      case stateIO:        performIO(pasynUser); break;
-      case stateSetOption: setOption(pasynUser); break;
-      case stateGetOption: getOptions(pasynUser); break;
+      case stateIdle:
+         /* This happens when TMOD=NoI/O */
+         break;    
+      case stateIO:
+         performIO(pasynUser); 
+         break;
+      case stateSetOption: 
+         setOption(pasynUser); 
+         break;
+      case stateGetOption:
+         getOptions(pasynUser); 
+         break;
       case stateConnect:
           if(pasynRec->cnct) {
               pasynRecPvt->pasynCommon->connect(
