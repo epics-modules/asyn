@@ -458,7 +458,7 @@ static asynStatus openSocket(const char *server, int port,
     strcpy(*portName, server);
     strcat(*portName, ":");
     strcat(*portName, portString);
-    status = drvAsynIPPortConfigure(*portName, *portName, 0, 0, 0,0);
+    status = drvAsynIPPortConfigure(*portName, *portName, 0, 0, 0);
     return(status);
 }
 

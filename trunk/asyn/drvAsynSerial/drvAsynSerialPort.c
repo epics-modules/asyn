@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.24 2004-11-10 02:11:29 rivers Exp $
+ * $Id: drvAsynSerialPort.c,v 1.25 2004-11-18 18:55:33 mrk Exp $
  */
 
 #include <string.h>
@@ -852,7 +852,7 @@ drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
                      int noAutoConnect,
-                     int processEosIn,int processEosOut)
+                     int noProcessEos)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -925,7 +925,7 @@ drvAsynSerialPortConfigure(char *portName,
         return -1;
     }
     status = pasynOctetBase->initialize(tty->portName,&tty->octet,
-         (processEosIn ? 1 : 0),(processEosOut ? 1 : 0),1);
+         (noProcessEos ? 0 : 1),(noProcessEos ? 0 : 1),1);
     if(status != asynSuccess) {
         printf("drvAsynSerialPortConfigure: Can't register octet.\n");
         ttyCleanup(tty);
@@ -949,18 +949,17 @@ static const iocshArg drvAsynSerialPortConfigureArg0 = { "port name",iocshArgStr
 static const iocshArg drvAsynSerialPortConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvAsynSerialPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynSerialPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynSerialPortConfigureArg4 = { "processEosIn",iocshArgInt};
-static const iocshArg drvAsynSerialPortConfigureArg5 = { "processEosOut",iocshArgInt};
+static const iocshArg drvAsynSerialPortConfigureArg4 = { "noProcessEos",iocshArgInt};
 static const iocshArg *drvAsynSerialPortConfigureArgs[] = {
     &drvAsynSerialPortConfigureArg0, &drvAsynSerialPortConfigureArg1,
     &drvAsynSerialPortConfigureArg2, &drvAsynSerialPortConfigureArg3,
-    &drvAsynSerialPortConfigureArg4, &drvAsynSerialPortConfigureArg5};
+    &drvAsynSerialPortConfigureArg4};
 static const iocshFuncDef drvAsynSerialPortConfigureFuncDef =
-                      {"drvAsynSerialPortConfigure",6,drvAsynSerialPortConfigureArgs};
+                      {"drvAsynSerialPortConfigure",5,drvAsynSerialPortConfigureArgs};
 static void drvAsynSerialPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynSerialPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                               args[3].ival, args[4].ival, args[5].ival);
+                               args[3].ival, args[4].ival);
 }
 
 /*

@@ -19,7 +19,7 @@ extern "C" {
 
 int drvAsynIPPortConfigure(const char *portName, const char *hostInfo,
                            unsigned int priority, int noAutoConnect,
-                           int processEosIn,int processEosOut);
+                           int noProcessEos);
 
 #ifdef __cplusplus
 }
