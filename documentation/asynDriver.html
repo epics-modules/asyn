@@ -1,39 +1,45 @@
-<?xml version="1.0" encoding="iso-8859-1"?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
-    "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+    "http://www.w3.org/TR/html4/loose.dtd">
+<html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
   <title>asynDriver</title>
-  <meta name="GENERATOR" content="amaya 5.1" />
 </head>
 
 <body>
 
 <center>
-<h1>Asynchronous Driver Support</h1>
+<h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p>Marty Kraimer, Benjamin Franksen, Pete Owens, Eric Norum, and Dirk
-Zimoch</p>
+<h2>Marty Kraimer, Benjamin Franksen, Pete Owens, Eric Norum, and Dirk
+Zimoch.</h2>
 
-<p>July 18, 2003</p>
+<h2>July 2003</h2>
 </center>
+<hr>
 
 <center>
-<h2>Goal</h2>
+<h2>License Agreement</h2>
 </center>
 
-<p><span style="font-weight: bold">asynDriver is a general purpose
-facility</span><span style="font-weight: bold">for interfacing device
-specific code to low level communication drivers</span>.</p>
+<p>This product is available via the open source license described at the end
+of this document</p>
+<hr>
+
+<center>
+<h2>Introduction</h2>
+</center>
+
+<p>asynDriver is a general purpose facility for interfacing device specific
+code to low level communication drivers</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, it is independent of EPICS IOC support.</p>
 
-<p>The plan is:</p>
+<p>This version</p>
 <ul>
-  <li>Provide a facility that could be used by gpibCore, streams,
-    devAscii/drvAscii, devOnrl, and mpfSerial. 
+  <li>Provides a facility that can be used by gpibCore, streams,
+    devAscii/drvAscii, devOnrl, and mpfSerial.
     <ul>
       <li>Each would have to be modified so that the device support component
         is compatible with existing uses but replace the driver part with
@@ -42,15 +48,15 @@ than using libCom, it is independent of EPICS IOC support.</p>
         drivers.</li>
     </ul>
   </li>
-  <li>Initially support the following communication protocals 
+  <li>Plans are to soon support the following communication protocals
     <ul>
       <li>gpib</li>
       <li>vxi11</li>
       <li>serial, i.e. RS232,, etc.</li>
     </ul>
   </li>
-  <li>In the future support other protocals especially for ethernet based
-    devices.</li>
+  <li>In the future other protocals will be supported especially for ethernet
+    based devices.</li>
 </ul>
 
 <h3>NOTES:</h3>
@@ -75,6 +81,7 @@ will not be easily persuaded to switch from their existing solution. Thus
 what is proposed is to implement a framework below the device support level
 that can be used by all of the above systems so that all can share the same
 drivers.</p>
+<hr>
 
 <center>
 <h2>Overview of asynDriver support</h2>
@@ -100,7 +107,7 @@ can be used by other code, e.g. a sequence program.</p>
 
 <h3>Asynchronous Driver Components</h3>
 <ul>
-  <li><span style="font-weight: bold">asynQueueManager</span> 
+  <li><span style="font-weight: bold">asynQueueManager</span>
     <p>Provides the following services.</p>
     <ul>
       <li>A thread for each communication interface.</li>
@@ -112,11 +119,11 @@ can be used by other code, e.g. a sequence program.</p>
         other users while it makes multiple queueRequests.</li>
     </ul>
   </li>
-  <li><span style="font-weight: bold">asynDriver</span> 
+  <li><span style="font-weight: bold">asynDriver</span>
     <p>asynDriver is a set of methods that must be implemented by all
     drivers.</p>
   </li>
-  <li><span style="font-weight: bold">octetDriver</span> 
+  <li><span style="font-weight: bold">octetDriver</span>
     <p>octetDriver is a set of methods implemented by any driver that accepts
     octet messages (messages consisting of 8 bit bytes) and returns octet
     responses. This interface will be sufficient for lots of device specific
@@ -136,7 +143,7 @@ drivers.This determines the methods it can call.</p>
 
 <p>User code communicates with drivers via the following method:</p>
 <ol>
-  <li>It calls: 
+  <li>It calls:
     <pre> pasynQueueManager-&gt;queueRequest(...)</pre>
   </li>
   <li>The callback specified in queueRequest calls the driver.</li>
@@ -154,6 +161,7 @@ drivers.This determines the methods it can call.</p>
     one type of support. For example most functions could be accessed via
     steams but gpibDriverUser could be used to handle unsollicited SRQs.</li>
 </ol>
+<hr>
 
 <center>
 <h2>asynDriver</h2>
@@ -263,7 +271,7 @@ by calling asynUserCalloc and asynUserFree.</p>
       <td>errorMessage</td>
       <td>When either asynQueueManager or a driver returns a
         status!=asynSuccess it can also put an error message into
-        errorMessage. They should do this via a call to 
+        errorMessage. They should do this via a call to
         <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"&lt;format&gt;",...)</pre>
       </td>
     </tr>
@@ -330,7 +338,7 @@ by calling asynUserCalloc and asynUserFree.</p>
       <td>Find a driver interface. It returns the address of a deviceDriver
         or 0 if the driverType is not supported. The user will need the
         address of the drivers interface and the address of pdrvPvt so that
-        calls can be made to the driver. For example: 
+        calls can be made to the driver. For example:
         <pre>deviceDriver *pdeviceDriver;
 octetDriver *poctetDriver;
 void *poctetDriverPvt;
@@ -459,6 +467,7 @@ strings for sending commands and receiving responses from a device.</p>
     </tr>
   </tbody>
 </table>
+<hr>
 
 <center>
 <h2>Discussion of asynDriver</h2>
@@ -553,6 +562,7 @@ void mainThread(void)
   <li>The thread associated with the device calls queueCallback.</li>
   <li>queueCallback calls the driver's setEos and read methods.</li>
 </ol>
+<hr>
 
 <center>
 <h2>gpibDriver</h2>
@@ -564,7 +574,7 @@ void mainThread(void)
 defines two interfaces.</p>
 <ul>
   <li>gpibDriverUser - This is the interface that user code uses. It provides
-    the following: 
+    the following:
     <ul>
       <li>A set of gpib specific methods that user code can call.</li>
       <li>Code that handles generic GPIB functions like SRQ polling.</li>
@@ -628,8 +638,7 @@ typedef struct gpibDriver {
     asynStatus (*serialPollBegin) (void *pdrvPvt);
     int (*serialPoll) (void *pdrvPvt, int addr, double timeout);
     asynStatus (*serialPollEnd) (void *pdrvPvt);
-}gpibDriver;
-</pre>
+}gpibDriver;</pre>
 
 <h3>gpibDriverUser</h3>
 
@@ -753,5 +762,73 @@ NI1014. It provides:</p>
     </tr>
   </tbody>
 </table>
+<hr>
+
+<center>
+<h2><a name="License Agreement"></a>License Agreement</h2>
+</center>
+<pre>Copyright (c) 2002 University of Chicago All rights reserved.
+asynDriver is distributed subject to the following license conditions:
+
+SOFTWARE LICENSE AGREEMENT
+Software: asynDriver
+
+ 1. The "Software", below, refers to devGpib (in either source code, or
+    binary form and accompanying documentation). Each licensee is
+    addressed as "you" or "Licensee."
+
+ 2. The copyright holders shown above and their third-party licensors
+    hereby grant Licensee a royalty-free nonexclusive license, subject to
+    the limitations stated herein and U.S. Government license rights.
+
+ 3. You may modify and make a copy or copies of the Software for use
+    within your organization, if you meet the following conditions:
+      a. Copies in source code must include the copyright notice and this
+         Software License Agreement.
+      b. Copies in binary form must include the copyright notice and this
+         Software License Agreement in the documentation and/or other
+         materials provided with the copy.
+
+ 4. You may modify a copy or copies of the Software or any portion of it,
+    thus forming a work based on the Software, and distribute copies of
+    such work outside your organization, if you meet all of the following
+    conditions:
+      a. Copies in source code must include the copyright notice and this
+         Software License Agreement;
+      b. Copies in binary form must include the copyright notice and this
+         Software License Agreement in the documentation and/or other
+         materials provided with the copy;
+      c. Modified copies and works based on the Software must carry
+         prominent notices stating that you changed specified portions of
+         the Software.
+
+ 5. Portions of the Software resulted from work developed under a U.S.
+    Government contract and are subject to the following license: the
+    Government is granted for itself and others acting on its behalf a
+    paid-up, nonexclusive, irrevocable worldwide license in this computer
+    software to reproduce, prepare derivative works, and perform publicly
+    and display publicly.
+
+ 6. WARRANTY DISCLAIMER. THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY
+    OF ANY KIND. THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, THE
+    UNITED STATES, THE UNITED STATES DEPARTMENT OF ENERGY, AND THEIR
+    EMPLOYEES: (1) DISCLAIM ANY WARRANTIES, EXPRESS OR IMPLIED, INCLUDING
+    BUT NOT LIMITED TO ANY IMPLIED WARRANTIES OF MERCHANTABILITY, FITNESS
+    FOR A PARTICULAR PURPOSE, TITLE OR NON-INFRINGEMENT, (2) DO NOT ASSUME
+    ANY LEGAL LIABILITY OR RESPONSIBILITY FOR THE ACCURACY, COMPLETENESS,
+    OR USEFULNESS OF THE SOFTWARE, (3) DO NOT REPRESENT THAT USE OF THE
+    SOFTWARE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS, (4) DO NOT WARRANT
+    THAT THE SOFTWARE WILL FUNCTION UNINTERRUPTED, THAT IT IS ERROR-FREE
+    OR THAT ANY ERRORS WILL BE CORRECTED.
+
+ 7. LIMITATION OF LIABILITY. IN NO EVENT WILL THE COPYRIGHT HOLDERS, THEIR
+    THIRD PARTY LICENSORS, THE UNITED STATES, THE UNITED STATES DEPARTMENT
+    OF ENERGY, OR THEIR EMPLOYEES: BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
+    CONSEQUENTIAL, SPECIAL OR PUNITIVE DAMAGES OF ANY KIND OR NATURE,
+    INCLUDING BUT NOT LIMITED TO LOSS OF PROFITS OR LOSS OF DATA, FOR ANY
+    REASON WHATSOEVER, WHETHER SUCH LIABILITY IS ASSERTED ON THE BASIS OF
+    CONTRACT, TORT (INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR
+    OTHERWISE, EVEN IF ANY OF SAID PARTIES HAS BEEN WARNED OF THE
+    POSSIBILITY OF SUCH LOSS OR DAMAGES.</pre>
 </body>
 </html>
