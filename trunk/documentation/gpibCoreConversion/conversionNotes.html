@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="iso-8859-1"?>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
   <title>Updating devGpib instrument support to ASYN</title>
-  <meta name="generator" content="amaya 6.4, see http://www.w3.org/Amaya/" />
+  <meta name="generator" content="amaya 8.5, see http://www.w3.org/Amaya/" />
 </head>
 
 <body>
@@ -16,19 +17,18 @@ modules should be placed in the EPICS CVS repository in a directory within
 the modules/instrument directory. Files placed in the modules/instrument
 directory should be as flexible as possible to ease their use by others. For
 example, device support database file GPIB link numbers and addresses should
-be macros and all PV names should be prefixed with a macro. 
+be macros and all PV names should be prefixed with a macro.
 
 <h2>1. Create instrument support development area</h2>
 <ol>
   <li>Make a directory in modules/instrument/ for your instrument.</li>
   <li>'cd' to the directory created in the previous step and create a set of
-    support files by running the makeSupport.pl script:<br></br>
+    support files by running:<br />
     <em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
-    -t devGpib <em>&lt;InstName&gt;</em><br></br>
-    for example:<br></br>
+    -t devGpib <em>&lt;InstName&gt;</em><br />
+    for example:<br />
     &nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
-    -t instrument Keithley196
-  </li>
+    -t instrument Keithley196</li>
   <li>Check configure/RELEASE and confirm that the ASYN and EPICS_BASE values
     specify the location of these packages on your system.</li>
   <li>Replace <em>&lt;InstName&gt;</em>Sup/dev<em>&lt;InstName&gt;</em>.c
@@ -41,39 +41,37 @@ be macros and all PV names should be prefixed with a macro.
 
 <h2>2. Modify instrument support C source file</h2>
 A side-by-side display of the results of applying the following changes to a
-support file for a simple instrument can be found <a
-href="devKeithley196.c.diff.html">here</a>. 
+support file for a simple instrument can be found in <a
+href="devKeithley196.c.diff.html">devKeithley196.c.diff.html</a>.
 <ol>
   <li>Remove all <span style="font-family: courier">#include</span> lines
     except <span style="font-family: courier">#include
     &lt;devCommonGpib.h&gt;</span>.</li>
-  <li>Add <span style="font-family: courier">#include
-    &lt;devGpib.h&gt;</span> after <span
-    style="font-family: courier">#include
-    &lt;devCommonGpib.h&gt;</span>.</li>
   <li>Ensure that there is a definition for <span
     style="font-family: courier">DSET_AI</span>, even if the device has no
     analog-in records.</li>
+  <li>Add <span style="font-family: courier">#include
+    &lt;devGpib.h&gt;</span> after the <span
+    style="font-family: courier">#include &lt;devCommonGpib.h&gt;</span> line
+    and after all the <span style="font-family: courier">DSET_</span><span
+    style="font-style: italic">xxx</span> definitions.</li>
   <li>Remove any <span style="font-family: courier">DSET_</span><span
     style="font-style: italic">xxx</span> structure initializations. Instead
     of using devGpib.h, older device support created it's own DSET_xxx
     definitions. Remove all of these and use the devGpib.h technique</li>
-  <li>Remove any <span
-    style="font-style: italic">xxx</span><span
-    style="font-family: courier">Debug</span>
-  definitions.</li>
+  <li>Remove any <span style="font-style: italic">xxx</span><span
+    style="font-family: courier">Debug</span> definitions.</li>
   <li>Change the value of the <span
-    style="font-family: courier">TIME_WINDOW</span> macro
-    from 1/60th of a second units to seconds.</li>
-  <li>Change the <span
-    style="font-family: courier">DMA_TIME</span> macro to
-    <span style="font-family: courier">TIMEOUT</span> and
-    its value from 1/60th of a second units to seconds.</li>
-  <li>Modify the command table entries: 
+    style="font-family: courier">TIME_WINDOW</span> macro from 1/60th of a
+    second units to seconds.</li>
+  <li>Change the <span style="font-family: courier">DMA_TIME</span> macro to
+    <span style="font-family: courier">TIMEOUT</span> and its value from
+    1/60th of a second units to seconds.</li>
+  <li>Modify the command table entries:
     <ul>
       <li>Change the end-of-string value (the last element) of each command
         from -1 to NULL or from a single character constant to a string
-        constant: 
+        constant:
 
         <table border="1">
           <tbody>
@@ -104,19 +102,18 @@ href="devKeithley196.c.diff.html">here</a>.
         end-of-string checking is now enabled by the presence of a non-NULL
         end-of-string value.</li>
       <li>If a device support module used GPIBIOCTL it will have to be
-        changed to use one on the new GPIBxxx command types.</li>
+        changed to use one of the new GPIBxxx command types.</li>
     </ul>
   </li>
   <li>Change the name of the device-support initialization function to <span
     style="font-family: courier">init_ai</span>.</li>
   <li>Remove from the device-support initialization function any calls to
-    <span
-    style="font-family: courier">devGpibLib_init()</span>.
-    Simply return 0 from the device-support initialization function.</li>
+    <span style="font-family: courier">devGpibLib_init()</span>. Simply
+    return 0 from the device-support initialization function.</li>
   <li><p>The fields in devGpibParmBlock have been reordered and some have
     gone away.</p>
     <ul>
-      <li>It must be initialized in init_ai. For example: 
+      <li>It must be initialized in init_ai. For example:
         <pre>    static long init_ai(int parm)
     {
         if (parm) {
@@ -130,13 +127,13 @@ href="devKeithley196.c.diff.html">here</a>.
         return 0;
     }
     </pre>
-        <p>The <code>name</code> and <code>respond2Writes</code>
-        values are unique to your implementation. All the rest should appear
-        exactly as shown above.</p>
+        <p>The <code>name</code> and <code>respond2Writes</code> values are
+        unique to your implementation. All the rest should appear exactly as
+        shown above.</p>
         <p>Older device support initialized devGpibParmBlock with a C
         initializer statement. This is no longer allowed.</p>
       </li>
-      <li>The following fields no longer exist: 
+      <li>The following fields no longer exist:
         <dl>
           <dt>debugFlag</dt>
             <dd>This is an obsolete field since devGpib uses the asynTrace
@@ -169,13 +166,14 @@ href="devKeithley196.c.diff.html">here</a>.
   <li>Check your instrument support database definition file and see if it
     contains an entry for analog-in (ai) record device support. Add such an
     entry if the file does not already contain one.</li>
-  <li>Add the line
-  <pre>include "asyn.dbd"</pre></li>
+  <li>Add the line: <code>include "asyn.dbd"</code>
+  </li>
 </ol>
 
 <h2>4. (Optional) Create an example database</h2>
 <ol>
-  <li>Records should adopt the following conventions: 
+  <li>To work well with the ASYN tools the example database should abide by
+    the following conventions:
     <ul>
       <li>All record names should begin with $(P).</li>
       <li>All GPIB INP/OUT fields should specify the link value as L$(L).</li>
