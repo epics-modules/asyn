@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.18 2004-07-15 21:43:26 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.19 2004-07-20 13:50:33 norume Exp $
  */
 
 #include <string.h>
@@ -763,9 +763,9 @@ drvAsynSerialPortFlush(void *drvPvt,asynUser *pasynUser)
     asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", tty->serialDeviceName);
     if (tty->fd >= 0) {
 #ifdef vxWorks
-        ioctl(tty->fd, FIOFLUSH, 0);
+        ioctl(tty->fd, FIORFLUSH, 0);
 #else
-        tcflush(tty->fd, TCIOFLUSH);
+        tcflush(tty->fd, TCIFLUSH);
 #endif
     }
     return asynSuccess;
