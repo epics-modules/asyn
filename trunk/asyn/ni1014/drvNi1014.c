@@ -290,7 +290,6 @@ static void waitTimeout(niport *pniport,double seconds)
         pniport->status=asynTimeout;
         printStatus(pniport,"waitTimeout transferStateCmd\n");
         break;
-    default:
     }
 }
 
