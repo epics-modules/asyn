@@ -3,7 +3,8 @@ AB300_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords("../../db/devAB300.db","P=AB300:,L=0,A=0")
 
 # Create a diagnostic asynRecord
-dbLoadRecords("../../db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
+cd ${AB300}
+dbLoadRecords("db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
 
 #The following command is for a serial line terminal concentrator
 drvAsynIPPortConfigure("L0","164.54.3.137:4001",0,0,0)
