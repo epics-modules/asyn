@@ -40,11 +40,6 @@ is to use the GNU glibc RPC/XDR routines.</p>
 <p>This should be broken up into two drivers. One that supports termios and
 one that supports sockets. Details to be determined.</p>
 
-<h3>flush</h3>
-
-<p>Flush is not currently supported on vxi11 or GS IP488. Can we think of
-what it would mean for 488.2?</p>
-
 <h3>Interrupt Callback</h3>
 <p>If a user callback calls a low level driver with an infinite or very long
 timeout, there is no way to make the call terminate. Is there a generic
