@@ -11,15 +11,12 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p><span style="font-weight: bold; font-size: 14pt">
-Release 3.2
-</span></p>
-<p><span style="font-weight: bold; font-size: 14pt">
-Marty Kraimer, Eric Norum and Mark Rivers
-</span></p>
-<p><span style="font-weight: bold; font-size: 14pt">
-June 22, 2004
-</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">Release 3.3</span></p>
+
+<p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
+and Mark Rivers</span></p>
+
+<p><span style="font-weight: bold; font-size: 14pt">Month Day, 2004</span></p>
 </center>
 <hr>
 
@@ -121,9 +118,9 @@ based devices.</p>
   <li>asynGpib: a replacement for the drvGpibCommon layer of the Franksen
     gpibCore support.</li>
   <li>drvAsynSerialPort: Support for devices connected to serial ports.</li>
-  <li>drvAsynIPPort: Support for devices connected to
-    devices connected through Ethernet/Serial converter boxes, TCP/IP
-    sockets or UDP/IP sockets.</li>
+  <li>drvAsynIPPort: Support for devices connected to devices connected
+    through Ethernet/Serial converter boxes, TCP/IP sockets or UDP/IP
+  sockets.</li>
   <li>vxi11: A replacement for the vxi11 support of the Franksen gpibCore
     support.</li>
   <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack
@@ -309,8 +306,8 @@ createAsynUser..</p>
     <ul>
       <li>connect - connect to a device and port, create asynUser for use by
         other methods.</li>
-      <li>openSocket- open a TCP/IP or UDP/IP socket and port, creating an asyn
-      port.</li>
+      <li>openSocket- open a TCP/IP or UDP/IP socket and port, creating an
+        asyn port.</li>
       <li>read - read device, wait for response. Optionally flush input
         before the read, and optionally set end of message string. The
         routine returns the number of 8-bit bytes read from the device or -1
@@ -376,8 +373,8 @@ and one or more interfaces.</p>
     "handle" for calling most methods.</li>
   <li>asynInterface - a structure that describes an interface.</li>
   <li>asynManager - An interface for communicating with asynDriver.</li>
-  <li>asynCommon - An interface providing methods that
-    must be implemented by all low level drivers.</li>
+  <li>asynCommon - An interface providing methods that must be implemented by
+    all low level drivers.</li>
   <li>asynOctet - An interface providing I/O methods that most low level
     drivers implement.</li>
   <li>asynTrace - An interface plus associated functions and definitions that
@@ -386,9 +383,9 @@ and one or more interfaces.</p>
 
 <h3>asynStatus</h3>
 
-<p>Defines the status returned by most methods.  If a method returns a
-status other than asynSuccess and one of the arguments to the method is
-pasynUser then the method is expected to write a message into
+<p>Defines the status returned by most methods.  If a method returns a status
+other than asynSuccess and one of the arguments to the method is pasynUser
+then the method is expected to write a message into
 pasynUser-&gt;errorMessage.</p>
 <pre>typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError
@@ -493,9 +490,9 @@ pasynUser-&gt;errorMessage.</p>
 
 <h3>asynUser</h3>
 
-<p>Describes a structure that user code passes to most
-asynManager and driver methods. Code must allocate and free an asynUser by
-calling asynManager:createAsynUser and asynManager:freeAsynUser.</p>
+<p>Describes a structure that user code passes to most asynManager and driver
+methods. Code must allocate and free an asynUser by calling
+asynManager:createAsynUser and asynManager:freeAsynUser.</p>
 <pre>typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
@@ -582,6 +579,8 @@ typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details);
     asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
+    asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
+                                 userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
     asynStatus (*isMultiDevice)(asynUser *pasynUser,
                                 const char *portName,int *yesNo);
@@ -640,10 +639,20 @@ epicsShareExtern asynManager *pasynManager;</pre>
       storage.</td>
     </tr>
     <tr>
+      <td>duplicateAsynUser</td>
+      <td>Creates an asynUser by calling createAsynUser. It then initializes
+        the new asynUser as follows: The fields asynUser.timeout and
+        asynUser.userPvt are initialized with values taken from pasynUser.
+        It's connectDevice state is the same as that for pasynUser.</td>
+    </tr>
+    <tr>
       <td>freeAsynUser</td>
       <td>Free an asynUser. The user must free an asynUser only via this
-        call. The call will fail if the asynUser is connected to a
-      device.</td>
+        call. If the asynUser is connected to a port, disconnect is called.
+        If the disconnect fails this calls will also fail. The storage for
+        the asynUser is saved on a free list and will be reused in later
+        calls to createAsynUser. Thus there is little loss in efficience to
+        continually call createAsynUser and freeAsynuser.</td>
     </tr>
     <tr>
       <td>isMultiDevice</td>
@@ -662,9 +671,10 @@ epicsShareExtern asynManager *pasynManager;</pre>
         portName,addr. The port driver may or may not be connected to the
         actual device. Thus connectDevice and asynCommon:connect are
         completely different.
+
         <p>See the Theory of Operation section for a description of the
         difference between single and multi-device port drivers.</p>
-        </td>
+      </td>
     </tr>
     <tr>
       <td>disconnect</td>
@@ -741,12 +751,12 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>getAddr</td>
-      <td>
-        *addr is set equal to the address which the user specified
-        in the call to connectDevice.
+      <td>*addr is set equal to the address which the user specified in the
+        call to connectDevice.
+
         <p>See the Theory of Operation section for a description of the
         difference between single and multi-device port drivers.</p>
-       </td>
+      </td>
     </tr>
     <tr>
       <td>registerPort</td>
@@ -838,8 +848,7 @@ typedef struct  asynCommon {
                                 const char *key, char *val, int sizeval);
 }asynCommon;</pre>
 
-<p>asynCommon describes the methods that must be implemented by
-drivers.</p>
+<p>asynCommon describes the methods that must be implemented by drivers.</p>
 
 <table border="1">
   <caption>asynCommon</caption>
@@ -863,16 +872,14 @@ drivers.</p>
     <tr>
       <td>setOption</td>
       <td>This is a generic routine for setting a device option. The
-        arguments are key,value pairs. The meaning is driver specific.
-       If a driver does not accept options it can return asynError.
-       </td>
+        arguments are key,value pairs. The meaning is driver specific. If a
+        driver does not accept options it can return asynError.</td>
     </tr>
     <tr>
       <td>getOption</td>
       <td>This is a generic routine for getting a device option. The value
-        for the key is written into val.
-       If a driver does not accept options it can return asynError.
-       </td>
+        for the key is written into val. If a driver does not accept options
+        it can return asynError.</td>
     </tr>
   </tbody>
 </table>
@@ -1005,10 +1012,10 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
 </ul>
 
 <p>In order for the trace facility to perform properly, device support, and
-all drivers must use the trace facility.
-Device and driver support can directly call the asynTrace methods. The
-asynPrint and asynPrintIO macros are provided so that it is easier for
-device/driver support. Support can have calls like.</p>
+all drivers must use the trace facility. Device and driver support can
+directly call the asynTrace methods. The asynPrint and asynPrintIO macros are
+provided so that it is easier for device/driver support. Support can have
+calls like.</p>
 <pre>    asynPrintIO(pasynUser,ASYN_TRACE_FLOW,"%s Calling queueRequest\n",
         someName);</pre>
 
@@ -1026,6 +1033,7 @@ example:</p>
     fd = pasynTrace-&gt;getTraceFILE(pasunUser);
     /*perform I/O of fd */
     pasynTrace-&gt;unlock(pasunUser);</pre>
+
 <p>If the asynUser is not connected to a port, i.e.
 pasynManager-&gt;connectDevice has not been called, then a "global" device is
 assumed. This is usefull when asynPrint is called before connectDevice.</p>
@@ -1064,10 +1072,10 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
     </tr>
     <tr>
       <td>setTraceFILE</td>
-      <td>Set the stream to use for output. A NULL argument means use
-        errlog. Normally set by the user requesting it via a shell command or
-        by the devTrace device support. If the current output stream is none
-        of (NULL, stdout, stderr) then the current output stream is closed
+      <td>Set the stream to use for output. A NULL argument means use errlog.
+        Normally set by the user requesting it via a shell command or by the
+        devTrace device support. If the current output stream is none of
+        (NULL, stdout, stderr) then the current output stream is closed
         before the new stream is used.</td>
     </tr>
     <tr>
@@ -1149,10 +1157,10 @@ document.</p>
     </tr>
     <tr>
       <td>openSocket</td>
-      <td>Opens a new connection to a TCP/IP or UDP/IP socket, returning the name of a
-        newly created asyn port.&nbsp; The name of the port created is of the
-        form "server:port [protocol]", i.e. "corvette:21" or "164.54.160.50:21" 
-        or "corvette:21 UDP".  </td>
+      <td>Opens a new connection to a TCP/IP or UDP/IP socket, returning the
+        name of a newly created asyn port.&nbsp; The name of the port created
+        is of the form "server:port [protocol]", i.e. "corvette:21" or
+        "164.54.160.50:21" or "corvette:21 UDP".  </td>
     </tr>
     <tr>
       <td>write</td>
@@ -1321,49 +1329,64 @@ height="645"></p>
 <p>The following reads from an device via octet messages.</p>
 <pre>#include &lt;asynDriver.h&gt;
 ...
-#define BUFSIZE 80
+#define BUFFER_SIZE 80
 typedef struct myData {
+    epicsEventId done;
     asynOctet *pasynOctet;
-    void *pdrvPvt;
-    char buffer[BUFSIZE];
+    void *drvPvt;
+    char buffer[BUFFER_SIZE];
 }myData;
 
-void queueCallback(asynUser *pasynUser)
-    myData *pmydata = (myData *)puserPvt;
-    asynOctet *pasynOctet = pmydata-&gt;pasynOctet;
-    void *pdrvPvt = pmydata-&gt;pdrvPvt;
+static void queueCallback(asynUser *pasynUser) {
+    myData     *pmydata = (myData *)pasynUser-&gt;userPvt;
+    asynOctet  *pasynOctet = pmydata-&gt;pasynOctet;
+    void       *drvPvt = pmydata-&gt;drvPvt;
     asynStatus status;
-    int retlen;
+    int        writeBytes,readBytes;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
-    status = pasynOctet-&gt;setEos(pdrvPvt,pasynUser,"\n",1);
+    status = pasynOctet-&gt;write(drvPvt,pasynUser,pmydata-&gt;buffer,
+              strlen(pmydata-&gt;buffer),&amp;writeBytes);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueCallback setEos failed %s\n",pasynUser-&gt;errorMessage);
+            "queueCallback write failed %s\n",pasynUser-&gt;errorMessage);
+    } else {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,strlen(pmydata-&gt;buffer),
+            "queueCallback write sent %d bytes\n",writeBytes);
     }
-    status = pasynOctet-&gt;read(pdrvPvt,pasynUser,pmydata-&gt;buffer,BUFSIZE,&amp;retlen);
-    if(status!=asynSuccess || retlen&lt;=0) {
+    status = pasynOctet-&gt;read(drvPvt,pasynUser,pmydata-&gt;buffer,
+         BUFFER_SIZE,&amp;readBytes);
+    if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
     } else {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-            pmydata-&gt;buffer,BUFSIZE,
+            pmydata-&gt;buffer,BUFFER_SIZE,
             "queueCallback read returned: retlen %d data %s\n",
-            retlen,pmydata-&gt;buffer);
+            readBytes,pmydata-&gt;buffer);
+    }
+    epicsEventSignal(pmydata-&gt;done);
+    status = pasynManager-&gt;freeAsynUser(pasynUser);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
     }
 }
 
-void mainThread(void)
+
+static void asynExample(const char *port,int addr,const char *message)
 {
-    myData *pmyData;
-    asynUser *pasynUser;
-    asynStatus status;
+    myData        *pmyData;
+    asynUser      *pasynUser;
+    asynStatus    status;
     asynInterface *pasynInterface;
 
     pmyData = calloc(1,sizeof(myData));
+    strcpy(pmyData-&gt;buffer,message);
     pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
     pasynUser-&gt;userPvt = pmyData;
-    status = pasynManager-&gt;connectDevice(pasynUser,"serialPort1",0)
+    status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
     if(status!=asynSuccess) {
         printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
         exit(1);
@@ -1375,15 +1398,16 @@ void mainThread(void)
         exit(-1);
     }
     pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
-    pmyData-&gt;pdrvPvt = pasynInterface-&gt;pdrvPvt;
+    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
+    pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
     status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
     if(status) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
-        exit(1);
     }
-    /*Note that callback will be called by another thread*/
-    ...
+    epicsEventWait(pmyData-&gt;done);
+    epicsEventDestroy(pmyData-&gt;done);
+    free(pmyData);
 }</pre>
 
 <p>The flow of control is as follows:</p>
@@ -1396,7 +1420,7 @@ void mainThread(void)
   <li>When it is ready to communicate with the driver it calls
   queueRequest.</li>
   <li>The thread associated with the port calls the callback which then calls
-    the port driver's setEos and read methods.</li>
+    the port driver's write and read methods.</li>
 </ol>
 <hr>
 
@@ -1762,11 +1786,10 @@ Ethernet/Serial converter box.</p>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynGpib.</li>
-  <li>hostInfo - The Internet host name,  port number and optional
-      IP protocol of the device
-    (e.g.  "164.54.9.90:4002", "serials8n3:4002",  "serials8n3:4002 TCP"
-    or "164.54.17.43:5186 udp").  If no protocol is specified, TCP will
-    be used.</li>
+  <li>hostInfo - The Internet host name,  port number and optional IP
+    protocol of the device (e.g.  "164.54.9.90:4002", "serials8n3:4002",
+    "serials8n3:4002 TCP" or "164.54.17.43:5186 udp").  If no protocol is
+    specified, TCP will be used.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
@@ -1852,6 +1875,7 @@ ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
 gsIP488Configure("L0",0,0,0x61,0,0)</pre>
 
 <h3><a name="ni1014"></a>National Instruments GPIB-1014D</h3>
+
 <p>This is support for a National Instruments VME GPIB interface. The
 configuration command is:</p>
 <pre>    ni1014Config(portNameA,portNameB,base,vector,level,priority,noAutoConnect)</pre>
@@ -1860,10 +1884,9 @@ where
   <li>portNameA - An ascii string specifying the port name that will be
     registered with asynDriver for portA.</li>
   <li>portNameB - An ascii string specifying the port name that will be
-    registered with asynDriver for portB.
-    If only one port should be registered than leave this as a null string.
-    The support should also work for a single port NI1014 butb has not been
-    tested.</li>
+    registered with asynDriver for portB. If only one port should be
+    registered than leave this as a null string. The support should also work
+    for a single port NI1014 butb has not been tested.</li>
   <li>base - VME A16 base address.</li>
   <li>vector - VME interrupt vector.</li>
   <li>level - An integer specifying the interrupt level.</li>
@@ -1876,16 +1899,16 @@ where
 
 <p>An example is:</p>
 <pre>ni1014Config("L0","L1",0x5000,0x64,5,0,0)</pre>
+
 <p>NOTES:</p>
 <ul>
-   <li>Ports A and B are almost but not quite the same.
-       Thus the code for connecting to port A is slightly different
-       than the code for portB.</li>
-   <li>In order to disconnect and reconnect either port, BOTH ports must
-       be disconnected and reconnected.</li>
-   <li>When the ports are connected, portA MUST be connected before portB.</li>
-   <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
-       A24 address space is required.</li>
+  <li>Ports A and B are almost but not quite the same. Thus the code for
+    connecting to port A is slightly different than the code for portB.</li>
+  <li>In order to disconnect and reconnect either port, BOTH ports must be
+    disconnected and reconnected.</li>
+  <li>When the ports are connected, portA MUST be connected before portB.</li>
+  <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
+    A24 address space is required.</li>
 </ul>
 <hr>
 
@@ -1931,7 +1954,7 @@ for the specified port and address.</p>
 <p><code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>.
 filename is handled as follows:</p>
 <ul>
-  <li>Not specified - A NULL pointer is passed to setTraceFile. Subsequent 
+  <li>Not specified - A NULL pointer is passed to setTraceFile. Subsequent
     messages are sent to errlog.</li>
   <li>An empty string ("") or "stdout" - stdout is passed to
   setTraceFile.</li>
@@ -2026,10 +2049,9 @@ explains how to include asynDriver components.</p>
     <pre>        &lt;app&gt;_LIBS += asyn
     </pre>
   </li>
-  <li>Add the following to <code>&lt;app&gt;Include.dbd</code> and uncomment the line or lines appropriate
-    for your application:
-    <pre>
-      #include "drvAsynSerialPort.dbd"
+  <li>Add the following to <code>&lt;app&gt;Include.dbd</code> and uncomment
+    the line or lines appropriate for your application:
+    <pre>      #include "drvAsynSerialPort.dbd"
       #include "drvAsynIPPort.dbd"
       #include "drvVxi11.dbd"
       #include "drvGsIP488.dbd"
@@ -2040,7 +2062,9 @@ explains how to include asynDriver components.</p>
 </ul>
 
 <p>In the <code>st.cmd</code> file add.<br>
-dbLoadRecords("db/asynRecord.db", "P=&lt;ioc&gt;, R=&lt;record&gt;, PORT=&lt;port&gt;, ADDR=&lt;addr&gt;, OMAX=&lt;omax&gt;, IMAX=&lt;imax&gt;")</p>
+dbLoadRecords("db/asynRecord.db", "P=&lt;ioc&gt;, R=&lt;record&gt;,
+PORT=&lt;port&gt;, ADDR=&lt;addr&gt;, OMAX=&lt;omax&gt;,
+IMAX=&lt;imax&gt;")</p>
 
 <p>You must provide  values for &lt;ioc&gt;, &lt;record&gt;, &lt;port&gt;,
 &lt;addr&gt;, &lt;omax&gt;, and &lt;imax&gt;.</p>
