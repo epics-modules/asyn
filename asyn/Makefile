@@ -48,7 +48,21 @@ asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
-ifdef ($(T_A))
+
+SRC_DIRS += $(ASYN)/drvGenericSerial
+asyn_SRCS += drvGenericSerial.c
+DBD += drvGenericSerial.dbd
+
+ifdef IPAC
+SRC_DIRS += $(ASYN)/gsIP488
+asyn_SRCS_vxWorks += drvGsIP488.c
+DBD += drvGsIP488.dbd
+asyn_LIBS_vxWorks += Ipac
+endif
+
+include $(TOP)/configure/RULES
+
+ifdef T_A
 ifeq ($(OS_CLASS),vxWorks)
 vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
 	cp ../vxi11/rpc/*.[ch] .
@@ -66,16 +80,3 @@ vxi11core_xdr.c: ../vxi11/vxi11core.rpcl ../vxi11/vxi11intr.rpcl
 endif
 endif
 endif
-
-SRC_DIRS += $(ASYN)/drvGenericSerial
-asyn_SRCS += drvGenericSerial.c
-DBD += drvGenericSerial.dbd
-
-ifdef IPAC
-SRC_DIRS += $(ASYN)/gsIP488
-asyn_SRCS_vxWorks += drvGsIP488.c
-DBD += drvGsIP488.dbd
-asyn_LIBS_vxWorks += Ipac
-endif
-
-include $(TOP)/configure/RULES
