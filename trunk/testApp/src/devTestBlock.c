@@ -12,6 +12,24 @@
     22MAR2005
     This is a test for asynManager:blockProcessCallback
 */
+/* NOTE: This code does the following:
+*    blockProcessCallback()
+*    delay
+*    unblockProcessCallback()
+*    write()
+*    blockProcessCallback()
+*    delay
+*    unblockProcessCallback()
+*    read()
+*
+* A normal application should
+*
+*    blockProcessCallback()
+*    write()
+*    delay
+*    read()
+*    unblockProcessCallback()
+*/
 
 #include <stdlib.h>
 #include <stddef.h>
@@ -188,6 +206,12 @@ static void queueItDelayed(CALLBACK * pvt)
             "%s queueRequest failed %s\n",
             precord->name,pasynUser->errorMessage);
         recGblSetSevr(precord,READ_ALARM,INVALID_ALARM);
+        status = pasynManager->unblockProcessCallback(pasynUser,pdevPvt->blockAll);
+        if(status!=asynSuccess) {
+            asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s queueRequest failed %s\n",
+                precord->name,pasynUser->errorMessage);
+        }
         callbackRequestProcessCallback(
             &pdevPvt->processCallback,precord->prio,precord);
     }
@@ -257,7 +281,7 @@ static void callbackSiWriteRead(asynUser *pasynUser)
     char           translate[MAX_STRING_SIZE];
     size_t         len = sizeof(precord->val);
 
-    status = pasynManager->unblockProcessCallback(pasynUser);
+    status = pasynManager->unblockProcessCallback(pasynUser,pdevPvt->blockAll);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s pasynManager:unblockProcessCallback failed %s\n",
