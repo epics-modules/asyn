@@ -1638,6 +1638,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     struct sockaddr_in ip;
     struct in_addr     inAddr;
     int     len;
+    int     attributes;
 
     assert(dn && hostName && vxiName);
     /* Force registration */
@@ -1671,11 +1672,13 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->inAddr = inAddr;
     pvxiPort->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
+    if(epicsStrnCaseCmp("inst", vxiName, 4) == 0) pvxiPort->isSingleLink = 1;
     pvxiPort->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiPort->hostName, hostName);
+    attributes = ASYN_CANBLOCK;
+    if(!pvxiPort->isSingleLink) attributes |= ASYN_MULTIDEVICE;
     pvxiPort->asynGpibPvt = pasynGpib->registerPort(pvxiPort->portName,
-        (pvxiPort->isSingleLink ? 0 : ASYN_MULTIDEVICE)|ASYN_CANBLOCK,
-        !noAutoConnect, &vxi11,pvxiPort,priority,0);
+        attributes, !noAutoConnect, &vxi11,pvxiPort,priority,0);
     if(!pvxiPort->asynGpibPvt) {
         printf("registerPort failed\n");
         return 0;
