@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">July 27, 2004</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">July 30, 2004</span></p>
 </center>
 <hr>
 
@@ -61,15 +61,14 @@ license</a> described at the end of this document.</p>
 </center>
 
 <p>asynDriver is a general purpose facility for interfacing device specific
-code to low level drivers. Although the name is asynDriver, it actually
-supports both asynchronous (can block) and synchronous (do not block)
-drivers.. The name asynDriver is used because, high level device support
-makes all calls to drivers from a callback.. asynDriver is designed so that
-it is easy to write non blocking device support that works with both blocking
-and non blocking drivers.</p>
+code to low level drivers. It supports both asynchronous (can block) and
+synchronous (do not block) drivers.. The name asynDriver is used because,
+high level device support makes all calls to drivers from a callback.
+asynDriver is designed so that it is easy to write non blocking device
+support that works with both blocking and non blocking drivers.</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
-than using libCom, it is independent of EPICS.</p>
+than using libCom, much of it is independent of EPICS.</p>
 
 <p>The following are some of the existing EPICS general purpose device
 support systems that have been converted to use asynDriver.</p>
@@ -183,7 +182,7 @@ individuals have been most influential.</p>
 <p>asynDriver is a software layer between device specific code and drivers
 that communicate with actual devices. It supports both blocking and
 non-blocking communication with devices. It can be used with both register
-and messdage based devices. asynDriver defines the following terminology:</p>
+and message based devices. asynDriver defines the following terminology:</p>
 <ul>
   <li>interface
     <p>All communication between software layers is done via interfaces. An
@@ -194,9 +193,8 @@ and messdage based devices. asynDriver defines the following terminology:</p>
     "function pointer".</p>
   </li>
   <li>port
-    <p>A communication entity over which messages are sent. Whenever this
-    document uses the word port without a qualifier, it means a communication
-    port. A port provides access to one or more devices.</p>
+    <p>An entity which provides access to a device. A port provides access to
+    one or more devices.</p>
   </li>
   <li>port thread
     <p>A thread that performs I/O to a specific port.</p>
@@ -222,7 +220,19 @@ and messdage based devices. asynDriver defines the following terminology:</p>
     <p>A driver that does not block while communicating with a device. Many
     register based drivers are be non-blocking</p>
   </li>
+  <li>Message Driver
+    <p>A driver that uses "messages" for communication with code that calls
+    the driver, i.e.  octet streams..</p>
+  </li>
+  <li>Register Driver
+    <p>A driver that uses something besides octet streams for communication
+    with code that calls the driver.</p>
+  </li>
 </ul>
+
+<p>Synchronous/asynchronous and message/register are orthogonal concepts. For
+example a register based driver can be either synchronous or asynchronous.
+The terminology register vs message is adapted from VXI.</p>
 
 <p>Standard interfaces are defined so that most device specific code can
 communicate with multiple port drivers. For example if device support does
@@ -235,20 +245,19 @@ can be defined, and it is expected that additional standard interfaces will
 be defined.</p>
 
 <p>Examples of ports that require drivers that can block are GPIB
-controllers, serial ports, Ethernet ports, etc. One or more devices can be
-attached to a port. For example, only one device can be attached to an RS-232
-port, but up to 15 devices can be attached to a GPIB port.</p>
+controllers, serial ports, Ethernet ports, etc. Examples of ports that
+require drivers that do not block are VME register based devices.</p>
 
-<p>Examples of ports that require drivers that do not block are register
-based devices.</p>
+<p>One or more devices can be attached to a port. For example, only one
+device can be attached to an RS-232 port, but up to 15 devices can be
+attached to a GPIB port.</p>
 
 <p>Multiple layers can exist between device specific code and a port driver.
 A software layer calls interposeInterface in order to be placed between
-device specific code and drivers.</p>
-
-<p>For more complicated protocols, additional layers can be created. For
-example, GPIB support is implemented as an asynGpib interface which is called
-by user code, and an asynGpibPort interface which is called by asynGpib.</p>
+device specific code and drivers. For more complicated protocols, additional
+layers can be created. For example, GPIB support is implemented as an
+asynGpib interface which is called by user code, and an asynGpibPort
+interface which is called by asynGpib.</p>
 
 <p>A driver can implement multiple interfaces. For example asynGpib
 implements asynCommon, asynOctet, and asynGpib.</p>
@@ -262,8 +271,8 @@ other code, e.g. a sequence program.</p>
 <p>This section briefly describes the interfaces provided by asynManager and
 standard interfaces implemented by port drivers. asynManager  members are
 called by application threads. Except for asynCommon:report, port driver
-methods can only be called from the user supplied callback supplied in the
-call to createAsynUser.</p>
+methods can only be called from the user supplied callback passed in the call
+to createAsynUser.</p>
 
 <p>The interfaces are:</p>
 
@@ -384,7 +393,9 @@ will be described shortly.</p>
 
 <p>User code connects to a low level driver via a call to <span
 style="font-family: courier">pasynManager-&gt;connectDevice(portName,addr)</span>.
-This call must specify the name of the port and the address of the device.</p>
+This call must specify the name of the port and the address of the device. It
+then calls findInterface to locate the interfaces with which it calls the
+driver.</p>
 
 <p>User code makes calls to the low level driver via an interface. All calls
 must be made from the processCallback passed to createAsynUser. A request to
@@ -504,9 +515,10 @@ pasynUser-&gt;errorMessage.</p>
     </tr>
     <tr>
       <td>asynOverflow</td>
-      <td>The caller did not supply a buffer large enough to hold all input.
-        What happens to the remaining bytes depends on the low level
-      driver.</td>
+      <td>The driver has lost input data. This can happen if an internal
+        buffer or the user supplied buffer is too small. Whenever possible,
+        low level drivers must be written so that the user can read input in
+        small pieces.</td>
     </tr>
     <tr>
       <td>asynError</td>
@@ -1204,11 +1216,15 @@ assumed. This is usefull when asynPrint is called before connectDevice.</p>
 </center>
 
 <h3>asynOctet</h3>
-<pre>/* Device Interface supported by low level octet drivers. */
+<pre>#define ASYN_EOM_CNT 0x0001 /*Request count reached*/
+#define ASYN_EOM_EOS 0x0002 /*End of String detected*/
+#define ASYN_EOM_END 0x0004 /*End indicator detected*/
+
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                       char *data,int maxchars,int *nbytesTransfered);
+                       char *data,int maxchars,int *nbytesTransfered,
+                       int *eomReason);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
                         const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
@@ -1230,7 +1246,8 @@ strings for sending commands and receiving responses from a device.</p>
     <tr>
       <td>read</td>
       <td>Read a message from the device.  *nbytesTransfered is the number of
-        8-bit bytes read from the device.</td>
+        8-bit bytes read from the device. If read returns asynSuccess than
+        eomReason tells why the read completed.</td>
     </tr>
     <tr>
       <td>write</td>
@@ -1927,9 +1944,9 @@ struct asynGpibPort {
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
     /*asynOctet methods passed through from asynGpib*/
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                                char *data,int maxchars,int *nbytesTransfered);
+                       char *data,int maxchars,int *nbytesTransfered,int *gotEom);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                                const char *data,int numchars,int *nbytesTransfered);
+                       const char *data,int numchars,int *nbytesTransfered);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                 const char *eos,int eoslen);
