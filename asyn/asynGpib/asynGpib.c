@@ -232,14 +232,14 @@ static asynStatus setOption(void *drvPvt, asynUser *pasynUser,
     const char *key, const char *val)
 {
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->setOption(drvPvt,pasynUser,key,val));
+    return(pasynGpibPort->setOption(pgpibPvt->asynGpibPortPvt,pasynUser,key,val));
 }
 
 static asynStatus getOption(void *drvPvt, asynUser *pasynUser,
     const char *key, char *val, int sizeval)
 {
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->getOption(drvPvt,pasynUser,key,val,sizeval));
+    return(pasynGpibPort->getOption(pgpibPvt->asynGpibPortPvt,pasynUser,key,val,sizeval));
 }
 
 /*asynOctet methods */
