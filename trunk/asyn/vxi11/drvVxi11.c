@@ -1010,8 +1010,6 @@ static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
             || devReadR.data.data_len>0) break;
         }
         if(clntStat != RPC_SUCCESS) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d vxiRead %s\n",
-                pvxiPort->portName, addr, clnt_sperror(pvxiPort->rpcClient,""));
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "%s RPC failed\n",pvxiPort->portName);
             status = asynError;
@@ -1019,8 +1017,6 @@ static asynStatus vxiRead(void *pdrvPvt,asynUser *pasynUser,
         } else if(devReadR.error != VXI_OK) {
             if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
                 vxiIfc(pdrvPvt, pasynUser);
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s addr %d vxiRead %s\n",
-                pvxiPort->portName, addr, vxiError(devReadR.error));
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "%s read request failed\n",pvxiPort->portName);
             status = (devReadR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
@@ -1095,17 +1091,11 @@ static asynStatus vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             (const xdrproc_t) xdr_Device_WriteParms,(void *) &devWriteP,
             (const xdrproc_t) xdr_Device_WriteResp,(void *) &devWriteR);
         if(clntStat != RPC_SUCCESS) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s addr %d vxiWrite %s\n",
-                pvxiPort->portName, addr,clnt_sperror(pvxiPort->rpcClient,""));
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "%s RPC failed\n",pvxiPort->portName);
             status = asynError;
             break;
         } else if(devWriteR.error != VXI_OK) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "%s addr %d vxiWrite %s\n",
-                    pvxiPort->portName, addr, vxiError(devWriteR.error));
             if(devWriteR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC) 
                 vxiIfc(pdrvPvt, pasynUser);
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -1243,16 +1233,22 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 
 static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
 {
-    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
-    long    nout;
-    char    data[2];
+    vxiPort    *pvxiPort = (vxiPort *)pdrvPvt;
+    long       nout;
+    char       data[2];
+    asynStatus status = asynSuccess;
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s vxiUniversalCmd %d\n",pvxiPort->portName,cmd);
     data[0] = cmd;
     data[1] = 0;
     nout = vxiWriteCmd(pvxiPort,pasynUser, data, 1);
-    return (nout==1 ? 0 : -1);
+    if(nout!=1) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s vxiUniversalCmd failed\n", pvxiPort->portName);
+        status = asynError;
+    }
+    return status;
 }
 
 static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
