@@ -38,9 +38,9 @@
 #include "drvVxi11.h"
 #include "asynGpibDriver.h"
 #include "vxi11.h"
+#include "osiRpc.h"
 #include "vxi11core.h"
 #include "vxi11intr.h"
-#include "osiRpc.h"
 
 #ifdef BOOL
 #undef BOOL
