@@ -48,8 +48,11 @@ struct asynGpib{
     /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
+        int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
+    asynStatus (*registerInterface)(const char *portName,
+        asynInterface *pasynInterface);
     void (*srqHappened)(void *asynGpibPvt);
 };
 epicsShareExtern asynGpib *pasynGpib;
@@ -72,9 +75,9 @@ struct asynGpibPort {
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setPortOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,const char *val);
-    asynStatus (*getPortOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);

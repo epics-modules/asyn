@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.21 2004-01-26 13:43:31 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.22 2004-03-11 14:44:54 mrk Exp $
  */
 
 #include <string.h>
@@ -58,6 +58,7 @@
 typedef struct {
     asynUser          *pasynUser;
     char              *serialDeviceName;
+    char              *portName;
     int                fd;
     int                isRemote;
     char               eos[2];
@@ -80,6 +81,8 @@ typedef struct {
     unsigned long      nWritten;
     int                baud;
     int                cflag;
+    asynInterface      common;
+    asynInterface      octet;
 } ttyController_t;
 
 /*
@@ -386,12 +389,16 @@ static asynStatus
 drvGenericSerialConnect(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    asynStatus     status;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "drvGenericSerial: %s connect.\n", tty->serialDeviceName);
     tty->pasynUser = pasynUser;
-    return openConnection(tty);
+    status = openConnection(tty);
+    if(status==asynSuccess)
+        pasynManager->exceptionConnect(pasynUser);
+    return status;
 }
 
 static asynStatus
@@ -407,6 +414,7 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
     closeConnection(tty);
     tty->needsDisconnect = 0;
     tty->needsDisconnectReported = 0;
+    pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
 
@@ -539,7 +547,7 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
             tty->cflag |= PARENB;
             tty->cflag &= ~PARODD;
         }
-        else if (epicsStrCaseCmp(val, "arodd") == 0) {
+        else if (epicsStrCaseCmp(val, "odd") == 0) {
             tty->cflag |= PARENB;
             tty->cflag |= PARODD;
         }
@@ -819,6 +827,7 @@ ttyCleanup(ttyController_t *tty)
     if (tty) {
         if (tty->fd >= 0)
             close(tty->fd);
+        free(tty->portName);
         free(tty->serialDeviceName);
         free(tty);
     }
@@ -852,6 +861,7 @@ static const struct asynOctet drvGenericSerialAsynOctet = {
 int
 drvGenericSerialConfigure(char *portName,
                      char *ttyName,
+                     int autoConnect,
                      unsigned int priority,
                      int openOnlyOnDisconnect)
 {
@@ -877,6 +887,7 @@ drvGenericSerialConfigure(char *portName,
     tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvGenericSerialConfigure()");
     tty->fd = -1;
     tty->serialDeviceName = epicsStrDup(ttyName);
+    tty->portName = epicsStrDup(portName);
     tty->baud = 9600;
     tty->cflag = CREAD | CLOCAL | CS8;
 
@@ -907,18 +918,28 @@ drvGenericSerialConfigure(char *portName,
      *  Link with higher level routines
      */
     pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvGenericSerialConfigure");
-    pasynInterface[0].interfaceType = asynCommonType;
-    pasynInterface[0].pinterface = (void *)&drvGenericSerialAsynCommon;
-    pasynInterface[0].drvPvt = tty;
-    pasynInterface[1].interfaceType = asynOctetType;
-    pasynInterface[1].pinterface = (void *)&drvGenericSerialAsynOctet;
-    pasynInterface[1].drvPvt = tty;
-    if (pasynManager->registerPort(epicsStrDup(portName),
-                                   pasynInterface,
-                                   2,
+    tty->common.interfaceType = asynCommonType;
+    tty->common.pinterface  = (void *)&drvGenericSerialAsynCommon;
+    tty->common.drvPvt = tty;
+    tty->octet.interfaceType = asynOctetType;
+    tty->octet.pinterface  = (void *)&drvGenericSerialAsynOctet;
+    tty->octet.drvPvt = tty;
+    if (pasynManager->registerPort(tty->portName,
+                                   0, /*not multiDevice*/
+                                   autoConnect,
                                    priority,
                                    0) != asynSuccess) {
         errlogPrintf("drvGenericSerialConfigure: Can't register myself.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    if(pasynManager->registerInterface(tty->portName,&tty->common)!= asynSuccess) {
+        errlogPrintf("drvGenericSerialConfigure: Can't register common.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    if(pasynManager->registerInterface(tty->portName,&tty->octet)!= asynSuccess) {
+        errlogPrintf("drvGenericSerialConfigure: Can't register octetommon.\n");
         ttyCleanup(tty);
         return -1;
     }
@@ -931,16 +952,19 @@ drvGenericSerialConfigure(char *portName,
 #include <iocsh.h>
 static const iocshArg drvGenericSerialConfigureArg0 = { "port name",iocshArgString};
 static const iocshArg drvGenericSerialConfigureArg1 = { "tty name",iocshArgString};
-static const iocshArg drvGenericSerialConfigureArg2 = { "priority",iocshArgInt};
-static const iocshArg drvGenericSerialConfigureArg3 = { "reopen only after disconnect",iocshArgInt};
+static const iocshArg drvGenericSerialConfigureArg2 = { "autoConnect",iocshArgInt};
+static const iocshArg drvGenericSerialConfigureArg3 = { "priority",iocshArgInt};
+static const iocshArg drvGenericSerialConfigureArg4 = { "reopen only after disconnect",iocshArgInt};
 static const iocshArg *drvGenericSerialConfigureArgs[] = {
     &drvGenericSerialConfigureArg0, &drvGenericSerialConfigureArg1,
-    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3};
+    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3,
+    &drvGenericSerialConfigureArg4};
 static const iocshFuncDef drvGenericSerialConfigureFuncDef =
-                      {"drvGenericSerialConfigure",4,drvGenericSerialConfigureArgs};
+                      {"drvGenericSerialConfigure",5,drvGenericSerialConfigureArgs};
 static void drvGenericSerialConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvGenericSerialConfigure(args[0].sval,args[1].sval,args[2].ival,args[3].ival);
+    drvGenericSerialConfigure(args[0].sval,args[1].sval,
+        args[2].ival,args[3].ival,args[4].ival);
 }
 
 /*

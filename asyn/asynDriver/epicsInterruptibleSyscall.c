@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.5 2003-11-14 15:20:30 mrk Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.6 2004-03-11 14:42:55 mrk Exp $
  */
 
 #include <stdio.h>
@@ -86,7 +86,7 @@ resetInterruptibleSyscall(epicsInterruptibleSyscallContext *c)
 int
 epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsThreadId tid)
 {
-    epicsMutexLock(c->mutex);
+    epicsMutexMustLock(c->mutex);
     c->fd = fd;
     c->tid = tid;
     c->interruptCount = 0;
@@ -100,7 +100,7 @@ epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsT
 int
 epicsInterruptibleSyscallDelete(epicsInterruptibleSyscallContext *c)
 {
-    epicsMutexLock(c->mutex);
+    epicsMutexMustLock(c->mutex);
     epicsMutexUnlock(c->mutex);
     epicsMutexDestroy(c->mutex);
     free(c);
@@ -110,7 +110,7 @@ epicsInterruptibleSyscallDelete(epicsInterruptibleSyscallContext *c)
 int
 epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
 {
-    epicsMutexLock(c->mutex);
+    epicsMutexMustLock(c->mutex);
     if (++c->interruptCount == 2)
         errlogPrintf("Warning -- Multiple calls to epicsInterruptibleSyscallInterrupt().\n");
     /*
@@ -162,7 +162,7 @@ epicsInterruptibleSyscallWasInterrupted(epicsInterruptibleSyscallContext *c)
 {
     int i;
 
-    epicsMutexLock(c->mutex);
+    epicsMutexMustLock(c->mutex);
     i = (c->interruptCount > 0);
     epicsMutexUnlock(c->mutex);
     return i;
@@ -173,7 +173,7 @@ epicsInterruptibleSyscallWasClosed(epicsInterruptibleSyscallContext *c)
 {
     int i;
 
-    epicsMutexLock(c->mutex);
+    epicsMutexMustLock(c->mutex);
     i = c->wasClosed;
     epicsMutexUnlock(c->mutex);
     return i;

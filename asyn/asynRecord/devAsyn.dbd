@@ -1,10 +1,14 @@
-#support for testing 
+#support for enable, autoConnect, connect
 device(bo,INST_IO,devAsynEnable,"asynEnable")
 device(bo,INST_IO,devAsynAutoConnect,"asynAutoConnect")
 device(bo,INST_IO,devAsynConnect,"asynConnect")
-device(longout,INST_IO,devAsynTrace,"asynTrace")
-device(longout,INST_IO,devAsynTraceIO,"asynTraceIO")
-device(longout,INST_IO,devAsynTraceIOTruncateSize,"asynTraceIOTSize")
-device(stringout,INST_IO,devAsynTraceFile,"asynTraceFile")
+#support for generic, i.e. connects to user chosen port,addr
+device(bo,INST_IO,devAsynEnableG,"asynEnableG")
+device(bo,INST_IO,devAsynAutoConnectG,"asynAutoConnectG")
+device(bo,INST_IO,devAsynConnectG,"asynConnectG")
+device(bo,INST_IO,devAsynTraceG,"asynTraceG")
+device(bo,INST_IO,devAsynTraceIOG,"asynTraceIOG")
+device(longout,INST_IO,devAsynTraceIOTruncateSizeG,"asynTraceIOTrunG")
+device(stringout,INST_IO,devAsynTraceFileG,"asynTraceFileG")
 registrar(asynSubRegistrar)
 driver(drvAsyn)

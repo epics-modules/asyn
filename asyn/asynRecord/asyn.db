@@ -1,122 +1,21 @@
-record(bo,"$(ioc)P$(port)A$(addr)Enable")
-{
-     field(DTYP,"asynEnable")
-     field(OUT,"@$(port),$(addr)")
-}
-record(bo,"$(ioc)P$(port)A$(addr)AutoConnect")
-{
-     field(DTYP,"asynAutoConnect")
-     field(OUT,"@$(port),$(addr)")
-}
-record(bo,"$(ioc)P$(port)A$(addr)Connect")
-{
-     field(DTYP,"asynConnect")
-     field(OUT,"@$(port),$(addr)")
-}
-
-record(bo,"$(ioc)P$(port)A$(addr)traceError")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-    field(VAL,"1")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceIODevice")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceIOFilter")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceIODriver")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceFlow")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(calc,"$(ioc)P$(port)A$(addr)traceCalc")
-{
-    field(INPA,"$(ioc)P$(port)A$(addr)traceError CP")
-    field(INPB,"$(ioc)P$(port)A$(addr)traceIODevice CP")
-    field(INPC,"$(ioc)P$(port)A$(addr)traceIOFilter CP")
-    field(INPD,"$(ioc)P$(port)A$(addr)traceIODriver CP")
-    field(INPE,"$(ioc)P$(port)A$(addr)traceFlow CP")
-    field(CALC,"A+B*2+C*4+D*8+E*16")
-    field(FLNK,"$(ioc)P$(port)A$(addr)traceSet")
-}
-record(longout,"$(ioc)P$(port)A$(addr)traceSet")
-{
-     field(DTYP,"asynTrace")
-     field(OUT,"@$(port),$(addr)")
-     field(DOL,"$(ioc)P$(port)A$(addr)traceCalc")
-     field(OMSL,"closed_loop")
-}
-record(sub,"$(ioc)P$(port)A$(addr)InitTrace")
-{
-    field(INAM,"asynTraceInit")
-    field(SNAM,"asynTraceWrite")
-    field(INPA,"$(ioc)P$(port)A$(addr)traceError")
-    field(INPB,"$(ioc)P$(port)A$(addr)traceIODevice")
-    field(INPC,"$(ioc)P$(port)A$(addr)traceIOFilter")
-    field(INPD,"$(ioc)P$(port)A$(addr)traceIODriver")
-    field(INPE,"$(ioc)P$(port)A$(addr)traceFlow")
-    field(INPL,"$(ioc)P$(port)A$(addr)traceSet")
+record(bo,"$(ioc):P$(port):A$(addr):Enable") {
+    field(DTYP,"asynEnable")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"disable")
+    field(ONAM,"enable")
     field(PINI,"YES")
 }
-
-record(bo,"$(ioc)P$(port)A$(addr)traceIOAscii")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceIOEscape")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(bo,"$(ioc)P$(port)A$(addr)traceIOHex")
-{
-    field(ZNAM,"off")
-    field(ONAM,"on")
-}
-record(calc,"$(ioc)P$(port)A$(addr)traceIOCalc")
-{
-    field(INPA,"$(ioc)P$(port)A$(addr)traceIOAscii CP")
-    field(INPB,"$(ioc)P$(port)A$(addr)traceIOEscape CP")
-    field(INPC,"$(ioc)P$(port)A$(addr)traceIOHex CP")
-    field(CALC,"A+B*2+C*4")
-    field(FLNK,"$(ioc)P$(port)A$(addr)traceIOSet")
-}
-record(longout,"$(ioc)P$(port)A$(addr)traceIOSet")
-{
-     field(DTYP,"asynTraceIO")
-     field(OUT,"@$(port),$(addr)")
-     field(DOL,"$(ioc)P$(port)A$(addr)traceIOCalc")
-     field(OMSL,"closed_loop")
-}
-record(sub,"$(ioc)P$(port)A$(addr)InitTraceIO")
-{
-    field(INAM,"asynTraceIOInit")
-    field(SNAM,"asynTraceIOWrite")
-    field(INPA,"$(ioc)P$(port)A$(addr)traceIOAscii")
-    field(INPB,"$(ioc)P$(port)A$(addr)traceIOEscape")
-    field(INPC,"$(ioc)P$(port)A$(addr)traceIOHex")
-    field(INPL,"$(ioc)P$(port)A$(addr)traceIOSet")
+record(bo,"$(ioc):P$(port):A$(addr):AutoConnect") {
+    field(DTYP,"asynAutoConnect")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"noAutoConnect")
+    field(ONAM,"AutoConnect")
     field(PINI,"YES")
 }
-record(longout,"$(ioc)P$(port)A$(addr)traceIOTruncateSize")
-{
-     field(DTYP,"asynTraceIOTSize")
-     field(OUT,"@$(port),$(addr)")
-}
-record(stringout,"$(ioc)P$(port)A$(addr)traceFile")
-{
-     field(DTYP,"asynTraceFile")
-     field(OUT,"@$(port),$(addr)")
+record(bo,"$(ioc):P$(port):A$(addr):Connect") {
+    field(DTYP,"asynConnect")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"disconnect")
+    field(ONAM,"connect")
+    field(PINI,"YES")
 }

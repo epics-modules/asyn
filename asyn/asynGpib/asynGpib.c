@@ -61,6 +61,9 @@ typedef struct gpibPvt {
     asynUser *pasynUser;
     srqHandler srq_handler;
     void *srqHandlerPvt;
+    asynInterface common;
+    asynInterface octet;
+    asynInterface gpib;
 }gpibPvt;
 
 #define GETgpibPvtasynGpibPort \
@@ -78,9 +81,9 @@ static void srqPoll(asynUser *pasynUser);
 static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
-static asynStatus setPortOption(void *drvPvt,asynUser *pasynUser,
+static asynStatus setOption(void *drvPvt,asynUser *pasynUser,
     const char *key,const char *val);
-static asynStatus getPortOption(void *drvPvt,asynUser *pasynUser,
+static asynStatus getOption(void *drvPvt,asynUser *pasynUser,
     const char *key,char *val,int sizeval);
 /*asynOctet methods */
 static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
@@ -103,13 +106,15 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff);
 /* The following are called by low level gpib drivers */
 static void *registerPort(
         const char *portName,
+        int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
+static asynStatus registerInterface(const char *portName,
+        asynInterface *pasynInterface);
 static void srqHappened(void *pgpibvt);
 
-#define NUM_INTERFACES 3
 static asynCommon asyn = {
-   report,connect,disconnect,setPortOption,getPortOption
+   report,connect,disconnect,setOption,getOption
 };
 static asynOctet octet = {
     gpibRead,gpibWrite,gpibFlush, setEos, getEos
@@ -117,7 +122,7 @@ static asynOctet octet = {
 static asynGpib gpib = {
     addressedCmd, universalCmd, ifc, ren,
     registerSrqHandler, pollAddr,
-    registerPort, srqHappened
+    registerPort, registerInterface,srqHappened
 };
 
 epicsShareDef asynGpib *pasynGpib = &gpib;
@@ -225,18 +230,18 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     return(pasynGpibPort->disconnect(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
 
-static asynStatus setPortOption(void *drvPvt, asynUser *pasynUser,
+static asynStatus setOption(void *drvPvt, asynUser *pasynUser,
     const char *key, const char *val)
 {
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->setPortOption(drvPvt,pasynUser,key,val));
+    return(pasynGpibPort->setOption(drvPvt,pasynUser,key,val));
 }
 
-static asynStatus getPortOption(void *drvPvt, asynUser *pasynUser,
+static asynStatus getOption(void *drvPvt, asynUser *pasynUser,
     const char *key, char *val, int sizeval)
 {
     GETgpibPvtasynGpibPort
-    return(pasynGpibPort->getPortOption(drvPvt,pasynUser,key,val,sizeval));
+    return(pasynGpibPort->getOption(drvPvt,pasynUser,key,val,sizeval));
 }
 
 /*asynOctet methods */
@@ -354,12 +359,12 @@ static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 /* The following are called by low level gpib drivers */
 static void *registerPort(
         const char *portName,
+        int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize)
 {
-    gpibPvt *pgpibPvt;
+    gpibPvt    *pgpibPvt;
     asynStatus status;
-    asynInterface *paasynInterface;
 
     if(!pgpibBase) gpibInit();
     pgpibPvt = locateGpibPvt(portName);
@@ -373,28 +378,34 @@ static void *registerPort(
     pgpibPvt->portName = portName;
     pgpibPvt->pasynGpibPort = pasynGpibPort;
     pgpibPvt->asynGpibPortPvt = asynGpibPortPvt;
-    paasynInterface = callocMustSucceed(NUM_INTERFACES,sizeof(asynInterface),
-        "echoDriverInit");
-    paasynInterface[0].interfaceType = asynCommonType;
-    paasynInterface[0].pinterface = &asyn;
-    paasynInterface[0].drvPvt = pgpibPvt;
-    paasynInterface[1].interfaceType = asynOctetType;
-    paasynInterface[1].pinterface = &octet;
-    paasynInterface[1].drvPvt = pgpibPvt;
-    paasynInterface[2].interfaceType = asynGpibType;
-    paasynInterface[2].pinterface = &gpib;
-    paasynInterface[2].drvPvt = pgpibPvt;
+    pgpibPvt->common.interfaceType = asynCommonType;
+    pgpibPvt->common.pinterface = &asyn;
+    pgpibPvt->common.drvPvt = pgpibPvt;
+    pgpibPvt->octet.interfaceType = asynOctetType;
+    pgpibPvt->octet.pinterface = &octet;
+    pgpibPvt->octet.drvPvt = pgpibPvt;
+    pgpibPvt->gpib.interfaceType = asynGpibType;
+    pgpibPvt->gpib.pinterface = &gpib;
     ellAdd(&pgpibBase->gpibPvtList,&pgpibPvt->node);
-    status = pasynManager->registerPort(portName,
-         paasynInterface,NUM_INTERFACES,priority,stackSize);
+    status = pasynManager->registerPort(portName,multiDevice,autoConnect,
+         priority,stackSize);
+    if(status==asynSuccess)
+        status = pasynManager->registerInterface(portName,&pgpibPvt->common);
+    if(status==asynSuccess)
+        status = pasynManager->registerInterface(portName,&pgpibPvt->octet);
+    if(status==asynSuccess)
+        status = pasynManager->registerInterface(portName,&pgpibPvt->gpib);
     if(status==asynSuccess) {
         pgpibPvt->pasynUser = pasynManager->createAsynUser(srqPoll,0);
         pgpibPvt->pasynUser->userPvt = pgpibPvt;
-        status = pasynManager->connectDevice(pgpibPvt->pasynUser,portName,0);
+        status = pasynManager->connectDevice(pgpibPvt->pasynUser,portName,-1);
     }
     if(status!=asynSuccess) return(0);
     return((void *)pgpibPvt);
 }
+static asynStatus registerInterface(const char *portName,
+        asynInterface *pasynInterface)
+{return pasynManager->registerInterface(portName,pasynInterface);}
 
 static void srqHappened(void *drvPvt)
 {

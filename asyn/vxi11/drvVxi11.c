@@ -648,7 +648,12 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     int isController;
     Device_Link link;
+    int addr = pasynManager->getAddr(pasynUser);
 
+    if(addr>=0) {
+        pasynManager->exceptionConnect(pasynUser);
+        return(asynSuccess);
+    }
     assert(pvxiLink);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiConnect\n",pvxiLink->portName);
     if(rpcTaskInit() == -1) {
@@ -688,7 +693,7 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
             "%s vxiConnect vxiBusStatus error %d initialization aborted\n",
             pvxiLink->portName,isController);
         clnt_destroy(pvxiLink->rpcClient);
-        return(asynError);
+        return asynError;
     }
     if(isController == 0) {
         isController = vxiBusStatus(pvxiLink, VXI_BSTAT_CONTROLLER_IN_CHARGE,
@@ -698,7 +703,7 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
                 "%s vxiConnect vxiBusStatus error %d initialization aborted\n",
                 pvxiLink->portName,isController);
             clnt_destroy(pvxiLink->rpcClient);
-            return -1;
+            return asynError;
         }
         if(isController == 0) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -706,7 +711,7 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
                 "controller in charge -- initialization aborted\n",
                 pvxiLink->portName);
             clnt_destroy(pvxiLink->rpcClient);
-            return -1;
+            return asynError;
         }
     }
     pvxiLink->srqThreadReady = epicsEventMustCreate(epicsEventEmpty);
@@ -715,14 +720,15 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiGenLink can't create interruptible syscall context.\n",
             pvxiLink->portName);
-        return -1;
+        return asynError;
     }
     epicsThreadCreate(srqThreadName, 46,
           epicsThreadGetStackSize(epicsThreadStackMedium),
           vxiSrqThread,pvxiLink);
     epicsEventMustWait(pvxiLink->srqThreadReady);
     vxiCreateIrqChannel(pvxiLink);
-    return(asynSuccess);
+    pasynManager->exceptionConnect(pasynUser);
+    return asynSuccess;
 }
 
 static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
@@ -733,7 +739,12 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     Device_Error devErr;
     int dummy;
     enum clnt_stat clntStat;
+    int useraddr = pasynManager->getAddr(pasynUser);
 
+    if(useraddr>=0) {
+        pasynManager->exceptionDisconnect(pasynUser);
+        return(asynSuccess);
+    }
     assert(pvxiLink);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiDisconnect\n",pvxiLink->portName);
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
@@ -776,7 +787,8 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
         }
         pvxiLink->srqInterrupt = NULL;
     }
-    return(0);
+    pasynManager->exceptionDisconnect(pasynUser);
+    return asynSuccess;
 }
 
 static asynStatus vxiSetPortOption(void *pdrvPvt,asynUser *pasynUser,
@@ -1234,6 +1246,7 @@ int vxi11SetRpcTimeout(double timeout)
 int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     double defTimeout,
     char *vxiName,
+    int autoConnect,
     unsigned int priority)
 {
     char *portName;
@@ -1266,6 +1279,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiLink->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiLink->hostName, hostName);
     pvxiLink->asynGpibPvt = pasynGpib->registerPort(pvxiLink->portName,
+        (pvxiLink->isSingleLink ? 0 : 1),autoConnect,
         &vxi11,pvxiLink,priority,0);
     return 0;
 }
@@ -1279,11 +1293,12 @@ static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
 static const iocshArg vxi11ConfigureArg2 = { "recover with IFC?",iocshArgInt};
 static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
-static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
+static const iocshArg vxi11ConfigureArg5 = { "autoConnect",iocshArgInt};
+static const iocshArg vxi11ConfigureArg6 = { "priority",iocshArgInt};
 static const iocshArg *vxi11ConfigureArgs[] = {&vxi11ConfigureArg0,
     &vxi11ConfigureArg1, &vxi11ConfigureArg2, &vxi11ConfigureArg3,
-    &vxi11ConfigureArg4, &vxi11ConfigureArg5};
-static const iocshFuncDef vxi11ConfigureFuncDef = {"vxi11Configure",6,vxi11ConfigureArgs};
+    &vxi11ConfigureArg4, &vxi11ConfigureArg5,&vxi11ConfigureArg6};
+static const iocshFuncDef vxi11ConfigureFuncDef = {"vxi11Configure",7,vxi11ConfigureArgs};
 static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
 {
     char *portName = args[0].sval;
@@ -1291,10 +1306,11 @@ static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
     int recoverWithIFC = args[2].ival;
     double defTimeout = args[3].dval;
     char *vxiName = args[4].sval;
-    int priority = args[5].ival;
+    int autoConnect = args[5].ival;
+    int priority = args[6].ival;
 
     vxi11Configure (portName, hostName, recoverWithIFC,
-                    defTimeout, vxiName, priority);
+                    defTimeout, vxiName, autoConnect, priority);
 }
 
 extern int E5810Reboot(char * inetAddr,char *password);

@@ -9,12 +9,14 @@ ASYN = $(TOP)
 ASYN_LIB = $(TOP)/lib/$(T_A)
 ASYN_BIN = $(TOP)/bin/$(T_A)
 
+DBD += devAsynTest.dbd
 DBD += test.dbd
 
 LIBRARY_IOC += testSupport
 testSupport_SRCS += echoDriver.c
 testSupport_SRCS += testEcho.c
-testSupport_SRCS += processModule.c
+testSupport_SRCS += interposeInterface.c
+testSupport_SRCS += devAsynTest.c
 testSupport_LIBS += asyn
 testSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
