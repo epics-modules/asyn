@@ -274,10 +274,22 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
         }
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
+            asynUser *pasynUser;
+            int      userAddr;
+
             pinterrupt = pnode->drvPvt;
-            if(pinterrupt->pasynUser->reason==ASYN_REASON_SIGNAL)
-                pinterrupt->callback(pinterrupt->userPvt,pinterrupt->pasynUser,
-                                     statusByte);
+            pasynUser = pinterrupt->pasynUser;
+            status = pasynManager->getAddr(pasynUser,&userAddr);
+            if(status!=asynSuccess) {
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "%s addr %d asynGpib:srqPoll getAddr %s\n",
+                    pgpibPvt->portName,addr,pasynUser->errorMessage);
+            } else {
+                if(userAddr==addr && pasynUser->reason==ASYN_REASON_SIGNAL) {
+                    pinterrupt->callback(pinterrupt->userPvt,
+                        pinterrupt->pasynUser, statusByte);
+                }
+            }
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(pgpibPvt->asynInt32Pvt);
