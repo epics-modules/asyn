@@ -548,6 +548,8 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
         pdevGpibParmBlock->rspLenMax = rspLenMax;
         pdevGpibParmBlock->msgLenMax = msgLenMax;
     }
+    msgLenMax = pdevGpibParmBlock->rspLenMax;
+    rspLenMax = pdevGpibParmBlock->rspLenMax;
     if(pportInstance->rspLenMax<rspLenMax) pportInstance->rspLenMax = rspLenMax;
     if(pportInstance->msgLenMax<msgLenMax) pportInstance->msgLenMax = msgLenMax;
 }
@@ -1052,6 +1054,7 @@ static void queueCallback(asynUser *pasynUser)
             "devSupportGpib::queueCallback");
         pportInstance->rspLen = pportInstance->rspLenMax;
     }
+    pgpibDpvt->msg = pportInstance->msg;
     pgpibDpvt->rsp = pportInstance->rsp;
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,failure);
