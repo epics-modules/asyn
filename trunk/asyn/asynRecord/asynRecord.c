@@ -117,7 +117,7 @@ typedef struct oldValues {	/* Used in monitor() and monitorStatus() */
     epicsInt32 nawt;	/* Number of bytes actually written */
     epicsInt32 nrrd;	/* Number of bytes to read */
     epicsInt32 nord;	/* Number of bytes read */
-    epicsEnum16 eomr;	/* Baud rate */
+    epicsEnum16 eomr;	/* EOM reason */
     epicsEnum16 baud;	/* Baud rate */
     epicsEnum16 prty;	/* Parity */
     epicsEnum16 dbit;	/* Data bits */
@@ -417,9 +417,6 @@ static long special(struct dbAddr * paddr, int after)
     switch (fieldIndex) {
     case asynRecordCNCT:
         pmsg->callbackType = callbackConnect;
-        break;
-    case asynRecordGOPT:
-        pmsg->callbackType = callbackGetOption;
         break;
     case asynRecordBAUD:
     case asynRecordPRTY:
