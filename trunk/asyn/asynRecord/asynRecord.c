@@ -781,8 +781,8 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     /* Queue a request to get the options */
     pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
                                                 queueTimeoutCallbackSpecial);
-    pmsg = (callbackMessage *)pasynUser->userData = 
-               pasynManager->memMalloc(sizeof(*pmsg));
+    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUser->userData;
     pmsg->callbackType = callbackGetOption;
     status = pasynManager->queueRequest(pasynUser,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
