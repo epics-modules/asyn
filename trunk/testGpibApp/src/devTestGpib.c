@@ -125,7 +125,7 @@ static long init_ai(int parm)
     devSupParms.numparams = NUMPARAMS;
     devSupParms.timeout = TIMEOUT;
     devSupParms.timeWindow = TIMEWINDOW;
-    devSupParms.respond2Writes = 0;
+    devSupParms.respond2Writes = -1;
     devSupParms.debugFlag = &testDebug;
   }
   return(0);
