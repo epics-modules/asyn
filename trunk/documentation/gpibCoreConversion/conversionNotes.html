@@ -21,12 +21,15 @@ be macros and all PV names should be prefixed with a macro.
 
 <h2>1. Create instrument support development area</h2>
 <ol>
-  <li>Make a directory in modules/instrument/ for your instrument.</li>
+  <li>Make a directory in modules/instrument/ for your instrument. For
+    example:
+    <br />&nbsp;&nbsp;mkdir &lt;<em>epicsTop</em>&gt;/modules/instrument/keithley196
+  </li>
   <li>'cd' to the directory created in the previous step and create a set of
     support files by running:<br />
     <em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
     -t devGpib <em>&lt;InstName&gt;</em><br />
-    for example:<br />
+    For example:<br />
     &nbsp;&nbsp;/usr/local/EPICS/modules/soft/asyn/bin/linux-x86/makeSupport.pl
     -t instrument Keithley196</li>
   <li>Check configure/RELEASE and confirm that the ASYN and EPICS_BASE values
@@ -166,8 +169,7 @@ href="devKeithley196.c.diff.html">devKeithley196.c.diff.html</a>.
   <li>Check your instrument support database definition file and see if it
     contains an entry for analog-in (ai) record device support. Add such an
     entry if the file does not already contain one.</li>
-  <li>Add the line: <code>include "asyn.dbd"</code>
-  </li>
+  <li>Add the line: <code>include "asyn.dbd"</code></li>
 </ol>
 
 <h2>4. (Optional) Create an example database</h2>
