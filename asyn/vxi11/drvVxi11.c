@@ -882,10 +882,10 @@ static asynStatus vxiGetPortOption(void *pdrvPvt,asynUser *pasynUser,
 
 static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
 {
-    vxiLink *pvxiPort = (vxiPort *)pdrvPvt;
+    vxiPort *pvxiPort = (vxiPort *)pdrvPvt;
     int     nRead = 0, thisRead;
     int     addr = pasynManager->getAddr(pasynUser);
-    devLink *pdevLink = vxiSetDevLink(pvxiPort,pasynUser,addr);
+    devLink *pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     enum clnt_stat   clntStat;
     Device_ReadParms devReadP;
     Device_ReadResp  devReadR;
@@ -915,10 +915,10 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
         if(clntStat != RPC_SUCCESS) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                         "%s vxiRead %d, %s, %d %s\n",
-                                    pvxiLink->portName, addr, data, maxchars,
+                                    pvxiPort->portName, addr, data, maxchars,
                                     clnt_sperror(pvxiPort->rpcClient, ""));
         } else if(devReadR.error != VXI_OK) {
-            if((devReadR.error == VXI_IOTIMEOUT) && (pvxiLink->recoverWithIFC))
+            if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
                 vxiIfc(pdrvPvt, pasynUser);
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                         "%s vxiRead %d, %s, %d %s\n",
