@@ -7,7 +7,7 @@ display {
 	object {
 		x=49
 		y=26
-		width=750
+		width=850
 		height=160
 	}
 	clr=14
@@ -87,9 +87,249 @@ display {
 		1a7309,
 	}
 }
+"message button" {
+	object {
+		x=0
+		y=0
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PA:A0.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=16
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PA:A0.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
 "text update" {
 	object {
+		x=60
+		y=8
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PA:A0.ENBD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=62
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=54
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A-1.ENBD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=80
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=96
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=88
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A0.ENBD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=0
+		y=120
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="enable"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=0
+		y=136
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1.ENBL"
+		clr=14
+		bclr=4
+	}
+	label="disable"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=60
+		y=128
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A1.ENBD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=400
+		y=0
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client1:PA:A0"
+	align="horiz. right"
+}
+text {
+	object {
+		x=400
+		y=20
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client2:PA:A0"
+	align="horiz. right"
+}
+menu {
+	object {
 		x=550
+		y=0
+		width=100
+		height=18
+	}
+	control {
+		chan="client1:PA:A0:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=550
+		y=20
+		width=100
+		height=18
+	}
+	control {
+		chan="client2:PA:A0:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=650
 		y=0
 		width=100
 		height=18
@@ -108,24 +348,6 @@ display {
 "text update" {
 	object {
 		x=650
-		y=0
-		width=100
-		height=18
-	}
-	monitor {
-		chan="client1:PA:A0:si"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=550
 		y=20
 		width=100
 		height=18
@@ -143,7 +365,25 @@ display {
 }
 "text update" {
 	object {
-		x=650
+		x=750
+		y=0
+		width=100
+		height=18
+	}
+	monitor {
+		chan="client1:PA:A0:si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=750
 		y=20
 		width=100
 		height=18
@@ -159,9 +399,126 @@ display {
 	limits {
 	}
 }
-"text update" {
+text {
+	object {
+		x=400
+		y=60
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client:PB:A-1"
+	align="horiz. right"
+}
+text {
+	object {
+		x=400
+		y=80
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client1:PB:A0"
+	align="horiz. right"
+}
+text {
+	object {
+		x=400
+		y=100
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client2:PB:A0"
+	align="horiz. right"
+}
+text {
+	object {
+		x=400
+		y=120
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client1:PB:A1"
+	align="horiz. right"
+}
+text {
+	object {
+		x=400
+		y=140
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="client2:PB:A1"
+	align="horiz. right"
+}
+menu {
 	object {
 		x=550
+		y=80
+		width=100
+		height=18
+	}
+	control {
+		chan="client1:PB:A0:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=550
+		y=100
+		width=100
+		height=18
+	}
+	control {
+		chan="client2:PB:A0:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=550
+		y=120
+		width=100
+		height=18
+	}
+	control {
+		chan="client1:PB:A1:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+menu {
+	object {
+		x=550
+		y=140
+		width=100
+		height=18
+	}
+	control {
+		chan="client2:PB:A1:calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=650
 		y=80
 		width=100
 		height=18
@@ -180,24 +537,6 @@ display {
 "text update" {
 	object {
 		x=650
-		y=80
-		width=100
-		height=18
-	}
-	monitor {
-		chan="client1:PB:A0:si"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=550
 		y=100
 		width=100
 		height=18
@@ -216,24 +555,6 @@ display {
 "text update" {
 	object {
 		x=650
-		y=100
-		width=100
-		height=18
-	}
-	monitor {
-		chan="client2:PB:A0:si"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=550
 		y=120
 		width=100
 		height=18
@@ -252,24 +573,6 @@ display {
 "text update" {
 	object {
 		x=650
-		y=120
-		width=100
-		height=18
-	}
-	monitor {
-		chan="client1:PB:A1:si"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=550
 		y=140
 		width=100
 		height=18
@@ -287,7 +590,61 @@ display {
 }
 "text update" {
 	object {
-		x=650
+		x=750
+		y=80
+		width=100
+		height=18
+	}
+	monitor {
+		chan="client1:PB:A0:si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=750
+		y=100
+		width=100
+		height=18
+	}
+	monitor {
+		chan="client2:PB:A0:si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=750
+		y=120
+		width=100
+		height=18
+	}
+	monitor {
+		chan="client1:PB:A1:si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=750
 		y=140
 		width=100
 		height=18
@@ -303,430 +660,15 @@ display {
 	limits {
 	}
 }
-text {
+"message button" {
 	object {
-		x=300
+		x=260
 		y=0
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client1:PA:A0"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=20
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client2:PA:A0"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=60
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client:PB:A-1"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=80
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client1:PB:A0"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=100
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client2:PB:A0"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=120
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client1:PB:A1"
-	align="horiz. right"
-}
-text {
-	object {
-		x=300
-		y=140
-		width=150
-		height=18
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="client2:PB:A1"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=450
-		y=0
-		width=100
-		height=18
-	}
-	control {
-		chan="client1:PA:A0:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-menu {
-	object {
-		x=450
-		y=20
-		width=100
-		height=18
-	}
-	control {
-		chan="client2:PA:A0:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-menu {
-	object {
-		x=450
-		y=80
-		width=100
-		height=18
-	}
-	control {
-		chan="client1:PB:A0:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-menu {
-	object {
-		x=450
-		y=100
-		width=100
-		height=18
-	}
-	control {
-		chan="client2:PB:A0:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-menu {
-	object {
-		x=450
-		y=120
-		width=100
-		height=18
-	}
-	control {
-		chan="client1:PB:A1:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-menu {
-	object {
-		x=450
-		y=140
-		width=100
-		height=18
-	}
-	control {
-		chan="client2:PB:A1:calc.SCAN"
-		clr=14
-		bclr=4
-	}
-}
-composite {
-	object {
-		x=0
-		y=0
-		width=290
-		height=32
-	}
-	"composite name"=""
-	children {
-		"message button" {
-			object {
-				x=0
-				y=0
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:Enable"
-				clr=14
-				bclr=4
-			}
-			label="enable"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=0
-				y=16
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:Enable"
-				clr=14
-				bclr=4
-			}
-			label="disable"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=60
-				y=8
-				width=30
-				height=16
-			}
-			monitor {
-				chan="asynTest:PA:A0:EnableState"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			format="string"
-			limits {
-			}
-		}
-		"message button" {
-			object {
-				x=100
-				y=0
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:AutoConnect"
-				clr=14
-				bclr=4
-			}
-			label="auto"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=100
-				y=16
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:AutoConnect"
-				clr=14
-				bclr=4
-			}
-			label="noAuto"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=160
-				y=8
-				width=30
-				height=16
-			}
-			monitor {
-				chan="asynTest:PA:A0:AutoConnectState"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			format="string"
-			limits {
-			}
-		}
-		"message button" {
-			object {
-				x=200
-				y=0
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:Connect"
-				clr=14
-				bclr=4
-			}
-			label="connect"
-			press_msg="1"
-		}
-		"message button" {
-			object {
-				x=200
-				y=16
-				width=60
-				height=16
-			}
-			control {
-				chan="asynTest:PA:A0:Connect"
-				clr=14
-				bclr=4
-			}
-			label="disconnect"
-			press_msg="0"
-		}
-		"text update" {
-			object {
-				x=260
-				y=8
-				width=30
-				height=16
-			}
-			monitor {
-				chan="asynTest:PA:A0:ConnectState"
-				clr=14
-				bclr=4
-			}
-			clrmod="alarm"
-			format="string"
-			limits {
-			}
-		}
-	}
-}
-"message button" {
-	object {
-		x=0
-		y=46
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1:Enable"
-		clr=14
-		bclr=4
-	}
-	label="enable"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=0
-		y=62
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A-1:Enable"
-		clr=14
-		bclr=4
-	}
-	label="disable"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=60
-		y=54
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A-1:EnableState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=100
-		y=46
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A-1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="auto"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=100
-		y=62
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A-1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="noAuto"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=160
-		y=54
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A-1:AutoConnectState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=200
-		y=46
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A-1:Connect"
+		chan="asynTest:PA:A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -735,13 +677,60 @@ composite {
 }
 "message button" {
 	object {
-		x=200
+		x=260
+		y=16
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PA:A0.CNCT"
+		clr=14
+		bclr=4
+	}
+	label="disconnect"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=320
+		y=8
+		width=80
+		height=16
+	}
+	monitor {
+		chan="asynTest:PA:A0.CNTD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=260
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1.CNCT"
+		clr=14
+		bclr=4
+	}
+	label="connect"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=260
 		y=62
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A-1:Connect"
+		chan="asynTest:PB:A-1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -750,13 +739,13 @@ composite {
 }
 "text update" {
 	object {
-		x=260
+		x=320
 		y=54
-		width=30
+		width=80
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1:ConnectState"
+		chan="asynTest:PB:A-1.CNTD"
 		clr=14
 		bclr=4
 	}
@@ -767,107 +756,13 @@ composite {
 }
 "message button" {
 	object {
-		x=0
+		x=260
 		y=80
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0:Enable"
-		clr=14
-		bclr=4
-	}
-	label="enable"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=0
-		y=96
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A0:Enable"
-		clr=14
-		bclr=4
-	}
-	label="disable"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=60
-		y=88
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A0:EnableState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=100
-		y=80
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A0:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="auto"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=100
-		y=96
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A0:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="noAuto"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=160
-		y=88
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A0:AutoConnectState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=200
-		y=80
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A0:Connect"
+		chan="asynTest:PB:A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -876,13 +771,13 @@ composite {
 }
 "message button" {
 	object {
-		x=200
+		x=260
 		y=96
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A0:Connect"
+		chan="asynTest:PB:A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -891,13 +786,13 @@ composite {
 }
 "text update" {
 	object {
-		x=260
+		x=320
 		y=88
-		width=30
+		width=80
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0:ConnectState"
+		chan="asynTest:PB:A0.CNTD"
 		clr=14
 		bclr=4
 	}
@@ -908,107 +803,13 @@ composite {
 }
 "message button" {
 	object {
-		x=0
+		x=260
 		y=120
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1:Enable"
-		clr=14
-		bclr=4
-	}
-	label="enable"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=0
-		y=136
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A1:Enable"
-		clr=14
-		bclr=4
-	}
-	label="disable"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=60
-		y=128
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A1:EnableState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=100
-		y=120
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="auto"
-	press_msg="1"
-}
-"message button" {
-	object {
-		x=100
-		y=136
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A1:AutoConnect"
-		clr=14
-		bclr=4
-	}
-	label="noAuto"
-	press_msg="0"
-}
-"text update" {
-	object {
-		x=160
-		y=128
-		width=30
-		height=16
-	}
-	monitor {
-		chan="asynTest:PB:A1:AutoConnectState"
-		clr=14
-		bclr=4
-	}
-	clrmod="alarm"
-	format="string"
-	limits {
-	}
-}
-"message button" {
-	object {
-		x=200
-		y=120
-		width=60
-		height=16
-	}
-	control {
-		chan="asynTest:PB:A1:Connect"
+		chan="asynTest:PB:A1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -1017,13 +818,13 @@ composite {
 }
 "message button" {
 	object {
-		x=200
+		x=260
 		y=136
 		width=60
 		height=16
 	}
 	control {
-		chan="asynTest:PB:A1:Connect"
+		chan="asynTest:PB:A1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -1032,13 +833,201 @@ composite {
 }
 "text update" {
 	object {
-		x=260
+		x=320
 		y=128
-		width=30
+		width=80
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1:ConnectState"
+		chan="asynTest:PB:A1.CNTD"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=130
+		y=0
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PA:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=130
+		y=16
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PA:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=190
+		y=8
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PA:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=130
+		y=46
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=130
+		y=62
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A-1.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=190
+		y=54
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A-1.AUCT"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=130
+		y=80
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=130
+		y=96
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=190
+		y=88
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A0.AUCT"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=130
+		y=120
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="auto"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=130
+		y=136
+		width=60
+		height=16
+	}
+	control {
+		chan="asynTest:PB:A1.AUCT"
+		clr=14
+		bclr=4
+	}
+	label="noAuto"
+	press_msg="0"
+}
+"text update" {
+	object {
+		x=190
+		y=128
+		width=60
+		height=16
+	}
+	monitor {
+		chan="asynTest:PB:A1.AUCT"
 		clr=14
 		bclr=4
 	}
