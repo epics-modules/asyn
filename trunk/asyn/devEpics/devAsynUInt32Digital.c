@@ -137,8 +137,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, addr);
     if (status != asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "devAsynUInt32Digital::initCommon, connectDevice failed %s\n",
-                  pasynUser->errorMessage);
+                  "devAsynUInt32Digital::initCommon, %s connectDevice failed %s\n",
+                  pr->name, pasynUser->errorMessage);
         goto bad;
     }
     /*call drvUserInit*/
@@ -152,8 +152,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
         status = pasynDrvUser->create(drvPvtCommon,pasynUser,
             pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            errlogPrintf("devAsynUInt32Digital::initCommon, drvUserInit failed %s\n",
-                     pasynUser->errorMessage);
+            errlogPrintf("devAsynUInt32Digital::initCommon, %s drvUserInit failed %s\n",
+                     pr->name, pasynUser->errorMessage);
             goto bad;
         }
     }
@@ -163,8 +163,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink, userCallback callback,
                                                  asynUInt32DigitalType, 1);
     if (!pasynInterface) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "devAsynUInt32Digital::initCommon, find asynUInt32Digital"
-                  " interface failed\n");
+                  "devAsynUInt32Digital::initCommon, %s find asynUInt32Digital"
+                  " interface failed\n", pr->name);
         goto bad;
     }
     pPvt->pasynUInt32D = (asynUInt32Digital *)pasynInterface->pinterface;
