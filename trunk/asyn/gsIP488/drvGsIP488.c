@@ -566,7 +566,7 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
 }
 
 static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, const char *val);
+    const char *key, const char *val)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -575,7 +575,7 @@ static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 }
 
 static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
-    const char *key, char *val,int sizeval);
+    const char *key, char *val,int sizeval)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
