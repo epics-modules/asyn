@@ -29,155 +29,122 @@
 
 typedef struct processPvt {
     asynUser *pasynUser;
-    deviceDriver *padeviceDriver;
-    octetDriver *poctetDriver;
-    void *octetDriverPvt;
+    asynInterface *paasynInterface;
+    asynOctet *pasynOctet;
+    void *asynOctetPvt;
 }processPvt;
     
-static int processModuleInit(const char *processModuleName,const char *deviceName);
+static int processModuleInit(const char *processModuleName,const char *portName);
 
 
-/* octetDriver methods */
-static int processRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+/* asynOctet methods */
+static int processRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars);
 static int processWrite(void *ppvt,asynUser *pasynUser,
-    int addr,const char *data,int numchars);
-static asynStatus processFlush(void *ppvt,asynUser *pasynUser,int addr);
+    const char *data,int numchars);
+static asynStatus processFlush(void *ppvt,asynUser *pasynUser);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
-    int addr,const char *eos,int eoslen);
-static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,
-    peekHandler handler,void *peekHandlerPvt);
-static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser);
-static octetDriver octet = {
-    processRead,processWrite,processFlush,
-    setEos,
-    installPeekHandler, removePeekHandler
-};
-
-static driverInterface mydriverInterface[NUM_INTERFACES] = {
-    {octetDriverType,&octet}
+    const char *eos,int eoslen);
+static asynOctet octet = {
+    processRead,processWrite,processFlush, setEos
 };
 
 static int processModuleInit(const char *pmn,const char *dn)
 {
     processPvt *pprocessPvt;
     char *processModuleName;
-    char *deviceName;
+    char *portName;
     asynStatus status;
-    deviceDriver *padeviceDriver;
-    deviceDriver *poctetdeviceDriver;
+    asynInterface *paasynInterface;
+    asynInterface *poctetasynInterface;
     asynUser *pasynUser;
-    int i;
 
     processModuleName = callocMustSucceed(strlen(pmn)+1,sizeof(char),
         "processModuleInit");
     strcpy(processModuleName,pmn);
-    deviceName = callocMustSucceed(strlen(dn)+1,sizeof(char),
+    portName = callocMustSucceed(strlen(dn)+1,sizeof(char),
         "processModuleInit");
-    strcpy(deviceName,dn);
+    strcpy(portName,dn);
     pprocessPvt = callocMustSucceed(1,sizeof(processPvt),"processModuleInit");
-    pprocessPvt->pasynUser = pasynUser = pasynQueueManager->createAsynUser(0,0,0);
-    status = pasynQueueManager->connectDevice(pasynUser,deviceName);
+    pprocessPvt->pasynUser = pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectPort(pasynUser,portName);
     if(status!=asynSuccess) {
-        printf("processModuleInit connectDevice failed %s\n",
+        printf("processModuleInit connectPort failed %s\n",
             pasynUser->errorMessage);
 	return(0);
     }
-    padeviceDriver = callocMustSucceed(NUM_INTERFACES,sizeof(deviceDriver),
+    paasynInterface = callocMustSucceed(NUM_INTERFACES,sizeof(asynInterface),
         "processModuleInit");
-    for(i=0; i<NUM_INTERFACES; i++) {
-        padeviceDriver[i].pdriverInterface = &mydriverInterface[i];
-        padeviceDriver[i].drvPvt = pprocessPvt;
-    }
-    pprocessPvt->padeviceDriver = padeviceDriver;
-    poctetdeviceDriver = pasynQueueManager->findDriver(pasynUser,
-        octetDriverType,0);
-    if(!poctetdeviceDriver) {
-	printf("%s %s\n",octetDriverType,pasynUser->errorMessage);
+    paasynInterface[0].interfaceType = asynOctetType;
+    paasynInterface[0].pinterface = &octet;
+    paasynInterface[0].drvPvt = pprocessPvt;
+    pprocessPvt->paasynInterface = paasynInterface;
+    poctetasynInterface = pasynManager->findInterface(pasynUser,
+        asynOctetType,0);
+    if(!poctetasynInterface) {
+	printf("%s %s\n",asynOctetType,pasynUser->errorMessage);
 	return(0);
     }
-    pprocessPvt->poctetDriver = (octetDriver *)
-	poctetdeviceDriver->pdriverInterface->pinterface;
-    pprocessPvt->octetDriverPvt = poctetdeviceDriver->drvPvt;
-    status = pasynQueueManager->registerProcessModule(
-        processModuleName,deviceName,
-        padeviceDriver,NUM_INTERFACES);
+    pprocessPvt->pasynOctet = (asynOctet *)
+	poctetasynInterface->pinterface;
+    pprocessPvt->asynOctetPvt = poctetasynInterface->drvPvt;
+    status = pasynManager->registerProcessModule(
+        processModuleName,portName,
+        paasynInterface,NUM_INTERFACES);
     if(status!=asynSuccess) {
         printf("processModuleInit registerDriver failed\n");
     }
+    pasynManager->freeAsynUser(pasynUser);
     return(0);
 }
 
-/* octetDriver methods */
-static int processRead(void *ppvt,asynUser *pasynUser,int addr,char *data,int maxchars)
+/* asynOctet methods */
+static int processRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
 {
     processPvt *pprocessPvt = (processPvt *)ppvt;
     int nchars;
 
     printf("entered processModule::read\n");
-    nchars = pprocessPvt->poctetDriver->read(pprocessPvt->octetDriverPvt,
-        pasynUser,addr,data,maxchars);
+    nchars = pprocessPvt->pasynOctet->read(pprocessPvt->asynOctetPvt,
+        pasynUser,data,maxchars);
     return(nchars);
 }
 
-static int processWrite(void *ppvt,asynUser *pasynUser, int addr,const char *data,int numchars)
+static int processWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars)
 {
     processPvt *pprocessPvt = (processPvt *)ppvt;
     int nchars;
 
     printf("entered processModule::write\n");
-    nchars = pprocessPvt->poctetDriver->write(pprocessPvt->octetDriverPvt,
-        pasynUser,addr,data,numchars);
+    nchars = pprocessPvt->pasynOctet->write(pprocessPvt->asynOctetPvt,
+        pasynUser,data,numchars);
     return(nchars);
 }
 
-static asynStatus processFlush(void *ppvt,asynUser *pasynUser,int addr)
+static asynStatus processFlush(void *ppvt,asynUser *pasynUser)
 {
     processPvt *pprocessPvt = (processPvt *)ppvt;
     asynStatus status;
 
     printf("entered processModule::flush\n");
-    status = pprocessPvt->poctetDriver->flush(pprocessPvt->octetDriverPvt,pasynUser,addr);
+    status = pprocessPvt->pasynOctet->flush(pprocessPvt->asynOctetPvt,pasynUser);
     return(status);
 }
 
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
-    int addr, const char *eos,int eoslen)
+    const char *eos,int eoslen)
 {
     processPvt *pprocessPvt = (processPvt *)ppvt;
     asynStatus status;
 
     printf("entered processModule::setEos\n");
-    status = pprocessPvt->poctetDriver->setEos(pprocessPvt->octetDriverPvt,
-        pasynUser,addr,eos,eoslen);
+    status = pprocessPvt->pasynOctet->setEos(pprocessPvt->asynOctetPvt,
+        pasynUser,eos,eoslen);
     return(status);
 }
 
-static asynStatus installPeekHandler(void *ppvt,asynUser *pasynUser,
-    peekHandler handler,void *peekHandlerPvt)
-{
-    processPvt *pprocessPvt = (processPvt *)ppvt;
-    asynStatus status;
-
-    printf("entered processModule::installPeekHandler\n");
-    status = pprocessPvt->poctetDriver->installPeekHandler(
-        pprocessPvt->octetDriverPvt,pasynUser,handler,peekHandlerPvt);
-    return(status);
-}
-
-static asynStatus removePeekHandler(void *ppvt,asynUser *pasynUser)
-{
-    processPvt *pprocessPvt = (processPvt *)ppvt;
-    asynStatus status;
-
-    printf("entered processModule::removePeekHandler\n");
-    status = pprocessPvt->poctetDriver->removePeekHandler(pprocessPvt->octetDriverPvt,
-        pasynUser);
-    return(status);
-}
-
 /* register processModuleInit*/
 static const iocshArg processModuleInitArg0 = { "processModuleName", iocshArgString };
-static const iocshArg processModuleInitArg1 = { "deviceName", iocshArgString };
+static const iocshArg processModuleInitArg1 = { "portName", iocshArgString };
 static const iocshArg *processModuleInitArgs[] = {
     &processModuleInitArg0,&processModuleInitArg1};
 static const iocshFuncDef processModuleInitFuncDef = {
