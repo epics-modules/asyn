@@ -118,7 +118,7 @@ struct devGpibParmBlock {
     int respond2Writes; /* set to true if a device responds to writes */
     /*The following are computed by devSupportGpib*/
     int  msgLenMax;     /*max msgLen all commands*/
-    int  rspLenMax;     /*rsp rspLen all commands*/
+    int  rspLenMax;     /*max rspLen all commands*/
 };
 
 /* EFAST tables must be defied as follows
