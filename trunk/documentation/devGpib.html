@@ -422,7 +422,8 @@ definition must define field OUT as</p>
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
       The use depends on the pgpibCmd-&gt;type. See below for details. Set to
       0 when no conversion function is present.
-      <p>If a convert routine finds an error it should do the following:</p>
+      <p>Conversion routines should return 0 to signify a successful
+         conversion.  If a convert routine finds an error it should do the following:</p>
       <ul>
         <li>Generate an error message as follows:
           <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"&lt;format&gt;",...);</pre>
@@ -841,8 +842,8 @@ filled in if the database designer has assigned them values..</p>
 
 <h2>Defining the devGpibParmBlock.</h2>
 Each DSET of the instrument support contains the address of a
-<code>devGpibParmBlock</code>. <code>init_ai</code>e MUST initialize this
-structure.
+<code>devGpibParmBlock</code>. <code>init_ai</code> MUST initialize this
+structure.  For example:
 <pre>static long init_ai(int parm)
 {
     if(parm==0) {
