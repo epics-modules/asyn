@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: epicsInterruptibleSyscall.c,v 1.9 2004-05-10 18:32:42 norume Exp $
+ * $Id: epicsInterruptibleSyscall.c,v 1.10 2004-05-14 16:41:32 norume Exp $
  */
 
 #include <stdio.h>
@@ -29,12 +29,10 @@
 #include <epicsMutex.h>
 
 #ifdef vxWorks
-# include <tyLib.h>
 # include <ioLib.h>
 #else
 # ifndef _WIN32
 #  include <sys/ioctl.h>
-#  include <termios.h>
 # endif
 #endif
 
@@ -44,7 +42,6 @@ struct epicsInterruptibleSyscallContext {
     epicsThreadId  tid;
     epicsMutexId   mutex;
     int            interruptCount;
-    int            isatty;
     int            wasClosed;
 };
 
@@ -86,8 +83,6 @@ epicsInterruptibleSyscallArm(epicsInterruptibleSyscallContext *c, int fd, epicsT
         epicsSignalInstallSigAlarmIgnore();
     }
     c->interruptCount = 0;
-    if(c->fd >= 0)
-        c->isatty = isatty(c->fd);
     c->wasClosed = 0;
     epicsMutexUnlock(c->mutex);
     return 0;
@@ -116,16 +111,7 @@ epicsInterruptibleSyscallInterrupt(epicsInterruptibleSyscallContext *c)
         if (c->tid != NULL)
             epicsSignalRaiseSigAlarm(c->tid);
     }
-    else if(c->isatty) {
-#ifdef vxWorks
-        ioctl(c->fd, FIOCANCEL, 0);
-#else
-        tcflush(c->fd, TCOFLUSH);
-        if (c->tid != NULL)
-            epicsSignalRaiseSigAlarm(c->tid);
-#endif
-    }
-    else {  /* Assume it's a socket */
+    else {
         switch(epicsSocketSystemCallInterruptMechanismQuery()) {
         case esscimqi_socketCloseRequired:
             if (c->fd >= 0) {

@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.11 2004-05-10 18:30:57 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.12 2004-05-14 16:41:32 norume Exp $
  */
 
 #include <string.h>
@@ -20,9 +20,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <errno.h>
-#include <sys/ioctl.h>
-#include <unistd.h>
 
+#include <osiUnistd.h>
 #include <cantProceed.h>
 #include <errlog.h>
 #include <iocsh.h>
@@ -38,7 +37,7 @@
 #include <asynInterposeEos.h>
 #include <drvAsynSerialPort.h>
 
-#if !defined(vxWorks) && !defined(__rtems__)
+#if !defined(vxWorks) && !defined(__rtems__) && !defined(_WIN32)
 # define USE_POLL
 # include <sys/poll.h>
 #endif
@@ -47,6 +46,7 @@
 # include <tyLib.h>
 # include <ioLib.h>
 # include <sioLib.h>
+# include <sys/ioctl.h>
 # define CSTOPB STOPB
 #else
 # define USE_TERMIOS
@@ -150,7 +150,7 @@ timeoutHandler(void *p)
 #ifdef vxWorks
     ioctl(tty->fd, FIOCANCEL, NULL);
 #endif
-#ifdef USE_TERMIOS
+#ifdef TCOFLUSH
     tcflush(tty->fd, TCOFLUSH);
 #endif
     /*
