@@ -36,6 +36,7 @@ testGpibSerialVx_LIBS += Ipac TyGSOctal
 endif
 testGpibSerialVx_LIBS += testSupport asyn
 testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
+testGpibSerialVx_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 
 #===========================
 
