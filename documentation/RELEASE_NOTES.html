@@ -43,6 +43,28 @@ alink="#FF0000">
 <p>If cancelRequest is called while either the process or timeout callback is
 active, it now waits until the callback completes.</p>
 
+<h3>asynRecord</h3>
+<ul>
+  <li>Added PCNCT field to connect/disconnect from port, and to indicate if
+    port is currently connected.
+  </li>
+  <li>Added DRVINFO and REASON fields to provide control for the drvUser
+    interface.
+  </li>
+  <li>Added support for register interfaces (asynInt32, asynUInt32Digital,
+    and asynFloat64).  New I/O fields for this support are I32INP, I32OUT, 
+    UI32INP, UI32OUT, UI32MASK, F64INP, and F64OUT.  The new IFACE field is used
+    to select the currently active interface.
+  </li>
+  <li>Added new fields to indicate if a particular interface is supported
+    by the driver.  These fields are OCTETIV, I32IV, UI32IV, F64IV, OPTIONIV,
+    and GPIBIV.
+  </li>
+  <li>Added support for I/O Intr scanning for any driver/interface that supports
+    callbacks.  asynOctet does not yet support callbacks.
+  </li>
+</ul>
+
 <center>
 <h2>Release 3-3</h2>
 </center>
