@@ -8,7 +8,7 @@ display {
 		x=72
 		y=61
 		width=442
-		height=500
+		height=465
 	}
 	clr=14
 	bclr=4
@@ -782,7 +782,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="reason:"
+	textix="Reason:"
 }
 "text entry" {
 	object {
