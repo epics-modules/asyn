@@ -20,6 +20,9 @@ alink="#FF0000">
 <h2>Release x-y</h2>
 </center>
 
+<h3>asynRecord</h3>
+<p> Removed the GOPT field.  This is no longer necessary because the port options are automatically read whenever connecting to a port.  "special" requests are now queued without changing the state of the record, using the new duplicateAsynUser, memMalloc(), and memFree() methods.  This means that there is no longer a possibility of a special request being rejected because the record is busy. It is no longer possible to cancel a special request. </p>
+
 <h3>devSupportGpib</h3>
 <p>setEos is now a method.</p>
 
@@ -33,10 +36,15 @@ the EOS read semantics match those of the low-level serial and IP drivers.</p>
 
 <h3>Changed and obsolete features</h3>
 <ul>
+<li> pasynManager->registerPort() has changed.  The second argument is now a bit mask, and asynchronous drivers must set the ASYN_CANBLOCK bit.
+<li> Removed setOption() and getOption() from the asynCommon interface.  Moved them to a new interface, asynOption.
 </ul>
 
 <h3>Major New Features</h3>
 <ul>
+<li> Added support for synchronous devices. Changes to pasynManager->registerPort, and new pasynManager->canBlock() function.
+<li> Added userData to asynUser structure.
+<li> Added pasynManager->memMalloc() and pasynManager->memFree() for allocating and freeing memory with a freelist.  This is primarily meant to be used with pasynManager->duplicateAsynUser() and the new pasynUser->userData field.
 </ul>
 
 <h1>June 25, 2004</h1>
