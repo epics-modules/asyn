@@ -431,7 +431,7 @@ definition must define field OUT as</p>
       0 when no conversion function is present.
       <p>If a convert routine finds an error it should do the following:</p>
       <ul>
-        <li>Generate and error massage as follows:
+        <li>Generate an error massage as follows:
           <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"&lt;format&gt;",...);</pre>
         </li>
         <li>return -1 to signify failure</li>
