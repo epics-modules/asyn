@@ -19,6 +19,7 @@
 #include <asynSyncIO.h>
 
 typedef enum {
+   asynSyncIO_DRIVER_CONNECT,
    asynSyncIO_FLUSH,
    asynSyncIO_READ,
    asynSyncIO_WRITE,
@@ -27,6 +28,8 @@ typedef enum {
 
 typedef struct asynSyncIOPvt {
    epicsEventId event;
+   asynCommon *pasynCommon;
+   void *pcommonPvt;
    asynOctet *pasynOctet;
    void *pdrvPvt;
    char *input_buff;
@@ -46,7 +49,7 @@ typedef struct asynSyncIOPvt {
 static asynStatus 
    asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser);
 static asynStatus 
-   asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser);
+   asynSyncIOOpenSocket(const char *server, int port, char **portName);
 static int
     asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len, 
                     double timeout);
@@ -60,10 +63,12 @@ static int
                         const char *ieos, int ieos_len, double timeout);
 static asynStatus 
     asynSyncIOFlush(asynUser *pasynUser);
+static asynStatus 
+    asynSyncIODriverConnect(asynUser *pasynUser);
 
 static asynSyncIO asynSyncIOManager = {
     asynSyncIOConnect,
-    asynSyncIOConnectSocket,
+    asynSyncIOOpenSocket,
     asynSyncIOWrite,
     asynSyncIORead,
     asynSyncIOWriteRead,
@@ -87,6 +92,7 @@ static asynStatus
     asynUser *pasynUser;
     asynStatus status;
     asynInterface *pasynInterface;
+    int isConnected;
 
     /* Create private structure */
     pasynSyncIOPvt = (asynSyncIOPvt *)calloc(1, sizeof(asynSyncIOPvt));
@@ -103,35 +109,58 @@ static asynStatus
     status = pasynManager->connectDevice(pasynUser, port, addr);    
     if (status != asynSuccess) {
       printf("Can't connect to port %s address %d\n", port, addr);
-      return(-1);
+      return(status);
     }
+
+    /* Get asynCommon interface */
+    pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
+    if (!pasynInterface) {
+       printf("%s driver not supported\n", asynCommonType);
+       return(asynError);
+    }
+
+    pasynSyncIOPvt->pasynCommon = (asynCommon *)pasynInterface->pinterface;
+    pasynSyncIOPvt->pcommonPvt = pasynInterface->drvPvt;
 
     /* Get asynOctet interface */
     pasynInterface = pasynManager->findInterface(pasynUser, asynOctetType, 1);
     if (!pasynInterface) {
        printf("%s driver not supported\n", asynOctetType);
-       return(-1);
+       return(asynError);
     }
 
     pasynSyncIOPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pasynSyncIOPvt->pdrvPvt = pasynInterface->drvPvt;
+
+    /* Connect to device if not already connected.  
+     * For TCP/IP sockets this ensures that the port is connected */
+    status = pasynManager->isConnected(pasynUser, &isConnected);
+    if (status != asynSuccess) {
+       printf("Error getting isConnected status %s\n", pasynUser->errorMessage);
+       return(status);
+    }
+    if (!isConnected) {
+       status = asynSyncIODriverConnect(pasynUser);
+       if (status != asynSuccess) {
+          printf("Error connecting to device %s\n", pasynUser->errorMessage);
+          return(status);
+       }
+    }
     return(asynSuccess);
 }
 
 static asynStatus 
-   asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser)
+   asynSyncIOOpenSocket(const char *server, int port, char **portName)
 {
     char portString[20];
-    char *serverString;
-    int status;
+    asynStatus status;
 
     sprintf(portString, "%d", port);
-    serverString = calloc(1, strlen(server)+strlen(portString)+3);
-    strcpy(serverString, server);
-    strcat(serverString, ":");
-    strcat(serverString, portString);
-    status = drvAsynTCPPortConfigure(serverString, serverString, 0, 0, 0);
-    status = asynSyncIOConnect(serverString, 0, ppasynUser);
+    *portName = calloc(1, strlen(server)+strlen(portString)+3);
+    strcpy(*portName, server);
+    strcat(*portName, ":");
+    strcat(*portName, portString);
+    status = drvAsynTCPPortConfigure(*portName, *portName, 0, 0, 0);
     return(status);
 }
 
@@ -146,6 +175,7 @@ static asynStatus
     asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
     asynStatus status;
     epicsEventWaitStatus waitStatus;
+    int wasQueued;
 
     /* Copy parameters to private structure for use in callback */
     pPvt->output_buff = output_buff;
@@ -159,8 +189,10 @@ static asynStatus
     pPvt->op = op;
 
     /* Queue request */
-    status = pasynManager->queueRequest(pasynUser, asynQueuePriorityLow, 
-                                        QUEUE_TIMEOUT);
+    status = pasynManager->queueRequest(pasynUser, 
+                ((op == asynSyncIO_DRIVER_CONNECT) ?
+                asynQueuePriorityConnect : asynQueuePriorityLow), 
+                QUEUE_TIMEOUT);
     if (status) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                  "asynSyncIOQueueAndWait queue request failed %s\n",
@@ -181,7 +213,15 @@ static asynStatus
                                               timeout+EVENT_TIMEOUT);
     if (waitStatus!=epicsEventWaitOK) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                 "asynSyncIOQueueAndWait queue timeout\n");
+                 "asynSyncIOQueueAndWait event timeout\n");
+       /* We need to delete the entry from the queue or it will block this
+        * port forever */
+       status = pasynManager->cancelRequest(pasynUser,&wasQueued);
+       if(status!=asynSuccess || !wasQueued) {
+          asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                    "asynSyncIOQueueAndWait Cancel request failed: %s",
+                    pasynUser->errorMessage);
+       }
        return(asynTimeout);
     }
     /* Return that status that the callback put in the private structure */
@@ -201,7 +241,17 @@ static int
 }
 
 
-static asynStatus 
+static asynStatus
+    asynSyncIODriverConnect(asynUser *pasynUser)
+{
+    asynStatus status;
+
+    status = asynSyncIOQueueAndWait(pasynUser, NULL, 0, NULL, 0, 
+                                    NULL, 0, 0, 0., asynSyncIO_DRIVER_CONNECT);
+    return(status);
+}
+
+static asynStatus
     asynSyncIOFlush(asynUser *pasynUser)
 {
     asynStatus status;
@@ -256,9 +306,12 @@ static void asynSyncIOCallback(asynUser *pasynUser)
                     pasynUser->errorMessage);
        }
     }
+    if (pPvt->op == asynSyncIO_DRIVER_CONNECT) {
+       status = pPvt->pasynCommon->connect(pPvt->pcommonPvt,pasynUser);
+    }
     if ((pPvt->op == asynSyncIO_WRITE) || (pPvt->op ==asynSyncIO_WRITE_READ)) {
        status = pasynOctet->write(pdrvPvt, pasynUser, 
-               pPvt->output_buff, pPvt->output_len,&nbytesTransfered);
+                   pPvt->output_buff, pPvt->output_len,&nbytesTransfered);
        if(status==asynError) {
           asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                     "asynSyncIO write failed %s\n",
@@ -270,14 +323,14 @@ static void asynSyncIOCallback(asynUser *pasynUser)
                     pPvt->output_len,nbytesTransfered);
        } else {
           asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, 
-                      pPvt->output_buff, pPvt->output_len,
-                      "asynSyncIOWrote wrote\n");
+                      pPvt->output_buff, nbytesTransfered,
+                      "asynSyncIO wrote: ");
        }
     }
     if ((pPvt->op == asynSyncIO_READ) || (pPvt->op == asynSyncIO_WRITE_READ)) {
        pasynOctet->setEos(pdrvPvt, pasynUser, pPvt->ieos, pPvt->ieos_len);
        status = pasynOctet->read(pdrvPvt, pasynUser, 
-               pPvt->input_buff, pPvt->input_len,&nbytesTransfered);
+                   pPvt->input_buff, pPvt->input_len,&nbytesTransfered);
        if(status==asynError) {
           asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                     "asynSyncIO read failed %s\n",
@@ -287,8 +340,8 @@ static void asynSyncIOCallback(asynUser *pasynUser)
           if(nbytesTransfered < pPvt->input_len)
               pPvt->input_buff[nbytesTransfered] = '\0';
           asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, 
-                      pPvt->input_buff, pPvt->input_len,
-                      "asynSyncIOR read\n");
+                      pPvt->input_buff, nbytesTransfered,
+                      "asynSyncIO read: ");
        }
     }
     pPvt->nbytesTransfered = nbytesTransfered;
