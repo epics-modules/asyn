@@ -1,2 +1,2 @@
 registrar(drvGenericSerialRegisterCommands)
-variable(drvGenericSerialDebug)
+include "asyn.dbd"
