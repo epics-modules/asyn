@@ -31,7 +31,7 @@
 #define BOOL int
 #define TRUE 1
 #define FALSE 0
-#define SRQTIMEOUT 2.0
+#define SRQTIMEOUT .01
 #define MAX_POLL 5
 
 typedef struct gpibBase {
