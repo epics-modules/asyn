@@ -28,6 +28,7 @@
 #include <recSup.h>
 #include <recGbl.h>
 #include <epicsString.h>
+#include <epicsString1.h>
 #include <epicsStdio.h>
 #include <epicsExport.h>
 #include <asynGpibDriver.h>
@@ -559,6 +560,7 @@ static void monitor(asynRecord *pasynRec)
           db_post_events(pasynRec,pasynRec->ainp, monitor_mask);
        else
           db_post_events(pasynRec, pasynRec->iptr, monitor_mask);
+       db_post_events(pasynRec,pasynRec->tinp, monitor_mask);
     }
     POST_IF_NEW(nrrd);
     POST_IF_NEW(nord);
@@ -792,6 +794,9 @@ static void performIO(asynUser *pasynUser)
       status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt, 
                    pasynUser, outptr, nwrite,&nbytesTransfered);
       pasynRec->nawt = nbytesTransfered;
+      asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
+            "%s: nwrite=%d, status=%d, nawt=%d, data=", pasynRec->name, nwrite, 
+            status, nbytesTransfered);
       if (status!=asynSuccess || nbytesTransfered != nwrite) {
          /* Something is wrong if we couldn't write everything */
          reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
@@ -824,8 +829,9 @@ static void performIO(asynUser *pasynUser)
                    pasynUser, inptr, nread,&nbytesTransfered);
 
       asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
-            "%s: inlen=%d, status=%d, ninp=%d\n", pasynRec->name, inlen, 
+            "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen, 
             status, nbytesTransfered);
+      inlen = nbytesTransfered;
       if (status!=asynSuccess) {
          if (nbytesTransfered == 0) {
             /* Nothing transfered */
@@ -871,9 +877,13 @@ static void performIO(asynUser *pasynUser)
          if ((eoslen > 0) && (nbytesTransfered >= eoslen) && 
              (strcmp(&inptr[nbytesTransfered-eoslen], eos) == 0)) {
             memset(&inptr[nbytesTransfered-eoslen], 0, eoslen);
+            inlen -= eoslen;
          }
       } 
       pasynRec->nord = nbytesTransfered; /* Number of bytes read */
+      /* Copy to tinp with dbTranslateEscape */
+      epicsStrSnPrintEscaped(pasynRec->tinp, sizeof(pasynRec->tinp), 
+                             inptr, inlen);
    }
 }
 
