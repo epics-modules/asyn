@@ -566,8 +566,8 @@ static void report(FILE *fd,int details)
         dpCommon      *pdpc;
         device        *pdevice;
         interfaceNode *pinterfaceNode;
-        asynCommon    *pasynCommon;
-        void          *drvPvt;
+        asynCommon    *pasynCommon = 0;
+        void          *drvPvt = 0;
 	int           nQueued = 0;
         int           lockCount;
 
