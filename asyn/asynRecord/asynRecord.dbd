@@ -123,6 +123,12 @@ recordtype(asyn) {
         interest(1)
         initial("0")
     }
+    field(DRVINFO,DBF_STRING) {
+        prompt("Driver info string")
+        special(SPC_MOD)
+        initial("")
+        size(40)
+    }
     field(SOCK,DBF_STRING) {
         prompt("socket address")
         promptgroup(GUI_DISPLAY)
@@ -145,24 +151,26 @@ recordtype(asyn) {
         interest(1)
         initial("1.0")
     }
-    field(DRVINFO,DBF_STRING) {
-        prompt("Driver info string")
-        size(40)
-    }
     field(IFACE,DBF_MENU) {
         prompt("Interface")
         menu(asynINTERFACE)
     }
-    field(OCTETIVAL, DBF_LONG) {
+    field(OCTETIV, DBF_LONG) {
         prompt("asynOctet is valid")
     }
-    field(I32IVAL, DBF_LONG) {
+    field(OPTIONIV, DBF_LONG) {
+        prompt("asynOption is valid")
+    }
+    field(GPIBIV, DBF_LONG) {
+        prompt("asynGPIB is valid")
+    }
+    field(I32IV, DBF_LONG) {
         prompt("asynInt32 is valid")
     }
-    field(UI32IVAL, DBF_LONG) {
+    field(UI32IV, DBF_LONG) {
         prompt("asynUInt32Digital is valid")
     }
-    field(F64IVAL, DBF_LONG) {
+    field(F64IV, DBF_LONG) {
         prompt("asynFloat64 is valid")
     }
 
