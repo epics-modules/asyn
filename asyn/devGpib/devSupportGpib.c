@@ -89,7 +89,8 @@ typedef struct portInstance {
     void *asynOctetPvt;
     asynGpib *pasynGpib;
     void *asynGpibPvt;
-    void *pupvt;                /* user defined pointer */
+    /* Following field is used for registerSrqHandlerCallback*/
+    asynUser *pasynUser;
 }portInstance;
 
 struct devGpibPvt {
@@ -129,6 +130,7 @@ epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
 /*Initialization routines*/
 static void commonGpibPvtInit(void);
 static void setMsgRsp(gpibDpvt *pgpibDpvt);
+static void registerSrqHandlerCallback(asynUser *pasynUser);
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName);
 static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr);
@@ -423,6 +425,20 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
     if(pgpibCmd->msgLen>0) pgpibDpvt->msg = pdevGpibParmBlock->msg;
 }
 
+static void registerSrqHandlerCallback(asynUser *pasynUser)
+{
+    portInstance *pportInstance = (portInstance *)pasynUser->userPvt;
+    int status;
+
+    status = pportInstance->pasynGpib->registerSrqHandler(
+        pportInstance->asynGpibPvt,pasynUser,srqHandlerGpib,pportInstance);
+    if(status!=asynSuccess) {
+        printf("%s devGpib:registerSrqHandlerCallback "
+            "registerSrqHandler failed %s\n",
+            pportInstance->portName,pasynUser->errorMessage);
+    }
+}
+
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName)
 {
@@ -455,15 +471,24 @@ static portInstance *createPortInstance(
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynGpibType,1);
     if(pasynInterface) {
+        asynUser *pasynUser;
+
         pportInstance->pasynGpib = 
             (asynGpib *)pasynInterface->pinterface;
         pportInstance->asynGpibPvt = pasynInterface->drvPvt;
-        status = pportInstance->pasynGpib->registerSrqHandler(
-            pportInstance->asynGpibPvt,pasynUser,
-            srqHandlerGpib,pportInstance);
+        /*Must not call registerSrqHandler directly. queueRequest*/
+        pasynUser = pasynManager->createAsynUser(registerSrqHandlerCallback,0);
+        pasynUser->userPvt = pportInstance;
+        pportInstance->pasynUser = pasynUser;
+        status = pasynManager->connectDevice(pasynUser,portName,0);
         if(status!=asynSuccess) {
-            printf("%s registerSrqHandler failed %s\n",
-                portName,pasynUser->errorMessage);
+            printf("%s devGpibCommon:createPortInstance "
+                "connectDevice failed %s\n",portName,pasynUser->errorMessage);
+        }
+        status = pasynManager->queueRequest(pasynUser,asynQueuePriorityHigh,0);
+        if(status!=asynSuccess) {
+            printf("%s devGpibCommon:createPortInstance "
+                "queueRequest failed %s\n",portName,pasynUser->errorMessage);
         }
     }
     ellAdd(&pcommonGpibPvt->portInstanceList,&pportInstance->node);
