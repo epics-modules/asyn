@@ -410,20 +410,12 @@ definition must define field OUT as</p>
     <dd>Size needed to read back from a device when performing a
       respond2Writes read operation. If a gpibCmd is a read operation or a
       write operation that does not respond then set this field to zero. When
-      devGpib initialize it finds the maximum rspLen of all commands,
-      allocates storage for the maximum in
-      <code>pdevGpibParmBlock-&gt;rsp</code>, and then, if rspLen is &gt;0,
-      sets <code>pgpibDpvt-&gt;rsp</code> to
-      <code>pdevGpibParmBlock-&gt;rsp</code>. Thus ALL records use the same
-      rsp buffer.</dd>
+      devGpib initializes it finds the maximum rspLen of all commands
+      associated with a port instance and allocates storage of that size.</dd>
   <dt><code>msgLen</code></dt>
     <dd>Size needed to read or write from a device. If not needed set it to
-      0. When devGpib initialize it finds the maximum msgLen of all commands,
-      allocates storage for the maximum in
-      <code>pdevGpibParmBlock-&gt;msg</code>, and then, if msgLen is &gt;0,
-      sets <code>pgpibDpvt-&gt;msg</code> to
-      <code>pdevGpibParmBlock-&gt;msg</code>. Thus ALL records use the same
-      msg buffer.</dd>
+      zero. When devGpib initializes it finds the maximum msgLen of all commands
+      associated with a port instance and allocates storage of that size.</dd>
   <dt><code>convert</code></dt>
     <dd>A conversion function that has the prototype:
       <pre> int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);</pre>
@@ -875,21 +867,20 @@ structure.
 
 <p><code>devGpibParmBlock</code> is:</p>
 <pre>struct devGpibParmBlock {
+    char *name;         /* Name of this device support*/
     gpibCmd *gpibCmds;  /* pointer to gpib command list */
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
     double timeWindow;  /* seconds to stop I/O after a timeout*/
     int respond2Writes; /* set to true if a device responds to writes */
     /*The following are set by devSupportGpib*/
-    char *msg;   /*shared msg buffer for all gpibCmds*/
-    int  msgLen;/*size of msg*/
-    char *rsp;   /*shared msg buffer for all gpibCmds*/
-    int  rspLen;/*size of msg*/
-    /*Are the following still needed? Marty thinks not */
-    char *name;         /* Name of this device support*/
+    int  msgLenMax;     /*max msgLen all commands*/
+    int  rspLenMax;     /*rsp rspLen all commands*/
 };</pre>
 <dl>
   <dt><code>gpibCmds</code></dt>
+  <dt><code>name</code></dt>
+    <dd>The device support module type name. Used only to generate diagnostic messages.</dd>
     <dd>Address of an array of gpibCmd definitions..</dd>
   <dt><code>numparams</code></dt>
     <dd>The number of gpibCmds defined. A macro should be used to set it's
@@ -909,30 +900,17 @@ structure.
       <ul>
         <li>If pgpibCmd-&gt;rspLen is &lt;=0 no action is taken. This is a
           way to override respond2Writes for specific commands.</li>
-        <li>If rspLen is &lt; len, where len is the length of the output
-          request, an error message is issued and no further action is
-        taken</li>
         <li>If respond2Writes is &gt;0 then a wait of respond2Writes
           milliseconds occurs.</li>
-        <li>A read of len bytes is read into pgpibDpvt-&gt;rsp.</li>
+        <li>A read of up to len bytes (terminated by GPIB EOI or by the terminator string, if any) is read into pgpibDpvt-&gt;rsp.</li>
       </ul>
     </dd>
-  <dt><code>msg</code></dt>
-    <dd>This is set by devGpibSupport. The storage allocated is large enough
-      to hold the maximum size input message, i.e. the largest msgLen defined
-      in gpibCmds. Each <code>pdevGpibPvt-&gt;msg</code> points to this same
-      buffer. Thus all records share the same buffer.</dd>
-  <dt><code>msgLen</code></dt>
-    <dd>The size of msg.</dd>
-  <dt><code>rsp</code></dt>
-    <dd>This is set by devGpibSupport. The storage allocated is large enough
-      to hold the maximum size input message, i.e. the largest rspLen defined
-      in gpibCmds. Each <code>pdevGpibPvt-&gt;rsp</code> points to this same
-      buffer. Thus all records share the same buffer.</dd>
-  <dt><code>rspLen</code></dt>
-    <dd>The size of rsp.</dd>
-  <dt><code>name</code></dt>
-    <dd>The device support module type name. NOTHING curently uses this.</dd>
+  <dt><code>msgLenMax</code></dt>
+    <dd>This is set by devGpibSupport. The value is that of the maximum
+    size input message, i.e. the largest msgLen defined in gpibCmds.</dd>
+  <dt><code>rspLenMax</code></dt>
+    <dd>This is set by devGpibSupport. The value is that of the maximum
+    size response message, i.e. the largest rspLen defined in gpibCmds.</dd>
 </dl>
 
 <h2>SRQ Processing</h2>
@@ -1030,7 +1008,6 @@ address of a gpibDpvt</p>
 <pre>struct gpibDpvt
 {
     devGpibParmBlock *pdevGpibParmBlock;
-    int gpibAddr;
     CALLBACK callback;
     dbCommon *precord;
     asynUser *pasynUser;
@@ -1054,9 +1031,6 @@ address of a gpibDpvt</p>
   <dt><code>pdevGpibParmBlock</code></dt>
     <dd>Address of the devGpibParmBlock. It is the same value as
       <code>pgDset-&gt;pdevGpibPvt</code?</dd></code></dd>
-  <dt><code>gpibAddr</code></dt>
-    <dd>The gpibAddr. It is obtained from INP or OUT during
-    initialization.</dd>
   <dt><code>callback</code></dt>
     <dd>For use by requestProcessCallback.</dd>
   <dt><code>precord</code></dt>
