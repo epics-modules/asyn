@@ -59,45 +59,45 @@ int testDebug = 0;		/* debugging flags */
 static struct gpibCmd gpibCmds[] = 
 {
   /* Param 0, */
-  {&DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 1, */
-  {&DSET_BO, GPIBREN, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBREN, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 2, */
-  {&DSET_BO, GPIBDCL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBDCL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 3, */
-  {&DSET_BO, GPIBLLO, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBLLO, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 4, */
-  {&DSET_BO, GPIBSDC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBSDC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 5, */
-  {&DSET_BO, GPIBGTL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBGTL, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 6, */
-  {&DSET_BO, GPIBRESETLNK, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_BO, GPIBRESETLNK, IB_Q_HIGH, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
 
   /* Param 7, */
-  {&DSET_LI, GPIBSRQHANDLER, IB_Q_LOW, 0,  0, 0, 0, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBSRQHANDLER, IB_Q_HIGH, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0},
   /* Param 8 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "DESE %ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "DESE %ld", 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 9 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*ESE %ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*ESE %ld", 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 10 */
-  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld", 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LO, GPIBWRITE, IB_Q_LOW, 0, "*SRE %ld", 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 11 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "DESE?",  0, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 12 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESR?",  0, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 13 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*ESE?",  0, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 14 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*STB?",  0, 0, 20, 0, 0, 0, 0, 0, 0},
   /* Param 15 */
-  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  0, 0, 20, 0, 0, 0, 0, 0, -1},
+  {&DSET_LI, GPIBREAD, IB_Q_LOW, "*SRE?",  0, 0, 20, 0, 0, 0, 0, 0, 0},
 
   /* Param 16 (id)   */
-  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREAD, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, 0},
   /* Param 17 */
-  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, -1},
+  {&DSET_SI, GPIBREADW, IB_Q_LOW, "*IDN?", 0, 0, 200, 0, 0, 0, 0, 0, 0},
   /* Param 18, */
-  {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK",  0, 0, 0, 0, 0, 0, 0, 0, -1}
+  {&DSET_BO, GPIBCMD, IB_Q_LOW, "XXXJUNK",  0, 0, 0, 0, 0, 0, 0, 0, 0}
 };
 
 

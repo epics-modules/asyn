@@ -61,6 +61,9 @@ typedef struct deviceInstance {
     unsigned long errorCount;   /* total number of errors since boot time */
     double queueTimeout;
     double srqWaitTimeout;
+    /*Following fields are to keep last eos*/
+    char eos[3];
+    int eosLen;
     /*Following fields are for timeWindow*/
     int timeoutActive;
     epicsTimeStamp timeoutTime;
@@ -557,17 +560,14 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     portInstance *pportInstance = pdevGpibPvt->pportInstance;
     deviceInstance *pdeviceInstance = pdevGpibPvt->pdeviceInstance;
-    int nchars = 0, lenmsg = 0, lenEos = 0;;
+    int nchars = 0, lenmsg = 0, eosLen = 0, callSetEos = 0;
     asynStatus status;
 
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibPrepareToRead\n",precord->name);
     if(!failure && pdevGpibPvt->start)
         failure = pdevGpibPvt->start(pgpibDpvt,failure);
-    if(failure) {
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-        return gpibRead(pgpibDpvt,failure);
-    }
+    if(failure)  goto done;
     epicsMutexMustLock(pportInstance->lock);
     /*Since queueReadRequest calls lock waitForSRQ should not be true*/
     assert(!pdeviceInstance->waitForSRQ);
@@ -584,16 +584,28 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     }
     epicsMutexUnlock(pportInstance->lock);
     if(pgpibCmd->eos) {
-        lenEos = strlen(pgpibCmd->eos);
-        if(lenEos==0) lenEos = 1;
+        eosLen = strlen(pgpibCmd->eos);
+        if(eosLen==0) eosLen = 1;
     } else {
-        lenEos = 0;
+        eosLen = 0;
     }
-    status = pgpibDpvt->pasynOctet->setEos(
-        pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,lenEos);
-    if(status!=asynSuccess) {
-        printf("%s pasynOctet->setEos failed %s\n",
-            precord->name,pgpibDpvt->pasynUser->errorMessage);
+    if(eosLen!=pdeviceInstance->eosLen) {
+        callSetEos = 1;
+    } else if(eosLen>2) {
+        callSetEos = 1;
+    } else if(eosLen>0) {
+        if(strcmp(pgpibCmd->eos,pdeviceInstance->eos)!=0) callSetEos = 1;
+    }
+    if(callSetEos) {
+        status = pgpibDpvt->pasynOctet->setEos(
+            pgpibDpvt->asynOctetPvt,pgpibDpvt->pasynUser,pgpibCmd->eos,eosLen);
+        if(status!=asynSuccess) {
+            printf("%s pasynOctet->setEos failed %s\n",
+                precord->name,pgpibDpvt->pasynUser->errorMessage);
+            failure = -1; goto done;
+        }
+        pdeviceInstance->eosLen = eosLen;
+        if(eosLen!=0 && eosLen<=2) strcpy(pdeviceInstance->eos,pgpibCmd->eos);
     }
     switch(cmdType) {
     case GPIBREADW:
@@ -602,8 +614,7 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
     case GPIBEFASTI:
         if(!pgpibCmd->cmd) {
             printf("%s pgpibCmd->cmd is null\n",precord->name);
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-            return gpibRead(pgpibDpvt,-1);
+            failure = -1; break;
         }
         lenmsg = strlen(pgpibCmd->cmd);
         nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenmsg);
@@ -613,17 +624,20 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
                 return gpibReadWaitComplete(pgpibDpvt,-1);
             }
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
-            return gpibRead(pgpibDpvt,-1);
+            failure = -1; break;
         }
         if(cmdType&(GPIBREADW|GPIBEFASTIW)) return 0;
     case GPIBRAWREAD:
-        return gpibRead(pgpibDpvt,0);
+        break;
         break;
     default:
         printf("%s gpibPrepareToRead can't handle cmdType %d",
             precord->name,cmdType);
+        failure = -1;
     }
-    return gpibRead(pgpibDpvt,-1);
+done:
+    if(failure) recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+    return gpibRead(pgpibDpvt,failure);
 }
 
 static int gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int failure)
@@ -639,6 +653,8 @@ static int gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int failure)
     /*check that pgpibDpvt is owner of waitForSRQ*/
     if(!pdeviceInstance->waitForSRQ) {
         epicsMutexUnlock(pportInstance->lock);
+        printf("%s gpibReadWaitComplete is not owner of waitForSRQ. Why?\n",
+            precord->name);
         return -1;
     }
     assert(pdeviceInstance->pgpibDpvt==pgpibDpvt);
@@ -667,8 +683,7 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
     if(failure) goto done;
     if(!pgpibDpvt->msg) {
         printf("%s pgpibDpvt->msg is null\n",precord->name);
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
-        nchars = 0;
+        nchars = 0; failure = -1; goto done;
     } else {
         nchars = pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,
             pgpibDpvt->msg,pgpibCmd->msgLen);
@@ -678,7 +693,6 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
     pgpibDpvt->msgInputLen = nchars;
     if(nchars==0) {
         gpibTimeoutHappened(pgpibDpvt);
-        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
         failure = -1; goto done;
     }
     if(nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
@@ -692,6 +706,7 @@ done:
         printf("%s pasynManager->unlock failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
     }
+    if(failure) recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
     return failure;
 }
 

@@ -99,7 +99,7 @@ struct gpibCmd {
 #define IB_Q_LOW     asynQueuePriorityLow
 #define IB_Q_MEDIUM  asynQueuePriorityMedium
 #define IB_Q_HIGH    asynQueuePriorityHigh
-#define FILL    {NULL,0,0,NULL,NULL,0,0,NULL,0,0,NULL,NULL,-1}
+#define FILL    {0,0,0,0,0,0,0,0,0,0,0,0,0}
 #define FILL10  FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL,FILL
 
 struct devGpibNames {
