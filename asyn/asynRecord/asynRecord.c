@@ -146,8 +146,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
         db_post_events(pasynRec, &pasynRec->FIELD, monitor_mask); \
         pasynRecPvt->old.FIELD = pasynRec->FIELD; }
 
-typedef enum {stateIdle,stateIO,stateGetOption,stateSetOption,stateConnect} 
-              callbackState;
+typedef enum {stateIdle,stateIO,stateGetOption,stateSetOption} callbackState;
 
 typedef struct asynRecPvt {
     asynRecord *prec;      /* Pointer to record */
@@ -207,7 +206,6 @@ static long init_record(asynRecord *pasynRec, int pass)
 static long process(asynRecord *pasynRec)
 {
    asynRecPvt* pasynRecPvt = pasynRec->dpvt;
-   asynQueuePriority priority;
 
    epicsMutexMustLock(pasynRecPvt->lock);
    if(!pasynRec->pact && pasynRecPvt->state==stateIdle) 
@@ -220,11 +218,8 @@ static long process(asynRecord *pasynRec)
       if (pasynRec->nrrd > pasynRec->imax) pasynRec->nrrd = pasynRec->imax;
       if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
       pasynRecPvt->callbackShouldProcess = 1;
-      if (pasynRecPvt->state == stateConnect) 
-         priority = asynQueuePriorityConnect;
-      else 
-         priority = asynQueuePriorityLow;
-      pasynManager->queueRequest(pasynRecPvt->pasynUser, priority, 0.0);
+      pasynManager->queueRequest(pasynRecPvt->pasynUser, 
+                                 asynQueuePriorityLow, 0.0);
       pasynRec->pact = TRUE;
       return(0);
    }
@@ -258,7 +253,6 @@ static long special(struct dbAddr *paddr, int after)
 
     if (!after) return(status);
     epicsMutexMustLock(pasynRecPvt->lock);
-    resetError(pasynRec);
     /* The first set of fields can be handled even if state != stateIdle */
     switch (fieldIndex) {
        case asynRecordTB0: 
@@ -316,6 +310,16 @@ static long special(struct dbAddr *paddr, int after)
        case asynRecordENBL:
           pasynManager->enable(pasynUser, pasynRec->enbl);
           goto unlock;
+       case asynRecordCNCT: 
+          /* Connect or disconnect from device */
+          /* This is supposed to be done in callback thread? */
+         if (pasynRec->cnct)
+            pasynRecPvt->pasynCommon->connect(pasynRecPvt->asynCommonPvt, 
+                                              pasynUser);
+         else
+            pasynRecPvt->pasynCommon->disconnect(pasynRecPvt->asynCommonPvt, 
+                                                 pasynUser);
+         goto unlock;
     }
 
     /* These cases require idle state */
@@ -325,10 +329,10 @@ static long special(struct dbAddr *paddr, int after)
        goto unlock;
     } 
     switch (fieldIndex) {
-       case asynRecordSDEV:
-          strcpy(pasynRec->port, pasynRec->sdev);
+       case asynRecordSOCK:
+          strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
-          status = drvGenericSerialConfigure(pasynRec->port, pasynRec->sdev, 
+          status = drvGenericSerialConfigure(pasynRec->port, pasynRec->sock, 
                                              0, 0);
           if (status != asynSuccess) goto unlock;
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
@@ -354,11 +358,6 @@ static long special(struct dbAddr *paddr, int after)
           asynPrint(pasynUser,ASYN_TRACE_FLOW,
               "%s: special() port=%s, addr=%d scanOnce request\n",
               pasynRec->name, pasynRec->port, pasynRec->addr);
-          scanOnce(pasynRec);
-          break;
-       case asynRecordCNCT: 
-          /* Connect or disconnect from device */
-          pasynRecPvt->state = stateConnect;
           scanOnce(pasynRec);
           break;
     }
@@ -455,7 +454,7 @@ static void monitorStatus(asynRecord *pasynRec)
     int trace_mask;
     FILE *traceFd;
 
-    monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+    monitor_mask = DBE_VALUE | DBE_LOG;
     
     trace_mask = pasynTrace->getTraceMask(pasynUser);
     pasynRec->tb0 = (trace_mask & ASYN_TRACE_ERROR)    ? 1 : 0;
@@ -699,14 +698,6 @@ static void asynCallback(asynUser *pasynUser)
       case stateIO:        performIO(pasynUser); break;
       case stateSetOption: setOption(pasynUser); break;
       case stateGetOption: getOptions(pasynUser); break;
-      case stateConnect:
-         if (pasynRec->cnct)
-            pasynRecPvt->pasynCommon->connect(pasynRecPvt->asynCommonPvt, 
-                                              pasynUser);
-         else
-            pasynRecPvt->pasynCommon->disconnect(pasynRecPvt->asynCommonPvt, 
-                                                 pasynUser);
-         break;
       default:
          printf("%s asynCallback illegal state %d\n",
                 pasynRec->name,pasynRecPvt->state);
@@ -822,8 +813,8 @@ static void performIO(asynUser *pasynUser)
          /* Something is wrong if we couldn't write everything */
          reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                      "Write error",
-                     "write error in performIO, %s", 
-                     pasynUser->errorMessage);
+                     "write error in performIO, nout=%d, %s", 
+                     nout, pasynUser->errorMessage);
    }
     
    if ((pasynRec->tmod == asynTMOD_Read) ||
@@ -859,7 +850,7 @@ static void performIO(asynUser *pasynUser)
                      ninp, pasynUser->errorMessage);
       /* Check for input buffer overflow */
       if ((pasynRec->ifmt == asynFMT_ASCII) && 
-          (ninp >= sizeof(pasynRec->ainp))) {
+          (ninp >= (int)sizeof(pasynRec->ainp))) {
          reportError(pasynRec, READ_ALARM, MINOR_ALARM,
                      "Buffer overflow",
                      "buffer overflow in performIO, ninp=%d, %s", 
@@ -976,7 +967,7 @@ static void getOptions(asynUser *pasynUser)
     for (i=0; i<NUM_FLOW_CHOICES; i++)
        if (strcmp(optbuff, flow_control_choices[i]) == 0) pasynRec->fctl = i;
 
-    monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+    monitor_mask = DBE_VALUE | DBE_LOG;
     
     POST_IF_NEW(baud);
     POST_IF_NEW(prty);
@@ -994,8 +985,6 @@ static void reportError(asynRecord *pasynRec, int status, int severity,
    char buffer[200];
    va_list  pvar;
 
-   recGblSetSevr(pasynRec, status, severity);
-
    va_start(pvar,pformat);
    vsprintf(buffer, pformat, pvar);
    pasynTrace->print(pasynUser, ASYN_TRACE_ERROR, "%s: %s\n", 
@@ -1005,9 +994,10 @@ static void reportError(asynRecord *pasynRec, int status, int severity,
    strcpy(pasynRec->errs, errorMessage);
    if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
        strcpy(pasynRecPvt->old.errs, pasynRec->errs);
-       monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+       monitor_mask = DBE_VALUE | DBE_LOG;
        db_post_events(pasynRec, pasynRec->errs, monitor_mask);
    }
+   recGblSetSevr(pasynRec, status, severity);
 }
 
 static void resetError(asynRecord *pasynRec)
@@ -1018,7 +1008,7 @@ static void resetError(asynRecord *pasynRec)
    strcpy(pasynRec->errs, "");
    if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {
        strcpy(pasynRecPvt->old.errs, pasynRec->errs);
-       monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
+       monitor_mask = DBE_VALUE | DBE_LOG;
        db_post_events(pasynRec, pasynRec->errs, monitor_mask);
    }
 }
