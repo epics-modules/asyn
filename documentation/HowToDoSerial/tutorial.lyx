@@ -1274,7 +1274,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-21 17:42:40 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-04-22 21:14:21 $$
 \newline 
 ############################################################################
 \newline 
@@ -1587,8 +1587,10 @@ To create the diagnostic record, add a line like
 \newline 
 
 \family typewriter 
+\size small 
 dbLoadRecords("../../db/asynRecord.db","P=AB300,R=Test,PORT=L0,ADDR=0,IMAX=0,OMAX=0")
 \family default 
+\size default 
 
 \newline 
 
@@ -1629,7 +1631,7 @@ R
  
 \layout Standard
 
-To run the asynTrace screen, add 
+To run the asynRecord screen, add 
 \shape italic 
 <asynTop
 \family typewriter 
