@@ -789,7 +789,7 @@ static asynGpibPort gsTi9914 = {
 };
 
 int gsIP488Configure(char *portName,int carrier, int module, int intVec,
-    int autoConnect,int priority)
+    int priority, int noAutoConnect)
 {
     gpib *pgpib;
     int ipstatus;
@@ -823,7 +823,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int intVec,
     pgpib->waitForInterrupt = epicsEventMustCreate(epicsEventEmpty);
     pgpib->regs = regs;
     pgpib->asynGpibPvt = pasynGpib->registerPort(pgpib->portName,
-        1,autoConnect, &gsTi9914,pgpib,priority,0);
+        1,!noAutoConnect, &gsTi9914,pgpib,priority,0);
     return(0);
 }
 
@@ -833,24 +833,17 @@ static const iocshArg gsIP488ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg gsIP488ConfigureArg1 = { "carrier",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg2 = { "module",iocshArgInt};
 static const iocshArg gsIP488ConfigureArg3 = { "intVec",iocshArgInt};
-static const iocshArg gsIP488ConfigureArg4 = { "autoConnect",iocshArgInt};
-static const iocshArg gsIP488ConfigureArg5 = { "priority",iocshArgInt};
+static const iocshArg gsIP488ConfigureArg4 = { "priority",iocshArgInt};
+static const iocshArg gsIP488ConfigureArg5 = { "disable auto-connect",iocshArgInt};
 static const iocshArg *gsIP488ConfigureArgs[] = {&gsIP488ConfigureArg0,
     &gsIP488ConfigureArg1, &gsIP488ConfigureArg2, &gsIP488ConfigureArg3,
     &gsIP488ConfigureArg4,&gsIP488ConfigureArg5};
 static const iocshFuncDef gsIP488ConfigureFuncDef = {"gsIP488Configure",6,gsIP488ConfigureArgs};
 static void gsIP488ConfigureCallFunc(const iocshArgBuf *args)
 {
-    char  *portName = args[0].sval;
-    int     carrier = args[1].ival;
-    int      module = args[2].ival;
-    int      intVec = args[3].ival;
-    int autoConnect = args[4].ival;
-    int    priority = args[5].ival;
-
-    gsIP488Configure (portName, carrier, module, intVec, autoConnect, priority);
+    gsIP488Configure (args[0].sval, args[1].ival, args[2].ival, args[3].ival,
+                                                args[4].ival, args[5].ival);
 }
-
 
 /*
  * This routine is called before multitasking has started, so there's

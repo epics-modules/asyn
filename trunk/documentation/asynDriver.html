@@ -1547,7 +1547,7 @@ the IOC and devices connected through Ethernet/Serial converter boxes.</p>
 
 <p>Serial ports are configured with the <tt>drvGenericSerialConfigure</tt>
 and <tt>asynSetPortOption</tt> commands:</p>
-<pre>   drvGenericSerialConfigure("portName","ttyName",autoConnect,priority)
+<pre>   drvGenericSerialConfigure("portName","ttyName",priority,noAutoConnect)
    asynSetPortOption("portName","key","value")</pre>
 where the arguments are:
 <ul>
@@ -1556,9 +1556,9 @@ where the arguments are:
     hardware serial port (e.g. "/dev/ttyS0") or the Internet host name and
     TCP port number of an Ethernet terminal concentrator (e.g.
     "164.54.9.90:4002", or "serials8n3:4002").</li>
-  <li>autoConnect - Should portThread automatically connect.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
+  <li>noAutoConnect - Zero or missing indicates that portThread should automatically connect.  Non-zero if explicit connect command must be issued.</li>
 </ul>
 
 <p>The following table summarizes the generic serial driver asynSetPortOption
@@ -1622,7 +1622,7 @@ carrier.</p>
 tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
-drvGenericSerialConfigure("L0","/tyGS/0/0",1,0,0)
+drvGenericSerialConfigure("L0","/tyGS/0/0",0,0)
 asynSetPortOption("L0","baud","9600")</pre>
 
 <h3><a name="vxi11"></a>vxi11</h3>
@@ -1653,7 +1653,7 @@ details.</p>
 <pre>    E2050Reboot("inet_addr")
     E5810Reboot("inet_addr","password")
     vxi11Configure("portName","inet_addr",recoverWithIFC,timeout,
-        "vxiName",autoConnect,priority)</pre>
+        "vxiName",priority,noAutoConnect)</pre>
 where
 <ul>
   <li>inet_addr - Internet Address</li>
@@ -1665,16 +1665,16 @@ where
   <li>timeout - I/O operation timeout in seconds as a double. If 0.0 then a
     default is assigned.</li>
   <li>vxiName - Must be chosen as specified above.</li>
-  <li>autoConnect - Should portThread automatically connect.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing then epicsThreadPriorityMedium is used.</li>
+  <li>noAutoConnect - Zero or missing indicates that portThread should automatically connect.  Non-zero if explicit connect command must be issued.</li>
 </ul>
 
 <h3><a name="gsIP488"></a>Green Springs IP488</h3>
 
 <p>This is support for the Green Springs Industry Pack GPIB carrier. The
 configuration command is:</p>
-<pre>    gsIP488Configure(portName,carrier,module,intVec,autoConnect,priority)</pre>
+<pre>    gsIP488Configure(portName,carrier,module,intVec,priority,noAutoConnect)</pre>
 where
 <ul>
   <li>portName - An ascii string specifying the port name the will be
@@ -1682,15 +1682,15 @@ where
   <li>carrier - An integer identifying the Industry Pack Carrier</li>
   <li>module - An integer identifying the module on the carrier</li>
   <li>intVec - An integer specifying the interrupt vector</li>
-  <li>autoConnect - Should portThread automatically connect.</li>
   <li>priority - In integer specifying the priority of the port thread. A
     value of 0 will result in a defalt value being assigned</li>
+  <li>noAutoConnect - Zero or missing indicates that portThread should automatically connect.  Non-zero if explicit connect command must be issued.</li>
 </ul>
 
 <p>An example is:</p>
 <pre>#The following is for the Greensprings IP488 on an MV162 
 ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
-gsIP488Configure("L0",0,0,0x61,1,0)</pre>
+gsIP488Configure("L0",0,0,0x61,0,0)</pre>
 <hr>
 
 <center>
