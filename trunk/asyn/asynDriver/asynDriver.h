@@ -15,6 +15,7 @@
 #ifndef ASYNDRIVER_H
 #define ASYNDRIVER_H
 
+#include <epicsStdio.h>
 #include "shareLib.h"
 
 #ifdef __cplusplus
