@@ -921,8 +921,8 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
     Device_ReadResp  devReadR;
 
     assert(data);
-    if(!pdevLink) return asynError;
-    if(!vxiIsPortConnected(pvxiLink,pasynUser)) return asynError;
+    if(!pdevLink) return -1;
+    if(!vxiIsPortConnected(pvxiLink,pasynUser)) return -1;
     if(!pdevLink->connected) return -1;
     devReadP.lid = pdevLink->lid;
     /* device link is created; do the read */
@@ -997,8 +997,8 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     assert(data);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d vxiWrite numchars %d\n",pvxiLink->portName,addr,numchars);
-    if(!pdevLink) return asynError;
-    if(!vxiIsPortConnected(pvxiLink,pasynUser)) return asynError;
+    if(!pdevLink) return -1;
+    if(!vxiIsPortConnected(pvxiLink,pasynUser)) return -1;
     if(!pdevLink->connected) return -1;
     devWriteP.lid = pdevLink->lid;;
     devWriteP.io_timeout = setIoTimeout(pvxiLink,pasynUser);
@@ -1042,11 +1042,11 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
                 devWriteP.data.data_val,devWriteP.data.data_len,
                 "%s %d vxiWrite\n",pvxiLink->portName,addr);
+            data += status;
+            numchars -= status;
+            rtnlen += status;
         }
         xdr_free((const xdrproc_t) xdr_Device_WriteResp, (char *) &devWriteR);
-        data += lennow;
-        numchars -= lennow;
-        rtnlen += lennow;
     } while(status==lennow && numchars>0);
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
