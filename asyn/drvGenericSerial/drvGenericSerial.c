@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.23 2004-03-17 19:56:54 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.24 2004-03-24 20:02:03 norume Exp $
  */
 
 #include <string.h>
@@ -124,19 +124,6 @@ closeConnection(ttyController_t *tty)
 }
 
 /*
- * Report error and close a connection
- */
-static void
-reportFailure(ttyController_t *tty, const char *caller, const char *reason)
-{
-      asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s %s\n",
-                        caller,
-                        tty->serialDeviceName,
-                        reason);
-}
-
-/*
  * Unblock the I/O operation
  */
 static void
@@ -161,6 +148,8 @@ timeoutHandler(void *p)
 static asynStatus
 setMode(ttyController_t *tty)
 {
+    asynUser *pasynUser = tty->pasynUser;
+
 #if defined(HAVE_TERMIOS)
     struct termios termios;
     int baudCode;
@@ -184,7 +173,8 @@ setMode(ttyController_t *tty)
     case 115200:baudCode = B115200; break;
     case 230400:baudCode = B230400; break;
     default:
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "Invalid speed.\n");
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                            "Invalid speed.");
         return asynError;
     }
     termios.c_cflag = tty->cflag;
@@ -196,9 +186,9 @@ setMode(ttyController_t *tty)
     cfsetispeed(&termios,baudCode);
     cfsetospeed(&termios,baudCode);
     if (tcsetattr(tty->fd, TCSADRAIN, &termios) < 0) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                  "drvGenericSerial: Can't set `%s' attributes: %s\n",
-                       tty->serialDeviceName, strerror(errno));
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                  "Can't set \"%s\" attributes: %s",
+                                       tty->serialDeviceName, strerror(errno));
         return asynError;
     }
     return asynSuccess;
@@ -232,7 +222,7 @@ setBaud (ttyController_t *tty)
     return asynSuccess;
 #else
     asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-              "Warning: drvGenericSerial doesn't know how to set serial port mode on this machine.\n");
+              "Don't know how to set serial port mode on this machine.\n");
     return asynSuccess; 
 #endif
 }
@@ -251,8 +241,8 @@ openConnection (ttyController_t *tty)
      */
     assert(tty);
     if (tty->fd >= 0) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "drvGenericSerial: Link already open!\n");
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                      "drvGenericSerial: Link already open!");
         return asynError;
     }
 
@@ -269,9 +259,8 @@ openConnection (ttyController_t *tty)
          * Create the socket
          */
         if ((tty->fd = epicsSocketCreate(PF_INET, SOCK_STREAM, 0)) < 0) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "drvGenericSerial: Can't create socket: %s\n",
-                           strerror(errno));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                  "Can't create socket: %s", strerror(errno));
             return asynError;
         }
         epicsInterruptibleSyscallArm(tty->interruptibleSyscallContext, tty->fd, epicsThreadGetIdSelf());
@@ -283,18 +272,18 @@ openConnection (ttyController_t *tty)
         i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
         epicsTimerCancel(tty->timer);
         if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "drvGenericSerial: Timed out attempting to connect to %s\n",
-                        tty->serialDeviceName);
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "Timed out attempting to connect to %s",
+                                                        tty->serialDeviceName);
             if (!epicsInterruptibleSyscallWasClosed(tty->interruptibleSyscallContext))
                 close(tty->fd);
             tty->fd = -1;
             return asynError;
         }
         if (i < 0) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "drvGenericSerial: Can't connect to %s: %s\n",
-                        tty->serialDeviceName, strerror(errno));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                  "drvGenericSerial: Can't connect to %s: %s",
+                                        tty->serialDeviceName, strerror(errno));
             close(tty->fd);
             tty->fd = -1;
             return asynError;
@@ -307,9 +296,9 @@ openConnection (ttyController_t *tty)
          * present and we plan to use the line in CLOCAL mode.
          */
         if ((tty->fd = open(tty->serialDeviceName, O_RDWR|O_NOCTTY|O_NONBLOCK, 0)) < 0) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "drvGenericSerial: Can't open `%s': %s\n",
-                        tty->serialDeviceName, strerror(errno));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "Can't open %s: %s\n",
+                                        tty->serialDeviceName, strerror(errno));
             return asynError;
         }
         epicsInterruptibleSyscallArm(tty->interruptibleSyscallContext, tty->fd, epicsThreadGetIdSelf());
@@ -325,9 +314,9 @@ openConnection (ttyController_t *tty)
          */
         tcflush(tty->fd, TCIOFLUSH);
         if (fcntl(tty->fd, F_SETFL, 0) < 0) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "drvGenericSerial: Can't set `%s' file flags: %s\n",
-                        tty->serialDeviceName, strerror(errno));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "Can't set %s file flags: %s",
+                                        tty->serialDeviceName, strerror(errno));
             close(tty->fd);
             tty->fd = -1;
             return asynError;
@@ -377,8 +366,6 @@ drvGenericSerialGetPortOption(void *drvPvt, asynUser *pasynUser,
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int l;
 
-    if (tty->isRemote)
-        printf ("Warning -- port option parameters are ignored for remote terminal connections.\n");
     if (epicsStrCaseCmp(key, "baud") == 0) {
         l = epicsSnprintf(val, valSize, "%d", tty->baud);
     }
@@ -418,11 +405,13 @@ drvGenericSerialGetPortOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%c", c);
     }
     else {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"Unsupported key `%s'\n", key);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                "Unsupported key \"%s\"", key);
         return asynError;
     }
     if (l >= valSize) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"Value buffer for key '%s' is too small.\n", key);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                            "Value buffer for key '%s' is too small.", key);
         return asynError;
     }
     return asynSuccess;
@@ -437,7 +426,7 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
 
     assert(tty);
     if (tty->isRemote) {
-        printf ("Warning -- port option parameters are ignored for remote terminal connections.\n");
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"Warning -- port options are ignored for remote terminal connections.\n");
         return asynSuccess;
     }
     if (epicsStrCaseCmp(key, "baud") == 0) {
@@ -468,7 +457,8 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
         case 115200: break;
         case 230400: break;
         default:
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "Invalid speed.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                            "Invalid speed.");
             return asynError;
         }
         tty->baud = baud;
@@ -487,7 +477,8 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
             tty->cflag = (tty->cflag & ~CSIZE) | CS8;
         }
         else {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,"Invalid number of bits.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid number of bits.");
             return asynError;
         }
     }
@@ -504,7 +495,8 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
             tty->cflag |= PARODD;
         }
         else {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "Invalid parity.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                            "Invalid parity.");
             return asynError;
         }
     }
@@ -516,7 +508,8 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
             tty->cflag |= CSTOPB;
         }
         else {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "Invalid number of stop bits.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                "Invalid number of stop bits.");
             return asynError;
         }
     }
@@ -528,7 +521,8 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
             tty->cflag &= ~CLOCAL;
         }
         else {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "Invalid clocal value.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid clocal value.");
             return asynError;
         }
     }
@@ -547,14 +541,14 @@ drvGenericSerialSetPortOption(void *drvPvt, asynUser *pasynUser,
 #endif
         }
         else {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                      "Invalid crtscts value.\n");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                      "Invalid crtscts value.");
             return asynError;
         }
     }
     else {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                  "Unsupported key `%s'\n", key);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                "Unsupported key \"%s\"", key);
         return asynError;
     }
     if (tty->fd >= 0) {
@@ -585,12 +579,15 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     wrote = write(tty->fd, (char *)data, numchars);
     epicsTimerCancel(tty->timer);
     if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
-        reportFailure(tty, "drvGenericSerialWrite", "timeout");
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                    "%s write timeout", tty->serialDeviceName);
         closeConnection(tty);
         return asynError;
     }
     if (wrote != numchars) {
-        reportFailure(tty, "drvGenericSerialWrite", strerror(errno));
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s write error: %s",
+                                        tty->serialDeviceName, strerror(errno));
         closeConnection(tty);
         return -1;
     }
@@ -660,15 +657,19 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
         thisRead = read(tty->fd, tty->inBuffer + tty->inBufferHead, thisRead);
         epicsTimerCancel(tty->timer);
         if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
-            reportFailure(tty, "drvGenericSerialRead", "timeout");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                    "%s read timeout", tty->serialDeviceName);
             break;
         }
         if (thisRead < 0) {
-            reportFailure(tty, "drvGenericSerialRead", strerror(errno));
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s read error: %s",
+                                        tty->serialDeviceName, strerror(errno));
             break;
         }
         if (thisRead == 0) {
-            reportFailure(tty, "drvGenericSerialRead", "unexpected EOF");
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                    "%s unexpected EOF", tty->serialDeviceName);
             break;
         }
         asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER,
@@ -718,9 +719,9 @@ drvGenericSerialSetEos(void *drvPvt,asynUser *pasynUser,const char *eos,int eosl
             "drvGenericSerialSetEos %d: ", eoslen);
     switch (eoslen) {
     default:
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-           "%s drvGenericSerialSetEos illegal eoslen %d\n",
-            tty->serialDeviceName,eoslen);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                        "%s drvGenericSerialSetEos illegal eoslen %d",
+                                                tty->serialDeviceName,eoslen);
         return asynError;
     case 2: tty->eos[1] = eos[1]; /* fall through to case 1 */
     case 1: tty->eos[0] = eos[0]; break;
@@ -742,17 +743,17 @@ drvGenericSerialGetEos(void *drvPvt,asynUser *pasynUser,char *eos,
 
     assert(tty);
     if(tty->eoslen>eossize) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-           "%s drvGenericSerialGetEos eossize %d < tty->eoslen %d\n",
-            tty->serialDeviceName,eossize,tty->eoslen);
-        *eoslen = 0;
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+           "%s drvGenericSerialGetEos eossize %d < tty->eoslen %d",
+                                tty->serialDeviceName,eossize,tty->eoslen);
+                            *eoslen = 0;
         return(asynError);
     }
     switch (tty->eoslen) {
     default:
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-           "%s drvGenericSerialGetEos illegal tty->eoslen %d\n",
-            tty->serialDeviceName,tty->eoslen);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s drvGenericSerialGetEos illegal tty->eoslen %d",
+                                            tty->serialDeviceName,tty->eoslen);
         return asynError;
     case 2: eos[1] = tty->eos[1]; /* fall through to case 1 */
     case 1: eos[0] = tty->eos[0]; break;
@@ -838,9 +839,8 @@ drvGenericSerialConfigure(char *portName,
      tty->timer = epicsTimerQueueCreateTimer(
          pserialBase->timerQueue, timeoutHandler, tty);
      if(!tty->timer) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                  "drvGenericSerial: Can't create timer.\n");
-        return asynError;
+        errlogPrintf("drvGenericSerialConfigure: Can't create timer.\n");
+        return -1;
     }
     tty->fd = -1;
     tty->serialDeviceName = epicsStrDup(ttyName);
