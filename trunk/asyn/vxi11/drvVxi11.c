@@ -1054,9 +1054,10 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
         xdr_free((const xdrproc_t) xdr_Device_ReadResp, (char *) &devReadR);
     } while(!devReadR.reason && thisRead>0);
     if(eomReason) {
-        if(devReadR.reason & VXI_REQCNT) *eomReason |= EOMCNT;
-        if(devReadR.reason & VXI_CHR) *eomReason |= EOMEOS;
-        if(devReadR.reason & VXI_ENDR) *eomReason |= EOMEND;
+        *eomReason = 0;
+        if(devReadR.reason & VXI_REQCNT) *eomReason |= ASYN_EOM_CNT;
+        if(devReadR.reason & VXI_CHR) *eomReason |= ASYN_EOM_EOS;
+        if(devReadR.reason & VXI_ENDR) *eomReason |= ASYN_EOM_END;
     }
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/

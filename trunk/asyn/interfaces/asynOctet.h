@@ -16,9 +16,9 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-#define EOMCNT 0x0001 /*Request count reached*/
-#define EOMEOS 0x0002 /*End of String detected*/
-#define EOMEND 0x0004 /*End indicator detected*/
+#define ASYN_EOM_CNT 0x0001 /*Request count reached*/
+#define ASYN_EOM_EOS 0x0002 /*End of String detected*/
+#define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{

@@ -27,6 +27,16 @@ menu(asynENABLE) {
     choice(asynENABLE_Disable,"Disable")
     choice(asynENABLE_Enable,"Enable")
 }
+menu(asynEOMREASON) {
+    choice(asynEOMREASONNone,"None")
+    choice(asynEOMREASONCNT,"Count")
+    choice(asynEOMREASONEOS,"Eos")
+    choice(asynEOMREASONCNTEOS,"Count Eos")
+    choice(asynEOMREASONEND,"End")
+    choice(asynEOMREASONCNTEND,"Count End")
+    choice(asynEOMREASONEOSEND,"Eos End")
+    choice(asynEOMREASONCNTEOSEND,"Count Eos End")
+}
 menu(serialBAUD) {
     choice(serialBAUD_unknown,"Unknown")
     choice(serialBAUD_300,"300")
@@ -238,6 +248,13 @@ recordtype(asyn) {
         promptgroup(GUI_COMMON)
         interest(1)
         menu(asynFMT)
+    }
+    field(EOMR,DBF_MENU) {
+        prompt("EOM reason")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_NOMOD)
+        interest(1)
+        menu(asynEOMREASON)
     }
 
 # Serial control fields

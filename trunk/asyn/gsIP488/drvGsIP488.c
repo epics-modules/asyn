@@ -329,9 +329,9 @@ void gsip488(void *pvt)
         *pgsport->nextByteRead = octet;
         --(pgsport->bytesRemainingRead); ++(pgsport->nextByteRead);
         if((pgsport->eos != -1 ) && (octet == pgsport->eos))
-            pgsport->eomReason |= EOMEOS;
-        if(END&isr0) pgsport->eomReason |= EOMEND;
-        if(pgsport->bytesRemainingRead == 0) pgsport->eomReason |= EOMCNT;
+            pgsport->eomReason |= ASYN_EOM_EOS;
+        if(END&isr0) pgsport->eomReason |= ASYN_EOM_END;
+        if(pgsport->bytesRemainingRead == 0) pgsport->eomReason |= ASYN_EOM_CNT;
         if(pgsport->eomReason) {
             pgsport->transferState = transferStateIdle;
             writeRegister(pgsport,AUXMR,LONC);
