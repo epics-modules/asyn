@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.32 2004-03-29 22:41:48 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.33 2004-03-30 01:44:02 norume Exp $
  */
 
 #include <string.h>
@@ -714,12 +714,35 @@ drvGenericSerialFlush(void *drvPvt,asynUser *pasynUser)
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s flush\n", tty->serialDeviceName);
-    if (!tty->isRemote && (tty->fd >= 0)) {
+    if (tty->fd >= 0) {
+        if (tty->isRemote) {
+            /*
+             * Toss characters until there are none left
+             */
 #ifdef vxWorks
-        ioctl(tty->fd, FIOFLUSH, 0);
+            int flag = 1;
+            if (ioctl(tty->fd, FIONBIO, &flag) >= 0) {
 #else
-        tcflush(tty->fd, TCIOFLUSH);
+            if (fcntl(tty->fd, F_SETFL, O_NONBLOCK) >= 0) {
 #endif
+                char cbuf[512];
+                while (read(tty->fd, cbuf, sizeof cbuf) > 0)
+                    continue;
+#ifdef vxWorks
+                flag = 0;
+                ioctl(tty->fd, FIONBIO, &flag);
+#else
+                fcntl(tty->fd, F_SETFL, 0);
+#endif
+            }
+        }
+        else {
+#ifdef vxWorks
+            ioctl(tty->fd, FIOFLUSH, 0);
+#else
+            tcflush(tty->fd, TCIOFLUSH);
+#endif
+        }
     }
     tty->inBufferHead = tty->inBufferTail = 0;
     tty->eosMatch = 0;
