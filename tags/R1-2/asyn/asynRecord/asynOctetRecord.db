@@ -1,0 +1,7 @@
+record(asynOctet,"$(P)$(R)")
+{
+    field(PORT,"$(PORT)")
+    field(ADDR,"$(ADDR)")
+    field(OMAX,"$(OMAX)")
+    field(IMAX,"$(IMAX)")
+}

@@ -1,0 +1,1663 @@
+#LyX 1.3 created this file. For more info see http://www.lyx.org/
+\lyxformat 221
+\textclass article
+\begin_preamble
+\usepackage{hevea}
+\usepackage{moreverb}
+\usepackage{url}
+
+\textwidth=6.5in
+\topmargin=0pt
+\headheight=0pt
+\textheight=8.6truein
+\oddsidemargin=0in
+\evensidemargin=0in
+\footskip=40pt
+
+\parindent=0pt
+\parskip=0.5ex
+\usepackage{hyperref}
+%HEVEA \def{\textbackslash}{$\backslash$} % No \textbackslash in hevea.
+\end_preamble
+\language english
+\inputencoding auto
+\fontscheme times
+\graphics default
+\paperfontsize default
+\spacing single 
+\papersize Default
+\paperpackage a4
+\use_geometry 0
+\use_amsmath 0
+\use_natbib 0
+\use_numerical_citations 0
+\paperorientation portrait
+\secnumdepth 3
+\tocdepth 2
+\paragraph_separation indent
+\defskip medskip
+\quotes_language english
+\quotes_times 2
+\papercolumns 1
+\papersides 2
+\paperpagestyle default
+
+\layout Title
+
+How to create EPICS device support for a simple serial device
+\layout Author
+
+W.
+ Eric Norum
+\newline 
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+mailto{norume@aps.anl.gov}
+\end_inset 
+
+
+\layout Section
+
+Introduction
+\layout Standard
+
+This tutorial provides step-by-step instructions on how to create EPICS
+ support for a simple serial device.
+ The steps are presented in a way that should make it possible to apply
+ them in cookbook fashion to create support for other serial devices.
+ For comprehensive description of all the details of the I/O system used
+ here, refer to the 
+\begin_inset ERT
+status Open
+
+\layout Standard
+
+\backslash 
+ahref{../../asynDriver.html}{asynDriver}
+\end_inset 
+
+ and 
+\begin_inset ERT
+status Open
+
+\layout Standard
+
+\backslash 
+ahref{../../devGpib.html}{devGpib}
+\end_inset 
+
+ documentation.
+\layout Standard
+
+This document isn't for the absolute newcomer though.
+ You must have EPICS installed on a system somewhere and know how to build
+ and run the example application.
+ In particular you must have the following installed: 
+\layout Itemize
+
+EPICS R3.14.5 or higher 
+\layout Itemize
+
+An up-to-date version of 
+\family typewriter 
+modules/asyn
+\layout Standard
+
+Serial devices can now be treated in much the same way as GPIB (IEEE-488)
+ devices.
+ Current versions of the EPICS asynDriver devGpib module contain a special
+ 'GPIB' driver capable of communicating with devices connected to serial
+ ports on the IOC or with devices connected through Ethernet/Serial converter
+ boxes.
+\layout Standard
+
+I based this tutorial on the device support I wrote for a CVI Laser Corporation
+ AB300 filter wheel.
+ You're almost certainly interested in controlling some other device so
+ you won't be able to use the information directly.
+ I chose the AB300 as the basis for this tutorial since the AB300 has a
+ very limited command set, which keeps this document small, and yet has
+ commands which raise many of the issues that you'll have to consider when
+ writing support for other devices.
+\layout Standard
+
+
+\begin_inset ERT
+status Open
+
+\layout Standard
+
+\backslash 
+begin{htmlonly}
+\newline 
+If you'd like to print this tutorial you can download a
+\newline 
+
+\backslash 
+ahref{tutorial.pdf}{PDF version}.
+\newline 
+
+\backslash 
+end{htmlonly}
+\end_inset 
+
+
+\layout Section
+
+Determine the required I/O operations
+\layout Standard
+
+The first order of business is to determine the set of operations the device
+ will have to perform.
+ A look at the AB300 documentation reveals that there are four commands
+ that must be supported.
+ Each command will be associated with an EPICS process variable (PV) whose
+ type must be appropriate to the data transferred by the command.
+ The AB300 commands and process variable record types I choose to associate
+ with them are shown in table\SpecialChar ~
+
+\begin_inset LatexCommand \ref{commandList}
+
+\end_inset 
+
+.
+\layout Standard
+
+
+\begin_inset Float table
+wide false
+collapsed false
+
+\layout Caption
+
+AB300 filter wheel commands
+\begin_inset LatexCommand \label{commandList}
+
+\end_inset 
+
+
+\layout Standard
+\align center 
+
+\begin_inset  Tabular
+<lyxtabular version="3" rows="6" columns="2">
+<features>
+<column alignment="left" valignment="top" leftline="true" rightline="true" width="0pt">
+<column alignment="left" valignment="top" rightline="true" width="0pt">
+<row topline="true" bottomline="true">
+<cell multicolumn="1" alignment="left" valignment="top" topline="true" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+CVI Laser Corporation AB300 filter wheel
+\end_inset 
+</cell>
+<cell multicolumn="2" alignment="left" valignment="top" topline="true" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+\end_inset 
+</cell>
+</row>
+<row bottomline="true">
+<cell multicolumn="1" alignment="left" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Command
+\end_inset 
+</cell>
+<cell multicolumn="1" alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+EPICS record type
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Reset 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longout 
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Go to new position 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longout 
+\end_inset 
+</cell>
+</row>
+<row>
+<cell alignment="left" valignment="top" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Query position 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longin 
+\end_inset 
+</cell>
+</row>
+<row bottomline="true">
+<cell alignment="left" valignment="top" bottomline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+Query status 
+\end_inset 
+</cell>
+<cell alignment="left" valignment="top" bottomline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\layout Standard
+
+longin  
+\end_inset 
+</cell>
+</row>
+</lyxtabular>
+
+\end_inset 
+
+
+\end_inset 
+
+
+\layout Standard
+
+There are lots of other ways that the AB300 could be handled.
+ It might be useful, for example, to treat the filter position as multi-bit
+ binary records instead.
+\layout Section
+
+Create a new application
+\layout Standard
+
+Now that the device operations and EPICS process variable types have been
+ chosen it's time to create a new EPICS application to provide a place to
+ perform subsequent software development.
+ The easiest way to do this is with the makeBaseApp.pl script supplied with
+ EPICS.
+\layout Standard
+
+Here are the commands I ran.
+ You'll have to change the 
+\family typewriter 
+/home/EPICS/R3.14.5
+\family default 
+ to the path to where your EPICS is installed.
+ If you're not running on Linux you'll also have to change all the 
+\family typewriter 
+linux-x86
+\family default 
+ to reflect the architecture you're using (
+\family typewriter 
+solaris-sparc
+\family default 
+, 
+\family typewriter 
+darwin-ppc
+\family default 
+, etc.).
+ I built the application as a 'soft' IOC running on the host machine, but
+ the serial 'GPIB' driver also works on RTEMS and vxWorks.
+\layout LyX-Code
+
+norume> 
+\family roman 
+\series bold 
+mkdir AB300
+\family default 
+\series default 
+
+\newline 
+norume> 
+\family roman 
+\series bold 
+cd AB300
+\family default 
+\series default 
+
+\newline 
+norume> 
+\family roman 
+\series bold 
+/home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -t ioc AB300
+\family default 
+\series default 
+
+\newline 
+norume> 
+\family roman 
+\series bold 
+/home/EPICS/R3.14.5/base/bin/linux-x86/makeBaseApp.pl -i -t ioc AB300
+\family default 
+\series default 
+
+\newline 
+The following target architectures are available in base:
+\newline 
+    RTEMS-pc386
+\newline 
+    linux-x86
+\newline 
+    solaris-sparc
+\newline 
+    win32-x86-cygwin
+\newline 
+    vxWorks-ppc603
+\newline 
+What architecture do you want to use? 
+\family roman 
+\series bold 
+linux-x86
+\layout Section
+
+Make some changes to the files in configure/
+\layout Standard
+
+Edit the 
+\family typewriter 
+configure/RELEASE
+\family default 
+ file which makeBaseApp.pl created and add an entry describing the path to
+ where you installed the EPICS ASYN module:
+\layout LyX-Code
+
+ASYN=/home/EPICS/R3.14.5/modules/soft/asyn
+\layout Standard
+
+Edit the 
+\family typewriter 
+configure/CONFIG
+\family default 
+ file which makeBaseApp.pl created and specify the IOC architectures on which
+ the application is to run.
+ I wanted the application to run as a soft IOC, so I uncommented the 
+\family typewriter 
+CROSS_COMPILER_TARGET_ARCHS
+\family default 
+ definition and set the definition to be empty: 
+\layout LyX-Code
+
+CROSS_COMPILER_TARGET_ARCHS =
+\layout Section
+
+Create the device support file
+\layout Standard
+
+The contents of the device support file provide all the details of the communica
+tion between the device and EPICS.
+ The easiest way to create a device support file is to copy the skeleton
+ device support file from the gpibCore module source directory to your applicati
+on source directory: 
+\layout LyX-Code
+
+norume> 
+\family roman 
+\series bold 
+cd AB300App/src
+\family default 
+\series default 
+
+\newline 
+norume> 
+\family roman 
+\series bold 
+cp /usr/EPICS/R3.14.5/modules/soft/asyn/devGpib/devSkeletonGpib.c devAB300.c
+\layout LyX-Code
+
+\layout Standard
+
+Of course, device support for a device similar to the one you're working
+ with provides an even easier starting point.
+\layout Standard
+
+The remainder this section describes the changes that I made to the skeleton
+ file in order to support the AB300 filter wheel.
+ You'll have to modify the steps as appropriate for your device.
+\layout Subsection
+
+Declare the DSET tables provided by the device support
+\layout Standard
+
+Since the AB300 provides only longin and longout records most of the 
+\family typewriter 
+DSET_
+\family default 
+\shape italic 
+xxx
+\shape default 
+ define statements can be removed.
+ Because of the way that the device initialization is performed you must
+ define an analog-in DSET even if the device provides no analog-in records
+ (as is the case for the AB300).
+\layout LyX-Code
+
+#define DSET_AI    devAB300_ai
+\newline 
+#define DSET_LI    devAB300_li
+\newline 
+#define DSET_LO    devAB300_lo
+\layout Subsection
+
+Select timeout values
+\layout Standard
+
+The default value of 
+\family typewriter 
+TIMEWINDOW
+\family default 
+ (2 seconds) is reasonable for the AB300, but I increased the value of 
+\family typewriter 
+TIMEOUT
+\family default 
+ to 5\SpecialChar ~
+seconds since the filter wheel can be slow in responding.
+\layout LyX-Code
+
+#define TIMEOUT     5.0
+\newline 
+#define TIMEWINDOW  2.0
+\layout Subsection
+
+Clean up some unused values
+\layout Standard
+
+The skeleton file provides a number of example character string arrays.
+ None are needed for the AB300 so I just removed them.
+ Not much space would be wasted by just leaving them in place however.
+\layout Subsection
+
+Declare the command array
+\layout Standard
+
+This is the hardest part of the job.
+ Here's where you have to figure how to produce the command strings required
+ to control the device and how to convert the device responses into EPICS
+ process variable values.
+\layout Standard
+
+Each command array entry describes the details of a single I/O operation
+ type.
+ The application database uses the index of the entry in the command array
+ to provide the link between the process variable and the I/O operation
+ to read or write that value.
+\layout Standard
+
+The command array entries I created for the AB300 are shown below.
+ The elements of each entry are described using the names from the 
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+ahref{../../devGpib.html}{GPIB documentation}
+\end_inset 
+
+.
+ 
+\layout Subsubsection
+
+Command array index 0 -- Device Reset
+\layout LyX-Code
+
+{&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "
+\backslash 
+377
+\backslash 
+377
+\backslash 
+033", 10, 10,
+\newline 
+       NULL, 0, 0, NULL, NULL, "
+\backslash 
+033"},
+\layout Description
+
+dset This command is associated with an longout record.
+ 
+\layout Description
+
+type A WRITE operation is to be performed.
+ 
+\layout Description
+
+pri This operation should be placed on the high-priority queue of I/O requests.
+ 
+\layout Description
+
+cmd Because this is a GPIBWRITE operation this element is unused.
+ 
+\layout Description
+
+format The format string to generate the command to be sent to the device.
+ The first two bytes are the RESET command, the third byte is the ECHO command.
+ The AB300 sends no response to a reset command so I send the 'ECHO' to
+ verify that the device is responding.
+ The AB300 resets itself fast enough that it can see an echo command immediately
+ following the reset command.
+\begin_deeper 
+\layout Standard
+
+Note that the process variable value is not used (there's no printf 
+\family typewriter 
+%
+\family default 
+ format character in the command string).
+ The AB300 is reset whenever the EPICS record is processed.
+ 
+\end_deeper 
+\layout Description
+
+rspLen The size of the readback buffer.
+ Although only one readback byte is expected I allow for a few extra bytes
+ just in case.
+ 
+\layout Description
+
+msgLen The size of the buffer into which the command string is placed.
+ I allowed a little extra space in case a longer command is used some day.
+ 
+\layout Description
+
+convert No special conversion function is needed.
+ 
+\layout Description
+
+P1,P2,P3 There's no special conversion function so no arguments are needed.
+ 
+\layout Description
+
+pdevGpibNames There's no name table.
+ 
+\layout Description
+
+eos The end-of-string value used to mark the end of the readback operation.
+ 
+\layout Subsubsection
+
+Command array index 1 -- Go to new filter position
+\layout LyX-Code
+
+{&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "
+\backslash 
+017%c", 10, 10,
+\newline 
+        NULL, 0, 0, NULL, NULL, "
+\backslash 
+030"},
+\layout Description
+
+dset This command is associated with an longout record.
+ 
+\layout Description
+
+type A WRITE operation is to be performed.
+ 
+\layout Description
+
+pri This operation should be placed on the high-priority queue of I/O requests.
+ 
+\layout Description
+
+cmd Because this is a GPIBWRITE operation this element is unused.
+ 
+\layout Description
+
+format The format string to generate the command to be sent to the device.
+ The filter position (1-6) can be converted to the required command byte
+ with the printf 
+\family typewriter 
+%c
+\family default 
+ format.
+ 
+\layout Description
+
+rspLen The size of the readback buffer.
+ Although only two readback bytes are expected I allow for a few extra bytes
+ just in case.
+ 
+\layout Description
+
+msgLen The size of the buffer into which the command string is placed.
+ I allowed a little extra space in case a longer command is used some day.
+ 
+\layout Description
+
+convert No special conversion function is needed.
+ 
+\layout Description
+
+P1,P2,P3 There's no special conversion function so no arguments are needed.
+ 
+\layout Description
+
+pdevGpibNames There's no name table.
+ 
+\layout Description
+
+eos The end-of-string value used to mark the end of the readback operation.
+ 
+\layout Subsubsection
+
+Command array index 2 -- Query filter position
+\layout LyX-Code
+
+{&DSET_LI, GPIBREAD, IB_Q_LOW, "
+\backslash 
+035", NULL, 0, 10,
+\newline 
+        convertPositionReply, 0, 0, NULL, NULL, "
+\backslash 
+030"},
+\layout Description
+
+dset This command is associated with an longin record.
+ 
+\layout Description
+
+type A READ operation is to be performed.
+ 
+\layout Description
+
+pri This operation should be placed on the high-priority queue of I/O requests.
+ 
+\layout Description
+
+cmd The command string to be sent to the device.
+ The AB300 responds to this command by sending back three bytes: the current
+ position, the controller status, and a terminating 
+\family typewriter 
+'
+\backslash 
+030'
+\family default 
+.
+ 
+\layout Description
+
+format Because this operation has its own conversion function this element
+ is unused.
+ 
+\layout Description
+
+rspLen There is no command echo to be read.
+ 
+\layout Description
+
+msgLen The size of the buffer into which the reply string is placed.
+ Although only three reply bytes are expected I allow for a few extra bytes
+ just in case.
+\layout Description
+
+convert There's no sscanf format that can convert the reply from the AB300
+ so a special conversion function must be provided.
+ 
+\layout Description
+
+P1,P2,P3 The special conversion function requires no arguments.
+ 
+\layout Description
+
+pdevGpibNames There's no name table.
+ 
+\layout Description
+
+eos The end-of-string value used to mark the end of the read operation.
+ 
+\layout Subsubsection
+
+Command array index 3 -- Query controller status
+\layout Standard
+
+This command array entry is almost identical to the previous entry.
+ The only change is that a different custom conversion function is used.
+ 
+\layout LyX-Code
+
+{&DSET_LI, GPIBREAD, IB_Q_LOW, "
+\backslash 
+035", NULL, 0, 10,
+\newline 
+        convertStatusReply, 0, 0, NULL, NULL, "
+\backslash 
+030"},
+\layout Subsection
+
+Write the special conversion functions
+\layout Standard
+
+As mentioned above, special conversion functions are need to convert reply
+ messages from the AB300 into EPICS PV values.
+ The easiest place to put these functions is just before the 
+\family typewriter 
+gpibCmds
+\family default 
+ table.
+ The conversion functions are passed a pointer to the 
+\family typewriter 
+gpibDpvt
+\family default 
+ structure and three values from the command table entry.
+ The 
+\family typewriter 
+gpibDpvt
+\family default 
+ structure contains a pointer to the EPICS record.
+ The custom conversion function uses this pointer to set the record's value
+ field.
+\layout Standard
+
+Here are the custom conversion functions I wrote for the AB300.
+ 
+\layout LyX-Code
+
+/*
+\newline 
+ * Custom conversion routines
+\newline 
+ */
+\newline 
+static int
+\newline 
+convertPositionReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
+\newline 
+{
+\newline 
+    struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
+\newline 
+
+\newline 
+    if (pdpvt->msgInputLen != 3) {
+\newline 
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+\newline 
+                      pdpvt->pasynUser->errorMessageSize,
+\newline 
+                      "Invalid reply");
+\newline 
+        return -1;
+\newline 
+    }
+\newline 
+    pli->val = pdpvt->msg[0];
+\newline 
+    return 0;
+\newline 
+}
+\newline 
+static int
+\newline 
+convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
+\newline 
+{
+\newline 
+    struct longinRecord *pli = ((struct longinRecord *)(pdpvt->precord));
+\newline 
+
+\newline 
+    if (pdpvt->msgInputLen != 3) {
+\newline 
+        epicsSnprintf(pdpvt->pasynUser->errorMessage,
+\newline 
+                      pdpvt->pasynUser->errorMessageSize,
+\newline 
+                      "Invalid reply");
+\newline 
+        return -1;
+\newline 
+    }
+\newline 
+    pli->val = pdpvt->msg[1];
+\newline 
+    return 0;
+\newline 
+}
+\layout Standard
+
+Some points of interest: 
+\layout Enumerate
+
+The custom conversion function can pass back an error message by printing
+ it to the 
+\family typewriter 
+errorMessage
+\family default 
+ buffer.
+ 
+\layout Enumerate
+
+I put in a sanity check to ensure that the end-of-string character is where
+ it should be.
+ 
+\layout Subsection
+
+Provide the device support initialization
+\layout Standard
+
+Because of way code is stored in object libraries on different systems the
+ device support parameter table must be initialized at run-time.
+ The analog-in initializer is used to perform this operation.
+ This is why all device support files must declare an analog-in DSET.
+\layout Standard
+
+Here's the initialization for the AB300 device support.
+ As you can see, most of the skeleton file values are left unchanged: 
+\layout LyX-Code
+
+static long init_ai(int parm)
+\newline 
+{
+\newline 
+  if(parm==0) {
+\newline 
+    devSupParms.name = "devAB300";
+\newline 
+    devSupParms.gpibCmds = gpibCmds;
+\newline 
+    devSupParms.numparams = NUMPARAMS;
+\newline 
+    devSupParms.timeout = TIMEOUT;
+\newline 
+    devSupParms.timeWindow = TIMEWINDOW;
+\newline 
+    devSupParms.respond2Writes = 0;
+\newline 
+  }
+\newline 
+  return(0);
+\newline 
+}
+\layout LyX-Code
+
+\layout Standard
+
+Three values have been changed: 
+\layout Enumerate
+
+The AB300 sends back values in response to commands, but needs no time delay,
+ so the 
+\family typewriter 
+respond2Writes
+\family default 
+ entry is set to 0.
+ 
+\layout Enumerate
+
+The name entry is used for diagnostic purposes only.
+ 
+\layout Section
+
+Add the device support to the application
+\layout Standard
+
+The makeBaseApp.pl script produces an application Makefile (
+\family typewriter 
+AB300App/src/Makefile
+\family default 
+) with a commented-out set of application example source files.
+ Remove the comment character and change the example names to the name of
+ the device support file created in the previous section:
+\layout LyX-Code
+
+AB300_SRCS += devAB300.c
+\layout Standard
+
+You must also link the GPIB support libraries with your application.
+ Add the following line 
+\layout LyX-Code
+
+AB300_LIBS += asyn
+\layout Standard
+
+before the
+\layout LyX-Code
+
+AB300_LIBS += $(EPICS_BASE_IOC_LIBS)
+\layout Standard
+
+line in the application Makefile.
+\layout Section
+
+Modify the application database definition file
+\layout Standard
+
+Here's where you specify the link between the DSET names defined in the
+ device support file and the DTYP fields in the application database.
+ The 
+\family typewriter 
+AB300App/src/AB300Include.dbd
+\family default 
+ file created by makeBaseApp.pl needs to be changed to include this information.
+ I used 
+\family typewriter 
+AB300Gpib
+\family default 
+ as the device type.
+\layout Standard
+
+The driver support for serial line 'GPIB' devices must also be included
+ in the application as shown.
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+verbatiminput{AB300/AB300App/src/AB300Include.dbd}
+\end_inset 
+
+
+\layout Section
+
+Create the application database file
+\layout Standard
+
+Now that the application includes the necessary device and driver support
+ it's possible to create the database describing the actual EPICS process
+ variables associated with the filter wheel.
+\layout Standard
+
+I created the file 
+\family typewriter 
+AB300App/Db/AB300.db
+\family default 
+ with the following contents:
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+verbatiminput{AB300/AB300App/Db/AB300.db}
+\end_inset 
+
+
+\layout Standard
+
+Notes: 
+\layout Enumerate
+
+The numbers following the 
+\family typewriter 
+L
+\family default 
+ in the INP and OUT fields are the number of the `link' used to communicate
+ with the filter wheel.
+ This link is set up at run time by commands in the application startup
+ script.
+ 
+\layout Enumerate
+
+The numbers following the 
+\family typewriter 
+A
+\family default 
+ in the INP and OUT fields are unused by the device support but must be
+ a valid GPIB address (0-30) since the GPIB address conversion routines
+ check the value and the diagnostic display routines require a matching
+ value.
+ 
+\layout Enumerate
+
+The numbers following the 
+\family typewriter 
+@
+\family default 
+ in the INP and OUT fields are the indices into the GPIB command array.
+ 
+\layout Enumerate
+
+The DTYP fields must match the names specified in the AB300Include.dbd database
+ definition.
+ 
+\layout Section
+
+Add the database file to the application
+\layout Standard
+
+The makeBaseApp.pl script put and exampl application database file into 
+\family typewriter 
+AB300App/Db/Makefile
+\family default 
+ as a comment.
+ Replace the example name with the name of the database file created in
+ the previous step, leaving:
+\layout LyX-Code
+
+DB += AB300.db
+\layout Section
+
+Modify the application startup script
+\layout Standard
+
+The 
+\family typewriter 
+iocBoot/iocAB300/st.cmd
+\family default 
+ application startup script created by the makeBaseApp.pl script needs a
+ few changes to get the application working properly.
+\layout Enumerate
+
+Ensure that the application database records are loaded.
+ Remove the 
+\family typewriter 
+#
+\family default 
+ and give a reasonable value to the 'user' macro:
+\begin_deeper 
+\layout LyX-Code
+
+dbLoadRecords("../../db/AB300.db","user=AB300")
+\end_deeper 
+\layout Enumerate
+
+Set up the 'link' between the IOC and the filter wheel.
+ 
+\begin_deeper 
+\layout Itemize
+
+If you're using an Ethernet/RS-232 converter or a device which communicates
+ over a telnet-style socket connection you need to specify the Internet
+ host and port number like:
+\begin_deeper 
+\layout LyX-Code
+
+drvGenericSerialConfigure("L0","164.54.9.91:4002",1,0)
+\end_deeper 
+\layout Itemize
+
+If you're using a serial line directly attached to the IOC you need something
+ like:
+\begin_deeper 
+\layout LyX-Code
+
+drvGenericSerialConfigure("L0","/dev/ttyS0",1,0)
+\newline 
+asynSetPortOption("L0", "baud", "9600")
+\newline 
+asynSetPortOption("L0", "bits", "8")
+\newline 
+asynSetPortOption("L0", "parity", "none")
+\newline 
+asynSetPortOption("L0", "stop", "1")
+\newline 
+asynSetPortOption("L0", "clocal", "Y")
+\newline 
+asynSetPortOption("L0", "crtscts", "N")
+\end_deeper 
+\layout Itemize
+
+If you're using a serial line directly attached to a vxWorks IOC you must
+ first configure the serial port interface hardware.
+ The following example shows the commands to configure a port on a GreenSprings
+ UART Industry-Pack module.
+\begin_deeper 
+\layout LyX-Code
+
+ipacAddVIPC616_01("0x6000,B0000000")
+\newline 
+tyGSOctalDrv(1)
+\newline 
+tyGSOctalModuleInit("RS232", 0x80, 0, 0)
+\newline 
+tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
+\newline 
+drvGenericSerialConfigure("L0","/tyGS/0/0",1,0)
+\newline 
+asynSetPortOption("L0","baud","9600")
+\end_deeper 
+\layout Standard
+
+In all of the above examples the first argument of the drvGenericSerialConfigure
+ and asynSetPortOption commands is the link identifier and must match the
+ 
+\family typewriter 
+L
+\family default 
+ value in the EPICS database record INP and OUT fields.
+
+The second argument of the drvGenericSerialConfigure command identifies
+the serial port to which the connection is to be made.
+The third argument sets the priority of the worker thread which performs
+the I/O operations.  A value of zero directs the command to choose a reasonable
+default value.
+The final argument is zero to
+direct the device support layer to automatically connect to the serial
+port on startup and whenever the serial port becomes disconnected.
+\end_deeper 
+\layout Enumerate
+
+(Optional) Add lines to control the debugging level of the serial line 'GPIB'
+ driver.
+ The following enables error messages and a description of every I/O operation.
+\begin_deeper 
+\layout LyX-Code
+
+asynSetTraceMask("L0",0,0x3)
+\newline 
+asynSetTraceIOMask("L0",0,0x2)
+\layout Standard
+
+A better way to control the amount and type of diagnostic output is through
+ the use of the 
+\begin_inset ERT
+status Open
+
+\layout Standard
+
+\backslash 
+ahref{
+\backslash 
+url{../asynDriver.html#DiagnosticAids}}{asynTrace}
+\end_inset 
+
+ facility.
+\end_deeper 
+\layout Section
+
+Build the application
+\layout Standard
+
+Change directories to the top-level directory of your application and:
+\layout LyX-Code
+
+norume> 
+\family roman 
+\series bold 
+make
+\layout LyX-Code
+
+\layout Standard
+
+(
+\series bold 
+gnumake
+\series default 
+ on solaris).
+\layout Standard
+
+If all goes well you'll be left with an executable program in 
+\family typewriter 
+bin/linux-x86/AB300
+\family default 
+.
+\layout Section
+
+Run the application
+\layout Standard
+
+Change directories to where makeBaseApp.pl put the application startup script
+ and run the application:
+\layout LyX-Code
+
+norume> 
+\family roman 
+\series bold 
+cd iocBoot/iocAB300
+\family default 
+\series default 
+
+\newline 
+norume> 
+\family roman 
+\series bold 
+../../bin/linux-x86/AB300 st.cmd
+\family default 
+\series default 
+
+\newline 
+dbLoadDatabase("../../dbd/AB300.dbd",0,0)
+\newline 
+AB300_registerRecordDeviceDriver(pdbbase) 
+\newline 
+dbLoadRecords("../../db/AB300.db","user=AB300")
+\newline 
+drvGenericSerialConfigure("L0","164.54.9.91:4002",0,0)
+\newline 
+asynSetTraceMask("L0",0,0x3)
+\newline 
+asynSetTraceIOMask("L0",0,0x2)
+\newline 
+iocInit()
+\newline 
+############################################################################
+\newline 
+###  EPICS IOC CORE built on Jan 29 2004
+\newline 
+###  EPICS R3.14.5 
+\backslash 
+[Name:  
+\backslash 
+] 
+\backslash 
+[Date: 2004/02/13 20:04:36 
+\backslash 
+]
+\newline 
+############################################################################
+\newline 
+Starting iocInit
+\newline 
+iocInit: All initialization complete
+\newline 
+epics>
+\layout Standard
+
+Check the process variable names:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbl
+\family default 
+\series default 
+
+\newline 
+AB300:FilterWheel:fbk
+\newline 
+AB300:FilterWheel:status
+\newline 
+AB300:FilterWheel
+\newline 
+AB300:FilterWheel:reset
+\layout Standard
+
+Reset the filter wheel.
+ The values sent between the IOC and the filter wheel are shown:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbpf AB300:FilterWheel:reset 0
+\family default 
+\series default 
+
+\newline 
+DBR_LONG:           0         0x0                 
+\newline 
+drvGenericSerial set eos 1 
+\backslash 
+033
+\newline 
+drvGenericSerialWrite 3 
+\backslash 
+377
+\backslash 
+377
+\backslash 
+033
+\newline 
+drvGenericSerialRead 1 
+\backslash 
+033
+\layout Standard
+
+Read back the filter wheel position.
+ The dbtr command prints the record before the I/O has a chance to occur:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbtr AB300:FilterWheel:fbk
+\family default 
+\series default 
+
+\newline 
+ACKS: NO_ALARM      ACKT: YES           ADEL: 0             ALST: 0
+\newline 
+ASG:                BKPT: 0x00          DESC: Filter Wheel Position
+\newline 
+DISA: 0             DISP: 0             DISS: NO_ALARM      DISV: 1
+\newline 
+DTYP: AB300Gpib     EGU:                EVNT: 0             FLNK:CONSTANT
+ 0
+\newline 
+HHSV: NO_ALARM      HIGH: 0             HIHI: 0             HOPR: 6
+\newline 
+HSV: NO_ALARM       HYST: 0             INP:GPIB_IO #L0 A0 @2
+\newline 
+LALM: 0             LCNT: 0             LLSV: NO_ALARM      LOLO: 0
+\newline 
+LOPR: 1             LOW: 0              LSV: NO_ALARM       MDEL: 0
+\newline 
+MLST: 0             NAME: AB300:FilterWheel:fbk             NSEV: NO_ALARM
+\newline 
+NSTA: NO_ALARM      PACT: 1             PHAS: 0             PINI: NO
+\newline 
+PRIO: LOW           PROC: 0             PUTF: 0             RPRO: 0
+\newline 
+SCAN: Passive       SDIS:CONSTANT       SEVR: INVALID       SIML:CONSTANT
+\newline 
+SIMM: NO            SIMS: NO_ALARM      SIOL:CONSTANT       STAT: UDF
+\newline 
+SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
+\newline 
+UDF: 1              VAL: 0
+\newline 
+drvGenericSerial set eos 1 
+\backslash 
+030
+\newline 
+drvGenericSerialWrite 1 
+\backslash 
+035
+\newline 
+drvGenericSerialRead 3 
+\backslash 
+001
+\backslash 
+020
+\backslash 
+030
+\layout Standard
+
+Now the process variable should have that value:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbpr AB300:FilterWheel:fbk
+\family default 
+\series default 
+
+\newline 
+ASG:                DESC: Filter Wheel Position             DISA: 0
+\newline 
+DISP: 0             DISV: 1             NAME: AB300:FilterWheel:fbk
+\newline 
+SEVR: NO_ALARM      STAT: NO_ALARM      SVAL: 0             TPRO: 0
+\newline 
+VAL: 1
+\layout Standard
+
+Move the wheel to position 4:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbpf AB300:FilterWheel 4
+\family default 
+\series default 
+
+\newline 
+DBR_LONG:           4         0x4
+\newline 
+drvGenericSerialWrite 2 
+\backslash 
+017
+\backslash 
+004
+\newline 
+drvGenericSerialRead 1 
+\backslash 
+020
+\newline 
+drvGenericSerialRead 1 
+\backslash 
+030
+\layout Standard
+
+Read back the position:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbtr AB300:FilterWheel:fbk
+\family default 
+\series default 
+
+\newline 
+ACKS: NO_ALARM      ACKT: YES           ADEL: 0             ALST: 1
+\newline 
+ASG:                BKPT: 0x00          DESC: Filter Wheel Position
+\newline 
+DISA: 0             DISP: 0             DISS: NO_ALARM      DISV: 1
+\newline 
+DTYP: AB300Gpib     EGU:                EVNT: 0             FLNK:CONSTANT
+ 0
+\newline 
+HHSV: NO_ALARM      HIGH: 0             HIHI: 0             HOPR: 6
+\newline 
+HSV: NO_ALARM       HYST: 0             INP:GPIB_IO #L0 A0 @2
+\newline 
+LALM: 1             LCNT: 0             LLSV: NO_ALARM      LOLO: 0
+\newline 
+LOPR: 1             LOW: 0              LSV: NO_ALARM       MDEL: 0
+\newline 
+MLST: 1             NAME: AB300:FilterWheel:fbk             NSEV: NO_ALARM
+\newline 
+NSTA: NO_ALARM      PACT: 1             PHAS: 0             PINI: NO
+\newline 
+PRIO: LOW           PROC: 0             PUTF: 0             RPRO: 0
+\newline 
+SCAN: Passive       SDIS:CONSTANT       SEVR: NO_ALARM      SIML:CONSTANT
+\newline 
+SIMM: NO            SIMS: NO_ALARM      SIOL:CONSTANT       STAT: NO_ALARM
+\newline 
+SVAL: 0             TPRO: 0             TSE: 0              TSEL:CONSTANT
+\newline 
+UDF: 0              VAL: 1
+\newline 
+drvGenericSerialWrite 1 
+\backslash 
+035
+\newline 
+drvGenericSerialRead 3 
+\backslash 
+004
+\backslash 
+020
+\backslash 
+030
+\layout Standard
+
+And it really is 4:
+\layout LyX-Code
+
+epics> 
+\family roman 
+\series bold 
+dbpr AB300:FilterWheel:fbk
+\family default 
+\series default 
+
+\newline 
+ASG:                DESC: Filter Wheel Position             DISA: 0
+\newline 
+DISP: 0             DISV: 1             NAME: AB300:FilterWheel:fbk
+\newline 
+SEVR: NO_ALARM      STAT: NO_ALARM      SVAL: 0             TPRO: 0
+\newline 
+VAL: 4
+\layout Section
+
+Device Support File
+\layout Standard
+
+Here is the complete device support file for the AB300 filter wheel (
+\family typewriter 
+AB300App/src/devAB300.c
+\family default 
+):
+\layout Standard
+
+
+\begin_inset ERT
+status Collapsed
+
+\layout Standard
+
+\backslash 
+verbatiminput{AB300/AB300App/src/devAB300.c}
+\end_inset 
+
+
+\layout Section
+
+asynTrace support
+\layout Standard
+
+The asynTrace facility provides a convenient mechanism for controlling the
+ diagnostic messages produced by asyn drivers.
+ To add asynTrace to your application: 
+\layout Enumerate
+
+Add the line
+\begin_deeper 
+\layout LyX-Code
+
+include "devAsynTrace.dbd"
+\layout Standard
+
+to the application 
+\shape italic 
+xxx
+\family typewriter 
+\shape default 
+Include.dbd
+\family default 
+ file.
+\end_deeper 
+\layout Enumerate
+
+Add the line
+\begin_deeper 
+\layout LyX-Code
+
+DB_INSTALLS += $(ASYN)/db/asynTrace.db 
+\layout Standard
+
+to an application 
+\family typewriter 
+Makefile
+\family default 
+.
+\end_deeper 
+\layout Enumerate
+
+For each port on which you wish to control diagnostic messages, add a line
+ like
+\begin_deeper 
+\layout LyX-Code
+
+dbLoadRecords("db/asynTrace.db","ioc=ab300Test,port=L0,addr=0")
+\layout Standard
+
+to the application startup (
+\family typewriter 
+st.cmd
+\family default 
+) script.
+ The 
+\family typewriter 
+port
+\family default 
+ value must match the the value in the corresponding 
+\family typewriter 
+drvGenericSerialConfigure
+\family default 
+ command.
+ The 
+\family typewriter 
+addr
+\family default 
+ value should be zero.
+ The 
+\family typewriter 
+ioc
+\family default 
+ value is arbitrary and should be chosen so that the ioc/port/addr combination
+ is unique among all IOCs on your network.
+ 
+\end_deeper 
+\layout Standard
+
+To run the asynTrace screen, add 
+\shape italic 
+<asynTop
+\family typewriter 
+\shape default 
+>/medm
+\family default 
+ to your 
+\family typewriter 
+EPICS_DISPLAY_PATH
+\family default 
+ environment variable and start medm with 
+\family typewriter 
+ioc
+\family default 
+, 
+\family typewriter 
+port
+\family default 
+ and 
+\family typewriter 
+addr
+\family default 
+ values matching those given in the 
+\family typewriter 
+dbLoadRecords
+\family default 
+ command:
+\layout LyX-Code
+
+medm -x -macro "ioc=ab300Test,port=L0,addr=0" asynTrace.adl &
+\the_end

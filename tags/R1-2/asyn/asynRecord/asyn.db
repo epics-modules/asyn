@@ -1,0 +1,45 @@
+record(bi,"$(ioc):P$(port):A$(addr):ConnectState") {
+    field(DTYP,"asynState")
+    field(INP,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(PINI,"YES")
+    field(MASK,"0x1")
+}
+record(bi,"$(ioc):P$(port):A$(addr):EnableState") {
+    field(DTYP,"asynState")
+    field(INP,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(PINI,"YES")
+    field(MASK,"0x2")
+}
+record(bi,"$(ioc):P$(port):A$(addr):AutoConnectState") {
+    field(DTYP,"asynState")
+    field(INP,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(PINI,"YES")
+    field(MASK,"0x4")
+}
+record(bo,"$(ioc):P$(port):A$(addr):Connect") {
+    field(DTYP,"asynState")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(MASK,"0x1")
+}
+record(bo,"$(ioc):P$(port):A$(addr):Enable") {
+    field(DTYP,"asynState")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(MASK,"0x2")
+}
+record(bo,"$(ioc):P$(port):A$(addr):AutoConnect") {
+    field(DTYP,"asynState")
+    field(OUT,"@$(port),$(addr)")
+    field(ZNAM,"no")
+    field(ONAM,"yes")
+    field(MASK,"0x4")
+}
