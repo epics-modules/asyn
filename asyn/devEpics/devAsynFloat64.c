@@ -319,6 +319,7 @@ static long initAo(aoRecord *pao)
     if (status != asynSuccess) return 0;
     pPvt = pao->dpvt;
     /* Read the current value from the device */
+/*
     status = pasynFloat64SyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
@@ -326,6 +327,7 @@ static long initAo(aoRecord *pao)
         pao->udf = 0;
         return 0;
     }
+*/
     return 2; /* Do not convert */
 }
 

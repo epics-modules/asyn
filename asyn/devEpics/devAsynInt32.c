@@ -413,12 +413,14 @@ static long initAo(aoRecord *pao)
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
     convertAo(pao, 1);
     /* Read the current value from the device */
+/*
     status = pasynInt32SyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pao->rval = value;
         return 0;
     }
+*/
     return 2; /* Do not convert */
 }
 
@@ -517,9 +519,11 @@ static long initLo(longoutRecord *pr)
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
+/*
     status = pasynInt32SyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) pr->val = value;
+*/
     return 0;
 }
 
@@ -599,12 +603,14 @@ static long initMbbo(mbboRecord *pr)
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
     /* Read the current value from the device */
+/*
     status = pasynInt32SyncIO->readOnce(pPvt->portName,pPvt->addr,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
         return 0;
     }
+*/
     return 2;
 }
 static long processMbbo(mbboRecord *pr)
