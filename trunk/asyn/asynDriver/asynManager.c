@@ -73,6 +73,7 @@ typedef struct asynPort {
 struct asynUserPvt {
     ELLNODE      node;        /*For asynPort.queueList*/
     userCallback queueCallback;
+    userCallback timeoutCallback;
     BOOL         isQueued;
     unsigned int lockCount;
     epicsTimerId timer;
@@ -90,6 +91,7 @@ struct asynUserPvt {
 static void asynInit(void);
 static asynPort *locateAsynPort(const char *portName);
 static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr);
+static void queueTimeoutCallback(void *);
 static void portThread(asynPort *pasynPort);
     
 /* forward reference to asynManager methods */
@@ -103,7 +105,7 @@ static asynInterface *findInterface(asynUser *pasynUser,
     const char *interfaceType,int processModuleOK);
 static asynStatus queueRequest(asynUser *pasynUser,
     asynQueuePriority priority,double timeout);
-static void cancelRequest(asynUser *pasynUser);
+static int cancelRequest(asynUser *pasynUser);
 static asynStatus lock(asynUser *pasynUser);
 static asynStatus unlock(asynUser *pasynUser);
 static int getAddr(asynUser *pasynUser);
@@ -172,6 +174,18 @@ static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr)
         ellAdd(&pasynPort->asynDeviceList,&pasynDevice->node);
     }
     return(pasynDevice);
+}
+
+static void queueTimeoutCallback(void *pvt)
+{
+    asynUserPvt *pasynUserPvt = (asynUserPvt *)pvt;
+    asynUser *pasynUser = &pasynUserPvt->user;
+    int status;
+
+    status = cancelRequest(pasynUser);
+    if(status==0 && pasynUserPvt->timeoutCallback) {
+        pasynUserPvt->timeoutCallback(pasynUser);
+    }
 }
 
 static void portThread(asynPort *pasynPort)
@@ -320,8 +334,9 @@ static asynUser *createAsynUser(userCallback queue, userCallback timeout)
     pasynUser->errorMessage = (char *)(pasynUser +1);
     pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
     if(timeout) {
+        pasynUserPvt->timeoutCallback = timeout;
         pasynUserPvt->timer = epicsTimerQueueCreateTimer(
-            pasynBase->timerQueue,(epicsTimerCallback)timeout,pasynUser);
+            pasynBase->timerQueue,queueTimeoutCallback,pasynUserPvt);
     }
     return(pasynUser);
 }
@@ -455,7 +470,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     pasynUserPvt->isQueued = TRUE;
     pasynUserPvt->timeout = timeout;
     if(pasynUserPvt->timeout>0.0) {
-        if(!pasynUserPvt->timer) {
+        if(!pasynUserPvt->timeoutCallback) {
             printf("%s,%d queueRequest with timeout but no timeout callback\n",
                 pasynPort->portName,pasynDevice->addr);
         } else {
@@ -467,7 +482,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     return(asynSuccess);
 }
 
-static void cancelRequest(asynUser *pasynUser)
+static int cancelRequest(asynUser *pasynUser)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
     asynPort *pasynPort = pasynUserPvt->pasynPort;
@@ -490,6 +505,7 @@ static void cancelRequest(asynUser *pasynUser)
 	if(pasynUserPvt) break;
     }
     epicsMutexUnlock(pasynPort->lock);
+    return(pasynUserPvt ? 0 : -1);
 }
 
 static asynStatus lock(asynUser *pasynUser)
