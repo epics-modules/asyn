@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.25 2004-03-25 19:35:06 norume Exp $
+ * $Id: drvGenericSerial.c,v 1.26 2004-03-26 15:45:03 norume Exp $
  */
 
 #include <string.h>
@@ -819,8 +819,8 @@ static const struct asynOctet drvGenericSerialAsynOctet = {
 int
 drvGenericSerialConfigure(char *portName,
                      char *ttyName,
-                     int autoConnect,
-                     unsigned int priority)
+                     unsigned int priority,
+                     int noAutoConnect,
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -893,7 +893,7 @@ drvGenericSerialConfigure(char *portName,
     tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    0, /*not multiDevice*/
-                                   autoConnect,
+                                   !noAutoConnect,
                                    priority,
                                    0) != asynSuccess) {
         errlogPrintf("drvGenericSerialConfigure: Can't register myself.\n");
@@ -924,8 +924,8 @@ drvGenericSerialConfigure(char *portName,
 #include <iocsh.h>
 static const iocshArg drvGenericSerialConfigureArg0 = { "port name",iocshArgString};
 static const iocshArg drvGenericSerialConfigureArg1 = { "tty name",iocshArgString};
-static const iocshArg drvGenericSerialConfigureArg2 = { "autoConnect",iocshArgInt};
-static const iocshArg drvGenericSerialConfigureArg3 = { "priority",iocshArgInt};
+static const iocshArg drvGenericSerialConfigureArg2 = { "priority",iocshArgInt};
+static const iocshArg drvGenericSerialConfigureArg3 = { "disable auto-connect",iocshArgInt};
 static const iocshArg *drvGenericSerialConfigureArgs[] = {
     &drvGenericSerialConfigureArg0, &drvGenericSerialConfigureArg1,
     &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3};
@@ -933,8 +933,8 @@ static const iocshFuncDef drvGenericSerialConfigureFuncDef =
                       {"drvGenericSerialConfigure",4,drvGenericSerialConfigureArgs};
 static void drvGenericSerialConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvGenericSerialConfigure(args[0].sval,args[1].sval,
-        args[2].ival,args[3].ival);
+    drvGenericSerialConfigure(args[0].sval, args[1].sval, args[2].ival,
+                                                                args[3].ival);
 }
 
 /*

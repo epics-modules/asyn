@@ -1353,8 +1353,8 @@ int vxi11SetRpcTimeout(double timeout)
 int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     double defTimeout,
     char *vxiName,
-    int autoConnect,
-    unsigned int priority)
+    unsigned int priority,
+    int noAutoConnect)
 {
     char    *portName;
     vxiPort *pvxiPort;
@@ -1394,7 +1394,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->isSingleLink = (epicsStrnCaseCmp("inst", vxiName, 4) == 0);
     strcpy(pvxiPort->hostName, hostName);
     pvxiPort->asynGpibPvt = pasynGpib->registerPort(pvxiPort->portName,
-        (pvxiPort->isSingleLink ? 0 : 1),autoConnect,
+        (pvxiPort->isSingleLink ? 0 : 1),!noAutoConnect,
         &vxi11,pvxiPort,priority,0);
     pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(
@@ -1413,24 +1413,16 @@ static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
 static const iocshArg vxi11ConfigureArg2 = { "recover with IFC?",iocshArgInt};
 static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
-static const iocshArg vxi11ConfigureArg5 = { "autoConnect",iocshArgInt};
-static const iocshArg vxi11ConfigureArg6 = { "priority",iocshArgInt};
+static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
+static const iocshArg vxi11ConfigureArg6 = { "disable auto-connect",iocshArgInt};
 static const iocshArg *vxi11ConfigureArgs[] = {&vxi11ConfigureArg0,
     &vxi11ConfigureArg1, &vxi11ConfigureArg2, &vxi11ConfigureArg3,
     &vxi11ConfigureArg4, &vxi11ConfigureArg5,&vxi11ConfigureArg6};
 static const iocshFuncDef vxi11ConfigureFuncDef = {"vxi11Configure",7,vxi11ConfigureArgs};
 static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
 {
-    char *portName = args[0].sval;
-    char *hostName = args[1].sval;
-    int recoverWithIFC = args[2].ival;
-    double defTimeout = args[3].dval;
-    char *vxiName = args[4].sval;
-    int autoConnect = args[5].ival;
-    int priority = args[6].ival;
-
-    vxi11Configure (portName, hostName, recoverWithIFC,
-                    defTimeout, vxiName, autoConnect, priority);
+    vxi11Configure (args[0].sval, args[1].sval, args[2].ival,
+                    args[3].dval, args[4].sval, args[5].ival, args[6].ival);
 }
 
 extern int E5810Reboot(char * inetAddr,char *password);
