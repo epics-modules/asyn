@@ -35,17 +35,12 @@ typedef enum {
     asynTimeoutWrite
 }asynTimeoutType;
 
-typedef enum {
-   asynCancelSuccess,
-   asynCancelCallbackActive,
-   asynCancelError
-}asynCancelStatus;
-
 typedef void (*userCallback)(void *puserPvt);
 
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
+    double timeout;  /*Timeout for I/O operations*/
     void *puserPvt; 
 }asynUser;
 
@@ -73,7 +68,7 @@ typedef struct asynQueueManager {
         const char *driverType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
         asynQueuePriority priority,double timeout);
-    asynCancelStatus (*cancelRequest)(asynUser *pasynUser);
+    void (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     /* drivers call the following*/
