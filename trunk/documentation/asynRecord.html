@@ -14,35 +14,50 @@
 <h2>Contents</h2>
 <ul>
   <li><a href="#Overview">Overview</a></li>
-  <li><a href="#Device Address Control Fields">Device Address Control
-    Fields</a></li>
-  <li><a href="#Input/Output Control Fields">Input/Output Control
-  Fields</a></li>
-  <li><a href="#Output Control Fields">Output Control Fields</a></li>
-  <li><a href="#Input Control Fields">Input Control Fields</a></li>
-  <li><a href="#Serial Control Fields">Serial Control Fields</a></li>
-  <li><a href="#GPIB Control Fields">GPIB Control Fields</a></li>
-  <li><a href="#Trace Control Fields">Trace Control Fields</a></li>
-  <li><a href="#Connection Management Fields">Connection Management
-  Fields</a></li>
-  <li><a href="#Error Status Fields">Error Status Fields</a></li>
-  <li><a href="#Private Fields">Private Fields</a></li>
-  <li><a href="#Record Processing">Record Processing</a></li>
-  <li><a href="#Restrictions">Restrictions</a></li>
-  <li><a href="#Obsolete serial and GPIB records">Obsolete serial and GPIB
-    records</a></li>
-  <li><a href="#medm screens">medm screens</a></li>
-  <li><a href="#Example 1">Example 1</a></li>
-  <li><a href="#Example 2">Example 2</a></li>
+  <li><a href="#Device Address Control Fields">
+                Device Address Control Fields</a></li>
+  <li><a href="#Input/Output Control Fields">
+                Input/Output Control Fields</a></li>
+  <li><a href="#Output Control Fields for asynOctet">
+                Output Control Fields for asynOctet</a></li>
+  <li><a href="#Input Control Fields for asynOctet">
+                Input Control Fields for asynOctet</a></li>
+  <li><a href="#Control Fields for Register Interfaces">
+                Control Fields for Register Interfaces</a></li>
+  <li><a href="#Serial Control Fields">
+                Serial Control Fields</a></li>
+  <li><a href="#GPIB Control Fields">
+                GPIB Control Fields</a></li>
+  <li><a href="#Trace Control Fields">
+                Trace Control Fields</a></li>
+  <li><a href="#Connection Management Fields">
+                Connection Management Fields</a></li>
+  <li><a href="#Error Status Fields">
+                Error Status Fields</a></li>
+  <li><a href="#Private Fields">
+                Private Fields</a></li>
+  <li><a href="#Record Processing">
+                Record Processing</a></li>
+  <li><a href="#Restrictions">
+                Restrictions</a></li>
+  <li><a href="#Obsolete serial and GPIB records">
+                Obsolete serial and GPIB records</a></li>
+  <li><a href="#medm screens">
+                medm screens</a></li>
+  <li><a href="#Example 1">
+                Example 1</a></li>
+  <li><a href="#Example 2">
+                Example 2</a></li>
 </ul>
 
-<h2><a name="Overview">Overview</a></h2>
+<h2><a name="Overview">
+             Overview</a></h2>
 
 <p>The asyn record is designed to provide access to nearly all of the
 features of the asyn facility.&nbsp; It includes the ability to:</p>
 <ul>
-  <li>Perform  I/O to any asyn device that supports the asynOctet
-  interface.</li>
+  <li>Perform I/O to any asyn device that supports the asynOctet, asynInt32, 
+      asynUInt32Digital, and/or asynFloat64 interfaces.</li>
   <li>Allow EPICS to communicate with a new device without rebooting the IOC,
     i.e. without writing any C code or changing the database. This allows
     Channel Access clients to communicate with devices for which no EPICS
@@ -53,18 +68,21 @@ features of the asyn facility.&nbsp; It includes the ability to:</p>
   <li>Dynamically change the asyn device "port" and "address", so a single
     asyn record can be switched from talking to one device to another at run
     time.</li>
+  <li>Dynamically change the asyn interface being used for I/O.</li>
   <li>Manage the connection state of a device, i.e. connect/disconnect,
     enable/disable, autoConnect/noAutoConnect..</li>
   <li>Provide access to asynTrace, controlling debugging output for any asyn
     device.</li>
-  <li>Control the the baud rate, parity, etc. for local serial ports.</li>
+  <li>Control the the baud rate, parity, etc. for serial ports whose drivers
+      support the asynOption interface.</li>
   <li>Control the GPIB address and execute global and addressed commands for
     GPIB devices.</li>
-  <li>Create asyn socket ports  dynamically at run time for new TCP/IP or
+  <li>Create asyn socket ports dynamically at run time for new TCP/IP or
     UDP/IP connections.</li>
 </ul>
 
-<p>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output).
+<p>For the asynOctet interface there are two output fields, 
+AOUT (ASCII Output) and BOUT (Byte Output).
 The OFMT (Output Format) field is used to select one of these fields or the
 other as the output source to the  device. Similarly, there are two input
 fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format)
@@ -110,8 +128,8 @@ large blocks of arbitrary data, either ASCII or binary.</p>
 <p>&nbsp; </p>
 <hr>
 
-<h2 align="center"><a name="Device Address Control Fields">Device Address
-Control Fields</a></h2>
+<h2 align="center"><a name="Device Address Control Fields">
+                            Device Address Control Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -141,6 +159,15 @@ Control Fields</a></h2>
         it may be used for RS-485 and other applications.</td>
     </tr>
     <tr>
+      <td>PCNCT</td>
+      <td>R/W</td>
+      <td>"Port Connect/Disconnect"</td>
+      <td>DBF_RECCHOICE</td>
+      <td>Disconnects or connects the port.&nbsp; Choices are "Disconnect"
+        and "Connect". The value read reflects whether there is currently a valid
+        connection to a port.</td>
+    </tr>
+    <tr>
       <td>SOCK</td>
       <td>R/W</td>
       <td>"Socket address"</td>
@@ -153,6 +180,24 @@ Control Fields</a></h2>
         "corvette:21 udp".  The protocol specifier is optional.  TCP is used
         by default.</td>
     </tr>
+    <tr>
+      <td>DRVINFO</td>
+      <td>R/W</td>
+      <td>"Driver information"</td>
+      <td>DBF_STRING</td>
+      <td>A string that is passed to the driver with asynDrvUser->create(),
+        assuming that the asynDrvUser interface exists.  The driver will update
+        pasynUser->reason and/or pasynUser->drvUser as a result.  If pasynUser->reason
+        is changed then the asynRecord REASON field will be updated.</td>
+    </tr>
+      <td>REASON</td>
+      <td>R/W</td>
+      <td>"Reason or command"</td>
+      <td>DBF_LONG</td>
+      <td>A integer "reason" or "command" that is typically used to tell the driver what
+        item to read or write.  This value is updated when connecting to the driver, using
+        the DRVINFO field.  It can be changed later without reconnecting to the driver.  If
+        REASON is changed then the DRVINFO field will be set to an empty string.</td>
   </tbody>
 </table>
 
@@ -160,11 +205,16 @@ Control Fields</a></h2>
 output links.&nbsp; Rather it provides the PORT and ADDR fields to allow
 dynamically changing what asyn device the record is connected to. </p>
 
-<p>Writing to the PORT or ADDR fields causes the asyn record to disconnect
+<p>Writing to the PORT, ADDR or DRVINFO fields causes the asyn record to disconnect
 from the current device and connect to the specified asyn port and
 address.&nbsp; This permits a single asyn record to be used to control any
 asyn device.&nbsp; Writing to these fields does not cause any I/O to be
 done.</p>
+
+<p>Note that since writing to the PORT, ADDR, or DRVINFO fields cause
+the record to automatically attempt to connect to the port, it is usually
+not necessary to write to the PCNCT field to connect to the port.  The PCNCT field is 
+useful for determining if the port is connected, and forcing a disconnect if desired.</p>
 
 <p>Writing to the SOCK field causes the record to create a new asyn port with
 the same name as the SOCK field.&nbsp; This is done with
@@ -173,8 +223,8 @@ drvAsynIPPortConfigure.</p>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Input/Output Control Fields">Input/Output Control
-Fields</a></h2>
+<h2 align="center"><a name="Input/Output Control Fields">
+                            Input/Output Control Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -223,6 +273,74 @@ Fields</a></h2>
         </table>
       </td>
     </tr>
+    </tr>
+      <td>IFACE</td>
+      <td>R/W</td>
+      <td>"Interface"</td>
+      <td>DBF_RECCHOICE</td>
+      <td>The interface to use for the I/O transfer when the record processes.  The choices are:
+        <table border="0">
+          <tbody>
+            <tr valign="top">
+              <td>"asynOctet" (default)</td>
+            </tr>
+            <tr valign="top">
+              <td>"asynInt32"</td>
+            </tr>
+            <tr valign="top">
+              <td>"asynUInt32Digital"</td>
+            </tr>
+            <tr valign="top">
+              <td>"asynFloat64"</td>
+            </tr>
+          </tbody>
+        </table>
+      </td>
+    </tr>
+    <tr valign="top">
+      <td>OCTETIV</td>
+      <td>R</td>
+      <td>"Octet Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the asynOctet interface.</td>
+    </tr>
+    <tr valign="top">
+      <td>I32IV</td>
+      <td>R</td>
+      <td>"Int32 Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the 
+          asynInt32 interface.</td>
+    </tr>
+    <tr valign="top">
+      <td>UI32IV</td>
+      <td>R</td>
+      <td>"UInt32Digital Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the 
+          asynUInt32Digital interface.</td>
+    </tr>
+    <tr valign="top">
+      <td>F64IV</td>
+      <td>R</td>
+      <td>"Float64 Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the asynFloat64 interface.</td>
+    </tr>
+    <tr valign="top">
+      <td>OPTIONIV</td>
+      <td>R</td>
+      <td>"Option Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the asynOption interface.</td>
+    </tr>
+    <tr valign="top">
+      <td>GPIBIV</td>
+      <td>R</td>
+      <td>"GPIB Is Valid"</td>
+      <td>DBF_LONG</td>
+      <td>This field is (1,0) if the driver (does,does not) support the asynGPIB interface.</td>
+    </tr>
     <tr>
       <td>TMOT</td>
       <td>R/W</td>
@@ -244,10 +362,10 @@ processes.</p>
   <tbody>
     <tr valign="top">
       <td>"Write/Read" (default)</td>
-      <td>The output source (AOUT or BOUT as selected by OFMT) is sent to the
-        device. A response is then read back into AINP or BINP (as selected
-        by IFMT). The response must be received within the time specified by
-        TMOT. The input buffer is flushed before the write operation, so that
+      <td>The output data is sent from the selected output field to the device. 
+        A response is then read back into the selected input field. 
+        The response must be received within the time specified by
+        TMOT. For asynOctet the input buffer is flushed before the write operation, so that
         any characters received prior to the write operation are
         discarded.&nbsp; The Write/Read operation is "atomic", meaning that
         it is guaranteed that no other asyn I/O to the device will occur
@@ -255,20 +373,20 @@ processes.</p>
     </tr>
     <tr valign="top">
       <td>"Write"</td>
-      <td>The output source (AOUT or BOUT as selected by OFMT) is sent to the
+      <td>The output source is sent to the
         device. No response is read back.</td>
     </tr>
     <tr valign="top">
       <td>"Read"</td>
-      <td>Data is read from the device into the input field (AINP or BINP as
-        selected by IFMT). The response must be received within the time
+      <td>Data is read from the device into the input field. 
+        The response must be received within the time
         specified by TMOT. No output is sent to the device prior to the read
         operation.</td>
     </tr>
     <tr valign="top">
       <td>"Flush"</td>
       <td>The input buffer is flushed.&nbsp; Nothing is sent to the device or
-        read from the device.</td>
+        read from the device.  Applies only to asynOctet.</td>
     </tr>
     <tr valign="top">
       <td>"NoI/O"</td>
@@ -284,8 +402,11 @@ processes.</p>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Output Control Fields">Output Control
-Fields</a></h2>
+<h2 align="center"><a name="Output Control Fields for asynOctet">
+                            Output Control Fields for asynOctet</a></h2>
+
+<p>These fields control output I/O when using the asynOctet interface 
+   (i.e. when IFACE="asynOctet").</p>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -405,8 +526,11 @@ called. </p>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Input Control Fields">Input Control
-Fields</a></h2>
+<h2 align="center"><a name="Input Control Fields for asynOctet">
+                            Input Control Fields for asynOctet</a></h2>
+
+<p>These fields control input I/O when using the asynOctet interface 
+   (i.e. when IFACE="asynOctet").</p>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -422,7 +546,7 @@ Fields</a></h2>
       <td>R</td>
       <td>"Input string"</td>
       <td>DBF_STRING</td>
-      <td>The input string which is read from the device if IFMT="ASCII". The
+      <td>The input string that is read from the device if IFMT="ASCII". The
         string will be null terminated. Note that due to the maximum size of
         a string in EPICS, the input string must be less than 40 characters.
         If longer strings are required then set IFMT="Hybrid" and read into
@@ -433,7 +557,7 @@ Fields</a></h2>
       <td>R</td>
       <td>"Input byte data"</td>
       <td>DBF_CHAR (array)</td>
-      <td>The input data which is read from the device if IFMT="Hybrid" or
+      <td>The input data that is read from the device if IFMT="Hybrid" or
         IFMT="Binary". The maximum length of this field is controlled by
         IMAX. The actual number of bytes read from the device is given by
         NORD.</td>
@@ -558,11 +682,88 @@ in "Hybrid" and "Binary" input modes.</p>
 <p>The IEOS terminator field is 40 characters long.&nbsp; However, the serial
 drivers permit 2 character end-of-message strings at most. The GPIB drivers
 only permit 1 character end-of-message strings.<br>
+
 &nbsp;</p>
 <hr>
+<h2 align="center"><a name="Control Fields for Register Interfaces">
+                            Control Fields for Register Interfaces</a></h2>
 
-<h2 align="center"><a name="Serial Control Fields">Serial Control
-Fields</a></h2>
+<p>These fields control input I/O when using the register interfaces 
+   (i.e. when IFACE="asynInt32", "asynUInt32Digital", or "asynFloat64").</p>
+
+<table cellpadding="5" border="1">
+  <tbody>
+    <tr>
+      <th>Name</th>
+      <th>Access</th>
+      <th>Prompt</th>
+      <th>Data type</th>
+      <th>Description</th>
+    </tr>
+    <tr valign="top">
+      <td>I32INP</td>
+      <td>R</td>
+      <td>"asynInt32 input"</td>
+      <td>DBF_LONG</td>
+      <td>The input data that is read from the device if IFACE="asynInt32" and
+          TMOD="Read" or "Write/Read".</td>
+    </tr>
+    <tr valign="top">
+      <td>I32OUT</td>
+      <td>R/W*</td>
+      <td>"asynInt32 output"</td>
+      <td>DBF_LONG</td>
+      <td>The data that is sent to the device if IFACE="asynInt32" and TMOD="Write"
+          or "Write/Read".</td>
+    </tr>
+    <tr valign="top">
+      <td>UI32INP</td>
+      <td>R</td>
+      <td>"asynUInt32Digital input"</td>
+      <td>DBF_ULONG</td>
+      <td>The input data that is read from the device if IFACE="asynUInt32Digital" and
+          TMOD="Read" or "Write/Read".</td>
+    </tr>
+    <tr valign="top">
+      <td>UI32OUT</td>
+      <td>R/W*</td>
+      <td>"asynUInt32Digital output"</td>
+      <td>DBF_ULONG</td>
+      <td>The data that is sent to the device if IFACE="asynUInt32Digital" and TMOD="Write"
+          or "Write/Read".</td>
+    </tr>
+    <tr valign="top">
+      <td>UI32MASK</td>
+      <td>R/W</td>
+      <td>"asynUInt32Digital mask"</td>
+      <td>DBF_ULONG</td>
+      <td>The mask that is used if IFACE="asynUInt32Digital".  The mask is used for
+          both write and read operations.  Only bits that are set in mask will be
+          modified on writes, and any bits that are clear in mask will be zero on read.</td>
+    </tr>
+    <tr valign="top">
+      <td>F64INP</td>
+      <td>R</td>
+      <td>"asynFloat64 input"</td>
+      <td>DBF_DOUBLE</td>
+      <td>The input data that is read from the device if IFACE="asynFloat64" and
+          TMOD="Read" or "Write/Read".</td>
+    </tr>
+    <tr valign="top">
+      <td>F64OUT</td>
+      <td>R/W*</td>
+      <td>"asynFloat64 output"</td>
+      <td>DBF_DOUBLE</td>
+      <td>The data that is sent to the device if IFACE="asynFloat64" and TMOD="Write"
+          or "Write/Read".</td>
+    </tr>
+  </tbody>
+</table>
+<p>&nbsp;</p>
+<hr>
+
+<h2 align="center"><a name="Serial Control Fields">
+                            Serial Control Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -638,7 +839,8 @@ when the connection to the port is made.</p>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="GPIB Control Fields">GPIB Control Fields</a></h2>
+<h2 align="center"><a name="GPIB Control Fields">
+                            GPIB Control Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -746,10 +948,12 @@ except "None" then the appropriate Addressed Command is executed, and ACMD is
 set back to "None". The record processing only performs the Addressed
 Command, i.e. it does not also perform the GPIB operation indicated by
 TMOD.</p>
+
+<p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Trace Control Fields">Trace Control
-Fields</a></h2>
+<h2 align="center"><a name="Trace Control Fields">
+                            Trace Control Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -879,8 +1083,8 @@ cases: </p>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Connection Management Fields">Connection
-Management Fields</a></h2>
+<h2 align="center"><a name="Connection Management Fields">
+                            Connection Management Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -924,7 +1128,8 @@ Management Fields</a></h2>
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Error Status Fields">Error Status Fields</a></h2>
+<h2 align="center"><a name="Error Status Fields">
+                            Error Status Fields</a></h2>
 
 <table cellpadding="5" border="1">
   <tbody>
@@ -972,7 +1177,8 @@ not affected by trace or connection management operations.</p>
 <p>&nbsp; </p>
 <hr>
 
-<h2 align="center"><a name="Private Fields">Private Fields</a></h2>
+<h2 align="center"><a name="Private Fields">
+                            Private Fields</a></h2>
 
 <p>&nbsp;</p>
 
@@ -1005,22 +1211,33 @@ not affected by trace or connection management operations.</p>
 <p>&nbsp; </p>
 <hr>
 
-<h2 align="center"><a name="Record Processing">Record Processing</a></h2>
+<h2 align="center"><a name="Record Processing">
+                            Record Processing</a></h2>
 
 <p>The asyn record processes, i.e. performs the I/O operation given by TMOD,
-according to the normal rules for EPICS records.&nbsp; The AOUT and BOUT
+according to the normal rules for EPICS records.&nbsp; The AOUT, BOUT, I32OUT,
+UI32OUT, and F64OUT
 fields are Process Passive, so the record will process if these fields are
 written to and the SCAN field of the record is Passive.&nbsp; The scan field
 of the record can be set to any of the periodic scan rates (e.g. "1 second")
-for periodic processing, or to "Event" for event processing.&nbsp; "I/O Intr"
-scanning is currently not supported (but see <a
+for periodic processing, to "Event" for event processing, or to "I/O Intr" for
+I/O interrupt processing.</p>
+
+<p>"I/O Intr" scanning is fully supported for drivers that provide callbacks.
+asynOctet does not yet support callbacks, (see <a
 href="#Restrictions">Restrictions</a> below).</p>
+
+<p>If the SCAN field is "I/O Intr" it will be changed to "Passive" when any of the following
+fields are modified: PORT, ADDR, DRVINFO, REASON, IFACE, or UINT32MASK.  This is
+necessary because changes to these
+fields require re-registering with the interrupt source.</p>
+
 
 <p>&nbsp;</p>
 <hr>
 
-<h2 align="center"><a name="Obsolete serial and GPIB records">Obsolete serial
-and GPIB records</a></h2>
+<h2 align="center"><a name="Obsolete serial and GPIB records">
+                            Obsolete serial and GPIB records</a></h2>
 
 <p>The asyn record is designed to be a complete replacement for the older
 generic serial ("serial") and generic GPIB ("gpib") records.&nbsp; These
@@ -1058,7 +1275,8 @@ applications.</p>
 <!--NEW PAGE -->
 
 
-<h2><a name="medm screens">medm screens</a></h2>
+<h2><a name="medm screens">
+             medm screens</a></h2>
 
 <p>The following are screen shots of the medm screens provided for the asyn
 record.</p>
@@ -1095,17 +1313,16 @@ height="150"></p>
 
 <p align="center">&nbsp;</p>
 
-<p></p>
+<p>&nbsp;</p>
 <hr>
 
-<h2><a name="Restrictions">Restrictions</a></h2>
+<h2><a name="Restrictions">
+             Restrictions</a></h2>
 
-<p>I/O Event Scanning (SCAN="I/O Intr") should be supported when the transfer
-mode (TMOD) is "Read". In this case the record should process whenever a
-complete message is received. A complete message is defined by the input
-delimiter (IEOS) and/or the requested number of input characters (NRRD),
-being received. The timeout field (TMOT) will not apply when SCAN="I/O Intr".
-This will be added in the future.</p>
+<p>I/O Event Scanning (SCAN="I/O Intr") is currently supported for the register
+       interfaces (asynInt32, asynUInt32Digital, asynFloat64).  It will be supported
+       for asynOctet as soon as the asynOctet interface supports callbacks.</p>
+<p>&nbsp;</p>
 <hr>
 
 <h2><a name="Example 1">Example #1</a></h2>
@@ -1304,7 +1521,7 @@ end</pre>
 <address>
   Suggestions and comments to: <a href="mailto:rivers@cars.uchicago.edu">Mark
   Rivers </a>: (rivers@cars.uchicago.edu) <br>
-  Last modified: March 30, 2004
+  Last modified: November 1, 2004
 </address>
 </body>
 </html>
