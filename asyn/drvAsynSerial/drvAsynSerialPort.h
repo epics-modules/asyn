@@ -17,6 +17,10 @@
 extern "C" {
 #endif  /* __cplusplus */
 
+/* Define additional pasynUser->auxStatus error masks */
+#define ASYN_ERROR_PARITY  0x0001
+#define ASYN_ERROR_FRAMING 0x0002
+
 int drvAsynSerialPortConfigure(char *portName, char *ttyName,
                                unsigned int priority, int noAutoConnect,
                                int noEosProcessing);

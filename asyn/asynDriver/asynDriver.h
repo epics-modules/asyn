@@ -36,11 +36,6 @@ typedef enum {
     asynQueuePriorityConnect
 }asynQueuePriority;
 
-/* Define generic error masks */
-#define ASYN_ERROR_TIMEOUT 0x0001
-#define ASYN_ERROR_PARITY  0x0002
-#define ASYN_ERROR_FRAMING 0x0004
-
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
@@ -49,7 +44,6 @@ typedef struct asynUser {
     void         *userPvt; 
     /* The following are for additional information from method calls */
     int          auxStatus; /*For auxillary status*/
-    unsigned int errorMask; /*Normally some combination of ASYN_ERROR... */
 }asynUser;
 
 typedef struct asynInterface{
