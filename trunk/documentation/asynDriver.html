@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">October 22,
+<p><span style="font-weight: bold; font-size: 14pt">October 29,
 2004</span></p>
 </center>
 <hr>
@@ -543,18 +543,30 @@ drivers. It provides the following services:</p>
     call exceptionConnect or exceptionDisconnect.</p>
   </li>
   <li>Interrupt services
-    <p>Methods: registerInterruptSource, interrupt, registerInterruptUser,
-    cancelInterruptUser</p>
-    <p>Interrupt just means: "I have a new value for this port,addr." Any
-    code can call interrupt, but normally it is called by port drivers or
-    interpose code.</p>
-    <p>Code that wants to call interrupt must call registerInterruptSource.
-    It can then call interrupt whenever it detects that the data for a
-    port,addr has changed. On operating systems like vxWorks or RTEMS
-    interrupt MUST NOT be called from interupt level.</p>
+    <p>Methods: registerInterruptSource, getInterruptPvt,
+    createInterruptNode, freeInterruptNode, addInterruptUser,
+    removeInterruptUser, interruptStart, interruptEnd</p>
+    <p>Interrupt just means: "I have a new value for ." Many asyn interfaces,
+    e.g. asynInt32, provide interrupt support. These interfaces provide
+    methods registerInterruptUser and cancelInterruptUser. Device support
+    calls registerInterruptUser if it wants to be called whenever an
+    interrupt occurs. Drivers or other code that implements the interface
+    calls the registers users when it has new data. asynManager provides
+    services that help drivers implement thread-safe support for
+    interrupts.</p>
+    <p>A driver that wants to support interrupts must call
+    registerInterruptSource for each interface it supports. After it has done
+    this it can call interruptStart to obtain a list of all registered users.
+    It call interruptEnd when it is done. If any calls are made to
+    addInterruptUser or removeInterruptUser between the calls to
+    interruptStart/interruptEnd, asynManager puts the request on a list. When
+    interruptEnd is called it processes the request.</p>
+    <p>The code that implements registerInterruptSource must call
+    addInterruptUser and removeInterruptUser.</p>
+    <p>On operating systems like vxWorks or RTEMS interruptStart,interruptEnd
+     MUST NOT be called from interupt level.</p>
     <p>Code that has called connectDevice can call registerInterruptUser and
-    cancelInterruptUser. A call to interrupt will result in a call to all
-    registerInterruptUser callbacks. The callbacks must not block.</p>
+    cancelInterruptUser. The callbacks must not block.</p>
     <p>Many standard interfaces, e.g. asynInt32, provide methods
     registerInterruptUser, cancelInterruptUser. These interfaces also provide
     an auxilliary interface, e.g. asynInt32Base, and code which implements
@@ -934,11 +946,14 @@ asynManager:interposeInterface.</p>
 #define ASYN_MULTIDEVICE  0x0001
 #define ASYN_CANBLOCK     0x0002
 
-typedef void (*userCallback)(asynUser *pasynUser);
-typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
+typedef struct interruptNode{
+    ELLNODE node;
+    void    *drvPvt;
+    void    *asynPvt;
+}interruptNode;
 
 typedef struct asynManager {
-    void      (*report)(FILE *fp,int details,const char *portName);
+    void      (*report)(FILE *fp,int details,const char*portName);
     asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
     asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
                                  userCallback queue,userCallback timeout);
@@ -982,12 +997,18 @@ typedef struct asynManager {
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
     /*The following are methods for interrupts*/
-    asynStatus (*registerInterruptSource)(const char *portName,int addr,
-                                        void *callerPvt, void **pasynPvt);
-    void       (*interrupt)(void *asynPvt,int addr, int reason,void *pvalue);
-    asynStatus (*registerInterruptUser)(asynUser *pasynUser,
-                            interruptCallback callback, void *userPvt);
-    asynStatus (*cancelInterruptUser)(asynUser *pasynUser);
+    asynStatus (*registerInterruptSource)(const char *portName,
+                               asynInterface *pasynInterface, void **pasynPvt);
+    asynStatus (*getInterruptPvt)(asynUser *pasynUser,
+                               const char *interfaceType, void **pasynPvt);
+    interruptNode *(*createInterruptNode)(void *pasynPvt);
+    asynStatus (*freeInterruptNode)(asynUser *pasynUser,interruptNode *pnode);
+    asynStatus (*addInterruptUser)(asynUser *pasynUser,
+                                  interruptNode*pinterruptNode);
+    asynStatus (*removeInterruptUser)(asynUser *pasynUser,
+                                  interruptNode*pinterruptNode);
+    asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
+    asynStatus (*interruptEnd)(void *pasynPvt);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;</pre>
 
@@ -1238,26 +1259,38 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>registerInterruptSource</td>
-      <td>If a low level driver supports interrupts it should call this so
-        that asynManager can handle callbacks.</td>
+      <td>If a low level driver supports interrupts it must call this for
+        each interface that supports interrupts.</td>
     </tr>
     <tr>
-      <td>interrupt</td>
-      <td>A driver calls this when it has new data because of an
-      interrupt.</td>
+      <td>getInterruptPvt</td>
+      <td>Any code that wants to call createInterruptNode must call this
+        because it provides the argument required by createInterruptNode. The
+        asynUser must have called createDevice or this call will return
+        asynError.</td>
     </tr>
     <tr>
-      <td>registerInterruptUser</td>
-      <td>Many interfaces provide registerInterruptUser and
-        cancelInterruptUser methods. Low level drivers or associated
-        interpose interfaces should provide a callback that only handles data
-        and call asynManager:registerInterruptUser to handle details of
-        callback processing.</td>
+      <td>createInterruptNode/freeInterruptNode</td>
+      <td>These methods are the only way a user can allocate and free an
+        interruptNode.</td>
     </tr>
     <tr>
-      <td>cancelInterruptUser</td>
-      <td>Code that calls asynManager:registerInterruptUser must call
-        asynManager:cancelInterruptUser to cancel callback requests.</td>
+      <td>addInterruptUser/removeInterruptUser</td>
+      <td>Code that implements registerInterruptUser/cancelInterruptUser must
+        call addInterruptUser/removeInterruptUser to add and remove users
+        from the list or else calls to interruptStart/interruptEnd will no
+        work.</td>
+    </tr>
+    <tr>
+      <td>interruptStart/interruptEnd</td>
+      <td>The code that implements interrupts is interface dependent. The
+        only service asynManager provides to thread-safe implemention of the
+        user list. When the interface wants to call the users it calls
+        interruptStart to obtain the list of users to call. When it is done
+        it calls interruptEnd. If any requests are made to
+        addInterruptUser/removeInterruptUser between the calls to
+        interruptStart and interruptEnd, asymManager delays the requests
+        until interruptEnd is called.</td>
     </tr>
   </tbody>
 </table>
@@ -1850,12 +1883,19 @@ addr is:</p>
 <p>asynInt32 describes the methods implemented by drivers that use integers
 for communicating with a device.</p>
 <pre>typedef void (*interruptCallbackInt32)(void *userPvt, epicsInt32 data);
+typedef struct asynInt32Interrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackInt32 callback;
+    void *userPvt;
+} asynInt32Interrupt;
 #define asynInt32Type "asynInt32"
 typedef struct asynInt32 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
-    asynStatus (*getBounds)(void *drvPvt, asynUser *pasynUser,
-                           epicsInt32 *low, epicsInt32 *high);
+    asynStatus (*getBounds)(void *drvPvt, asynUser *pasynUser, 
+                           epicsInt32 *low, epicsInt32 *high); 
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
                            interruptCallbackInt32 callback, void *userPvt,
                            void **registrarPvt);
@@ -1874,7 +1914,7 @@ typedef struct asynInt32 {
 typedef struct asynInt32Base {
     asynStatus (*initialize)(const char *portName,
                             asynInterface *pint32Interface);
-} asynInt32Base;
+} asynInt32Base; 
 epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
 
 <table border="1">
@@ -2047,7 +2087,14 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
 <p>asynInt32Array describes the methods implemented by drivers that use
 arrays of integers for communicating with a device.</p>
 <pre>typedef void (*interruptCallbackInt32Array)(
-             void *userPvt, epicsInt32 *value, size_t *nelements);
+             void *userPvt, epicsInt32 *value, size_t nelements);
+typedef struct asynInt32ArrayInterrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackInt32Array callback;
+    void *userPvt;
+} asynInt32ArrayInterrupt;
 #define asynInt32ArrayType "asynInt32Array"
 typedef struct asynInt32Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
@@ -2058,7 +2105,14 @@ typedef struct asynInt32Array {
              interruptCallbackInt32Array callback, void *userPvt,
              void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
-} asynInt32Array;</pre>
+} asynInt32Array;
+   
+#define asynInt32ArrayBaseType "asynInt32ArrayBase"
+typedef struct asynInt32ArrayBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pint32ArrayInterface);
+} asynInt32ArrayBase;
+epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
 
 <table border="1">
   <caption>asynInt32Array</caption>
@@ -2093,8 +2147,16 @@ Int32 register.</p>
 <pre>typedef enum {
     interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
 } interruptReason;
-
+    
 typedef void (*interruptCallbackUInt32Digital)(void *userPvt, epicsUInt32 data);
+typedef struct asynUInt32DigitalInterrupt {
+    epicsUInt32 mask;
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackUInt32Digital callback;
+    void *userPvt;
+} asynUInt32DigitalInterrupt;
 #define asynUInt32DigitalType "asynUInt32Digital"
 typedef struct asynUInt32Digital {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
@@ -2111,7 +2173,7 @@ typedef struct asynUInt32Digital {
         interruptCallbackUInt32Digital callback,void *userPvt,epicsUInt32 mask,
         void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
-} asynUInt32Digital;
+} asynUInt32Digital;        
 
 /* asynUInt32DigitalBase does the following:
    calls  registerInterface for asynUInt32Digital.
@@ -2337,6 +2399,13 @@ epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;</pre>
 <p>asynFloat64  describes the methods for communicating via IEEE double
 precision float values.</p>
 <pre>typedef void (*interruptCallbackFloat64)(void *userPvt, epicsFloat64 data);
+typedef struct asynFloat64Interrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackFloat64 callback;
+    void *userPvt;
+} asynFloat64Interrupt;
 #define asynFloat64Type "asynFloat64"
 typedef struct asynFloat64 {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsFloat64 value);
@@ -2505,10 +2574,17 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
 
 <p>asynFloat64Array  describes the methods for communicating via IEEE double
 precision float values.</p>
-<pre>typedef void (*interruptCallbackFloat64Array)( 
+<pre>typedef void (*interruptCallbackFloat64Array)(
                void *userPvt, epicsFloat64 *data, size_t nelements);
+typedef struct asynFloat64ArrayInterrupt {
+    int reason;
+    void *drvUser;
+    int addr;
+    interruptCallbackFloat64Array callback;
+    void *userPvt;
+} asynFloat64ArrayInterrupt;
 #define asynFloat64ArrayType "asynFloat64Array"
-typedef struct asynFloat64Array { 
+typedef struct asynFloat64Array {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
                        epicsFloat64 *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
@@ -2517,7 +2593,22 @@ typedef struct asynFloat64Array {
          interruptCallbackFloat64Array callback,
          void *userPvt,void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
-} asynFloat64Array;</pre>
+} asynFloat64Array;
+
+/* asynFloat64ArrayBase does the following:
+   calls  registerInterface for asynFloat64Array.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
+*/
+
+#define asynFloat64ArrayBaseType "asynFloat64ArrayBase"
+typedef struct asynFloat64ArrayBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pfloat64ArrayInterface);
+} asynFloat64ArrayBase;
+epicsShareExtern asynFloat64ArrayBase *pasynFloat64ArrayBase;</pre>
 
 <table border="1">
   <caption>asynFloat64Array</caption>
