@@ -31,9 +31,10 @@ typedef enum {
 typedef struct asynUInt32DigitalCallback {
     asynStatus (*registerCallback)(void *drvPvt, asynUser *pasynUser,
         void (*callback)(void *userPvt, epicsUInt32 data),
-        epicsUInt32 mask,void *userPvt);
+        epicsUInt32 mask, void *userPvt);
     asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
-        void (*callback)(void *pvt, epicsUInt32 data),void *pvt);
+        void (*callback)(void *pvt, epicsUInt32 data),
+        epicsUInt32 mask, void *pvt);
     asynStatus (*setInterruptMask)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 mask, interruptReason reason);
     asynStatus (*getInterruptMask)(void *drvPvt, asynUser *pasynUser,
