@@ -145,6 +145,7 @@ static asynStatus
 {
     asynSyncIOPvt *pPvt = (asynSyncIOPvt *)pasynUser->userPvt;
     asynStatus status;
+    epicsEventWaitStatus waitStatus;
 
     /* Copy parameters to private structure for use in callback */
     pPvt->output_buff = output_buff;
@@ -168,11 +169,11 @@ static asynStatus
     }
 
     /* Wait for event, signals I/O is complete */
-    status = epicsEventWaitWithTimeout(pPvt->event, EVENT_TIMEOUT);
-    if (status) {
+    waitStatus = epicsEventWaitWithTimeout(pPvt->event, EVENT_TIMEOUT);
+    if (waitStatus!=epicsEventWaitOK) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
                  "asynSyncIOQueueAndWait queue timeout\n");
-       return(status);
+       return(asynTimeout);
     }
     /* Return that status that the callback put in the private structure */
     return(pPvt->retval);
