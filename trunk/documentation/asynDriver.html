@@ -2030,11 +2030,20 @@ time the record processed.</p>
 <pre>device(bi,INST_IO,asynBiUInt32Digital,"asynUInt32Digital")
 device(bo,INST_IO,asynBoUInt32Digital,"asynUInt32Digital")
 device(longin,INST_IO,asynLiUInt32Digital,"asynUInt32Digital")
-device(longout,INST_IO,asynLoUInt32Digital,"asynUInt32Digital")</pre>
+device(longout,INST_IO,asynLoUInt32Digital,"asynUInt32Digital")
+device(mbbi,INST_IO,asynMbbiUInt32Digital,"asynUInt32Digital")
+device(mbbo,INST_IO,asynMbboUInt32Digital,"asynUInt32Digital")
+device(mbbiDirect,INST_IO,asynMbbiDirectUInt32Digital,"asynUInt32Digital")
+device(mbboDirect,INST_IO,asynMbboDirectUInt32Digital,"asynUInt32Digital")
+</pre>
 
-<p>This needs documentation. Also support is needed for mbbi, mbbo,
-mbbiDirect, and mbboDirect.</p>
+<p>
+<p>Support for drivers the implement interface asynUInt32Digital
+and optionally asynUInt32DigitalCallback. If asynUInt32DigitalCallback is
+available then input records can be declared "I/O Intr" scanned.
+</p>
 
+</p>
 <h2>octet device support</h2>
 
 <p>The following support is available:</p>
