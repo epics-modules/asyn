@@ -2,6 +2,7 @@ record(bo,"$(ioc):$(port)$(addr)traceError")
 {
     field(ZNAM,"off")
     field(ONAM,"on")
+    field(VAL,"1")
 }
 record(bo,"$(ioc):$(port)$(addr)traceIODevice")
 {
@@ -32,6 +33,7 @@ record(calc,"$(ioc):$(port)$(addr)traceCalc")
     field(INPE,"$(ioc):$(port)$(addr)traceFlow CP")
     field(CALC,"A+B*2+C*4+D*8+E*16")
     field(FLNK,"$(ioc):$(port)$(addr)traceSet")
+    field(PINI,"YES")
 }
 record(longout,"$(ioc):$(port)$(addr)traceSet")
 {

@@ -253,6 +253,7 @@ static asynDevice *locateAsynDevice(asynPort *pasynPort, int addr)
         pasynTracePvt->traceBuffer = callocMustSucceed(
             DEFAULT_TRACE_TRUNCATE_SIZE,sizeof(char),
             "asynManager:locateAsynDevice");
+        pasynTracePvt->traceMask = ASYN_TRACE_ERROR;
         pasynTracePvt->traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
         pasynTracePvt->traceBufferSize = DEFAULT_TRACE_TRUNCATE_SIZE;
         ellAdd(&pasynPort->asynDeviceList,&pasynDevice->node);
@@ -699,10 +700,7 @@ static int getTraceMask(asynUser *pasynUser)
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
     asynDevice *pasynDevice = pasynUserPvt->pasynDevice;
 
-    if(!pasynDevice) {
-        printf("asynManager::getTraceMask but not connected\n");
-        return(0);
-    }
+    if(!pasynDevice) return(ASYN_TRACE_ERROR);
     return(pasynDevice->trace.traceMask);
 }
 
@@ -806,7 +804,10 @@ static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
     FILE *fd;
 
     if(!pasynDevice) {
-        printf("asynManager::print but not connected\n");
+        printf("asynManager::print not connected\n");
+        va_start(pvar,pformat);
+        nout = vfprintf(stdout,pformat,pvar);
+        va_end(pvar);
         return(0);
     }
     pasynTracePvt = &pasynDevice->trace;

@@ -55,7 +55,8 @@ long epicsShareAPI devGpib_initAi(aiRecord * pai)
     pgpibDpvt = gpibDpvtGet(pai);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
-        printf("%s invalid command type for AI record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for AI record in param %d\n",
             pai->name, pgpibDpvt->parm);
         pai->pact = TRUE;
         return S_db_badField;
@@ -90,7 +91,8 @@ static int aiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pai->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pai->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         int result = 0;
@@ -126,7 +128,8 @@ long epicsShareAPI devGpib_initAo(aoRecord * pao)
     pgpibDpvt = gpibDpvtGet(pao);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
-        printf("%s invalid command type for AO record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for AO record in param %d\n",
             pao->name, pgpibDpvt->parm);
         pao->pact = TRUE;
         return S_db_badField;
@@ -185,7 +188,8 @@ long epicsShareAPI devGpib_initBi(biRecord * pbi)
     pgpibDpvt = gpibDpvtGet(pbi);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
-        printf("%s invalid command type for BI record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for BI record in param %d\n",
             pbi->name, pgpibDpvt->parm);
         pbi->pact = TRUE;
         return  S_db_badField;
@@ -228,7 +232,8 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             failure = -1;
         }
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pbi->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pbi->name);
         failure = -1;
     } else {
         char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
@@ -283,14 +288,16 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
         case GPIBGTL: papname = gtlName; break;
         case GPIBRESETLNK: papname = resetName; break;
         default:
-            printf("%s devGpib_initBo logic error\n",pbo->name);
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s devGpib_initBo logic error\n",pbo->name);
         }
         if (papname) {
             if (pbo->znam[0] == 0) strcpy(pbo->znam, papname[0]);
             if (pbo->onam[0] == 0) strcpy(pbo->onam, papname[1]);
         }
     } else if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
-        printf("%s invalid command type for BO record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for BO record in param %d\n",
             pbo->name, pgpibDpvt->parm);
         pbo->pact = TRUE;
         return S_db_badField;
@@ -371,7 +378,8 @@ static int boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
             status = pgpibDpvt->pasynCommon->connect(asynCommonPvt,pasynUser);
     } else if(!pasynGpib) {
         failure = -1;
-        printf("%s pasynGpib is 0\n",precord->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynGpib is 0\n",precord->name);
     } else switch(cmdType) {
         case GPIBIFC: status = pasynGpib->ifc(drvPvt,pasynUser); break;
         case GPIBREN: status = pasynGpib->ren(drvPvt,pasynUser,val); break;
@@ -409,7 +417,8 @@ long epicsShareAPI devGpib_initEv(eventRecord * pev)
     pgpibDpvt = gpibDpvtGet(pev);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
-        printf("%s invalid command type for EV record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for EV record in param %d\n",
             pev->name, pgpibDpvt->parm);
         pev->pact = TRUE;
         return S_db_badField;
@@ -440,7 +449,8 @@ static int evGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pev->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pev->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "hu";
@@ -479,7 +489,8 @@ long epicsShareAPI devGpib_initLi(longinRecord * pli)
     pgpibDpvt = gpibDpvtGet(pli);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBSRQHANDLER))) {
-        printf("%s invalid command type for LI record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for LI record in param %d\n",
             pli->name, pgpibDpvt->parm);
         pli->pact = TRUE;
         return S_db_badField;
@@ -514,7 +525,8 @@ static int liGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pli->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pli->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
         char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%ld";
@@ -544,7 +556,8 @@ long epicsShareAPI devGpib_initLo(longoutRecord * plo)
     pgpibDpvt = gpibDpvtGet(plo);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
-        printf("%s invalid command type for LO record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for LO record in param %d\n",
             plo->name, pgpibDpvt->parm);
         plo->pact = TRUE;
         return S_db_badField;
@@ -601,14 +614,16 @@ long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT|GPIBEFASTI|GPIBEFASTIW))) {
-        printf("%s invalid command type for MBBI record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for MBBI record in param %d\n",
             pmbbi->name, pgpibDpvt->parm);
         pmbbi->pact = TRUE;
         return S_db_badField;
     }
     if(pdevGpibNames) {
         if (pdevGpibNames->value == NULL) {
-            printf("%s: init_rec_mbbi: MBBI value list wrong for param"
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s: init_rec_mbbi: MBBI value list wrong for param"
                 " #%d\n", pmbbi->name, pgpibDpvt->parm);
             pmbbi->pact = TRUE;
             return S_db_badField;
@@ -660,7 +675,8 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             failure = -1;
         }
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pmbbi->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pmbbi->name);
         failure = -1;
     } else {
         char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
@@ -692,7 +708,8 @@ long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
     pgpibDpvt = gpibDpvtGet(pmbbiDirect);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
-        printf("%s invalid command type for MBBI_DIRECT record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for MBBI_DIRECT record in param %d\n",
             pmbbiDirect->name, pgpibDpvt->parm);
         pmbbiDirect->pact = TRUE;
         return S_db_badField;
@@ -724,7 +741,8 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",pmbbiDirect->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",pmbbiDirect->name);
         failure = -1;
     } else {
         char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "%lu";
@@ -760,7 +778,8 @@ long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
     pgpibDpvt = gpibDpvtGet(pmbbo);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT))) {
-        printf("%s invalid command type for MBBO record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for MBBO record in param %d\n",
             pmbbo->name, pgpibDpvt->parm);
         pmbbo->pact = TRUE;
         return S_db_badField;
@@ -768,8 +787,9 @@ long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if (pdevGpibNames) {
         if (pdevGpibNames->value == NULL) {
-            printf("%s: init_rec_mbbo: MBBO value list wrong for param"
-               " #%d\n", pmbbo->name, pgpibDpvt->parm);
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s: init_rec_mbbo: MBBO value list wrong for param"
+                " #%d\n", pmbbo->name, pgpibDpvt->parm);
             pmbbo->pact = TRUE;
             return S_db_badField;
         }
@@ -837,7 +857,8 @@ long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
     pgpibDpvt = gpibDpvtGet(pmbboDirect);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
-        printf("%s invalid command type for MBBO_DIRECT record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for MBBO_DIRECT record in param %d\n",
             pmbboDirect->name, pgpibDpvt->parm);
         pmbboDirect->pact = TRUE;
         return S_db_badField;
@@ -889,7 +910,8 @@ long epicsShareAPI devGpib_initSi(stringinRecord * psi)
     pgpibDpvt = gpibDpvtGet(psi);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD|GPIBSOFT))) {
-        printf("%s invalid command type for SI record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for SI record in param %d\n",
             psi->name, pgpibDpvt->parm);
         psi->pact = TRUE;
         return S_db_badField;
@@ -919,7 +941,8 @@ static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
             failure = -1;
     } else if (!pgpibDpvt->msg) {
-        printf("%s no msg buffer\n",psi->name);
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s no msg buffer\n",psi->name);
         failure = -1;
     } else {
         char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
@@ -929,8 +952,8 @@ static int siGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         nchars = epicsSnprintf(psi->val,lenVal,format,pgpibDpvt->msg);
         if(nchars>=lenVal) {
             psi->val[lenVal-1] = 0;
-            printf("%s %d characters were truncated\n",
-                psi->name,(nchars-lenVal+1));
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s %d characters were truncated\n",psi->name,(nchars-lenVal+1));
             failure = -1;
         }
         psi->udf = FALSE;
@@ -955,7 +978,8 @@ long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
     pgpibDpvt = gpibDpvtGet(pso);
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBSOFT))) {
-        printf("%s invalid command type for SO record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for SO record in param %d\n",
             pso->name, pgpibDpvt->parm);
         pso->pact = TRUE;
         return S_db_badField;
@@ -1011,12 +1035,14 @@ long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(cmdType&(GPIBREAD|GPIBREADW|GPIBRAWREAD)) {
         if((!pgpibCmd->convert) && (pwf->ftvl!=menuFtypeCHAR)) {
-            printf("%s ftvl != CHAR but no convert\n", pwf->name);
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s ftvl != CHAR but no convert\n", pwf->name);
             pwf->pact = 1;
             return S_db_badField;
         }
     } else if(!(cmdType&(GPIBSOFT|GPIBWRITE|GPIBCMD|GPIBACMD))) {
-        printf("%s invalid command type for WF record in param %d\n",
+        asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+            "%s invalid command type for WF record in param %d\n",
             pwf->name, pgpibDpvt->parm);
         pwf->pact = TRUE;
         return S_db_badField;
@@ -1046,7 +1072,8 @@ static int wfGpibStart(gpibDpvt * pgpibDpvt,int failure)
 
     if(!failure && !pgpibCmd->convert && (pgpibCmd->type&GPIBWRITE)) {
         if(pwf->ftvl!=menuFtypeCHAR) {
-            printf("%s ftvl != CHAR but no convert\n", pwf->name);
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s ftvl != CHAR but no convert\n", pwf->name);
             pwf->pact = 1;
             failure = -1;
         } else {
@@ -1068,7 +1095,8 @@ static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             if(pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3)==-1)
                 failure = -1;
         } else if(pwf->ftvl!=menuFtypeCHAR) {
-            printf("%s ftvl != CHAR but no convert\n",pwf->name);
+            asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                "%s ftvl != CHAR but no convert\n",pwf->name);
             failure = -1; 
         } else {
             char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
@@ -1079,8 +1107,9 @@ static int wfGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             nchars = epicsSnprintf(pdest,lenDest,format,pgpibDpvt->msg);
             if(nchars>=lenDest) {
                  pdest[lenDest-1] = 0;
-                 printf("%s %d characters were truncated\n",
-                     pwf->name,(nchars-lenDest+1));
+                 asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
+                     "%s %d characters were truncated\n",
+                      pwf->name,(nchars-lenDest+1));
                  failure = -1;
                  nchars = lenDest;
             }

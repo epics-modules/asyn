@@ -788,13 +788,15 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
             (const xdrproc_t) xdr_Device_ReadParms,(void *) &devReadP,
             (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
         if(clntStat != RPC_SUCCESS) {
-            errlogPrintf("%s vxiRead %d, %s, %d %s\n",
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiRead %d, %s, %d %s\n",
                 pvxiLink->portName, addr, data, maxchars,
                 clnt_sperror(pvxiLink->rpcClient, ""));
             status = -1;
         } else if(devReadR.error != VXI_OK) {
             if(devReadR.error != VXI_IOTIMEOUT) {
-                errlogPrintf("%s vxiRead %d, %s, %d %s\n",
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "%s vxiRead %d, %s, %d %s\n",
                     pvxiLink->portName, addr, data, maxchars,
                     vxiError(devReadR.error));
             }
@@ -859,14 +861,16 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             (const xdrproc_t) xdr_Device_WriteParms,(void *) &devWriteP,
             (const xdrproc_t) xdr_Device_WriteResp,(void *) &devWriteR);
         if(clntStat != RPC_SUCCESS) {
-            errlogPrintf("%s vxiWrite %d, \"%s\", %d)%s\n",
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s vxiWrite %d, \"%s\", %d)%s\n",
                 pvxiLink->portName,
                 addr, data, numchars,
                 clnt_sperror(pvxiLink->rpcClient, ""));
             status = -1;
         } else if(devWriteR.error != VXI_OK) {
             if(devWriteR.error != VXI_IOTIMEOUT) {
-                errlogPrintf("%s vxiWrite %d, \"%s\", %d: %s\n",
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "%s vxiWrite %d, \"%s\", %d: %s\n",
                     pvxiLink->portName, addr, data, numchars,
                     vxiError(devWriteR.error));
             }
@@ -904,8 +908,8 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s vxiSetEos eoslen %d\n",pvxiLink->portName,eoslen);
     if(eoslen>1 || eoslen<0) {
-        errlogPrintf("%s vxiSetEos illegal eoslen %d\n",
-            pvxiLink->portName,eoslen);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+           "%s vxiSetEos illegal eoslen %d\n",pvxiLink->portName,eoslen);
         return(asynError);
     }
     pvxiLink->eos = (eoslen==0) ? -1 : (int)(unsigned int)eos[0] ;
@@ -975,11 +979,11 @@ static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
         (const xdrproc_t) xdr_Device_DocmdParms,(void *) &devDocmdP,
         (const xdrproc_t) xdr_Device_DocmdResp, (void *) &devDocmdR);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiIfc\n",pvxiLink->portName);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiIfc\n",pvxiLink->portName);
         status = asynError;
     } else if(devDocmdR.error != VXI_OK) {
         if(devDocmdR.error != VXI_IOTIMEOUT) {
-            errlogPrintf("%s vxiIfc %s\n",
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiIfc %s\n",
                 pvxiLink->portName, vxiError(devDocmdR.error));
         }
         status = asynError;
@@ -1018,11 +1022,11 @@ static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
         (const xdrproc_t) xdr_Device_DocmdParms,(void *) &devDocmdP,
         (const xdrproc_t) xdr_Device_DocmdResp, (void *) &devDocmdR);
     if(clntStat != RPC_SUCCESS) {
-        errlogPrintf("%s vxiRen\n", pvxiLink->portName);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRen\n", pvxiLink->portName);
         status = asynError;
     } else if(devDocmdR.error != VXI_OK) {
         if(devDocmdR.error != VXI_IOTIMEOUT) {
-            errlogPrintf("%s vxiRen %s\n", 
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiRen %s\n", 
                 pvxiLink->portName, vxiError(devDocmdR.error));
         }
         status = asynError;

@@ -43,18 +43,20 @@ typedef struct dsetTrace{
 }dsetTrace;
 
 static long initCommon();
-static long initLongout();
-static long initTraceIOTruncateSize();
-static long initStringout();
+
+static long initTrace();
 static long writeTrace();
+static long initTraceIO();
 static long writeTraceIO();
+static long initTraceIOTruncateSize();
 static long writeTraceIOTruncateSize();
+static long initStringout();
 static long writeTraceFile();
 
-dsetTrace devAsynTrace = {5,0,0,initLongout,0,writeTrace};
+dsetTrace devAsynTrace = {5,0,0,initTrace,0,writeTrace};
 epicsExportAddress(dset,devAsynTrace);
 
-dsetTrace devAsynTraceIO = {5,0,0,initLongout,0,writeTraceIO};
+dsetTrace devAsynTraceIO = {5,0,0,initTraceIO,0,writeTraceIO};
 epicsExportAddress(dset,devAsynTraceIO);
 
 dsetTrace devAsynTraceIOTruncateSize =
@@ -106,33 +108,21 @@ static long initCommon(dbCommon *pdbCommon,struct link *plink)
     pdbCommon->dpvt = pdevTrace;
     return 0;
 } 
-
-static long initLongout(longoutRecord *plongout)
+
+static long initTrace(longoutRecord *plongout)
 {
-    return initCommon((dbCommon *)plongout,&(plongout->out));
-}
-
-static long initTraceIOTruncateSize(longoutRecord *plongout)
-{
-    long initStatus;
+    long status = initCommon((dbCommon *)plongout,&plongout->out);
     devTrace *pdevTrace;
     asynUser *pasynUser;
-    int size;
+    int mask;
 
-    initStatus = initCommon((dbCommon *)plongout,&(plongout->out));
-    if(initStatus!=asynSuccess) return(initStatus);
+    if(status!=asynSuccess) return(status);
     pdevTrace = (devTrace *)plongout->dpvt;
     pasynUser = pdevTrace->pasynUser;
-    size = pasynTrace->getTraceIOTruncateSize(pasynUser);
-    plongout->val = size;
+    mask = pasynTrace->getTraceMask(pasynUser);
+    plongout->val = mask;
     plongout->udf = 0;
     return 0;
-
-}
-
-static long initStringout(stringoutRecord *pstringout)
-{
-    return initCommon((dbCommon *)pstringout,&(pstringout->out));
 }
 
 static long writeTrace(longoutRecord	*plongout)
@@ -150,6 +140,22 @@ static long writeTrace(longoutRecord	*plongout)
     return 0;
 }
 
+static long initTraceIO(longoutRecord *plongout)
+{
+    long status = initCommon((dbCommon *)plongout,&plongout->out);
+    devTrace *pdevTrace;
+    asynUser *pasynUser;
+    int mask;
+
+    if(status!=asynSuccess) return(status);
+    pdevTrace = (devTrace *)plongout->dpvt;
+    pasynUser = pdevTrace->pasynUser;
+    mask = pasynTrace->getTraceIOMask(pasynUser);
+    plongout->val = mask;
+    plongout->udf = 0;
+    return 0;
+}
+
 static long writeTraceIO(longoutRecord *plongout)
 {
     devTrace *pdevTrace = (devTrace *)plongout->dpvt;
@@ -162,6 +168,22 @@ static long writeTraceIO(longoutRecord *plongout)
             plongout->name,pasynUser->errorMessage);
         recGblSetSevr(plongout,WRITE_ALARM,INVALID_ALARM);
     }
+    return 0;
+}
+
+static long initTraceIOTruncateSize(longoutRecord *plongout)
+{
+    long initStatus = initCommon((dbCommon *)plongout,&plongout->out);
+    devTrace *pdevTrace;
+    asynUser *pasynUser;
+    int size;
+
+    if(initStatus!=asynSuccess) return(initStatus);
+    pdevTrace = (devTrace *)plongout->dpvt;
+    pasynUser = pdevTrace->pasynUser;
+    size = pasynTrace->getTraceIOTruncateSize(pasynUser);
+    plongout->val = size;
+    plongout->udf = 0;
     return 0;
 }
 
@@ -178,6 +200,11 @@ static long writeTraceIOTruncateSize(longoutRecord *plongout)
         recGblSetSevr(plongout,WRITE_ALARM,INVALID_ALARM);
     }
     return 0;
+}
+
+static long initStringout(stringoutRecord *pstringout)
+{
+    return initCommon((dbCommon *)pstringout,&(pstringout->out));
 }
 
 static long writeTraceFile(stringoutRecord *pstringout)
