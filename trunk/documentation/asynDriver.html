@@ -960,7 +960,11 @@ strings for sending commands and receiving responses from a device.</p>
     <tr>
       <td>setEos</td>
       <td>Set End Of String. For example "\n". Note that gpib drivers usually
-        accept at most a one character string.</td>
+        accept at most a one character string.
+    If eoslen is equal to 0, the behaviour depends on the interface.  The 
+    asynInterposeEos asynOctet interface provides a read method which will
+    not return until the specified number of characters have been
+    been read or the time limit has been reached.</td>
     </tr>
     <tr>
       <td>getEos</td>
@@ -1747,12 +1751,16 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the input routines should search
-    for the end-of-string character(s), if any. Non-zero inhibits
-    end-of-string search.</li>
+  <li>noEos - Zero or missing indicates that the generic EOS handler will
+         be interposed.  Non-zero will not interpose the EOS handler.</li>
   <li>addr - This argument is ignored since serial devices are configured
     with multiDevice=0.</li>
 </ul>
+
+<p>The setEos and getEos methods have no effect and return asynError.  The
+read method blocks until at least one character has been received or
+until a timeout occurs.  The read method transfers as many characters
+as possible, limited by the specified count.</p>
 
 <p>The following table summarizes the drvAsynSerialPort driver asynSetOption
 keys and values. Default values are enclosed in square brackets.</p>
@@ -1838,10 +1846,14 @@ where the arguments are:
   <li>noAutoConnect - Zero or missing indicates that portThread should
     automatically connect.  Non-zero if explicit connect command must be
     issued.</li>
-  <li>noEos - Zero or missing indicates that the input routines should search
-    for the end-of-string character(s), if any. Non-zero inhibits
-    end-of-string search.</li>
+  <li>noEos - Zero or missing indicates that the generic EOS handler will
+         be interposed.  Non-zero will not interpose the EOS handler.</li>
 </ul>
+
+<p>The setEos and getEos methods have no effect and return asynError.  The
+read method blocks until at least one character has been received or
+until a timeout occurs.  The read method transfers as many characters
+as possible, limited by the specified count.</p>
 
 <p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
 connections.</p>
