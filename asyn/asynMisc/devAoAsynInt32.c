@@ -125,7 +125,7 @@ static long write_ao(aoRecord *pao)
     int status;
 
     status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-    if (status == asynSuccess) {
+    if (status != asynSuccess) {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                   "devAoAsynInt32::write_ao, error queuing request %s\n", 
                   pPvt->pasynUser->errorMessage);
