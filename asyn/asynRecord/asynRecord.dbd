@@ -197,8 +197,8 @@ recordtype(asyn) {
     field(OEOS,DBF_STRING) {
         prompt("Output delimiter")
         promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
         size(40)
-        initial("\r")
     }
     field(BOUT,DBF_CHAR) {
         prompt("Output binary data")
@@ -256,7 +256,7 @@ recordtype(asyn) {
     field(IEOS,DBF_STRING) {
         prompt("Input Delimiter")
         promptgroup(GUI_DISPLAY)
-        initial("\r")
+        special(SPC_MOD)
         size(40)
     }
     field(BINP,DBF_CHAR) {
