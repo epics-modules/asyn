@@ -237,8 +237,13 @@ static long initRecord(dbCommon *precord, struct link *plink)
 static long processGPIBSOFT(gpibDpvt *pgpibDpvt)
 {
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
+    dbCommon *precord = pgpibDpvt->precord;
 
+    asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s processGPIBSOFT but no convert\n",
+        precord->name);
     if(!pgpibCmd->convert) return -1;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s processGPIBSOFT\n",precord->name);
     return pgpibCmd->convert(pgpibDpvt,pgpibCmd->P1,pgpibCmd->P2,pgpibCmd->P3);
 }
 
@@ -317,6 +322,8 @@ static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     if(failure==-1) {
         precord->pact = TRUE;
     }else {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            "%s registerSrqHandler\n",precord->name);
         pdeviceInstance->unsollicitedHandlerPvt = unsollicitedHandlerPvt;
         pdeviceInstance->unsollicitedHandler = handler;
         if(!pdeviceInstance->waitForSRQ) {
@@ -361,6 +368,7 @@ static int writeMsgLong(gpibDpvt *pgpibDpvt,long val)
 {
     writeMsgProlog
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,pgpibCmd->format,val);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgLong\n",precord->name);
     writeMsgPostLog
 }
 
@@ -368,6 +376,7 @@ static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val)
 {
     writeMsgProlog
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,pgpibCmd->format,val);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgULong\n",precord->name);
     writeMsgPostLog
 }
 
@@ -375,6 +384,7 @@ static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val)
 {
     writeMsgProlog
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,pgpibCmd->format,val);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgDouble\n",precord->name);
     writeMsgPostLog
 }
 
@@ -394,6 +404,7 @@ static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
         return -1; 
     }
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,format,str);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgString\n",precord->name);
     writeMsgPostLog
 }
 
@@ -434,7 +445,7 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
     if(pgpibCmd->rspLen>0) pgpibDpvt->rsp = pdevGpibParmBlock->rsp;
     if(pgpibCmd->msgLen>0) pgpibDpvt->msg = pdevGpibParmBlock->msg;
 }
-
+
 static void registerSrqHandlerCallback(asynUser *pasynUser)
 {
     portInstance *pportInstance = (portInstance *)pasynUser->userPvt;
@@ -447,9 +458,12 @@ static void registerSrqHandlerCallback(asynUser *pasynUser)
             "%s devGpib:registerSrqHandlerCallback "
             "registerSrqHandler failed %s\n",
             pportInstance->portName,pasynUser->errorMessage);
+    } else {
+        asynPrint(pasynUser,ASYN_TRACE_FLOW,
+            "%s devGpib:registerSrqHandlerCallback\n",pportInstance->portName);
     }
 }
-
+
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName)
 {
@@ -624,6 +638,10 @@ static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
                 "%s pasynOctet->setEos failed %s\n",
                 precord->name,pgpibDpvt->pasynUser->errorMessage);
             return -1;
+        } else {
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "%s pasynOctet->setEos eos %s eosLen %d\n",
+                precord->name,pgpibCmd->eos,eosLen);
         }
         pdeviceInstance->eosLen = eosLen;
         if(eosLen!=0 && eosLen<=2) strcpy(pdeviceInstance->eos,pgpibCmd->eos);
@@ -682,6 +700,9 @@ static int gpibPrepareToRead(gpibDpvt *pgpibDpvt,int failure)
                 epicsTimerCancel(pdeviceInstance->srqWaitTimer);
                 return gpibReadWaitComplete(pgpibDpvt,-1);
             }
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s lenmsg %d but nchars written %d\n",
+                precord->name,lenmsg,nchars);
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             failure = -1; break;
         }
@@ -756,6 +777,8 @@ static int gpibRead(gpibDpvt *pgpibDpvt,int failure)
         "%s gpibRead\n",precord->name);
     pgpibDpvt->msgInputLen = nchars;
     if(nchars==0) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s read returned 0 characters\n",precord->name);
         gpibTimeoutHappened(pgpibDpvt);
         failure = -1; goto done;
     }
@@ -799,6 +822,8 @@ static int gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         cnvrtStat = pgpibCmd->convert(
             pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
         if(cnvrtStat==-1) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s convert failed\n",precord->name);
             failure = -1;
         } else {
             lenMessage = cnvrtStat;
@@ -981,9 +1006,12 @@ static void srqWaitTimeoutCallback(void *parm)
 {
     deviceInstance *pdeviceInstance = (deviceInstance *)parm;
     gpibDpvt *pgpibDpvt = pdeviceInstance->pgpibDpvt;
+    dbCommon *precord = pgpibDpvt->precord;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     devGpibPvt *pdevGpibPvt;
     portInstance *pportInstance;
 
+    asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s srqWaitTimeout\n", precord->name);
     pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     pportInstance = pdevGpibPvt->pportInstance;
     epicsMutexMustLock(pportInstance->lock);
@@ -1090,7 +1118,8 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,int len)
         "%s writeIt\n",precord->name);
     if(nchars!=len) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s write requested %d but sent %d bytes\n",len,nchars);
+            "%s write requested %d but sent %d bytes\n",
+            precord->name,len,nchars);
         if(nchars==0) {
             gpibTimeoutHappened(pgpibDpvt);
         } else {
