@@ -71,8 +71,10 @@ static asynCommon asyn = {
 };
 
 /* asynOctet methods */
-static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars);
-static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars);
+static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered);
+static asynStatus echoWrite(void *ppvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus echoFlush(void *ppvt,asynUser *pasynUser);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -146,9 +148,12 @@ static void report(void *ppvt,FILE *fp,int details)
 static asynStatus connect(void *ppvt,asynUser *pasynUser)
 {
     echoPvt    *pechoPvt = (echoPvt *)ppvt;
-    int        addr = pasynManager->getAddr(pasynUser);
     deviceInfo *pdeviceInfo;
+    int        addr;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s echoDriver:connect addr %d\n",pechoPvt->portName,addr);
     if(!pechoPvt->multiDevice) {
@@ -194,9 +199,12 @@ static asynStatus connect(void *ppvt,asynUser *pasynUser)
 static asynStatus disconnect(void *ppvt,asynUser *pasynUser)
 {
     echoPvt    *pechoPvt = (echoPvt *)ppvt;
-    int        addr = pasynManager->getAddr(pasynUser);
     deviceInfo *pdeviceInfo;
+    int        addr;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s echoDriver:disconnect addr %d\n",pechoPvt->portName,addr);
     if(!pechoPvt->multiDevice) {
@@ -261,14 +269,18 @@ static asynStatus getOption(void *ppvt,asynUser *pasynUser,
 }
 
 /* asynOctet methods */
-static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
+static asynStatus echoRead(void *ppvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered)
 {
     echoPvt      *pechoPvt = (echoPvt *)ppvt;
-    int          addr = pasynManager->getAddr(pasynUser);
     deviceInfo   *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
     int          nchars;
+    int          addr;
+    asynStatus   status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pechoPvt->multiDevice) addr = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s echoDriver:read addr %d\n",pechoPvt->portName,addr);
@@ -282,7 +294,10 @@ static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s echoDriver:read device %d not connected\n",
             pechoPvt->portName,addr);
-        return -1;
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver:read device %d not connected\n",
+            pechoPvt->portName,addr);
+        return asynError;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
     nchars = pdeviceBuffer->nchars;
@@ -292,30 +307,38 @@ static int echoRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
         "echoRead nchars %d ",nchars);
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
-    return(nchars);
+    *nbytesTransfered = nchars;
+    return status;
 }
 
-static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int nchars)
+static asynStatus echoWrite(void *ppvt,asynUser *pasynUser,
+    const char *data,int nchars,int *nbytesTransfered)
 {
     echoPvt      *pechoPvt = (echoPvt *)ppvt;
-    int          addr = pasynManager->getAddr(pasynUser);
     deviceInfo   *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
+    int          addr;
+    asynStatus   status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pechoPvt->multiDevice) addr = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s echoDriver:write addr %d\n",pechoPvt->portName,addr);
     if(addr<0 || addr>=NUM_DEVICES) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "addr %d is illegal. Must be 0 or 1\n",addr);
-        return(0);
+        return asynError;
     }
     pdeviceInfo = &pechoPvt->device[addr];
     if(!pdeviceInfo->connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s echoDriver:write device %d not connected\n",
             pechoPvt->portName,addr);
-        return -1;
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s echoDriver:write device %d not connected\n",
+            pechoPvt->portName,addr);
+        return asynError;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
     if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
@@ -324,16 +347,20 @@ static int echoWrite(void *ppvt,asynUser *pasynUser,const char *data,int nchars)
             "echoWrite nchars %d ",nchars);
     pdeviceBuffer->nchars = nchars;
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
-    return(nchars);
+    *nbytesTransfered = nchars;
+    return status;
 }
 
 static asynStatus echoFlush(void *ppvt,asynUser *pasynUser)
 {
     echoPvt *pechoPvt = (echoPvt *)ppvt;
-    int     addr = pasynManager->getAddr(pasynUser);
     deviceInfo *pdeviceInfo;
     deviceBuffer *pdeviceBuffer;
+    int          addr;
+    asynStatus   status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     if(!pechoPvt->multiDevice) addr = 0;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s echoDriver:flush addr %d\n",pechoPvt->portName,addr);

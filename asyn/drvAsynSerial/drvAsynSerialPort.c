@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.4 2004-04-09 20:38:36 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.5 2004-04-12 18:02:13 mrk Exp $
  */
 
 #include <string.h>
@@ -533,20 +533,21 @@ drvAsynSerialPortSetPortOption(void *drvPvt, asynUser *pasynUser,
 /*
  * Write to the serial line
  */
-static int
-drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int numchars)
+static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
+    const char *data, int numchars,int *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
     int nleft = numchars;
     int timerStarted = 0;
+    asynStatus status = asynSuccess;
 
     assert(tty);
     assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                       "%s write.\n", tty->serialDeviceName);
+        "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                               "%s write %d ", tty->serialDeviceName, numchars);
+        "%s write %d ", tty->serialDeviceName, numchars);
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -593,11 +594,13 @@ drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int 
         if (tty->cancelFlag) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                     "%s I/O cancelled", tty->serialDeviceName);
+            status = asynError;
             break;
         }
         if (tty->timeoutFlag || (tty->writePollmsec == 0)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                     "%s timeout", tty->serialDeviceName);
+            status = asynError;
             break;
         }
         if ((thisWrite < 0) && (errno != EWOULDBLOCK)
@@ -607,31 +610,36 @@ drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int 
                                 "%s write error: %s",
                                         tty->serialDeviceName, strerror(errno));
             closeConnection(tty);
+            status = asynError;
             break;
         }
     }
-    if (timerStarted)
-        epicsTimerCancel(tty->timer);
-    return numchars - nleft;
+    if (timerStarted) epicsTimerCancel(tty->timer);
+    *nbytesTransfered = numchars - nleft;
+    return status;
 }
 
 /*
  * Read from the serial line
  */
-static int
-drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
+static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
+    char *data, int maxchars,int *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
     int nRead = 0;
     int timerStarted = 0;
+    asynStatus status = asynSuccess;
 
     assert(tty);
     assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "%s read.\n", tty->serialDeviceName);
-    if (maxchars <= 0)
-        return 0;
+    if (maxchars <= 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s maxchars %d Why <=0?\n",tty->serialDeviceName,maxchars);
+        return asynError;
+    }
     if ((tty->readPollmsec < 0) || (pasynUser->timeout != tty->readTimeout)) {
         tty->readTimeout = pasynUser->timeout;
         if (tty->readTimeout == 0) {
@@ -695,7 +703,7 @@ drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchar
                                 "%s read error: %s",
                                         tty->serialDeviceName, strerror(errno));
                 closeConnection(tty);
-                nRead = -1;
+                status = asynError;
                 break;
             }
             if (tty->readTimeout == 0)
@@ -714,9 +722,9 @@ drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchar
             break;
         }
     }
-    if (timerStarted)
-        epicsTimerCancel(tty->timer);
-    return nRead ? nRead : -1;
+    if (timerStarted) epicsTimerCancel(tty->timer);
+    *nbytesTransfered = nRead;
+    return status;
 }
 
 /*

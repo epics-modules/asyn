@@ -41,9 +41,10 @@ static int interposeInterfaceInit(const char *interposeInterfaceName,
 
 
 /* asynOctet methods */
-static int processRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars);
-static int processWrite(void *ppvt,asynUser *pasynUser,
-    const char *data,int numchars);
+static asynStatus processRead(void *ppvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered);
+static asynStatus processWrite(void *ppvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus processFlush(void *ppvt,asynUser *pasynUser);
 static asynStatus setEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -87,26 +88,24 @@ static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
 }
 
 /* asynOctet methods */
-static int processRead(void *ppvt,asynUser *pasynUser,char *data,int maxchars)
+static asynStatus processRead(void *ppvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
-    int nchars;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered interposeInterface::read\n");
-    nchars = pinterposePvt->pasynOctet->read(pinterposePvt->asynOctetPvt,
-        pasynUser,data,maxchars);
-    return(nchars);
+    return pinterposePvt->pasynOctet->read(pinterposePvt->asynOctetPvt,
+        pasynUser,data,maxchars,nbytesTransfered);
 }
 
-static int processWrite(void *ppvt,asynUser *pasynUser,const char *data,int numchars)
+static asynStatus processWrite(void *ppvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
-    int nchars;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered interposeInterface::write\n");
-    nchars = pinterposePvt->pasynOctet->write(pinterposePvt->asynOctetPvt,
-        pasynUser,data,numchars);
-    return(nchars);
+    return pinterposePvt->pasynOctet->write(pinterposePvt->asynOctetPvt,
+        pasynUser,data,numchars,nbytesTransfered);
 }
 
 static asynStatus processFlush(void *ppvt,asynUser *pasynUser)

@@ -86,9 +86,10 @@ static asynStatus setOption(void *drvPvt,asynUser *pasynUser,
 static asynStatus getOption(void *drvPvt,asynUser *pasynUser,
     const char *key,char *val,int sizeval);
 /*asynOctet methods */
-static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
-static int gpibWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars);
+static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered);
+static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -243,25 +244,22 @@ static asynStatus getOption(void *drvPvt, asynUser *pasynUser,
 }
 
 /*asynOctet methods */
-static int gpibRead(void *drvPvt,asynUser *pasynUser,char *data,int maxchars)
+static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered)
 {
-    int nchars;
     GETgpibPvtasynGpibPort
 
-    nchars = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
-           data,maxchars);
-    return(nchars);
+    return pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
+               data,maxchars,nbytesTransfered);
 }
 
-static int gpibWrite(void *drvPvt,asynUser *pasynUser,
-                    const char *data,int numchars)
+static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered)
 {
-    int nchars;
     GETgpibPvtasynGpibPort
 
-    nchars = pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
-           data,numchars);
-    return(nchars);
+    return pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
+              data,numchars,nbytesTransfered);
 }
 
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser)
@@ -337,9 +335,16 @@ static asynStatus registerSrqHandler(void *drvPvt,asynUser *pasynUser,
 static void pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 {
     int primary,secondary,addr;
+    asynStatus status;
     GETgpibPvtasynGpibPort
 
-    addr = pasynManager->getAddr(pasynUser);
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s asynGpib:pollAddr getAddr failed %s\n",
+            pgpibPvt->portName,pasynUser->errorMessage);
+        return;
+    }
     if(addr<100) {
 	assert(addr>=0 && addr<NUM_GPIB_ADDRESSES);
 	pgpibPvt->pollList[addr].primary.pollIt = onOff;

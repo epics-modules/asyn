@@ -118,8 +118,10 @@ static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val);
 static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, char *val, int sizeval);
-static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars);
-static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,const char *data,int numchars);
+static asynStatus gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered);
+static asynStatus gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered);
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -557,8 +559,11 @@ static asynStatus gsTi9914Connect(void *pdrvPvt,asynUser *pasynUser)
     int intVec = pgpib->intVec;
     ip488RegisterMap *regs = pgpib->regs;
     int ipstatus;
-    int addr = pasynManager->getAddr(pasynUser);
+    int addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s addr %d gsTi9914Connect\n",pgpib->portName,addr);
     if(addr>=0) {
@@ -598,8 +603,11 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
     int carrier = pgpib->carrier;
     int module = pgpib->module;
     ip488RegisterMap *regs = pgpib->regs;
-    int addr = pasynManager->getAddr(pasynUser);
+    int addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s addr %d gsTi9914Disconnect\n",pgpib->portName,addr);
     if(addr>=0) {
@@ -638,14 +646,17 @@ static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     return asynError;
 }
 
-static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
+static asynStatus gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,
+    char *data,int maxchars,int *nbytesTransfered)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
-    asynStatus status;
     int        actual = 0;
     double     timeout = setTimeout(pasynUser);
-    int        addr = pasynManager->getAddr(pasynUser);
+    int        addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Read nchar %d\n",
         pgpib->portName,actual);
     pgpib->errorMessage[0] = 0;
@@ -658,21 +669,26 @@ static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchar
             asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s readGpib error %s\n",
             pgpib->portName,pgpib->errorMessage);
         }
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s readGpib failed %s\n",pgpib->portName,pgpib->errorMessage);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gsTi9914Read\n",pgpib->portName);
-    return actual;
+    *nbytesTransfered = actual;
+    return status;
 }
 
-static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars)
+static asynStatus gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
+    const char *data,int numchars,int *nbytesTransfered)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
-    asynStatus status;
     int        actual = 0;
     double     timeout = setTimeout(pasynUser);
-    int        addr = pasynManager->getAddr(pasynUser);
+    int        addr = 0;
+    asynStatus status;
 
+    status = pasynManager->getAddr(pasynUser,&addr);
+    if(status!=asynSuccess) return status;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gsTi9914Write nchar %d\n",
         pgpib->portName,numchars);
     pgpib->errorMessage[0] = 0;
@@ -680,16 +696,19 @@ static int gsTi9914Write(void *pdrvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s writeGpib error %s\n",
             pgpib->portName,pgpib->errorMessage);
-        return actual;
-    }
-    if(actual!=numchars) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s writeGpib failed %s\n",pgpib->portName,pgpib->errorMessage);
+    } else if(actual!=numchars) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s requested %d but sent %d\n",
             pgpib->portName,numchars,actual);
-        return actual;
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "%s requested %d but sent %d bytes\n",pgpib->portName,numchars,actual);
+        status = asynError;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gsTi9914Write\n",pgpib->portName);
-    return actual;
+    *nbytesTransfered = actual;
+    return status;
 }
 
 static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)

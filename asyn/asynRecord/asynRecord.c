@@ -29,7 +29,7 @@
 #include        <epicsExport.h>
 #include        <asynGpibDriver.h>
 #include        <asynDriver.h>
-#include        <drvGenericSerial.h>
+#include        <drvAsynTCPPort.h>
 #define GEN_SIZE_OFFSET
 #include        "asynRecord.h"
 #undef GEN_SIZE_OFFSET
@@ -333,7 +333,7 @@ static long special(struct dbAddr *paddr, int after)
        case asynRecordSOCK:
           strcpy(pasynRec->port, pasynRec->sock);
           pasynRec->addr = 0;
-          status = drvGenericSerialConfigure(pasynRec->port, pasynRec->sock, 
+          status = drvAsynTCPPortConfigure(pasynRec->port, pasynRec->sock, 
                                              0, 0);
           if (status != asynSuccess) goto unlock;
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
@@ -454,6 +454,7 @@ static void monitorStatus(asynRecord *pasynRec)
     asynUser *pasynUser = pasynRecPvt->pasynUser;
     int trace_mask;
     FILE *traceFd;
+    int yesNo;
 
     monitor_mask = DBE_VALUE | DBE_LOG;
     
@@ -468,9 +469,12 @@ static void monitorStatus(asynRecord *pasynRec)
     pasynRec->tib1 = (trace_mask & ASYN_TRACEIO_ESCAPE) ? 1 : 0;
     pasynRec->tib2 = (trace_mask & ASYN_TRACEIO_HEX)    ? 1 : 0;
 
-    pasynRec->actd = pasynManager->isAutoConnect(pasynUser);
-    pasynRec->cntd = pasynManager->isConnected(pasynUser);
-    pasynRec->enbd = pasynManager->isEnabled(pasynUser);
+    pasynManager->isAutoConnect(pasynUser,&yesNo);
+    pasynRec->actd = yesNo;
+    pasynManager->isConnected(pasynUser,&yesNo);
+    pasynRec->cntd = yesNo;
+    pasynManager->isEnabled(pasynUser,&yesNo);
+    pasynRec->enbd = yesNo;
     pasynRec->tsiz = pasynTrace->getTraceIOTruncateSize(pasynUser);
     traceFd        = pasynTrace->getTraceFile(pasynUser);
     POST_IF_NEW(tb0);
@@ -576,8 +580,8 @@ static void GPIB_command(asynUser *pasynUser)
    /* This function handles GPIB-specific commands */
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
-   int     status;
-   int     ninp;
+   asynStatus status;
+   int     nbytesTransfered;
    char    cmd_char=0;
    char    acmd[6];
 
@@ -644,17 +648,18 @@ static void GPIB_command(asynUser *pasynUser)
             /* Serial Poll Enable */
             cmd_char = IBSPE;
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt, 
-                        pasynRecPvt->pasynUser, &cmd_char, 1);
-            if (status)
+                        pasynRecPvt->pasynUser, &cmd_char, 1,&nbytesTransfered);
+            if (status!=asynSuccess || nbytesTransfered!=1)
                 /* Something is wrong if we couldn't write */
                 reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                             "GPIB Serial Poll write error",
                             "error in GPIB Serial Poll write, %s", 
                             pasynUser->errorMessage);
             /* Read the response byte  */
-            ninp = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynGpibPvt, 
-                      pasynRecPvt->pasynUser, (char *)&pasynRec->spr, 1);
-            if (ninp < 0) /* Is this right? */
+            status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynGpibPvt, 
+                  pasynRecPvt->pasynUser, (char *)&pasynRec->spr,
+                  1,&nbytesTransfered);
+            if (status!=asynSuccess || nbytesTransfered!=1) 
                 /* Something is wrong if we couldn't read */
                 reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
                             "GPIB Serial Poll read error",
@@ -663,8 +668,8 @@ static void GPIB_command(asynUser *pasynUser)
             /* Serial Poll Disable */
             cmd_char = IBSPD;
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt, 
-                        pasynRecPvt->pasynUser, &cmd_char, 1);
-            if (status)
+                        pasynRecPvt->pasynUser, &cmd_char, 1,&nbytesTransfered);
+            if (status!=asynSuccess || nbytesTransfered!=1)
                 /* Something is wrong if we couldn't write */
                 reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                             "GPIB Serial Poll Disable write error",
@@ -727,9 +732,8 @@ static void performIO(asynUser *pasynUser)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
-   int     nout;
-   int     ninp;
-   int     status;
+   asynStatus status;
+   int        nbytesTransfered;
    char    *inptr;
    char    *outptr;
    int     inlen;
@@ -804,16 +808,17 @@ static void performIO(asynUser *pasynUser)
 
    if ((pasynRec->tmod == asynTMOD_Write) ||
        (pasynRec->tmod == asynTMOD_Write_Read)) {
-      /* Send the message */
-      nout = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt, 
-                                     pasynUser, outptr, nwrite);
-      pasynRec->nawt = nout;
-      if (nout != nwrite) 
+      /* Send the message */ 
+      nbytesTransfered = 0;
+      status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt, 
+                   pasynUser, outptr, nwrite,&nbytesTransfered);
+      pasynRec->nawt = nbytesTransfered;
+      if (status!=asynSuccess || nbytesTransfered != nwrite) 
          /* Something is wrong if we couldn't write everything */
          reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                      "Write error",
                      "write error in performIO, nout=%d, %s", 
-                     nout, pasynUser->errorMessage);
+                     nbytesTransfered, pasynUser->errorMessage);
    }
     
    if ((pasynRec->tmod == asynTMOD_Read) ||
@@ -836,56 +841,57 @@ static void performIO(asynUser *pasynUser)
                      "Error setting EOS",
                      "error setting EOS in performIO, %s", 
                      pasynUser->errorMessage);
-      ninp = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt, 
-                                    pasynUser, inptr, nread);
+      nbytesTransfered = 0;
+      status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt, 
+                   pasynUser, inptr, nread,&nbytesTransfered);
 
-      asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, ninp,
-            "%s: inlen=%d, ninp=%d\n", pasynRec->name, inlen, ninp);
-      if (ninp <= 0) 
+      asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
+            "%s: inlen=%d, ninp=%d\n", pasynRec->name, inlen, nbytesTransfered);
+      if (status!=asynSuccess || nbytesTransfered == 0) 
          /* Something is wrong if we didn't get any response */
          reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
                      "Timeout, nothing received",
                      "timeout in performIO, ninp=%d, %s", 
-                     ninp, pasynUser->errorMessage);
+                     nbytesTransfered, pasynUser->errorMessage);
       /* Check for input buffer overflow */
       if ((pasynRec->ifmt == asynFMT_ASCII) && 
-          (ninp >= (int)sizeof(pasynRec->ainp))) {
+          (nbytesTransfered >= (int)sizeof(pasynRec->ainp))) {
          reportError(pasynRec, READ_ALARM, MINOR_ALARM,
                      "Buffer overflow",
                      "buffer overflow in performIO, ninp=%d, %s", 
-                     ninp, pasynUser->errorMessage);
+                     nbytesTransfered, pasynUser->errorMessage);
          /* terminate response with \0 */
          inptr[sizeof(pasynRec->ainp)-1] = '\0';
       }
       else if ((pasynRec->ifmt == asynFMT_Hybrid) && 
-               (ninp >= pasynRec->imax)) {
+               (nbytesTransfered >= pasynRec->imax)) {
          reportError(pasynRec, READ_ALARM, MINOR_ALARM,
                      "Buffer overflow",
                      "buffer overflow in performIO, ninp=%d, %s", 
-                     ninp, pasynUser->errorMessage);
+                     nbytesTransfered, pasynUser->errorMessage);
          /* terminate response with \0 */
          inptr[pasynRec->imax-1] = '\0';
       }
       else if ((pasynRec->ifmt == asynFMT_Binary) && 
-               (ninp > pasynRec->imax)) {
+               (nbytesTransfered > pasynRec->imax)) {
          /* This should not be able to happen */
          reportError(pasynRec, READ_ALARM, MAJOR_ALARM,
                      "Buffer overflow",
                      "buffer overflow in performIO, ninp=%d, %s", 
-                     ninp, pasynUser->errorMessage);
+                     nbytesTransfered, pasynUser->errorMessage);
       }
       else if (pasynRec->ifmt != asynFMT_Binary) {
          /* Not binary and no input buffer overflow has occurred */
          /* Add null at end of input.  This is safe because of tests above */
-         inptr[ninp] = '\0';
+         inptr[nbytesTransfered] = '\0';
          /* If the string is terminated by the requested terminator */
          /* remove it. */
-         if ((eoslen > 0) && (ninp >= eoslen) && 
-                             (strcmp(&inptr[ninp-eoslen], eos) == 0)) {
-            memset(&inptr[ninp-eoslen], 0, eoslen);
+         if ((eoslen > 0) && (nbytesTransfered >= eoslen) && 
+                             (strcmp(&inptr[nbytesTransfered-eoslen], eos) == 0)) {
+            memset(&inptr[nbytesTransfered-eoslen], 0, eoslen);
          }
       } 
-      pasynRec->nord = ninp; /* Number of bytes read */
+      pasynRec->nord = nbytesTransfered; /* Number of bytes read */
    }
 }
 
