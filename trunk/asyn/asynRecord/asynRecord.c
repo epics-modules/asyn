@@ -517,18 +517,28 @@ static long get_array_info(struct dbAddr *paddr, long *no_elements,
                            long *offset)
 {
    asynRecord *pasynRec=(asynRecord *)paddr->precord;
+   int fieldIndex = dbGetFieldIndex(paddr);
 
-   *no_elements =  pasynRec->nord;
-   *offset = 0;
+   if (fieldIndex == asynRecordBOUT) {
+      *no_elements =  pasynRec->nowt;
+      *offset = 0;
+   } else if (fieldIndex == asynRecordBINP) {
+      *no_elements =  pasynRec->nord;
+      *offset = 0;
+   }
    return(0);
 }
 
 static long put_array_info(struct dbAddr *paddr, long nNew)
 {
    asynRecord *pasynRec=(asynRecord *)paddr->precord;
+   int fieldIndex = dbGetFieldIndex(paddr);
 
-   pasynRec->nowt = nNew;
-   if (pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
+   if (fieldIndex == asynRecordBOUT) {
+      pasynRec->nowt = nNew;
+   } else if (fieldIndex == asynRecordBINP) {
+      pasynRec->nord = nNew;
+   }
    return(0);
 }
 
@@ -785,6 +795,7 @@ static void performIO(asynUser *pasynUser)
        (pasynRec->tmod == asynTMOD_Write_Read)) {
       /* Flush the input buffer */
       pasynRecPvt->pasynOctet->flush(pasynRecPvt->asynOctetPvt, pasynUser);
+      asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s flush\n",pasynRec->name);
    }
 
    if ((pasynRec->tmod == asynTMOD_Write) ||
@@ -903,22 +914,22 @@ static void GPIB_command(asynUser *pasynUser)
       switch (pasynRec->ucmd)
       {
         case gpibUCMD_Device_Clear__DCL_:
-            cmd_char = 20;
+            cmd_char = IBDCL;
             break;
         case gpibUCMD_Local_Lockout__LL0_:
-            cmd_char = 17;
+            cmd_char = IBLLO;
             break;
         case gpibUCMD_Serial_Poll_Disable__SPD_:
-            cmd_char = 25;
+            cmd_char = IBSPD;
             break;
         case gpibUCMD_Serial_Poll_Enable__SPE_:
-            cmd_char = 24;
+            cmd_char = IBSPE;
             break;
         case gpibUCMD_Unlisten__UNL_:
-            cmd_char = 63;
+            cmd_char = IBUNL;
             break;
         case gpibUCMD_Untalk__UNT_:
-            cmd_char = 95;
+            cmd_char = IBUNT;
             break;
       }
       status = pasynRecPvt->pasynGpib->universalCmd(pasynRecPvt->asynGpibPvt,
@@ -934,26 +945,26 @@ static void GPIB_command(asynUser *pasynUser)
    /* See if an Addressed Command is to be done */
    if (pasynRec->acmd != gpibACMD_None)
    {
-      acmd[0] = 95; /* Untalk */
-      acmd[1] = 63; /* Unlisten */
+      acmd[0] = IBUNT; /* Untalk */
+      acmd[1] = IBUNL; /* Unlisten */
       acmd[2] = pasynRec->addr + LADBASE;  /* GPIB address + Listen Base */
-      acmd[4] = 95; /* Untalk */
-      acmd[5] = 63; /* Unlisten */
+      acmd[4] = IBUNT; /* Untalk */
+      acmd[5] = IBUNL; /* Unlisten */
       switch (pasynRec->acmd)
       {
         case gpibACMD_Group_Execute_Trig___GET_:
-            acmd[3] = 8;
+            acmd[3] = IBGET[0];
             break;
         case gpibACMD_Go_To_Local__GTL_:
-            acmd[3] = 1;
+            acmd[3] = IBGTL[0];
             break;
         case gpibACMD_Selected_Dev__Clear__SDC_:
-            acmd[3] = 4;
+            acmd[3] = IBSDC[0];
             break;
         case gpibACMD_Take_Control__TCT_:
             /* This command requires Talker Base */
             acmd[2] = pasynRec->addr + TADBASE;
-            acmd[3] = 9;
+            acmd[3] = IBTCT[0];
             break;
         case gpibACMD_Serial_Poll:
             /* Serial poll. Requires 3 operations */
@@ -1118,9 +1129,9 @@ static void reportError(asynRecord *pasynRec, int status, int severity,
 
    va_start(pvar,pformat);
    epicsVsnprintf(buffer, ERR_SIZE, pformat, pvar);
+   va_end(pvar);
    pasynTrace->print(pasynUser, ASYN_TRACE_ERROR, "%s: %s\n", 
                      pasynRec->name, buffer);
-   va_end(pvar);
  
    strncpy(pasynRec->errs, buffer, sizeof(pasynRec->errs));
    if (strcmp(pasynRec->errs, pasynRecPvt->old.errs) != 0) {

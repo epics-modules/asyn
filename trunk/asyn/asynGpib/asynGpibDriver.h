@@ -16,14 +16,18 @@ extern "C" {
 #endif  /* __cplusplus */
 
 /* GPIB Addressed Commands*/
-#define IBSDC "\x04"    /* Selective Device Clear */
 #define IBGTL "\x01"    /* Go to local */
+#define IBSDC "\x04"    /* Selective Device Clear */
+#define IBGET "\x08"    /* Group Execute Trigger */
+#define IBTCT "\x09"    /* Take Control */
 
 /* GPIB Universial Commands*/
 #define IBDCL 0x14      /* Device Clear */
 #define IBLLO 0x11      /* Local Lockout */
 #define IBSPE 0x18      /* Serial Poll Enable */
 #define IBSPD 0x19      /* Serial Poll Disable */
+#define IBUNT 0x5f      /* Untalk */
+#define IBUNL 0x3f      /* Untalk */
 
 /* Talk, Listen, Secondary base addresses */
 #define TADBASE    0x40   /* offset to GPIB listen address 0 */
