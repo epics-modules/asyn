@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>March 30, 2004</h1>
+<h1>April 1, 2004</h1>
 </center>
 <hr>
 
@@ -29,6 +29,11 @@ one that supports sockets. Details to be determined.</p>
 
 <p>Flush is not currently supported on vxi11 or GS IP488. Can we think of
 what it would mean for 488.2?</p>
+
+<h3>Interrupt Callback</h3>
+<p>If a user callback calls a low level driver with an infinite or very long
+timeout, there is no way to make the call terminate. Is there a generic
+way to abort the call?</p>
 
 <h3>NI1014 VME Gpib driver</h3>
 
