@@ -610,7 +610,7 @@ static long processMbbo(mbboRecord *pr)
     int status;
 
     if(pPvt->gotValue) {
-        epicsUInt32 rval = pPvt->value;
+        epicsUInt32 rval = pPvt->value & pr->mask;
 
         pr->rval = rval;
         if(pr->shft>0) rval >>= pr->shft;
