@@ -103,6 +103,8 @@ static void performFloat64IO(asynUser * pasynUser);
 static void performOctetIO(asynUser * pasynUser);
 static void setOption(asynUser * pasynUser);
 static void getOptions(asynUser * pasynUser);
+static void setEos(asynUser * pasynUser);
+static void getEos(asynUser * pasynUser);
 static void reportError(asynRecord * pasynRec, asynStatus status,
             const char *pformat,...);
 static void resetError(asynRecord * pasynRec);
@@ -186,7 +188,8 @@ typedef enum {
     stateNoDevice, stateIdle, stateCancelIO, stateIO
 }   callbackState;
 typedef enum {
-    callbackConnect, callbackGetOption, callbackSetOption
+    callbackConnect, callbackGetOption, callbackSetOption, 
+    callbackGetEos, callbackSetEos
 }   callbackType;
 typedef struct callbackMessage {
     callbackType callbackType;
@@ -516,6 +519,11 @@ static long special(struct dbAddr * paddr, int after)
         pmsg->fieldIndex = fieldIndex;
         pmsg->callbackType = callbackSetOption;
         break;
+    case asynRecordIEOS:
+    case asynRecordOEOS:
+        pmsg->fieldIndex = fieldIndex;
+        pmsg->callbackType = callbackSetEos;
+        break;
     }
     if(pmsg->callbackType == callbackConnect) {
         priority = asynQueuePriorityConnect;
@@ -768,6 +776,12 @@ static void asynCallbackSpecial(asynUser * pasynUser)
         /* no break - every time an option is set call getOptions to verify */
     case callbackGetOption:
         getOptions(pasynUser);
+        break;
+    case callbackSetEos:
+        setEos(pasynUser);
+        /* no break - every time an option is set call getOptions to verify */
+    case callbackGetEos:
+        getEos(pasynUser);
         break;
     case callbackConnect:{
             int isConnected;
@@ -1154,6 +1168,14 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     pmsg->callbackType = callbackGetOption;
     status = pasynManager->queueRequest(pasynUser,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
+    /* Queue a request to get the EOS */
+    pasynUser = pasynManager->duplicateAsynUser(pasynUser, asynCallbackSpecial, 
+                                                queueTimeoutCallbackSpecial);
+    pasynUser->userData = pasynManager->memMalloc(sizeof(*pmsg));
+    pmsg = (callbackMessage *)pasynUser->userData;
+    pmsg->callbackType = callbackGetEos;
+    status = pasynManager->queueRequest(pasynUser,
+                                        asynQueuePriorityLow,QUEUE_TIMEOUT);
     pasynRec->pcnct = 1; 
     status = asynSuccess;
     goto done;
@@ -1330,10 +1352,8 @@ static void performOctetIO(asynUser * pasynUser)
     size_t inlen;
     size_t nread = 0;
     size_t nwrite = 0;
-    int eoslen;
+    int eomReason = 0;
     int ntranslate;
-    char eos[EOS_SIZE];
-    int  eomReason = 0;
 
     if(pasynRec->ofmt == asynFMT_ASCII) {
         /* ASCII output mode */
@@ -1349,15 +1369,6 @@ static void performOctetIO(asynUser * pasynUser)
         /* Binary output mode */
         nwrite = pasynRec->nowt;
         outptr = pasynRec->optr;
-    }
-    /* If not binary mode, append the terminator */
-    if(pasynRec->ofmt != asynFMT_Binary) {
-        eoslen = dbTranslateEscape(eos, pasynRec->oeos);
-        /* Make sure there is room for terminator */
-        if((nwrite + eoslen) < pasynRec->omax) {
-            strncat(outptr, eos, eoslen);
-            nwrite += eoslen;
-        }
     }
     if(pasynRec->ifmt == asynFMT_ASCII) {
         /* ASCII input mode */
@@ -1406,15 +1417,8 @@ static void performOctetIO(asynUser * pasynUser)
                   pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
         } else {
             /* ASCII or Hybrid mode */
-            eoslen = dbTranslateEscape(eos, pasynRec->ieos);
-            if(eoslen>0) {
-                status = pasynRecPvt->pasynOctet->setInputEos(
-                    pasynRecPvt->asynOctetPvt, pasynUser, eos, eoslen);
-            }
-            if(status==asynSuccess) {
-                 status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                  pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
-            }
+            status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
+                        pasynUser, inptr, nread, &nbytesTransfered, &eomReason);
         }
         if(status!=asynSuccess) {
             reportError(pasynRec, status,
@@ -1456,13 +1460,6 @@ static void performOctetIO(asynUser * pasynUser)
             /* Not binary and no input buffer overflow has occurred */
             /* Add null at end of input.  This is safe because of tests above */
             inptr[nbytesTransfered] = '\0';
-            /* If the string is terminated by the requested terminator */
-            /* remove it. */
-            if((eoslen > 0) && (nbytesTransfered >= eoslen) &&
-                (strcmp(&inptr[nbytesTransfered - eoslen], eos) == 0)) {
-                memset(&inptr[nbytesTransfered - eoslen], 0, eoslen);
-                inlen -= eoslen;
-            }
         }
         pasynRec->nord = nbytesTransfered;    /* Number of bytes read */
         /* Copy to tinp with dbTranslateEscape */
@@ -1470,8 +1467,8 @@ static void performOctetIO(asynUser * pasynUser)
                                            sizeof(pasynRec->tinp),
                                            inptr, inlen);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-             "%s: inlen=%d, nbytesTransfered=%d, ntranslate=%d sizeof(tinp)=%d tinp[39]=%x\n",
-             pasynRec->name, inlen, nbytesTransfered, ntranslate, sizeof(pasynRec->tinp), pasynRec->tinp[39]);
+             "%s: inlen=%d, nbytesTransfered=%d, ntranslate=%d \n",
+             pasynRec->name, inlen, nbytesTransfered, ntranslate);
     }
 }
 
@@ -1640,14 +1637,14 @@ static void setOption(asynUser * pasynUser)
             "Error setting option, %s", pasynUser->errorMessage);
     }
 }
-
+
 static void getOptions(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     char optbuff[OPT_SIZE];
     int i;
-    unsigned short monitor_mask;
+    unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
     /* If port does not have an asynOption interface return */
     if (!pasynRec->optioniv) return;
@@ -1693,13 +1690,86 @@ static void getOptions(asynUser * pasynUser)
     for (i = 0; i < NUM_FLOW_CHOICES; i++)
         if(strcmp(optbuff, flow_control_choices[i]) == 0)
             pasynRec->fctl = i;
-    monitor_mask = DBE_VALUE | DBE_LOG;
     POST_IF_NEW(baud);
     POST_IF_NEW(prty);
     POST_IF_NEW(sbit);
     POST_IF_NEW(dbit);
     POST_IF_NEW(fctl);
 }
+
+
+static void setEos(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
+    callbackMessage *pmsg = (callbackMessage *)pasynUser->userData;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+    char eosBuff[EOS_SIZE];
+    int eoslen;
+    asynStatus status;
+
+    /* If port does not have an asynOctet interface report error and return */
+    if (!pasynRec->octetiv) {
+        reportError(pasynRec, asynError, "No asynOctet interface");
+        recGblSetSevr(pasynRec,COMM_ALARM, MAJOR_ALARM);
+        return;
+    }
+
+    switch (pmsg->fieldIndex) {
+    case asynRecordIEOS:
+        eoslen = dbTranslateEscape(eosBuff, pasynRec->ieos);
+        if(eoslen>0) {
+            status = pasynRecPvt->pasynOctet->setInputEos(
+                       pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
+            if (status==asynSuccess) {
+                reportError(pasynRec, status,
+                    "Error setting input eos, %s", pasynUser->errorMessage);
+            }
+        }
+        break;
+    case asynRecordOEOS:
+        eoslen = dbTranslateEscape(eosBuff, pasynRec->oeos);
+        if(eoslen>0) {
+            status = pasynRecPvt->pasynOctet->setOutputEos(
+                       pasynRecPvt->asynOctetPvt, pasynUser, eosBuff, eoslen);
+            if(status==asynSuccess) {
+                reportError(pasynRec, status,
+                    "Error setting output eos, %s", pasynUser->errorMessage);
+            }
+        }
+        break;
+    }
+}
+
+static void getEos(asynUser * pasynUser)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+    char eosBuff[EOS_SIZE];
+    char eosTranslate[EOS_SIZE];
+    int eosSize;
+    unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
+
+    /* If port does not have an asynOctet interface return */
+    if (!pasynRec->octetiv) return;
+
+    pasynRecPvt->pasynOctet->getInputEos(pasynRecPvt->asynOctetPvt, pasynUser,
+                                         eosBuff, EOS_SIZE, &eosSize);
+    epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
+                           eosBuff, eosSize);
+    if (strcmp(eosTranslate, pasynRec->ieos) != 0) {
+        strncpy(pasynRec->ieos, eosTranslate, sizeof(pasynRec->ieos));
+        db_post_events(pasynRec, pasynRec->ieos, monitor_mask);
+    }
+    pasynRecPvt->pasynOctet->getOutputEos(pasynRecPvt->asynOctetPvt, pasynUser,
+                                          eosBuff, EOS_SIZE, &eosSize);
+    epicsStrSnPrintEscaped(eosTranslate, sizeof(eosTranslate),
+                           eosBuff, eosSize);
+    if (strcmp(eosTranslate, pasynRec->oeos) != 0) {
+        strncpy(pasynRec->oeos, eosTranslate, sizeof(pasynRec->oeos));
+        db_post_events(pasynRec, pasynRec->oeos, monitor_mask);
+    }
+}
+
 
 static void reportError(asynRecord * pasynRec, asynStatus status,
     const char *pformat,...)
