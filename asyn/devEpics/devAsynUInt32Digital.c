@@ -361,7 +361,7 @@ static long processBi(biRecord *pr)
         }
     }
     if(pPvt->status==asynSuccess) {
-        pr->rval = pPvt->value; pr->udf=0;
+        pr->rval = pPvt->value & pr->mask; pr->udf=0;
     }
     pPvt->gotValue = 0; pPvt->status = asynSuccess;
     return 0;
