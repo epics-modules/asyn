@@ -124,7 +124,7 @@ menu {
 		height=20
 	}
 	control {
-		chan="asyndevMbboInt32"
+		chan="asyndevMbboUInt32"
 		clr=14
 		bclr=4
 	}
@@ -170,12 +170,11 @@ menu {
 		height=20
 	}
 	control {
-		chan="asyndevSetRate"
+		chan="asyndevSetRateUInt32Digital"
 		clr=14
 		bclr=4
 	}
 	clrmod="alarm"
-	format="engr. notation"
 	limits {
 	}
 }
