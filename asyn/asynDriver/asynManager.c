@@ -132,19 +132,19 @@ typedef struct exceptionUser {
 typedef enum {callbackIdle,callbackActive,callbackCanceled}callbackState;
 struct userPvt {
     ELLNODE       node;        /*For asynPort.queueList*/
-    BOOL          freeAfterCallback;
-    exceptionUser *pexceptionUser;
-    BOOL          isQueued;
-    /* state,...,timeout are for queueRequest callbacks*/
-    callbackState state;
+    /* timer,...,state are for queueRequest callbacks*/
+    epicsTimerId  timer;
     epicsEventId  callbackDone;
     userCallback  processUser;
     userCallback  timeoutUser;
-    epicsTimerId  timer;
     double        timeout;
+    callbackState state;
     unsigned int  lockCount;
     port          *pport;
     device        *pdevice;
+    exceptionUser *pexceptionUser;
+    BOOL          freeAfterCallback;
+    BOOL          isQueued;
     asynUser      user;
 };
 
@@ -184,8 +184,10 @@ struct port {
 
 /* internal methods */
 static void tracePvtInit(tracePvt *ptracePvt);
+static void tracePvtFree(tracePvt *ptracePvt);
 static void asynInit(void);
 static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect);
+static void dpCommonFree(dpCommon *pdpCommon);
 static dpCommon *findDpCommon(userPvt *puserPvt);
 static tracePvt *findTracePvt(userPvt *puserPvt);
 static port *locatePort(const char *portName);
@@ -337,6 +339,13 @@ static void tracePvtInit(tracePvt *ptracePvt)
     ptracePvt->traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
     ptracePvt->type = traceFileStdout;
 }
+
+static void tracePvtFree(tracePvt *ptracePvt)
+{
+    assert(ptracePvt->fp==0);
+    free(ptracePvt->traceBuffer);
+}
+
 static void asynInit(void)
 {
     int i;
@@ -365,6 +374,12 @@ static void dpCommonInit(port *pport,dpCommon *pdpCommon,BOOL autoConnect)
     ellInit(&pdpCommon->exceptionNotifyList);
     pdpCommon->pport = pport;
     tracePvtInit(&pdpCommon->trace);
+}
+
+static void dpCommonFree(dpCommon *pdpCommon)
+{
+    tracePvtFree(&pdpCommon->trace);
+    epicsMutexDestroy(pdpCommon->syncLock);
 }
 
 static dpCommon *findDpCommon(userPvt *puserPvt)
@@ -689,6 +704,12 @@ static void portThread(port *pport)
             if (puserPvt->state==callbackCanceled)
                 epicsEventSignal(puserPvt->callbackDone);
             puserPvt->state = callbackIdle;
+            if(puserPvt->freeAfterCallback) {
+                puserPvt->freeAfterCallback = FALSE;
+                epicsMutexMustLock(pasynBase->lock);
+                ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+                epicsMutexUnlock(pasynBase->lock);
+            }
         }
         if(!pport->dpc.connected && pport->dpc.autoConnect) {
             epicsMutexUnlock(pport->asynManagerLock);
@@ -719,7 +740,7 @@ static void portThread(port *pport)
                     }
                     puserPvt = (userPvt *)ellNext(&puserPvt->node);
                 }
-                if(puserPvt || pport->queueStateChange) break; /*for*/
+                if(puserPvt) break; /*for*/
             }
             if(!puserPvt) break; /*while(1)*/
             pasynUser = userPvtToAsynUser(puserPvt);
@@ -871,12 +892,12 @@ static asynUser *createAsynUser(userCallback process, userCallback timeout)
         epicsMutexUnlock(pasynBase->lock);
         nbytes = sizeof(userPvt) + ERROR_MESSAGE_SIZE + 1;
         puserPvt = callocMustSucceed(1,nbytes,"asynCommon:registerDriver");
+        puserPvt->timer = epicsTimerQueueCreateTimer(
+            pasynBase->timerQueue,queueTimeoutCallback,puserPvt);
+        puserPvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
         pasynUser = userPvtToAsynUser(puserPvt);
         pasynUser->errorMessage = (char *)(puserPvt +1);
         pasynUser->errorMessageSize = ERROR_MESSAGE_SIZE;
-        puserPvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
-        puserPvt->timer = epicsTimerQueueCreateTimer(
-            pasynBase->timerQueue,queueTimeoutCallback,puserPvt);
     } else {
         ellDelete(&pasynBase->asynUserFreeList,&puserPvt->node);
         epicsMutexUnlock(pasynBase->lock);
@@ -884,8 +905,12 @@ static asynUser *createAsynUser(userCallback process, userCallback timeout)
     }
     puserPvt->processUser = process;
     puserPvt->timeoutUser = timeout;
-    puserPvt->isQueued = FALSE;
+    puserPvt->timeout = 0.0;
     puserPvt->state = callbackIdle;
+    puserPvt->lockCount = 0;
+    assert(puserPvt->freeAfterCallback==FALSE);
+    assert(puserPvt->pexceptionUser==0);
+    puserPvt->isQueued = FALSE;
     pasynUser->errorMessage[0] = 0;
     pasynUser->timeout = 0.0;
     pasynUser->userPvt = 0;
@@ -924,9 +949,7 @@ static asynStatus freeAsynUser(asynUser *pasynUser)
     }
     epicsMutexMustLock(pasynBase->lock);
     if(puserPvt->state==callbackIdle) {
-        epicsMutexMustLock(pasynBase->lock);
         ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
-        epicsMutexUnlock(pasynBase->lock);
     } else {
         puserPvt->freeAfterCallback = TRUE;
     }
@@ -940,6 +963,7 @@ static void *memMalloc(size_t size)
     ELLLIST *pmemList;
     memNode *pmemNode;
     
+    if(!pasynBase) asynInit();
     for(ind=0; ind<nMemList; ind++) {
         if(size<=memListSize[ind]) break;
     }
@@ -952,7 +976,7 @@ static void *memMalloc(size_t size)
     if(pmemNode) {
         ellDelete(pmemList,&pmemNode->node);
     } else {
-        pmemNode = callocMustSucceed(1,sizeof(memNode)+size,
+        pmemNode = mallocMustSucceed(sizeof(memNode)+size,
             "asynManager::memCalloc");
         pmemNode->memory = pmemNode + 1;
     }
@@ -967,6 +991,7 @@ static void memFree(void *pmem,size_t size)
     memNode *pmemNode;
     
     assert(size>0);
+    if(!pasynBase) asynInit();
     if(size>memListSize[nMemList-1]) {
         free(pmem);
         return;
@@ -1437,23 +1462,30 @@ static asynStatus registerPort(const char *portName,
     pport->pasynUser = createAsynUser(0,0);
     ellInit(&pport->deviceList);
     ellInit(&pport->interfaceList);
+    if((attributes&ASYN_CANBLOCK)) {
+        for(i=0; i<NUMBER_QUEUE_PRIORITIES; i++) ellInit(&pport->queueList[i]);
+        pport->notifyPortThread = epicsEventMustCreate(epicsEventEmpty);
+        priority = priority ? priority : epicsThreadPriorityMedium;
+        stackSize = stackSize ?
+                       stackSize :
+                       epicsThreadGetStackSize(epicsThreadStackMedium);
+        pport->threadid = epicsThreadCreate(portName,priority,stackSize,	
+             (EPICSTHREADFUNC)portThread,pport);
+        if(!pport->threadid){
+            printf("asynCommon:registerDriver %s epicsThreadCreate failed \n",
+                portName);
+            epicsEventDestroy(pport->notifyPortThread);
+            freeAsynUser(pport->pasynUser);
+            dpCommonFree(&pport->dpc);
+            epicsMutexDestroy(pport->synchronousLock);
+            epicsMutexDestroy(pport->asynManagerLock);
+            free(pport);
+            return asynError;
+        }
+    }
     epicsMutexMustLock(pasynBase->lock);
     ellAdd(&pasynBase->asynPortList,&pport->node);
     epicsMutexUnlock(pasynBase->lock);
-    if(!(attributes&ASYN_CANBLOCK)) return asynSuccess;
-    for(i=0; i<NUMBER_QUEUE_PRIORITIES; i++) ellInit(&pport->queueList[i]);
-    pport->notifyPortThread = epicsEventMustCreate(epicsEventEmpty);
-    priority = priority ? priority : epicsThreadPriorityMedium;
-    stackSize = stackSize ?
-                   stackSize :
-                   epicsThreadGetStackSize(epicsThreadStackMedium);
-    pport->threadid = epicsThreadCreate(portName,priority,stackSize,	
-         (EPICSTHREADFUNC)portThread,pport);
-    if(!pport->threadid){
-        printf("asynCommon:registerDriver %s epicsThreadCreate failed \n",
-            portName);
-        return asynError;
-    }
     return asynSuccess;
 }
 
