@@ -67,7 +67,7 @@ typedef struct asynManager {
                             const char *interfaceType,int interposeInterfaceOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
-    /*cancelRequest returns (0,1) if request (was not, was) queued*/
+    /*cancelRequest returns (-1,0,1) if request (had error, was not, was) queued*/
     int        (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
     asynStatus (*unlock)(asynUser *pasynUser);

@@ -1,6 +1,6 @@
 # Following must be added for many board support packages
 #cd <full path to target bin directory>
-cd "src/EPICS/modules/soft/asyn/iocBoot/ioctestGpibVx"
+#cd "src/EPICS/modules/soft/asyn/iocBoot/ioctestGpibVx"
 
 < cdCommands
 

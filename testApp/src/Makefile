@@ -14,7 +14,6 @@ DBD += test.dbd
 
 LIBRARY_IOC += testSupport
 testSupport_SRCS += echoDriver.c
-testSupport_SRCS += testEcho.c
 testSupport_SRCS += interposeInterface.c
 testSupport_SRCS += devAsynTest.c
 testSupport_LIBS += asyn

@@ -28,11 +28,6 @@ record(bo,"$(name)L$(L):gtl") {
     field(OUT,"#L$(L) A$(A) @5")
     field(HIGH,"1.0")
 }
-record(bo,"$(name)L$(L):resetLink") {
-    field(DTYP,"GPIB Test")
-    field(OUT,"#L$(L) A$(A) @6")
-    field(HIGH,"1.0")
-}
 record(longout,"$(name)L$(L):setDESE") {
     field(DESC,"DESE = CME|EXE|DDE")
     field(DTYP,"GPIB Test")

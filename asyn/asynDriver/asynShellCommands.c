@@ -168,6 +168,13 @@ int asynReport(const char *filename, int level)
         }
     }
     pasynManager->report(fp,level);
+    if(fp!=stdout)  {
+        int status;
+
+        errno = 0;
+        status = fclose(fp);
+        if(status) fprintf(stderr,"asynReport fclose error %s\n",strerror(errno));
+    }
     return 0;
 }
 static void asynReportCall(const iocshArgBuf * args) {

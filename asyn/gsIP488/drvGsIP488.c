@@ -449,7 +449,7 @@ static asynStatus readIpGpib(gpib *pgpib,
     *actual = cnt - pgpib->bytesRemaining;
     return(pgpib->status);
 }
-
+
 static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
     int cnt, epicsBoolean raw_flag, double timeout)
 {
@@ -478,7 +478,7 @@ static asynStatus writeIpGpib(gpib *pgpib,const char *buf,
     return(pgpib->status);
 
 }
-
+
 static asynStatus writeGpib(gpib *pgpib,const char *buf, int cnt,
      int addr, double timeout)
 {
@@ -580,7 +580,7 @@ static asynStatus gsTi9914Disconnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
 }
-
+
 static asynStatus gsTi9914SetPortOptions(void *pdrvPvt,asynUser *pasynUser,
     const char *key, const char *val)
 {
@@ -598,7 +598,7 @@ static asynStatus gsTi9914GetPortOptions(void *pdrvPvt,asynUser *pasynUser,
         "%s gsTi9914 does not have any options\n",pgpib->portName);
     return(asynError);
 }
-
+
 static int gsTi9914Read(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
 {
     gpib *pgpib = (gpib *)pdrvPvt;
@@ -646,7 +646,7 @@ static asynStatus gsTi9914Flush(void *pdrvPvt,asynUser *pasynUser)
     /*Nothing to do */
     return(asynSuccess);
 }
-
+
 static asynStatus gsTi9914SetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {

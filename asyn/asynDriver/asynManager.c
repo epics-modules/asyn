@@ -68,15 +68,17 @@ typedef struct interfaceNode {
 }interfaceNode;
 
 typedef struct dpCommon { /*device/port common fields*/
-    BOOL     enabled;
-    BOOL     connected;
-    BOOL     autoConnect;
-    userPvt  *plockHolder;
-    ELLLIST  interposeInterfaceList;
-    ELLLIST  exceptionUserList;
-    ELLLIST  exceptionNotifyList;
-    BOOL     exceptionActive;
-    tracePvt trace;
+    BOOL           enabled;
+    BOOL           connected;
+    BOOL           autoConnect;
+    userPvt        *plockHolder;
+    ELLLIST        interposeInterfaceList;
+    ELLLIST        exceptionUserList;
+    ELLLIST        exceptionNotifyList;
+    BOOL           exceptionActive;
+    epicsTimeStamp lastDisconnect;
+    unsigned long  numberConnects;
+    tracePvt       trace;
 }dpCommon;
 
 typedef struct exceptionUser {
@@ -117,7 +119,7 @@ struct port {
     ELLLIST       queueList[NUMBER_QUEUE_PRIORITIES];
     ELLLIST       deviceList;
     ELLLIST       interfaceList;
-    BOOL          queueListModified;
+    BOOL          queueStateChange;
     epicsEventId  notifyPortThread;
     unsigned int  priority;
     unsigned int  stackSize;
@@ -390,29 +392,41 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
         ellDelete(&pdpCommon->exceptionNotifyList,&pexceptionUser->notifyNode);
     }
     pdpCommon->exceptionActive = FALSE;
+    pport->queueStateChange = TRUE;
     epicsMutexUnlock(pport->lock);
     epicsEventSignal(pport->notifyPortThread);
 }
 
 static void autoConnect(port *pport,int addr)
 {
-    asynUser      *pasynUser = pport->pasynUser;
-    asynInterface *pasynInterface;
-    asynCommon    *pasynCommon = 0;
-    void          *drvPvt = 0;
-    asynStatus    status;
+    asynUser       *pasynUser = pport->pasynUser;
+    userPvt        *puserPvt = asynUserToUserPvt(pasynUser);
+    dpCommon       *pdpCommon;
+    epicsTimeStamp now;
+    double         secsSinceDisconnect;
+    asynInterface  *pasynInterface;
+    asynCommon     *pasynCommon = 0;
+    void           *drvPvt = 0;
+    asynStatus     status;
 
     status = pasynManager->connectDevice(pasynUser,pport->portName,addr);
     if(status!=asynSuccess) {
-        printf("asynManager:autoConnect connectDevice failed. Why??\n");
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s addr %d asynManager:autoConnect connectDevice failed.\n",
+            pport->portName,addr);
         return;
     }
-    pasynInterface = findInterface(pasynUser,asynCommonType,TRUE);
+    pdpCommon = findDpCommon(puserPvt);
+    assert(pdpCommon);
+    epicsTimeGetCurrent(&now);
+    secsSinceDisconnect = epicsTimeDiffInSeconds(&now,&pdpCommon->lastDisconnect);
+    if(secsSinceDisconnect<2.0) epicsThreadSleep(2.0 - secsSinceDisconnect);
+    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,TRUE);
     if(!pasynInterface) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "asynManager:autoConnect findInterface failed %s. port:%s addr %d\n",
-            pasynUser->errorMessage,pport->portName,addr);
-        goto disconnect;
+            "%s addr %d asynManager:autoConnect findInterface failed.\n",
+            pport->portName,addr);
+            goto disconnect;
     }
     pasynCommon = (asynCommon *)pasynInterface->pinterface;
     drvPvt = pasynInterface->drvPvt;
@@ -429,11 +443,11 @@ disconnect:
     status = pasynManager->disconnect(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "asynManager:autoConnect disconnect failed %s port:%s addr %d\n",
-            pasynUser->errorMessage, pport->portName,addr);
+            "%s addr %d asynManager:autoConnect disconnect failed.\n",
+            pport->portName,addr);
     }
 }
-
+
 static void portThread(port *pport)
 {
     userPvt  *puserPvt;
@@ -455,6 +469,8 @@ static void portThread(port *pport)
             puserPvt->isQueued = FALSE;
             pasynUser = userPvtToAsynUser(puserPvt);
             pasynUser->errorMessage[0] = '\0';
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,
+                "asynManager connect queueCallback port:%s\n",pport->portName);
             epicsMutexUnlock(pport->lock);
             puserPvt->queueCallback(pasynUser);
             epicsMutexMustLock(pport->lock);
@@ -472,7 +488,7 @@ static void portThread(port *pport)
             int i;
             dpCommon *pdpCommon = 0;
 
-            pport->queueListModified = FALSE;
+            pport->queueStateChange = FALSE;
             for(i=asynQueuePriorityHigh; i>=asynQueuePriorityLow; i--) {
                 puserPvt = (userPvt *)ellFirst(&pport->queueList[i]);
                 while(puserPvt){
@@ -485,7 +501,7 @@ static void portThread(port *pport)
                                 epicsMutexUnlock(pport->lock);
                                 autoConnect(pport,addr);
                                 epicsMutexMustLock(pport->lock);
-                                if(pport->queueListModified) break;
+                                if(pport->queueStateChange) break;
                             }
                         }
                         if(pdpCommon->connected) {
@@ -500,10 +516,9 @@ static void portThread(port *pport)
                     }
                     puserPvt = (userPvt *)ellNext(&puserPvt->node);
                 }
-                if(puserPvt || pport->queueListModified) break;
+                if(puserPvt || pport->queueStateChange) break;
             }
-            if(pport->queueListModified) continue; /*look at queueLists again*/
-            if(!puserPvt) break;
+            if(!puserPvt || pport->queueStateChange) break;
             pasynUser = userPvtToAsynUser(puserPvt);
             if(puserPvt->lockCount>0) {
                 assert(pdpCommon);
@@ -518,6 +533,7 @@ static void portThread(port *pport)
             epicsMutexUnlock(pport->lock);
             puserPvt->queueCallback(pasynUser);
             epicsMutexMustLock(pport->lock);
+            if(pport->queueStateChange) break;
         }
         epicsMutexUnlock(pport->lock);
     }
@@ -547,26 +563,28 @@ static void report(FILE *fd,int details)
     pport = (port *)ellFirst(&pasynBase->asynPortList);
     while(pport) {
         int           i;
-        interfaceNode *pinterfaceNode;
         dpCommon      *pdpc;
         device        *pdevice;
-        asynCommon    *pasynCommon = 0;
+        interfaceNode *pinterfaceNode;
+        asynCommon    *pasynCommon;
+        void          *drvPvt;
 	int           nQueued = 0;
-        void          *drvPvt = 0;
         int           lockCount;
 
 	for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
 	    nQueued += ellCount(&pport->queueList[i]);
         pdpc = &pport->dpc;
-	fprintf(fd,"%s multiDevice:%s autoConnect:%s enabled:%s connected:%s\n",
+	fprintf(fd,"%s multiDevice:%s autoConnect:%s enabled:%s connected:%s"
+            " numberConnects %lu\n",
             pport->portName,(pport->multiDevice ? "Yes" : "No"),
             (pdpc->autoConnect ? "Yes" : "No"),
             (pdpc->enabled ? "Yes" : "No"),
-            (pdpc->connected ? "Yes" : "No"));
+            (pdpc->connected ? "Yes" : "No"),
+            pdpc->numberConnects);
         epicsMutexMustLock(pport->lock);
         lockCount = (pdpc->plockHolder) ? pdpc->plockHolder->lockCount : 0;
         epicsMutexUnlock(pport->lock);
-        fprintf(fd,"    nDevices %d nQueued %d lockCount %d",
+        fprintf(fd,"    nDevices %d nQueued %d lockCount %d\n",
             ellCount(&pport->deviceList),nQueued,lockCount);
         fprintf(fd,"    exceptionActive: %s "
             "exceptionUsers %d exceptionNotifys %d\n",
@@ -602,7 +620,7 @@ static void report(FILE *fd,int details)
         while(pinterfaceNode) {
             asynInterface *pasynInterface = pinterfaceNode->pasynInterface;
             if(strcmp(pasynInterface->interfaceType,asynCommonType)==0) {
-                pasynCommon = pasynInterface->pinterface;
+                pasynCommon = (asynCommon *)pasynInterface->pinterface;
                 drvPvt = pasynInterface->drvPvt;
                 break;
             }
@@ -867,7 +885,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
         /*Add to end of list*/
         ellAdd(&pport->queueList[priority],&puserPvt->node);
     }
-    pport->queueListModified = TRUE;
+    pport->queueStateChange = TRUE;
     puserPvt->isQueued = TRUE;
     puserPvt->timeout = timeout;
     if(puserPvt->timeout>0.0) {
@@ -891,6 +909,12 @@ static int cancelRequest(asynUser *pasynUser)
     int      addr = (pdevice ? pdevice->addr : -1);
     int      i;
 
+    if(!pport) {
+        epicsMutexUnlock(pport->lock);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "asynManager:cancelRequest but not connected\n");
+        return -1;
+    }
     epicsMutexMustLock(pport->lock);
     if(!puserPvt->isQueued) {
         epicsMutexUnlock(pport->lock);
@@ -912,7 +936,7 @@ static int cancelRequest(asynUser *pasynUser)
     }
     if(puserPvt) {
         puserPvt->isQueued = FALSE;
-        pport->queueListModified = TRUE;
+        pport->queueStateChange = TRUE;
         if(puserPvt->timer && puserPvt->timeout>0.0) {
             epicsTimerCancel(puserPvt->timer);
         }
@@ -925,6 +949,7 @@ static int cancelRequest(asynUser *pasynUser)
             pport->portName, addr);
     }
     epicsMutexUnlock(pport->lock);
+    epicsEventSignal(pport->notifyPortThread);
     return 1;
 }
 
@@ -997,8 +1022,8 @@ static asynStatus registerPort(const char *portName,
     int multiDevice,int autoConnect,
     unsigned int priority,unsigned int stackSize)
 {
-    port *pport = locatePort(portName);
-    int  i,len;
+    port    *pport = locatePort(portName);
+    int     i,len;
 
     if(pport) {
         printf("asynCommon:registerDriver %s already registered\n",portName);
@@ -1069,9 +1094,11 @@ static asynStatus exceptionConnect(asynUser *pasynUser)
         return asynError;
     }
     pdpCommon->connected = TRUE;
+    ++pdpCommon->numberConnects;
     exceptionOccurred(pasynUser,asynExceptionConnect);
     return asynSuccess;
 }
+
 static asynStatus exceptionDisconnect(asynUser *pasynUser)
 {
     userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
@@ -1084,11 +1111,12 @@ static asynStatus exceptionDisconnect(asynUser *pasynUser)
         return asynError;
     }
     pdpCommon->connected = FALSE;
+    epicsTimeGetCurrent(&pdpCommon->lastDisconnect);
     exceptionOccurred(pasynUser,asynExceptionConnect);
     return asynSuccess;
     
 }
-
+
 static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev)
 {

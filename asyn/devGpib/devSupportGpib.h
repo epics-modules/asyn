@@ -95,8 +95,7 @@ struct gpibCmd {
 #define GPIBLLO         0x00004000
 #define GPIBSDC         0x00008000
 #define GPIBGTL         0x00010000
-#define GPIBRESETLNK    0x00020000
-#define GPIBSRQHANDLER  0x00040000
+#define GPIBSRQHANDLER  0x00020000
 #define IB_Q_LOW     asynQueuePriorityLow
 #define IB_Q_MEDIUM  asynQueuePriorityMedium
 #define IB_Q_HIGH    asynQueuePriorityHigh
@@ -224,7 +223,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * GPIBSDC:     bo only. (0,1) => (do nothing, send Selective Device Clear)
  * GPIBGTL:     bo only. (0,1) => (do nothing, send Go To Local)
  *
- * GPIBRESETLNK:bo only. (0,1) => (do nothing, Reset Link Thread)
  * GPIBSRQHANDLER: longin only. Register SRQ handler. val is status byte
  *
  * If a particular GPIB message does not fit one of these formats, a custom

@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvGenericSerial.c,v 1.22 2004-03-11 14:44:54 mrk Exp $
+ * $Id: drvGenericSerial.c,v 1.23 2004-03-17 19:56:54 mrk Exp $
  */
 
 #include <string.h>
@@ -68,15 +68,8 @@ typedef struct {
     unsigned int       inBufferTail;
     int                eosMatch;
     osiSockAddr        farAddr;
-    epicsTimerQueueId  timerQueue;
     epicsTimerId       timer;
     epicsInterruptibleSyscallContext *interruptibleSyscallContext;
-    int                wasClosed;
-    int                needsDisconnect;
-    int                needsDisconnectReported;
-    epicsTimeStamp     whenClosed;
-    int                openOnlyOnDisconnect;
-    unsigned long      nReconnect;
     unsigned long      nRead;
     unsigned long      nWritten;
     int                baud;
@@ -85,6 +78,17 @@ typedef struct {
     asynInterface      octet;
 } ttyController_t;
 
+typedef struct serialBase {
+    epicsTimerQueueId timerQueue;
+}serialBase;
+static serialBase *pserialBase = 0;
+static void serialBaseInit(void)
+{
+    if(pserialBase) return;
+    pserialBase = callocMustSucceed(1,sizeof(serialBase),"serialBaseInit");
+    pserialBase->timerQueue = epicsTimerQueueAllocate(
+        1,epicsThreadPriorityScanLow);
+}
 /*
  * Report link parameters
  */
@@ -94,12 +98,11 @@ drvGenericSerialReport(void *drvPvt, FILE *fp, int details)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    fprintf(fp, "Serial line %s: %sonnected\n", tty->serialDeviceName,
-                                                tty->fd >= 0 ? "C" : "Disc");
+    fprintf(fp, "Serial line %s: %sonnected\n",
+        tty->serialDeviceName,
+        tty->fd >= 0 ? "C" : "Disc");
     if (details >= 1) {
-        if (tty->fd >= 0)
-            fprintf(fp, "                    fd: %d\n", tty->fd);
-        fprintf(fp, "            Reconnects: %lu\n", tty->nReconnect);
+        fprintf(fp, "                    fd: %d\n", tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }
@@ -111,14 +114,12 @@ drvGenericSerialReport(void *drvPvt, FILE *fp, int details)
 static void
 closeConnection(ttyController_t *tty)
 {
+    asynUser *pasynUser = tty->pasynUser;
     if (tty->fd >= 0) {
-        epicsTimeGetCurrent(&tty->whenClosed);
-        tty->wasClosed = 1;
-        if (tty->openOnlyOnDisconnect)
-            tty->needsDisconnect = 1;
         if (!epicsInterruptibleSyscallWasClosed(tty->interruptibleSyscallContext))
             close(tty->fd);
         tty->fd = -1;
+        pasynManager->exceptionDisconnect(pasynUser);
     }
 }
 
@@ -129,12 +130,10 @@ static void
 reportFailure(ttyController_t *tty, const char *caller, const char *reason)
 {
       asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s %s%s.\n",
+                "%s %s %s\n",
                         caller,
                         tty->serialDeviceName,
-                        reason,
-                        tty->openOnlyOnDisconnect ?
-                           " -- must be disconnected and reconnected" : "");
+                        reason);
 }
 
 /*
@@ -245,72 +244,32 @@ static asynStatus
 openConnection (ttyController_t *tty)
 {
     int i;
+    asynUser *pasynUser = tty->pasynUser;
 
     /*
      * Sanity check
      */
     assert(tty);
     if (tty->fd >= 0) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "drvGenericSerial: Link already open!\n");
         return asynError;
     }
 
-    /*
-     * Some devices require an explicit disconnect
-     */
-    if (tty->needsDisconnect) {
-        if (!tty->needsDisconnectReported) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                      "Can't open connection to %s till it has been explicitly disconnected.\n",
-                        tty->serialDeviceName);
-            tty->needsDisconnectReported = 1;
-        }
-        return asynError;
-    }
-    
-    /*
-     * Create timeout mechanism
-     */
-    if ((tty->timerQueue == NULL)
-     && ((tty->timerQueue = epicsTimerQueueAllocate(1, epicsThreadPriorityBaseMax)) == NULL)) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                  "drvGenericSerial: Can't create timer queue.\n");
-        return asynError;
-    }
-    if ((tty->timer == NULL) 
-     && ((tty->timer = epicsTimerQueueCreateTimer(tty->timerQueue, timeoutHandler, tty)) == NULL)) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
-                  "drvGenericSerial: Can't create timer.\n");
-        return asynError;
-    }
     if (tty->interruptibleSyscallContext == NULL)
         tty->interruptibleSyscallContext = epicsInterruptibleSyscallMustCreate("drvGenericSerial");
 
     /*
-     * Don't try to open a connection too soon after breaking the previous one
-     */
-    if (tty->wasClosed) {
-        epicsTimeStamp now;
-        double sec;
-
-        epicsTimeGetCurrent(&now);
-        sec = epicsTimeDiffInSeconds(&now, &tty->whenClosed);
-        if ((sec >= 0) && (sec < 2.0))
-            epicsThreadSleep(2.0 - sec);
-    }
-
-    /*
      * Create the remote or local connection
      */
-    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
           "drvGenericSerial open connection to %s\n", tty->serialDeviceName);
     if (tty->isRemote) {
         /*
          * Create the socket
          */
         if ((tty->fd = epicsSocketCreate(PF_INET, SOCK_STREAM, 0)) < 0) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvGenericSerial: Can't create socket: %s\n",
                            strerror(errno));
             return asynError;
@@ -324,7 +283,7 @@ openConnection (ttyController_t *tty)
         i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
         epicsTimerCancel(tty->timer);
         if (epicsInterruptibleSyscallWasInterrupted(tty->interruptibleSyscallContext)) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvGenericSerial: Timed out attempting to connect to %s\n",
                         tty->serialDeviceName);
             if (!epicsInterruptibleSyscallWasClosed(tty->interruptibleSyscallContext))
@@ -333,7 +292,7 @@ openConnection (ttyController_t *tty)
             return asynError;
         }
         if (i < 0) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvGenericSerial: Can't connect to %s: %s\n",
                         tty->serialDeviceName, strerror(errno));
             close(tty->fd);
@@ -348,7 +307,7 @@ openConnection (ttyController_t *tty)
          * present and we plan to use the line in CLOCAL mode.
          */
         if ((tty->fd = open(tty->serialDeviceName, O_RDWR|O_NOCTTY|O_NONBLOCK, 0)) < 0) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvGenericSerial: Can't open `%s': %s\n",
                         tty->serialDeviceName, strerror(errno));
             return asynError;
@@ -366,7 +325,7 @@ openConnection (ttyController_t *tty)
          */
         tcflush(tty->fd, TCIOFLUSH);
         if (fcntl(tty->fd, F_SETFL, 0) < 0) {
-            asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvGenericSerial: Can't set `%s' file flags: %s\n",
                         tty->serialDeviceName, strerror(errno));
             close(tty->fd);
@@ -375,10 +334,9 @@ openConnection (ttyController_t *tty)
         }
 #endif
     }
-    if (tty->wasClosed)
-        tty->nReconnect++;
-    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
           "drvGenericSerial opened connection to %s\n", tty->serialDeviceName);
+    pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
 
@@ -394,10 +352,7 @@ drvGenericSerialConnect(void *drvPvt, asynUser *pasynUser)
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "drvGenericSerial: %s connect.\n", tty->serialDeviceName);
-    tty->pasynUser = pasynUser;
     status = openConnection(tty);
-    if(status==asynSuccess)
-        pasynManager->exceptionConnect(pasynUser);
     return status;
 }
 
@@ -412,9 +367,6 @@ drvGenericSerialDisconnect(void *drvPvt, asynUser *pasynUser)
     if (tty->timer)
         epicsTimerCancel(tty->timer);
     closeConnection(tty);
-    tty->needsDisconnect = 0;
-    tty->needsDisconnectReported = 0;
-    pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
 
@@ -626,10 +578,7 @@ drvGenericSerialWrite(void *drvPvt, asynUser *pasynUser, const char *data, int n
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "drvGenericSerial: %s write.\n", tty->serialDeviceName);
-    if (tty->fd < 0) {
-      if (tty->openOnlyOnDisconnect) return asynError;
-      if (openConnection(tty) != asynSuccess) return asynError;
-    }
+    if (tty->fd < 0) return asynError;
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                "drvGenericSerialWrite %d ", numchars);
     epicsTimerStartDelay(tty->timer, pasynUser->timeout);
@@ -669,10 +618,7 @@ drvGenericSerialRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "drvGenericSerial: %s read.\n", tty->serialDeviceName);
-    if (tty->fd < 0) {
-      if (tty->openOnlyOnDisconnect) return asynError;
-      if (openConnection(tty) != asynSuccess) return asynError;
-    }
+    if (tty->fd < 0) return asynError;
     if (maxchars <= 0)
         return 0;
     for (;;) {
@@ -862,12 +808,12 @@ int
 drvGenericSerialConfigure(char *portName,
                      char *ttyName,
                      int autoConnect,
-                     unsigned int priority,
-                     int openOnlyOnDisconnect)
+                     unsigned int priority)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
     char *cp;
+    asynStatus status;
 
     /*
      * Check arguments
@@ -881,10 +827,21 @@ drvGenericSerialConfigure(char *portName,
         return -1;
     }
 
+    if(!pserialBase) serialBaseInit();
     /*
      * Create a driver
      */
     tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvGenericSerialConfigure()");
+    /*
+     * Create timeout mechanism
+     */
+     tty->timer = epicsTimerQueueCreateTimer(
+         pserialBase->timerQueue, timeoutHandler, tty);
+     if(!tty->timer) {
+        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR,
+                  "drvGenericSerial: Can't create timer.\n");
+        return asynError;
+    }
     tty->fd = -1;
     tty->serialDeviceName = epicsStrDup(ttyName);
     tty->portName = epicsStrDup(portName);
@@ -911,7 +868,6 @@ drvGenericSerialConfigure(char *portName,
         *cp = ':';
         tty->isRemote = 1;
     }
-    tty->openOnlyOnDisconnect = openOnlyOnDisconnect;
 
 
     /*
@@ -943,6 +899,11 @@ drvGenericSerialConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
+    tty->pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
+    if(status!=asynSuccess)
+        printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
+
     return 0;
 }
 
@@ -954,17 +915,15 @@ static const iocshArg drvGenericSerialConfigureArg0 = { "port name",iocshArgStri
 static const iocshArg drvGenericSerialConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvGenericSerialConfigureArg2 = { "autoConnect",iocshArgInt};
 static const iocshArg drvGenericSerialConfigureArg3 = { "priority",iocshArgInt};
-static const iocshArg drvGenericSerialConfigureArg4 = { "reopen only after disconnect",iocshArgInt};
 static const iocshArg *drvGenericSerialConfigureArgs[] = {
     &drvGenericSerialConfigureArg0, &drvGenericSerialConfigureArg1,
-    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3,
-    &drvGenericSerialConfigureArg4};
+    &drvGenericSerialConfigureArg2, &drvGenericSerialConfigureArg3};
 static const iocshFuncDef drvGenericSerialConfigureFuncDef =
-                      {"drvGenericSerialConfigure",5,drvGenericSerialConfigureArgs};
+                      {"drvGenericSerialConfigure",4,drvGenericSerialConfigureArgs};
 static void drvGenericSerialConfigureCallFunc(const iocshArgBuf *args)
 {
     drvGenericSerialConfigure(args[0].sval,args[1].sval,
-        args[2].ival,args[3].ival,args[4].ival);
+        args[2].ival,args[3].ival);
 }
 
 /*

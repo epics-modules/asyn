@@ -1,1 +1,3 @@
-medm -x -macro "name=gpibTest,L=0" test.adl 
+asynTrace=../../medm/asynGeneric.adl
+medm -cleanup  -x -macro "name=gpibTest,L=0" test.adl &
+medm -attach -x -macro "ioc=gpibTest" ${asynTrace} &
