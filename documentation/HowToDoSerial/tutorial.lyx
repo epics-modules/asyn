@@ -385,8 +385,8 @@ CROSS_COMPILER_TARGET_ARCHS =
 Create the device support file
 \layout Standard
 
-The contents of the device support file provide all the details of the communica
-tion between the device and EPICS.
+The contents of the device support file provide all the details ofthe communicat
+ion between the device and EPICS.
  The makeSupport.pl command created a skeleton device support file in 
 \family typewriter 
 AB300Sup/devAB300.c
@@ -736,8 +736,11 @@ gpibDpvt
 \layout Standard
 
 Here are the custom conversion functions I wrote for the AB300.
-  Because theseroutines use epicsSnprintf I had to also add a #include <epicsStd
-io.h> to the file.
+  Because these routines use epicsSnprintf I had to also add a 
+\family typewriter 
+#include <epicsStdio.h>
+\family default 
+ to the file.
 \layout LyX-Code
 
 /*
@@ -806,7 +809,7 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 Some points of interest: 
 \layout Enumerate
 
-Custom conversion function indicate an error by returning -1.
+Custom conversion functions indicate an error by returning -1.
 \layout Enumerate
 
 If an error status is returned an explanation should be left in the 
@@ -881,7 +884,7 @@ DSET_
 \shape italic 
 xxx
 \shape default 
- definitions from the devcie support file you must remove the corresponding
+ definitions from the device support file you must remove the corresponding
  lines from this file.
 \layout Standard
 
@@ -983,7 +986,7 @@ make
 \series bold 
 gnumake
 \series default 
- on solaris).
+ on Solaris).
 \layout Standard
 
 If all goes well you'll be left with a device support library in lib/
@@ -1170,7 +1173,7 @@ _DBD += drvAsynSerialPort.dbd
 Add the device support libraries to the application
 \layout Standard
 
-You must link your device suport library and the ASYN support library with
+You must link your device support library and the ASYN support library with
  the application.
  Add the following lines 
 \layout LyX-Code
@@ -1310,15 +1313,16 @@ In all of the above examples the first argument of the configure and set
 \family typewriter 
 L
 \family default 
- value in the EPICS database record INP and OUT fields.The second argument
- of the configure command identifiesthe port to which the connection is
- to be made.The third argument sets the priority of the worker thread which
- performsthe I/O operations.
-  A value of zero directs the command to choose a reasonabledefault value.The
- fourth argument is zero todirect the device support layer to automatically
- connect to the serialport on startup and whenever the serial port becomes
- disconnected.The final argument is zero todirect the device support layer
- to use standard end-of-string processingon input messages.
+ value in the EPICS database record INP and OUT fields. The second argument
+ of the configure command identifies the port to which the connection is
+ to be made. The third argument sets the priority of the worker thread which
+ performs the I/O operations.
+  A value of zero directs the command to choose a reasonable default value. The
+ fourth argument is zero to direct the device support layer to automatically
+ connect to the serial port on startup and whenever the serial port becomes
+ disconnected.
+ The final argument is zero to direct the device support layer to use standard
+ end-of-string processing on input messages.
 \end_deeper 
 \layout Enumerate
 
@@ -1365,7 +1369,7 @@ make
 \series bold 
 gnumake
 \series default 
- on solaris).
+ on Solaris).
 \layout Standard
 
 If all goes well you'll be left with an executable program in bin/linux-x86/AB30
@@ -1413,7 +1417,7 @@ iocInit()
 \newline 
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline 
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-04 20:58:36 $$
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2004-06-10 20:54:57 $$
 \newline 
 ############################################################################
 \newline 
