@@ -1,0 +1,6 @@
+grecord(asynOctet,"$(P)$(R)")
+{
+	field(DESC,"asynOctet $(R)")
+	field(PORT,"$(PORT)")
+	field(ADDR,"$(ADDRESS)")
+}
