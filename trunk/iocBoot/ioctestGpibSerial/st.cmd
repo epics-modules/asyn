@@ -7,7 +7,7 @@ dbLoadRecords("../../db/testGpib.db","P=gpib,R=Test,PORT=L0,A=1")
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=L0,ADDR=0,OMAX=0,IMAX=0")
 
 #The following command is for a serial line terminal concentrator
-#drvAsynIPPortConfigure("L0","164.54.9.90:4004",0,0)
+#drvAsynIPPortConfigure("L0","164.54.9.90:4004",0,0,0)
 
 #The following commands are for a local serial line
 #drvAsynSerialPortConfigure("L0","/dev/cua/a",0,0,0)
