@@ -252,14 +252,12 @@ epicsShareFunc int epicsShareAPI
     }
     pasynUser = pPvt->pasynUser;
 
-    if ((strlen(output) + pPvt->oeos_len) > pPvt->write_buffer_len) {
+    if (strlen(output) > pPvt->write_buffer_len) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error writing, buffer too small\n");
        return(-1);
     }
     len = dbTranslateEscape(pPvt->write_buffer, output);
-    strcat(pPvt->write_buffer, pPvt->oeos);
-    len += pPvt->oeos_len;
     status = pasynOctetSyncIO->write(pasynUser, pPvt->write_buffer,
         len, pPvt->timeout,&nout);
     if (status!=asynSuccess) {
@@ -289,14 +287,12 @@ epicsShareFunc int epicsShareAPI
     }
     pasynUser = pPvt->pasynUser;
 
-    if ((strlen(output) + pPvt->oeos_len) > pPvt->write_buffer_len) {
+    if (strlen(output) > pPvt->write_buffer_len) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error writing, buffer too small\n");
        return(-1);
     }
     len = dbTranslateEscape(pPvt->write_buffer, output);
-    strcat(pPvt->write_buffer, pPvt->oeos);
-    len += pPvt->oeos_len;
     if (nread == 0) nread = pPvt->read_buffer_len;
     if (nread > pPvt->read_buffer_len) nread = pPvt->read_buffer_len;
     status = pasynOctetSyncIO->writeRead(pasynUser, pPvt->write_buffer, len,
