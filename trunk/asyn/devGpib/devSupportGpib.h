@@ -65,7 +65,9 @@ struct gpibCmd {
     int rspLen;	/* room for response error message */
     int msgLen;	/* room for return data message length */
     int (*convert) ();	/* custom routine for conversions */
-    int P1;	/* user defined parameter used in convert() */
+    /*P1 plays a dual role.  user defined parameter for convert. For EFAST
+      it is number of entries in EFAST table*/
+    int P1;
     int P2;	/* user defined parameter used in convert() */
     /* P3 plays dual role. For EFAST address of EFAST table   */
     /* For convert it is passed to convert */
@@ -89,9 +91,9 @@ struct gpibCmd {
 #define GPIBDCL         0x00001000
 #define GPIBLLO         0x00002000
 #define GPIBSDC         0x00004000
-#define GPIBGTL         0x00010000
-#define GPIBRESETLNK    0x00020000
-#define GPIBSRQHANDLER  0x00040000
+#define GPIBGTL         0x00008000
+#define GPIBRESETLNK    0x00010000
+#define GPIBSRQHANDLER  0x00020000
 /*GPIBEOS can be combined with some of the above commands*/
 /*If set gpibCmd.eosChar is end of message terminator*/
 #define GPIBEOS	        0x80000000
@@ -118,7 +120,7 @@ struct devGpibParmBlock {
     int *debugFlag;	/* pointer to debug flag */
 };
 
-/* UFAST tables must be defied as follows
+/* EFAST tables must be defied as follows
     static char *xxxx[] = {"xxx","yyy",...,0};
     IT MUST PROVIDE A 0 AS THE LAST STRING
 */
