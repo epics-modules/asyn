@@ -397,6 +397,16 @@ not called.
           <TD>"Binary"</TD>
           <TD>The data read from the device will be placed in the BINP 
           field.</TD></TR></TBODY></TABLE></TD></TR>
+  <tr>
+    <TD>TINP</TD>
+    <TD>R</TD>
+    <TD>&quot;Translated input&quot;</TD>
+    <TD>DBF_CHAR (array)</TD>
+    <TD>This field will contain up to the first 40 characters of the AINP or 
+    BINP fields (depending on IFMT),&nbsp; after translation with 
+    epicsStrSnPrintEscaped, to convert non-printable characters to a printable 
+    form (e.g. \r, \n, etc.)</TD>
+  </tr>
 </TABLE>
 <P>There are two input 
 fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format) 
@@ -425,7 +435,14 @@ terminated.
 <P>If IFMT=&quot;Binary&quot; then the IEOS field is ignored, and no asyn input
 terminator is used.&nbsp; The input is read into the BINP field. BINP will be
 null terminated.
-<P>The IEOS terminator field is 40 characters long.&nbsp; However, the serial 
+<P>The TINP field is intended for operator display.&nbsp; It will contain up to 
+the first 40 characters of the input read into AINP (if IFMT=&quot;ASCII&quot;) or BINP 
+(if IFMT=&quot;Hybrid&quot; or &quot;Binary&quot;).&nbsp; Non-printable characters are first 
+converted to a printable form using epicsStrSnPrintEscaped.&nbsp; This field 
+should not normally be using for parsing the response from the device.&nbsp; 
+This is the field that is shown as the ASCII input field in the medm display 
+asynRecord.adl.&nbsp; It is useful for displaying the device response, even in 
+&quot;Hybrid&quot; and &quot;Binary&quot; input modes.<P>The IEOS terminator field is 40 characters long.&nbsp; However, the serial 
 drivers permit 2 character end-of-message strings at most. The GPIB drivers only 
 permit 1 character end-of-message strings.<br>
 &nbsp;<HR>
