@@ -64,7 +64,8 @@ struct gpibCmd {
     char *format;	/* string used to generate or interpret msg */
     int rspLen;	/* room for response error message */
     int msgLen;	/* room for return data message length */
-    int (*convert) ();	/* custom routine for conversions */
+    /*convert is optional custom routine for conversions */
+    int (*convert) (gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
     /*P1 plays a dual role.  user defined parameter for convert. For EFAST
       it is number of entries in EFAST table*/
     int P1;
@@ -151,7 +152,7 @@ struct gpibDpvt {
     devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
 };
 
-typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int timeoutOccured);
+typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
 /* If a method retuns int then 0,1) => (OK, failure) */
 struct devSupportGpib {
     long (*initRecord)(dbCommon *precord, struct link * plink);

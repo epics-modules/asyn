@@ -133,9 +133,9 @@ static int getDeviceInterface(gpibDpvt *pgpibDpvt,int link,int gpibAddr);
 
 /*Process routines */
 static void queueIt(gpibDpvt *pgpibDpvt,int isLocked);
-static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured);
-static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int timeoutOccured);
-static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured);
+static void gpibRead(gpibDpvt *pgpibDpvt,int failure);
+static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int failure);
+static void gpibWrite(gpibDpvt *pgpibDpvt,int failure);
 
 /*Callback routines*/
 static void queueCallback(asynUser *pasynUser);
@@ -359,12 +359,12 @@ static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     
     if(!pasynGpib) {
 	printf("%s asynGpib not supported\n",precord->name);
-	failure = 1;
+	failure = -1;
     } else if(pdeviceInstance->unsollicitedHandler) {
 	printf("%s an unsollicitedHandler already registered\n",precord->name);
-	failure = 1;
+	failure = -1;
     }
-    if(failure) {
+    if(failure==-1) {
 	precord->pact = TRUE;
     }else {
 	pdeviceInstance->unsollicitedHandlerPvt = unsollicitedHandlerPvt;
@@ -383,14 +383,23 @@ static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     if(!pgpibDpvt->msg) { \
         printf("%s no msg buffer. Must define gpibCmd.msgLen > 0.\n", \
             precord->name); \
-        return(1); \
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); \
+        return(-1); \
+    }\
+    if(!pgpibCmd->format) {\
+        printf("%s no format. Must define gpibCmd.format > 0.\n", \
+            precord->name); \
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); \
+        return(-1); \
     }
+
 
 #define writeMsgPostLog \
     if(nchars>pgpibCmd->msgLen) { \
         printf("%s msg buffer too small. msgLen %d message length %d\n", \
             precord->name,pgpibCmd->msgLen,nchars); \
-        return(1); \
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); \
+        return(-1); \
     } \
     return(0);
 
@@ -417,8 +426,18 @@ static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val)
 
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
 {
-    writeMsgProlog
-    nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,pgpibCmd->format,str);
+    int nchars; 
+    dbCommon *precord = (dbCommon *)pgpibDpvt->precord; 
+    gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
+
+    if(!pgpibDpvt->msg) {
+        printf("%s no msg buffer. Must define gpibCmd.msgLen > 0.\n", 
+            precord->name);
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); 
+        return(-1); 
+    }
+    nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,format,str);
     writeMsgPostLog
 }
 
@@ -561,7 +580,7 @@ static void queueIt(gpibDpvt *pgpibDpvt,int isLocked)
     if(!isLocked)epicsMutexUnlock(pportInstance->lock);
 }
 
-static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
+static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -576,8 +595,9 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
 
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibRead\n",precord->name);
-    if(timeoutOccured) {
-        pdevGpibPvt->finish(pgpibDpvt,1);
+    if(failure) {
+        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        pdevGpibPvt->finish(pgpibDpvt,-1);
         goto done;
     }
     epicsMutexMustLock(pportInstance->lock);
@@ -615,7 +635,8 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
                 /*MUST be return NOT break. gpibReadWaitComplete unlocked*/
 	        return;
             }
-            pdevGpibPvt->finish(pgpibDpvt,1);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+            pdevGpibPvt->finish(pgpibDpvt,-1);
             break;
         }
         if(cmdType&(GPIBREADW|GPIBEFASTIW)) return;
@@ -632,7 +653,8 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int timeoutOccured)
             printf("%s msg %s nchars %d\n",precord->name,pgpibDpvt->msg,nchars);
         if(nchars==0) {
             gpibTimeoutHappened(pgpibDpvt);
-            pdevGpibPvt->finish(pgpibDpvt,1);
+            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            pdevGpibPvt->finish(pgpibDpvt,-1);
 	    break;
 	}
         if(nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
@@ -652,7 +674,7 @@ done:
     }
 }
 
-static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int timeoutOccured)
+static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -683,15 +705,17 @@ static void gpibReadWaitComplete(gpibDpvt *pgpibDpvt,int timeoutOccured)
     pdeviceInstance->pgpibDpvt = 0;
     pdeviceInstance->queueRequestFromSrq = 0;
     epicsMutexUnlock(pportInstance->lock);
-    if(timeoutOccured) {
-        pdevGpibPvt->finish(pgpibDpvt,1);
+    if(failure) {
+        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        pdevGpibPvt->finish(pgpibDpvt,-1);
         goto done;
     }
     nchars = pasynOctet->read(asynOctetPvt,pgpibDpvt->pasynUser,
         pgpibDpvt->msg,pgpibCmd->msgLen);
     if(nchars==0) {
         ++pdeviceInstance->tmoCount;
-        pdevGpibPvt->finish(pgpibDpvt,1);
+        recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+        pdevGpibPvt->finish(pgpibDpvt,-1);
         goto done;
     }
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
@@ -708,7 +732,7 @@ done:
     }
 }
 
-static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
+static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -716,37 +740,42 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
     asynGpib *pasynGpib = pgpibDpvt->pasynGpib;
     void *asynGpibPvt = pgpibDpvt->asynGpibPvt;
     int cmdType = gpibCmdTypeNoEOS(pgpibCmd->type);
-    int nchars = 0, lenMessage = 0, failure = 0;
+    int nchars = 0, lenMessage = 0;
     char *efasto, *msg;
 
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s gpibWrite\n",precord->name);
-    if(timeoutOccured) {
-        pdevGpibPvt->finish(pgpibDpvt,1);
+    if(failure) {
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+        pdevGpibPvt->finish(pgpibDpvt,-1);
         return;
     }
     if (pgpibCmd->convert) {
         int cnvrtStat;
         cnvrtStat = pgpibCmd->convert(
             pgpibDpvt, pgpibCmd->P1, pgpibCmd->P2, pgpibCmd->P3);
-        if(cnvrtStat==-1) failure = 1;
+        if(cnvrtStat==-1) {
+            failure = -1;
+        } else {
+            lenMessage = cnvrtStat;
+        }
     }
     if(!failure) switch(cmdType) {
     case GPIBWRITE:
         if(!pgpibDpvt->msg) {
             printf("%s pgpibDpvt->msg is null\n",precord->name);
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            lenMessage = strlen(pgpibDpvt->msg);
+            if(lenMessage==0) lenMessage = strlen(pgpibDpvt->msg);
 	    nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
         }
 	break;
     case GPIBCMD:
         if(!pgpibCmd->cmd) {
             printf("%s pgpibCmd->cmd is null\n",precord->name);
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            lenMessage = strlen(pgpibCmd->cmd);
+            if(lenMessage==0) lenMessage = strlen(pgpibCmd->cmd);
 	    nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenMessage);
         }
 	break;
@@ -757,9 +786,9 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
         }
         if(!pgpibCmd->cmd) {
             printf("%s pgpibCmd->cmd is null\n",precord->name);
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            lenMessage = strlen(pgpibCmd->cmd);
+            if(lenMessage==0) lenMessage = strlen(pgpibCmd->cmd);
             nchars = pasynGpib->addressedCmd(
                 asynGpibPvt,pgpibDpvt->pasynUser,
                 pgpibCmd->cmd,strlen(pgpibDpvt->msg));
@@ -770,7 +799,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
          * pgpibCmd->P3[pgpibDpvt->efastVal] (cmd is _not_ intended to be an
          * independent command in itself). */
         if(pgpibCmd->P1<=pgpibDpvt->efastVal) {
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             printf("%s() efastVal out of range\n",precord->name);
             break;
         }
@@ -780,7 +809,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
             && (pgpibCmd->msgLen > (strlen(efasto)+strlen(pgpibCmd->cmd)))) {
                 sprintf(pgpibDpvt->msg, "%s%s", pgpibCmd->cmd, efasto);
             } else {
-                recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+                recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
                 printf("%s() no msg buffer or msgLen too small\n",precord->name);
                 break;
             }
@@ -792,7 +821,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
         if(lenMessage>0) {
 	    nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
         } else {
-            recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             printf("%s msgLen is 0\n",precord->name);
         }
         break;
@@ -801,7 +830,8 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int timeoutOccured)
                " record left with PACT true\n",precord->name,cmdType);
         return;
     }
-    if(nchars!=lenMessage) failure = 1;
+    if(nchars!=lenMessage) failure = -1;
+    if(failure) recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
     pdevGpibPvt->finish(pgpibDpvt,failure);
 }
 
@@ -818,7 +848,8 @@ static void queueCallback(asynUser *pasynUser)
     if(*pgpibDpvt->pdevGpibParmBlock->debugFlag>=2)
         printf("%s queueCallback\n",precord->name);
     epicsMutexMustLock(pportInstance->lock);
-    if(pdeviceInstance->timeoutActive) failure = isTimeWindowActive(pgpibDpvt);
+    if(pdeviceInstance->timeoutActive)
+        failure = isTimeWindowActive(pgpibDpvt) ? -1 : 0;
     epicsMutexUnlock(pportInstance->lock);
     if(!precord->pact) {
 	printf("%s devSupportGpib:queueCallback but pact 0. Request ignored.\n",
@@ -935,18 +966,15 @@ static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt)
         }
     }
     if(pgpibCmd->type&(GPIBREAD|GPIBREADW)) {
-        if(!pgpibCmd->cmd
-        || !(pgpibCmd->format||pgpibCmd->convert)
-        ||(pgpibCmd->msgLen==0)) {
-            printf("%s parm %d requires cmd, format, and  msgLen>0\n",
+        if(!pgpibCmd->cmd ||(pgpibCmd->msgLen==0)) {
+            printf("%s parm %d requires cmd and  msgLen>0\n",
                 precord->name,pgpibDpvt->parm);
             return(0);
         }
     }
     if(pgpibCmd->type&(GPIBRAWREAD|GPIBWRITE)) {
-        if(!(pgpibCmd->format||pgpibCmd->convert)
-        ||(pgpibCmd->msgLen==0)) {
-            printf("%s parm %d requires format and  msgLen>0\n",
+        if(pgpibCmd->msgLen==0) {
+            printf("%s parm %d msgLen>0\n",
                 precord->name,pgpibDpvt->parm);
             return(0);
         }
