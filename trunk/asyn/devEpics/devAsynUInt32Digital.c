@@ -358,6 +358,7 @@ static long processBi(biRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     if(pPvt->status==asynSuccess) {
@@ -408,6 +409,7 @@ static long processBo(boRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital:process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
@@ -441,6 +443,7 @@ static long processLi(longinRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     if(pPvt->status==asynSuccess) {
@@ -485,6 +488,7 @@ static long processLo(longoutRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
@@ -520,6 +524,7 @@ static long processMbbi(mbbiRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
     if(pPvt->status==asynSuccess) {
@@ -589,6 +594,7 @@ static long processMbbo(mbboRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
@@ -624,6 +630,7 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
     if(pPvt->status==asynSuccess) {
@@ -684,6 +691,7 @@ static long processMbboDirect(mbboDirectRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;

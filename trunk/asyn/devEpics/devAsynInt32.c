@@ -390,6 +390,7 @@ static long processAi(aiRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     if(pPvt->status==asynSuccess) {
@@ -503,6 +504,7 @@ static long processAo(aoRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
 done:
@@ -537,6 +539,7 @@ static long processLi(longinRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     if(pPvt->status==asynSuccess) {
@@ -581,6 +584,7 @@ static long processLo(longoutRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
@@ -616,6 +620,7 @@ static long processMbbi(mbbiRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
     if(pPvt->status==asynSuccess) {
@@ -685,6 +690,7 @@ static long processMbbo(mbboRecord *pr)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32::processCommon, error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
     }
     pPvt->gotValue = 0;
