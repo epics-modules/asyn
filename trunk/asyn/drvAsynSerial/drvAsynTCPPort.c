@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.1 2004-04-05 19:43:54 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.2 2004-04-05 20:56:31 norume Exp $
  */
 
 #include <string.h>
@@ -180,6 +180,26 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
         tty->fd = -1;
         return asynError;
     }
+    i = 1;
+    if (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, &i, sizeof i) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                               "Can't set %s socket NODELAY option: %s\n",
+                                       tty->serialDeviceName, strerror(errno));
+        close(tty->fd);
+        tty->fd = -1;
+        return asynError;
+    }
+#ifdef POLLIN
+    if (((i = fcntl(tty->fd, F_GETFL, 0)) < 0)
+     || (fcntl(tty->fd, F_SETFL, i | O_NONBLOCK) < 0)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                               "Can't set %s O_NONBLOCK option: %s\n",
+                                       tty->serialDeviceName, strerror(errno));
+        close(tty->fd);
+        tty->fd = -1;
+        return asynError;
+    }
+#endif
 
     tty->readPollmsec = -1;
     tty->writePollmsec = -1;
@@ -252,7 +272,13 @@ drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int num
             tty->writePollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
 #if defined(vxWorks) || defined(__rtems__)
-        setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO, &tty->writePollmsec, sizeof tty->writePollmsec);
+        if (setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO,
+                        &tty->writePollmsec, sizeof tty->writePollmsec) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                   "Can't set %s socket send timeout: %s",
+                                   tty->serialDeviceName, strerror(errno));
+            return -1;
+        }
 #endif
     }
     tty->cancelFlag = 0;
@@ -263,11 +289,11 @@ drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int num
         timerStarted = 1;
     }
     for (;;) {
-#ifdef POLLWRNORM
+#ifdef POLLOUT
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
-        pollfd.events = POLLWRNORM;
+        pollfd.events = POLLOUT;
         poll(&pollfd, 1, tty->writePollmsec);
         }
 #endif
@@ -289,7 +315,9 @@ drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser, const char *data, int num
                                     "%s timeout", tty->serialDeviceName);
             break;
         }
-        if ((thisWrite < 0) && (errno != EWOULDBLOCK) && (errno != EINTR)) {
+        if ((thisWrite < 0) && (errno != EWOULDBLOCK)
+                            && (errno != EINTR)
+                            && (errno != EAGAIN)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s write error: %s",
                                         tty->serialDeviceName, strerror(errno));
@@ -333,7 +361,13 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
             tty->readPollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
 #if defined(vxWorks) || defined(__rtems__)
-        setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO, &tty->readPollmsec, sizeof tty->readPollmsec);
+        if (setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO,
+                        &tty->readPollmsec, sizeof tty->readPollmsec) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                   "Can't set %s socket receive timeout: %s",
+                                   tty->serialDeviceName, strerror(errno));
+            return -1;
+        }
 #endif
     }
     tty->cancelFlag = 0;
@@ -391,11 +425,11 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
         }
-#ifdef POLLRDNORM
+#ifdef POLLIN
         {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
-        pollfd.events = POLLRDNORM;
+        pollfd.events = POLLIN;
         poll(&pollfd, 1, tty->readPollmsec);
         }
 #endif
@@ -410,7 +444,9 @@ drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser, char *data, int maxchars)
             tty->consecutiveReadTimeouts = 0;
         }
         else {
-            if ((thisRead < 0) && (errno != EWOULDBLOCK) && (errno != EINTR)) {
+            if ((thisRead < 0) && (errno != EWOULDBLOCK)
+                               && (errno != EINTR)
+                               && (errno != EAGAIN)) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s read error: %s",
                                         tty->serialDeviceName, strerror(errno));
@@ -448,7 +484,7 @@ drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
         if (ioctl(tty->fd, FIONBIO, &flags) >= 0)
 #else
         if (((flags = fcntl(tty->fd, F_GETFL, 0)) >= 0)
-         && (fcntl(tty->fd, F_SETFL, flags & O_NONBLOCK) >= 0))
+         && (fcntl(tty->fd, F_SETFL, flags | O_NONBLOCK) >= 0))
 #endif
             {
             char cbuf[512];
