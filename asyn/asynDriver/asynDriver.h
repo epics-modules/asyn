@@ -35,76 +35,68 @@ typedef enum {
     asynTimeoutWrite
 }asynTimeoutType;
 
-typedef void (*userCallback)(void *userPvt);
-
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
+    /* The following can be set by the user */
+    int addr;        /*For multidevice ports*/
     double timeout;  /*Timeout for I/O operations*/
     void *userPvt; 
 }asynUser;
 
-typedef void (*peekHandler)(void *peekHandlerPvt,
-    char byte,int isReceive,int gotEOI);
+typedef void (*userCallback)(asynUser *pasynUser);
 
-typedef struct driverInterface{
-    const char *driverType;
+typedef struct asynInterface{
+    const char *interfaceType;
     void *pinterface;
-}driverInterface;
-
-typedef struct deviceDriver{
-    driverInterface *pdriverInterface;
     void *drvPvt;
-}deviceDriver;
+}asynInterface;
 
-typedef struct asynQueueManager {
+typedef struct asynManager {
     void (*report)(int details);
-    asynUser  *(*createAsynUser)(
-        userCallback queue,userCallback timeout,void *userPvt);
+    asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
-    asynStatus (*connectDevice)(asynUser *pasynUser, const char *deviceName);
-    asynStatus (*disconnectDevice)(asynUser *pasynUser);
-    deviceDriver *(*findDriver)(asynUser *pasynUser,
-        const char *driverType,int processModuleOK);
+    asynStatus (*connectPort)(asynUser *pasynUser, const char *portName);
+    asynStatus (*disconnectPort)(asynUser *pasynUser);
+    asynInterface *(*findInterface)(asynUser *pasynUser,
+        const char *interfaceType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
         asynQueuePriority priority,double timeout);
     void (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     /* drivers call the following*/
-    asynStatus (*registerDevice)(
-        const char *deviceName,
-        deviceDriver *padeviceDriver,int ndeviceDrivers,
+    asynStatus (*registerPort)(
+        const char *portName,
+        asynInterface *paasynInterface,int nasynInterface,
         unsigned int priority,unsigned int stackSize);
     /*process modules call the following */
     asynStatus (*registerProcessModule)(
-        const char *processModuleName,const char *deviceName,
-        deviceDriver *padeviceDriver,int ndeviceDrivers);
-}asynQueueManager;
-epicsShareExtern asynQueueManager *pasynQueueManager;
+        const char *processModuleName,const char *portName,
+        asynInterface *paasynInterface,int nasynInterface);
+}asynManager;
+epicsShareExtern asynManager *pasynManager;
 
 /*Methods supported by ALL asyn drivers*/
-#define asynDriverType "asynDriver"
-typedef struct  asynDriver {
+#define asynCommonType "asynCommon"
+typedef struct  asynCommon {
     void       (*report)(void *drvPvt,int details);
     /*following are to connect/disconnect to/from hardware*/
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-}asynDriver;
+}asynCommon;
 
 /* Methods supported by low level octet drivers. */
-#define octetDriverType "octetDriver"
-typedef struct octetDriver{
-    int        (*read)(void *drvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
+#define asynOctetType "asynOctet"
+typedef struct asynOctet{
+    int        (*read)(void *drvPvt,asynUser *pasynUser,
+                       char *data,int maxchars);
     int        (*write)(void *drvPvt,asynUser *pasynUser,
-                        int addr,const char *data,int numchars);
-    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser,int addr);
+                        const char *data,int numchars);
+    asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
-                         int addr,const char *eos,int eoslen);
-    asynStatus (*installPeekHandler)(void *drvPvt,asynUser *pasynUser,
-                         peekHandler handler,void *peekHandlerPvt);
-    asynStatus (*removePeekHandler)(void *drvPvt,asynUser *pasynUser);
-}octetDriver;
+                         const char *eos,int eoslen);
+}asynOctet;
 
 
 #ifdef __cplusplus

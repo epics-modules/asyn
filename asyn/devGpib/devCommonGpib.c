@@ -33,7 +33,7 @@
 #include <shareLib.h>
 
 #include <asynDriver.h>
-#include <gpibDriver.h>
+#include <asynGpibDriver.h>
 
 #include "devSupportGpib.h"
 #define epicsExportSharedSymbols
@@ -347,44 +347,42 @@ static void boGpibWorkSpecial(gpibDpvt *pgpibDpvt,int timeoutOccured)
     boRecord *precord = (boRecord *)pgpibDpvt->precord;
     int val = (int)precord->val;
     int cmdType = gpibCmdGetType(pgpibDpvt);
-    gpibDriver *pgpibDriver = pgpibDpvt->pgpibDriver;
-    void *drvPvt = pgpibDpvt->gpibDriverPvt;
+    asynGpib *pasynGpib = pgpibDpvt->pasynGpib;
+    void *drvPvt = pgpibDpvt->asynGpibPvt;
     asynUser *pasynUser = pgpibDpvt->pasynUser;
     asynStatus status = asynSuccess;
     int failure = 0;
 
     if(timeoutOccured) {
         failure = 1;
-    } else if(!pgpibDriver) {
+    } else if(!pasynGpib) {
         failure = 1;
-        printf("%s pgpibDriver is 0\n",precord->name);
+        printf("%s pasynGpib is 0\n",precord->name);
     } else switch(gpibCmdTypeNoEOS(cmdType)) {
-        case GPIBIFC: status = pgpibDriver->ifc(drvPvt,pasynUser); break;
-        case GPIBREN: status = pgpibDriver->ren(drvPvt,pasynUser,val); break;
+        case GPIBIFC: status = pasynGpib->ifc(drvPvt,pasynUser); break;
+        case GPIBREN: status = pasynGpib->ren(drvPvt,pasynUser,val); break;
         case GPIBDCL:
-            status = pgpibDriver->universalCmd(drvPvt,pasynUser,IBDCL);
+            status = pasynGpib->universalCmd(drvPvt,pasynUser,IBDCL);
             break;
         case GPIBLLO:
-            status = pgpibDriver->universalCmd(drvPvt,pasynUser,IBLLO);
+            status = pasynGpib->universalCmd(drvPvt,pasynUser,IBLLO);
             break;
         case GPIBSDC:
-            status = pgpibDriver->addressedCmd(drvPvt,pasynUser,
-                pgpibDpvt->gpibAddr,IBSDC,1);
+            status = pasynGpib->addressedCmd(drvPvt,pasynUser,IBSDC,1);
             break;
         case GPIBGTL:
-            status = pgpibDriver->addressedCmd(drvPvt,pasynUser,
-                pgpibDpvt->gpibAddr,IBGTL,1);
+            status = pasynGpib->addressedCmd(drvPvt,pasynUser,IBGTL,1);
             break;
         case GPIBRESETLNK:
         {
-            asynDriver *pasynDriver = pgpibDpvt->pasynDriver;
-            void *asynDriverPvt = pgpibDpvt->asynDriverPvt;
+            asynCommon *pasynCommon = pgpibDpvt->pasynCommon;
+            void *asynCommonPvt = pgpibDpvt->asynCommonPvt;
 
-            assert(pasynDriver);
-            status = pgpibDpvt->pasynDriver->disconnect(
-                asynDriverPvt,pasynUser);
-            if(status==asynSuccess) status = pgpibDpvt->pasynDriver->connect(
-                asynDriverPvt,pasynUser);
+            assert(pasynCommon);
+            status = pgpibDpvt->pasynCommon->disconnect(
+                asynCommonPvt,pasynUser);
+            if(status==asynSuccess) status = pgpibDpvt->pasynCommon->connect(
+                asynCommonPvt,pasynUser);
         }
         break;
         default: status = -1;
