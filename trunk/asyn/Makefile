@@ -52,6 +52,7 @@ SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd
 INC += asynShellCommands.h
 INC += asynInterposeEos.h
+INC += asynInterposeFlush.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
