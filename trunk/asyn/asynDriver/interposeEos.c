@@ -37,7 +37,7 @@ typedef struct eosPvt {
     asynInterface octet;
     asynOctet     *pasynOctet;  /* The methods we're overriding */
     void          *asynOctetPvt;
-    asynUser      asynUser;     /* For connect/disconnect reporting *
+    asynUser      *pasynUser;     /* For connect/disconnect reporting *
     char          inBuffer[INBUFFER_SIZE];
     unsigned int  inBufferHead;
     unsigned int  inBufferTail;
@@ -69,7 +69,11 @@ int epicsShareAPI interposeEosConfig(const char *pnm,const char *dn,int addr)
     peosPvt->octet.interfaceType = asynOctetType;
     peosPvt->octet.pinterface = &octet;
     peosPvt->octet.drvPvt = peosPvt;
-    peosPvt->asynuser = callocMustSucceed(1,sizeof(asynUser),"interposeEosConfig");
+    peosPvt->pasynuser = pasynManager->createAsynUser(0,0);
+    peosPvt->pasynuser->devPvt = peosPvt;
+    status = pasynManager->connectDevice(peosPvt->pasynuser,peosPvt->portName,peosPvt->addr);
+    if(status!=asynSyccess) ???
+    status = pasynManager->exceptionCallbackAdd(pasynuser,myCallback);
     status = pasynManager->interposeInterface(portName,addr,
         &peosPvt->octet,&poctetasynInterface);
     if((status!=asynSuccess) || !poctetasynInterface) {
