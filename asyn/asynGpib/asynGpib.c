@@ -85,7 +85,7 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
 static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
@@ -252,12 +252,12 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 
 /*asynOctet methods */
 static asynStatus gpibRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     GETgpibPvtasynGpibPort
 
     return pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
-               data,maxchars,nbytesTransfered);
+               data,maxchars,nbytesTransfered,eomReason);
 }
 
 static asynStatus gpibWrite(void *drvPvt,asynUser *pasynUser,

@@ -43,7 +43,7 @@ static int interposeInterfaceInit(const char *interposeInterfaceName,
 
 /* asynOctet methods */
 static asynStatus processRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus processWrite(void *ppvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus processFlush(void *ppvt,asynUser *pasynUser);
@@ -90,13 +90,13 @@ static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
 
 /* asynOctet methods */
 static asynStatus processRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered interposeInterface::read\n");
     return pinterposePvt->pasynOctet->read(pinterposePvt->asynOctetPvt,
-        pasynUser,data,maxchars,nbytesTransfered);
+        pasynUser,data,maxchars,nbytesTransfered,eomReason);
 }
 
 static asynStatus processWrite(void *ppvt,asynUser *pasynUser,

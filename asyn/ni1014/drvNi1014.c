@@ -30,6 +30,7 @@
 #include <devLib.h>
 #include <taskwd.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <asynGpibDriver.h>
 
 #include <epicsExport.h>
@@ -63,6 +64,7 @@ struct niport {
     epicsUInt8  *nextByteWrite;
     int	        bytesRemainingRead;
     epicsUInt8  *nextByteRead;
+    int         eomReason;
     int         eos; /* -1 means no end of string character*/
     asynStatus  status; /*status of ip transfer*/
     epicsEventId waitForInterrupt;
@@ -86,13 +88,13 @@ static asynStatus writeAddr(niport *pniport,int talk, int listen,
 static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
     int *actual, int addr, double timeout);
 static asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
-    int addr, double timeout);
+    int addr, double timeout,int *eomReason);
 /* asynGpibPort methods */
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser);
@@ -365,8 +367,11 @@ void ni1014(void *pvt)
         octet = readRegister(pniport,DIR);
         *pniport->nextByteRead = octet;
         --(pniport->bytesRemainingRead); ++(pniport->nextByteRead);
-        if(((pniport->eos != -1 ) && (octet == pniport->eos)) 
-        || (ENDRX&isr1) || (pniport->bytesRemainingRead == 0)) {
+        if((pniport->eos != -1 ) && (octet == pniport->eos))
+            pniport->eomReason |= EOMEOS;
+        if(ENDRX&isr1) pniport->eomReason |= EOMEOS;
+        if(pniport->bytesRemainingRead == 0) pniport->eomReason |= EOMCNT;
+        if(pniport->eomReason) {
             pniport->transferState = transferStateIdle;
             writeRegister(pniport,AUXMR,AUXTCS);
             epicsEventSignal(pniport->waitForInterrupt);
@@ -451,7 +456,7 @@ static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
 }
 
 asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
-    int addr, double timeout)
+    int addr, double timeout,int *eomReason)
 {
     epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
@@ -460,6 +465,7 @@ asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
     *actual=0; *buf=0;
     pniport->bytesRemainingRead = cnt;
     pniport->nextByteRead = buf;
+    pniport->eomReason = 0;
     if(isr1&DI) {
         pniport->bytesRemainingRead--;
         pniport->nextByteRead++;
@@ -470,6 +476,7 @@ asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
     status = writeAddr(pniport,addr,0,timeout,transferStateRead);
     if(status!=asynSuccess) return status;
     *actual = cnt - pniport->bytesRemainingRead;
+    if(eomReason) *eomReason = pniport->eomReason;
     writeCmd(pniport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
@@ -560,7 +567,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 }
 
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     niport *pniport = (niport *)pdrvPvt;
     int        actual = 0;
@@ -573,7 +580,7 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibPortRead\n",
         pniport->portName,addr);
     pniport->errorMessage[0] = 0;
-    status = readGpib(pniport,data,maxchars,&actual,addr,timeout);
+    status = readGpib(pniport,data,maxchars,&actual,addr,timeout,eomReason);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s readGpib failed %s\n",pniport->portName,pniport->errorMessage);

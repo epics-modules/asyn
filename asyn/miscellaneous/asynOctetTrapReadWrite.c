@@ -46,7 +46,7 @@ typedef struct trapPvt {
 /* asynOctet methods */
 
 static asynStatus trapRead(void *ppvt,
-    asynUser *pasynUser, char *data,int maxchars,int *nbytesTransfered);
+    asynUser *pasynUser, char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus trapWrite(void *ppvt,
     asynUser *pasynUser, const char *data,int numchars,int *nbytesTransfered);
 static asynStatus trapFlush(void *ppvt, asynUser *pasynUser);
@@ -62,14 +62,14 @@ static asynOctet octet = {
 /* intercept read and write */
 
 static asynStatus trapRead(void *ppvt, asynUser *pasynUser,
-    char *data,int maxchars,int *transfered)
+    char *data,int maxchars,int *transfered,int *eomReason)
 {
     asynStatus result;
     client* pclient;
     trapPvt *ptrapPvt = (trapPvt *)ppvt;
 
     result = ptrapPvt->plowerLevel->read(ptrapPvt->lowerLevelPvt,
-        pasynUser, data, maxchars, transfered);
+        pasynUser, data, maxchars, transfered,eomReason);
     epicsMutexLock(ptrapPvt->mutex);
     for (pclient = ptrapPvt->readClients; pclient; pclient = pclient->next)
     {

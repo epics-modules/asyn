@@ -54,7 +54,7 @@ static void eosExceptionHandler(asynUser *pasynUser,asynException exception);
 
 /* asynOctet methods */
 static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus eosWrite(void *ppvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus eosFlush(void *ppvt,asynUser *pasynUser);
@@ -107,13 +107,14 @@ static void eosExceptionHandler(asynUser *pasynUser,asynException exception)
 
 /* asynOctet methods */
 static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
     int thisRead;
     int nRead = 0;
     asynStatus status = asynSuccess;
 
+    if(eomReason) *eomReason = 0;
     for (;;) {
         if ((peosPvt->inBufferTail != peosPvt->inBufferHead)) {
             char c = *data++ = peosPvt->inBuffer[peosPvt->inBufferTail++];
@@ -122,6 +123,7 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
                 if (c == peosPvt->eos[peosPvt->eosMatch]) {
                     if (++peosPvt->eosMatch == peosPvt->eoslen) {
                         peosPvt->eosMatch = 0;
+                        if(eomReason) *eomReason += EOMEOS;
                         break;
                     }
                 }
@@ -142,8 +144,9 @@ static asynStatus eosRead(void *ppvt,asynUser *pasynUser,
             if (nRead >= maxchars) break;
             continue;
         }
+        if(eomReason && *eomReason) break;
         status = peosPvt->plowerLevelMethods->read(peosPvt->lowerLevelPvt,
-                        pasynUser,peosPvt->inBuffer,INBUFFER_SIZE,&thisRead);
+                        pasynUser,peosPvt->inBuffer,INBUFFER_SIZE,&thisRead,eomReason);
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufferTail = 0;
         peosPvt->inBufferHead = thisRead;

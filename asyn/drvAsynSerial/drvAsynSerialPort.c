@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.21 2004-07-29 13:48:03 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.22 2004-07-29 20:00:06 mrk Exp $
  */
 
 #include <string.h>
@@ -625,7 +625,7 @@ static asynStatus drvAsynSerialPortWrite(void *drvPvt, asynUser *pasynUser,
  * Read from the serial line
  */
 static asynStatus drvAsynSerialPortRead(void *drvPvt, asynUser *pasynUser,
-    char *data, int maxchars,int *nbytesTransfered)
+    char *data, int maxchars,int *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;

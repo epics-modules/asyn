@@ -34,6 +34,7 @@
 #include <cantProceed.h>
 #include <epicsString.h>
 #include <asynDriver.h>
+#include <asynOctet.h>
 #include <asynOption.h>
 #include "asynGpibDriver.h"
 #include <epicsInterruptibleSyscall.h>
@@ -120,7 +121,7 @@ static void vxiReport(void *drvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser);
 static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered);
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
 static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
     const char *data,int numchars,int *nbytesTransfered);
 static asynStatus vxiFlush(void *drvPvt,asynUser *pasynUser);
@@ -979,7 +980,7 @@ static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered)
+    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
     vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     nRead = 0, thisRead;
@@ -1052,6 +1053,11 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
         }
         xdr_free((const xdrproc_t) xdr_Device_ReadResp, (char *) &devReadR);
     } while(!devReadR.reason && thisRead>0);
+    if(eomReason) {
+        if(devReadR.reason & VXI_REQCNT) *eomReason |= EOMCNT;
+        if(devReadR.reason & VXI_CHR) *eomReason |= EOMEOS;
+        if(devReadR.reason & VXI_ENDR) *eomReason |= EOMEND;
+    }
     /* send <UNT,UNL> after completion */
     /* SHOULD THIS BE DONE ???*/
     if(vxiWriteCmd(pvxiPort,pasynUser, "_?", 2) != 2) return -1;

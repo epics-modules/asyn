@@ -882,7 +882,7 @@ static void performIO(asynUser * pasynUser)
         }
         nbytesTransfered = 0;
         status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                                 pasynUser, inptr, nread, &nbytesTransfered);
+                                 pasynUser, inptr, nread, &nbytesTransfered,0);
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
              "%s: inlen=%d, status=%d, ninp=%d, data=", pasynRec->name, inlen,
                     status, nbytesTransfered);
@@ -1014,7 +1014,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
         }
         /* Read the response byte  */
         status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynGpibPvt,
-                pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered);
+                pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered,0);
         if(status != asynSuccess || nbytesTransfered != 1) {
             reportError(pasynRec, status,
                         "Error in GPIB Serial Poll read, %s",
