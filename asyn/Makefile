@@ -99,6 +99,12 @@ asyn_SRCS_vxWorks += drvNi1014.c
 asyn_SRCS_RTEMS += drvNi1014.c
 DBD += drvNi1014.dbd
 
+ifeq ($(LINUX_GPIB),YES)
+SRC_DIRS += $(ASYN)/linuxGpib
+asyn_SRCS_Linux += drvLinuxGpib.c
+DBD += drvLinuxGpib.dbd
+endif
+
 SRC_DIRS += $(ASYN)/devGpib
 INC += devGpib.h
 INC += devSupportGpib.h
