@@ -856,8 +856,6 @@ static void performIO(asynUser * pasynUser)
             /* ASCII or Hybrid mode */
             eoslen = dbTranslateEscape(eos, pasynRec->ieos);
         }
-        /* If eoslen is zero, make it -1, which means wait forever */
-        if (eoslen == 0) eoslen = -1;
         status = pasynRecPvt->pasynOctet->setEos(pasynRecPvt->asynOctetPvt,
                                                  pasynUser, eos, eoslen);
         if(status) {
