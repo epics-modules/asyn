@@ -19,6 +19,7 @@
 #include <epicsEvent.h>
 #include <asynDriver.h>
 #include <asynFloat64.h>
+#include <asynDrvUser.h>
 #include <drvAsynIPPort.h>
 #include <asynFloat64SyncIO.h>
 
@@ -51,14 +52,15 @@ static asynStatus queueAndWait(asynUser *pasynUser, double timeout, opType op);
 static void processCallback(asynUser *pasynUser);
 
 /*asynFloat64SyncIO methods*/
-static asynStatus connect(const char *port, int addr,asynUser **ppasynUser);
+static asynStatus connect(const char *port, int addr,
+                          asynUser **ppasynUser, char *drvInfo);
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeOp(asynUser *pasynUser,epicsFloat64 value,double timeout);
 static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout);
 static asynStatus writeOpOnce(const char *port, int addr,
-                          epicsFloat64 value, double timeout);
+                          epicsFloat64 value, double timeout, char *drvInfo);
 static asynStatus readOpOnce(const char *port, int addr,
-                        epicsFloat64 *pvalue,double timeout);
+                        epicsFloat64 *pvalue,double timeout, char *drvInfo);
 static asynFloat64SyncIO interface = {
     connect,
     disconnect,
@@ -142,25 +144,14 @@ static void processCallback(asynUser *pasynUser)
        break;
     case opWrite:
        status = pasynFloat64->write(pdrvPvt, pasynUser, pPvt->value);
-       if(status==asynError) {
-          asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                    "asynFloat64SyncIO write failed %s\n",
-                    pasynUser->errorMessage);
-       } else {
-           asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                      "asynFloat64SyncIO wrote: %e",pPvt->value);
-       }
+       asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+                 "asynFloat64SyncIO status=%d, wrote: %e",
+                 status,pPvt->value);
        break;
     case opRead:
        status = pasynFloat64->read(pdrvPvt, pasynUser, &pPvt->value);
-       if(status==asynError) {
-          asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                    "asynFloat64SyncIO read failed %s\n",
-                    pasynUser->errorMessage);
-       } else {
-          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                      "asynFloat64SyncIO read: %e",pPvt->value);
-       }
+       asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+                 "asynFloat64SyncIO status=%d read: %e",status,pPvt->value);
        break;
     }
     pPvt->status = status;
@@ -169,7 +160,7 @@ static void processCallback(asynUser *pasynUser)
 }
 
 static asynStatus connect(const char *port, int addr,
-   asynUser **ppasynUser)
+   asynUser **ppasynUser, char *drvInfo)
 {
     ioPvt *pioPvt;
     asynUser *pasynUser;
@@ -218,6 +209,20 @@ static asynStatus connect(const char *port, int addr,
     }
     pioPvt->pasynFloat64 = (asynFloat64 *)pasynInterface->pinterface;
     pioPvt->pdrvPvt = pasynInterface->drvPvt;
+
+    /* Get asynDrvUser interface */
+    pasynInterface = pasynManager->findInterface(pasynUser, asynDrvUserType, 1);
+    if(pasynInterface && drvInfo) {
+        asynDrvUser *pasynDrvUser;
+        void       *drvPvt;
+        pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
+        drvPvt = pasynInterface->drvPvt;
+        status = pasynDrvUser->create(drvPvt,pasynUser,drvInfo,0,0);
+        if(status!=asynSuccess) {
+            printf("asynIntFloat64SyncIO::connect drvUserCreate drvInfo=%s %s\n",
+                     drvInfo, pasynUser->errorMessage);
+        }
+    }
 
     /* Connect to device if not already connected.  
      * For TCP/IP sockets this ensures that the port is connected */
@@ -276,13 +281,13 @@ static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout
 }
 
 static asynStatus writeOpOnce(const char *port, int addr,
-    epicsFloat64 value,double timeout)
+    epicsFloat64 value,double timeout,char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
     int        nbytes;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     nbytes = writeOp(pasynUser,value,timeout);
     disconnect(pasynUser);
@@ -290,12 +295,12 @@ static asynStatus writeOpOnce(const char *port, int addr,
 }
 
 static asynStatus readOpOnce(const char *port, int addr,
-                   epicsFloat64 *pvalue,double timeout)
+                   epicsFloat64 *pvalue,double timeout,char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     status = readOp(pasynUser,pvalue,timeout);
     disconnect(pasynUser);

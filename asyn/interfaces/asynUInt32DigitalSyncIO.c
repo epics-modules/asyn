@@ -19,6 +19,7 @@
 #include <epicsEvent.h>
 #include <asynDriver.h>
 #include <asynUInt32Digital.h>
+#include <asynDrvUser.h>
 #include <drvAsynIPPort.h>
 #include <asynUInt32DigitalSyncIO.h>
 
@@ -57,28 +58,33 @@ static asynStatus queueAndWait(asynUser *pasynUser, double timeout, opType op);
 static void processCallback(asynUser *pasynUser);
 
 /*asynUInt32DigitalSyncIO methods*/
-static asynStatus connect(const char *port, int addr,asynUser **ppasynUser);
+static asynStatus connect(const char *port, int addr,asynUser **ppasynUser,
+                      char *drvInfo);
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeOp(asynUser *pasynUser,
-                          epicsUInt32 value,epicsUInt32 mask, double timeout);
+                      epicsUInt32 value,epicsUInt32 mask, double timeout);
 static asynStatus readOp(asynUser *pasynUser,
-                        epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+                      epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
 static asynStatus setInterrupt(asynUser *pasynUser,
-                       epicsUInt32 mask, interruptReason reason,double timeout);
+                      epicsUInt32 mask, interruptReason reason,double timeout);
 static asynStatus clearInterrupt(asynUser *pasynUser,
-                        epicsUInt32 mask,double timeout);
+                      epicsUInt32 mask,double timeout);
 static asynStatus getInterrupt(asynUser *pasynUser,
                       epicsUInt32 *mask, interruptReason reason,double timeout);
 static asynStatus writeOpOnce(const char *port, int addr,
-                          epicsUInt32 value,epicsUInt32 mask, double timeout);
+                      epicsUInt32 value,epicsUInt32 mask, double timeout,
+                      char *drvInfo);
 static asynStatus readOpOnce(const char *port, int addr,
-                        epicsUInt32 *pvalue,epicsUInt32 mask,double timeout);
+                      epicsUInt32 *pvalue,epicsUInt32 mask,double timeout,
+                      char *drvInfo);
 static asynStatus setInterruptOnce(const char *port, int addr,
-                      epicsUInt32 mask, interruptReason reason,double timeout);
+                      epicsUInt32 mask, interruptReason reason,double timeout,
+                      char *drvInfo);
 static asynStatus clearInterruptOnce(const char *port, int addr,
-                        epicsUInt32 mask,double timeout);
+                      epicsUInt32 mask,double timeout,char *drvInfo);
 static asynStatus getInterruptOnce(const char *port, int addr,
-                      epicsUInt32 *mask, interruptReason reason,double timeout);
+                      epicsUInt32 *mask, interruptReason reason,double timeout,
+                      char *drvInfo);
 static asynUInt32DigitalSyncIO interface = {
     connect,
     disconnect,
@@ -233,7 +239,7 @@ static void processCallback(asynUser *pasynUser)
 }
 
 static asynStatus connect(const char *port, int addr,
-   asynUser **ppasynUser)
+   asynUser **ppasynUser, char *drvInfo)
 {
     ioPvt *pioPvt;
     asynUser *pasynUser;
@@ -282,6 +288,20 @@ static asynStatus connect(const char *port, int addr,
     }
     pioPvt->pasynUInt32Digital = (asynUInt32Digital *)pasynInterface->pinterface;
     pioPvt->pdrvPvt = pasynInterface->drvPvt;
+
+    /* Get asynDrvUser interface */
+    pasynInterface = pasynManager->findInterface(pasynUser, asynDrvUserType, 1);
+    if(pasynInterface && drvInfo) {
+        asynDrvUser *pasynDrvUser;
+        void       *drvPvt;
+        pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
+        drvPvt = pasynInterface->drvPvt;
+        status = pasynDrvUser->create(drvPvt,pasynUser,drvInfo,0,0);
+        if(status!=asynSuccess) {
+            printf("asynUInt32DigitalSyncIO::connect drvUserCreate drvInfo=%s %s\n",
+                     drvInfo, pasynUser->errorMessage);
+        }
+    }
 
     /* Connect to device if not already connected.  
      * For TCP/IP sockets this ensures that the port is connected */
@@ -378,13 +398,13 @@ static asynStatus getInterrupt(asynUser *pasynUser,
 }
 
 static asynStatus writeOpOnce(const char *port, int addr,
-    epicsUInt32 value,epicsUInt32 mask,double timeout)
+    epicsUInt32 value,epicsUInt32 mask,double timeout,char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
     int        nbytes;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     nbytes = writeOp(pasynUser,value,mask,timeout);
     disconnect(pasynUser);
@@ -392,12 +412,13 @@ static asynStatus writeOpOnce(const char *port, int addr,
 }
 
 static asynStatus readOpOnce(const char *port, int addr,
-                   epicsUInt32 *pvalue,epicsUInt32 mask,double timeout)
+                   epicsUInt32 *pvalue,epicsUInt32 mask,double timeout,
+                   char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     status = readOp(pasynUser,pvalue,mask,timeout);
     disconnect(pasynUser);
@@ -405,12 +426,13 @@ static asynStatus readOpOnce(const char *port, int addr,
 }
 
 static asynStatus setInterruptOnce(const char *port, int addr,
-                    epicsUInt32 mask, interruptReason reason,double timeout)
+                    epicsUInt32 mask, interruptReason reason,double timeout,
+                    char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     status = setInterrupt(pasynUser,mask,reason,timeout);
     disconnect(pasynUser);
@@ -418,12 +440,12 @@ static asynStatus setInterruptOnce(const char *port, int addr,
 }
 
 static asynStatus clearInterruptOnce(const char *port, int addr,
-                        epicsUInt32 mask,double timeout)
+                        epicsUInt32 mask,double timeout,char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     status = clearInterrupt(pasynUser,mask,timeout);
     disconnect(pasynUser);
@@ -431,12 +453,13 @@ static asynStatus clearInterruptOnce(const char *port, int addr,
 }
 
 static asynStatus getInterruptOnce(const char *port, int addr,
-                  epicsUInt32 *mask, interruptReason reason,double timeout)
+                  epicsUInt32 *mask, interruptReason reason,double timeout,
+                  char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
 
-    status = connect(port,addr,&pasynUser);
+    status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) return -1;
     status = getInterrupt(pasynUser,mask,reason,timeout);
     disconnect(pasynUser);
