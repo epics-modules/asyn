@@ -716,13 +716,6 @@ support it must to document its changes.</p>
           <p>Only define <code>dset</code>, <code>type</code>, and
           <code>pri</code>. A default pdevGpibNames is provided.</p>
         </dd>
-      <dt>GPIBRESETLNK Valid only for BO records.</dt>
-        <dd><p>If rval = (0,1) then (do nothing, reset link task).  This
-          completely restarts the link thread. This is a very drastic
-          action.</p>
-          <p>Only define <code>dset</code>, <code>type</code>, and
-          <code>pri</code>. A default pdevGpibNames is provided.</p>
-        </dd>
       <dt>GPIBSRQHANDLER</dt>
         <dd>This is used to handle an unsolicited SRQ from gpibAddr,, i.e. a
           device raises SRQ when a read wait, e.g. GPIBREADW or GPIBEFASTIW,

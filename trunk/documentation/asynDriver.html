@@ -1363,10 +1363,12 @@ asynOctet. asynGpib defines two interfaces.</p>
 
 <p>asynGpibDriver.h contains the following definitions:</p>
 <pre>#include "asynDriver.h"
-
-#define asynGpibUserType "asynGpibUser"
+#define asynGpibType "asynGpib"
 /* GPIB drivers */
-/*asynGpib defines methods called by GPIB aware users*/
+typedef void (*srqHandler)(void *userPrivate,int gpibAddr,int statusByte);
+typedef struct asynGpib asynGpib;
+typedef struct asynGpibPort asynGpibPort;
+/*asynGpib defines methods called by gpib aware users*/
 struct asynGpib{
     /*addressedCmd,...,ren are just passed to device handler*/
     asynStatus (*addressedCmd) (void *drvPvt,asynUser *pasynUser,
@@ -1382,21 +1384,19 @@ struct asynGpib{
     /*srqHappened is passed the pointer returned by registerPort*/
     void *(*registerPort)(
         const char *portName,
+        int multiDevice,int autoConnect,
         asynGpibPort *pasynGpibPort, void *asynGpibPortPvt,
         unsigned int priority, unsigned int stackSize);
     void (*srqHappened)(void *asynGpibPvt);
 };
-epicsShareExtern asynGpib *pasynGpib;
-
-
 struct asynGpibPort {
     /*asynCommon methods */
     void (*report)(void *drvPvt,FILE *fd,int details);
     asynStatus (*connect)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
-    asynStatus (*setPortOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*setOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,const char *val);
-    asynStatus (*getPortOption)(void *drvPvt,asynUser *pasynUser,
+    asynStatus (*getOption)(void *drvPvt,asynUser *pasynUser,
                                 const char *key,char *val,int sizeval);
     /*asynOctet methods passed through from asynGpib*/
     int (*read)(void *drvPvt,asynUser *pasynUser,char *data,int maxchars);
@@ -1418,7 +1418,8 @@ struct asynGpibPort {
     asynStatus (*serialPollBegin) (void *drvPvt);
     int (*serialPoll) (void *drvPvt, int addr, double timeout);
     asynStatus (*serialPollEnd) (void *drvPvt);
-};</pre>
+};
+</pre>
 
 <h3>asynGpib</h3>
 
