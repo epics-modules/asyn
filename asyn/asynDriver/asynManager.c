@@ -183,7 +183,7 @@ static void portThread(asynPort *pasynPort)
     void *drvPvt = 0;
     int i;
 
-    taskwdInsert(pasynPort->threadid,0,0);
+    taskwdInsert(epicsThreadGetIdSelf(),0,0);
     /* find and call pasynCommon->connect */
     for(i=0; i<pasynPort->nasynInterface; i++) {
         asynInterface *pasynInterface = &pasynPort->paasynInterface[i];
@@ -575,14 +575,16 @@ static asynStatus registerPort(
     pasynPort->paasynInterface = paasynInterface;
     pasynPort->nasynInterface = nasynInterface;
     pasynPort->notifyDeviceThread = epicsEventMustCreate(epicsEventEmpty);
-    pasynPort->priority = priority;
-    pasynPort->stackSize = stackSize;
+    pasynPort->priority = priority ? priority : epicsThreadPriorityMedium;
+    pasynPort->stackSize = stackSize ?
+                                stackSize :
+                                epicsThreadGetStackSize(epicsThreadStackMedium);
     for(i=0; i<NUMBER_QUEUE_PRIORITIES; i++) ellInit(&pasynPort->queueList[i]);
     ellInit(&pasynPort->asynDeviceList);
     epicsMutexMustLock(pasynPort->lock);
     ellAdd(&pasynBase->asynPortList,&pasynPort->node);
-    pasynPort->threadid = epicsThreadCreate(portName,priority,stackSize,
-        (EPICSTHREADFUNC)portThread,pasynPort);
+    pasynPort->threadid = epicsThreadCreate(portName,pasynPort->priority,
+                pasynPort->stackSize,(EPICSTHREADFUNC)portThread,pasynPort);
     if(!pasynPort->threadid){
         printf("asynCommon:registerDriver %s epicsThreadCreate failed \n",
             portName);
