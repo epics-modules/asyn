@@ -2027,9 +2027,8 @@ explains how to include asynDriver components.</p>
     <pre>        &lt;app&gt;_LIBS += asyn
     </pre>
   </li>
-  <li>Add the following to <code>&lt;app&gt;Include.dbd<span
-    style="font-family: times"> and uncomment the line or lines appropriate
-    for your application:</span></code>
+  <li>Add the following to <code>&lt;app&gt;Include.dbd</code> and uncomment the line or lines appropriate
+    for your application:
     <pre>
       #include "drvAsynSerialPort.dbd"
       #include "drvAsynIPPort.dbd"
@@ -2041,8 +2040,8 @@ explains how to include asynDriver components.</p>
   </li>
 </ul>
 
-<p>In the <code>st.cmd</code> file add.
-dbLoadRecords("db/asynRecord.db","P=&lt;ioc&gt;,R=&lt;record&gt;,PORT=&lt;port&gt;,ADDR=&lt;addr&gt;,OMAX=&lt;omax&gt;,IMAX=&lt;imax&gt;")</p>
+<p>In the <code>st.cmd</code> file add.<br>
+dbLoadRecords("db/asynRecord.db", "P=&lt;ioc&gt;, R=&lt;record&gt;, PORT=&lt;port&gt;, ADDR=&lt;addr&gt;, OMAX=&lt;omax&gt;, IMAX=&lt;imax&gt;")</p>
 
 <p>You must provide  values for &lt;ioc&gt;, &lt;record&gt;, &lt;port&gt;,
 &lt;addr&gt;, &lt;omax&gt;, and &lt;imax&gt;.</p>
