@@ -16,7 +16,8 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">August 23, 2004</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">September 23,
+2004</span></p>
 </center>
 <hr>
 
@@ -67,11 +68,9 @@ Interfaces</a> <br>
 </center>
 
 <p>asynDriver is a general purpose facility for interfacing device specific
-code to low level drivers. It supports both asynchronous (can block) and
-synchronous (do not block) drivers.. The name asynDriver is used because,
-high level device support makes all calls to drivers from a callback.
-asynDriver is designed so that it is easy to write non blocking device
-support that works with both blocking and non blocking drivers.</p>
+code to low level drivers, asynDriver makes it easy to implement  non
+blocking device support that works with both blocking and non blocking
+drivers.</p>
 
 <p>A primary target for asynDriver is EPICS IOC device support but, other
 than using libCom, much of it is independent of EPICS.</p>
@@ -221,6 +220,15 @@ asynDriver defines the following terminology:</p>
     uses the word device without a quailifier, it means something that is
     connected to a port.</p>
   </li>
+  <li>synchronous
+    <p>Support that does not voluntarily give up control of the CPU.</p>
+  </li>
+  <li>asynchronous
+    <p>Support that is not synchronous. Some examples of asynchronous
+    operations are epicsThreadSleep, epicsEventWait,and stdio operations.
+    Calls to epicsMutexTake are considered to be synchronous operations, i.e.
+    they are permitted.</p>
+  </li>
   <li>asynDriver
     <p>This is the name for the support described in this manual. It is also
     the name of the header file that describes the core interfaces</p>
@@ -336,34 +344,49 @@ sections.</p>
 <p>During initialization, port drivers register each communication port as
 well as all supported interfaces.</p>
 
-<p>User code creates an asynUser by calling  <span
-style="font-family: courier">pasynManager-&gt;createAsynUser(processCallback,...)</span>.
-The address of the asynUser is passed to most other asynDriver methods.
-processCallback is the addresss of a caller supplied callback routine, which
-will be described shortly. An asynUser is a "handle" for accessing asynDriver
-facilities. It is the means by which asynManager manages multiple requests
-for access to a port. Device support code should NOT try to share an asynUser
-between multiple sources of requsts for access to a port. For example device
-support for EPICS records should normally allocate a separate asynUser for
-each record instance.</p>
+<p>User code creates an asynUser, which a "handle" for accessing asynDriver
+facilities,  by calling</p>
+<pre>    pasynManager-&gt;createAsynUser(processCallback,timeoutCallback);</pre>
+An asynUser has the following features:
+<ul>
+  <li>An asynUser is the means by which asynManager manages multiple requests
+    for accessing a port.</li>
+  <li>processCallback is the addresss of a user supplied callback
+  routine.</li>
+  <li>timeoutCallback is the address of caller supplied callback that will be
+    called if a queueRequest remains on the  queue for too long.</li>
+  <li>Device support code should create an asynUser for each "atomic" access
+    to low level drivers, i.e. a set of calls that must not be interlaced
+    with other calls to the low level drivers. For example device support for
+    EPICS record support should create an asynUser for each record
+  instance.</li>
+  <li>Device support code should NOT try to share an asynUser between
+    multiple sources of requsts for access to a port. If this is done then
+    device support must itself handle contention issues that are already
+    handled by asynManager.</li>
+</ul>
 
-<p>User code connects to a low level driver via a call to <span
-style="font-family: courier">pasynManager-&gt;connectDevice(pasynUser,portName,addr)</span>.
+<p>User code connects to a low level driver via a call to</p>
+<pre>    status = pasynManager-&gt;connectDevice(pasynUser,portName,addr);</pre>
 This call must specify the name of the port and the address of the device. It
 then calls findInterface to locate the interfaces with which it calls the
-driver.</p>
+driver.
 
-<p>User code makes calls to the low level driver via an interface. All calls
-must be made from the queue callback passed to createAsynUser. A request to
-call queue callback is made by calling queueRequest. A thread that calls
-queueRequest is guaranteed not to block. If queueRequest is called for a port
-that can block the request is queued to a thread dedicated to the port. If
-queueRequest is called for a port does not block it just calls queue
-callback. In either case asynManager guarantees that multiple threads do not
-simultaneously call a low level driver. This guarantee is valid only if low
-level drivers are only accessed by calling queueRequest.</p>
+<p>User code requests access to a port by calling:</p>
+<pre>    status = pasynManager-&gt;queueRequest(pasynUser,priority,timeout);</pre>
+This results in either the processCallback or timeoutCallback, passed to
+createAsynUser, being called. All requests to the port must be made from
+processCallback. A thread that calls queueRequest is guaranteed not to block
+(assuming that processCallback does not block). If queueRequest is called for
+a port that can block the request is queued to a thread dedicated to the
+port. If queueRequest is called for a port does not block it just calls
+processCallback. In either case asynManager guarantees that multiple threads
+do not simultaneously call a low level driver. This guarantee is valid only
+if low level drivers are only accessed by calling queueRequest.
 
 <p>The following examples are based on EPICS IOC record/device support.</p>
+
+<p>The first example shows access to a port that can block.</p>
 
 <center>
 <img name="AsynFlow" src="AsynFlow.jpg" border="1">
@@ -381,14 +404,16 @@ following steps:
     subsequent operations for this I/O request are handled in the port driver
     thread.</li>
   <li>The port thread removes the I/O request from the work queue.</li>
-  <li>The port thread calls the callback located in Record device
-  support.</li>
-  <li>The record device support calls the low-level driver.</li>
+  <li>The port thread calls the processCallback located in Record device
+    support.</li>
+  <li>processCallback calls the low-level driver.</li>
   <li>The low-level driver read or write routine blocks until the I/O
     completes or until a timeout occurs.  The low-level driver routine
-    returns the results of the I/O operation to the record device support
-    code which completes record processing.</li>
+    returns the results of the I/O operation to processCallback which
+    completes record processing.</li>
 </ol>
+
+<p>The second example shows access to a port that can block.</p>
 
 <center>
 <img name="AsynSynFlow" src="AsynSynFlow.jpg" border="1">
@@ -402,11 +427,10 @@ following steps:
   <li>Record processing calls Record device support.</li>
   <li>Record device support calls queueRequest.</li>
   <li>Since the port is synchronous, i.e. can not block, queueRequest calls
-    the callback provided by record device support.</li>
-  <li>Record device support calls the low-level driver read or write
-  routine.</li>
+    processCallback.</li>
+  <li>processCallback calls the low-level driver read or write routine.</li>
   <li>The low-level driver routine returns the results of the I/O operation
-    to the record device support code which completes record processing.</li>
+    to processCallback which completes record processing.</li>
 </ol>
 
 <h3>Comments:</h3>
@@ -661,7 +685,7 @@ typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details);
-    asynUser  *(*createAsynUser)(userCallback queue,userCallback timeout);
+    asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
     asynUser  *(*duplicateAsynUser)(asynUser *pasynUser,
                                  userCallback queue,userCallback timeout);
     asynStatus (*freeAsynUser)(asynUser *pasynUser);
@@ -715,14 +739,12 @@ epicsShareExtern asynManager *pasynManager;</pre>
     </tr>
     <tr>
       <td>createAsynUser</td>
-      <td>Creates an asynUser. The caller specifies two callbacks, one for
-        successful queueRequests and one if a queueRequest has a timeout. The
-        timeout callback is optional. If it is not provided and a
-        queueRequest with a non-zero timeout is requested, an error message
-        is issued and no timeout will occur. errorMessageSize characters are
-        allocated for errorMessage. The amount of storage can not be changed.
-        This method doesn't return if it is unable to allocate the
-      storage.</td>
+      <td>Creates an asynUser. The caller specifies two callbacks, process
+        and timeout. These callback are only called as a result of a
+        queueRequest. The timeout callback is optional. errorMessageSize
+        characters are allocated for errorMessage. The amount of storage can
+        not be changed. This method doesn't return if it is unable to
+        allocate the storage.</td>
     </tr>
     <tr>
       <td>duplicateAsynUser</td>
@@ -830,15 +852,17 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         issue new queue requests. The priority asynQueuePriorityConnect must
         be used for asynCommon:connect and asynCommon:disconnect calls, and
         must NOT be used for any other calls.</p>
+
+        <p> If a timeout callback was not passed to createAsynUser and a
+        queueRequest with a non-zero timeout is requested, an error message
+        is issued and no timeout will occur.</p>
       </td>
     </tr>
     <tr>
       <td>cancelRequest</td>
-      <td>If a asynUser is queued, remove it from the queue. If it is not on
-        a queue, nothing is done. In particular if the callback is active,
-        this call has no effect. If the return value is asynSuccess, then
-        wasQueued (0,1) if a request (was not, was) canceled, i.e. removed
-        from the queue.</td>
+      <td>If a asynUser is queued, remove it from the queue. If either the
+        process or timeout callback is active when cancelRequest is called
+        than cancelRequest will not return until the callback completes.</td>
     </tr>
     <tr>
       <td>canBlock</td>
