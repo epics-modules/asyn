@@ -21,18 +21,22 @@
 #include <recSup.h>
 #include <devSup.h>
 
+#include "asynDriver.h"
 #include "asynInt32.h"
+#include "asynUtils.h"
 
 typedef struct {
    aoRecord *pao;
    asynUser *pasynUser;
    asynInt32 *pasynInt32;
    void *asynInt32Pvt;
+   int canBlock;
 } devAoAsynInt32Pvt;
 
 static long init_record(aoRecord *pao);
 static long convert(aoRecord *pao, int pass);
 static long write_ao(aoRecord *pao);
+static void callback_ao(asynUser *pasynUser);
 
 struct aodset { /* analog input dset */
     long          number;
@@ -58,9 +62,8 @@ epicsExportAddress(dset, devAoAsynInt32);
 static long init_record(aoRecord *pao)
 {
     devAoAsynInt32Pvt *pPvt;
-    struct vmeio *pvmeio;
-    char *port;
-    int signal;
+    char *port, *userParam;
+    int card, signal;
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
@@ -69,23 +72,25 @@ static long init_record(aoRecord *pao)
     pao->dpvt = pPvt;
     pPvt->pao = pao;
 
-    /* Get the signal from the VME signal */
-    pvmeio = (struct vmeio*)&(pao->out.value);
-    signal = pvmeio->signal;
+    /* Create asynUser */
+    pasynUser = pasynManager->createAsynUser(callback_ao, 0);
+    pasynUser->userPvt = pPvt;
+    pPvt->pasynUser = pasynUser;
+
+    /* Parse the VME link to get signal and port */
+    status = pasynUtils->parseVmeIo(pasynUser, &pao->out, &card, &signal, 
+                                    &port, &userParam);
+    if (status != asynSuccess) {
+        errlogPrintf("devAoAsynInt32::initCommon, error in VME link %s\n",
+                     pasynUser->errorMessage);
+        goto bad;
+    }
     if (signal<0 || signal>7) {
         errlogPrintf("devAoAsynInt32::init_record %s Illegal OUT signal field "
                      "(0-7) = %d\n",
                      pao->name, signal);
         goto bad;
     }
-
-    /* Get the port name from the parm field */
-    port = pvmeio->parm;
-
-    /* Create asynUser */
-    pasynUser = pasynManager->createAsynUser(0, 0);
-    pasynUser->userPvt = pPvt;
-    pPvt->pasynUser = pasynUser;
 
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser, port, signal);
@@ -103,6 +108,9 @@ static long init_record(aoRecord *pao)
     pPvt->pasynInt32 = (asynInt32 *)pasynInterface->pinterface;
     pPvt->asynInt32Pvt = pasynInterface->drvPvt;
 
+    /* Determine if device can block */
+    pasynManager->canBlock(pasynUser, &pPvt->canBlock);
+
     /* set linear conversion slope */
     pao->eslo = (pao->eguf - pao->egul)/4095.0;
     return(2); /* Don't convert from rval */
@@ -116,13 +124,27 @@ static long write_ao(aoRecord *pao)
     devAoAsynInt32Pvt *pPvt = (devAoAsynInt32Pvt *)pao->dpvt;
     int status;
 
+    status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                  "devAoAsynInt32::write_ao, error queuing request %s\n", 
+                  pPvt->pasynUser->errorMessage);
+    }
+    return status;
+}
+
+static void callback_ao(asynUser *pasynUser)
+{
+    devAoAsynInt32Pvt *pPvt = (devAoAsynInt32Pvt *)pasynUser->userPvt;
+    aoRecord *pao = (aoRecord *)pPvt->pao;
+    int status;
+
     status = pPvt->pasynInt32->write(pPvt->asynInt32Pvt, pPvt->pasynUser, 
                                      pao->rval);
     if (status == 0)
         pao->udf=0;
     else
         recGblSetSevr(pao,READ_ALARM,INVALID_ALARM);
-    return status;
 }
 
 static long convert(aoRecord *pao, int pass)
