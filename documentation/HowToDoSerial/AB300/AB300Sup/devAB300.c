@@ -1,13 +1,7 @@
-/*************************************************************************\
-* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
-*     National Laboratory.
-* Copyright (c) 2002 The Regents of the University of California, as
-*     Operator of Los Alamos National Laboratory.
-* EPICS BASE Versions 3.13.7
-* and higher are distributed subject to a Software License Agreement found
-* in file LICENSE that is included with this distribution. 
-\*************************************************************************/
-/* $Id: devAB300.c,v 1.1 2004-05-13 15:37:53 norume Exp $ */
+/*
+ * AB300 device support
+ */
+
 #include <epicsStdio.h>
 #include <devCommonGpib.h>
 
@@ -26,8 +20,8 @@
 
 #include <devGpib.h> /* must be included after DSET defines */
 
-#define TIMEWINDOW 2.0       /* wait 2 seconds after device timeout */
-#define TIMEOUT    5.0       /* I/O must complete within 5 seconds */
+#define TIMEOUT     5.0    /* I/O must complete within this time */
+#define TIMEWINDOW  2.0    /* Wait this long after device timeout */
 
 /*
  * Custom conversion routines
@@ -87,7 +81,7 @@ static struct gpibCmd gpibCmds[] = {
 };
 
 /* The following is the number of elements in the command array above.  */
-#define NUMPARAMS        sizeof(gpibCmds)/sizeof(struct gpibCmd)
+#define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)
 
 /******************************************************************************
  *
@@ -96,13 +90,13 @@ static struct gpibCmd gpibCmds[] = {
  *****************************************************************************/
 static long init_ai(int parm)
 {
-  if(parm==0)  {
-    devSupParms.name = "devAB300";
-    devSupParms.gpibCmds = gpibCmds;
-    devSupParms.numparams = NUMPARAMS;
-    devSupParms.timeout = TIMEOUT;
-    devSupParms.timeWindow = TIMEWINDOW;
-    devSupParms.respond2Writes = 0;
-  }
-  return(0);
+    if(parm==0) {
+        devSupParms.name = "devAB300";
+        devSupParms.gpibCmds = gpibCmds;
+        devSupParms.numparams = NUMPARAMS;
+        devSupParms.timeout = TIMEOUT;
+        devSupParms.timeWindow = TIMEWINDOW;
+        devSupParms.respond2Writes = 0;
+    }
+    return(0);
 }
