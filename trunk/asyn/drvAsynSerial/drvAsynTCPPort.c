@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynTCPPort.c,v 1.10 2004-04-15 13:45:45 norume Exp $
+ * $Id: drvAsynTCPPort.c,v 1.11 2004-04-15 14:51:46 norume Exp $
  */
 
 #include <string.h>
@@ -40,13 +40,13 @@
 #include <asynInterposeEos.h>
 #include <drvAsynTCPPort.h>
 
-#if defined(vxWorks)
-# define USE_SHUTDOWN
-#elif defined(__rtems__)
+#if defined(__rtems__)
 # define USE_SOCKTIMEOUT
 #else
 # define USE_POLL
-# include <sys/poll.h>
+# if !defined(vxWorks)
+#  include <sys/poll.h>
+# endif
 #endif
 
 #define CANCEL_CHECK_INTERVAL 5.0 /* Interval between checks for I/O cancel */
@@ -87,6 +87,60 @@ static void serialBaseInit(void)
     pserialBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
 }
+
+#ifdef vxWorks
+/*
+ * Use select() to simulate enough of poll() to get by.
+ */
+#define POLLIN  0x1
+#define POLLOUT 0x2
+struct pollfd {
+    int fd;
+    short events;
+    short revents;
+};
+static int poll(struct pollfd fds[], int nfds, int timeout)
+{
+    fd_set fdset;
+    struct timeval tv;
+
+    assert(nfds == 1);
+    FD_ZERO(&fdset);
+    FD_SET(fds[0].fd,&fdset);
+    tv.tv_sec = timeout / 1000;
+    tv.tv_usec = (timeout % 1000) * 1000;
+    return select(fds[0].fd + 1, 
+        (fds[0].events & POLLIN) ? &fdset : NULL,
+        (fds[0].events & POLLOUT) ? &fdset : NULL,
+        NULL,
+        &tv);
+}
+#endif
+
+/*
+ * OSI function to control blocking/non-blocking I/O
+ */
+static int setNonBlock(int fd, int nonBlockFlag)
+{
+    int flags;
+
+#ifdef vxWorks
+    flags = nonBlockFlag;
+    if (ioctl(fd, FIONBIO, &flags) < 0)
+        return -1;
+#else
+    if ((flags = fcntl(fd, F_GETFL, 0)) < 0)
+        return -1;
+    if (nonBlockFlag)
+        flags |= O_NONBLOCK;
+    else
+        flags &= ~O_NONBLOCK;
+    if (fcntl(fd, F_SETFL, flags) < 0)
+        return -1;
+#endif
+    return 0;
+}
+
 /*
  * Report link parameters
  */
@@ -107,7 +161,7 @@ drvAsynTCPPortReport(void *drvPvt, FILE *fp, int details)
 }
 
 /*
- * Silently close a connection
+ * Close a connection
  */
 static void
 closeConnection(ttyController_t *tty)
@@ -132,10 +186,6 @@ timeoutHandler(void *p)
 
     asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
                                "%s timeout handler.\n", tty->serialDeviceName);
-#ifdef USE_SHUTDOWN
-    if (tty->fd >= 0)
-        shutdown(tty->fd, SHUT_RDWR);
-#endif
     tty->timeoutFlag = 1;
 }
 
@@ -184,7 +234,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
         return asynError;
     }
     i = 1;
-    if (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, &i, sizeof i) < 0) {
+    if (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s socket NODELAY option: %s\n",
                                        tty->serialDeviceName, strerror(errno));
@@ -193,8 +243,7 @@ drvAsynTCPPortConnect(void *drvPvt, asynUser *pasynUser)
         return asynError;
     }
 #ifdef USE_POLL
-    if (((i = fcntl(tty->fd, F_GETFL, 0)) < 0)
-     || (fcntl(tty->fd, F_SETFL, i | O_NONBLOCK) < 0)) {
+    if (setNonBlock(tty->fd, 1) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s O_NONBLOCK option: %s\n",
                                        tty->serialDeviceName, strerror(errno));
@@ -257,11 +306,15 @@ static asynStatus drvAsynTCPPortWrite(void *drvPvt, asynUser *pasynUser,
     asynStatus status = asynSuccess;
 
     assert(tty);
-    assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                            "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                             "%s write %d ", tty->serialDeviceName, numchars);
+    if (tty->fd < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s disconnected:", tty->serialDeviceName);
+        return asynError;
+    }
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -351,9 +404,13 @@ static asynStatus drvAsynTCPPortRead(void *drvPvt, asynUser *pasynUser,
     asynStatus status = asynSuccess;
 
     assert(tty);
-    assert(tty->fd >= 0);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                "%s read.\n", tty->serialDeviceName);
+    if (tty->fd < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                "%s disconnected:", tty->serialDeviceName);
+        return asynError;
+    }
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s maxchars %d. Why <=0?\n",tty->serialDeviceName,maxchars);
@@ -447,7 +504,7 @@ static asynStatus
 drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    int flags;
+    char cbuf[512];
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -456,24 +513,14 @@ drvAsynTCPPortFlush(void *drvPvt,asynUser *pasynUser)
         /*
          * Toss characters until there are none left
          */
-#ifdef vxWorks
-        flags = 1;
-        if (ioctl(tty->fd, FIONBIO, &flags) >= 0)
-#else
-        if (((flags = fcntl(tty->fd, F_GETFL, 0)) >= 0)
-         && (fcntl(tty->fd, F_SETFL, flags | O_NONBLOCK) >= 0))
+#ifdef USE_SOCKTIMEOUT
+        setNonBlock(tty->fd, 1);
 #endif
-            {
-            char cbuf[512];
-            while (read(tty->fd, cbuf, sizeof cbuf) > 0)
-                continue;
-#ifdef vxWorks
-            flags = 0;
-            ioctl(tty->fd, FIONBIO, &flags);
-#else
-            fcntl(tty->fd, F_SETFL, flags);
+        while (read(tty->fd, cbuf, sizeof cbuf) > 0)
+            continue;
+#ifdef USE_SOCKTIMEOUT
+        setNonBlock(tty->fd, 0);
 #endif
-            }
     }
     return asynSuccess;
 }
