@@ -1040,7 +1040,7 @@ typedef struct asynManager {
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
-    asynStatus (*unblockProcessCallback)(asynUser *pasynUser);
+    asynStatus (*unblockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
@@ -1240,6 +1240,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           <li>queueRequests that specify a priority of
             asynQueuePriorityConnect are not blocked.</li>
         </ul>
+        It is permissible to simultaneously block allDevices and also
+        the device to which the asynUser is connected.
       </td>
     </tr>
     <tr>
