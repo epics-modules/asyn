@@ -123,11 +123,22 @@ recordtype(asyn) {
         interest(1)
         initial("0")
     }
+    field(PCNCT,DBF_MENU) {
+        prompt("Port Connect/Disconnect")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynCONNECT)
+    }
     field(DRVINFO,DBF_STRING) {
         prompt("Driver info string")
         special(SPC_MOD)
         initial("")
         size(40)
+    }
+    field(REASON,DBF_LONG) {
+        prompt("asynUser->reason")
+        special(SPC_MOD)
     }
     field(SOCK,DBF_STRING) {
         prompt("socket address")
@@ -313,6 +324,7 @@ recordtype(asyn) {
     field(UI32MASK,DBF_ULONG) {
         prompt("asynUInt32Digital mask")
         initial("0xffffffff")
+        special(SPC_MOD)
     }
     field(F64INP,DBF_DOUBLE) {
         prompt("asynFloat64 input")
