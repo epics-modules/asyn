@@ -582,7 +582,7 @@ static void GPIB_command(asynUser *pasynUser)
    char    acmd[6];
 
    /* See asynRecord.dbd for definitions of constants gpibXXXX_Abcd */
-   if ((pasynRecPvt->pasynGpib) && (pasynRec->ucmd != gpibUCMD_None))
+   if (pasynRec->ucmd != gpibUCMD_None)
    {
       switch (pasynRec->ucmd)
       {
@@ -613,11 +613,10 @@ static void GPIB_command(asynUser *pasynUser)
                      "GPIB Universal Command write error",
                      "error in GPIB Universal command, %s", 
                      pasynUser->errorMessage);
-      pasynRec->ucmd = gpibUCMD_None;  /* Reset to no Universal Command */
    }
 
    /* See if an Addressed Command is to be done */
-   if ((pasynRecPvt->pasynGpib) && (pasynRec->acmd != gpibACMD_None))
+   if (pasynRec->acmd != gpibACMD_None)
    {
       acmd[0] = 95; /* Untalk */
       acmd[1] = 63; /* Unlisten */
@@ -671,7 +670,6 @@ static void GPIB_command(asynUser *pasynUser)
                             "GPIB Serial Poll Disable write error",
                             "error in GPIB Serial Poll disable write, %s", 
                             pasynUser->errorMessage);
-            pasynRec->acmd = gpibACMD_None;  /* Reset to no Addressed Command */
             return;
       }
       status = pasynRecPvt->pasynGpib->addressedCmd(pasynRecPvt->asynGpibPvt, 
@@ -682,7 +680,6 @@ static void GPIB_command(asynUser *pasynUser)
                      "GPIB Address Commmand write error",
                      "error in GPIB Addressed Command write, %s", 
                      pasynUser->errorMessage);
-      pasynRec->acmd = gpibACMD_None;  /* Reset to no Addressed Command */
    }
 }
 
@@ -755,6 +752,8 @@ static void performIO(asynUser *pasynUser)
       } else {
          GPIB_command(pasynUser);
       }
+      pasynRec->acmd = gpibACMD_None;  /* Reset to no Addressed Command */
+      pasynRec->ucmd = gpibUCMD_None;  /* Reset to no Universal Command */
       return;
    }
 
