@@ -214,7 +214,7 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     biRecord *pbi = ((biRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     unsigned long value;
 
     if(failure) {; /*do nothing*/
@@ -237,10 +237,8 @@ static int biGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         } else {
             /* sscanf did not find or assign the parameter*/
             failure = -1;
-            if (*pdevGpibParmBlock->debugFlag) {
-                    printf("%s can't convert msg >%s<\n",
-                        pbi->name, pgpibDpvt->msg);
-            }
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't convert msg >%s<\n",
+                pbi->name, pgpibDpvt->msg);
         }
     }
     if(failure==-1) recGblSetSevr(pbi, READ_ALARM, INVALID_ALARM);
@@ -648,7 +646,7 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
 {
     mbbiRecord *pmbbi = ((mbbiRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     unsigned long value;
 
     if(failure) {; /*do nothing*/
@@ -671,10 +669,8 @@ static int mbbiGpibFinish(gpibDpvt * pgpibDpvt,int failure)
         } else {
             /*sscanf did not find or assign the parameter*/
             failure = -1;
-            if (*pdevGpibParmBlock->debugFlag) {
-                    printf("%s can't convert msg >%s<\n",
-                        pmbbi->name, pgpibDpvt->msg);
-            }
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't convert msg >%s<\n",
+                pmbbi->name, pgpibDpvt->msg);
         }
     }
     if(failure==-1) recGblSetSevr(pmbbi, READ_ALARM, INVALID_ALARM);
@@ -721,7 +717,7 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
     unsigned long value;
     mbbiDirectRecord *pmbbiDirect = ((mbbiDirectRecord *) (pgpibDpvt->precord));
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
 
     if(failure) {; /*do nothing*/
     } else if (pgpibCmd->convert) {
@@ -736,10 +732,8 @@ static int mbbiDirectGpibFinish(gpibDpvt * pgpibDpvt,int failure)
             pmbbiDirect->rval = value;
         } else {
             failure = -1;
-            if (*pdevGpibParmBlock->debugFlag) {
-                printf("%s can't convert msg >%s<\n",
-                    pmbbiDirect->name, pgpibDpvt->msg);
-            }
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't convert msg >%s<\n",
+                pmbbiDirect->name, pgpibDpvt->msg);
         }
     }
     if(failure==-1) recGblSetSevr(pmbbiDirect, READ_ALARM, INVALID_ALARM);

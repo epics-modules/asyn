@@ -15,6 +15,7 @@
 #include <stdio.h>
 #include <errno.h>
 #include <stdarg.h>
+#include <ctype.h>
 
 #include <ellLib.h>
 #include <errlog.h>
@@ -179,6 +180,36 @@ static asynTrace asynTraceManager = {
     tracePrintIO
 };
 epicsShareDef asynTrace *pasynTrace = &asynTraceManager;
+
+/*WHEN epicsStrPrintEscaped is in EPICS base remove this*/
+static int epicsStrPrintEscaped( FILE *fp, const char *s, int n)
+{
+   int nout=0;
+   while (n--) {
+       char c = *s++;
+       switch (c) {
+       case '\a':  nout += fprintf(fp, "\\a");  break;
+       case '\b':  nout += fprintf(fp, "\\b");  break;
+       case '\f':  nout += fprintf(fp, "\\f");  break;
+       case '\n':  nout += fprintf(fp, "\\n");  break;
+       case '\r':  nout += fprintf(fp, "\\r");  break;
+       case '\t':  nout += fprintf(fp, "\\t");  break;
+       case '\v':  nout += fprintf(fp, "\\v");  break;
+       case '\\':  nout += fprintf(fp, "\\\\"); break;
+       case '\?':  nout += fprintf(fp, "\\?");  break;
+       case '\'':  nout += fprintf(fp, "\\'");  break;
+       case '\"':  nout += fprintf(fp, "\\\"");  break;
+       default:
+           if (isprint(c))
+               nout += fprintf(fp, "%c", c);/* putchar(c) doesn't work on vxWorks */
+           else
+               nout += fprintf(fp, "\\%03o", (unsigned char)c);
+           break;
+       }
+   }
+   return nout;
+}
+
 
 /*internal methods */
 static void asynInit(void)
@@ -674,6 +705,7 @@ static int getTraceMask(asynUser *pasynUser)
     }
     return(pasynDevice->trace.traceMask);
 }
+
 static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
@@ -727,7 +759,7 @@ static FILE *getTraceFILE(asynUser *pasynUser)
     }
     return(pasynDevice->trace.fd);
 }
-
+
 static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
@@ -764,36 +796,6 @@ static int getTraceIOTruncateSize(asynUser *pasynUser)
     return pasynDevice->trace.traceTruncateSize;
 }
 
-/*WHEN epicsStrPrintEscaped is in EPICS base remove this*/
-#include <ctype.h>
-static int epicsStrPrintEscaped( FILE *fp, const char *s, int n)
-{
-   int nout=0;
-   while (n--) {
-       char c = *s++;
-       switch (c) {
-       case '\a':  nout += fprintf(fp, "\\a");  break;
-       case '\b':  nout += fprintf(fp, "\\b");  break;
-       case '\f':  nout += fprintf(fp, "\\f");  break;
-       case '\n':  nout += fprintf(fp, "\\n");  break;
-       case '\r':  nout += fprintf(fp, "\\r");  break;
-       case '\t':  nout += fprintf(fp, "\\t");  break;
-       case '\v':  nout += fprintf(fp, "\\v");  break;
-       case '\\':  nout += fprintf(fp, "\\\\"); break;
-       case '\?':  nout += fprintf(fp, "\\?");  break;
-       case '\'':  nout += fprintf(fp, "\\'");  break;
-       case '\"':  nout += fprintf(fp, "\\\"");  break;
-       default:
-           if (isprint(c))
-               nout += fprintf(fp, "%c", c);/* putchar(c) doesn't work on vxWorks */
-           else
-               nout += fprintf(fp, "\\%03o", (unsigned char)c);
-           break;
-       }
-   }
-   return nout;
-}
-
 static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
 {
     asynUserPvt *pasynUserPvt = asynUserToAsynUserPvt(pasynUser);
@@ -827,7 +829,7 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     va_list pvar;
     int     nout = 0;
     FILE *fd;
-    int traceMask,traceIOMask,traceTruncateSize;
+    int traceMask,traceIOMask,traceTruncateSize,nBytes;
 
     if(!pasynDevice) {
         printf("asynManager::printIO but not connected\n");
@@ -843,20 +845,19 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     va_start(pvar,pformat);
     nout += vfprintf(fd,pformat,pvar);
     va_end(pvar);
-    if((traceIOMask&ASYN_TRACEIO_ASCII) && (len>0)) {
-        nout += fprintf(fd,"%s\n",buffer);
+    nBytes = (len<traceTruncateSize) ? len : traceTruncateSize;
+    if((traceIOMask&ASYN_TRACEIO_ASCII) && (nBytes>0)) {
+        nout += fprintf(fd,"%.*s\n",nBytes,buffer);
     }
     if(traceIOMask&ASYN_TRACEIO_ESCAPE) {
-        int n = (len<traceTruncateSize) ? len : traceTruncateSize;
-        if(n>0) {
-            nout += epicsStrPrintEscaped(fd,buffer,n);
+        if(nBytes>0) {
+            nout += epicsStrPrintEscaped(fd,buffer,nBytes);
             nout += fprintf(fd,"\n");
         }
     }
-    if((traceIOMask&ASYN_TRACEIO_BINARY) && (traceTruncateSize>0)) {
-        int n = (len<traceTruncateSize) ? len : traceTruncateSize;
+    if((traceIOMask&ASYN_TRACEIO_HEX) && (traceTruncateSize>0)) {
         int i;
-        for(i=0; i<n; i++) {
+        for(i=0; i<nBytes; i++) {
             if(i%20 == 0) nout += fprintf(fd,"\n");
             nout += fprintf(fd,"%2.2x ",buffer[i]);
         }
@@ -936,10 +937,8 @@ static asynStatus registerProcessModule(
 
 static const iocshArg asynReportArg0 = {"filename", iocshArgString};
 static const iocshArg asynReportArg1 = {"level", iocshArgInt};
-static const iocshArg *const asynReportArgs[] = {
-    &asynReportArg0,&asynReportArg1};
-static const iocshFuncDef asynReportDef =
-    {"asynReport", 2, asynReportArgs};
+static const iocshArg *const asynReportArgs[] = {&asynReportArg0,&asynReportArg1};
+static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
 static void asynReportCall(const iocshArgBuf * args) {
     FILE *fp;
     const char *filename = args[0].sval;
@@ -983,6 +982,7 @@ static void asynSetTraceMaskCall(const iocshArgBuf * args) {
     }
     pasynManager->freeAsynUser(pasynUser);
 }
+
 static const iocshArg asynSetTraceIOMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceIOMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgInt};

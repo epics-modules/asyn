@@ -55,7 +55,7 @@ typedef struct asynManager {
     asynInterface *(*findInterface)(asynUser *pasynUser,
                                 const char *interfaceType,int processModuleOK);
     asynStatus (*queueRequest)(asynUser *pasynUser,
-        asynQueuePriority priority,double timeout);
+                              asynQueuePriority priority,double timeout);
     /*cancelRequest returns (0,-1) if request (was, was not) queued*/
     int        (*cancelRequest)(asynUser *pasynUser);
     asynStatus (*lock)(asynUser *pasynUser);   /*lock portName,addr */
@@ -63,13 +63,13 @@ typedef struct asynManager {
     int        (*getAddr)(asynUser *pasynUser);
     /* drivers call the following*/
     asynStatus (*registerPort)(const char *portName,
-                 asynInterface *paasynInterface,int nasynInterface,
-                 unsigned int priority,unsigned int stackSize);
+                              asynInterface *paasynInterface,int nasynInterface,
+                              unsigned int priority,unsigned int stackSize);
     /* paasynInterface is pointer to array of asynInterface */
     /*process modules call the following */
     asynStatus (*registerProcessModule)(
-                 const char *processModuleName,const char *portName,int addr,
-                 asynInterface *paasynInterface,int nasynInterface);
+                    const char *processModuleName,const char *portName,int addr,
+                    asynInterface *paasynInterface,int nasynInterface);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
 
@@ -107,7 +107,7 @@ typedef struct asynOctet{
 #define ASYN_TRACEIO_NODATA 0x0000
 #define ASYN_TRACEIO_ASCII  0x0001
 #define ASYN_TRACEIO_ESCAPE 0x0002
-#define ASYN_TRACEIO_BINARY 0x0004
+#define ASYN_TRACEIO_HEX    0x0004
 
 /* asynPrint and asynPrintIO are macros that act like
    int asynPrint(asynUser *pasynUser,int reason, const char *format, ... ); 

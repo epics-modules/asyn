@@ -110,6 +110,7 @@ struct devGpibNames {
 };
 
 struct devGpibParmBlock {
+    char *name;         /* Name of this device support*/
     gpibCmd *gpibCmds;  /* pointer to gpib command list */
     int numparams;  /* number of elements in the command list */
     double timeout; /* seconds to wait for I/O */
@@ -120,9 +121,6 @@ struct devGpibParmBlock {
     int  msgLen;/*size of msg*/
     char *rsp;   /*shared rsp buffer for all respond2Writes*/
     int  rspLen;/*size of rsp*/
-    /*Are the following still needed? Marty thinks not */
-    char *name;         /* Name of this device support*/
-    int *debugFlag; /* pointer to debug flag */
 };
 
 /* EFAST tables must be defied as follows
@@ -257,6 +255,8 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  ******************************************************************************/
 
 /*    devGpibParmBlock ****************************************************
+ * name:
+ *   Name of this device support.
  * gpibCmds:
  *   Pointer to the gpibCmds array.
  * numparams:
@@ -273,11 +273,6 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  *   Set by devSupportGpib. The msg size is the largest msgLen in all gppibCmds
  * rsp rspLen
  *   Set by devSupportGpib. The rsp size is the largest rspLen in all gppibCmds
- * name:
- *   Name of this device support.
- * debugFlag:
- *   Must point to a flag used to request debugging traces for the device
- *   while executing library code.
  ******************************************************************************/
 
 /*    gDset  ************************************

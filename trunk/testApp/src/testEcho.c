@@ -79,10 +79,9 @@ void timeoutCallback(asynUser *pasynUser)
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW|ASYN_TRACE_ERROR,"%s timeoutCallback\n",
         ptestPvt->prefix);
-    pasynManager->cancelRequest(pasynUser);
     epicsEventSignal(ptestPvt->done);
 }
-
+
 static void writeReadThread(testPvt *ptestPvt)
 {
     asynUser *pasynUser = ptestPvt->pasynUser;

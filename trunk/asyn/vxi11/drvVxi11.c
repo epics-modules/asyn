@@ -86,10 +86,6 @@ typedef struct vxiLink {
     unsigned char restartActive; /* Is vxiReconnect active */
 }vxiLink;
 
-/* global variables */
-int vxi11Debug = 0;
-epicsExportAddress(int,vxi11Debug);
-
 /* local variables */
 typedef struct vxiLocal {
     struct timeval vxiRpcTimeout;/* time to wait for RPC completion */
@@ -134,29 +130,6 @@ static asynStatus vxiSerialPollBegin(void *pdrvPvt);
 static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout);
 static asynStatus vxiSerialPollEnd(void *pdrvPvt);
 
-/*
- * Show string in human-readable form
- */
-static void
-showString(const char *str, int numchars)
-{
-    while (numchars--) {
-        char c = *str++;
-        switch (c) {
-        case '\n':  printf("\\n");  break;
-        case '\r':  printf("\\r");  break;
-        case '\t':  printf("\\t");  break;
-        case '\\':  printf("\\\\");  break;
-        default:
-            if (isprint(c))
-                printf("%c", c);   /* putchar(c) doesn't work on vxWorks (!!) */
-            else
-                printf("\\%03o", (unsigned char)c);
-            break;
-        }
-    }
-}
-
 /******************************************************************************
  * Convert VXI error code to a string.
  ******************************************************************************/
@@ -281,11 +254,11 @@ static int vxiDestroyDevLink(vxiLink * pvxiLink, Device_Link devLink)
         (const xdrproc_t) xdr_Device_Error, (void *) &devErr);
     if(clntStat != RPC_SUCCESS) {
         status = -1;
-        if(vxi11Debug) printf("%s vxiDestroyDevLink RPC error %s\n",
+        printf("%s vxiDestroyDevLink RPC error %s\n",
              pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient, ""));
     } else if(devErr.error != VXI_OK) {
         status = -1;
-        if(vxi11Debug) printf("%s vxiDestroyDevLink error %s\n",
+        printf("%s vxiDestroyDevLink error %s\n",
             pvxiLink->portName,vxiError(devErr.error));
     }
     xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
@@ -665,7 +638,6 @@ static asynStatus vxiConnect(void *pdrvPvt,asynUser *pasynUser)
     int isController;
     Device_Link link;
 
-    if(vxi11Debug) printf("%s vxiConnect\n",pvxiLink->portName);
     assert(pvxiLink);
     if(rpcTaskInit() == -1) {
         errlogPrintf("%s Can't init RPC\n",pvxiLink->portName);
@@ -743,7 +715,7 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
     enum clnt_stat clntStat;
 
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiDisconnect\n",pvxiLink->portName);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiDisconnect\n",pvxiLink->portName);
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
         int link;
         link = pvxiLink->devLink[addr].primary;
@@ -760,10 +732,10 @@ static asynStatus vxiDisconnect(void *pdrvPvt,asynUser *pasynUser)
      * link is initialized, make sure a new SRQ thread is started.  See comments
      * in vxiConnect. */
     if(clntStat != RPC_SUCCESS) {
-        if(vxi11Debug) printf("%s vxiDestroyLink %s\n",
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiDestroyLink %s\n",
             pvxiLink->portName,clnt_sperror(pvxiLink->rpcClient,""));
     } else if(devErr.error != VXI_OK) {
-        if(vxi11Debug) printf("%s vxiDestroyLink %s\n",
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiDestroyLink %s\n",
             pvxiLink->portName,vxiError(devErr.error));
     }
     xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
@@ -832,12 +804,9 @@ static int vxiRead(void *pdrvPvt,asynUser *pasynUser,char *data,int maxchars)
             }
             status = -1;
         } else {
-        if(vxi11Debug) {
-            printf("%s %d vxiRead %d  ",pvxiLink->portName,addr,devReadR.data.data_len);
-            if(vxi11Debug>1)
-                showString(devReadR.data.data_val, devReadR.data.data_len);
-            printf("\n");
-        }
+            asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
+                devReadR.data.data_val,devReadR.data.data_len,
+                "%s %d vxiRead\n",pvxiLink->portName,addr);
             memcpy(data, devReadR.data.data_val, devReadR.data.data_len);
             status += devReadR.data.data_len;
             data += devReadR.data.data_len;
@@ -865,12 +834,8 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
     int lennow;
 
     assert(pvxiLink && data);
-    if(vxi11Debug) {
-        printf("%s %d vxiWrite %d  ",pvxiLink->portName,addr,numchars);
-        if(vxi11Debug>1)
-            showString(data, numchars);
-        printf("\n");
-    }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,
+        "%s %d vxiWrite numchars %d\n",pvxiLink->portName,addr,numchars);
     assert(pvxiLink);
     assert(data);
     if(!vxiSetDevLink(pvxiLink, addr, &devWriteP.lid)) return(-1);
@@ -910,6 +875,9 @@ static int vxiWrite(void *pdrvPvt,asynUser *pasynUser,
             status = -1;
         } else {
             status = devWriteR.size;
+            asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
+                devWriteP.data.data_val,devWriteP.data.data_len,
+                "%s %d vxiWrite\n",pvxiLink->portName,addr);
         }
         xdr_free((const xdrproc_t) xdr_Device_WriteResp, (char *) &devWriteR);
         data += lennow;
@@ -933,7 +901,8 @@ static asynStatus vxiSetEos(void *pdrvPvt,asynUser *pasynUser,
 {
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
 
-    if(vxi11Debug) printf("%s vxiSetEos eoslen %d\n",pvxiLink->portName,eoslen);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s vxiSetEos eoslen %d\n",pvxiLink->portName,eoslen);
     if(eoslen>1 || eoslen<0) {
         errlogPrintf("%s vxiSetEos illegal eoslen %d\n",
             pvxiLink->portName,eoslen);
@@ -953,9 +922,15 @@ static asynStatus vxiAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
 
     assert(pvxiLink);
     assert(data);
-    if(vxi11Debug) printf("%s vxiAddressedCmd %s\n",pvxiLink->portName,data);
     if(!vxiSetDevLink(pvxiLink, addr, &lid)) return(-1);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s %d vxiAddressedCmd %s\n",pvxiLink->portName,addr);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
+        data,length,"%s %d vxiAddressedCmd\n",pvxiLink->portName,addr);
     status = vxiWriteAddressed(pvxiLink,lid,(char *)data,length,pvxiLink->defTimeout);
+    if(status!=length)asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
+        length,status);
     return(status);
 }
 
@@ -965,7 +940,8 @@ static asynStatus vxiUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
     long nout;
     char data[2];
 
-    if(vxi11Debug) printf("%s vxiUniversalCmd\n",pvxiLink->portName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "%s vxiUniversalCmd %d\n",pvxiLink->portName,cmd);
     data[0] = cmd;
     data[1] = 0;
     nout = vxiWriteCmd(pvxiLink, data, 1);
@@ -981,7 +957,7 @@ static asynStatus vxiIfc(void *pdrvPvt, asynUser *pasynUser)
     Device_DocmdResp devDocmdR;
 
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiIfc\n",pvxiLink->portName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,"%s vxiIfc\n",pvxiLink->portName);
     /* initialize devDocmdP */
     devDocmdP.lid = pvxiLink->serverAddr;
     devDocmdP.flags = 0; /* no timeout on a locked gateway */
@@ -1022,7 +998,7 @@ static asynStatus vxiRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
     unsigned short data,netdata;
 
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiRen\n",pvxiLink->portName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,"%s vxiRen\n",pvxiLink->portName);
     /* initialize devDocmdP */
     devDocmdP.lid = pvxiLink->serverAddr;
     devDocmdP.flags = 0; /* no timeout on a locked gateway */
@@ -1060,7 +1036,6 @@ static int vxiSrqStatus(void *pdrvPvt)
     vxiLink *pvxiLink = (vxiLink *)pdrvPvt;
     int status;
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiSrqStatus\n",pvxiLink->portName);
     status = vxiBusStatus(pvxiLink, VXI_BSTAT_SRQ, pvxiLink->defTimeout);
     return(status);
 }
@@ -1075,7 +1050,6 @@ static asynStatus vxiSrqEnable(void *pdrvPvt, int onOff)
     char handle[16];
 
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiSrqEnable\n",pvxiLink->portName);
     devEnSrqP.lid = pvxiLink->serverAddr;
     if(onOff) {
         devEnSrqP.enable = TRUE;
@@ -1120,7 +1094,6 @@ static int vxiSerialPoll(void *pdrvPvt, int addr, double timeout)
     unsigned char stb;
 
     assert(pvxiLink);
-    if(vxi11Debug) printf("%s vxiSerialPoll addr %d\n",pvxiLink->portName,addr);
     if(!vxiSetDevLink(pvxiLink, addr, &devGenP.lid)) return -1;
     devGenP.flags = 0; /* no timeout on a locked gateway */
     devGenP.io_timeout = (u_long)(1000.0*pvxiLink->defTimeout);

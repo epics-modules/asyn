@@ -12,6 +12,7 @@ dbLoadDatabase("../../dbd/testGpibSerialVx.dbd")
 testGpibSerialVx_registerRecordDeviceDriver(pdbbase)
 
 dbLoadRecords("../../db/testGpib.db","name=gpibTest,L=0,A=3")
+dbLoadRecords("../../db/asynTrace.db","ioc=gpibTest,port=L0,addr=3")
 
 #The following command is for a serial line terminal concentrator
 #drvGenericSerialConfigure("L0","164.54.9.93:4003",0,0)
