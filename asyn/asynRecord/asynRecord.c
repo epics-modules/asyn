@@ -442,6 +442,7 @@ static void asynCallback(asynUser *pasynUser)
 {
    asynRecPvt *pasynRecPvt=pasynUser->userPvt;
    asynRecord *pasynRec = pasynRecPvt->prec;
+   asynStatus status;
 
    asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s: asynCallback, state=%d\n",
@@ -459,13 +460,25 @@ static void asynCallback(asynUser *pasynUser)
       case stateGetOption:
          getOptions(pasynUser);
          break;
-      case stateConnect:
-          if(pasynRec->cnct) {
-              pasynRecPvt->pasynCommon->connect(
-                  pasynRecPvt->asynCommonPvt,pasynUser);
-          } else {
-               pasynRecPvt->pasynCommon->disconnect(
-                   pasynRecPvt->asynCommonPvt,pasynUser);
+      case stateConnect: {
+              int isConnected;
+
+              status = pasynManager->isConnected(pasynUser,&isConnected);
+              if(pasynRec->cnct) {
+                  if(!isConnected) {
+                      pasynRecPvt->pasynCommon->connect(
+                          pasynRecPvt->asynCommonPvt,pasynUser);
+                  } else {
+                      monitorStatus(pasynRec);
+                  }
+              } else {
+                  if(isConnected) {
+                      pasynRecPvt->pasynCommon->disconnect(
+                           pasynRecPvt->asynCommonPvt,pasynUser);
+                  } else {
+                      monitorStatus(pasynRec);
+                  }
+              }
           }
           break;
       default:
@@ -700,6 +713,7 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     /* Get asynCommon interface */
     pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
     if(!pasynInterface) {
+        pasynRecPvt->pasynCommon = 0; pasynRecPvt->asynCommonPvt = 0;
         reportError(pasynRec, COMM_ALARM, MAJOR_ALARM, 
                     "Error finding common interface, %s",
                     pasynUser->errorMessage);
@@ -711,6 +725,7 @@ static asynStatus connectDevice(asynRecord *pasynRec)
     /* Get asynOctet interface */
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if(!pasynInterface) {
+        pasynRecPvt->pasynOctet = 0; pasynRecPvt->asynOctetPvt = 0;
         reportError(pasynRec, COMM_ALARM, MAJOR_ALARM,
                     "Error finding octet interface, %s",
                     pasynUser->errorMessage);
@@ -725,6 +740,8 @@ static asynStatus connectDevice(asynRecord *pasynRec)
         /* This device has an asynGpib interface, not serial or socket */
         pasynRecPvt->pasynGpib = (asynGpib *)pasynInterface->pinterface;
         pasynRecPvt->asynGpibPvt = pasynInterface->drvPvt;
+    } else {
+        pasynRecPvt->pasynGpib = 0; pasynRecPvt->asynGpibPvt = 0;
     }
 
     /* Add exception callback */
@@ -920,12 +937,14 @@ static void performIO(asynUser *pasynUser)
 static void GPIB_command(asynUser *pasynUser)
 {
    /* This function handles GPIB-specific commands */
-   asynRecPvt *pasynRecPvt=pasynUser->userPvt;
-   asynRecord *pasynRec = pasynRecPvt->prec;
-   asynStatus status;
-   int     nbytesTransfered;
-   char    cmd_char=0;
-   char    acmd[6];
+   asynRecPvt  *pasynRecPvt=pasynUser->userPvt;
+   asynRecord  *pasynRec = pasynRecPvt->prec;
+   asynGpib    *pasynGpib = pasynRecPvt->pasynGpib;
+   void        *asynGpibPvt = pasynRecPvt->asynGpibPvt;
+   asynStatus  status;
+   int         nbytesTransfered;
+   char        cmd_char=0;
+   char        acmd[6];
 
    /* See asynRecord.dbd for definitions of constants gpibXXXX_Abcd */
    if (pasynRec->ucmd != gpibUCMD_None)
@@ -951,8 +970,7 @@ static void GPIB_command(asynUser *pasynUser)
             cmd_char = IBUNT;
             break;
       }
-      status = pasynRecPvt->pasynGpib->universalCmd(pasynRecPvt->asynGpibPvt,
-                                             pasynRecPvt->pasynUser, cmd_char);
+      status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
       if (status) {
          /* Something is wrong if we couldn't write */
          reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
@@ -964,6 +982,7 @@ static void GPIB_command(asynUser *pasynUser)
    /* See if an Addressed Command is to be done */
    if (pasynRec->acmd != gpibACMD_None)
    {
+      int lenCmd = 6;
       acmd[0] = IBUNT; /* Untalk */
       acmd[1] = IBUNL; /* Unlisten */
       acmd[2] = pasynRec->addr + LADBASE;  /* GPIB address + Listen Base */
@@ -984,14 +1003,14 @@ static void GPIB_command(asynUser *pasynUser)
             /* This command requires Talker Base */
             acmd[2] = pasynRec->addr + TADBASE;
             acmd[3] = IBTCT[0];
+            lenCmd = 4;
             break;
         case gpibACMD_Serial_Poll:
             /* Serial poll. Requires 3 operations */
             /* Serial Poll Enable */
             cmd_char = IBSPE;
-            status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt,
-                        pasynRecPvt->pasynUser, &cmd_char, 1,&nbytesTransfered);
-            if (status!=asynSuccess || nbytesTransfered!=1) {
+            status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
+            if (status!=asynSuccess) {
                 /* Something is wrong if we couldn't write */
                 reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                             "Error in GPIB Serial Poll write, %s",
@@ -1009,9 +1028,8 @@ static void GPIB_command(asynUser *pasynUser)
             }
             /* Serial Poll Disable */
             cmd_char = IBSPD;
-            status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynGpibPvt,
-                        pasynRecPvt->pasynUser, &cmd_char, 1,&nbytesTransfered);
-            if (status!=asynSuccess || nbytesTransfered!=1) {
+            status = pasynGpib->universalCmd(asynGpibPvt, pasynUser, cmd_char);
+            if (status!=asynSuccess) {
                 /* Something is wrong if we couldn't write */
                 reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
                             "Error in GPIB Serial Poll disable write, %s",
@@ -1020,7 +1038,7 @@ static void GPIB_command(asynUser *pasynUser)
             return;
       }
       status = pasynRecPvt->pasynGpib->addressedCmd(pasynRecPvt->asynGpibPvt,
-                                             pasynRecPvt->pasynUser, acmd, 6);
+                      pasynRecPvt->pasynUser, acmd, lenCmd);
       if (status) {
          /* Something is wrong if we couldn't write */
          reportError(pasynRec, WRITE_ALARM, MAJOR_ALARM,
