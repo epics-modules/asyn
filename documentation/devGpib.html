@@ -1115,6 +1115,7 @@ struct devSupportGpib {
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
+    int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
 <dl>
@@ -1155,6 +1156,14 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;</pre>
   <dt><code>writeMsgLong,writeMsgULong,writeMsgDouble,writeMsgString</code></dt>
     <dd>pgpibDpvt-&gt;msg is written from pgpibCmd-&gt;format and the value
       passed by the caller.</dd>
+  <dt><code>readArbitraryBlockProgramData</code></dt>
+    <dd>Reads zero or more preamble (non-<code>#</code>) characters followed by
+    IEEE-488.2 definite-length arbitrary block program data followed by the
+    end-of-string specified by the active gpibCmd entry and stores the
+    entire response in pgpibDpvt-&gt;msg.  This routine is intended for use
+    by custom input functions to read a block of arbitrary data from a
+    serial-line device.
+      </dd>
   <dt><code>pdevSupportGpib</code></dt>
     <dd>An external variable which points to devSupportGpib</dd>
 </dl>

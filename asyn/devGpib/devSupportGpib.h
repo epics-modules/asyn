@@ -169,6 +169,7 @@ struct devSupportGpib {
     int (*writeMsgULong)(gpibDpvt *pgpibDpvt,unsigned long val);
     int (*writeMsgDouble)(gpibDpvt *pgpibDpvt,double val);
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
+    int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
 
@@ -314,6 +315,7 @@ epicsShareExtern devSupportGpib *pdevSupportGpib;
  * writeMsgULong - write gpibDpvt.msg with an unsigned long value
  * writeMsgDouble - write gpibDpvt.msg with a double value
  * writeMsgString - write gpibDpvt.msg with a char * value
+ * readArbitraryBlockProgramData - read IEEE-488.2 arbitrary block program data
  ****************************************************************************/
 
 #ifdef __cplusplus
