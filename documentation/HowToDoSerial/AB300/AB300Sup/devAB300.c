@@ -64,7 +64,7 @@ convertStatusReply(struct gpibDpvt *pdpvt, int P1, int P2, char **P3)
 
 static struct gpibCmd gpibCmds[] = {
     /* Param 0 -- Device Reset */
-    {&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "\377\377\033", 10, 10,
+    {&DSET_LO, GPIBWRITE, IB_Q_LOW, NULL, "\377\377\033", 10, 10,
         NULL, 0, 0, NULL, NULL, "\033"},
 
     /* Param 1 -- Go to new filter position */
