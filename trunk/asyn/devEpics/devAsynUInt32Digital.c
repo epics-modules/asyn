@@ -241,7 +241,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
         pPvt->pasynUInt32DCb->cancelCallback(pPvt->asynUInt32DCbPvt, 
                                              pPvt->pasynUser,
                                              dataCallback,
-                                             pr);
+                                             pPvt->mask, pr);
     }
     *iopvt = pPvt->ioScanPvt;
     return 0;
