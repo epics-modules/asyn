@@ -183,6 +183,13 @@ individuals have been most influential.</p>
       support for network based devices. It has a single device support
       model, but provides a general framework for communicating with network
       based devices.</dd>
+  <dt>Mark Rivers</dt>
+     <dd>Mark became an active developer of asynDriver soon after he
+        started converting SYNAPPS to use asynDriver. He soon pushed
+       to have asynDriver support synchronous drivers, support register based
+       drivers, and support interrupts. With these additions 
+       asynDriver is a framework for interfacing to a large class of devices
+       instead of just message based asynchronous devices.</dd>
   <dt>Yevgeny A. Gusev</dt>
     <dd>Yevgeny has found bugs and suggested improvements in the way
       asynManager handles queue timeouts and cancels. He provides an expert
@@ -199,7 +206,7 @@ individuals have been most influential.</p>
 <p>asynDriver is a software layer between device specific code and drivers
 that communicate with devices. It supports both blocking and non-blocking
 communication and can be used with both register and message based devices.
-asynDriver the following terminology:</p>
+asynDriver uses the following terminology:</p>
 <ul>
   <li>interface
     <p>All communication between software layers is done via interfaces. An
@@ -223,7 +230,7 @@ asynDriver the following terminology:</p>
   <li>device
     <p>A device (instrument) connected to a port. For example a GPIB
     interface can have up to 15 devices connected to it. Other ports, e.g.
-    serial ports, can only support a single device. Whenever this document
+    EIA232 serial ports, only support a single device. Whenever this document
     uses the word device without a qualifier, it means something that is
     connected to a port.</p>
   </li>
@@ -240,12 +247,12 @@ asynDriver the following terminology:</p>
     they are permitted in synchronous support.</p>
   </li>
   <li>asynDriver
-    <p>This is the name for the support described in this manual. It is also
+    <p>The name for the support described in this manual. It is also
     the name of the header file that describes the core interfaces.</p>
   </li>
   <li>asynManager
-    <p>An interface and also the code which implements the asynManager and
-    asynTrace methods.</p>
+    <p>An interface and the code which implements the methods for interfaces
+       asynManager and asynTrace.</p>
   </li>
   <li>asynchronous Driver
     <p>A driver that may block while communicating with a device. Typical
@@ -271,7 +278,7 @@ asynDriver the following terminology:</p>
 example a register based driver can be either synchronous or asynchronous.
 The terminology register vs message is adapted from VXI.</p>
 
-<p>Standard interfaces are defined so that most device specific code can
+<p>Standard interfaces are defined so that device specific code can
 communicate with multiple port drivers. For example if device support does
 all its communication via reads and writes consisting of 8 bit bytes
 (octets), then it should work with all port drivers that support octet
@@ -303,9 +310,7 @@ other code, e.g. a sequence program.</p>
 
 <p>This section briefly describes the interfaces provided by asynManager and
 standard interfaces implemented by port drivers. asynManager  members are
-called by application threads. Except for asynCommon:report, port driver
-methods can only be called from the user supplied callback passed in the call
-to createAsynUser.</p>
+called by application threads.</p>
 
 <p>The interfaces are:</p>
 
@@ -470,7 +475,7 @@ drivers. It provides the following services:</p>
   <li>Basic asynUser services
     <p>Methods: connectDevice, disconnect, findInterface</p>
     <p>These methods should only be called by the code that created the
-    asunUser.</p>
+    asynUser.</p>
     <p>After an asynUser is created the user calls connectDevice. The user is
     connected to a port driver that can communicate with a device.
     findInterface is called for each interface the user requires. disconnect
@@ -479,7 +484,7 @@ drivers. It provides the following services:</p>
   <li>Queuing services
     <p>Methods: queueRequest, cancelRequest, lock, unlock</p>
     <p>These methods should only be called by the code that created the
-    asunUser.</p>
+    asynUser.</p>
     <p>queueRequest is a request to call either the processCallback or
     timeoutCallback specified in the call to createAsynUser. Most interface
     methods must only be called from processCallback via a call to
@@ -502,15 +507,16 @@ drivers. It provides the following services:</p>
     no other asynUser's processCallback will be called until unlock is
     called. It should be noted that lock/unlock works with non-blocking
     drivers. The implementation depends on the fact that epicsMutex
-    guarantees that recursive mutexs are supported.</p>
+    supports recursive mutexs.</p>
   </li>
   <li>Basic Driver services
     <p>Methods: registerPort,registerInterface</p>
     <p>registerPort should only be called by a portDriver. registerInterface
     is called by a portDriver or an interposeInterface.</p>
-    <p>Each port driver has a configuration command that is executed for each
-    port instance it supports. The configuration command performs port
-    specific initializations and then calls registerPort. It then calls
+    <p>Each port driver provides a configuration command'
+     that is executed for each port instance.
+     The configuration command performs port
+    specific initializations and then calls registerPort and then
     registerInterface for each interface it supports.</p>
   </li>
   <li>Attribute Retrieval
@@ -518,8 +524,6 @@ drivers. It provides the following services:</p>
     isEnabled, isAutoConnect</p>
     <p>These methods can be called by any code that has access to the
     asynUser</p>
-    <p>After an asynUser has called connectDevice, these methods can be
-    called to retrieve various attributes of the port or device.</p>
   </li>
   <li>Connection services
     <p>These methods can be called by any code that has access to the
@@ -533,8 +537,9 @@ drivers. It provides the following services:</p>
   <li>Exception services
     <p>Methods: exceptionCallbackAdd, exceptionCallbackRemove,
     exceptionConnect, exceptionDisconnect</p>
-    <p>Device support code calls exceptionCallbackAdd if it wants to be
-    notified when an exception occurs. The complete list of exceptions is
+    <p>Device support code calls exceptionCallbackAdd
+     and exceptionCallbackRemove.
+    The complete list of exceptions is
     defined in asynDriver.h as "enum asynException".</p>
     <p>Whenever a port driver connects or disconnects, normally as a result
     of a call to asynCommon:connect or asynCommon:disconnect, it must also
@@ -544,8 +549,8 @@ drivers. It provides the following services:</p>
     <p>Methods: registerInterruptSource, interrupt, registerInterruptUser,
     cancelInterruptUser</p>
     <p>Interrupt just means: "I have a new value for this port,addr." Any
-    code can call interrupt, but normally port drivers or interpose code call
-    interrupt.</p>
+    code can call interrupt, but normally it is called by
+    port drivers or interpose code.</p>
     <p>Code that wants to call interrupt must call registerInterruptSource.
     It can then call interrupt whenever it detects that the data for a
     port,addr has changed. On operating systems like vxWorks or RTEMS
@@ -561,7 +566,7 @@ drivers. It provides the following services:</p>
   </li>
   <li>General purpose freelist service
     <p>Methods: memMalloc, memFree</p>
-    <p>These methods do not require a asynUser. They are provided for code
+    <p>These methods do not require an asynUser. They are provided for code
     that must continually allocate and free memory. Since memFree puts the
     memory on a free list instead of calling free, they are more efficient
     that calloc/free and also help prevent memory fragmentation.</p>
@@ -651,11 +656,14 @@ non blocking driver.</p>
 <p>If a driver calls asynManager:registerPort with the ASYN_CANBLOCK bit of
 attributes set then asynManager creates a thread for the port. Each
 portThread has its own set of queues for the calls to queueRequest.
+Four queues are maintained. One queue is used only for asynCommon:connect
+and asynCommon:disconnect requests. The other queues provide 
+different priorities: low, medium, and high.
 portThread runs forever implementing the following algorithm:</p>
 <ol>
   <li>Wait for work by calling epicsEventMustWait. Other code such as
     queueRequest call epicsEventSignal.</li>
-  <li>If the port is disabled, return 1.</li>
+  <li>If the port is disabled,  go back to 1.</li>
   <li>For every element in queue, asynQueuePriorityConnect:
     <ul>
       <li>Removes the element from the queue.</li>
@@ -664,7 +672,7 @@ portThread runs forever implementing the following algorithm:</p>
   </li>
   <li>If the port is not connected and autoConnect is true for the port, then
     attempt to connect to the port.</li>
-  <li>If the port is still not connected, return 1.</li>
+  <li>If the port is still not connected,  go back to 1.</li>
   <li>For each element of the queues asynQueuePriorityHigh,
     ...,asynQueuePriorityLow.
     <ul>
@@ -855,7 +863,7 @@ asynManager:freeAsynUser.</p>
         by the user and can be changed between calls to drivers.
 
         <p>The user must provide a non zero value or many low level drivers
-        will timeout. A timeout value &lt;= 0.0 means wait forever.</p>
+        will timeout.</p>
       </td>
     </tr>
     <tr>
@@ -1008,8 +1016,8 @@ epicsShareExtern asynManager *pasynManager;</pre>
     <tr>
       <td>duplicateAsynUser</td>
       <td>Creates an asynUser by calling createAsynUser. It then initializes
-        the new asynUser as follows: The fields .timeout, .userPvt,
-        .userData, and .drvUser are initialized with values taken from
+        the new asynUser as follows: The fields timeout, userPvt,
+        userData, and drvUser are initialized with values taken from
         pasynUser. Its connectDevice state is the same as that for
       pasynUser.</td>
     </tr>
@@ -1025,7 +1033,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
     </tr>
     <tr>
       <td>memMalloc</td>
-      <td>Allocate memory. memMalloc/memFree maintain a set of freelists of
+      <td>Allocate/Free memory. memMalloc/memFree maintain a set of freelists of
         different sizes. Thus any application that needs storage for a short
         time can use memMalloc/memFree to allocate and free the storage
         without causing memory fragmentation.</td>
@@ -1044,7 +1052,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
       <td>connectDevice</td>
       <td>Device code calls this to connect to a device. It passes the name
         of the communication port and the address of the device. The port
-        Name is the same as that specified in the call to registerPort. The
+        Name is the same as that specified in a call to registerPort. The
         call will fail if the asynUser is already connected. If the port does
         not support multiple devices, than addr is ignored. The call will
         fail if the asynUser is already connected to a device. connectDevice
@@ -1092,6 +1100,7 @@ pasynInterface = pasynManager-&gt;findInterface(
 if(!pasynInterface) { /*error do something*/}
 pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
 pasynOctetPvt = pasynInterface-&gt;pdrvPvt;
+...
 /* The following call must be made from a callback */
 pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         </pre>
@@ -1161,7 +1170,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     <tr>
       <td>registerPort</td>
       <td>This method is called by drivers. A call is made for each
-        communication interface instance. Attributes is a set of bits.
+        port instance. Attributes is a set of bits.
         Currently two bits are defined: ASYN_MULTIDEVICE and ASYN_CANBLOCK.
         The driver must specify these properly. autoConnect, which is (0,1)
         for (no,yes), provides the initial value for the port and all devices
@@ -3059,6 +3068,7 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
 <p><img src="./asynRecord.gif" alt="asynRecord" width="500" height="700"></p>
 </center>
 <center>
+<hr>
 <h2><a name="Example"></a>Example</h2>
 </center>
 
