@@ -49,17 +49,17 @@ asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
 ifeq ($(OS_CLASS),vxWorks)
-vxi11core_xdr.c: $(ASYN)/vxi11/rpc/vxi11core_xdr.c
-	cp $(ASYN)/vxi11/rpc/*.[ch] .
+vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
+	cp ../vxi11/rpc/*.[ch] .
 else
 ifeq ($(OS_CLASS),RTEMS)
-vxi11core_xdr.c: $(ASYN)/vxi11/rpc/vxi11core_xdr.c
-	cp $(ASYN)/vxi11/rpc/*.[ch] .
+vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
+	cp ../vxi11/rpc/*.[ch] .
 else
 RPCGEN_FLAGS_solaris = -M
-vxi11core_xdr.c: $(ASYN)/vxi11/vxi11core.rpcl $(ASYN)/vxi11/vxi11intr.rpcl
-	cp $(ASYN)/vxi11/vxi11core.rpcl .
-	cp $(ASYN)/vxi11/vxi11intr.rpcl .
+vxi11core_xdr.c: ../vxi11/vxi11core.rpcl ../vxi11/vxi11intr.rpcl
+	cp ../vxi11/vxi11core.rpcl .
+	cp ../vxi11/vxi11intr.rpcl .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11core.rpcl
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11intr.rpcl
 endif
