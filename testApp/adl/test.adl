@@ -125,7 +125,7 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.ENBD"
+		chan="asynTest:PA:A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -172,7 +172,7 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.ENBD"
+		chan="asynTest:PB:A-1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -219,7 +219,7 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.ENBD"
+		chan="asynTest:PB:A0.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -266,7 +266,7 @@ display {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.ENBD"
+		chan="asynTest:PB:A1.ENBL"
 		clr=14
 		bclr=4
 	}
@@ -698,7 +698,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.CNTD"
+		chan="asynTest:PA:A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -745,7 +745,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.CNTD"
+		chan="asynTest:PB:A-1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -792,7 +792,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.CNTD"
+		chan="asynTest:PB:A0.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -839,7 +839,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.CNTD"
+		chan="asynTest:PB:A1.CNCT"
 		clr=14
 		bclr=4
 	}
@@ -886,7 +886,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PA:A0.ACTD"
+		chan="asynTest:PA:A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -933,7 +933,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A-1.ACTD"
+		chan="asynTest:PB:A-1.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -980,7 +980,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A0.ACTD"
+		chan="asynTest:PB:A0.AUCT"
 		clr=14
 		bclr=4
 	}
@@ -1027,7 +1027,7 @@ menu {
 		height=16
 	}
 	monitor {
-		chan="asynTest:PB:A1.ACTD"
+		chan="asynTest:PB:A1.AUCT"
 		clr=14
 		bclr=4
 	}
