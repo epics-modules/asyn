@@ -1449,7 +1449,7 @@ all registered callbacks for read and write messages.</p>
       <li>asynUInt32Digital - read/write.</li>
       <li>asynUInt32DigitalCallback - registerCallback/cancelCallback to
         receive Float64 value. This is for interrupt driven drivers. It also
-        has methods to setInterruptMask/getInterruptMask.</li>
+        has methods to setInterrupt/getInterrupt.</li>
     </ul>
   </li>
   <li>Float64 - data is passed as double precision floats.
@@ -1721,11 +1721,11 @@ typedef struct asynUInt32DigitalCallback {
     asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
         void (*callback)(void *userPvt, epicsUInt32 data),
         epicsUInt32 mask, void *userPvt);
-    asynStatus (*setInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*setInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 mask, interruptReason reason);
-    asynStatus (*clearInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*clearInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 mask);
-    asynStatus (*getInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*getInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *mask, interruptReason reason);
 } asynUInt32DigitalCallback;
 </pre>
@@ -1747,15 +1747,15 @@ with interupt driven drivers.</p>
          must all match the values passed to registerCallback.</td>
     </tr>
     <tr>
-      <td>setInterruptMask</td>
+      <td>setInterrupt</td>
       <td>Enable interrupts on bits specified by mask.</td>
     </tr>
     <tr>
-      <td>clearInterruptMask</td>
+      <td>clearInterrupt</td>
       <td>Disable  interrupts on bits specified by mask.</td>
     </tr>
     <tr>
-      <td>getInterruptMask</td>
+      <td>getInterrupt</td>
       <td>Get enabled interrupt bits</td>
     </tr>
   </tbody>

@@ -35,11 +35,11 @@ typedef struct asynUInt32DigitalCallback {
     asynStatus (*cancelCallback)(void *drvPvt, asynUser *pasynUser,
         void (*callback)(void *userPvt, epicsUInt32 data),
         epicsUInt32 mask, void *userPvt);
-    asynStatus (*setInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*setInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 mask, interruptReason reason);
-    asynStatus (*clearInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*clearInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 mask);
-    asynStatus (*getInterruptMask)(void *drvPvt, asynUser *pasynUser,
+    asynStatus (*getInterrupt)(void *drvPvt, asynUser *pasynUser,
         epicsUInt32 *mask, interruptReason reason);
 } asynUInt32DigitalCallback;
 
