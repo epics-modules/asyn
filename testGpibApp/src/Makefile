@@ -11,8 +11,8 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += devTestGpib.dbd
 
-DBD += testGpib.dbd
-DBD += testGpibVx.dbd
+DBD_DEFAULT += testGpib.dbd
+DBD_vxWorks += testGpibVx.dbd
 testGpib_DBD += commonInclude.dbd
 
 #=============================
