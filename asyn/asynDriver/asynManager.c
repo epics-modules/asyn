@@ -42,25 +42,27 @@
 #define DEFAULT_TRACE_TRUNCATE_SIZE 80
 #define DEFAULT_TRACE_BUFFER_SIZE 80
 
-typedef struct asynBase {
-    ELLLIST           asynPortList;
-    epicsTimerQueueId timerQueue;
-    epicsMutexId      lockTrace;
-}asynBase;
-static asynBase *pasynBase = 0;
-
+typedef struct tracePvt tracePvt;
 typedef struct userPvt userPvt;
 typedef struct port port;
 typedef struct device device;
 
-typedef struct tracePvt {
+struct tracePvt {
     int  traceMask;
     int  traceIOMask;
     FILE *fd;
     int  traceTruncateSize;
     int  traceBufferSize;
     char *traceBuffer;
-}tracePvt;
+};
+
+typedef struct asynBase {
+    ELLLIST           asynPortList;
+    epicsTimerQueueId timerQueue;
+    epicsMutexId      lockTrace;
+    tracePvt          trace;
+}asynBase;
+static asynBase *pasynBase = 0;
 
 typedef struct interfaceNode {
     ELLNODE       node;
@@ -136,11 +138,11 @@ struct port {
 static void asynInit(void);
 static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect);
 static dpCommon *findDpCommon(userPvt *puserPvt);
+static tracePvt *findTracePvt(userPvt *puserPvt);
 static port *locatePort(const char *portName);
 static device *locateDevice(port *pport,int addr,BOOL allocNew);
 static interfaceNode *locateInterfaceNode(
             ELLLIST *plist,const char *interfaceType,BOOL allocNew);
-static tracePvt *locateTracePvt(userPvt *puserPvt);
 static void queueTimeoutCallback(void *);
 static void exceptionOccurred(asynUser *pasynUser,asynException exception);
 static void autoConnect(port *pport,int addr);
@@ -249,6 +251,12 @@ static void asynInit(void)
     pasynBase->timerQueue = epicsTimerQueueAllocate(
         1,epicsThreadPriorityScanLow);
     pasynBase->lockTrace = epicsMutexMustCreate();
+    pasynBase->trace.traceBuffer = callocMustSucceed(
+        DEFAULT_TRACE_BUFFER_SIZE,sizeof(char),
+        "asynManager:asynInit");
+    pasynBase->trace.traceMask = ASYN_TRACE_ERROR;
+    pasynBase->trace.traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
+    pasynBase->trace.traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
 }
 
 static void dpCommonInit(dpCommon *pdpCommon,BOOL autoConnect)
@@ -277,6 +285,13 @@ static dpCommon *findDpCommon(userPvt *puserPvt)
     if(!pport) return(0);
     if(!pport->multiDevice || !pdevice) return(&pport->dpc);
     return(&pdevice->dpc);
+}
+
+static tracePvt *findTracePvt(userPvt *puserPvt)
+{
+    dpCommon *pdpCommon = findDpCommon(puserPvt);
+    if(pdpCommon) return(&pdpCommon->trace);
+    return(&pasynBase->trace);
 }
 
 /*locatePort returns 0 if portName is not registered*/
@@ -331,15 +346,6 @@ static interfaceNode *locateInterfaceNode(
         ellAdd(plist,&pinterfaceNode->node);
     }
     return pinterfaceNode;
-}
-
-static tracePvt *locateTracePvt(userPvt *puserPvt)
-{
-    port *pport = puserPvt->pport;
-    
-    if(!pport) return 0;
-    if(!pport->multiDevice || !puserPvt->pdevice) return(&pport->dpc.trace);
-    return &puserPvt->pdevice->dpc.trace;
 }
 
 static void queueTimeoutCallback(void *pvt)
@@ -1241,69 +1247,42 @@ static asynStatus traceUnlock(asynUser *pasynUser)
 static asynStatus setTraceMask(asynUser *pasynUser,int mask)
 {
     userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-    port       *pport = puserPvt->pport;
-    dpCommon   *pdpCommon = findDpCommon(puserPvt);
+    tracePvt   *ptracePvt = findTracePvt(puserPvt);
 
-    if(!pport || !pdpCommon) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:setTraceMask not connected\n");
-        return asynError;
-    }
-    pdpCommon->trace.traceMask = mask;
+    ptracePvt->traceMask = mask;
     return asynSuccess;
 }
 
 static int getTraceMask(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:getTraceMask but not connectDevice\n");
-        return -1;
-    }
     return ptracePvt->traceMask;
 }
 
 static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
 {
-    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-    port       *pport = puserPvt->pport;
-    dpCommon   *pdpCommon = findDpCommon(puserPvt);
+    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!pport || !pdpCommon) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:setTraceIOMask not connected\n");
-        return asynError;
-    }
-    pdpCommon->trace.traceIOMask = mask;
+    ptracePvt->traceIOMask = mask;
     return asynSuccess;
 }
 
 static int getTraceIOMask(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:getTraceIOMask but not connectDevice\n");
-        return -1;
-    }
     return ptracePvt->traceIOMask;
 }
 
 static asynStatus setTraceFILE(asynUser *pasynUser,FILE *fd)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:setTraceFILE but not connectDevice\n");
-        return ASYN_TRACE_ERROR;
-    }
     epicsMutexMustLock(pasynBase->lockTrace);
     if(ptracePvt->fd!=0 && ptracePvt->fd!=stdout && ptracePvt->fd!=stderr) {
         int status;
@@ -1323,26 +1302,16 @@ static asynStatus setTraceFILE(asynUser *pasynUser,FILE *fd)
 static FILE *getTraceFILE(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:getTraceFILE but not connectDevice\n");
-        return 0;
-    }
     return ptracePvt->fd;
 }
 
 static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:setTraceIOTruncateSize but not connectDevice\n");
-        return ASYN_TRACE_ERROR;
-    }
     epicsMutexMustLock(pasynBase->lockTrace);
     if(size>ptracePvt->traceBufferSize) {
         free(ptracePvt->traceBuffer);
@@ -1358,30 +1327,19 @@ static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,int size)
 static int getTraceIOTruncateSize(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
 
-    if(!ptracePvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:getTraceIOTruncateSize but not connectDevice\n");
-        return 0;
-    }
     return ptracePvt->traceTruncateSize;
 }
 
 static int tracePrint(asynUser *pasynUser,int reason, const char *pformat, ...)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
     va_list  pvar;
     int      nout = 0;
     FILE     *fd;
 
-    if(!ptracePvt) {
-        va_start(pvar,pformat);
-        nout = vfprintf(stdout,pformat,pvar);
-        va_end(pvar);
-        return 0;
-    }
     if(!(reason&ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
     fd = (ptracePvt->fd) ? ptracePvt->fd : stdout;
@@ -1396,18 +1354,12 @@ static int tracePrintIO(asynUser *pasynUser,int reason,
     const char *buffer, int len,const char *pformat, ...)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = locateTracePvt(puserPvt);
+    tracePvt *ptracePvt  = findTracePvt(puserPvt);
     va_list  pvar;
     int      nout = 0;
     FILE     *fd;
     int traceMask,traceIOMask,traceTruncateSize,nBytes;
 
-    if(!ptracePvt) {
-        va_start(pvar,pformat);
-        nout = vfprintf(stdout,pformat,pvar);
-        va_end(pvar);
-        return 0;
-    }
     traceMask = ptracePvt->traceMask;
     traceIOMask = ptracePvt->traceIOMask;
     traceTruncateSize = ptracePvt->traceTruncateSize;
