@@ -56,6 +56,7 @@ static char *flow_control_choices[NUM_FLOW_CHOICES]={"Unknown","Y","N"};
 #define OPT_SIZE 80  /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10  /* Size of buffer for EOS */
 #define ERR_SIZE 200 /* Size of buffer for error message */
+#define QUEUE_TIMEOUT 5.0 /* Timeout for queueRequest */
 
 
 /* Create RSET - Record Support Entry Table*/
@@ -84,6 +85,7 @@ static asynStatus connectDevice(asynRecord *pasynRec);
 static void GPIB_command(asynUser *pasynUser);
 
 static void asynCallback(asynUser *pasynUser);
+static void queueTimeoutCallback(asynUser *pasynUser);
 static void exceptCallback(asynUser *pasynUser, asynException exception);
 static void performIO(asynUser *pasynUser);
 static void setOption(asynUser *pasynUser);
@@ -191,7 +193,7 @@ static long init_record(asynRecord *pasynRec, int pass)
     pasynRecPvt->prec = pasynRec;
 
     /* Initialize asyn, connect to device */
-    pasynUser = pasynManager->createAsynUser(asynCallback,0);
+    pasynUser = pasynManager->createAsynUser(asynCallback,queueTimeoutCallback);
     pasynRecPvt->pasynUser = pasynUser;
     pasynUser->userPvt = pasynRecPvt;
     if (strlen(pasynRec->port) != 0) {
@@ -252,7 +254,7 @@ static long process(asynRecord *pasynRec)
       resetError(pasynRec);
       pasynManager->queueRequest(pasynRecPvt->pasynUser, 
          ((pasynRecPvt->state==stateConnect)
-         ? asynQueuePriorityConnect : asynQueuePriorityLow), 0.0);
+         ? asynQueuePriorityConnect : asynQueuePriorityLow), QUEUE_TIMEOUT);
       pasynRec->pact = TRUE;
    } else {
       /* PACT was true, finish record processing */
@@ -401,7 +403,8 @@ static long special(struct dbAddr *paddr, int after)
           pasynRec->addr = 0;
           status = drvAsynTCPPortConfigure(pasynRec->port, pasynRec->sock, 
                                              0, 0, 0);
-          if (status != asynSuccess) goto done;
+          /* We don't go to done on status!=asynSuccess here, because 
+           * the error could be user just re-entering an existing port */
           monitor_mask = recGblResetAlarms(pasynRec) | DBE_VALUE | DBE_LOG;
           db_post_events(pasynRec, pasynRec->port, monitor_mask);
           db_post_events(pasynRec, &pasynRec->addr, monitor_mask);
@@ -490,6 +493,19 @@ static void exceptCallback(asynUser *pasynUser,asynException exception)
     /* There has been a change in connect or enable status */
     monitorStatus(pasynRec);
     if(callLock) dbScanUnlock( (dbCommon*) pasynRec);
+}
+
+static void queueTimeoutCallback(asynUser *pasynUser)
+{
+   asynRecPvt *pasynRecPvt=pasynUser->userPvt;
+   asynRecord *pasynRec = pasynRecPvt->prec;
+
+   reportError(pasynRec, COMM_ALARM, MAJOR_ALARM, 
+               "queueRequest timeout");
+   dbScanLock( (dbCommon*) pasynRec);
+   process(pasynRec);
+   monitor(pasynRec); /* We call monitor so alarms get posted */
+   dbScanUnlock( (dbCommon*) pasynRec);
 }
 
 static long cvt_dbaddr(struct dbAddr *paddr)
