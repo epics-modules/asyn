@@ -75,6 +75,8 @@ typedef struct deviceInstance {
     gpibDpvt *pgpibDpvt;        /*for record waiting for SRQ*/
     int queueRequestFromSrq;
     void    *registrarPvt; /* For pasynInt32->registerInterruptUser*/
+    char    saveEos[2];
+    int     saveEosLen;
 }deviceInstance;
 
 struct portInstance {
@@ -120,7 +122,8 @@ static int writeMsgULong(gpibDpvt *pgpibDpvt,unsigned long val);
 static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val);
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str);
 static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt);
-static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd);
+static int setEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd);
+static int restoreEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd);
 static void completeProcess(gpibDpvt *pgpibDpvt);
 
 static devSupportGpib gpibSupport = {
@@ -135,7 +138,8 @@ static devSupportGpib gpibSupport = {
     writeMsgDouble,
     writeMsgString,
     readArbitraryBlockProgramData,
-    gpibSetEOS,
+    setEos,
+    restoreEos,
     completeProcess
 };
 epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
@@ -578,24 +582,54 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     return pgpibDpvt->msgInputLen;
 }
 
-static int gpibSetEOS(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
+static int setEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
-    dbCommon *precord = pgpibDpvt->precord;
-    asynStatus status;
+    deviceInstance *pdeviceInstance = pgpibDpvt->pdevGpibPvt->pdeviceInstance;
+    asynUser    *pasynUser = pgpibDpvt->pasynUser; 
+    dbCommon    *precord = pgpibDpvt->precord;
+    asynOctet   *pasynOctet = pgpibDpvt->pasynOctet;
+    void        *drvPvt = pgpibDpvt->asynOctetPvt;
+    asynStatus  status;
     int eosLen;
 
-    if(pgpibCmd->eos) {
-        eosLen = strlen(pgpibCmd->eos);
-        if(eosLen==0) eosLen = 1;
-    } else {
-        eosLen = 0;
-    }
-    status = pgpibDpvt->pasynOctet->setInputEos(
-        pgpibDpvt->asynOctetPvt,pasynUser,pgpibCmd->eos,eosLen);
+    if(!pgpibCmd->eos) return 0;
+    eosLen = strlen(pgpibCmd->eos);
+    if(eosLen==0) eosLen = 1;
+    status = pasynOctet->getInputEos(drvPvt,pasynUser,
+        pdeviceInstance->saveEos,sizeof(pdeviceInstance->saveEos),
+        &pdeviceInstance->saveEosLen);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s pasynOctet->setEos failed %s\n",
+            "%s pasynOctet->getInputEos failed %s\n",
+            precord->name,pgpibDpvt->pasynUser->errorMessage);
+        return -1;
+    }
+    status = pasynOctet->setInputEos(drvPvt,pasynUser,pgpibCmd->eos,eosLen);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynOctet->setInputEos failed %s\n",
+            precord->name,pgpibDpvt->pasynUser->errorMessage);
+        return -1;
+    }
+    return 0;
+}
+
+static int restoreEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
+{
+    deviceInstance *pdeviceInstance = pgpibDpvt->pdevGpibPvt->pdeviceInstance;
+    asynUser    *pasynUser = pgpibDpvt->pasynUser; 
+    dbCommon    *precord = pgpibDpvt->precord;
+    asynOctet   *pasynOctet = pgpibDpvt->pasynOctet;
+    void        *drvPvt = pgpibDpvt->asynOctetPvt;
+    asynStatus  status;
+    int eosLen;
+
+    if(!pgpibCmd->eos) return 0;
+    status = pasynOctet->setInputEos(drvPvt,pasynUser,
+        pdeviceInstance->saveEos,pdeviceInstance->saveEosLen);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s pasynOctet->setInputEos failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
         return -1;
     }
@@ -612,7 +646,7 @@ static void completeProcess(gpibDpvt *pgpibDpvt)
     status = pasynManager->canBlock(pasynUser,&yesNo);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s pasynOctet->setEos failed %s\n",
+            "%s pasynOctet->canBlock failed %s\n",
             precord->name,pgpibDpvt->pasynUser->errorMessage);
     }
     if(yesNo) {
@@ -854,7 +888,7 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
             pdeviceInstance->srqWaitTimeout);
     }
     epicsMutexUnlock(pportInstance->lock);
-    if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) {
+    if (setEos(pgpibDpvt, pgpibCmd) < 0) {
         failure = -1;
         goto done;
     }
@@ -966,6 +1000,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
+    restoreEos(pgpibDpvt,pgpibCmd);
     status = pasynManager->unlock(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -1316,12 +1351,13 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
         size_t nrsp;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s respond2Writes\n",precord->name);
         if(respond2Writes>0) epicsThreadSleep(respond2Writes);
-        if (gpibSetEOS(pgpibDpvt, pgpibCmd) < 0) return -1;
+        if (setEos(pgpibDpvt, pgpibCmd) < 0) return -1;
         status = pasynOctet->read(asynOctetPvt,pasynUser,rsp,rspLen,&nrsp,0);
         if (status!=asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s respond2Writes read failed\n", precord->name);
         }
+        restoreEos(pgpibDpvt,pgpibCmd);
     }
     return nchars;
 }

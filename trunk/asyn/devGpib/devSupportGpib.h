@@ -173,6 +173,7 @@ struct devSupportGpib {
     int (*writeMsgString)(gpibDpvt *pgpibDpvt,const char *str);
     int (*readArbitraryBlockProgramData)(gpibDpvt *pgpibDpvt);
     int (*setEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
+    int (*restoreEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
     void (*completeProcess)(gpibDpvt *pgpibDpvt);
 };
 epicsShareExtern devSupportGpib *pdevSupportGpib;
