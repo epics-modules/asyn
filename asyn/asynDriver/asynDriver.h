@@ -26,7 +26,9 @@ typedef enum {
 }asynStatus;
 
 typedef enum {
-    asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect
+    asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
+    asynExceptionTraceMask,asynExceptionTraceIOMask,
+    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
 } asynException;
 
 typedef enum {
