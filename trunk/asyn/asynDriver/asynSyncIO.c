@@ -15,6 +15,7 @@
 #include <string.h>
 #include <epicsEvent.h>
 #include <asynDriver.h>
+#include <drvGenericSerial.h>
 #include <asynSyncIO.h>
 
 typedef enum {
@@ -87,6 +88,23 @@ epicsShareFunc asynStatus epicsShareAPI
     pasynSyncIOPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pasynSyncIOPvt->pdrvPvt = pasynInterface->drvPvt;
     return(asynSuccess);
+}
+
+epicsShareFunc asynStatus epicsShareAPI
+    asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser)
+{
+    char portString[20];
+    char *serverString;
+    int status;
+
+    sprintf(portString, "%d", port);
+    serverString = calloc(1, strlen(server)+strlen(portString)+3);
+    strcpy(serverString, server);
+    strcat(serverString, ":");
+    strcat(serverString, portString);
+    status = drvGenericSerialConfigure(serverString, serverString, 0, 0);
+    status = asynSyncIOConnect(serverString, 0, ppasynUser);
+    return(status);
 }
 
 static asynStatus asynSyncIOQueueAndWait(asynUser *pasynUser,

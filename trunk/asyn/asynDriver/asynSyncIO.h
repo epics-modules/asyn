@@ -17,7 +17,9 @@ of this distribution.
  * 01-Mar-2004  Mark Rivers, created from old serialIO.h
  */
 
-#include "shareLib.h"
+#include <shareLib.h>
+#include "asynDriver.h"
+#include "drvGenericSerial.h"
 
 #ifndef	INCasynSyncIOh
 #define	INCasynSyncIOh 1
@@ -27,6 +29,8 @@ extern "C" {
 #endif
 epicsShareFunc asynStatus epicsShareAPI
     asynSyncIOConnect(const char *port, int addr, asynUser **ppasynUser);
+epicsShareFunc asynStatus epicsShareAPI
+    asynSyncIOConnectSocket(const char *server, int port, asynUser **ppasynUser);
 epicsShareFunc int epicsShareAPI
     asynSyncIOWrite(asynUser *pasynUser, char const *buffer, int buffer_len,
                     double timeout);
