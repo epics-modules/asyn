@@ -59,7 +59,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         *addr = pvmeio->signal;
         p = pvmeio->parm;
         /* first field of parm is always the asyn port name */
-        for(len=0; *p && !isspace(*p) ; len++, p++);
+        for(len=0; *p && !isspace(*p) ; len++, p++) {}
         if(len==0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "parm is null. Must be <port> <addr> ...");
@@ -91,7 +91,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         if(!pnext) goto error;
         p = pnext;
         for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
-        if(p==0) goto error;
+        if(*p==0) goto error;
         *port = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
         (*port)[len] = 0;
         strncpy(*port,pnext,len);
