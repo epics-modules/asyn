@@ -512,13 +512,11 @@ done:
 
 static long initLi(longinRecord *pr)
 {
-    devInt32Pvt *pPvt;
     asynStatus status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
        processCallbackInput,interruptCallbackInput);
     if (status != asynSuccess) return 0;
-    pPvt = pr->dpvt;
     return 0;
 }
 
