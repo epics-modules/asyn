@@ -850,9 +850,8 @@ static void queueTimeoutCallbackProcess(asynUser * pasynUser)
     asynRecord *pasynRec = pasynRecPvt->prec;
     reportError(pasynRec, asynError, "process queueRequest timeout");
     recGblSetSevr(pasynRec,STATE_ALARM,MAJOR_ALARM);
-    dbScanLock((dbCommon *) pasynRec);
-    process(pasynRec);
-    dbScanUnlock((dbCommon *) pasynRec);
+    callbackRequestProcessCallback(&pasynRecPvt->callback,
+                    pasynRec->prio, pasynRec);
 }
 
 static void queueTimeoutCallbackSpecial(asynUser * pasynUser)

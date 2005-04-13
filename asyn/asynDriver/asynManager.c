@@ -109,6 +109,7 @@ typedef struct dpCommon { /*device/port common fields*/
     BOOL           enabled;
     BOOL           connected;
     BOOL           autoConnect;
+    BOOL           autoConnectActive;
     userPvt        *pblockProcessHolder;
     ELLLIST        interposeInterfaceList;
     ELLLIST        exceptionUserList;
@@ -167,7 +168,6 @@ struct port {
     int           attributes;
     /* The following are for autoConnect*/
     asynUser      *pasynUser;
-    BOOL          autoConnectActive;
     /*The following are only initialized/used if attributes&ASYN_CANBLOCK*/
     ELLLIST       queueList[NUMBER_QUEUE_PRIORITIES];
     BOOL          queueStateChange;
@@ -201,8 +201,6 @@ static interfaceNode *locateInterfaceNode(
             ELLLIST *plist,const char *interfaceType,BOOL allocNew);
 static void exceptionOccurred(asynUser *pasynUser,asynException exception);
 static void queueTimeoutCallback(void *pvt);
-/*autoConnectRequest must be called with asynManagerLock held*/
-static BOOL autoConnectRequest(dpCommon *pdpCommon);
 /*autoConnectDevice must be called with asynManagerLock held*/
 static BOOL autoConnectDevice(port *pport,device *pdevice);
 static void connectAttempt(dpCommon *pdpCommon);
@@ -559,53 +557,43 @@ static void queueTimeoutCallback(void *pvt)
     epicsEventSignal(pport->notifyPortThread);
 }
 
-/*autoConnectRequest must be called with asynManagerLock held*/
-static BOOL autoConnectRequest(dpCommon *pdpCommon)
-{
-    port           *pport = pdpCommon->pport;
-    epicsTimeStamp now;
-    double         secsSinceDisconnect;
-
-    if(pdpCommon->connected) return FALSE;
-    if(!pdpCommon->autoConnect) return FALSE;
-    if(pport->autoConnectActive) return FALSE;
-    epicsTimeGetCurrent(&now);
-    secsSinceDisconnect = epicsTimeDiffInSeconds(
-        &now,&pdpCommon->lastConnectDisconnect);
-    if(secsSinceDisconnect<2.0) return FALSE;
-    epicsTimeGetCurrent(&pdpCommon->lastConnectDisconnect);
-    return TRUE;
-}
-
 /*autoConnectDevice must be called with asynManagerLock held*/
 static BOOL autoConnectDevice(port *pport,device *pdevice)
 {
     if(!pport->dpc.connected
-    && pport->dpc.autoConnect
-    && autoConnectRequest(&pport->dpc)
-    && !pport->autoConnectActive) {
-        pport->autoConnectActive = TRUE;
+    &&  pport->dpc.autoConnect
+    && !pport->dpc.autoConnectActive) {
+        epicsTimeStamp now;
+
+        epicsTimeGetCurrent(&now);
+        if(epicsTimeDiffInSeconds(
+             &now,&pport->dpc.lastConnectDisconnect) < 2.0) return FALSE;
+        epicsTimeGetCurrent(&pport->dpc.lastConnectDisconnect);
+        pport->dpc.autoConnectActive = TRUE;
         epicsMutexUnlock(pport->asynManagerLock);
         connectAttempt(&pport->dpc);
         epicsMutexMustLock(pport->asynManagerLock);
-        pport->autoConnectActive = FALSE;
+        pport->dpc.autoConnectActive = FALSE;
     }
     if(!pport->dpc.connected) return FALSE;
     if(!pdevice) return TRUE;
     if(!pdevice->dpc.connected
-    && pdevice->dpc.autoConnect
-    && autoConnectRequest(&pdevice->dpc)
-    && !pport->autoConnectActive) {
-        pport->autoConnectActive = TRUE;
+    &&  pdevice->dpc.autoConnect
+    && !pdevice->dpc.autoConnectActive) {
+        epicsTimeStamp now;
+
+        epicsTimeGetCurrent(&now);
+        if(epicsTimeDiffInSeconds(
+            &now,&pdevice->dpc.lastConnectDisconnect) < 2.0) return FALSE;
+        epicsTimeGetCurrent(&pdevice->dpc.lastConnectDisconnect);
+        pdevice->dpc.autoConnectActive = TRUE;
         epicsMutexUnlock(pport->asynManagerLock);
         connectAttempt(&pdevice->dpc);
         epicsMutexMustLock(pport->asynManagerLock);
-        pport->autoConnectActive = FALSE;
+        pport->dpc.autoConnectActive = FALSE;
     }
-    if(!pdevice->dpc.connected) return FALSE;
-    return TRUE;
+    return pdevice->dpc.connected;
 }
-
 
 static void connectAttempt(dpCommon *pdpCommon)
 {
@@ -1366,6 +1354,7 @@ static asynStatus blockProcessCallback(asynUser *pasynUser, int allDevices)
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::blockProcessCallback is queued\n");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
     if(allDevices) 
@@ -1687,7 +1676,7 @@ static asynStatus enable(asynUser *pasynUser,int yesNo)
             "asynManager:enable not connected\n");
         return asynError;
     }
-    pdpCommon->enabled = yesNo&1;
+    pdpCommon->enabled = (yesNo ? 1 : 0);
     exceptionOccurred(pasynUser,asynExceptionEnable);
     return asynSuccess;
 }
@@ -1703,7 +1692,7 @@ static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo)
             "asynManager:autoConnect not connected\n");
         return asynError;
     }
-    pdpCommon->autoConnect = yesNo&1;
+    pdpCommon->autoConnect = (yesNo ? 1 : 0);
     exceptionOccurred(pasynUser,asynExceptionAutoConnect);
     return asynSuccess;
 }
