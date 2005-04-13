@@ -158,7 +158,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsFloat64 value,double timeout)
     }
     status = pPvt->pasynFloat64->write(pPvt->float64Pvt, pasynUser,value);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-              "asynFloat64SyncIO status=%d, wrote: %e",
+              "asynFloat64SyncIO status=%d, wrote: %e\n",
               status,value);
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -181,7 +181,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout
     }
     status = pPvt->pasynFloat64->read(pPvt->float64Pvt, pasynUser, pvalue);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                 "asynFloat64SyncIO status=%d read: %e",status,*pvalue);
+                 "asynFloat64SyncIO status=%d read: %e\n",status,*pvalue);
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "unlockPort error %s\n", pasynUser->errorMessage);

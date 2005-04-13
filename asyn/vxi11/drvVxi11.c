@@ -1253,7 +1253,7 @@ static asynStatus vxiSetEos(void *drvPvt,asynUser *pasynUser,
     pdevLink = vxiGetDevLink(pvxiPort,pasynUser,addr);
     if(!pdevLink) return asynError;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, eoslen,
-            "%s vxiSetEos %d: ",pvxiPort->portName,eoslen);
+            "%s vxiSetEos %d\n",pvxiPort->portName,eoslen);
     switch (eoslen) {
     default:
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -1294,7 +1294,7 @@ static asynStatus vxiGetEos(void *drvPvt,asynUser *pasynUser,
         *eoslen = 1;
     }
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s vxiGetEos %d: ",pvxiPort->portName,eoslen);
+            "%s vxiGetEos %d\n",pvxiPort->portName,eoslen);
     return asynSuccess;
 }
 

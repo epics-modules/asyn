@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.13 2005-02-14 20:25:42 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.14 2005-04-13 16:01:09 mrk Exp $
  */
 
 #include <string.h>
@@ -295,7 +295,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                            "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                            "%s write %d ", tty->serialDeviceName, numchars);
+                            "%s write %d\n", tty->serialDeviceName, numchars);
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s disconnected:", tty->serialDeviceName);
@@ -442,7 +442,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         thisRead = recv(tty->fd, data, maxchars, 0);
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                       "%s read %d ", tty->serialDeviceName, thisRead);
+                       "%s read %d\n", tty->serialDeviceName, thisRead);
             nRead = thisRead;
             tty->nRead += thisRead;
             break;

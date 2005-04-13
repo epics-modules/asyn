@@ -903,7 +903,7 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
         break;
     default:
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s prepareToRead can't handle cmdType %d",
+            "%s prepareToRead can't handle cmdType %d\n",
             precord->name,cmdType);
         failure = -1;
     }

@@ -304,7 +304,7 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
             buffer,sizeof(buffer),&nbytesTransfered,0);
         if(nbytesTransfered==0) break;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
-            buffer,nbytesTransfered,"asynOctetBase:flush ");
+            buffer,nbytesTransfered,"asynOctetBase:flush\n");
     }
     pasynUser->timeout = savetimeout;
     return asynSuccess;
