@@ -786,47 +786,55 @@ static void reportPrintPort(port *pport, FILE *fp,int details)
     for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
         nQueued += ellCount(&pport->queueList[i]);
     pdpc = &pport->dpc;
-    fprintf(fp,"%s multiDevice %s canBlock %s autoConnect %s\n"
-            "    enabled %s connected %s numberConnects %lu\n",
-            pport->portName,
-            ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
-            ((pport->attributes&ASYN_CANBLOCK) ? "Yes" : "No"),
-            (pdpc->autoConnect ? "Yes" : "No"),
+    fprintf(fp,"%s multiDevice %s canBlock %s autoConnect %s\n",
+        pport->portName,
+        ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
+        ((pport->attributes&ASYN_CANBLOCK) ? "Yes" : "No"),
+        (pdpc->autoConnect ? "Yes" : "No"));
+    if(details>=1) {
+        fprintf(fp,"    enabled %s connected %s numberConnects %lu\n",
             (pdpc->enabled ? "Yes" : "No"),
             (pdpc->connected ? "Yes" : "No"),
              pdpc->numberConnects);
-    fprintf(fp,"    nDevices %d nQueued %d "
+        fprintf(fp,"    nDevices %d nQueued %d "
                "blocked %s\n",
             ellCount(&pport->deviceList),
             nQueued,
             (pport->pblockProcessHolder ? "Yes" : "No"));
 
-    fprintf(fp,"    exceptionActive %s "
+        fprintf(fp,"    exceptionActive %s "
             "exceptionUsers %d exceptionNotifys %d\n",
             (pdpc->exceptionActive ? "Yes" : "No"),
             ellCount(&pdpc->exceptionUserList),
             ellCount(&pdpc->exceptionNotifyList));
-    reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
+    }
+    if(details>=2) {
+        reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
                              "interposeInterfaceList");
-    reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
+        reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
+    }
     pdevice = (device *)ellFirst(&pport->deviceList);
     while(pdevice) {
         pdpc = &pdevice->dpc;
         fprintf(fp,"    addr %d",pdevice->addr);
         fprintf(fp," autoConnect %s enabled %s "
-                "connected %s exceptionActive %s\n",
-                (pdpc->autoConnect ? "Yes" : "No"),
-                (pdpc->enabled ? "Yes" : "No"),
-                (pdpc->connected ? "Yes" : "No"),
-                (pdpc->exceptionActive ? "Yes" : "No"));
-        fprintf(fp,"    exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
+            "connected %s exceptionActive %s\n",
+            (pdpc->autoConnect ? "Yes" : "No"),
+            (pdpc->enabled ? "Yes" : "No"),
+            (pdpc->connected ? "Yes" : "No"),
+            (pdpc->exceptionActive ? "Yes" : "No"));
+        if(details>=1) {
+            fprintf(fp,"    exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
                 (pdpc->exceptionActive ? "Yes" : "No"),
                 ellCount(&pdpc->exceptionUserList),
                 ellCount(&pdpc->exceptionNotifyList));
-        fprintf(fp,"    blocked %s\n",
+            fprintf(fp,"    blocked %s\n",
                 (pdpc->pblockProcessHolder ? "Yes" : "No"));
-        reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
+        }
+        if(details>=2) {
+            reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
                                  "interposeInterfaceList");
+        }
         pdevice = (device *)ellNext(&pdevice->node);
     }
     pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
@@ -840,7 +848,6 @@ static void reportPrintPort(port *pport, FILE *fp,int details)
         pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
     }
     if(pasynCommon) {
-        fprintf(fp,"    Calling asynCommon.report\n");
         pasynCommon->report(drvPvt,fp,details);
     }
 }
