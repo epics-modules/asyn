@@ -189,7 +189,7 @@ static asynStatus writeOp(asynUser *pasynUser,
             "asynUInt32DigitalSyncIO write failed %s\n",pasynUser->errorMessage);
     } else {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-             "asynUInt32DigitalSyncIO wrote: %e",value);
+             "asynUInt32DigitalSyncIO wrote: %e\n",value);
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -219,7 +219,7 @@ static asynStatus readOp(asynUser *pasynUser,
                  pasynUser->errorMessage);
     } else {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO read: %e",*pvalue);
+                   "asynUInt32DigitalSyncIO read: %e\n",*pvalue);
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -249,7 +249,7 @@ static asynStatus setInterrupt(asynUser *pasynUser,
                  pasynUser->errorMessage);
     } else {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO setInterrupt: 0x%x ",mask);
+                   "asynUInt32DigitalSyncIO setInterrupt: 0x%x\n",mask);
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -279,7 +279,7 @@ static asynStatus clearInterrupt(asynUser *pasynUser,
                  pasynUser->errorMessage);
     } else {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO clearInterrupt: 0x%x ",mask);
+                   "asynUInt32DigitalSyncIO clearInterrupt: 0x%x\n",mask);
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -309,7 +309,7 @@ static asynStatus getInterrupt(asynUser *pasynUser,
                  pasynUser->errorMessage);
     } else {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO getInterrupt: 0x%x ",mask);
+                   "asynUInt32DigitalSyncIO getInterrupt: 0x%x\n",mask);
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,

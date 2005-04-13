@@ -151,7 +151,7 @@ static asynStatus flushIt(void *ppvt,asynUser *pasynUser)
             buffer,sizeof(buffer),&nbytesTransfered,0);
         if(nbytesTransfered==0) break;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
-            buffer,nbytesTransfered,"asynInterposeFlush:flush ");
+            buffer,nbytesTransfered,"asynInterposeFlush:flush\n");
     }
     pasynUser->timeout = savetimeout;
     return(asynSuccess);

@@ -254,7 +254,7 @@ static asynStatus writeIt(asynUser *pasynUser,
              buffer_len,*nbytesTransfered);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             buffer,buffer_len,"asynOctetSyncIO");
+             buffer,buffer_len,"asynOctetSyncIO\n");
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -287,7 +287,7 @@ static asynStatus writeRaw(asynUser *pasynUser,
              buffer_len,*nbytesTransfered);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             buffer,buffer_len,"asynOctetSyncIO");
+             buffer,buffer_len,"asynOctetSyncIO\n");
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -318,7 +318,7 @@ static asynStatus readIt(asynUser *pasynUser,
              "asynOctetSyncIO read failed %s\n",pasynUser->errorMessage);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             buffer,buffer_len,"asynOctetSyncIO");
+             buffer,buffer_len,"asynOctetSyncIO\n");
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -349,7 +349,7 @@ static asynStatus readRaw(asynUser *pasynUser,
              "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             buffer,buffer_len,"asynOctetSyncIO");
+             buffer,buffer_len,"asynOctetSyncIO\n");
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -390,7 +390,7 @@ static asynStatus writeRead(asynUser *pasynUser,
              write_buffer_len,*nbytesOut);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             write_buffer,*nbytesOut,"asynOctetSyncIO");
+             write_buffer,*nbytesOut,"asynOctetSyncIO\n");
     }
     status = pioPvt->pasynOctet->read(
         pioPvt->octetPvt,pasynUser,read_buffer,read_buffer_len,nbytesIn,eomReason);
@@ -399,7 +399,7 @@ static asynStatus writeRead(asynUser *pasynUser,
              "asynOctetSyncIO read failed %s\n",pasynUser->errorMessage);
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             read_buffer,*nbytesIn,"asynOctetSyncIO");
+             read_buffer,*nbytesIn,"asynOctetSyncIO\n");
     }
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,

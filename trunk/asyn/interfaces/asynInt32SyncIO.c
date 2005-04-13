@@ -164,7 +164,7 @@ static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout)
     }
     status = pioPvt->pasynInt32->write(pioPvt->int32Pvt, pasynUser, value);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                 "asynInt32SyncIO status=%d wrote: %d",status,value);
+                 "asynInt32SyncIO status=%d wrote: %d\n",status,value);
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "unlockPort error %s\n", pasynUser->errorMessage);
@@ -186,7 +186,7 @@ static asynStatus readOp(asynUser *pasynUser, epicsInt32 *pvalue, double timeout
     }
     status = pioPvt->pasynInt32->read(pioPvt->int32Pvt, pasynUser, pvalue);
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                 "asynInt32SyncIO status=%d read: %d",status,*pvalue);
+                 "asynInt32SyncIO status=%d read: %d\n",status,*pvalue);
     if((pasynManager->unlockPort(pasynUser)) ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "unlockPort error %s\n", pasynUser->errorMessage);

@@ -180,7 +180,7 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     status = peosPvt->poctet->writeRaw(peosPvt->octetPvt, pasynUser,
          peosPvt->outBuf,(numchars + peosPvt->eosOutLen),&nbytesActual);
     asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->outBuf,nbytesActual,
-            "%s write ",peosPvt->portName);
+            "%s write\n",peosPvt->portName);
     *nbytesTransfered = (nbytesActual>numchars) ? numchars : nbytesActual;
     return status;
 }
@@ -244,7 +244,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
              pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,eomReason);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->inBuf,thisRead,
-                "%s read ",peosPvt->portName);
+                "%s read\n",peosPvt->portName);
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
@@ -280,7 +280,7 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
              pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,eomReason);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->inBuf,thisRead,
-                "%s read ",peosPvt->portName);
+                "%s read\n",peosPvt->portName);
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
@@ -297,7 +297,7 @@ static asynStatus flushIt(void *ppvt,asynUser *pasynUser)
     if(!peosPvt->processEosIn) {
         return peosPvt->poctet->flush(peosPvt->octetPvt,pasynUser);
     }
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s flush",peosPvt->portName);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s flush\n",peosPvt->portName);
     peosPvt->inBufHead = 0;
     peosPvt->inBufTail = 0;
     peosPvt->eosInMatch = 0;
@@ -331,7 +331,7 @@ static asynStatus setInputEos(void *ppvt,asynUser *pasynUser,
            eos,eoslen);
     }
     asynPrintIO(pasynUser,ASYN_TRACE_FLOW,eos,eoslen,
-            "%s set Eos %d: ",peosPvt->portName, eoslen);
+            "%s set Eos %d\n",peosPvt->portName, eoslen);
     switch (eoslen) {
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -373,7 +373,7 @@ static asynStatus getInputEos(void *ppvt,asynUser *pasynUser,
     *eoslen = peosPvt->eosInLen;
     if(peosPvt->eosInLen<eossize) eos[peosPvt->eosInLen] = 0;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s get Eos %d: ", peosPvt->portName, *eoslen);
+            "%s get Eos %d\n", peosPvt->portName, *eoslen);
     return asynSuccess;
 }
 
@@ -384,7 +384,7 @@ static asynStatus setOutputEos(void *ppvt,asynUser *pasynUser,
 
     assert(peosPvt);
     asynPrintIO(pasynUser,ASYN_TRACE_FLOW,eos,eoslen,
-            "%s set Eos %d: ",peosPvt->portName, eoslen);
+            "%s set Eos %d\n",peosPvt->portName, eoslen);
     switch (eoslen) {
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -421,7 +421,7 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
     }
     *eoslen = peosPvt->eosOutLen;
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-            "%s get Eos %d: ", peosPvt->portName, *eoslen);
+            "%s get Eos %d\n", peosPvt->portName, *eoslen);
     return asynSuccess;
 }
 
