@@ -2053,7 +2053,7 @@ static asynStatus setTraceFile(asynUser *pasynUser,FILE *fp)
     } else if(fp==stderr) {
         ptracePvt->type = traceFileStderr; ptracePvt->fp = 0;
     } else {
-        ptracePvt->fp = fp;
+        ptracePvt->type = traceFileFP; ptracePvt->fp = fp;
     }
     if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceFile);
     epicsMutexUnlock(pasynBase->lockTrace);
