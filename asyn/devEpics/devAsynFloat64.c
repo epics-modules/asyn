@@ -362,7 +362,6 @@ static long initAo(aoRecord *pao)
     if (status == asynSuccess) {
         pao->val = value;
         pao->udf = 0;
-        return 0;
     }
     return 2; /* Do not convert */
 }
