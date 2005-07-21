@@ -325,7 +325,7 @@ static int computeShift(epicsUInt32 mask)
     int shift = 0;
 
     for(i=0; i<NUM_BITS; i++, bit <<= 1 ) {
-        if((mask&bit) == 1) break;
+        if(mask&bit) break;
         shift += 1;
     }
     return shift;
