@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.14 2005-04-13 16:01:09 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.15 2005-07-22 15:08:55 mrk Exp $
  */
 
 #include <string.h>
@@ -528,19 +528,6 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 };
 
 /*
- * asynOctet methods
- */
-static struct asynOctet drvAsynIPPortAsynOctet = {
-    0,         
-    writeRaw,
-    0,        
-    readRaw,
-    flushIt,
-    0,0,     
-    0,0,0,0 
-};
-
-/*
  * Configure and register a generic serial device
  */
 int
@@ -556,6 +543,8 @@ drvAsynIPPortConfigure(const char *portName,
     char *cp;
     int port;
     char protocol[6];
+    int nbytes;
+    asynOctet *pasynOctet;
 
     /*
      * Check arguments
@@ -573,8 +562,10 @@ drvAsynIPPortConfigure(const char *portName,
     /*
      * Create a driver
      */
-    tty = (ttyController_t *)callocMustSucceed(1, sizeof *tty, "drvAsynIPPortConfigure()");
-
+    nbytes = sizeof(*tty) + sizeof(asynOctet);
+    tty = (ttyController_t *)callocMustSucceed(1, nbytes,
+          "drvAsynIPPortConfigure()");
+    pasynOctet = (asynOctet *)(tty +1);
     /*
      * Create timeout mechanism
      */
@@ -629,9 +620,6 @@ drvAsynIPPortConfigure(const char *portName,
     tty->common.interfaceType = asynCommonType;
     tty->common.pinterface  = (void *)&drvAsynIPPortAsynCommon;
     tty->common.drvPvt = tty;
-    tty->octet.interfaceType = asynOctetType;
-    tty->octet.pinterface  = (void *)&drvAsynIPPortAsynOctet;
-    tty->octet.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    ASYN_CANBLOCK,
                                    !noAutoConnect,
@@ -647,6 +635,12 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
+    pasynOctet->readRaw = readRaw;
+    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->flush = flushIt;
+    tty->octet.interfaceType = asynOctetType;
+    tty->octet.pinterface  = pasynOctet;
+    tty->octet.drvPvt = tty;
     status = pasynOctetBase->initialize(tty->portName,&tty->octet,
         (noProcessEos ? 0 : 1), (noProcessEos ? 0 : 1), 1);
     if(status != asynSuccess) {
