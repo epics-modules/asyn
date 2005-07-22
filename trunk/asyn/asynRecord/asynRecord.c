@@ -1346,7 +1346,7 @@ static void performFloat64IO(asynUser * pasynUser)
         status = pasynRecPvt->pasynFloat64->read(pasynRecPvt->asynFloat64Pvt,
                                                  pasynUser, &pasynRec->f64inp);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s: status=%d, Float64 read data=%d\n",        
+                  "%s: status=%d, Float64 read data=%f\n",        
                   pasynRec->name, status, pasynRec->f64inp);
         if(status != asynSuccess) {
             reportError(pasynRec, status, "Float64 read error, %s",
