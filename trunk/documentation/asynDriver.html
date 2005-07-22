@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 22 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">July 22 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -1458,6 +1458,52 @@ typedef struct  asynDrvUser {
       <td>destroy</td>
       <td>Destroy the resources created by create and set asynUser.drvUser
         null.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynLockPortNotify</h3>
+
+<p>This is provided for port drivers that are an asynUser of another
+port driver. For example a serial bus driver can be implemented by
+connecting to a standard serial port to perform the actual I/O.
+When the serial bus port is locked, either by the requester calling
+lockPort or because a queueRequest was dequeued, then the serial bus
+driver needs to lock the associated serial port.</p>
+<p>
+The serial bus driver registers interface asynLockPortNotify.
+Whenever the serial bus port is locked, asynManager calls
+pasynLockPortNotify.lock. The serial bus driver calls
+asynManager.lockPort for the serial port to which it is connected.
+Similarly for unlockPort. Thus while the serial bus port is locked,
+the serial bus is also locked.</p>
+<p>
+asynLockPortNotify is used only be asynManager itself. It is not put in
+the list of interfaces for the port.</p>
+
+<p>asynLockPortNotify is:>/p>
+<pre>
+#define asynLockPortNotifyType "asynLockPortNotify"
+typedef struct  asynLockPortNotify {
+    asynStatus (*lock)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*unlock)(void *drvPvt,asynUser *pasynUser);
+}asynLockPortNotify;
+</pre>
+
+<table border="1">
+  <caption>asynDrvUser</caption>
+  <tbody>
+    <tr>
+      <td>lock</td>
+      <td>Called when asynManager.lockPort is called.
+        The driver normally calls asynManager.lockPort for the port to
+        which it is connected.</td>
+    </tr>
+    <tr>
+      <td>unlock</td>
+      <td>Called when asynManager.unlockPort is called.
+        The driver normally calls asynManager.unlockPort for the port to
+        which it is connected.</td>
     </tr>
   </tbody>
 </table>
