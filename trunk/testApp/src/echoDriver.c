@@ -74,8 +74,6 @@ static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
 static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
-static asynOctet octet = {
-    0,echoWrite,0,echoRead, echoFlush,0,0, setEos, getEos,0,0 };
 
 static int echoDriverInit(const char *dn, double delay,
     int noAutoConnect,int multiDevice)
@@ -85,10 +83,12 @@ static int echoDriverInit(const char *dn, double delay,
     asynStatus status;
     int        nbytes;
     int        attributes;
+    asynOctet  *pasynOctet;
 
-    nbytes = sizeof(echoPvt) + strlen(dn) + 1;
+    nbytes = sizeof(echoPvt) + sizeof(asynOctet) + strlen(dn) + 1;
     pechoPvt = callocMustSucceed(nbytes,sizeof(char),"echoDriverInit");
-    portName = (char *)(pechoPvt + 1);
+    pasynOctet = (asynOctet *)(pechoPvt + 1);
+    portName = (char *)(pasynOctet + 1);
     strcpy(portName,dn);
     pechoPvt->portName = portName;
     pechoPvt->delay = delay;
@@ -96,9 +96,6 @@ static int echoDriverInit(const char *dn, double delay,
     pechoPvt->common.interfaceType = asynCommonType;
     pechoPvt->common.pinterface  = (void *)&asyn;
     pechoPvt->common.drvPvt = pechoPvt;
-    pechoPvt->octet.interfaceType = asynOctetType;
-    pechoPvt->octet.pinterface  = (void *)&octet;
-    pechoPvt->octet.drvPvt = pechoPvt;
     attributes = 0;
     if(multiDevice) attributes |= ASYN_MULTIDEVICE;
     if(delay>0.0) attributes|=ASYN_CANBLOCK;
@@ -112,6 +109,15 @@ static int echoDriverInit(const char *dn, double delay,
         printf("echoDriverInit registerInterface failed\n");
         return 0;
     }
+
+    pasynOctet->writeRaw = echoWrite;
+    pasynOctet->readRaw = echoRead;
+    pasynOctet->flush = echoFlush;
+    pasynOctet->setInputEos = setEos;
+    pasynOctet->getInputEos = getEos;
+    pechoPvt->octet.interfaceType = asynOctetType;
+    pechoPvt->octet.pinterface  = pasynOctet;
+    pechoPvt->octet.drvPvt = pechoPvt;
     if(multiDevice) {
         status = pasynOctetBase->initialize(portName,&pechoPvt->octet,0,0,0);
     } else {
