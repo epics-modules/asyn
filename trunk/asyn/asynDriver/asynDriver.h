@@ -146,6 +146,12 @@ typedef struct  asynCommon {
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
 }asynCommon;
 
+/* asynLockPortNotify is only used by asynManager itself */
+#define asynLockPortNotifyType "asynLockPortNotify"
+typedef struct  asynLockPortNotify {
+    asynStatus (*lock)(void *drvPvt,asynUser *pasynUser);
+    asynStatus (*unlock)(void *drvPvt,asynUser *pasynUser);
+}asynLockPortNotify;
 
 /*asynTrace is implemented by asynManager*/
 /*All asynTrace methods can be called from any thread*/
