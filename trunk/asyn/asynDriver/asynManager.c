@@ -1536,10 +1536,6 @@ static asynStatus lockPort(asynUser *pasynUser,int autoConnectOK)
         asynStatus status;
         status = pport->pasynLockPortNotify->lock(
            pport->lockPortNotifyPvt,pasynUser);
-        if(status!=asynSuccess) {
-            epicsMutexUnlock(pport->synchronousLock);
-            return status;
-        }
     }
     return asynSuccess;
 }
