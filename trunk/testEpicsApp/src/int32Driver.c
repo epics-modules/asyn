@@ -73,23 +73,17 @@ static asynStatus getType(void *drvPvt,asynUser *pasynUser,
 static asynStatus destroy(void *drvPvt,asynUser *pasynUser);
 static asynDrvUser drvUser = {create,getType,destroy};
 
-
 /* asynInt32 methods */
 static asynStatus int32Write(void *drvPvt,asynUser *pasynUser,epicsInt32 value);
 static asynStatus int32Read(void *drvPvt,asynUser *pasynUser,epicsInt32 *value);
 static asynStatus int32GetBounds(void *drvPvt, asynUser *pasynUser,
                                 epicsInt32 *low, epicsInt32 *high);
-/*use default for registerCallback,cancelCallback*/
-static asynInt32 int32 = { int32Write, int32Read, int32GetBounds, 0, 0 };
 
 /* asynFloat64 methods */
 static asynStatus float64Write(void *drvPvt,asynUser *pasynUser,
     epicsFloat64 value);
 static asynStatus float64Read(void *drvPvt,asynUser *pasynUser,
     epicsFloat64 *value);
-/*use default for registerCallback,cancelCallback*/
-static asynFloat64 float64= { float64Write, float64Read, 0, 0 };
-
 
 static int int32DriverInit(const char *dn,int low,int high)
 {
@@ -98,10 +92,15 @@ static int int32DriverInit(const char *dn,int low,int high)
     asynStatus status;
     int        nbytes;
     int        addr;
+    asynInt32  *pasynInt32;
+    asynFloat64 *pasynFloat64;
 
-    nbytes = sizeof(drvPvt) + strlen(dn) + 1;
+    nbytes = sizeof(drvPvt) + sizeof(asynInt32) + sizeof(asynFloat64);
+    nbytes += strlen(dn) + 1;
     pdrvPvt = callocMustSucceed(nbytes,sizeof(char),"int32DriverInit");
-    portName = (char *)(pdrvPvt + 1);
+    pasynInt32 = (asynInt32 *)(pdrvPvt + 1);
+    pasynFloat64 = (asynFloat64 *)(pasynInt32 + 1);
+    portName = (char *)(pasynFloat64 + 1);
     strcpy(portName,dn);
     pdrvPvt->portName = portName;
     pdrvPvt->lock = epicsMutexMustCreate();
@@ -112,12 +111,6 @@ static int int32DriverInit(const char *dn,int low,int high)
     pdrvPvt->asynDrvUser.interfaceType = asynDrvUserType;
     pdrvPvt->asynDrvUser.pinterface = (void *)&drvUser;
     pdrvPvt->asynDrvUser.drvPvt = pdrvPvt;
-    pdrvPvt->asynInt32.interfaceType = asynInt32Type;
-    pdrvPvt->asynFloat64.interfaceType = asynFloat64Type;
-    pdrvPvt->asynFloat64.pinterface  =(void *)&float64;
-    pdrvPvt->asynFloat64.drvPvt = pdrvPvt;
-    pdrvPvt->asynInt32.pinterface  = (void *)&int32;
-    pdrvPvt->asynInt32.drvPvt = pdrvPvt;
     pdrvPvt->low = low;
     pdrvPvt->high = high;
     status = pasynManager->registerPort(portName,ASYN_MULTIDEVICE,1,0,0);
@@ -135,8 +128,19 @@ static int int32DriverInit(const char *dn,int low,int high)
         printf("int32DriverInit registerInterface failed\n");
         return 0;
     }
+    pasynInt32->write = int32Write;
+    pasynInt32->read = int32Read;
+    pasynInt32->getBounds = int32GetBounds;
+    pdrvPvt->asynInt32.interfaceType = asynInt32Type;
+    pdrvPvt->asynInt32.pinterface  = pasynInt32;
+    pdrvPvt->asynInt32.drvPvt = pdrvPvt;
     status = pasynInt32Base->initialize(pdrvPvt->portName, &pdrvPvt->asynInt32);
     if(status!=asynSuccess) return 0;
+    pasynFloat64->write = float64Write;
+    pasynFloat64->read = float64Read;
+    pdrvPvt->asynFloat64.interfaceType = asynFloat64Type;
+    pdrvPvt->asynFloat64.pinterface  = pasynFloat64;
+    pdrvPvt->asynFloat64.drvPvt = pdrvPvt;
     status = pasynFloat64Base->initialize(pdrvPvt->portName,
         &pdrvPvt->asynFloat64);
     if(status!=asynSuccess) return 0;
