@@ -168,6 +168,9 @@ struct port {
     int           attributes;
     /* The following are for autoConnect*/
     asynUser      *pasynUser;
+    /* The following are for asynLockPortNotify */
+    asynLockPortNotify *pasynLockPortNotify;
+    void          *lockPortNotifyPvt;
     /*The following are only initialized/used if attributes&ASYN_CANBLOCK*/
     ELLLIST       queueList[NUMBER_QUEUE_PRIORITIES];
     BOOL          queueStateChange;
@@ -660,6 +663,8 @@ static void portThread(port *pport)
         /*Process ALL connect/disconnect requests first*/
         while((puserPvt = (userPvt *)ellFirst(
         &pport->queueList[asynQueuePriorityConnect]))) {
+            asynStatus status = asynSuccess;
+
             assert(puserPvt->isQueued);
             ellDelete(&pport->queueList[asynQueuePriorityConnect],
                &puserPvt->node);
@@ -674,7 +679,21 @@ static void portThread(port *pport)
             epicsMutexUnlock(pport->asynManagerLock);
             if(puserPvt->timer && timeout>0.0) epicsTimerCancel(puserPvt->timer);
             epicsMutexMustLock(pport->synchronousLock);
+            if(pport->pasynLockPortNotify) {
+                status = pport->pasynLockPortNotify->lock(
+                   pport->lockPortNotifyPvt,pasynUser);
+                if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "%s queueCallback pasynLockPortNotify:lock error %s\n",
+                         pport->portName,pasynUser->errorMessage);
+            }
             puserPvt->processUser(pasynUser);
+            if(pport->pasynLockPortNotify) {
+                status = pport->pasynLockPortNotify->unlock(
+                   pport->lockPortNotifyPvt,pasynUser);
+                if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "%s queueCallback pasynLockPortNotify:lock error %s\n",
+                         pport->portName,pasynUser->errorMessage);
+            }
             epicsMutexUnlock(pport->synchronousLock);
             epicsMutexMustLock(pport->asynManagerLock);
             if (puserPvt->state==callbackCanceled)
@@ -696,6 +715,7 @@ static void portThread(port *pport)
         while(1) {
             int i;
             dpCommon *pdpCommon = 0;
+            asynStatus status = asynSuccess;
 
             pport->queueStateChange = FALSE;
             for(i=asynQueuePriorityHigh; i>=asynQueuePriorityLow; i--) {
@@ -735,7 +755,21 @@ static void portThread(port *pport)
             epicsMutexUnlock(pport->asynManagerLock);
             if(puserPvt->timer && timeout>0.0) epicsTimerCancel(puserPvt->timer);
             epicsMutexMustLock(pport->synchronousLock);
+            if(pport->pasynLockPortNotify) {
+                status = pport->pasynLockPortNotify->lock(
+                   pport->lockPortNotifyPvt,pasynUser);
+                if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "*s queueCallback pasynLockPortNotify:lock error %s\n",
+                         pport->portName,pasynUser->errorMessage);
+            }
             puserPvt->processUser(pasynUser);
+            if(pport->pasynLockPortNotify) {
+                status = pport->pasynLockPortNotify->unlock(
+                   pport->lockPortNotifyPvt,pasynUser);
+                if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                        "*s queueCallback pasynLockPortNotify:lock error %s\n",
+                         pport->portName,pasynUser->errorMessage);
+            }    
             epicsMutexUnlock(pport->synchronousLock);
             epicsMutexMustLock(pport->asynManagerLock);
             if(puserPvt->blockPortCount>0)
@@ -772,9 +806,23 @@ static void reportPrintInterfaceList(FILE *fp,ELLLIST *plist,const char *title)
     }
 }
 
-
-static void reportPrintPort(port *pport, FILE *fp,int details)
+/* reportPrintPort is done by separate thread so that synchronousLock
+*  and asynManagerLock can be properly reported. If report is run by same thread
+*  that has mutex then it would be reported no instead of yes
+*/
+typedef struct printPortArgs {
+    epicsEventId done;
+    port *pport;
+    FILE *fp;
+    int  details;
+}printPortArgs;
+    
+static void reportPrintPort(printPortArgs *pprintPortArgs)
 {
+    epicsEventId done = pprintPortArgs->done;
+    port *pport = pprintPortArgs->pport;
+    FILE *fp = pprintPortArgs->fp;
+    int  details = pprintPortArgs->details;
     int           i;
     dpCommon      *pdpc;
     device        *pdevice;
@@ -786,23 +834,32 @@ static void reportPrintPort(port *pport, FILE *fp,int details)
     for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
         nQueued += ellCount(&pport->queueList[i]);
     pdpc = &pport->dpc;
-    fprintf(fp,"%s multiDevice %s canBlock %s autoConnect %s\n",
+    fprintf(fp,"%s multiDevice:%s canBlock:%s autoConnect:%s\n",
         pport->portName,
         ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
         ((pport->attributes&ASYN_CANBLOCK) ? "Yes" : "No"),
         (pdpc->autoConnect ? "Yes" : "No"));
     if(details>=1) {
-        fprintf(fp,"    enabled %s connected %s numberConnects %lu\n",
+        epicsMutexLockStatus mgrStatus;
+        epicsMutexLockStatus syncStatus;
+        syncStatus = epicsMutexTryLock(pport->synchronousLock);
+        if(syncStatus==epicsMutexLockOK)
+             epicsMutexUnlock(pport->synchronousLock);
+        mgrStatus = epicsMutexTryLock(pport->asynManagerLock);
+        if(mgrStatus==epicsMutexLockOK)
+             epicsMutexUnlock(pport->asynManagerLock);
+        fprintf(fp,"    enabled:%s connected:%s numberConnects %lu\n",
             (pdpc->enabled ? "Yes" : "No"),
             (pdpc->connected ? "Yes" : "No"),
              pdpc->numberConnects);
-        fprintf(fp,"    nDevices %d nQueued %d "
-               "blocked %s\n",
+        fprintf(fp,"    nDevices %d nQueued %d blocked:%s\n",
             ellCount(&pport->deviceList),
             nQueued,
             (pport->pblockProcessHolder ? "Yes" : "No"));
-
-        fprintf(fp,"    exceptionActive %s "
+        fprintf(fp,"    asynManagerLock:%s synchronousLock:%s\n",
+            ((mgrStatus==epicsMutexLockOK) ? "No" : "Yes"),
+            ((syncStatus==epicsMutexLockOK) ? "No" : "Yes"));
+        fprintf(fp,"    exceptionActive:%s "
             "exceptionUsers %d exceptionNotifys %d\n",
             (pdpc->exceptionActive ? "Yes" : "No"),
             ellCount(&pdpc->exceptionUserList),
@@ -850,11 +907,18 @@ static void reportPrintPort(port *pport, FILE *fp,int details)
     if(pasynCommon) {
         pasynCommon->report(drvPvt,fp,details);
     }
+    epicsEventSignal(done);
 }
 
 static void report(FILE *fp,int details,const char *portName)
 {
     port *pport;
+    printPortArgs args;
+    epicsEventId done = epicsEventMustCreate(epicsEventEmpty);
+    args.done = done;
+    args.fp = fp;
+    args.details = details;
+
 
     if(!pasynBase) asynInit();
     if (portName) {
@@ -863,14 +927,25 @@ static void report(FILE *fp,int details,const char *portName)
             fprintf(fp, "asynManager:report port %s not found\n",portName);
             return;
         }
-        reportPrintPort(pport,fp,details);
+        args.pport = pport;
+        epicsThreadCreate("reportPort",
+           epicsThreadPriorityLow,
+           epicsThreadGetStackSize(epicsThreadStackSmall),
+           (EPICSTHREADFUNC)reportPrintPort,&args);
+        epicsEventMustWait(done);
     } else {
         pport = (port *)ellFirst(&pasynBase->asynPortList);
         while(pport) {
-            reportPrintPort(pport,fp,details);
+            args.pport = pport;
+            epicsThreadCreate("reportPort",
+               epicsThreadPriorityLow,
+               epicsThreadGetStackSize(epicsThreadStackSmall),
+               (EPICSTHREADFUNC)reportPrintPort,&args);
+            epicsEventMustWait(done);
             pport = (port *)ellNext(&pport->node);
         }
     }
+    epicsEventDestroy(done);
 }
 
 static asynUser *createAsynUser(userCallback process, userCallback timeout)
@@ -1393,12 +1468,14 @@ static asynStatus unblockProcessCallback(asynUser *pasynUser, int allDevices)
     if(puserPvt->isQueued) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::unblockProcessCallback is queued\n");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
     if((allDevices&&puserPvt->blockPortCount==0)
     || (!allDevices && puserPvt->blockDeviceCount==0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::unblockProcessCallback but not blocked\n");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynError;
     }
     if(allDevices) {
@@ -1455,6 +1532,15 @@ static asynStatus lockPort(asynUser *pasynUser,int autoConnectOK)
     }
     epicsMutexUnlock(pport->asynManagerLock);
     epicsMutexMustLock(pport->synchronousLock);
+    if(pport->pasynLockPortNotify) {
+        asynStatus status;
+        status = pport->pasynLockPortNotify->lock(
+           pport->lockPortNotifyPvt,pasynUser);
+        if(status!=asynSuccess) {
+            epicsMutexUnlock(pport->synchronousLock);
+            return status;
+        }
+    }
     return asynSuccess;
 }
 
@@ -1469,6 +1555,15 @@ static asynStatus unlockPort(asynUser *pasynUser)
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort\n", pport->portName);
+    if(pport->pasynLockPortNotify) {
+        asynStatus status;
+        status = pport->pasynLockPortNotify->unlock(
+           pport->lockPortNotifyPvt,pasynUser);
+        if(status!=asynSuccess) {
+            epicsMutexUnlock(pport->synchronousLock);
+            return status;
+        }
+    }
     epicsMutexUnlock(pport->synchronousLock);
     return asynSuccess;
 }
@@ -1580,6 +1675,13 @@ static asynStatus registerInterface(const char *portName,
        return asynError;
     }
     epicsMutexMustLock(pport->asynManagerLock);
+    if(strcmp(pasynInterface->interfaceType,asynLockPortNotifyType)==0) {
+        pport->pasynLockPortNotify =
+            (asynLockPortNotify *)pasynInterface->pinterface;
+        pport->lockPortNotifyPvt = pasynInterface->drvPvt;
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynSuccess;
+    }
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,pasynInterface->interfaceType,TRUE);
     if(pinterfaceNode->pasynInterface) {
