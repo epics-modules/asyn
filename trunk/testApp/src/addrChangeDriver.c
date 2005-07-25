@@ -47,12 +47,9 @@ typedef struct eosSave {
 typedef struct lowerPort {
     char       *portName;
     int        addr;
-    int        multiDevice;
     int        canBlock;
     int        autoConnect;
     asynUser   *pasynUser;
-    asynCommon *pasynCommon;
-    void       *commonPvt;
     asynOctet  *pasynOctet;
     void       *octetPvt;
 }lowerPort;
@@ -115,12 +112,6 @@ static asynStatus lowerPortInit(addrChangePvt *paddrChangePvt)
         printf("connectDevice failed %s\n", pasynUser->errorMessage);
         goto freeAsynUser;
     }
-    status = pasynManager->isMultiDevice(pasynUser,plowerPort->portName,
-                                         &plowerPort->multiDevice);
-    if(status!=asynSuccess) {
-        printf("isMultiDevice failed %s\n",pasynUser->errorMessage);
-        goto disconnect;
-    }
     status = pasynManager->canBlock(pasynUser,&plowerPort->canBlock);
     if(status!=asynSuccess) {
         printf("canBlock failed %s\n",pasynUser->errorMessage);
@@ -131,13 +122,6 @@ static asynStatus lowerPortInit(addrChangePvt *paddrChangePvt)
         printf("isAutoConnect failed %s\n",pasynUser->errorMessage);
         goto disconnect;
     }
-    pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,1);
-    if(!pasynInterface) {
-        printf("interface %s not found\n",asynCommonType);
-        goto disconnect;
-    }
-    plowerPort->pasynCommon = (asynCommon *)pasynInterface->pinterface;
-    plowerPort->commonPvt = pasynInterface->drvPvt;
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if(!pasynInterface) {
         printf("interface %s not found\n",asynOctetType);
@@ -346,19 +330,9 @@ static void report(void *drvPvt,FILE *fp,int details)
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
     addrChangePvt    *paddrChangePvt = (addrChangePvt *)drvPvt;
-    lowerPort        *plowerPort = paddrChangePvt->plowerPort;
-    int              isConnected = 0;
-    int              isAutoConnect = 0;
     int              addr;
     asynStatus       status;
 
-    status = pasynManager->isConnected(plowerPort->pasynUser,&isConnected);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s isConnected error %s\n",
-            plowerPort->portName,plowerPort->pasynUser->errorMessage);
-        return asynError;
-    }
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -386,33 +360,6 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
             " already connected");
         return asynError;
     }
-    if(!isConnected) {
-        status = pasynManager->isAutoConnect(plowerPort->pasynUser,&isAutoConnect);
-        if(status!=asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                " port %s isAutoConnect error %s\n",
-                plowerPort->portName,plowerPort->pasynUser->errorMessage);
-            return asynError;
-        }
-        if(isAutoConnect) {
-            status = plowerPort->pasynCommon->connect(
-                plowerPort->commonPvt,plowerPort->pasynUser);
-            if(status!=asynSuccess) {
-                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                     " connect to %s failed %s",
-                     plowerPort->portName,plowerPort->pasynUser->errorMessage);
-                 return asynError;
-            }
-            status = pasynManager->isConnected(plowerPort->pasynUser,&isConnected);
-            if(status!=asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                    " port %s isConnected error %s\n",
-                    plowerPort->portName,plowerPort->pasynUser->errorMessage);
-                return asynError;
-            }
-        }
-    }
-    if(!isConnected) return asynSuccess;
     paddrChangePvt->isConnected = 1;
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
