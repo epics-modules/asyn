@@ -8,5 +8,6 @@ DIRS += testApp
 DIRS += testGpibApp
 DIRS += testGpibSerialApp
 DIRS += testEpicsApp
+DIRS += testManagerApp
 DIRS += iocBoot
 include $(TOP)/configure/RULES_TOP
