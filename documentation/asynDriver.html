@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">July 22 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">July 25 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -336,6 +336,11 @@ generating diagnostic messages.</p>
 <p><span style="font-weight: bold">asynDrvUser</span> is an interface for
 communicating information from device support to a driver without the device
 support knowing and details about what is passed.</p>
+
+<p><span style="font-weight: bold">asynLockPortNotify</span> is an interface
+that is implemented by a driver that is an asynUser of another driver. An
+example is a serial bus driver that uses standard serial support. asynManager
+calls asynLockPortNotify whenever it locks or unlocks the port.</p>
 
 <h3>Generic Interfaces</h3>
 
@@ -1115,7 +1120,10 @@ epicsShareExtern asynManager *pasynManager;</pre>
         efficient.</td>
     </tr>
     <tr>
-      <td>memMalloc/memFree</td>
+      <td>memMalloc
+
+        <p>memFree</p>
+      </td>
       <td>Allocate/Free memory. memMalloc/memFree maintain a set of freelists
         of different sizes. Thus any application that needs storage for a
         short time can use memMalloc/memFree to allocate and free the storage
@@ -1224,7 +1232,10 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         to registerPort.</td>
     </tr>
     <tr>
-      <td>blockProcessCallback/unblockProcessCallback</td>
+      <td>blockProcessCallback
+
+        <p>unblockProcessCallback</p>
+      </td>
       <td>blockProcessCallback is a request to prevent acccess to a device or
         port by other asynUsers between queueRequests. blockProcessCallback
         can be called from a processCallback or when the asynUser has no
@@ -1240,9 +1251,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           <li>queueRequests that specify a priority of
             asynQueuePriorityConnect are not blocked.</li>
         </ul>
-        It is permissible to simultaneously block allDevices and also
-        the device to which the asynUser is connected.
-      </td>
+        It is permissible to simultaneously block allDevices and also the
+        device to which the asynUser is connected.</td>
     </tr>
     <tr>
       <td>lockPort/unlockPort</td>
@@ -1353,7 +1363,10 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         connectDevice, or getInterruptPvt returns asynError.</td>
     </tr>
     <tr>
-      <td>createInterruptNode/freeInterruptNode</td>
+      <td>createInterruptNode
+
+        <p>freeInterruptNode</p>
+      </td>
       <td>These methods are the only way a user can allocate and free an
         interruptNode. pasynPvt is the value obtained from getInterruptPvt.
         createInterruptNode/freeInterruptNode are separate methods rather
@@ -1361,7 +1374,10 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         so that addInterruptUser/removeInterruptUser can be efficient.</td>
     </tr>
     <tr>
-      <td>addInterruptUser/removeInterruptUser</td>
+      <td>addInterruptUser
+
+        <p>removeInterruptUser</p>
+      </td>
       <td>Code that implements registerInterruptUser/cancelInterruptUser must
         call addInterruptUser/removeInterruptUser to add and remove users
         from the list or else calls to interruptStart/interruptEnd will no
@@ -1373,7 +1389,10 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         cancelInterruptUser it will block forever.</td>
     </tr>
     <tr>
-      <td>interruptStart/interruptEnd</td>
+      <td>interruptStart
+
+        <p>interruptEnd</p>
+      </td>
       <td>The code that implements interrupts is interface dependent. The
         only service asynManager provides is a thread-safe implemention of
         the user list. When the code wants to call the callback specified in
@@ -1464,46 +1483,42 @@ typedef struct  asynDrvUser {
 
 <h3>asynLockPortNotify</h3>
 
-<p>This is provided for port drivers that are an asynUser of another
-port driver. For example a serial bus driver can be implemented by
-connecting to a standard serial port to perform the actual I/O.
-When the serial bus port is locked, either by the requester calling
-lockPort or because a queueRequest was dequeued, then the serial bus
-driver needs to lock the associated serial port.</p>
-<p>
-The serial bus driver registers interface asynLockPortNotify.
-Whenever the serial bus port is locked, asynManager calls
-pasynLockPortNotify.lock. The serial bus driver calls
-asynManager.lockPort for the serial port to which it is connected.
-Similarly for unlockPort. Thus while the serial bus port is locked,
-the serial bus is also locked.</p>
-<p>
-asynLockPortNotify is used only be asynManager itself. It is not put in
+<p>This is provided for port drivers that are an asynUser of another port
+driver. For example a serial bus driver can be implemented by connecting to a
+standard serial port to perform the actual I/O. When the serial bus port is
+locked, either by the requester calling lockPort or because a queueRequest
+was dequeued, then the serial bus driver needs to lock the associated serial
+port.</p>
+
+<p>The serial bus driver registers interface asynLockPortNotify. Whenever the
+serial bus port is locked, asynManager calls pasynLockPortNotify.lock. The
+serial bus driver calls asynManager.lockPort for the serial port to which it
+is connected. Similarly for unlockPort. Thus while the serial bus port is
+locked, the serial bus is also locked.</p>
+
+<p>asynLockPortNotify is used only by asynManager itself. It is not put in
 the list of interfaces for the port.</p>
 
-<p>asynLockPortNotify is:>/p>
-<pre>
-#define asynLockPortNotifyType "asynLockPortNotify"
+<p>asynLockPortNotify is:</p>
+<pre>#define asynLockPortNotifyType "asynLockPortNotify"
 typedef struct  asynLockPortNotify {
     asynStatus (*lock)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*unlock)(void *drvPvt,asynUser *pasynUser);
-}asynLockPortNotify;
-</pre>
+}asynLockPortNotify;</pre>
 
 <table border="1">
   <caption>asynDrvUser</caption>
   <tbody>
     <tr>
       <td>lock</td>
-      <td>Called when asynManager.lockPort is called.
-        The driver normally calls asynManager.lockPort for the port to
-        which it is connected.</td>
+      <td>Called when asynManager.lockPort is called. The driver normally
+        calls asynManager.lockPort for the port to which it is connected.</td>
     </tr>
     <tr>
       <td>unlock</td>
-      <td>Called when asynManager.unlockPort is called.
-        The driver normally calls asynManager.unlockPort for the port to
-        which it is connected.</td>
+      <td>Called when asynManager.unlockPort is called. The driver normally
+        calls asynManager.unlockPort for the port to which it is
+      connected.</td>
     </tr>
   </tbody>
 </table>
