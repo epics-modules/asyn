@@ -5,7 +5,7 @@ regression test instructions:
    exit
 
    then on host
-   diff temp test20040823
+   diff temp test20050725
 
    there should be no differences
    NOT TRUE: May be subtle timing diffs if workstation is busy
@@ -19,5 +19,5 @@ epicsThreadSleep calls are used to cause particlar states in asynManager
 
 The test tests two features of asynManager:
 
-1) lock/unlock
+1) blockProcessCallback/unblockProcessCallback
 2) cancelRequest.
