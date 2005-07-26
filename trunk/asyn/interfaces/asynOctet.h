@@ -47,7 +47,8 @@ typedef struct asynOctet{
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
                     interruptCallbackOctet callback, void *userPvt,
                     void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
     asynStatus (*setInputEos)(void *drvPvt,asynUser *pasynUser,
                     const char *eos,int eoslen);
     asynStatus (*getInputEos)(void *drvPvt,asynUser *pasynUser,

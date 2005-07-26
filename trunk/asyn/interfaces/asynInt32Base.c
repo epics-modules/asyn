@@ -33,7 +33,8 @@ static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32 callback, void *userPvt,
                                void **registrarPvt);
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
+                               void *registrarPvt);
 
 
 asynStatus initialize(const char *portName, asynInterface *pdriver)
@@ -138,7 +139,8 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     return pasynManager->addInterruptUser(pasynUser,pinterruptNode);
 }
 
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
+    void *registrarPvt)
 {
     interruptNode      *pinterruptNode = (interruptNode *)registrarPvt;
     asynInt32Interrupt *pasynInt32Interrupt = 

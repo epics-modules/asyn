@@ -69,7 +69,8 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
 static asynStatus flushIt(void *drvPvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
        interruptCallbackOctet callback, void *userPvt, void **registrarPvt);
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
+       void *registrarPvt);
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
                         const char *eos,int eoslen);
 static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
@@ -96,7 +97,8 @@ static asynStatus readRawFail(void *drvPvt, asynUser *pasynUser,
 static asynStatus flushFail(void *drvPvt,asynUser *pasynUser);
 static asynStatus registerInterruptUserFail(void *drvPvt,asynUser *pasynUser,
        interruptCallbackOctet callback, void *userPvt, void **registrarPvt);
-static asynStatus cancelInterruptUserFail(void *registrarPvt, asynUser *pasynUser);
+static asynStatus cancelInterruptUserFail(void *drvPvt,
+       asynUser *pasynUser,void *registrarPvt);
 static asynStatus setInputEosFail(void *drvPvt,asynUser *pasynUser,
                         const char *eos,int eoslen);
 static asynStatus getInputEosFail(void *drvPvt,asynUser *pasynUser,
@@ -342,7 +344,8 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     return pasynManager->addInterruptUser(pasynUser,pinterruptNode);
 }
 
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
+    void *registrarPvt)
 {
     interruptNode      *pinterruptNode = (interruptNode *)registrarPvt;
     asynOctetInterrupt *pinterrupt = (asynOctetInterrupt *)pinterruptNode->drvPvt;
@@ -356,11 +359,11 @@ static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
     if(status!=asynSuccess) return status;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d cancelInterruptUser\n",portName,addr);
-    pasynManager->freeAsynUser(pinterrupt->pasynUser);
-    pasynManager->memFree(pinterruptNode->drvPvt,sizeof(asynOctetInterrupt));
     status = pasynManager->removeInterruptUser(pasynUser,pinterruptNode);
     if(status==asynSuccess)
         pasynManager->freeInterruptNode(pasynUser,pinterruptNode);
+    pasynManager->freeAsynUser(pinterrupt->pasynUser);
+    pasynManager->memFree(pinterrupt,sizeof(asynOctetInterrupt));
     return status;
 }
 
@@ -437,7 +440,8 @@ static asynStatus registerInterruptUserFail(void *drvPvt,asynUser *pasynUser,
        interruptCallbackOctet callback, void *userPvt, void **registrarPvt)
 { return showFailure(pasynUser,"registerInterruptUser");}
 
-static asynStatus cancelInterruptUserFail(void *registrarPvt, asynUser *pasynUser)
+static asynStatus cancelInterruptUserFail(void *drvPvt,
+       asynUser *pasynUser,void *registrarPvt)
 { return showFailure(pasynUser,"cancelInterruptUser");}
 
 static asynStatus setInputEosFail(void *drvPvt,asynUser *pasynUser,

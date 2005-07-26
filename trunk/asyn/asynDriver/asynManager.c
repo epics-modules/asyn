@@ -232,7 +232,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
 static asynStatus cancelRequest(asynUser *pasynUser,int *wasQueued);
 static asynStatus blockProcessCallback(asynUser *pasynUser, int allDevices);
 static asynStatus unblockProcessCallback(asynUser *pasynUser, int allDevices);
-static asynStatus lockPort(asynUser *pasynUser,int autoConnectOK);
+static asynStatus lockPort(asynUser *pasynUser);
 static asynStatus unlockPort(asynUser *pasynUser);
 static asynStatus canBlock(asynUser *pasynUser,int *yesNo);
 static asynStatus getAddr(asynUser *pasynUser,int *addr);
@@ -1498,13 +1498,14 @@ static asynStatus unblockProcessCallback(asynUser *pasynUser, int allDevices)
     return asynSuccess;
 }
 
-static asynStatus lockPort(asynUser *pasynUser,int autoConnectOK)
+static asynStatus lockPort(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
     device   *pdevice = puserPvt->pdevice;
     int      addr = (pdevice ? pdevice->addr : -1);
     dpCommon *pdpCommon;
+    BOOL     autoConnectOK;
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -1512,9 +1513,11 @@ static asynStatus lockPort(asynUser *pasynUser,int autoConnectOK)
         return asynError;
     }
     pdpCommon = findDpCommon(puserPvt);
+    assert(pdpCommon);
+    epicsMutexMustLock(pport->asynManagerLock);
+    autoConnectOK = pdpCommon->autoConnect;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort autoConnectOK %d\n",
         pport->portName,autoConnectOK);
-    epicsMutexMustLock(pport->asynManagerLock);
     if(!pport->dpc.enabled
     || (addr>=0 && !pdpCommon->enabled)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,

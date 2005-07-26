@@ -35,7 +35,8 @@ typedef struct asynFloat64 {
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
         interruptCallbackFloat64 callback, void *userPvt,void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+        void *registrarPvt);
 } asynFloat64;
 
 /* asynFloat64Base does the following:

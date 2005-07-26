@@ -150,7 +150,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsFloat64 value,double timeout)
     ioPvt      *pPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynFloat64SyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -173,7 +173,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsFloat64 *pvalue,double timeout
     asynStatus status;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynFloat64SyncIO lockPort failed %s\n",pasynUser->errorMessage);

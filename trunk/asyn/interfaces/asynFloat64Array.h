@@ -39,7 +39,8 @@ typedef struct asynFloat64Array {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
          interruptCallbackFloat64Array callback,
          void *userPvt,void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+         void *registrarPvt);
 } asynFloat64Array;
 
 /* asynFloat64ArrayBase does the following:

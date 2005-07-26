@@ -50,7 +50,8 @@ typedef struct asynUInt32Digital {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
         interruptCallbackUInt32Digital callback,void *userPvt,epicsUInt32 mask,
         void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+        void *registrarPvt);
 } asynUInt32Digital;
 
 /* asynUInt32DigitalBase does the following:

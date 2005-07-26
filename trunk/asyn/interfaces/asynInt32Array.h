@@ -40,7 +40,8 @@ typedef struct asynInt32Array {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
              interruptCallbackInt32Array callback, void *userPvt,
              void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+             void *registrarPvt);
 } asynInt32Array;
 
 #define asynInt32ArrayBaseType "asynInt32ArrayBase"
