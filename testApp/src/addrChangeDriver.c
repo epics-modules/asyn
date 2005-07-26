@@ -249,19 +249,8 @@ static asynStatus lockPort(void *drvPvt,asynUser *pasynUser)
     lowerPort *plowerPort = paddrChangePvt->plowerPort;
     asynUser *pasynUserLower = plowerPort->pasynUser;
     asynStatus status;
-    int isConnected = 0;
-    int autoConnectOK = 0;
 
-    status = pasynManager->isAutoConnect(pasynUserLower,&autoConnectOK);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s isAutoConnect to %s %s\n",
-            paddrChangePvt->portName,plowerPort->portName,
-            pasynUserLower->errorMessage);
-        asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
-        return asynError;
-    }
-    status = pasynManager->lockPort(pasynUserLower,autoConnectOK);
+    status = pasynManager->lockPort(pasynUserLower);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s lockPort to %s %s\n",
@@ -269,33 +258,6 @@ static asynStatus lockPort(void *drvPvt,asynUser *pasynUser)
             pasynUserLower->errorMessage);
         asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
         return asynError;
-    }
-    status = pasynManager->isConnected(pasynUserLower,&isConnected);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s isConnected to %s %s\n",
-            paddrChangePvt->portName,plowerPort->portName,
-            pasynUserLower->errorMessage);
-        asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
-        return asynError;
-    }
-    if(!isConnected) {
-        status = pasynManager->isAutoConnect(pasynUserLower,&autoConnectOK);
-        if(status!=asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s isAutoConnect to %s %s\n",
-                paddrChangePvt->portName,plowerPort->portName,
-                pasynUserLower->errorMessage);
-            asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
-            return asynError;
-        }
-        if(!autoConnectOK) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s port %s will not connect\n",
-                paddrChangePvt->portName,plowerPort->portName);
-            asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
-            return asynError;
-        }
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s lockPort %s\n",paddrChangePvt->portName,plowerPort->portName);
