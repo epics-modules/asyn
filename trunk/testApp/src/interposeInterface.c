@@ -53,7 +53,8 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *ppvt,asynUser *pasynUser,
     interruptCallbackOctet callback, void *userPvt,void **registrarPvt);
-static asynStatus cancelInterruptUser(void *ppvt,asynUser *pasynUser);
+static asynStatus cancelInterruptUser(void *ppvt,asynUser *pasynUser,
+    void *registrarPvt);
 static asynStatus setInputEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen);
 static asynStatus getInputEos(void *ppvt,asynUser *pasynUser,
@@ -169,14 +170,15 @@ static asynStatus registerInterruptUser(void *ppvt,asynUser *pasynUser,
         pinterposePvt->asynOctetPvt,pasynUser,callback,userPvt,registrarPvt);
 }
 
-static asynStatus cancelInterruptUser(void *ppvt,asynUser *pasynUser)
+static asynStatus cancelInterruptUser(void *drvPvt,asynUser *pasynUser,
+    void *registrarPvt)
 {
-    interposePvt *pinterposePvt = (interposePvt *)ppvt;
+    interposePvt *pinterposePvt = (interposePvt *)drvPvt;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
         "entered interposeInterface::cancelInterruptUser\n");
     return pinterposePvt->pasynOctet->cancelInterruptUser(
-        pinterposePvt->asynOctetPvt,pasynUser);
+        pinterposePvt->asynOctetPvt,pasynUser,registrarPvt);
 }
 
 static asynStatus setInputEos(void *ppvt,asynUser *pasynUser,
