@@ -176,7 +176,7 @@ static asynStatus writeOp(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynUInt32DigitalSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -205,7 +205,7 @@ static asynStatus readOp(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynUInt32DigitalSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -235,7 +235,7 @@ static asynStatus setInterrupt(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynUInt32DigitalSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -265,7 +265,7 @@ static asynStatus clearInterrupt(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynUInt32DigitalSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -295,7 +295,7 @@ static asynStatus getInterrupt(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynUInt32DigitalSyncIO lockPort failed %s\n",pasynUser->errorMessage);

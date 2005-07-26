@@ -38,7 +38,8 @@ typedef struct asynInt32 {
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
                            interruptCallbackInt32 callback, void *userPvt,
                            void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                           void *registrarPvt);
 } asynInt32;
 
 /* asynInt32Base does the following:

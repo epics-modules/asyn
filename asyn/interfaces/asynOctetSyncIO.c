@@ -237,7 +237,7 @@ static asynStatus writeIt(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -270,7 +270,7 @@ static asynStatus writeRaw(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -305,7 +305,7 @@ static asynStatus readIt(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -336,7 +336,7 @@ static asynStatus readRaw(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -368,7 +368,7 @@ static asynStatus writeRead(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -415,7 +415,7 @@ static asynStatus
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -442,7 +442,7 @@ static asynStatus setInputEos(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -471,7 +471,7 @@ static asynStatus getInputEos(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -500,7 +500,7 @@ static asynStatus setOutputEos(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -529,7 +529,7 @@ static asynStatus getOutputEos(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);

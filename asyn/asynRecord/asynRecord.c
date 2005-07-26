@@ -87,6 +87,8 @@ static void monitorStatus(asynRecord * pasynRec);
 static asynStatus connectDevice(asynRecord * pasynRec);
 static asynStatus registerInterrupts(asynRecord * pasynRec);
 static asynStatus cancelInterrupts(asynRecord * pasynRec);
+static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
+                 char *data,size_t numchars, int eomReason);
 static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
                 epicsInt32 value);
 static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
@@ -577,13 +579,10 @@ static asynStatus registerInterrupts(asynRecord *pasynRec)
     switch(pasynRec->iface) {
     case asynINTERFACE_OCTET:
         if (pasynRec->octetiv) {
-           /* status = pasynRecPvt->pasynOctet->registerInterruptUser(
+           status = pasynRecPvt->pasynOctet->registerInterruptUser(
                         pasynRecPvt->asynOctetPvt, pasynUser,
                         callbackInterruptOctet,pasynRecPvt,
                         &pasynRecPvt->interruptPvt);
-           */
-            reportError(pasynRec, asynError, 
-                "asynOctet does not yet support interrupts");
         } else {
             reportError(pasynRec, asynError, "No asynOctet interface");
         }
@@ -639,11 +638,8 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
     switch(pasynRec->iface) {
     case asynINTERFACE_OCTET:
         if (pasynRec->octetiv) {
-            /* status = pasynRecPvt->pasynOctet->cancelInterruptUser(
-                         pasynRecPvt->interruptPvt, pasynUser);
-             */
-            reportError(pasynRec, asynError, 
-                "asynOctet does not yet support interrupts");
+            status = pasynRecPvt->pasynOctet->cancelInterruptUser(
+                pasynRecPvt->asynOctetPvt,pasynUser,pasynRecPvt->interruptPvt);
         } else {
             reportError(pasynRec, asynError, "No asynOctet interface");
         }
@@ -651,7 +647,7 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
     case asynINTERFACE_INT32:
         if (pasynRec->i32iv) {
             status = pasynRecPvt->pasynInt32->cancelInterruptUser(
-                         pasynRecPvt->interruptPvt, pasynUser);
+                pasynRecPvt->asynInt32Pvt,pasynUser,pasynRecPvt->interruptPvt);
         } else {
             reportError(pasynRec, asynError, "No asynInt32 interface");
         }
@@ -659,7 +655,7 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
     case asynINTERFACE_UINT32:
         if (pasynRec->ui32iv) {
             status = pasynRecPvt->pasynUInt32->cancelInterruptUser(
-                         pasynRecPvt->interruptPvt, pasynUser);
+                pasynRecPvt->asynUInt32Pvt,pasynUser,pasynRecPvt->interruptPvt);
         } else {
             reportError(pasynRec, asynError, "No asynUInt32Digital interface");
         }
@@ -667,7 +663,7 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
     case asynINTERFACE_FLOAT64:
         if (pasynRec->f64iv) {
             status = pasynRecPvt->pasynFloat64->cancelInterruptUser(
-                         pasynRecPvt->interruptPvt, pasynUser);
+                pasynRecPvt->asynFloat64Pvt,pasynUser,pasynRecPvt->interruptPvt);
         } else {
             reportError(pasynRec, asynError, "No asynFloat64 interface");
         }
@@ -678,6 +674,26 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
                pasynRec->name, pasynUser->errorMessage);
     }
     return(status);
+}
+
+static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
+                 char *data,size_t numchars, int eomReason)
+{
+    asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
+    asynRecord *pasynRec = pasynRecPvt->prec;
+
+    /* If gotValue==1 then the record has not yet finished processing
+     * the previous interrupt, just return */
+    if (pasynRecPvt->gotValue == 1) return;
+    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s callbackInterruptOctet new value=%s numchars %d eomReason %d\n",
+        pasynRec->name, data, numchars, eomReason);
+    epicsMutexLock(pasynRecPvt->interruptLock);
+    pasynRecPvt->gotValue = 1;
+    epicsStrSnPrintEscaped(pasynRec->tinp,sizeof(pasynRec->tinp),
+        data,numchars);
+    epicsMutexUnlock(pasynRecPvt->interruptLock);
+    scanIoRequest(pasynRecPvt->ioScanPvt);
 }
 
 static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,

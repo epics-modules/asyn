@@ -31,7 +31,8 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32Array callback, void *userPvt,
                                void **registrarPvt);
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser);
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
+                               void *registrarPvt);
 
 
 asynStatus initialize(const char *portName, asynInterface *pdriver)
@@ -104,10 +105,10 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     status = pasynManager->getInterruptPvt(pasynUser, asynInt32ArrayType,
                                            &pinterruptPvt);
     if(status!=asynSuccess) return status;
-    pasynInt32ArrayInterrupt = pasynManager->memMalloc(
-                                             sizeof(asynInt32ArrayInterrupt));
     pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
     if(status!=asynSuccess) return status;
+    pasynInt32ArrayInterrupt = pasynManager->memMalloc(
+                                             sizeof(asynInt32ArrayInterrupt));
     pinterruptNode->drvPvt = pasynInt32ArrayInterrupt;
     pasynInt32ArrayInterrupt->pasynUser =
                        pasynManager->duplicateAsynUser(pasynUser, NULL, NULL);
@@ -120,7 +121,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     return pasynManager->addInterruptUser(pasynUser,pinterruptNode);
 }
 
-static asynStatus cancelInterruptUser(void *registrarPvt, asynUser *pasynUser)
+static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,void *registrarPvt)
 {
     interruptNode *pinterruptNode = (interruptNode *)registrarPvt;
     asynStatus    status;

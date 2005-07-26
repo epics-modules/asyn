@@ -156,7 +156,7 @@ static asynStatus writeOp(asynUser *pasynUser, epicsInt32 value,double timeout)
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -178,7 +178,7 @@ static asynStatus readOp(asynUser *pasynUser, epicsInt32 *pvalue, double timeout
     asynStatus status;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);
@@ -200,7 +200,7 @@ static asynStatus getBounds(asynUser *pasynUser,
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
     asynStatus status;
 
-    status = pasynManager->lockPort(pasynUser,1);
+    status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "asynInt32SyncIO lockPort failed %s\n",pasynUser->errorMessage);

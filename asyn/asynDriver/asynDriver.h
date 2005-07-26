@@ -99,7 +99,7 @@ typedef struct asynManager {
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
     asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*unblockProcessCallback)(asynUser *pasynUser, int allDevices);
-    asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
+    asynStatus (*lockPort)(asynUser *pasynUser);
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);

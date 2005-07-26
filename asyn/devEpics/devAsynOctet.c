@@ -237,8 +237,8 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
         asynPrint(pdevPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s devAsynOctet::getIoIntInfo cancelling interrupt\n",
              pr->name);
-        status = pdevPvt->poctet->cancelInterruptUser(
-             pdevPvt->registrarPvt, pdevPvt->pasynUser);
+        status = pdevPvt->poctet->cancelInterruptUser(pdevPvt->octetPvt,
+             pdevPvt->pasynUser,pdevPvt->registrarPvt);
         if(status!=asynSuccess) {
             printf("%s devAsynOctet cancelInterruptUser %s\n",
                    pr->name,pdevPvt->pasynUser->errorMessage);
