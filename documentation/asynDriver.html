@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">July 25 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">July 26 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -1046,7 +1046,7 @@ typedef struct asynManager {
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*unblockProcessCallback)(asynUser *pasynUser, int allDevices);
-    asynStatus (*lockPort)(asynUser *pasynUser,int autoConnectOK);
+    asynStatus (*lockPort)(asynUser *pasynUser);
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
@@ -1787,7 +1787,8 @@ typedef struct asynOctet{
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
                     interruptCallbackOctet callback, void *userPvt,
                     void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
     asynStatus (*setInputEos)(void *drvPvt,asynUser *pasynUser,
                     const char *eos,int eoslen);
     asynStatus (*getInputEos)(void *drvPvt,asynUser *pasynUser,
@@ -2209,7 +2210,8 @@ typedef struct asynInt32 {
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
                            interruptCallbackInt32 callback, void *userPvt,
                            void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
 } asynInt32;
 
 /* asynInt32Base does the following:
@@ -2396,7 +2398,8 @@ typedef struct asynInt32Array {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
              interruptCallbackInt32Array callback, void *userPvt,
              void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
 } asynInt32Array;
 
 #define asynInt32ArrayBaseType "asynInt32ArrayBase"
@@ -2480,7 +2483,8 @@ typedef struct asynUInt32Digital {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
         interruptCallbackUInt32Digital callback,void *userPvt,epicsUInt32 mask,
         void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
 } asynUInt32Digital;
 
 /* asynUInt32DigitalBase does the following:
@@ -2697,7 +2701,8 @@ typedef struct asynFloat64 {
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
         interruptCallbackFloat64 callback, void *userPvt,void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
 } asynFloat64;
 
 /* asynFloat64Base does the following:
@@ -2853,7 +2858,8 @@ typedef struct asynFloat64Array {
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
          interruptCallbackFloat64Array callback,
          void *userPvt,void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
 } asynFloat64Array;
 
 /* asynFloat64ArrayBase does the following:
