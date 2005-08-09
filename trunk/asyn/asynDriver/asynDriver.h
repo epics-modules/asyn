@@ -42,7 +42,7 @@ typedef enum {
 typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
-    /* The following must be set by the user */
+    /* timeout must be set by the user */
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt; 
     void         *userData; 
