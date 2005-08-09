@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">July 26 2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">August 8 2005</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -335,10 +335,10 @@ generating diagnostic messages.</p>
 
 <p><span style="font-weight: bold">asynDrvUser</span> is an interface for
 communicating information from device support to a driver without the device
-support knowing and details about what is passed.</p>
+support knowing any details about what is passed.</p>
 
 <p><span style="font-weight: bold">asynLockPortNotify</span> is an interface
-that is implemented by a driver that is an asynUser of another driver. An
+that is implemented by a driver which is an asynUser of another driver. An
 example is a serial bus driver that uses standard serial support. asynManager
 calls asynLockPortNotify whenever it locks or unlocks the port.</p>
 
@@ -379,8 +379,8 @@ drivers. It provides the following services:</p>
   </li>
   <li>asynUser creation
     <p>Methods: createAsynUser, duplicateAsynUser, freeAsynUser</p>
-    <p>An asynUser is a "handle" for accessing other asynManager services and
-    for calling interfaces implemented by drivers. An asynUser must only be
+    <p>An asynUser is a "handle" for accessing  asynManager services and for
+    calling interfaces implemented by drivers. An asynUser must only be
     created via a call to createAsynUser or duplicateAsynUser since
     asynManager keeps private information for each asynUser. freeAsynUser
     puts the asynUser on a free list rather than calling free. Clients can
@@ -405,13 +405,11 @@ drivers. It provides the following services:</p>
   <li>Queuing services
     <p>Methods: queueRequest, cancelRequest, lockPort, unlockPort,
     blockProcessCallback, unblockProcessCallback</p>
-    <p>These methods should only be called by the code that created the
-    asynUser.</p>
-    <p>queueRequest is a request to call either the processCallback or
-    timeoutCallback specified in the call to createAsynUser. Most interface
-    methods must only be called from processCallback via a call to
-    queueRequest. Exceptions to this rule must be clearly documented ( a
-    common exception are methods
+    <p>queueRequest is a request to call the processCallback specified in the
+    call to createAsynUser. Most interface methods must only be called from
+    processCallback via a call to queueRequest or between calls to
+    lockPort/unlockPort.. Exceptions to this rule must be clearly documented
+    ( a common exception are methods
     registerInterruptUser/cancelInterruptUser).</p>
     <p>queueRequest semantics differ for ports that can block and ports that
     do not block</p>
@@ -427,7 +425,8 @@ drivers. It provides the following services:</p>
     <p>lockPort is a request to lock all access to low level drivers until
     unlockPort is called. If the port  blocks then lockPort and all calls to
     the port driver may block. lockPort/unlockPort are provided for use by
-    code that is willing to block.</p>
+    code that is willing to block or for communication with synchronous
+    ports.</p>
     <p>blockProcessCallback is a request to prevent acccess to a device or
     port by other asynUsers between queueRequests. blockProcessCallback can
     be called from a processCallback or when the asynUser has no request
@@ -476,29 +475,28 @@ drivers. It provides the following services:</p>
     <p>Methods: registerInterruptSource, getInterruptPvt,
     createInterruptNode, freeInterruptNode, addInterruptUser,
     removeInterruptUser, interruptStart, interruptEnd</p>
-    <p>Interrupt just means: "I have a new value for ." Many asyn interfaces,
-    e.g. asynInt32, provide interrupt support. These interfaces provide
-    methods registerInterruptUser and cancelInterruptUser. Device support
-    calls registerInterruptUser if it wants to be called whenever an
-    interrupt occurs. Drivers or other code that implements the interface
-    calls the registers users when it has new data. asynManager provides
-    services that help drivers implement thread-safe support for
-    interrupts.</p>
-    <p>A driver that wants to support interrupts must call
-    registerInterruptSource for each interface that has associated
-    interrupts. It calls interruptStart to obtain a list of all registered
-    users and calls interruptEnd after it calls all the registered users. If
-    any calls are made to addInterruptUser or removeInterruptUser between the
-    calls to interruptStart/interruptEnd, asynManager puts the request on a
-    list. When interruptEnd is called it processes the request. The driver is
-    also responsible for calling addInterruptUser and removeInterruptUser.</p>
-    <p>On operating systems like vxWorks or RTEMS interruptStart,interruptEnd
-    MUST NOT be called from interupt level.</p>
+    <p>Interrupt just means: "I have a new value." Many asyn interfaces, e.g.
+    asynInt32, provide interrupt support. These interfaces provide methods
+    registerInterruptUser and cancelInterruptUser. Device support calls
+    registerInterruptUser if it wants to be called whenever an interrupt
+    occurs. Drivers or other code that implements the interface calls the
+    registers users when it has new data. asynManager provides services that
+    help drivers implement thread-safe support for interrupts.</p>
+    <p>A driver that supports interrupts calls registerInterruptSource for
+    each interface that has associated interrupts. It calls interruptStart to
+    obtain a list of all registered users and interruptEnd after it calls the
+    registered users. The driver is also responsible for calling
+    addInterruptUser and removeInterruptUser.</p>
+    <p>If any calls are made to addInterruptUser or removeInterruptUser
+    between the calls to interruptStart and interruptEnd, asynManager puts
+    the request on a list and processes the request after interruptEnd is
+    called.</p>
     <p>Many standard interfaces, e.g. asynInt32, provide methods
     registerInterruptUser, cancelInterruptUser. These interfaces also provide
     an auxilliary interface, e.g. asynInt32Base, and code which implements
-    registerInterruptUser and cancelInterruptUser. The implementation calls
-    the addInterruptUser and removeInterruptUsersynManager methods.</p>
+    registerInterruptUser and cancelInterruptUser.</p>
+    <p>On operating systems like vxWorks or RTEMS interruptStart,interruptEnd
+    MUST NOT be called from interupt level.</p>
   </li>
   <li>General purpose freelist service
     <p>Methods: memMalloc, memFree</p>
@@ -509,7 +507,7 @@ drivers. It provides the following services:</p>
   </li>
   <li>Interpose service
     <p>Method: interposeInterface</p>
-    <p>Code the calls interposeInterface implements an interface that is
+    <p>Code that calls interposeInterface implements an interface which is
     either not supported by a port driver or that is "interposed" between the
     caller and the port driver. For example asynInterposeEos interposes
     asynOctet. It performs end of string processing for port drivers that do
@@ -616,8 +614,8 @@ following algorithm:</p>
       <li>If not connected and autoConnect is true for the device, then
         attempt to connect to the device.</li>
       <li>If not connected, skip this element.</li>
-      <li>If locked by another thread, skip this element.</li>
-      <li>If not locked and user has requested lock, then lock.</li>
+      <li>If blocked by another thread, skip this element.</li>
+      <li>If not blocked and user has requested blocking, then blocked.</li>
       <li>Remove from queue and:
         <ul>
           <li>lockPort</li>
@@ -901,7 +899,7 @@ asynManager:freeAsynUser.</p>
 <pre>typedef struct asynUser {
     char *errorMessage;
     int errorMessageSize;
-    /* The following must be set by the user */
+    /* timeout must be set by the user */
     double       timeout;  /*Timeout for I/O operations*/
     void         *userPvt;
     void         *userData;
@@ -1195,13 +1193,13 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
     </tr>
     <tr>
       <td>queueRequest</td>
-      <td>When registerPort is called, the caller must specify if it can
+      <td><p>When registerPort is called, the caller must specify if it can
         block, i.e. attribute bit ASYN_CANBLOCK is set or cleared. If the
         port has been registered with ASYN_CANBLOCK true then the request is
         put on a queue for the thread associated with the queue. If the port
         has been registered with ASYN_CANBLOCK false then queueRequest locks
         the port and calls the process callback. In either case the process
-        callback specified in the call to createAsynUser is called.
+        callback specified in the call to createAsynUser is called.</p>
 
         <p>If the asynUser is already on a queue, asynError is returned. The
         timeout starts when the request is queued. A value less than or equal
@@ -1209,10 +1207,11 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         the callback is called. Callbacks are allowed to make requests to
         asynManager such as queueRequest, blockProcessCallback, etc. It is
         even permissible to call freeAsynUser from a callback but the request
-        will be delayed until after the callback completes. The priority
-        asynQueuePriorityConnect must be used for asynCommon:connect and
-        asynCommon:disconnect calls, and must NOT be used for any other
-        calls.</p>
+        will be delayed until after the callback completes.</p>
+
+        <p>The priority asynQueuePriorityConnect must be used for
+        asynCommon:connect and asynCommon:disconnect calls, and must NOT be
+        used for any other calls.</p>
 
         <p>If a timeout callback was not passed to createAsynUser and a
         queueRequest with a non-zero timeout is requested, an error message
