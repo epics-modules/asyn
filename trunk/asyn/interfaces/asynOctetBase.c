@@ -40,11 +40,6 @@ typedef struct octetPvt {
     void          *pasynPvt;   /*For registerInterruptSource*/
     int           interruptProcess;
 }octetPvt;
-
-typedef struct interruptPvt {
-    interruptCallbackOctet callback;
-    void                  *userPvt;
-}interruptPvt;
 
 static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet);
 
@@ -137,7 +132,7 @@ static asynStatus initialize(const char *portName,
     octetPvt   *poctetPvt;
     asynStatus status;
     asynUser   *pasynUser;
-    int        yesNo;
+    int        isMulti;
     asynOctet  *poctetDriver = (asynOctet *)pdriver->pinterface;
 
     if(poctetDriver->registerInterruptUser
@@ -154,7 +149,7 @@ static asynStatus initialize(const char *portName,
     poctetPvt->drvPvt = pdriver->drvPvt;
     initOverride(poctetPvt,poctetDriver);
     pasynUser = pasynManager->createAsynUser(0,0);
-    status = pasynManager->isMultiDevice(pasynUser,portName,&yesNo);
+    status = pasynManager->isMultiDevice(pasynUser,portName,&isMulti);
     if(status!=asynSuccess) {
         printf("isMultiDevice failed %s\n",pasynUser->errorMessage);
         pasynManager->freeAsynUser(pasynUser);
@@ -162,7 +157,7 @@ static asynStatus initialize(const char *portName,
         return status;
     }
     pasynManager->freeAsynUser(pasynUser);
-    if(yesNo && (processEosIn || processEosOut || interruptProcess)) {
+    if(isMulti && (processEosIn || processEosOut || interruptProcess)) {
         printf("Can not processEosIn, processEosOut,interruptProcess "
                "for multiDevice port\n");
         free(poctetPvt);
