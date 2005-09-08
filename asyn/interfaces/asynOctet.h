@@ -70,7 +70,7 @@ typedef struct asynOctet{
 #define asynOctetBaseType "asynOctetBase"
 typedef struct asynOctetBase {
     asynStatus (*initialize)(const char *portName,
-        asynInterface *pint32Interface,
+        asynInterface *pasynOctetInterface,
         int processEosIn,int processEosOut,int interruptProcess);
     void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
         char *data,size_t *nbytesTransfered,int *eomReason);
