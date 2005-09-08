@@ -1319,6 +1319,13 @@ static asynStatus queueRequest(asynUser *pasynUser,
                 "asynManager::queueRequest is already queued\n");
         return asynError;
     }
+    if(timeout>0.0 && !puserPvt->timeoutUser) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager::queueRequest timeout requested but no "
+            "timeout callback was passed to createAsynUser\n");
+        return asynError;
+    }
     if(puserPvt->blockPortCount>0 || puserPvt->blockDeviceCount>0) {
         if(pport->pblockProcessHolder
         && pport->pblockProcessHolder==puserPvt) addToFront = TRUE;
