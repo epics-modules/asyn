@@ -634,13 +634,11 @@ static long initMbbo(mbboRecord *pr)
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput);
-printf("%s initMbbo status %d\n",pr->name,status);
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
     /* Read the current value from the device */
-printf("%s initMbbo status %d\n",pr->name,status);
     status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
