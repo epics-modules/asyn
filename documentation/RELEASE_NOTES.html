@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>July 26, 2005</h1>
+<h1>September 8 2005</h1>
 </center>
 <hr>
 
@@ -24,8 +24,8 @@ alink="#FF0000">
 <ul>
   <li>lock/unlock renamed to blockProcessCallback/unblockProcessCallback
     <p>The names have been changed and now these methods only work for
-    asynchronous ports. An error is returned if blockProcessCallback is called for a
-    synchronous port.</p>
+    asynchronous ports. An error is returned if blockProcessCallback is
+    called for a synchronous port.</p>
   </li>
   <li>lockPort/unlockPort
     <p>These are new asynManager methods. They can be used in place of
@@ -41,15 +41,12 @@ alink="#FF0000">
 </ul>
 
 <h3>cancelInterruptUser</h3>
+
 <p>The cancelInterruptUser methods of all interfaces has been changed from</p>
-<pre>
-    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
-</pre>
+<pre>    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);</pre>
 to
-<pre>
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
-                                      void *registrarPvt);
-</pre>
+<pre>    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                                      void *registrarPvt);</pre>
 
 <h3>asynTrace</h3>
 
@@ -91,13 +88,17 @@ style="font-family: courier">queueRequest</span>.</p>
 <center>
 <h2>Release 4-2-1</h2>
 </center>
+
 <h3>devAsynFloat64</h3>
-<p>Device support was not returning 2 (do not convert) for ai records
-when it should.  This meant that the VAL field was being set back to 0
-by the record after device support wrote to it. This bug is fixed.</p>
+
+<p>Device support was not returning 2 (do not convert) for ai records when it
+should.  This meant that the VAL field was being set back to 0 by the record
+after device support wrote to it. This bug is fixed.</p>
+
 <h3>asynRecord</h3>
-<p>The record sometimes did not read the current input and output EOS
-values from the driver when it connected. This bug is fixed.</p>
+
+<p>The record sometimes did not read the current input and output EOS values
+from the driver when it connected. This bug is fixed.</p>
 
 <center>
 <h2>Release 4-2</h2>
