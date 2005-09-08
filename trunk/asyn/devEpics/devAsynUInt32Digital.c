@@ -464,7 +464,10 @@ static long initLo(longoutRecord *pr)
     /* Read the current value from the device */
     status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
-    if (status == asynSuccess) pr->val = value;
+    if (status == asynSuccess) {
+        pr->val = value;
+        pr->udf = 0;
+    }
     return 0;
 }
 
