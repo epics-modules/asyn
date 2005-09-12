@@ -135,8 +135,10 @@ static asynStatus initialize(const char *portName,
     int        isMulti;
     asynOctet  *poctetDriver = (asynOctet *)pdriver->pinterface;
 
-    if(poctetDriver->registerInterruptUser
-    || poctetDriver->cancelInterruptUser) {
+    if((poctetDriver->registerInterruptUser &&
+       (poctetDriver->registerInterruptUser != registerInterruptUser))
+    || (poctetDriver->cancelInterruptUser &&
+       (poctetDriver->cancelInterruptUser != cancelInterruptUser))) {
         printf("asynOctetBase:initialize "
             " overrides registerInterruptUser and cancelInterruptUser\n");
     }

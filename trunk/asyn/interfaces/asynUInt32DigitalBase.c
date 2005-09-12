@@ -45,8 +45,10 @@ static asynStatus initialize(const char *portName,asynInterface *pdriver)
     asynUInt32Digital *pasynUInt32Digital =
                       (asynUInt32Digital *)pdriver->pinterface;
 
-    if(pasynUInt32Digital->registerInterruptUser
-    || pasynUInt32Digital->cancelInterruptUser) {
+    if((pasynUInt32Digital->registerInterruptUser &&
+       (pasynUInt32Digital->registerInterruptUser != registerInterruptUser))
+    || (pasynUInt32Digital->cancelInterruptUser &&
+       (pasynUInt32Digital->cancelInterruptUser != cancelInterruptUser))) {
         printf("asynUInt32DigitalBase:initialize "
             " overrides registerInterruptUser and cancelInterruptUser\n");
     }
