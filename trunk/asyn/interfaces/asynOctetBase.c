@@ -138,7 +138,7 @@ static asynStatus initialize(const char *portName,
     if(poctetDriver->registerInterruptUser
     || poctetDriver->cancelInterruptUser) {
         printf("asynOctetBase:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser");
+            " overrides registerInterruptUser and cancelInterruptUser\n");
     }
     poctetPvt = callocMustSucceed(1,sizeof(octetPvt),
         "asynOctetBase:initialize");
