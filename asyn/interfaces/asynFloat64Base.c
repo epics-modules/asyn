@@ -38,8 +38,10 @@ static asynStatus initialize(const char *portName, asynInterface *pdriver)
 {
     asynFloat64   *pasynFloat64 = (asynFloat64 *)pdriver->pinterface;;
 
-    if(pasynFloat64->registerInterruptUser
-    || pasynFloat64->cancelInterruptUser) {
+    if((pasynFloat64->registerInterruptUser &&
+       (pasynFloat64->registerInterruptUser != registerInterruptUser))
+    || (pasynFloat64->cancelInterruptUser &&
+       (pasynFloat64->cancelInterruptUser != cancelInterruptUser))) {
         printf("asynFloat64Base:initialize "
             " overrides registerInterruptUser and cancelInterruptUser\n");
     }
