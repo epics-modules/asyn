@@ -28,9 +28,11 @@
 #include "asynOctet.h"
 #include "asynInterposeEos.h"
 
-#define overrideWrite        0x001
-#define overrideRead         0x002
-#define overrideFlush        0x004
+#define overrideWrite                        0x0001
+#define overrideRead                         0x0002
+#define overrideFlush                        0x0004
+#define overrideRegisterInterruptUser        0x0008
+#define overrideCancelInterruptUser          0x0010
 
 typedef struct octetPvt {
     asynInterface octetBase; /*Implemented by asynOctetBase*/
@@ -115,8 +117,14 @@ static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
     if(!pasynOctet->readRaw) pasynOctet->readRaw = readRawFail;
     if(!pasynOctet->flush) pasynOctet->flush = flushFail;
     if(pasynOctet->flush == flushFail) override |=  overrideFlush;
-    pasynOctet->registerInterruptUser = registerInterruptUserFail;
-    pasynOctet->cancelInterruptUser = cancelInterruptUserFail;
+    if(!pasynOctet->registerInterruptUser)
+        pasynOctet->registerInterruptUser = registerInterruptUserFail;
+    if(pasynOctet->registerInterruptUser == registerInterruptUserFail)
+        override |=  overrideRegisterInterruptUser;
+    if(!pasynOctet->cancelInterruptUser)
+        pasynOctet->cancelInterruptUser = cancelInterruptUserFail;
+    if(pasynOctet->cancelInterruptUser == cancelInterruptUserFail)
+        override |=  overrideCancelInterruptUser;
     if(!pasynOctet->setInputEos) pasynOctet->setInputEos = setInputEosFail;
     if(!pasynOctet->getInputEos) pasynOctet->getInputEos = getInputEosFail;
     if(!pasynOctet->setOutputEos) pasynOctet->setOutputEos = setOutputEosFail;
@@ -135,13 +143,6 @@ static asynStatus initialize(const char *portName,
     int        isMulti;
     asynOctet  *poctetDriver = (asynOctet *)pdriver->pinterface;
 
-    if((poctetDriver->registerInterruptUser &&
-       (poctetDriver->registerInterruptUser != registerInterruptUser))
-    || (poctetDriver->cancelInterruptUser &&
-       (poctetDriver->cancelInterruptUser != cancelInterruptUser))) {
-        printf("asynOctetBase:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser\n");
-    }
     poctetPvt = callocMustSucceed(1,sizeof(octetPvt),
         "asynOctetBase:initialize");
     poctetPvt->octetBase.interfaceType = asynOctetType;
@@ -312,6 +313,8 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
       interruptCallbackOctet callback, void *userPvt, void **registrarPvt)
 {
+    octetPvt           *poctetPvt = (octetPvt *)drvPvt;
+    asynOctet          *pasynOctet = poctetPvt->pasynOctet;
     const char         *portName;
     asynStatus         status;
     int                addr;
@@ -319,6 +322,10 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     asynOctetInterrupt *pasynOctetInterrupt;
     void               *pinterruptPvt;
     
+    if(!(poctetPvt->override&overrideRegisterInterruptUser)) {
+        return pasynOctet->registerInterruptUser(poctetPvt->drvPvt,pasynUser,
+                                 callback,userPvt,registrarPvt);
+    }
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     status = pasynManager->getPortName(pasynUser,&portName);
@@ -344,12 +351,18 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     void *registrarPvt)
 {
+    octetPvt           *poctetPvt = (octetPvt *)drvPvt;
+    asynOctet          *pasynOctet = poctetPvt->pasynOctet;
     interruptNode      *pinterruptNode = (interruptNode *)registrarPvt;
     asynOctetInterrupt *pinterrupt = (asynOctetInterrupt *)pinterruptNode->drvPvt;
-    asynStatus    status;
-    const char    *portName;
-    int           addr;
+    asynStatus         status;
+    const char         *portName;
+    int                addr;
     
+    if(!(poctetPvt->override&overrideCancelInterruptUser)) {
+        return pasynOctet->cancelInterruptUser(poctetPvt->drvPvt,pasynUser,
+                                 registrarPvt);
+    }
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);

@@ -1983,8 +1983,7 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynOctetBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynOctetBase always implements
-        registerInterruptUser and cancelInterruptUser. If the port is not
+        implementations. If the port is not
         multi-device and either processEosIn or processEosOut is specified,
         asynInterposeEosConfig is called. If the port is not multi-device and
         interruptProcess is specified, then whenever read or readRaw is
@@ -2353,18 +2352,7 @@ asynManager:interruptEnd.</p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynInt32Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynInt32Base implements registerInterruptUser and
-        cancelInterruptUser. Since these methods are called only during
-        initialization they do not need to be called via a queueRequest
-        callback.
-
-        <p>A driver that calls initialize MUST pass a pint32Interface that
-        has the address of a asynInt32 with a null for the methods the driver
-        does not implement. This means that pint32Interface should NOT be
-        that address of static storage because initialize replaces the null
-        methods with an override method. A new asynInterface must be
-        allocated for each port instance. An easy way is to put it in the
-        drvPvt for the port.</p>
+        implementations.
       </td>
     </tr>
   </tbody>
@@ -2532,18 +2520,7 @@ epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
       <td>After a driver calls registerPort is can call:
         <pre>pasynInt32ArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynInt32ArrayBase implements registerInterruptUser
-        and cancelInterruptUser. Since these methods are called only during
-        initialization they do not need to be called via a queueRequest
-        callback.
-
-        <p>A driver that calls initialize MUST pass a pint32ArrayInterface
-        that has the address of a asynInt32Array with a null for the methods
-        the driver does not implement. This means that pint32Interface should
-        NOT be that address of static storage because initialize replaces the
-        null methods with an override method. A new asynInterface must be
-        allocated for each port instance. An easy way is to put it in the
-        drvPvt for the port.</p>
+        implementations.
       </td>
     </tr>
   </tbody>
@@ -2654,17 +2631,7 @@ provides code to implement registerInterruptUser and cancelInterruptUser.</p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynUInt32DigitalBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynUInt32DigitalBase:initialize implements
-        registerInterruptUser and cancelInterruptUser.
-
-        <p>A driver that calls initialize MUST pass a
-        pasynUInt32DigitalInterface that has the address of a
-        asynUInt32Digital with a null for the methods the driver does not
-        implement. This means that pasynUInt32DigitalInterface should NOT be
-        that address of static storage because initialize replaces the null
-        methods with an override method. A new asynInterface must be
-        allocated for each port instance. An easy way is to put it in the
-        drvPvt for the port.</p>
+        implementations.
       </td>
     </tr>
   </tbody>
@@ -2863,16 +2830,7 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
       <td>After a driver calls registerPort is can call:
         <pre>pasynFloat64Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynFloat64Base:initialize implements
-        registerInterruptUser and cancelInterruptUser.
-
-        <p>A driver that calls initialize MUST pass a  pasynFloat64Interface
-        that has the address of a asynFloat64 with a null for the methods the
-        driver does not implement. This means that pasynFloat64Interface
-        should NOT be that address of static storage because initialize
-        replaces the null methods with an override method. A new
-        asynInterface must be allocated for each port instance. An easy way
-        is to put it in the drvPvt for the port.</p>
+        implementations.
       </td>
     </tr>
   </tbody>
