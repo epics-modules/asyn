@@ -40,17 +40,12 @@ asynStatus initialize(const char *portName, asynInterface *pdriver)
     asynFloat64Array *pasynFloat64Array =
                       (asynFloat64Array *)pdriver->pinterface;
 
-    if((pasynFloat64Array->registerInterruptUser &&
-       (pasynFloat64Array->registerInterruptUser != registerInterruptUser))
-    || (pasynFloat64Array->cancelInterruptUser &&
-       (pasynFloat64Array->cancelInterruptUser != cancelInterruptUser))) {
-        printf("asynFloat64ArrayBase:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser\n");
-    }
     if(!pasynFloat64Array->write) pasynFloat64Array->write = writeDefault;
     if(!pasynFloat64Array->read) pasynFloat64Array->read = readDefault;
-    pasynFloat64Array->registerInterruptUser = registerInterruptUser;
-    pasynFloat64Array->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynFloat64Array->registerInterruptUser)
+        pasynFloat64Array->registerInterruptUser = registerInterruptUser;
+    if(!pasynFloat64Array->cancelInterruptUser)
+        pasynFloat64Array->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pdriver);
 }
 

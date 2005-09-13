@@ -41,18 +41,13 @@ asynStatus initialize(const char *portName, asynInterface *pdriver)
 {
     asynInt32 *pasynInt32 = (asynInt32 *)pdriver->pinterface;
 
-    if((pasynInt32->registerInterruptUser &&
-       (pasynInt32->registerInterruptUser != registerInterruptUser))
-    || (pasynInt32->cancelInterruptUser &&
-       (pasynInt32->cancelInterruptUser != cancelInterruptUser))) {
-        printf("asynInt32Base:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser\n");
-    }
     if(!pasynInt32->write) pasynInt32->write = writeDefault;
     if(!pasynInt32->read) pasynInt32->read = readDefault;
     if(!pasynInt32->getBounds) pasynInt32->getBounds = getBounds;
-    pasynInt32->registerInterruptUser = registerInterruptUser;
-    pasynInt32->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynInt32->registerInterruptUser)
+        pasynInt32->registerInterruptUser = registerInterruptUser;
+    if(!pasynInt32->cancelInterruptUser)
+        pasynInt32->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pdriver);
 }
 

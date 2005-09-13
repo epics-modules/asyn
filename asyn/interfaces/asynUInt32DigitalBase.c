@@ -45,13 +45,6 @@ static asynStatus initialize(const char *portName,asynInterface *pdriver)
     asynUInt32Digital *pasynUInt32Digital =
                       (asynUInt32Digital *)pdriver->pinterface;
 
-    if((pasynUInt32Digital->registerInterruptUser &&
-       (pasynUInt32Digital->registerInterruptUser != registerInterruptUser))
-    || (pasynUInt32Digital->cancelInterruptUser &&
-       (pasynUInt32Digital->cancelInterruptUser != cancelInterruptUser))) {
-        printf("asynUInt32DigitalBase:initialize "
-            " overrides registerInterruptUser and cancelInterruptUser\n");
-    }
     if(!pasynUInt32Digital->write) pasynUInt32Digital->write = writeDefault;
     if(!pasynUInt32Digital->read) pasynUInt32Digital->read = readDefault;
     if(!pasynUInt32Digital->setInterrupt)
@@ -60,8 +53,10 @@ static asynStatus initialize(const char *portName,asynInterface *pdriver)
         pasynUInt32Digital->clearInterrupt = clearInterrupt;
     if(!pasynUInt32Digital->getInterrupt)
         pasynUInt32Digital->getInterrupt = getInterrupt;
-    pasynUInt32Digital->registerInterruptUser = registerInterruptUser;
-    pasynUInt32Digital->cancelInterruptUser = cancelInterruptUser;
+    if(!pasynUInt32Digital->registerInterruptUser)
+        pasynUInt32Digital->registerInterruptUser = registerInterruptUser;
+    if(!pasynUInt32Digital->cancelInterruptUser)
+        pasynUInt32Digital->cancelInterruptUser = cancelInterruptUser;
     return pasynManager->registerInterface(portName,pdriver);
 }
 
