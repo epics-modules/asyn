@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">September 8
+<p><span style="font-weight: bold; font-size: 14pt">September 13
 2005</span></p>
 
 <h3>Other Contributers</h3>
@@ -1992,16 +1992,7 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
         asynOctetBase can not implement processEosIn, processEosOut, and
         interruptProcess if the port is a multi-device port. Since this
         method is called only during initialization it can be called directly
-        rather than via queueRequest.
-
-        <p>A driver that calls initialize MUST pass a pasynOctetInterface
-        that has the address of a asynOctet with a null for the methods the
-        driver does not implement. This means that pasynOctetInterface should
-        NOT be that address of static storage because initialize replaces the
-        null methods with an override method. A new asynOctetInterface must
-        be allocated for each port instance. An easy way is to put it in the
-        drvPvt for the port.</p>
-      </td>
+        rather than via queueRequest.</td>
     </tr>
     <tr>
       <td>callInterruptUsers</td>
