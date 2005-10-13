@@ -487,7 +487,7 @@ drivers. It provides the following services:</p>
     unlockPort is called. If the port  blocks then lockPort and all calls to
     the port driver may block. lockPort/unlockPort are provided for use by
     code that is willing to block or for communication with synchronous
-    ports.</p>
+    ports.  A call to lockPort locks all addresses associated with a multi-address port.</p>
     <p>blockProcessCallback is a request to prevent acccess to a device or
     port by other asynUsers between queueRequests. blockProcessCallback can
     be called from a processCallback or when the asynUser has no request
