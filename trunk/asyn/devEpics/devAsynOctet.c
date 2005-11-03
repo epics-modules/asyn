@@ -259,8 +259,8 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
     num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
     if(num>0) {
         strncpy(psi->val,data,num);
-        if(num<MAX_STRING_SIZE) psi->val[num] = 0;
         psi->udf = 0;
+        if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     }
     scanIoRequest(pdevPvt->ioScanPvt);
 }
@@ -442,6 +442,7 @@ static void callbackSiCmdResponse(asynUser *pasynUser)
     if(status==asynSuccess) {
         status = readIt(pasynUser,psi->val,len,&nBytesRead);
         if(status==asynSuccess) {
+            psi->udf = 0;
             if(nBytesRead==len) nBytesRead--;
             psi->val[nBytesRead] = 0;
         }
@@ -485,6 +486,7 @@ static void callbackSiWriteRead(asynUser *pasynUser)
     if(status==asynSuccess) {
         status = readIt(pasynUser,psi->val,len,&nBytesRead);
         if(status==asynSuccess) {
+            psi->udf = 0;
             if(nBytesRead==len) nBytesRead--;
             psi->val[nBytesRead] = 0;
         }
@@ -515,6 +517,7 @@ static void callbackSiRead(asynUser *pasynUser)
 
     status = readIt(pasynUser,psi->val,len,&nBytesRead);
     if(status==asynSuccess) {
+        psi->udf = 0;
         if(nBytesRead==len) nBytesRead--;
         psi->val[nBytesRead] = 0;
     }
