@@ -22,11 +22,11 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
+#include "asynInterposeEos.h"
 
 #define epicsExportSharedSymbols
 
 #include "asynOctet.h"
-#include "asynInterposeEos.h"
 
 #define overrideWrite                        0x0001
 #define overrideRead                         0x0002

@@ -24,10 +24,10 @@
 #include <cantProceed.h>
 #include <epicsExport.h>
 #include <iocsh.h>
+#include <asynOctet.h>
 
 #define epicsExportSharedSymbols
 #include <asynGpibDriver.h>
-#include <asynOctet.h>
 
 #define BOOL int
 #define TRUE 1
