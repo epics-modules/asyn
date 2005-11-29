@@ -24,6 +24,7 @@
 #include <cantProceed.h>
 #include <epicsExport.h>
 #include <iocsh.h>
+#include <asynDriver.h>
 #include <asynOctet.h>
 
 #define epicsExportSharedSymbols
