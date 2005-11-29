@@ -15,6 +15,7 @@ ASYN = $(TOP)/asyn
 
 LIBRARY_IOC += asyn
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+asyn_SYS_LIBS_WIN32 = ws2_32
 
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
@@ -28,7 +29,8 @@ asyn_SRCS += asynGpib.c
 
 SRC_DIRS += $(ASYN)/drvAsynSerial
 INC += drvAsynSerialPort.h
-asyn_SRCS += drvAsynSerialPort.c
+asyn_SRCS_DEFAULT += drvAsynSerialPort.c
+asyn_SRCS_WIN32 += -nil-
 DBD += drvAsynSerialPort.dbd
 INC += drvAsynIPPort.h
 asyn_SRCS += drvAsynIPPort.c
@@ -83,6 +85,7 @@ asyn_SRCS += asynRecord.c
 asyn_SRCS += drvAsyn.c
 DB += asynRecord.db
 
+ifneq ($(OS_CLASS), WIN32)
 SRC_DIRS += $(ASYN)/vxi11
 asyn_SRCS += vxi11core_xdr.c
 asyn_SRCS += drvVxi11.c
@@ -90,6 +93,7 @@ asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
+endif
 
 ifdef IPAC
 SRC_DIRS += $(ASYN)/gsIP488
