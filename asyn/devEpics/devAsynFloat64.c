@@ -36,9 +36,9 @@
 
 #include "asynDriver.h"
 #include "asynDrvUser.h"
-#include "asynFloat64.h"
 #include "asynFloat64SyncIO.h"
 #include "asynEpicsUtils.h"
+#include "asynFloat64.h"
 
 typedef enum {
     typeAiFloat64,

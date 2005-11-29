@@ -26,10 +26,10 @@
 
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include "asynShellCommands.h"
 
 #define epicsExportSharedSymbols
 
-#include "asynShellCommands.h"
 #include "asynInterposeFlush.h"
 
 typedef struct interposePvt {
