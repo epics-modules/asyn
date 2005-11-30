@@ -11,6 +11,7 @@
 
 #ifndef asynOctetH
 #define asynOctetH
+#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {

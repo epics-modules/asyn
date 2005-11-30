@@ -28,6 +28,7 @@
 #include <asynOctet.h>
 
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include <asynGpibDriver.h>
 
 #define BOOL int

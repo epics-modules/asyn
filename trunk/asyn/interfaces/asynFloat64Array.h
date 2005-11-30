@@ -16,6 +16,7 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
+#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {

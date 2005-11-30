@@ -11,6 +11,7 @@
 #ifndef asynInterposeEos_H
 #define asynInterposeEos_H
 
+#include <shareLib.h>
 #include <epicsExport.h>
 
 #ifdef __cplusplus

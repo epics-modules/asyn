@@ -24,6 +24,7 @@
 #include <asynDrvUser.h>
 #include <drvAsynIPPort.h>
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include <asynFloat64SyncIO.h>
 
 typedef struct ioPvt{

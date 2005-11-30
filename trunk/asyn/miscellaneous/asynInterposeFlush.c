@@ -29,7 +29,7 @@
 #include "asynShellCommands.h"
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include "asynInterposeFlush.h"
 
 typedef struct interposePvt {

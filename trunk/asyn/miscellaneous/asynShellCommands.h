@@ -12,7 +12,7 @@
 #ifndef INCasynShellCommandsh
 #define INCasynShellCommandsh 1
 
-#include "shareLib.h"
+#include <shareLib.h>
 #ifdef __cplusplus
 extern "C" {
 #endif /*__cplusplus*/

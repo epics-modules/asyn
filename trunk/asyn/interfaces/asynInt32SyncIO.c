@@ -23,6 +23,7 @@
 #include <asynInt32.h>
 #include <asynDrvUser.h>
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include <asynInt32SyncIO.h>
 
 typedef struct ioPvt{
