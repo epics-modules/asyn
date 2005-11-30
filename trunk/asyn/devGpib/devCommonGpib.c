@@ -39,6 +39,7 @@
 
 #include "devSupportGpib.h"
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include "devCommonGpib.h"
 
 

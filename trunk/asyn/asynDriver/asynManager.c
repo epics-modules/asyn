@@ -32,6 +32,7 @@
 #include <epicsExport.h>
 
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include "asynDriver.h"
 
 #define BOOL int
