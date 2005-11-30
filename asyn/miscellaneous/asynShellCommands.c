@@ -25,7 +25,7 @@
 #include "asynOctetSyncIO.h"
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include "asynShellCommands.h"
 
 #define MAX_EOS_LEN 10

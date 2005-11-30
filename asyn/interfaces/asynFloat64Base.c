@@ -17,7 +17,7 @@
 #include <cantProceed.h>
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include "asynFloat64.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pfloat64Interface);

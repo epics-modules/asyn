@@ -25,7 +25,7 @@
 #include "asynInterposeEos.h"
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include "asynOctet.h"
 
 #define overrideWrite                        0x0001

@@ -16,7 +16,7 @@
 #include <cantProceed.h>
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include "asynInt32Array.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pint32ArrayInterface);

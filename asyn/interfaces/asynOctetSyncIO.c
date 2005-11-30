@@ -30,6 +30,7 @@
 #include <asynDrvUser.h>
 #include <drvAsynIPPort.h>
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include <asynOctetSyncIO.h>
 
 typedef struct ioPvt {

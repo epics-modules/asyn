@@ -30,7 +30,7 @@
 #include <asynOctet.h>
 
 #define epicsExportSharedSymbols
-
+#include "shareLib.h"
 #include <asynInterposeEos.h>
 
 #define START_OUTPUT_SIZE 100

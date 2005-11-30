@@ -10,6 +10,7 @@
 
 #ifndef INCasynGpibh
 #define INCasynGpibh
+#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
