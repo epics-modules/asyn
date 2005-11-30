@@ -43,6 +43,7 @@
 #include <asynGpibDriver.h>
 
 #define epicsExportSharedSymbols
+#include "shareLib.h"
 #include "devSupportGpib.h"
 
 #define DEFAULT_QUEUE_TIMEOUT 60.0
