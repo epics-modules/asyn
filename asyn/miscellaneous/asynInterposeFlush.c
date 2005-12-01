@@ -21,7 +21,6 @@
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
@@ -31,6 +30,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include "asynInterposeFlush.h"
+#include <epicsExport.h>
 
 typedef struct interposePvt {
     char          *portName;

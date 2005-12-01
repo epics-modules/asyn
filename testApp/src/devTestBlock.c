@@ -42,7 +42,6 @@
 #include <dbDefs.h>
 #include <link.h>
 #include <epicsPrint.h>
-#include <epicsExport.h>
 #include <epicsMutex.h>
 #include <epicsString.h>
 #include <cantProceed.h>
@@ -57,6 +56,7 @@
 #include "asynDrvUser.h"
 #include "asynOctet.h"
 #include "asynEpicsUtils.h"
+#include <epicsExport.h>
 
 typedef enum {stateIdle,stateWrite} processState;
 typedef struct devPvt{

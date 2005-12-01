@@ -17,10 +17,10 @@
 #include <epicsThread.h>
 #include <epicsTime.h>
 #include <cantProceed.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynGpibDriver.h>
+#include <epicsExport.h>
 
 typedef struct skeletonPvt {
     char *portName;

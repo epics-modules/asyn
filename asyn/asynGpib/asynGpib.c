@@ -22,7 +22,6 @@
 #include <epicsTime.h>
 #include <epicsTimer.h>
 #include <cantProceed.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 #include <asynDriver.h>
 #include <asynOctet.h>
@@ -30,6 +29,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include <asynGpibDriver.h>
+#include <epicsExport.h>
 
 #define BOOL int
 #define TRUE 1

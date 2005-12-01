@@ -36,7 +36,6 @@
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <shareLib.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
@@ -45,6 +44,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include "devSupportGpib.h"
+#include <epicsExport.h>
 
 #define DEFAULT_QUEUE_TIMEOUT 60.0
 #define DEFAULT_SRQ_WAIT_TIMEOUT 5.0

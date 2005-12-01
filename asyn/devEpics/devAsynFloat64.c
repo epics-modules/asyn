@@ -24,7 +24,6 @@
 #include <dbDefs.h>
 #include <link.h>
 #include <epicsPrint.h>
-#include <epicsExport.h>
 #include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
@@ -39,6 +38,7 @@
 #include "asynFloat64SyncIO.h"
 #include "asynEpicsUtils.h"
 #include "asynFloat64.h"
+#include <epicsExport.h>
 
 typedef enum {
     typeAiFloat64,

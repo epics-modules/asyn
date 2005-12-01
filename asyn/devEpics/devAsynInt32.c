@@ -23,7 +23,6 @@
 #include <dbDefs.h>
 #include <link.h>
 #include <epicsPrint.h>
-#include <epicsExport.h>
 #include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
@@ -45,6 +44,7 @@
 #include "asynInt32.h"
 #include "asynInt32SyncIO.h"
 #include "asynEpicsUtils.h"
+#include <epicsExport.h>
 
 typedef struct devInt32Pvt{
     dbCommon          *pr;

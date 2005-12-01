@@ -23,7 +23,6 @@
 #include <epicsAssert.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
@@ -32,6 +31,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include <asynInterposeEos.h>
+#include <epicsExport.h>
 
 #define START_OUTPUT_SIZE 100
 #define INPUT_SIZE        600

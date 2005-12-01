@@ -27,9 +27,9 @@
 #include <link.h>
 #include <drvSup.h>
 #include <registryFunction.h>
-#include <epicsExport.h>
 
 #include <asynDriver.h>
+#include <epicsExport.h>
 
 /* add support so that dbior generates asynDriver reports */
 static long drvAsynReport(int level);

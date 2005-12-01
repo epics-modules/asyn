@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.30 2005-07-22 15:08:55 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.31 2005-12-01 01:25:18 rivers Exp $
  */
 
 #include <string.h>
@@ -32,12 +32,13 @@
 #include <epicsTime.h>
 #include <epicsTimer.h>
 #include <osiUnistd.h>
-#include <epicsExport.h>
 #include <asynDriver.h>
 #include <asynOctet.h>
 #include <asynOption.h>
 #include <asynInterposeEos.h>
 #include <drvAsynSerialPort.h>
+#include <iocsh.h>
+#include <epicsExport.h>
 
 #if !defined(vxWorks) && !defined(__rtems__) && !defined(_WIN32)
 # define USE_POLL
@@ -1008,7 +1009,6 @@ drvAsynSerialPortConfigure(char *portName,
 /*
  * IOC shell command registration
  */
-#include <iocsh.h>
 static const iocshArg drvAsynSerialPortConfigureArg0 = { "port name",iocshArgString};
 static const iocshArg drvAsynSerialPortConfigureArg1 = { "tty name",iocshArgString};
 static const iocshArg drvAsynSerialPortConfigureArg2 = { "priority",iocshArgInt};

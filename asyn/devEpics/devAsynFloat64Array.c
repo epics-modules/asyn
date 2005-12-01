@@ -24,7 +24,6 @@
 #include <dbScan.h>
 #include <callback.h>
 #include <errlog.h>
-#include <epicsExport.h>
 #include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
@@ -36,6 +35,7 @@
 #include "asynDrvUser.h"
 #include "asynFloat64Array.h"
 #include "asynEpicsUtils.h"
+#include <epicsExport.h>
 
 typedef struct devAsynWfPvt{
     dbCommon        *pr;

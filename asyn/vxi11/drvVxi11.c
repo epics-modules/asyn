@@ -43,8 +43,8 @@
 #include "osiRpc.h"
 #include "vxi11core.h"
 #include "vxi11intr.h"
-#include <epicsExport.h>
 #include "drvVxi11.h"
+#include <epicsExport.h>
 
 #ifdef BOOL
 #undef BOOL

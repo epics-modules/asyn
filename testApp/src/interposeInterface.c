@@ -20,11 +20,11 @@
 
 #include <cantProceed.h>
 #include <epicsStdio.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include <epicsExport.h>
 
 #define NUM_INTERFACES 1
 
