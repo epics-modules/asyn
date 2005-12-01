@@ -35,7 +35,7 @@ devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-testGpib_SRCS_default += testGpib_registerRecordDeviceDriver.cpp
+testGpib_SRCS_DEFAULT += testGpib_registerRecordDeviceDriver.cpp
 testGpib_SRCS_WIN32 += testGpibWin32_registerRecordDeviceDriver.cpp
 testGpib_SRCS += testGpibMain.c
 
