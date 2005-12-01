@@ -26,8 +26,8 @@
 
 #include <asynDriver.h>
 #include <asynOctet.h>
-#include <epicsExport.h>
 
+#include <epicsExport.h>
 #define BUFFERSIZE 4096
 #define NUM_DEVICES 2
 

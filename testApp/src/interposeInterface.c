@@ -24,10 +24,10 @@
 
 #include <asynDriver.h>
 #include <asynOctet.h>
-#include <epicsExport.h>
 
 #define NUM_INTERFACES 1
 
+#include <epicsExport.h>
 typedef struct interposePvt {
     const char *interposeName;
     const char *portName;
