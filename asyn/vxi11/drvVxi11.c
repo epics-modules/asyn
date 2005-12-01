@@ -33,18 +33,18 @@
 #include <epicsTime.h>
 #include <cantProceed.h>
 #include <epicsString.h>
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynOption.h>
-#include "asynGpibDriver.h"
 #include <epicsInterruptibleSyscall.h>
 /* local includes */
 #include "vxi11.h"
 #include "osiRpc.h"
 #include "vxi11core.h"
 #include "vxi11intr.h"
-#include "drvVxi11.h"
 #include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynOption.h"
+#include "asynGpibDriver.h"
+#include "drvVxi11.h"
 
 #ifdef BOOL
 #undef BOOL

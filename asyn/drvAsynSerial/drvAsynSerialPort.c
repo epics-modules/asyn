@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.31 2005-12-01 01:25:18 rivers Exp $
+ * $Id: drvAsynSerialPort.c,v 1.32 2005-12-01 12:59:17 mrk Exp $
  */
 
 #include <string.h>
@@ -32,13 +32,13 @@
 #include <epicsTime.h>
 #include <epicsTimer.h>
 #include <osiUnistd.h>
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynOption.h>
-#include <asynInterposeEos.h>
-#include <drvAsynSerialPort.h>
-#include <iocsh.h>
+
 #include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynOption.h"
+#include "asynInterposeEos.h"
+#include "drvAsynSerialPort.h"
 
 #if !defined(vxWorks) && !defined(__rtems__) && !defined(_WIN32)
 # define USE_POLL

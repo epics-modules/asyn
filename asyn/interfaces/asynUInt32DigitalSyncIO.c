@@ -19,12 +19,12 @@
 
 #include <cantProceed.h>
 
-#include <asynDriver.h>
-#include <asynUInt32Digital.h>
-#include <asynDrvUser.h>
 #define epicsExportSharedSymbols
-#include "shareLib.h"
-#include <asynUInt32DigitalSyncIO.h>
+#include <shareLib.h>
+#include "asynDriver.h"
+#include "asynUInt32Digital.h"
+#include "asynDrvUser.h"
+#include "asynUInt32DigitalSyncIO.h"
 
 typedef struct ioPvt{
    asynCommon        *pasynCommon;

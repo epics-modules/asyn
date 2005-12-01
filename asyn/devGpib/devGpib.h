@@ -37,8 +37,8 @@
 #define INCdevGpibh
 
 #include <devCommonGpib.h>
-#include <epicsExport.h>
 #include <devSup.h>
+#include <epicsExport.h>
 /* forward declaration: */
 static devGpibParmBlock devSupParms;
 

@@ -19,12 +19,12 @@
 #include <epicsString.h>
 #include <iocsh.h>
 #include <gpHash.h>
+
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOption.h"
 #include "asynOctetSyncIO.h"
-
-#define epicsExportSharedSymbols
-#include "shareLib.h"
 #include "asynShellCommands.h"
 #include <epicsExport.h>
 

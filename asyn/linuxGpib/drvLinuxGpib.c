@@ -30,15 +30,13 @@
 #include <epicsTime.h>
 #include <devLib.h>
 #include <taskwd.h>
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynOption.h>
-#include <asynGpibDriver.h>
+#include <gpib/ib.h>
 
-#include <asynDriver.h>
-#include <asynGpibDriver.h>
-#include "gpib/ib.h"
 #include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynOption.h"
+#include "asynGpibDriver.h"
 
 #define DEBUG 0
 

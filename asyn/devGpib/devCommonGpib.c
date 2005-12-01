@@ -34,12 +34,11 @@
 #include <menuFtype.h>
 #include <shareLib.h>
 
-#include <asynDriver.h>
-#include <asynGpibDriver.h>
-
-#include "devSupportGpib.h"
 #define epicsExportSharedSymbols
-#include "shareLib.h"
+#include <shareLib.h>
+#include "asynDriver.h"
+#include "asynGpibDriver.h"
+#include "devSupportGpib.h"
 #include "devCommonGpib.h"
 
 

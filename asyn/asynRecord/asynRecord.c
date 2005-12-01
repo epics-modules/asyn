@@ -28,15 +28,17 @@
 #include <special.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
-#include <asynGpibDriver.h>
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynInt32.h>
-#include <asynUInt32Digital.h>
-#include <asynFloat64.h>
-#include <asynDrvUser.h>
-#include <asynOption.h>
-#include <drvAsynIPPort.h>
+
+#include <epicsExport.h>
+#include "asynGpibDriver.h"
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInt32.h"
+#include "asynUInt32Digital.h"
+#include "asynFloat64.h"
+#include "asynDrvUser.h"
+#include "asynOption.h"
+#include "drvAsynIPPort.h"
 #define GEN_SIZE_OFFSET
 #include "asynRecord.h"
 #include <epicsExport.h>

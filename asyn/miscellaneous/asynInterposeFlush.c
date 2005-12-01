@@ -23,12 +23,10 @@
 #include <epicsString.h>
 #include <iocsh.h>
 
-#include <asynDriver.h>
-#include <asynOctet.h>
+#include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
 #include "asynShellCommands.h"
-
-#define epicsExportSharedSymbols
-#include "shareLib.h"
 #include "asynInterposeFlush.h"
 #include <epicsExport.h>
 
