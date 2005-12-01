@@ -49,7 +49,7 @@ static void genericFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static void aiFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initAi(aiRecord * pai)
+long  devGpib_initAi(aiRecord * pai)
 {
     long result;
     int cmdType;
@@ -71,7 +71,7 @@ long epicsShareAPI devGpib_initAi(aiRecord * pai)
     return 0;
 }
 
-long epicsShareAPI devGpib_readAi(aiRecord * pai)
+long  devGpib_readAi(aiRecord * pai)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pai);
     int cmdType;
@@ -128,7 +128,7 @@ static void aiFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static int aoStart(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initAo(aoRecord * pao)
+long  devGpib_initAo(aoRecord * pao)
 {
     long result;
     int cmdType;
@@ -152,7 +152,7 @@ long epicsShareAPI devGpib_initAo(aoRecord * pao)
     return (got_special_linconv ? 0 : 2);
 }
 
-long epicsShareAPI devGpib_writeAo(aoRecord * pao)
+long  devGpib_writeAo(aoRecord * pao)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pao);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -185,7 +185,7 @@ static int aoStart(gpibDpvt *pgpibDpvt,int failure)
 }
 
 static void biFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initBi(biRecord * pbi)
+long  devGpib_initBi(biRecord * pbi)
 {
     long result;
     int cmdType;
@@ -213,7 +213,7 @@ long epicsShareAPI devGpib_initBi(biRecord * pbi)
     return  0;
 }
 
-long epicsShareAPI devGpib_readBi(biRecord * pbi)
+long  devGpib_readBi(biRecord * pbi)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pbi);
     int cmdType;
@@ -281,7 +281,7 @@ static char *lloName[] = {"noop", "LLO", "0"};
 static char *sdcName[] = {"noop", "SDC", "0"};
 static char *gtlName[] = {"noop", "GTL", "0"};
 
-long epicsShareAPI devGpib_initBo(boRecord * pbo)
+long  devGpib_initBo(boRecord * pbo)
 {
     long result;
     int cmdType;
@@ -327,7 +327,7 @@ long epicsShareAPI devGpib_initBo(boRecord * pbo)
     return 2;
 }
 
-long epicsShareAPI devGpib_writeBo(boRecord * pbo)
+long  devGpib_writeBo(boRecord * pbo)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pbo);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -410,7 +410,7 @@ static void boWorkSpecial(gpibDpvt *pgpibDpvt,int failure)
 }
 
 static void evFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initEv(eventRecord * pev)
+long  devGpib_initEv(eventRecord * pev)
 {
     long result;
     int cmdType;
@@ -432,7 +432,7 @@ long epicsShareAPI devGpib_initEv(eventRecord * pev)
     return 0;
 }
 
-long epicsShareAPI devGpib_readEv(eventRecord * pev)
+long  devGpib_readEv(eventRecord * pev)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pev);
     int cmdType;
@@ -493,7 +493,7 @@ static void liSrqHandler(void *userPrivate,asynUser *pasynUser,
     scanOnce(pgpibDpvt->precord);
 }
 
-long epicsShareAPI devGpib_initLi(longinRecord * pli)
+long  devGpib_initLi(longinRecord * pli)
 {
     long result;
     int cmdType;
@@ -518,7 +518,7 @@ long epicsShareAPI devGpib_initLi(longinRecord * pli)
     return 0;
 }
 
-long epicsShareAPI devGpib_readLi(longinRecord * pli)
+long  devGpib_readLi(longinRecord * pli)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pli);
     int cmdType;
@@ -569,7 +569,7 @@ static void liFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static int loStart(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initLo(longoutRecord * plo)
+long  devGpib_initLo(longoutRecord * plo)
 {
     long result;
     int cmdType;
@@ -591,7 +591,7 @@ long epicsShareAPI devGpib_initLo(longoutRecord * plo)
     return 0;
 }
 
-long epicsShareAPI devGpib_writeLo(longoutRecord * plo)
+long  devGpib_writeLo(longoutRecord * plo)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(plo);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -619,7 +619,7 @@ static int loStart(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static void mbbiFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
+long  devGpib_initMbbi(mbbiRecord * pmbbi)
 {
     long result;
     int cmdType;
@@ -668,7 +668,7 @@ long epicsShareAPI devGpib_initMbbi(mbbiRecord * pmbbi)
     return 0;
 }
 
-long epicsShareAPI devGpib_readMbbi(mbbiRecord * pmbbi)
+long  devGpib_readMbbi(mbbiRecord * pmbbi)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pmbbi);
     int cmdType;
@@ -727,7 +727,7 @@ static void mbbiFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static void mbbiDirectFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
+long  devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
 {
     long result;
     int cmdType;
@@ -749,7 +749,7 @@ long epicsShareAPI devGpib_initMbbiDirect(mbbiDirectRecord * pmbbiDirect)
     return 0;
 }
 
-long epicsShareAPI devGpib_readMbbiDirect(mbbiDirectRecord * pmbbiDirect)
+long  devGpib_readMbbiDirect(mbbiDirectRecord * pmbbiDirect)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pmbbiDirect);
     int cmdType;
@@ -801,7 +801,7 @@ static void mbbiDirectFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static int mbboStart(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
+long  devGpib_initMbbo(mbboRecord * pmbbo)
 {
     long result;
     int cmdType;
@@ -850,7 +850,7 @@ long epicsShareAPI devGpib_initMbbo(mbboRecord * pmbbo)
     return 2;
 }
 
-long epicsShareAPI devGpib_writeMbbo(mbboRecord * pmbbo)
+long  devGpib_writeMbbo(mbboRecord * pmbbo)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pmbbo);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -880,7 +880,7 @@ static int mbboStart(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static int mbboDirectStart(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
+long  devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
 {
     long result;
     int cmdType;
@@ -902,7 +902,7 @@ long epicsShareAPI devGpib_initMbboDirect(mbboDirectRecord * pmbboDirect)
     return 2;
 }
 
-long epicsShareAPI devGpib_writeMbboDirect(mbboDirectRecord * pmbboDirect)
+long  devGpib_writeMbboDirect(mbboDirectRecord * pmbboDirect)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pmbboDirect);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -931,7 +931,7 @@ static int mbboDirectStart(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static void siFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initSi(stringinRecord * psi)
+long  devGpib_initSi(stringinRecord * psi)
 {
     long result;
     int cmdType;
@@ -953,7 +953,7 @@ long epicsShareAPI devGpib_initSi(stringinRecord * psi)
     return 0;
 }
 
-long epicsShareAPI devGpib_readSi(stringinRecord * psi)
+long  devGpib_readSi(stringinRecord * psi)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(psi);
     int cmdType;
@@ -1003,7 +1003,7 @@ static void siFinish(gpibDpvt * pgpibDpvt,int failure)
 }
 
 static int soStart(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
+long  devGpib_initSo(stringoutRecord * pso)
 {
     long result;
     int cmdType;
@@ -1025,7 +1025,7 @@ long epicsShareAPI devGpib_initSo(stringoutRecord * pso)
     return 0;
 }
 
-long epicsShareAPI devGpib_writeSo(stringoutRecord * pso)
+long  devGpib_writeSo(stringoutRecord * pso)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pso);
     int cmdType = gpibCmdGetType(pgpibDpvt);
@@ -1054,7 +1054,7 @@ static int soStart(gpibDpvt *pgpibDpvt,int failure)
 
 static int wfStart(gpibDpvt *pgpibDpvt,int failure);
 static void wfFinish(gpibDpvt *pgpibDpvt,int failure);
-long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
+long  devGpib_initWf(waveformRecord * pwf)
 {
     long result;
     int cmdType;
@@ -1085,7 +1085,7 @@ long epicsShareAPI devGpib_initWf(waveformRecord * pwf)
     return 0;
 }
 
-long epicsShareAPI devGpib_readWf(waveformRecord * pwf)
+long  devGpib_readWf(waveformRecord * pwf)
 {
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pwf);
     int cmdType = gpibCmdGetType(pgpibDpvt);
