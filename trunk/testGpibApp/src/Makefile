@@ -16,6 +16,8 @@ ifeq ($(OS_CLASS),vxWorks)
 DBD += testGpibVx.dbd
 endif
 testGpib_DBD += commonInclude.dbd
+testGpibWin32_DBD += commonInclude_win32.dbd
+testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
 
 #=============================
 
@@ -25,7 +27,6 @@ PROD_IOC_vxWorks += testGpibVx
 LIBRARY_IOC += devTestGpib
 devTestGpib_SRCS += devTestGpib.c
 devTestGpib_LIBS += asyn
-testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
 ifdef IPAC
 testGpibVx_DBD += ipacInclude.dbd
 devTestGpib_LIBS_vxWorks += Ipac
@@ -34,7 +35,8 @@ devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-testGpib_SRCS += testGpib_registerRecordDeviceDriver.cpp
+testGpib_SRCS_default += testGpib_registerRecordDeviceDriver.cpp
+testGpib_SRCS_WIN32 += testGpibWin32_registerRecordDeviceDriver.cpp
 testGpib_SRCS += testGpibMain.c
 
 testGpib_LIBS += devTestGpib
