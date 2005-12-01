@@ -35,14 +35,10 @@
 #include <asynOption.h>
 #include <asynGpibDriver.h>
 
-#include <epicsExport.h>
-
-
-
 #include <asynDriver.h>
 #include <asynGpibDriver.h>
-
 #include "gpib/ib.h"
+#include <epicsExport.h>
 
 #define DEBUG 0
 

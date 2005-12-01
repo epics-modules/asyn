@@ -16,7 +16,6 @@
 #include <errno.h>
 
 #include <epicsEvent.h>
-#include <epicsExport.h>
 #include <epicsString.h>
 #include <iocsh.h>
 #include <gpHash.h>
@@ -27,6 +26,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include "asynShellCommands.h"
+#include <epicsExport.h>
 
 #define MAX_EOS_LEN 10
 typedef struct asynIOPvt {

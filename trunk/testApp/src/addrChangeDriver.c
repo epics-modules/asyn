@@ -22,11 +22,11 @@
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsThread.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
 #include <asynOctet.h>
+#include <epicsExport.h>
 
 #define NUM_DEVICES 2
 typedef struct deviceInfo {

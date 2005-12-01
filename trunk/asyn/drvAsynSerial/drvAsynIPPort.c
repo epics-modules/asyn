@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.15 2005-07-22 15:08:55 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.16 2005-12-01 01:25:18 rivers Exp $
  */
 
 #include <string.h>
@@ -31,11 +31,12 @@
 #include <epicsTime.h>
 #include <epicsTimer.h>
 #include <osiUnistd.h>
-#include <epicsExport.h>
 #include <asynDriver.h>
 #include <asynOctet.h>
 #include <asynInterposeEos.h>
 #include <drvAsynIPPort.h>
+#include <iocsh.h>
+#include <epicsExport.h>
 
 #if defined(__rtems__)
 # define USE_SOCKTIMEOUT
@@ -661,7 +662,6 @@ drvAsynIPPortConfigure(const char *portName,
 /*
  * IOC shell command registration
  */
-#include <iocsh.h>
 static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString};
 static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocshArgString};
 static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};

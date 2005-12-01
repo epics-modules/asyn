@@ -29,11 +29,11 @@
 #include <epicsTimer.h>
 #include <cantProceed.h>
 #include <epicsAssert.h>
-#include <epicsExport.h>
 
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include "asynDriver.h"
+#include <epicsExport.h>
 
 #define BOOL int
 #define TRUE 1

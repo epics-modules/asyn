@@ -22,13 +22,13 @@
 #include <epicsEvent.h>
 #include <epicsMutex.h>
 #include <epicsThread.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include <asynDriver.h>
 #include <asynDrvUser.h>
 #include <asynUInt32Digital.h>
 #include <asynFloat64.h>
+#include <epicsExport.h>
 
 #define NCHANNELS 4
 

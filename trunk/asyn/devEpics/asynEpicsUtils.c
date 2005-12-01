@@ -18,7 +18,6 @@
 
 #include <link.h>
 #include <epicsAssert.h>
-#include <epicsExport.h>
 #include <epicsString.h>
 #include <cantProceed.h>
 
@@ -26,6 +25,7 @@
 #define epicsExportSharedSymbols
 #include "shareLib.h"
 #include "asynEpicsUtils.h"
+#include <epicsExport.h>
 
 static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink, 
                    char **port, int *addr, char **userParam);

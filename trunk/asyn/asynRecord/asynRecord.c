@@ -28,7 +28,6 @@
 #include <special.h>
 #include <epicsString.h>
 #include <epicsStdio.h>
-#include <epicsExport.h>
 #include <asynGpibDriver.h>
 #include <asynDriver.h>
 #include <asynOctet.h>
@@ -40,6 +39,8 @@
 #include <drvAsynIPPort.h>
 #define GEN_SIZE_OFFSET
 #include "asynRecord.h"
+#include <epicsExport.h>
+
 #undef GEN_SIZE_OFFSET
 /* These should be in a header file*/
 #define NUM_BAUD_CHOICES 12
