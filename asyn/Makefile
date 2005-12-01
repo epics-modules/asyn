@@ -85,15 +85,15 @@ asyn_SRCS += asynRecord.c
 asyn_SRCS += drvAsyn.c
 DB += asynRecord.db
 
-ifneq ($(OS_CLASS), WIN32)
 SRC_DIRS += $(ASYN)/vxi11
+ifneq ($(OS_CLASS), WIN32)
 asyn_SRCS += vxi11core_xdr.c
 asyn_SRCS += drvVxi11.c
+endif
 asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
-endif
 
 ifdef IPAC
 SRC_DIRS += $(ASYN)/gsIP488

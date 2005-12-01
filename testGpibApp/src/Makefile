@@ -13,11 +13,11 @@ DBD += devTestGpib.dbd
 
 DBD += testGpib.dbd
 ifeq ($(OS_CLASS),vxWorks)
+testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
 DBD += testGpibVx.dbd
 endif
-testGpib_DBD += commonInclude.dbd
 testGpibWin32_DBD += commonInclude_win32.dbd
-testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
+testGpib_DBD += commonInclude.dbd
 
 #=============================
 
