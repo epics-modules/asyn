@@ -11,6 +11,7 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += devTestBlock.dbd
 DBD += test.dbd
+DBD += test_win32.dbd
 
 LIBRARY_IOC += testSupport
 testSupport_SRCS += echoDriver.c
@@ -24,7 +25,8 @@ testSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 PROD_IOC += test
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-test_SRCS += test_registerRecordDeviceDriver.cpp
+test_SRCS_default += test_registerRecordDeviceDriver.cpp
+test_SRCS_WIN32 += test_win32_registerRecordDeviceDriver.cpp
 test_SRCS += testMain.c
 
 test_LIBS += testSupport
