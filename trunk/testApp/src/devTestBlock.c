@@ -56,8 +56,8 @@
 #include "asynDrvUser.h"
 #include "asynOctet.h"
 #include "asynEpicsUtils.h"
-#include <epicsExport.h>
 
+#include <epicsExport.h>
 typedef enum {stateIdle,stateWrite} processState;
 typedef struct devPvt{
     dbCommon    *precord;
