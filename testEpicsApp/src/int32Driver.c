@@ -30,6 +30,7 @@
 #include <asynFloat64.h>
 #include <epicsExport.h>
 
+#include <epicsExport.h>
 #define NCHANNELS 16
 
 typedef struct chanPvt {
