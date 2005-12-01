@@ -69,7 +69,7 @@ static void setOption(asynUser *pasynUser)
     epicsEventSignal(poptionargs->done);
 }
 
-int epicsShareAPI
+epicsShareFunc int
  asynSetOption(const char *portName, int addr, const char *key, const char *val)
 {
     asynInterface *pasynInterface;
@@ -128,7 +128,7 @@ static void showOption(asynUser *pasynUser)
     epicsEventSignal(poptionargs->done);
 }
 
-int epicsShareAPI
+epicsShareFunc int
  asynShowOption(const char *portName, int addr,const char *key)
 {
     asynInterface *pasynInterface;
@@ -183,7 +183,7 @@ static asynIOPvt* asynFindEntry(const char *name)
     return((asynIOPvt *)hashEntry->userPvt);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetConnect(const char *entry, const char *port, int addr,
              int timeout, int buffer_len, const char *drvInfo)
 {
@@ -212,7 +212,7 @@ epicsShareFunc int epicsShareAPI
     return(0);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetDisconnect(const char *entry)
 {
     asynIOPvt *pPvt;
@@ -245,7 +245,7 @@ epicsShareFunc int epicsShareAPI
     return(0);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetRead(const char *entry, int nread)
 {
     asynStatus status;
@@ -276,7 +276,7 @@ epicsShareFunc int epicsShareAPI
     return(ninp);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetWrite(const char *entry, const char *output)
 {
     asynStatus status;
@@ -309,7 +309,7 @@ epicsShareFunc int epicsShareAPI
     return(nout);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetWriteRead(const char *entry, const char *output, int nread)
 {
     asynStatus status;
@@ -351,7 +351,7 @@ epicsShareFunc int epicsShareAPI
     return(ninp);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetFlush(const char *entry)
 {
     asynIOPvt *pPvt;
@@ -374,7 +374,7 @@ epicsShareFunc int epicsShareAPI
     return(0);
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetSetInputEos(const char *portName, int addr,
     const char *eosin,const char *drvInfo)
 {
@@ -396,7 +396,7 @@ epicsShareFunc int epicsShareAPI
     return (status==asynSuccess) ? 0 : -1;
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetGetInputEos(const char *portName, int addr,const char *drvInfo)
 {
     char eos[2],eostran[10];
@@ -421,7 +421,7 @@ epicsShareFunc int epicsShareAPI
     return -1;
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetSetOutputEos(const char *portName, int addr,
     const char *eosin,const char *drvInfo)
 {
@@ -443,7 +443,7 @@ epicsShareFunc int epicsShareAPI
     return (status==asynSuccess) ? 0 : -1;
 }
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc epicsShareFunc int
     asynOctetGetOutputEos(const char *portName, int addr,const char *drvInfo)
 {
     char eos[2],eostran[10];
@@ -473,7 +473,7 @@ static const iocshArg asynReportArg1 = {"port", iocshArgString};
 static const iocshArg *const asynReportArgs[] = {
     &asynReportArg0,&asynReportArg1};
 static const iocshFuncDef asynReportDef = {"asynReport", 2, asynReportArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynReport(int level, const char *portName)
 {
     pasynManager->report(stdout,level,portName);
@@ -512,7 +512,7 @@ static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
 static const iocshFuncDef asynSetTraceMaskDef =
     {"asynSetTraceMask", 3, asynSetTraceMaskArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynSetTraceMask(const char *portName,int addr,int mask)
 {
     asynUser *pasynUser;
@@ -546,7 +546,7 @@ static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
 static const iocshFuncDef asynSetTraceIOMaskDef =
     {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynSetTraceIOMask(const char *portName,int addr,int mask)
 {
     asynUser *pasynUser;
@@ -573,7 +573,7 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     asynSetTraceIOMask(portName,addr,mask);
 }
 
-int epicsShareAPI
+epicsShareFunc int
  asynSetTraceFile(const char *portName,int addr,const char *filename)
 {
     asynUser        *pasynUser;
@@ -628,7 +628,7 @@ static const iocshArg *const asynSetTraceIOTruncateSizeArgs[] = {
     &asynSetTraceIOTruncateSizeArg0,&asynSetTraceIOTruncateSizeArg1,&asynSetTraceIOTruncateSizeArg2};
 static const iocshFuncDef asynSetTraceIOTruncateSizeDef =
     {"asynSetTraceIOTruncateSize", 3, asynSetTraceIOTruncateSizeArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynSetTraceIOTruncateSize(const char *portName,int addr,int size)
 {
     asynUser *pasynUser;
@@ -662,7 +662,7 @@ static const iocshArg *const asynEnableArgs[] = {
     &asynEnableArg0,&asynEnableArg1,&asynEnableArg2};
 static const iocshFuncDef asynEnableDef =
     {"asynEnable", 3, asynEnableArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynEnable(const char *portName,int addr,int yesNo)
 {
     asynUser *pasynUser;
@@ -696,7 +696,7 @@ static const iocshArg *const asynAutoConnectArgs[] = {
     &asynAutoConnectArg0,&asynAutoConnectArg1,&asynAutoConnectArg2};
 static const iocshFuncDef asynAutoConnectDef =
     {"asynAutoConnect", 3, asynAutoConnectArgs};
-int epicsShareAPI
+epicsShareFunc int
  asynAutoConnect(const char *portName,int addr,int yesNo)
 {
     asynUser *pasynUser;

@@ -17,43 +17,43 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynSetOption(const char *portName, int addr, const char *key, const char *val);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynShowOption(const char *portName, int addr,const char *key);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynReport(int level, const char *portName);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynSetTraceMask(const char *portName,int addr,int mask);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynSetTraceIOMask(const char *portName,int addr,int mask);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynSetTraceFile(const char *portName,int addr,const char *filename);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynSetTraceIOTruncateSize(const char *portName,int addr,int size);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynAutoConnect(const char *portName,int addr,int yesNo);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynEnable(const char *portName,int addr,int yesNo);
 
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetConnect(const char *entry, const char *port, int addr,
                   int timeout, int buffer_len,const char *drvInfo);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetRead(const char *entry, int nread);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetWrite(const char *entry, const char *output);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetWriteRead(const char *entry, const char *output, int nread);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetFlush(const char *entry);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetSetInputEos(const char *port, int addr,const char *eos,const char *drvInfo);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetGetInputEos(const char *port, int addr,const char *drvInfo);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetSetOutputEos(const char *port, int addr,const char *eos,const char *drvInfo);
-epicsShareFunc int epicsShareAPI
+epicsShareFunc int 
  asynOctetGetOutputEos(const char *port, int addr,const char *drvInfo);
 
 #ifdef __cplusplus

@@ -85,7 +85,7 @@ static asynOctet octet = {
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
 
-int epicsShareAPI asynInterposeEosConfig(const char *portName,int addr,
+epicsShareFunc int asynInterposeEosConfig(const char *portName,int addr,
     int processEosIn,int processEosOut)
 {
     eosPvt        *peosPvt;
