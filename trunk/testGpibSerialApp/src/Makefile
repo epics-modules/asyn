@@ -15,6 +15,9 @@ ifeq ($(OS_CLASS),vxWorks)
 DBD += testGpibSerialVx.dbd
 testGpibSerialVx_DBD += commonInclude.dbd
 endif
+ifeq ($(OS_CLASS),WIN32)
+testGpibSerialWin32_DBD += commonInclude_win32.dbd
+endif
 
 #=============================
 
@@ -22,7 +25,8 @@ PROD_IOC += testGpibSerial
 PROD_vxWorks += testGpibSerialVx
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-testGpibSerial_SRCS += testGpibSerial_registerRecordDeviceDriver.cpp
+testGpibSerial_SRCS_default += testGpibSerial_registerRecordDeviceDriver.cpp
+testGpibSerial_SRCS_WIN32 += testGpibSerialWin32_registerRecordDeviceDriver.cpp
 testGpibSerial_SRCS += testGpibSerialMain.cpp
 testGpibSerial_SRCS += devTestGpibSerial.c
 testGpibSerial_LIBS += testSupport asyn
