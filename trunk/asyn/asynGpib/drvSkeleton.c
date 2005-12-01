@@ -19,6 +19,7 @@
 #include <cantProceed.h>
 #include <iocsh.h>
 
+#include <epicsExport.h>
 #include <asynGpibDriver.h>
 #include <epicsExport.h>
 

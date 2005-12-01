@@ -23,7 +23,7 @@
 
 
 #define epicsExportSharedSymbols
-#include "shareLib.h"
+#include <shareLib.h>
 #include "asynEpicsUtils.h"
 #include <epicsExport.h>
 

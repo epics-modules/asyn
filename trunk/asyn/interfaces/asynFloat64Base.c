@@ -11,13 +11,13 @@
 /*  11-OCT-2004 Marty Kraimer
 */
 
-#include <asynDriver.h>
 #include <epicsTypes.h>
 #include <epicsStdio.h>
 #include <cantProceed.h>
 
 #define epicsExportSharedSymbols
-#include "shareLib.h"
+#include <shareLib.h>
+#include "asynDriver.h"
 #include "asynFloat64.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pfloat64Interface);

@@ -27,11 +27,12 @@
 #include <epicsTime.h>
 #include <devLib.h>
 #include <taskwd.h>
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynGpibDriver.h>
 
 #include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynGpibDriver.h"
+
 
 int gsip488Debug = 0;
 #define ERROR_MESSAGE_BUFFER_SIZE 160

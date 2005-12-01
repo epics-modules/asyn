@@ -25,13 +25,10 @@
 #include <epicsString.h>
 #include <iocsh.h>
 
-#include <asynDriver.h>
-#include <asynOctet.h>
-
-#define epicsExportSharedSymbols
-#include "shareLib.h"
-#include <asynInterposeEos.h>
 #include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynInterposeEos.h"
 
 #define START_OUTPUT_SIZE 100
 #define INPUT_SIZE        600

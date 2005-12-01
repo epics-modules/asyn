@@ -38,11 +38,10 @@
 #include <shareLib.h>
 #include <iocsh.h>
 
-#include <asynDriver.h>
-#include <asynGpibDriver.h>
+#include <epicsExport.h>
+#include "asynDriver.h"
+#include "asynGpibDriver.h"
 
-#define epicsExportSharedSymbols
-#include "shareLib.h"
 #include "devSupportGpib.h"
 #include <epicsExport.h>
 

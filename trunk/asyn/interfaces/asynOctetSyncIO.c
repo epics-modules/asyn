@@ -25,13 +25,13 @@
 
 #include <cantProceed.h>
 
-#include <asynDriver.h>
-#include <asynOctet.h>
-#include <asynDrvUser.h>
-#include <drvAsynIPPort.h>
 #define epicsExportSharedSymbols
-#include "shareLib.h"
-#include <asynOctetSyncIO.h>
+#include <shareLib.h>
+#include "asynDriver.h"
+#include "asynOctet.h"
+#include "asynDrvUser.h"
+#include "drvAsynIPPort.h"
+#include "asynOctetSyncIO.h"
 
 typedef struct ioPvt {
    asynCommon   *pasynCommon;
