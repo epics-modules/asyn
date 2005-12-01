@@ -31,7 +31,7 @@
 #include <epicsAssert.h>
 
 #define epicsExportSharedSymbols
-#include "shareLib.h"
+#include <shareLib.h>
 #include "asynDriver.h"
 #include <epicsExport.h>
 
