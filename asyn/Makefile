@@ -28,10 +28,11 @@ INC += asynGpibDriver.h
 asyn_SRCS += asynGpib.c
 
 SRC_DIRS += $(ASYN)/drvAsynSerial
+ifneq ($(OS_CLASS), WIN32)
 INC += drvAsynSerialPort.h
-asyn_SRCS_DEFAULT += drvAsynSerialPort.c
-asyn_SRCS_WIN32 += -nil-
+asyn_SRCS += drvAsynSerialPort.c
 DBD += drvAsynSerialPort.dbd
+endif
 INC += drvAsynIPPort.h
 asyn_SRCS += drvAsynIPPort.c
 DBD += drvAsynIPPort.dbd
