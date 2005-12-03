@@ -25,7 +25,7 @@ PROD_IOC += testGpibSerial
 PROD_vxWorks += testGpibSerialVx
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
-testGpibSerial_SRCS_default += testGpibSerial_registerRecordDeviceDriver.cpp
+testGpibSerial_SRCS_DEFAULT += testGpibSerial_registerRecordDeviceDriver.cpp
 testGpibSerial_SRCS_WIN32 += testGpibSerialWin32_registerRecordDeviceDriver.cpp
 testGpibSerial_SRCS += testGpibSerialMain.cpp
 testGpibSerial_SRCS += devTestGpibSerial.c
