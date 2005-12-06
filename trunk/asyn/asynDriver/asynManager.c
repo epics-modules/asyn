@@ -30,10 +30,8 @@
 #include <cantProceed.h>
 #include <epicsAssert.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
-#include "asynDriver.h"
 #include <epicsExport.h>
+#include "asynDriver.h"
 
 #define BOOL int
 #define TRUE 1
@@ -1002,7 +1000,6 @@ static asynUser *duplicateAsynUser(asynUser *pasynUser,
     pnew->pdevice = pold->pdevice;
     pnew->user.userPvt = pold->user.userPvt;
     pnew->user.userData = pold->user.userData;
-/*MARTY IS THIS SAFE*/
     pnew->user.drvUser = pold->user.drvUser;
     pnew->user.reason = pold->user.reason;
     pnew->user.timeout = pold->user.timeout;
@@ -1942,7 +1939,6 @@ static interruptNode *createInterruptNode(void *pasynPvt)
     interruptNode    *pinterruptNode;
     interruptNodePvt *pinterruptNodePvt;
 
-    epicsMutexMustLock(pport->asynManagerLock);
     epicsMutexMustLock(pasynBase->lock);
     pinterruptNode = (interruptNode *)ellFirst(&pasynBase->interruptNodeFree);
     if(pinterruptNode) {
@@ -1960,7 +1956,6 @@ static interruptNode *createInterruptNode(void *pasynPvt)
         pinterruptNodePvt->callbackDone = epicsEventMustCreate(epicsEventEmpty);
     }
     pinterruptNodePvt->pinterruptBase = pinterruptBase;
-    epicsMutexUnlock(pport->asynManagerLock);
     return(&pinterruptNodePvt->nodePublic);
 }
 
@@ -1977,10 +1972,10 @@ static asynStatus freeInterruptNode(asynUser *pasynUser,interruptNode *pinterrup
             "freeInterruptNode requested but it is on a list\n");
         return asynError;
     }
+    epicsMutexUnlock(pport->asynManagerLock);
     epicsMutexMustLock(pasynBase->lock);
     ellAdd(&pasynBase->interruptNodeFree,&pinterruptNode->node);
     epicsMutexUnlock(pasynBase->lock);
-    epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
 
