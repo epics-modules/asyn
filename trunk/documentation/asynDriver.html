@@ -1445,13 +1445,13 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </td>
       <td>Code that implements registerInterruptUser/cancelInterruptUser must
         call addInterruptUser/removeInterruptUser to add and remove users
-        from the list or else calls to interruptStart/interruptEnd will no
+        from the list or else calls to interruptStart/interruptEnd will not
         work. This is an efficient operation so that a user can repeatedly
         call registerInterruptUser/cancelInterruptUser. If either of these is
         called while a interrupt is being processed, i.e. between calls to
         interruptStart/interruptEnd, the call will block until interruptEnd
         is called. The process callback for the asynUser specified in the
-        call to addInterruptUser must not call removeInterruptUser ot it will
+        call to addInterruptUser must not call removeInterruptUser or it will
         block forever.</td>
     </tr>
     <tr>
