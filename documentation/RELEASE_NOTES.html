@@ -20,7 +20,18 @@ alink="#FF0000">
 </center>
 
 <h3>win32</h3>
-<p>MARK ADD SOMETHING</p>
+<p>Changes were made to allow asyn to build on native Windows (win32-x86) 
+architecture.
+<p>
+There are two asyn components that do not yet work on win32-x86.
+<ol>
+  <li> Local serial ports.  The asyn uses the "termios" API for serial ports,
+       and termios is not available for native Windows.
+  <li> VXI-11.  The asyn VXI-11 support uses the Sun XDR API, which is not
+       available for native Windows.
+</ol>
+<p> Users who want to use local serial ports or VXI-11 on Windows can use the
+Cygwin EPICS build (cygwin-x86).
 
 <center>
 <h2>Release 4-3</h2>
