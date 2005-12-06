@@ -136,7 +136,7 @@ typedef struct asynManager {
     asynStatus (*interruptEnd)(void *pasynPvt);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
-
+
 /* Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
@@ -146,7 +146,7 @@ typedef struct  asynCommon {
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
 }asynCommon;
 
-/* asynLockPortNotify is only used by asynManager itself */
+/* asynLockPortNotify is for address change drivers */
 #define asynLockPortNotifyType "asynLockPortNotify"
 typedef struct  asynLockPortNotify {
     asynStatus (*lock)(void *drvPvt,asynUser *pasynUser);
