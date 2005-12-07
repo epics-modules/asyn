@@ -55,9 +55,11 @@ asyn_SRCS += asynOctetBase.c asynOctetSyncIO.c
 
 SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd
+INC += epicsStrtok_r.h
 INC += asynShellCommands.h
 INC += asynInterposeEos.h
 INC += asynInterposeFlush.h
+asyn_SRCS += epicsStrtok_r.c
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
