@@ -1935,7 +1935,6 @@ static asynStatus getInterruptPvt(asynUser *pasynUser,
 static interruptNode *createInterruptNode(void *pasynPvt)
 {
     interruptBase    *pinterruptBase = (interruptBase *)pasynPvt;
-    port             *pport = pinterruptBase->pport;
     interruptNode    *pinterruptNode;
     interruptNodePvt *pinterruptNodePvt;
 
