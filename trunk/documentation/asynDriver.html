@@ -11,12 +11,12 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p><span style="font-weight: bold; font-size: 14pt">Release 4.3</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">Release 4.4</span></p>
 
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">September 13
+<p><span style="font-weight: bold; font-size: 14pt">December 07
 2005</span></p>
 
 <h3>Other Contributers</h3>
@@ -487,7 +487,8 @@ drivers. It provides the following services:</p>
     unlockPort is called. If the port  blocks then lockPort and all calls to
     the port driver may block. lockPort/unlockPort are provided for use by
     code that is willing to block or for communication with synchronous
-    ports.  A call to lockPort locks all addresses associated with a multi-address port.</p>
+    ports.  A call to lockPort locks all addresses associated with a
+    multi-address port.</p>
     <p>blockProcessCallback is a request to prevent acccess to a device or
     port by other asynUsers between queueRequests. blockProcessCallback can
     be called from a processCallback or when the asynUser has no request
@@ -1983,15 +1984,15 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynOctetBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. If the port is not
-        multi-device and either processEosIn or processEosOut is specified,
-        asynInterposeEosConfig is called. If the port is not multi-device and
-        interruptProcess is specified, then whenever read or readRaw is
-        called, asynBase calls all the registered interrupt users.
-        asynOctetBase can not implement processEosIn, processEosOut, and
-        interruptProcess if the port is a multi-device port. Since this
-        method is called only during initialization it can be called directly
-        rather than via queueRequest.</td>
+        implementations. If the port is not multi-device and either
+        processEosIn or processEosOut is specified, asynInterposeEosConfig is
+        called. If the port is not multi-device and interruptProcess is
+        specified, then whenever read or readRaw is called, asynBase calls
+        all the registered interrupt users. asynOctetBase can not implement
+        processEosIn, processEosOut, and interruptProcess if the port is a
+        multi-device port. Since this method is called only during
+        initialization it can be called directly rather than via
+      queueRequest.</td>
     </tr>
     <tr>
       <td>callInterruptUsers</td>
@@ -2352,8 +2353,7 @@ asynManager:interruptEnd.</p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynInt32Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations.
-      </td>
+        implementations.</td>
     </tr>
   </tbody>
 </table>
@@ -2520,8 +2520,7 @@ epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
       <td>After a driver calls registerPort is can call:
         <pre>pasynInt32ArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations.
-      </td>
+        implementations.</td>
     </tr>
   </tbody>
 </table>
@@ -2631,8 +2630,7 @@ provides code to implement registerInterruptUser and cancelInterruptUser.</p>
       <td>After a driver calls registerPort is can call:
         <pre>pasynUInt32DigitalBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations.
-      </td>
+        implementations.</td>
     </tr>
   </tbody>
 </table>
@@ -2830,8 +2828,7 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
       <td>After a driver calls registerPort is can call:
         <pre>pasynFloat64Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations.
-      </td>
+        implementations.</td>
     </tr>
   </tbody>
 </table>
