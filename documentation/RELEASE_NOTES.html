@@ -15,23 +15,35 @@ alink="#FF0000">
 <h1>December 7 2005</h1>
 </center>
 <hr>
+
 <center>
 <h2>Release 4-4</h2>
 </center>
 
 <h3>win32</h3>
-<p>Changes were made to allow asyn to build on native Windows (win32-x86) 
-architecture.
-<p>
-There are two asyn components that do not yet work on win32-x86.
+
+<p>Changes were made to allow asyn to build on native Windows (win32-x86)
+architecture.</p>
+
+<p>There are two asyn components that do not yet work on win32-x86.</p>
 <ol>
-  <li> Local serial ports.  The asyn uses the "termios" API for serial ports,
-       and termios is not available for native Windows.
-  <li> VXI-11.  The asyn VXI-11 support uses the Sun XDR API, which is not
-       available for native Windows.
+  <li>Local serial ports.  The asyn uses the "termios" API for serial ports,
+    and termios is not available for native Windows.</li>
+  <li>VXI-11.  The asyn VXI-11 support uses the Sun XDR API, which is not
+    available for native Windows.</li>
 </ol>
-<p> Users who want to use local serial ports or VXI-11 on Windows can use the
-Cygwin EPICS build (cygwin-x86).
+
+<p>Users who want to use local serial ports or VXI-11 on Windows can use the
+Cygwin EPICS build (cygwin-x86).</p>
+
+<h3>devGpib: devGpibConvertExample</h3>
+
+<p>An example of how to implement convert routines for devGpib support
+modules is available in asyn/devGpib/devGpibConvertExample.c</p>
+
+<h3>devAsynOctet.c</h3>
+
+<p>The UDF field is now set FALSE when the VAL field is updated.</p>
 
 <center>
 <h2>Release 4-3</h2>

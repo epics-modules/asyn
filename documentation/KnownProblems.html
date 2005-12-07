@@ -12,37 +12,61 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>March 30 2005</h1>
+<h1>December 07 2005</h1>
 </center>
 <hr>
+
+<center>
+<h2>Release 4-3</h2>
+</center>
+
+<h3>devAsynOctet</h3>
+
+<p>UDF is not set false when the VAL field is modified.</p>
+<hr>
+
 <center>
 <h2>Release 4-2</h2>
 </center>
+
 <h3>devAsynFloat64</h3>
-<p>Device support is not returning 2 (do not convert) for ai records
-when it should.  This means that the VAL field is being set back to 0
-by the record after device support writes to it.</p>
+
+<p>Device support is not returning 2 (do not convert) for ai records when it
+should.  This means that the VAL field is being set back to 0 by the record
+after device support writes to it.</p>
+
 <h3>asynRecord</h3>
-<p>The record sometimes does not read the current input and output EOS
-values from the driver when it connects.</p>
+
+<p>The record sometimes does not read the current input and output EOS values
+from the driver when it connects.</p>
+
 <center>
 <h2>Release 4-1</h2>
 </center>
+
 <h3>asynInterposeEos</h3>
-<p>If read reads maxchars, it forces the last character to be 0
-and returns asynOverflow if it wasn't.</p>
+
+<p>If read reads maxchars, it forces the last character to be 0 and returns
+asynOverflow if it wasn't.</p>
+
 <h3>drvAsynSerialPort,drvAsynIPPort - Error reporting</h3>
-<p>These do not properly set an error message in asynUser.errorMessage
-when they return asynError.</p>
+
+<p>These do not properly set an error message in asynUser.errorMessage when
+they return asynError.</p>
+
 <h3>asynRecordFCTL</h3>
-<p>This calls setOption for clocal. This only works on
-vxWorks because vxWorks uses the name CLOCAL for what POSIX calls CRTSCTS.</p>
+
+<p>This calls setOption for clocal. This only works on vxWorks because
+vxWorks uses the name CLOCAL for what POSIX calls CRTSCTS.</p>
 
 <h3>devEpics</h3>
+
 <p>If a call to a low level driver, which registered itself as canBlock,
 completes without blocking then the asynchronous completion may never occur.
 This will be fixed in the next release.</p>
+
 <h3>drvAsynIPPort and drvAsynSerialPort</h3>
+
 <p>The problem reported for version 4 about segmentation faults on cygwin-x86
 has been fixed.</p>
 
@@ -51,36 +75,29 @@ has been fixed.</p>
 </center>
 
 <h3>asynRecord</h3>
+
 <p>asynRecord (and other code) use epicsStrSnPrintEscaped.  In EPICS 3.14.6
-the files epicsVsnprintf on vxWorks (which gets called by several other 
-epicsXXXprintf routines) and epicsStrSnPrintEscaped each
-have a bug could cause buffer overflow. These bugs are guaranteed to lead to corruption in
-asynRecord if the received string is longer than 40 characters.<p>
+the files epicsVsnprintf on vxWorks (which gets called by several other
+epicsXXXprintf routines) and epicsStrSnPrintEscaped each have a bug could
+cause buffer overflow. These bugs are guaranteed to lead to corruption in
+asynRecord if the received string is longer than 40 characters.</p>
+
+<p></p>
 
 <h3>drvAsynSerial</h3>
 <ul>
-  <li>drvAsynSerialPort.c has a bug that can cause segmentation faults 
-      on some systems (e.g. cygwin-x86).  The line
-<pre>
-static const struct asynOctet drvAsynSerialPortAsynOctet = {
-</pre>
-must be changed to
-<pre>
-static struct asynOctet drvAsynSerialPortAsynOctet = {
-</pre>
-i.e. remove the const keyword.
- </li>
-  <li>drvAsynIPPort.c has a bug that can cause segmentation faults 
-      on some systems (e.g. cygwin-x86).  The line
-<pre>
-static const struct asynOctet drvAsynIPPortAsynOctet = {
-</pre>
-must be changed to
-<pre>
-static struct asynOctet drvAsynIPPortAsynOctet = {
-</pre>
-i.e. remove the const keyword.
- </li>
+  <li>drvAsynSerialPort.c has a bug that can cause segmentation faults on
+    some systems (e.g. cygwin-x86).  The line
+    <pre>static const struct asynOctet drvAsynSerialPortAsynOctet = {</pre>
+    must be changed to
+    <pre>static struct asynOctet drvAsynSerialPortAsynOctet = {</pre>
+    i.e. remove the const keyword.</li>
+  <li>drvAsynIPPort.c has a bug that can cause segmentation faults on some
+    systems (e.g. cygwin-x86).  The line
+    <pre>static const struct asynOctet drvAsynIPPortAsynOctet = {</pre>
+    must be changed to
+    <pre>static struct asynOctet drvAsynIPPortAsynOctet = {</pre>
+    i.e. remove the const keyword.</li>
 </ul>
 
 <h3>asynManager</h3>
