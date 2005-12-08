@@ -183,12 +183,65 @@ static asynGpibPort gpibPort = {
 
 /*Definitions for BSR*/
 #define BSRSRQ  0x04 /*SRQ request*/
+
+/*
+ * Must wait 5 ti9914 clock cycles between AUXMR commands
+ * Documentation is confusing but experiments indicate that 6 microsecod wait
+ * Is required.
+*/
 
-/*Must wait 5 clock cycles between AUXMR commands*/
-static void wasteTime(void)
+static long nloopsPerMicrosecond = 0;
+
+static void wasteTime(int nloops)
 {
-    volatile int n = 100;
+    volatile int n = nloops;
     while(n>0) n--;
+}
+
+static void microSecondDelay(int n)
+{
+    volatile long nloops = n * nloopsPerMicrosecond;
+    while(nloops>0) nloops--;
+}
+
+/* The following assumes that nothing else is using large amounts of
+ * cpu time between the calls to epicsTimeGetCurrent.
+*/
+
+static void initAuxmrWait() {
+    epicsTimeStamp stime,etime;
+    double elapsedTime = 0.0;
+    int ntimes = 1;
+    static int nloops = 1000000;
+    double totalLoops;
+
+    while(elapsedTime<1.0) {
+        int i;
+        ntimes *= 2;
+        epicsTimeGetCurrent(&stime);
+        for(i=0; i<ntimes; i++) wasteTime(nloops);
+        epicsTimeGetCurrent(&etime);
+        elapsedTime = epicsTimeDiffInSeconds(&etime,&stime);
+    }
+    totalLoops = ((double)ntimes) * ((double)nloops);
+    nloopsPerMicrosecond = (totalLoops/elapsedTime)/1e6 + .99;
+    if(gsip488Debug) {
+        printf("totalLoops %f elapsedTime %f nloopsPerMicrosecond %ld\n",
+             totalLoops,elapsedTime,nloopsPerMicrosecond);
+        epicsTimeGetCurrent(&stime);
+        microSecondDelay(1000000);
+        epicsTimeGetCurrent(&etime);
+        elapsedTime = epicsTimeDiffInSeconds(&etime,&stime);
+        printf("elapsedTime %f\n",elapsedTime);
+    }
+}
+
+
+static void auxCmd(gsport *pgsport,epicsUInt8 value)
+{
+    int nmicro = 6;
+    writeRegister(pgsport,AUXMR,value);
+    microSecondDelay(nmicro);
 }
 
 static epicsUInt8 readRegister(gsport *pgsport, int offset)
@@ -311,24 +364,22 @@ void gsip488(int parameter)
         case transferStateIdle:
             epicsEventSignal(pgsport->waitForInterrupt); return;
         case transferStateWrite:
-            writeRegister(pgsport,AUXMR,TONS); break;
+            auxCmd(pgsport,TONS); break;
         case transferStateRead:
-            writeRegister(pgsport,AUXMR,LONS); break;
+            auxCmd(pgsport,LONS); break;
         default:
         }
-        wasteTime();
-        writeRegister(pgsport,AUXMR,GTS);
+        auxCmd(pgsport,GTS);
         if(pgsport->transferState!=transferStateWrite) return;
-        wasteTime();
     case transferStateWrite:
         if(!isr0&BO) return;
         if(pgsport->bytesRemainingWrite == 0) {
             pgsport->transferState = transferStateIdle;
-            writeRegister(pgsport,AUXMR,TONC);
+            auxCmd(pgsport,TONC);
             epicsEventSignal(pgsport->waitForInterrupt);
             break ;
         }
-        if(pgsport->bytesRemainingWrite==1) writeRegister(pgsport,AUXMR,FEOI);
+        if(pgsport->bytesRemainingWrite==1) auxCmd(pgsport,FEOI);
         octet = *pgsport->nextByteWrite;
         writeRegister(pgsport,CDOR,(epicsUInt8)octet);
         --(pgsport->bytesRemainingWrite); ++(pgsport->nextByteWrite);
@@ -344,10 +395,10 @@ void gsip488(int parameter)
         if(pgsport->bytesRemainingRead == 0) pgsport->eomReason |= ASYN_EOM_CNT;
         if(pgsport->eomReason) {
             pgsport->transferState = transferStateIdle;
-            writeRegister(pgsport,AUXMR,LONC);
+            auxCmd(pgsport,LONC);
             epicsEventSignal(pgsport->waitForInterrupt);
         }
-        writeRegister(pgsport,AUXMR,RHDF);
+        auxCmd(pgsport,RHDF);
         break;
     case transferStateIdle: 
         if(readRegister(pgsport,ASR&ATN)) return;
@@ -364,7 +415,7 @@ static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
 {
     epicsUInt8 isr0 = pgsport->isr0;
 
-    writeRegister(pgsport,AUXMR,TCA);
+    auxCmd(pgsport,TCA);
     if(!isr0&BO) {
         printStatus(pgsport,"writeCmd !isr0&BO\n");
         return asynTimeout;
@@ -436,7 +487,7 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     pgsport->bytesRemainingRead = cnt;
     pgsport->nextByteRead = buf;
     pgsport->eomReason = 0;
-    writeRegister(pgsport,AUXMR,RHDF);
+    auxCmd(pgsport,RHDF);
     pgsport->status = asynSuccess;
     status = writeAddr(pgsport,addr,0,timeout,transferStateRead);
     if(status!=asynSuccess) return status;
@@ -476,24 +527,17 @@ static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
         return asynSuccess;
     }
     /* Issue a software reset to the GPIB controller chip*/
-    writeRegister(pgsport,AUXMR,SWRSTS);
-    epicsThreadSleep(.01);
+    auxCmd(pgsport,SWRSTS);
     writeRegister(pgsport,ADR,0); /*controller address is 0*/
     writeRegister(pgsport,IMR0,0);
     writeRegister(pgsport,IMR1,0);
     readRegister(pgsport,ISR0);
     readRegister(pgsport,ISR1);
-    epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,SWRSTC);
-    epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,IFCS);
-    epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,IFCC);
-    epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,REMS);
-    epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,HDFAS);
-    epicsThreadSleep(.01);
+    auxCmd(pgsport,SWRSTC);
+    auxCmd(pgsport,IFCS);
+    auxCmd(pgsport,IFCC);
+    auxCmd(pgsport,REMS);
+    auxCmd(pgsport,HDFAS);
     writeRegister(pgsport,IMR0,BI|BO);
     writeRegister(pgsport,IMR1,ERR|MA|(pgsport->srqEnabled ? SRQ : 0));
     pasynManager->exceptionConnect(pasynUser);
@@ -682,9 +726,9 @@ static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser)
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s gpibPortIfc\n",pgsport->portName);
-    writeRegister(pgsport,AUXMR,IFCS);
+    auxCmd(pgsport,IFCS);
     epicsThreadSleep(.01);
-    writeRegister(pgsport,AUXMR,IFCC);
+    auxCmd(pgsport,IFCC);
     return asynSuccess;
 }
 
@@ -694,7 +738,7 @@ static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s gpibPortRen %s\n",pgsport->portName,(onOff ? "On" : "Off"));
-    writeRegister(pgsport,AUXMR,(onOff ? REMS : REMC));
+    auxCmd(pgsport,(onOff ? REMS : REMC));
     return asynSuccess;
 }
 
@@ -737,7 +781,7 @@ static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
     pgsport->bytesRemainingRead = 1;
     pgsport->nextByteRead = buffer;
     pgsport->eomReason = 0;
-    writeRegister(pgsport,AUXMR,RHDF);
+    auxCmd(pgsport,RHDF);
     pgsport->status = asynSuccess;
     writeAddr(pgsport,addr,-1,timeout,transferStateRead);
     *statusByte = buffer[0];
@@ -764,6 +808,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int vector,
     epicsUInt8 *registers;
     int size;
 
+    if(nloopsPerMicrosecond==0) initAuxmrWait();
     ipstatus = ipmValidate(carrier,module,GREEN_SPRING_ID,GSIP_488);
     if(ipstatus) {
         printf("gsIP488Configure Unable to validate IP module");
