@@ -21,7 +21,7 @@ and Mark Rivers</span></p>
 
 <h3>Other Contributers</h3>
 
-<p><span style="font-weight: bold; font-size: 14pt">Rok Sanjan (cosyLab) -
+<p><span style="font-weight: bold; font-size: 14pt">Gasper Jansa (cosyLab) -
 linuxGpib support.</span></p>
 </center>
 <hr>
@@ -4199,6 +4199,12 @@ where
 <pre>#The following is for the Greensprings IP488 on an MV162 
 ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
 gsIP488Configure("L0",0,0,0x61,0,0)</pre>
+<p>WARNING:</p>
+<p>This module includes code that implement a 6 microsecond delay
+because  the gpib interface chip requires it.
+The first time gsIP488Configure is executed code is run to determine
+a variable used by the delay routine. It assumes that there is no higher
+priority thread running that consumes lots of cpu cycles.</p>
 
 <h3><a name="ni1014"></a>National Instruments GPIB-1014D</h3>
 
