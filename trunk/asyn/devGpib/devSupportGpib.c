@@ -43,7 +43,6 @@
 #include "asynGpibDriver.h"
 
 #include "devSupportGpib.h"
-#include <epicsExport.h>
 
 #define DEFAULT_QUEUE_TIMEOUT 60.0
 #define DEFAULT_SRQ_WAIT_TIMEOUT 5.0
