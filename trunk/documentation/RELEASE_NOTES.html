@@ -12,13 +12,23 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>December 7 2005</h1>
+<h1>December 13 2005</h1>
 </center>
 <hr>
 
 <center>
 <h2>Release 4-4</h2>
 </center>
+
+<h3>VXI11</h3>
+<p>Better support was provided for VXI-11.3 controllers, i.e. talking
+directly to an ethernet port on an instrument. In particular
+a TDS3054B was tested.</p>
+<p>WARNING: The VXI-11.1 ansd VXI-11.3 standards do NOT allow access to
+GPIB lines, i.e. conmmands like Untalk/Unlisten are not possible.
+The previous support issued these commands after each read or write.
+Some really old GPIB devices may fail. If so the device specific code must be
+modified to sent these commands separately.</p>
 
 <h3>win32</h3>
 
