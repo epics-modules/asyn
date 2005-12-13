@@ -174,7 +174,7 @@ static asynStatus getAddr(gpibPvt *pgpibPvt,asynUser *pasynUser,
                  pgpibPvt->portName,*addr);
             return asynError;
         }
-        *primary = 0; *isPrimary = TRUE;
+        *primary = *addr = 0; *isPrimary = TRUE;
         return asynSuccess;
     } else if(*addr<100) {
         if(*addr>=NUM_GPIB_ADDRESSES) {
@@ -212,6 +212,9 @@ static void exceptionHandler(asynUser *pasynUser,asynException exception)
     }
 }
 
+/* NOTE FOR SINGLE ADDRESS CONTROLLER
+* The asynUser must specify addr = 0 or SRQs will not work.
+*/
 static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
     asynGpibPort *pasynGpibPort,pollNode *ppollNode,int addr)
 {
@@ -275,20 +278,20 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
             asynUser *pasynUser;
-            int      userAddr;
+            int      userAddr,primary,secondary;
+            BOOL isPrimary;
 
             pinterrupt = pnode->drvPvt;
             pasynUser = pinterrupt->pasynUser;
-            status = pasynManager->getAddr(pasynUser,&userAddr);
+            status = getAddr(pgpibPvt,pasynUser,&userAddr,
+                &primary,&secondary,&isPrimary);
             if(status!=asynSuccess) {
                 asynPrint(pasynUser,ASYN_TRACE_ERROR,
                     "%s addr %d asynGpib:srqPoll getAddr %s\n",
                     pgpibPvt->portName,addr,pasynUser->errorMessage);
-            } else {
-                if(userAddr==addr && pasynUser->reason==ASYN_REASON_SIGNAL) {
+            } else if(userAddr==addr && pasynUser->reason==ASYN_REASON_SIGNAL) {
                     pinterrupt->callback(pinterrupt->userPvt,
                         pinterrupt->pasynUser, statusByte);
-                }
             }
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
