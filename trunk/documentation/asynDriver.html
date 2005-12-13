@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">December 07
+<p><span style="font-weight: bold; font-size: 14pt">December 13
 2005</span></p>
 
 <h3>Other Contributers</h3>
@@ -3841,9 +3841,17 @@ struct asynGpibPort {
 specific functions like SRQ handling. It makes calls to asynGpibPort.
 asynGpib.c implements asynCommon and asynOctet. It supports asynInt32 by
 using the methods from asynInt32Base. asynInt32 is the way asynGpib reports
-SRQs to asynUsers. An asynUser that wishes to receive SRQs calls
+SRQs to asynUsers.</p>
+
+<p>An asynUser that wishes to receive SRQs calls
 pasynInt32-&gt;registerInterruptUser and must set asynUser.reason =
-ASYN_REASON_SIGNAL.</p>
+ASYN_REASON_SIGNAL. Although most gpib controllers are multidevice drivers,
+the VXI11 standard allows for a controller (VXI-11.2) that attached to a
+single device, i.e. it is a single address port driver. For such controllers,
+the use must specify addr = 0 in order to use SRQs. Also see the vxi support
+below for more details.</p>
+
+<p></p>
 
 <table border="1">
   <caption>asynGpib</caption>
@@ -4080,7 +4088,8 @@ an RPC based protocol. In addition to the VXI-11 standard, three additional
 standards are defined.
 <ul>
   <li>VXI-11.1 - A standard for communicating with VXIbus devices. These
-    devices have a vxiName that starts with "vxi".</li>
+    controllers have a vxiName that starts with "vxi" and can control
+    multiple devices, i.e. the port driver will be a multiaddress driver.</li>
   <li>VXI-11.2 - A standard for communicating with a IEEE 488.1 device. This
     means that the TCP/IP connection is talking to a GPIB controller that is
     talking to a GPIB bus. These devices have an vxiName that starts with
@@ -4088,7 +4097,29 @@ standards are defined.
     the vxiName must be "hpib"</li>
   <li>VXI-11.3 - A standard for communicating with IEEE 488.2 devices. This
     means that the TCP/IP connection is talking directly with an device.
-    These devices have an vxiName that starts with "inst".</li>
+    These devices have an vxiName that starts with "inst". These controllers
+    can control only a single device, i.e. the port driver will be a single
+    address driver</li>
+</ul>
+
+<p>NOTES</p>
+<ul>
+  <li>No VXI-11.1 controller has been tested.</li>
+  <li>The following VXI-11.2 controllers have been tested: Agilent E2050 and
+    E5810</li>
+  <li>The following VXI-11.3 instruments have been tested:
+    <ul>
+      <li>Tektronic TDS3054B scope.
+        <p>SRQs do not work. Do not know why</p>
+      </li>
+      <li>Tektronic TDS5054B scope.
+        <p>SRQs do work. The asynUser MUST specify addr = 0. Also do NOT set
+        bit 0x40 of Service Request Enable register, i.e. cause SRQ when
+        device has output available. This did not work and can cause infinite
+        set of SRQs</p>
+      </li>
+    </ul>
+  </li>
 </ul>
 
 <p>Consult the following documents (available on-line) for details.</p>
@@ -4199,12 +4230,14 @@ where
 <pre>#The following is for the Greensprings IP488 on an MV162 
 ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
 gsIP488Configure("L0",0,0,0x61,0,0)</pre>
+
 <p>WARNING:</p>
-<p>This module includes code that implement a 6 microsecond delay
-because  the gpib interface chip requires it.
-The first time gsIP488Configure is executed code is run to determine
-a variable used by the delay routine. It assumes that there is no higher
-priority thread running that consumes lots of cpu cycles.</p>
+
+<p>This module includes code that implement a 6 microsecond delay because 
+the gpib interface chip requires it. The first time gsIP488Configure is
+executed code is run to determine a variable used by the delay routine. It
+assumes that there is no higher priority thread running that consumes lots of
+cpu cycles.</p>
 
 <h3><a name="ni1014"></a>National Instruments GPIB-1014D</h3>
 
