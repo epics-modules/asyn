@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.19 2005-12-15 14:36:18 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.20 2005-12-15 16:51:43 rivers Exp $
  */
 
 #include <string.h>
@@ -514,7 +514,7 @@ ttyCleanup(ttyController_t *tty)
         if (tty->fd >= 0)
             epicsSocketDestroy(tty->fd);
         if (tty->timer != NULL)
-            epicsTimerDestroy(tty->timer);
+            epicsTimerQueueDestroyTimer(pserialBase->timerQueue, tty->timer);
         free(tty->portName);
         free(tty->serialDeviceName);
         free(tty);
