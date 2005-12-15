@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.18 2005-12-15 00:30:38 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.19 2005-12-15 14:36:18 norume Exp $
  */
 
 #include <string.h>
@@ -513,6 +513,8 @@ ttyCleanup(ttyController_t *tty)
     if (tty) {
         if (tty->fd >= 0)
             epicsSocketDestroy(tty->fd);
+        if (tty->timer != NULL)
+            epicsTimerDestroy(tty->timer);
         free(tty->portName);
         free(tty->serialDeviceName);
         free(tty);
@@ -559,14 +561,28 @@ drvAsynIPPortConfigure(const char *portName,
         return -1;
     }
 
-    if(!pserialBase) serialBaseInit();
+    /*
+     * Perform some one-time-only initializations
+     */
+    if(pserialBase == NULL) {
+        if (osiSockAttach() == 0) {
+            printf("drvAsynIPPortConfigure: osiSockAttach failed\n");
+            return -1;
+        }
+        serialBaseInit();
+    }
+
     /*
      * Create a driver
      */
     nbytes = sizeof(*tty) + sizeof(asynOctet);
     tty = (ttyController_t *)callocMustSucceed(1, nbytes,
           "drvAsynIPPortConfigure()");
-    pasynOctet = (asynOctet *)(tty +1);
+    pasynOctet = (asynOctet *)(tty+1);
+    tty->fd = -1;
+    tty->serialDeviceName = epicsStrDup(hostInfo);
+    tty->portName = epicsStrDup(portName);
+
     /*
      * Create timeout mechanism
      */
@@ -574,11 +590,9 @@ drvAsynIPPortConfigure(const char *portName,
          pserialBase->timerQueue, timeoutHandler, tty);
      if(!tty->timer) {
         printf("drvAsynIPPortConfigure: Can't create timer.\n");
+        ttyCleanup(tty);
         return -1;
     }
-    tty->fd = -1;
-    tty->serialDeviceName = epicsStrDup(hostInfo);
-    tty->portName = epicsStrDup(portName);
 
     /*
      * Parse configuration parameters
@@ -588,17 +602,11 @@ drvAsynIPPortConfigure(const char *portName,
      || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
         printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
                                                         tty->serialDeviceName);
+        ttyCleanup(tty);
         return -1;
     }
     *cp = '\0';
     memset(&tty->farAddr, 0, sizeof tty->farAddr);
-    if (osiSockAttach() == 0) {
-        *cp = ':';
-        printf("drvAsynIPPortConfigure: osiSockAttach failed\n");
-        ttyCleanup(tty);
-        return -1;
-    }
-    
     if(hostToIPAddr(tty->serialDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
         *cp = ':';
         printf("drvAsynIPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
