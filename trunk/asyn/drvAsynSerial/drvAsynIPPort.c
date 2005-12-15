@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.17 2005-12-01 12:59:17 mrk Exp $
+ * $Id: drvAsynIPPort.c,v 1.18 2005-12-15 00:30:38 rivers Exp $
  */
 
 #include <string.h>
@@ -592,6 +592,13 @@ drvAsynIPPortConfigure(const char *portName,
     }
     *cp = '\0';
     memset(&tty->farAddr, 0, sizeof tty->farAddr);
+    if (osiSockAttach() == 0) {
+        *cp = ':';
+        printf("drvAsynIPPortConfigure: osiSockAttach failed\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    
     if(hostToIPAddr(tty->serialDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
         *cp = ':';
         printf("drvAsynIPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
