@@ -26,11 +26,13 @@ endif
 
 #=============================
 
-PROD_IOC += testGpib
+PROD_IOC_DEFAULT += testGpib
+PROD_IOC_vxWorks += testGpibVx
 
 LIBRARY_IOC += devTestGpib
 devTestGpib_SRCS += devTestGpib.c
 devTestGpib_LIBS += asyn
+testGpibVx_DBD += commonInclude.dbd ni1014Include.dbd
 ifdef IPAC
 testGpibVx_DBD += ipacInclude.dbd
 devTestGpib_LIBS_vxWorks += Ipac
@@ -41,17 +43,22 @@ devTestGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 testGpib_SRCS_DEFAULT += testGpib_registerRecordDeviceDriver.cpp testGpibMain.c
 testGpib_SRCS_WIN32   += testGpibWin32_registerRecordDeviceDriver.cpp testGpibMain.c
-testGpib_SRCS_vxWorks += testGpibVx_registerRecordDeviceDriver.cpp
+testGpibVx_SRCS_vxWorks += testGpibVx_registerRecordDeviceDriver.cpp
 
 testGpib_LIBS += devTestGpib
 testGpib_LIBS += testSupport asyn
-ifdef IPAC
-testGpib_LIBS_vxWorks += Ipac
-endif
 SYS_PROD_LIBS_cygwin32 += rpc
 testGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
-testGpib_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
+
+testGpibVx_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
 vxComLibrary_DIR = $(EPICS_BASE_BIN)
+
+testGpibVx_LIBS += devTestGpib
+ifdef IPAC
+testGpibVx_LIBS_vxWorks += Ipac
+endif
+testGpibVx_LIBS += testSupport asyn
+testGpibVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 #===========================
