@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.20 2005-12-15 16:51:43 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.21 2006-01-17 18:59:53 norume Exp $
  */
 
 #include <string.h>
@@ -301,6 +301,10 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s disconnected:", tty->serialDeviceName);
         return asynError;
+    }
+    if (numchars == 0) {
+        *nbytesTransfered = 0;
+        return asynSuccess;
     }
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;

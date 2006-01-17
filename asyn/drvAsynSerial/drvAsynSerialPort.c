@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.32 2005-12-01 12:59:17 mrk Exp $
+ * $Id: drvAsynSerialPort.c,v 1.33 2006-01-17 18:59:53 norume Exp $
  */
 
 #include <string.h>
@@ -86,7 +86,6 @@ typedef struct {
     int                writePollmsec;
     epicsTimerId       timer;
     int                timeoutFlag;
-    int                cancelFlag;
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
@@ -658,6 +657,10 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
                                 "%s disconnected:", tty->serialDeviceName);
         return asynError;
     }
+    if (numchars == 0) {
+        *nbytesTransfered = 0;
+        return asynSuccess;
+    }
     if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
         tty->writeTimeout = pasynUser->timeout;
         if (tty->writeTimeout == 0) {
@@ -672,7 +675,6 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
             tty->writePollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
         }
     }
-    tty->cancelFlag = 0;
     tty->timeoutFlag = 0;
     nleft = numchars;
 #ifdef vxWorks
@@ -700,12 +702,6 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
             if (nleft == 0)
                 break;
             data += thisWrite;
-        }
-        if (tty->cancelFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s I/O cancelled", tty->serialDeviceName);
-            status = asynError;
-            break;
         }
         if (tty->timeoutFlag || (tty->writePollmsec == 0)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -781,7 +777,6 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         }
 #endif
     }
-    tty->cancelFlag = 0;
     tty->timeoutFlag = 0;
     for (;;) {
 #ifdef vxWorks
@@ -833,12 +828,6 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             }
             if (tty->readTimeout == 0)
                 tty->timeoutFlag = 1;
-        }
-        if (tty->cancelFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s I/O cancelled", tty->serialDeviceName);
-            status = asynError;
-            break;
         }
         if (tty->timeoutFlag)
             break;
