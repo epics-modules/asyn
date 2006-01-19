@@ -139,7 +139,7 @@ static asynGpibPort gpibPort = {
 #define IMR0    0x01 /*Interrupt   Mask Register 0*/
 #define ISR1    0x03 /*Interrupt Status Register 1*/
 #define IMR1    0x03 /*Interrupt   Mask Register 1*/
-#define ASR     0x05 /*Address Status Register*/
+#define ADSR    0x05 /*Address Status Register*/
 #define BSR     0x07 /*Bus Status Register*/
 #define AUXMR   0x07 /*Auxiliary Mode Register*/
 #define ADR     0x09 /*Address Register*/
@@ -175,7 +175,7 @@ static asynGpibPort gpibPort = {
 #define REMC    0x10 /*Remote Enable Clear*/
 #define REMS    0x90 /*Remote Enable Clear*/
 
-/*Definitions for ASR*/
+/*Definitions for ADSR*/
 #define REM     0x80 /*Remote*/
 #define ATN     0x20 /*ATN*/
 #define LADS    0x04 /*Addressed to Listen*/
@@ -282,14 +282,22 @@ static void writeRegister(gsport *pgsport,int offset, epicsUInt8 value)
         }
     }
     *pregister = value;
+
+    /*
+     * Must wait 5 ti9914 clock cycles between AUXMR commands
+     * Documentation is confusing but experiments indicate that 6 microsecod wait
+     * Is required.
+     */
+    if (offset == AUXMR)
+	microSecondDelay(6);
 }
 
 static void printStatus(gsport *pgsport, const char *source)
 {
     sprintf(pgsport->errorMessage, "%s "
-        "isr0 %2.2x isr1 %2.2x ASR %2.2x BSR %2.2x\n",
+        "isr0 %2.2x isr1 %2.2x ADSR %2.2x BSR %2.2x\n",
         source, pgsport->isr0,pgsport->isr1,
-        readRegister(pgsport,ASR),readRegister(pgsport,BSR));
+        readRegister(pgsport,ADSR),readRegister(pgsport,BSR));
 }
 
 static void waitTimeout(gsport *pgsport,double seconds)
@@ -348,21 +356,23 @@ void gsip488(int parameter)
             pgsport->status = asynError;
             epicsEventSignal(pgsport->waitForInterrupt);
         }
-        return;
+        goto exit;
     }
     switch(state) {
     case transferStateCmd:
-        if(!isr0&BO) return;
+        if(!isr0&BO)
+	    goto exit;
         if(pgsport->bytesRemainingCmd > 0) {
             octet = *pgsport->nextByteCmd;
             writeRegister(pgsport,CDOR,(epicsUInt8)octet);
             --(pgsport->bytesRemainingCmd); ++(pgsport->nextByteCmd);
-            return;
+            goto exit;
         }
         pgsport->transferState = pgsport->nextTransferState;
         switch(pgsport->transferState) {
         case transferStateIdle:
-            epicsEventSignal(pgsport->waitForInterrupt); return;
+            epicsEventSignal(pgsport->waitForInterrupt);
+	    goto exit;
         case transferStateWrite:
             auxCmd(pgsport,TONS); break;
         case transferStateRead:
@@ -370,9 +380,11 @@ void gsip488(int parameter)
         default:
         }
         auxCmd(pgsport,GTS);
-        if(pgsport->transferState!=transferStateWrite) return;
+        if(pgsport->transferState!=transferStateWrite)
+	    goto exit;
     case transferStateWrite:
-        if(!isr0&BO) return;
+        if(!isr0&BO)
+	    goto exit;
         if(pgsport->bytesRemainingWrite == 0) {
             pgsport->transferState = transferStateIdle;
             auxCmd(pgsport,TONC);
@@ -401,13 +413,19 @@ void gsip488(int parameter)
         auxCmd(pgsport,RHDF);
         break;
     case transferStateIdle: 
-        if(readRegister(pgsport,ASR&ATN)) return;
-        if(!isr0&BI) return;
+        if(readRegister(pgsport,ADSR&ATN))
+	    goto exit;
+        if(!isr0&BI)
+	    goto exit;
         octet = readRegister(pgsport,DIR);
         sprintf(message,"%s gsip488 received %2.2x\n",
              pgsport->portName,octet);
         epicsInterruptContextMessage(message);
     }
+
+exit:
+    /* Force synchronization of VMEbus writes on PPC CPU boards. */
+    octet = readRegister(pgsport,ADSR);
 }
 
 static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
