@@ -3301,9 +3301,9 @@ mask
 }</pre>
 
 <p>Binary Output Example Record</p>
-<pre>record(bi,"boUInt32Bit2") {
+<pre>record(bo,"boUInt32Bit2") {
     field(DTYP,"asynUInt32Digital")
-    field(INP,"@asynMask( $(port) , 0, 0x4 , 1.0) ")
+    field(OUT,"@asynMask( $(port) , 0, 0x4 , 1.0) ")
     field(ZNAM,"zero")
     field(ONAM,"one")
 }</pre>
@@ -4276,6 +4276,13 @@ where
   <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
     A24 address space is required.</li>
 </ul>
+<p>WARNING:</p>
+
+<p>This module includes code that implement a 6 microsecond delay because 
+the gpib interface chip requires it. The first time gsIP488Configure is
+executed code is run to determine a variable used by the delay routine. It
+assumes that there is no higher priority thread running that consumes lots of
+cpu cycles.</p>
 <hr>
 
 <center>
