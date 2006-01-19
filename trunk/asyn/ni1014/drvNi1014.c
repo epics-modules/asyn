@@ -216,7 +216,59 @@ static asynGpibPort gpibPort = {
 #define DL      0x20   /* Disable Listener*/
 
 #define EOSR    0x11F  /*End Of String Register*/
-
+
+/*
+ * Must wait 5 ti9914 clock cycles between AUXMR commands
+ * Documentation is confusing but experiments indicate that 6 microsecod wait
+ * Is required.
+*/
+
+static long nloopsPerMicrosecond = 0;
+
+static void wasteTime(int nloops)
+{
+    volatile int n = nloops;
+    while(n>0) n--;
+}
+
+static void microSecondDelay(int n)
+{
+    volatile long nloops = n * nloopsPerMicrosecond;
+    while(nloops>0) nloops--;
+}
+
+/* The following assumes that nothing else is using large amounts of
+ * cpu time between the calls to epicsTimeGetCurrent.
+*/
+
+static void initAuxmrWait() {
+    epicsTimeStamp stime,etime;
+    double elapsedTime = 0.0;
+    int ntimes = 1;
+    static int nloops = 1000000;
+    double totalLoops;
+
+    while(elapsedTime<1.0) {
+        int i;
+        ntimes *= 2;
+        epicsTimeGetCurrent(&stime);
+        for(i=0; i<ntimes; i++) wasteTime(nloops);
+        epicsTimeGetCurrent(&etime);
+        elapsedTime = epicsTimeDiffInSeconds(&etime,&stime);
+    }
+    totalLoops = ((double)ntimes) * ((double)nloops);
+    nloopsPerMicrosecond = (totalLoops/elapsedTime)/1e6 + .99;
+    if(ni1014Debug) {
+        printf("totalLoops %f elapsedTime %f nloopsPerMicrosecond %ld\n",
+             totalLoops,elapsedTime,nloopsPerMicrosecond);
+        epicsTimeGetCurrent(&stime);
+        microSecondDelay(1000000);
+        epicsTimeGetCurrent(&etime);
+        elapsedTime = epicsTimeDiffInSeconds(&etime,&stime);
+        printf("elapsedTime %f\n",elapsedTime);
+    }
+}
+
 static epicsUInt8 readRegister(niport *pniport, int offset)
 {
     volatile epicsUInt8 *pregister = (epicsUInt8 *)
@@ -255,6 +307,14 @@ static void writeRegister(niport *pniport,int offset, epicsUInt8 value)
         }
     }
     *pregister = value;
+
+    /*
+     * Must wait 5 ti9914 clock cycles between AUXMR commands
+     * Documentation is confusing but experiments indicate that 6 microsecod wait
+     * Is required.
+     */
+    if (offset == AUXMR)
+	microSecondDelay(6);
 }
 
 static void printStatus(niport *pniport, const char *source)
@@ -333,11 +393,12 @@ void ni1014(void *pvt)
             pniport->status = asynError;
             epicsEventSignal(pniport->waitForInterrupt);
         }
-        return;
+        goto exit;
     }
     switch(state) {
     case transferStateCmd:
-        if(!isr2&CO) return;
+        if(!isr2&CO)
+	    goto exit;
         if(pniport->bytesRemainingCmd == 0) {
             pniport->transferState = pniport->nextTransferState;
             if(pniport->transferState==transferStateIdle) {
@@ -352,7 +413,8 @@ void ni1014(void *pvt)
         --(pniport->bytesRemainingCmd); ++(pniport->nextByteCmd);
         break;
     case transferStateWrite:
-        if(!isr1&DO) return;
+        if(!isr1&DO)
+	    goto exit;
         if(pniport->bytesRemainingWrite == 0) {
             pniport->transferState = transferStateIdle;
             writeRegister(pniport,AUXMR,AUXTCA);
@@ -382,14 +444,19 @@ void ni1014(void *pvt)
         writeRegister(pniport,AUXMR,AUXFH);
         break;
     case transferStateIdle:
-        if(!isr1&DI) return;
+        if(!isr1&DI)
+	    goto exit;
         octet = readRegister(pniport,DIR);
         sprintf(message,"%s ni1014IH transferStateIdle received %2.2x\n",
              pniport->portName,octet);
         epicsInterruptContextMessage(message);
     }
+
+exit:
+    /* Force synchronization of VMEbus writes on PPC CPU boards. */
+    readRegister(pniport,ADSR);
 }
-
+
 static asynStatus writeCmd(niport *pniport,const char *buf, int cnt,
     double timeout,transferState_t nextState)
 {
@@ -814,6 +881,9 @@ int ni1014Config(char *portNameA,char *portNameB,
     int    size;
     int    indPort,nports;
     long   status;
+
+    if(nloopsPerMicrosecond==0)
+	initAuxmrWait();
 
     nports = (portNameB==0 || strlen(portNameB)==0) ? 1 : 2;
     for(indPort=0; indPort<nports; indPort++) {
