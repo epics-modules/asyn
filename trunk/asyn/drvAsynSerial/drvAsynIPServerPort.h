@@ -17,9 +17,8 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-int drvAsynIPServerPortConfigure(const char *portName, char *serverName,
-                                 unsigned int maxClients, unsigned int priority, int noAutoConnect,
-                                 int noProcessEos);
+int drvAsynIPServerPortConfigure(const char *portName, const char *serverName,
+                                 unsigned int maxClients, unsigned int priority, int noAutoConnect);
 
 #ifdef __cplusplus
 }
