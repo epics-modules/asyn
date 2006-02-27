@@ -35,7 +35,9 @@ DBD += drvAsynSerialPort.dbd
 endif
 INC += drvAsynIPPort.h
 asyn_SRCS += drvAsynIPPort.c
+asyn_SRCS += drvAsynIPServerPort.c
 DBD += drvAsynIPPort.dbd
+INC += drvAsynIPServerPort.h
 
 SRC_DIRS += $(ASYN)/interfaces
 INC += asynInt32.h asynInt32SyncIO.h
