@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.21 2006-01-17 18:59:53 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.22 2006-02-27 21:10:15 rivers Exp $
  */
 
 #include <string.h>
@@ -207,9 +207,10 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
     assert(tty);
     if (tty->fd >= 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s: Link already open!", tty->serialDeviceName);
-        return asynError;
+        /* The link is already open.  Ignore, because this is what happens if we are created with
+         * an existing file descriptor */
+        pasynManager->exceptionConnect(pasynUser);
+        return asynSuccess;
     }
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                               "Open connection to %s\n", tty->serialDeviceName);
@@ -535,7 +536,7 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 };
 
 /*
- * Configure and register a generic serial device
+ * Configure and register a generic serial device from a hostInfo string
  */
 int
 drvAsynIPPortConfigure(const char *portName,
@@ -679,6 +680,121 @@ drvAsynIPPortConfigure(const char *portName,
 }
 
 /*
+ * Configure and register a generic serial device from a file descriptor.  This is typically
+ * used when a socket server is running and has returned a file descriptor for a connection.
+ */
+int
+drvAsynIPPortFdConfigure(const char *portName,
+                         const char *hostInfo,
+                         int fd,
+                         unsigned int priority,
+                         int noAutoConnect,
+                         int noProcessEos)
+{
+    ttyController_t *tty;
+    asynInterface *pasynInterface;
+    asynStatus status;
+    int nbytes;
+    asynOctet *pasynOctet;
+
+    /*
+     * Check arguments
+     */
+    if (portName == NULL) {
+        printf("Port name missing.\n");
+        return -1;
+    }
+    if (hostInfo == NULL) {
+        printf("TCP host information missing.\n");
+        return -1;
+    }
+    if (fd < 0) {
+        printf("Invalid file descriptor.\n");
+        return -1;
+    }
+
+    /*
+     * Perform some one-time-only initializations
+     */
+    if(pserialBase == NULL) {
+        if (osiSockAttach() == 0) {
+            printf("drvAsynIPPortFdConfigure: osiSockAttach failed\n");
+            return -1;
+        }
+        serialBaseInit();
+    }
+
+    /*
+     * Create a driver
+     */
+    nbytes = sizeof(*tty) + sizeof(asynOctet);
+    tty = (ttyController_t *)callocMustSucceed(1, nbytes,
+          "drvAsynIPPortFdConfigure()");
+    pasynOctet = (asynOctet *)(tty+1);
+    tty->fd = -1;
+    tty->serialDeviceName = epicsStrDup(hostInfo);
+    tty->portName = epicsStrDup(portName);
+
+    /*
+     * Create timeout mechanism
+     */
+     tty->timer = epicsTimerQueueCreateTimer(
+         pserialBase->timerQueue, timeoutHandler, tty);
+     if(!tty->timer) {
+        printf("drvAsynIPPortFdConfigure: Can't create timer.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+
+    tty->fd = fd;
+
+    /*
+     *  Link with higher level routines
+     */
+    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynIPPortFdConfigure");
+    tty->common.interfaceType = asynCommonType;
+    tty->common.pinterface  = (void *)&drvAsynIPPortAsynCommon;
+    tty->common.drvPvt = tty;
+    if (pasynManager->registerPort(tty->portName,
+                                   ASYN_CANBLOCK,
+                                   !noAutoConnect,
+                                   priority,
+                                   0) != asynSuccess) {
+        printf("drvAsynIPPortFdConfigure: Can't register myself.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    status = pasynManager->registerInterface(tty->portName,&tty->common);
+    if(status != asynSuccess) {
+        printf("drvAsynIPPortFdConfigure: Can't register common.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    pasynOctet->readRaw = readRaw;
+    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->flush = flushIt;
+    tty->octet.interfaceType = asynOctetType;
+    tty->octet.pinterface  = pasynOctet;
+    tty->octet.drvPvt = tty;
+    status = pasynOctetBase->initialize(tty->portName,&tty->octet,
+        (noProcessEos ? 0 : 1), (noProcessEos ? 0 : 1), 1);
+    if(status != asynSuccess) {
+        printf("drvAsynIPPortFdConfigure: pasynOctetBase->initialize failed.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    tty->pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
+    if(status != asynSuccess) {
+        printf("connectDevice failed %s\n",tty->pasynUser->errorMessage);
+        ttyCleanup(tty);
+        return -1;
+    }
+    return 0;
+}
+
+
+/*
  * IOC shell command registration
  */
 static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString};
@@ -698,6 +814,24 @@ static void drvAsynIPPortConfigureCallFunc(const iocshArgBuf *args)
                            args[3].ival, args[4].ival);
 }
 
+static const iocshArg drvAsynIPPortFdConfigureArg0 = { "port name",iocshArgString};
+static const iocshArg drvAsynIPPortFdConfigureArg1 = { "host:port [protocol]",iocshArgString};
+static const iocshArg drvAsynIPPortFdConfigureArg2 = { "file descriptor",iocshArgInt};
+static const iocshArg drvAsynIPPortFdConfigureArg3 = { "priority",iocshArgInt};
+static const iocshArg drvAsynIPPortFdConfigureArg4 = { "disable auto-connect",iocshArgInt};
+static const iocshArg drvAsynIPPortFdConfigureArg5 = { "noProcessEos",iocshArgInt};
+static const iocshArg *drvAsynIPPortFdConfigureArgs[] = {
+    &drvAsynIPPortFdConfigureArg0, &drvAsynIPPortFdConfigureArg1,
+    &drvAsynIPPortFdConfigureArg2, &drvAsynIPPortFdConfigureArg3,
+    &drvAsynIPPortFdConfigureArg4, &drvAsynIPPortFdConfigureArg5};
+static const iocshFuncDef drvAsynIPPortFdConfigureFuncDef =
+                      {"drvAsynIPPortFdConfigure",6,drvAsynIPPortFdConfigureArgs};
+static void drvAsynIPPortFdConfigureCallFunc(const iocshArgBuf *args)
+{
+    drvAsynIPPortFdConfigure(args[0].sval, args[1].sval, args[2].ival,
+                             args[3].ival, args[4].ival, args[5].ival);
+}
+
 /*
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
@@ -708,6 +842,7 @@ drvAsynIPPortRegisterCommands(void)
     static int firstTime = 1;
     if (firstTime) {
         iocshRegister(&drvAsynIPPortConfigureFuncDef,drvAsynIPPortConfigureCallFunc);
+        iocshRegister(&drvAsynIPPortFdConfigureFuncDef,drvAsynIPPortFdConfigureCallFunc);
         firstTime = 0;
     }
 }
