@@ -22,7 +22,6 @@
 #include <epicsThread.h>
 #include <epicsAssert.h>
 #include <asynDriver.h>
-#include <asynInt32.h>
 #include <asynOctet.h>
 #include <asynOctetSyncIO.h>
 #include <drvAsynIPPort.h>
@@ -34,41 +33,24 @@
 typedef struct myData {
     epicsMutexId mutexId;
     char         *portName;
-    int          numConnections;
     asynOctet    *pasynOctet;
-    asynInt32    *pasynInt32;
     void         *octetPvt;
-    void         *int32Pvt;
     void         *registrarPvt;
-    asynUser     *pasynUser;
-    int          fileDescriptor;
 }myData;
 
 static void echoHandler(myData *pPvt)
 {
     asynUser *pasynUser;
-    char portName[100];
     char buffer[BUFFER_SIZE];
     int nread, nwrite, eomReason;
     asynStatus status;
 
-    /* Create a new asyn port with a unique name */
-    epicsSnprintf(portName, sizeof(portName), "%s:%d", pPvt->portName, pPvt->numConnections);
-
-    status = drvAsynIPPortFdConfigure(portName,
-                         portName,
-                         pPvt->fileDescriptor,
-                         0, 0, 0);
+    status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
     if (status) {
-        printf("echoHandler: unable to create port %s\n", portName);
+        printf("echoHandler: unable to connect to port %s\n", pPvt->portName);
         return;
     }
-    status = pasynOctetSyncIO->connect(portName, 0, &pasynUser, NULL);
-    if (status) {
-        printf("echoHandler: unable to connect to port %s\n", portName);
-        return;
-    }
-    status - pasynOctetSyncIO->setInputEos(pasynUser, "\r\n", 2);
+    status = pasynOctetSyncIO->setInputEos(pasynUser, "\r\n", 2);
     status = pasynOctetSyncIO->setOutputEos(pasynUser, "\r\n", 2);
     while(1) {
         status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE, 
@@ -83,30 +65,24 @@ static void echoHandler(myData *pPvt)
             printf("echoHandler: write error %s\n", pasynUser->errorMessage);
             goto disconnect;
         }
-        /* NEED A WAY TO DETECT REMOTE HOST DISCONNECTED, KILL THREAD */
     }
     disconnect:
     pasynOctetSyncIO->disconnect(pasynUser);
-    return(-1);
 }
 
                          
-static void connectionCallback(void *drvPvt, asynUser *pasynUser, epicsInt32 fd)
+static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName, size_t len, int eomReason)
 {
     myData     *pPvt = (myData *)drvPvt;
     myData     *newPvt = calloc(1, sizeof(myData));
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-              "testIPServer: connectionCallback, file descriptor=%d\n", fd);
+              "testIPServer: connectionCallback, portName=%s\n", portName);
     epicsMutexLock(pPvt->mutexId);
-    pPvt->numConnections++;
     /* Make a copy of myData, with new fileDescriptor */
     *newPvt = *pPvt;
     epicsMutexUnlock(pPvt->mutexId);
-    newPvt->fileDescriptor = fd;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-              "testIPServer: connectionCallback, file descriptor=%d, numConnections=%d\n", 
-              newPvt->fileDescriptor, newPvt->numConnections);
+    newPvt->portName = epicsStrDup(portName);
     /* Create a new thread to communicate with this port */
     epicsThreadCreate(pPvt->portName,
                       epicsThreadPriorityLow,
@@ -133,19 +109,19 @@ static void testIPServer(const char *portName)
         return;
     }
     pasynInterface = pasynManager->findInterface(
-        pasynUser,asynInt32Type,1);
+        pasynUser,asynOctetType,1);
     if(!pasynInterface) {
-        printf("%s driver not supported\n",asynInt32Type);
+        printf("%s driver not supported\n",asynOctetType);
         return;
     }
-    pPvt->pasynInt32 = (asynInt32 *)pasynInterface->pinterface;
-    pPvt->int32Pvt = pasynInterface->drvPvt;
-    status = pPvt->pasynInt32->registerInterruptUser(
-                 pPvt->int32Pvt, pasynUser,
+    pPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
+    pPvt->octetPvt = pasynInterface->drvPvt;
+    status = pPvt->pasynOctet->registerInterruptUser(
+                 pPvt->octetPvt, pasynUser,
                  connectionCallback,pPvt,&pPvt->registrarPvt);
     if(status!=asynSuccess) {
-        printf("testIPServer devAsynInt32 registerInterruptUser %s\n",
-               pPvt->pasynUser->errorMessage);
+        printf("testIPServer devAsynOctet registerInterruptUser %s\n",
+               pasynUser->errorMessage);
     }
  }
 
