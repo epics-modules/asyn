@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.2 2006-02-27 21:09:32 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.3 2006-02-28 17:22:53 rivers Exp $
  */
 
 #include <string.h>
@@ -34,8 +34,10 @@
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynInt32.h"
+#include "asynOctet.h"
 #include "asynInterposeEos.h"
 #include "drvAsynIPServerPort.h"
+#include "drvAsynIPPort.h"
 
 /*
  * This structure holds the hardware-specific information for a single server port.
@@ -51,7 +53,8 @@ typedef struct {
     int                fd;
     asynInterface      common;
     asynInterface      int32;
-    void               *registrarPvt;
+    asynInterface      octet;
+    void               *octetCallbackPvt;
 } ttyController_t;
 
 /* Function prototypes */
@@ -82,6 +85,13 @@ static asynInt32 drvAsynIPServerPortInt32 = {
    NULL, /* Get Bounds */
    NULL,
    NULL
+};
+/* asynOctet methods */
+static asynOctet drvAsynIPServerPortOctet = {
+   NULL, /* Write */
+   NULL, /* Write raw */
+   NULL, /* Read */
+   NULL, /* Read raw */
 };
 
 typedef struct serialBase {
@@ -169,9 +179,11 @@ static void connectionListener(void *drvPvt)
     int clientFd, clientLen=sizeof(clientAddr);
     ELLLIST *pclientList;
     interruptNode *pnode;
-    asynInt32Interrupt *pinterrupt;
+    asynOctetInterrupt *pinterrupt;
     asynUser *pasynUser;
-
+    char *portName;
+    int len;
+    asynStatus status;
 
     /*
      * Sanity check
@@ -191,19 +203,32 @@ static void connectionListener(void *drvPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
-        } else {
-            /* Issue callbacks to all clients who want notification on connection */
-            pasynManager->interruptStart(tty->registrarPvt, &pclientList);
-            pnode = (interruptNode *)ellFirst(pclientList);
-            while (pnode) {
-                pinterrupt = pnode->drvPvt;
-                pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
-                                     clientFd);
-                pnode = (interruptNode *)ellNext(&pnode->node);
-            }
-            pasynManager->interruptEnd(tty->registrarPvt);
+            continue;
         }
-        epicsThreadSleep(1.0);
+        /* Create a new asyn port with a unique name */
+        tty->numClients++;
+        len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
+        portName = callocMustSucceed(1, len, "drvAsynIPServerPort:connectionListener");
+        epicsSnprintf(portName, len, "%s:%d", tty->portName, tty->numClients);
+        status = drvAsynIPPortFdConfigure(portName,
+                     portName,
+                     clientFd,
+                     0, 0, 0);
+        if (status) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                      "Unable to create port %s\n", portName);
+            continue;
+        }
+        /* Issue callbacks to all clients who want notification on connection */
+        pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
+        pnode = (interruptNode *)ellFirst(pclientList);
+        while (pnode) {
+            pinterrupt = pnode->drvPvt;
+            pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
+                                 portName, strlen(portName), 0);
+            pnode = (interruptNode *)ellNext(&pnode->node);
+        }
+        pasynManager->interruptEnd(tty->octetCallbackPvt);
     }
 }
 
@@ -213,7 +238,7 @@ static asynStatus connectIt(void *drvPvt, asynUser *pasynUser)
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s connect\n", tty->portName);
+              "%s connect\n", tty->portName);
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
@@ -224,7 +249,7 @@ static asynStatus disconnect(void *drvPvt, asynUser *pasynUser)
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s disconnect\n", tty->portName);
+              "%s disconnect\n", tty->portName);
     closeConnection(pasynUser,tty);
     return asynSuccess;
 }
@@ -237,7 +262,6 @@ static void ttyCleanup(ttyController_t *tty)
     if (tty) {
         if (tty->fd >= 0)
             epicsSocketDestroy(tty->fd);
-        free(tty->portName);
         free(tty->portName);
         free(tty);
     }
@@ -384,8 +408,17 @@ int drvAsynIPServerPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    status = pasynManager->registerInterruptSource(tty->portName,&tty->int32,
-                                                   &tty->registrarPvt);
+    tty->octet.interfaceType = asynOctetType;
+    tty->octet.pinterface  = (void *)&drvAsynIPServerPortOctet;
+    tty->octet.drvPvt = tty;
+    status = pasynOctetBase->initialize(tty->portName,&tty->octet, 0, 0, 0);
+    if(status != asynSuccess) {
+        printf("drvAsynIPServerPortConfigure: pasynOctetBase->initialize failed.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    status = pasynManager->registerInterruptSource(tty->portName,&tty->octet,
+                                                   &tty->octetCallbackPvt);
     if(status!=asynSuccess) {
         printf("drvAsynIPServerPortConfigure registerInterruptSource failed\n");
         ttyCleanup(tty);
