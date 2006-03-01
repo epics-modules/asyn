@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.3 2006-02-28 17:22:53 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.4 2006-03-01 18:09:31 rivers Exp $
  */
 
 #include <string.h>
@@ -35,12 +35,20 @@
 #include "asynDriver.h"
 #include "asynInt32.h"
 #include "asynOctet.h"
+#include "asynCommonSyncIO.h"
 #include "asynInterposeEos.h"
 #include "drvAsynIPServerPort.h"
 #include "drvAsynIPPort.h"
 
+/* This structure holds the information for an IP port created by the listener */
+typedef struct {
+    char               *portName;
+    int                fd;
+    asynUser          *pasynUser;
+} portList_t;
+
 /*
- * This structure holds the hardware-specific information for a single server port.
+ * This structure holds the hardware-specific information for a single IP listener port.
  */
 typedef struct {
     asynUser          *pasynUser;
@@ -50,11 +58,15 @@ typedef struct {
     int                maxClients;
     int                numClients;
     int                socketType;
+    int                priority;
+    int                noAutoConnect;
+    int                noProcessEos;
     int                fd;
     asynInterface      common;
     asynInterface      int32;
     asynInterface      octet;
     void               *octetCallbackPvt;
+    portList_t         *portList;
 } ttyController_t;
 
 /* Function prototypes */
@@ -70,7 +82,8 @@ int drvAsynIPServerPortConfigure(const char *portName,
                              const char *serverInfo,
                              unsigned int maxClients,
                              unsigned int priority,
-                             int noAutoConnect);
+                             int noAutoConnect,
+                             int noProcessEos);
 
 /* asynCommon methods */
 static asynCommon drvAsynIPServerPortCommon = {
@@ -142,7 +155,7 @@ static void closeConnection(asynUser *pasynUser,ttyController_t *tty)
 {
     if (tty->fd >= 0) {
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "Close %s connection on port %d.\n", tty->portName, tty->portNumber);
+                           "drvAsynIPServerPort: close %s connection on port %d.\n", tty->portName, tty->portNumber);
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         pasynManager->exceptionDisconnect(pasynUser);
@@ -169,8 +182,8 @@ static void report(void *drvPvt, FILE *fp, int details)
 }
 
  /*
-  * This is the thread that listens for new connection requests, and issues int32 callbacks with the
-  * socket file descriptor when they occur.
+  * This is the thread that listens for new connection requests, and issues asynOctet callbacks with the
+  * port name when they occur.
   */
 static void connectionListener(void *drvPvt)
 {
@@ -181,9 +194,11 @@ static void connectionListener(void *drvPvt)
     interruptNode *pnode;
     asynOctetInterrupt *pinterrupt;
     asynUser *pasynUser;
-    char *portName;
     int len;
     asynStatus status;
+    int i;
+    portList_t *pl;
+    int connected;
 
     /*
      * Sanity check
@@ -192,43 +207,75 @@ static void connectionListener(void *drvPvt)
     pasynUser = tty->pasynUser;
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "%s started listening for connections on %s\n", 
+              "drvAsynIPServerPort: %s started listening for connections on %s\n", 
               tty->serverInfo);
     while (1) {
         clientFd = accept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                  "New connection, socket=%d on %s\n", 
+                  "drvAsynIPServerPort: new connection, socket=%d on %s\n", 
                   clientFd, tty->serverInfo);
         if (clientFd < 0) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "accept error on %s: fd=%d, %s\n", tty->serverInfo,
+                      "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
-            continue;
+            goto next;
         }
-        /* Create a new asyn port with a unique name */
-        tty->numClients++;
-        len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
-        portName = callocMustSucceed(1, len, "drvAsynIPServerPort:connectionListener");
-        epicsSnprintf(portName, len, "%s:%d", tty->portName, tty->numClients);
-        status = drvAsynIPPortFdConfigure(portName,
-                     portName,
-                     clientFd,
-                     0, 0, 0);
-        if (status) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "Unable to create port %s\n", portName);
-            continue;
+        /* Search for a port we have already created which is now disconnected */
+        for (i=0, pl=&tty->portList[0]; i<tty->numClients; i++, pl++) {
+            pasynManager->isConnected(pl->pasynUser, &connected);
+            if (!connected) {
+                break;
+            }
+            pl = NULL;
         }
+        if (pl == NULL) {
+            /* Have we exceeded maxClients? */
+            if (tty->numClients >= tty->maxClients) {
+                asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                          "drvAsynIPServerPort: %s: too many clients\n", tty->portName);
+                close(clientFd);
+                goto next;
+            }
+            /* Create a new asyn port with a unique name */
+            len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
+            pl = &tty->portList[tty->numClients];
+            pl->portName = callocMustSucceed(1, len, "drvAsynIPServerPort:connectionListener");
+            pl->fd = clientFd;
+            tty->numClients++;
+            epicsSnprintf(pl->portName, len, "%s:%d", tty->portName, tty->numClients);
+            /* Must create port with noAutoConnect, we manually connect with the file descriptor */
+            status = drvAsynIPPortConfigure(pl->portName,
+                         tty->serverInfo,
+                         tty->priority, 
+                         1,                  /* noAutoConnect */
+                         tty->noProcessEos);
+            if (status) {
+                asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                          "drvAsynIPServerPort: unable to create port %s\n", pl->portName);
+                goto next;
+            }
+            status = pasynCommonSyncIO->connect(pl->portName, -1, &pl->pasynUser, NULL);
+            if (status) {
+                asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                          "drvAsynIPServerPort: error calling pasynCommonSyncIO->connect %s\n", pl->portName);
+                goto next;
+            }
+        }
+        /* Set the existing port to use the new file descriptor */
+        pl->pasynUser->reason = clientFd;
+        pasynCommonSyncIO->connectDevice(pl->pasynUser);
+        pl->pasynUser->reason = 0;
         /* Issue callbacks to all clients who want notification on connection */
         pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
             pinterrupt = pnode->drvPvt;
             pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
-                                 portName, strlen(portName), 0);
+                                 pl->portName, strlen(pl->portName), 0);
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(tty->octetCallbackPvt);
+        next:
     }
 }
 
@@ -238,7 +285,7 @@ static asynStatus connectIt(void *drvPvt, asynUser *pasynUser)
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "%s connect\n", tty->portName);
+              "drvAsynIPServerPort: %s connect\n", tty->portName);
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
@@ -249,7 +296,7 @@ static asynStatus disconnect(void *drvPvt, asynUser *pasynUser)
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "%s disconnect\n", tty->portName);
+              "drvAsynIPServerPort: %s disconnect\n", tty->portName);
     closeConnection(pasynUser,tty);
     return asynSuccess;
 }
@@ -276,13 +323,13 @@ int drvAsynIPServerPortConfigure(const char *portName,
                              const char *serverInfo,
                              unsigned int maxClients,
                              unsigned int priority,
-                             int noAutoConnect)
+                             int noAutoConnect,
+                             int noProcessEos)
 {
     ttyController_t *tty;
     asynStatus status;
     char protocol[6];
     char *cp;
-    asynInt32 *pasynInt32;
     int i;
     struct sockaddr_in serverAddr;
 
@@ -294,8 +341,8 @@ int drvAsynIPServerPortConfigure(const char *portName,
         printf("TCP server information missing.\n");
         return -1;
     }
-    if (maxClients == 0) {
-        printf("Zero clients.\n");
+    if (maxClients <= 0) {
+        printf("No clients.\n");
         return -1;
     }
 
@@ -319,12 +366,16 @@ int drvAsynIPServerPortConfigure(const char *portName,
     tty->maxClients = maxClients;
     tty->portName = epicsStrDup(portName);
     tty->serverInfo = epicsStrDup(serverInfo);
+    tty->priority = priority;
+    tty->noAutoConnect = noAutoConnect;
+    tty->noProcessEos = noProcessEos;
+    tty->portList = callocMustSucceed(tty->maxClients, sizeof(portList_t), "drvAsynIPServerPortConfig");
 
     /*
      * Parse configuration parameters
      */
     protocol[0] = '\0';
-    if (((cp = strchr(tty->serverInfo, ':')) == NULL)
+    if (((cp = strchr(serverInfo, ':')) == NULL)
      || (sscanf(cp, ":%d %5s", &tty->portNumber, protocol) < 1)) {
         printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
                                                         tty->serverInfo);
@@ -449,16 +500,18 @@ static const iocshArg drvAsynIPServerPortConfigureArg1 = { "localhost:port [prot
 static const iocshArg drvAsynIPServerPortConfigureArg2 = { "max clients",iocshArgInt};
 static const iocshArg drvAsynIPServerPortConfigureArg3 = { "priority",iocshArgInt};
 static const iocshArg drvAsynIPServerPortConfigureArg4 = { "disable auto-connect",iocshArgInt};
+static const iocshArg drvAsynIPServerPortConfigureArg5 = { "noProcessEos",iocshArgInt};
+
 static const iocshArg *drvAsynIPServerPortConfigureArgs[] = {
     &drvAsynIPServerPortConfigureArg0, &drvAsynIPServerPortConfigureArg1,
     &drvAsynIPServerPortConfigureArg2, &drvAsynIPServerPortConfigureArg3,
-    &drvAsynIPServerPortConfigureArg4};
+    &drvAsynIPServerPortConfigureArg4, &drvAsynIPServerPortConfigureArg5};
 static const iocshFuncDef drvAsynIPServerPortConfigureFuncDef =
-                      {"drvAsynIPServerPortConfigure",5,drvAsynIPServerPortConfigureArgs};
+                      {"drvAsynIPServerPortConfigure",6,drvAsynIPServerPortConfigureArgs};
 static void drvAsynIPServerPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynIPServerPortConfigure(args[0].sval, args[1].sval, args[2].ival,
-                           args[3].ival, args[4].ival);
+                           args[3].ival, args[4].ival, args[5].ival);
 }
 
 /*
