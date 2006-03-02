@@ -8,7 +8,6 @@ option +r;
 %%#include <asynDriver.h>
 %%#include <asynOctet.h>
 %%#include <asynOctetSyncIO.h>
-%%#include <asynCommonSyncIO.h>
 
 #define BUFFER_SIZE 80
 
@@ -98,13 +97,6 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portNa
                   portName, pasynUser->errorMessage);
         return;
     }
-    /* Connect pasynUser to asynCommon interface */
-    status = pasynCommonSyncIO->connect(portName, 0, &pasynUser, NULL);
-    if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "ipSNCServer:connectionCallback: error connecting to asynCommon interface error on: %s\n",
-                  portName);
-    }
     /* Send an EPICS event to wake up the SNL program */
     pVar->connected = 1;
     epicsEventSignal( (epicsEventId)pVar->eventId);
@@ -147,55 +139,46 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
     char buffer[BUFFER_SIZE];
     int nread, eomReason;
     asynUser *pasynUser = (asynUser *)pVar->pasynUser;
-    asynStatus status, readStatus;
+    asynStatus status;
 
-    readStatus = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE,
+    status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE,
                                     0.0, &nread, &eomReason);
-    if (readStatus) {
+    if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:readSocket: read error on: %s: %s\n",
                   pVar->IOPortName, pasynUser->errorMessage);
-        /* Disconnect from device */
-        status = pasynCommonSyncIO->disconnectDevice(pasynUser);
-        if (status) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "ipSNCServer:readSocket: disconnect device error on: %s: %s\n",
-                      pVar->IOPortName, pasynUser->errorMessage);
-        }
         pVar->connected = 0;
+        strcpy(pVar->input, "");
     }
-    else asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                   "ipSNCServer:readSocket: %s read %s: %s: %s\n",
+    else {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                  "ipSNCServer:readSocket: %s read %s: %s: %s\n",
                    pVar->IOPortName, buffer);
-    strcpy(pVar->input, buffer);
-    return(readStatus);
+        strcpy(pVar->input, buffer);
+    }
+    return(status);
 }
 
 static int writeSocket(SS_ID ssId, struct UserVar *pVar)
 {
     int nwrite;
     asynUser *pasynUser = (asynUser *)pVar->pasynUser;
-    asynStatus status, writeStatus;
+    asynStatus status;
 
-    writeStatus = pasynOctetSyncIO->write(pasynUser, pVar->output, strlen(pVar->output),
-                                    0.0, &nwrite);
-    if (writeStatus) {
+    status = pasynOctetSyncIO->write(pasynUser, pVar->output, strlen(pVar->output),
+                                     0.0, &nwrite);
+    if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:writeSocket: write error on: %s: %s\n",
                   pVar->IOPortName, pasynUser->errorMessage);
-        /* Disconnect from device */
-        status = pasynCommonSyncIO->disconnectDevice(pasynUser);
-        if (status) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "ipSNCServer:writeSocket: disconnect device error on: %s: %s\n",
-                      pVar->IOPortName, pasynUser->errorMessage);
-        }
         pVar->connected = 0;
     }
-    else asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+    else {
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                    "ipSNCServer:writeSocket: %s write %s\n",
                    pVar->IOPortName, pVar->output);
-    return(writeStatus);
+    }
+    return(status);
 }
 
 }%

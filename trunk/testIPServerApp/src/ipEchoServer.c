@@ -24,7 +24,6 @@
 #include <asynDriver.h>
 #include <asynOctet.h>
 #include <asynOctetSyncIO.h>
-#include <asynCommonSyncIO.h>
 #include <drvAsynIPPort.h>
 #include <iocsh.h>
 #include <registryFunction.h>
@@ -74,7 +73,7 @@ static void echoHandler(myData *pPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "echoHandler: read error on: %s: %s\n", 
                       pPvt->portName, pasynUser->errorMessage);
-            goto disconnect;
+            break;
         }
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "echoHandler: %s read %s: %s: %s\n", 
@@ -86,42 +85,12 @@ static void echoHandler(myData *pPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "echoHandler: write error on: %s: %s\n", 
                       pPvt->portName, pasynUser->errorMessage);
-            goto disconnect;
+            break;
         }
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "echoHandler: %s wrote %s: %s: %s\n", 
                   pPvt->portName, buffer);
     }
-    disconnect:
-    /* Disconnect pasynUser from asynOctet interface */
-    status = pasynOctetSyncIO->disconnect(pasynUser);
-    if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: disconnect error on: %s: %s\n", 
-                  pPvt->portName, pasynUser->errorMessage);
-    }
-    /* Connect pasynUser to asynCommon interface */
-    status = pasynCommonSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
-    if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: error connecting to asynCommon interface error on: %s\n", 
-                  pPvt->portName);
-    }
-    /* Disconnect from device */
-    status = pasynCommonSyncIO->disconnectDevice(pasynUser);
-    if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: disconnect device error on: %s: %s\n", 
-                  pPvt->portName, pasynUser->errorMessage);
-    }
-    /* Disconnect pasynUser from asynCommon interface */
-    status = pasynCommonSyncIO->disconnect(pasynUser);
-    if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: disconnect error on: %s: %s\n", 
-                  pPvt->portName, pasynUser->errorMessage);
-    }
-
     return;
 }
 
