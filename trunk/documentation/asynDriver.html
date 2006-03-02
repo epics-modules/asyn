@@ -11,13 +11,12 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p><span style="font-weight: bold; font-size: 14pt">Release 4.4</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">Release 4.5</span></p>
 
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">December 13
-2005</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">March 2, 2006 </span></p>
 
 <h3>Other Contributers</h3>
 
@@ -58,6 +57,7 @@ license</a> described at the end of this document.</p>
 <ul>
   <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
   <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
+  <li><a href="#drvAsynIPServerPort">TCP/IP or UDP/IP Server</a></li>
   <li><a href="#vxi11">VXI-11</a></li>
   <li><a href="#Linux-gpib">Linux-Gpib</a></li>
   <li><a href="#gsIP488">Green Springs IP488</a></li>
@@ -157,7 +157,10 @@ than using libCom, much of it is independent of EPICS.</p>
   <li>drvAsynSerialPort: Support for devices connected to serial ports.</li>
   <li>drvAsynIPPort: Support for devices accessed via Ethernet/Serial
     converter boxes. TCP/IP and UDP/IP socket communication are
-  supported..</li>
+    supported.</li>
+  <li>drvAsynIPServerPort: Support for asyn socket servers that are accessed
+    from remote clients. TCP/IP and UDP/IP socket communication are
+    supported.</li>
   <li>VXI-11: A replacement for the VXI-11 support of the Franksen gpibCore
     support.</li>
   <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
@@ -1505,6 +1508,29 @@ typedef struct  asynCommon {
     </tr>
   </tbody>
 </table>
+
+<h3>asynCommonSyncIO</h3>
+
+<p>asynCommonSyncIO provides a convenient interface for software that needs to
+perform "synchronous" operations to an asyn device, i.e. that blocks while waiting
+for the port to be available and for the operation to complete.  The code does
+not need to handle callbacks or understand the details of the asynManager and
+asynCommon interfaces.  </p>
+<pre>
+typedef struct asynCommonSyncIO {
+    asynStatus (*connect)(const char *port, int addr, 
+                          asynUser **ppasynUser, const char *drvInfo);
+    asynStatus (*disconnect)(asynUser *pasynUser);
+    asynStatus (*connectDevice)(asynUser *pasynUser);
+    asynStatus (*disconnectDevice)(asynUser *pasynUser);
+    asynStatus (*report)(asynUser *pasynUser, FILE *fd, int details);
+} asynCommonSyncIO;
+epicsShareExtern asynCommonSyncIO *pasynCommonSyncIO;
+</pre>
+Note that there is a potential for confusion in the connect* and disconnect* function names of this interface.  
+For consistency with the other SyncIO interfaces, connect calls pasynManager->connectDevice, 
+disconnect calls pasynManager->disconnect, connectDevice calls asynCommon->connect, and 
+disconnectDevice calls asynCommon->disconnect.
 
 <h3>asynDrvUser</h3>
 
@@ -4056,7 +4082,7 @@ Ethernet/Serial converter box.</p>
         noProcessEos)</pre>
 where the arguments are:
 <ul>
-  <li>portName - The portName that is registered with asynGpib.</li>
+  <li>portName - The portName that is registered with asynManager.</li>
   <li>hostInfo - The Internet host name,  port number and optional IP
     protocol of the device (e.g.  "164.54.9.90:4002", "serials8n3:4002",
     "serials8n3:4002 TCP" or "164.54.17.43:5186 udp").  If no protocol is
@@ -4081,6 +4107,57 @@ connections.</p>
 
 <p>asynInterposeEos and asynInterposeFlush can be used to provide additional
 functionality.</p>
+
+<h3><a name="drvAsynIPServerPort"></a>TCP/IP or UDP/IP Server</h3>
+
+<p>The drvAsynIPServerPort driver supports asyn socket servers by listening for
+TCP/IP or UDP/IP connections from remote clients. The listener thread then creates
+a new drvAsynIPPort port by calling drvAsynIPPortConfigure 
+(or re-uses a disconnected port it previously created), 
+and calls back any registered asyn clients with the name of
+the new port.  These asyn clients will typically be socket servers.</p>
+
+<p>TCP/IP or UDP/IP server listeners are configured with the
+<tt>drvAsynIPServerPortConfigure</tt> command:</p>
+<pre> drvAsynIPServerPortConfigure("portName", "serverInfo", maxClients, priority, 
+      noAutoConnect, noProcessEos);</pre>
+where the arguments are:
+<ul>
+  <li>portName - The portName that is registered with asynManager.</li>
+  <li>serverInfo - The Internet host name, port number and optional IP
+    protocol to listen for connections on (e.g.  "localhost:4002", "localhost:5186 udp").  
+    If no protocol is specified, TCP will be used.</li>
+  <li>maxClients - the maximum number of IP clients that can be simultaneously
+    connected on this port.  Additional connect requests will fail.
+  <li>priority - Priority at which the listener thread and any asyn I/O ports it creates will run. 
+    If this is zero or missing, then epicsThreadPriorityMedium is used.</li>
+  <li>noAutoConnect - Zero or missing indicates that the listener port should
+    automatically connect.  Non-zero if explicit connect command must be
+    issued. Note that all asyn I/O ports that the listener thread creates
+    will be created with noAutoConnect=1, but this is transparent to socket
+    server applications, because the listener thread does the explicit connect
+    for them.</li>
+  <li>noProcessEos is passed to drvAsynIPPortConfigure when new asyn I/O ports
+    are created. If 0 then asynInterposeEosConfig is called specifying both
+    processEosIn and processEosOut.</li>
+</ul>
+
+<p>This driver implements the asynOctet interface.  The only methods it supports
+are registerInterruptUser and cancelInterruptUser.
+Calling the other asynOctet methods will result in an error.
+The following happens when a new connection is received on the port specified in drvAsynIPServerPortConfigure:
+<ul>
+  <li> The list of drvAsynIPPort ports that this listener thread has created is searched to see
+    if there is an existing port that is currently disconnected because the remote IP client disconnected.</li>
+  <li> If there is an existing disconnected port, then it is reconnected with the file descriptor from the
+    new IP connection.</li>
+  <li> If there is no available existing port, then a new one is created by calling drvAsynIPPortConfigure.
+    The name of the new port is of the form portName:1, portName:2, etc., where portName is the name of
+    the listener port.</li>
+  <li> All registered asyn clients (who have called registerInterruptUser on the asynOctet interface of
+    the listener port) are called back with the name of the newly connected port.</li>
+  <li> The clients then will connect to this new asyn port and perform I/O using the asynOctet methods.
+</ul>
 
 <h3><a name="vxi11"></a>VXI-11</h3>
 VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is
