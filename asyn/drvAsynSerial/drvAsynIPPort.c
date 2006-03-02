@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.24 2006-03-02 18:21:12 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.25 2006-03-02 20:47:14 rivers Exp $
  */
 
 #include <string.h>
@@ -211,9 +211,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
               "Open connection to %s\n", tty->serialDeviceName);
 
     /* If pasynUser->reason > 0) then use this as the file descriptor */
-    if (pasynUser->reason > 0) tty->fd = pasynUser->reason;
-    if (tty->fd >= 0) {
-        /* The link is already open with an existing file descriptor */
+    if (pasynUser->reason > 0) {
+        tty->fd = pasynUser->reason;
         pasynManager->exceptionConnect(pasynUser);
         return asynSuccess;
     }
