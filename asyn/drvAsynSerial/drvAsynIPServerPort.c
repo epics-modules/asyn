@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.5 2006-03-02 17:32:49 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.6 2006-03-02 20:00:20 rivers Exp $
  */
 
 #include <string.h>
@@ -71,7 +71,6 @@ typedef struct {
 
 /* Function prototypes */
 static void serialBaseInit(void);
-static int setNonBlock(int fd, int nonBlockFlag);
 static void closeConnection(asynUser *pasynUser,ttyController_t *tty);
 static void connectionListener(void *drvPvt);
 static void report(void *drvPvt, FILE *fp, int details);
@@ -117,35 +116,6 @@ static void serialBaseInit(void)
 {
     if(pserialBase) return;
     pserialBase = callocMustSucceed(1,sizeof(serialBase),"serialBaseInit");
-}
-
-/*
- * OSI function to control blocking/non-blocking I/O
- */
-static int setNonBlock(int fd, int nonBlockFlag)
-{
-#if defined(vxWorks)
-    int flags;
-    flags = nonBlockFlag;
-    if (ioctl(fd, FIONBIO, &flags) < 0)
-        return -1;
-#elif defined(_WIN32)
-    unsigned long int flags;
-    flags = nonBlockFlag;
-    if (socket_ioctl(fd, FIONBIO, &flags) < 0)
-        return -1;
-#else
-    int flags;
-    if ((flags = fcntl(fd, F_GETFL, 0)) < 0)
-        return -1;
-    if (nonBlockFlag)
-        flags |= O_NONBLOCK;
-    else
-        flags &= ~O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, flags) < 0)
-        return -1;
-#endif
-    return 0;
 }
 
 /*
@@ -218,7 +188,7 @@ static void connectionListener(void *drvPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
-            goto next;
+            break;
         }
         /* Search for a port we have already created which is now disconnected */
         pl = NULL;
@@ -235,7 +205,7 @@ static void connectionListener(void *drvPvt)
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: %s: too many clients\n", tty->portName);
                 close(clientFd);
-                goto next;
+                break;
             }
             /* Create a new asyn port with a unique name */
             len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
@@ -253,13 +223,13 @@ static void connectionListener(void *drvPvt)
             if (status) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: unable to create port %s\n", pl->portName);
-                goto next;
+                break;
             }
             status = pasynCommonSyncIO->connect(pl->portName, -1, &pl->pasynUser, NULL);
             if (status) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: error calling pasynCommonSyncIO->connect %s\n", pl->portName);
-                goto next;
+                break;
             }
         }
         /* Set the existing port to use the new file descriptor */
@@ -276,7 +246,6 @@ static void connectionListener(void *drvPvt)
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(tty->octetCallbackPvt);
-        next:
     }
 }
 
@@ -383,7 +352,7 @@ int drvAsynIPServerPortConfigure(const char *portName,
      */
     protocol[0] = '\0';
     if (((cp = strchr(serverInfo, ':')) == NULL)
-     || (sscanf(cp, ":%d %5s", &tty->portNumber, protocol) < 1)) {
+     || (sscanf(cp, ":%ud %5s", &tty->portNumber, protocol) < 1)) {
         printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
                                                         tty->serverInfo);
         ttyCleanup(tty);
