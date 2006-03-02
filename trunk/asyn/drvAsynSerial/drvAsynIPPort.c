@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.23 2006-03-01 18:07:16 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.24 2006-03-02 18:21:12 rivers Exp $
  */
 
 #include <string.h>
@@ -378,6 +378,15 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
             status = asynError;
             break;
         }
+        /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
+        if ((thisWrite == 0) && (tty->socketType == SOCK_STREAM)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s connection closed",
+                          tty->serialDeviceName);
+            closeConnection(pasynUser,tty);
+            status = asynError;
+            break;
+        }
     }
     if (timerStarted)
         epicsTimerCancel(tty->timer);
@@ -462,6 +471,15 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s read error: %s",
                                         tty->serialDeviceName, strerror(SOCKERRNO));
+                closeConnection(pasynUser,tty);
+                status = asynError;
+                break;
+            }
+            /* If recv() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
+            if ((thisRead == 0) && (tty->socketType == SOCK_STREAM)) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s connection closed",
+                              tty->serialDeviceName);
                 closeConnection(pasynUser,tty);
                 status = asynError;
                 break;
