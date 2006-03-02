@@ -1,6 +1,6 @@
 record(stringin,"$(P)stringInput") {
 }
-record(stringout,"$(P)stringOutput") {
+record(stringin,"$(P)stringOutput") {
 }
 record(bi, "$(P)connected") {
     field(ZNAM, "Disconnected")
