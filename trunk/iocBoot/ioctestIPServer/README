@@ -1,0 +1,16 @@
+This IOC uses the code in testIPServer/ directory.
+
+It creates 2 socket listener ports on localhost.  Port 5001 allows 2 simultaneous connections
+port 5002 allows only a single connection.  
+
+The port 5001 servers run the ipEchoServer.c code, and simply echo all input
+revieved on the port back to the output on that port.
+
+The port 5002 server run the ipSNCServer.st code.  It receives input commands
+and sends the response "OK" to every command.  It updates 3 EPICS PVs
+$(P)connected is a bi record with the connection status
+$(P)stringInput is a stringin record with the string received from the IP client
+$(P)stringOutput is a stringin record with the string sent to the IP client.
+
+medm/ipSNCServer.adl is an medm screen that can used to view these PVs.
+
