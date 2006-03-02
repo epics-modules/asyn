@@ -1,3 +1,4 @@
 include "base.dbd"
 include "drvAsynIPServerPort.dbd"
-registrar("testIPServerRegister")
+registrar("ipEchoServerRegister")
+registrar("ipSNCServerRegistrar")
