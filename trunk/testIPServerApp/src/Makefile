@@ -11,6 +11,10 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 DBD += testIPServer.dbd
 
+LIBRARY_IOC += testIPServerSupport
+testIPServerSupport_SRCS += ipEchoServer.c
+testIPServerSupport_SRCS += ipSNCServer.st
+
 #=============================
 
 PROD_IOC += testIPServer
@@ -18,8 +22,8 @@ PROD_IOC += testIPServer
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 testIPServer_SRCS_DEFAULT += testIPServer_registerRecordDeviceDriver.cpp testIPServerMain.cpp
 testIPServerVx_SRCS_vxWorks  += testIPServer_registerRecordDeviceDriver.cpp
-testIPServer_SRCS += testIPServer.c
-testIPServer_LIBS += testSupport asyn
+testIPServer_LIBS += testIPServerSupport asyn
+testIPServer_LIBS += seq pv
 testIPServer_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 testIPServer_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
