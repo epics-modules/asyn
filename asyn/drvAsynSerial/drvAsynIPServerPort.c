@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.4 2006-03-01 18:09:31 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.5 2006-03-02 17:32:49 rivers Exp $
  */
 
 #include <string.h>
@@ -197,7 +197,7 @@ static void connectionListener(void *drvPvt)
     int len;
     asynStatus status;
     int i;
-    portList_t *pl;
+    portList_t *pl, *p;
     int connected;
 
     /*
@@ -221,12 +221,13 @@ static void connectionListener(void *drvPvt)
             goto next;
         }
         /* Search for a port we have already created which is now disconnected */
-        for (i=0, pl=&tty->portList[0]; i<tty->numClients; i++, pl++) {
-            pasynManager->isConnected(pl->pasynUser, &connected);
+        pl = NULL;
+        for (i=0, p=&tty->portList[0]; i<tty->numClients; i++, p++) {
+            pasynManager->isConnected(p->pasynUser, &connected);
             if (!connected) {
+                pl = p;
                 break;
             }
-            pl = NULL;
         }
         if (pl == NULL) {
             /* Have we exceeded maxClients? */
@@ -282,11 +283,17 @@ static void connectionListener(void *drvPvt)
 static asynStatus connectIt(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    int status;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "drvAsynIPServerPort: %s connect\n", tty->portName);
-    pasynManager->exceptionConnect(pasynUser);
+    status = pasynManager->exceptionConnect(pasynUser);
+    if (status) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                  "drvAsynIPServerPort: error calling exceptionConnect on %s: %s\n",
+                  tty->portName, pasynUser->errorMessage);
+    }
     return asynSuccess;
 }
 
