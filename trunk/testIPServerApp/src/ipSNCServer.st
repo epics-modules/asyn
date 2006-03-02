@@ -153,7 +153,7 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
                                     0.0, &nread, &eomReason);
     if (readStatus) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: read error on: %s: %s\n",
+                  "ipSNCServer:readSocket: read error on: %s: %s\n",
                   pVar->IOPortName, pasynUser->errorMessage);
         /* Disconnect from device */
         status = pasynCommonSyncIO->disconnectDevice(pasynUser);
@@ -165,7 +165,7 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
         pVar->connected = 0;
     }
     else asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                   "echoHandler: %s read %s: %s: %s\n",
+                   "ipSNCServer:readSocket: %s read %s: %s: %s\n",
                    pVar->IOPortName, buffer);
     strcpy(pVar->input, buffer);
     return(readStatus);
