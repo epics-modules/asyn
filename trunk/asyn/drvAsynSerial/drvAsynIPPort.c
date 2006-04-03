@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.26 2006-04-03 20:12:32 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.27 2006-04-03 23:38:19 norume Exp $
  */
 
 #include <string.h>
@@ -443,6 +443,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     }
     tty->cancelFlag = 0;
     tty->timeoutFlag = 0;
+    *gotEom = 0;
     for (;;) {
         if (!timerStarted && (tty->readTimeout > 0)) {
             epicsTimerStartDelay(tty->timer, tty->readTimeout);
@@ -499,7 +500,6 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if (tty->timeoutFlag && (status == asynSuccess))
         status = asynTimeout;
     *nbytesTransfered = nRead;
-    *gotEom = ASYN_EOM_END;  /* This is not quite right, but it means we have read what is available */
     /* If there is room add a null byte */
     if (nRead < maxchars) data[nRead] = 0;
     return status;
