@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.25 2006-03-02 20:47:14 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.26 2006-04-03 20:12:32 rivers Exp $
  */
 
 #include <string.h>
@@ -499,6 +499,9 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if (tty->timeoutFlag && (status == asynSuccess))
         status = asynTimeout;
     *nbytesTransfered = nRead;
+    *gotEom = ASYN_EOM_END;  /* This is not quite right, but it means we have read what is available */
+    /* If there is room add a null byte */
+    if (nRead < maxchars) data[nRead] = 0;
     return status;
 }
 
