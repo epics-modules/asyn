@@ -1655,27 +1655,27 @@ static void setOption(asynUser * pasynUser)
               pmsg->fieldIndex);
     switch (pmsg->fieldIndex) {
     case asynRecordBAUD:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "baud", baud_choices[pasynRec->baud]);
         break;
     case asynRecordPRTY:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "parity", parity_choices[pasynRec->prty]);
         break;
     case asynRecordSBIT:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "stop", stop_bit_choices[pasynRec->sbit]);
         break;
     case asynRecordDBIT:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
            pasynUser, "bits", data_bit_choices[pasynRec->dbit]);
         break;
     case asynRecordMCTL:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
            pasynUser, "clocal", modem_control_choices[pasynRec->mctl]);
         break;
     case asynRecordFCTL:
-        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynCommonPvt,
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
            pasynUser, "crtscts", flow_control_choices[pasynRec->fctl]);
         break;
     }
@@ -1708,37 +1708,37 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(mctl);
     REMEMBER_STATE(fctl);
     /* Get port options */
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
     pasynRec->baud = 0;
     for (i = 0; i < NUM_BAUD_CHOICES; i++)
         if(strcmp(optbuff, baud_choices[i]) == 0)
             pasynRec->baud = i;
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "parity", optbuff, OPT_SIZE);
     pasynRec->prty = 0;
     for (i = 0; i < NUM_PARITY_CHOICES; i++)
         if(strcmp(optbuff, parity_choices[i]) == 0)
             pasynRec->prty = i;
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "stop", optbuff, OPT_SIZE);
     pasynRec->sbit = 0;
     for (i = 0; i < NUM_SBIT_CHOICES; i++)
         if(strcmp(optbuff, stop_bit_choices[i]) == 0)
             pasynRec->sbit = i;
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "bits", optbuff, OPT_SIZE);
     pasynRec->dbit = 0;
     for (i = 0; i < NUM_DBIT_CHOICES; i++)
         if(strcmp(optbuff, data_bit_choices[i]) == 0)
             pasynRec->dbit = i;
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "clocal", optbuff, OPT_SIZE);
     pasynRec->mctl = 0;
     for (i = 0; i < NUM_MODEM_CHOICES; i++)
         if(strcmp(optbuff, modem_control_choices[i]) == 0)
             pasynRec->mctl = i;
-    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynCommonPvt, pasynUser,
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "crtscts", optbuff, OPT_SIZE);
     pasynRec->fctl = 0;
     for (i = 0; i < NUM_FLOW_CHOICES; i++)
