@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.6 2006-03-02 20:00:20 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.7 2006-04-13 17:14:44 mrk Exp $
  */
 
 #include <string.h>
@@ -226,9 +226,11 @@ static void connectionListener(void *drvPvt)
                 break;
             }
             status = pasynCommonSyncIO->connect(pl->portName, -1, &pl->pasynUser, NULL);
-            if (status) {
+            if (status!=asynSuccess) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                          "drvAsynIPServerPort: error calling pasynCommonSyncIO->connect %s\n", pl->portName);
+                    "%s drvAsynIPServerPort: error calling "
+                    "pasynCommonSyncIO->connect %s\n",
+                    pl->portName,pl->pasynUser->errorMessage);
                 break;
             }
         }
