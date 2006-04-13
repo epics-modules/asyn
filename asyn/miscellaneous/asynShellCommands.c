@@ -192,13 +192,17 @@ epicsShareFunc epicsShareFunc int
     asynStatus status;
     GPHENTRY *hashEntry;
 
-    status = pasynOctetSyncIO->connect(port, addr, &pasynUser,drvInfo);
-    if (status) return(-1);
-
     pPvt = asynFindEntry(entry);
     if (pPvt) {
        printf("Entry already connected\n");
        return(-1);
+    }
+
+    status = pasynOctetSyncIO->connect(port, addr, &pasynUser,drvInfo);
+    if (status) {
+        printf("connect failed %s\n",pasynUser->errorMessage);
+        pasynOctetSyncIO->disconnect(pasynUser);
+        return(-1);
     }
     hashEntry = gphAdd(asynHash, epicsStrDup(entry), NULL);
     pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt)); 
@@ -228,7 +232,7 @@ epicsShareFunc epicsShareFunc int
     }
     hashEntry = gphFind(asynHash, entry, NULL);
     if (hashEntry == NULL) {
-        printf("device name not specified\n");
+        printf("device name not found\n");
         return -1;
     }
     pPvt = (asynIOPvt *)hashEntry->userPvt;
