@@ -365,6 +365,7 @@ static long initAo(aoRecord *pao)
         pao->val = value;
         pao->udf = 0;
     }
+    pasynFloat64SyncIO->disconnect(pPvt->pasynUserSync);
     return 2; /* Do not convert */
 }
 

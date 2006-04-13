@@ -383,6 +383,7 @@ static long initBo(boRecord *pbo)
     /* Read the current value from the device */
     status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask,pPvt->pasynUser->timeout);
+    pasynUInt32DigitalSyncIO->disconnect(pPvt->pasynUserSync);
     if (status == asynSuccess) {
         pbo->rval = value;
         return 0;
