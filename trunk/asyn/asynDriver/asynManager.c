@@ -554,6 +554,12 @@ static void queueTimeoutCallback(void *pvt)
 	if(puserPvt->state==callbackCanceled)
 	    epicsEventSignal(puserPvt->callbackDone);
         puserPvt->state = callbackIdle;
+        if(puserPvt->freeAfterCallback) {
+            puserPvt->freeAfterCallback = FALSE;
+            epicsMutexMustLock(pasynBase->lock);
+            ellAdd(&pasynBase->asynUserFreeList,&puserPvt->node);
+            epicsMutexUnlock(pasynBase->lock);
+        }
     }
     epicsMutexUnlock(pport->asynManagerLock);
     epicsEventSignal(pport->notifyPortThread);
