@@ -258,7 +258,14 @@ static long init_record(asynRecord * pasynRec, int pass)
     asynStatus status;
     char fieldName[100];
 
-    if(pass != 0) return (0);
+    if(pass != 0)  {
+        if(strlen(pasynRec->port) != 0) {
+            status = connectDevice(pasynRec);
+            pasynRecPvt = pasynRec->dpvt;
+            if(status == asynSuccess) pasynRecPvt->state = stateIdle;
+        }
+        return (0);
+    }
     /* Allocate and initialize private structure used by this record */
     pasynRecPvt = (asynRecPvt *) callocMustSucceed(
                                          1, sizeof(asynRecPvt), "asynRecord");
@@ -284,18 +291,12 @@ static long init_record(asynRecord * pasynRec, int pass)
     pasynUser->userPvt = pasynRecPvt;
     pasynRecPvt->pasynUser = pasynUser;
     pasynRecPvt->state = stateNoDevice;
-    if(strlen(pasynRec->port) != 0) {
-        status = connectDevice(pasynRec);
-        if(status == asynSuccess) pasynRecPvt->state = stateIdle;
-    }
     pasynRecPvt->interruptLock = epicsMutexCreate();
     /* Get the dbaddr field of this record's SCAN field */
     strcpy(fieldName, pasynRec->name);
     strcat(fieldName, ".SCAN");
     dbNameToAddr(fieldName, &pasynRecPvt->scanAddr);
     scanIoInit(&pasynRecPvt->ioScanPvt);
-    /* Get initial values of trace and connect bits */
-    monitorStatus(pasynRec);
     return (0);
 }
 
@@ -358,6 +359,7 @@ static long special(struct dbAddr * paddr, int after)
     int        fieldIndex = dbGetFieldIndex(paddr);
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
+    asynUser *pasynUserSpecial;
     callbackMessage *pmsg;
     asynStatus status = asynSuccess;
     int        traceMask;
@@ -513,10 +515,10 @@ static long special(struct dbAddr * paddr, int after)
     }
             
     /* remaining cases must be handled by asynCallbackSpecial*/
-    pasynUser = pasynManager->duplicateAsynUser(pasynUser,
+    pasynUserSpecial = pasynManager->duplicateAsynUser(pasynUser,
                                                 asynCallbackSpecial, 
                                                 queueTimeoutCallbackSpecial);
-    pmsg = pasynUser->userData = 
+    pmsg = pasynUserSpecial->userData = 
                 (callbackMessage *)pasynManager->memMalloc(sizeof(*pmsg));
     switch (fieldIndex) {
     case asynRecordCNCT:
@@ -542,12 +544,13 @@ static long special(struct dbAddr * paddr, int after)
     } else {
         priority = asynQueuePriorityLow;
     }
-    status = pasynManager->queueRequest(pasynUser,
+    status = pasynManager->queueRequest(pasynUserSpecial,
                                         priority,QUEUE_TIMEOUT);
     if(status!=asynSuccess) {
         reportError(pasynRec,status,"queueRequest failed for special.");
-        reportError(pasynRec,status,pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
+        reportError(pasynRec,status,pasynUserSpecial->errorMessage);
+        pasynManager->memFree(pmsg, sizeof(*pmsg));
+        pasynManager->freeAsynUser(pasynUserSpecial);
     }
     return 0;
 }
@@ -819,7 +822,12 @@ static void asynCallbackSpecial(asynUser * pasynUser)
         break;
     case callbackConnect:{
             int isConnected;
-            pasynManager->isConnected(pasynUser, &isConnected);
+            status = pasynManager->isConnected(pasynUser, &isConnected);
+            if(status!=asynSuccess) {
+                reportError(pasynRec, asynError,
+                    "asynCallbackSpecial isConnected error");
+                break;
+            }
             if(pasynRec->cnct) {
                 if(!isConnected) {
                     pasynRecPvt->pasynCommon->connect(
@@ -877,8 +885,11 @@ static void queueTimeoutCallbackSpecial(asynUser * pasynUser)
 {
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
+    callbackMessage *pmsg = (callbackMessage *)pasynUser->userData;
     reportError(pasynRec, asynError, "special queueRequest timeout");
     pasynRecPvt->state = stateIdle;
+    pasynManager->memFree(pmsg, sizeof(*pmsg));
+    pasynManager->freeAsynUser(pasynUser);
 }
 
 static long cvt_dbaddr(struct dbAddr * paddr)
@@ -1194,22 +1205,38 @@ static asynStatus connectDevice(asynRecord * pasynRec)
     pasynManager->exceptionCallbackAdd(pasynUser, exceptCallback);
     /* Get the trace and connect flags */
     monitorStatus(pasynRec);
-    /* Queue a request to get the options */
-    pasynUserConnect = pasynManager->duplicateAsynUser(pasynUser,
-        asynCallbackSpecial, queueTimeoutCallbackSpecial);
-    pasynUserConnect->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUserConnect->userData;
-    pmsg->callbackType = callbackGetOption;
-    status = pasynManager->queueRequest(pasynUserConnect,
+    if(pasynRec->optioniv) {
+        /* Queue a request to get the options */
+        pasynUserConnect = pasynManager->duplicateAsynUser(pasynUser,
+            asynCallbackSpecial, queueTimeoutCallbackSpecial);
+        pasynUserConnect->userData = pasynManager->memMalloc(sizeof(*pmsg));
+        pmsg = (callbackMessage *)pasynUserConnect->userData;
+        pmsg->callbackType = callbackGetOption;
+        status = pasynManager->queueRequest(pasynUserConnect,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
-    /* Queue a request to get the EOS */
-    pasynUserEos = pasynManager->duplicateAsynUser(pasynUser,
-        asynCallbackSpecial, queueTimeoutCallbackSpecial);
-    pasynUserEos->userData = pasynManager->memMalloc(sizeof(*pmsg));
-    pmsg = (callbackMessage *)pasynUserEos->userData;
-    pmsg->callbackType = callbackGetEos;
-    status = pasynManager->queueRequest(pasynUserEos,
+        if(status!=asynSuccess) {
+            reportError(pasynRec, asynError, 
+                "queueRequest failed\n");
+            pasynManager->memFree(pmsg, sizeof(*pmsg));
+            pasynManager->freeAsynUser(pasynUserConnect);
+        }
+    }
+    if(pasynRec->octetiv) {
+        /* Queue a request to get the EOS */
+        pasynUserEos = pasynManager->duplicateAsynUser(pasynUser,
+            asynCallbackSpecial, queueTimeoutCallbackSpecial);
+        pasynUserEos->userData = pasynManager->memMalloc(sizeof(*pmsg));
+        pmsg = (callbackMessage *)pasynUserEos->userData;
+        pmsg->callbackType = callbackGetEos;
+        status = pasynManager->queueRequest(pasynUserEos,
                                         asynQueuePriorityLow,QUEUE_TIMEOUT);
+        if(status!=asynSuccess) {
+            reportError(pasynRec, asynError, 
+                "queueRequest failed\n");
+            pasynManager->memFree(pmsg, sizeof(*pmsg));
+            pasynManager->freeAsynUser(pasynUserEos);
+        }
+    }
     pasynRec->pcnct = 1; 
     status = asynSuccess;
     goto done;
