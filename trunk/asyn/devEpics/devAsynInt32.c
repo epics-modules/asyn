@@ -373,6 +373,7 @@ static long initAi(aiRecord *pr)
     pPvt = pr->dpvt;
     pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
                             &pPvt->deviceLow, &pPvt->deviceHigh);
+    pasynInt32SyncIO->disconnect(pPvt->pasynUserSync);
     convertAi(pr, 1);
     return 0;
 }
