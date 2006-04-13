@@ -62,16 +62,13 @@ static asynStatus connect(const char *port, int addr,
     *ppasynUser = pasynUser;
     status = pasynManager->connectDevice(pasynUser, port, addr);    
     if (status != asynSuccess) {
-      printf("Can't connect to port %s address %d %s\n",
-          port, addr,pasynUser->errorMessage);
-      pasynManager->freeAsynUser(pasynUser);
-      free(pioPvt);
-      return status ;
+        return status;
     }
     pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
     if (!pasynInterface) {
-       printf("%s interface not supported\n", asynCommonType);
-       goto cleanup;
+       epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+           "interface %s is not supported by port\n",asynCommonType);
+       return asynError;
     }
     pioPvt->pasynCommon = (asynCommon *)pasynInterface->pinterface;
     pioPvt->pcommonPvt = pasynInterface->drvPvt;
@@ -88,15 +85,13 @@ static asynStatus connect(const char *port, int addr,
                 pioPvt->pasynDrvUser = pasynDrvUser;
                 pioPvt->drvUserPvt = drvPvt;
             } else {
-                printf("asynCommonSyncIO::connect drvUserCreate drvInfo=%s %s\n",
+                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                    "pasynDrvUser->create drvInfo %s error %s\n",
                          drvInfo, pasynUser->errorMessage);
             }
         }
     }
     return asynSuccess ;
-cleanup:
-    disconnect(pasynUser);
-    return asynError;
 }
 
 static asynStatus disconnect(asynUser *pasynUser)
@@ -112,12 +107,6 @@ static asynStatus disconnect(asynUser *pasynUser)
                 pasynUser->errorMessage);
             return status;
         }
-    }
-    status = pasynManager->disconnect(pasynUser);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynCommonSyncIO disconnect failed %s\n",pasynUser->errorMessage);
-        return status;
     }
     status = pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) {
