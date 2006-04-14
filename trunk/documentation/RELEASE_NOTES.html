@@ -12,13 +12,25 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>April 3, 2006</h1>
+<h1>April 14, 2006</h1>
 </center>
 <hr>
 
 <center>
 <h2>Release 4-5</h2>
 </center>
+
+<h3>memMalloc/memFree</h3>
+<p>memMalloc was allocating the amount of memory the caller requested rather
+than the amount required for the freeList.
+If memFree was called and the memory reallocated to a user requesting
+a larger size, memory corruption occured. This is fixed.
+</p>
+<h3>SyncIO routines</h3>
+<p>If the connect call fails the asynUser is no longer freed.
+Instead a message is put into asynUser.errorMessage.
+The caller must call disconnect in order to free the storage for the asynUser.
+</p>
 
 <h3>Serial, TCP/UDP/IP</h3>
 <p>Handle 0-length write requests.
