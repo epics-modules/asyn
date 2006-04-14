@@ -317,9 +317,11 @@ static asynStatus writeOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynUInt32DigitalSyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynUInt32DigitalSyncIO connect failed %s\n",
             pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = writeOp(pasynUser,value,mask,timeout);
     if(status!=asynSuccess) {
@@ -340,9 +342,11 @@ static asynStatus readOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynUInt32DigitalSyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynUInt32DigitalSyncIO connect failed %s\n",
             pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = readOp(pasynUser,pvalue,mask,timeout);
     if(status!=asynSuccess) {
@@ -363,9 +367,11 @@ static asynStatus setInterruptOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynUInt32DigitalSyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynUInt32DigitalSyncIO connect failed %s\n",
             pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = setInterrupt(pasynUser,mask,reason,timeout);
     if(status!=asynSuccess) {
@@ -385,9 +391,11 @@ static asynStatus clearInterruptOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynUInt32DigitalSyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynUInt32DigitalSyncIO connect failed %s\n",
             pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = clearInterrupt(pasynUser,mask,timeout);
     if(status!=asynSuccess) {
@@ -408,9 +416,11 @@ static asynStatus getInterruptOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynUInt32DigitalSyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynUInt32DigitalSyncIO connect failed %s\n",
             pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = getInterrupt(pasynUser,mask,reason,timeout);
     if(status!=asynSuccess) {

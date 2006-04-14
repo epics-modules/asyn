@@ -188,9 +188,11 @@ static asynStatus writeOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynFloat64SyncIO connect failed %s\n",
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "asynFloat64SyncIO connect failed %s\n",
            pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = writeOp(pasynUser,value,timeout);
     if(status!=asynSuccess) {
@@ -209,9 +211,11 @@ static asynStatus readOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynFloat64SyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "asynFloat64SyncIO connect failed %s\n",
            pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = readOp(pasynUser,pvalue,timeout);
     if(status!=asynSuccess) {
