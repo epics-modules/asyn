@@ -551,8 +551,10 @@ static asynStatus writeOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = writeIt(pasynUser,buffer,buffer_len,timeout,nbytesTransfered);
     if(status!=asynSuccess) {
@@ -572,8 +574,10 @@ static asynStatus writeRawOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+         "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = writeRaw(pasynUser,buffer,buffer_len,timeout,nbytesTransfered);
     if(status!=asynSuccess) {
@@ -594,8 +598,10 @@ static asynStatus readOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = readIt(pasynUser,buffer,buffer_len,
          timeout,nbytesTransfered,eomReason);
@@ -617,8 +623,10 @@ static asynStatus readRawOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = readRaw(pasynUser,buffer,buffer_len,
          timeout,nbytesTransfered,eomReason);
@@ -642,8 +650,10 @@ static asynStatus writeReadOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = writeRead(pasynUser,write_buffer,write_buffer_len,
          read_buffer,read_buffer_len,
@@ -662,8 +672,10 @@ static asynStatus flushOnce(const char *port, int addr,const char *drvInfo)
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = flushIt(pasynUser);
     if(status!=asynSuccess) {
@@ -682,8 +694,10 @@ static asynStatus setInputEosOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = setInputEos(pasynUser,eos,eoslen);
     if(status!=asynSuccess) {
@@ -702,8 +716,10 @@ static asynStatus getInputEosOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = getInputEos(pasynUser,eos,eossize,eoslen);
     if(status!=asynSuccess) {
@@ -722,8 +738,10 @@ static asynStatus setOutputEosOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = setOutputEos(pasynUser,eos,eoslen);
     if(status!=asynSuccess) {
@@ -742,8 +760,10 @@ static asynStatus getOutputEosOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-        printf("asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
-        return status;
+         asynPrint(pasynUser, ASYN_TRACE_ERROR,
+             "asynOctetSyncIO connect failed %s\n",pasynUser->errorMessage);
+         disconnect(pasynUser);
+         return status;
     }
     status = getOutputEos(pasynUser,eos,eossize,eoslen);
     if(status!=asynSuccess) {

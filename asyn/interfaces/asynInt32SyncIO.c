@@ -216,9 +216,11 @@ static asynStatus writeOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynInt32SyncIO connect failed %s\n",
-           pasynUser->errorMessage);
-       return status;
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO connect failed %s\n",
+            pasynUser->errorMessage);
+        disconnect(pasynUser);
+        return status;
     }
     status = writeOp(pasynUser,value,timeout);
     if(status!=asynSuccess) {
@@ -237,9 +239,11 @@ static asynStatus readOpOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynInt32SyncIO connect failed %s\n",
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "asynInt32SyncIO connect failed %s\n",
            pasynUser->errorMessage);
-       return status;
+        disconnect(pasynUser);
+        return status;
     }
     status = readOp(pasynUser,pvalue,timeout);
     if(status!=asynSuccess) {
@@ -258,9 +262,11 @@ static asynStatus getBoundsOnce(const char *port, int addr,
 
     status = connect(port,addr,&pasynUser,drvInfo);
     if(status!=asynSuccess) {
-       printf("asynInt32SyncIO connect failed %s\n",
-           pasynUser->errorMessage);
-       return status;
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynInt32SyncIO connect failed %s\n",
+            pasynUser->errorMessage);
+        disconnect(pasynUser);
+        return status;
     }
     status = getBounds(pasynUser,plow,phigh);
     if(status!=asynSuccess) {
