@@ -31,6 +31,11 @@ a larger size, memory corruption occured. This is fixed.
 Instead a message is put into asynUser.errorMessage.
 The caller must call disconnect in order to free the storage for the asynUser.
 </p>
+<p>The SyncIO routines no longer call asynPrint if there is an error and there is
+a valid asynUser available.  Rather they return an error message in pasynUser->errorMessage.
+The SyncIO*Once functions still call asynPrint for errors, because they do not have a
+way of returning an error message.
+</p>
 
 <h3>Serial, TCP/UDP/IP</h3>
 <p>Handle 0-length write requests.
