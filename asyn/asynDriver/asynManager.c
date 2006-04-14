@@ -1050,7 +1050,7 @@ static void *memMalloc(size_t size)
     if(pmemNode) {
         ellDelete(pmemList,&pmemNode->node);
     } else {
-        pmemNode = mallocMustSucceed(sizeof(memNode)+size,
+        pmemNode = mallocMustSucceed(sizeof(memNode)+memListSize[ind]),
             "asynManager::memCalloc");
         pmemNode->memory = pmemNode + 1;
     }
