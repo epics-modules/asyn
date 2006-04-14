@@ -172,9 +172,7 @@ static asynStatus connect(const char *port, int addr,
                 pioPvt->pasynDrvUser = pasynDrvUser;
                 pioPvt->drvUserPvt = drvPvt;
             } else {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "pasynDrvUser->create drvInfo %s error %s\n",
-                         drvInfo, pasynUser->errorMessage);
+                return status;
             }
         }
     }
@@ -189,17 +187,11 @@ static asynStatus disconnect(asynUser *pasynUser)
     if(pioPvt->pasynDrvUser) {
         status = pioPvt->pasynDrvUser->destroy(pioPvt->drvUserPvt,pasynUser);
         if(status!=asynSuccess) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "asynOctetSyncIO pasynDrvUser->destroy failed %s\n",
-                pasynUser->errorMessage);
             return status;
         }
     }
     status = pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO freeAsynUser failed %s\n",
-            pasynUser->errorMessage);
         return status;
     }
     free(pioPvt);
@@ -224,32 +216,23 @@ static asynStatus openSocket(const char *server, int port,
 static asynStatus writeIt(asynUser *pasynUser,
     char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->write(
         pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO write failed %s\n",pasynUser->errorMessage);
-    } else if(*nbytesTransfered!=buffer_len) {
-         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO write output_len %d but nbytesTransfered %d\n",
-             buffer_len,*nbytesTransfered);
-    } else {
+    if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,buffer_len,"asynOctetSyncIO wrote:\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser); 
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -257,32 +240,23 @@ static asynStatus writeIt(asynUser *pasynUser,
 static asynStatus writeRaw(asynUser *pasynUser,
     char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->writeRaw(
         pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO writeRaw failed %s\n",pasynUser->errorMessage);
-    } else if(*nbytesTransfered!=buffer_len) {
-         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO write output_len %d but nbytesTransfered %d\n",
-             buffer_len,*nbytesTransfered);
-    } else {
+    if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,buffer_len,"asynOctetSyncIO wrote:\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -292,28 +266,23 @@ static asynStatus readIt(asynUser *pasynUser,
                    double timeout,
                    size_t *nbytesTransfered,int *eomReason)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->read(
         pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered,eomReason);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO read failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,*nbytesTransfered,"asynOctetSyncIO read:\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -323,28 +292,23 @@ static asynStatus readRaw(asynUser *pasynUser,
                    double timeout,
                    size_t *nbytesTransfered,int *eomReason)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->readRaw(
         pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered,eomReason);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,*nbytesTransfered,"asynOctetSyncIO read:\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -355,30 +319,22 @@ static asynStatus writeRead(asynUser *pasynUser,
                         double timeout,
                         size_t *nbytesOut, size_t *nbytesIn,int *eomReason)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->flush(pioPvt->octetPvt,pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO flush failed %s\n",pasynUser->errorMessage);
+        goto bad;
     }
     status = pioPvt->pasynOctet->write(
         pioPvt->octetPvt,pasynUser,write_buffer,write_buffer_len,nbytesOut);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO write failed %s\n",pasynUser->errorMessage);
-    } else if(*nbytesOut!=write_buffer_len) {
-         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO write output_len %d but nbytesTransfered %d\n",
-             write_buffer_len,*nbytesOut);
+        goto bad;
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              write_buffer,*nbytesOut,"asynOctetSyncIO wrote:\n");
@@ -386,15 +342,15 @@ static asynStatus writeRead(asynUser *pasynUser,
     status = pioPvt->pasynOctet->read(
         pioPvt->octetPvt,pasynUser,read_buffer,read_buffer_len,nbytesIn,eomReason);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO read failed %s\n",pasynUser->errorMessage);
+        goto bad;
     } else {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              read_buffer,*nbytesIn,"asynOctetSyncIO read:\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    bad:
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -402,26 +358,21 @@ static asynStatus writeRead(asynUser *pasynUser,
 static asynStatus
     flushIt(asynUser *pasynUser)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->flush(pioPvt->octetPvt,pasynUser);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,"asynOctetSyncIO flush\n");
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -429,28 +380,23 @@ static asynStatus
 static asynStatus setInputEos(asynUser *pasynUser,
                      const char *eos,int eoslen)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->setInputEos(
         pioPvt->octetPvt,pasynUser,eos,eoslen);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
              "asynOctetSyncIO setInputEos eoslen %d\n",eoslen);
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -458,28 +404,23 @@ static asynStatus setInputEos(asynUser *pasynUser,
 static asynStatus getInputEos(asynUser *pasynUser,
                      char *eos, int eossize, int *eoslen)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->getInputEos(
         pioPvt->octetPvt,pasynUser,eos,eossize,eoslen);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
              "asynOctetSyncIO setInputEos eoslen %d\n",eoslen);
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -487,28 +428,23 @@ static asynStatus getInputEos(asynUser *pasynUser,
 static asynStatus setOutputEos(asynUser *pasynUser,
                      const char *eos,int eoslen)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->setOutputEos(
         pioPvt->octetPvt,pasynUser,eos,eoslen);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
              "asynOctetSyncIO setOutputEos eoslen %d\n",eoslen);
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -516,28 +452,23 @@ static asynStatus setOutputEos(asynUser *pasynUser,
 static asynStatus getOutputEos(asynUser *pasynUser,
                      char *eos, int eossize, int *eoslen)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = 1.0;
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynOctetSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynOctet->getOutputEos(
         pioPvt->octetPvt,pasynUser,eos,eossize,eoslen);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-             "asynOctetSyncIO readRaw failed %s\n",pasynUser->errorMessage);
-    } else {
+    if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
              "asynOctetSyncIO setOutputEos eoslen %d\n",eoslen);
     }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return unlockStatus;
     }
     return status;
 }
@@ -665,6 +596,7 @@ static asynStatus writeReadOnce(const char *port, int addr,
     disconnect(pasynUser);
     return status;
 }
+
 static asynStatus flushOnce(const char *port, int addr,const char *drvInfo)
 {
     asynStatus status;

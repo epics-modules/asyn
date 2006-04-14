@@ -85,9 +85,7 @@ static asynStatus connect(const char *port, int addr,
                 pioPvt->pasynDrvUser = pasynDrvUser;
                 pioPvt->drvUserPvt = drvPvt;
             } else {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                    "pasynDrvUser->create drvInfo %s error %s\n",
-                         drvInfo, pasynUser->errorMessage);
+                return status;
             }
         }
     }
@@ -102,17 +100,11 @@ static asynStatus disconnect(asynUser *pasynUser)
     if(pioPvt->pasynDrvUser) {
         status = pioPvt->pasynDrvUser->destroy(pioPvt->drvUserPvt,pasynUser);
         if(status!=asynSuccess) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "asynCommonSyncIO pasynDrvUser->destroy failed %s\n",
-                pasynUser->errorMessage);
             return status;
         }
     }
     status = pasynManager->freeAsynUser(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynCommonSyncIO freeAsynUser failed %s\n",
-            pasynUser->errorMessage);
         return status;
     }
     free(pioPvt);
@@ -122,46 +114,34 @@ static asynStatus disconnect(asynUser *pasynUser)
 
 static asynStatus connectDevice(asynUser *pasynUser)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynCommonSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynCommon->connect(pioPvt->pcommonPvt, pasynUser);
-    if (status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-                 "asynCommonSyncIO connect failed %s\n",pasynUser->errorMessage);
-    }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser);
+    if (unlockStatus != asynSuccess) {
+        return(unlockStatus);
     }
     return(status);
 }
 
 static asynStatus disconnectDevice(asynUser *pasynUser)
 {
-    asynStatus status;
+    asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     status = pasynManager->lockPort(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "asynCommonSyncIO lockPort failed %s\n",pasynUser->errorMessage);
         return status;
     }
     status = pioPvt->pasynCommon->disconnect(pioPvt->pcommonPvt, pasynUser);
-    if (status!=asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,   
-                 "asynCommonSyncIO disconnect failed %s\n",pasynUser->errorMessage);
-    }
-    if((pasynManager->unlockPort(pasynUser)) ) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "unlockPort error %s\n", pasynUser->errorMessage);
+    unlockStatus = pasynManager->unlockPort(pasynUser); 
+    if (unlockStatus != asynSuccess) {
+        return(unlockStatus);
     }
     return(status);
 }
