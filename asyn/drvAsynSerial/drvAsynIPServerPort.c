@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.8 2006-04-15 03:30:13 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.9 2006-04-15 15:33:52 rivers Exp $
  */
 
 #include <string.h>
@@ -246,6 +246,9 @@ static void connectionListener(void *drvPvt)
         pl->pasynUser->reason = clientFd;
         pasynCommonSyncIO->connectDevice(pl->pasynUser);
         pl->pasynUser->reason = 0;
+        /* Set the new port to initially have the same trace mask that we have */
+        pasynTrace->setTraceMask(pl->pasynUser,   pasynTrace->getTraceMask(pasynUser));
+        pasynTrace->setTraceIOMask(pl->pasynUser, pasynTrace->getTraceIOMask(pasynUser));
         /* Issue callbacks to all clients who want notification on connection */
         pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
         pnode = (interruptNode *)ellFirst(pclientList);
