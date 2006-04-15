@@ -71,14 +71,14 @@ static void echoHandler(myData *pPvt)
                                         0.0, &nread, &eomReason);
         if (status) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoHandler: read error on: %s: %s\n", 
-                      pPvt->portName, pasynUser->errorMessage);
+                      "echoHandler: read error on: %s: status=%d error=%s\n", 
+                      pPvt->portName, status, pasynUser->errorMessage);
             break;
         }
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "echoHandler: %s read %s: %s: %s\n", 
+                  "echoHandler: %s read %s:\n", 
                   pPvt->portName, buffer);
-                 
+
         status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer), 
                                          2.0, &nwrite);
         if (status) {
