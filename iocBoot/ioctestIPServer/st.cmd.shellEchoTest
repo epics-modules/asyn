@@ -1,3 +1,5 @@
+# This script tests using the shell command asynOctetWriteRead to write/read to ipEchoServer
+
 < envPaths
 
 dbLoadDatabase("../../dbd/testIPServer.dbd")
@@ -17,12 +19,19 @@ iocInit()
 ipEchoServer("P5001")
 seq("ipSNCServer", "P=testIPServer:, PORT=P5002")
 
+# Wait till the servers start running
 epicsThreadSleep(1)
-
+i
+# Create a client port that connects to the echo server
 drvAsynIPPortConfigure("client5001","localhost:5001",0,0,0)
+
 #asynSetTraceMask("client5001",0,255)
 #asynSetTraceIOMask("client5001",0,0x2)
 asynOctetSetOutputEos("client5001",0,"\r\n")
 asynOctetSetInputEos("client5001",0,"\r\n")
+
+# Connect to that port from iocsh
 asynOctetConnect("test1","client5001")
+
+# Write to the port, should get echo back
 asynOctetWriteRead("test1","hello world")
