@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.7 2006-04-13 17:14:44 mrk Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.8 2006-04-15 03:30:13 rivers Exp $
  */
 
 #include <string.h>
@@ -189,6 +189,14 @@ static void connectionListener(void *drvPvt)
                       "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
             break;
+        }
+        /* See if any clients have registered for callbacks.  If not, close the connection */
+        pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
+        pnode = (interruptNode *)ellFirst(pclientList);
+        pasynManager->interruptEnd(tty->octetCallbackPvt);
+        if (!pnode) {
+            /* There are no registered clients to handle connections on this port */
+            close(clientFd);
         }
         /* Search for a port we have already created which is now disconnected */
         pl = NULL;
