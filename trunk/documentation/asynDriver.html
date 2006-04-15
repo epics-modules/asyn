@@ -4147,6 +4147,10 @@ are registerInterruptUser and cancelInterruptUser.
 Calling the other asynOctet methods will result in an error.
 The following happens when a new connection is received on the port specified in drvAsynIPServerPortConfigure:
 <ul>
+  <li> If there are no registered asyn clients (who have called registerInterruptUser on the asynOctet interface of
+    the listener port) then the incoming connection is immediately closed, since there are no IP servers
+    available to service it.  If there is at least one registered client, then the following steps
+    are executed.</li>
   <li> The list of drvAsynIPPort ports that this listener thread has created is searched to see
     if there is an existing port that is currently disconnected because the remote IP client disconnected.</li>
   <li> If there is an existing disconnected port, then it is reconnected with the file descriptor from the
@@ -4154,6 +4158,9 @@ The following happens when a new connection is received on the port specified in
   <li> If there is no available existing port, then a new one is created by calling drvAsynIPPortConfigure.
     The name of the new port is of the form portName:1, portName:2, etc., where portName is the name of
     the listener port.</li>
+  <li> The asynTraceMask and asynTraceIOMask of the newly connected port are set to the current values
+    of the listener thread port.  This makes it possible to trace the early stages of execution of
+    the callbacks to the registered clients, before one could enable tracing at iocsh.</li>
   <li> All registered asyn clients (who have called registerInterruptUser on the asynOctet interface of
     the listener port) are called back with the name of the newly connected port.</li>
   <li> The clients then will connect to this new asyn port and perform I/O using the asynOctet methods.
