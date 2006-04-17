@@ -1,0 +1,72 @@
+
+port cantBlockSingle addr 0 cant block so no block or cancel test
+
+port cantBlockMulti addr 0 cant block so no block or cancel test
+
+port canBlockSingle addr 0
+test blockProcessCallback/unblockProcessCallback. thread0 first
+thread0 blockProcessCallback/unblockProcessCallback first queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback first queueRequest
+thread0 blockProcessCallback/unblockProcessCallback second queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback all done
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback second queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback all done
+test unblockProcessCallback/unblockProcessCallback. thread1 first
+thread1 blockProcessCallback/unblockProcessCallback first queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback first queueRequest
+thread1 blockProcessCallback/unblockProcessCallback second queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback all done
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback second queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback all done
+test cancelRequest
+thread0 cancelRequest  cancelRequest should remove
+thread0 cancelRequest cancelRequest wasQueued 1
+thread0 cancelRequest should find callback active
+thread0 cancelRequest cancelCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest should find timeout active
+thread0 cancelRequest timeoutCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest all done
+
+port canBlockMulti addr 0
+test blockProcessCallback/unblockProcessCallback. thread0 first
+thread0 blockProcessCallback/unblockProcessCallback first queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback first queueRequest
+thread0 blockProcessCallback/unblockProcessCallback second queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback all done
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback second queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback all done
+test unblockProcessCallback/unblockProcessCallback. thread1 first
+thread1 blockProcessCallback/unblockProcessCallback first queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback first queueRequest
+thread1 blockProcessCallback/unblockProcessCallback second queueRequest
+thread1 blockProcessCallback/unblockProcessCallback blockCallback
+thread1 blockProcessCallback/unblockProcessCallback all done
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback second queueRequest
+thread0 blockProcessCallback/unblockProcessCallback blockCallback
+thread0 blockProcessCallback/unblockProcessCallback all done
+test cancelRequest
+thread0 cancelRequest  cancelRequest should remove
+thread0 cancelRequest cancelRequest wasQueued 1
+thread0 cancelRequest should find callback active
+thread0 cancelRequest cancelCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest should find timeout active
+thread0 cancelRequest timeoutCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest all done

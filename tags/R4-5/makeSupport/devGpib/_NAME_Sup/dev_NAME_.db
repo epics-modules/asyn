@@ -1,0 +1,15 @@
+record(ai,"$(P)$(R)_NAME_Record") {
+    field(DESC, "Example _NAME_ GPIB Record")
+    field(SCAN, "1 second")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @3")
+    field(LINR, "NO CONVERSION")
+    field(EGUF, "10")
+    field(EGUL, "-10")
+    field(EGU,  "Volts")
+    field(HOPR, "30")
+    field(LOPR, "-30")
+    field(AOFF, "0")
+    field(ASLO, "1")
+    field(SIMS, "NO_ALARM")
+}
