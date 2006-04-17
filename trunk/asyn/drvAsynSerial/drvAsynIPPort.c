@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.27 2006-04-03 23:38:19 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.28 2006-04-17 15:36:40 rivers Exp $
  */
 
 #include <string.h>
@@ -206,6 +206,11 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      * Sanity check
      */
     assert(tty);
+    if (tty->fd >= 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s: Link already open!", tty->serialDeviceName);
+        return asynError;
+    }
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "Open connection to %s\n", tty->serialDeviceName);
