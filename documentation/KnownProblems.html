@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>April 14 2006</h1>
+<h1>April 19, 2006</h1>
 </center>
 <hr>
 
@@ -20,7 +20,43 @@ alink="#FF0000">
 <h2>Release 4-5</h2>
 </center>
 
-No known problems.
+<h3>drvAsynIPPort</h3>  If a client calls asynCommon->connect when the asyn port is already connected
+to the IP port, then the asyn port will be disconnected from the IP port for all clients.
+The correct behavior in this case is to simply return an asynError status.
+<p>
+The following change fix can be made to drvAsynIPPort.c to fix the problem:
+<pre>
+corvette> cvs diff -rR4-5 drvAsynIPPort.c
+Index: drvAsynIPPort.c
+===================================================================
+RCS file: /net/phoebus/epicsmgr/cvsroot/epics/modules/soft/asyn/asyn/drvAsynSerial/drvAsynIPPort.c,v
+retrieving revision 1.27
+retrieving revision 1.28
+diff -u -r1.27 -r1.28
+--- drvAsynIPPort.c     3 Apr 2006 23:38:19 -0000       1.27
++++ drvAsynIPPort.c     17 Apr 2006 15:36:40 -0000      1.28
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ 
+ /*
+- * $Id: KnownProblems.html,v 1.28 2006-04-19 20:52:31 rivers Exp $
++ * $Id: KnownProblems.html,v 1.28 2006-04-19 20:52:31 rivers Exp $
+  */
+ 
+ #include <string.h>
+@@ -206,6 +206,11 @@
+      * Sanity check
+      */
+     assert(tty);
++    if (tty->fd >= 0) {
++        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
++                              "%s: Link already open!", tty->serialDeviceName);
++        return asynError;
++    }
+ 
+     asynPrint(pasynUser, ASYN_TRACE_FLOW,
+               "Open connection to %s\n", tty->serialDeviceName);
+</pre>
 
 <center>
 <h2>Release 4-3</h2>
