@@ -187,8 +187,11 @@ typedef struct asynTrace {
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
     size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
+    int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar);
     int        (*printIO)(asynUser *pasynUser,int reason,
                const char *buffer, size_t len,const char *pformat, ...);
+    int        (*vprintIO)(asynUser *pasynUser,int reason,
+               const char *buffer, size_t len,const char *pformat, va_list pvar);
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;
 
