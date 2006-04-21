@@ -12,6 +12,32 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
+<h1>April 21, 2006</h1>
+</center>
+<hr>
+
+<center>
+<h2>Release 4-6</h2>
+</center>
+
+<h3>asynTrace</h3>
+<p>Added two new functions which are related to pasynPrint and pasynPrintIO 
+the way vprintf is to printf.
+<ul>
+<li>pasynTrace->vprint  Same as pasynTrace->print except that instead of a variable
+of arguments it takes a va_list argument as its last parameter.</li>
+<li>pasynTrace->vprintIO  Same as pasynTrace->printIO except that instead of a variable
+of arguments it takes a va_list argument as its last parameter.</li>
+</ul>
+
+
+<h3>asynManager</h3>
+<p>Changed pasynManager->connectDevice for ports which have the properties autoConnect=1
+and isConnected=0.  In this case a request is queued to call asynCommon->connect for that
+port.  This ensures that ports that have a pasynUser connected to them will report being
+connected even if no I/O has yet been done.  Previously such ports reported a disconnected
+state until the first I/O or operation such as setTraceMask.  This was confusing.
+
 <h1>April 14, 2006</h1>
 </center>
 <hr>
