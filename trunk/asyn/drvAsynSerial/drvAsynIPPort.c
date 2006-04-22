@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.28 2006-04-17 15:36:40 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.29 2006-04-22 17:04:42 rivers Exp $
  */
 
 #include <string.h>
@@ -218,39 +218,38 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     /* If pasynUser->reason > 0) then use this as the file descriptor */
     if (pasynUser->reason > 0) {
         tty->fd = pasynUser->reason;
-        pasynManager->exceptionConnect(pasynUser);
-        return asynSuccess;
-    }
+    } else {
 
-    /*
-     * Create the socket
-     */
-    if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "Can't create socket: %s", strerror(SOCKERRNO));
-        return asynError;
-    }
+        /*
+         * Create the socket
+         */
+        if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                  "Can't create socket: %s", strerror(SOCKERRNO));
+            return asynError;
+        }
 
-    /*
-     * Connect to the remote host
-     */
-    epicsTimerStartDelay(tty->timer, 10.0);
-    i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
-    epicsTimerCancel(tty->timer);
-    if (i < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "Can't connect to %s: %s",
-                                    tty->serialDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(tty->fd);
-        tty->fd = -1;
-        return asynError;
+        /*
+         * Connect to the remote host
+         */
+        epicsTimerStartDelay(tty->timer, 10.0);
+        i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
+        epicsTimerCancel(tty->timer);
+        if (i < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "Can't connect to %s: %s",
+                          tty->serialDeviceName, strerror(SOCKERRNO));
+            epicsSocketDestroy(tty->fd);
+            tty->fd = -1;
+            return asynError;
+        }
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
-     && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
+        && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                               "Can't set %s socket NODELAY option: %s\n",
-                                       tty->serialDeviceName, strerror(SOCKERRNO));
+                      "Can't set %s socket NODELAY option: %s\n",
+                      tty->serialDeviceName, strerror(SOCKERRNO));
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         return asynError;
