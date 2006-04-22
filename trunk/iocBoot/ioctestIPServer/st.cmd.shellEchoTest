@@ -21,7 +21,7 @@ seq("ipSNCServer", "P=testIPServer:, PORT=P5002")
 
 # Wait till the servers start running
 epicsThreadSleep(1)
-i
+
 # Create a client port that connects to the echo server
 drvAsynIPPortConfigure("client5001","localhost:5001",0,0,0)
 
