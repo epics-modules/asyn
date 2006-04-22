@@ -30,6 +30,9 @@
 #include <epicsExport.h>
 
 #define BUFFER_SIZE 80
+#define READ_TIMEOUT 5.0
+#define WRITE_TIMEOUT 2.0
+
 typedef struct myData {
     epicsMutexId mutexId;
     char         *portName;
@@ -67,30 +70,43 @@ static void echoHandler(myData *pPvt)
         return;
     }
     while(1) {
+        /* Erase buffer */
+        buffer[0] = 0;
         status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE, 
-                                        0.0, &nread, &eomReason);
-        if (status) {
+                                        READ_TIMEOUT, &nread, &eomReason);
+        switch (status) {
+        case asynSuccess:
+            asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                      "echoHandler: %s read %d: %s\n", 
+                      pPvt->portName, nread, buffer);
+            status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer),
+                                             WRITE_TIMEOUT, &nwrite);
+            if (status) {
+                asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                          "echoHandler: write error on: %s: %s\n",
+                          pPvt->portName, pasynUser->errorMessage);
+                goto done;
+            }
+            asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
+                      "echoHandler: %s wrote %d: %s\n",
+                      pPvt->portName, nwrite, buffer);
+            break;
+
+        case asynTimeout:
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                      "echoHandler: timeout on: %s read %d: %s\n", 
+                      pPvt->portName, nread, buffer);
+            break;
+
+        default:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "echoHandler: read error on: %s: status=%d error=%s\n", 
                       pPvt->portName, status, pasynUser->errorMessage);
+            goto done;
             break;
         }
-        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "echoHandler: %s read %s:\n", 
-                  pPvt->portName, buffer);
-
-        status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer), 
-                                         2.0, &nwrite);
-        if (status) {
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoHandler: write error on: %s: %s\n", 
-                      pPvt->portName, pasynUser->errorMessage);
-            break;
-        }
-        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "echoHandler: %s wrote %s: %s: %s\n", 
-                  pPvt->portName, buffer);
     }
+    done:
     return;
 }
 
