@@ -11,7 +11,27 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.29 2006-04-22 17:04:42 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.30 2006-04-25 17:50:02 rivers Exp $
+ */
+
+/* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
+ * attempted to allow 2 things:
+ * 1) Use an EPICS timer to time-out an I/O operation.
+ * 2) Periodically check (every 5 seconds) during a long I/O operation to see if
+ *    the operation should be cancelled.
+ *
+ * Item 1) above was not really implemented because there is no portable robust was
+ * to abort a pend I/O operation.  So the timer set a flag which was checked after
+ * the poll() was complete to see if the timeout had occured.  This was not robust,
+ * because there were competing timers (timeout timer and poll) which could fire in
+ * the wrong order.
+ *
+ * Item 2) was not implemented, because asyn has no mechanism to issue a cancel
+ * request to a driver which is blocked on an I/O operation.
+ *
+ * Since neither of these mechanisms was working as designed, the driver has been 
+ * re-written to simplify it.  If one or both of these are to be implemented in the future
+ * the code as of version 1.29 should be used as the starting point.
  */
 
 #include <string.h>
@@ -29,13 +49,11 @@
 #include <epicsString.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
-#include <epicsTimer.h>
 #include <osiUnistd.h>
 
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
-#include "asynInterposeEos.h"
 #include "drvAsynIPPort.h"
 
 #if defined(__rtems__)
@@ -49,43 +67,22 @@
 # endif
 #endif
 
-#define CANCEL_CHECK_INTERVAL 5.0 /* Interval between checks for I/O cancel */
-
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each IP socket.
  */
 typedef struct {
-    asynUser          *pasynUser;        /*Needed for timeoutHandler*/
-    char              *serialDeviceName;
+    asynUser          *pasynUser;        /* Not currently used */
+    char              *IPDeviceName;
     char              *portName;
     int                socketType;
     int                fd;
     unsigned long      nRead;
     unsigned long      nWritten;
     osiSockAddr        farAddr;
-    double             readTimeout;
-    int                readPollmsec;
-    double             writeTimeout;
-    int                writePollmsec;
-    epicsTimerId       timer;
-    int                timeoutFlag;
-    int                cancelFlag;
     asynInterface      common;
     asynInterface      octet;
 } ttyController_t;
-
-typedef struct serialBase {
-    epicsTimerQueueId timerQueue;
-}serialBase;
-static serialBase *pserialBase = 0;
-static void serialBaseInit(void)
-{
-    if(pserialBase) return;
-    pserialBase = callocMustSucceed(1,sizeof(serialBase),"serialBaseInit");
-    pserialBase->timerQueue = epicsTimerQueueAllocate(
-        1,epicsThreadPriorityScanLow);
-}
 
 #ifdef FAKE_POLL
 /*
@@ -101,18 +98,23 @@ struct pollfd {
 static int poll(struct pollfd fds[], int nfds, int timeout)
 {
     fd_set fdset;
-    struct timeval tv;
+    struct timeval tv, *ptv;
 
     assert(nfds == 1);
     FD_ZERO(&fdset);
     FD_SET(fds[0].fd,&fdset);
-    tv.tv_sec = timeout / 1000;
-    tv.tv_usec = (timeout % 1000) * 1000;
+    if (timeout >= 0) {
+        tv.tv_sec = timeout / 1000;
+        tv.tv_usec = (timeout % 1000) * 1000;
+        ptv = &tv;
+    } else {
+        ptv = NULL;
+    }
     return select(fds[0].fd + 1, 
         (fds[0].events & POLLIN) ? &fdset : NULL,
         (fds[0].events & POLLOUT) ? &fdset : NULL,
         NULL,
-        &tv);
+        ptv);
 }
 #endif
 
@@ -153,24 +155,11 @@ closeConnection(asynUser *pasynUser,ttyController_t *tty)
 {
     if (tty->fd >= 0) {
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "Close %s connection.\n", tty->serialDeviceName);
+                           "Close %s connection.\n", tty->IPDeviceName);
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         pasynManager->exceptionDisconnect(pasynUser);
     }
-}
-
-/*
- * Unblock the I/O operation
- */
-static void
-timeoutHandler(void *p)
-{
-    ttyController_t *tty = (ttyController_t *)p;
-
-    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
-                               "%s timeout handler.\n", tty->serialDeviceName);
-    tty->timeoutFlag = 1;
 }
 
 /*Beginning of asynCommon methods*/
@@ -184,7 +173,7 @@ report(void *drvPvt, FILE *fp, int details)
 
     assert(tty);
     fprintf(fp, "Port %s: %sonnected\n",
-        tty->serialDeviceName,
+        tty->IPDeviceName,
         tty->fd >= 0 ? "C" : "Disc");
     if (details >= 1) {
         fprintf(fp, "                    fd: %d\n", tty->fd);
@@ -208,12 +197,12 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     assert(tty);
     if (tty->fd >= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s: Link already open!", tty->serialDeviceName);
+                              "%s: Link already open!", tty->IPDeviceName);
         return asynError;
     }
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s\n", tty->serialDeviceName);
+              "Open connection to %s\n", tty->IPDeviceName);
 
     /* If pasynUser->reason > 0) then use this as the file descriptor */
     if (pasynUser->reason > 0) {
@@ -232,13 +221,15 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         /*
          * Connect to the remote host
          */
-        epicsTimerStartDelay(tty->timer, 10.0);
+
+        /* We don't use the timer, since it does nothing at present */
+        /* epicsTimerStartDelay(tty->timer, 10.0); */
         i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
-        epicsTimerCancel(tty->timer);
+        /* epicsTimerCancel(tty->timer); */
         if (i < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
-                          tty->serialDeviceName, strerror(SOCKERRNO));
+                          tty->IPDeviceName, strerror(SOCKERRNO));
             epicsSocketDestroy(tty->fd);
             tty->fd = -1;
             return asynError;
@@ -249,7 +240,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket NODELAY option: %s\n",
-                      tty->serialDeviceName, strerror(SOCKERRNO));
+                      tty->IPDeviceName, strerror(SOCKERRNO));
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         return asynError;
@@ -258,17 +249,15 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     if (setNonBlock(tty->fd, 1) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s O_NONBLOCK option: %s\n",
-                                       tty->serialDeviceName, strerror(SOCKERRNO));
+                                       tty->IPDeviceName, strerror(SOCKERRNO));
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         return asynError;
     }
 #endif
 
-    tty->readPollmsec = -1;
-    tty->writePollmsec = -1;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                          "Opened connection to %s\n", tty->serialDeviceName);
+                          "Opened connection to %s\n", tty->IPDeviceName);
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
@@ -280,8 +269,7 @@ disconnect(void *drvPvt, asynUser *pasynUser)
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s disconnect\n", tty->serialDeviceName);
-    epicsTimerCancel(tty->timer);
+                                    "%s disconnect\n", tty->IPDeviceName);
     closeConnection(pasynUser,tty);
     return asynSuccess;
 }
@@ -295,105 +283,70 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
-    int nleft = numchars;
-    int timerStarted = 0;
     asynStatus status = asynSuccess;
+    int writePollmsec;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "%s write.\n", tty->serialDeviceName);
+              "%s write.\n", tty->IPDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                            "%s write %d\n", tty->serialDeviceName, numchars);
+                "%s write %d\n", tty->IPDeviceName, numchars);
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s disconnected:", tty->serialDeviceName);
+                      "%s disconnected:", tty->IPDeviceName);
         return asynError;
     }
     if (numchars == 0) {
         *nbytesTransfered = 0;
         return asynSuccess;
     }
-    if ((tty->writePollmsec < 0) || (pasynUser->timeout != tty->writeTimeout)) {
-        tty->writeTimeout = pasynUser->timeout;
-        if (tty->writeTimeout == 0) {
-            tty->writePollmsec = 0;
-        }
-        else if ((tty->writeTimeout > 0) && (tty->writeTimeout <= CANCEL_CHECK_INTERVAL)) {
-            tty->writePollmsec = tty->writeTimeout * 1000.0;
-            if (tty->writePollmsec == 0)
-                tty->writePollmsec = 1;
-        }
-        else {
-            tty->writePollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
-        }
+    writePollmsec = pasynUser->timeout * 1000.0;
+    if (writePollmsec == 0) writePollmsec = 1;
+    if (writePollmsec < 0) writePollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
-        if (setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO,
-                        &tty->writePollmsec, sizeof tty->writePollmsec) < 0) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                   "Can't set %s socket send timeout: %s",
-                                   tty->serialDeviceName, strerror(SOCKERRNO));
-            return asynError;
-        }
+    if (setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO,
+                   &writePollmsec, sizeof writePollmsec) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "Can't set %s socket send timeout: %s",
+                      tty->IPDeviceName, strerror(SOCKERRNO));
+        return asynError;
+    }
 #endif
-    }
-    tty->cancelFlag = 0;
-    tty->timeoutFlag = 0;
-    nleft = numchars;
-    if (tty->writeTimeout > 0) {
-        epicsTimerStartDelay(tty->timer, tty->writeTimeout);
-        timerStarted = 1;
-    }
-    for (;;) {
 #ifdef USE_POLL
-        {
+    {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
-        poll(&pollfd, 1, tty->writePollmsec);
-        }
+        poll(&pollfd, 1, writePollmsec);
+    }
 #endif
-        thisWrite = send(tty->fd, (char *)data, nleft, 0);
-        if (thisWrite > 0) {
-            tty->nWritten += thisWrite;
-            nleft -= thisWrite;
-            if (nleft == 0)
-                break;
-            data += thisWrite;
-        }
-        if (tty->cancelFlag) {
+    thisWrite = send(tty->fd, (char *)data, numchars, 0);
+    if (thisWrite > 0) {
+        tty->nWritten += thisWrite;
+        if (thisWrite != numchars) {
+            /* Is this a reliable indication of timeout on write? */
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s I/O cancelled", tty->serialDeviceName);
+                          "%s timeout", tty->IPDeviceName);
             status = asynError;
-            break;
-        }
-        if (tty->timeoutFlag || (tty->writePollmsec == 0)) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s timeout", tty->serialDeviceName);
-            status = asynError;
-            break;
-        }
-        if ((thisWrite < 0) && (SOCKERRNO != SOCK_EWOULDBLOCK)
-                            && (SOCKERRNO != SOCK_EINTR)) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s write error: %s",
-                                        tty->serialDeviceName, strerror(SOCKERRNO));
-            closeConnection(pasynUser,tty);
-            status = asynError;
-            break;
-        }
-        /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
-        if ((thisWrite == 0) && (tty->socketType == SOCK_STREAM)) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s connection closed",
-                          tty->serialDeviceName);
-            closeConnection(pasynUser,tty);
-            status = asynError;
-            break;
         }
     }
-    if (timerStarted)
-        epicsTimerCancel(tty->timer);
-    *nbytesTransfered = numchars - nleft;
+    if ((thisWrite < 0) && (SOCKERRNO != SOCK_EWOULDBLOCK)
+                        && (SOCKERRNO != SOCK_EINTR)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "%s write error: %s",
+                      tty->IPDeviceName, strerror(SOCKERRNO));
+        closeConnection(pasynUser,tty);
+        status = asynError;
+    }
+    /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
+    if ((thisWrite == 0) && (tty->socketType == SOCK_STREAM)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "%s connection closed",
+                      tty->IPDeviceName);
+        closeConnection(pasynUser,tty);
+        status = asynError;
+    }
+    *nbytesTransfered = thisWrite;
     return status;
 }
 
@@ -405,107 +358,74 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
-    int nRead = 0;
-    int timerStarted = 0;
+    int readPollmsec;
     asynStatus status = asynSuccess;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-               "%s read.\n", tty->serialDeviceName);
+              "%s read.\n", tty->IPDeviceName);
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s disconnected:", tty->serialDeviceName);
+                      "%s disconnected:", tty->IPDeviceName);
         return asynError;
     }
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s maxchars %d. Why <=0?\n",tty->serialDeviceName,maxchars);
+                      "%s maxchars %d. Why <=0?\n",tty->IPDeviceName,maxchars);
         return asynError;
     }
-    if ((tty->readPollmsec < 0) || (pasynUser->timeout != tty->readTimeout)) {
-        tty->readTimeout = pasynUser->timeout;
-        if (tty->readTimeout == 0) {
-            tty->readPollmsec = 0;
-        }
-        else if ((tty->readTimeout > 0) && (tty->readTimeout <= CANCEL_CHECK_INTERVAL)) {
-            tty->readPollmsec = tty->readTimeout * 1000.0;
-            if (tty->readPollmsec == 0)
-                tty->readPollmsec = 1;
-        }
-        else {
-            tty->readPollmsec = CANCEL_CHECK_INTERVAL * 1000.0;
-        }
+    readPollmsec = pasynUser->timeout * 1000.0;
+    if (readPollmsec == 0) readPollmsec = 1;
+    if (readPollmsec < 0) readPollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
-        if (setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO,
-                        &tty->readPollmsec, sizeof tty->readPollmsec) < 0) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                   "Can't set %s socket receive timeout: %s",
-                                   tty->serialDeviceName, strerror(SOCKERRNO));
-            status = asynError;
-        }
-#endif
+    if (setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO,
+                   &tty->readPollmsec, sizeof tty->readPollmsec) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "Can't set %s socket receive timeout: %s",
+                      tty->IPDeviceName, strerror(SOCKERRNO));
+        status = asynError;
     }
-    tty->cancelFlag = 0;
-    tty->timeoutFlag = 0;
+#endif
     *gotEom = 0;
-    for (;;) {
-        if (!timerStarted && (tty->readTimeout > 0)) {
-            epicsTimerStartDelay(tty->timer, tty->readTimeout);
-            timerStarted = 1;
-        }
 #ifdef USE_POLL
-        {
+    {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLIN;
-        poll(&pollfd, 1, tty->readPollmsec);
-        }
-#endif
-        thisRead = recv(tty->fd, data, maxchars, 0);
-        if (thisRead > 0) {
-            asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                       "%s read %d\n", tty->serialDeviceName, thisRead);
-            nRead = thisRead;
-            tty->nRead += thisRead;
-            break;
-        }
-        else {
-            if ((thisRead < 0) && (SOCKERRNO != SOCK_EWOULDBLOCK)
-                               && (SOCKERRNO != SOCK_EINTR)) {
-                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s read error: %s",
-                                        tty->serialDeviceName, strerror(SOCKERRNO));
-                closeConnection(pasynUser,tty);
-                status = asynError;
-                break;
-            }
-            /* If recv() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
-            if ((thisRead == 0) && (tty->socketType == SOCK_STREAM)) {
-                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s connection closed",
-                              tty->serialDeviceName);
-                closeConnection(pasynUser,tty);
-                status = asynError;
-                break;
-            }
-            if (tty->readTimeout == 0)
-                tty->timeoutFlag = 1;
-        }
-        if (tty->cancelFlag) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                    "%s I/O cancelled", tty->serialDeviceName);
-            status = asynError;
-            break;
-        }
-        if (tty->timeoutFlag)
-            break;
+        poll(&pollfd, 1, readPollmsec);
     }
-    if (timerStarted) epicsTimerCancel(tty->timer);
-    if (tty->timeoutFlag && (status == asynSuccess))
-        status = asynTimeout;
-    *nbytesTransfered = nRead;
+#endif
+    thisRead = recv(tty->fd, data, maxchars, 0);
+    if (thisRead > 0) {
+        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
+                   "%s read %d\n", tty->IPDeviceName, thisRead);
+        tty->nRead += thisRead;
+    }
+    if (thisRead < 0) {
+        if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s read error: %s",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+            closeConnection(pasynUser,tty);
+            status = asynError;
+        } else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s timeout: %s",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+            status = asynTimeout;
+        }
+    }
+    /* If recv() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
+    if ((thisRead == 0) && (tty->socketType == SOCK_STREAM)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "%s connection closed",
+                      tty->IPDeviceName);
+        closeConnection(pasynUser,tty);
+        status = asynError;
+    }
+    *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
-    if (nRead < maxchars) data[nRead] = 0;
+    if (thisRead < maxchars) data[thisRead] = 0;
     return status;
 }
 
@@ -519,7 +439,7 @@ flushIt(void *drvPvt,asynUser *pasynUser)
     char cbuf[512];
 
     assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", tty->serialDeviceName);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s flush\n", tty->IPDeviceName);
     if (tty->fd >= 0) {
         /*
          * Toss characters until there are none left
@@ -545,10 +465,8 @@ ttyCleanup(ttyController_t *tty)
     if (tty) {
         if (tty->fd >= 0)
             epicsSocketDestroy(tty->fd);
-        if (tty->timer != NULL)
-            epicsTimerQueueDestroyTimer(pserialBase->timerQueue, tty->timer);
         free(tty->portName);
-        free(tty->serialDeviceName);
+        free(tty->IPDeviceName);
         free(tty);
     }
 }
@@ -580,6 +498,7 @@ drvAsynIPPortConfigure(const char *portName,
     char protocol[6];
     int nbytes;
     asynOctet *pasynOctet;
+    static int firstTime = 1;
 
     /*
      * Check arguments
@@ -596,12 +515,12 @@ drvAsynIPPortConfigure(const char *portName,
     /*
      * Perform some one-time-only initializations
      */
-    if(pserialBase == NULL) {
+    if (firstTime) {
+        firstTime = 0;
         if (osiSockAttach() == 0) {
             printf("drvAsynIPPortConfigure: osiSockAttach failed\n");
             return -1;
         }
-        serialBaseInit();
     }
 
     /*
@@ -612,36 +531,25 @@ drvAsynIPPortConfigure(const char *portName,
           "drvAsynIPPortConfigure()");
     pasynOctet = (asynOctet *)(tty+1);
     tty->fd = -1;
-    tty->serialDeviceName = epicsStrDup(hostInfo);
+    tty->IPDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
-
-    /*
-     * Create timeout mechanism
-     */
-     tty->timer = epicsTimerQueueCreateTimer(
-         pserialBase->timerQueue, timeoutHandler, tty);
-     if(!tty->timer) {
-        printf("drvAsynIPPortConfigure: Can't create timer.\n");
-        ttyCleanup(tty);
-        return -1;
-    }
 
     /*
      * Parse configuration parameters
      */
     protocol[0] = '\0';
-    if (((cp = strchr(tty->serialDeviceName, ':')) == NULL)
+    if (((cp = strchr(tty->IPDeviceName, ':')) == NULL)
      || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
         printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
-                                                        tty->serialDeviceName);
+                                                        tty->IPDeviceName);
         ttyCleanup(tty);
         return -1;
     }
     *cp = '\0';
     memset(&tty->farAddr, 0, sizeof tty->farAddr);
-    if(hostToIPAddr(tty->serialDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
+    if(hostToIPAddr(tty->IPDeviceName, &tty->farAddr.ia.sin_addr) < 0) {
         *cp = ':';
-        printf("drvAsynIPPortConfigure: Unknown host \"%s\".\n", tty->serialDeviceName);
+        printf("drvAsynIPPortConfigure: Unknown host \"%s\".\n", tty->IPDeviceName);
         ttyCleanup(tty);
         return -1;
     }
