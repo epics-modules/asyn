@@ -30,12 +30,13 @@
 #include <epicsExport.h>
 
 #define BUFFER_SIZE 80
-#define READ_TIMEOUT 5.0
+#define READ_TIMEOUT -1.0
 #define WRITE_TIMEOUT 2.0
 
 typedef struct myData {
     epicsMutexId mutexId;
     char         *portName;
+    double       readTimeout;
     asynOctet    *pasynOctet;
     void         *octetPvt;
     void         *registrarPvt;
@@ -73,7 +74,7 @@ static void echoHandler(myData *pPvt)
         /* Erase buffer */
         buffer[0] = 0;
         status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE, 
-                                        READ_TIMEOUT, &nread, &eomReason);
+                                        pPvt->readTimeout, &nread, &eomReason);
         switch (status) {
         case asynSuccess:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
@@ -119,7 +120,7 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName
     asynPrint(pasynUser, ASYN_TRACE_FLOW, 
               "ipEchoServer: connectionCallback, portName=%s\n", portName);
     epicsMutexLock(pPvt->mutexId);
-    /* Make a copy of myData, with new fileDescriptor */
+    /* Make a copy of myData, with new portName */
     *newPvt = *pPvt;
     epicsMutexUnlock(pPvt->mutexId);
     newPvt->portName = epicsStrDup(portName);
@@ -130,7 +131,7 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName
                       (EPICSTHREADFUNC)echoHandler, newPvt);
 }
 
-static void ipEchoServer(const char *portName)
+static void ipEchoServer(const char *portName, int readTimeout)
 {
     myData        *pPvt;
     asynUser      *pasynUser;
@@ -154,6 +155,10 @@ static void ipEchoServer(const char *portName)
         printf("%s driver not supported\n",asynOctetType);
         return;
     }
+    if (readTimeout == 0) 
+        pPvt->readTimeout = READ_TIMEOUT;
+    else 
+        pPvt->readTimeout = (double)readTimeout;
     pPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pPvt->octetPvt = pasynInterface->drvPvt;
     status = pPvt->pasynOctet->registerInterruptUser(
@@ -166,12 +171,14 @@ static void ipEchoServer(const char *portName)
 }
 
 static const iocshArg ipEchoServerArg0 = {"port", iocshArgString};
+static const iocshArg ipEchoServerArg1 = {"read timeout", iocshArgInt};
 static const iocshArg *const ipEchoServerArgs[] = {
-    &ipEchoServerArg0};
-static const iocshFuncDef ipEchoServerDef = {"ipEchoServer", 1, ipEchoServerArgs};
+    &ipEchoServerArg0,
+    &ipEchoServerArg1};
+static const iocshFuncDef ipEchoServerDef = {"ipEchoServer", 2, ipEchoServerArgs};
 static void ipEchoServerCall(const iocshArgBuf * args) 
 { 
-    ipEchoServer(args[0].sval);
+    ipEchoServer(args[0].sval, args[1].ival);
 }
 
 static void ipEchoServerRegister(void)
