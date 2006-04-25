@@ -32,7 +32,8 @@
 
 #define MESSAGE_SIZE 80
 #define NUM_MESSAGES 10
-#define TIMEOUT 5.0
+#define READ_TIMEOUT 0.5
+#define WRITE_TIMEOUT 2.0
 
 typedef struct myData {
     epicsMutexId mutexId;
@@ -41,6 +42,7 @@ typedef struct myData {
     epicsMessageQueueId msgQueue;
     void         *octetPvt;
     void         *registrarPvt;
+    double       readTimeout;
 } myData;
 
 static void echoListener(myData *pPvt)
@@ -75,14 +77,14 @@ static void echoListener(myData *pPvt)
         /* Erase buffer */
         buffer[0] = 0;
         status = pasynOctetSyncIO->read(pasynUser, buffer, MESSAGE_SIZE, 
-                                        TIMEOUT, &nread, &eomReason);
+                                        pPvt->readTimeout, &nread, &eomReason);
         switch (status) {
         case asynSuccess:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                       "echoListener: %s read %d: %s\n", 
                       pPvt->portName, nread, buffer);
             epicsMessageQueueSend(pPvt->msgQueue, buffer, MESSAGE_SIZE);
-            epicsThreadSleep(0.2);  /* Let the writer thread get time to run */
+            epicsThreadSleep(0.01); /* Let the writer thread get time to run */
             break;
         case asynTimeout:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
@@ -123,7 +125,7 @@ static void echoWriter(myData *pPvt)
                       pPvt->portName, status);
         }
         status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer), 
-                                         2.0, &nwrite);
+                                         WRITE_TIMEOUT, &nwrite);
         if (status) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "echoWriter: write error on: %s: %s\n", 
@@ -159,7 +161,7 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName
                       (EPICSTHREADFUNC)echoWriter, newPvt);
 }
 
-static void ipEchoServer(const char *portName)
+static void ipEchoServer(const char *portName, int readTimeout)
 {
     myData        *pPvt;
     asynUser      *pasynUser;
@@ -192,15 +194,18 @@ static void ipEchoServer(const char *portName)
         printf("ipEchoServer devAsynOctet registerInterruptUser %s\n",
                pasynUser->errorMessage);
     }
+    pPvt->readTimeout = readTimeout/1000.;
 }
 
 static const iocshArg ipEchoServerArg0 = {"port", iocshArgString};
+static const iocshArg ipEchoServerArg1 = {"read timeout (msec)", iocshArgInt};
 static const iocshArg *const ipEchoServerArgs[] = {
-    &ipEchoServerArg0};
-static const iocshFuncDef ipEchoServerDef = {"ipEchoServer2", 1, ipEchoServerArgs};
+    &ipEchoServerArg0,
+    &ipEchoServerArg1};
+static const iocshFuncDef ipEchoServerDef = {"ipEchoServer2", 2, ipEchoServerArgs};
 static void ipEchoServerCall(const iocshArgBuf * args) 
 { 
-    ipEchoServer(args[0].sval);
+    ipEchoServer(args[0].sval, args[1].ival);
 }
 
 static void ipEchoServer2Register(void)
