@@ -16,7 +16,7 @@ dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
 
 iocInit()
 
-ipEchoServer("P5001")
+ipEchoServer("P5001", -1)
 seq("ipSNCServer", "P=testIPServer:, PORT=P5002")
 
 # Wait till the servers start running
