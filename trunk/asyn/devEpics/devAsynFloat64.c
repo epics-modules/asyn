@@ -303,7 +303,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     dbCommon *pr = pPvt->pr;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynFloat64::interruptCallbackInput new value=%lu\n",
+        "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
         pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++;
@@ -399,7 +399,7 @@ static long initAiAverage(aiRecord *pai)
     devPvt *pPvt;
 
     status = initCommon((dbCommon *)pai,&pai->inp,
-        0,interruptCallbackInput);
+        0,interruptCallbackAverage);
     if (status != asynSuccess) return 0;
     pPvt = pai->dpvt;
     status = pPvt->pfloat64->registerInterruptUser(
@@ -423,7 +423,7 @@ static long processAiAverage(aiRecord *pai)
     pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->mutexId);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-              "%s devAsynAnalog::callbackAiAverage val=%f\n",
+              "%s devAsynFloat64::callbackAiAverage val=%f\n",
               pai->name, pai->val);
     return 2;
 }
