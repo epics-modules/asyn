@@ -41,13 +41,6 @@
 #include "asynFloat64.h"
 #include <epicsExport.h>
 
-typedef enum {
-    typeAiFloat64,
-    typeAiFloat64Average,
-    typeAiFloat64Interrupt,
-    typeAoFloat64
-}asynAnalogDevType;
-
 typedef struct devPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
@@ -56,7 +49,6 @@ typedef struct devPvt{
     void              *float64Pvt;
     void              *registrarPvt;
     int               canBlock;
-    asynAnalogDevType devType;
     epicsMutexId      mutexId;
     asynStatus        status;
     int               gotValue;
@@ -417,7 +409,10 @@ static long processAiAverage(aiRecord *pai)
     devPvt *pPvt = (devPvt *)pai->dpvt;
 
     epicsMutexLock(pPvt->mutexId);
-    if (pPvt->numAverage == 0) pPvt->numAverage = 1;
+    if (pPvt->numAverage == 0) 
+        pPvt->numAverage = 1;
+    else
+        pai->udf = 0;
     pai->val = pPvt->sum/pPvt->numAverage;
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
