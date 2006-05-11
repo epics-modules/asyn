@@ -39,7 +39,8 @@ connected even if no I/O has yet been done.  Previously such ports reported a di
 state until the first I/O or operation such as setTraceMask.  This was confusing.
 
 <h3>devEpics</h3>
-<p>Fixed bug with asynFloat64Average device support.  The wrong interrupt function was being called.
+<p>Fixed bugs with asynFloat64Average device support.  
+The wrong interrupt function was being called, and UDF was not being cleared.
 </p>
 
 
