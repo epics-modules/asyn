@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.34 2006-04-03 23:38:19 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.35 2006-05-11 21:12:45 norume Exp $
  */
 
 #include <string.h>
@@ -778,7 +778,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
 #endif
     }
     tty->timeoutFlag = 0;
-    *gotEom = 0;
+    if (gotEom) *gotEom = 0;
     for (;;) {
 #ifdef vxWorks
         /*

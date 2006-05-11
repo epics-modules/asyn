@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.30 2006-04-25 17:50:02 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.31 2006-05-11 21:12:45 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -386,7 +386,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         status = asynError;
     }
 #endif
-    *gotEom = 0;
+    if (gotEom) *gotEom = 0;
 #ifdef USE_POLL
     {
         struct pollfd pollfd;
