@@ -12,13 +12,69 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>April 19, 2006</h1>
+<h1>May 12, 2006</h1>
 </center>
 <hr>
 
 <center>
 <h2>Release 4-5</h2>
 </center>
+
+<h3>drvAsynSerialPort/drvAsynIPPort</h3>  NULL pointer dereference.  How this one slipped through testing is quite surprising.
+<pre>
+Index: asyn/drvAsynSerial/drvAsynIPPort.c
+===================================================================
+RCS file: /net/phoebus/epicsmgr/cvsroot/epics/modules/soft/asyn/asyn/drvAsynSerial/drvAsynIPPort.c,v
+retrieving revision 1.30
+retrieving revision 1.31
+diff -u -r1.30 -r1.31
+--- asyn/drvAsynSerial/drvAsynIPPort.c	25 Apr 2006 17:50:02 -0000	1.30
++++ asyn/drvAsynSerial/drvAsynIPPort.c	11 May 2006 21:12:45 -0000	1.31
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ 
+ /*
+- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
++ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
+  */
+ 
+ /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
+@@ -386,7 +386,7 @@
+         status = asynError;
+     }
+ #endif
+-    *gotEom = 0;
++    if (gotEom) *gotEom = 0;
+ #ifdef USE_POLL
+     {
+         struct pollfd pollfd;
+Index: asyn/drvAsynSerial/drvAsynSerialPort.c
+===================================================================
+RCS file: /net/phoebus/epicsmgr/cvsroot/epics/modules/soft/asyn/asyn/drvAsynSerial/drvAsynSerialPort.c,v
+retrieving revision 1.34
+retrieving revision 1.35
+diff -u -r1.34 -r1.35
+--- asyn/drvAsynSerial/drvAsynSerialPort.c	3 Apr 2006 23:38:19 -0000	1.34
++++ asyn/drvAsynSerial/drvAsynSerialPort.c	11 May 2006 21:12:45 -0000	1.35
+@@ -11,7 +11,7 @@
+ ***********************************************************************/
+ 
+ /*
+- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
++ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
+  */
+ 
+ #include <string.h>
+@@ -778,7 +778,7 @@
+ #endif
+     }
+     tty->timeoutFlag = 0;
+-    *gotEom = 0;
++    if (gotEom) *gotEom = 0;
+     for (;;) {
+ #ifdef vxWorks
+         /*
+</pre>
 
 <h3>drvAsynIPPort</h3>  If a client calls asynCommon->connect when the asyn port is already connected
 to the IP port, then the asyn port will be disconnected from the IP port for all clients.
@@ -39,8 +95,8 @@ diff -u -r1.27 -r1.28
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.28 2006-04-19 20:52:31 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.28 2006-04-19 20:52:31 rivers Exp $
+- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
++ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
   */
  
  #include <string.h>
