@@ -20,6 +20,79 @@ alink="#FF0000">
 <h2>Release 4-5</h2>
 </center>
 
+<h3>devAsynFloat64.c</h3>  
+<p>The wrong interrupt callback routine was being called. </p>
+<p>UDF is not set false when the VAL field is modified.</p>
+<pre>
+Index: devAsynFloat64.c
+===================================================================
+RCS file: /net/phoebus/epicsmgr/cvsroot/epics/modules/soft/asyn/asyn/devEpics/devAsynFloat64.c,v
+retrieving revision 1.18
+retrieving revision 1.20
+diff -u -r1.18 -r1.20
+--- devAsynFloat64.c    13 Apr 2006 17:16:46 -0000      1.18
++++ devAsynFloat64.c    11 May 2006 23:25:15 -0000      1.20
+@@ -41,13 +41,6 @@
+ #include "asynFloat64.h"
+ #include <epicsExport.h>
+ 
+-typedef enum {
+-    typeAiFloat64,
+-    typeAiFloat64Average,
+-    typeAiFloat64Interrupt,
+-    typeAoFloat64
+-}asynAnalogDevType;
+-
+ typedef struct devPvt{
+     dbCommon          *pr;
+     asynUser          *pasynUser;
+@@ -56,7 +49,6 @@
+     void              *float64Pvt;
+     void              *registrarPvt;
+     int               canBlock;
+-    asynAnalogDevType devType;
+     epicsMutexId      mutexId;
+     asynStatus        status;
+     int               gotValue;
+@@ -303,7 +295,7 @@
+     dbCommon *pr = pPvt->pr;
+ 
+     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+-        "%s devAsynFloat64::interruptCallbackInput new value=%lu\n",
++        "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
+         pr->name, value);
+     epicsMutexLock(pPvt->mutexId);
+     pPvt->numAverage++;
+@@ -399,7 +391,7 @@
+     devPvt *pPvt;
+ 
+     status = initCommon((dbCommon *)pai,&pai->inp,
+-        0,interruptCallbackInput);
++        0,interruptCallbackAverage);
+     if (status != asynSuccess) return 0;
+     pPvt = pai->dpvt;
+     status = pPvt->pfloat64->registerInterruptUser(
+@@ -417,13 +409,16 @@
+     devPvt *pPvt = (devPvt *)pai->dpvt;
+ 
+     epicsMutexLock(pPvt->mutexId);
+-    if (pPvt->numAverage == 0) pPvt->numAverage = 1;
++    if (pPvt->numAverage == 0) 
++        pPvt->numAverage = 1;
++    else
++        pai->udf = 0;
+     pai->val = pPvt->sum/pPvt->numAverage;
+     pPvt->numAverage = 0;
+     pPvt->sum = 0.;
+     epicsMutexUnlock(pPvt->mutexId);
+     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+-              "%s devAsynAnalog::callbackAiAverage val=%f\n",
++              "%s devAsynFloat64::callbackAiAverage val=%f\n",
+               pai->name, pai->val);
+     return 2;
+ }
+</pre>
+
 <h3>drvAsynSerialPort/drvAsynIPPort</h3>  NULL pointer dereference.  How this one slipped through testing is quite surprising.
 <pre>
 Index: asyn/drvAsynSerial/drvAsynIPPort.c
@@ -34,8 +107,8 @@ diff -u -r1.30 -r1.31
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
-+ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
+- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
++ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
   */
  
  /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -60,8 +133,8 @@ diff -u -r1.34 -r1.35
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
-+ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
+- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
++ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
   */
  
  #include <string.h>
@@ -95,8 +168,8 @@ diff -u -r1.27 -r1.28
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
-+ * $Id: KnownProblems.html,v 1.29 2006-05-12 15:35:41 norume Exp $
+- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
++ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
   */
  
  #include <string.h>
