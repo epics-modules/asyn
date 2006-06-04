@@ -88,9 +88,9 @@ static struct gpibCmd gpibCmds[] = {
  * Initialize device support parameters
  *
  *****************************************************************************/
-static long init_ai(int parm)
+static long init_ai(int pass)
 {
-    if(parm==0) {
+    if(pass==0) {
         devSupParms.name = "devAB300";
         devSupParms.gpibCmds = gpibCmds;
         devSupParms.numparams = NUMPARAMS;
