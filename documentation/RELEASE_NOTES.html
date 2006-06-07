@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>April 21, 2006</h1>
+<h1>June 7, 2006</h1>
 </center>
 <hr>
 
@@ -22,6 +22,35 @@ alink="#FF0000">
 
 <h3>drvAsynIPPort/drvAsynSerialPort</h3>
 <p>Fixed NULL pointer dereference.</p>
+
+<h3>drvAsynIPPort</h3>
+Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
+attempted to allow 2 things:
+<ol>
+<li>Use an EPICS timer to time-out an I/O operation, such as send(), recv() and connect().
+<li>Periodically check (every 5 seconds) during a long I/O operation to see if
+the operation should be cancelled.
+</ol>
+
+<p>Item 1) above was not really implemented because there is no portable robust way
+to abort a pending I/O operation.  So the timer set a flag which was checked after
+the poll() was complete to see if the timeout had occured.  This was not robust,
+because there were competing timers (timeout timer and poll) which could fire in
+the wrong order.</p>
+
+<p>Item 2) was not implemented, because asyn has no mechanism to issue a cancel
+request to a driver which is blocked on an I/O operation.</p>
+
+<p>Since neither of these mechanisms was working as designed, the driver has been
+re-written to simplify it.  If one or both of these are to be implemented in the future
+the code as of version 1.29 should be used as the starting point.</p>
+
+<p>If pasynUser->timeout < 0 an infinite timeout is now used.</p>
+<p>Fixed bug so that ports connected with a file descriptor in pasynUser->reason
+execute code to set timeouts.</p>
+
+<p>Fixed bug to return error if pasynCommon->connect is called when port already connected.</p>
+
 
 <h3>asynTrace</h3>
 <p>Added two new functions which are related to pasynTrace->print and pasynTrace->printIO 
@@ -39,7 +68,14 @@ of arguments it takes a va_list argument as its last parameter.</li>
 and isConnected=0.  In this case a request is queued to call asynCommon->connect for that
 port.  This ensures that ports that have a pasynUser connected to them will report being
 connected even if no I/O has yet been done.  Previously such ports reported a disconnected
-state until the first I/O or operation such as setTraceMask.  This was confusing.
+state until the first I/O or operation such as setTraceMask.  This was confusing.</p>
+
+<p>Clarify documentation on meaning of pasynUser->timeout.  Previously there was no documented
+method of specifying an "infinite" timeout to a driver, and the meaning of timeout=0.0 was not
+defined.  The new definitions are:
+<p> &gt; 0.0 Wait for up to timeout seconds for the I/O to complete
+<p> = 0.0 Peform any I/O that can be done without blocking.  Return timeout error if no I/O can be done without blocking.
+<p> &lt; 0.0 Infinite timeout. Wait forever for I/O to complete.
 
 <h3>devEpics</h3>
 <p>Fixed bugs with asynFloat64Average device support.  
