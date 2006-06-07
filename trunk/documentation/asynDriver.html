@@ -994,13 +994,15 @@ asynManager:freeAsynUser.</p>
     </tr>
     <tr>
       <td>timeout</td>
-      <td>The number of seconds before timeout for I/O requests. This is set
-        by the user and can be changed between calls to a driver. If a call
-        to a low level driver results in the driver making many I/O requests
-        this is the time for each I/O request.
-
-        <p>The user must provide a non zero value or many low level drivers
-        will timeout.</p>
+      <td>The number of seconds before timeout for I/O requests. This is set by 
+        the user and can be changed between calls to a driver. If a call to a low 
+        level driver results in the driver making many I/O requests this is the 
+        time for each I/O request. 
+        <p>The meaning is as follows:</p>
+        <p>&gt; 0.0 Wait for up to timeout seconds for the I/O to complete</p>
+        <p>= 0.0 Peform any I/O that can be done without blocking.&nbsp; 
+        Return timeout error if no I/O can be done without blocking.</p>
+        <p>&lt; 0.0 Infinite timeout. Wait forever for I/O to complete.</p>
       </td>
     </tr>
     <tr>
