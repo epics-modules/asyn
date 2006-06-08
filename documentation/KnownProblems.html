@@ -12,9 +12,14 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>May 12, 2006</h1>
+<h1>June 9, 2006</h1>
 </center>
 <hr>
+
+<center>
+<h2>Release 4-6</h2>
+</center>
+<h3>drvAsynSerialPort</h3>  Does not yet support new timeout semantics (timeout<0 means wait forever, timeout=0 means return characters immediately available).
 
 <center>
 <h2>Release 4-5</h2>
@@ -107,8 +112,8 @@ diff -u -r1.30 -r1.31
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
+- * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
++ * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
   */
  
  /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -133,8 +138,8 @@ diff -u -r1.34 -r1.35
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
+- * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
++ * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
   */
  
  #include <string.h>
@@ -168,8 +173,8 @@ diff -u -r1.27 -r1.28
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.30 2006-05-12 22:43:35 rivers Exp $
+- * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
++ * $Id: KnownProblems.html,v 1.31 2006-06-08 01:48:25 norume Exp $
   */
  
  #include <string.h>
