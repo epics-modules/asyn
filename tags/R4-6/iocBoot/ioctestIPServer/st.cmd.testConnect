@@ -1,0 +1,12 @@
+< envPaths
+
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+
+drvAsynIPPortConfigure("serial3", "164.54.160.50:4001", 0, 0, 0)
+asynOctetConnect("serial3", "serial3")
+
+#asynSetTraceMask("serial3",0,0xff)
+#asynSetTraceIOMask("serial3",0,0x2)
+
+iocInit()
