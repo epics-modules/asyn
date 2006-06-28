@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.37 2006-06-28 12:05:07 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.38 2006-06-28 14:24:53 norume Exp $
  */
 
 #include <string.h>
@@ -812,7 +812,10 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         status = asynTimeout;
     *nbytesTransfered = nRead;
     /* If there is room add a null byte */
-    if (nRead < maxchars) data[nRead] = 0;
+    if (nRead < maxchars)
+        data[nRead] = 0;
+    else if (gotEom)
+        *gotEom = ASYN_EOM_CNT;
     return status;
 }
 

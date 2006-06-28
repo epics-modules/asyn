@@ -1355,11 +1355,18 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         If priority is 0, then a default will be assigned. If stackSize is 0,
         a default is assigned. The portName argument specifies the name by
         which the upper levels of the asyn code will refer to this
-        communication interface instance.</td>
+        communication interface instance.  The registerPort method
+        makes an internal copy of the string to which the
+        name argument points.</td>
     </tr>
     <tr>
       <td>registerInterface</td>
-      <td>This is called by port drivers for each supported interface.</td>
+      <td>This is called by port drivers for each supported interface.  This
+      method <em>does not</em> make a copy of the asynInterface
+      to which the pasynInterface argument points.   Callers must store the
+      asynInteface in a location which is retained for the lifetime of the port.
+      This is commonly done by placing the asynInterface structure in the
+      'driver private' structure.</td>
     </tr>
     <tr>
       <td>exceptionConnect</td>

@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.32 2006-06-12 22:07:55 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.33 2006-06-28 14:24:53 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -423,9 +423,14 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         closeConnection(pasynUser,tty);
         status = asynError;
     }
+    if (thisRead < 0)
+        thisRead = 0;
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
-    if (thisRead < maxchars) data[thisRead] = 0;
+    if (thisRead < maxchars)
+        data[thisRead] = 0;
+    else if (gotEom)
+        *gotEom = ASYN_EOM_CNT;
     return status;
 }
 
