@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.36 2006-06-28 00:36:04 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.37 2006-06-28 12:05:07 norume Exp $
  */
 
 #include <string.h>
@@ -735,16 +735,20 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         /*
          * Set TERMIOS timeout
          */
-        if (pasynUser->timeout == 0) {
+        if (pasynUser->timeout > 0) {
+            int t = (pasynUser->timeout * 10) + 1;
+            if (t > 255)
+                t = 255;
+            tty->termios.c_cc[VMIN] = 0;
+            tty->termios.c_cc[VTIME] = t;
+        }
+        else if (pasynUser->timeout == 0) {
+            tty->termios.c_cc[VMIN] = 0;
             tty->termios.c_cc[VTIME] = 0;
         }
         else {
-            int t = pasynUser->timeout / 10;
-            if (t == 0)
-                t = 1;
-            else if (t > 255)
-                t = 255;
-            tty->termios.c_cc[VTIME] = t;
+            tty->termios.c_cc[VMIN] = 1;
+            tty->termios.c_cc[VTIME] = 0;
         }
         if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
