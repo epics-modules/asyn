@@ -234,7 +234,10 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
                     }
                 }
             }
-            if (nRead >= maxchars) break;
+            if (nRead >= maxchars)  {
+                if(eomReason) *eomReason |= ASYN_EOM_CNT;
+                break;
+            }
             continue;
         }
         if(eomReason && *eomReason) break;
