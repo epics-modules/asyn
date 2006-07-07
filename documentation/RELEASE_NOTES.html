@@ -21,138 +21,176 @@ alink="#FF0000">
 </center>
 
 <h3>drvAsynIPPort/drvAsynSerialPort</h3>
+
 <p>*eomReason now set to ASYN_EOM_CNT when read count has been satisfied.</p>
 
+<p>Add support for UDP broadcasts. Specify "UDP*" and the network broadcast
+address in the port configuration command:<br>
+<code> drvAsynIPPortConfigure("L0", "192.168.1.255:1234 UDP*", 0, 0,
+0)</code></p>
+
 <h3>drvAsynSerialPort</h3>
-Full support for new timeout semantics (timeout<0 means wait forever, timeout=0 means return characters immediately available).
-
-
-
-
+Full support for new timeout semantics (timeout&lt;0 means "wait forever for
+characters to arrive", timeout=0 means "return characters immediately
+available", timeout&gt;0 means "return a timeout status if no characters are
+received within the specified number of seconds"). <0 means wait forever,
+timeout=0 means return characters immediately available). <center>
 
 <center>
 <h2>Release 4-6</h2>
 </center>
 
 <h3>drvAsynIPPort/drvAsynSerialPort</h3>
+
 <p>Fixed NULL pointer dereference.</p>
 
 <h3>drvAsynIPPort</h3>
-Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
-attempted to allow 2 things:
+Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and
+earlier) attempted to allow 2 things:
 <ol>
-<li>Use an EPICS timer to time-out an I/O operation, such as send(), recv() and connect().
-<li>Periodically check (every 5 seconds) during a long I/O operation to see if
-the operation should be cancelled.
+  <li>Use an EPICS timer to time-out an I/O operation, such as send(), recv()
+    and connect().</li>
+  <li>Periodically check (every 5 seconds) during a long I/O operation to see
+    if the operation should be cancelled.</li>
 </ol>
 
-<p>Item 1) above was not really implemented because there is no portable robust way
-to abort a pending I/O operation.  So the timer set a flag which was checked after
-the poll() was complete to see if the timeout had occured.  This was not robust,
-because there were competing timers (timeout timer and poll) which could fire in
-the wrong order.</p>
+<p>Item 1) above was not really implemented because there is no portable
+robust way to abort a pending I/O operation.  So the timer set a flag which
+was checked after the poll() was complete to see if the timeout had occured.
+This was not robust, because there were competing timers (timeout timer and
+poll) which could fire in the wrong order.</p>
 
-<p>Item 2) was not implemented, because asyn has no mechanism to issue a cancel
-request to a driver which is blocked on an I/O operation.</p>
+<p>Item 2) was not implemented, because asyn has no mechanism to issue a
+cancel request to a driver which is blocked on an I/O operation.</p>
 
-<p>Since neither of these mechanisms was working as designed, the driver has been
-re-written to simplify it.  If one or both of these are to be implemented in the future
-the code as of version 1.29 should be used as the starting point.</p>
+<p>Since neither of these mechanisms was working as designed, the driver has
+been re-written to simplify it.  If one or both of these are to be
+implemented in the future the code as of version 1.29 should be used as the
+starting point.</p>
 
-<p>If pasynUser->timeout < 0 an infinite timeout is now used.</p>
-<p>Fixed bug so that ports connected with a file descriptor in pasynUser->reason
-execute code to set timeouts.</p>
+<p>If pasynUser-&gt;timeout &lt; 0 an infinite timeout is now used.</p>
 
-<p>Fixed bug to return error if pasynCommon->connect is called when port already connected.</p>
+<p>Fixed bug so that ports connected with a file descriptor in
+pasynUser-&gt;reason execute code to set timeouts.</p>
 
+<p>Fixed bug to return error if pasynCommon-&gt;connect is called when port
+already connected.</p>
 
 <h3>asynTrace</h3>
-<p>Added two new functions which are related to pasynTrace->print and pasynTrace->printIO 
-the way vprintf is related to printf.
+
+<p>Added two new functions which are related to pasynTrace-&gt;print and
+pasynTrace-&gt;printIO the way vprintf is related to printf.</p>
 <ul>
-<li>pasynTrace->vprint  Same as pasynTrace->print except that instead of a variable
-of arguments it takes a va_list argument as its last parameter.</li>
-<li>pasynTrace->vprintIO  Same as pasynTrace->printIO except that instead of a variable
-of arguments it takes a va_list argument as its last parameter.</li>
+  <li>pasynTrace-&gt;vprint  Same as pasynTrace-&gt;print except that instead
+    of a variable of arguments it takes a va_list argument as its last
+    parameter.</li>
+  <li>pasynTrace-&gt;vprintIO  Same as pasynTrace-&gt;printIO except that
+    instead of a variable of arguments it takes a va_list argument as its
+    last parameter.</li>
 </ul>
 
-
 <h3>asynManager</h3>
-<p>Changed pasynManager->connectDevice for ports which have the properties autoConnect=1
-and isConnected=0.  In this case a request is queued to call asynCommon->connect for that
-port.  This ensures that ports that have a pasynUser connected to them will report being
-connected even if no I/O has yet been done.  Previously such ports reported a disconnected
-state until the first I/O or operation such as setTraceMask.  This was confusing.</p>
 
-<p>Clarify documentation on meaning of pasynUser->timeout.  Previously there was no documented
-method of specifying an "infinite" timeout to a driver, and the meaning of timeout=0.0 was not
-defined.  The new definitions are:
-<p> &gt; 0.0 Wait for up to timeout seconds for the I/O to complete
-<p> = 0.0 Peform any I/O that can be done without blocking.  Return timeout error if no I/O can be done without blocking.
-<p> &lt; 0.0 Infinite timeout. Wait forever for I/O to complete.
+<p>Changed pasynManager-&gt;connectDevice for ports which have the properties
+autoConnect=1 and isConnected=0.  In this case a request is queued to call
+asynCommon-&gt;connect for that port.  This ensures that ports that have a
+pasynUser connected to them will report being connected even if no I/O has
+yet been done.  Previously such ports reported a disconnected state until the
+first I/O or operation such as setTraceMask.  This was confusing.</p>
+
+<p>Clarify documentation on meaning of pasynUser-&gt;timeout.  Previously
+there was no documented method of specifying an "infinite" timeout to a
+driver, and the meaning of timeout=0.0 was not defined.  The new definitions
+are:</p>
+
+<p>&gt; 0.0 Wait for up to timeout seconds for the I/O to complete</p>
+
+<p>= 0.0 Peform any I/O that can be done without blocking.  Return timeout
+error if no I/O can be done without blocking.</p>
+
+<p>&lt; 0.0 Infinite timeout. Wait forever for I/O to complete.</p>
 
 <h3>devEpics</h3>
-<p>Fixed bugs with asynFloat64Average device support.  
-The wrong interrupt function was being called, and UDF was not being cleared.
-</p>
 
+<p>Fixed bugs with asynFloat64Average device support. The wrong interrupt
+function was being called, and UDF was not being cleared.</p>
 
 <center>
 <h2>Release 4-5</h2>
 </center>
 
 <h3>memMalloc/memFree</h3>
+
 <p>memMalloc was allocating the amount of memory the caller requested rather
-than the amount required for the freeList.
-If memFree was called and the memory reallocated to a user requesting
-a larger size, memory corruption occured. This is fixed.
-</p>
+than the amount required for the freeList. If memFree was called and the
+memory reallocated to a user requesting a larger size, memory corruption
+occured. This is fixed.</p>
+
 <h3>SyncIO routines</h3>
-<p>If the connect call fails the asynUser is no longer freed.
-Instead a message is put into asynUser.errorMessage.
-The caller must call disconnect in order to free the storage for the asynUser.
-</p>
-<p>The SyncIO routines no longer call asynPrint if there is an error and there is
-a valid asynUser available.  Rather they return an error message in pasynUser->errorMessage.
-The SyncIO*Once functions still call asynPrint for errors, because they do not have a
-way of returning an error message.
-</p>
+
+<p>If the connect call fails the asynUser is no longer freed. Instead a
+message is put into asynUser.errorMessage. The caller must call disconnect in
+order to free the storage for the asynUser.</p>
+
+<p>The SyncIO routines no longer call asynPrint if there is an error and
+there is a valid asynUser available.  Rather they return an error message in
+pasynUser-&gt;errorMessage. The SyncIO*Once functions still call asynPrint
+for errors, because they do not have a way of returning an error message.</p>
 
 <h3>Serial, TCP/UDP/IP</h3>
-<p>Handle 0-length write requests.
+
+<p>Handle 0-length write requests.</p>
 
 <h3>TCP/UDP/IP</h3>
-<p>Added drvAsynIPServerPort to support TCP and UDP socket servers.
-<p>Added iocBoot/testIPServer to test TCP server support.
-<p>drvAsynIPPort now closes TCP sockets when remote system closes connection.
-<p>drvAsynIPPort connect function now uses pasynUser->reason as a file descriptor if it is > 0.
-This allows drvAsynIPServerPort to re-use asyn ports it creates.
-<p>Made drvAsynIPPort add null byte at end of input if there is room.
-<p>Made drvAsynIPPort:readRaw set eomReason to 0.  It was not setting eomReason at all previously.
+
+<p>Added drvAsynIPServerPort to support TCP and UDP socket servers.</p>
+
+<p>Added iocBoot/testIPServer to test TCP server support.</p>
+
+<p>drvAsynIPPort now closes TCP sockets when remote system closes
+connection.</p>
+
+<p>drvAsynIPPort connect function now uses pasynUser-&gt;reason as a file
+descriptor if it is &gt; 0. This allows drvAsynIPServerPort to re-use asyn
+ports it creates.</p>
+
+<p>Made drvAsynIPPort add null byte at end of input if there is room.</p>
+
+<p>Made drvAsynIPPort:readRaw set eomReason to 0.  It was not setting
+eomReason at all previously.</p>
 
 <h3>Serial</h3>
-<p>Made drvAsynSerialPort add null byte at end of input if there is room.
-<p>Made drvAsynSerialPort:readRaw set eomReason to 0.  It was not setting eomReason at all previously.
+
+<p>Made drvAsynSerialPort add null byte at end of input if there is room.</p>
+
+<p>Made drvAsynSerialPort:readRaw set eomReason to 0.  It was not setting
+eomReason at all previously.</p>
 
 <h3>Interfaces</h3>
-<p>Added asynCommonSyncIO for synchronous support of the asynCommon interface.
+
+<p>Added asynCommonSyncIO for synchronous support of the asynCommon
+interface.</p>
 
 <h3>VME GPIB</h3>
-<p>Add delay loops to get these boards to work with faster VME CPU modules.
+
+<p>Add delay loops to get these boards to work with faster VME CPU
+modules.</p>
 
 <center>
 <h2>Release 4-4</h2>
 </center>
 
 <h3>VXI11</h3>
+
 <p>Better support was provided for VXI-11.3 controllers, i.e. talking
-directly to an ethernet port on an instrument. In particular
-a TDS3054B was tested.</p>
-<p>WARNING: The VXI-11.1 ansd VXI-11.3 standards do NOT allow access to
-GPIB lines, i.e. conmmands like Untalk/Unlisten are not possible.
-The previous support issued these commands after each read or write.
-Some really old GPIB devices may fail. If so the device specific code must be
-modified to sent these commands separately.</p>
+directly to an ethernet port on an instrument. In particular a TDS3054B was
+tested.</p>
+
+<p>WARNING: The VXI-11.1 ansd VXI-11.3 standards do NOT allow access to GPIB
+lines, i.e. conmmands like Untalk/Unlisten are not possible. The previous
+support issued these commands after each read or write. Some really old GPIB
+devices may fail. If so the device specific code must be modified to sent
+these commands separately.</p>
 
 <h3>win32</h3>
 
@@ -554,10 +592,10 @@ by asynRecord.</p>
     passed an additional  argument through which they store the actual number
     of characters read or written.</li>
   <li>The createSocket method in the asynSyncIO interface has been replaced
-    by openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(),
-    that must now be done by the caller.</li>
-  <li>Removed code for "flush" from gpib drivers.&nbsp; The implementation
-    caused infinite loops on devices that speak when not spoken to.</li>
+    by openSocket.  openSocket does not call asynSyncIO-&gt;connect(), that
+    must now be done by the caller.</li>
+  <li>Removed code for "flush" from gpib drivers.  The implementation caused
+    infinite loops on devices that speak when not spoken to.</li>
   <li>asynRecord
     <ul>
       <li>asynOctetRecord has been renamed to asynRecord</li>
