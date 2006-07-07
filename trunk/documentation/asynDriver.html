@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 2, 2006 </span></p>
+<p><span style="font-weight: bold; font-size: 14pt">March 2, 2006</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -157,10 +157,10 @@ than using libCom, much of it is independent of EPICS.</p>
   <li>drvAsynSerialPort: Support for devices connected to serial ports.</li>
   <li>drvAsynIPPort: Support for devices accessed via Ethernet/Serial
     converter boxes. TCP/IP and UDP/IP socket communication are
-    supported.</li>
+  supported.</li>
   <li>drvAsynIPServerPort: Support for asyn socket servers that are accessed
     from remote clients. TCP/IP and UDP/IP socket communication are
-    supported.</li>
+  supported.</li>
   <li>VXI-11: A replacement for the VXI-11 support of the Franksen gpibCore
     support.</li>
   <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
@@ -994,14 +994,18 @@ asynManager:freeAsynUser.</p>
     </tr>
     <tr>
       <td>timeout</td>
-      <td>The number of seconds before timeout for I/O requests. This is set by 
-        the user and can be changed between calls to a driver. If a call to a low 
-        level driver results in the driver making many I/O requests this is the 
-        time for each I/O request. 
+      <td>The number of seconds before timeout for I/O requests. This is set
+        by the user and can be changed between calls to a driver. If a call
+        to a low level driver results in the driver making many I/O requests
+        this is the time for each I/O request.
+
         <p>The meaning is as follows:</p>
+
         <p>&gt; 0.0 Wait for up to timeout seconds for the I/O to complete</p>
-        <p>= 0.0 Peform any I/O that can be done without blocking.&nbsp; 
-        Return timeout error if no I/O can be done without blocking.</p>
+
+        <p>= 0.0 Peform any I/O that can be done without blocking.  Return
+        timeout error if no I/O can be done without blocking.</p>
+
         <p>&lt; 0.0 Infinite timeout. Wait forever for I/O to complete.</p>
       </td>
     </tr>
@@ -1355,18 +1359,17 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         If priority is 0, then a default will be assigned. If stackSize is 0,
         a default is assigned. The portName argument specifies the name by
         which the upper levels of the asyn code will refer to this
-        communication interface instance.  The registerPort method
-        makes an internal copy of the string to which the
-        name argument points.</td>
+        communication interface instance.  The registerPort method makes an
+        internal copy of the string to which the name argument points.</td>
     </tr>
     <tr>
       <td>registerInterface</td>
       <td>This is called by port drivers for each supported interface.  This
-      method <em>does not</em> make a copy of the asynInterface
-      to which the pasynInterface argument points.   Callers must store the
-      asynInteface in a location which is retained for the lifetime of the port.
-      This is commonly done by placing the asynInterface structure in the
-      'driver private' structure.</td>
+        method <em>does not</em> make a copy of the asynInterface to which
+        the pasynInterface argument points.   Callers must store the
+        asynInteface in a location which is retained for the lifetime of the
+        port. This is commonly done by placing the asynInterface structure in
+        the 'driver private' structure.</td>
     </tr>
     <tr>
       <td>exceptionConnect</td>
@@ -1520,13 +1523,12 @@ typedef struct  asynCommon {
 
 <h3>asynCommonSyncIO</h3>
 
-<p>asynCommonSyncIO provides a convenient interface for software that needs to
-perform "synchronous" operations to an asyn device, i.e. that blocks while waiting
-for the port to be available and for the operation to complete.  The code does
-not need to handle callbacks or understand the details of the asynManager and
-asynCommon interfaces.  </p>
-<pre>
-typedef struct asynCommonSyncIO {
+<p>asynCommonSyncIO provides a convenient interface for software that needs
+to perform "synchronous" operations to an asyn device, i.e. that blocks while
+waiting for the port to be available and for the operation to complete.  The
+code does not need to handle callbacks or understand the details of the
+asynManager and asynCommon interfaces.</p>
+<pre>typedef struct asynCommonSyncIO {
     asynStatus (*connect)(const char *port, int addr, 
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
@@ -1534,12 +1536,12 @@ typedef struct asynCommonSyncIO {
     asynStatus (*disconnectDevice)(asynUser *pasynUser);
     asynStatus (*report)(asynUser *pasynUser, FILE *fd, int details);
 } asynCommonSyncIO;
-epicsShareExtern asynCommonSyncIO *pasynCommonSyncIO;
-</pre>
-Note that there is a potential for confusion in the connect* and disconnect* function names of this interface.  
-For consistency with the other SyncIO interfaces, connect calls pasynManager->connectDevice, 
-disconnect calls pasynManager->disconnect, connectDevice calls asynCommon->connect, and 
-disconnectDevice calls asynCommon->disconnect.
+epicsShareExtern asynCommonSyncIO *pasynCommonSyncIO;</pre>
+Note that there is a potential for confusion in the connect* and disconnect*
+function names of this interface. For consistency with the other SyncIO
+interfaces, connect calls pasynManager-&gt;connectDevice, disconnect calls
+pasynManager-&gt;disconnect, connectDevice calls asynCommon-&gt;connect, and
+disconnectDevice calls asynCommon-&gt;disconnect.
 
 <h3>asynDrvUser</h3>
 
@@ -2040,8 +2042,8 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
 
 <p>asynOctetSyncIO provides a convenient interface for software that needs to
 perform "synchronous" I/O to an asyn device, i.e. that starts an I/O
-operation and then blocks while waiting for the response.&nbsp; The code does
-not need to handle callbacks or understand the details of the asynManager and
+operation and then blocks while waiting for the response.  The code does not
+need to handle callbacks or understand the details of the asynManager and
 asynOctet interfaces. Examples include motor drivers running in their own
 threads, SNL programs, and the shell commands described later in this
 document.</p>
@@ -2119,8 +2121,8 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     <tr>
       <td>openSocket</td>
       <td>Opens a new connection to a TCP/IP or UDP/IP socket, returning the
-        name of a newly created asyn port.&nbsp; The name of the port created
-        is of the form "server:port [protocol]", i.e. "corvette:21" or
+        name of a newly created asyn port.  The name of the port created is
+        of the form "server:port [protocol]", i.e. "corvette:21" or
         "164.54.160.50:21" or "corvette:21 UDP".  </td>
     </tr>
     <tr>
@@ -2709,6 +2711,8 @@ provides code to implement registerInterruptUser and cancelInterruptUser.</p>
       <td>Cancels the callback</td>
     </tr>
     <tr>
+      <td></td>
+      <td></td>
     </tr>
   </tbody>
 </table>
@@ -4092,10 +4096,13 @@ Ethernet/Serial converter box.</p>
 where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynManager.</li>
-  <li>hostInfo - The Internet host name,  port number and optional IP
-    protocol of the device (e.g.  "164.54.9.90:4002", "serials8n3:4002",
-    "serials8n3:4002 TCP" or "164.54.17.43:5186 udp").  If no protocol is
-    specified, TCP will be used.</li>
+  <li>hostInfo - The Internet host name, port number and optional IP protocol
+    of the device (e.g. "164.54.9.90:4002", "serials8n3:4002",
+    "serials8n3:4002 TCP" or "164.54.17.43:5186 udp"). If no protocol is
+    specified, TCP will be used. UDP broadcasts are supported by specifying
+    IP protocol "UDP*" and the network broadcast address (e.g.
+    "192.168.1.255:1234 UDP*"). Note that on many systems UDP broadcasts are
+    restricted to the super-user account.</li>
   <li>priority - Priority at which the asyn I/O thread will run. If this is
     zero or missing, then epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that portThread should
@@ -4119,12 +4126,12 @@ functionality.</p>
 
 <h3><a name="drvAsynIPServerPort"></a>TCP/IP or UDP/IP Server</h3>
 
-<p>The drvAsynIPServerPort driver supports asyn socket servers by listening for
-TCP/IP or UDP/IP connections from remote clients. The listener thread then creates
-a new drvAsynIPPort port by calling drvAsynIPPortConfigure 
-(or re-uses a disconnected port it previously created), 
-and calls back any registered asyn clients with the name of
-the new port.  These asyn clients will typically be socket servers.</p>
+<p>The drvAsynIPServerPort driver supports asyn socket servers by listening
+for TCP/IP or UDP/IP connections from remote clients. The listener thread
+then creates a new drvAsynIPPort port by calling drvAsynIPPortConfigure (or
+re-uses a disconnected port it previously created), and calls back any
+registered asyn clients with the name of the new port.  These asyn clients
+will typically be socket servers.</p>
 
 <p>TCP/IP or UDP/IP server listeners are configured with the
 <tt>drvAsynIPServerPortConfigure</tt> command:</p>
@@ -4134,45 +4141,54 @@ where the arguments are:
 <ul>
   <li>portName - The portName that is registered with asynManager.</li>
   <li>serverInfo - The Internet host name, port number and optional IP
-    protocol to listen for connections on (e.g.  "localhost:4002", "localhost:5186 udp").  
-    If no protocol is specified, TCP will be used.</li>
-  <li>maxClients - the maximum number of IP clients that can be simultaneously
-    connected on this port.  Additional connect requests will fail.
-  <li>priority - Priority at which the listener thread and any asyn I/O ports it creates will run. 
-    If this is zero or missing, then epicsThreadPriorityMedium is used.</li>
+    protocol to listen for connections on (e.g.  "localhost:4002",
+    "localhost:5186 udp"). If no protocol is specified, TCP will be used.</li>
+  <li>maxClients - the maximum number of IP clients that can be
+    simultaneously connected on this port.  Additional connect requests will
+    fail.</li>
+  <li>priority - Priority at which the listener thread and any asyn I/O ports
+    it creates will run. If this is zero or missing, then
+    epicsThreadPriorityMedium is used.</li>
   <li>noAutoConnect - Zero or missing indicates that the listener port should
     automatically connect.  Non-zero if explicit connect command must be
     issued. Note that all asyn I/O ports that the listener thread creates
     will be created with noAutoConnect=1, but this is transparent to socket
-    server applications, because the listener thread does the explicit connect
-    for them.</li>
-  <li>noProcessEos is passed to drvAsynIPPortConfigure when new asyn I/O ports
-    are created. If 0 then asynInterposeEosConfig is called specifying both
-    processEosIn and processEosOut.</li>
+    server applications, because the listener thread does the explicit
+    connect for them.</li>
+  <li>noProcessEos is passed to drvAsynIPPortConfigure when new asyn I/O
+    ports are created. If 0 then asynInterposeEosConfig is called specifying
+    both processEosIn and processEosOut.</li>
 </ul>
 
-<p>This driver implements the asynOctet interface.  The only methods it supports
-are registerInterruptUser and cancelInterruptUser.
-Calling the other asynOctet methods will result in an error.
-The following happens when a new connection is received on the port specified in drvAsynIPServerPortConfigure:
+<p>This driver implements the asynOctet interface.  The only methods it
+supports are registerInterruptUser and cancelInterruptUser. Calling the other
+asynOctet methods will result in an error. The following happens when a new
+connection is received on the port specified in
+drvAsynIPServerPortConfigure:</p>
 <ul>
-  <li> If there are no registered asyn clients (who have called registerInterruptUser on the asynOctet interface of
-    the listener port) then the incoming connection is immediately closed, since there are no IP servers
-    available to service it.  If there is at least one registered client, then the following steps
-    are executed.</li>
-  <li> The list of drvAsynIPPort ports that this listener thread has created is searched to see
-    if there is an existing port that is currently disconnected because the remote IP client disconnected.</li>
-  <li> If there is an existing disconnected port, then it is reconnected with the file descriptor from the
-    new IP connection.</li>
-  <li> If there is no available existing port, then a new one is created by calling drvAsynIPPortConfigure.
-    The name of the new port is of the form portName:1, portName:2, etc., where portName is the name of
-    the listener port.</li>
-  <li> The asynTraceMask and asynTraceIOMask of the newly connected port are set to the current values
-    of the listener thread port.  This makes it possible to trace the early stages of execution of
-    the callbacks to the registered clients, before one could enable tracing at iocsh.</li>
-  <li> All registered asyn clients (who have called registerInterruptUser on the asynOctet interface of
-    the listener port) are called back with the name of the newly connected port.</li>
-  <li> The clients then will connect to this new asyn port and perform I/O using the asynOctet methods.
+  <li>If there are no registered asyn clients (who have called
+    registerInterruptUser on the asynOctet interface of the listener port)
+    then the incoming connection is immediately closed, since there are no IP
+    servers available to service it.  If there is at least one registered
+    client, then the following steps are executed.</li>
+  <li>The list of drvAsynIPPort ports that this listener thread has created
+    is searched to see if there is an existing port that is currently
+    disconnected because the remote IP client disconnected.</li>
+  <li>If there is an existing disconnected port, then it is reconnected with
+    the file descriptor from the new IP connection.</li>
+  <li>If there is no available existing port, then a new one is created by
+    calling drvAsynIPPortConfigure. The name of the new port is of the form
+    portName:1, portName:2, etc., where portName is the name of the listener
+    port.</li>
+  <li>The asynTraceMask and asynTraceIOMask of the newly connected port are
+    set to the current values of the listener thread port.  This makes it
+    possible to trace the early stages of execution of the callbacks to the
+    registered clients, before one could enable tracing at iocsh.</li>
+  <li>All registered asyn clients (who have called registerInterruptUser on
+    the asynOctet interface of the listener port) are called back with the
+    name of the newly connected port.</li>
+  <li>The clients then will connect to this new asyn port and perform I/O
+    using the asynOctet methods.</li>
 </ul>
 
 <h3><a name="vxi11"></a>VXI-11</h3>
@@ -4326,11 +4342,11 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
 
 <p>WARNING:</p>
 
-<p>This module includes code that implement a 6 microsecond delay because 
-the gpib interface chip requires it. The first time gsIP488Configure is
-executed code is run to determine a variable used by the delay routine. It
-assumes that there is no higher priority thread running that consumes lots of
-cpu cycles.</p>
+<p>This module includes code that implement a 6 microsecond delay because the
+gpib interface chip requires it. The first time gsIP488Configure is executed
+code is run to determine a variable used by the delay routine. It assumes
+that there is no higher priority thread running that consumes lots of cpu
+cycles.</p>
 
 <h3><a name="ni1014"></a>National Instruments GPIB-1014D</h3>
 
@@ -4369,13 +4385,14 @@ where
   <li>Programmed I/O, via interrupts, rather than DMA is implemented. Thus no
     A24 address space is required.</li>
 </ul>
+
 <p>WARNING:</p>
 
-<p>This module includes code that implement a 6 microsecond delay because 
-the gpib interface chip requires it. The first time ni1014Config is
-executed code is run to determine a variable used by the delay routine. It
-assumes that there is no higher priority thread running that consumes lots of
-cpu cycles.</p>
+<p>This module includes code that implement a 6 microsecond delay because the
+gpib interface chip requires it. The first time ni1014Config is executed code
+is run to determine a variable used by the delay routine. It assumes that
+there is no higher priority thread running that consumes lots of cpu
+cycles.</p>
 <hr>
 
 <center>

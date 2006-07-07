@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.33 2006-06-28 14:24:53 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.34 2006-07-07 15:22:51 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -76,6 +76,7 @@ typedef struct {
     char              *IPDeviceName;
     char              *portName;
     int                socketType;
+    int                broadcastFlag;
     int                fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -219,6 +220,20 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         }
 
         /*
+         * Enable broadcasts if so requested
+         */
+        i = 1;
+        if (tty->broadcastFlag
+         && (setsockopt(tty->fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "Can't set %s socket BROADCAST option: %s\n",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+            epicsSocketDestroy(tty->fd);
+            tty->fd = -1;
+            return asynError;
+        }
+
+        /*
          * Connect to the remote host
          */
 
@@ -237,7 +252,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
-        && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
+     && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket NODELAY option: %s\n",
                       tty->IPDeviceName, strerror(SOCKERRNO));
@@ -561,12 +576,17 @@ drvAsynIPPortConfigure(const char *portName,
     *cp = ':';
     tty->farAddr.ia.sin_port = htons(port);
     tty->farAddr.ia.sin_family = AF_INET;
+    tty->broadcastFlag = 0;
     if ((protocol[0] ==  '\0')
      || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
         tty->socketType = SOCK_STREAM;
     }
     else if (epicsStrCaseCmp(protocol, "udp") == 0) {
         tty->socketType = SOCK_DGRAM;
+    }
+    else if (epicsStrCaseCmp(protocol, "udp*") == 0) {
+        tty->socketType = SOCK_DGRAM;
+        tty->broadcastFlag = 1;
     }
     else {
         printf("drvAsynIPPortConfigure: Unknown protocol \"%s\".\n", protocol);
