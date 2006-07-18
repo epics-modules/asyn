@@ -412,13 +412,13 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     *nbytesTransfered = (size_t)nt;
     if(status!=asynSuccess) return status;
     if(pgpibPvt->eoslen==1 && nt>0) {
-        if(data[nt-1]==pgpibPvt->eos) nt--;
+        if(data[nt-1]==pgpibPvt->eos) {
+            *eomReason |= ASYN_EOM_EOS;
+            nt--;
+        }
     }
-    if(nt<maxchars && data[nt]!=0) data[nt] = 0;
-    if(nt==maxchars && data[nt-1]!=0) {
-        data[nt-1] = 0;
-        return asynOverflow;
-    }
+    if(nt<maxchars) data[nt] = 0;
+    if(nt==maxchars) *eomReason |= ASYN_EOM_CNT;
     *nbytesTransfered = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
         data,nbytesTransfered,eomReason);
