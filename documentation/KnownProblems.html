@@ -19,7 +19,7 @@ alink="#FF0000">
 <center>
 <h2>Release 4-6</h2>
 </center>
-<h3>drvAsynSerialPort</h3>  Does not yet support new timeout semantics (timeout<0 means wait forever, timeout=0 means return characters immediately available).  Support for timeout values less than zero will be part of the next release.
+<h3>drvAsynSerialPort</h3>  Does not yet support new timeout semantics (timeout&lt;0 means wait forever, timeout=0 means return characters immediately available).  Support for timeout values less than zero will be part of the next release.
 
 <center>
 <h2>Release 4-5</h2>
@@ -39,7 +39,7 @@ diff -u -r1.18 -r1.20
 +++ devAsynFloat64.c    11 May 2006 23:25:15 -0000      1.20
 @@ -41,13 +41,6 @@
  #include "asynFloat64.h"
- #include <epicsExport.h>
+ #include &lt;epicsExport.h&gt;
  
 -typedef enum {
 -    typeAiFloat64,
@@ -60,40 +60,40 @@ diff -u -r1.18 -r1.20
      asynStatus        status;
      int               gotValue;
 @@ -303,7 +295,7 @@
-     dbCommon *pr = pPvt->pr;
+     dbCommon *pr = pPvt-&gt;pr;
  
-     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+     asynPrint(pPvt-&gt;pasynUser, ASYN_TRACEIO_DEVICE,
 -        "%s devAsynFloat64::interruptCallbackInput new value=%lu\n",
 +        "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
-         pr->name, value);
-     epicsMutexLock(pPvt->mutexId);
-     pPvt->numAverage++;
+         pr-&gt;name, value);
+     epicsMutexLock(pPvt-&gt;mutexId);
+     pPvt-&gt;numAverage++;
 @@ -399,7 +391,7 @@
      devPvt *pPvt;
  
-     status = initCommon((dbCommon *)pai,&pai->inp,
+     status = initCommon((dbCommon *)pai,&pai-&gt;inp,
 -        0,interruptCallbackInput);
 +        0,interruptCallbackAverage);
      if (status != asynSuccess) return 0;
-     pPvt = pai->dpvt;
-     status = pPvt->pfloat64->registerInterruptUser(
+     pPvt = pai-&gt;dpvt;
+     status = pPvt-&gt;pfloat64-&gt;registerInterruptUser(
 @@ -417,13 +409,16 @@
-     devPvt *pPvt = (devPvt *)pai->dpvt;
+     devPvt *pPvt = (devPvt *)pai-&gt;dpvt;
  
-     epicsMutexLock(pPvt->mutexId);
--    if (pPvt->numAverage == 0) pPvt->numAverage = 1;
-+    if (pPvt->numAverage == 0) 
-+        pPvt->numAverage = 1;
+     epicsMutexLock(pPvt-&gt;mutexId);
+-    if (pPvt-&gt;numAverage == 0) pPvt-&gt;numAverage = 1;
++    if (pPvt-&gt;numAverage == 0) 
++        pPvt-&gt;numAverage = 1;
 +    else
-+        pai->udf = 0;
-     pai->val = pPvt->sum/pPvt->numAverage;
-     pPvt->numAverage = 0;
-     pPvt->sum = 0.;
-     epicsMutexUnlock(pPvt->mutexId);
-     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
++        pai-&gt;udf = 0;
+     pai-&gt;val = pPvt-&gt;sum/pPvt-&gt;numAverage;
+     pPvt-&gt;numAverage = 0;
+     pPvt-&gt;sum = 0.;
+     epicsMutexUnlock(pPvt-&gt;mutexId);
+     asynPrint(pPvt-&gt;pasynUser, ASYN_TRACEIO_DEVICE,
 -              "%s devAsynAnalog::callbackAiAverage val=%f\n",
 +              "%s devAsynFloat64::callbackAiAverage val=%f\n",
-               pai->name, pai->val);
+               pai-&gt;name, pai-&gt;val);
      return 2;
  }
 </pre>
@@ -112,8 +112,8 @@ diff -u -r1.30 -r1.31
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
-+ * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
+- * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
++ * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
   */
  
  /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -138,15 +138,15 @@ diff -u -r1.34 -r1.35
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
-+ * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
+- * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
++ * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
   */
  
- #include <string.h>
+ #include &lt;string.h&gt;
 @@ -778,7 +778,7 @@
  #endif
      }
-     tty->timeoutFlag = 0;
+     tty-&gt;timeoutFlag = 0;
 -    *gotEom = 0;
 +    if (gotEom) *gotEom = 0;
      for (;;) {
@@ -154,7 +154,7 @@ diff -u -r1.34 -r1.35
          /*
 </pre>
 
-<h3>drvAsynIPPort</h3>  If a client calls asynCommon->connect when the asyn port is already connected
+<h3>drvAsynIPPort</h3>  If a client calls asynCommon-&gt;connect when the asyn port is already connected
 to the IP port, then the asyn port will be disconnected from the IP port for all clients.
 The correct behavior in this case is to simply return an asynError status.
 <p>
@@ -173,23 +173,23 @@ diff -u -r1.27 -r1.28
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
-+ * $Id: KnownProblems.html,v 1.33 2006-06-12 22:02:08 norume Exp $
+- * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
++ * $Id: KnownProblems.html,v 1.34 2006-08-28 15:08:31 anj Exp $
   */
  
- #include <string.h>
+ #include &lt;string.h&gt;
 @@ -206,6 +206,11 @@
       * Sanity check
       */
      assert(tty);
-+    if (tty->fd >= 0) {
-+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-+                              "%s: Link already open!", tty->serialDeviceName);
++    if (tty-&gt;fd &gt;= 0) {
++        epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,
++                              "%s: Link already open!", tty-&gt;serialDeviceName);
 +        return asynError;
 +    }
  
      asynPrint(pasynUser, ASYN_TRACE_FLOW,
-               "Open connection to %s\n", tty->serialDeviceName);
+               "Open connection to %s\n", tty-&gt;serialDeviceName);
 </pre>
 
 <center>
