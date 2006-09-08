@@ -215,6 +215,9 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
     devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
     asynStatus status;
 
+    /* If initCommon failed then pPvt->pint32 is NULL, return error */
+    if (!pPvt->pint32) return -1;
+
     if (cmd == 0) {
         /* Add to scan list.  Register interrupts */
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
