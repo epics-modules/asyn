@@ -20,6 +20,9 @@ alink="#FF0000">
 <h2>Release 4-7</h2>
 </center>
 
+<h3>asynRecord</h3>
+<p>Fixed buffer overflow error when NRRD&gt;40 and IFMT=ASCII.</p>
+
 <h3>asynGpib</h3>
 <p>Read method now sets return status and *eomReason properly.</p>
 
@@ -36,7 +39,7 @@ Full support for new timeout semantics (timeout&lt;0 means "wait forever for
 characters to arrive", timeout=0 means "return characters immediately
 available", timeout&gt;0 means "return a timeout status if no characters are
 received within the specified number of seconds"). <0 means wait forever,
-timeout=0 means return characters immediately available). <center>
+timeout=0 means return characters immediately available).
 
 <center>
 <h2>Release 4-6</h2>
