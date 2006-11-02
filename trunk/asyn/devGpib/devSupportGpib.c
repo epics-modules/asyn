@@ -1054,7 +1054,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
             if(lenMessage==0) lenMessage = strlen(pgpibCmd->cmd);
             nchars = pasynGpib->addressedCmd(
                 asynGpibPvt,pgpibDpvt->pasynUser,
-                pgpibCmd->cmd,strlen(pgpibDpvt->msg));
+                pgpibCmd->cmd,lenMessage);
         }
         break;
     case GPIBEFASTO:    /* write the enumerated cmd from the P3 array */
