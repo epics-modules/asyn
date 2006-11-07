@@ -17,15 +17,14 @@ alink="#FF0000">
 <hr>
 
 <center>
-<h2>Release 4-8</h2>
+<h2>Release 4-7</h2>
 </center>
 
 <h3>devGpib</h3>
 <p>Fixed error in GPIBACMD operations.</p>
 
-<center>
-<h2>Release 4-7</h2>
-</center>
+<h3>linuxGpib</h3>
+<p>Patches from Gasper Jansa to improve option handling.</p>
 
 <h3>devEpics</h3>
 <p>Fixed null pointer dereference for all device support when SCAN=I/O Intr and asyn port could not be found.</p>
@@ -48,8 +47,7 @@ address in the port configuration command:<br>
 Full support for new timeout semantics (timeout&lt;0 means "wait forever for
 characters to arrive", timeout=0 means "return characters immediately
 available", timeout&gt;0 means "return a timeout status if no characters are
-received within the specified number of seconds"). <0 means wait forever,
-timeout=0 means return characters immediately available).
+received within the specified number of seconds"). 
 
 <center>
 <h2>Release 4-6</h2>
