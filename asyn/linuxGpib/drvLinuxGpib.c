@@ -7,8 +7,8 @@
 ***********************************************************************/
 
 /* Author: Gasper Jansa, Cosylab */
-/* date: 13AUG2004    */
-
+/* date: 18AUG2006
+   date  19OCT2006 - changed get/set options to check the option key and value  */
 
 #include <signal.h>
 #include <errno.h>
@@ -118,17 +118,19 @@ static asynOption GpibBoardOption = {
       gpibPortGetPortOptions
 };
 
+volatile int work;
 
 void signal_handler(int signum){
+	if(signum==SIGUSR1)
+		work=0;
 }
 
 static void poll_worker(GpibBoardPvt *pGpibBoardPvt)
 {
        	/*mask for srq bit*/
        	int mask=SRQI;
-	int work=1;
-	extern int errno;
 	struct sigaction new_action,old_action;
+	work = 1;
 	new_action.sa_handler=signal_handler;
 	sigemptyset(&new_action.sa_mask);
 	new_action.sa_flags=0;
@@ -137,15 +139,11 @@ static void poll_worker(GpibBoardPvt *pGpibBoardPvt)
 	
 	sigaction(SIGUSR1,&new_action,&old_action);
        
-      	do{
+      	while(work){
 	       	ibwait(pGpibBoardPvt->ud,mask);
-		if(errno==EINTR)
-			work=0;
-		else{
-			callbackRequest(&pGpibBoardPvt->callback);
-			epicsThreadSleep(0.001);
-		}
-	}while(work);
+		callbackRequest(&pGpibBoardPvt->callback);
+		epicsThreadSleep(0.001);
+	}
 }
 
 
@@ -184,6 +182,7 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 			status=checkError(pdrvPvt,pasynUser,addr);
         	        if(status!=asynSuccess)return status;
         	}
+		
 					 
 		/*disable autopolling*/
 		ibconfig(pGpibBoardPvt->ud,IbcAUTOPOLL,0);
@@ -219,6 +218,7 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 				epicsThreadGetStackSize(epicsThreadStackSmall),
                                 (EPICSTHREADFUNC)poll_worker,pGpibBoardPvt);
 		
+			
 	pasynManager->exceptionConnect(pasynUser);
  	return asynSuccess;
 }
@@ -239,6 +239,7 @@ static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser)
 	
 	/*disconnect device or board*/
 	if(addr==-1){
+
 		ibonl(pGpibBoardPvt->ud,0);	
 	 
                 status=checkError(pdrvPvt,pasynUser,addr);
@@ -264,8 +265,11 @@ const char *key, const char *val)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int option,value;
-        int addr=0;
+        int addr=0,j=0;
+	char cset[] = "1234567890ABCDEFabcdefxX";	
         asynStatus status;
+	int parseStatus;
+	
 		       
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
@@ -275,13 +279,43 @@ const char *key, const char *val)
 	asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortSetPortOptions\n",
 			        pGpibBoardPvt->portName);
 
+
+	j = strspn (key,cset);
 	
-	sscanf(key,"%x",&option);
-	sscanf(val,"%d",&value);
+	if((*key != '0') || ((*(key+1) != 'x') && (*(key+1) != 'X')) || ( j != strlen(key))){
+		asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d gpibPortSetPortOptions illegal option: %s\n",
+					              pGpibBoardPvt->portName,addr,key);
+		return asynError;
+	}
+	
+	parseStatus = sscanf(key,"%x",&option);
+	
+	if(parseStatus != 1){
+		asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d gpibPortSetPortOptions illegal option: %s\n",
+					              pGpibBoardPvt->portName,addr,key);
+		return asynError;
+	}	
+	
+	parseStatus = sscanf(val,"%d",&value);
+	
+	if(parseStatus != 1){
+		asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d gpibPortSetPortOptions illegal option value: %s\n",
+					              pGpibBoardPvt->portName,addr,val);
+		return asynError;
+	}		
 
 	if(DEBUG) printf("option %d set with value %d\n",option,value); 
 	
-	ibconfig(pGpibBoardPvt->ud,option,value);
+	
+	if(addr==-1){
+		ibconfig(pGpibBoardPvt->ud,option,value);
+	}
+	else{
+		ibconfig(pGpibBoardPvt->uddev[addr],option,value);
+	}
 	
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
@@ -294,26 +328,52 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int value,option;
-	int addr=0;
+	int addr=0,j=0;
 	asynStatus status;
+	char cset[] = "1234567890ABCDEFabcdefxX";
+	int parseStatus = 0;
 	
 	
+
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
 			
 	if(DEBUG) printf("drvGpibBoard:gpibPortGetPortOptions!!\n");
 	
+	
 	asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibPortGetPortOptions\n",
 			        *pGpibBoardPvt->portName);
 
-	sscanf(key,"%x",&option);
 	
-	ibask(pGpibBoardPvt->ud,option,&value);
+	j = strspn (key,cset);
+	
+	if((*key != '0') || ((*(key+1) != 'x') && (*(key+1) != 'X')) || ( j != strlen(key))){
+		asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d gpibPortGetPortOptions illegal option: %s\n",
+					              pGpibBoardPvt->portName,addr,key);
+		return asynError;
+	}
+	
+	parseStatus=sscanf(key,"%x",&option);	
+	
+	if(parseStatus != 1){
+		asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d gpibPortGetPortOptions illegal option: %s\n",
+					              pGpibBoardPvt->portName,addr,key);
+		return asynError;
+	}
+	
+	if(addr==-1){
+		ibask(pGpibBoardPvt->ud,option,&value);
+	}
+	else{
+		ibask(pGpibBoardPvt->uddev[addr],option,&value);
+	}
 	
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
 	
-	sprintf(val,"%c",value);
+	sprintf(val,"%d",value);
 
 	if(DEBUG) printf("option %d get with value %d\n",option,value);
 	
@@ -328,8 +388,9 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
  	int addr=0;
         asynStatus status=asynSuccess;
         double timeout = pasynUser->timeout;
-	
+
 	if(DEBUG) printf("drvGpibBoard:gpibRead!!\n");
+	epicsThreadSleep(epicsThreadSleepQuantum());
 	
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
