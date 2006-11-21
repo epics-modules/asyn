@@ -92,6 +92,7 @@ typedef struct vxiPort {
     osiSockAddr   vxiServerAddr; /*addess of vxi11 server*/
     char          *srqThreadName;
     epicsInterruptibleSyscallContext *srqInterrupt;
+    int           srqEnabled;
 }vxiPort;
 
 /* Local routines */
@@ -1494,6 +1495,12 @@ static asynStatus vxiSrqEnable(void *drvPvt, int onOff)
         printf("%s vxiSrqEnable port not connected\n",pvxiPort->portName);
         return asynError;
     }
+    if ((pvxiPort->srqEnabled >= 0)
+     && ((onOff && pvxiPort->srqEnabled)
+      || (!onOff && !pvxiPort->srqEnabled))) {
+        return asynSuccess;
+    }
+    pvxiPort->srqEnabled = -1;
     devEnSrqP.lid = pdevLink->lid;
     if(onOff) {
         devEnSrqP.enable = TRUE;
@@ -1519,6 +1526,9 @@ static asynStatus vxiSrqEnable(void *drvPvt, int onOff)
         printf("%s vxiSrqEnable %s\n",
             pvxiPort->portName, vxiError(devErr.error));
         status = asynError;
+    }
+    else {
+        pvxiPort->srqEnabled = (onOff != 0);
     }
     xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
     return status;
@@ -1666,6 +1676,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->srqThreadName = srqThreadName = portName + strlen(dn) + 1;
     strcpy(srqThreadName,dn);
     strcat(srqThreadName,"SRQ");
+    pvxiPort->srqEnabled = -1;
     pvxiPort->server.eos = -1;
     for(addr = 0; addr < NUM_GPIB_ADDRESSES; addr++) {
         pvxiPort->primary[addr].primary.eos = -1;
