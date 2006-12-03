@@ -451,7 +451,6 @@ static long special(struct dbAddr * paddr, int after)
                     "Error opening trace file: %s", pasynRec->tfil);
                 return 0;
             }
-            setlinebuf(fd);
         }
         /* Set old value to this, so monitorStatus won't think another
          * thread changed it */
