@@ -327,6 +327,9 @@ static void waitTimeout(gsport *pgsport,double seconds)
         printStatus(pgsport,"waitTimeout transferStateCmd\n");
         break;
     default:
+        pgsport->status=asynError;
+        printStatus(pgsport,"waitTimeout Unknown state!\n");
+        break;
     }
 }
 
