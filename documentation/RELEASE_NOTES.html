@@ -12,28 +12,24 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>XXXX XX, 2007</h1>
-</center>
-<hr>
-
-<center>
-<h2>Release 4-8</h2>
-</center>
-
-<h3>devGpib</h3>
-<p>asynRecord sets line-buffering on trace file.</p>
-
-<h3>drvGsIP488.c</h3>
-<p>Clean up dangling 'default' statement.</p>
-
-
-<h1>June 13, 2006</h1>
+<h1>February 17, 2007</h1>
 </center>
 <hr>
 
 <center>
 <h2>Release 4-7</h2>
 </center>
+
+<h3>drvAsynSerialPort</h3>
+<p>Clean up operation on POSIX/termios systems (everything but vxWorks).
+The old mechanism was prone to polling during read operations rather than
+using the termios read timeout mechanism.</p>
+
+<h3>devGpib</h3>
+<p>asynRecord sets line-buffering on trace file.</p>
+
+<h3>drvGsIP488.c</h3>
+<p>Clean up dangling 'default' statement.</p>
 
 <h3>devGpib</h3>
 <p>Fixed error in GPIBACMD operations.</p>
@@ -59,10 +55,10 @@ address in the port configuration command:<br>
 0)</code></p>
 
 <h3>drvAsynSerialPort</h3>
-Full support for new timeout semantics (timeout&lt;0 means "wait forever for
+<p>Full support for new timeout semantics (timeout&lt;0 means "wait forever for
 characters to arrive", timeout=0 means "return characters immediately
 available", timeout&gt;0 means "return a timeout status if no characters are
-received within the specified number of seconds"). 
+received within the specified number of seconds").</p>
 
 <center>
 <h2>Release 4-6</h2>
