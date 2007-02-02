@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.38 2006-06-28 14:24:53 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.39 2007-02-02 17:02:10 norume Exp $
  */
 
 #include <string.h>
@@ -72,9 +72,10 @@ typedef struct {
     unsigned long      nRead;
     unsigned long      nWritten;
     struct termios     termios;
-    double             timeout;
+    double             readTimeout;
+    double             writeTimeout;
     epicsTimerId       timer;
-    int                timeoutFlag;
+    volatile int       timeoutFlag;
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
@@ -118,18 +119,18 @@ timeoutHandler(void *p)
     asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
                                "%s timeout handler.\n", tty->serialDeviceName);
     tty->timeoutFlag = 1;
-#ifdef vxWorks
-    ioctl(tty->fd, FIOCANCEL, NULL);
-#endif
 #ifdef TCOFLUSH
     tcflush(tty->fd, TCOFLUSH);
 #endif
+#ifdef vxWorks
+    ioctl(tty->fd, FIOCANCEL, NULL);
     /*
      * Since it is possible, though unlikely, that we got here before the
      * slow system call actually started, we arrange to poke the thread
      * again in a little while.
      */
     epicsTimerStartDelay(tty->timer, 10.0);
+#endif
 }
 
 static asynStatus
@@ -172,7 +173,7 @@ termiosInit(asynUser *pasynUser ,ttyController_t *tty)
     tty->termios.c_lflag = 0;
     tty->termios.c_cc[VMIN] = 0;
     tty->termios.c_cc[VTIME] = 0;
-    if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
+    if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
            "tcsetattr failed %s\n",strerror(errno));
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -289,7 +290,7 @@ setBaud(asynUser *pasynUser ,ttyController_t *tty,int baud)
             "cfsetospeed returned %s\n",strerror(errno));
         return asynError;
     }
-    if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
+    if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
            "tcsetattr failed %s\n",strerror(errno));
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -381,7 +382,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
 #ifndef vxWorks
     tcflush(tty->fd, TCIOFLUSH);
-    tty->timeout = -1e-99;
+    tty->readTimeout = -1e-99;
+    tty->writeTimeout = -1e-99;
     if (fcntl(tty->fd, F_SETFL, 0) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                             "Can't set %s file flags: %s",
@@ -596,7 +598,7 @@ setOption(void *drvPvt, asynUser *pasynUser,
         return asynError;
     }
 #else
-    if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
+    if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
            "tcsetattr failed %s\n",strerror(errno));
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -634,13 +636,13 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         *nbytesTransfered = 0;
         return asynSuccess;
     }
-    if (tty->timeout != pasynUser->timeout) {
+    if (tty->writeTimeout != pasynUser->timeout) {
 #ifndef vxWorks
         /*
          * Must set flags if we're transitioning
          * between blocking and non-blocking.
          */
-        if ((pasynUser->timeout == 0) || (tty->timeout == 0)) {
+        if ((pasynUser->timeout == 0) || (tty->writeTimeout == 0)) {
             int newFlags = (pasynUser->timeout == 0) ? O_NONBLOCK : 0;
             if (fcntl(tty->fd, F_SETFL, newFlags) < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -650,17 +652,17 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
             }
         }
 #endif
-        tty->timeout = pasynUser->timeout;
+        tty->writeTimeout = pasynUser->timeout;
     }
     tty->timeoutFlag = 0;
     nleft = numchars;
 #ifdef vxWorks
-    if (tty->timeout >= 0)
+    if (tty->writeTimeout >= 0)
 #else
-    if (tty->timeout > 0)
+    if (tty->writeTimeout > 0)
 #endif
         {
-        epicsTimerStartDelay(tty->timer, tty->timeout);
+        epicsTimerStartDelay(tty->timer, tty->writeTimeout);
         timerStarted = 1;
         }
     for (;;) {
@@ -672,7 +674,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
                 break;
             data += thisWrite;
         }
-        if (tty->timeoutFlag || (tty->timeout == 0)) {
+        if (tty->timeoutFlag || (tty->writeTimeout == 0)) {
             status = asynTimeout;
             break;
         }
@@ -717,13 +719,13 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             "%s maxchars %d Why <=0?\n",tty->serialDeviceName,(int)maxchars);
         return asynError;
     }
-    if (tty->timeout != pasynUser->timeout) {
+    if (tty->readTimeout != pasynUser->timeout) {
 #ifndef vxWorks
         /*
          * Must set flags if we're transitioning
          * between blocking and non-blocking.
          */
-        if ((pasynUser->timeout == 0) || (tty->timeout == 0)) {
+        if ((pasynUser->timeout == 0) || (tty->readTimeout == 0)) {
             int newFlags = (pasynUser->timeout == 0) ? O_NONBLOCK : 0;
             if (fcntl(tty->fd, F_SETFL, newFlags) < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -750,14 +752,15 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             tty->termios.c_cc[VMIN] = 1;
             tty->termios.c_cc[VTIME] = 0;
         }
-        if (tcsetattr(tty->fd, TCSADRAIN, &tty->termios) < 0) {
+            
+        if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't set \"%s\" c_cc[VTIME]: %s",
                                        tty->serialDeviceName, strerror(errno));
             return asynError;
         }
 #endif
-        tty->timeout = pasynUser->timeout;
+        tty->readTimeout = pasynUser->timeout;
     }
     tty->timeoutFlag = 0;
     if (gotEom) *gotEom = 0;
@@ -769,7 +772,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
          * timeout is zero we have to check for characters explicitly
          * since we don't want to start a timer with 0 delay.
          */
-        if (tty->timeout == 0) {
+        if (tty->readTimeout == 0) {
             int nready;
             ioctl(tty->fd, FIONREAD, (int)&nready);
             if (nready == 0) {
@@ -778,8 +781,8 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             }
         }
 #endif
-        if (!timerStarted && (tty->timeout > 0)) {
-            epicsTimerStartDelay(tty->timer, tty->timeout);
+        if (!timerStarted && (tty->readTimeout > 0)) {
+            epicsTimerStartDelay(tty->timer, tty->readTimeout);
             timerStarted = 1;
         }
         thisRead = read(tty->fd, data, maxchars);
@@ -801,7 +804,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                 status = asynError;
                 break;
             }
-            if (tty->timeout == 0)
+            if (tty->readTimeout == 0)
                 tty->timeoutFlag = 1;
         }
         if (tty->timeoutFlag)
