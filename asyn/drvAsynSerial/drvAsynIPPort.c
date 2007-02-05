@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.34 2006-07-07 15:22:51 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.35 2007-02-05 17:25:39 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -319,12 +319,16 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
-    if (setsockopt(tty->fd, IPPROTO_TCP, SO_SNDTIMEO,
-                   &writePollmsec, sizeof writePollmsec) < 0) {
+    {
+    struct timeval tv;
+    tv.tv_sec = writePollmsec / 1000;
+    tv.tv_usec = (writePollmsec % 1000) * 1000;
+    if (setsockopt(tty->fd, SOL_SOCKET, SO_SNDTIMEO, &tv, sizeof tv) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket send timeout: %s",
                       tty->IPDeviceName, strerror(SOCKERRNO));
         return asynError;
+    }
     }
 #endif
 #ifdef USE_POLL
@@ -393,12 +397,16 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     if (readPollmsec == 0) readPollmsec = 1;
     if (readPollmsec < 0) readPollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
-    if (setsockopt(tty->fd, IPPROTO_TCP, SO_RCVTIMEO,
-                                   &readPollmsec, sizeof readPollmsec) < 0) {
+    {
+    struct timeval tv;
+    tv.tv_sec = readPollmsec / 1000;
+    tv.tv_usec = (readPollmsec % 1000) * 1000;
+    if (setsockopt(tty->fd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof tv) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket receive timeout: %s",
                       tty->IPDeviceName, strerror(SOCKERRNO));
         status = asynError;
+    }
     }
 #endif
     if (gotEom) *gotEom = 0;
