@@ -1,0 +1,8 @@
+#RELEASE Location of external products
+#  IPAC is only necessary if support for Greensprings IP488 is required
+#  IPAC release V2-7 or later is required.
+IPAC=J:/epics/devel/ipac/2-8
+SNCSEQ=J:/epics/devel/seq/2-0-11beta
+#  EPICS_BASE 3.14.6 or later is required
+LINUX_GPIB=NO
+EPICS_BASE=H:/epics/base-3.14.9beta
