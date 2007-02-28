@@ -964,6 +964,24 @@ Note that the callback is an interruptCallbackInt32 since asynGpib handles
 SRQ callbacks via the asynInt32 interface and using asynUser.reason =
 ASYN_REASON_SIGNAL.</p>
 
+<p>To save time during SRQ polling operations it is possible to exclude a
+device which has  become disconnected from the bus for some reason and then
+to restore the device to the polling list when the device is reattached.  A
+binary output record with the following command table entry is used for this
+purpose:</p>
+
+<p><span style="font-family: courier">      /* Add/remove address from SRQ
+polling list */     </span></p>
+
+<p><span style="font-family: courier">      {
+&amp;DSET_BO,GPIBCVTIO,IB_Q_HIGH,NULL,NULL,0,0,boSRQonOff,0,0,NULL,NULL,NULL
+} </span></p>
+
+<p>If the binary-output record rval is (0, 1) then (remove, add) device
+(from, to) the SRQ polling liist. No commands are sent to the bus.  Before
+exluding a device from being polled stop any communications to it, i.e. set
+SCAN-field(s) to PASSIVE and turn off the device. </p>
+
 <h2>gpibCmd convert example</h2>
 
 <p>The asyn distribution includes an example of how to implement the convert

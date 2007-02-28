@@ -126,6 +126,7 @@ INC += devCommonGpib.h
 DBD += devGpib.dbd
 asyn_SRCS += devCommonGpib.c
 asyn_SRCS += devSupportGpib.c
+asyn_SRCS += boSRQonOff.c
 
 include $(TOP)/configure/RULES
 
