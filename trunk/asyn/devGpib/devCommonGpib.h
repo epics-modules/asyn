@@ -53,6 +53,10 @@ epicsShareFunc long  devGpib_writeSo(struct stringoutRecord * pso);
 epicsShareFunc long  devGpib_initWf(struct waveformRecord * pwf);
 epicsShareFunc long  devGpib_readWf(struct waveformRecord * pwf);
 
+/*
+ * SRQ support
+ */
+int boSRQonOff(struct gpibDpvt *pdpvt, int p1, int p2,char **p3);
 
 #ifdef __cplusplus
 }

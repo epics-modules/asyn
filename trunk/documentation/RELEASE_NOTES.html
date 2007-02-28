@@ -12,7 +12,7 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
 
-<h1>February 17, 2007</h1>
+<h1>February 28, 2007</h1>
 </center>
 <hr>
 
@@ -21,33 +21,48 @@ alink="#FF0000">
 </center>
 
 <h3>drvAsynSerialPort</h3>
-<p>Clean up operation on POSIX/termios systems (everything but vxWorks).
-The old mechanism was prone to polling during read operations rather than
-using the termios read timeout mechanism.</p>
+
+<p>Clean up operation on POSIX/termios systems (everything but vxWorks). The
+old mechanism was prone to polling during read operations rather than using
+the termios read timeout mechanism.</p>
 
 <h3>devGpib</h3>
+
 <p>asynRecord sets line-buffering on trace file.</p>
 
+<p>Peter Mueller provided code to remove/restore a device from/to the SRQ
+polling list.</p>
+
 <h3>drvGsIP488.c</h3>
+
 <p>Clean up dangling 'default' statement.</p>
 
 <h3>devGpib</h3>
+
 <p>Fixed error in GPIBACMD operations.</p>
 
 <h3>linuxGpib</h3>
+
 <p>Patches from Gasper Jansa to improve option handling.</p>
 
 <h3>devEpics</h3>
-<p>Fixed null pointer dereference for all device support when SCAN=I/O Intr and asyn port could not be found.</p>
+
+<p>Fixed null pointer dereference for all device support when SCAN=I/O Intr
+and asyn port could not be found.</p>
 
 <h3>asynRecord</h3>
+
 <p>Fixed buffer overflow error when NRRD&gt;40 and IFMT=ASCII.</p>
 
 <h3>asynGpib</h3>
+
 <p>Read method now sets return status and *eomReason properly.</p>
 
 <h3>drvAsynIPPort/drvAsynSerialPort</h3>
+
 <p>*eomReason now set to ASYN_EOM_CNT when read count has been satisfied.</p>
+
+<p>Fix timeout settings on RTEMS.</p>
 
 <p>Add support for UDP broadcasts. Specify "UDP*" and the network broadcast
 address in the port configuration command:<br>
@@ -55,8 +70,9 @@ address in the port configuration command:<br>
 0)</code></p>
 
 <h3>drvAsynSerialPort</h3>
-<p>Full support for new timeout semantics (timeout&lt;0 means "wait forever for
-characters to arrive", timeout=0 means "return characters immediately
+
+<p>Full support for new timeout semantics (timeout&lt;0 means "wait forever
+for characters to arrive", timeout=0 means "return characters immediately
 available", timeout&gt;0 means "return a timeout status if no characters are
 received within the specified number of seconds").</p>
 
@@ -616,10 +632,10 @@ by asynRecord.</p>
     passed an additional  argument through which they store the actual number
     of characters read or written.</li>
   <li>The createSocket method in the asynSyncIO interface has been replaced
-    by openSocket.  openSocket does not call asynSyncIO-&gt;connect(), that
-    must now be done by the caller.</li>
-  <li>Removed code for "flush" from gpib drivers.  The implementation caused
-    infinite loops on devices that speak when not spoken to.</li>
+    by openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(),
+    that must now be done by the caller.</li>
+  <li>Removed code for "flush" from gpib drivers.&nbsp; The implementation
+    caused infinite loops on devices that speak when not spoken to.</li>
   <li>asynRecord
     <ul>
       <li>asynOctetRecord has been renamed to asynRecord</li>
