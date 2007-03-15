@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.35 2007-02-05 17:25:39 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.36 2007-03-15 17:03:24 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -45,6 +45,7 @@
 #include <errlog.h>
 #include <iocsh.h>
 #include <epicsAssert.h>
+#include <epicsExit.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
 #include <epicsThread.h>
@@ -184,6 +185,21 @@ report(void *drvPvt, FILE *fp, int details)
 }
 
 /*
+ * Clean up a socket on exit
+ * This helps reduce problems with vxWorks when the IOC restarts
+ */
+static void
+cleanup (void *arg)
+{
+    ttyController_t *tty = (ttyController_t *)arg;
+
+    if (tty->fd >= 0) {
+        close(tty->fd);
+        tty->fd = -1;
+    }
+}
+
+/*
  * Create a link
  */
 static asynStatus
@@ -249,6 +265,11 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             tty->fd = -1;
             return asynError;
         }
+
+        /*
+         * Register for socket cleanup
+         */
+        epicsAtExit(cleanup, tty);
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
@@ -390,7 +411,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     }
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s maxchars %d. Why <=0?\n",tty->IPDeviceName,maxchars);
+                  "%s maxchars %d. Why <=0?\n",tty->IPDeviceName,(int)maxchars);
         return asynError;
     }
     readPollmsec = pasynUser->timeout * 1000.0;
