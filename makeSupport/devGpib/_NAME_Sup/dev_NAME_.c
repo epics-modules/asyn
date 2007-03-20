@@ -60,7 +60,7 @@ static struct devGpibNames invertNorm = { 2,invertNormList,0,1 };
 static char  *fallingRisingList[] = { "FALLING","RISING" };
 static struct devGpibNames fallingRising = { 2,fallingRisingList,0,1 };
 
-static char  *clearList[] = { "CLEAR","CLEAR" };
+static char  *clearList[] = { "Clear","Clear" };
 static struct devGpibNames clear = { 2,clearList,0,1 };
 
 /******************************************************************************
@@ -101,14 +101,42 @@ static char *userOffOn[] = {"USER OFF;","USER ON;",0};
  ******************************************************************************/
 
 static struct gpibCmd gpibCmds[] = {
-    /* Param 0 */
-    {&DSET_BO,GPIBCMD,IB_Q_HIGH,"init",0,0,32,NULL,0,0,NULL,&initNames,0},
-    /* Param 1 */
-    {&DSET_BO,GPIBEFASTO,IB_Q_HIGH,0,NULL,0,32,0,0,0,userOffOn,&offOn,0},
-    /* Param 2 */
-    {&DSET_BI,GPIBEFASTI,IB_Q_HIGH,"user?",0,0,32,0,0,0,userOffOn,&offOn,0},
-    /* Param 3 */
-    {&DSET_AI,GPIBREAD,IB_Q_LOW,"send","%lf",0,32,0,0,0,NULL,NULL,0}
+    /* Param 0 -- Read SCPI identification string */
+    {&DSET_SI, GPIBREAD, IB_Q_HIGH, "*IDN?", "%39[^\r\n]", 0, 200, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 1 - SCPI reset command */
+    {&DSET_BO, GPIBCMD, IB_Q_HIGH, "*RST", NULL, 0, 80, NULL, 0, 0, NULL, &reset, NULL},
+
+    /* Param 2 - SCPI clear status command */
+    {&DSET_BO, GPIBCMD, IB_Q_HIGH, "*CLS", NULL, 0, 80, NULL, 0, 0, NULL, &clear, NULL},
+
+    /* Param 3 - Read SCPI status byte */
+    {&DSET_LI, GPIBREAD, IB_Q_HIGH, "*STB?", "%d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 4 - Read SCPI event register */
+    {&DSET_LI, GPIBREAD, IB_Q_HIGH, "*ESR?", "%d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 5 - Enable SCPI events */
+    {&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "*ESE %d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 6 - Read back SCPI enabled events */
+    {&DSET_LI, GPIBREAD, IB_Q_HIGH, "*ESE?", "%d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 7 - Enable SCPI service request sources */
+    {&DSET_LO, GPIBWRITE, IB_Q_HIGH, NULL, "*SRE %d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 8 - Read back SCPI enabled service request sources */
+    {&DSET_LI, GPIBREAD, IB_Q_HIGH, "*SRE?", "%d", 0, 80, NULL, 0, 0, NULL, NULL, NULL},
+
+    /* Param 9 - Read SCPI output completion status */
+    {&DSET_LI, GPIBREAD, IB_Q_HIGH, "*OPC?", "%d", 0, 80, NULL, 0, 0, NULL, NULL, 0},
+
+
+    /* Some more examples */
+    {&DSET_BO, GPIBCMD, IB_Q_HIGH, "init", 0, 0, 32, NULL, 0, 0, NULL, &initNames, 0},
+    {&DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, NULL, 0, 32, 0, 0, 0, userOffOn, &offOn, 0},
+    {&DSET_BI, GPIBEFASTI, IB_Q_HIGH, "user?", 0, 0, 32, 0, 0, 0, userOffOn, &offOn, 0},
+    {&DSET_AI, GPIBREAD, IB_Q_LOW, "send", "%lf", 0, 32, 0, 0, 0, NULL, NULL, 0}
 };
 
 /* The following is the number of elements in the command array above.  */
