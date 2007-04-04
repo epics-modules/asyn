@@ -20,6 +20,51 @@ alink="#FF0000">
 <h2>Release x-y</h2>
 </center>
 
+<h3>devEpics/devAsynInt32</h3>
+
+<p>Added support for link specification of
+<pre>
+@asynMask(port addr nbits timeout)drv_user
+</pre>
+in addition to the previous support for 
+<pre>
+@asyn(port addr timeout)drv_user.
+</pre>
+This allows device support to work with drivers that cannot return
+meaningful values in pasynInt32->getBounds because they do not know
+the range of the device.  This is true, for example of Modbus ADCs.
+The nbits parameter is defined as follows:
+<pre>
+nbits > 0  Device is unipolar with a range from 0 to 2^nbits-1 <BR>
+nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
+           Values returned on the asynInt32 interface will be sign extended
+           using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
+</pre>
+
+<h3>devEpics/devAsynInt32Array, devAsynFloat64Array</h3>
+
+<p>Added support for callbacks from driver to device support.  
+This allows waveform records to have I/O Intr scanning, as already
+supported for other records in devEpics.</p>
+
+<h3>devEpics/asynEpicsUtils</h3>
+
+<p>Changed parser so it requires an exact match to "asyn("
+or "asynMask(".
+Previously it tolerated other characters before the "(",
+and in particular it accepted "asynMask(" when "asyn(" was expected.
+Note that this change could cause problems with database files if they
+did not follow the documented syntax, which has no white space
+between "asyn" or "asynMask" and the "(" character.</p>
+
+<h3>asynManager</h3>
+
+<p>Fix errors in format strings for asynPrint.</p>
+
+<h3>testIPServerApp</h3>
+
+<p>Fix problem with Makefile.</p>
+
 <h3>devGpib</h3>
 
 <p>Add more SCPI commands to devGpib template.</p>
