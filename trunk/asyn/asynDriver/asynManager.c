@@ -495,7 +495,7 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
     pexceptionUser = (exceptionUser *)ellFirst(&pdpCommon->exceptionUserList);
     while(pexceptionUser) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d exceptionOccurred calling exceptionUser\n",
+            "%s %d exception %d occurred calling exceptionUser\n",
             pport->portName,addr, (int)exception);
         pexceptionUser->callback(pexceptionUser->pasynUser,exception);
         pexceptionUser = (exceptionUser *)ellNext(&pexceptionUser->node);
@@ -504,7 +504,7 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
     while((pexceptionUser  =
     (exceptionUser *)ellFirst(&pdpCommon->exceptionNotifyList))) {
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d exceptionOccurred notify\n",
+            "%s %d exception %d occurred notify\n",
             pport->portName,addr, (int)exception);
         epicsEventSignal(pexceptionUser->notify);
         ellDelete(&pdpCommon->exceptionNotifyList,&pexceptionUser->notifyNode);
@@ -646,7 +646,7 @@ static void connectAttempt(dpCommon *pdpCommon)
     epicsMutexUnlock(pport->synchronousLock);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s %d autoConnect could not connect\n",
+            "%s %s %d autoConnect could not connect\n",
             pasynUser->errorMessage,pport->portName,addr);
     }
 disconnect:
@@ -771,7 +771,7 @@ static void portThread(port *pport)
                 status = pport->pasynLockPortNotify->lock(
                    pport->lockPortNotifyPvt,pasynUser);
                 if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                        "*s queueCallback pasynLockPortNotify:lock error %s\n",
+                        "%s queueCallback pasynLockPortNotify:lock error %s\n",
                          pport->portName,pasynUser->errorMessage);
             }
             puserPvt->processUser(pasynUser);
@@ -779,7 +779,7 @@ static void portThread(port *pport)
                 status = pport->pasynLockPortNotify->unlock(
                    pport->lockPortNotifyPvt,pasynUser);
                 if(status!=asynSuccess) asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                        "*s queueCallback pasynLockPortNotify:lock error %s\n",
+                        "%s queueCallback pasynLockPortNotify:lock error %s\n",
                          pport->portName,pasynUser->errorMessage);
             }    
             epicsMutexUnlock(pport->synchronousLock);
