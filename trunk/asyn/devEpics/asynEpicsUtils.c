@@ -94,11 +94,9 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
     case INST_IO:
         pinstio=(struct instio*)&(plink->value);
         p = pinstio->string;
-        pnext = strstr(p,"asyn");
+        pnext = strstr(p,"asyn(");
         if(!pnext) goto error;
-        pnext = strchr(pnext,'(');
-        if(!pnext) goto error;
-        pnext++;
+        pnext+=5;
         pnext = skipWhite(pnext,0);
         p = pnext;
         for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
@@ -176,11 +174,9 @@ static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink,
     }
     pinstio=(struct instio*)&(plink->value);
     p = pinstio->string;
-    pnext = strstr(p,"asynMask");
+    pnext = strstr(p,"asynMask(");
     if(!pnext) goto error;
-    pnext = strchr(pnext,'(');
-    if(!pnext) goto error;
-    pnext++;
+    pnext+=9;
     pnext = skipWhite(pnext,0);
     p = pnext;
     for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
