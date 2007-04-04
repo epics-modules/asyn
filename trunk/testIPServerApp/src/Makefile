@@ -15,6 +15,7 @@ LIBRARY_IOC += testIPServerSupport
 testIPServerSupport_SRCS += ipEchoServer.c
 testIPServerSupport_SRCS += ipEchoServer2.c
 testIPServerSupport_SRCS += ipSNCServer.st
+testIPServerSupport_LIBS += asyn
 testIPServerSupport_LIBS += seq pv
 testIPServerSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
