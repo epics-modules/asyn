@@ -64,6 +64,9 @@ typedef struct devInt32Pvt{
     double            sum;
     epicsInt32        value;
     int               numAverage;
+    int               bipolar;
+    epicsInt32        mask;
+    epicsInt32        signBit;
     CALLBACK          callback;
     IOSCANPVT         ioScanPvt;
     char              *portName;
@@ -140,6 +143,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
+    epicsUInt32 mask=0;
+    int nbits;
 
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynInt32::initCommon");
     pr->dpvt = pPvt;
@@ -149,14 +154,40 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     pasynUser->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
     pPvt->mutexId = epicsMutexCreate();
+ 
     /* Parse the link to get addr and port */
+    /* We accept 2 different link syntax (@asyn(...) and @asynMask(...)
+     * If parseLink returns an error then try parseLinkMask. */
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
                 &pPvt->portName, &pPvt->addr, &pPvt->userParam);
+    if (status != asynSuccess) {
+        status = pasynEpicsUtils->parseLinkMask(pasynUser, plink, 
+                &pPvt->portName, &pPvt->addr, &mask, &pPvt->userParam);
+    }
     if (status != asynSuccess) {
         printf("%s devAsynInt32::initCommon  %s\n",
                      pr->name, pasynUser->errorMessage);
         goto bad;
     }
+    
+    /* Parse nbits if it was specified */
+    nbits = (int)mask;
+    if (nbits) {
+        if (nbits < 0) {
+            nbits = -nbits;
+            pPvt->bipolar = 1;
+        }
+        pPvt->signBit = ldexp(1.0, nbits-1);
+        pPvt->mask = pPvt->signBit*2 - 1;
+        if (pPvt->bipolar) {
+            pPvt->deviceLow = ~(pPvt->mask/2)+1;
+            pPvt->deviceHigh = (pPvt->mask/2);
+        } else {
+            pPvt->deviceLow = 0;
+            pPvt->deviceHigh = pPvt->mask;
+        }
+    }
+            
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
@@ -290,6 +321,7 @@ static void processCallbackInput(asynUser *pasynUser)
     int status=asynSuccess;
 
     status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pPvt->value);
+    if (pPvt->bipolar && (pPvt->value & pPvt->signBit)) pPvt->value |= ~pPvt->mask;
     if (status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynInt32 process value=%d\n",pr->name,pPvt->value);
@@ -327,6 +359,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
+    if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynInt32::interruptCallbackInput new value=%d\n",
         pr->name, value);
@@ -357,6 +390,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     aiRecord *pai = (aiRecord *)pPvt->pr;
 
+    if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynInt32::interruptCallbackAverage new value=%d\n",
          pai->name, value);
@@ -374,9 +408,12 @@ static long initAi(aiRecord *pr)
         processCallbackInput,interruptCallbackInput);
     if(status != asynSuccess) return 0;
     pPvt = pr->dpvt;
-    pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
-                            &pPvt->deviceLow, &pPvt->deviceHigh);
-    pasynInt32SyncIO->disconnect(pPvt->pasynUserSync);
+    /* Don't call getBounds if we already have non-zero values from
+     * parseLinkMask */
+    if ((pPvt->deviceLow == 0) && (pPvt->deviceHigh == 0)) {
+        pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
+                                &pPvt->deviceLow, &pPvt->deviceHigh);
+    }
     convertAi(pr, 1);
     return 0;
 }
@@ -419,8 +456,12 @@ static long initAiAverage(aiRecord *pr)
         printf("%s devAsynInt32 registerInterruptUser %s\n",
                pr->name,pPvt->pasynUser->errorMessage);
     }
-    pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
+    /* Don't call getBounds if we already have non-zero values from
+     * parseLinkMask */
+    if ((pPvt->deviceLow == 0) && (pPvt->deviceHigh == 0)) {
+        pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
+    }
     convertAi(pr, 1);
     return 0;
 }
@@ -455,8 +496,12 @@ static long initAo(aoRecord *pao)
         processCallbackOutput,interruptCallbackOutput);
     if (status != asynSuccess) return 0;
     pPvt = pao->dpvt;
-    pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
+    /* Don't call getBounds if we already have non-zero values from
+     * parseLinkMask */
+    if ((pPvt->deviceLow == 0) && (pPvt->deviceHigh == 0)) {
+        pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
+    }
     convertAo(pao, 1);
     /* Read the current value from the device */
     status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
