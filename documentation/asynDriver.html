@@ -11,12 +11,12 @@
 <center>
 <h1>asynDriver: Asynchronous Driver Support</h1>
 
-<p><span style="font-weight: bold; font-size: 14pt">Release 4.5</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">Release 4.8</span></p>
 
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 2, 2006</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">April 4, 2007</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -3118,11 +3118,13 @@ are the same as INP.</p>
   <li>XXX - The name of the type of interface supported.</li>
   <li>portName - The name of the port.</li>
   <li>addr - The address. If addr is not specified the default is 0.</li>
-  <li>mask - This is for devAsynUInt32Digital.</li>
+  <li>mask - This is for devAsynUInt32Digital.
+      It is also used by devAsynInt32 to specify the number of bits of the hardware
+      device for drivers that do not support getBounds().</li>
   <li>timeout - The timeout value for asynUser.timeout. If not specified the
     default is 1.0.</li>
   <li>drvParams - This is passed to the low level driver via the asynDrvUser
-    interface.</li>
+    interface. It is optional.</li>
 </ul>
 
 <p>For example:</p>
@@ -3131,8 +3133,9 @@ are the same as INP.</p>
 
 <h2>asynManager interrupts and EPICS device support</h2>
 
-<p>devAsynInt32, devAsynFloat64, devAsynUInt32Digital, and devAsynPctet call
-registerInterruptUser for input record. The callback is used in one of two
+<p>devAsynInt32, devAsynInt32Array, devAsynFloat64, devAsynFloat64Array, 
+devAsynUInt32Digital, and devAsynOctet call
+registerInterruptUser for input records. The callback is used in one of two
 ways:</p>
 <ul>
   <li>Input Records except Average
@@ -3159,10 +3162,27 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
 
 <p>devAsynInt32.c provides EPICS device support for drivers that implement
 interface asynInt32.</p>
+For ai and ao records either of the following
+specifications for the INP and OUT fields can be used:
+<pre>    
+    field(INP,"@asyn(portName,addr,timeout) drvParams")
+     or
+    field(INP,"@asynMask(portName,addr,nbits,timeout) drvParams")
+</pre>
+The asynMask format allows device support to work with drivers that cannot return
+meaningful values from getBounds() because they do not know
+the range of the device.  This is true, for example, of Modbus ADCs.
+The nbits parameter is defined as follows:
+<pre>
+nbits > 0  Device is unipolar with a range from 0 to 2^nbits-1 <BR>
+nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
+           Values read with the asynInt32 interface will be sign extended
+           using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
+</pre>
 <ul>
   <li>aiRecord
     <p>A value is given to rval. Linear conversions are supported if the
-    driver implements getBounds.</p>
+    driver implements getBounds, or if nbits is specified as explained above.  </p>
     <ul>
       <li>asynInt32 - SCAN "I/O Intr" is supported. If the record is "I/O
         Intr" scanned then when the registerInterruptUser callback is called,
@@ -3173,12 +3193,12 @@ interface asynInt32.</p>
       <li>asynInt32Average - The registerInterruptUser callback adds the new
         value to a sum and also increments the number of samples. When the
         record is processed the average is computed and the sum and number of
-        set to zero.</li>
+        samples is set to zero.</li>
     </ul>
   </li>
   <li>aoRecord
     <p>rval is written. Linear conversions are supported if the driver
-    properly implements getBounds.</p>
+    properly implements getBounds, or if nbits is specified as explained above.</p>
   </li>
   <li>longinRecord
     <p>A value is given to val. Each time the record is processed a new value
@@ -3198,10 +3218,21 @@ interface asynInt32.</p>
 </ul>
 
 <p>Analog Input Example Records</p>
-<pre>   record(ai,"aiInt32") {
+<pre>
+   record(ai,"aiInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
+        field(EGUF,"10.0")
+        field(EGUL,"-10.0")
+        field(PREC,"3")
+   }
+   # This record is for a 12-bit bipolar ADC for a driver that does not
+   # support getBounds()
+   record(ai,"aiInt32") {
+        field(SCAN,"I/O Intr")
+        field(DTYP,"asynInt32")
+        field(INP,"@asynMask($(port),-12,$(addr))")
         field(EGUF,"10.0")
         field(EGUL,"-10.0")
         field(PREC,"3")
@@ -3213,32 +3244,40 @@ interface asynInt32.</p>
         field(EGUF,"10.0")
         field(EGUL,"-10.0")
         field(PREC,"3")
-   }</pre>
+   }
+</pre>
 
 <p>Analog Output Example Record</p>
-<pre>    record(ao,"aoInt32") {
+<pre>
+   record(ao,"aoInt32") {
         field(DTYP,"asynInt32")
         field(OUT,"@asyn($(port),$(addr))")
         field(EGUF,"10.0")
         field(EGUL,"-10.0")
         field(PREC,"3")
-   }</pre>
+   }
+</pre>
 
 <p>Long Input Example Records</p>
-<pre>   record(longin,"liInt32") {
+<pre>
+   record(longin,"liInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
-   }</pre>
+   }
+</pre>
 
 <p>Long Output Example Record</p>
-<pre>    record(longout,"loInt32") {
+<pre>
+   record(longout,"loInt32") {
         field(DTYP,"asynInt32")
         field(OUT,"@asyn($(port),$(addr))")
-   }</pre>
+   }
+</pre>
 
 <p>Multibit Binary Input Example Records</p>
-<pre>   record(mbbi,"mbbiInt32") {
+<pre>
+   record(mbbi,"mbbiInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
@@ -3248,10 +3287,12 @@ interface asynInt32.</p>
         field(ONST,"oneVal")
         field(TWST,"twoVal")
         field(THST,"threeVal")
-   }</pre>
+   }
+</pre>
 
 <p>Multibit Binary Output Example Record</p>
-<pre>    record(mbbo,"mbboInt32") {
+<pre>
+   record(mbbo,"mbboInt32") {
         field(DTYP,"asynInt32")
         field(OUT,"@asyn($(port),$(addr))")
         field(NOBT,"2")
@@ -3260,7 +3301,8 @@ interface asynInt32.</p>
         field(ONST,"oneVal")
         field(TWST,"twoVal")
         field(THST,"threeVal")
-   }</pre>
+   }
+</pre>
 
 <h2>asynInt32Array device support</h2>
 
@@ -3270,7 +3312,8 @@ device(waveform,INST_IO,asynInt32ArrayWfOut,"asynInt32ArrayOut")</pre>
 
 <p>devAsynInt32Array.c provides EPICS device support for drivers that
 implement interface asynInt32Array. It has support for both reading and
-writing a waveform. It does not support interrupt processing.</p>
+writing a waveform.  SCAN "I/O Intr" is supported similar to the aiRecord 
+in devAsynInt32 device support.</p>
 
 <h2>devAsynUInt32Digital</h2>
 
@@ -3419,7 +3462,7 @@ interface asynFloat64.</p>
       <li>asynFloat64Average - The registerInterruptUser callback adds the
         new value to a sum and also increments the number of samples. When
         the record is processed the average is computed and the sum and
-        number of set to zero.</li>
+        number of samples is set to zero.</li>
     </ul>
   </li>
   <li>aoRecord
@@ -3435,7 +3478,8 @@ device(waveform,INST_IO,asynFloat64ArrayWfOut,"asynFloat64ArrayOut")</pre>
 
 <p>devAsynFloat64Array.c provides EPICS device support for drivers that
 implement interface asynFloat64Array. It has support for both reading and
-writing a waveform. It does not support interrupt processing.</p>
+writing a waveform.  SCAN "I/O Intr" is supported similar to the aiRecord
+in devAsynInt32 device support.</p>
 
 <h2>octet device support</h2>
 
@@ -3470,7 +3514,7 @@ following features not provided by the string support:</p>
   <li>WriteRead The INP field is of the form:
     <pre>    field(INP,"@asyn(portName,addr,timeout) pvname")</pre>
     pvname must refer to a field in a record in the same IOC. During record
-    initialization the pvname is locatedd. When the record is processed dbGet
+    initialization the pvname is located. When the record is processed dbGet
     is called to read the current value of pvname. This value is sent to the
     device. A read is then issued and the result stored in the record. For
     asynSiOctetWriteRead, the value obtained from pvname is passed through
