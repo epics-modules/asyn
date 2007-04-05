@@ -24,11 +24,11 @@ alink="#FF0000">
 
 <p>Added support for link specification of
 <pre>
-@asynMask(port addr nbits timeout)drv_user
+@asynMask(portName,addr,nbits,timeout)drvParams
 </pre>
 in addition to the previous support for 
 <pre>
-@asyn(port addr timeout)drv_user.
+@asyn(portName,addr,timeout)drvParams
 </pre>
 This allows device support to work with drivers that cannot return
 meaningful values in pasynInt32->getBounds because they do not know
