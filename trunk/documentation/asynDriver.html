@@ -545,7 +545,8 @@ drivers. It provides the following services:</p>
     addInterruptUser and removeInterruptUser. Device support calls
     addInterruptUser if it wants to be called whenever an interrupt occurs.
     Drivers or other code that implements the interface calls the registered
-    users when it has new data. asynManager provides services that help
+    users when it has new data, or when there is a change in communication status.
+    asynManager provides services that help
     drivers implement thread-safe support for interrupts.</p>
     <p>A driver that supports interrupts calls registerInterruptSource for
     each interface that has associated interrupts. It calls interruptStart to
@@ -1031,7 +1032,13 @@ asynManager:freeAsynUser.</p>
     <tr>
       <td>reason</td>
       <td>Drivers and asynUsers can use this as a general purpose field. By
-        convention it is used for asynManager interrupt support. A driver
+        convention it is used to determine what "command" is being
+        sent over a particular interface.  For example an A/D driver implementing
+        the asynInt32 interface might define reason=0 to mean "return the A/D conversion",
+        while reason=1 might mean "return the amplifier gain".  Typically drivers
+        implement the asynDrvUser interface, and use this to convert from descriptive
+        strings for commands (e.g. "DATA" or "GAIN" in this example) to the enum
+        "reason".  A driver
         that is calling an interrupt users often uses reason to decide if the
         users callback should be called. Values of reason less than 0 are
         reserved for standard meanings. For example ASYN_REASON_SIGNAL is
@@ -1852,7 +1859,7 @@ message based means that the device communicates via octet strings, i.e.
 arrays of 8 bit bytes. Three interfaces are provided: asynOctet,
 asynOctetBase, and asynOctetSyncIO. asynOctet is generic message based
 interface. asynOctetBase is an interface used by port drivers that implement
-asynOctet. It's primary putpose is to help with interrupt support.
+asynOctet. It's primary purpose is to help with interrupt support.
 asynOctetSyncIO provides a synchronous inteface to asynOctet and can be used
 by code that is willing to block.</p>
 
@@ -1868,7 +1875,7 @@ communication is done via 8-bit bytes.</p>
 #define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
 typedef void (*interruptCallbackOctet)(void *userPvt, asynUser *pasynUser,
-                      char *data,size_t numchars, int eomReason);
+              char *data,size_t numchars, int eomReason, asynStatus status);
 
 typedef struct asynOctetInterrupt {
     asynUser *pasynUser;
@@ -1967,7 +1974,8 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
     <tr>
       <td>registerInterruptUser</td>
       <td>Register a user that will be called whenever a new message is
-        received. NOTE: The callback must not block and must not call
+        received or when the communication status changes.
+        NOTE: The callback must not block and must not call
         registerInterruptUser or cancelInterruptUser.</td>
     </tr>
     <tr>
@@ -2000,7 +2008,7 @@ and cancelInterruptUser.</p>
 
 <p>For single device support,  it can optionally implement interrupt support.
 A driver that implements interrupts must call registerInterruptSource. If it
-asks asunOctetBase to handle interrupts it calls
+asks asynOctetBase to handle interrupts it calls
 asynOctetBase:callInterruptUsers when it has new data.</p>
 
 <p>For single device support asynOctetBase can optionally call
@@ -2226,7 +2234,8 @@ provided for:</p>
 registers. The standard interfaces can still be used by setting the unused
 bits to 0.</p>
 
-<p>For Int32, UInt32Digital, and Float64 three interfaces are provided. In
+<p>For Int32, Int32Array, UInt32Digital, Float64, and Float64Array 
+three interfaces are provided. In
 addition a default implementation and a synchronous inplementation are
 provided. Lets use Int32 as an example.</p>
 <ul>
@@ -2252,7 +2261,10 @@ provided. Lets use Int32 as an example.</p>
       <li>Call <span
         style="font-family: courier">pasynManager-&gt;registerInterruptSource</span></li>
       <li>Interact with asynManager to call the users that have registered
-        with asynInt32Base:registerInterruptUser</li>
+        with asynInt32Base:registerInterruptUser.  The driver calls users
+        when there is new data available.  It must also call the users
+        when the communication status changes, passing either asynError
+        when there is a problem, or asynSuccess when things are normal.</li>
     </ul>
     <span
     style="font-family: courier">asyn/testEpicsApp/src/int32Driver.c</span>
@@ -2308,8 +2320,9 @@ are:</p>
 
 <p>asynInt32 describes the methods implemented by drivers that use integers
 for communicating with a device.</p>
-<pre>typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser,
-                                       epicsInt32 data);
+<pre>
+typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser, 
+                                       epicsInt32 data, asynStatus status);
 typedef struct asynInt32Interrupt {
     int addr;
     asynUser *pasynUser;
@@ -2363,7 +2376,7 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     <tr>
       <td>registerInterruptUser</td>
       <td>Registers a callback that will be called whenever new data is
-        available. Since it can be called directly rather than via a
+        available or when the communication status changes. Since it can be called directly rather than via a
         queueRequest this method must not block.</td>
     </tr>
     <tr>
@@ -2494,9 +2507,10 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
 
 <p>asynInt32Array describes the methods implemented by drivers that use
 arrays of integers for communicating with a device.</p>
-<pre>typedef void (*interruptCallbackInt32Array)(
+<pre>
+typedef void (*interruptCallbackInt32Array)(
               void *userPvt, asynUser *pasynUser,
-              epicsInt32 *value, size_t nelements);
+              epicsInt32 *value, size_t nelements, asynStatus status);
 typedef struct asynInt32ArrayInterrupt {
     asynUser *pasynUser;
     int addr;
@@ -2536,7 +2550,8 @@ epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
     </tr>
     <tr>
       <td>registerInterruptUser</td>
-      <td>Register a callback that is called whenever new data is available.
+      <td>Register a callback that is called whenever new data is available,
+        or when the communication status changes.
         Since it can be called directly rather than via a queueRequest this
         method must not block.</td>
     </tr>
@@ -2570,8 +2585,8 @@ Int32 register.</p>
     interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
 } interruptReason;
 
-typedef void (*interruptCallbackUInt32Digital)(void *userPvt,
-                 asynUser *pasynUser, epicsUInt32 data);
+typedef void (*interruptCallbackUInt32Digital)(void *userPvt, 
+                 asynUser *pasynUser, epicsUInt32 data, asynStatus status);
 typedef struct asynUInt32DigitalInterrupt {
     epicsUInt32 mask;
     int addr;
@@ -2801,8 +2816,9 @@ epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;</pre>
 
 <p>asynFloat64  describes the methods for communicating via IEEE double
 precision float values.</p>
-<pre>typedef void (*interruptCallbackFloat64)(void *userPvt, asynUser *pasynUser,
-            epicsFloat64 data);
+<pre>
+typedef void (*interruptCallbackFloat64)(void *userPvt, asynUser *pasynUser,
+            epicsFloat64 data, asynStatus status);
 typedef struct asynFloat64Interrupt {
     asynUser *pasynUser;
     int addr;
@@ -2847,7 +2863,8 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
     </tr>
     <tr>
       <td>registerInterruptUser</td>
-      <td>Register a callback that is called whenever new data is available.
+      <td>Register a callback that is called whenever new data is available,
+        or when the communication status changes.
         Since it can be called directly rather than via a queueRequest this
         method must not block.</td>
     </tr>
@@ -2953,9 +2970,10 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
 
 <p>asynFloat64Array  describes the methods for communicating via IEEE double
 precision float values.</p>
-<pre>typedef void (*interruptCallbackFloat64Array)(
-              void *userPvt, asynUser *pasynUser, epicsFloat64 *data,
-              size_t nelements);
+<pre>
+typedef void (*interruptCallbackFloat64Array)(
+              void *userPvt, asynUser *pasynUser,
+              epicsFloat64 *data, size_t nelements, asynStatus status);
 typedef struct asynFloat64ArrayInterrupt {
     asynUser *pasynUser;
     int addr;
