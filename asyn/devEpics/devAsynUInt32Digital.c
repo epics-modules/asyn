@@ -76,9 +76,9 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value);
+                epicsUInt32 value, asynStatus status);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value);
+                epicsUInt32 value, asynStatus status);
 static int computeShift(epicsUInt32 mask);
 
 static long initBi(biRecord *pbi);
@@ -293,14 +293,21 @@ static void processCallbackOutput(asynUser *pasynUser)
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value)
+                epicsUInt32 value, asynStatus status)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
-        pr->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
+            pr->name, value);
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s devAsynUInt32Digital::interruptCallbackInput error %s\n",
+            pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -308,14 +315,21 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value)
+                epicsUInt32 value, asynStatus status)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
-        pr->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
+            pr->name, value);
+    } else {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "%s devAsynUInt32Digital::interruptCallbackOutput error %s\n",
+            pr->name, pasynUser->errorMessage);
+        recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
     if(pPvt->gotValue) return;
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;

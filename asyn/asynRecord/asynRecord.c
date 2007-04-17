@@ -91,13 +91,13 @@ static asynStatus connectDevice(asynRecord * pasynRec);
 static asynStatus registerInterrupts(asynRecord * pasynRec);
 static asynStatus cancelInterrupts(asynRecord * pasynRec);
 static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
-                 char *data,size_t numchars, int eomReason);
+                 char *data,size_t numchars, int eomReason, asynStatus status);
 static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value);
+                epicsInt32 value, asynStatus status);
 static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value);
+                epicsUInt32 value, asynStatus status);
 static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value);
+                epicsFloat64 value, asynStatus status);
 static asynStatus cancelIOInterruptScan(asynRecord *pasynRec);
 static void gpibUniversalCmd(asynUser * pasynUser);
 static void gpibAddressedCmd(asynUser * pasynUser);
@@ -681,7 +681,7 @@ static asynStatus cancelInterrupts(asynRecord *pasynRec)
 }
 
 static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
-                 char *data,size_t numchars, int eomReason)
+                 char *data,size_t numchars, int eomReason, asynStatus status)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -689,9 +689,15 @@ static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
-    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s callbackInterruptOctet new value=%s numchars %d eomReason %d\n",
-        pasynRec->name, data, numchars, eomReason);
+    if (status == asynSuccess) {
+        asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s callbackInterruptOctet new value=%s numchars %d eomReason %d\n",
+            pasynRec->name, data, numchars, eomReason);
+    } else {
+        reportError(pasynRec, status, "callbackInterruptOctet, %s",
+                    pasynUser->errorMessage);
+        recGblSetSevr(pasynRec, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pasynRecPvt->interruptLock);
     pasynRecPvt->gotValue = 1;
     epicsStrSnPrintEscaped(pasynRec->tinp,sizeof(pasynRec->tinp),
@@ -701,7 +707,7 @@ static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
 }
 
 static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value)
+                epicsInt32 value, asynStatus status)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -709,9 +715,15 @@ static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
-    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s callbackInterruptInt32 new value=%d\n",
-        pasynRec->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s callbackInterruptInt32 new value=%d\n",
+            pasynRec->name, value);
+    } else {
+        reportError(pasynRec, status, "callbackInterruptInt32, %s",
+                    pasynUser->errorMessage);
+        recGblSetSevr(pasynRec, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pasynRecPvt->interruptLock);
     pasynRecPvt->gotValue = 1;
     pasynRec->i32inp = value;
@@ -720,7 +732,7 @@ static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
 }
 
 static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
-                epicsUInt32 value)
+                epicsUInt32 value, asynStatus status)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -728,9 +740,15 @@ static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
-    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s callbackInterruptUInt32 new value=%x\n",
-        pasynRec->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s callbackInterruptUInt32 new value=%x\n",
+            pasynRec->name, value);
+    } else {
+        reportError(pasynRec, status, "callbackInterruptUInt32, %s",
+                    pasynUser->errorMessage);
+        recGblSetSevr(pasynRec, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pasynRecPvt->interruptLock);
     pasynRecPvt->gotValue = 1;
     pasynRec->ui32inp = value;
@@ -739,7 +757,7 @@ static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
 }
 
 static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value)
+                epicsFloat64 value, asynStatus status)
 {
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
@@ -747,9 +765,15 @@ static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
-    asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s callbackInterruptFloat64 new value=%f\n",
-        pasynRec->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s callbackInterruptFloat64 new value=%f\n",
+            pasynRec->name, value);
+    } else {
+        reportError(pasynRec, status, "callbackInterruptFloat64, %s",
+                    pasynUser->errorMessage);
+        recGblSetSevr(pasynRec, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pasynRecPvt->interruptLock);
     pasynRecPvt->gotValue = 1;
     pasynRec->f64inp = value;

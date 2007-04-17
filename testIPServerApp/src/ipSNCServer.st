@@ -66,7 +66,8 @@ ss ipSNCServer
 }
 
 %{
-static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portName, size_t len, int eomReason)
+static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portName, size_t len, 
+                               int eomReason, asynStatus callbackStatus)
 {
     struct UserVar  *pVar = (struct UserVar *)drvPvt;
     asynUser *pasynUser = (asynUser *)pVar->pasynUser;

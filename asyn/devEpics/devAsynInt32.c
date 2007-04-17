@@ -82,11 +82,11 @@ static long convertAo(aoRecord *pao, int pass);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value);
+                epicsInt32 value, asynStatus status);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value);
+                epicsInt32 value, asynStatus status);
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value);
+                epicsInt32 value, asynStatus status);
 
 static long initAi(aiRecord *pai);
 static long initAiAverage(aiRecord *pai);
@@ -354,15 +354,22 @@ static void processCallbackOutput(asynUser *pasynUser)
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
-                epicsInt32 value)
+                epicsInt32 value, asynStatus status)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
     if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynInt32::interruptCallbackInput new value=%d\n",
-        pr->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynInt32::interruptCallbackInput new value=%d\n",
+            pr->name, value);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynInt32::interruptCallbackInput error= %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -370,14 +377,21 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value)
+                epicsInt32 value, asynStatus status)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynInt32::interruptCallbackOutput new value=%d\n",
-        pr->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynInt32::interruptCallbackOutput new value=%d\n",
+            pr->name, value);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynInt32::interruptCallbackOutput error= %s\n",
+           pr->name, pasynUser->errorMessage);
+       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+    }
     if(pPvt->gotValue) return;
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
@@ -385,15 +399,22 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     scanOnce(pr);
 }
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
-                epicsInt32 value)
+                epicsInt32 value, asynStatus status)
 {
     devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
     aiRecord *pai = (aiRecord *)pPvt->pr;
 
     if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
-    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynInt32::interruptCallbackAverage new value=%d\n",
-         pai->name, value);
+    if (status == asynSuccess) {
+        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            "%s devAsynInt32::interruptCallbackAverage new value=%d\n",
+             pai->name, value);
+    } else {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynInt32::interruptCallbackAverage error= %s\n",
+           pai->name, pasynUser->errorMessage);
+       recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
+    }
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++; pPvt->sum += (double)value;
     epicsMutexUnlock(pPvt->mutexId);
