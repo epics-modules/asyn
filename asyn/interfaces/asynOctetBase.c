@@ -215,9 +215,10 @@ static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
     while (pnode) {
         pinterrupt = pnode->drvPvt;
         if(addr==pinterrupt->addr) {
+            /* Is there any time we want to pass status!=asynSuccess here? */
             pinterrupt->callback(
                 pinterrupt->userPvt,pinterrupt->pasynUser,
-                data,*nbytesTransfered,*eomReason);
+                data,*nbytesTransfered,*eomReason,asynSuccess);
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
