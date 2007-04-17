@@ -85,9 +85,9 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback);
 static long initWfCommon(waveformRecord *pwf);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
-       char *data,size_t numchars, int eomReason);
+       char *data,size_t numchars, int eomReason, asynStatus status);
 static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
-       char *data,size_t numchars, int eomReason);
+       char *data,size_t numchars, int eomReason, asynStatus status);
 static void initDrvUser(devPvt *pdevPvt);
 static void initCmdBuffer(devPvt *pdevPvt);
 static void initDbAddr(devPvt *pdevPvt);
@@ -253,7 +253,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 }
 
 static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
-       char *data,size_t numchars, int eomReason)
+       char *data,size_t numchars, int eomReason, asynStatus status)
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
@@ -266,11 +266,17 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
         psi->udf = 0;
         if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     }
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s devAsynOctet: interruptCallbackSi error %s\n",
+            psi->name,pasynUser->errorMessage);
+        recGblSetSevr(psi, READ_ALARM, INVALID_ALARM);
+    }
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
 static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
-       char *data,size_t numchars, int eomReason)
+       char *data,size_t numchars, int eomReason, asynStatus status)
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
@@ -284,6 +290,12 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
         if(num<pwf->nelm) pbuf[num] = 0;
         pwf->nord = num;
         pwf->udf = 0;
+    }
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s devAsynOctet: interruptCallbackWaveform error %s\n",
+            pwf->name,pasynUser->errorMessage);
+        recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
     }
     scanIoRequest(pdevPvt->ioScanPvt);
 }
