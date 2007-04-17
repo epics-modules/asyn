@@ -23,7 +23,7 @@ extern "C" {
 #endif  /* __cplusplus */
 
 typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser, 
-                                       epicsInt32 data);
+                                       epicsInt32 data, asynStatus status);
 typedef struct asynInt32Interrupt {
     int addr;
     asynUser *pasynUser;
