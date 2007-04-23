@@ -484,13 +484,12 @@ static void evFinish(gpibDpvt * pgpibDpvt,int failure)
 
 static void liFinish(gpibDpvt *pgpibDpvt,int failure);
 static void liSrqHandler(void *userPrivate,asynUser *pasynUser,
-                epicsInt32 statusByte, asynStatus status)
+                epicsInt32 statusByte)
 {
     longinRecord *pli = (longinRecord *)userPrivate;
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pli);
     pli->val = statusByte;
     pli->udf = FALSE;
-    if (status != asynSuccess) recGblSetSevr(pli, READ_ALARM, INVALID_ALARM);
     scanOnce(pgpibDpvt->precord);
 }
 
