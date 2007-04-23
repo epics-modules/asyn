@@ -291,7 +291,7 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
                     pgpibPvt->portName,addr,pasynUser->errorMessage);
             } else if(userAddr==addr && pasynUser->reason==ASYN_REASON_SIGNAL) {
                     pinterrupt->callback(pinterrupt->userPvt,
-                        pinterrupt->pasynUser, statusByte, asynSuccess);
+                        pinterrupt->pasynUser, statusByte);
             }
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
