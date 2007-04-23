@@ -69,11 +69,11 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status);
+                epicsFloat64 value);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status);
+                epicsFloat64 value);
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status);
+                epicsFloat64 value);
 
 static long initAi(aiRecord *pai);
 static long initAo(aoRecord *pai);
@@ -261,21 +261,14 @@ static void processCallbackOutput(asynUser *pasynUser)
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status)
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    if (status == asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64::interruptCallbackInput new value=%f\n",
-            pr->name, value);
-    } else {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynFloat64::interruptCallbackInput %s\n",
-           pr->name, pasynUser->errorMessage);
-       recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
-    }
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynFloat64::interruptCallbackInput new value=%f\n",
+        pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -283,22 +276,15 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status)
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
     if(pPvt->gotValue) return;
-    if (status == asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64::interruptCallbackOutput new value=%f\n",
-            pr->name, value);
-    } else {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynFloat64::interruptCallbackOutput %s\n",
-           pr->name, pasynUser->errorMessage);
-       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
-    }
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynFloat64::interruptCallbackOutput new value=%f\n",
+        pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
@@ -306,21 +292,14 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
-                epicsFloat64 value, asynStatus status)
+                epicsFloat64 value)
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
 
-    if (status == asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
-            pr->name, value);
-    } else {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynFloat64::interruptCallbackAverage %s\n",
-           pr->name, pasynUser->errorMessage);
-       recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
-    }
+    asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
+        pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++;
     pPvt->sum += value;

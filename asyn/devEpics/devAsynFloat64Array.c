@@ -67,9 +67,9 @@ static long initWfOutFloat64Array(waveformRecord *pwf);
 static void callbackWf(asynUser *pasynUser);
 static void callbackWfOut(asynUser *pasynUser);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
-                epicsFloat64 *value, size_t len, asynStatus status);
+                epicsFloat64 *value, size_t len);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser, 
-                epicsFloat64 *value, size_t len, asynStatus status);
+                epicsFloat64 *value, size_t len);
 
 typedef struct analogDset { /* analog  dset */
     long        number;
@@ -278,24 +278,17 @@ static void callbackWf(asynUser *pasynUser)
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
-                epicsFloat64 *value, size_t len, asynStatus status)
+                epicsFloat64 *value, size_t len)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pPvt->pr;
     int i;
     epicsFloat64 *pfloat64 = (epicsFloat64 *)pwf->bptr;
 
-    if (status == asynSuccess) {
-        asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            (char *)value, len*sizeof(epicsFloat64),
-            "%s devAsynFloat64Array::interruptCallbackInput\n",
-            pwf->name);
-    } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynWf::interruptCallbackInput error %s\n",
-              pwf->name, pasynUser->errorMessage);
-        recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
-    }
+    asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        (char *)value, len*sizeof(epicsFloat64),
+        "%s devAsynFloat64Array::interruptCallbackInput\n",
+        pwf->name);
     if (len > pwf->nelm) len = pwf->nelm;
     for (i=0; i<len; i++) pfloat64[i] = value[i];
     pPvt->gotValue = 1;
@@ -304,21 +297,14 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser, 
-                epicsFloat64 *value, size_t len, asynStatus status)
+                epicsFloat64 *value, size_t len)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;
-    waveformRecord *pwf = (waveformRecord *)pPvt->pr;
+    dbCommon *pr = pPvt->pr;
 
-    if (status == asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-            "%s devAsynFloat64Array::interruptCallbackOutput not supported yet!\n",
-            pwf->name);
-    } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynWf::interruptCallbackOutput error %s\n",
-              pwf->name, pasynUser->errorMessage);
-        recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
-    }
+    asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+        "%s devAsynFloat64Array::interruptCallbackOutput not supported yet!\n",
+        pr->name);
     /* scanOnce(pr); */
 }
 

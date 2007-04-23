@@ -135,7 +135,7 @@ static void echoWriter(myData *pPvt)
 }
                          
 static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName,
-                               size_t len, int eomReason, asynStatus status)
+                               size_t len, int eomReason)
 {
     myData     *pPvt = (myData *)drvPvt;
     myData     *newPvt = calloc(1, sizeof(myData));

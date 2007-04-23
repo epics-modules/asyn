@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.10 2007-04-17 18:49:18 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.11 2007-04-23 19:35:50 rivers Exp $
  */
 
 #include <string.h>
@@ -254,9 +254,8 @@ static void connectionListener(void *drvPvt)
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
             pinterrupt = pnode->drvPvt;
-            /* Is there any time we want to pass status!=asynSuccess here? */
             pinterrupt->callback(pinterrupt->userPvt, pinterrupt->pasynUser,
-                                 pl->portName, strlen(pl->portName), 0, asynSuccess);
+                                 pl->portName, strlen(pl->portName), 0);
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(tty->octetCallbackPvt);

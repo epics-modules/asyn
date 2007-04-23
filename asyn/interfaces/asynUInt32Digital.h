@@ -28,7 +28,7 @@ typedef enum {
 } interruptReason;
 
 typedef void (*interruptCallbackUInt32Digital)(void *userPvt, 
-                 asynUser *pasynUser, epicsUInt32 data, asynStatus status);
+                 asynUser *pasynUser, epicsUInt32 data);
 typedef struct asynUInt32DigitalInterrupt {
     epicsUInt32 mask;
     int addr;

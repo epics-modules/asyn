@@ -168,7 +168,7 @@ static void queueTimeoutCallback(asynUser *pasynUser);
 /* srq routines*/
 static void srqPvtInit(asynUser *pasynUser, deviceInstance *pdeviceInstance);
 static asynStatus srqReadWait(gpibDpvt *pgpibDpvt);
-static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte, asynStatus status);
+static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte);
 static void waitTimeoutCallback(void *parm);
 
 /*Utility routines*/
@@ -1221,10 +1221,8 @@ static asynStatus srqReadWait(gpibDpvt *pgpibDpvt)
     return status;
 }
 
-static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte, asynStatus status)
+static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte)
 {
-    /* We need to think about how to handle status!= asynSuccess !!*/
-
     deviceInstance *pdeviceInstance = (deviceInstance *)parm;
     srqPvt *psrqPvt = &pdeviceInstance->srq;
     portInstance *pportInstance = pdeviceInstance->pportInstance;
@@ -1251,7 +1249,7 @@ static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByt
         if(psrqPvt->unsollicitedHandler) {
             epicsMutexUnlock(pportInstance->lock);
             psrqPvt->unsollicitedHandler(
-                psrqPvt->unsollicitedHandlerPvt,pasynUser,statusByte,asynSuccess);
+                psrqPvt->unsollicitedHandlerPvt,pasynUser,statusByte);
             return;
         }
         break;

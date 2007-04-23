@@ -22,7 +22,7 @@ extern "C" {
 #define ASYN_EOM_END 0x0004 /*End indicator detected*/
 
 typedef void (*interruptCallbackOctet)(void *userPvt, asynUser *pasynUser,
-              char *data,size_t numchars, int eomReason, asynStatus status);
+                      char *data,size_t numchars, int eomReason);
 
 typedef struct asynOctetInterrupt {
     asynUser *pasynUser;

@@ -67,9 +67,9 @@ static long initWfOutInt32Array(waveformRecord *pwf);
 static void callbackWf(asynUser *pasynUser);
 static void callbackWfOut(asynUser *pasynUser);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
-                epicsInt32 *value, size_t len, asynStatus status);
+                epicsInt32 *value, size_t len);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser, 
-                epicsInt32 *value, size_t len, asynStatus status);
+                epicsInt32 *value, size_t len);
 
 typedef struct analogDset { /* analog  dset */
     long        number;
@@ -279,24 +279,17 @@ static void callbackWf(asynUser *pasynUser)
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
-                epicsInt32 *value, size_t len, asynStatus status)
+                epicsInt32 *value, size_t len)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pPvt->pr;
     int i;
     epicsInt32 *pint32 = (epicsInt32 *)pwf->bptr;
 
-    if (status == asynSuccess) {
-        asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            (char *)value, len*sizeof(epicsInt32),
-            "%s devAsynInt32Array::interruptCallbackInput\n",
-            pwf->name);
-    } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynWf::interruptCallbackInput error %s\n",
-              pwf->name, pasynUser->errorMessage);
-        recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM);
-    }
+    asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+        (char *)value, len*sizeof(epicsInt32),
+        "%s devAsynInt32Array::interruptCallbackInput\n",
+        pwf->name);
     if (len > pwf->nelm) len = pwf->nelm;
     for (i=0; i<len; i++) pint32[i] = value[i];
     pPvt->gotValue = 1;
@@ -305,21 +298,14 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser, 
-                epicsInt32 *value, size_t len, asynStatus status)
+                epicsInt32 *value, size_t len)
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;
-    waveformRecord *pwf = (waveformRecord *)pPvt->pr;
+    dbCommon *pr = pPvt->pr;
 
-    if (status == asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-            "%s devAsynInt32Array::interruptCallbackOutput not supported yet!\n",
-            pwf->name);
-    } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynWf::interruptCallbackOutput error %s\n",
-              pwf->name, pasynUser->errorMessage);
-        recGblSetSevr(pwf, WRITE_ALARM, INVALID_ALARM);
-    }
+    asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+        "%s devAsynInt32Array::interruptCallbackOutput not supported yet!\n",
+        pr->name);
     /* scanOnce(pr); */
 }
 
