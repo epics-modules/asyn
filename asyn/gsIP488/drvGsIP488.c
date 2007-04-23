@@ -351,7 +351,7 @@ void gsip488(int parameter)
 
     pgsport->isr0 = isr0 = readRegister(pgsport,ISR0);
     pgsport->isr1 = isr1 = readRegister(pgsport,ISR1);
-    if(isr1&SRQ) callbackRequest(&pgsport->callback);
+    if(interruptAccept && isr1&SRQ) callbackRequest(&pgsport->callback);
     if(isr1&ERR) {
         if(state!=transferStateIdle) {
             sprintf(pgsport->errorMessage,"\n%s interruptHandler ERR state %d\n",
