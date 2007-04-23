@@ -26,6 +26,7 @@
 #include <cantProceed.h>
 #include <epicsTime.h>
 #include <devLib.h>
+#include <dbAccess.h>
 #include <taskwd.h>
 
 #include <epicsExport.h>
