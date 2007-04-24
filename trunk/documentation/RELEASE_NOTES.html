@@ -17,27 +17,8 @@ alink="#FF0000">
 
 <center>
 <h2>Release 4-8</h2>
-<h2>April 17, 2007</h2>
+<h2>April 24, 2007</h2>
 </center>
-<h3>interfaces</h3>
-Changed the asynInt32, asynInt32Array, asynUInt32Digital, asynFloat64, asynFloat64Array, and
-asynOctet interfaces to add an asynStatus argument to the callback functions.  For example:
-<pre>
-typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser, 
-                                       epicsInt32 data);
-</pre>
-was changed to
-<pre>
-typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser, 
-                                       epicsInt32 data, asynStatus status);
-</pre>
-This change allows asyn port drivers to pass status information back to asyn device support
-when a callback is made.  This allows EPICS records with SCAN=I/O Intr to have the alarm
-status change when the driver detects a communication error.
-<b>NOTE: This change requires modifications to all asyn port drivers that do callbacks with the
-standard asyn interfaces!</b> This incompatible change is inconvenient, but it is important that
-records go into alarm state when the asyn port driver detects an error.  This change required many
-small changes to other parts of asyn, including devEpics, asynRecord, devGpib, and test applications.
 
 <h3>devEpics/devAsynInt32</h3>
 
