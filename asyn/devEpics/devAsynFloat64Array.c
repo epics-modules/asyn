@@ -105,8 +105,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     pasynUser->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
     /* This device support only supports 32-bit float data type */
-    if (pwf->ftvl != menuFtypeFLOAT) {
-        errlogPrintf("devAsynWf::initCommon, %s field type must be FLOAT\n",
+    if (pwf->ftvl != menuFtypeDOUBLE) {
+        errlogPrintf("devAsynWf::initCommon, %s field type must be DOUBLE\n",
                      pr->name);
         goto bad;
     }
