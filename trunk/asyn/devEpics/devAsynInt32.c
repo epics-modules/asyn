@@ -506,6 +506,7 @@ static long initAo(aoRecord *pao)
     /* Read the current value from the device */
     status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->pasynUser->timeout);
+    if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
     if (status == asynSuccess) {
         pao->rval = value;
         return 0;
