@@ -243,7 +243,7 @@ static void callbackWfOut(asynUser *pasynUser)
         pwf->udf=0;
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynWf::callbackWfOut read error %s\n",
+              "%s devAsynWf::callbackWfOut write error %s\n",
               pwf->name, pasynUser->errorMessage);
         recGblSetSevr(pwf, WRITE_ALARM, INVALID_ALARM);
     }
