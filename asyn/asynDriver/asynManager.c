@@ -919,6 +919,13 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     if(pasynCommon) {
         pasynCommon->report(drvPvt,fp,details);
     }
+#ifdef CYGWIN32
+/* This is a (hopefully) temporary fix for a problem with POSIX threads on Cygwin.
+ * If a thread is very short-lived, which this report thread will be if the amount of
+ * output is small, then it crashes when it exits.  The workaround is a short delay.
+ * This should should be fixed in base/src/osi/os/posix/osdThread.c */
+    epicsThreadSleep(.001);
+#endif
     epicsEventSignal(done);
 }
 
