@@ -17,7 +17,7 @@ alink="#FF0000">
 
 <center>
 <h2>Release 4-8</h2>
-<h2>April 24, 2007</h2>
+<h2>April 28, 2007</h2>
 </center>
 
 <h3>devEpics/devAsynInt32</h3>
@@ -60,6 +60,10 @@ between "asyn" or "asynMask" and the "(" character.</p>
 <h3>asynManager</h3>
 
 <p>Fix errors in format strings for asynPrint.</p>
+
+<p>Temporary fix to asynReport thread for Cygwin.  If the amount of output is small
+the thread exists for a very short time, and this causes a crash.  The fix is a short
+wait, but it should really be fixed in base/src/libCom/osi/os/posix/osdThread.c.</p>
 
 <h3>testIPServerApp</h3>
 
