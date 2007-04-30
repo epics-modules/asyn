@@ -1,0 +1,3 @@
+device(ai,INST_IO,asynAiFloat64,"asynFloat64")
+device(ai,INST_IO,asynAiFloat64Average,"asynFloat64Average")
+device(ao,INST_IO,asynAoFloat64,"asynFloat64")
