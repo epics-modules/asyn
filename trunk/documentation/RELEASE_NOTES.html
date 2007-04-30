@@ -75,7 +75,9 @@ wait, but it should really be fixed in base/src/libCom/osi/os/posix/osdThread.c.
 
 <h3>drvAsynIPPort</h3>
 
-<p>Close sockets on application exit.</p>
+<p>Close sockets on application exit.  
+This is very important for vxWorks, otherwise sockets are not closed cleanly which often leads to problems
+when the IOC reboots.</p>
 
 <h3>drvGsIP488</h3>
 
