@@ -1,8 +1,5 @@
 dbLoadDatabase("../../dbd/test.dbd")
 test_registerRecordDeviceDriver(pdbbase)
-# For WIN32 use the following lines, rather than those above
-#dbLoadDatabase("../../dbd/testWin32.dbd")
-#testWin32_registerRecordDeviceDriver(pdbbase)
 
 #drvAsynIPPortConfigure("A","164.54.9.90:4001",0,0,0)
 echoDriverInit("A",0.05,0,0)

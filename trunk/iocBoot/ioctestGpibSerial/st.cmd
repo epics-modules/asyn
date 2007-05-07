@@ -2,9 +2,6 @@
 
 dbLoadDatabase("../../dbd/testGpibSerial.dbd")
 testGpibSerial_registerRecordDeviceDriver(pdbbase)
-# For WIN32 use the following 2 lines rather than those above
-#dbLoadDatabase("../../dbd/testGpibSerialWin32.dbd")
-#testGpibSerialWin32_registerRecordDeviceDriver(pdbbase)
 
 #dbLoadRecords("../../db/testGpib.db","P=gpib,R=Test,PORT=L0,A=1")
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=L0,ADDR=0,OMAX=0,IMAX=0")
