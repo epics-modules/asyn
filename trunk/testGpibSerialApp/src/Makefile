@@ -11,16 +11,11 @@ ASYN_BIN = $(TOP)/bin/$(T_A)
 
 ifeq ($(OS_CLASS),vxWorks)
 DBD += testGpibSerialVx.dbd
-testGpibSerialVx_DBD += commonInclude.dbd
+testGpibSerialVx_DBD += testGpibSerialSupport.dbd
 endif
 
-ifeq ($(OS_CLASS),WIN32)
-DBD += testGpibSerialWin32.dbd
-testGpibSerialWin32_DBD += win32Include.dbd
-else
 DBD += testGpibSerial.dbd
-testGpibSerial_DBD += commonInclude.dbd
-endif
+testGpibSerial_DBD += testGpibSerialSupport.dbd
 
 #=============================
 
@@ -29,7 +24,6 @@ PROD_IOC_vxWorks += testGpibSerialVx
 
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 testGpibSerial_SRCS_DEFAULT += testGpibSerial_registerRecordDeviceDriver.cpp testGpibSerialMain.cpp
-testGpibSerial_SRCS_WIN32   += testGpibSerialWin32_registerRecordDeviceDriver.cpp testGpibSerialMain.cpp
 testGpibSerialVx_SRCS_vxWorks  += testGpibSerialVx_registerRecordDeviceDriver.cpp
 testGpibSerial_SRCS += devTestGpibSerial.c
 testGpibSerial_LIBS += testSupport asyn
