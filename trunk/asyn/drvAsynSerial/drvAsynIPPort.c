@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.36 2007-03-15 17:03:24 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.37 2007-05-16 19:45:33 rivers Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -67,6 +67,10 @@
 #  include <sys/poll.h>
 # endif
 #endif
+
+
+/* This delay is needed in cleanup() else sockets are not always really closed cleanly */
+#define CLOSE_SOCKET_DELAY 0.02
 
 /*
  * This structure holds the hardware-specific information for a single
@@ -193,9 +197,12 @@ cleanup (void *arg)
 {
     ttyController_t *tty = (ttyController_t *)arg;
 
+    if (!tty) return;
     if (tty->fd >= 0) {
         close(tty->fd);
         tty->fd = -1;
+        /* If this delay is not present then the sockets are not always really closed cleanly */
+        epicsThreadSleep(CLOSE_SOCKET_DELAY);
     }
 }
 
