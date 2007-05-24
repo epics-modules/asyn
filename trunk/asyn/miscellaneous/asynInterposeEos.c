@@ -246,6 +246,9 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->inBuf,thisRead,
                 "%s read\n",peosPvt->portName);
+        /* readRaw could have returned *eomReason=ASYN_EOM_CNT because the number of octets available
+         * exceeded inBufSize.  This is not a reason for us to stop reading, so set eomReason to 0. */
+        if(eomReason && *eomReason == ASYN_EOM_CNT) *eomReason = 0;
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
