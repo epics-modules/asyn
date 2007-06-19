@@ -1158,8 +1158,8 @@ static asynStatus connectDevice(asynRecord * pasynRec)
         pasynRecPvt->asynFloat64Pvt = pasynInterface->drvPvt;
         pasynRec->f64iv = 1;
     } else {
-        pasynRecPvt->pasynInt32 = 0;
-        pasynRecPvt->asynInt32Pvt = 0;
+        pasynRecPvt->pasynFloat64 = 0;
+        pasynRecPvt->asynFloat64Pvt = 0;
         pasynRec->f64iv = 0;
     }
     /* Get asynGpib interface if it exists */
