@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.39 2007-02-02 17:02:10 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.40 2007-07-06 18:54:56 norume Exp $
  */
 
 #include <string.h>
@@ -243,7 +243,7 @@ setBaud(asynUser *pasynUser ,ttyController_t *tty,int baud)
     if(ioctl(tty->fd, SIO_BAUD_GET, (int)&inBaud) == 0) {
         if(inBaud!=baud) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-               "ioctl SIO_BAUD_SET failed inBaud %d baud %d\n",
+               "ioctl SIO_BAUD_GET failed in setBaud %d baud %d\n",
                 inBaud,baud);
             return asynError;
         }
