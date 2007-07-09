@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.40 2007-07-06 18:54:56 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.41 2007-07-09 13:40:32 norume Exp $
  */
 
 #include <string.h>
@@ -217,6 +217,9 @@ getBaud(asynUser *pasynUser ,ttyController_t *tty,int *baud)
         case B4800:   *baud = 4800 ;   break;
         case B9600:   *baud = 9600 ;   break;
         case B19200:  *baud = 19200 ;  break;
+#ifdef B28800
+        case B28800:  *baud = 28800 ;  break;
+#endif
         case B38400:  *baud = 38400 ;  break;
         case B57600:  *baud = 57600 ;  break;
         case B115200: *baud = 115200 ; break;
@@ -271,6 +274,9 @@ setBaud(asynUser *pasynUser ,ttyController_t *tty,int baud)
         case 4800:   baudCode = B4800 ;   break;
         case 9600:   baudCode = B9600 ;   break;
         case 19200:  baudCode = B19200 ;  break;
+#ifdef B28800
+        case 28800:  baudCode = B28800 ;  break;
+#endif
         case 38400:  baudCode = B38400 ;  break;
         case 57600:  baudCode = B57600 ;  break;
         case 115200: baudCode = B115200 ; break;
