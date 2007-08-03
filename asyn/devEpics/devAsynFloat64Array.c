@@ -19,14 +19,14 @@
 #include <alarm.h>
 #include <recGbl.h>
 #include <dbAccess.h>
+#include <callback.h>
 #include <dbDefs.h>
 #include <link.h>
-#include <dbScan.h>
-#include <callback.h>
 #include <errlog.h>
 #include <epicsMutex.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
+#include <dbScan.h>
 #include <waveformRecord.h>
 #include <recSup.h>
 #include <devSup.h>
@@ -55,7 +55,7 @@ typedef struct devAsynWfPvt{
     char            *portName;
     char            *userParam;
     int             addr;
-}devAsynWfPvt;
+} devAsynWfPvt;
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static long initCommon(dbCommon *pr, DBLINK *plink,
