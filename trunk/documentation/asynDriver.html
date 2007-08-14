@@ -3244,7 +3244,7 @@ nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbit
    record(ai,"aiInt32") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt32")
-        field(INP,"@asynMask($(port),-12,$(addr))")
+        field(INP,"@asynMask($(port),$(addr),-12)")
         field(EGUF,"10.0")
         field(EGUL,"-10.0")
         field(PREC,"3")
