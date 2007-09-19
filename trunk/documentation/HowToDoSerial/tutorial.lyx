@@ -1650,7 +1650,7 @@ iocInit()
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline
 ###  EPICS R3.14.6 $$Name:
-  $$ $$Date: 2006-06-04 00:55:03 $$
+  $$ $$Date: 2007-09-19 17:28:13 $$
 \newline
 #############################################
 ###############################
@@ -2087,7 +2087,7 @@ dbLoadRecords
 \end_layout
 
 \begin_layout LyX-Code
-medm -x -macro "P=AB300,R=Test,PORT=L0,ADDR=0" asynRecord.adl
+medm -x -macro "P=AB300,R=Test" asynRecord.adl
 \end_layout
 
 \begin_layout Section

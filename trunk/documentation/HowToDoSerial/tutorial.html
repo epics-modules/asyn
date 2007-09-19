@@ -4,7 +4,7 @@
 <HEAD>
 <TITLE>tutorial</TITLE>
 
-<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+<META http-equiv="Content-Type" content="text/html; charset=ISO-8859-15">
 <META name="GENERATOR" content="hevea 1.09">
 <STYLE type="text/css">
 .li-itemize{margin:1ex 0ex;}
@@ -82,7 +82,8 @@ reveals that there are four commands that must be supported. Each
 command will be associated with an EPICS process variable (PV) whose
 type must be appropriate to the data transferred by the command. The
 AB300 commands and process variable record types I choose to associate
-with them are shown in table <A HREF="#commandList">12Determine the required I/O operationstable.1</A>.</P><BLOCKQUOTE CLASS="table"><DIV CLASS="center"><HR WIDTH="80%" SIZE=2></DIV><DIV CLASS="caption"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD VALIGN=top ALIGN=left>Table 1: AB300 filter wheel commands<A NAME="commandList"></A></TD></TR>
+with them are shown in table <A HREF="#commandList">12Determine the required I/O operationstable.1</A>.</P><BLOCKQUOTE CLASS="table"><DIV CLASS="center"><HR WIDTH="80%" SIZE=2></DIV>
+<DIV CLASS="caption"><TABLE CELLSPACING=6 CELLPADDING=0><TR><TD VALIGN=top ALIGN=left>Table 1: AB300 filter wheel commands<A NAME="commandList"></A></TD></TR>
 </TABLE></DIV><TABLE BORDER=1 CELLSPACING=0 CELLPADDING=1><TR><TD ALIGN=left NOWRAP COLSPAN=2>CVI Laser Corporation AB300 filter wheel</TD></TR>
 <TR><TD ALIGN=left NOWRAP>Command</TD><TD ALIGN=left NOWRAP>EPICS record type</TD></TR>
 <TR><TD ALIGN=left NOWRAP>Reset</TD><TD ALIGN=left NOWRAP>longout</TD></TR>
@@ -137,11 +138,10 @@ with provides an even easier starting point.</P><P>The remainder this section de
 skeleton file in order to support the AB300 filter wheel. You'll have
 to modify the steps as appropriate for your device.</P><!--TOC subsubsection Declare the DSET tables provided by the device support-->
 <H4 CLASS="subsubsection"><!--SEC ANCHOR -->3.2.1  Declare the DSET tables provided by the device support</H4><!--SEC END --><P>Since the AB300 provides only longin and longout records most of the
-<TT>DSET_</TT><I>xxx</I> define statements can be removed although
-leaving them in place will not hurt anything. Because of the way that
-the device initialization is performed you must define an analog-in
-DSET even if the device provides no analog-in records (as is the case
-for the AB300).</P><DIV CLASS="flushleft"><DL CLASS="list"><DT CLASS="dt-list">
+<TT>DSET_</TT><I>xxx</I> define statements can be removed. Because
+of the way that the device initialization is performed you must define
+an analog-in DSET even if the device provides no analog-in records
+(as is the case for the AB300).</P><DIV CLASS="flushleft"><DL CLASS="list"><DT CLASS="dt-list">
 
 
 
@@ -207,7 +207,7 @@ are needed.
 </DD><DT CLASS="dt-description"><B>eos</B></DT><DD CLASS="dd-description"> The end-of-string value used to mark the end of the readback
 operation. GPIB devices can usually leave this entry NULL since they
 use the End-Or-Identify (EOI) line to delimit messages.Serial devices
-which have the same end-of-string value for all commands could also
+which have the same end-of-string value for all commands couldalso
 leave these entries NULL and set the end-of-string value with theiocsh
 asynOctetSetInputEos command.
 </DD></DL><!--TOC paragraph Command array index 1 &#X2013; Go to new filter position-->
@@ -611,7 +611,7 @@ asynSetTraceIOMask("L0",-1,0x2) <BR>
 iocInit() <BR>
 ############################################################################ <BR>
 ###  EPICS IOC CORE built on Apr 23 2004 <BR>
-###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2007-03-15 17:04:54 $$ <BR>
+###  EPICS R3.14.6 $$Name: not supported by cvs2svn $$ $$Date: 2007-09-19 17:28:13 $$ <BR>
 ############################################################################ <BR>
 Starting iocInit <BR>
 iocInit: All initialization complete
@@ -857,7 +857,7 @@ values matching those given in the <TT>dbLoadRecords</TT> command:</P><DIV CLASS
 
 
 <TT></TT></DT><DD CLASS="dd-list"><TT>
-medm -x -macro "P=AB300,R=Test,PORT=L0,ADDR=0" asynRecord.adl
+medm -x -macro "P=AB300,R=Test" asynRecord.adl
 </TT></DD></DL></DIV><!--TOC section Support for devices with common 'end-of-string' characters-->
 <H2 CLASS="section"><!--SEC ANCHOR --><A NAME="htoc19">8</A>  Support for devices with common 'end-of-string' characters</H2><!--SEC END --><P>Devices which use the same character, or characters, to mark the end
 of each command or response message need not specify these characters
