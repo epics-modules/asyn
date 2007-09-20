@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.41 2007-07-09 13:40:32 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.42 2007-09-20 17:45:25 norume Exp $
  */
 
 #include <string.h>
@@ -697,6 +697,8 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
     *nbytesTransfered = numchars - nleft;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s wrote %d, return %d\n",
+                            tty->serialDeviceName, *nbytesTransfered, status);
     return status;
 }
 
@@ -825,6 +827,8 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         data[nRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %d, return %d\n",
+                            tty->serialDeviceName, *nbytesTransfered, status);
     return status;
 }
 
