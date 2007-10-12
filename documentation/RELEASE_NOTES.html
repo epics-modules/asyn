@@ -17,8 +17,16 @@ alink="#FF0000">
 
 <center>
 <h2>Release 4-9</h2>
-<h2>May ??, 2007</h2>
+<h2>October ??, 2007</h2>
 </center>
+
+<h3>devEpics</h3>
+
+<p>Replaced scanIoRequest with direct call to rset->process in interrupt callback routines
+in all device support.
+Without this fix if another interrupt occurred before the first scanIoRequest was complete bad
+things could happen.  The data from the first interrupt would be lost, and the read 
+function in the driver would be called when it should not have been.
 
 <h3>drvAsynSerialPort</h3>
 
