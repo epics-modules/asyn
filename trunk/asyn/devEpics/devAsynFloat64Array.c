@@ -282,6 +282,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 {
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pPvt->pr;
+    dbCommon *pr = pPvt->pr;
     int i;
     epicsFloat64 *pfloat64 = (epicsFloat64 *)pwf->bptr;
 
@@ -293,7 +294,9 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     for (i=0; i<len; i++) pfloat64[i] = value[i];
     pPvt->gotValue = 1;
     pPvt->nord = len;
-    scanIoRequest(pPvt->ioScanPvt);
+    dbScanLock(pr);
+    pr->rset->process(pr);
+    dbScanUnlock(pr);
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser, 

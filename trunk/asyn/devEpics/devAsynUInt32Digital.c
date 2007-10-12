@@ -304,7 +304,9 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     epicsMutexLock(pPvt->mutexId);
     pPvt->gotValue = 1; pPvt->value = value;
     epicsMutexUnlock(pPvt->mutexId);
-    scanIoRequest(pPvt->ioScanPvt);
+    dbScanLock(pr);
+    pr->rset->process(pr);
+    dbScanUnlock(pr);
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
