@@ -382,6 +382,7 @@ void gsip488(int parameter)
         case transferStateRead:
             auxCmd(pgsport,LONS); break;
         default:
+            break;
         }
         auxCmd(pgsport,GTS);
         if(pgsport->transferState!=transferStateWrite)
