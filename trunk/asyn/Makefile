@@ -107,8 +107,10 @@ DBD += drvVxi11.dbd
 ifdef IPAC
 SRC_DIRS += $(ASYN)/gsIP488
 asyn_SRCS_vxWorks += drvGsIP488.c
+asyn_SRCS_RTEMS += drvGsIP488.c
 DBD += drvGsIP488.dbd
 asyn_LIBS_vxWorks += Ipac
+asyn_LIBS_RTEMS += Ipac
 endif
 
 SRC_DIRS += $(ASYN)/ni1014
