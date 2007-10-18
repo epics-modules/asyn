@@ -29,8 +29,8 @@ things could happen.  The data from the first interrupt would be lost, and the r
 function in the driver would be called when it should not have been.
 
 <h3>drvAsynSerialPort</h3>
-
 <p>Added support for 28,800 baud for those architectures which support this unusual speed.
+<p>Added stub routines for WIN32 so that a separate DBD file is no longer needed.
 
 <h3>asynInterposeEos.c</h3>
 
@@ -43,6 +43,8 @@ driver returned 600 bytes in readRaw().
 
 <p>Build driver for Greensprings IP-488 if IPAC is defined in configure/RELEASE.
 
+<h3>VXI11</h3>
+<p>Added stub routines for WIN32 so that a separate DBD file is no longer needed.
 
 <center>
 <h2>Release 4-8</h2>
