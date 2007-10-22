@@ -904,4 +904,3 @@ static void gsIP488RegisterCommands (void)
     }
 }
 epicsExportRegistrar(gsIP488RegisterCommands);
-epicsExportAddress(int,gsip488Debug);
