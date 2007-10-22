@@ -1,0 +1,8 @@
+device(stringin,INST_IO,asynSiOctetCmdResponse,"asynOctetCmdResponse")
+device(stringin,INST_IO,asynSiOctetWriteRead,"asynOctetWriteRead")
+device(stringin,INST_IO,asynSiOctetRead,"asynOctetRead")
+device(stringout,INST_IO,asynSoOctetWrite,"asynOctetWrite")
+device(waveform,INST_IO,asynWfOctetCmdResponse,"asynOctetCmdResponse")
+device(waveform,INST_IO,asynWfOctetWriteRead,"asynOctetWriteRead")
+device(waveform,INST_IO,asynWfOctetRead,"asynOctetRead")
+device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")
