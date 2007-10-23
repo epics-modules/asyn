@@ -27,6 +27,12 @@ vxi11Configure("L0","164.54.9.21",0,0.0,"inst0",0,0)
 #vxi11Configure("L0","164.54.8.137",0,0.0,"inst0",0,0)
 #vxi11Configure("L0","164.54.9.32",0,0.0,"inst0",0,0)
 
+#The following is for the Greensprings IP488
+#     Choose one carrier here and in drvIpac.dbd.
+#ipacAddXy9660("0x0,1 B=1,D00000")
+#ipacAddVIPC616_01("0x6000,0xD00000,128")
+#gsIP488Configure("L0",0,0,0x61,0,0)
+
 #asynSetTraceMask("L0",1,0xff)
 #asynSetTraceIOMask("L0",1,0x2)
 #asynSetTraceMask("L0",-1,0xff)
