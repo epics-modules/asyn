@@ -183,7 +183,7 @@ static asynIOPvt* asynFindEntry(const char *name)
     return((asynIOPvt *)hashEntry->userPvt);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetConnect(const char *entry, const char *port, int addr,
              int timeout, int buffer_len, const char *drvInfo)
 {
@@ -216,7 +216,7 @@ epicsShareFunc epicsShareFunc int
     return(0);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetDisconnect(const char *entry)
 {
     asynIOPvt *pPvt;
@@ -249,7 +249,7 @@ epicsShareFunc epicsShareFunc int
     return(0);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetRead(const char *entry, int nread)
 {
     asynStatus status;
@@ -280,7 +280,7 @@ epicsShareFunc epicsShareFunc int
     return(ninp);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetWrite(const char *entry, const char *output)
 {
     asynStatus status;
@@ -313,7 +313,7 @@ epicsShareFunc epicsShareFunc int
     return(nout);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetWriteRead(const char *entry, const char *output, int nread)
 {
     asynStatus status;
@@ -355,7 +355,7 @@ epicsShareFunc epicsShareFunc int
     return(ninp);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetFlush(const char *entry)
 {
     asynIOPvt *pPvt;
@@ -378,7 +378,7 @@ epicsShareFunc epicsShareFunc int
     return(0);
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetSetInputEos(const char *portName, int addr,
     const char *eosin,const char *drvInfo)
 {
@@ -400,7 +400,7 @@ epicsShareFunc epicsShareFunc int
     return (status==asynSuccess) ? 0 : -1;
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetGetInputEos(const char *portName, int addr,const char *drvInfo)
 {
     char eos[2],eostran[10];
@@ -425,7 +425,7 @@ epicsShareFunc epicsShareFunc int
     return -1;
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetSetOutputEos(const char *portName, int addr,
     const char *eosin,const char *drvInfo)
 {
@@ -447,7 +447,7 @@ epicsShareFunc epicsShareFunc int
     return (status==asynSuccess) ? 0 : -1;
 }
 
-epicsShareFunc epicsShareFunc int
+epicsShareFunc int
     asynOctetGetOutputEos(const char *portName, int addr,const char *drvInfo)
 {
     char eos[2],eostran[10];
