@@ -1,7 +1,7 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynRecord.adl"
-	version=020306
+	name="/home/phoebus/NORUME/src/EPICS/modules/soft/asyn/medm/asynRecord.adl"
+	version=030102
 }
 display {
 	object {
@@ -120,20 +120,6 @@ composite {
 			textix="$(P)$(R)"
 			align="horiz. centered"
 		}
-	}
-}
-"text update" {
-	object {
-		x=34
-		y=177
-		width=2
-		height=2
-	}
-	monitor {
-		clr=14
-		bclr=51
-	}
-	limits {
 	}
 }
 "text update" {
