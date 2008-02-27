@@ -1,5 +1,5 @@
-#LyX 1.4.1 created this file. For more info see http://www.lyx.org/
-\lyxformat 245
+#LyX 1.5.4 created this file. For more info see http://www.lyx.org/
+\lyxformat 276
 \begin_document
 \begin_header
 \textclass article
@@ -23,13 +23,21 @@
 \end_preamble
 \language english
 \inputencoding auto
-\fontscheme times
+\font_roman times
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
 \graphics default
 \paperfontsize default
 \spacing single
 \papersize default
 \use_geometry false
 \use_amsmath 1
+\use_esint 0
 \cite_engine basic
 \use_bibtopic false
 \paperorientation portrait
@@ -42,7 +50,8 @@
 \papersides 2
 \paperpagestyle default
 \tracking_changes false
-\output_changes true
+\output_changes false
+\author "" 
 \end_header
 
 \begin_body
@@ -193,7 +202,8 @@ The first order of business is to determine the set of operations the device
  The AB300 commands and process variable record types I choose to associate
  with them are shown in table\InsetSpace ~
 
-\begin_inset LatexCommand \ref{commandList}
+\begin_inset LatexCommand ref
+reference "commandList"
 
 \end_inset
 
@@ -206,9 +216,18 @@ wide false
 sideways false
 status open
 
-\begin_layout Caption
+\begin_layout Standard
+\begin_inset Caption
+
+\begin_layout Standard
 AB300 filter wheel commands
-\begin_inset LatexCommand \label{commandList}
+\begin_inset LatexCommand label
+name "commandList"
+
+\end_inset
+
+
+\end_layout
 
 \end_inset
 
@@ -1650,7 +1669,7 @@ iocInit()
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline
 ###  EPICS R3.14.6 $$Name:
-  $$ $$Date: 2007-09-19 17:28:13 $$
+  $$ $$Date: 2008-02-27 19:53:47 $$
 \newline
 #############################################
 ###############################
@@ -1979,9 +1998,9 @@ Add the line
 \newline
 
 \family typewriter
-DB_INSTALLS += $(ASYN)/db/asynRecord.db 
+DB_INSTALLS += $(ASYN)/db/asynRecord.db
 \family default
-
+ 
 \newline
 
 \newline
