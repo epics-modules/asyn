@@ -199,7 +199,6 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
     size_t thisRead;
     int nRead = 0;
     asynStatus status = asynSuccess;
-
     if(!peosPvt->processEosIn) {
         return peosPvt->poctet->read(peosPvt->octetPvt,
             pasynUser,data,maxchars,nbytesTransfered,eomReason);
@@ -276,8 +275,11 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
         if ((peosPvt->inBufTail != peosPvt->inBufHead)) {
             *data++ = peosPvt->inBuf[peosPvt->inBufTail++];
             nRead++;
-            if (nRead >= maxchars) break;
-            continue;
+            if (nRead >= maxchars) {
+				if(eomReason) *eomReason |= ASYN_EOM_CNT;
+				break;
+            }
+			continue;
         }
         if(eomReason && *eomReason) break;
         status = peosPvt->poctet->readRaw(peosPvt->octetPvt,
@@ -285,7 +287,10 @@ static asynStatus readRaw(void *ppvt,asynUser *pasynUser,
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->inBuf,thisRead,
                 "%s read\n",peosPvt->portName);
-        }
+        /* readRaw could have returned *eomReason=ASYN_EOM_CNT because the number of octets available
+         * exceeded inBufSize.  This is not a reason for us to stop reading, so set eomReason to 0. */
+         	if(eomReason && *eomReason == ASYN_EOM_CNT) *eomReason = 0;
+       }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
         peosPvt->inBufHead = thisRead;
