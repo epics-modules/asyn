@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.37 2007-05-16 19:45:33 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.38 2008-03-10 21:36:43 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -164,8 +164,8 @@ closeConnection(asynUser *pasynUser,ttyController_t *tty)
                            "Close %s connection.\n", tty->IPDeviceName);
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
-        pasynManager->exceptionDisconnect(pasynUser);
     }
+    pasynManager->exceptionDisconnect(pasynUser);
 }
 
 /*Beginning of asynCommon methods*/
@@ -178,10 +178,12 @@ report(void *drvPvt, FILE *fp, int details)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    fprintf(fp, "Port %s: %sonnected\n",
-        tty->IPDeviceName,
-        tty->fd >= 0 ? "C" : "Disc");
     if (details >= 1) {
+        fprintf(fp, "    Port %s: %sonnected\n",
+                                                tty->IPDeviceName,
+                                                tty->fd >= 0 ? "C" : "Disc");
+    }
+    if (details >= 2) {
         fprintf(fp, "                    fd: %d\n", tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
@@ -213,6 +215,7 @@ static asynStatus
 connectIt(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    int fd;
     int i;
 
     /*
@@ -226,17 +229,18 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s\n", tty->IPDeviceName);
+              "Open connection to %s.  reason:%d\n", tty->IPDeviceName,
+                                                     pasynUser->reason);
 
     /* If pasynUser->reason > 0) then use this as the file descriptor */
     if (pasynUser->reason > 0) {
-        tty->fd = pasynUser->reason;
+        fd = pasynUser->reason;
     } else {
 
         /*
          * Create the socket
          */
-        if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
+        if ((fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                   "Can't create socket: %s", strerror(SOCKERRNO));
             return asynError;
@@ -247,12 +251,11 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          */
         i = 1;
         if (tty->broadcastFlag
-         && (setsockopt(tty->fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
+         && (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't set %s socket BROADCAST option: %s\n",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(tty->fd);
-            tty->fd = -1;
+            epicsSocketDestroy(fd);
             return asynError;
         }
 
@@ -262,14 +265,13 @@ connectIt(void *drvPvt, asynUser *pasynUser)
 
         /* We don't use the timer, since it does nothing at present */
         /* epicsTimerStartDelay(tty->timer, 10.0); */
-        i = connect(tty->fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
+        i = connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
         /* epicsTimerCancel(tty->timer); */
         if (i < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(tty->fd);
-            tty->fd = -1;
+            epicsSocketDestroy(fd);
             return asynError;
         }
 
@@ -280,21 +282,19 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
-     && (setsockopt(tty->fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
+     && (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket NODELAY option: %s\n",
                       tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(tty->fd);
-        tty->fd = -1;
+        epicsSocketDestroy(fd);
         return asynError;
     }
 #ifdef USE_POLL
-    if (setNonBlock(tty->fd, 1) < 0) {
+    if (setNonBlock(fd, 1) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                "Can't set %s O_NONBLOCK option: %s\n",
                                        tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(tty->fd);
-        tty->fd = -1;
+        epicsSocketDestroy(fd);
         return asynError;
     }
 #endif
@@ -302,6 +302,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection to %s\n", tty->IPDeviceName);
     pasynManager->exceptionConnect(pasynUser);
+    tty->fd = fd;
     return asynSuccess;
 }
 
