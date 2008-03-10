@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.38 2008-03-10 21:36:43 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.39 2008-03-10 23:13:45 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -268,6 +268,10 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         i = connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
         /* epicsTimerCancel(tty->timer); */
         if (i < 0) {
+            asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                               "connect() to \"%s\" failed: %s.\n",
+                                                        tty->IPDeviceName,
+                                                        strerror(SOCKERRNO));
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
