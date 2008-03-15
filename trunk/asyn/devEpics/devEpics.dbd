@@ -1,4 +1,5 @@
 include "devAsynOctet.dbd"
+include "devAsynInt8Array.dbd"
 include "devAsynInt32.dbd"
 include "devAsynInt32Array.dbd"
 include "devAsynFloat64.dbd"
