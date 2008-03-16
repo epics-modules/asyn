@@ -20,11 +20,20 @@ alink="#FF0000">
 <h2>xxxxx xx, 2008</h2>
 </center>
 
+<h3>interfaces</h3>
+<p>Added two new interfaces, asynInt8Array and asynInt32Array.  
+These are the same as asynInt32Array except that the data types are for epicsInt8 and epicsInt16 respectively.
+
+<h3>devEpics</h3>
+<p>Added waveform record device support for the asynInt8Array and asynInt16Array interfaces.
+These are the same as devAsynInt32Array except that the data types are for epicsInt8 and epicsInt16 respectively.
+
 <h3>asynShellCommands</h3>
 <p>Remove duplicate windows function decorations.
 
 <h3>drvAsynIpPort</h3>
-<p>asynReport no longer reports as connected a port which has successfully completed its socket() call but not yet actually connected to the remote host.
+<p>asynReport no longer reports as connected a port which has successfully 
+completed its socket() call but not yet actually connected to the remote host.
 
 
 <center>
