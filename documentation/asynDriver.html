@@ -425,8 +425,14 @@ devices that read/write arrays of IEEE float values</p>
 <p><span style="font-weight: bold">asynInt32</span> methods for devices that
 read/write integer values. Many analog I/O drivers can use this interface.</p>
 
+<p><span style="font-weight: bold">asynInt8Array</span> methods for devices
+that read/write arrays of 8-bit integer values</p>
+
+<p><span style="font-weight: bold">asynInt16Array</span> methods for devices
+that read/write arrays of 16-bit integer values</p>
+
 <p><span style="font-weight: bold">asynInt32Array</span> methods for devices
-that read/write arrays of integer values</p>
+that read/write arrays of 32-bit integer values</p>
 
 <p><span style="font-weight: bold">asynUInt32Digital</span> methods for
 devices that read/write arrays of digital values. This interface provides a
@@ -2499,42 +2505,42 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynInt32Array</h3>
+<h3>asynIntXXXArray</h3>
 
-<p>asynInt32Array describes the methods implemented by drivers that use
-arrays of integers for communicating with a device.</p>
+<p>asynIntXXXArray (where XXX is 8, 16, or 32) describes the methods implemented by drivers that use
+arrays of 8, 16 or 32-bit integers for communicating with a device.</p>
 <pre>
-typedef void (*interruptCallbackInt32Array)(
+typedef void (*interruptCallbackIntXXXArray)(
               void *userPvt, asynUser *pasynUser,
-              epicsInt32 *value, size_t nelements);
-typedef struct asynInt32ArrayInterrupt {
+              epicsIntXXX *value, size_t nelements);
+typedef struct asynIntXXXArrayInterrupt {
     asynUser *pasynUser;
     int addr;
-    interruptCallbackInt32Array callback;
+    interruptCallbackIntXXXArray callback;
     void *userPvt;
-} asynInt32ArrayInterrupt;
-#define asynInt32ArrayType "asynInt32Array"
-typedef struct asynInt32Array {
+} asynIntXXXArrayInterrupt;
+#define asynIntXXXArrayType "asynIntXXXArray"
+typedef struct asynIntXXXArray {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsInt32 *value, size_t nelements);
+                       epicsIntXXX *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsInt32 *value, size_t nelements, size_t *nIn);
+                       epicsIntXXX *value, size_t nelements, size_t *nIn);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-             interruptCallbackInt32Array callback, void *userPvt,
+             interruptCallbackIntXXXArray callback, void *userPvt,
              void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                     void *registrarPvt);
-} asynInt32Array;
+} asynIntXXXArray;
 
-#define asynInt32ArrayBaseType "asynInt32ArrayBase"
-typedef struct asynInt32ArrayBase {
+#define asynIntXXXArrayBaseType "asynIntXXXArrayBase"
+typedef struct asynIntXXXArrayBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pint32ArrayInterface);
-} asynInt32ArrayBase;
-epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
+                            asynInterface *pintXXXArrayInterface);
+} asynIntXXXArrayBase;
+epicsShareExtern asynIntXXXArrayBase *pasynIntXXXArrayBase;</pre>
 
 <table border="1">
-  <caption>asynInt32Array</caption>
+  <caption>asynIntXXXArray</caption>
   <tbody>
     <tr>
       <td>write</td>
@@ -2560,12 +2566,12 @@ epicsShareExtern asynInt32ArrayBase *pasynInt32ArrayBase;</pre>
 </table>
 
 <table border="1">
-  <caption>asynInt32ArrayBase</caption>
+  <caption>asynIntXXXArrayBase</caption>
   <tbody>
     <tr>
       <td>initialize</td>
       <td>After a driver calls registerPort is can call:
-        <pre>pasynInt32ArrayBase-&gt;initialize(...</pre>
+        <pre>pasynIntXXXArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations.</td>
     </tr>
@@ -3105,6 +3111,10 @@ provides the following:</p>
 <ul>
   <li>devAsynInt32 - support for drivers that implement interface
   asynInt32</li>
+  <li>devAsynInt8Array - support for drivers that implement interface
+    asynInt8Array</li>
+  <li>devAsynInt16Array - support for drivers that implement interface
+    asynInt16Array</li>
   <li>devAsynInt32Array - support for drivers that implement interface
     asynInt32Array</li>
   <li>devAsynUInt32Digital - support for drivers that implement interface
@@ -3145,7 +3155,7 @@ are the same as INP.</p>
 
 <h2>asynManager interrupts and EPICS device support</h2>
 
-<p>devAsynInt32, devAsynInt32Array, devAsynFloat64, devAsynFloat64Array, 
+<p>devAsynInt32, devAsynInt8Array, devAsynInt16Array, devAsynInt32Array, devAsynFloat64, devAsynFloat64Array, 
 devAsynUInt32Digital, and devAsynOctet call
 registerInterruptUser for input records. The callback is used in one of two
 ways:</p>
@@ -3316,14 +3326,14 @@ nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbit
    }
 </pre>
 
-<h2>asynInt32Array device support</h2>
+<h2>asynIntXXXArray device support (XXX=8, 16 or 32)</h2>
 
 <p>The following support is available:</p>
-<pre>device(waveform,INST_IO,asynInt32ArrayWfIn,"asynInt32ArrayIn")
-device(waveform,INST_IO,asynInt32ArrayWfOut,"asynInt32ArrayOut")</pre>
+<pre>device(waveform,INST_IO,asynIntXXXArrayWfIn,"asynIntXXXArrayIn")
+device(waveform,INST_IO,asynIntXXXArrayWfOut,"asynIntXXXArrayOut")</pre>
 
-<p>devAsynInt32Array.c provides EPICS device support for drivers that
-implement interface asynInt32Array. It has support for both reading and
+<p>devAsynIntXXXArray.c provides EPICS device support for drivers that
+implement interface asynIntXXXArray. It has support for both reading and
 writing a waveform.  SCAN "I/O Intr" is supported similar to the aiRecord 
 in devAsynInt32 device support.</p>
 
