@@ -419,8 +419,11 @@ devices</p>
 <p><span style="font-weight: bold">asynFloat64</span> methods for devices
 that read/write IEEE float values</p>
 
+<p><span style="font-weight: bold">asynFloat32Array</span> methods for
+devices that read/write arrays of IEEE 32-bit float values</p>
+
 <p><span style="font-weight: bold">asynFloat64Array</span> methods for
-devices that read/write arrays of IEEE float values</p>
+devices that read/write arrays of IEEE 64-bit float values</p>
 
 <p><span style="font-weight: bold">asynInt32</span> methods for devices that
 read/write integer values. Many analog I/O drivers can use this interface.</p>
@@ -2231,6 +2234,7 @@ provided for:</p>
     can be used to address specific bits.</li>
   <li>Float64 - registers appear as double precision floats.</li>
   <li>Int32Array - Arrays of 32 bit integers.</li>
+  <li>Float32Array - Arrays of single precision floats.</li>
   <li>Float64Array - Arrays of double precision floats.</li>
 </ul>
 
@@ -2238,7 +2242,8 @@ provided for:</p>
 registers. The standard interfaces can still be used by setting the unused
 bits to 0.</p>
 
-<p>For Int32, Int32Array, UInt32Digital, Float64, and Float64Array 
+<p>For Int32, Int8Array, Int16Array, Int32Array, UInt32Digital, Float64, 
+Float32Array, and Float64Array 
 three interfaces are provided. In
 addition a default implementation and a synchronous inplementation are
 provided. Lets use Int32 as an example.</p>
@@ -2282,9 +2287,12 @@ addr is:</p>
   <li>Int32  - The driver supports an array of Int32 values. addr selects an
     array element. For example a 16 channel ADC would support addr 0 through
     15.</li>
+  <li>Int8Array  - Each addr is an array of Int8 values.</li>
+  <li>Int16Array - Each addr is an array of Int16 values.</li>
   <li>Int32Array - Each addr is an array of Int32 values.</li>
   <li>Float64 - The driver supports an array of Float64 values. addr selects
     an array element.</li>
+  <li>Float32Array - Each addr is an array of Float32 values.</li>
   <li>Float64Array - Each addr is an array of Float64 values.</li>
   <li>UInt32Digital - The driver supports an array of UInt32 values. addr
     selects an array element. For example a 128 bit digital I/O module
@@ -2966,50 +2974,50 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynFloat64Array</h3>
+<h3>asynFloatXXXArray (where XXX is 32 or 64)</h3>
 
-<p>asynFloat64Array  describes the methods for communicating via IEEE double
-precision float values.</p>
+<p>asynFloatXXXArray  describes the methods for communicating via IEEE single precision (XXX=32)
+or double precision float values (XXX=64).</p>
 <pre>
-typedef void (*interruptCallbackFloat64Array)(
+typedef void (*interruptCallbackFloatXXXArray)(
               void *userPvt, asynUser *pasynUser,
-              epicsFloat64 *data, size_t nelements);
-typedef struct asynFloat64ArrayInterrupt {
+              epicsFloatXXX *data, size_t nelements);
+typedef struct asynFloatXXXArrayInterrupt {
     asynUser *pasynUser;
     int addr;
-    interruptCallbackFloat64Array callback;
+    interruptCallbackFloatXXXArray callback;
     void *userPvt;
-} asynFloat64ArrayInterrupt;
-#define asynFloat64ArrayType "asynFloat64Array"
-typedef struct asynFloat64Array {
+} asynFloatXXXArrayInterrupt;
+#define asynFloatXXXArrayType "asynFloatXXXArray"
+typedef struct asynFloatXXXArray {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloat64 *value, size_t nelements);
+                       epicsFloatXXX *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloat64 *value, size_t nelements, size_t *nIn);
+                       epicsFloatXXX *value, size_t nelements, size_t *nIn);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-         interruptCallbackFloat64Array callback,
+         interruptCallbackFloatXXXArray callback,
          void *userPvt,void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                     void *registrarPvt);
-} asynFloat64Array;
+} asynFloatXXXArray;
 
-/* asynFloat64ArrayBase does the following:
-   calls  registerInterface for asynFloat64Array.
+/* asynFloatXXXArrayBase does the following:
+   calls  registerInterface for asynFloatXXXArray.
    Implements registerInterruptUser and cancelInterruptUser
    Provides default implementations of all methods.
    registerInterruptUser and cancelInterruptUser can be called
    directly rather than via queueRequest.
 */
 
-#define asynFloat64ArrayBaseType "asynFloat64ArrayBase"
-typedef struct asynFloat64ArrayBase {
+#define asynFloatXXXArrayBaseType "asynFloatXXXArrayBase"
+typedef struct asynFloatXXXArrayBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pfloat64ArrayInterface);
-} asynFloat64ArrayBase;
-epicsShareExtern asynFloat64ArrayBase *pasynFloat64ArrayBase;</pre>
+                            asynInterface *pfloatXXXArrayInterface);
+} asynFloatXXXArrayBase;
+epicsShareExtern asynFloatXXXArrayBase *pasynFloatXXXArrayBase;</pre>
 
 <table border="1">
-  <caption>asynFloat64Array</caption>
+  <caption>asynFloatXXXArray</caption>
   <tbody>
     <tr>
       <td>write</td>
@@ -3032,22 +3040,22 @@ epicsShareExtern asynFloat64ArrayBase *pasynFloat64ArrayBase;</pre>
 </table>
 
 <table border="1">
-  <caption>asynFloat64ArrayBase</caption>
+  <caption>asynFloatXXXArrayBase</caption>
   <tbody>
     <tr>
       <td>initialize</td>
       <td>After a driver calls registerPort is can call:
-        <pre>pasynFloat64ArrayBase-&gt;initialize(...</pre>
+        <pre>pasynFloatXXXArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynFloat64ArrayBase implements
+        implementations. asynFloatXXXArrayBase implements
         registerInterruptUser and cancelInterruptUser. Since these methods
         are called only during initialization they do not need to be called
         via a queueRequest callback.
 
-        <p>A driver that calls initialize MUST pass a  pFloat64ArrayInterface
-        that has the address of a asynFloat64Array with a null for the
+        <p>A driver that calls initialize MUST pass a  pFloatXXXArrayInterface
+        that has the address of a asynFloatXXXArray with a null for the
         methods the driver does not implement. This means that
-        pFloat64ArrayInterface should NOT be that address of static storage
+        pFloatXXXArrayInterface should NOT be that address of static storage
         because initialize replaces the null methods with an override method.
         A new asynInterface must be allocated for each port instance. An easy
         way is to put it in the drvPvt for the port.</p>
@@ -3121,6 +3129,8 @@ provides the following:</p>
     asynUInt32Digital</li>
   <li>devAsynFloat64 - support for drivers that implement interface
     asynFloat64</li>
+  <li>devAsynFloat32Array - support for drivers that implement interface
+    asynFloat32Array</li>
   <li>devAsynFloat64Array - support for drivers that implement interface
     asynFloat64Array</li>
   <li>devAsynOctet - support for drivers that implement interface
@@ -3155,7 +3165,8 @@ are the same as INP.</p>
 
 <h2>asynManager interrupts and EPICS device support</h2>
 
-<p>devAsynInt32, devAsynInt8Array, devAsynInt16Array, devAsynInt32Array, devAsynFloat64, devAsynFloat64Array, 
+<p>devAsynInt32, devAsynInt8Array, devAsynInt16Array, devAsynInt32Array, devAsynFloat64, 
+devAsynFloat32Array, devAsynFloat64Array, 
 devAsynUInt32Digital, and devAsynOctet call
 registerInterruptUser for input records. The callback is used in one of two
 ways:</p>
@@ -3492,14 +3503,14 @@ interface asynFloat64.</p>
   </li>
 </ul>
 
-<h2>asynFloat64Array device support</h2>
+<h2>asynFloatXXXArray device support (where XXX=32 or 64)</h2>
 
 <p>The following support is available:</p>
-<pre>device(waveform,INST_IO,asynFloat64ArrayWfIn,"asynFloat64ArrayIn")
-device(waveform,INST_IO,asynFloat64ArrayWfOut,"asynFloat64ArrayOut")</pre>
+<pre>device(waveform,INST_IO,asynFloatXXXArrayWfIn,"asynFloatXXXArrayIn")
+device(waveform,INST_IO,asynFloatXXXArrayWfOut,"asynFloatXXXArrayOut")</pre>
 
-<p>devAsynFloat64Array.c provides EPICS device support for drivers that
-implement interface asynFloat64Array. It has support for both reading and
+<p>devAsynFloatXXXArray.c provides EPICS device support for drivers that
+implement interface asynFloatXXXArray. It has support for both reading and
 writing a waveform.  SCAN "I/O Intr" is supported similar to the aiRecord
 in devAsynInt32 device support.</p>
 
