@@ -177,8 +177,9 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     }
     status = peosPvt->poctet->writeRaw(peosPvt->octetPvt, pasynUser,
          peosPvt->outBuf,(numchars + peosPvt->eosOutLen),&nbytesActual);
-    asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->outBuf,nbytesActual,
-            "%s write\n",peosPvt->portName);
+    if (status!=asynError)
+        asynPrintIO(pasynUser,ASYN_TRACE_FLOW,peosPvt->outBuf,nbytesActual,
+                "%s wrote",peosPvt->portName);
     *nbytesTransfered = (nbytesActual>numchars) ? numchars : nbytesActual;
     return status;
 }
