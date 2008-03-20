@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.39 2008-03-10 23:13:45 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.40 2008-03-20 20:36:50 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -157,11 +157,11 @@ static int setNonBlock(int fd, int nonBlockFlag)
  * Close a connection
  */
 static void
-closeConnection(asynUser *pasynUser,ttyController_t *tty)
+closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "Close %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
     if (tty->fd >= 0) {
-        asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "Close %s connection.\n", tty->IPDeviceName);
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
     }
@@ -222,15 +222,16 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      * Sanity check
      */
     assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "Open connection to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+                                                           pasynUser->reason,
+                                                           tty->fd);
+
     if (tty->fd >= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "%s: Link already open!", tty->IPDeviceName);
         return asynError;
     }
-
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s.  reason:%d\n", tty->IPDeviceName,
-                                                     pasynUser->reason);
 
     /* If pasynUser->reason > 0) then use this as the file descriptor */
     if (pasynUser->reason > 0) {
@@ -262,16 +263,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         /*
          * Connect to the remote host
          */
-
-        /* We don't use the timer, since it does nothing at present */
-        /* epicsTimerStartDelay(tty->timer, 10.0); */
         i = connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
-        /* epicsTimerCancel(tty->timer); */
         if (i < 0) {
-            asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                               "connect() to \"%s\" failed: %s.\n",
-                                                        tty->IPDeviceName,
-                                                        strerror(SOCKERRNO));
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
@@ -316,9 +309,7 @@ disconnect(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
 
     assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s disconnect\n", tty->IPDeviceName);
-    closeConnection(pasynUser,tty);
+    closeConnection(pasynUser,tty,"Disconnect request");
     return asynSuccess;
 }
 
@@ -387,7 +378,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s write error: %s",
                       tty->IPDeviceName, strerror(SOCKERRNO));
-        closeConnection(pasynUser,tty);
+        closeConnection(pasynUser,tty,"Write error");
         status = asynError;
     }
     /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
@@ -395,7 +386,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s connection closed",
                       tty->IPDeviceName);
-        closeConnection(pasynUser,tty);
+        closeConnection(pasynUser,tty,"Write to broken connection");
         status = asynError;
     }
     *nbytesTransfered = thisWrite;
@@ -462,7 +453,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
-            closeConnection(pasynUser,tty);
+            closeConnection(pasynUser,tty,"Read error");
             status = asynError;
         } else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -476,7 +467,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s connection closed",
                       tty->IPDeviceName);
-        closeConnection(pasynUser,tty);
+        closeConnection(pasynUser,tty,"Read from broken connection");
         status = asynError;
     }
     if (thisRead < 0)

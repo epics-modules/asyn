@@ -828,15 +828,29 @@ static void asynCallbackSpecial(asynUser * pasynUser)
             }
             if(pasynRec->cnct) {
                 if(!isConnected) {
-                    pasynRecPvt->pasynCommon->connect(
+                    status = pasynRecPvt->pasynCommon->connect(
                                       pasynRecPvt->asynCommonPvt, pasynUser);
+                    if (status!=asynSuccess) {
+                        reportError(pasynRec, asynError,
+                            "asynCallbackSpecial callbackConnect connect: %s",
+                                                    pasynUser->errorMessage);
+
+                        break;
+                    }
                 } else {
                     monitorStatus(pasynRec);
                 }
             } else {
                 if(isConnected) {
-                    pasynRecPvt->pasynCommon->disconnect(
+                    status = pasynRecPvt->pasynCommon->disconnect(
                                       pasynRecPvt->asynCommonPvt, pasynUser);
+                    if (status!=asynSuccess) {
+                        reportError(pasynRec, asynError,
+                            "asynCallbackSpecial callbackConnect disconnect: %s",
+                                                    pasynUser->errorMessage);
+
+                        break;
+                    }
                 } else {
                     monitorStatus(pasynRec);
                 }
