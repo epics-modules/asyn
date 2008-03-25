@@ -52,6 +52,7 @@
 \tracking_changes false
 \output_changes false
 \author "" 
+\author "" 
 \end_header
 
 \begin_body
@@ -1379,6 +1380,8 @@ _DBD += drvAsynSerialPort.dbd
 .
 \newline
 .
+\newline
+This is the preferred method.
 \end_layout
 
 \begin_layout Subsection
@@ -1669,7 +1672,7 @@ iocInit()
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline
 ###  EPICS R3.14.6 $$Name:
-  $$ $$Date: 2008-02-27 19:53:47 $$
+  $$ $$Date: 2008-03-25 18:06:21 $$
 \newline
 #############################################
 ###############################
