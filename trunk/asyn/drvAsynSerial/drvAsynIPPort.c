@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.40 2008-03-20 20:36:50 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.41 2008-03-26 17:19:38 rivers Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -201,7 +201,7 @@ cleanup (void *arg)
 
     if (!tty) return;
     if (tty->fd >= 0) {
-        close(tty->fd);
+        epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         /* If this delay is not present then the sockets are not always really closed cleanly */
         epicsThreadSleep(CLOSE_SOCKET_DELAY);
@@ -339,7 +339,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         *nbytesTransfered = 0;
         return asynSuccess;
     }
-    writePollmsec = pasynUser->timeout * 1000.0;
+    writePollmsec = (int) (pasynUser->timeout * 1000.0);
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
@@ -417,7 +417,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
                   "%s maxchars %d. Why <=0?\n",tty->IPDeviceName,(int)maxchars);
         return asynError;
     }
-    readPollmsec = pasynUser->timeout * 1000.0;
+    readPollmsec = (int) (pasynUser->timeout * 1000.0);
     if (readPollmsec == 0) readPollmsec = 1;
     if (readPollmsec < 0) readPollmsec = -1;
 #ifdef USE_SOCKTIMEOUT
@@ -474,7 +474,7 @@ static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
         thisRead = 0;
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
-    if (thisRead < maxchars)
+    if (thisRead < (int) maxchars)
         data[thisRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
