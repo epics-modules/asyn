@@ -54,6 +54,7 @@ INC += asynOctet.h asynOctetSyncIO.h
 INC += asynCommonSyncIO.h
 INC += asynOption.h
 INC += asynDrvUser.h
+INC += asynStandardInterfaces.h
 asyn_SRCS += asynInt32Base.c asynInt32SyncIO.c
 asyn_SRCS += asynInt8ArrayBase.c
 asyn_SRCS += asynInt16ArrayBase.c
@@ -64,6 +65,7 @@ asyn_SRCS += asynFloat32ArrayBase.c
 asyn_SRCS += asynFloat64ArrayBase.c
 asyn_SRCS += asynOctetBase.c asynOctetSyncIO.c
 asyn_SRCS += asynCommonSyncIO.c
+asyn_SRCS += asynStandardInterfacesBase.c
 
 SRC_DIRS += $(ASYN)/miscellaneous
 DBD += asyn.dbd
