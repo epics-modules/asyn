@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.42 2007-09-20 17:45:25 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.43 2008-04-04 23:15:32 norume Exp $
  */
 
 #include <string.h>
@@ -937,7 +937,6 @@ drvAsynSerialPortConfigure(char *portName,
     /*
      *  Link with higher level routines
      */
-    pasynInterface = (asynInterface *)callocMustSucceed(2, sizeof *pasynInterface, "drvAsynSerialPortConfigure");
     tty->common.interfaceType = asynCommonType;
     tty->common.pinterface  = (void *)&drvAsynSerialPortAsynCommon;
     tty->common.drvPvt = tty;
