@@ -1671,16 +1671,15 @@ iocInit()
 \newline
 ###  EPICS IOC CORE built on Apr 23 2004
 \newline
-###  EPICS R3.14.6 $$Name:
-  $$ $$Date: 2008-03-25 18:06:21 $$
+###  EPICS R3.14.6  2008/03/25
+ 18:06:21
 \newline
-#############################################
-###############################
+#######################################################################
+#####
 \newline
 Starting iocInit
 \newline
-iocInit: All initialization
- complete
+iocInit: All initialization complete
 \end_layout
 
 \begin_layout Standard
