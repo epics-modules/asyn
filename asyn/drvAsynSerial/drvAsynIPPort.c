@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.42 2008-04-08 22:03:54 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.43 2008-04-08 23:08:52 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -388,7 +388,13 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
                 if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess)
                     break;
             }
-            else if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {
+            else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                          "%s timeout.\n", tty->IPDeviceName);
+                status = asynTimeout;
+                break;
+            }
+            else if (SOCKERRNO != SOCK_EINTR) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s write error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
