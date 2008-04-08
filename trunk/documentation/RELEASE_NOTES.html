@@ -20,6 +20,13 @@ alink="#FF0000">
 <h2>xxxxx xx, 2008</h2>
 </center>
 
+<h3>drvAsynIPPort/drvAsynSerialPort</h3>
+
+<p>Add support for servers which perform a single transaction per connection.
+Specify "TCP*" as the network protocol in the port configuration command:<br>
+<code> drvAsynIPPortConfigure("L0", "192.168.1.42:1234 TCP*", 0, 0, 0)</code></p>
+
+<h3>drvAsynSerialPort</h3>
 <h3>interfaces</h3>
 <p>Added three new interfaces, asynInt8Array, asynInt16Array, and asynFloat32Array.  
 asynInt8Array and asynInt16Array are the same as asynInt32Array except that the data types
