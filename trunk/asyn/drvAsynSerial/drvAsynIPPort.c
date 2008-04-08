@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.41 2008-03-26 17:19:38 rivers Exp $
+ * $Id: drvAsynIPPort.c,v 1.42 2008-04-08 22:03:54 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -82,6 +82,7 @@ typedef struct {
     char              *portName;
     int                socketType;
     int                broadcastFlag;
+    int                reconnectFlag;
     int                fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -209,6 +210,22 @@ cleanup (void *arg)
 }
 
 /*
+ * Issue a socket connect operation
+ */
+static asynStatus
+tryConnect(int fd, ttyController_t *tty, asynUser *pasynUser)
+{
+    if (connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                      "Can't connect to %s: %s",
+                      tty->IPDeviceName, strerror(SOCKERRNO));
+        epicsSocketDestroy(fd);
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+/*
  * Create a link
  */
 static asynStatus
@@ -263,14 +280,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         /*
          * Connect to the remote host
          */
-        i = connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia);
-        if (i < 0) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "Can't connect to %s: %s",
-                          tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(fd);
+        if (tryConnect(fd, tty, pasynUser) != asynSuccess)
             return asynError;
-        }
 
         /*
          * Register for socket cleanup
@@ -363,33 +374,30 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         poll(&pollfd, 1, writePollmsec);
     }
 #endif
-    thisWrite = send(tty->fd, (char *)data, numchars, 0);
-    if (thisWrite > 0) {
-        tty->nWritten += thisWrite;
-        if (thisWrite != numchars) {
-            /* Is this a reliable indication of timeout on write? */
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s timeout", tty->IPDeviceName);
-            status = asynError;
+    *nbytesTransfered = 0;
+    while (numchars) {
+        thisWrite = send(tty->fd, (char *)data, numchars, 0);
+        if (thisWrite >= 0) {
+            tty->nWritten += thisWrite;
+            *nbytesTransfered += thisWrite;
+            data += thisWrite;
+            numchars -= thisWrite;
+        }
+        else {
+            if ((SOCKERRNO == EPIPE) && tty->reconnectFlag) {
+                if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess)
+                    break;
+            }
+            else if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s write error: %s",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+                closeConnection(pasynUser,tty,"Write error");
+                status = asynError;
+                break;
+            }
         }
     }
-    if ((thisWrite < 0) && (SOCKERRNO != SOCK_EWOULDBLOCK)
-                        && (SOCKERRNO != SOCK_EINTR)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s write error: %s",
-                      tty->IPDeviceName, strerror(SOCKERRNO));
-        closeConnection(pasynUser,tty,"Write error");
-        status = asynError;
-    }
-    /* If send() returns 0 on a SOCK_STREAM (TCP) socket, the connection has closed */
-    if ((thisWrite == 0) && (tty->socketType == SOCK_STREAM)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s connection closed",
-                      tty->IPDeviceName);
-        closeConnection(pasynUser,tty,"Write to broken connection");
-        status = asynError;
-    }
-    *nbytesTransfered = thisWrite;
     return status;
 }
 
@@ -612,6 +620,10 @@ drvAsynIPPortConfigure(const char *portName,
     if ((protocol[0] ==  '\0')
      || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
         tty->socketType = SOCK_STREAM;
+    }
+    else if (epicsStrCaseCmp(protocol, "tcp*") == 0) {
+        tty->socketType = SOCK_STREAM;
+        tty->reconnectFlag = 1;
     }
     else if (epicsStrCaseCmp(protocol, "udp") == 0) {
         tty->socketType = SOCK_DGRAM;
