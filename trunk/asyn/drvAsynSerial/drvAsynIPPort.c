@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.47 2008-04-09 18:08:56 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.48 2008-04-09 21:53:39 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -270,11 +270,6 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             epicsSocketDestroy(fd);
             return asynError;
         }
-
-        /*
-         * Register for socket cleanup
-         */
-        epicsAtExit(cleanup, tty);
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
@@ -670,6 +665,11 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
+
+    /*
+     * Register for socket cleanup
+     */
+    epicsAtExit(cleanup, tty);
     return 0;
 }
 
