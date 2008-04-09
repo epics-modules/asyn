@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.46 2008-04-09 16:18:44 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.47 2008-04-09 18:08:56 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -82,7 +82,6 @@ typedef struct {
     char              *portName;
     int                socketType;
     int                broadcastFlag;
-    int                reconnectFlag;
     int                fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -210,22 +209,6 @@ cleanup (void *arg)
 }
 
 /*
- * Issue a socket connect operation
- */
-static asynStatus
-tryConnect(int fd, ttyController_t *tty, asynUser *pasynUser)
-{
-    if (connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "Can't connect to %s: %s",
-                      tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(fd);
-        return asynError;
-    }
-    return asynSuccess;
-}
-
-/*
  * Create a link
  */
 static asynStatus
@@ -280,8 +263,13 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         /*
          * Connect to the remote host
          */
-        if (tryConnect(fd, tty, pasynUser) != asynSuccess)
+        if (connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "Can't connect to %s: %s",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+            epicsSocketDestroy(fd);
             return asynError;
+        }
 
         /*
          * Register for socket cleanup
@@ -379,34 +367,25 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         if (thisWrite >= 0) {
             tty->nWritten += thisWrite;
             *nbytesTransfered = thisWrite;
-            if (thisWrite == numchars) {
+            if (thisWrite == numchars)
                 status = asynSuccess;
-                break;
-            }
+            else
+                status = asynTimeout;
+            break;
+        }
+        else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
+            *nbytesTransfered = 0;
             status = asynTimeout;
             break;
         }
-        else {
+        else if (SOCKERRNO != SOCK_EINTR) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s write error: %s", tty->IPDeviceName,
+                                                           strerror(SOCKERRNO));
+            closeConnection(pasynUser,tty,"Write error");
             *nbytesTransfered = 0;
-            if ((SOCKERRNO == EPIPE) && tty->reconnectFlag) {
-                if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess) {
-                    break;
-                }
-                asynPrint(pasynUser, ASYN_TRACE_FLOW, "Reconnected to %s.\n",
-                                                           tty->IPDeviceName);
-            }
-            else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
-                status = asynTimeout;
-                break;
-            }
-            else if (SOCKERRNO != SOCK_EINTR) {
-                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s write error: %s",
-                          tty->IPDeviceName, strerror(SOCKERRNO));
-                closeConnection(pasynUser,tty,"Write error");
-                status = asynError;
-                break;
-            }
+            status = asynError;
+            break;
         }
     }
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -635,10 +614,6 @@ drvAsynIPPortConfigure(const char *portName,
     if ((protocol[0] ==  '\0')
      || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
         tty->socketType = SOCK_STREAM;
-    }
-    else if (epicsStrCaseCmp(protocol, "tcp*") == 0) {
-        tty->socketType = SOCK_STREAM;
-        tty->reconnectFlag = 1;
     }
     else if (epicsStrCaseCmp(protocol, "udp") == 0) {
         tty->socketType = SOCK_DGRAM;
