@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.44 2008-04-09 16:02:18 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.45 2008-04-09 16:09:26 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -408,7 +408,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         }
     }
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "drvAsynIPPort wrote %d to %s return %s.\n", *nbytesTransfered,
+              "wrote %lu to %s, return %s.\n", (unsigned long)*nbytesTransfered,
                                                tty->IPDeviceName,
                                                pasynManager->strStatus(status));
     return status;
