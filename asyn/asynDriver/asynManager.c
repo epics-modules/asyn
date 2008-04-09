@@ -263,6 +263,7 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
                                    interruptNode*pinterruptNode);
 static asynStatus interruptStart(void *pasynPvt,ELLLIST **plist);
 static asynStatus interruptEnd(void *pasynPvt);
+static const char *strStatus(asynStatus status);
 
 static asynManager manager = {
     report,
@@ -303,7 +304,8 @@ static asynManager manager = {
     addInterruptUser,
     removeInterruptUser,
     interruptStart,
-    interruptEnd
+    interruptEnd,
+    strStatus
 };
 epicsShareDef asynManager *pasynManager = &manager;
 
@@ -2420,4 +2422,18 @@ static int traceVprintIO(asynUser *pasynUser,int reason,
     if(fp==stdout || fp==stderr) fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
+}
+
+/*
+ * User-readable status code
+ */
+static const char *strStatus(asynStatus status)
+{
+    switch (status) {
+    case asynSuccess:   return "asynSuccess";
+    case asynTimeout:   return "asynTimeout";
+    case asynOverflow:  return "asynOverflow";
+    case asynError:     return "asynError";
+    default:            return "asyn????";
+    }
 }
