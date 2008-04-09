@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.45 2008-04-09 16:09:26 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.46 2008-04-09 16:18:44 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -392,6 +392,8 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
                 if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess) {
                     break;
                 }
+                asynPrint(pasynUser, ASYN_TRACE_FLOW, "Reconnected to %s.\n",
+                                                           tty->IPDeviceName);
             }
             else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
                 status = asynTimeout;
