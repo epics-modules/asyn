@@ -27,6 +27,7 @@ alink="#FF0000">
 <h3>drvAsynIPPort</h3>
 
 <p>Cleaned up timeout handling. </p>
+<p>Fix memory leak (one epicsAtExit entry was allocated for every connect).</p>
 
 <h3>interfaces</h3>
 <p>Added three new interfaces, asynInt8Array, asynInt16Array, and asynFloat32Array.  
