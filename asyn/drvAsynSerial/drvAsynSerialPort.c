@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.44 2008-04-09 16:09:26 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.45 2008-04-09 16:18:44 norume Exp $
  */
 
 #include <string.h>
@@ -897,7 +897,6 @@ drvAsynSerialPortConfigure(char *portName,
                      int noProcessEos)
 {
     ttyController_t *tty;
-    asynInterface *pasynInterface;
     asynStatus status;
     int nbytes;
     asynOctet *pasynOctet;
