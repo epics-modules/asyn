@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.43 2008-04-08 23:08:52 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.44 2008-04-09 16:02:18 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -374,23 +374,26 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
         poll(&pollfd, 1, writePollmsec);
     }
 #endif
-    *nbytesTransfered = 0;
-    while (numchars) {
+    for (;;) {
         thisWrite = send(tty->fd, (char *)data, numchars, 0);
         if (thisWrite >= 0) {
             tty->nWritten += thisWrite;
-            *nbytesTransfered += thisWrite;
-            data += thisWrite;
-            numchars -= thisWrite;
+            *nbytesTransfered = thisWrite;
+            if (thisWrite == numchars) {
+                status = asynSuccess;
+                break;
+            }
+            status = asynTimeout;
+            break;
         }
         else {
+            *nbytesTransfered = 0;
             if ((SOCKERRNO == EPIPE) && tty->reconnectFlag) {
-                if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess)
+                if ((status = tryConnect(tty->fd, tty, pasynUser)) != asynSuccess) {
                     break;
+                }
             }
             else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
-                asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                          "%s timeout.\n", tty->IPDeviceName);
                 status = asynTimeout;
                 break;
             }
@@ -404,6 +407,10 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
             }
         }
     }
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+              "drvAsynIPPort wrote %d to %s return %s.\n", *nbytesTransfered,
+                                               tty->IPDeviceName,
+                                               pasynManager->strStatus(status));
     return status;
 }
 
