@@ -2977,18 +2977,7 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
       <td>After a driver calls registerPort it can call:
         <pre>pasynXXXArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynXXXArrayBase implements
-        registerInterruptUser and cancelInterruptUser. Since these methods
-        are called only during initialization they do not need to be called
-        via a queueRequest callback.
-
-        <p>A driver that calls initialize MUST pass a pXXXArrayInterface
-        that has the address of a asynXXXArray with a null for the
-        methods the driver does not implement. This means that
-        pXXXArrayInterface should NOT be that address of static storage
-        because initialize replaces the null methods with an override method.
-        A new asynInterface must be allocated for each port instance. An easy
-        way is to put it in the drvPvt for the port.</p>
+        implementations.</p>
       </td>
     </tr>
   </tbody>
@@ -3012,7 +3001,7 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
     </tr>
     <tr>
       <td>registerInterruptUser</td>
-      <td>registers an interrupt callback.</td>
+      <td>Registers an interrupt callback.</td>
     </tr>
     <tr>
       <td>cancelInterruptUser</td>
