@@ -28,12 +28,22 @@ alink="#FF0000">
 
 <p>Cleaned up timeout handling. </p>
 <p>Fix memory leak (one epicsAtExit entry was allocated for every connect).</p>
+<p>asynReport no longer reports as connected a port which has successfully disconnected.
+<p>Improved diagnostic messages.
 
 <h3>interfaces</h3>
-<p>Added three new interfaces, asynInt8Array, asynInt16Array, and asynFloat32Array.  
+<p>Added three new array interfaces, asynInt8Array, asynInt16Array, and asynFloat32Array.  
 asynInt8Array and asynInt16Array are the same as asynInt32Array except that the data types
-are for epicsInt8 and epicsInt16 respectively. asynFloat32Array is the same as asynFloat64Array except that the data type
-is for epicsFloat32.
+are for epicsInt8 and epicsInt16 respectively. asynFloat32Array is the same as asynFloat64Array
+except that the data type is for epicsFloat32.</p>
+
+<p>Added asyn(XXX)ArraySyncIO for synchronous I/O to all array interfaces.</p>
+
+<p>Added new asynHandle interface.  The datatype for this interface is void*, so it can be used to
+pass a pointer (handle) to anything.  Includes asynHandelSyncIO for synchronous I/O.</p>
+
+<p>Added asynStandardInterfaces.h and asynStandardInterfacesBase.c to simplify driver initialization
+when using the standard asyn interfaces defined in asyn/interfaces (common, octet, int32, etc.)  </p>
 
 
 <h3>devEpics</h3>
@@ -42,10 +52,6 @@ These are the same as devAsynInt32Array and devAsynFloat64Array with changes to 
 
 <h3>asynShellCommands</h3>
 <p>Remove duplicate windows function decorations.
-
-<h3>drvAsynIpPort</h3>
-<p>asynReport no longer reports as connected a port which has successfully disconnected.
-<p>Improved diagnostic messages.
 
 <h3>asynInterposeEos</h3>
 <p>Improved diagnostic messages.
