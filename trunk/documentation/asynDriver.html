@@ -42,13 +42,11 @@ license</a> described at the end of this document.</p>
 <a href="#Overview">Overview of asynDriver</a> <br>
 <a href="#theoryOfOperation">Theory of Operation</a> <br>
 <a href="#asynDriver">asynDriver Structures and Interfaces</a> <br>
-<a href="#standardMessageInterfaces">Standard Message Based Interface</a>s
-<br>
-<a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a>
-<br>
+<a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br>
+<a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br>
+<a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br>
 <a href="#interposeInterfaces">Standard Interpose Interfaces</a> <br>
-<a href="#genericEpicsSupport">Generic Device Support for EPICS records</a>
-<br>
+<a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br>
 <a href="#asynRecord">asynRecord: Generic Record Support</a> <br>
 <a href="#Example">Example</a> <br>
 <a href="#Test">Test Example</a> <br>
@@ -2905,10 +2903,10 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynXXXArray (where XXX is Int8, Int16, Int32, Float32 or 64)</h3>
+<h3>asynXXXArray (where XXX is Int8, Int16, Int32, Float32 or Float64)</h3>
 
 <p>asynXXXArray  describes the methods for communicating via 8, 16, or 32-bit integers,
-or single or double precision IEEE float values.</p>
+or 32 or 64-bit IEEE float values.</p>
 <pre>
 typedef void (*interruptCallbackXXXArray)(
               void *userPvt, asynUser *pasynUser,
@@ -3231,6 +3229,201 @@ epicsShareExtern asynHandleSyncIO *pasynHandleSyncIO;</pre>
     </tr>
   </tbody>
 </table>
+
+<center>
+<h2><a name="asynStandardInterfacesBase"></a>asynStandardInterfacesBase</h2>
+</center>
+
+<p>asynStandardInterfacesBase is an interface designed as a convenience to
+minimize the amount of code that must be written in the initialization
+routine of a port driver that uses the standard asyn message-based or
+register-based interfaces that are described above.  Without asynStandardInterfacesBase
+a port driver needs to call asynRegisterInterface(), and possibly 
+asynRegisterInterruptSource() for each interface that it supports, and handle
+any errors that may occur in these calls.  It also needs to explicitly include
+several fields in its drvPvt structure for each interface.
+ asynStandardInterfacesBase provides an
+interface that allows port drivers to include a single structure in its
+drvPvt structure, enter just define values in this structure.  It then
+calls a single function to register all interfaces that it supports, and to register
+itself as an interrupt source on one or more of those interfaces.  This can
+reduce the number of lines of code in the driver initialization routine
+by a factor of four or more.</p>
+
+<h2>asynStandardInterfaces structure</h2>
+The following is the definition of the asynStandardInterfaces structure.  Drivers
+will normally have a structure of this type contained in their drvPvt structure.  If this
+structure is initialized to all zeros when drvPvt is created, then all that is
+necessary is to fill in the addresses of each of each of the supported interfaces 
+(in that interface's .pinterface field), and to 
+set the CanInterrupt flag to 1 for those interfaces that are interrupt sources.
+
+<pre>
+typedef struct asynStandardInterfaces {
+    asynInterface common;
+
+    asynInterface drvUser;
+
+    asynInterface octet;
+    int octetProcessEosIn;
+    int octetProcessEosOut;
+    int octetInterruptProcess;
+    int octetCanInterrupt;
+    void *octetInterruptPvt;
+
+    asynInterface int32;
+    int int32CanInterrupt;
+    void *int32InterruptPvt;
+
+    asynInterface float64;
+    int float64CanInterrupt;
+    void *float64InterruptPvt;
+
+    asynInterface int8Array;
+    int int8ArrayCanInterrupt;
+    void *int8ArrayInterruptPvt;
+
+    asynInterface int16Array;
+    int int16ArrayCanInterrupt;
+    void *int16ArrayInterruptPvt;
+
+    asynInterface int32Array;
+    int int32ArrayCanInterrupt;
+    void *int32ArrayInterruptPvt;
+
+    asynInterface float32Array;
+    int float32ArrayCanInterrupt;
+    void *float32ArrayInterruptPvt;
+
+    asynInterface float64Array;
+    int float64ArrayCanInterrupt;
+    void *float64ArrayInterruptPvt;
+
+    asynInterface handle;
+    int handleCanInterrupt;
+    void *handleInterruptPvt;
+
+} asynStandardInterfaces;
+</pre>
+
+<h2>asynStandardInterfacesBase interface</h2>
+
+The following is the definition of the asynStandardInterfacesBase interface.
+<pre>
+typedef struct asynStandardInterfacesBase {
+    asynStatus (*initialize)(const char *portName, asynStandardInterfaces *pInterfaces, 
+                             asynUser *pasynUser, void *pPvt);
+} asynStandardInterfacesBase;
+
+epicsShareExtern asynStandardInterfacesBase *pasynStandardInterfacesBase;
+</pre>
+
+asynStandardInterfacesBase has a single method, initialize(), which calls registerInterface or Base->initialize
+for each interface which has a non-NULL value in its .pinterface field.  
+It also calls registerInterruptSource for interfaces that are defined and that
+have the CanInterrupt flag set to 1.
+<p>
+The following is an example of the code required in a port driver that uses
+the asynStandardInterfacesBase interface.
+<pre>
+#include &lt;asynStandardInterfaces.h&gt;
+...
+typedef struct drvADPvt {
+...
+    /* The asyn interfaces this driver implements */
+    asynStandardInterfaces asynStdInterfaces;
+
+    /* asynUser connected to ourselves for asynTrace */
+    asynUser *pasynUser;
+...
+} drvADPvt;
+...
+/* Structures with function pointers for each of the asyn interfaces */
+static asynCommon ifaceCommon = {
+    report,
+    connect,
+    disconnect
+};
+
+static asynInt32 ifaceInt32 = {
+    writeInt32,
+    readInt32,
+    getBounds
+};
+
+static asynFloat64 ifaceFloat64 = {
+    writeFloat64,
+    readFloat64
+};
+
+static asynOctet ifaceOctet = {
+    writeOctet,
+    NULL,
+    readOctet,
+};
+
+static asynDrvUser ifaceDrvUser = {
+    drvUserCreate,
+    drvUserGetType,
+    drvUserDestroy
+};
+
+static asynHandle ifaceHandle = {
+    writeADImage,
+    readADImage
+};
+...
+
+int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int dataType)
+
+{
+    drvADPvt *pPvt;
+    int status = asynSuccess;
+    char *functionName = "simDetectorConfig";
+    asynStandardInterfaces *pInterfaces;
+
+    pPvt = callocMustSucceed(1, sizeof(*pPvt), functionName);
+    pPvt->portName = epicsStrDup(portName);
+
+    status = pasynManager->registerPort(portName,
+                                        ASYN_MULTIDEVICE | ASYN_CANBLOCK,
+                                        1,  /*  autoconnect */
+                                        0,  /* medium priority */
+                                        0); /* default stack size */
+    if (status != asynSuccess) {
+        printf("%s ERROR: Can't register port\n", functionName);
+        return(asynError);
+    }
+
+    /* Create asynUser for debugging */
+    pPvt->pasynUser = pasynManager->createAsynUser(0, 0);
+
+    pInterfaces = &pPvt->asynStdInterfaces;
+    
+    /* Initialize interface pointers */
+    pInterfaces->common.pinterface        = (void *)&ifaceCommon;
+    pInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
+    pInterfaces->octet.pinterface         = (void *)&ifaceOctet;
+    pInterfaces->int32.pinterface         = (void *)&ifaceInt32;
+    pInterfaces->float64.pinterface       = (void *)&ifaceFloat64;
+    pInterfaces->handle.pinterface        = (void *)&ifaceHandle;
+
+    /* Define which interfaces can generate interrupts */
+    pInterfaces->octetCanInterrupt        = 1;
+    pInterfaces->int32CanInterrupt        = 1;
+    pInterfaces->float64CanInterrupt      = 1;
+    pInterfaces->handleCanInterrupt       = 1;
+
+    status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
+                                                     pPvt->pasynUser, pPvt);
+    if (status != asynSuccess) {
+        printf("%s ERROR: Can't register interfaces: %s.\n",
+               functionName, pPvt->pasynUser->errorMessage);
+        return(asynError);
+    }
+...
+}
+</pre>
 
 
 
