@@ -25,6 +25,7 @@
 #include <asynFloat32Array.h>
 #include <asynFloat64.h>
 #include <asynFloat64Array.h>
+#include <asynHandle.h>
 #include <asynOctet.h>
 #include <asynDrvUser.h>
 
@@ -71,6 +72,10 @@ typedef struct asynStandardInterfaces {
     asynInterface float64Array;
     int float64ArrayCanInterrupt;
     void *float64ArrayInterruptPvt;
+
+    asynInterface handle;
+    int handleCanInterrupt;
+    void *handleInterruptPvt;
 
 } asynStandardInterfaces;
 

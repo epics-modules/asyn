@@ -213,6 +213,25 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         }
     }
 
+    if (pInterfaces->handle.pinterface) {
+        pInterfaces->handle.interfaceType = asynHandleType;
+        pInterfaces->handle.drvPvt = pPvt;
+        status = pasynHandleBase->initialize(portName, &pInterfaces->handle);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register handle");
+            return(asynError);
+        }
+        if (pInterfaces->handleCanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->handle,
+                                                           &pInterfaces->handleInterruptPvt);
+            if (status != asynSuccess) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "Can't register handle interrupt");
+                return(asynError);
+            }
+        }
+    }
      
     return(asynSuccess);
 }
