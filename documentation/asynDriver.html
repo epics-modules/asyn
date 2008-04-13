@@ -16,7 +16,7 @@
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum
 and Mark Rivers</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">March 16, 2008</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">April 13, 2008</span></p>
 
 <h3>Other Contributers</h3>
 
@@ -2033,7 +2033,7 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
   <tbody>
     <tr>
       <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
+      <td>After a driver calls registerPort it can call:
         <pre>pasynOctetBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations. If the port is not multi-device and either
@@ -2233,9 +2233,12 @@ provided for:</p>
   <li>UInt32Digital - registers appear a 32 bit unsigned integers and masks
     can be used to address specific bits.</li>
   <li>Float64 - registers appear as double precision floats.</li>
+  <li>Int8Array - Arrays of 8 bit integers.</li>
+  <li>Int16Array - Arrays of 16 bit integers.</li>
   <li>Int32Array - Arrays of 32 bit integers.</li>
   <li>Float32Array - Arrays of single precision floats.</li>
   <li>Float64Array - Arrays of double precision floats.</li>
+  <li>Handle - void* pointer.</li>
 </ul>
 
 <p>Note that hardware may have registers with smaller sizes, e.g. 16 bit
@@ -2266,7 +2269,7 @@ provided. Lets use Int32 as an example.</p>
     driver provides interrupt support it must:
     <ul>
       <li>Call <span
-        style="font-family: courier">pasynInt32Base-&gt;initializ</span>e</li>
+        style="font-family: courier">pasynInt32Base-&gt;initialize</span></li>
       <li>Call <span
         style="font-family: courier">pasynManager-&gt;registerInterruptSource</span></li>
       <li>Interact with asynManager to call the users that have registered
@@ -2410,7 +2413,7 @@ asynManager:interruptEnd.</p>
   <tbody>
     <tr>
       <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
+      <td>After a driver calls registerPort it can call:
         <pre>pasynInt32Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations.</td>
@@ -2513,78 +2516,6 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynIntXXXArray</h3>
-
-<p>asynIntXXXArray (where XXX is 8, 16, or 32) describes the methods implemented by drivers that use
-arrays of 8, 16 or 32-bit integers for communicating with a device.</p>
-<pre>
-typedef void (*interruptCallbackIntXXXArray)(
-              void *userPvt, asynUser *pasynUser,
-              epicsIntXXX *value, size_t nelements);
-typedef struct asynIntXXXArrayInterrupt {
-    asynUser *pasynUser;
-    int addr;
-    interruptCallbackIntXXXArray callback;
-    void *userPvt;
-} asynIntXXXArrayInterrupt;
-#define asynIntXXXArrayType "asynIntXXXArray"
-typedef struct asynIntXXXArray {
-    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsIntXXX *value, size_t nelements);
-    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsIntXXX *value, size_t nelements, size_t *nIn);
-    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-             interruptCallbackIntXXXArray callback, void *userPvt,
-             void **registrarPvt);
-    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
-                    void *registrarPvt);
-} asynIntXXXArray;
-
-#define asynIntXXXArrayBaseType "asynIntXXXArrayBase"
-typedef struct asynIntXXXArrayBase {
-    asynStatus (*initialize)(const char *portName,
-                            asynInterface *pintXXXArrayInterface);
-} asynIntXXXArrayBase;
-epicsShareExtern asynIntXXXArrayBase *pasynIntXXXArrayBase;</pre>
-
-<table border="1">
-  <caption>asynIntXXXArray</caption>
-  <tbody>
-    <tr>
-      <td>write</td>
-      <td>Write an array of integers to a device.</td>
-    </tr>
-    <tr>
-      <td>read</td>
-      <td>Read an array of integers from a device.</td>
-    </tr>
-    <tr>
-      <td>registerInterruptUser</td>
-      <td>Register a callback that is called whenever new data is available.
-        Since it can be called directly rather than via a queueRequest this
-        method must not block.</td>
-    </tr>
-    <tr>
-      <td>cancelInterruptUser</td>
-      <td>Cancel the callback.  Callback and userPvt must match the values
-        passed to registerInterruptUser. Since it can be called directly
-        rather than via a queueRequest this method must not block.</td>
-    </tr>
-  </tbody>
-</table>
-
-<table border="1">
-  <caption>asynIntXXXArrayBase</caption>
-  <tbody>
-    <tr>
-      <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
-        <pre>pasynIntXXXArrayBase-&gt;initialize(...</pre>
-        Any null methods in the asynInterface are replaced by default
-        implementations.</td>
-    </tr>
-  </tbody>
-</table>
 
 <h3>asynUInt32Digital</h3>
 
@@ -2688,7 +2619,7 @@ provides code to implement registerInterruptUser and cancelInterruptUser.</p>
   <tbody>
     <tr>
       <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
+      <td>After a driver calls registerPort it can call:
         <pre>pasynUInt32DigitalBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations.</td>
@@ -2889,7 +2820,7 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
   <tbody>
     <tr>
       <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
+      <td>After a driver calls registerPort it can call:
         <pre>pasynFloat64Base-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations.</td>
@@ -2974,50 +2905,50 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynFloatXXXArray (where XXX is 32 or 64)</h3>
+<h3>asynXXXArray (where XXX is Int8, Int16, Int32, Float32 or 64)</h3>
 
-<p>asynFloatXXXArray  describes the methods for communicating via IEEE single precision (XXX=32)
-or double precision float values (XXX=64).</p>
+<p>asynXXXArray  describes the methods for communicating via 8, 16, or 32-bit integers,
+or single or double precision IEEE float values.</p>
 <pre>
-typedef void (*interruptCallbackFloatXXXArray)(
+typedef void (*interruptCallbackXXXArray)(
               void *userPvt, asynUser *pasynUser,
-              epicsFloatXXX *data, size_t nelements);
-typedef struct asynFloatXXXArrayInterrupt {
+              epicsXXX *data, size_t nelements);
+typedef struct asynXXXArrayInterrupt {
     asynUser *pasynUser;
     int addr;
-    interruptCallbackFloatXXXArray callback;
+    interruptCallbackXXXArray callback;
     void *userPvt;
-} asynFloatXXXArrayInterrupt;
-#define asynFloatXXXArrayType "asynFloatXXXArray"
-typedef struct asynFloatXXXArray {
+} asynXXXArrayInterrupt;
+#define asynXXXArrayType "asynXXXArray"
+typedef struct asynXXXArray {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloatXXX *value, size_t nelements);
+                       epicsXXX *value, size_t nelements);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
-                       epicsFloatXXX *value, size_t nelements, size_t *nIn);
+                       epicsXXX *value, size_t nelements, size_t *nIn);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-         interruptCallbackFloatXXXArray callback,
+         interruptCallbackXXXArray callback,
          void *userPvt,void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                     void *registrarPvt);
-} asynFloatXXXArray;
+} asynXXXArray;
 
-/* asynFloatXXXArrayBase does the following:
-   calls  registerInterface for asynFloatXXXArray.
+/* asynXXXArrayBase does the following:
+   calls  registerInterface for asynXXXArray.
    Implements registerInterruptUser and cancelInterruptUser
    Provides default implementations of all methods.
    registerInterruptUser and cancelInterruptUser can be called
    directly rather than via queueRequest.
 */
 
-#define asynFloatXXXArrayBaseType "asynFloatXXXArrayBase"
-typedef struct asynFloatXXXArrayBase {
+#define asynXXXArrayBaseType "asynXXXArrayBase"
+typedef struct asynXXXArrayBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pfloatXXXArrayInterface);
-} asynFloatXXXArrayBase;
-epicsShareExtern asynFloatXXXArrayBase *pasynFloatXXXArrayBase;</pre>
+                            asynInterface *pXXXArrayInterface);
+} asynXXXArrayBase;
+epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
 
 <table border="1">
-  <caption>asynFloatXXXArray</caption>
+  <caption>asynXXXArray</caption>
   <tbody>
     <tr>
       <td>write</td>
@@ -3039,23 +2970,24 @@ epicsShareExtern asynFloatXXXArrayBase *pasynFloatXXXArrayBase;</pre>
   </tbody>
 </table>
 
+<p></p>
 <table border="1">
-  <caption>asynFloatXXXArrayBase</caption>
+  <caption>asynXXXArrayBase</caption>
   <tbody>
     <tr>
       <td>initialize</td>
-      <td>After a driver calls registerPort is can call:
-        <pre>pasynFloatXXXArrayBase-&gt;initialize(...</pre>
+      <td>After a driver calls registerPort it can call:
+        <pre>pasynXXXArrayBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
-        implementations. asynFloatXXXArrayBase implements
+        implementations. asynXXXArrayBase implements
         registerInterruptUser and cancelInterruptUser. Since these methods
         are called only during initialization they do not need to be called
         via a queueRequest callback.
 
-        <p>A driver that calls initialize MUST pass a  pFloatXXXArrayInterface
-        that has the address of a asynFloatXXXArray with a null for the
+        <p>A driver that calls initialize MUST pass a pXXXArrayInterface
+        that has the address of a asynXXXArray with a null for the
         methods the driver does not implement. This means that
-        pFloatXXXArrayInterface should NOT be that address of static storage
+        pXXXArrayInterface should NOT be that address of static storage
         because initialize replaces the null methods with an override method.
         A new asynInterface must be allocated for each port instance. An easy
         way is to put it in the drvPvt for the port.</p>
@@ -3064,6 +2996,243 @@ epicsShareExtern asynFloatXXXArrayBase *pasynFloatXXXArrayBase;</pre>
   </tbody>
 </table>
 <hr>
+
+<p></p>
+
+<p>The default implementation of each method does the following:</p>
+
+<table border="1">
+  <caption>asynXXXArrayBase</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Reports an error "write is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Reports an error "read is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>registers an interrupt callback.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancels the callback</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynXXXArraySyncIO</h3>
+
+<p>asynXXXArraySyncIO describes a synchronous interface to asynXXXArray. The code
+that calls it must be willing to block.</p>
+<pre>#define asynXXXArraySyncIOType "asynXXXArraySyncIO"
+typedef struct asynXXXArraySyncIO {
+    asynStatus (*connect)(const char *port, int addr,
+                          asynUser **ppasynUser, const char *drvInfo);
+    asynStatus (*disconnect)(asynUser *pasynUser);
+    asynStatus (*write)(asynUser *pasynUser, epicsXXX *pvalue,size_t nelem,double timeout);
+    asynStatus (*read)(asynUser *pasynUser, epicsXXX *pvalue,size_t nelem,size_t *nIn,double timeout);
+    asynStatus (*writeOnce)(const char *port, int addr,
+                    epicsXXX *pvalue,size_t nelem,double timeout, const char *drvInfo);
+    asynStatus (*readOnce)(const char *port, int addr,
+                    epicsXXX *pvalue,size_t nelem,size_t *nIn,double timeout, const char *drvInfo);
+} asynXXXArraySyncIO;
+epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
+
+<table border="1">
+  <caption>asynXXXArraySyncIO</caption>
+  <tbody>
+    <tr>
+      <td>connect</td>
+      <td>Connects to a port and address, returns a pointer to an
+      asynUser.</td>
+    </tr>
+    <tr>
+      <td>disconnect</td>
+      <td>Disconnect. This frees all resources allocated by create.</td>
+    </tr>
+    <tr>
+      <td>write</td>
+      <td>Calls pasynXXXArray-&gt;write and waits for the operation to complete
+        or time out.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Calls pasynXXXArray-&gt;read and waits for the operation to complete
+        or time out.</td>
+    </tr>
+    <tr>
+      <td>writeOnce</td>
+      <td>This does a connect, write, and disconnect.</td>
+    </tr>
+    <tr>
+      <td>readOnce</td>
+      <td>This does a connect, read, and disconnect.</td>
+    </tr>
+    <tr>
+      <td>getBoundsOnce</td>
+      <td>This does a connect, getBounds, and disconnect.</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynHandle</h3>
+
+<p>asynHandle  describes the methods for communicating via void* pointers.  
+asyn clients and port drivers must agree on the type of object that is being pointed to!</p>
+<pre>
+typedef void (*interruptCallbackHandle)(void *userPvt, asynUser *pasynUser,
+            void *pdata);
+typedef struct asynHandleInterrupt {
+    asynUser *pasynUser;
+    int addr;
+    interruptCallbackHandle callback;
+    void *userPvt;
+} asynHandleInterrupt;
+#define asynHandleType "asynHandle"
+typedef struct asynHandle {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, void *pvalue);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, void *pvalue);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+        interruptCallbackHandle callback, void *userPvt,void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+                    void *registrarPvt);
+} asynHandle;
+
+/* asynHandleBase does the following:
+   calls  registerInterface for asynHandle.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
+*/
+
+#define asynHandleBaseType "asynHandleBase"
+typedef struct asynHandleBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pasynHandleInterface);
+} asynHandleBase;
+epicsShareExtern asynHandleBase *pasynHandleBase;</pre>
+
+<table border="1">
+  <caption>asynHandle</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Write a value.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Read a value.</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>Register a callback that is called whenever new data is available.
+        Since it can be called directly rather than via a queueRequest this
+        method must not block.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancel the callback. Since it can be called directly rather than
+        via a queueRequest this method must not block.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p></p>
+<table border="1">
+  <caption>asynHandleBase</caption>
+  <tbody>
+    <tr>
+      <td>initialize</td>
+      <td>After a driver calls registerPort it can call:
+        <pre>pasynHandleBase-&gt;initialize(...</pre>
+        Any null methods in the asynInterface are replaced by default
+        implementations.</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>The default implementation of each method does the following:</p>
+
+<table border="1">
+  <caption>asynHandle</caption>
+  <tbody>
+    <tr>
+      <td>write</td>
+      <td>Reports an error "write is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Reports an error "read is not supported" and returns asynError</td>
+    </tr>
+    <tr>
+      <td>registerInterruptUser</td>
+      <td>registers the interrupt user. The low level driver must call the
+        registered callbacks via calls to asynManager:interruptStart and
+        asynManager:interruptEnd.</td>
+    </tr>
+    <tr>
+      <td>cancelInterruptUser</td>
+      <td>Cancels the callback</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>asynHandleSyncIO</h3>
+
+<p>asynHandleSyncIO describes a synchronous interrace to asynHandle. The
+code that calls it must be willing to block.</p>
+<pre>#define asynHandleSyncIOType "asynHandleSyncIO"
+typedef struct asynHandleSyncIO {
+    asynStatus (*connect)(const char *port, int addr,
+                       asynUser **ppasynUser, const char *drvInfo);
+    asynStatus (*disconnect)(asynUser *pasynUser);
+    asynStatus (*write)(asynUser *pasynUser,void *pvalue,double timeout);
+    asynStatus (*read)(asynUser *pasynUser,void *pvalue,double timeout);
+    asynStatus (*writeOnce)(const char *port, int addr,
+                       void *pvalue,double timeout,const char *drvInfo);
+    asynStatus (*readOnce)(const char *port, int addr,
+                       void *pvalue,double timeout,const char *drvInfo);
+} asynHandleSyncIO;
+epicsShareExtern asynHandleSyncIO *pasynHandleSyncIO;</pre>
+
+<table border="1">
+  <caption>asynHandleSyncIO</caption>
+  <tbody>
+    <tr>
+      <td>connect</td>
+      <td>Connects to a port and address, returns a pointer to an asynUser
+        structure.</td>
+    </tr>
+    <tr>
+      <td>disconnect</td>
+      <td>Disconnect. This frees all resources allocated by create.</td>
+    </tr>
+    <tr>
+      <td>write</td>
+      <td>Calls pasynHandle-&gt;write and waits for the operation to
+        complete or time out.</td>
+    </tr>
+    <tr>
+      <td>read</td>
+      <td>Calls pasynHandle-&gt;read and waits for the operation to complete
+        or time out.</td>
+    </tr>
+    <tr>
+      <td>writeOnce</td>
+      <td>This does a connect, write, and disconnect.</td>
+    </tr>
+    <tr>
+      <td>readOnce</td>
+      <td>This does a connect, read, and disconnect.</td>
+    </tr>
+  </tbody>
+</table>
+
+
 
 <center>
 <h2><a name="interposeInterfaces"></a>Standard Interpose Interfaces</h2>
