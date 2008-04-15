@@ -3233,7 +3233,7 @@ any errors that may occur in these calls.  It also needs to explicitly include
 several fields in its drvPvt structure for each interface.
  asynStandardInterfacesBase provides an
 interface that allows port drivers to include a single structure in its
-drvPvt structure, enter just define values in this structure.  It then
+drvPvt structure, and define values in this structure.  It then
 calls a single function to register all interfaces that it supports, and to register
 itself as an interrupt source on one or more of those interfaces.  This can
 reduce the number of lines of code in the driver initialization routine
