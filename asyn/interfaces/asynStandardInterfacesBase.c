@@ -73,6 +73,26 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         }
     }
 
+    if (pInterfaces->uInt32Digital.pinterface) {
+        pInterfaces->uInt32Digital.interfaceType = asynUInt32DigitalType;
+        pInterfaces->uInt32Digital.drvPvt = pPvt;
+        status = pasynUInt32DigitalBase->initialize(portName, &pInterfaces->uInt32Digital);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register uInt32Digital");
+            return(asynError);
+        }
+        if (pInterfaces->uInt32DigitalCanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->uInt32Digital,
+                                                           &pInterfaces->uInt32DigitalInterruptPvt);
+            if (status != asynSuccess) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "Can't register uInt32Digital interrupt");
+                return(asynError);
+            }
+        }
+    }
+
     if (pInterfaces->int32.pinterface) {
         pInterfaces->int32.interfaceType = asynInt32Type;
         pInterfaces->int32.drvPvt = pPvt;
