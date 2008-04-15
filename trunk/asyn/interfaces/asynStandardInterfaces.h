@@ -18,6 +18,7 @@
 #define asynStandardInterfacesH
 
 #include <asynDriver.h>
+#include <asynUInt32Digital.h>
 #include <asynInt32.h>
 #include <asynInt8Array.h>
 #include <asynInt16Array.h>
@@ -44,6 +45,10 @@ typedef struct asynStandardInterfaces {
     int octetInterruptProcess;
     int octetCanInterrupt;
     void *octetInterruptPvt;
+
+    asynInterface uInt32Digital;
+    int uInt32DigitalCanInterrupt;
+    void *uInt32DigitalInterruptPvt;
 
     asynInterface int32;
     int int32CanInterrupt;
