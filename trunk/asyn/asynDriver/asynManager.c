@@ -607,7 +607,7 @@ static BOOL autoConnectDevice(port *pport,device *pdevice)
         epicsMutexUnlock(pport->asynManagerLock);
         connectAttempt(&pdevice->dpc);
         epicsMutexMustLock(pport->asynManagerLock);
-        pport->dpc.autoConnectActive = FALSE;
+        pdevice->dpc.autoConnectActive = FALSE;
     }
     return pdevice->dpc.connected;
 }
