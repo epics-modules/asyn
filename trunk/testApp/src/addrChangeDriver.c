@@ -89,11 +89,7 @@ static asynLockPortNotify lockPortNotify = {lockPort,unlockPort};
 /* asynOctet methods */
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);
-static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 
 
@@ -197,9 +193,7 @@ static int addrChangeDriverInit(const char *portName, const char *lowerPortName,
         return 0;
     }
     pasynOctet->write = writeIt;
-    pasynOctet->writeRaw = writeRaw;
     pasynOctet->read = readIt;
-    pasynOctet->readRaw = readRaw;
     paddrChangePvt->octet.interfaceType = asynOctetType;
     paddrChangePvt->octet.pinterface  = pasynOctet;
     paddrChangePvt->octet.drvPvt = paddrChangePvt;
@@ -388,25 +382,6 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     }
     return status;
 }
-
-static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    lowerPort     *plowerPort = paddrChangePvt->plowerPort;
-    asynOctet     *pasynOctet = plowerPort->pasynOctet;
-    void          *octetPvt = plowerPort->octetPvt;
-    asynStatus    status;
-
-    status = pasynOctet->writeRaw(octetPvt,plowerPort->pasynUser,
-        data,numchars,nbytesTransfered);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s error %s",plowerPort->portName,
-            plowerPort->pasynUser->errorMessage);
-    }
-    return status;
-}
 
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
@@ -418,29 +393,6 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     asynStatus    status;
 
     status = pasynOctet->read(octetPvt,plowerPort->pasynUser,
-        data,maxchars,nbytesTransfered,eomReason);
-    if(status!=asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            " port %s error %s",plowerPort->portName,
-            plowerPort->pasynUser->errorMessage);
-    }
-    pasynOctetBase->callInterruptUsers(pasynUser,paddrChangePvt->pasynPvt,
-        data,nbytesTransfered,eomReason);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,*nbytesTransfered,
-        "addrChangeDriver\n");
-    return status;
-}
-
-static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
-{
-    addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
-    lowerPort     *plowerPort = paddrChangePvt->plowerPort;
-    asynOctet     *pasynOctet = plowerPort->pasynOctet;
-    void          *octetPvt = plowerPort->octetPvt;
-    asynStatus    status;
-
-    status = pasynOctet->readRaw(octetPvt,plowerPort->pasynUser,
         data,maxchars,nbytesTransfered,eomReason);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
