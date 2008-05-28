@@ -57,11 +57,7 @@ epicsShareDef asynOctetBase *pasynOctetBase = &octetBase;
 
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus flushIt(void *drvPvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
@@ -78,18 +74,14 @@ static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
                        char *eos, int eossize, int *eoslen);
 
 static asynOctet octet = {
-    writeIt,writeRaw,readIt,readRaw,flushIt,
+    writeIt,readIt,flushIt,
     registerInterruptUser,cancelInterruptUser,
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
 /*Implementation to replace null methods*/
 static asynStatus writeFail(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);
-static asynStatus writeRawFail(void *drvPvt, asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
 static asynStatus readFail(void *drvPvt, asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus readRawFail(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus flushFail(void *drvPvt,asynUser *pasynUser);
 static asynStatus registerInterruptUserFail(void *drvPvt,asynUser *pasynUser,
@@ -111,10 +103,8 @@ static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
 
     if(!pasynOctet->write) pasynOctet->write = writeFail;
     if(pasynOctet->write == writeFail) override |= overrideWrite;
-    if(!pasynOctet->writeRaw) pasynOctet->writeRaw = writeRawFail;
     if(!pasynOctet->read)  pasynOctet->read = readFail;
     if(pasynOctet->read == readFail) override |=  overrideRead;
-    if(!pasynOctet->readRaw) pasynOctet->readRaw = readRawFail;
     if(!pasynOctet->flush) pasynOctet->flush = flushFail;
     if(pasynOctet->flush == flushFail) override |=  overrideFlush;
     if(!pasynOctet->registerInterruptUser)
@@ -230,20 +220,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     octetPvt  *poctetPvt = (octetPvt *)drvPvt;
     asynOctet *pasynOctet = poctetPvt->pasynOctet;
 
-    if(!(poctetPvt->override&overrideWrite)) {
-        return pasynOctet->write(poctetPvt->drvPvt,
-                                 pasynUser,data,numchars,nbytesTransfered);
-    }
-    return writeRaw(drvPvt,pasynUser,data,numchars,nbytesTransfered);
-}
-
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
-{
-    octetPvt  *poctetPvt = (octetPvt *)drvPvt;
-    asynOctet *pasynOctet = poctetPvt->pasynOctet;
-
-    return pasynOctet->writeRaw(poctetPvt->drvPvt,pasynUser,
+    return pasynOctet->write(poctetPvt->drvPvt,pasynUser,
                       data,numchars,nbytesTransfered);
 }
 
@@ -254,34 +231,13 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     asynOctet  *pasynOctet = poctetPvt->pasynOctet;
     asynStatus status;
 
-    if(!(poctetPvt->override&overrideRead)) {
-        status = pasynOctet->read(poctetPvt->drvPvt,pasynUser,
+    status = pasynOctet->read(poctetPvt->drvPvt,pasynUser,
                                  data,maxchars,nbytesTransfered,eomReason);
-    } else { 
-        status = readRaw(drvPvt,pasynUser,
-           data,maxchars,nbytesTransfered,eomReason);
-    }
     if(status!=asynSuccess) return status;
     if(poctetPvt->interruptProcess)
         callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
             data,nbytesTransfered,eomReason);
     return status;
-}
-
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
-{
-    octetPvt  *poctetPvt = (octetPvt *)drvPvt;
-    asynOctet *pasynOctet = poctetPvt->pasynOctet;
-    asynStatus status;
-
-    status = pasynOctet->readRaw(poctetPvt->drvPvt,pasynUser,
-                 data,maxchars,nbytesTransfered,eomReason);
-    if(status!=asynSuccess) return status;
-    if(poctetPvt->interruptProcess)
-        callInterruptUsers(pasynUser,poctetPvt->pasynPvt,
-            data,nbytesTransfered,eomReason);
-    return asynSuccess;
 }
 
 static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
@@ -431,17 +387,9 @@ static asynStatus writeFail(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
 { return showFailure(pasynUser,"write");}
 
-static asynStatus writeRawFail(void *drvPvt, asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
-{ return showFailure(pasynUser,"writeRaw");}
-
 static asynStatus readFail(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 { return showFailure(pasynUser,"read");}
-
-static asynStatus readRawFail(void *drvPvt, asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
-{ return showFailure(pasynUser,"readRaw");}
 
 static asynStatus flushFail(void *drvPvt,asynUser *pasynUser)
 { return showFailure(pasynUser,"flush");}

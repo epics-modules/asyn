@@ -11,14 +11,46 @@ alink="#FF0000">
 
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
-
 </center>
 <hr>
 
 <center>
 <h2>Release 4-x</h2>
+
 <h2>xxxxx xx, 2008</h2>
 </center>
+
+<h3>asynOctet</h3>
+
+<p>Ths asynOctet <strong>writeRaw</strong> and <strong>readRaw</strong>
+methods have been removed. In most cases, if your code now calls readRaw or
+writeRaw it should be safe to simply change these calls to their non-Raw
+equivalent. If you're paranoid about someone interposing the end-of-string
+processing layer you could add something like the following to ensure that
+there is no end-of-string to match:</p>
+<pre>pasynOctet-&gt;setInputEos(asynOctetPvt,pasynUser,NULL,0);</pre>
+
+<p>If you need to switch to 'raw' mode for a while and then back to 'eos
+mode', you can use code similar to that in
+devGpib.c:readArbitraryBlockProgramData:</p>
+<pre>char saveEosBuf[5];
+int saveEosLen;
+.
+.
+.
+status = pasynOctet-&gt;getInputEos(asynOctetPvt,pasynUser,saveEosBuf,sizeof saveEosBuf,&amp;saveEosLen);
+if (status != asynSuccess) {
+    epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,"Device EOS too long!");
+    return -1;
+}
+if (saveEosLen)
+pasynOctet-&gt;setInputEos(asynOctetPvt,pasynUser,NULL,0);
+.
+.
+.
+.
+if (saveEosLen)
+    pasynOctet-&gt;setInputEos(asynOctetPvt,pasynUser,saveEos,saveEosLen);</pre>
 
 <h3>asynManager</h3>
 
@@ -26,125 +58,137 @@ alink="#FF0000">
 
 <h3>drvAsynIPPort</h3>
 
-<p>Cleaned up timeout handling. </p>
-<p>Fix memory leak (one epicsAtExit entry was allocated for every connect).</p>
-<p>asynReport no longer reports as connected a port which has successfully disconnected.
-<p>Improved diagnostic messages.
+<p>Cleaned up timeout handling.</p>
+
+<p>Fix memory leak (one epicsAtExit entry was allocated for every
+connect).</p>
+
+<p>asynReport no longer reports as connected a port which has successfully
+disconnected.</p>
+
+<p>Improved diagnostic messages.</p>
 
 <h3>interfaces</h3>
-<p>Added three new array interfaces, asynInt8Array, asynInt16Array, and asynFloat32Array.  
-asynInt8Array and asynInt16Array are the same as asynInt32Array except that the data types
-are for epicsInt8 and epicsInt16 respectively. asynFloat32Array is the same as asynFloat64Array
-except that the data type is for epicsFloat32.</p>
+
+<p>Added three new array interfaces, asynInt8Array, asynInt16Array, and
+asynFloat32Array. asynInt8Array and asynInt16Array are the same as
+asynInt32Array except that the data types are for epicsInt8 and epicsInt16
+respectively. asynFloat32Array is the same as asynFloat64Array except that
+the data type is for epicsFloat32.</p>
 
 <p>Added asyn(XXX)ArraySyncIO for synchronous I/O to all array interfaces.</p>
 
-<p>Added new asynHandle interface.  The datatype for this interface is void*, so it can be used to
-pass a pointer (handle) to anything.  Includes asynHandelSyncIO for synchronous I/O.</p>
+<p>Added new asynHandle interface.  The datatype for this interface is void*,
+so it can be used to pass a pointer (handle) to anything.  Includes
+asynHandelSyncIO for synchronous I/O.</p>
 
-<p>Added asynStandardInterfaces.h and asynStandardInterfacesBase.c to simplify driver initialization
-when using the standard asyn interfaces defined in asyn/interfaces (common, octet, int32, etc.)  </p>
-
+<p>Added asynStandardInterfaces.h and asynStandardInterfacesBase.c to
+simplify driver initialization when using the standard asyn interfaces
+defined in asyn/interfaces (common, octet, int32, etc.)</p>
 
 <h3>devEpics</h3>
-<p>Added waveform record device support for the asynInt8Array, asynInt16Array, and asynFloat32Array interfaces.
-These are the same as devAsynInt32Array and devAsynFloat64Array with changes to the data types.
+
+<p>Added waveform record device support for the asynInt8Array,
+asynInt16Array, and asynFloat32Array interfaces. These are the same as
+devAsynInt32Array and devAsynFloat64Array with changes to the data types.</p>
 
 <h3>asynShellCommands</h3>
-<p>Remove duplicate windows function decorations.
+
+<p>Remove duplicate windows function decorations.</p>
 
 <h3>asynInterposeEos</h3>
-<p>Improved diagnostic messages.
 
+<p>Improved diagnostic messages.</p>
 
 <center>
 <h2>Release 4-9</h2>
+
 <h2>October 19, 2007</h2>
 </center>
 
 <h3>devEpics</h3>
 
-<p>Replaced scanIoRequest with direct call to rset->process in interrupt callback routines
-in all device support.
-Without this fix if another interrupt occurred before the first scanIoRequest was complete bad
-things could happen.  The data from the first interrupt would be lost, and the read 
-function in the driver would be called when it should not have been.
+<p>Replaced scanIoRequest with direct call to rset-&gt;process in interrupt
+callback routines in all device support. Without this fix if another
+interrupt occurred before the first scanIoRequest was complete bad things
+could happen.  The data from the first interrupt would be lost, and the read
+function in the driver would be called when it should not have been.</p>
 
 <h3>drvAsynSerialPort</h3>
-<p>Added support for 28,800 baud for those architectures which support this unusual speed.
-<p>Added stub routines for WIN32 so that a separate DBD file is no longer needed.
+
+<p>Added support for 28,800 baud for those architectures which support this
+unusual speed.</p>
+
+<p>Added stub routines for WIN32 so that a separate DBD file is no longer
+needed.</p>
 
 <h3>drvAsynIpPort</h3>
-<p>Added short delay in cleanup routine so sockets would close cleanly.
+
+<p>Added short delay in cleanup routine so sockets would close cleanly.</p>
 
 <h3>asynInterposeEos.c</h3>
 
-<p>Fixed bug which caused asynOctetRead() to return prematurely with 
-eomReason=ASYN_EOM_CNT if the port
-driver returned 600 bytes in readRaw().
-
+<p>Fixed bug which caused asynOctetRead() to return prematurely with
+eomReason=ASYN_EOM_CNT if the port driver returned 600 bytes in readRaw().</p>
 
 <h3>RTEMS</h3>
 
-<p>Build driver for Greensprings IP-488 if IPAC is defined in configure/RELEASE.
+<p>Build driver for Greensprings IP-488 if IPAC is defined in
+configure/RELEASE.</p>
 
 <h3>VXI11</h3>
-<p>Added stub routines for WIN32 so that a separate DBD file is no longer needed.
+
+<p>Added stub routines for WIN32 so that a separate DBD file is no longer
+needed.</p>
 
 <h3>VXI-11</h3>
 
-<p>Avoid duplicate clnt_destroy operations.
-
+<p>Avoid duplicate clnt_destroy operations.</p>
 
 <center>
 <h2>Release 4-8</h2>
+
 <h2>April 28, 2007</h2>
 </center>
 
 <h3>devEpics/devAsynInt32</h3>
 
-<p>Added support for link specification of
-<pre>
-@asynMask(portName,addr,nbits,timeout)drvParams
-</pre>
-in addition to the previous support for 
-<pre>
-@asyn(portName,addr,timeout)drvParams
-</pre>
-This allows device support to work with drivers that cannot return
-meaningful values in pasynInt32->getBounds because they do not know
-the range of the device.  This is true, for example of Modbus ADCs.
-The nbits parameter is defined as follows:
-<pre>
-nbits > 0  Device is unipolar with a range from 0 to 2^nbits-1 <BR>
-nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
+<p>Added support for link specification of</p>
+<pre>@asynMask(portName,addr,nbits,timeout)drvParams</pre>
+in addition to the previous support for
+<pre>@asyn(portName,addr,timeout)drvParams</pre>
+This allows device support to work with drivers that cannot return meaningful
+values in pasynInt32-&gt;getBounds because they do not know the range of the
+device.  This is true, for example of Modbus ADCs. The nbits parameter is
+defined as follows:
+<pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1 <br>
+nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
            Values returned on the asynInt32 interface will be sign extended
-           using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
-</pre>
+           using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).</pre>
 
 <h3>devEpics/devAsynInt32Array, devAsynFloat64Array</h3>
 
-<p>Added support for callbacks from driver to device support.  
-This allows waveform records to have I/O Intr scanning, as already
-supported for other records in devEpics.</p>
+<p>Added support for callbacks from driver to device support. This allows
+waveform records to have I/O Intr scanning, as already supported for other
+records in devEpics.</p>
 
 <h3>devEpics/asynEpicsUtils</h3>
 
-<p>Changed parser so it requires an exact match to "asyn("
-or "asynMask(".
-Previously it tolerated other characters before the "(",
-and in particular it accepted "asynMask(" when "asyn(" was expected.
-Note that this change could cause problems with database files if they
-did not follow the documented syntax, which has no white space
-between "asyn" or "asynMask" and the "(" character.</p>
+<p>Changed parser so it requires an exact match to "asyn(" or "asynMask(".
+Previously it tolerated other characters before the "(", and in particular it
+accepted "asynMask(" when "asyn(" was expected. Note that this change could
+cause problems with database files if they did not follow the documented
+syntax, which has no white space between "asyn" or "asynMask" and the "("
+character.</p>
 
 <h3>asynManager</h3>
 
 <p>Fix errors in format strings for asynPrint.</p>
 
-<p>Temporary fix to asynReport thread for Cygwin.  If the amount of output is small
-the thread exists for a very short time, and this causes a crash.  The fix is a short
-wait, but it should really be fixed in base/src/libCom/osi/os/posix/osdThread.c.</p>
+<p>Temporary fix to asynReport thread for Cygwin.  If the amount of output is
+small the thread exists for a very short time, and this causes a crash.  The
+fix is a short wait, but it should really be fixed in
+base/src/libCom/osi/os/posix/osdThread.c.</p>
 
 <h3>testIPServerApp</h3>
 
@@ -156,18 +200,18 @@ wait, but it should really be fixed in base/src/libCom/osi/os/posix/osdThread.c.
 
 <h3>drvAsynIPPort</h3>
 
-<p>Close sockets on application exit.  
-This is very important for vxWorks, otherwise sockets are not closed cleanly which often leads to problems
-when the IOC reboots.</p>
+<p>Close sockets on application exit. This is very important for vxWorks,
+otherwise sockets are not closed cleanly which often leads to problems when
+the IOC reboots.</p>
 
 <h3>drvGsIP488</h3>
 
-<p>Hold off SRQ callbacks until iocInit.</P>
-
+<p>Hold off SRQ callbacks until iocInit.</p>
 <hr>
 
 <center>
 <h2>Release 4-7</h2>
+
 <h2>February 28, 2007</h2>
 </center>
 
@@ -783,10 +827,10 @@ by asynRecord.</p>
     passed an additional  argument through which they store the actual number
     of characters read or written.</li>
   <li>The createSocket method in the asynSyncIO interface has been replaced
-    by openSocket.&nbsp; openSocket does not call asynSyncIO-&gt;connect(),
-    that must now be done by the caller.</li>
-  <li>Removed code for "flush" from gpib drivers.&nbsp; The implementation
-    caused infinite loops on devices that speak when not spoken to.</li>
+    by openSocket.  openSocket does not call asynSyncIO-&gt;connect(), that
+    must now be done by the caller.</li>
+  <li>Removed code for "flush" from gpib drivers.  The implementation caused
+    infinite loops on devices that speak when not spoken to.</li>
   <li>asynRecord
     <ul>
       <li>asynOctetRecord has been renamed to asynRecord</li>

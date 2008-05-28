@@ -96,11 +96,9 @@ static void report(void *drvPvt,FILE *fd,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
-static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
+    const char *data,size_t maxchars,size_t *nbytesTransfered);
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
-static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
@@ -126,9 +124,8 @@ static asynCommon common = {
    report,connect,disconnect
 };
 
-/*NOTE: Since gpib does not support outputEos just use writeRaw for write*/
 static asynOctet octet = {
-    writeRaw,writeRaw,readIt,readRaw,gpibFlush, 0,0,setInputEos, getInputEos,0,0
+    writeIt,readIt,gpibFlush, 0,0,setInputEos, getInputEos,0,0
 };
 
 static asynGpib gpib = {
@@ -387,7 +384,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 /*asynOctet methods */
-static asynStatus writeRaw(void *drvPvt,asynUser *pasynUser,
+static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
 {
     int nt;
@@ -422,23 +419,6 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     *nbytesTransfered = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
         data,nbytesTransfered,eomReason);
-    return status;
-}
-
-static asynStatus readRaw(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
-{
-    int nt;
-    asynStatus status;
-    GETgpibPvtasynGpibPort
-
-    status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
-               data,(int)maxchars,&nt,eomReason);
-    if(nbytesTransfered) *nbytesTransfered = (size_t)nt;
-    if(status==asynSuccess) {
-        pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
-            data,nbytesTransfered,eomReason);
-    }
     return status;
 }
 

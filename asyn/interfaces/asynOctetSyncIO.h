@@ -33,11 +33,7 @@ typedef struct asynOctetSyncIO {
    asynStatus (*openSocket)(const char *server, int port, char **portName);
    asynStatus (*write)(asynUser *pasynUser, char const *buffer, size_t buffer_len,
                   double timeout,size_t *nbytesTransfered);
-   asynStatus (*writeRaw)(asynUser *pasynUser,char const *buffer,size_t buffer_len,
-                  double timeout,size_t *nbytesTransfered);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len, 
-                  double timeout, size_t *nbytesTransfered,int *eomReason);
-   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, size_t buffer_len, 
                   double timeout, size_t *nbytesTransfered,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, size_t write_buffer_len,
@@ -56,13 +52,7 @@ typedef struct asynOctetSyncIO {
    asynStatus (*writeOnce)(const char *port, int addr,
                   char const *buffer, size_t buffer_len, double timeout,
                   size_t *nbytesTransfered, const char *drvInfo);
-   asynStatus (*writeRawOnce)(const char *port, int addr,
-                  char const *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
-                  char *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
-   asynStatus (*readRawOnce)(const char *port, int addr,
                   char *buffer, size_t buffer_len, double timeout,
                   size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,

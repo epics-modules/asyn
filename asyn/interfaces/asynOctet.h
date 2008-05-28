@@ -36,12 +36,7 @@ typedef struct asynOctetInterrupt {
 typedef struct asynOctet{
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
                     const char *data,size_t numchars,size_t *nbytesTransfered);
-    asynStatus (*writeRaw)(void *drvPvt,asynUser *pasynUser,
-                    const char *data,size_t numchars,size_t *nbytesTransfered);
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                    char *data,size_t maxchars,size_t *nbytesTransfered,
-                    int *eomReason);
-    asynStatus (*readRaw)(void *drvPvt,asynUser *pasynUser,
                     char *data,size_t maxchars,size_t *nbytesTransfered,
                     int *eomReason);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);

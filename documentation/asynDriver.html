@@ -1895,12 +1895,7 @@ typedef struct asynOctetInterrupt {
 typedef struct asynOctet{
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
                     const char *data,size_t numchars,size_t *nbytesTransfered);
-    asynStatus (*writeRaw)(void *drvPvt,asynUser *pasynUser,
-                    const char *data,size_t numchars,size_t *nbytesTransfered);
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                    char *data,size_t maxchars,size_t *nbytesTransfered,
-                    int *eomReason);
-    asynStatus (*readRaw)(void *drvPvt,asynUser *pasynUser,
                     char *data,size_t maxchars,size_t *nbytesTransfered,
                     int *eomReason);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
@@ -1949,12 +1944,6 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
         included in *nbytesTransfered.</td>
     </tr>
     <tr>
-      <td>writeRaw</td>
-      <td>Send a message to the device.  *nbytesTransfered is the number of
-        8-bit bytes sent to the device. Interpose or driver code must not add
-        end of string terminators to the message.</td>
-    </tr>
-    <tr>
       <td>read</td>
       <td>Read a message from the device.  *nbytesTransfered is the number of
         8-bit bytes read from the device. If read returns asynSuccess than
@@ -1963,15 +1952,6 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
         may strip end of string terminators from the message. If it does the
         first eos character will be replaced by null and the eos characters
         will not be included in nbytesTransfered.</td>
-    </tr>
-    <tr>
-      <td>readRaw</td>
-      <td>Read a message from the device.  *nbytesTransfered is the number of
-        8-bit bytes read from the device. If read returns asynSuccess than
-        eomReason tells why the read completed. Interpose or driver code must
-        not strip end of string terminators from the message. Note that for
-        standard serial support, readRaw will return as soon as it has input.
-        Thus the caller may receive partial messages.</td>
     </tr>
     <tr>
       <td>flush</td>
@@ -2037,7 +2017,7 @@ style="font-family: courier">asyn/testApp/src/echoDriver.c</span></p>
         implementations. If the port is not multi-device and either
         processEosIn or processEosOut is specified, asynInterposeEosConfig is
         called. If the port is not multi-device and interruptProcess is
-        specified, then whenever read or readRaw is called, asynBase calls
+        specified, then whenever read is called, asynBase calls
         all the registered interrupt users. asynOctetBase can not implement
         processEosIn, processEosOut, and interruptProcess if the port is a
         multi-device port. Since this method is called only during
@@ -2068,12 +2048,7 @@ document.</p>
    asynStatus (*write)(asynUser *pasynUser,
                   char const *buffer, size_t buffer_len,
                   double timeout,size_t *nbytesTransfered);
-   asynStatus (*writeRaw)(asynUser *pasynUser,
-                  char const *buffer,size_t buffer_len,
-                  double timeout,size_t *nbytesTransfered);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len,
-                  double timeout, size_t *nbytesTransfered,int *eomReason);
-   asynStatus (*readRaw)(asynUser *pasynUser, char *buffer, size_t buffer_len,
                   double timeout, size_t *nbytesTransfered,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, size_t write_buffer_len,
@@ -2092,13 +2067,7 @@ document.</p>
    asynStatus (*writeOnce)(const char *port, int addr,
                   char const *buffer, size_t buffer_len, double timeout,
                   size_t *nbytesTransfered, const char *drvInfo);
-   asynStatus (*writeRawOnce)(const char *port, int addr,
-                  char const *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
-                  char *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
-   asynStatus (*readRawOnce)(const char *port, int addr,
                   char *buffer, size_t buffer_len, double timeout,
                   size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,
@@ -2144,18 +2113,8 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         or time out.</td>
     </tr>
     <tr>
-      <td>writeRaw</td>
-      <td>Calls asynOctet-&gt;writeRaw and waits for the operation to
-        complete or time out.</td>
-    </tr>
-    <tr>
       <td>read</td>
       <td>Calls asynOctet-&gt;read. Waits for the operation to complete or
-        time out.</td>
-    </tr>
-    <tr>
-      <td>readRaw</td>
-      <td>Calls asynOctet-&gt;readRaw. Waits for the operation to complete or
         time out.</td>
     </tr>
     <tr>
@@ -2187,10 +2146,6 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     <tr>
       <td>writeOnce</td>
       <td>This does a connect, write, and disconnect.</td>
-    </tr>
-    <tr>
-      <td>writeRawOnce</td>
-      <td>This does a connect, writeRaw, and disconnect.</td>
     </tr>
     <tr>
       <td>readOnce</td>
@@ -4539,10 +4494,10 @@ where the arguments are:
     processEosIn and processEosOut.</li>
 </ul>
 
-<p>Only asynOctet methods writeRaw, readRaw, and flush are implemented.
+<p>Only asynOctet methods write, read, and flush are implemented.
 Calling the other methods will result in an error unless asynInterposeEos is
-used for the other asunOctet methods. readRaw blocks until at least one
-character has been received or until a timeout occurs. readRaw transfers as
+used for the other asunOctet methods. read blocks until at least one
+character has been received or until a timeout occurs. read transfers as
 many characters as possible, limited by the specified count.</p>
 
 <p>There are no asynSetOption key/value pairs associated with drvAsynIPPort
