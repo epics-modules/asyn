@@ -110,8 +110,8 @@ static int echoDriverInit(const char *dn, double delay,
         return 0;
     }
 
-    pasynOctet->writeRaw = echoWrite;
-    pasynOctet->readRaw = echoRead;
+    pasynOctet->write = echoWrite;
+    pasynOctet->read = echoRead;
     pasynOctet->flush = echoFlush;
     pasynOctet->setInputEos = setEos;
     pasynOctet->getInputEos = getEos;
