@@ -52,6 +52,16 @@ pasynOctet-&gt;setInputEos(asynOctetPvt,pasynUser,NULL,0);
 if (saveEosLen)
     pasynOctet-&gt;setInputEos(asynOctetPvt,pasynUser,saveEos,saveEosLen);</pre>
 
+<p></p>
+
+<p>When compiling your code against this new version of asyn you should pay
+particular attention to warning messages of the form "warning: initialization
+from incompatible pointer type". These are a good indication that you're
+initializing an <strong>asynOctet</strong> structure with the old-style I/O
+methods.</p>
+
+<p></p>
+
 <h3>asynManager</h3>
 
 <p>Add a strStatus method to convert an asynStatus code to a string.</p>
