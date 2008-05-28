@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.48 2008-04-09 21:53:39 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.49 2008-05-28 18:58:52 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -311,7 +311,7 @@ disconnect(void *drvPvt, asynUser *pasynUser)
 /*
  * Write to the TCP port
  */
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -393,7 +393,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 /*
  * Read from the TCP port
  */
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -645,8 +645,8 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    pasynOctet->readRaw = readRaw;
-    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->read = readIt;
+    pasynOctet->write = writeIt;
     pasynOctet->flush = flushIt;
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = pasynOctet;

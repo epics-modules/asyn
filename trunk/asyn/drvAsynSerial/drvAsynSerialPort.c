@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.45 2008-04-09 16:18:44 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.46 2008-05-28 18:58:52 norume Exp $
  */
 
 #include <string.h>
@@ -619,7 +619,7 @@ setOption(void *drvPvt, asynUser *pasynUser,
 /*
  * Write to the serial line
  */
-static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data, size_t numchars,size_t *nbytesTransfered)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -707,7 +707,7 @@ static asynStatus writeRaw(void *drvPvt, asynUser *pasynUser,
 /*
  * Read from the serial line
  */
-static asynStatus readRaw(void *drvPvt, asynUser *pasynUser,
+static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
@@ -965,8 +965,8 @@ drvAsynSerialPortConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    pasynOctet->readRaw = readRaw;
-    pasynOctet->writeRaw = writeRaw;
+    pasynOctet->read = readIt;
+    pasynOctet->write = writeIt;
     pasynOctet->flush = flushIt;
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = pasynOctet;

@@ -59,7 +59,7 @@ int E5810Reboot(char * inetAddr,char *password)
     epicsThreadSleep(1.0);
     nbytes = send(fd,password,strlen(password),0);
     if(nbytes!=strlen(password)) 
-        printf("nbytes %d expected %d\n",nbytes,strlen(password));
+        printf("nbytes %d expected %d\n",nbytes,(int)strlen(password));
     epicsThreadSleep(1.0);
     nbytes = send(fd,"\ny\n",3,0);
     if(nbytes!=3) printf("nbytes %d expected 3\n",nbytes);
