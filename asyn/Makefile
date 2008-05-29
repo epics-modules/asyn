@@ -19,7 +19,9 @@ asyn_SYS_LIBS_WIN32 = ws2_32
 
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
+INC += epicsInterruptibleSyscall.h
 asyn_SRCS += asynManager.c
+asyn_SRCS += epicsInterruptibleSyscall.c
 
 SRC_DIRS += $(ASYN)/asynGpib
 INC += asynGpibDriver.h
