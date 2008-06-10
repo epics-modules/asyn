@@ -50,6 +50,17 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         }
     }
 
+    if (pInterfaces->option.pinterface) {
+        pInterfaces->option.interfaceType = asynOptionType;
+        pInterfaces->option.drvPvt = pPvt;
+        status = pasynManager->registerInterface(portName, &pInterfaces->option);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register option");
+            return(asynError);
+        }
+    }
+
     if (pInterfaces->octet.pinterface) {
         pInterfaces->octet.interfaceType = asynOctetType;
         pInterfaces->octet.drvPvt = pPvt;
@@ -233,21 +244,21 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         }
     }
 
-    if (pInterfaces->handle.pinterface) {
-        pInterfaces->handle.interfaceType = asynHandleType;
-        pInterfaces->handle.drvPvt = pPvt;
-        status = pasynHandleBase->initialize(portName, &pInterfaces->handle);
+    if (pInterfaces->genericPointer.pinterface) {
+        pInterfaces->genericPointer.interfaceType = asynGenericPointerType;
+        pInterfaces->genericPointer.drvPvt = pPvt;
+        status = pasynGenericPointerBase->initialize(portName, &pInterfaces->genericPointer);
         if (status != asynSuccess) {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-            "Can't register handle");
+            "Can't register genericPointer");
             return(asynError);
         }
-        if (pInterfaces->handleCanInterrupt) {
-            status = pasynManager->registerInterruptSource(portName, &pInterfaces->handle,
-                                                           &pInterfaces->handleInterruptPvt);
+        if (pInterfaces->genericPointerCanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->genericPointer,
+                                                           &pInterfaces->genericPointerInterruptPvt);
             if (status != asynSuccess) {
                 epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                "Can't register handle interrupt");
+                "Can't register genericPointer interrupt");
                 return(asynError);
             }
         }
