@@ -34,6 +34,8 @@
 #include <menuConvert.h>
 #include <longinRecord.h>
 #include <longoutRecord.h>
+#include <biRecord.h>
+#include <boRecord.h>
 #include <mbbiRecord.h>
 #include <mbboRecord.h>
 #include <recSup.h>
@@ -93,6 +95,8 @@ static long initAiAverage(aiRecord *pai);
 static long initAo(aoRecord *pao);
 static long initLi(longinRecord *pli);
 static long initLo(longoutRecord *plo);
+static long initBi(biRecord *pbi);
+static long initBo(boRecord *pbo);
 static long initMbbi(mbbiRecord *pmbbi);
 static long initMbbo(mbboRecord *pmbbo);
 static long processAi(aiRecord *pr);
@@ -100,6 +104,8 @@ static long processAiAverage(aiRecord *pr);
 static long processAo(aoRecord *pr);
 static long processLi(longinRecord *pr);
 static long processLo(longoutRecord *pr);
+static long processBi(biRecord *pr);
+static long processBo(boRecord *pr);
 static long processMbbi(mbbiRecord *pr);
 static long processMbbo(mbboRecord *pr);
 
@@ -123,6 +129,10 @@ analogDset asynLiInt32 = {
     5,0,0,initLi,       getIoIntInfo, processLi };
 analogDset asynLoInt32 = {
     5,0,0,initLo,       getIoIntInfo, processLo };
+analogDset asynBiInt32 = {
+    5,0,0,initBi,     getIoIntInfo, processBi };
+analogDset asynBoInt32 = {
+    5,0,0,initBo,     getIoIntInfo, processBo };
 analogDset asynMbbiInt32 = {
     5,0,0,initMbbi,     getIoIntInfo, processMbbi };
 analogDset asynMbboInt32 = {
@@ -133,6 +143,8 @@ epicsExportAddress(dset, asynAiInt32Average);
 epicsExportAddress(dset, asynAoInt32);
 epicsExportAddress(dset, asynLiInt32);
 epicsExportAddress(dset, asynLoInt32);
+epicsExportAddress(dset, asynBiInt32);
+epicsExportAddress(dset, asynBoInt32);
 epicsExportAddress(dset, asynMbbiInt32);
 epicsExportAddress(dset, asynMbboInt32);
 
@@ -633,6 +645,88 @@ static long processLo(longoutRecord *pr)
         if(status != asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 queueRequest %s\n",
+                pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+        }
+    }
+    pPvt->gotValue = 0;
+    return 0;
+}
+
+
+static long initBi(biRecord *pr)
+{
+    devInt32Pvt *pPvt;
+    asynStatus status;
+
+    status = initCommon((dbCommon *)pr,&pr->inp,
+        processCallbackInput,interruptCallbackInput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    return 0;
+}
+
+static long processBi(biRecord *pr)
+{
+    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    int status;
+
+    if(!pPvt->gotValue && !pr->pact) {
+        if(pPvt->canBlock) pr->pact = 1;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynInt32 queueRequest %s\n", 
+                pr->name,pPvt->pasynUser->errorMessage);
+            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+        } 
+    }
+    if(pPvt->status==asynSuccess) {
+        pr->rval = pPvt->value; pr->udf=0;
+    }
+    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    return 0;
+}
+
+static long initBo(boRecord *pr)
+{
+    devInt32Pvt *pPvt;
+    asynStatus status;
+    epicsInt32 value;
+
+    status = initCommon((dbCommon *)pr,&pr->out,
+        processCallbackOutput,interruptCallbackOutput);
+    if (status != asynSuccess) return 0;
+    pPvt = pr->dpvt;
+    /* Read the current value from the device */
+    status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
+                      &value, pPvt->pasynUser->timeout);
+    if (status == asynSuccess) {
+        pr->rval = value;
+        return 0;
+    }
+    return 2;
+}
+static long processBo(boRecord *pr)
+{
+    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    int status;
+
+    if(pPvt->gotValue) {
+        pr->rval = pPvt->value;
+        pr->val = (pr->rval) ? 1 : 0;
+        pr->udf = 0;
+    } else if(pr->pact == 0) {
+        pPvt->gotValue = 1; pPvt->value = pr->rval;
+        if(pPvt->canBlock) pr->pact = 1;
+        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        if(status != asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynInt32::processCommon, error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
             recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
