@@ -26,9 +26,10 @@
 #include <asynFloat32Array.h>
 #include <asynFloat64.h>
 #include <asynFloat64Array.h>
-#include <asynHandle.h>
+#include <asynGenericPointer.h>
 #include <asynOctet.h>
 #include <asynDrvUser.h>
+#include <asynOption.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,6 +39,8 @@ typedef struct asynStandardInterfaces {
     asynInterface common;
 
     asynInterface drvUser;
+
+    asynInterface option;
 
     asynInterface octet;
     int octetProcessEosIn;
@@ -78,9 +81,9 @@ typedef struct asynStandardInterfaces {
     int float64ArrayCanInterrupt;
     void *float64ArrayInterruptPvt;
 
-    asynInterface handle;
-    int handleCanInterrupt;
-    void *handleInterruptPvt;
+    asynInterface genericPointer;
+    int genericPointerCanInterrupt;
+    void *genericPointerInterruptPvt;
 
 } asynStandardInterfaces;
 
