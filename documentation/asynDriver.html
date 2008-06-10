@@ -2191,7 +2191,7 @@ provided for:</p>
   <li>Int32Array - Arrays of 32 bit integers.</li>
   <li>Float32Array - Arrays of single precision floats.</li>
   <li>Float64Array - Arrays of double precision floats.</li>
-  <li>Handle - void* pointer.</li>
+  <li>GenericPointer - void* pointer.</li>
 </ul>
 
 <p>Note that hardware may have registers with smaller sizes, e.g. 16 bit
@@ -3020,46 +3020,46 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
   </tbody>
 </table>
 
-<h3>asynHandle</h3>
+<h3>asynGenericPointer</h3>
 
-<p>asynHandle  describes the methods for communicating via void* pointers.  
+<p>asynGenericPointer  describes the methods for communicating via void* pointers.  
 asyn clients and port drivers must agree on the type of object that is being pointed to!</p>
 <pre>
-typedef void (*interruptCallbackHandle)(void *userPvt, asynUser *pasynUser,
+typedef void (*interruptCallbackGenericPointer)(void *userPvt, asynUser *pasynUser,
             void *pdata);
-typedef struct asynHandleInterrupt {
+typedef struct asynGenericPointerInterrupt {
     asynUser *pasynUser;
     int addr;
-    interruptCallbackHandle callback;
+    interruptCallbackGenericPointer callback;
     void *userPvt;
-} asynHandleInterrupt;
-#define asynHandleType "asynHandle"
-typedef struct asynHandle {
+} asynGenericPointerInterrupt;
+#define asynGenericPointerType "asynGenericPointer"
+typedef struct asynGenericPointer {
     asynStatus (*write)(void *drvPvt, asynUser *pasynUser, void *pvalue);
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser, void *pvalue);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-        interruptCallbackHandle callback, void *userPvt,void **registrarPvt);
+        interruptCallbackGenericPointer callback, void *userPvt,void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                     void *registrarPvt);
-} asynHandle;
+} asynGenericPointer;
 
-/* asynHandleBase does the following:
-   calls  registerInterface for asynHandle.
+/* asynGenericPointerBase does the following:
+   calls  registerInterface for asynGenericPointer.
    Implements registerInterruptUser and cancelInterruptUser
    Provides default implementations of all methods.
    registerInterruptUser and cancelInterruptUser can be called
    directly rather than via queueRequest.
 */
 
-#define asynHandleBaseType "asynHandleBase"
-typedef struct asynHandleBase {
+#define asynGenericPointerBaseType "asynGenericPointerBase"
+typedef struct asynGenericPointerBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pasynHandleInterface);
-} asynHandleBase;
-epicsShareExtern asynHandleBase *pasynHandleBase;</pre>
+                            asynInterface *pasynGenericPointerInterface);
+} asynGenericPointerBase;
+epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;</pre>
 
 <table border="1">
-  <caption>asynHandle</caption>
+  <caption>asynGenericPointer</caption>
   <tbody>
     <tr>
       <td>write</td>
@@ -3085,12 +3085,12 @@ epicsShareExtern asynHandleBase *pasynHandleBase;</pre>
 
 <p></p>
 <table border="1">
-  <caption>asynHandleBase</caption>
+  <caption>asynGenericPointerBase</caption>
   <tbody>
     <tr>
       <td>initialize</td>
       <td>After a driver calls registerPort it can call:
-        <pre>pasynHandleBase-&gt;initialize(...</pre>
+        <pre>pasynGenericPointerBase-&gt;initialize(...</pre>
         Any null methods in the asynInterface are replaced by default
         implementations.</td>
     </tr>
@@ -3100,7 +3100,7 @@ epicsShareExtern asynHandleBase *pasynHandleBase;</pre>
 <p>The default implementation of each method does the following:</p>
 
 <table border="1">
-  <caption>asynHandle</caption>
+  <caption>asynGenericPointer</caption>
   <tbody>
     <tr>
       <td>write</td>
@@ -3123,12 +3123,12 @@ epicsShareExtern asynHandleBase *pasynHandleBase;</pre>
   </tbody>
 </table>
 
-<h3>asynHandleSyncIO</h3>
+<h3>asynGenericPointerSyncIO</h3>
 
-<p>asynHandleSyncIO describes a synchronous interrace to asynHandle. The
+<p>asynGenericPointerSyncIO describes a synchronous interrace to asynGenericPointer. The
 code that calls it must be willing to block.</p>
-<pre>#define asynHandleSyncIOType "asynHandleSyncIO"
-typedef struct asynHandleSyncIO {
+<pre>#define asynGenericPointerSyncIOType "asynGenericPointerSyncIO"
+typedef struct asynGenericPointerSyncIO {
     asynStatus (*connect)(const char *port, int addr,
                        asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
@@ -3138,11 +3138,11 @@ typedef struct asynHandleSyncIO {
                        void *pvalue,double timeout,const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
                        void *pvalue,double timeout,const char *drvInfo);
-} asynHandleSyncIO;
-epicsShareExtern asynHandleSyncIO *pasynHandleSyncIO;</pre>
+} asynGenericPointerSyncIO;
+epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
 
 <table border="1">
-  <caption>asynHandleSyncIO</caption>
+  <caption>asynGenericPointerSyncIO</caption>
   <tbody>
     <tr>
       <td>connect</td>
@@ -3155,12 +3155,12 @@ epicsShareExtern asynHandleSyncIO *pasynHandleSyncIO;</pre>
     </tr>
     <tr>
       <td>write</td>
-      <td>Calls pasynHandle-&gt;write and waits for the operation to
+      <td>Calls pasynGenericPointer-&gt;write and waits for the operation to
         complete or time out.</td>
     </tr>
     <tr>
       <td>read</td>
-      <td>Calls pasynHandle-&gt;read and waits for the operation to complete
+      <td>Calls pasynGenericPointer-&gt;read and waits for the operation to complete
         or time out.</td>
     </tr>
     <tr>
@@ -3243,9 +3243,9 @@ typedef struct asynStandardInterfaces {
     int float64ArrayCanInterrupt;
     void *float64ArrayInterruptPvt;
 
-    asynInterface handle;
-    int handleCanInterrupt;
-    void *handleInterruptPvt;
+    asynInterface genericPointer;
+    int genericPointerCanInterrupt;
+    void *genericPointerInterruptPvt;
 
 } asynStandardInterfaces;
 </pre>
@@ -3312,7 +3312,7 @@ static asynDrvUser ifaceDrvUser = {
     drvUserDestroy
 };
 
-static asynHandle ifaceHandle = {
+static asynGenericPointer ifaceGenericPointer = {
     writeADImage,
     readADImage
 };
@@ -3345,18 +3345,18 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     pInterfaces = &pPvt->asynStdInterfaces;
     
     /* Initialize interface pointers */
-    pInterfaces->common.pinterface        = (void *)&ifaceCommon;
-    pInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
-    pInterfaces->octet.pinterface         = (void *)&ifaceOctet;
-    pInterfaces->int32.pinterface         = (void *)&ifaceInt32;
-    pInterfaces->float64.pinterface       = (void *)&ifaceFloat64;
-    pInterfaces->handle.pinterface        = (void *)&ifaceHandle;
+    pInterfaces->common.pinterface         = (void *)&ifaceCommon;
+    pInterfaces->drvUser.pinterface        = (void *)&ifaceDrvUser;
+    pInterfaces->octet.pinterface          = (void *)&ifaceOctet;
+    pInterfaces->int32.pinterface          = (void *)&ifaceInt32;
+    pInterfaces->float64.pinterface        = (void *)&ifaceFloat64;
+    pInterfaces->genericPointer.pinterface = (void *)&ifaceGenericPointer;
 
     /* Define which interfaces can generate interrupts */
-    pInterfaces->octetCanInterrupt        = 1;
-    pInterfaces->int32CanInterrupt        = 1;
-    pInterfaces->float64CanInterrupt      = 1;
-    pInterfaces->handleCanInterrupt       = 1;
+    pInterfaces->octetCanInterrupt          = 1;
+    pInterfaces->int32CanInterrupt          = 1;
+    pInterfaces->float64CanInterrupt        = 1;
+    pInterfaces->genericPointerCanInterrupt = 1;
 
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      pPvt->pasynUser, pPvt);
