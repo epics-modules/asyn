@@ -51,7 +51,7 @@ INC += asynInt32Array.h    asynInt32ArraySyncIO.h
 INC += asynFloat32Array.h  asynFloat32ArraySyncIO.h
 INC += asynFloat64Array.h  asynFloat64ArraySyncIO.h
 INC += asynOctet.h         asynOctetSyncIO.h
-INC += asynHandle.h        asynHandleSyncIO.h
+INC += asynGenericPointer.h asynGenericPointerSyncIO.h
 INC += asynCommonSyncIO.h
 INC += asynOption.h
 INC += asynDrvUser.h
@@ -65,7 +65,7 @@ asyn_SRCS += asynFloat64Base.c       asynFloat64SyncIO.c
 asyn_SRCS += asynFloat32ArrayBase.c  asynFloat32ArraySyncIO.c
 asyn_SRCS += asynFloat64ArrayBase.c  asynFloat64ArraySyncIO.c
 asyn_SRCS += asynOctetBase.c         asynOctetSyncIO.c
-asyn_SRCS += asynHandleBase.c        asynHandleSyncIO.c
+asyn_SRCS += asynGenericPointerBase.c  asynGenericPointerSyncIO.c
 asyn_SRCS += asynCommonSyncIO.c
 asyn_SRCS += asynStandardInterfacesBase.c
 
