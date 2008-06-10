@@ -3494,6 +3494,8 @@ ways:</p>
 <pre>device(ai,INST_IO,asynAiInt32,"asynInt32")
 device(ai,INST_IO,asynAiInt32Average,"asynInt32Average")
 device(ao,INST_IO,asynAoInt32,"asynInt32")
+device(bi,INST_IO,asynBiInt32,"asynInt32")
+device(bo,INST_IO,asynBoInt32,"asynInt32")
 device(mbbi,INST_IO,asynMbbiInt32,"asynInt32")
 device(mbbo,INST_IO,asynMbboInt32,"asynInt32")
 device(longin,INST_IO,asynLiInt32,"asynInt32")
@@ -3545,6 +3547,14 @@ nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbit
   </li>
   <li>longoutRecord
     <p>val is written.</p>
+  </li>
+  <li>biRecord
+    <p>A value is given to rval. The mask field in the record is not used. Each
+    time the record is processed a new value is read. SCAN "I/O Intr" is
+    supported similar to aiRecord.</p>
+  </li>
+  <li>boRecord
+    <p>rval is written. The mask field in the record is not used.</p>
   </li>
   <li>mbbiRecord
     <p>A value is given to rval. mask is computed from nobt and shft. Each
