@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.49 2008-05-28 18:58:52 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.50 2008-06-30 20:34:39 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -324,15 +324,14 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
               "%s write.\n", tty->IPDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                 "%s write %d\n", tty->IPDeviceName, numchars);
+    *nbytesTransfered = 0;
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "%s disconnected:", tty->IPDeviceName);
         return asynError;
     }
-    if (numchars == 0) {
-        *nbytesTransfered = 0;
+    if (numchars == 0)
         return asynSuccess;
-    }
     writePollmsec = (int) (pasynUser->timeout * 1000.0);
     if (writePollmsec == 0) writePollmsec = 1;
     if (writePollmsec < 0) writePollmsec = -1;
@@ -349,27 +348,23 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     }
     }
 #endif
+    for (;;) {
 #ifdef USE_POLL
-    {
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
         poll(&pollfd, 1, writePollmsec);
-    }
 #endif
-    for (;;) {
         thisWrite = send(tty->fd, (char *)data, numchars, 0);
-        if (thisWrite >= 0) {
+        if (thisWrite > 0) {
             tty->nWritten += thisWrite;
-            *nbytesTransfered = thisWrite;
-            if (thisWrite == numchars)
-                status = asynSuccess;
-            else
-                status = asynTimeout;
-            break;
+            *nbytesTransfered += thisWrite;
+            numchars -= thisWrite;
+            if (numchars == 0)
+                break;
+            data += thisWrite;
         }
-        else if (SOCKERRNO == SOCK_EWOULDBLOCK) {
-            *nbytesTransfered = 0;
+        else if ((thisWrite == 0) || (SOCKERRNO == SOCK_EWOULDBLOCK)) {
             status = asynTimeout;
             break;
         }
@@ -378,7 +373,6 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
                                      "%s write error: %s", tty->IPDeviceName,
                                                            strerror(SOCKERRNO));
             closeConnection(pasynUser,tty,"Write error");
-            *nbytesTransfered = 0;
             status = asynError;
             break;
         }
