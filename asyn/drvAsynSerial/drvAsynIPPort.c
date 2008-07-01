@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.50 2008-06-30 20:34:39 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.51 2008-07-01 00:18:40 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -353,7 +353,9 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
-        poll(&pollfd, 1, writePollmsec);
+        do {
+            poll(&pollfd, 1, writePollmsec);
+        } while ((pollfd.revents & POLLOUT) == 0);
 #endif
         thisWrite = send(tty->fd, (char *)data, numchars, 0);
         if (thisWrite > 0) {
