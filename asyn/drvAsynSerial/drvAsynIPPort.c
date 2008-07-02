@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.52 2008-07-01 01:20:28 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.53 2008-07-02 21:02:06 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -71,6 +71,9 @@
 
 /* This delay is needed in cleanup() else sockets are not always really closed cleanly */
 #define CLOSE_SOCKET_DELAY 0.02
+/* This delay is how long to wait in seconds after a send fails with errno ==
+ * EAGAIN or EINTR before trying again */
+#define SEND_RETRY_DELAY 0.01
 
 /*
  * This structure holds the hardware-specific information for a single
@@ -318,6 +321,10 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     int thisWrite;
     asynStatus status = asynSuccess;
     int writePollmsec;
+    int epicsTimeStatus;
+    epicsTimeStamp startTime;
+    epicsTimeStamp endTime;
+    int haveStartTime;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -348,20 +355,34 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     }
     }
 #endif
+    haveStartTime = 0;
     for (;;) {
 #ifdef USE_POLL
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
-        do {
-            int p = poll(&pollfd, 1, writePollmsec);
-            if (p < 0)
-                return asynError;
-            if (p == 0)
-                return asynTimeout;
-        } while ((pollfd.revents & POLLOUT) == 0);
+        poll(&pollfd, 1, writePollmsec);
 #endif
-        thisWrite = send(tty->fd, (char *)data, numchars, 0);
+        for (;;) {
+            thisWrite = send(tty->fd, (char *)data, numchars, 0);
+            if (thisWrite >= 0) break;
+            if (SOCKERRNO == SOCK_EWOULDBLOCK || SOCKERRNO == SOCK_EINTR) {
+                if (!haveStartTime) {
+                    epicsTimeStatus = epicsTimeGetCurrent(&startTime);
+                    assert(epicsTimeStatus == epicsTimeOK);
+                    haveStartTime = 1;
+                } else if (pasynUser->timeout >= 0) {
+                    epicsTimeStatus = epicsTimeGetCurrent(&endTime);
+                    assert(epicsTimeStatus == epicsTimeOK);
+                    if (epicsTimeDiffInSeconds(&endTime, &startTime) >
+                            pasynUser->timeout) {
+                        thisWrite = 0;
+                        break;
+                    }
+                }
+                epicsThreadSleep(SEND_RETRY_DELAY);
+            } else break;
+        }
         if (thisWrite > 0) {
             tty->nWritten += thisWrite;
             *nbytesTransfered += thisWrite;
@@ -370,11 +391,11 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
                 break;
             data += thisWrite;
         }
-        else if ((thisWrite == 0) || (SOCKERRNO == SOCK_EWOULDBLOCK)) {
+        else if (thisWrite == 0) {
             status = asynTimeout;
             break;
         }
-        else if (SOCKERRNO != SOCK_EINTR) {
+        else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                      "%s write error: %s", tty->IPDeviceName,
                                                            strerror(SOCKERRNO));
