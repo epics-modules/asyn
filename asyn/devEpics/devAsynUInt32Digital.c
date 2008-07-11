@@ -24,6 +24,7 @@
 #include <link.h>
 #include <epicsPrint.h>
 #include <epicsMutex.h>
+#include <epicsRingBytes.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
 #include <dbScan.h>
@@ -47,6 +48,10 @@
 #include "asynEpicsUtils.h"
 #include <epicsExport.h>
 
+#define DEFAULT_RING_BUFFER_SIZE 100
+/* In the future we will use the record info mechanism to allow this to
+ * be changed on a per-record basis */
+
 typedef struct devPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
@@ -59,6 +64,8 @@ typedef struct devPvt{
     int               gotValue;
     epicsUInt32        value;
     epicsUInt32        mask;
+    epicsRingBytesId  ringBuffer;
+    int               ringBufferSize;
     interruptCallbackUInt32Digital interruptCallback;
     CALLBACK          callback;
     IOSCANPVT         ioScanPvt;
@@ -145,6 +152,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynUInt32Digital::initCommon");
     pr->dpvt = pPvt;
     pPvt->pr = pr;
+    pPvt->ringBufferSize = DEFAULT_RING_BUFFER_SIZE;
     /* Create asynUser */
     pasynUser = pasynManager->createAsynUser(processCallback, 0);
     pasynUser->userPvt = pPvt;
@@ -227,6 +235,13 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s devAsynUInt32Digital::getIoIntInfo registering interrupt\n",
             pr->name);
+        if (!pPvt->ringBuffer) {
+            pPvt->ringBuffer = epicsRingBytesCreate(pPvt->ringBufferSize*sizeof(epicsUInt32));
+            if (!pPvt->ringBuffer)
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::getIoIntInfo error creating ring buffer\n",
+                    pr->name);
+        }
         status = pPvt->puint32->registerInterruptUser(
             pPvt->uint32Pvt,pPvt->pasynUser,
             pPvt->interruptCallback,pPvt,pPvt->mask,&pPvt->registrarPvt);
@@ -297,16 +312,17 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
+    int count, size = sizeof(epicsUInt32);
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
         pr->name, value);
-    epicsMutexLock(pPvt->mutexId);
-    pPvt->gotValue = 1; pPvt->value = value;
-    epicsMutexUnlock(pPvt->mutexId);
-    dbScanLock(pr);
-    pr->rset->process(pr);
-    dbScanUnlock(pr);
+    count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
+    if (count != size)
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynUInt32Digital interruptCallbackInput error, ring buffer full\n",
+           pr->name);
+    scanIoRequest(pPvt->ioScanPvt);
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
@@ -314,15 +330,32 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
+    int count, size = sizeof(epicsUInt32);
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
         pr->name, value);
-    if(pPvt->gotValue) return;
-    epicsMutexLock(pPvt->mutexId);
-    pPvt->gotValue = 1; pPvt->value = value;
-    epicsMutexUnlock(pPvt->mutexId);
+    count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
+    if (count != size)
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "%s devAsynUInt32Digital interruptCallbackOutput error, ring buffer full\n",
+           pr->name);
     scanOnce(pr);
+}
+
+static void getCallbackValue(devPvt *pPvt)
+{
+    int count, size=sizeof(epicsUInt32);
+
+    if (pPvt->ringBuffer && !epicsRingBytesIsEmpty(pPvt->ringBuffer)) {
+        count = epicsRingBytesGet(pPvt->ringBuffer, (char *)&pPvt->value, size);
+        if (count == size)
+            pPvt->gotValue = 1;
+        else 
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital getCallbackValue error, ring read failed\n",
+                pPvt->pr->name);
+    }
 }
 
 static int computeShift(epicsUInt32 mask)
@@ -355,6 +388,7 @@ static long processBi(biRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(!pPvt->gotValue && !pr->pact) {
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
@@ -401,6 +435,7 @@ static long processBo(boRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(pPvt->gotValue) {
         pr->rval = pPvt->value & pr->mask;
         pr->val = (pr->rval) ? 1 : 0;
@@ -439,6 +474,7 @@ static long processLi(longinRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(!pPvt->gotValue && !pr->pact) {
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
@@ -483,6 +519,7 @@ static long processLo(longoutRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(pPvt->gotValue) {
         pr->val = pPvt->value;
     } else if(pr->pact == 0) {
@@ -521,6 +558,7 @@ static long processMbbi(mbbiRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(!pPvt->gotValue && !pr->pact) {
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
@@ -566,6 +604,7 @@ static long processMbbo(mbboRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(pPvt->gotValue) {
         epicsUInt32 rval = pPvt->value & pr->mask;
 
@@ -625,6 +664,7 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(!pPvt->gotValue && !pr->pact) {
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
@@ -670,6 +710,7 @@ static long processMbboDirect(mbboDirectRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    getCallbackValue(pPvt);
     if(pPvt->gotValue) {
         epicsUInt32 rval = pPvt->value & pr->mask;
         unsigned char *bit = &(pr->b0);
