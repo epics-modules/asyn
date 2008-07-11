@@ -236,7 +236,6 @@ static void callbackWf(asynUser *pasynUser) \
 { \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pasynUser->userPvt; \
     waveformRecord *pwf = (waveformRecord *)pPvt->pr; \
-    rset *prset = (rset *)pwf->rset; \
     int status; \
     size_t nread; \
  \
@@ -254,9 +253,7 @@ static void callbackWf(asynUser *pasynUser) \
         recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM); \
     } \
     if (pwf->pact) { \
-        dbScanLock((dbCommon *)pwf); \
-        prset->process(pwf); \
-        dbScanUnlock((dbCommon *)pwf); \
+        scanIoRequest(pPvt->ioScanPvt); \
     } \
 } \
  \
@@ -265,7 +262,6 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
 { \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt; \
     waveformRecord *pwf = (waveformRecord *)pPvt->pr; \
-    dbCommon *pr = pPvt->pr; \
     int i; \
     EPICS_TYPE *pData = (EPICS_TYPE *)pwf->bptr; \
  \
@@ -277,9 +273,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     for (i=0; i<(int)len; i++) pData[i] = value[i]; \
     pPvt->gotValue = 1; \
     pPvt->nord = len; \
-    dbScanLock(pr); \
-    pr->rset->process(pr); \
-    dbScanUnlock(pr); \
+    scanIoRequest(pPvt->ioScanPvt); \
 } \
  \
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,  \

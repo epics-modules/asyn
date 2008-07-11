@@ -257,7 +257,6 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
-    dbCommon       *pr = pdevPvt->precord;
     int            num;
     
     pdevPvt->gotValue = 1; 
@@ -267,9 +266,7 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
         psi->udf = 0;
         if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     }
-    dbScanLock(pr);
-    pr->rset->process(pr);
-    dbScanUnlock(pr);
+    scanIoRequest(pdevPvt->ioScanPvt);
 }
 
 static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
@@ -277,7 +274,6 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
-    dbCommon       *pr = pdevPvt->precord;
     int            num;
     
     pdevPvt->gotValue = 1; 
@@ -289,9 +285,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
         pwf->nord = num;
         pwf->udf = 0;
     }
-    dbScanLock(pr);
-    pr->rset->process(pr);
-    dbScanUnlock(pr);
+    scanIoRequest(pdevPvt->ioScanPvt);
 }
 
 static void initDrvUser(devPvt *pdevPvt)
