@@ -7,8 +7,10 @@
 ***********************************************************************/
 
 /* Author: Gasper Jansa, Cosylab */
-/* date: 18AUG2006
-   date  19OCT2006 - changed get/set options to check the option key and value  */
+/* date:  18AUG2006
+   date:  19OCT2006 - changed get/set options to check the option key and value
+   date:  07APR2008 - added support for secondary address, address 30 bugfix
+   date:  20JUN2008 - modified time of start of the poll_worker thread - after iocInit*/
 
 #include <signal.h>
 #include <errno.h>
@@ -30,6 +32,7 @@
 #include <epicsTime.h>
 #include <devLib.h>
 #include <taskwd.h>
+#include <initHooks.h>
 #include <gpib/ib.h>
 
 #include <epicsExport.h>
@@ -44,7 +47,7 @@ typedef struct GpibBoardPvt {
     char *portName;
     void  *asynGpibPvt;
     int ud;
-    int uddev[30];
+    int uddev[31][31];
     int ibsta;
     int iberr;
     int sad;
@@ -56,6 +59,8 @@ typedef struct GpibBoardPvt {
     pid_t worker_pid;
     asynInterface option;
 }GpibBoardPvt;
+
+GpibBoardPvt *pGlobalGpibBoardPvt;
 
 static void report(void *pdrvPvt,FILE *fd,int details);
 static asynStatus connect(void *pdrvPvt,asynUser *pasynUser);
@@ -86,6 +91,8 @@ unsigned int sec_to_timeout( double sec );
 /*interrupt handlers*/
 static void srqCallback(CALLBACK *pcallback);
 /*EPICSTHREADFUNC poll_worker(GpibBoardPvt *pGpibBoardPvt);*/
+
+void getAddr(int addr,int *primAddr,int *secAddr);
 
 
 static asynGpibPort GpibBoardDriver = {
@@ -138,11 +145,26 @@ static void poll_worker(GpibBoardPvt *pGpibBoardPvt)
 	pGpibBoardPvt->worker_pid=getpid();
 	
 	sigaction(SIGUSR1,&new_action,&old_action);
-       
-      	while(work){
+	
+	while(work){
 	       	ibwait(pGpibBoardPvt->ud,mask);
 		callbackRequest(&pGpibBoardPvt->callback);
 		epicsThreadSleep(0.001);
+	}
+}
+
+
+/* poll_worker is started after iocInit finishes */
+void poll_worker_starter(initHookState state)
+{
+
+	if(state == initHookAtEnd)
+	{
+		/*create thread only if not yet created*/
+		if((!epicsThreadGetId("PollThread")))
+			epicsThreadCreate("PollThread", epicsThreadPriorityMedium,
+				epicsThreadGetStackSize(epicsThreadStackSmall),
+                       	        (EPICSTHREADFUNC)poll_worker,pGlobalGpibBoardPvt);	
 	}
 }
 
@@ -157,10 +179,13 @@ static void report(void *pdrvPvt,FILE *fd,int details)
 		
 }
 
+
 static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr = 0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	
 	asynStatus status;
 
 	
@@ -168,6 +193,7 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
+	
 
 	asynPrint(pasynUser, ASYN_TRACE_FLOW,
 			        "%s addr %d connect\n",pGpibBoardPvt->portName,addr);
@@ -183,7 +209,7 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
         	        if(status!=asynSuccess)return status;
         	}
 		
-					 
+				 
 		/*disable autopolling*/
 		ibconfig(pGpibBoardPvt->ud,IbcAUTOPOLL,0);
 
@@ -199,27 +225,29 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser)
 		
 	}
 	else{
+		getAddr(addr,&primaryAddr,&secondaryAddr);
 		/*third argument:secondary address,last two arguments are:set EOI line and set eos*/
-		if(addr>0 && addr<=30){
-			pGpibBoardPvt->uddev[addr]=ibdev(pGpibBoardPvt->boardIndex,addr,0,pGpibBoardPvt->timeout,1,0);
+		if((primaryAddr>=0 && primaryAddr<=30) && (secondaryAddr>=0 && secondaryAddr<=30)){
+			pGpibBoardPvt->uddev[primaryAddr][secondaryAddr]=ibdev(pGpibBoardPvt->boardIndex,primaryAddr,secondaryAddr + 96,pGpibBoardPvt->timeout,1,0);
 			
-			if(DEBUG) printf("DESCRIPTOR: %d\n",pGpibBoardPvt->uddev[addr]);
+			if(DEBUG) printf("DESCRIPTOR: %d\n",pGpibBoardPvt->uddev[primaryAddr][secondaryAddr]);
 			
-			if(pGpibBoardPvt->uddev<0){ 
+			if(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr]<0){ 
 	                        status=checkError(pdrvPvt,pasynUser,addr);
 		                if(status!=asynSuccess)return status;
-			}					
+			}
+		}
+		else{
+			asynPrint(pasynUser,ASYN_TRACE_ERROR,
+				           "%s addr %d connect illegal primary or secondary address (primary:%d,secondary %d)\n",
+					              pGpibBoardPvt->portName,addr,primaryAddr,secondaryAddr);
+			return asynError;			
 		}	
 	}
 	
-	/*create thread only if not yet created*/
-	if((!epicsThreadGetId("PollThread")))
-		epicsThreadCreate("PollThread", epicsThreadPriorityMedium,
-				epicsThreadGetStackSize(epicsThreadStackSmall),
-                                (EPICSTHREADFUNC)poll_worker,pGpibBoardPvt);
-		
-			
-	pasynManager->exceptionConnect(pasynUser);
+	
+	pasynManager->exceptionConnect(pasynUser);	
+
  	return asynSuccess;
 }
 
@@ -227,12 +255,16 @@ static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	;	
 	asynStatus status;
 	
 	if(DEBUG) printf("drvGpibBoard:disconnect!!\n");
 	
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 		
 	asynPrint(pasynUser, ASYN_TRACE_FLOW,
 			        "%s addr %d disconnect\n",pGpibBoardPvt->portName,addr);
@@ -249,7 +281,7 @@ static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser)
 	 	kill(pGpibBoardPvt->worker_pid,SIGUSR1);
 	}
 	else{
-		ibonl(pGpibBoardPvt->uddev[addr],0);
+		ibonl(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],0);
 	
                 status=checkError(pdrvPvt,pasynUser,addr);
                 if(status!=asynSuccess)return status;
@@ -266,6 +298,8 @@ const char *key, const char *val)
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int option,value;
         int addr=0,j=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	
 	char cset[] = "1234567890ABCDEFabcdefxX";	
         asynStatus status;
 	int parseStatus;
@@ -273,6 +307,8 @@ const char *key, const char *val)
 		       
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 			
 	if(DEBUG) printf("drvGpibBoard:gpibPortSetPortOptions!!\n");
 	
@@ -314,7 +350,7 @@ const char *key, const char *val)
 		ibconfig(pGpibBoardPvt->ud,option,value);
 	}
 	else{
-		ibconfig(pGpibBoardPvt->uddev[addr],option,value);
+		ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],option,value);
 	}
 	
         status=checkError(pdrvPvt,pasynUser,addr);
@@ -329,6 +365,8 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int value,option;
 	int addr=0,j=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status;
 	char cset[] = "1234567890ABCDEFabcdefxX";
 	int parseStatus = 0;
@@ -337,6 +375,8 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 			
 	if(DEBUG) printf("drvGpibBoard:gpibPortGetPortOptions!!\n");
 	
@@ -367,7 +407,7 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 		ibask(pGpibBoardPvt->ud,option,&value);
 	}
 	else{
-		ibask(pGpibBoardPvt->uddev[addr],option,&value);
+		ibask(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],option,&value);
 	}
 	
         status=checkError(pdrvPvt,pasynUser,addr);
@@ -386,6 +426,8 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
  	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
         asynStatus status=asynSuccess;
         double timeout = pasynUser->timeout;
 
@@ -395,18 +437,20 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
 	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
+	
 	asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d gpibRead\n",
 			        pGpibBoardPvt->portName,addr);
 	
 	/*set timeout*/
-	ibtmo(pGpibBoardPvt->uddev[addr],sec_to_timeout(timeout));
+	ibtmo(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],sec_to_timeout(timeout));
 	
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
 							
 	
 	/*read data*/
-	ibrd(pGpibBoardPvt->uddev[addr],data,maxchars);
+	ibrd(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],data,maxchars);
 	
 
 	/*ibcnt holds number of bytes transfered*/
@@ -436,11 +480,15 @@ static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status=asynSuccess;
         double timeout = pasynUser->timeout;
 
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 	
 	if(DEBUG){
 		printf("drvGpibBoard:gpibWrite!!\n");
@@ -451,13 +499,13 @@ static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
 			        pGpibBoardPvt->portName,addr,numchars);
 	
         /*set timeout*/
-        ibtmo(pGpibBoardPvt->uddev[addr],sec_to_timeout(timeout));
+        ibtmo(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],sec_to_timeout(timeout));
 
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
 							
 	/*write data*/
-	ibwrt(pGpibBoardPvt->uddev[addr],data,numchars);
+	ibwrt(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],data,numchars);
 		
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess){
@@ -489,12 +537,16 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr = 0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	      
         asynStatus status;
 	
 	if(DEBUG) printf("drvGpibBoard:setEos!!\n");
 
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 
 	asynPrint(pasynUser, ASYN_TRACE_FLOW,
 			        "%s addr %d setEos eoslen %d\n",pGpibBoardPvt->portName,addr,eoslen);
@@ -508,12 +560,12 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 	}
 	
 	if(eoslen==1){
-		ibconfig(pGpibBoardPvt->uddev[addr],IbcEOSchar,*eos);
+		ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSchar,*eos);
 
                 status=checkError(pdrvPvt,pasynUser,addr);
                 if(status!=asynSuccess)return status;
 								
-		ibconfig(pGpibBoardPvt->uddev[addr],IbcEOSrd,1);
+		ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,1);
 		
 		if(DEBUG)
 			printf("Seting EOS: %u\n",*eos);
@@ -524,18 +576,18 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 	}
 	else{
 		if(eos==0){
-			pGpibBoardPvt->ibsta=ibconfig(pGpibBoardPvt->uddev[addr],IbcEOSrd,0);
+			pGpibBoardPvt->ibsta=ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,0);
 			if(DEBUG) printf("Disabling EOS\n");
 	                status=checkError(pdrvPvt,pasynUser,addr);
         	        if(status!=asynSuccess)return status;
 		}
 		else{
-			ibconfig(pGpibBoardPvt->uddev[addr],IbcEOSchar,'\0');
+			ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSchar,'\0');
 			
 	                status=checkError(pdrvPvt,pasynUser,addr);
 	                if(status!=asynSuccess)return status;
 
-			ibconfig(pGpibBoardPvt->uddev[addr],IbcEOSrd,1);
+			ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,1);
 	                if(DEBUG)printf("Seting EOS: %u\n",*eos);
 
 			status=checkError(pdrvPvt,pasynUser,addr);
@@ -551,11 +603,15 @@ static asynStatus getEos(void *pdrvPvt,asynUser *pasynUser,
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr = 0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	
 	asynStatus status;
-	unsigned int ieos;
+	int ieos;
 		
 	status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
 
 	asynPrint(pasynUser, ASYN_TRACE_FLOW,
 	             "%s addr %d gpibPortGetEos\n",pGpibBoardPvt->portName,addr);
@@ -571,7 +627,7 @@ static asynStatus getEos(void *pdrvPvt,asynUser *pasynUser,
 		return asynError;
 	}
 	
-	ibask(pGpibBoardPvt->uddev[addr],IbaEOSrd,&ieos);
+	ibask(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbaEOSrd,&ieos);
 
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
@@ -583,7 +639,7 @@ static asynStatus getEos(void *pdrvPvt,asynUser *pasynUser,
 	}	
 	else {
 		*eoslen = 1;
-		ibask(pGpibBoardPvt->uddev[addr],IbaEOSchar,&ieos);
+		ibask(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbaEOSchar,&ieos);
 
                 status=checkError(pdrvPvt,pasynUser,addr);
                 if(status!=asynSuccess)return status;
@@ -600,24 +656,29 @@ static asynStatus addressedCmd (void *pdrvPvt,asynUser *pasynUser,
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr = 0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status;
 	double timeout = pasynUser->timeout;
 	
 	if(DEBUG) printf("drvGpibBoard:addressedCmd!!\n");
 	status = pasynManager->getAddr(pasynUser,&addr);
 	if(status!=asynSuccess) return status;
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);
+	
 	asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s addr %d addressedCmd nchar %d\n",
 			         pGpibBoardPvt->portName,addr,length);
 
         /*set timeout*/
-        ibtmo(pGpibBoardPvt->uddev[addr],sec_to_timeout(timeout));
+        ibtmo(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],sec_to_timeout(timeout));
 
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
 	
 	if(DEBUG) printf("DATA: %s\n", data);
 	
- 	Send(pGpibBoardPvt->ud,MakeAddr(addr,0),data,strlen(data),1);
+ 	Send(pGpibBoardPvt->ud,MakeAddr(primaryAddr,secondaryAddr),data,strlen(data),1);
 	
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
@@ -629,12 +690,15 @@ static asynStatus universalCmd(void *pdrvPvt, asynUser *pasynUser, int cmd)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status; 
 	char chcmd[20];
 	
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
-			
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);			
 	
 	asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s universalCmd %2.2x\n",
 			        pGpibBoardPvt->portName,cmd);
@@ -659,11 +723,14 @@ static asynStatus ifc(void *pdrvPvt,asynUser *pasynUser)
 {
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status;
 
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
-		       
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);		       
 	
 	if(DEBUG)printf("drvGpibBoard:ifc!!\n");
 	
@@ -683,11 +750,14 @@ static asynStatus ren(void *pdrvPvt,asynUser *pasynUser, int onOff)
 {	
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	int addr=0;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;		
 	asynStatus status;
 	
         status = pasynManager->getAddr(pasynUser,&addr);
         if(status!=asynSuccess) return status;
 			
+	getAddr(addr,&primaryAddr,&secondaryAddr);			
 	
 	if(DEBUG)printf("drvGpibBoard:ren!!\n");
 	
@@ -740,15 +810,19 @@ static asynStatus serialPoll (void *pdrvPvt, int addr, double timeout,int *statu
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
         char serialPollByte = 0;
 	int ibsta;
+	int primaryAddr = 0;
+	int secondaryAddr = 0;	
+	
+	getAddr(addr,&primaryAddr,&secondaryAddr);	
 
 	if(DEBUG){
 		printf("drvGpibBoard:serialPoll!!\n");
         	printf("ADDR: %d\n",addr);
-		printf("uddev: %d\n",pGpibBoardPvt->uddev[addr]);
+		printf("uddev: %d\n",pGpibBoardPvt->uddev[primaryAddr][secondaryAddr]);
 	}	
 
         /*set timeout*/
-        ibsta=ibtmo(pGpibBoardPvt->uddev[addr],sec_to_timeout(timeout));
+        ibsta=ibtmo(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],sec_to_timeout(timeout));
 	if(ibsta&TIMO)
 		return asynTimeout;
 	if(ibsta&ERR)
@@ -756,7 +830,7 @@ static asynStatus serialPoll (void *pdrvPvt, int addr, double timeout,int *statu
 
 
 	/*serial poll*/
-	ibsta=ibrsp(pGpibBoardPvt->uddev[addr],&serialPollByte);
+	ibsta=ibrsp(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],&serialPollByte);
 	if(ibsta&TIMO)
 		return asynTimeout;
 	if(ibsta&ERR)	
@@ -868,6 +942,17 @@ static void srqCallback(CALLBACK *pcallback)
 	pasynGpib->srqHappened(pGpibBoardPvt->asynGpibPvt);
 }
 
+void getAddr(int addr,int *primAddr,int *secAddr)
+{
+	if(addr < 100){
+		*primAddr = addr;
+		return;
+	}
+	*primAddr = addr/100;
+	*secAddr = addr%100;
+	return;
+}
+
 
 
 int GpibBoardDriverConfig(char *name,int autoConnect,int boardIndex,double timeout,int priority)
@@ -897,10 +982,15 @@ int GpibBoardDriverConfig(char *name,int autoConnect,int boardIndex,double timeo
     pGpibBoardPvt->option.drvPvt= pGpibBoardPvt;
     status = pasynManager->registerInterface(pGpibBoardPvt->portName,&pGpibBoardPvt->option);
     
-    if(status==asynError)
+    if(status==asynError){
 	    errlogPrintf("GpibBoardDriverConfig: Can't register option.\n");
 	    return -1;
+    }
     
+    pGlobalGpibBoardPvt = pGpibBoardPvt;
+    
+    /*register for init */
+    initHookRegister(poll_worker_starter);
     
     return 0;
 }
