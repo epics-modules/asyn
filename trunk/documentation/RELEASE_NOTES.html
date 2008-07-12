@@ -98,6 +98,21 @@ defined in asyn/interfaces (common, octet, int32, etc.)</p>
 
 <h3>devEpics</h3>
 
+<p>Undid the change that was done in R4-9 with direct calls to dbScanLock and process
+in the interrupt callback functions.  This could lead to deadlocks in some circumstances.
+The original reason for changing from scanIoRequest to (dbScanLock,
+process) was because callback values would be lost if the callbacks came
+so close together in time that the single callback value stored in
+device support was overwritten before scanIoRequest could process the
+record. This problem has been fixed by adding a FIFO (ring buffer) to the
+device support for the scalar interfaces asynInt32, asynUInt32Digital,
+and asynFloat64.  The ring buffer is only created when the record is put
+into I/O Intr scan, so the storage is not allocated for records that are
+not I/O Intr scanned.  The ring buffer is currently allocated to hold
+100 values, but the device support could be enhanced to use the record
+"info" feature to allow the buffer size to be specified on a per-record
+basis. </p>
+
 <p>Added support for bi and bo records for asynInt32 interface.  Previously
 these records were only supported for the asynUInt32Digital interface.
 
