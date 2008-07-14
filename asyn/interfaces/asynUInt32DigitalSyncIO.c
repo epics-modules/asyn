@@ -167,7 +167,7 @@ static asynStatus writeOp(asynUser *pasynUser,
        pioPvt->uint32DigitalPvt, pasynUser, value,mask);
     if(status==asynSuccess) {
          asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-             "asynUInt32DigitalSyncIO wrote: %e\n",value);
+             "asynUInt32DigitalSyncIO wrote: 0x%x\n",value);
     }
     unlockStatus = pasynManager->unlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
@@ -191,7 +191,7 @@ static asynStatus readOp(asynUser *pasynUser,
         pioPvt->uint32DigitalPvt, pasynUser,pvalue,mask);
     if(status==asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO read: %e\n",*pvalue);
+                   "asynUInt32DigitalSyncIO read: 0x%x\n",*pvalue);
     }
     unlockStatus = pasynManager->unlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
