@@ -21,6 +21,7 @@
 #include <recGbl.h>
 #include <dbAccess.h>
 #include <dbDefs.h>
+#include <dbStaticLib.h>
 #include <link.h>
 #include <epicsPrint.h>
 #include <epicsMutex.h>
@@ -48,9 +49,7 @@
 #include "asynEpicsUtils.h"
 #include <epicsExport.h>
 
-#define DEFAULT_RING_BUFFER_SIZE 100
-/* In the future we will use the record info mechanism to allow this to
- * be changed on a per-record basis */
+#define DEFAULT_RING_BUFFER_SIZE 10
 
 typedef struct devPvt{
     dbCommon          *pr;
@@ -152,7 +151,6 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynUInt32Digital::initCommon");
     pr->dpvt = pPvt;
     pPvt->pr = pr;
-    pPvt->ringBufferSize = DEFAULT_RING_BUFFER_SIZE;
     /* Create asynUser */
     pasynUser = pasynManager->createAsynUser(processCallback, 0);
     pasynUser->userPvt = pPvt;
@@ -226,6 +224,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
+    const char *sizeString;
 
     /* If initCommon failed then pPvt->puint32 is NULL, return error */
     if (!pPvt->puint32) return -1;
@@ -236,11 +235,24 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
             "%s devAsynUInt32Digital::getIoIntInfo registering interrupt\n",
             pr->name);
         if (!pPvt->ringBuffer) {
-            pPvt->ringBuffer = epicsRingBytesCreate(pPvt->ringBufferSize*sizeof(epicsUInt32));
+            DBENTRY *pdbentry = dbAllocEntry(pdbbase);
+            pPvt->ringBufferSize = DEFAULT_RING_BUFFER_SIZE;
+            status = dbFindRecord(pdbentry, pr->name);
+            if (status)
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                    "%s devAsynUInt32Digital::getIoIntInfo error finding record\n",
+                    pr->name);
+            sizeString = dbGetInfo(pdbentry, "FIFO");
+            if (sizeString) pPvt->ringBufferSize = atoi(sizeString);
+            pPvt->ringBuffer = epicsRingBytesCreate(pPvt->ringBufferSize*sizeof(epicsInt32));
             if (!pPvt->ringBuffer)
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                     "%s devAsynUInt32Digital::getIoIntInfo error creating ring buffer\n",
                     pr->name);
+            else
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
+                    "%s devAsynUInt32Digital::getIoIntInfo created ring buffer, size=%d\n",
+                    pr->name, pPvt->ringBufferSize);
         }
         status = pPvt->puint32->registerInterruptUser(
             pPvt->uint32Pvt,pPvt->pasynUser,
