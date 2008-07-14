@@ -142,7 +142,7 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
     asynStatus status;
 
     status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE,
-                                    0.0, &nread, &eomReason);
+                                    -1.0, &nread, &eomReason);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:readSocket: read error on: %s: %s\n",
