@@ -108,10 +108,9 @@ record. This problem has been fixed by adding a FIFO (ring buffer) to the
 device support for the scalar interfaces asynInt32, asynUInt32Digital,
 and asynFloat64.  The ring buffer is only created when the record is put
 into I/O Intr scan, so the storage is not allocated for records that are
-not I/O Intr scanned.  The ring buffer is currently allocated to hold
-100 values, but the device support could be enhanced to use the record
-"info" feature to allow the buffer size to be specified on a per-record
-basis. </p>
+not I/O Intr scanned.  The ring buffer default size is
+10 values, but this can be changed on a per-record basis using the dbInfo
+string "FIFO" with a value such as "100". </p>
 
 <p>Added support for bi and bo records for asynInt32 interface.  Previously
 these records were only supported for the asynUInt32Digital interface.
@@ -127,6 +126,10 @@ devAsynInt32Array and devAsynFloat64Array with changes to the data types.</p>
 <h3>asynInterposeEos</h3>
 
 <p>Improved diagnostic messages.</p>
+
+<h3>testIPServerApp/ipSNCServer.st</h3>
+
+<p>Fixed timeout bug introduced in R4-6 when timeouts of 0.0 and -1.0 were defined.</p>
 
 <center>
 <h2>Release 4-9</h2>
