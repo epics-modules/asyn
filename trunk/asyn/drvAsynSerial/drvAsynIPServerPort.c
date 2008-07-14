@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.11 2007-04-23 19:35:50 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.12 2008-07-14 20:04:22 rivers Exp $
  */
 
 #include <string.h>
@@ -188,7 +188,7 @@ static void connectionListener(void *drvPvt)
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
                       "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
                       tty->fd, strerror(errno));
-            break;
+            continue;
         }
         /* See if any clients have registered for callbacks.  If not, close the connection */
         pasynManager->interruptStart(tty->octetCallbackPvt, &pclientList);
@@ -213,7 +213,7 @@ static void connectionListener(void *drvPvt)
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: %s: too many clients\n", tty->portName);
                 close(clientFd);
-                break;
+                continue;
             }
             /* Create a new asyn port with a unique name */
             len = strlen(tty->portName)+10;  /* Room for port name + ":" + numClients */
@@ -231,7 +231,7 @@ static void connectionListener(void *drvPvt)
             if (status) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: unable to create port %s\n", pl->portName);
-                break;
+                continue;
             }
             status = pasynCommonSyncIO->connect(pl->portName, -1, &pl->pasynUser, NULL);
             if (status!=asynSuccess) {
@@ -239,7 +239,7 @@ static void connectionListener(void *drvPvt)
                     "%s drvAsynIPServerPort: error calling "
                     "pasynCommonSyncIO->connect %s\n",
                     pl->portName,pl->pasynUser->errorMessage);
-                break;
+                continue;
             }
         }
         /* Set the existing port to use the new file descriptor */
