@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.12 2008-07-14 20:04:22 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.13 2008-07-15 18:40:29 rivers Exp $
  */
 
 #include <string.h>
@@ -180,7 +180,7 @@ static void connectionListener(void *drvPvt)
               "drvAsynIPServerPort: %s started listening for connections on %s\n", 
               tty->serverInfo);
     while (1) {
-        clientFd = accept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
+        clientFd = epicsSocketAccept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
                   "drvAsynIPServerPort: new connection, socket=%d on %s\n", 
                   clientFd, tty->serverInfo);
@@ -196,7 +196,7 @@ static void connectionListener(void *drvPvt)
         pasynManager->interruptEnd(tty->octetCallbackPvt);
         if (!pnode) {
             /* There are no registered clients to handle connections on this port */
-            close(clientFd);
+            epicsSocketDestroy(clientFd);
         }
         /* Search for a port we have already created which is now disconnected */
         pl = NULL;
@@ -212,7 +212,7 @@ static void connectionListener(void *drvPvt)
             if (tty->numClients >= tty->maxClients) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
                           "drvAsynIPServerPort: %s: too many clients\n", tty->portName);
-                close(clientFd);
+                epicsSocketDestroy(clientFd);
                 continue;
             }
             /* Create a new asyn port with a unique name */
