@@ -195,7 +195,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
             nbits = -nbits;
             pPvt->bipolar = 1;
         }
-        pPvt->signBit = ldexp(1.0, nbits-1);
+        pPvt->signBit = (epicsInt32) ldexp(1.0, nbits-1);
         pPvt->mask = pPvt->signBit*2 - 1;
         if (pPvt->bipolar) {
             pPvt->deviceLow = ~(pPvt->mask/2)+1;
@@ -536,7 +536,7 @@ static long processAiAverage(aiRecord *pr)
     rval = pPvt->sum/pPvt->numAverage;
     /*round result*/
     rval += (pPvt->sum>0.0) ? 0.5 : -0.5;
-    pr->rval = rval;
+    pr->rval = (epicsInt32) rval;
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->mutexId);

@@ -274,7 +274,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
-    int            num;
+    unsigned            num;
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
