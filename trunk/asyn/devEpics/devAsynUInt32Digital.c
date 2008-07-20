@@ -65,6 +65,7 @@ typedef struct devPvt{
     epicsUInt32        mask;
     epicsRingBytesId  ringBuffer;
     int               ringBufferSize;
+    int               ringBufferOverflows;
     interruptCallbackUInt32Digital interruptCallback;
     CALLBACK          callback;
     IOSCANPVT         ioScanPvt;
@@ -330,10 +331,11 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
         "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
         pr->name, value);
     count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
-    if (count != size)
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynUInt32Digital interruptCallbackInput error, ring buffer full\n",
-           pr->name);
+    if (count != size) {
+        epicsMutexLock(pPvt->mutexId);
+        pPvt->ringBufferOverflows++;
+        epicsMutexUnlock(pPvt->mutexId);
+    }
     scanIoRequest(pPvt->ioScanPvt);
 }
 
@@ -348,10 +350,11 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
         pr->name, value);
     count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
-    if (count != size)
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynUInt32Digital interruptCallbackOutput error, ring buffer full\n",
-           pr->name);
+    if (count != size) {
+        epicsMutexLock(pPvt->mutexId);
+        pPvt->ringBufferOverflows++;
+        epicsMutexUnlock(pPvt->mutexId);
+    }
     scanOnce(pr);
 }
 
@@ -360,6 +363,13 @@ static void getCallbackValue(devPvt *pPvt)
     int count, size=sizeof(epicsUInt32);
 
     if (pPvt->ringBuffer && !epicsRingBytesIsEmpty(pPvt->ringBuffer)) {
+        epicsMutexLock(pPvt->mutexId);
+        if (pPvt->ringBufferOverflows > 0) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital getCallbackValue error, %d ring buffer overflows\n",
+                pPvt->pr->name, pPvt->ringBufferOverflows);
+                pPvt->ringBufferOverflows = 0;
+        }
         count = epicsRingBytesGet(pPvt->ringBuffer, (char *)&pPvt->value, size);
         if (count == size)
             pPvt->gotValue = 1;
@@ -367,6 +377,7 @@ static void getCallbackValue(devPvt *pPvt)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital getCallbackValue error, ring read failed\n",
                 pPvt->pr->name);
+        epicsMutexUnlock(pPvt->mutexId);
     }
 }
 
