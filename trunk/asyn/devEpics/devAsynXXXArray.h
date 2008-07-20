@@ -206,7 +206,10 @@ static long processCommon(dbCommon *pr) \
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
         } \
     } \
-    if (pPvt->gotValue) pwf->nord = pPvt->nord; \
+    if (pPvt->gotValue) { \
+	pwf->nord = pPvt->nord; \
+        pwf->udf = 0; \
+    } \
     pPvt->gotValue = 0; \
     return 0; \
 }  \
@@ -252,9 +255,7 @@ static void callbackWf(asynUser *pasynUser) \
               pwf->name, driverName, pasynUser->errorMessage); \
         recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM); \
     } \
-    if (pwf->pact) { \
-        scanIoRequest(pPvt->ioScanPvt); \
-    } \
+    if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf); \
 } \
  \
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
