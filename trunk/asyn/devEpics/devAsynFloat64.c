@@ -345,7 +345,7 @@ static void getCallbackValue(devPvt *pPvt)
 {
     int count, size=sizeof(epicsFloat64);
 
-    if (pPvt->ringBuffer && !epicsRingBytesIsEmpty(pPvt->ringBuffer)) {
+    if (pPvt->ringBuffer && (epicsRingBytesUsedBytes(pPvt->ringBuffer) >= size)) {
         epicsMutexLock(pPvt->mutexId);
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,

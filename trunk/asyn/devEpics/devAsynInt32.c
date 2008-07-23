@@ -464,8 +464,6 @@ static void getCallbackValue(devInt32Pvt *pPvt)
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynInt32 getCallbackValue error, ring read failed\n",
                 pPvt->pr->name);
-        if (epicsRingBytesUsedBytes(pPvt->ringBuffer) >= size) 
-            scanIoRequest(pPvt->ioScanPvt);
         epicsMutexUnlock(pPvt->mutexId);
     }
 }
