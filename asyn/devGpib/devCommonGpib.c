@@ -523,6 +523,7 @@ long  devGpib_readLi(longinRecord * pli)
     gpibDpvt *pgpibDpvt = gpibDpvtGet(pli);
     int cmdType;
  
+/*printf("READ -- %s %d      %p\n", pli->name, pli->val, &pli->val);*/
     if(pli->pact) return 0;
     cmdType = gpibCmdGetType(pgpibDpvt);
     if(cmdType&GPIBSRQHANDLER)  return 0;
@@ -552,6 +553,8 @@ static void liFinish(gpibDpvt * pgpibDpvt,int failure)
                 pli->name,pasynUser->errorMessage);
             failure = -1;
         }
+/*printf("HI THERE -- %s %d\n", pli->name, pli->val); */
+/*printf("HI THERE -- %s %p\n", pli->name, &pli->val);*/
     } else if (!pgpibDpvt->msg) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
             "%s no msg buffer\n",pli->name);
@@ -627,7 +630,7 @@ long  devGpib_initMbbi(mbbiRecord * pmbbi)
     devGpibNames *pdevGpibNames;
     int name_ct;        /* for filling in the name strings */
     char *name_ptr;     /* index into name list array */
-    unsigned long *val_ptr;     /* indev into the value list array */
+    epicsUInt32 *val_ptr;     /* indev into the value list array */
 
     /* do common initialization */
     result = pdevSupportGpib->initRecord((dbCommon *) pmbbi, &pmbbi->inp);
@@ -809,7 +812,7 @@ long  devGpib_initMbbo(mbboRecord * pmbbo)
     devGpibNames *pdevGpibNames;
     int name_ct;        /* for filling in the name strings */
     char *name_ptr;     /* index into name list array */
-    unsigned long *val_ptr;     /* indev into the value list array */
+    epicsUInt32 *val_ptr;     /* indev into the value list array */
 
     /* do common initialization */
     result = pdevSupportGpib->initRecord((dbCommon *) pmbbo, &pmbbo->out);

@@ -869,7 +869,7 @@ static long processMbbo(mbboRecord *pr)
         pr->rval = rval;
         if(pr->shft>0) rval >>= pr->shft;
         if(pr->sdef){
-            unsigned long *pstate_values;
+            epicsUInt32 *pstate_values;
             int           i;
 
             pstate_values = &(pr->zrvl);
