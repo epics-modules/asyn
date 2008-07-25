@@ -261,7 +261,7 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
-    if(num>0) {
+    if(num>=0) {
         strncpy(psi->val,data,num);
         psi->udf = 0;
         if(num<MAX_STRING_SIZE) psi->val[num] = 0;
@@ -278,7 +278,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
-    if(num>0) {
+    if(num>=0) {
         char *pbuf = (char *)pwf->bptr;
         memcpy(pbuf,data,num);
         if(num<pwf->nelm) pbuf[num] = 0;
