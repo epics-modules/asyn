@@ -27,6 +27,7 @@
 #include <epicsPrint.h>
 #include <epicsMutex.h>
 #include <epicsRingBytes.h>
+#include <epicsThread.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
 #include <dbScan.h>
@@ -304,6 +305,14 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringBufferOverflows++;
         epicsMutexUnlock(pPvt->mutexId);
     }
+    /* There is a problem.  A driver could be calling us with a value after
+     * this record has registered for callbacks but before EPICS has set interruptAccept,
+     * which means that scanIoRequest will return immediately.
+     * This is very bad, because we will have pushed a value into the ring buffer
+     * but it won't get popped off because the record won't process.  The values
+     * read the next time the record processes would then be stale.
+     * Work around this problem by waiting here for interruptAccept */
+    while (!interruptAccept) epicsThreadSleep(0.1);
     scanIoRequest(pPvt->ioScanPvt);
 }
 
