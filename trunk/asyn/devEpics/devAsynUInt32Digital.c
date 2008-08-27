@@ -310,10 +310,10 @@ static void processCallbackOutput(asynUser *pasynUser)
         pPvt->value,pPvt->mask);
     if(status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynIn432 process value %lu\n",pr->name,pPvt->value);
+            "%s devAsynUInt32Digital process value %lu\n",pr->name,pPvt->value);
     } else {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynIn432 process error %s\n",
+           "%s devAsynUInt32Digital process error %s\n",
            pr->name, pasynUser->errorMessage);
        recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
     }
