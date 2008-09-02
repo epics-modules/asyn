@@ -12,9 +12,29 @@ alink="#FF0000">
 <center>
 <h1>asynDriver: Asynchronous Driver Support - Known Problems</h1>
 
-<h1>June 13, 2006</h1>
+<h1>Sept. 2, 2008</h1>
 </center>
 <hr>
+<center>
+<h2>Release 4-9</h2>
+</center>
+<h3>asynManager.c</h3> There is a bug with autoconnecting to devices.  The following change to 
+asynManager.c fixes the problem:</p>
+<pre>
+@@ -605,7 +607,7 @@
+         epicsMutexUnlock(pport->asynManagerLock);
+         connectAttempt(&pdevice->dpc);
+         epicsMutexMustLock(pport->asynManagerLock);
+-        pport->dpc.autoConnectActive = FALSE;
++        pdevice->dpc.autoConnectActive = FALSE;
+     }
+     return pdevice->dpc.connected;
+ }
+</pre>
+
+<h3>devEpics</h3> The change that was done in R4-9 with direct calls to dbScanLock and process
+in the interrupt callback functions can lead to deadlocks in some unusual circumstances.  This is
+fixed in R4-10.
 
 <center>
 <h2>Release 4-6</h2>
@@ -117,8 +137,8 @@ diff -u -r1.30 -r1.31
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
+- * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
++ * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
   */
  
  /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -143,8 +163,8 @@ diff -u -r1.34 -r1.35
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
+- * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
++ * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
   */
  
  #include &lt;string.h&gt;
@@ -178,8 +198,8 @@ diff -u -r1.27 -r1.28
  ***********************************************************************/
  
  /*
-- * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
-+ * $Id: KnownProblems.html,v 1.36 2006-09-13 23:44:13 rivers Exp $
+- * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
++ * $Id: KnownProblems.html,v 1.37 2008-09-02 21:04:14 rivers Exp $
   */
  
  #include &lt;string.h&gt;
