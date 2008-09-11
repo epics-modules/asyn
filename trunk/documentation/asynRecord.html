@@ -518,7 +518,7 @@ using asynOctet-&gt;write. This will append the output EOS if one has been
 set.</p>
 
 <p>If OFMT="Binary" then NOWT bytes from the BOUT field are sent to the
-device using asynOctet-&gt;writeRaw.  This will not append an output EOS.</p>
+device using asynOctet-&gt;write.  This will not append an output EOS.</p>
 
 <p>OEOS is set to the current value for the port when the record connects to
 the port.  If OEOS is modified after the record connects to the port, then
@@ -666,7 +666,7 @@ asynOctet-&gt;read. This will remove the input EOS string, if any, and BINP
 will be NULL terminated if possible.</p>
 
 <p>If IFMT="Binary" then the  input is read into the BINP field using
-asynOctet-&gt;readRaw.  This will ignore the input EOS.  BINP will be null
+asynOctet-&gt;read.  This will ignore the input EOS.  BINP will be null
 terminated. </p>
 
 <p>The TINP field is intended for operator display.  It will contain up to
