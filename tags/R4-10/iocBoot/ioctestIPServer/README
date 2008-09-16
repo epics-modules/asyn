@@ -1,0 +1,72 @@
+This IOC uses the code in testIPServer/ directory.
+
+It creates 2 socket listener ports on localhost.  Port 5001 allows 2 simultaneous connections
+port 5002 allows only a single connection.  
+
+The port 5001 servers run the ipEchoServer.c code, and simply echo all input
+revieved on the port back to the output on that port.
+
+The port 5002 server run the ipSNCServer.st code.  It receives input commands
+and sends the response "OK" to every command.  It updates 3 EPICS PVs
+$(P)connected is a bi record with the connection status
+$(P)stringInput is a stringin record with the string received from the IP client
+$(P)stringOutput is a stringin record with the string sent to the IP client.
+
+medm/ipSNCServer.adl is an medm screen that can used to view these PVs.
+
+Here is the output when the soft IOC starts:
+
+corvette> ../../bin/linux-x86/testIPServer st.cmd
+< envPaths
+epicsEnvSet(ARCH,"linux-x86")
+epicsEnvSet(IOC,"ioctestIPServer")
+epicsEnvSet(TOP,"/home/epics/devel/asyn/4-5beta")
+epicsEnvSet(IPAC,"/corvette/home/epics/devel/ipac/2-8")
+epicsEnvSet(SNCSEQ,"/corvette/home/epics/devel/seq/2-0-11beta")
+epicsEnvSet(EPICS_BASE,"/corvette/usr/local/epics/base-3.14.9beta")
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+#The following command starts a server on port 5001
+drvAsynIPServerPortConfigure("P5001","localhost:5001",2,0,0,0)
+drvAsynIPServerPortConfigure("P5002","localhost:5002",1,0,0,0)
+#asynSetTraceFile("P5001",-1,"")
+#asynSetTraceMask("P5001",-1,0xff)
+#asynSetTraceIOMask("P5001",-1,0x2)
+dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
+iocInit()
+Starting iocInit
+############################################################################
+###  EPICS IOC CORE built on Feb 17 2006
+###  EPICS R3.14.8 $$Name: not supported by cvs2svn $$ $$Date: 2006-03-03 15:03:20 $$
+############################################################################
+iocInit: All initialization complete
+ipEchoServer("P5001")
+seq("ipSNCServer", "P=testIPServer:, PORT=P5002")
+SEQ Version 2.0.10: Thu Jan  5 13:14:09 2006
+Spawning state program "ipSNCServer", thread 0x809e720: "ipSNCServer"
+epics> 
+
+
+Once the IOC is started it can be tested by connecting to ports 5001 and/or 5002 from another window 
+or computer with telnet.  The server on port 5001 will echo every command, the server on port 5002 will
+send OK as a response to every command.
+
+corvette> telnet corvette.cars.aps.anl.gov 5001
+Trying 127.0.0.1...
+Connected to corvette.cars.aps.anl.gov.
+Escape character is '^]'.
+this is a test
+this is a test
+^]
+telnet> quit 
+Connection closed.
+corvette> telnet corvette.cars.aps.anl.gov 5002
+Trying 127.0.0.1...
+Connected to corvette.cars.aps.anl.gov.
+Escape character is '^]'.
+hello world
+OK
+^]
+telnet> quit
+Connection closed.
+
