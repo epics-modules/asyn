@@ -1195,7 +1195,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
     <tr>
       <td>freeAsynUser</td>
       <td>Free an asynUser. The user must free an asynUser only via this
-        call. If the asynUser is connected to a port, disconnect is called.
+        call. If the asynUser is connected to a port, asynManager:disconnect is called.
         If the disconnect fails, this call will also fail. The storage for
         the asynUser is saved on a free list and will be reused in later
         calls to createAsynUser or duplicateAsynUser. Thus continually
