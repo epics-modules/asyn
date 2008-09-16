@@ -967,7 +967,7 @@ pasynUser-&gt;errorMessage.</p>
 
 <p>Describes a structure that user code passes to most asynManager and driver
 methods. Code must allocate and free an asynUser by calling
-asynManager:createAsynUser (or asynManager:dupliateAsynUser) and
+asynManager:createAsynUser (or asynManager:duplicateAsynUser) and
 asynManager:freeAsynUser.</p>
 <pre>typedef struct asynUser {
     char *errorMessage;
@@ -1103,6 +1103,9 @@ typedef struct interruptNode{
     ELLNODE node;
     void    *drvPvt;
 }interruptNode;
+
+typedef void (*userCallback)(asynUser *pasynUser);
+typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
