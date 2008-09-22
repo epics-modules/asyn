@@ -3269,6 +3269,10 @@ asynStandardInterfacesBase has a single method, initialize(), which calls regist
 for each interface which has a non-NULL value in its .pinterface field.  
 It also calls registerInterruptSource for interfaces that are defined and that
 have the CanInterrupt flag set to 1.
+The pasynUser argument to the initialize() method
+is used only to provide a place for the method to return an error message (in
+pasynUser-&gt;errorMessage) so the invoking routine may reuse or free the
+asynUser structure when the method has returned.
 <p>
 The following is an example of the code required in a port driver that uses
 the asynStandardInterfacesBase interface.
