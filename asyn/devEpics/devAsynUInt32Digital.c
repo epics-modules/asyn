@@ -331,12 +331,14 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
         pr->name, value);
+    /* Note that we put a lock around epicsRingBytesPut and Get because we potentially have
+     * more than one reader, since the reader is whatever thread is processing the record */
+    epicsMutexLock(pPvt->mutexId);
     count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
     if (count != size) {
-        epicsMutexLock(pPvt->mutexId);
         pPvt->ringBufferOverflows++;
-        epicsMutexUnlock(pPvt->mutexId);
     }
+    epicsMutexUnlock(pPvt->mutexId);
     /* There is a problem.  A driver could be calling us with a value after
      * this record has registered for callbacks but before EPICS has set interruptAccept,
      * which means that scanIoRequest will return immediately.
@@ -358,12 +360,12 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
         pr->name, value);
+    epicsMutexLock(pPvt->mutexId);
     count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
     if (count != size) {
-        epicsMutexLock(pPvt->mutexId);
         pPvt->ringBufferOverflows++;
-        epicsMutexUnlock(pPvt->mutexId);
     }
+    epicsMutexUnlock(pPvt->mutexId);
     scanOnce(pr);
 }
 
@@ -371,8 +373,8 @@ static void getCallbackValue(devPvt *pPvt)
 {
     int count, size=sizeof(epicsUInt32);
 
+    epicsMutexLock(pPvt->mutexId);
     if (pPvt->ringBuffer && (epicsRingBytesUsedBytes(pPvt->ringBuffer) >= size)) {
-        epicsMutexLock(pPvt->mutexId);
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital getCallbackValue error, %d ring buffer overflows\n",
@@ -380,14 +382,17 @@ static void getCallbackValue(devPvt *pPvt)
                 pPvt->ringBufferOverflows = 0;
         }
         count = epicsRingBytesGet(pPvt->ringBuffer, (char *)&pPvt->value, size);
-        if (count == size)
+        if (count == size) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+                "%s devAsynUInt32Digital::getCallbackValue from ringBuffer value=%lu\n",pPvt->pr->name,pPvt->value);
             pPvt->gotValue = 1;
+        }
         else 
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital getCallbackValue error, ring read failed\n",
                 pPvt->pr->name);
-        epicsMutexUnlock(pPvt->mutexId);
     }
+    epicsMutexUnlock(pPvt->mutexId);
 }
 
 static int computeShift(epicsUInt32 mask)
