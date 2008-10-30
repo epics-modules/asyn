@@ -1,10 +1,9 @@
-#LyX 1.5.4 created this file. For more info see http://www.lyx.org/
+#LyX 1.5.6 created this file. For more info see http://www.lyx.org/
 \lyxformat 276
 \begin_document
 \begin_header
 \textclass article
 \begin_preamble
-\usepackage{hevea}
 \usepackage{moreverb}
 \usepackage{url}
 
@@ -66,15 +65,9 @@ W.
  Eric Norum
 \newline
 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-mailto{norume@aps.anl.gov}
-\end_layout
+\begin_inset LatexCommand url
+name "norume.aps.anl.gov"
+target "mailto:norume@aps.anl.gov"
 
 \end_inset
 
@@ -92,28 +85,16 @@ This tutorial provides step-by-step instructions on how to create EPICS
  them in cookbook fashion to create support for other devices.
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-ahref{../asynDriver.html}{asynDriver}
-\end_layout
+\begin_inset LatexCommand url
+name "asynDriver"
+target "../asynDriver.html"
 
 \end_inset
 
  and 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-ahref{../devGpib.html}{devGpib}
-\end_layout
+\begin_inset LatexCommand url
+name "devGpib"
+target "../devGpib.html"
 
 \end_inset
 
@@ -152,41 +133,14 @@ I based this tutorial on the device support I wrote for a CVI Laser Corporation
  very limited command set, which keeps this document small, and yet has
  commands which raise many of the issues that you'll have to consider when
  writing support for other devices.
-\end_layout
-
-\begin_layout Standard
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-begin{htmlonly}
-\end_layout
-
-\begin_layout Standard
-
-If you'd like to print this tutorial you can download a
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-ahref{tutorial.pdf}{PDF version}.
-\end_layout
-
-\begin_layout Standard
-
-
-\backslash
-end{htmlonly}
-\end_layout
+ If you'd like to print this tutorial you can download 
+\begin_inset LatexCommand url
+name "PDF version"
+target "tutorial.pdf"
 
 \end_inset
 
-
+.
 \end_layout
 
 \begin_layout Section
@@ -569,15 +523,9 @@ Each command array entry describes the details of a single I/O operation
 \begin_layout Standard
 The command array entries I created for the AB300 are shown below.
  The elements of each entry are described using the names from the 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-ahref{../devGpib.html}{GPIB documentation}
-\end_layout
+\begin_inset LatexCommand url
+name "GPIB documentation"
+target "../devGpib.html"
 
 \end_inset
 
@@ -1058,11 +1006,13 @@ xxx
 \shape default
  definitions from the device support file you must remove the corresponding
  lines from this file.
+ You must define an analog-in DSET even if the device provides no analog-in
+ records (as is the case for the AB300).
 \end_layout
 
 \begin_layout Standard
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Standard
 
@@ -1095,7 +1045,7 @@ AB300Sup/devAB300.db
 
 \begin_layout Standard
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Standard
 
@@ -1331,7 +1281,7 @@ Include.dbd
 \newline
 
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Standard
 
@@ -1573,17 +1523,9 @@ asynSetTraceIOMask("L0",-1,0x2)
 \begin_layout Standard
 A better way to control the amount and type of diagnostic output is to add
  an 
-\begin_inset ERT
-status collapsed
-
-\begin_layout Standard
-
-
-\backslash
-ahref{
-\backslash
-url{../asynRecord.html}}{asynRecord}
-\end_layout
+\begin_inset LatexCommand url
+name "asynRecord"
+target "../asynRecord.html"
 
 \end_inset
 
@@ -1969,7 +1911,7 @@ AB300Sup/devAB300.c
 
 \begin_layout Standard
 \begin_inset ERT
-status collapsed
+status open
 
 \begin_layout Standard
 
