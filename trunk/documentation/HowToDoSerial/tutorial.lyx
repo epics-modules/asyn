@@ -85,14 +85,14 @@ This tutorial provides step-by-step instructions on how to create EPICS
  them in cookbook fashion to create support for other devices.
  For comprehensive description of all the details of the I/O system used
  here, refer to the 
-\begin_inset LatexCommand url
+\begin_inset LatexCommand htmlurl
 name "asynDriver"
 target "../asynDriver.html"
 
 \end_inset
 
  and 
-\begin_inset LatexCommand url
+\begin_inset LatexCommand htmlurl
 name "devGpib"
 target "../devGpib.html"
 
