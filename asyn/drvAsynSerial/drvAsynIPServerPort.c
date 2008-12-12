@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.13 2008-07-15 18:40:29 rivers Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.14 2008-12-12 18:19:44 norume Exp $
  */
 
 #include <string.h>
@@ -197,6 +197,7 @@ static void connectionListener(void *drvPvt)
         if (!pnode) {
             /* There are no registered clients to handle connections on this port */
             epicsSocketDestroy(clientFd);
+            continue;
         }
         /* Search for a port we have already created which is now disconnected */
         pl = NULL;
