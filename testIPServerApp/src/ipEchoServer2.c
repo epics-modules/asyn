@@ -100,9 +100,9 @@ static void echoListener(myData *pPvt)
         }
     }
     done:
-    status = pasynManager->freeAsynUser(pPvt->pasynUser);
+    status = pasynManager->freeAsynUser(pasynUser);
     if (status != asynSuccess) {
-        asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                               "echoListener: Can't free port %s asynUser\n",
                                                                pPvt->portName);
     }
