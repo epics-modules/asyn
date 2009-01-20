@@ -1031,7 +1031,7 @@ static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser)
         return asynSuccess;
     }
     if(addr==-1) return vxiConnectPort(pvxiPort,pasynUser);
-    if(!pdevLink->lid) {
+    if(!pdevLink->connected) {
         Device_Link lid;
 
         if(!vxiCreateDevLink(pvxiPort,addr,&lid)) {
@@ -1041,8 +1041,8 @@ static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser)
             return asynError;
         }
         pdevLink->lid = lid;
+        pdevLink->connected = TRUE;
     }
-    pdevLink->connected = TRUE;
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
@@ -1557,7 +1557,7 @@ static asynStatus vxiSerialPoll(void *drvPvt, int addr,
     }
     pdevLink = vxiGetDevLink(pvxiPort,0,addr);
     if(!pdevLink) return asynError;
-    if(!pdevLink->lid) {
+    if(!pdevLink->connected) {
         Device_Link lid;
         if(!vxiCreateDevLink(pvxiPort,addr,&lid)) {
             printf("%s vxiCreateDevLink failed for addr %d\n",
@@ -1565,6 +1565,7 @@ static asynStatus vxiSerialPoll(void *drvPvt, int addr,
             return asynError;
         }
         pdevLink->lid = lid;
+    	pdevLink->connected = TRUE;
     }
     devGenP.lid = pdevLink->lid;
     devGenP.flags = 0; /* no timeout on a locked gateway */
