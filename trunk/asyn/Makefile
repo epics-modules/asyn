@@ -74,9 +74,11 @@ DBD += asyn.dbd
 INC += asynShellCommands.h
 INC += asynInterposeEos.h
 INC += asynInterposeFlush.h
+INC += asynPortDriver.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
+asyn_SRCS += asynPortDriver.cpp
 
 SRC_DIRS += $(ASYN)/devEpics
 DBD += devAsynOctet.dbd
