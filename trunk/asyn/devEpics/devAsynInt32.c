@@ -405,6 +405,19 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s devAsynInt32::interruptCallbackInput new value=%d\n",
         pr->name, value);
+    /* There is a problem.  A driver could be calling us with a value after
+     * this record has registered for callbacks but before EPICS has set interruptAccept,
+     * which means that scanIoRequest will return immediately.
+     * This is very bad, because if we have pushed a value into the ring buffer
+     * it won't get popped off because the record won't process.  The values
+     * read the next time the record processes would then be stale.
+     * We previously worked around this problem by waiting here for interruptAccept.
+     * But that does not work if the callback is coming from the thread that is executing
+     * iocInit, which can happen with synchronous drivers (ASYN_CANBLOCK=0) that do callbacks
+     * when a value is written to them, which can happen in initRecord for an output record.
+     * Instead we just return.  There will then be nothing in the ring buffer, so the first
+     * read will do a read from the driver, which should be OK. */
+    if (!interruptAccept) return;
     /* Note that we put a lock around epicsRingBytesPut and Get because we potentially have
      * more than one reader, since the reader is whatever thread is processing the record */
     epicsMutexLock(pPvt->mutexId);
@@ -413,14 +426,6 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringBufferOverflows++;
     }
     epicsMutexUnlock(pPvt->mutexId);
-    /* There is a problem.  A driver could be calling us with a value after
-     * this record has registered for callbacks but before EPICS has set interruptAccept,
-     * which means that scanIoRequest will return immediately.
-     * This is very bad, because we will have pushed a value into the ring buffer
-     * but it won't get popped off because the record won't process.  The values
-     * read the next time the record processes would then be stale.
-     * Work around this problem by waiting here for interruptAccept */
-    while (!interruptAccept) epicsThreadSleep(0.1);
     scanIoRequest(pPvt->ioScanPvt);
 }
 
