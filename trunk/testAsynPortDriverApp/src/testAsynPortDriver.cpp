@@ -33,7 +33,7 @@
 #define FREQUENCY 1000       /* Frequency in Hz */
 #define AMPLITUDE 1.0        /* Plus and minus peaks of sin wave */
 #define NUM_DIVISIONS 10     /* Number of scope divisions in X and Y */
-#define MIN_UPDATE_TIME 0.01 /* Minimum update time, to prevent CPU saturation */
+#define MIN_UPDATE_TIME 0.02 /* Minimum update time, to prevent CPU saturation */
 
 class testAsynPortDriver : public asynPortDriver {
 public:
