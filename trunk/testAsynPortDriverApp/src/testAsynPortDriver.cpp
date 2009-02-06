@@ -3,7 +3,7 @@
  * 
  * Asyn driver that inherits from the asynPortDriver class to demonstrate its use.
  * It simulates a digital scope looking at a 1kHz 1000-point noisy sine wave.  Controls are
- * provided for time/division, volts/division, trigger offset, noise amplitude, update time,
+ * provided for time/division, volts/division, volt offset, trigger delay, noise amplitude, update time,
  * and run/stop.
  * Readbacks are provides for the waveform data, min, max and mean values.
  *
@@ -30,9 +30,10 @@
 
 #include "asynPortDriver.h"
 
-#define FREQUENCY 1000   /* Frequency in Hz */
-#define AMPLITUDE 1.0    /* Plus and minus peaks of sin wave */
-#define NUM_DIVISIONS 10 /* Number of scope divisions in X and Y */
+#define FREQUENCY 1000       /* Frequency in Hz */
+#define AMPLITUDE 1.0        /* Plus and minus peaks of sin wave */
+#define NUM_DIVISIONS 10     /* Number of scope divisions in X and Y */
+#define MIN_UPDATE_TIME 0.01 /* Minimum update time, to prevent CPU saturation */
 
 class testAsynPortDriver : public asynPortDriver {
 public:
@@ -119,6 +120,7 @@ void testAsynPortDriver::simTask(void)
         getIntegerParam(P_Run, &run);
         if (run) epicsEventWaitWithTimeout(this->eventId, updateTime);
         else     epicsEventWait(this->eventId);
+        /* run could have changed while we were waiting */
         getIntegerParam(P_Run, &run);
         if (!run) continue;
         getIntegerParam(P_MaxPoints,        &maxPoints);
@@ -199,6 +201,11 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
 
     switch(function) {
         case P_UpdateTime:
+            /* Make sure the update time is valid. If not change it and put back in parameter library */
+            if (value < MIN_UPDATE_TIME) {
+                value = MIN_UPDATE_TIME;
+                setDoubleParam(P_UpdateTime, value);
+            }
             /* If the update time has changed and we are running then wake up the simulation task */
             getIntegerParam(P_Run, &run);
             if (run) epicsEventSignal(this->eventId);
@@ -242,6 +249,8 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
         case P_TimeBase:
             memcpy(value, this->pTimeBase, ncopy*sizeof(epicsFloat64));
             *nIn = ncopy;
+            break;
+        default:
             break;
     }
     if (status) 
@@ -294,7 +303,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
                     NUM_DRIVER_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask,  /* Interrupt mask */
-                    ASYN_CANBLOCK, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                    0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/    
@@ -344,7 +353,9 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 
 /* Configuration routine.  Called directly, or from the iocsh function below */
 
-extern "C" int testAsynPortDriverConfigure(const char *portName, int maxPoints)
+extern "C" {
+
+int testAsynPortDriverConfigure(const char *portName, int maxPoints)
 {
     new testAsynPortDriver(portName, maxPoints);
     return(asynSuccess);
@@ -369,4 +380,6 @@ void testAsynPortDriverRegister(void)
 }
 
 epicsExportRegistrar(testAsynPortDriverRegister);
+
+}
 
