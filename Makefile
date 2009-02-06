@@ -16,6 +16,8 @@ DIRS += testEpicsApp
 testEpicsApp_DEPEND_DIRS = testApp
 DIRS += testManagerApp
 testManagerApp_DEPEND_DIRS = asyn
+DIRS += testAsynPortDriverApp
+testAsynPortDriverApp_DEPEND_DIRS = asyn
 
 ifdef SNCSEQ
 DIRS += testIPServerApp
