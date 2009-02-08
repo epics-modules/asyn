@@ -31,10 +31,25 @@ to allow link identifiers with a value of zero.
 
 <h3>asynOctetSyncIO</h3>
 
-<p>Ths asynOctetSyncIO <strong>openSocket</strong>
+<p>The asynOctetSyncIO <strong>openSocket</strong>
 method will be removed in the next release.  This method is
 redundant since it is no different than calling the <strong>connect</strong>
 method with the port name from a previous drvAsynIPPortConfigure command.
+
+<h3>asynPortDriver</h3>
+
+<p>A new C++ base class called <strong>asynPortDriver</strong> from which
+real asyn port drivers can be derived.  It greatly simplifies the code
+required to write a new asyn port driver.  It is documented 
+<a href="asynPortDriver.html">here</a>.</p>
+
+<h3>testAsynPortDriverApp</h3>
+
+<p>A new test application to demonstrate the use of the new
+asynPortDriver C++ class.  This driver simulates a simple digital 
+oscilloscope, and includes a C++ driver, EPICS database, medm
+screen, and an example iocBoot directory in ioctestAsynPortDriver.
+It is described in the documentation for <a href="asynPortDriver.html">asynPortDriver</a>.</p>
 
 
 <center>
