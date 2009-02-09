@@ -1,6 +1,9 @@
-<html xmlns="http://www.w3.org/1999/xhtml">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+        "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>asynPortDriver</title>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
 </head>
 <body>
   <div style="text-align: center">
@@ -38,7 +41,7 @@
   <p>
     asynPortDriver provides methods to simplify the above sequence, which must be implemented
     for each of the often many parameters that the driver supports. Each parameter is
-    assigned a number, which is the value in the pasynUser-&gt reason field that asyn
+    assigned a number, which is the value in the pasynUser-&gt;reason field that asyn
     clients pass to the driver when reading or writing that parameter. asynPortDriver
     maintains a table of parameter values, associating each parameter number with a
     data type (integer, double, or string), caching the current value, and maintaining
@@ -170,33 +173,34 @@ public:
     This is the constructor for the class.
   </p>
   <ul>
-    <li><code>portName</code> is the name of the asyn port for this driver or plugin.</li>
-    <li><code>maxAddr</code> is the maximum number of asyn addresses that this driver
-      supports. This number returned by the <code>pasynManager-&gt getAddr()</code> function.
-      Often it is 1, but some drivers, for example a 16-channel D/A or A/D would support
-      values &gt 1. This controls the number of parameter tables that are created.</li>
+    <li><code>portNameIn</code> is the name of the asyn port for this driver or plugin.</li>
+    <li><code>maxAddrIn</code> is the maximum number of asyn addresses that this driver
+      supports. Often it is 1, but some drivers, for example a 16-channel D/A or A/D would
+      support values &gt; 1. This controls the number of parameter tables that are created.</li>
     <li><code>parmTableSize</code> is the maximum number of parameters that this driver
       supports. This controls the size of the parameter tables.</li>
     <li><code>interfaceMask</code> is a mask with each bit defining which asyn interfaces
       this driver or plugin supports. The bit mask values are defined in asynPortDriver.h,
       e.g. <code>asynInt32Mask</code>.</li>
-    <li><code>interruptMask</code> is a mask with each bit defining which of the asyn
-      interfaces this driver supports can generate callbacks (interrupts). The bit mask
-      values are defined in asynPortDriver.h, e.g. <code>asynInt8ArrayMask</code>.</li>
-    <li><code>asynFlags</code> is an attributes mask passed to pasynManager-&gt registerPort.
+    <li><code>interruptMask</code> is a mask with each bit defining the asyn interfaces
+      for which this driver supports generating callbacks (interrupts). The bit mask values
+      are defined in asynPortDriver.h, e.g. <code>asynInt8ArrayMask</code>.</li>
+    <li><code>asynFlags</code> is an attributes mask passed to pasynManager-&gt;registerPort.
       The bits ASYN_CANBLOCK and ASYN_MULTIDEVICE are currently defined for this parameter.</li>
-    <li><code>autoConnect</code> is passed to pasynManager-&gt registerPort. 1 if the
+    <li><code>autoConnect</code> is passed to pasynManager-&gt;registerPort. 1 if the
       driver should autoconnect.</li>
-    <li><code>priority</code> is passed to pasynManager-&gt registerPort. If it is 0 then
-      a default will be assigned.</li>
-    <li><code>stackSize</code> is passed to pasynManager-&gt registerPort. If it is 0
-      then a default will be assigned.</li>
+    <li><code>priority</code> is passed to pasynManager-&gt;registerPort. It is only relevant
+      if ASYN_CANBLOCK=1. If it is 0 then the default value of epicsThreadPriorityMedium
+      will be assigned by asynManager.</li>
+    <li><code>stackSize</code> is passed to pasynManager-&gt;registerPort. It is only
+      relevant if ASYN_CANBLOCK=1. If it is 0 then the default value of epicsThreadGetStackSize(epicsThreadStackMedium)
+      will be assigned by asynManager.</li>
   </ul>
   <pre>    virtual asynStatus getAddress(asynUser *pasynUser, const char *functionName, int *address); 
 </pre>
   <p>
-    Returns the value from pasynManager-&gt getAddr(pasynUser,...). Returns an error
-    if the address is not valid, e.g. &gt= this-&gt maxAddr.
+    Returns the value from pasynManager-&gt;getAddr(pasynUser,...). Returns an error
+    if the address is not valid, e.g. &gt;= this-&gt;maxAddr.
   </p>
   <pre>    virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus readFloat64(asynUser *pasynUser, epicsFloat64 *value);
@@ -205,8 +209,8 @@ public:
 </pre>
   <p>
     These methods are called by asyn clients to return the current cached value for
-    the parameter indexed by pasynUser-&gt reason in the parameter table defined by
-    <code>getAddress()</code>. Derived classed typically do not need to implement these
+    the parameter indexed by pasynUser-&gt;reason in the parameter table defined by
+    <code>getAddress()</code>. Derived classes typically do not need to implement these
     methods.
   </p>
   <pre>    virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
@@ -215,7 +219,7 @@ public:
                           size_t *nActual);
 </pre>
   <p>
-    These methods are called by asynClients to set the new value of a parameter. The
+    These methods are called by asyn clients to set the new value of a parameter. The
     implementation of these methods in asynPortDriver copies the parameter into a cached
     location for use by the asynRead(Int32, Float64, and Octet) methods. Most drivers
     will provide their own implementations of these methods to do driver-dependent operations
@@ -267,11 +271,11 @@ public:
 </pre>
   <p>
     The <code>report</code> function prints information on registered interrupt clients
-    if details &gt 0, and prints parameter table information if details &gt 5. It is
+    if details &gt;0, and prints parameter table information if details &gt;5. It is
     typically called by the implementation of <code>report</code> in derived classes
     before or after they print specific information about themselves. <code>connect</code>
-    and <code>disconnect</code> call <code>pasynManager-&gt exceptionConnect</code>
-    and <code>pasynManager-&gt exceptionDisconnect</code> respectively. Derived classes
+    and <code>disconnect</code> call <code>pasynManager-&gt;exceptionConnect</code>
+    and <code>pasynManager-&gt;exceptionDisconnect</code> respectively. Derived classes
     may or may not need to implement these functions.
   </p>
   <pre>     
@@ -304,55 +308,67 @@ public:
     is a second version of <code>callParamCallbacks</code> that takes an argument specifying
     the parameter list number, and the asyn address to match.
   </p>
- <h2>Example driver - testAsynPortDriver</h2>
- <p>An example driver using the asynPortDriver class is provided in the testAsynPortDriverApp application
- in asyn.  This example is a simple digital oscilloscope emulator.  In this example all of output control
- and input data is done in a calculated simulation.  But it is easy to see how to use the driver as a basis
- for real device control.  The code doing the simulation would simply be changed to talk to an actual device. 
- This could be done using the asyn serial or IP drivers via the asynOctetSyncIO interface (because at this
- driver level blocking is permitted), or via VME register access, or any other I/O mechanism.
- <p>This is the medm screen for controlling this example application.  It is started in the
-    testAsynPortDriverApp/adl directory with the command:
- <pre>
- medm -x -macro "P=testAPD:, R=scope1:" testAsynPortDriver.adl &
+  <h2>
+    Example driver - testAsynPortDriver</h2>
+  <p>
+    An example driver using the asynPortDriver class is provided in the testAsynPortDriverApp
+    application in asyn. This example is a simple digital oscilloscope emulator. In
+    this example all of output control and input data is done in a calculated simulation.
+    But it is easy to see how to use the driver as a basis for real device control.
+    The code doing the simulation would simply be changed to talk to an actual device.
+    This could be done using the asyn serial or IP drivers via the asynOctetSyncIO interface
+    (because at this driver level blocking is permitted), or via VME register access,
+    or any other I/O mechanism.</p>
+  <p>
+    This is the medm screen for controlling this example application. It is started
+    in the testAsynPortDriverApp/adl directory with the command:</p>
+  <pre>
+ medm -x -macro "P=testAPD:, R=scope1:" testAsynPortDriver.adl &amp;
  </pre>
-   <div style="text-align: center">
+  <div style="text-align: center">
     <h3>
       testAsynPortDriver.adl</h3>
     <p>
       <img alt="testAsynPortDriver.png" src="testAsynPortDriver.png" /></p>
   </div>
-<p>The simulated scope input is a noisy 1kHz sin wave with an amplitude of +-1V.  
-The amplitude of the noise is an adjustable parameter.  The scope parameters that can
-be adjusted are the vertical volts/division, vertical volt offset, horizontal time/division,
-trigger delay (relative to time=0 for the sin wave). The minimum, maximum and mean values
-of the waveform are calculated.  The run/stop control turns the simulation of the waveform
-on and off. The update time in seconds controls the rate at which the waveform and statistics
-are calculated.  By default all of the EPICS input records are I/O Intr scanned.  There is
-a control on the medm screen to change the scan rate of the waveform record itself.  By default
-it is also I/O Intr scanned, so the plot updates on every simulation.  One can change this to,
-for example, 1 second, and then the simulation can be running faster (for example 50 Hz, 
-Update time=.02) so the statistics will update quickly but the waveform at only 1Hz to save CPU time and
-network bandwidth.</p>
-<p>This driver supports about 20 EPICS records, including ao, ai, bo, bi, and waveform.  It does callbacks 
-to device support when any of the input records changes, so the records can use I/O Intr scanning rather
-than polling.  It uses only the standard asyn EPICS record device support provided as part of asyn.  Yet the driver
-is only about 400 lines of well-commented C++ code, because so much of the infrastructure is handled 
-by the asynPortDriver base class.</p>
-<p> Here are the important lines from the startup script to start this IOC:</p>
-<pre>
+  <p>
+    The simulated scope input is a noisy 1kHz sin wave with an amplitude of +-1V. The
+    amplitude of the noise is an adjustable parameter. The scope parameters that can
+    be adjusted are the vertical volts/division, vertical volt offset, horizontal time/division,
+    trigger delay (relative to time=0 for the sin wave). The minimum, maximum and mean
+    values of the waveform are calculated. The run/stop control turns the simulation
+    of the waveform on and off. The update time in seconds controls the rate at which
+    the waveform and statistics are calculated. By default all of the EPICS input records
+    are I/O Intr scanned. There is a control on the medm screen to change the scan rate
+    of the waveform record itself. By default it is also I/O Intr scanned, so the plot
+    updates on every simulation. One can change this to, for example, 1 second, and
+    then the simulation can be running faster (for example 50 Hz, Update time=.02) so
+    the statistics will update quickly but the waveform at only 1Hz to save CPU time
+    and network bandwidth.</p>
+  <p>
+    This driver supports about 20 EPICS records, including ao, ai, bo, bi, and waveform.
+    It does callbacks to device support when any of the input records changes, so the
+    records can use I/O Intr scanning rather than polling. It uses only the standard
+    asyn EPICS record device support provided as part of asyn. Yet the driver is only
+    about 400 lines of well-commented C++ code, because so much of the infrastructure
+    is handled by the asynPortDriver base class.</p>
+  <p>
+    Here are the important lines from the startup script to start this IOC:</p>
+  <pre>
 testAsynPortDriverConfigure("testAPD", 1000)
 dbLoadRecords("../../db/testAsynPortDriver.db","P=testAPD:,R=scope1:,PORT=testAPD,ADDR=0,TIMEOUT=1,NPOINTS=1000")
 </pre>
-<p>The first line starts the asyn port driver with a 1000 point waveform. The second line loads
-the database.  The PORT parameter is the name of the asyn port created in the first line.  The ADDR
-parameter is 0 because this driver is not ASYN_MULTIDEVICE, it only supports a single address.
-The TIMEOUT parameter is not really significant because this is a synchronous asyn port driver,
-i.e. ASYN_CANBLOCK=0.  NPOINTS is the value for NELM in the waveform record in the database.  It would
-normally match the value provided in the configure command above.</p>
-
-<p>This is an example of 2 of the record definitions in the database file, testAsynPortDriver.db.</p>
-<pre>
+  <p>
+    The first line starts the asyn port driver with a 1000 point waveform. The second
+    line loads the database. The PORT parameter is the name of the asyn port created
+    in the first line. The ADDR parameter is 0 because this driver is not ASYN_MULTIDEVICE,
+    it only supports a single address. The TIMEOUT parameter is not really significant
+    because this is a synchronous asyn port driver, i.e. ASYN_CANBLOCK=0. NPOINTS is
+    the value for NELM in the waveform record in the database. It would normally match
+    the value provided in the configure command above.</p>
+  <p>
+    This is an example of 2 of the record definitions in the database file, testAsynPortDriver.db.</p>
+  <pre>
 ###################################################################
 #  These records are the time per division                        #
 ###################################################################
@@ -373,27 +389,34 @@ record(ai, "$(P)$(R)TimePerDiv_RBV")
    field(SCAN, "I/O Intr")
 }
 </pre>
-Note that there is both an output record and an input record for this parameter, the time per
-horizontal division.  This is done so that if the driver is forced to modify a parameter (for
-example because the device cannot support the output value it received) there is
-feedback to the user on the actual value being used.  In this case the ai record will always
-be the same as the ao record.  But in the case of the update time parameter the driver
-enforces a minimum time of 0.02 seconds, so that if a value less than this is requested
-the ao and ai records will not agree.  In that particular case DRVL could be used to enforce that
-limit at the ao record level, but this is not always the case, because device limits can vary
-with the value of other parameters.</p>
-<p>The DTYP field of these records is asynFloat64, which uses the standard asyn device support
-for ao and ai records, provided in asyn/devEpics/devAsynFloat64.c.</p>
-<p>The OUT and INP fields use the PORT, ADDR and TIMEOUT values described above. The final parameter,
-TIME_PER_DIV in these fields is used by the driver to identify which driver parameter these records
-are connected to.  This is the asyn drvUser parameter, and is discussed below.
-<p>Finally, note that the ai record has SCAN=I/O Intr.  This means that this record does not have
-to be periodically scanned (which is inefficient), but rather it will be processed whenever
-its value is changed by the driver.  For the ai statistics records (min, max, mean) in this
-example record callbacks occur every time the simulation runs if the noise is non-zero.</p>
-<p>
-<p>This is the definition of the testAsynPortDriver class:</p>
-<pre>
+  <p>
+    Note that there is both an output record and an input record for this parameter,
+    the time per horizontal division. This is done so that if the driver is forced to
+    modify a parameter (for example because the device cannot support the output value
+    it received) there is feedback to the user on the actual value being used. In this
+    case the ai record will always be the same as the ao record. But in the case of
+    the update time parameter the driver enforces a minimum time of 0.02 seconds, so
+    that if a value less than this is requested the ao and ai records will not agree.
+    In that particular case DRVL could be used to enforce that limit at the ao record
+    level, but this is not always the case, because device limits can vary with the
+    value of other parameters.</p>
+  <p>
+    The DTYP field of these records is asynFloat64, which uses the standard asyn device
+    support for ao and ai records, provided in asyn/devEpics/devAsynFloat64.c.</p>
+  <p>
+    The OUT and INP fields use the PORT, ADDR and TIMEOUT values described above. The
+    final parameter, TIME_PER_DIV in these fields is used by the driver to identify
+    which driver parameter these records are connected to. This is the asyn drvUser
+    parameter, and is discussed below.</p>
+  <p>
+    Finally, note that the ai record has SCAN=I/O Intr. This means that this record
+    does not have to be periodically scanned (which is inefficient), but rather it will
+    be processed whenever its value is changed by the driver. For the ai statistics
+    records (min, max, mean) in this example,,. record callbacks occur every time the
+    simulation runs if the noise is non-zero.</p>
+  <p>
+    This is the definition of the testAsynPortDriver class:</p>
+  <pre>
 class testAsynPortDriver : public asynPortDriver {
 public:
     testAsynPortDriver(const char *portName, int maxArraySize);
@@ -415,12 +438,13 @@ public:
     epicsFloat64 *pTimeBase;
 };
 </pre>
-<p>testAsynPortDriver is derived from asynPortDriver.  It overrides the methods writeInt32, writeFloat64,
-readFloat64Array, and drvUserCreate.  It adds a new method, simTask, which runs a separate thread
-to compute the waveform at the specified update time.</p>
-<p>
-This is the how the parameters are defined in the driver, testAsynPortDriver.cpp</p>
-<pre>
+  <p>
+    testAsynPortDriver is derived from asynPortDriver. It overrides the methods writeInt32,
+    writeFloat64, readFloat64Array, and drvUserCreate. It adds a new method, simTask,
+    which runs a separate thread to compute the waveform at the specified update time.</p>
+  <p>
+    This is the how the parameters are defined in the driver, testAsynPortDriver.cpp</p>
+  <pre>
 typedef enum {
     P_Run,                /* asynInt32,    r/w */
     P_MaxPoints,          /* asynInt32,    r/o */
@@ -459,10 +483,13 @@ static asynParamString_t driverParamString[] = {
 #define NUM_DRIVER_PARAMS (sizeof(driverParamString)/sizeof(driverParamString[0]))
 
 </pre>
-<p>Note that each parameter is assigned an enum value that identifies it.  It is also associated with a string
-that is used in the drvUser field of the record INP or OUT fields to associate a record with a parameter.</p>
-<p>This is the beginning of the constructor for the testAsynPortDriver C++ class.</p>
-<pre>
+  <p>
+    Note that each parameter is assigned an enum value that identifies it. It is also
+    associated with a string that is used in the drvUser field of the record INP or
+    OUT fields to associate a record with a parameter.</p>
+  <p>
+    This is the beginning of the constructor for the testAsynPortDriver C++ class.</p>
+  <pre>
 testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
@@ -475,33 +502,38 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
                     0) /* Default stack size*/    
 ...
 </pre>
-<p>It invoke the constructor for the asynPortDriver base class.  It passes:</p>
-<ul>
-  <li>The portName, which is the name of the asyn port to be created.  In the st.cmd file above this
-  is "testAPD".</li>
-  <li>The maximum number of asyn addresses that this driver supports, which is 1.</li>
-  <li>The number of parameters that this driver supports.  This is NUM_DRIVER_PARAMS, which was computed
-    above from the size of the <code>driverParamString</code> array.</li>
-  <li>A mask which defines which asyn interfaces this driver supports, in this case asynInt32, asynFloat64,
-    asynFloat64Array, and asynDrvUser.  All drivers must support asynCommon, so that bit is added in the base
-    class</li>.
-  <li>A mask which defines which asyn interfaces can generate interrupts (callbacks).  In this case that
-    is asynInt32, asynFloat64, and asynFloat64Array.</li>
-  <li>A mask which defines the asyn attributes for this driver.  asyn current defines two attribute bits,
-    ASYN_CANBLOCK and ASYN_MULTIDEVICE.  ASYN_CANBLOCK must be set for drivers that perform "slow" operations
-    on their interfaces, requiring asynManager to create a separate port thread for them and to use
-    asynchronous device support.  ASYN_MULTIDEVICE must be set for drivers that support more than one asyn 
-    address, for example a driver used to support a 16-channel A/D converter.</li>
-  <li>A flag to tell asynManager that it should automatically attempt to connect to this device when a call is made
-    on its interfaces.  This results in a call to asynCommon-&gt&connect().</li>
-  <li>A priority flag for the port thread that asynManager will create is ASYN_CANBLOCK is 1.  If this
-    is 0 then asyn will use a default medium thread priority.</li>
-  <li>The stack size for the port thread that asynManager will create is ASYN_CANBLOCK is 1.  If this
-    is 0 then asyn will use a default medium thread stack size.</li>
-</ul>
-<p>The constructor also allocates spaces for the waveform arrays (X and Y axes), and creates the simTask thread.</p>
-<p>This is the implementation of the writeFloat64 function:</p>
-<pre>
+  <p>
+    It invokes the constructor for the asynPortDriver base class. It passes:</p>
+  <ul>
+    <li>The portName, which is the name of the asyn port to be created. In the st.cmd
+      file above this is "testAPD".</li>
+    <li>The maximum number of asyn addresses that this driver supports, which is 1.</li>
+    <li>The number of parameters that this driver supports. This is NUM_DRIVER_PARAMS,
+      which was computed above from the size of the <code>driverParamString</code> array.</li>
+    <li>A mask which defines which asyn interfaces this driver supports, in this case
+      asynInt32, asynFloat64, asynFloat64Array, and asynDrvUser. All drivers must support
+      asynCommon, so that bit is added in the base class.</li>
+    <li>A mask which defines which asyn interfaces can generate interrupts (callbacks).
+      In this case that is asynInt32, asynFloat64, and asynFloat64Array.</li>
+    <li>A mask which defines the asyn attributes for this driver. asyn currently defines
+      two attribute bits, ASYN_CANBLOCK and ASYN_MULTIDEVICE. ASYN_CANBLOCK must be set
+      for drivers that perform "slow" operations on their interfaces, requiring asynManager
+      to create a separate port thread for them and to use asynchronous device support.
+      ASYN_MULTIDEVICE must be set for drivers that support more than one asyn address,
+      for example a driver used to support a 16-channel A/D converter.</li>
+    <li>A flag to tell asynManager that it should automatically attempt to connect to
+      this device when a call is made on its interfaces. This results in a call to asynCommon-&gt;connect().</li>
+    <li>A priority flag for the port thread that asynManager will create if ASYN_CANBLOCK
+      is 1. If this is 0 then asyn will use a default medium thread priority.</li>
+    <li>The stack size for the port thread that asynManager will create if ASYN_CANBLOCK
+      is 1. If this is 0 then asyn will use a default medium thread stack size.</li>
+  </ul>
+  <p>
+    The constructor also allocates spaces for the waveform arrays (X and Y axes), and
+    creates the simTask thread.</p>
+  <p>
+    This is the implementation of the writeFloat64 function:</p>
+  <pre>
 asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
@@ -515,12 +547,12 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     switch(function) {
         case P_UpdateTime:
             /* Make sure the update time is valid. If not change it and put back in parameter library */
-            if (value < MIN_UPDATE_TIME) {
+            if (value &lt; MIN_UPDATE_TIME) {
                 value = MIN_UPDATE_TIME;
                 setDoubleParam(P_UpdateTime, value);
             }
             /* If the update time has changed and we are running then wake up the simulation task */
-            getIntegerParam(P_Run, &run);
+            getIntegerParam(P_Run, &amp;run);
             if (run) epicsEventSignal(this->eventId);
             break;
         default:
@@ -543,33 +575,39 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     return status;
 }
 </pre>
-<p>This is what is being performed in this function:</p>
-<ul>
-  <li>The pasynUser-&gt reason field is used to get the value of <code>function</code>.  This is
-    one of the testParams enum values (e.g. P_TimePerDivision).  It was placed in the pasynUser-&gt reason
-    field by this driver's drvUserCreate method that was called at iocInit, and was passed the drvUser field from the
-    record link, e.g. "TIME_PER_DIV".</li>
-  <li>The value passed is set in the parameter list with <code>setDoubleParam</code>.</li>
-  <li>A switch statement processes each of the parameters differently.  In this case only one float64 parameter,
-    P_UpdateTime, needs to actually have any action taken in this function.  All other parameters just have their
-    values set in the parameter list for later use.</li>
-  <li>For P_Update time the value is checked for validity to make sure it is greater than MIN_UPDATE_TIME.  If
-  not then the value is changed, and the new value is written to the parameter list.  This new value
-  will be passed in callbacks to any callback clients, for example an ai record that is monitoring
-  this parameter.  The function then retrieves the value of the P_Run parameter from the parameter list,
-  and if it is 1 it sends an EPICS event signal to wake up the simTask.  This is done so that if the update
-  time is changed from a very long value to a shorter one then it does not wait for the long timer to
-  expire.</li>
-  <li><code>callParamCallbacks()</code> is called, which results in callbacks to all registered clients
-    for any parameters that have changed as a result of this function call.  In this case the only parameter
-    that will have changed is whatever parameter was passed in pasynUser-&gt reason, but in general other
-    parameters could have changed as a side-effect of changing this parameter.</li>
-  <li>Diagnostic information is optionally printed for both error and success status.</li>
-</ul>
-<p>The <code>writeInt32</code> function is very similar.</p>
-<p>Finally here is the <code>simTask</code> function, which actually does the simulation.  It runs in a 
-separate thread created in the constuctor:</p>
-<pre>
+  <p>
+    This is what is being performed in this function:</p>
+  <ul>
+    <li>The pasynUser-&gt;reason field is used to get the value of <code>function</code>.
+      This is one of the testParams enum values (e.g. P_TimePerDivision). It was placed
+      in the pasynUser-&gt;reason field by this driver's drvUserCreate method that was
+      called at iocInit, and was passed the drvUser field from the record link, e.g. "TIME_PER_DIV".</li>
+    <li>The value passed is set in the parameter list with <code>setDoubleParam</code>.</li>
+    <li>A switch statement processes each of the parameters differently. In this case
+      only one float64 parameter, P_UpdateTime, needs to actually have any action taken
+      in this function. All other parameters just have their values set in the parameter
+      list for later use.</li>
+    <li>For P_UpdateTime the value is checked for validity to make sure it is greater
+      than MIN_UPDATE_TIME. If not then the value is changed, and the new value is written
+      to the parameter list. This new value will be passed in callbacks to any callback
+      clients, for example an ai record that is monitoring this parameter. The function
+      then retrieves the value of the P_Run parameter from the parameter list, and if
+      it is 1 it sends an EPICS event signal to wake up the simTask. This is done so that
+      if the update time is changed from a very long value to a shorter one then it does
+      not wait for the long timer to expire.</li>
+    <li><code>callParamCallbacks()</code> is called, which results in callbacks to all
+      registered clients for any parameters that have changed as a result of this function
+      call. In this case the only parameter that will have changed is whatever parameter
+      was passed in pasynUser-&gt;reason, but in general other parameters could have changed
+      as a side-effect of changing this parameter.</li>
+    <li>Diagnostic information is optionally printed for both error and success status.</li>
+  </ul>
+  <p>
+    The <code>writeInt32</code> function is very similar.</p>
+  <p>
+    Finally here is the <code>simTask</code> function, which actually does the simulation.
+    It runs in a separate thread created in the constructor:</p>
+  <pre>
 void testAsynPortDriver::simTask(void)
 {
     /* This thread computes the waveform and does callbacks with it */
@@ -583,65 +621,70 @@ void testAsynPortDriver::simTask(void)
     
     /* Loop forever */    
     while (1) {
-        getDoubleParam(P_UpdateTime, &updateTime);
-        getIntegerParam(P_Run, &run);
+        getDoubleParam(P_UpdateTime, &amp;updateTime);
+        getIntegerParam(P_Run, &amp;run);
         if (run) epicsEventWaitWithTimeout(this->eventId, updateTime);
         else     epicsEventWait(this->eventId);
         /* run could have changed while we were waiting */
-        getIntegerParam(P_Run, &run);
+        getIntegerParam(P_Run, &amp;run);
         if (!run) continue;
-        getIntegerParam(P_MaxPoints,        &maxPoints);
-        getDoubleParam (P_TimePerDivision,  &timePerDivision);
-        getDoubleParam (P_VoltsPerDivision, &voltsPerDivision);
-        getDoubleParam (P_VoltOffset,       &voltOffset);
-        getDoubleParam (P_TriggerDelay,     &triggerDelay);
-        getDoubleParam (P_NoiseAmplitude,   &noiseAmplitude);
+        getIntegerParam(P_MaxPoints,        &amp;maxPoints);
+        getDoubleParam (P_TimePerDivision,  &amp;timePerDivision);
+        getDoubleParam (P_VoltsPerDivision, &amp;voltsPerDivision);
+        getDoubleParam (P_VoltOffset,       &amp;voltOffset);
+        getDoubleParam (P_TriggerDelay,     &amp;triggerDelay);
+        getDoubleParam (P_NoiseAmplitude,   &amp;noiseAmplitude);
         time = triggerDelay;
         timeStep = timePerDivision * NUM_DIVISIONS / maxPoints;
         minValue = 1e6;
         maxValue = -1e6;
         meanValue = 0.;
     
-        yScale = 1.0 / voltsPerDivision;
-        for (i=0; i<maxPoints; i++) {
-            noise = noiseAmplitude * (rand()/(double)RAND_MAX - 0.5);
-            pData[i] = AMPLITUDE * (sin(time*FREQUENCY*2*pi)) + noise;
-            /* Compute statistics before doing the yOffset and yScale */
-            if (pData[i] < minValue) minValue = pData[i];
-            if (pData[i] > maxValue) maxValue = pData[i];
-            meanValue += pData[i];
-            pData[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData[i]);
-            time += timeStep;
+         yScale = 1.0 / voltsPerDivision;
+         for (i=0; i&lt;maxPoints; i++) {
+             noise = noiseAmplitude * (rand()/(double)RAND_MAX - 0.5);
+             pData[i] = AMPLITUDE * (sin(time*FREQUENCY*2*pi)) + noise;
+             /* Compute statistics before doing the yOffset and yScale */
+             if (pData[i] &lt; minValue) minValue = pData[i];
+             if (pData[i] &gt; maxValue) maxValue = pData[i];
+             meanValue += pData[i];
+             pData[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData[i]);
+             time += timeStep;
+
         }
         meanValue = meanValue/maxPoints;
         setDoubleParam(P_MinValue, minValue);
         setDoubleParam(P_MaxValue, maxValue);
         setDoubleParam(P_MeanValue, meanValue);
-        callParamCallbacks();
         doCallbacksFloat64Array(pData, maxPoints, P_Waveform, 0);
     }
 }
 </pre>
-<p>Here are the important aspects of this function:</p>
-<ul>
-  <li>The value of <code>P_Run</code> determines whether the simulation is running or stopped.  If stopped
-  it simply waits for a signal (from the <code>writeInt32()</code> function) to start running.  If running
-  it waits for the update time, or until it receives a signal, which will occur if the update time
-  is changed in the <code>writeFloat64()</code> function.</li>
-  <li>It reads the values of the simulation parameters (<code>P_TimePerDivision</code>, etc.) from the parameter list.</li>
-  <li>It computes each point in the waveform inside the <code>for</code> loop, using the current
-  values of the simulation parameters.  It also updates the statistics parameters (min, max, mean) inside
-  this loop.</li>
-  <li>After the loop is done the new values of the statistics parameters are written to the parameter list
-  with <code>setDoubleParam()</code>.
-  <li>New values of all scalar parameters (int32, float64, string) in the parameter list are sent to registered clients
-  (e.g. asyn device support for input records) with the call to <code>callParamCallbacks()</code>.</li>
-  <li>The new value of the waveform is sent to registered clients (e.g. device support for the waveform input
-  record) with the call to <code>doCallbacksFloat64Array()</code>.</li> 
-</ul>
-<p>Real drivers may or may not need such a separate thread.  Drivers that need to periodically poll status
-information will probably use one.  Most drivers will probably implement one or more of the 
-<code>writeInt32()</code>, <code>writeFloat64()</code>, or <code>writeOctet()</code> functions, 
-in addition to <code>drvUserCreate()<code/>.</p>
+  <p>
+    Here are the important aspects of this function:</p>
+  <ul>
+    <li>The value of <code>P_Run</code> determines whether the simulation is running or
+      stopped. If stopped it simply waits for a signal (from the <code>writeInt32()</code>
+      function) to start running. If running it waits for the update time, or until it
+      receives a signal, which will occur if the update time is changed in the <code>writeFloat64()</code>
+      function.</li>
+    <li>It reads the values of the simulation parameters (<code>P_TimePerDivision</code>,
+      etc.) from the parameter list.</li>
+    <li>It computes each point in the waveform inside the <code>for</code> loop, using
+      the current values of the simulation parameters. It also updates the statistics
+      parameters (min, max, mean) inside this loop.</li>
+    <li>After the loop is done the new values of the statistics parameters are written
+      to the parameter list with <code>setDoubleParam()</code>.</li>
+    <li>New values of all scalar parameters (int32, float64, string) in the parameter
+      list are sent to registered clients (e.g. asyn device support for input records)
+      with the call to <code>callParamCallbacks()</code>.</li>
+    <li>The new value of the waveform is sent to registered clients (e.g. device support
+      for the waveform input record) with the call to <code>doCallbacksFloat64Array()</code>.</li>
+  </ul>
+  <p>
+    Real drivers may or may not need such a separate thread. Drivers that need to periodically
+    poll status information will probably use one. Most drivers will probably implement
+    one or more of the <code>writeInt32()</code>, <code>writeFloat64()</code>, or <code>
+      writeOctet()</code> functions, in addition to <code>drvUserCreate()</code>.</p>
 </body>
 </html>
