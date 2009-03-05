@@ -2,6 +2,7 @@
 #define asynPortDriver_H
 
 #include <epicsTypes.h>
+#include <epicsMutex.h>
 #include <asynStandardInterfaces.h>
 
 typedef struct {
