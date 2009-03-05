@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.53 2008-07-02 21:02:06 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.54 2009-03-05 17:13:59 norume Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -61,8 +61,14 @@
 # define USE_SOCKTIMEOUT
 #else
 # define USE_POLL
-# if defined(vxWorks) || defined(_WIN32)
+# if defined(vxWorks)
 #  define FAKE_POLL
+# elif defined(_WIN32)
+#  if(_WIN32_WINNT >= 0x0600)
+#   define poll(fd,nfd,t) WSAPoll(fd,nfd,t)
+#  else
+#   define FAKE_POLL
+#  endif
 # else
 #  include <sys/poll.h>
 # endif
