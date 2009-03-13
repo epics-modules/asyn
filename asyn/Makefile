@@ -16,6 +16,7 @@ ASYN = $(TOP)/asyn
 LIBRARY_IOC += asyn
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 asyn_SYS_LIBS_WIN32 = ws2_32
+asyn_SYS_LIBS_cygwin32 = rpc
 
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
