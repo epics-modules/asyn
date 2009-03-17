@@ -13,13 +13,17 @@
 #ifndef DRVASYNIPPORT_H
 #define DRVASYNIPPORT_H
 
+#include <shareLib.h>  
+
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
-int drvAsynIPPortConfigure(const char *portName, const char *hostInfo,
-                           unsigned int priority, int noAutoConnect,
-                           int noProcessEos);
+epicsShareFunc int drvAsynIPPortConfigure(const char *portName,
+                                          const char *hostInfo,
+                                          unsigned int priority,
+                                          int noAutoConnect,
+                                          int noProcessEos);
 
 #ifdef __cplusplus
 }
