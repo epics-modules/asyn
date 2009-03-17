@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.46 2008-05-28 18:58:52 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.47 2009-03-17 18:11:58 norume Exp $
  */
 
 #include <string.h>
@@ -889,7 +889,7 @@ static const struct asynOption drvAsynSerialPortAsynOption = {
 /*
  * Configure and register a generic serial device
  */
-int
+epicsShareFunc int
 drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,
