@@ -13,6 +13,8 @@
 #ifndef DRVASYNLOCALSERIALPORT_H
 #define DRVASYNLOCALSERIALPORT_H
 
+#include <shareLib.h> 
+
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
@@ -21,9 +23,11 @@ extern "C" {
 #define ASYN_ERROR_PARITY  0x0001
 #define ASYN_ERROR_FRAMING 0x0002
 
-int drvAsynSerialPortConfigure(char *portName, char *ttyName,
-                               unsigned int priority, int noAutoConnect,
-                               int noProcessEos);
+epicsShareFunc int drvAsynSerialPortConfigure(char *portName,
+                                              char *ttyName,
+                                              unsigned int priority,
+                                              int noAutoConnect,
+                                              int noProcessEos);
 
 #ifdef __cplusplus
 }
