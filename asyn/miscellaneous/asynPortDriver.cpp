@@ -15,13 +15,39 @@
 
 #include <epicsString.h>
 #include <epicsMutex.h>
+#include <epicsThread.h>
 #include <cantProceed.h>
+/* NOTE: This is needed only for interruptAccept, which is hopefully a temporary workaround 
+ * until EPICS supports PINI after interruptAccept */
+#include <dbAccess.h>
 
 #include <asynStandardInterfaces.h>
 
 #include "asynPortDriver.h"
 
 static const char *driverName = "asynPortDriver";
+
+/* This thread waits for interruptAccept and then does all the callbacks once.
+   THIS SHOULD BE A TEMPORARY FIX until EPICS supports PINI after interruptAccept */
+static void callbackTaskC(void *drvPvt)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    
+    pPvt->callbackTask();
+}
+
+void asynPortDriver::callbackTask()
+{
+    int addr;
+    
+    while(!interruptAccept) epicsThreadSleep(0.1);
+    epicsMutexLock(this->mutexId);
+    for (addr=0; addr<this->maxAddr; addr++) {
+        callParamCallbacks(addr, addr);
+    }
+    epicsMutexUnlock(this->mutexId);
+}
+
 
 paramList::paramList(int startVal, int nValsIn, asynStandardInterfaces *pasynInterfaces)
     : startVal(startVal), nVals(nValsIn), nFlags(0), pasynInterfaces(pasynInterfaces)
@@ -251,6 +277,11 @@ asynStatus paramList::callCallbacks(int addr)
     int command;
     asynStatus status = asynSuccess;
 
+    /* TEMPORARY FIX.  Dont do anything if interruptAccept=0.  There is now a thread that will
+     * do all callbacks once when interruptAccept goes to 1.
+     * THIS SHOULD BE A TEMPORARY FIX until EPICS supports PINI after interruptAccept */
+    if (!interruptAccept) return(status);
+    
     for (i = 0; i < this->nFlags; i++)
     {
         index = this->flags[i];
@@ -1314,6 +1345,19 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
     if (status != asynSuccess) {
         printf("%s:%s:, connectDevice failed\n", driverName, functionName);
+        return;
+    }
+
+    /* Create a thread that waits for interruptAccept and then does all the callbacks once.
+       THIS SHOULD BE A TEMPORARY FIX until epics supports PII after interruptAccept */
+    status = (asynStatus)(epicsThreadCreate("asynPortDriverCallback",
+                                epicsThreadPriorityMedium,
+                                epicsThreadGetStackSize(epicsThreadStackMedium),
+                                (EPICSTHREADFUNC)callbackTaskC,
+                                this) == NULL);
+    if (status) {
+        printf("%s:%s epicsThreadCreate failure for callback task\n", 
+            driverName, functionName);
         return;
     }
 
