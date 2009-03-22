@@ -612,6 +612,7 @@ static long processAo(aoRecord *pr)
     
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
+        /* This code is for I/O Intr scanned output records, which are not tested yet. */
         pr->rval = pPvt->value;
         pr->udf = 0;
         value = (double)pr->rval + (double)pr->roff;
@@ -635,7 +636,7 @@ static long processAo(aoRecord *pr)
         pr->val = value;
         pr->udf = isnan(value);
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->rval;
+        pPvt->value = pr->rval;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
@@ -714,9 +715,10 @@ static long processLo(longoutRecord *pr)
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
+        /* This code is for I/O Intr scanned output records, which are not tested yet. */
         pr->val = pPvt->value; pr->udf = 0;
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->val;
+        pPvt->value = pr->val;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
@@ -797,11 +799,12 @@ static long processBo(boRecord *pr)
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
+        /* This code is for I/O Intr scanned output records, which are not tested yet. */
         pr->rval = pPvt->value;
         pr->val = (pr->rval) ? 1 : 0;
         pr->udf = 0;
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->rval;
+        pPvt->value = pr->rval;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
@@ -884,6 +887,7 @@ static long processMbbo(mbboRecord *pr)
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
+        /* This code is for I/O Intr scanned output records, which are not tested yet. */
         unsigned long rval = pPvt->value & pr->mask;
 
         pr->rval = rval;
@@ -907,7 +911,7 @@ static long processMbbo(mbboRecord *pr)
         }
         pr->udf = FALSE;
     } else if(pr->pact == 0) {
-        pPvt->gotValue = 1; pPvt->value = pr->rval;
+        pPvt->value = pr->rval;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
