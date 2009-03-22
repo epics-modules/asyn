@@ -141,6 +141,8 @@ public:
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual void reportParams();
 
+    void callbackTask();
+
     char *portName;
     int maxAddr;
     paramList **params;
