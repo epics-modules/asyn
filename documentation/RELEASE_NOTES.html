@@ -36,6 +36,8 @@ broken.</p>
 <p>Setting the trace mask or trace I/O mask for a port now also sets the 
 trace mask or trace I/O mask for every device associated with that port.</p>
 
+<p>Passing a NULL pasynUser argument to the setTraceMask and setTraceIOMask will set the asynBase (default) trace mask or trace I/O mask.</p>
+
 <h3>asynDriver.h</h3>
 
 <p>Add new asynStatus codes, <strong>asynDisconnected</strong> and
