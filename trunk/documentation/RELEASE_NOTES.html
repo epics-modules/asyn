@@ -33,6 +33,9 @@ changes have been made to reduce the occurences of 'connection flurries' and
 to ensure that requests do not languish in the queue when connections are
 broken.</p>
 
+<p>Setting the trace mask or trace I/O mask for a port now also sets the 
+trace mask or trace I/O mask for every device associated with that port.</p>
+
 <h3>asynDriver.h</h3>
 
 <p>Add new asynStatus codes, <strong>asynDisconnected</strong> and
