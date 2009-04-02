@@ -25,7 +25,7 @@ extern "C" {
 
 
 typedef enum {
-    asynSuccess,asynTimeout,asynOverflow,asynError
+    asynSuccess,asynTimeout,asynOverflow,asynError,asynDisconnected,asynDisabled
 }asynStatus;
 
 typedef enum {
