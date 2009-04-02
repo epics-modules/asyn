@@ -2167,24 +2167,29 @@ static asynStatus setTraceMask(asynUser *pasynUser,int mask)
         pasynBase->trace.traceMask = mask;
     }
     else {
-        userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-        port       *pport = puserPvt->pport;
+        userPvt *puserPvt = asynUserToUserPvt(pasynUser);
+        port    *pport = puserPvt->pport;
+        device  *pdevice = puserPvt->pdevice;
 
         if(!pport) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager:setTraceMask -- not connected to port.");
             return asynError;
         }
-        if(!puserPvt->pdevice) {
-            device *pdevice = (device *)ellFirst(&pport->deviceList);
+        if(pdevice) {
+            pdevice->dpc.trace.traceMask = mask;
+            announceExceptionOccurred(pport, pdevice, asynExceptionTraceMask);
+        }
+        else {
+            pdevice = (device *)ellFirst(&pport->deviceList);
             while(pdevice) {
                 pdevice->dpc.trace.traceMask = mask;
                 announceExceptionOccurred(pport, pdevice, asynExceptionTraceMask);
                 pdevice = (device *)ellNext(&pdevice->node);
             }
+            pport->dpc.trace.traceMask = mask;
+            announceExceptionOccurred(pport, NULL, asynExceptionTraceMask);
         }
-        pport->dpc.trace.traceMask = mask;
-        announceExceptionOccurred(pport, puserPvt->pdevice, asynExceptionTraceMask);
     }
     return asynSuccess;
 }
@@ -2203,24 +2208,29 @@ static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
         pasynBase->trace.traceIOMask = mask;
     }
     else {
-        userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-        port       *pport = puserPvt->pport;
+        userPvt *puserPvt = asynUserToUserPvt(pasynUser);
+        port    *pport = puserPvt->pport;
+        device  *pdevice = puserPvt->pdevice;
 
         if(!pport) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager:setTraceIOMask -- not connected to port.");
             return asynError;
         }
-        if(!puserPvt->pdevice) {
-            device *pdevice = (device *)ellFirst(&pport->deviceList);
+        if(pdevice) {
+            pdevice->dpc.trace.traceIOMask = mask;
+            announceExceptionOccurred(pport, pdevice, asynExceptionTraceIOMask);
+        }
+        else {
+            pdevice = (device *)ellFirst(&pport->deviceList);
             while(pdevice) {
                 pdevice->dpc.trace.traceIOMask = mask;
                 announceExceptionOccurred(pport, pdevice, asynExceptionTraceIOMask);
                 pdevice = (device *)ellNext(&pdevice->node);
             }
+            pport->dpc.trace.traceIOMask = mask;
+            announceExceptionOccurred(pport, NULL, asynExceptionTraceIOMask);
         }
-        pport->dpc.trace.traceIOMask = mask;
-        announceExceptionOccurred(pport, puserPvt->pdevice, asynExceptionTraceIOMask);
     }
     return asynSuccess;
 }
