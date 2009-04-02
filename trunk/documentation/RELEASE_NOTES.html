@@ -6,7 +6,7 @@
   <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type" />
 </head>
 
-<body>
+<body xml:lang="en" lang="en">
 
 <div style="text-align: center">
 <h1>asynDriver: Asynchronous Driver Support - Release Notes</h1>
@@ -24,18 +24,22 @@
 <p>asynReport at detail level 0 now reports only disconnected
 subaddresses.</p>
 
-<p>The autoconnect code has been modified considerably. When a port is
-registered with autoConnect=1,or whenever a port disconnect exception is
-raised on an autoConnect port, an attempt at connection occurs immediately
+<p>The autoconnect code has undergone considerable modification. When a port
+is registered with autoConnect true,,or whenever a port disconnect exception
+is raised on an autoConnect port, an attempt at connection occurs immediately
 followed by retry attempts at 20 second intervals. Attempts to queue requests
 to a disconnected port (even an autoConnect port) will be rejected. These
-changes have been made to reduce the occurences of 'connection flurries'.</p>
+changes have been made to reduce the occurences of 'connection flurries' and
+to ensure that requests do not languish in the queue when connections are
+broken.</p>
 
 <h3>asynDriver.h</h3>
 
 <p>Add new asynStatus codes, <strong>asynDisconnected</strong> and
 <strong>asynOutOfService</strong>. Attempts to queue a request to a
-disconnected or disabled port return these codes, respectively.</p>
+disconnected or disabled port return these codes, respectively. Future
+changes to record support may propogate these to the record alarm status
+field.</p>
 
 <h3>VXI-11</h3>
 
