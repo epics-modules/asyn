@@ -183,6 +183,8 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
                pechoPvt->portName);
             return asynError;
         }
+        /* simulate connection delay */
+        if(pechoPvt->delay>0.0) epicsThreadSleep(1.0);
         pechoPvt->connected = 1;
         pasynManager->exceptionConnect(pasynUser);
         return asynSuccess;
