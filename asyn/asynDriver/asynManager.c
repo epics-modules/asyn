@@ -217,7 +217,6 @@ static void queueTimeoutCallback(void *pvt);
 static BOOL autoConnectDevice(port *pport,device *pdevice);
 static void connectAttempt(dpCommon *pdpCommon);
 static void portThread(port *pport);
-static void asynConnectCallback(asynUser *pasynUser);
 /* functions for portConnect */
 static void initHookCallback(initHookState state);
 static void initPortConnect(port *ppport);
@@ -497,13 +496,9 @@ static interfaceNode *locateInterfaceNode(
 
 /* While an exceptionActive exceptionCallbackAdd and exceptionCallbackRemove
    will wait to be notified that exceptionActive is no longer true.  */
-static void exceptionOccurred(asynUser *pasynUser,asynException exception)
+static void announceExceptionOccurred(port *pport, device *pdevice, asynException exception)
 {
-    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-    port       *pport = puserPvt->pport;
-    device     *pdevice = puserPvt->pdevice;
-    int        addr = (pdevice ? pdevice->addr : -1);
-    dpCommon   *pdpCommon = findDpCommon(puserPvt);
+    dpCommon *pdpCommon = (pdevice ? &pdevice->dpc : &pport->dpc);
     exceptionUser *pexceptionUser;
 
     assert(pport&&pdpCommon);
@@ -512,18 +507,12 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
     epicsMutexUnlock(pport->asynManagerLock);
     pexceptionUser = (exceptionUser *)ellFirst(&pdpCommon->exceptionUserList);
     while(pexceptionUser) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d exception %d occurred calling exceptionUser\n",
-            pport->portName,addr, (int)exception);
         pexceptionUser->callback(pexceptionUser->pasynUser,exception);
         pexceptionUser = (exceptionUser *)ellNext(&pexceptionUser->node);
     }
     epicsMutexMustLock(pport->asynManagerLock);
     while((pexceptionUser  =
     (exceptionUser *)ellFirst(&pdpCommon->exceptionNotifyList))) {
-        asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s %d exception %d occurred notify\n",
-            pport->portName,addr, (int)exception);
         epicsEventSignal(pexceptionUser->notify);
         ellDelete(&pdpCommon->exceptionNotifyList,&pexceptionUser->notifyNode);
     }
@@ -532,6 +521,14 @@ static void exceptionOccurred(asynUser *pasynUser,asynException exception)
     epicsMutexUnlock(pport->asynManagerLock);
     if(pport->attributes&ASYN_CANBLOCK)
         epicsEventSignal(pport->notifyPortThread);
+}
+static void exceptionOccurred(asynUser *pasynUser,asynException exception)
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port       *pport = puserPvt->pport;
+    device     *pdevice = puserPvt->pdevice;
+
+    announceExceptionOccurred(pport, pdevice, exception);
 }
 
 static void queueTimeoutCallback(void *pvt)
@@ -1164,54 +1161,6 @@ static asynStatus connectDevice(asynUser *pasynUser,
     }
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
-}
-
-static void asynConnectCallback(asynUser *pasynUser)
-{
-    asynInterface *pasynInterface;
-    asynCommon    *pasynCommon;
-    const char    *portName;
-    void          *commonPvt;
-    asynStatus    status;
-    int           connected;
-
-    status = pasynManager->getPortName(pasynUser, &portName);
-    if (status != asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "asynManager::asynConnectCallback, error calling getPortName %s\n",
-                  pasynUser->errorMessage);
-        goto cleanup;
-    }
-
-    /* When this request was queued the port was not connected.  However, it could
-     * have subsequently connected.  Check and exit if it has */
-    status = pasynManager->isConnected(pasynUser, &connected);
-    if (connected) goto cleanup;
-
-    /* Get the asynCommon interface */
-    pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
-    if (!pasynInterface) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "asynManager::asynConnectCallback, port %s cannot find asynCommon interface\n",
-                  portName);
-        goto cleanup;
-    }
-    pasynCommon = (asynCommon *)pasynInterface->pinterface;
-    commonPvt   = pasynInterface->drvPvt;
-    status = pasynCommon->connect(commonPvt, pasynUser);
-    if (status != asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "asynManager::asynConnectCallback, port %s error calling asynCommon->connect %s\n",
-                  portName, pasynUser->errorMessage);
-        goto cleanup;
-    }
-    cleanup:
-    status = pasynManager->freeAsynUser(pasynUser);
-    if (status != asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "asynManager::asynConnectCallback, port %s error calling freeAsynUser %s\n",
-                  portName, pasynUser->errorMessage);
-    }
 }
 
 static asynStatus disconnect(asynUser *pasynUser)
@@ -2214,11 +2163,29 @@ static asynStatus traceUnlock(asynUser *pasynUser)
 
 static asynStatus setTraceMask(asynUser *pasynUser,int mask)
 {
-    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt   *ptracePvt = findTracePvt(puserPvt);
+    if(pasynUser == NULL) {
+        pasynBase->trace.traceMask = mask;
+    }
+    else {
+        userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+        port       *pport = puserPvt->pport;
 
-    ptracePvt->traceMask = mask;
-    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceMask);
+        if(!pport) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:setTraceMask -- not connected to port.");
+            return asynError;
+        }
+        if(!puserPvt->pdevice) {
+            device *pdevice = (device *)ellFirst(&pport->deviceList);
+            while(pdevice) {
+                pdevice->dpc.trace.traceMask = mask;
+                announceExceptionOccurred(pport, pdevice, asynExceptionTraceMask);
+                pdevice = (device *)ellNext(&pdevice->node);
+            }
+        }
+        pport->dpc.trace.traceMask = mask;
+        announceExceptionOccurred(pport, puserPvt->pdevice, asynExceptionTraceMask);
+    }
     return asynSuccess;
 }
 
@@ -2232,11 +2199,29 @@ static int getTraceMask(asynUser *pasynUser)
 
 static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
 {
-    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
-    tracePvt *ptracePvt  = findTracePvt(puserPvt);
+    if(pasynUser == NULL) {
+        pasynBase->trace.traceIOMask = mask;
+    }
+    else {
+        userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+        port       *pport = puserPvt->pport;
 
-    ptracePvt->traceIOMask = mask;
-    if(puserPvt->pport) exceptionOccurred(pasynUser,asynExceptionTraceIOMask);
+        if(!pport) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:setTraceIOMask -- not connected to port.");
+            return asynError;
+        }
+        if(!puserPvt->pdevice) {
+            device *pdevice = (device *)ellFirst(&pport->deviceList);
+            while(pdevice) {
+                pdevice->dpc.trace.traceIOMask = mask;
+                announceExceptionOccurred(pport, pdevice, asynExceptionTraceIOMask);
+                pdevice = (device *)ellNext(&pdevice->node);
+            }
+        }
+        pport->dpc.trace.traceIOMask = mask;
+        announceExceptionOccurred(pport, puserPvt->pdevice, asynExceptionTraceIOMask);
+    }
     return asynSuccess;
 }
 
