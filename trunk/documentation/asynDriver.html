@@ -1894,7 +1894,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           setTraceMask</td>
         <td>
           Set the trace mask. Normally set by the user requesting it via a shell command or
-          the devTrace device support.</td>
+          the devTrace device support.  Setting the trace mask for a port also sets the trace mask for all devices connected to that port</td>
       </tr>
       <tr>
         <td>
@@ -1908,7 +1908,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           setTraceIOMask</td>
         <td>
           Set the traceIO mask. Normally set by the user requesting it via a shell command
-          or the devTrace device support.</td>
+          or the devTrace device support.  Setting the traceIO mask for a port also sets the traceIO mask for all devices connected to that port</td>
       </tr>
       <tr>
         <td>
