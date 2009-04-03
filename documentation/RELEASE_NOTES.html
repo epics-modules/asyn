@@ -25,7 +25,7 @@
 subaddresses.</p>
 
 <p>The autoconnect code has undergone considerable modification. When a port
-is registered with autoConnect true,,or whenever a port disconnect exception
+is registered with autoConnect true, or whenever a port disconnect exception
 is raised on an autoConnect port, an attempt at connection occurs immediately
 followed by retry attempts at 20 second intervals. Attempts to queue requests
 to a disconnected port (even an autoConnect port) will be rejected. These
@@ -41,7 +41,7 @@ trace mask or trace I/O mask for every device associated with that port.</p>
 <h3>asynDriver.h</h3>
 
 <p>Add new asynStatus codes, <strong>asynDisconnected</strong> and
-<strong>asynOutOfService</strong>. Attempts to queue a request to a
+<strong>asynDisabled</strong>. Attempts to queue a request to a
 disconnected or disabled port return these codes, respectively. Future
 changes to record support may propogate these to the record alarm status
 field.</p>
