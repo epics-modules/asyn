@@ -20,6 +20,7 @@
 #include <shareLib.h>
 
 # Version number names similar to those provide by base
+# These macros are always numeric
 #define ASYN_VERSION       4
 #define ASYN_REVISION     11
 #define ASYN_MODIFICATION  0
