@@ -19,6 +19,11 @@
 #include <ellLib.h>
 #include <shareLib.h>
 
+# Version number names similar to those provide by base
+#define ASYN_VERSION       4
+#define ASYN_REVISION     11
+#define ASYN_MODIFICATION  0
+
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
