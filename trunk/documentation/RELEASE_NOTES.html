@@ -40,6 +40,9 @@ trace mask or trace I/O mask for every device associated with that port.</p>
 
 <h3>asynDriver.h</h3>
 
+<p>Add new version macros (ASYN_VERSION, ASYN_REVISION and ASYN_MODIFICATION).
+These are guaranteed to be numeric.</p>
+
 <p>Add new asynStatus codes, <strong>asynDisconnected</strong> and
 <strong>asynDisabled</strong>. Attempts to queue a request to a
 disconnected or disabled port return these codes, respectively. Future
