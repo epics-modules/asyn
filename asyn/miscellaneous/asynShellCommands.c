@@ -555,21 +555,23 @@ static const iocshFuncDef asynSetTraceIOMaskDef =
 epicsShareFunc int
  asynSetTraceIOMask(const char *portName,int addr,int mask)
 {
-    asynUser *pasynUser;
+    asynUser *pasynUser=NULL;
     asynStatus status;
 
-    pasynUser = pasynManager->createAsynUser(0,0);
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if(status!=asynSuccess) {
-        printf("%s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return -1;
+    if (portName && (strlen(portName) > 0)) {
+        pasynUser = pasynManager->createAsynUser(0,0);
+        status = pasynManager->connectDevice(pasynUser,portName,addr);
+        if(status!=asynSuccess) {
+            printf("%s\n",pasynUser->errorMessage);
+            pasynManager->freeAsynUser(pasynUser);
+            return -1;
+        }
     }
     status = pasynTrace->setTraceIOMask(pasynUser,mask);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
     }
-    pasynManager->freeAsynUser(pasynUser);
+    if (pasynUser) pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
 static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
