@@ -1281,6 +1281,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
        
     this->portName = epicsStrDup(portNameIn);
     this->maxAddr = maxAddrIn;
+    interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
 
     status = pasynManager->registerPort(portName,
                                         asynFlags,    /* multidevice and canblock flags */
@@ -1293,8 +1294,16 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
 
     /* Create asynUser for debugging and for standardInterfacesBase */
     this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
+    
+    /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+        "%s:%s: creating port %s maxAddr=%d, paramTableSize=%d\n"
+        "    interfaceMask=0x%X, interruptMask=0x%X\n"
+        "    asynFlags=0x%X, autoConnect=%d, priority=%d, stackSize=%d\n",
+        driverName, functionName, this->portName, this->maxAddr, paramTableSize, 
+        interfaceMask, interruptMask, 
+        asynFlags, autoConnect, priority, stackSize);
 
-    interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
      /* Set addresses of asyn interfaces */
     if (interfaceMask & asynCommonMask)         pInterfaces->common.pinterface        = (void *)&ifaceCommon;
     if (interfaceMask & asynDrvUserMask)        pInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
@@ -1322,15 +1331,17 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      this->pasynUserSelf, this);
     if (status != asynSuccess) {
-        printf("%s:%s ERROR: Can't register interfaces: %s.\n",
-               driverName, functionName, this->pasynUserSelf->errorMessage);
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s ERROR: Can't register interfaces: %s.\n",
+            driverName, functionName, this->pasynUserSelf->errorMessage);
         return;
     }
 
     /* Create the epicsMutex for locking access to data structures from other threads */
     this->mutexId = epicsMutexCreate();
     if (!this->mutexId) {
-        printf("%s::%s epicsMutexCreate failure\n", driverName, functionName);
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s::%s epicsMutexCreate failure\n", driverName, functionName);
         return;
     }
 
@@ -1344,7 +1355,8 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     /* Connect to our device for asynTrace */
     status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
     if (status != asynSuccess) {
-        printf("%s:%s:, connectDevice failed\n", driverName, functionName);
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s:, connectDevice failed\n", driverName, functionName);
         return;
     }
 
