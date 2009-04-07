@@ -519,21 +519,23 @@ static const iocshFuncDef asynSetTraceMaskDef =
 epicsShareFunc int
  asynSetTraceMask(const char *portName,int addr,int mask)
 {
-    asynUser *pasynUser;
+    asynUser *pasynUser=NULL;
     asynStatus status;
 
-    pasynUser = pasynManager->createAsynUser(0,0);
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if((status!=asynSuccess) && (strlen(portName)!=0)) {
-        printf("%s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return -1;
+    if (portName && (strlen(portName) > 0)) {
+        pasynUser = pasynManager->createAsynUser(0,0);
+        status = pasynManager->connectDevice(pasynUser,portName,addr);
+        if(status!=asynSuccess) {
+            printf("%s\n",pasynUser->errorMessage);
+            pasynManager->freeAsynUser(pasynUser);
+            return -1;
+        }
     }
     status = pasynTrace->setTraceMask(pasynUser,mask);
     if(status!=asynSuccess) {
         printf("%s\n",pasynUser->errorMessage);
     }
-    pasynManager->freeAsynUser(pasynUser);
+    if (pasynUser) pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
 static void asynSetTraceMaskCall(const iocshArgBuf * args) {
@@ -593,7 +595,9 @@ epicsShareFunc int
     }
     if(!filename) {
         fp = 0;
-    } else if(strlen(filename)==0 || strcmp(filename,"stdout")==0) {
+    } else if(strlen(filename)==0 || strcmp(filename,"stderr")==0) {
+        fp = stderr;
+    } else if(strcmp(filename,"stdout")==0) {
         fp = stdout;
     } else {
         fp = fopen(filename,"w");
