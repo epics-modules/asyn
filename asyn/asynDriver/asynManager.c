@@ -2205,6 +2205,7 @@ static int getTraceMask(asynUser *pasynUser)
 
 static asynStatus setTraceIOMask(asynUser *pasynUser,int mask)
 {
+    if(!pasynBase) asynInit();
     if(pasynUser == NULL) {
         pasynBase->trace.traceIOMask = mask;
     }
