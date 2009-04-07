@@ -1865,7 +1865,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
     to call lock or unlock. If it does want to do its own I/O, it must lock before any
     I/O and unlock after. For example:</p>
   <pre>    pasynTrace-&gt;lock(pasynUser);
-    fd = pasynTrace-&gt;getTraceFILE(pasynUser);
+    fd = pasynTrace-&gt;getTraceFile(pasynUser);
     /*perform I/O to fd */
     pasynTrace-&gt;unlock(pasynUser);</pre>
   <p>
@@ -1884,7 +1884,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           of asynPrint and asynPrintIO.
           <p>
             print, and printIO both lock while performing their operations. The get methods
-            do not lock (except for getTraceFILE) and they are safe. Except for setTraceFile
+            do not lock (except for getTraceFile) and they are safe. Except for setTraceFile
             the set methods do not block, since worst that can happen is that the user gets
             a little more or a little less output.</p>
         </td>
@@ -1894,7 +1894,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           setTraceMask</td>
         <td>
           Set the trace mask. Normally set by the user requesting it via a shell command or
-          the devTrace device support.  Setting the trace mask for a port also sets the trace mask for all devices connected to that port</td>
+          the devTrace device support. Setting the trace mask for a port also sets the trace
+          mask for all devices connected to that port</td>
       </tr>
       <tr>
         <td>
@@ -1908,7 +1909,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           setTraceIOMask</td>
         <td>
           Set the traceIO mask. Normally set by the user requesting it via a shell command
-          or the devTrace device support.  Setting the traceIO mask for a port also sets the traceIO mask for all devices connected to that port</td>
+          or the devTrace device support. Setting the traceIO mask for a port also sets the
+          traceIO mask for all devices connected to that port</td>
       </tr>
       <tr>
         <td>
@@ -1920,7 +1922,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
       </tr>
       <tr>
         <td>
-          setTraceFILE</td>
+          setTraceFile</td>
         <td>
           Set the stream to use for output. A NULL argument means use errlog. Normally set
           by the user requesting it via a shell command or by the devTrace device support.
@@ -1929,7 +1931,7 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
       </tr>
       <tr>
         <td>
-          getTraceFILE</td>
+          getTraceFile</td>
         <td>
           Get the file descriptor to use for output. Device support that wants to issue its
           own IO messages instead of calling asynPrintIO should call this and honor the mask
@@ -5125,17 +5127,20 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     End of String processing for low level drivers that don't.</p>
   <p>
     <code>asynSetTraceMask</code> calls <code>asynTrace:setTraceMask</code> for the
-    specified port and address.</p>
+    specified port and address. If portName is zero length then the global trace mask
+    is set.</p>
   <p>
     <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code> for
-    the specified port and address.</p>
+    the specified port and address. If portName is zero length then the global traceIO
+    mask is set.</p>
   <p>
     <code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>. The filename
     is handled as follows:</p>
   <ul>
     <li>Not specified - A NULL pointer is passed to setTraceFile. Subsequent messages
       are sent to errlog.</li>
-    <li>An empty string ("") or "stdout" - stdout is passed to setTraceFile.</li>
+    <li>An empty string ("") or "stderr" - stderr is passed to setTraceFile.</li>
+    <li>"stdout" - stdout is passed to setTraceFile.</li>
     <li>Any other string - The specified file is opened with an option of "w" and the
       file pointer is passed to setTraceFile.</li>
   </ul>
