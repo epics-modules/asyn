@@ -369,7 +369,7 @@ static void tracePvtInit(tracePvt *ptracePvt)
     ptracePvt->traceMask = ASYN_TRACE_ERROR;
     ptracePvt->traceTruncateSize = DEFAULT_TRACE_TRUNCATE_SIZE;
     ptracePvt->traceBufferSize = DEFAULT_TRACE_BUFFER_SIZE;
-    ptracePvt->type = traceFileStdout;
+    ptracePvt->type = traceFileStderr;
 }
 
 static void tracePvtFree(tracePvt *ptracePvt)
@@ -2163,6 +2163,7 @@ static asynStatus traceUnlock(asynUser *pasynUser)
 
 static asynStatus setTraceMask(asynUser *pasynUser,int mask)
 {
+    if(!pasynBase) asynInit();
     if(pasynUser == NULL) {
         pasynBase->trace.traceMask = mask;
     }
