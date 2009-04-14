@@ -510,7 +510,9 @@ support, it must document its changes.</p>
       <p>If <code>convert</code> is defined then:</p>
       <ul>
         <li><code>convert</code> is called. It is expected to give a value to
-          the appropriate field of the record or return -1.</li>
+          the appropriate field of the record or return -1.  Note that it
+          is the responsiblity of the custom conversion routine to set
+          or clear the record .UDF field.</li>
         <li>The field <code>pgpibDpvt-&gt;msgInputLen</code> contains the
           number of bytes in the last read msg. This allows messages with
           null characters to be processed.</li>
