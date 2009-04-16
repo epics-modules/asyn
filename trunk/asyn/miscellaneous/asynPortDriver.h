@@ -72,6 +72,8 @@ public:
     asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
     virtual ~asynPortDriver();
+    virtual asynStatus lock();
+    virtual asynStatus unlock();
     virtual asynStatus getAddress(asynUser *pasynUser, const char *functionName, int *address); 
     virtual asynStatus findParam(asynParamString_t *paramTable, int numParams, const char *paramName, int *param);
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
@@ -141,18 +143,20 @@ public:
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual void reportParams();
 
-    void callbackTask();
-
     char *portName;
     int maxAddr;
+    void callbackTask();
+
+protected:
+    /* asynUser connected to ourselves for asynTrace */
+    asynUser *pasynUserSelf;
+    /* The asyn interfaces this driver implements */
+    asynStandardInterfaces asynStdInterfaces;
+
+private:
     paramList **params;
     epicsMutexId mutexId;
 
-    /* The asyn interfaces this driver implements */
-    asynStandardInterfaces asynStdInterfaces;
-    
-    /* asynUser connected to ourselves for asynTrace */
-    asynUser *pasynUserSelf;
 };
 
 #endif /* cplusplus */
