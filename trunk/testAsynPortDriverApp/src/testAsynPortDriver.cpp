@@ -35,6 +35,12 @@
 #define NUM_DIVISIONS 10     /* Number of scope divisions in X and Y */
 #define MIN_UPDATE_TIME 0.02 /* Minimum update time, to prevent CPU saturation */
 
+/** Class that demonstrates the use of the asynPortDriver base class to greatly simplify the task
+  * of writing an asyn port driver.
+  * This class does a simple simulation of a digital oscilloscope.  It computes a waveform, computes
+  * statistics on the waveform, and does callbacks with the statistics and the waveform data itself. 
+  * I have made the methods of this class public in order to generate doxygen documentation for them,
+  * but they should really all be private. */
 class testAsynPortDriver : public asynPortDriver {
 public:
     testAsynPortDriver(const char *portName, int maxArraySize);
@@ -50,12 +56,14 @@ public:
     /* These are the methods that are new to this class */
     void simTask(void);
     
+private:
     /* Our data */
     epicsEventId eventId;
     epicsFloat64 *pData;
     epicsFloat64 *pTimeBase;
 };
 
+/** Enum values are used for pasynUser->reason values, and are the index into the parameter library. */
 typedef enum {
     P_Run,                /* asynInt32,    r/w */
     P_MaxPoints,          /* asynInt32,    r/o */
@@ -72,9 +80,9 @@ typedef enum {
     P_MeanValue           /* asynFloat64,  r/o */
 } testParams;
 
-/* The command strings are the userParam argument for asyn device support links
- * The asynDrvUser interface in this driver parses these strings and puts the
- * corresponding enum value in pasynUser->reason */
+/** The command strings are the drvInfo argument for asyn device support links
+  * The asynDrvUser interface in this driver parses these strings and puts the
+  * corresponding enum value in pasynUser->reason */
 static asynParamString_t driverParamString[] = {
     {P_Run,              "RUN"            },
     {P_MaxPoints,        "MAX_POINTS"     },
@@ -103,6 +111,11 @@ void simTask(void *drvPvt)
     pPvt->simTask();
 }
 
+/** Simulation task that runs as a separate thread.  When the P_Run parameter is set to 1
+  * to rub the simulation it computes a 1 kHz sine wave with 1V amplitude and user-controllable
+  * noise, and displays it on
+  * a simulated scope.  It computes waveforms for the X (time) and Y (volt) axes, and computes
+  * statistics about the waveform. */
 void testAsynPortDriver::simTask(void)
 {
     /* This thread computes the waveform and does callbacks with it */
@@ -155,6 +168,11 @@ void testAsynPortDriver::simTask(void)
     }
 }
 
+/** Called when asyn clients call pasynInt32->write().
+  * This function sends a signal to the simTask thread if the value of P_Run has changed.
+  * For all parameters it sets the value in the parameter library and calls any registered callbacks..
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Value to write. */
 asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
@@ -189,6 +207,11 @@ asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     return status;
 }
 
+/** Called when asyn clients call pasynFloat64->write().
+  * This function sends a signal to the simTask thread if the value of P_UpdateTime has changed.
+  * For all  parameters it  sets the value in the parameter library and calls any registered callbacks.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Value to write. */
 asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
@@ -231,6 +254,12 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
 }
 
 
+/** Called when asyn clients call pasynFloat64Array->read().
+  * Returns the value of the P_Waveform or P_TimeBase arrays.  
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Pointer to the array to read.
+  * \param[in] nElements Number of elements to read.
+  * \param[out] nIn Number of elements actually read. */
 asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, 
                                          size_t nElements, size_t *nIn)
 {
@@ -265,6 +294,12 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 }
     
 
+/** Called by asynManager to pass a pasynUser structure and drvInfo string to the driver; 
+  * assigns pasynUser->reason to one of the testParams enum value based on the value of the drvInfo string.
+  * \param[in] pasynUser pasynUser structure that driver modifies
+  * \param[in] drvInfo String containing information about what driver function is being referenced
+  * \param[out] pptypeName Location in which driver puts a copy of drvInfo.
+  * \param[out] psize Location where driver puts size of param */
 asynStatus testAsynPortDriver::drvUserCreate(asynUser *pasynUser,
                                        const char *drvInfo, 
                                        const char **pptypeName, size_t *psize)
@@ -296,7 +331,10 @@ asynStatus testAsynPortDriver::drvUserCreate(asynUser *pasynUser,
     }
 }
 
-/* Constructor */
+/** Constructor for the testAsynPortDriver class.
+  * Calls constructor for the asynPortDriver base class.
+  * \param[in] portName The name of the asyn port driver to be created.
+  * \param[in] maxPoints The maximum  number of points in the volt and time arrays */
 testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
@@ -355,6 +393,9 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 
 extern "C" {
 
+/** EPICS iocsh callable function to call constructor for the testAsynPortDriver class.
+  * \param[in] portName The name of the asyn port driver to be created.
+  * \param[in] maxPoints The maximum  number of points in the volt and time arrays */
 int testAsynPortDriverConfigure(const char *portName, int maxPoints)
 {
     new testAsynPortDriver(portName, maxPoints);
