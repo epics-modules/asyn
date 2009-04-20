@@ -5,6 +5,7 @@
 #include <epicsMutex.h>
 #include <asynStandardInterfaces.h>
 
+/** Structure that is used to associate an enum value in pasynUser->reason with a drvUser string */
 typedef struct {
     int param;
     const char *paramString;
@@ -12,6 +13,7 @@ typedef struct {
 
 #ifdef __cplusplus
 
+/** Masks for each of the asyn standard interfaces */
 #define asynCommonMask          0x00000001
 #define asynDrvUserMask         0x00000002
 #define asynOptionMask          0x00000004
@@ -27,11 +29,19 @@ typedef struct {
 #define asynGenericPointerMask  0x00001000
 
 
-typedef enum { paramUndef, paramInt, paramDouble, paramString} paramType;
+/** Parameter data types for the parameter library */
+typedef enum { 
+    paramUndef,     /**< Undefined */
+    paramInt,       /**< int  parameter */
+    paramDouble,    /**< double parameter */ 
+    paramString     /**< Dynamic length string parameter */
+} paramType;
 
+/** Structure for storing parameter value in parameter library */
 typedef struct
 {
-    paramType type;
+    paramType type;     /**< Parameter data type */
+    /** Union for parameter value */
     union
     {
         double dval;
@@ -40,6 +50,11 @@ typedef struct
     } data;
 } paramVal;
 
+/** Class to support parameter library (also called parameter list); 
+  * set and get values indexed by parameter number (pasynUser->reason)
+  * and do asyn callbacks when parameters change. 
+  * The parameter class supports 3 types of parameters: int, double
+  * and dynamic-length strings. */
 class paramList {
 public:
     paramList(int startVal, int nVals, asynStandardInterfaces *pasynInterfaces);
@@ -67,6 +82,8 @@ private:
     paramVal *vals;
 };
 
+/** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
+  * with standard asyn interfaces and a parameter library. */
 class asynPortDriver {
 public:
     asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
@@ -143,15 +160,14 @@ public:
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual void reportParams();
 
-    char *portName;
-    int maxAddr;
+    char *portName;         /**< The name of this asyn port */
+
+    int maxAddr;            /**< The maximum asyn address (addr) supported by this driver */
     void callbackTask();
 
 protected:
-    /* asynUser connected to ourselves for asynTrace */
-    asynUser *pasynUserSelf;
-    /* The asyn interfaces this driver implements */
-    asynStandardInterfaces asynStdInterfaces;
+    asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
+    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
     paramList **params;
