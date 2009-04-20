@@ -86,7 +86,7 @@ private:
   * with standard asyn interfaces and a parameter library. */
 class asynPortDriver {
 public:
-    asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
+    asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
     virtual ~asynPortDriver();
     virtual asynStatus lock();
