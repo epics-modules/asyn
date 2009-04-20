@@ -53,10 +53,10 @@ void asynPortDriver::callbackTask()
 
 /** Constructor for paramList class.
   * \param[in] startVal The first index number for this parameter list, typically 0. 
-  * \param[in] nValsIn Number of parameters in the list.
+  * \param[in] nVals Number of parameters in the list.
   * \param[in] pasynInterfaces Pointer to asynStandardInterfaces structure, used for callbacks */
-paramList::paramList(int startVal, int nValsIn, asynStandardInterfaces *pasynInterfaces)
-    : startVal(startVal), nVals(nValsIn), nFlags(0), pasynInterfaces(pasynInterfaces)
+paramList::paramList(int startVal, int nVals, asynStandardInterfaces *pasynInterfaces)
+    : startVal(startVal), nVals(nVals), nFlags(0), pasynInterfaces(pasynInterfaces)
 {
      vals = (paramVal *) calloc(nVals, sizeof(paramVal));
      flags = (int *) calloc(nVals, sizeof(int));
@@ -1589,17 +1589,17 @@ static asynDrvUser ifaceDrvUser = {
 
 
 /** Constructor for the asynPortDriver class.
-  * \param[in] portNameIn The name of the asyn port driver to be created.
-  * \param[in] maxAddrIn The maximum  number of asyn addr addresses this driver supports. 1 is minimum.
+  * \param[in] portName The name of the asyn port driver to be created.
+  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports. 1 is minimum.
   * \param[in] paramTableSize The number of parameters that this driver supports.
   * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
   * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks)
   * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK and ASYN_MULTIDEVICE.
   * \param[in] autoConnect The autoConnect flag for the asyn port driver.
-  * \param[in] priority The thread priority for the asynPort driver thread if ASYN_CANBLOCK is set.
-  * \param[in] stackSize The stack size for the asynPort driver thread if ASYN_CANBLOCK is set.
+  * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+  * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
   */
-asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
+asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                                int asynFlags, int autoConnect, int priority, int stackSize)
 {
     asynStatus status;
@@ -1658,7 +1658,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     if (interruptMask & asynInt32ArrayMask)     pInterfaces->int32ArrayCanInterrupt   = 1;
     if (interruptMask & asynFloat32ArrayMask)   pInterfaces->float32ArrayCanInterrupt = 1;
     if (interruptMask & asynFloat64ArrayMask)   pInterfaces->float64ArrayCanInterrupt = 1;
-    if (interruptMask & asynGenericPointerMask) pInterfaces->genericPointerCanInterrupt       = 1;
+    if (interruptMask & asynGenericPointerMask) pInterfaces->genericPointerCanInterrupt = 1;
 
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      this->pasynUserSelf, this);
