@@ -296,6 +296,7 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 
 /** Called by asynManager to pass a pasynUser structure and drvInfo string to the driver; 
   * assigns pasynUser->reason to one of the testParams enum value based on the value of the drvInfo string.
+  * Simply calls asynPortDriver::drvUserCreateParam with the parameter table for this driver.
   * \param[in] pasynUser pasynUser structure that driver modifies
   * \param[in] drvInfo String containing information about what driver function is being referenced
   * \param[out] pptypeName Location in which driver puts a copy of drvInfo.
@@ -304,31 +305,10 @@ asynStatus testAsynPortDriver::drvUserCreate(asynUser *pasynUser,
                                        const char *drvInfo, 
                                        const char **pptypeName, size_t *psize)
 {
-    int status;
-    int param;
-    const char *functionName = "drvUserCreate";
-
-    /* See if this parameter is defined for the testAsynPortDriver class */
-    status = findParam(driverParamString, NUM_DRIVER_PARAMS, drvInfo, &param);
-
-    if (status == asynSuccess) {
-        pasynUser->reason = param;
-        if (pptypeName) {
-            *pptypeName = epicsStrDup(drvInfo);
-        }
-        if (psize) {
-            *psize = sizeof(param);
-        }
-        asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                  "%s:%s:, drvInfo=%s, param=%d\n", 
-                  driverName, functionName, drvInfo, param);
-        return(asynSuccess);
-    } else {
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                     "%s:%s:, unknown drvInfo=%s", 
-                     driverName, functionName, drvInfo);
-        return(asynError);
-    }
+    //const char *functionName = "drvUserCreate";
+    
+    return this->drvUserCreateParam(pasynUser, drvInfo, pptypeName, psize, 
+                                    driverParamString, NUM_DRIVER_PARAMS);
 }
 
 /** Constructor for the testAsynPortDriver class.
