@@ -92,7 +92,6 @@ public:
     virtual asynStatus lock();
     virtual asynStatus unlock();
     virtual asynStatus getAddress(asynUser *pasynUser, const char *functionName, int *address); 
-    virtual asynStatus findParam(asynParamString_t *paramTable, int numParams, const char *paramName, int *param);
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus getBounds(asynUser *pasynUser, epicsInt32 *low, epicsInt32 *high);
@@ -135,8 +134,13 @@ public:
     virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
+    virtual asynStatus findParam(asynParamString_t *paramTable, int numParams, const char *paramName, 
+                                 int *param);
     virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
                                      const char **pptypeName, size_t *psize);
+    virtual asynStatus drvUserCreateParam(asynUser *pasynUser, const char *drvInfo, 
+                                          const char **pptypeName, size_t *psize,
+                                          asynParamString_t *paramTable, int numParams);
     virtual asynStatus drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize);
     virtual asynStatus drvUserDestroy(asynUser *pasynUser);

@@ -1370,6 +1370,50 @@ asynStatus asynPortDriver::drvUserCreate(asynUser *pasynUser,
     return(asynSuccess);
 }
 
+/** Convenience function typically called by derived classes from their drvUserCreate method;
+  * assigns pasynUser->reason based on the value of the drvInfo string.
+  * \param[out] pasynUser pasynUser structure in which this function modifies reason field
+  * \param[in] drvInfo String containing information about what driver function is being referenced
+  * \param[out] pptypeName Location in which driver can write information.
+  * \param[out] psize Location where driver can write information about size of pptypeName
+  * \param[in] paramTable Pointer to an array of asynParamString_t structures defining the enum values
+  * (pasynUser->reason) and command strings (drvInfo) that this driver supports.
+  * \param[in] numParams Number of elements in paramTable array.
+  * \return Returns asynSuccess if a matching string was found, asynError if not found. */
+asynStatus asynPortDriver::drvUserCreateParam(asynUser *pasynUser,
+                                       const char *drvInfo, 
+                                       const char **pptypeName, size_t *psize,
+                                       asynParamString_t *paramTable, int numParams)
+{
+    asynStatus status;
+    int param;
+    const char *functionName = "drvUserCreate";
+    
+    status = findParam(paramTable, numParams, drvInfo, &param);
+
+    if (status == asynSuccess) {
+        pasynUser->reason = param;
+        if (pptypeName) {
+            *pptypeName = epicsStrDup(drvInfo);
+        }
+        if (psize) {
+            *psize = sizeof(param);
+        }
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                  "%s:%s:, drvInfo=%s, param=%d\n", 
+                  driverName, functionName, drvInfo, param);
+    } else {
+        param = -1;
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                     "%s:%s:, unknown drvInfo=%s", 
+                     driverName, functionName, drvInfo);
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                  "%s:%s:, cannot find parameter drvInfo=%s\n", 
+                  driverName, functionName, drvInfo);
+    }
+    return(status);
+}
+
     
 extern "C" {static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser,
                                  const char **pptypeName, size_t *psize)
