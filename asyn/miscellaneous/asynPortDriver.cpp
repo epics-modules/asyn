@@ -1634,14 +1634,24 @@ static asynDrvUser ifaceDrvUser = {
 
 /** Constructor for the asynPortDriver class.
   * \param[in] portName The name of the asyn port driver to be created.
-  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports. 1 is minimum.
+  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports.
+               Often it is 1 (which is the minimum), but some drivers, for example a 
+			   16-channel D/A or A/D would support values &gt; 1. 
+			   This controls the number of parameter tables that are created.
   * \param[in] paramTableSize The number of parameters that this driver supports.
+               This controls the size of the parameter tables.
   * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
-  * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks)
+                The bit mask values are defined in asynPortDriver.h, e.g. asynInt32Mask.
+  * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks).
+               The bit mask values are defined in asynPortDriver.h, e.g. asynInt8ArrayMask.
   * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK and ASYN_MULTIDEVICE.
-  * \param[in] autoConnect The autoConnect flag for the asyn port driver.
+  * \param[in] autoConnect The autoConnect flag for the asyn port driver. 
+               1 if the driver should autoconnect.
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+               If it is 0 then the default value of epicsThreadPriorityMedium will be assigned by asynManager.
   * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+               If it is 0 then the default value of epicsThreadGetStackSize(epicsThreadStackMedium)
+               will be assigned by asynManager.
   */
 asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                                int asynFlags, int autoConnect, int priority, int stackSize)
