@@ -1,9 +1,20 @@
 HTMLFLAGS = --book --duplex --no-numbered --format pdf14 --title --size letter
 
-all: asynDriver.pdf asynRecord.pdf devGpib.pdf
-
 %.pdf: %.html
 	-htmldoc $(HTMLFLAGS) --outfile $@ $<
+
+all: asynDriver.pdf asynRecord.pdf devGpib.pdf doxygen install
+
+doxygen:
+	doxygen
+
+install:
+	mkdir -p ../html
+	cp *.html ../html
+	cp *.jpg ../html
+	cp *.png ../html
+	cp *.gif ../html
+	cp -r asynDoxygenHTML ../html
 
 clean:
 
