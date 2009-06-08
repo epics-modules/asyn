@@ -14,6 +14,7 @@ install:
 	cp *.jpg ../html
 	cp *.png ../html
 	cp *.gif ../html
+	cp *.pdf ../html
 	cp -r asynDoxygenHTML ../html
 
 clean:
