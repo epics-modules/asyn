@@ -12,12 +12,11 @@
 <h1>EPICS: asynDriver devGpib<br>
 Instrument Device Support</h1>
 
-<h1>asynManager R4-9</h1>
-
 <p><span style="font-weight: bold; font-size: 14pt">Marty Kraimer and Eric
 Norum</span></p>
 
-<p><span style="font-weight: bold; font-size: 14pt">October 19, 2007</span></p>
+<p><span style="font-weight: bold; font-size: 14pt">October 19,
+2007</span></p>
 </center>
 <hr>
 
@@ -278,7 +277,7 @@ OUT links of records, see the EPICS Application Developers Guide.</p>
   <li>Create a source directory and 'cd' to it.</li>
   <li>Create a set of instrument support files by running the makeSupport.pl
     script:
-    <p><em>&nbsp;&nbsp;&lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
+    <p><em>  &lt;asynTop&gt;</em>/bin/<em>&lt;EpicsHostArch&gt;</em>/makeSupport.pl
     -t devGpib <em>&lt;InstName&gt;</em></p>
   </li>
   <li>Modify the src/<em>&lt;InstName&gt;</em>.c,
@@ -510,9 +509,9 @@ support, it must document its changes.</p>
       <p>If <code>convert</code> is defined then:</p>
       <ul>
         <li><code>convert</code> is called. It is expected to give a value to
-          the appropriate field of the record or return -1.  Note that it
-          is the responsiblity of the custom conversion routine to set
-          or clear the record .UDF field.</li>
+          the appropriate field of the record or return -1.  Note that it is
+          the responsiblity of the custom conversion routine to set or clear
+          the record .UDF field.</li>
         <li>The field <code>pgpibDpvt-&gt;msgInputLen</code> contains the
           number of bytes in the last read msg. This allows messages with
           null characters to be processed.</li>
@@ -971,17 +970,17 @@ to restore the device to the polling list when the device is reattached.  A
 binary output record with the following command table entry is used for this
 purpose:</p>
 
-<p><span style="font-family: courier">      /* Add/remove address from SRQ
-polling list */     </span></p>
+<p><span style="font-family: courier">/* Add/remove address from SRQ polling
+list */</span></p>
 
-<p><span style="font-family: courier">      {
+<p><span style="font-family: courier">{
 &amp;DSET_BO,GPIBCVTIO,IB_Q_HIGH,NULL,NULL,0,0,boSRQonOff,0,0,NULL,NULL,NULL
-} </span></p>
+}</span></p>
 
 <p>If the binary-output record rval is (0, 1) then (remove, add) device
 (from, to) the SRQ polling liist. No commands are sent to the bus.  Before
 exluding a device from being polled stop any communications to it, i.e. set
-SCAN-field(s) to PASSIVE and turn off the device. </p>
+SCAN-field(s) to PASSIVE and turn off the device.</p>
 
 <h2>gpibCmd convert example</h2>
 
