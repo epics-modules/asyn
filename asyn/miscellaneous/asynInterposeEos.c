@@ -31,7 +31,7 @@
 #include "asynInterposeEos.h"
 
 #define START_OUTPUT_SIZE 100
-#define INPUT_SIZE        600
+#define INPUT_SIZE        2048
 
 typedef struct eosPvt {
     char          *portName;
