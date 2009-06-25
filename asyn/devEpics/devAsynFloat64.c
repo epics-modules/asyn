@@ -492,10 +492,12 @@ static long processAiAverage(aiRecord *pai)
     devPvt *pPvt = (devPvt *)pai->dpvt;
 
     epicsMutexLock(pPvt->mutexId);
-    if (pPvt->numAverage == 0) 
-        pPvt->numAverage = 1;
-    else
-        pai->udf = 0;
+    if (pPvt->numAverage == 0) {
+        recGblSetSevr(pai, UDF_ALARM, INVALID_ALARM);
+        pai->udf = 1;
+        return -2;
+    }
+    pai->udf = 0;
     pai->val = pPvt->sum/pPvt->numAverage;
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
