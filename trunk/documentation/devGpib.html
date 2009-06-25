@@ -509,7 +509,8 @@ support, it must document its changes.</p>
       <p>If <code>convert</code> is defined then:</p>
       <ul>
         <li><code>convert</code> is called. It is expected to give a value to
-          the appropriate field of the record or return -1.  Note that it is
+          the appropriate field (RVAL for bi, mbbi, mbbiDirect and VAL for
+          all others) of the record or return -1.  Note that it is
           the responsiblity of the custom conversion routine to set or clear
           the record .UDF field.</li>
         <li>The field <code>pgpibDpvt-&gt;msgInputLen</code> contains the
@@ -522,9 +523,10 @@ support, it must document its changes.</p>
       <ul>
         <li>bi, event, longin, mbbi, and mbbiDirect.
           <p><code>pgpibDpvt-&gt;msg</code> is converted and the result put
-          into field VAL. If pgpibCmd-&gt;format is defined it is used for
+          into field RVAL (bi, mbbi, mbbiDirect) or VAL (event, longin).
+          If pgpibCmd-&gt;format is defined it is used for
           the conversion, otherwise a format appropriate to the data type of
-          VAL is used.</p>
+          RVAL/VAL is used.</p>
         </li>
         <li>ai
           <p><code>pgpibDpvt-&gt;msg</code> is converted  and the result put
