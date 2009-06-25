@@ -562,7 +562,11 @@ static long processAiAverage(aiRecord *pr)
     double rval;
 
     epicsMutexLock(pPvt->mutexId);
-    if (pPvt->numAverage == 0) pPvt->numAverage = 1;
+    if (pPvt->numAverage == 0) {
+        recGblSetSevr(pr, UDF_ALARM, INVALID_ALARM);
+        pr->udf = 1;
+        return -2;
+    }
     rval = pPvt->sum/pPvt->numAverage;
     /*round result*/
     rval += (pPvt->sum>0.0) ? 0.5 : -0.5;

@@ -3754,7 +3754,10 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>Input records that are averaged, i.e. asynInt32Average or asynFloat64Average.
       <p>
         These records are normally scanned periodically. The registerInterruptUser callback
-        is used to calculate an average value between record processes.</p>
+        is used to calculate an average value between record processes.  If 
+        the record is processed before new data have arrived (numAverage==0)
+        the record is set to UDF/INVALID, UDF is set to TRUE, and the value
+        is left unchanged.</p>
     </li>
   </ul>
   <h2>
