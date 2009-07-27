@@ -18,6 +18,18 @@
     ???? ??, 20??</h2>
   </div>
   <h3>
+    asynManager</h3>
+  <p>
+    The autoconnect code is now decoupled from EPICS iocInit.</p>
+  <h3>
+    asynOctet</h3>
+  <p>
+    Requests to set end-of-string values or serial port parameters are accepted
+    even when the port is not connected.  The request takes effect when the
+    port is connected.  This makes IOC startup more robust
+    in the face of network or USB to serial adapters that may be unavailable
+    on startup.</p>
+  <h3>
     asynInt32Average, asynFlaot64Average</h3>
   <p>
     If record is processed before new data have arrived (numAverage==0) set
