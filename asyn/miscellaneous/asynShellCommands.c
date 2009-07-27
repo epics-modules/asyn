@@ -52,79 +52,92 @@ typedef struct setOptionArgs {
 
 typedef struct showOptionArgs {
     const char     *key;
+    char            val[100];
     asynOption     *pasynOption;
     void           *drvPvt;
     epicsEventId   done;
 }showOptionArgs;
-
+
+static asynStatus
+findInterface(const char *portName, int addr, const char *interfaceType,
+                        void (*handler)(asynUser *),
+                        asynUser **ppasynUser, asynInterface **ppasynInterface)
+{
+    if (portName == NULL) {
+        printf("Missing portName argument\n");
+        return asynError;
+    }
+    *ppasynUser = pasynManager->createAsynUser(handler, 0);
+    if (pasynManager->connectDevice(*ppasynUser, portName, addr) != asynSuccess) {
+        printf("Port %s connectDevice failed: %s\n", portName, (*ppasynUser)->errorMessage);
+        pasynManager->freeAsynUser(*ppasynUser);
+        return asynError;
+    }
+    *ppasynInterface = pasynManager->findInterface(*ppasynUser, interfaceType, 1);
+    if (!*ppasynInterface) {
+        printf("Port %s does not provide required %s interface\n", portName, interfaceType);
+        pasynManager->freeAsynUser(*ppasynUser);
+        return asynError;
+    }
+    return asynSuccess;
+}
+
 static void setOption(asynUser *pasynUser)
 {
     setOptionArgs *poptionargs = (setOptionArgs *)pasynUser->userPvt;
     asynStatus status;
 
     status = poptionargs->pasynOption->setOption(poptionargs->drvPvt,
-            pasynUser,poptionargs->key,poptionargs->val);
+                                pasynUser, poptionargs->key, poptionargs->val);
     if(status!=asynSuccess) 
-        printf("setOption failed %s\n",pasynUser->errorMessage);
+        printf("setOption failed %s\n", pasynUser->errorMessage);
     epicsEventSignal(poptionargs->done);
 }
 
 epicsShareFunc int
  asynSetOption(const char *portName, int addr, const char *key, const char *val)
 {
+    asynUser *pasynUser;
     asynInterface *pasynInterface;
     setOptionArgs optionargs;
-    asynUser *pasynUser;
-    asynStatus status;
 
-    if ((portName == NULL) || (key == NULL) || (val == NULL)) {
-        printf("Missing argument\n");
+    if ((key == NULL) || (val == NULL)) {
+        printf("Missing key/value argument\n");
         return asynError;
     }
-    pasynUser = pasynManager->createAsynUser(setOption,0);
+    if (findInterface(portName, addr, asynOptionType, setOption,
+                                    &pasynUser, &pasynInterface) != asynSuccess)
+        return asynError;
     pasynUser->userPvt = &optionargs;
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if(status!=asynSuccess) {
-        printf("connectDevice failed %s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return asynError;
-    }
-    pasynInterface = pasynManager->findInterface(pasynUser,asynOptionType,1);
-    if(!pasynInterface) {
-        printf("port %s does not support get/set option\n",portName);
-        return asynError;
-    }
+    pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
     optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
     optionargs. drvPvt = pasynInterface->drvPvt;
     optionargs.key = key;
     optionargs.val = val;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
-    status = pasynManager->queueRequest(pasynUser,asynQueuePriorityLow,0.0);
-    if(status!=asynSuccess) {
-        printf("queueRequest failed %s\n",pasynUser->errorMessage);
+    if (pasynManager->queueRequest(pasynUser,asynQueuePriorityConnect,0.0) != asynSuccess) {
+        printf("queueRequest failed: %s\n", pasynUser->errorMessage);
+        epicsEventDestroy(optionargs.done);
         pasynManager->freeAsynUser(pasynUser);
         return asynError;
     }
     epicsEventWait(optionargs.done);
     epicsEventDestroy(optionargs.done);
     pasynManager->freeAsynUser(pasynUser);
-    return 0;
+    return asynSuccess;
 }
 
 static void showOption(asynUser *pasynUser)
 {
     showOptionArgs *poptionargs = (showOptionArgs *)pasynUser->userPvt;
     asynStatus status;
-    char val[100];
 
-    pasynUser->errorMessage[0] = '\0';
     status = poptionargs->pasynOption->getOption(poptionargs->drvPvt,
-        pasynUser,poptionargs->key,val,sizeof(val));
-    if(status!=asynSuccess) {
-        printf("getOption failed %s\n",pasynUser->errorMessage);
-    } else {
-        printf("%s=%s\n",poptionargs->key,val);
-    }
+        pasynUser, poptionargs->key, poptionargs->val, sizeof(poptionargs->val));
+    if(status != asynSuccess)
+        printf("getOption failed %s\n", pasynUser->errorMessage);
+    else
+        printf("%s=%s\n", poptionargs->key, poptionargs->val);
     epicsEventSignal(poptionargs->done);
 }
 
@@ -134,34 +147,30 @@ epicsShareFunc int
     asynInterface *pasynInterface;
     showOptionArgs optionargs;
     asynUser *pasynUser;
-    asynStatus status;
 
-    if ((portName == NULL) || (key == NULL) ) {
-        printf("Missing argument\n");
+    if (key == NULL) {
+        printf("Missing key argument\n");
         return asynError;
     }
-    pasynUser = pasynManager->createAsynUser(showOption,0);
+    if (findInterface(portName, addr, asynOptionType, showOption,
+                                    &pasynUser, &pasynInterface) != asynSuccess)
+        return asynError;
     pasynUser->userPvt = &optionargs;
-    status = pasynManager->connectDevice(pasynUser,portName,addr);
-    if(status!=asynSuccess) {
-        printf("connectDevice failed %s\n",pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return 1;
-    }
-    pasynInterface = pasynManager->findInterface(pasynUser,asynOptionType,0);
-    if(!pasynInterface) {
-        printf("port %s does not support get/set option\n",portName);
-        return asynError;
-    }
+    pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
     optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
     optionargs.drvPvt = pasynInterface->drvPvt;
     optionargs.key = key;
     optionargs.done = epicsEventMustCreate(epicsEventEmpty);
-    status = pasynManager->queueRequest(pasynUser,0,0.0);
+    if (pasynManager->queueRequest(pasynUser,asynQueuePriorityConnect,0.0) != asynSuccess) {
+        printf("queueRequest failed: %s\n", pasynUser->errorMessage);
+        epicsEventDestroy(optionargs.done);
+        pasynManager->freeAsynUser(pasynUser);
+        return asynError;
+    }
     epicsEventWait(optionargs.done);
     epicsEventDestroy(optionargs.done);
     pasynManager->freeAsynUser(pasynUser);
-    return 0;
+    return asynSuccess;
 }
 
 /* Default timeout for reading */

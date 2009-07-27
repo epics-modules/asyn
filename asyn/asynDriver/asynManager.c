@@ -31,7 +31,6 @@
 #include <epicsAssert.h>
 
 #include <epicsExport.h>
-#include <initHooks.h>
 #include "asynDriver.h"
 
 #define BOOL int
@@ -81,7 +80,6 @@ typedef struct asynBase {
     ELLLIST           memList[nMemList];
     /* following for connectPort */
     epicsTimerQueueId connectPortTimerQueue;
-    int numConnectPortWait;
 }asynBase;
 static asynBase *pasynBase = 0;
 
@@ -218,7 +216,6 @@ static BOOL autoConnectDevice(port *pport,device *pdevice);
 static void connectAttempt(dpCommon *pdpCommon);
 static void portThread(port *pport);
 /* functions for portConnect */
-static void initHookCallback(initHookState state);
 static void initPortConnect(port *ppport);
 static void portConnectTimerCallback(void *pvt);
 static void portConnectProcessCallback(asynUser *pasynUser);
@@ -393,7 +390,8 @@ static void asynInit(void)
     pasynBase->lockTrace = epicsMutexMustCreate();
     tracePvtInit(&pasynBase->trace);
     for(i=0; i<nMemList; i++) ellInit(&pasynBase->memList[i]);
-    initHookRegister(initHookCallback);
+    pasynBase->connectPortTimerQueue = epicsTimerQueueAllocate(
+        0,epicsThreadPriorityScanLow);
 }
 
 static void dpCommonInit(port *pport,device *pdevice,BOOL autoConnect)
@@ -1318,7 +1316,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     assert(priority>=asynQueuePriorityLow && priority<=asynQueuePriorityConnect);
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager::queueRequest not connected\n");
+                "asynManager::queueRequest asynUser not associated with a port\n");
         return asynError;
     }
     if(!puserPvt->processUser) {
@@ -1326,7 +1324,8 @@ static asynStatus queueRequest(asynUser *pasynUser,
                 "asynManager::queueRequest no processCallback\n");
         return asynError;
     }
-    if(addr==-1 &&  priority==asynQueuePriorityConnect) {
+    if((priority==asynQueuePriorityConnect)
+    && (addr==-1 || pasynUser->reason==ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED)) {
         checkPortConnect = FALSE;
     }
     epicsMutexMustLock(pport->asynManagerLock);
@@ -1357,7 +1356,8 @@ static asynStatus queueRequest(asynUser *pasynUser,
             epicsMutexUnlock(pport->asynManagerLock);
             return asynDisabled;
         }
-        if(!pport->dpc.connected || !pdpCommon->connected) {
+        if((!pport->dpc.connected || !pdpCommon->connected)
+        && (pasynUser->reason != ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED)) {
             if(priority<asynQueuePriorityConnect
             && !autoConnectDevice(pport,pdevice)) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -1568,38 +1568,13 @@ static asynStatus lockPort(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
-    device   *pdevice = puserPvt->pdevice;
-    int      addr = (pdevice ? pdevice->addr : -1);
-    dpCommon *pdpCommon;
-    BOOL     autoConnectOK;
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
-    pdpCommon = findDpCommon(puserPvt);
-    assert(pdpCommon);
-    epicsMutexMustLock(pport->asynManagerLock);
-    autoConnectOK = pdpCommon->autoConnect;
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort autoConnectOK %d\n",
-        pport->portName,autoConnectOK);
-    if(!pport->dpc.enabled
-    || (addr>=0 && !pdpCommon->enabled)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "port %s or addr %d not enabled\n",pport->portName,addr);
-        epicsMutexUnlock(pport->asynManagerLock);
-        return asynError;
-    }
-    if(autoConnectOK && (!pport->dpc.connected || !pdpCommon->connected)) {
-        if(!autoConnectDevice(pport,pdevice)) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "port %s or addr %d not connected\n",pport->portName,addr);
-            epicsMutexUnlock(pport->asynManagerLock);
-            return asynError;
-        }
-    }
-    epicsMutexUnlock(pport->asynManagerLock);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
     epicsMutexMustLock(pport->synchronousLock);
     if(pport->pasynLockPortNotify) {
         asynStatus status;
@@ -1757,6 +1732,10 @@ static asynStatus registerInterface(const char *portName,
     }
     pinterfaceNode->pasynInterface = pasynInterface;
     epicsMutexUnlock(pport->asynManagerLock);
+    if(strcmp(pasynInterface->interfaceType,asynCommonType)==0) {
+        initPortConnect(pport);
+        portConnectTimerCallback(pport);
+    }
     return asynSuccess;
 }
 
@@ -2468,31 +2447,6 @@ static const char *strStatus(asynStatus status)
 /*
  * functions for portConnect 
  */
-
-static void initHookCallback(initHookState state)
-{
-      port *pport;
-
-      if(state!=initHookAfterInitDevSup) return;
-      pasynBase->connectPortTimerQueue = epicsTimerQueueAllocate(
-        0,epicsThreadPriorityScanLow);
-      pasynBase->numConnectPortWait = 0;
-      pport = (port *)ellFirst(&pasynBase->asynPortList);
-      while(pport) {
-            initPortConnect(pport);
-            portConnectTimerCallback(pport);
-            pport = (port *)ellNext(&pport->node);
-      }
-      while(1) {
-          int numConnectPortWait;
-          epicsMutexMustLock(pasynBase->lock);
-          numConnectPortWait = pasynBase->numConnectPortWait;
-          epicsMutexUnlock(pasynBase->lock);
-          if(numConnectPortWait<=0) break;
-          epicsThreadSleep(.1);
-      }
-}
-
 static void initPortConnect(port *pport)
 {
     asynStatus status;
@@ -2514,6 +2468,7 @@ static void initPortConnect(port *pport)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
            "%s %d autoConnect findInterface failed.\n",
          pport->portName,addr);
+         return;
     }
     pport->pcommonInterface = pasynInterface;
     pport->connectTimer = epicsTimerQueueCreateTimer(
@@ -2529,9 +2484,6 @@ static void portConnectTimerCallback(void *pvt)
     asynStatus status;
     int addr = -1;
     if(!pport->dpc.connected && pport->dpc.autoConnect) {
-       epicsMutexMustLock(pasynBase->lock);
-       pasynBase->numConnectPortWait++;
-       epicsMutexUnlock(pasynBase->lock);
         status = pasynManager->queueRequest(pasynUser, asynQueuePriorityConnect, 0);
         if(status != asynSuccess) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -2553,7 +2505,4 @@ static void portConnectProcessCallback(asynUser *pasynUser)
     if(status!=asynSuccess) {
         epicsTimerStartDelay(pport->connectTimer,pport->secondsBetweenPortConnect);
     }
-    epicsMutexMustLock(pasynBase->lock);
-    pasynBase->numConnectPortWait--;
-    epicsMutexUnlock(pasynBase->lock);
 }
