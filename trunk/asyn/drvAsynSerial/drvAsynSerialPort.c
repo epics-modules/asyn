@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.47 2009-03-17 18:11:58 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.48 2009-07-27 14:43:59 norume Exp $
  */
 
 #include <string.h>
@@ -56,7 +56,6 @@
  */
 struct termios {
     int c_cflag;
-    int baud;
 };
 #endif
 
@@ -72,6 +71,7 @@ typedef struct {
     unsigned long      nRead;
     unsigned long      nWritten;
     struct termios     termios;
+    int                baud;
     double             readTimeout;
     double             writeTimeout;
     epicsTimerId       timer;
@@ -94,346 +94,45 @@ static void serialBaseInit(void)
 }
 
 /*
- * Close a connection
+ * Apply option settings to hardware
  */
-static void
-closeConnection(asynUser *pasynUser,ttyController_t *tty)
-{
-    if (tty->fd >= 0) {
-        asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                           "Close %s connection.\n", tty->serialDeviceName);
-        close(tty->fd);
-        tty->fd = -1;
-        pasynManager->exceptionDisconnect(pasynUser);
-    }
-}
-
-/*
- * Unblock the I/O operation
- */
-static void
-timeoutHandler(void *p)
-{
-    ttyController_t *tty = (ttyController_t *)p;
-
-    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
-                               "%s timeout handler.\n", tty->serialDeviceName);
-    tty->timeoutFlag = 1;
-#ifdef TCOFLUSH
-    tcflush(tty->fd, TCOFLUSH);
-#endif
-#ifdef vxWorks
-    ioctl(tty->fd, FIOCANCEL, NULL);
-    /*
-     * Since it is possible, though unlikely, that we got here before the
-     * slow system call actually started, we arrange to poke the thread
-     * again in a little while.
-     */
-    epicsTimerStartDelay(tty->timer, 10.0);
-#endif
-}
-
 static asynStatus
-termiosGet (asynUser *pasynUser,ttyController_t *tty)
+applyOptions(asynUser *pasynUser, ttyController_t *tty)
 {
 #ifdef vxWorks
-    int baud;
-    if(ioctl(tty->fd, SIO_HW_OPTS_GET, (int)&tty->termios.c_cflag) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "ioctl SIO_HW_OPTS_GET failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s ioctl SIO_HW_OPTS_GET failed %s\n",
-            tty->serialDeviceName,strerror(errno));
+    if ((ioctl(tty->fd, FIOBAUDRATE, tty->baud) < 0)
+     && (ioctl(tty->fd, SIO_BAUD_SET, tty->baud) < 0)) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                "SIO_BAUD_SET failed: %s\n", strerror(errno));
         return asynError;
     }
-    if(ioctl(tty->fd, SIO_BAUD_GET, (int)&baud) == 0) {
-        tty->termios.baud = baud;
+    if (ioctl(tty->fd, SIO_HW_OPTS_SET, tty->termios.c_cflag) < 0) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                               "SIO_HW_OPTS_SET failed: %s\n", strerror(errno));
+        return asynError;
     }
 #else
-    if(tcgetattr(tty->fd,&tty->termios) < 0 ) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "tcgetattr failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s tcgetattr failed %s\n",
-            tty->serialDeviceName,strerror(errno));
-        return asynError;
-    }
-#endif
-    return asynSuccess;
-}
-
-static asynStatus
-termiosInit(asynUser *pasynUser ,ttyController_t *tty)
-{
-
-    termiosGet(pasynUser,tty);
-#ifndef vxWorks
-    tty->termios.c_iflag = IGNBRK | IGNPAR;
-    tty->termios.c_oflag = 0;
-    tty->termios.c_lflag = 0;
-    tty->termios.c_cc[VMIN] = 0;
-    tty->termios.c_cc[VTIME] = 0;
     if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "tcsetattr failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s tcsetattr failed %s\n",
-            tty->serialDeviceName,strerror(errno));
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                   "tcsetattr failed: %s\n", strerror(errno));
         return asynError;
     }
 #endif
     return asynSuccess;
-}
-
-static asynStatus
-getBaud(asynUser *pasynUser ,ttyController_t *tty,int *baud)
-{
-#ifdef vxWorks
-    *baud = tty->termios.baud;
-#else
-    speed_t inBaud,outBaud;
-
-    termiosGet(pasynUser,tty);
-    inBaud = cfgetispeed(&tty->termios);
-    outBaud = cfgetospeed(&tty->termios);
-    if(inBaud!=outBaud) {
-       epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-          "cfgetispeed = %d cfgetospeed = %d are not the same\n",
-          (int)inBaud,(int)outBaud);
-       return asynError;
-    }
-    switch(inBaud) {
-        case B50:     *baud = 50 ;     break;
-        case B75:     *baud = 75 ;     break;
-        case B110:    *baud = 110 ;    break;
-        case B134:    *baud = 134 ;    break;
-        case B150:    *baud = 150 ;    break;
-        case B200:    *baud = 200 ;    break;
-        case B300:    *baud = 300 ;    break;
-        case B600:    *baud = 600 ;    break;
-        case B1200:   *baud = 1200 ;   break;
-        case B1800:   *baud = 1800 ;   break;
-        case B2400:   *baud = 2400 ;   break;
-        case B4800:   *baud = 4800 ;   break;
-        case B9600:   *baud = 9600 ;   break;
-        case B19200:  *baud = 19200 ;  break;
-#ifdef B28800
-        case B28800:  *baud = 28800 ;  break;
-#endif
-        case B38400:  *baud = 38400 ;  break;
-        case B57600:  *baud = 57600 ;  break;
-        case B115200: *baud = 115200 ; break;
-        case B230400: *baud = 230400 ; break;
-        default:
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-              "cfgetispeed returned unknown size");
-            return asynError;
-    }
-#endif
-    return asynSuccess;
-}
-static asynStatus
-setBaud(asynUser *pasynUser ,ttyController_t *tty,int baud)
-{
-#ifdef vxWorks
-    int inBaud;
-    if ((ioctl(tty->fd, FIOBAUDRATE, baud) < 0)
-    && (ioctl(tty->fd, SIO_BAUD_SET, baud) < 0)) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "SIO_BAUD_SET returned %s\n",strerror(errno));
-        return asynError;
-    }
-    if(ioctl(tty->fd, SIO_BAUD_GET, (int)&inBaud) == 0) {
-        if(inBaud!=baud) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-               "ioctl SIO_BAUD_GET failed in setBaud %d baud %d\n",
-                inBaud,baud);
-            return asynError;
-        }
-    }
-    tty->termios.baud = baud;
-    return asynSuccess;
-#else
-    speed_t baudCode;
-    int inBaud;
-    asynStatus status;
-
-    termiosGet(pasynUser,tty);
-    switch(baud) {
-        case 50:     baudCode = B50 ;     break;
-        case 75:     baudCode = B75 ;     break;
-        case 110:    baudCode = B110 ;    break;
-        case 134:    baudCode = B134 ;    break;
-        case 150:    baudCode = B150 ;    break;
-        case 200:    baudCode = B200 ;    break;
-        case 300:    baudCode = B300 ;    break;
-        case 600:    baudCode = B600 ;    break;
-        case 1200:   baudCode = B1200 ;   break;
-        case 1800:   baudCode = B1800 ;   break;
-        case 2400:   baudCode = B2400 ;   break;
-        case 4800:   baudCode = B4800 ;   break;
-        case 9600:   baudCode = B9600 ;   break;
-        case 19200:  baudCode = B19200 ;  break;
-#ifdef B28800
-        case 28800:  baudCode = B28800 ;  break;
-#endif
-        case 38400:  baudCode = B38400 ;  break;
-        case 57600:  baudCode = B57600 ;  break;
-        case 115200: baudCode = B115200 ; break;
-        case 230400: baudCode = B230400 ; break;
-        default:
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-              "cfgetispeed returned unknown size");
-            return asynError;
-    }
-    if(cfsetispeed(&tty->termios,baudCode) < 0 ) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "cfsetispeed returned %s\n",strerror(errno));
-        return asynError;
-    }
-    if(cfsetospeed(&tty->termios,baudCode) < 0 ) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "cfsetospeed returned %s\n",strerror(errno));
-        return asynError;
-    }
-    if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "tcsetattr failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s tcsetattr failed %s\n",
-            tty->serialDeviceName,strerror(errno));
-        return asynError;
-    }
-    status = getBaud(pasynUser,tty,&inBaud);
-    if(status!=asynSuccess) return status;
-    if(inBaud!=baud) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "getBaud %d != baud %d\n",inBaud,baud);
-        return asynError;
-    }
-    return asynSuccess;
-#endif
 }
 
 /*
- * Report link parameters
+ * asynOption methods
  */
-static void
-report(void *drvPvt, FILE *fp, int details)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-
-    assert(tty);
-    fprintf(fp, "Serial line %s: %sonnected\n",
-        tty->serialDeviceName,
-        tty->fd >= 0 ? "C" : "Disc");
-    if (details >= 1) {
-        fprintf(fp, "                    fd: %d\n", tty->fd);
-        fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
-        fprintf(fp, "       Characters read: %lu\n", tty->nRead);
-    }
-}
-
-/*
- * Create a link
- */
-static asynStatus
-connectIt(void *drvPvt, asynUser *pasynUser)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-    asynStatus status;
-
-    /*
-     * Sanity check
-     */
-    assert(tty);
-    if (tty->fd >= 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s: Link already open!", tty->serialDeviceName);
-        return asynError;
-    }
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                              "Open connection to %s\n", tty->serialDeviceName);
-
-    /*
-     * Open serial line and set configuration
-     * Must open in non-blocking mode in case carrier detect is not
-     * present and we plan to use the line in CLOCAL mode.
-     */
-    if ((tty->fd = open(tty->serialDeviceName, O_RDWR|O_NOCTTY|O_NONBLOCK, 0)) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s Can't open  %s\n",
-                                    tty->serialDeviceName, strerror(errno));
-        return asynError;
-    }
-#if defined(FD_CLOEXEC) && !defined(vxWorks)
-    if (fcntl(tty->fd, F_SETFD, FD_CLOEXEC) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "Can't set %s close-on-exec flag: %s\n",
-                                    tty->serialDeviceName, strerror(errno));
-        close(tty->fd);
-        tty->fd = -1;
-        return asynError;
-    }
-#endif
-    status = termiosInit(pasynUser,tty);
-    if(status!=asynSuccess) {
-        close(tty->fd);
-        tty->fd = -1;
-        return asynError;
-    }
-   
-    /*
-     * Turn off non-blocking mode
-     */
-#ifndef vxWorks
-    tcflush(tty->fd, TCIOFLUSH);
-    tty->readTimeout = -1e-99;
-    tty->writeTimeout = -1e-99;
-    if (fcntl(tty->fd, F_SETFL, 0) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "Can't set %s file flags: %s",
-                                    tty->serialDeviceName, strerror(errno));
-        close(tty->fd);
-        tty->fd = -1;
-        return asynError;
-    }
-#endif
-
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                          "Opened connection to %s\n", tty->serialDeviceName);
-    pasynManager->exceptionConnect(pasynUser);
-    return asynSuccess;
-}
-
-static asynStatus
-disconnect(void *drvPvt, asynUser *pasynUser)
-{
-    ttyController_t *tty = (ttyController_t *)drvPvt;
-
-    assert(tty);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                                    "%s disconnect\n", tty->serialDeviceName);
-    epicsTimerCancel(tty->timer);
-    closeConnection(pasynUser,tty);
-    return asynSuccess;
-}
-
 static asynStatus
 getOption(void *drvPvt, asynUser *pasynUser,
                               const char *key, char *val, int valSize)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    asynStatus status;
     int l;
 
     if (epicsStrCaseCmp(key, "baud") == 0) {
-        int baud;
-        
-
-        status = getBaud(pasynUser,tty,&baud);
-        if(status!=asynSuccess) return status;
-        l = epicsSnprintf(val, valSize, "%d", baud);
+        l = epicsSnprintf(val, valSize, "%d", tty->baud);
     }
     else if (epicsStrCaseCmp(key, "bits") == 0) {
         switch (tty->termios.c_cflag & CSIZE) {
@@ -485,24 +184,63 @@ getOption(void *drvPvt, asynUser *pasynUser,
 }
 
 static asynStatus
-setOption(void *drvPvt, asynUser *pasynUser,
-                              const char *key, const char *val)
+setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    asynStatus status;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-        "%s setOption key %s val %s\n",tty->portName,key,val);
+                    "%s setOption key %s val %s\n", tty->portName, key, val);
     if (epicsStrCaseCmp(key, "baud") == 0) {
         int baud;
-        if(sscanf(val,"%d",&baud) !=1) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "sscanf failed converting value");
+        if(sscanf(val, "%d", &baud) != 1) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
             return asynError;
         }
-        status = setBaud(pasynUser,tty,baud);
-        return status;
+#ifndef vxWorks
+        {
+        speed_t baudCode;
+        switch(baud) {
+            case 50:     baudCode = B50 ;     break;
+            case 75:     baudCode = B75 ;     break;
+            case 110:    baudCode = B110 ;    break;
+            case 134:    baudCode = B134 ;    break;
+            case 150:    baudCode = B150 ;    break;
+            case 200:    baudCode = B200 ;    break;
+            case 300:    baudCode = B300 ;    break;
+            case 600:    baudCode = B600 ;    break;
+            case 1200:   baudCode = B1200 ;   break;
+            case 1800:   baudCode = B1800 ;   break;
+            case 2400:   baudCode = B2400 ;   break;
+            case 4800:   baudCode = B4800 ;   break;
+            case 9600:   baudCode = B9600 ;   break;
+            case 19200:  baudCode = B19200 ;  break;
+#ifdef B28800
+            case 28800:  baudCode = B28800 ;  break;
+#endif
+            case 38400:  baudCode = B38400 ;  break;
+            case 57600:  baudCode = B57600 ;  break;
+            case 115200: baudCode = B115200 ; break;
+            case 230400: baudCode = B230400 ; break;
+            default:
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                      "Unsupported data rate (%d baud)", baud);
+                return asynError;
+        }
+        if(cfsetispeed(&tty->termios,baudCode) < 0 ) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "cfsetispeed returned %s\n",strerror(errno));
+            return asynError;
+        }
+        if(cfsetospeed(&tty->termios,baudCode) < 0 ) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "cfsetospeed returned %s\n",strerror(errno));
+            return asynError;
+        }
+        }
+#endif
+        tty->baud = baud;
     }
     else if (epicsStrCaseCmp(key, "bits") == 0) {
         if (epicsStrCaseCmp(val, "5") == 0) {
@@ -589,32 +327,156 @@ setOption(void *drvPvt, asynUser *pasynUser,
             return asynError;
         }
     }
-    else {
+    else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
         return asynError;
     }
+    if (tty->fd >= 0)
+        return applyOptions(pasynUser, tty);
+    return asynSuccess;
+}
+static const struct asynOption asynOptionMethods = { setOption, getOption };
+
+/*
+ * Close a connection
+ */
+static void
+closeConnection(asynUser *pasynUser,ttyController_t *tty)
+{
+    if (tty->fd >= 0) {
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                           "Close %s connection.\n", tty->serialDeviceName);
+        close(tty->fd);
+        tty->fd = -1;
+        pasynManager->exceptionDisconnect(pasynUser);
+    }
+}
+
+/*
+ * Unblock the I/O operation
+ */
+static void
+timeoutHandler(void *p)
+{
+    ttyController_t *tty = (ttyController_t *)p;
+
+    asynPrint(tty->pasynUser, ASYN_TRACE_FLOW,
+                               "%s timeout handler.\n", tty->serialDeviceName);
+    tty->timeoutFlag = 1;
+#ifdef TCOFLUSH
+    tcflush(tty->fd, TCOFLUSH);
+#endif
 #ifdef vxWorks
-    if(ioctl(tty->fd,SIO_HW_OPTS_SET,tty->termios.c_cflag) < 0) {
+    ioctl(tty->fd, FIOCANCEL, NULL);
+    /*
+     * Since it is possible, though unlikely, that we got here before the
+     * slow system call actually started, we arrange to poke the thread
+     * again in a little while.
+     */
+    epicsTimerStartDelay(tty->timer, 10.0);
+#endif
+}
+
+
+/*
+ * Report link parameters
+ */
+static void
+report(void *drvPvt, FILE *fp, int details)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    assert(tty);
+    fprintf(fp, "Serial line %s: %sonnected\n",
+        tty->serialDeviceName,
+        tty->fd >= 0 ? "C" : "Disc");
+    if (details >= 1) {
+        fprintf(fp, "                    fd: %d\n", tty->fd);
+        fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
+        fprintf(fp, "       Characters read: %lu\n", tty->nRead);
+    }
+}
+
+/*
+ * Create a link
+ */
+static asynStatus
+connectIt(void *drvPvt, asynUser *pasynUser)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    /*
+     * Sanity check
+     */
+    assert(tty);
+    if (tty->fd >= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "ioctl SIO_HW_OPTS_SET failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s ioctl SIO_HW_OPTS_SET failed %s\n",
-            tty->serialDeviceName,strerror(errno));
+                              "%s: Link already open!", tty->serialDeviceName);
         return asynError;
     }
-#else
-    if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                              "Open connection to %s\n", tty->serialDeviceName);
+
+    /*
+     * Open serial line and set configuration
+     * Must open in non-blocking mode in case carrier detect is not
+     * present and we plan to use the line in CLOCAL mode.
+     */
+    if ((tty->fd = open(tty->serialDeviceName, O_RDWR|O_NOCTTY|O_NONBLOCK, 0)) < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "tcsetattr failed %s\n",strerror(errno));
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s tcsetattr failed %s\n",
-            tty->serialDeviceName,strerror(errno));
+                            "%s Can't open  %s\n",
+                                    tty->serialDeviceName, strerror(errno));
+        return asynError;
+    }
+#if defined(FD_CLOEXEC) && !defined(vxWorks)
+    if (fcntl(tty->fd, F_SETFD, FD_CLOEXEC) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                            "Can't set %s close-on-exec flag: %s\n",
+                                    tty->serialDeviceName, strerror(errno));
+        close(tty->fd);
+        tty->fd = -1;
         return asynError;
     }
 #endif
+    applyOptions(pasynUser, tty);
+   
+    /*
+     * Turn off non-blocking mode
+     */
+#ifndef vxWorks
+    tcflush(tty->fd, TCIOFLUSH);
+    tty->readTimeout = -1e-99;
+    tty->writeTimeout = -1e-99;
+    if (fcntl(tty->fd, F_SETFL, 0) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                            "Can't set %s file flags: %s",
+                                    tty->serialDeviceName, strerror(errno));
+        close(tty->fd);
+        tty->fd = -1;
+        return asynError;
+    }
+#endif
+
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                          "Opened connection to %s\n", tty->serialDeviceName);
+    pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
+
+static asynStatus
+disconnect(void *drvPvt, asynUser *pasynUser)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                                    "%s disconnect\n", tty->serialDeviceName);
+    epicsTimerCancel(tty->timer);
+    closeConnection(pasynUser,tty);
+    return asynSuccess;
+}
+
 
 /*
  * Write to the serial line
@@ -854,6 +716,8 @@ flushIt(void *drvPvt,asynUser *pasynUser)
     return asynSuccess;
 }
 
+static asynOctet asynOctetMethods = { writeIt, readIt, flushIt };
+
 /*
  * Clean up a ttyController
  */
@@ -872,18 +736,10 @@ ttyCleanup(ttyController_t *tty)
 /*
  * asynCommon methods
  */
-static const struct asynCommon drvAsynSerialPortAsynCommon = {
+static const struct asynCommon asynCommonMethods = {
     report,
     connectIt,
     disconnect
-};
-
-/*
- * asynOption methods
- */
-static const struct asynOption drvAsynSerialPortAsynOption = {
-    setOption,
-    getOption
 };
 
 /*
@@ -898,8 +754,6 @@ drvAsynSerialPortConfigure(char *portName,
 {
     ttyController_t *tty;
     asynStatus status;
-    int nbytes;
-    asynOctet *pasynOctet;
 
 
     /*
@@ -918,10 +772,8 @@ drvAsynSerialPortConfigure(char *portName,
     /*
      * Create a driver
      */
-    nbytes = sizeof(*tty) + sizeof(asynOctet);
-    tty = (ttyController_t *)callocMustSucceed(1, nbytes,
-         "drvAsynSerialPortConfigure()");
-    pasynOctet = (asynOctet *)(tty +1);
+    tty = (ttyController_t *)callocMustSucceed(1, sizeof(*tty), "drvAsynSerialPortConfigure()");
+
     /*
      * Create timeout mechanism
      */
@@ -936,13 +788,28 @@ drvAsynSerialPortConfigure(char *portName,
     tty->portName = epicsStrDup(portName);
 
     /*
+     * Set defaults
+     */
+    tty->termios.c_cflag = CS8 | CLOCAL;
+    tty->baud = 9600;
+#ifndef vxWorks
+    tty->termios.c_iflag = IGNBRK | IGNPAR;
+    tty->termios.c_oflag = 0;
+    tty->termios.c_lflag = 0;
+    tty->termios.c_cc[VMIN] = 0;
+    tty->termios.c_cc[VTIME] = 0;
+    cfsetispeed(&tty->termios, B9600);
+    cfsetospeed(&tty->termios, B9600);
+#endif
+
+    /*
      *  Link with higher level routines
      */
     tty->common.interfaceType = asynCommonType;
-    tty->common.pinterface  = (void *)&drvAsynSerialPortAsynCommon;
+    tty->common.pinterface  = (void *)&asynCommonMethods;
     tty->common.drvPvt = tty;
     tty->option.interfaceType = asynOptionType;
-    tty->option.pinterface  = (void *)&drvAsynSerialPortAsynOption;
+    tty->option.pinterface  = (void *)&asynOptionMethods;
     tty->option.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    ASYN_CANBLOCK,
@@ -965,14 +832,11 @@ drvAsynSerialPortConfigure(char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    pasynOctet->read = readIt;
-    pasynOctet->write = writeIt;
-    pasynOctet->flush = flushIt;
     tty->octet.interfaceType = asynOctetType;
-    tty->octet.pinterface  = pasynOctet;
+    tty->octet.pinterface  = &asynOctetMethods;
     tty->octet.drvPvt = tty;
     status = pasynOctetBase->initialize(tty->portName,&tty->octet,
-         (noProcessEos ? 0 : 1),(noProcessEos ? 0 : 1),1);
+                             (noProcessEos ? 0 : 1),(noProcessEos ? 0 : 1),1);
     if(status != asynSuccess) {
         printf("drvAsynSerialPortConfigure: Can't register octet.\n");
         ttyCleanup(tty);

@@ -73,6 +73,11 @@ typedef struct asynInterface{
 /*standard values for asynUser.reason*/
 #define ASYN_REASON_SIGNAL -1
 
+#define ASYN_REASON_RESERVED_LOW 0x70000000
+#define ASYN_REASON_RESERVED_HIGH 0x7FFFFFFF
+
+#define ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED ASYN_REASON_RESERVED_LOW
+
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 
