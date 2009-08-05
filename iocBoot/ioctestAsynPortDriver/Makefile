@@ -1,6 +1,6 @@
 TOP = ../..
 
-#ARCH = vxWorks-ppc603
+ARCH = vxWorks-ppc603
 TARGETS = cdCommands envPaths
 
 include $(TOP)/configure/CONFIG
