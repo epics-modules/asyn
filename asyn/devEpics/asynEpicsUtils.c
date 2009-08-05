@@ -48,7 +48,7 @@ epicsShareDef asynEpicsUtils *pasynEpicsUtils = &utils;
 
 static char *skipWhite(char *pstart,int commaOk){
     char *p = pstart;
-    while(*p && (isspace(*p) || (commaOk && (*p==',')))) p++;
+    while(*p && (isspace((int)*p) || (commaOk && (*p==',')))) p++;
     return p;
 }
 
@@ -70,7 +70,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         *addr = pvmeio->signal;
         p = pvmeio->parm;
         p = skipWhite(p,0);
-        for(len=0; *p && !isspace(*p) && *p!=','  ; len++, p++){}
+        for(len=0; *p && !isspace((int)*p) && *p!=','  ; len++, p++){}
         /* first field of parm is always the asyn port name */
         if(len==0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -99,7 +99,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         pnext+=5;
         pnext = skipWhite(pnext,0);
         p = pnext;
-        for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
+        for(len=0; *p && !isspace((int)*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
         if(*p==0) goto error;
         *port = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
         (*port)[len] = 0;
@@ -179,7 +179,7 @@ static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink,
     pnext+=9;
     pnext = skipWhite(pnext,0);
     p = pnext;
-    for(len=0; *p && !isspace(*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
+    for(len=0; *p && !isspace((int)*p) && (*p!=',') && (*p!=')')  ; len++, p++){}
     if(*p==0) goto error;
     *port = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
     (*port)[len] = 0;

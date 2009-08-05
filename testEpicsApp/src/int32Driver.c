@@ -417,7 +417,7 @@ static const char *testDriverReason = "testDriverReason";
 static const char *skipWhite(const char *pstart)
 {
     const char *p = pstart;
-    while(*p && isspace(*p)) p++;
+    while(*p && isspace((int)*p)) p++;
     return p;
 }
 

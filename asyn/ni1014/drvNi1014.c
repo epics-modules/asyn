@@ -23,6 +23,7 @@
 #include <epicsEvent.h>
 #include <epicsThread.h>
 #include <epicsInterrupt.h>
+#include <errlog.h>
 #include <iocsh.h>
 #include <callback.h>
 #include <cantProceed.h>
