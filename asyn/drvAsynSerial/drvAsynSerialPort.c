@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynSerialPort.c,v 1.48 2009-07-27 14:43:59 norume Exp $
+ * $Id: drvAsynSerialPort.c,v 1.49 2009-08-13 20:35:31 norume Exp $
  */
 
 #include <string.h>
@@ -112,6 +112,8 @@ applyOptions(asynUser *pasynUser, ttyController_t *tty)
         return asynError;
     }
 #else
+    
+    tty->termios.c_cflag |= CREAD;
     if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                    "tcsetattr failed: %s\n", strerror(errno));
@@ -790,7 +792,7 @@ drvAsynSerialPortConfigure(char *portName,
     /*
      * Set defaults
      */
-    tty->termios.c_cflag = CS8 | CLOCAL;
+    tty->termios.c_cflag = CS8 | CLOCAL | CREAD;
     tty->baud = 9600;
 #ifndef vxWorks
     tty->termios.c_iflag = IGNBRK | IGNPAR;
