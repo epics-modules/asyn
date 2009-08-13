@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPPort.c,v 1.55 2009-03-17 18:11:58 norume Exp $
+ * $Id: drvAsynIPPort.c,v 1.56 2009-08-13 19:11:44 rivers Exp $
  */
 
 /* Previous versions of drvAsynIPPort.c (1.29 and earlier, asyn R4-5 and earlier)
@@ -141,7 +141,7 @@ static int setNonBlock(int fd, int nonBlockFlag)
 #if defined(vxWorks)
     int flags;
     flags = nonBlockFlag;
-    if (ioctl(fd, FIONBIO, &flags) < 0)
+    if (ioctl(fd, FIONBIO, (int)&flags) < 0)
         return -1;
 #elif defined(_WIN32)
     unsigned long int flags;
