@@ -1669,6 +1669,14 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
     this->maxAddr = maxAddr;
     interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
 
+    /* Create the epicsMutex for locking access to data structures from other threads */
+    this->mutexId = epicsMutexCreate();
+    if (!this->mutexId) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s::%s epicsMutexCreate failure\n", driverName, functionName);
+        return;
+    }
+
     status = pasynManager->registerPort(portName,
                                         asynFlags,    /* multidevice and canblock flags */
                                         autoConnect,  /* autoconnect flag */
@@ -1720,14 +1728,6 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s ERROR: Can't register interfaces: %s.\n",
             driverName, functionName, this->pasynUserSelf->errorMessage);
-        return;
-    }
-
-    /* Create the epicsMutex for locking access to data structures from other threads */
-    this->mutexId = epicsMutexCreate();
-    if (!this->mutexId) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s::%s epicsMutexCreate failure\n", driverName, functionName);
         return;
     }
 
