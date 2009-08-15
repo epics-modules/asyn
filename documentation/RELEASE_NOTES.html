@@ -15,12 +15,21 @@
     <h2>
       Release 4-12</h2>
   <h2>
-    ???? ??, 20??</h2>
+    August 17, 2009</h2>
   </div>
   <h3>
     asynManager</h3>
   <p>
-    The autoconnect code is now decoupled from EPICS iocInit.</p>
+    A problem was introduced in R4-11 by not starting the autoconnect process until iocInit(), 
+    and operations that do not use the XXXSyncIO functions thus fail before iocInit(). 
+    This means, for example, that calls to asynSetOption() to set serial port parameters fail if done 
+    in a startup script before iocInit(). 
+    R4-12 fixes this problem by decoupling autoconnect operations from iocInit().
+    NOTE: The first call to the pasynCommon->connect() function now happens almost immediately after
+    pasynManager->registerInterface() is called for the asynCommon interface.  This timing is different
+    from all previous asyn releases, and it means that port drivers must be prepared to handle the
+    call to asynCommon->connect() before they register the asynCommon interface.  This may require 
+    minor re-ordering of the initialization sequence in some drivers.</p>
   <h3>
     drvAsynSerialPort</h3>
   <p>
