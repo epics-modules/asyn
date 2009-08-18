@@ -26,9 +26,9 @@
     in a startup script before iocInit(). 
     R4-12 fixes this problem by decoupling autoconnect operations from iocInit().
     NOTE: The first call to the pasynCommon->connect() function now happens almost immediately after
-    pasynManager->registerInterface() is called for the asynCommon interface.  This timing is different
-    from all previous asyn releases, and it means that port drivers must be prepared to handle the
-    call to asynCommon->connect() before they register the asynCommon interface.  This may require 
+    pasynManager->registerInterface() is called for the asynCommon interface.  This timing is different 
+    from all previous asyn releases, and it means that port drivers must initialize everything required by
+    asynCommon->connect() before they register the asynCommon interface. This may require 
     minor re-ordering of the initialization sequence in some drivers.</p>
   <h3>
     drvAsynSerialPort</h3>
