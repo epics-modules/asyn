@@ -178,7 +178,7 @@ epicsShareFunc int
 /* Default buffer size  */
 #define BUFFER_SIZE 160
 
-static void* asynHash=NULL;
+static struct gphPvt* asynHash=NULL;
 
 static asynIOPvt* asynFindEntry(const char *name)
 {
