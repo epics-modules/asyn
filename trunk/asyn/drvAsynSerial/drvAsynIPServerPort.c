@@ -11,7 +11,7 @@
 ***********************************************************************/
 
 /*
- * $Id: drvAsynIPServerPort.c,v 1.14 2008-12-12 18:19:44 norume Exp $
+ * $Id: drvAsynIPServerPort.c,v 1.15 2009-08-19 20:24:20 rivers Exp $
  */
 
 #include <string.h>
@@ -159,7 +159,8 @@ static void connectionListener(void *drvPvt)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     struct sockaddr_in clientAddr;
-    int clientFd, clientLen=sizeof(clientAddr);
+    int clientFd;
+    osiSocklen_t clientLen=sizeof(clientAddr);
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynOctetInterrupt *pinterrupt;
