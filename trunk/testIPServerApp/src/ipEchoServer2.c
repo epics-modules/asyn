@@ -49,7 +49,8 @@ static void echoListener(myData *pPvt)
 {
     asynUser *pasynUser;
     char buffer[MESSAGE_SIZE];
-    int nread, eomReason;
+    size_t nread;
+    int eomReason;
     asynStatus status;
 
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
@@ -114,7 +115,7 @@ static void echoWriter(myData *pPvt)
 {
     asynUser *pasynUser;
     char buffer[MESSAGE_SIZE];
-    int nread, nwrite;
+    size_t nread, nwrite;
     asynStatus status;
 
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);

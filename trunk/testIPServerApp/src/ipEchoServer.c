@@ -46,7 +46,8 @@ static void echoHandler(myData *pPvt)
 {
     asynUser *pasynUser;
     char buffer[BUFFER_SIZE];
-    int nread, nwrite, eomReason;
+    size_t nread, nwrite;
+    int eomReason;
     asynStatus status;
 
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
