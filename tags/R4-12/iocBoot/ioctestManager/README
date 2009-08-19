@@ -1,0 +1,23 @@
+regression test instructions:
+
+   ../../bin/<arch>/testManager st.cmd
+   testManagerAllPorts temp
+   exit
+
+   then on host
+   diff temp test20050725
+
+   there should be no differences
+   NOT TRUE: May be subtle timing diffs if workstation is busy
+
+NOTES:
+
+testManager.c has epicsThreadSleep in many of the callbacks.
+This, of course, violates the rule that callbacks should not
+block except because of calling interface methods. The
+epicsThreadSleep calls are used to cause particlar states in asynManager
+
+The test tests two features of asynManager:
+
+1) blockProcessCallback/unblockProcessCallback
+2) cancelRequest.

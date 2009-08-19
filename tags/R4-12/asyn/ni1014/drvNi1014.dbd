@@ -1,0 +1,2 @@
+registrar(ni1014RegisterCommands)
+include "asyn.dbd"

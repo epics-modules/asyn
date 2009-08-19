@@ -1,0 +1,9 @@
+#RELEASE Location of external products
+#  IPAC is only necessary if support for Greensprings IP488 is required
+#  IPAC release V2-7 or later is required.
+IPAC=/usr/local/iocapps/R3.14.10/modules/bus/ipac/2-9-asd1
+# SEQ is required for testIPServer
+SNCSEQ=/usr/local/iocapps/R3.14.10/modules/soft/seq/2-0-12-asd1
+#  EPICS_BASE 3.14.6 or later is required
+LINUX_GPIB=NO
+EPICS_BASE=/usr/local/iocapps/R3.14.10/base/3-14-10-asd1
