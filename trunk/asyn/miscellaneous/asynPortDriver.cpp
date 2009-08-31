@@ -17,39 +17,12 @@
 #include <epicsMutex.h>
 #include <epicsThread.h>
 #include <cantProceed.h>
-/* NOTE: This is needed only for interruptAccept, which is hopefully a temporary workaround 
- * until EPICS supports PINI after interruptAccept */
-#include <dbAccess.h>
 
 #include <asynStandardInterfaces.h>
 
 #include "asynPortDriver.h"
 
 static const char *driverName = "asynPortDriver";
-
-/* This thread waits for interruptAccept and then does all the callbacks once.
-   THIS SHOULD BE A TEMPORARY FIX until EPICS supports PINI after interruptAccept */
-static void callbackTaskC(void *drvPvt)
-{
-    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
-    
-    pPvt->callbackTask();
-}
-
-/** TEMPORARY FIX: waits for interruptAccept and then does all the parameter library callbacks once.
-  * THIS SHOULD BE A TEMPORARY FIX until EPICS supports PINI after interruptAccept */
-void asynPortDriver::callbackTask()
-{
-    int addr;
-    
-    while(!interruptAccept) epicsThreadSleep(0.1);
-    epicsMutexLock(this->mutexId);
-    for (addr=0; addr<this->maxAddr; addr++) {
-        callParamCallbacks(addr, addr);
-    }
-    epicsMutexUnlock(this->mutexId);
-}
-
 
 /** Constructor for paramList class.
   * \param[in] startVal The first index number for this parameter list, typically 0. 
@@ -309,19 +282,13 @@ asynStatus paramList::stringCallback(int command, int addr, char *value)
 /** Calls the registered asyn callback functions for all clients for any parameters that have changed
   * since the last time this function was called.
   * \param[in] addr A client will be called if addr matches the asyn address registered for that client.
-  *
-  * TEMPORARY FIX.  Dont do anything if interruptAccept=0.  There is now a thread that will
-  * do all callbacks once when interruptAccept goes to 1.
-  * THIS SHOULD BE A TEMPORARY FIX until EPICS supports PINI after interruptAccept, which will then be used
-  * for input records that need callbacks after output records that also have PINI and that could affect them. */
+  */
 asynStatus paramList::callCallbacks(int addr)
 {
     int i, index;
     int command;
     asynStatus status = asynSuccess;
 
-     if (!interruptAccept) return(status);
-    
     for (i = 0; i < this->nFlags; i++)
     {
         index = this->flags[i];
@@ -1745,20 +1712,6 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
             "%s:%s:, connectDevice failed\n", driverName, functionName);
         return;
     }
-
-    /* Create a thread that waits for interruptAccept and then does all the callbacks once.
-       THIS SHOULD BE A TEMPORARY FIX until epics supports PII after interruptAccept */
-    status = (asynStatus)(epicsThreadCreate("asynPortDriverCallback",
-                                epicsThreadPriorityMedium,
-                                epicsThreadGetStackSize(epicsThreadStackMedium),
-                                (EPICSTHREADFUNC)callbackTaskC,
-                                this) == NULL);
-    if (status) {
-        printf("%s:%s epicsThreadCreate failure for callback task\n", 
-            driverName, functionName);
-        return;
-    }
-
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
