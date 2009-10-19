@@ -1024,8 +1024,12 @@ extern "C" {static asynStatus readInt32Array(void *drvPvt, asynUser *pasynUser, 
                                 size_t nElements, size_t *nIn)
 {
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
     
-    return(pPvt->readInt32Array(pasynUser, value, nElements, nIn));
+    pPvt->lock();
+    status = pPvt->readInt32Array(pasynUser, value, nElements, nIn);
+    pPvt->unlock();
+    return(status);
 }}
 
 /** Called when asyn clients call pasynInt32Array->read().
