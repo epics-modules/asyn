@@ -410,12 +410,12 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     if(status!=asynSuccess) return status;
     if(pgpibPvt->eoslen==1 && nt>0) {
         if(data[nt-1]==pgpibPvt->eos) {
-            *eomReason |= ASYN_EOM_EOS;
+            if (eomReason) *eomReason |= ASYN_EOM_EOS;
             nt--;
         }
     }
     if(nt<maxchars) data[nt] = 0;
-    if(nt==maxchars) *eomReason |= ASYN_EOM_CNT;
+    if((nt==maxchars) && eomReason) *eomReason |= ASYN_EOM_CNT;
     *nbytesTransfered = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
         data,nbytesTransfered,eomReason);
