@@ -5,12 +5,6 @@
 #include <epicsMutex.h>
 #include <asynStandardInterfaces.h>
 
-/** Structure that is used to associate an enum value in pasynUser->reason with a drvUser string */
-typedef struct {
-    int param;
-    const char *paramString;
-} asynParamString_t;
-
 #ifdef __cplusplus
 
 /** Masks for each of the asyn standard interfaces */
@@ -41,6 +35,7 @@ typedef enum {
 typedef struct
 {
     paramType type;     /**< Parameter data type */
+    char *name;         /**< Parameter name */
     /** Union for parameter value */
     union
     {
@@ -57,8 +52,11 @@ typedef struct
   * and dynamic-length strings. */
 class paramList {
 public:
-    paramList(int startVal, int nVals, asynStandardInterfaces *pasynInterfaces);
+    paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
     ~paramList();
+    asynStatus addParam(const char *name, int *index);
+    asynStatus findParam(const char *name, int *index);
+    asynStatus getName(int index, const char **name);
     asynStatus setInteger(int index, int value);
     asynStatus setDouble(int index, double value);
     asynStatus setString(int index, const char *string);
@@ -74,7 +72,7 @@ private:
     asynStatus intCallback(int command, int addr, int value);
     asynStatus doubleCallback(int command, int addr, double value);
     asynStatus stringCallback(int command, int addr, char *value);
-    int startVal;
+    int nextParam;
     int nVals;
     int nFlags;
     asynStandardInterfaces *pasynInterfaces;
@@ -134,13 +132,8 @@ public:
     virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
-    virtual asynStatus findParam(asynParamString_t *paramTable, int numParams, const char *paramName, 
-                                 int *param);
     virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
                                      const char **pptypeName, size_t *psize);
-    virtual asynStatus drvUserCreateParam(asynUser *pasynUser, const char *drvInfo, 
-                                          const char **pptypeName, size_t *psize,
-                                          asynParamString_t *paramTable, int numParams);
     virtual asynStatus drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize);
     virtual asynStatus drvUserDestroy(asynUser *pasynUser);
@@ -148,6 +141,12 @@ public:
     virtual asynStatus connect(asynUser *pasynUser);
     virtual asynStatus disconnect(asynUser *pasynUser);
    
+    virtual asynStatus addParam(const char *name, int *index);
+    virtual asynStatus addParam(int list, const char *name, int *index);
+    virtual asynStatus findParam(const char *name, int *index);
+    virtual asynStatus findParam(int list, const char *name, int *index);
+    virtual asynStatus getParamName(int index, const char **name);
+    virtual asynStatus getParamName(int list, int index, const char **name);
     virtual asynStatus setIntegerParam(int index, int value);
     virtual asynStatus setIntegerParam(int list, int index, int value);
     virtual asynStatus setDoubleParam(int index, double value);
