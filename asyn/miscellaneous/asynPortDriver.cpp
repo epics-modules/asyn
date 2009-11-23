@@ -452,7 +452,7 @@ asynStatus asynPortDriver::addParam(const char *name, int *index)
 }
 
 /** Adds a parameter to the parameter library.
-  * Calls paramList::addParam (name, index) for parameter list.
+  * Calls paramList::addParam (name, index) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] name Parameter name
   * \param[out] index Parameter number */
@@ -480,7 +480,7 @@ asynStatus asynPortDriver::findParam(const char *name, int *index)
 }
 
 /** Finds a parameter in the parameter library.
-  * Calls paramList::findParam (name, index) for parameter list.
+  * Calls paramList::findParam (name, index) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] name Parameter name
   * \param[out] index Parameter number */
@@ -499,7 +499,7 @@ asynStatus asynPortDriver::getParamName(int index, const char **name)
 }
 
 /** Returns the name of a parameter in the parameter library.
-  * Calls paramList::getName (index, name) for parameter list 0.
+  * Calls paramList::getName (index, name) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index Parameter number
   * \param[out] name Parameter name */
@@ -519,7 +519,7 @@ asynStatus asynPortDriver::setIntegerParam(int index, int value)
 }
 
 /** Sets the value for an integer in the parameter library.
-  * Calls paramList::setInteger (index, value) for parameter list.
+  * Calls paramList::setInteger (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
   * \param[in] value Value to set. */
@@ -538,7 +538,7 @@ asynStatus asynPortDriver::setDoubleParam(int index, double value)
 }
 
 /** Sets the value for a double in the parameter library.
-  * Calls paramList::setDouble (index, value) for parameter list.
+  * Calls paramList::setDouble (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
   * \param[in] value Value to set. */
@@ -557,7 +557,7 @@ asynStatus asynPortDriver::setStringParam(int index, const char *value)
 }
 
 /** Sets the value for a string in the parameter library.
-  * Calls paramList::setString (index, value) for parameter list.
+  * Calls paramList::setString (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
   * \param[in] value Address of value to set. */
