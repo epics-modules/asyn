@@ -29,77 +29,12 @@
 #include <iocsh.h>
 
 #include "asynPortDriver.h"
+#include "testAsynPortDriver.h"
 
 #define FREQUENCY 1000       /* Frequency in Hz */
 #define AMPLITUDE 1.0        /* Plus and minus peaks of sin wave */
 #define NUM_DIVISIONS 10     /* Number of scope divisions in X and Y */
 #define MIN_UPDATE_TIME 0.02 /* Minimum update time, to prevent CPU saturation */
-
-/** Class that demonstrates the use of the asynPortDriver base class to greatly simplify the task
-  * of writing an asyn port driver.
-  * This class does a simple simulation of a digital oscilloscope.  It computes a waveform, computes
-  * statistics on the waveform, and does callbacks with the statistics and the waveform data itself. 
-  * I have made the methods of this class public in order to generate doxygen documentation for them,
-  * but they should really all be private. */
-class testAsynPortDriver : public asynPortDriver {
-public:
-    testAsynPortDriver(const char *portName, int maxArraySize);
-                 
-    /* These are the methods that we override from asynPortDriver */
-    virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
-                                        size_t nElements, size_t *nIn);
-    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
-                                     const char **pptypeName, size_t *psize);
-                                     
-    /* These are the methods that are new to this class */
-    void simTask(void);
-    
-private:
-    /* Our data */
-    epicsEventId eventId;
-    epicsFloat64 *pData;
-    epicsFloat64 *pTimeBase;
-};
-
-/** Enum values are used for pasynUser->reason values, and are the index into the parameter library. */
-typedef enum {
-    P_Run,                /* asynInt32,    r/w */
-    P_MaxPoints,          /* asynInt32,    r/o */
-    P_TimePerDivision,    /* asynFloat64,  r/w */
-    P_VoltsPerDivision,   /* asynFloat64,  r/w */
-    P_VoltOffset,         /* asynFloat64,  r/w */
-    P_TriggerDelay,       /* asynFloat64,  r/w */
-    P_NoiseAmplitude,     /* asynFloat64,  r/w */
-    P_UpdateTime,         /* asynFloat64,  r/w */
-    P_Waveform,           /* asynFloat64Array,  r/o */
-    P_TimeBase,           /* asynFloat64Array,  r/o */
-    P_MinValue,           /* asynFloat64,  r/o */
-    P_MaxValue,           /* asynFloat64,  r/o */
-    P_MeanValue           /* asynFloat64,  r/o */
-} testParams;
-
-/** The command strings are the drvInfo argument for asyn device support links
-  * The asynDrvUser interface in this driver parses these strings and puts the
-  * corresponding enum value in pasynUser->reason */
-static asynParamString_t driverParamString[] = {
-    {P_Run,              "RUN"            },
-    {P_MaxPoints,        "MAX_POINTS"     },
-    {P_TimePerDivision,  "TIME_PER_DIV"   },
-    {P_VoltsPerDivision, "VOLTS_PER_DIV"  },
-    {P_VoltOffset,       "VOLT_OFFSET"    },
-    {P_TriggerDelay,     "TRIGGER_DELAY"  },
-    {P_NoiseAmplitude,   "NOISE_AMPLITUDE"},
-    {P_UpdateTime,       "UPDATE_TIME"    },
-    {P_Waveform,         "WAVEFORM"       },
-    {P_TimeBase,         "TIME_BASE"      },
-    {P_MinValue,         "MIN_VALUE"      },
-    {P_MaxValue,         "MAX_VALUE"      },
-    {P_MeanValue,        "MEAN_VALUE"     }
-};
-
-#define NUM_DRIVER_PARAMS (sizeof(driverParamString)/sizeof(driverParamString[0]))
 
 static const char *driverName="testAsynPortDriver";
 
@@ -177,20 +112,21 @@ asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
+    const char *paramName;
     const char* functionName = "writeInt32";
 
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setIntegerParam(function, value);
+    
+    /* Fetch the parameter string name for possible use in debugging */
+    getParamName(function, &paramName);
 
-    switch(function) {
-        case P_Run:
-            /* If run was set then wake up the simulation task */
-            if (value) epicsEventSignal(this->eventId);
-            break;
-        default:
-            /* All other parameters just get set in parameter list, no need to
-             * act on them here */
-            break;
+    if (function == P_Run) {
+        /* If run was set then wake up the simulation task */
+        if (value) epicsEventSignal(this->eventId);
+    } else {
+        /* All other parameters just get set in parameter list, no need to
+         * act on them here */
     }
     
     /* Do callbacks so higher layers see any changes */
@@ -198,12 +134,12 @@ asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%d", 
-                  driverName, functionName, status, function, value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+                  driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%d\n", 
+              driverName, functionName, function, paramName, value);
     return status;
 }
 
@@ -217,26 +153,27 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
     int run;
+    const char *paramName;
     const char* functionName = "writeFloat64";
 
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setDoubleParam(function, value);
 
-    switch(function) {
-        case P_UpdateTime:
-            /* Make sure the update time is valid. If not change it and put back in parameter library */
-            if (value < MIN_UPDATE_TIME) {
-                value = MIN_UPDATE_TIME;
-                setDoubleParam(P_UpdateTime, value);
-            }
-            /* If the update time has changed and we are running then wake up the simulation task */
-            getIntegerParam(P_Run, &run);
-            if (run) epicsEventSignal(this->eventId);
-            break;
-        default:
-            /* All other parameters just get set in parameter list, no need to
-             * act on them here */
-            break;
+    /* Fetch the parameter string name for possible use in debugging */
+    getParamName(function, &paramName);
+
+    if (function == P_UpdateTime) {
+        /* Make sure the update time is valid. If not change it and put back in parameter library */
+        if (value < MIN_UPDATE_TIME) {
+            value = MIN_UPDATE_TIME;
+            setDoubleParam(P_UpdateTime, value);
+        }
+        /* If the update time has changed and we are running then wake up the simulation task */
+        getIntegerParam(P_Run, &run);
+        if (run) epicsEventSignal(this->eventId);
+    } else {
+        /* All other parameters just get set in parameter list, no need to
+         * act on them here */
     }
     
     /* Do callbacks so higher layers see any changes */
@@ -244,12 +181,12 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%f", 
-                  driverName, functionName, status, function, value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%f", 
+                  driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%f\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%f\n", 
+              driverName, functionName, function, paramName, value);
     return status;
 }
 
@@ -270,17 +207,13 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 
     getIntegerParam(P_MaxPoints, (epicsInt32 *)&ncopy);
     if (nElements < ncopy) ncopy = nElements;
-    switch(function) {
-        case P_Waveform:
-            memcpy(value, this->pData, ncopy*sizeof(epicsFloat64));
-            *nIn = ncopy;
-            break;
-        case P_TimeBase:
-            memcpy(value, this->pTimeBase, ncopy*sizeof(epicsFloat64));
-            *nIn = ncopy;
-            break;
-        default:
-            break;
+    if (function == P_Waveform) {
+        memcpy(value, this->pData, ncopy*sizeof(epicsFloat64));
+        *nIn = ncopy;
+    }
+    else if (function == P_TimeBase) {
+        memcpy(value, this->pTimeBase, ncopy*sizeof(epicsFloat64));
+        *nIn = ncopy;
     }
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
@@ -294,23 +227,6 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 }
     
 
-/** Called by asynManager to pass a pasynUser structure and drvInfo string to the driver; 
-  * assigns pasynUser->reason to one of the testParams enum value based on the value of the drvInfo string.
-  * Simply calls asynPortDriver::drvUserCreateParam with the parameter table for this driver.
-  * \param[in] pasynUser pasynUser structure that driver modifies
-  * \param[in] drvInfo String containing information about what driver function is being referenced
-  * \param[out] pptypeName Location in which driver puts a copy of drvInfo.
-  * \param[out] psize Location where driver puts size of param.
-  * \return Returns asynSuccess if a matching string was found, asynError if not found. */
-asynStatus testAsynPortDriver::drvUserCreate(asynUser *pasynUser,
-                                       const char *drvInfo, 
-                                       const char **pptypeName, size_t *psize)
-{
-    //const char *functionName = "drvUserCreate";
-    
-    return this->drvUserCreateParam(pasynUser, drvInfo, pptypeName, psize, 
-                                    driverParamString, NUM_DRIVER_PARAMS);
-}
 
 /** Constructor for the testAsynPortDriver class.
   * Calls constructor for the asynPortDriver base class.
@@ -319,7 +235,7 @@ asynStatus testAsynPortDriver::drvUserCreate(asynUser *pasynUser,
 testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    NUM_DRIVER_PARAMS,
+                    NUM_SCOPE_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask,  /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
@@ -343,6 +259,19 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     for (i=0; i<maxPoints; i++) pTimeBase[i] = (double)i / (maxPoints-1) * NUM_DIVISIONS;
     
     this->eventId = epicsEventCreate(epicsEventEmpty);
+    addParam(P_RunString,               &P_Run);
+    addParam(P_MaxPointsString,         &P_MaxPoints);
+    addParam(P_TimePerDivisionString,   &P_TimePerDivision);
+    addParam(P_VoltsPerDivisionString,  &P_VoltsPerDivision);
+    addParam(P_VoltOffsetString,        &P_VoltOffset);
+    addParam(P_TriggerDelayString,      &P_TriggerDelay);
+    addParam(P_NoiseAmplitudeString,    &P_NoiseAmplitude);
+    addParam(P_UpdateTimeString,        &P_UpdateTime);
+    addParam(P_WaveformString,          &P_Waveform);
+    addParam(P_TimeBaseString,          &P_TimeBase);
+    addParam(P_MinValueString,          &P_MinValue);
+    addParam(P_MaxValueString,          &P_MaxValue);
+    addParam(P_MeanValueString,         &P_MeanValue);
 
     /* Set the initial values of some parameters */
     setIntegerParam(P_MaxPoints,         maxPoints);
