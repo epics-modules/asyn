@@ -15,7 +15,7 @@
     <h2>
       Release 4-13</h2>
   <h2>
-    August xx, 20xx</h2>
+    December xx, 20xx</h2>
   </div>
   <h3>
     asyn/Makefile</h3>
@@ -26,11 +26,12 @@
   <p>
     Fixed bug in readInt32Array, not taking lock where needed.</p>
   <p>
-   Removed ugly hack that worked around problem in EPICS prior to 3.14.11 of input 
-   records sometimes processing before output records at iocInit, leading to input
-   records having incorrect readback values. 
-   Now we can use PINI=RUNNING on input records, forcing them to do their
-   initial processing after the related output records. </p> 
+    Added drvInfo strings to parameter lists, and new methods to support this: addParam(), findParam(), getParamName().
+    The report functions now print out the drvInfo strings, which is very useful.
+    The base class drvUserCreate() method can now be used without reimplementing in derived classes, because the
+    parameter names are now available to the base class.  Removed asynParamString_T and drvUserCreateParam(), 
+    which no longer needed.  The testAsynPortDriver test application has been updated to use these new features.</p> 
+   
   <div style="text-align: center">
     <h2>
       Release 4-12</h2>
