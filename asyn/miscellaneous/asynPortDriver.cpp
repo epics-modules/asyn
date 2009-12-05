@@ -108,7 +108,7 @@ asynStatus paramList::addParam(const char *name, int *index)
 asynStatus paramList::findParam(const char *name, int *index)
 {
     for (*index=0; *index<this->nVals; (*index)++) {
-        if (name && this->vals[*index].name && (strcmp(name, this->vals[*index].name) == 0)) return asynSuccess;
+        if (name && this->vals[*index].name && (epicsStrCaseCmp(name, this->vals[*index].name) == 0)) return asynSuccess;
     }
     return asynError;
 }
@@ -459,8 +459,17 @@ asynStatus asynPortDriver::addParam(const char *name, int *index)
 asynStatus asynPortDriver::addParam(int list, const char *name, int *index)
 {
     asynStatus status;
+    int itemp;
     static const char *functionName = "addParam";
     
+    /* Make sure this parameter does not already exist */
+    status = this->params[list]->findParam(name, &itemp);
+    if (status == asynSuccess) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: error adding parameter %s to list %d, parameter already exists.\n",
+            driverName, functionName, name, list);
+        return(asynError);
+    }
     status = this->params[list]->addParam(name, index);
     if (status) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
@@ -476,7 +485,7 @@ asynStatus asynPortDriver::addParam(int list, const char *name, int *index)
   * \param[out] index Parameter number */
 asynStatus asynPortDriver::findParam(const char *name, int *index)
 {
-    return this->params[0]->findParam(name, index);
+    return this->findParam(0, name, index);
 }
 
 /** Finds a parameter in the parameter library.
@@ -495,7 +504,7 @@ asynStatus asynPortDriver::findParam(int list, const char *name, int *index)
   * \param[out] name Parameter name */
 asynStatus asynPortDriver::getParamName(int index, const char **name)
 {
-    return this->params[0]->getName(index, name);
+    return this->getParamName(0, index, name);
 }
 
 /** Returns the name of a parameter in the parameter library.
@@ -515,7 +524,7 @@ asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
   * \param[in] value Value to set. */
 asynStatus asynPortDriver::setIntegerParam(int index, int value)
 {
-    return this->params[0]->setInteger(index, value);
+    return this->setIntegerParam(0, index, value);
 }
 
 /** Sets the value for an integer in the parameter library.
@@ -534,7 +543,7 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
   * \param[in] value Value to set. */
 asynStatus asynPortDriver::setDoubleParam(int index, double value)
 {
-    return this->params[0]->setDouble(index, value);
+    return this->setDoubleParam(0, index, value);
 }
 
 /** Sets the value for a double in the parameter library.
@@ -553,7 +562,7 @@ asynStatus asynPortDriver::setDoubleParam(int list, int index, double value)
   * \param[in] value Address of value to set. */
 asynStatus asynPortDriver::setStringParam(int index, const char *value)
 {
-    return this->params[0]->setString(index, value);
+    return this->setStringParam(0, index, value);
 }
 
 /** Sets the value for a string in the parameter library.
@@ -573,7 +582,7 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
   * \param[out] value Address of value to get. */
 asynStatus asynPortDriver::getIntegerParam(int index, int *value)
 {
-    return this->params[0]->getInteger(index, value);
+    return this->getIntegerParam(0, index, value);
 }
 
 /** Returns the value for an integer from the parameter library.
@@ -592,7 +601,7 @@ asynStatus asynPortDriver::getIntegerParam(int list, int index, int *value)
   * \param[out] value Address of value to get. */
 asynStatus asynPortDriver::getDoubleParam(int index, double *value)
 {
-    return this->params[0]->getDouble(index, value);
+    return this->getDoubleParam(0, index, value);
 }
 
 /** Returns the value for a double from the parameter library.
@@ -612,7 +621,7 @@ asynStatus asynPortDriver::getDoubleParam(int list, int index, double *value)
   * \param[out] value Address of value to get. */
 asynStatus asynPortDriver::getStringParam(int index, int maxChars, char *value)
 {
-    return this->params[0]->getString(index, maxChars, value);
+    return this->getStringParam(0, index, maxChars, value);
 }
 
 /** Returns the value for a string from the parameter library.
@@ -629,7 +638,7 @@ asynStatus asynPortDriver::getStringParam(int list, int index, int maxChars, cha
 /** Calls paramList::callCallbacks() with no list and asyn address arguments, which uses 0 for both. */
 asynStatus asynPortDriver::callParamCallbacks()
 {
-    return this->params[0]->callCallbacks();
+    return this->callParamCallbacks(0, 0);
 }
 
 /** Calls paramList::callCallbacks (list, addr) for a specific parameter list and asyn address.
