@@ -31,6 +31,10 @@
     The base class drvUserCreate() method can now be used without reimplementing in derived classes, because the
     parameter names are now available to the base class.  Removed asynParamString_T and drvUserCreateParam(), 
     which no longer needed.  The testAsynPortDriver test application has been updated to use these new features.</p> 
+  <h3>
+    drvAsynIPPort</h3>
+  <p>A return of 0 from a read of a TCP stream is treated as an END condition rather than as an error.  This makes it easier to handle devices that close the connection at the end of a reply.</p>
+  <p>Support has been added for devices such as web servers that require a connect at the beginning of each transaction.  To enable this behaviour, specify "http" as the protocol in the drvAsynIPPortConfigure command and ensure that each transaction ends with a read that detects the broken connection from the device.  Note that the device will always appear connected.   The connect/disconnect around each transaction is handled within the drvAsynIPPort driver.</p>
    
   <div style="text-align: center">
     <h2>
