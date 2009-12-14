@@ -367,14 +367,13 @@ int drvAsynIPServerPortConfigure(const char *portName,
      */
     protocol[0] = '\0';
     if (((cp = strchr(serverInfo, ':')) == NULL)
-     || (sscanf(cp, ":%ud %5s", &tty->portNumber, protocol) < 1)) {
+     || (sscanf(cp, ":%u %5s", &tty->portNumber, protocol) < 1)) {
         printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
                                                         tty->serverInfo);
         ttyCleanup(tty);
         return -1;
     }
     *cp = '\0';
-
 
     if ((protocol[0] ==  '\0')
      || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
