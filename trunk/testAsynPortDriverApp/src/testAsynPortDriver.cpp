@@ -259,20 +259,20 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     for (i=0; i<maxPoints; i++) pTimeBase[i] = (double)i / (maxPoints-1) * NUM_DIVISIONS;
     
     this->eventId = epicsEventCreate(epicsEventEmpty);
-    addParam(P_RunString,               &P_Run);
-    addParam(P_MaxPointsString,         &P_MaxPoints);
-    addParam(P_TimePerDivisionString,   &P_TimePerDivision);
-    addParam(P_VoltsPerDivisionString,  &P_VoltsPerDivision);
-    addParam(P_VoltOffsetString,        &P_VoltOffset);
-    addParam(P_TriggerDelayString,      &P_TriggerDelay);
-    addParam(P_NoiseAmplitudeString,    &P_NoiseAmplitude);
-    addParam(P_UpdateTimeString,        &P_UpdateTime);
-    addParam(P_WaveformString,          &P_Waveform);
-    addParam(P_TimeBaseString,          &P_TimeBase);
-    addParam(P_MinValueString,          &P_MinValue);
-    addParam(P_MaxValueString,          &P_MaxValue);
-    addParam(P_MeanValueString,         &P_MeanValue);
-
+    createParam(P_RunString,                asynParamInt32,         &P_Run);
+    createParam(P_MaxPointsString,          asynParamInt32,         &P_MaxPoints);
+    createParam(P_TimePerDivisionString,    asynParamFloat64,       &P_TimePerDivision);
+    createParam(P_VoltsPerDivisionString,   asynParamFloat64,       &P_VoltsPerDivision);
+    createParam(P_VoltOffsetString,         asynParamFloat64,       &P_VoltOffset);
+    createParam(P_TriggerDelayString,       asynParamFloat64,       &P_TriggerDelay);
+    createParam(P_NoiseAmplitudeString,     asynParamFloat64,       &P_NoiseAmplitude);
+    createParam(P_UpdateTimeString,         asynParamFloat64,       &P_UpdateTime);
+    createParam(P_WaveformString,           asynParamFloat64Array,  &P_Waveform);
+    createParam(P_TimeBaseString,           asynParamFloat64Array,  &P_TimeBase);
+    createParam(P_MinValueString,           asynParamFloat64,       &P_MinValue);
+    createParam(P_MaxValueString,           asynParamFloat64,       &P_MaxValue);
+    createParam(P_MeanValueString,          asynParamFloat64,       &P_MeanValue);
+    
     /* Set the initial values of some parameters */
     setIntegerParam(P_MaxPoints,         maxPoints);
     setIntegerParam(P_Run,               0);
