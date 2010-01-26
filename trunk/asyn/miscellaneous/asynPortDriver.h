@@ -96,12 +96,12 @@ public:
     asynStatus getUInt32Interrupt(int index, epicsUInt32 *mask, interruptReason reason);
     asynStatus callCallbacks(int addr);
     asynStatus callCallbacks();
-    void report();
+    void report(FILE *fp, int details);
 
 private:    
     asynStatus setFlag(int index);
     asynStatus int32Callback(int command, int addr, epicsInt32 value);
-    asynStatus uint32Callback(int command, int addr, epicsUInt32 value);
+    asynStatus uint32Callback(int command, int addr, epicsUInt32 value, epicsUInt32 interruptMask);
     asynStatus float64Callback(int command, int addr, epicsFloat64 value);
     asynStatus octetCallback(int command, int addr, char *value);
     int nextParam;
@@ -203,7 +203,7 @@ public:
     virtual asynStatus callParamCallbacks();
     virtual asynStatus callParamCallbacks(int addr);
     virtual asynStatus callParamCallbacks(int list, int addr);
-    virtual void reportParams();
+    virtual void reportParams(FILE *fp, int details);
 
     char *portName;         /**< The name of this asyn port */
 
