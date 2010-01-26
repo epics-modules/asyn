@@ -163,8 +163,7 @@ than using libCom, much of it is independent of EPICS.</p>
     converter boxes. TCP/IP and UDP/IP socket communication are
   supported.</li>
   <li>drvAsynIPServerPort: Support for asyn socket servers that are accessed
-    from remote clients. TCP/IP and UDP/IP socket communication are
-  supported.</li>
+    from remote clients. TCP/IP sockets are supported, UDP is not currently supported.</li>
   <li>VXI-11: A replacement for the VXI-11 support of the Franksen gpibCore
     support.</li>
   <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
@@ -4527,16 +4526,16 @@ connections.</p>
 <p>asynInterposeEos and asynInterposeFlush can be used to provide additional
 functionality.</p>
 
-<h3 id="drvAsynIPServerPort">TCP/IP or UDP/IP Server</h3>
+<h3 id="drvAsynIPServerPort">TCP/IP Server</h3>
 
 <p>The drvAsynIPServerPort driver supports asyn socket servers by listening
-for TCP/IP or UDP/IP connections from remote clients. The listener thread
+for TCP/IP connections from remote clients. The listener thread
 then creates a new drvAsynIPPort port by calling drvAsynIPPortConfigure (or
 re-uses a disconnected port it previously created), and calls back any
 registered asyn clients with the name of the new port. These asyn clients
 will typically be socket servers.</p>
 
-<p>TCP/IP or UDP/IP server listeners are configured with the
+<p>TCP/IP server listeners are configured with the
 <tt>drvAsynIPServerPortConfigure</tt> command:</p>
 <pre> drvAsynIPServerPortConfigure("portName", "serverInfo", maxClients, priority, 
       noAutoConnect, noProcessEos);</pre>
@@ -4544,9 +4543,9 @@ will typically be socket servers.</p>
 <p>where the arguments are:</p>
 <ul>
   <li>portName - The portName that is registered with asynManager.</li>
-  <li>serverInfo - The Internet host name, port number and optional IP
-    protocol to listen for connections on (e.g. "localhost:4002",
-    "localhost:5186 udp"). If no protocol is specified, TCP will be used.</li>
+  <li>serverInfo - The Internet host name and port number 
+    to listen for connections on (e.g. "localhost:4002"). 
+    TCP is the only protocol currently supported.</li>
   <li>maxClients - the maximum number of IP clients that can be
     simultaneously connected on this port. Additional connect requests will
     fail.</li>
