@@ -349,10 +349,30 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     epicsMutexLock(pPvt->mutexId);
     count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
     if (count != size) {
+        /* There was no room in the ring buffer.  In the past we just threw away
+         * the new value.  However, it is better to remove the oldest value from the
+         * ring buffer and add the new one.  That way the final value the record receives
+         * is guaranteed to be the most recent value */
+        epicsUInt32 dummy;
+        count = epicsRingBytesGet(pPvt->ringBuffer, (char *)&dummy, size);
+        if (count != size) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital interruptCallbackInput error, ring read failed\n",
+                pPvt->pr->name);
+        }
+        count = epicsRingBytesPut(pPvt->ringBuffer, (char *)&value, size);
+        if (count != size) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynUInt32Digital interruptCallbackInput error, ring put failed\n",
+                pPvt->pr->name);
+        }
         pPvt->ringBufferOverflows++;
-    }
+    } else {
+        /* We only need to request the record to process if we added a 
+         * new element to the ring buffer, not if we just replaced an element. */
+        scanIoRequest(pPvt->ioScanPvt);
+    }    
     epicsMutexUnlock(pPvt->mutexId);
-    scanIoRequest(pPvt->ioScanPvt);
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
