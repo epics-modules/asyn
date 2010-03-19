@@ -698,13 +698,11 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
             "%s vxiCreateIrqChannel (create_intr_chan)%s\n",
             pvxiPort->portName,clnt_sperror(pvxiPort->rpcClient,""));
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
-        clnt_destroy(pvxiPort->rpcClient);
     } else if(devErr.error != VXI_OK) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiCreateIrqChannel %s (create_intr_chan)\n",
             pvxiPort->portName, vxiError(devErr.error));
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
-        clnt_destroy(pvxiPort->rpcClient);
     } else {
         vxiSrqEnable(pvxiPort,1);
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
