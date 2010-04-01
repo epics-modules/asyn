@@ -14,68 +14,105 @@
   <div style="text-align: center">
     <h2>
       Release 4-13</h2>
-  <h2>
-    December xx, 20xx</h2>
+    <h2>
+      April 1, 2010</h2>
   </div>
   <h3>
     asyn/Makefile</h3>
   <p>
     Change some dependencies to fix parallel (-j) make problem.</p>
   <h3>
+    drvAsynIPPort</h3>
+  <p>
+    A return of 0 from a read of a TCP stream is treated as an END condition rather
+    than as an error. This makes it easier to handle devices that close the connection
+    at the end of a reply.</p>
+  <p>
+    Support has been added for devices such as web servers that require a connect at
+    the beginning of each transaction. To enable this behaviour, specify "http" as the
+    protocol in the drvAsynIPPortConfigure command and ensure that each transaction
+    ends with a read that detects the broken connection from the device. Note that the
+    device will always appear connected. The connect/disconnect around each transaction
+    is handled within the drvAsynIPPort driver.</p>
+  <h3>
+    drvAsynIPServerPort</h3>
+  <p>
+    Corrected the documentation to state that only the TCP/IP protocol is supported,
+    not UDP.</p>
+  <h3>
+    asynGpib</h3>
+  <p>
+    Fix problem with NULL-pointer dereferences.</p>
+  <h3>
+    drvVxi11</h3>
+  <p>
+    Bug fix from Benjamin Franksen for devices that don't support IRQ.
+  </p>
+  <h3>
+    devEPICS</h3>
+  <p>
+    The ring buffer code in devAsynFloat64.c, devAsynInt32.c and devAsynUInt32Digital.c
+    has been improved. Previously when ring buffer overflow occurred during a callback
+    the new value was simply discarded. This meant that when the record processed at
+    the end of a rapid burst of callbacks it would not contain the most recent value.
+    Now when overflow occurs the oldest value is removed from from the ring buffer and
+    the new value is added, so that the record will contain the most recent callback
+    value after a burst.</p>
+  <h3>
+    asynRecord</h3>
+  <p>
+    Fixed bug which caused an error when writing or reading in binary format if the
+    driver did not implement the get(Input/Output)Eos functions. This bug was introduced
+    when readRaw and writeRaw were removed from asynOctet in release 4-10.
+  </p>
+  <h3>
     asynPortDriver</h3>
   <p>
     Fixed bug in readInt32Array, not taking lock where needed.</p>
   <p>
-    Added drvInfo strings to parameter lists, and new methods to support this: addParam(), findParam(), getParamName().
-    The report functions now print out the drvInfo strings, which is very useful.
-    The base class drvUserCreate() method can now be used without reimplementing in derived classes, because the
-    parameter names are now available to the base class.  Removed asynParamString_T and drvUserCreateParam(), 
-    which no longer needed.  The testAsynPortDriver test application has been updated to use these new features.</p> 
-  <h3>
-    drvAsynIPPort</h3>
-  <p>A return of 0 from a read of a TCP stream is treated as an END condition rather than as an error.  This makes it easier to handle devices that close the connection at the end of a reply.</p>
-  <p>Support has been added for devices such as web servers that require a connect at the beginning of each transaction.  To enable this behaviour, specify "http" as the protocol in the drvAsynIPPortConfigure command and ensure that each transaction ends with a read that detects the broken connection from the device.  Note that the device will always appear connected.   The connect/disconnect around each transaction is handled within the drvAsynIPPort driver.</p>
-  <h3>
-    drvAsynIPServerPort</h3>
-  <p>Corrected the documentation to state that only the TCP/IP protocol is supported, not UDP.</p>
-
+    Added drvInfo strings to parameter lists, and new methods to support this: createParam(),
+    findParam(), getParamName(). The report functions now print out the drvInfo strings,
+    which is very useful. The base class drvUserCreate() method can now be used without
+    reimplementing in derived classes, because the parameter names are now available
+    to the base class. Removed asynParamString_T and drvUserCreateParam(), which are
+    no longer needed. The testAsynPortDriver test application has been updated to use
+    these new features.</p>
   <div style="text-align: center">
     <h2>
       Release 4-12</h2>
-  <h2>
-    August 19, 2009</h2>
+    <h2>
+      August 19, 2009</h2>
   </div>
   <h3>
     asynManager</h3>
   <p>
-    A problem was introduced in R4-11 by not starting the autoconnect process until iocInit(), 
-    and operations that do not use the XXXSyncIO functions thus fail before iocInit(). 
-    This means, for example, that calls to asynSetOption() to set serial port parameters fail if done 
-    in a startup script before iocInit(). 
-    R4-12 fixes this problem by decoupling autoconnect operations from iocInit().
-    NOTE: The first call to the pasynCommon->connect() function now happens almost immediately after
-    pasynManager->registerInterface() is called for the asynCommon interface.  This timing is different 
-    from all previous asyn releases, and it means that port drivers must initialize everything required by
-    asynCommon->connect() before they register the asynCommon interface. This may require 
-    minor re-ordering of the initialization sequence in some drivers.</p>
+    A problem was introduced in R4-11 by not starting the autoconnect process until
+    iocInit(), and operations that do not use the XXXSyncIO functions thus fail before
+    iocInit(). This means, for example, that calls to asynSetOption() to set serial
+    port parameters fail if done in a startup script before iocInit(). R4-12 fixes this
+    problem by decoupling autoconnect operations from iocInit(). NOTE: The first call
+    to the pasynCommon->connect() function now happens almost immediately after pasynManager->registerInterface()
+    is called for the asynCommon interface. This timing is different from all previous
+    asyn releases, and it means that port drivers must initialize everything required
+    by asynCommon->connect() before they register the asynCommon interface. This may
+    require minor re-ordering of the initialization sequence in some drivers.</p>
   <h3>
     drvAsynSerialPort</h3>
   <p>
-    Requests to set end-of-string values or serial port parameters are accepted
-    even when the port is not connected.  The request takes effect when the
-    port is connected.  This makes IOC startup more robust
-    in the face of network or USB to serial adapters that may be unavailable
-    on startup.</p>
+    Requests to set end-of-string values or serial port parameters are accepted even
+    when the port is not connected. The request takes effect when the port is connected.
+    This makes IOC startup more robust in the face of network or USB to serial adapters
+    that may be unavailable on startup.</p>
   <h3>
     asynInt32Average, asynFloat64Average</h3>
   <p>
-    If record is processed before new data have arrived (numAverage==0) set
-    record to UDF/INVALID, set UDF to TRUE and leave value unchanged.</p>
+    If record is processed before new data have arrived (numAverage==0) set record to
+    UDF/INVALID, set UDF to TRUE and leave value unchanged.</p>
   <div style="text-align: center">
     <h2>
       Release 4-11</h2>
-  <h2>
-    June 16, 2009</h2>
+    <h2>
+      June 16, 2009</h2>
   </div>
   <h3>
     asynManager</h3>
