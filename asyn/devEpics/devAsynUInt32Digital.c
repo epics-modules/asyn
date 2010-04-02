@@ -424,13 +424,11 @@ static int computeShift(epicsUInt32 mask)
 {
     epicsUInt32 bit=1;
     int i;
-    int shift = 0;
 
-    for(i=0; i<NUM_BITS; i++, bit <<= 1 ) {
+    for(i=0; i<32; i++, bit <<= 1 ) {
         if(mask&bit) break;
-        shift += 1;
     }
-    return shift;
+    return i;
 }
 
 static long initBi(biRecord *pr)
