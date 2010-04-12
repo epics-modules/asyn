@@ -1,0 +1,11 @@
+record(stringin,"$(P)stringInput") {
+}
+record(stringin,"$(P)stringOutput") {
+}
+record(bi, "$(P)connected") {
+    field(ZNAM, "Disconnected")
+    field(ZSV,  "INVALID")
+    field(OSV,  "NO_ALARM")
+    field(ONAM, "Connected")
+}
+

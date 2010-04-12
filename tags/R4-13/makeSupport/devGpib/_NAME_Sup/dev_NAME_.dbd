@@ -1,0 +1,16 @@
+device(ai,        GPIB_IO, devAi_NAME_,    "_NAME_")
+device(ao,        GPIB_IO, devAo_NAME_,    "_NAME_")
+device(bi,        GPIB_IO, devBi_NAME_,    "_NAME_")
+device(bo,        GPIB_IO, devBo_NAME_,    "_NAME_")
+device(event,     GPIB_IO, devEv_NAME_,    "_NAME_")
+device(longin,    GPIB_IO, devLi_NAME_,    "_NAME_")
+device(longout,   GPIB_IO, devLo_NAME_,    "_NAME_")
+device(mbbi,      GPIB_IO, devMbbi_NAME_ , "_NAME_")
+device(mbbiDirect,GPIB_IO, devMbbid_NAME_, "_NAME_")
+device(mbbo,      GPIB_IO, devMbbo_NAME_,  "_NAME_")
+device(mbboDirect,GPIB_IO, devMbbod_NAME_, "_NAME_")
+device(stringin,  GPIB_IO, devSi_NAME_,    "_NAME_")
+device(stringout, GPIB_IO, devSo_NAME_,    "_NAME_")
+device(waveform,  GPIB_IO, devWf_NAME_,    "_NAME_")
+
+include "asyn.dbd"
