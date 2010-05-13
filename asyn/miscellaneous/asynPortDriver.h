@@ -184,6 +184,8 @@ public:
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(int index, const char **name);
     virtual asynStatus getParamName(int list, int index, const char **name);
+    virtual void       reportSetParamErrors(asynStatus status, int index, int list, const char *functionName);
+    virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual asynStatus setIntegerParam(int index, int value);
     virtual asynStatus setIntegerParam(int list, int index, int value);
     virtual asynStatus setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 mask);
