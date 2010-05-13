@@ -638,6 +638,24 @@ asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
     return this->params[list]->getName(index, name);
 }
 
+/** Reports errors when setting parameters.  
+  * \param[in] status The error status.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] functionName The name of the function that generated the error  */
+void asynPortDriver::reportSetParamErrors(asynStatus status, int index, int list, const char *functionName)
+{
+    if (status == asynParamBadIndex) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: port=%s error setting parameter %d in list %d, bad index\n",
+            driverName, functionName, portName, index, list);
+    }
+    if (status == asynParamWrongType) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
+            driverName, functionName, portName, index, list);
+    }
+}
 
 /** Sets the value for an integer in the parameter library.
   * Calls setIntegerParam(0, index, value) i.e. for parameter list 0.
@@ -659,13 +677,8 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
     static const char *functionName = "setIntegerParam";
     
     status = this->params[list]->setInteger(index, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Sets the value for a UInt32Digital in the parameter library.
@@ -690,13 +703,8 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 
     static const char *functionName = "setUIntDigitalParam";
     
     status = this->params[list]->setUInt32(index, value, mask);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Sets the value for a double in the parameter library.
@@ -719,13 +727,8 @@ asynStatus asynPortDriver::setDoubleParam(int list, int index, double value)
     static const char *functionName = "setDoubleParam";
     
     status = this->params[list]->setDouble(index, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Sets the value for a string in the parameter library.
@@ -748,15 +751,36 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
     static const char *functionName = "setStringParam";
 
     status = this->params[list]->setString(index, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
+/** Reports errors when getting parameters.  
+  * asynParamBadIndex and asynParamWrongType are printed with ASYN_TRACE_ERROR because they should never happen.
+  * asynParamUndefined is printed with ASYN_TRACE_FLOW because it is an expected error if the value is read before it
+  * is defined, which device support can do.
+  * \param[in] status The error status.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] functionName The name of the function that generated the error  */
+void asynPortDriver::reportGetParamErrors(asynStatus status, int index, int list, const char *functionName)
+{
+    if (status == asynParamBadIndex) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: port=%s error getting parameter %d in list %d, bad index\n",
+            driverName, functionName, portName, index, list);
+    }
+    if (status == asynParamWrongType) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
+            driverName, functionName, portName, index, list);
+    }
+    if (status == asynParamUndefined) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+            "%s:%s: port=%s error getting parameter %d in list %d, value undefined\n",
+            driverName, functionName, portName, index, list);
+    }
+}
 
 /** Returns the value for an integer from the parameter library.
   * Calls getIntegerParam(0, index, value) i.e. for parameter list 0.
@@ -778,13 +802,8 @@ asynStatus asynPortDriver::getIntegerParam(int list, int index, int *value)
     static const char *functionName = "getIntegerParam";
 
     status = this->params[list]->getInteger(index, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportGetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Returns the value for an UInt32Digital parameter from the parameter library.
@@ -809,13 +828,8 @@ asynStatus asynPortDriver::getUIntDigitalParam(int list, int index, epicsUInt32 
     static const char *functionName = "getUIntDigitalParam";
 
     status = this->params[list]->getUInt32(index, value, mask);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportGetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Returns the value for a double from the parameter library.
@@ -838,13 +852,8 @@ asynStatus asynPortDriver::getDoubleParam(int list, int index, double *value)
     static const char *functionName = "getDoubleParam";
 
     status = this->params[list]->getDouble(index, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportGetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Returns the value for a string from the parameter library.
@@ -869,13 +878,8 @@ asynStatus asynPortDriver::getStringParam(int list, int index, int maxChars, cha
     static const char *functionName = "getStringParam";
 
     status = this->params[list]->getString(index, maxChars, value);
-    if (status == asynParamWrongType) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
-        return(asynError);
-    }
-    return(asynSuccess);
+    if (status) reportGetParamErrors(status, index, list, functionName);
+    return(status);
 }
 
 /** Calls callParamCallbacks(0, 0) i.e. with both list and asyn address. */
