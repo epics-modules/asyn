@@ -13,6 +13,19 @@
   <hr />
   <div style="text-align: center">
     <h2>
+      Release 4-13-1</h2>
+    <h2>
+      May 14, 2010</h2>
+  </div>
+  <h3>
+    asynPortDriver</h3>
+  <p>
+    Fixed bug in getXXXParam. It was not returning error status when a parameter was
+    undefined. This caused device support to use undefined values for output records,
+    because the initial read from the driver during device support initialization did
+    not return an error it should have.</p>
+  <div style="text-align: center">
+    <h2>
       Release 4-13</h2>
     <h2>
       April 1, 2010</h2>
