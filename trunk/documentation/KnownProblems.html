@@ -10,9 +10,16 @@
     <h1>
       asynDriver: Asynchronous Driver Support - Known Problems</h1>
     <h1>
-      April 1, 2010</h1>
+      May 14, 2010</h1>
     <hr />
   </div>
+  <h2 style="text-align: center">
+    Release 4-13</h2>
+  <p>
+    asynPortDriver was not returning an error when undefined values were read from the
+    parameter library. This could cause output records to contain undefined data because
+    the initial read of the driver in device support initialization did not return an
+    error when it should have.</p>
   <h2 style="text-align: center">
     Release 4-12</h2>
   <p>
