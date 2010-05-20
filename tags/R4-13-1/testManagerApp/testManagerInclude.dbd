@@ -1,4 +1,0 @@
-include "base.dbd"
-include "asyn.dbd"
-registrar("testManagerRegister")
-registrar("testManagerDriverRegister")

@@ -1,5 +1,0 @@
-include "base.dbd"
-include "asyn.dbd"
-registrar("int32DriverRegister")
-registrar("uint32DigitalDriverRegister")
-registrar("echoDriverRegister")
