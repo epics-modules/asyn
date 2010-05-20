@@ -640,7 +640,7 @@ asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
 
 /** Reports errors when setting parameters.  
   * \param[in] status The error status.
-  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] functionName The name of the function that generated the error  */
 void asynPortDriver::reportSetParamErrors(asynStatus status, int index, int list, const char *functionName)
@@ -760,7 +760,7 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
   * asynParamUndefined is printed with ASYN_TRACE_FLOW because it is an expected error if the value is read before it
   * is defined, which device support can do.
   * \param[in] status The error status.
-  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] functionName The name of the function that generated the error  */
 void asynPortDriver::reportGetParamErrors(asynStatus status, int index, int list, const char *functionName)
