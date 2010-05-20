@@ -1,0 +1,5 @@
+device(ai,        GPIB_IO, devAiAB300,    "AB300")
+device(longin,    GPIB_IO, devLiAB300,    "AB300")
+device(longout,   GPIB_IO, devLoAB300,    "AB300")
+
+include "asyn.dbd"
