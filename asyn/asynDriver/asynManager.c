@@ -655,7 +655,9 @@ static void connectAttempt(dpCommon *pdpCommon)
         "%s %d autoConnect\n",pport->portName,addr);
     pasynUser->errorMessage[0] = '\0';
     epicsMutexMustLock(pport->synchronousLock);
-    status = pasynCommon->connect(drvPvt,pasynUser);
+    /* When we were called we were not connected, but we could have connected since that test? */
+    if (!pdpCommon->connected)
+        status = pasynCommon->connect(drvPvt,pasynUser);
     epicsMutexUnlock(pport->synchronousLock);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -1568,13 +1570,38 @@ static asynStatus lockPort(asynUser *pasynUser)
 {
     userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
     port     *pport = puserPvt->pport;
+    device   *pdevice = puserPvt->pdevice;
+    int      addr = (pdevice ? pdevice->addr : -1);
+    dpCommon *pdpCommon;
+    BOOL     autoConnectOK;
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
+    pdpCommon = findDpCommon(puserPvt);
+    assert(pdpCommon);
+    epicsMutexMustLock(pport->asynManagerLock);
+    autoConnectOK = pdpCommon->autoConnect;
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort autoConnectOK %d\n",
+        pport->portName,autoConnectOK);
+    if(!pport->dpc.enabled
+    || (addr>=0 && !pdpCommon->enabled)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "port %s or addr %d not enabled\n",pport->portName,addr);
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynError;
+    }
+    if(autoConnectOK && (!pport->dpc.connected || !pdpCommon->connected)) {
+        if(!autoConnectDevice(pport,pdevice)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "port %s or addr %d not connected\n",pport->portName,addr);
+            epicsMutexUnlock(pport->asynManagerLock);
+            return asynError;
+        }
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
     epicsMutexMustLock(pport->synchronousLock);
     if(pport->pasynLockPortNotify) {
         asynStatus status;
@@ -2495,13 +2522,16 @@ static void portConnectTimerCallback(void *pvt)
 
 static void portConnectProcessCallback(asynUser *pasynUser)
 {
-    asynStatus status;
+    asynStatus status = asynSuccess;
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
     port    *pport = puserPvt->pport;
     asynInterface *pasynInterface = pport->pcommonInterface;
     asynCommon *pasynCommon = (asynCommon *)pasynInterface->pinterface;
     void *drvPvt = pasynInterface->drvPvt;
-    status = pasynCommon->connect(drvPvt,pasynUser);
+    int isConnected;
+    /* We were not connected when the request was queued, but we could have connected since then */
+    status = pasynManager->isConnected(pasynUser, &isConnected);
+    if (!isConnected) status = pasynCommon->connect(drvPvt,pasynUser);
     if(status!=asynSuccess) {
         epicsTimerStartDelay(pport->connectTimer,pport->secondsBetweenPortConnect);
     }
