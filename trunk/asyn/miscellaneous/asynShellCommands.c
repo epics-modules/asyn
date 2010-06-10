@@ -305,7 +305,7 @@ epicsShareFunc int
     }
     pasynUser = pPvt->pasynUser;
 
-    if (strlen(output) > pPvt->write_buffer_len) {
+    if (strlen(output) > (size_t)pPvt->write_buffer_len) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error writing, buffer too small\n");
        return(-1);
@@ -340,7 +340,7 @@ epicsShareFunc int
     }
     pasynUser = pPvt->pasynUser;
 
-    if (strlen(output) > pPvt->write_buffer_len) {
+    if (strlen(output) > (size_t)pPvt->write_buffer_len) {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
                  "Error writing, buffer too small\n");
        return(-1);
@@ -480,7 +480,37 @@ epicsShareFunc int
     printf("%s\n",eostran);
     return -1;
 }
-
+
+epicsShareFunc int
+    asynWaitConnect(const char *portName, double timeout)
+{
+    asynUser      *pasynUser=NULL;
+    int           isConnected=0;
+    asynStatus    status;
+ 
+    pasynUser = pasynManager->createAsynUser(0,0);
+    if (!pasynUser) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+            "waitConnect: port=%s error calling createAsynUser\n", 
+            portName);
+        return asynError;
+    }
+    status = pasynManager->connectDevice(pasynUser, portName, -1);
+    if (status) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+            "waitConnect: port=%s error calling connectDevice\n",
+            portName);
+        return asynError;
+    }
+    status = pasynManager->waitConnect(pasynUser, timeout);
+    if (status == asynSuccess) isConnected = 1;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+        "waitConnect: port=%s exit, isConnected=%d\n", 
+        portName, isConnected);
+    pasynManager->freeAsynUser(pasynUser);
+    if (isConnected) return asynSuccess; 
+    return asynError;
+}
 static const iocshArg asynReportArg0 = {"level", iocshArgInt};
 static const iocshArg asynReportArg1 = {"port", iocshArgString};
 static const iocshArg *const asynReportArgs[] = {
@@ -883,6 +913,29 @@ static void asynOctetGetOutputEosCall(const iocshArgBuf * args) {
     asynOctetGetOutputEos( portName, addr, drvInfo);
 }
 
+static const iocshArg asynWaitConnectArg0 = {"portName", iocshArgString};
+static const iocshArg asynWaitConnectArg1 = {"timeout", iocshArgDouble};
+static const iocshArg *const asynWaitConnectArgs[] = {
+    &asynWaitConnectArg0, &asynWaitConnectArg1};
+static const iocshFuncDef asynWaitConnectDef =
+    {"asynWaitConnect", 2, asynWaitConnectArgs};
+static void asynWaitConnectCall(const iocshArgBuf * args) {
+    const char *portName   = args[0].sval;
+    double timeout         = args[1].dval;
+    asynWaitConnect( portName, timeout);
+}
+
+static const iocshArg asynSetAutoConnectTimeoutArg0 = {"timeout", iocshArgDouble};
+static const iocshArg *const asynSetAutoConnectTimeoutArgs[] = {
+    &asynSetAutoConnectTimeoutArg0};
+static const iocshFuncDef asynSetAutoConnectTimeoutDef =
+    {"asynSetAutoConnectTimeout", 1, asynSetAutoConnectTimeoutArgs};
+static void asynSetAutoConnectTimeoutCall(const iocshArgBuf * args) {
+    double timeout = args[0].dval;
+    pasynManager->setAutoConnectTimeout(timeout);
+}
+
+
 static void asynRegister(void)
 {
     static int firstTime = 1;
@@ -907,5 +960,7 @@ static void asynRegister(void)
     iocshRegister(&asynOctetGetInputEosDef,asynOctetGetInputEosCall);
     iocshRegister(&asynOctetSetOutputEosDef,asynOctetSetOutputEosCall);
     iocshRegister(&asynOctetGetOutputEosDef,asynOctetGetOutputEosCall);
+    iocshRegister(&asynWaitConnectDef,asynWaitConnectCall);
+    iocshRegister(&asynSetAutoConnectTimeoutDef,asynSetAutoConnectTimeoutCall);
 }
 epicsExportRegistrar(asynRegister);
