@@ -13,6 +13,72 @@
   <hr />
   <div style="text-align: center">
     <h2>
+      Release 4-14</h2>
+    <h2>
+      June XXX, 2010</h2>
+  </div>
+  <h3>
+    asynDriver</h3>
+  <p>
+    Fixed bugs in connection management. Releases 4-11 through 4-13 had the following
+    problems:</p>
+  <ul>
+    <li>If a port was multi-device and auto-connect, and was only accessed using SyncIO
+      calls, then asynManager would never connect to the devices. If regular queued requests
+      were used, which happens if an asyn record is connected to that port, and device,
+      then it would connect.</li>
+    <li>For all auto-connect ports there was a race condition, such that the port might
+      or might not be connected when the first queued request or SyncIO call was done
+      on that port. This arose because when the port registered its asynCommon interface,
+      asynManager queued a connection request on that port. But if that connection request
+      callback, which executes in the portThread, had not yet occurred when a queue request
+      or SyncIO call was made, then those operations would be rejected because the port
+      was not yet connected.</li>
+  </ul>
+  <p>
+    These problems were fixed by doing the following:</p>
+  <ul>
+    <li>When the port registers its asynCommon interface and asynManager queues the connection
+      request, it now waits for a short time for the connection callback to complete.
+      The default time is 0.5 seconds, but this time can be changed with a call to the
+      new function <code>pasynManager-&gt;setAutoConnectTimeout(double timeout)</code>.
+      This function can be accessed from the iocsh shell with the new <code>asynSetAutoConnectTimeout(double
+        timeout)</code> command. This short timeout is designed to allow devices to time
+      to connect if they are available, but not to excessively slow down booting of the
+      IOC by waiting, for example, for the system timeout on TCP connections. </li>
+    <li>There is an additional new function, <code>pasynManager-&gt;waitConnect(asynUser
+      *pasynUser, double timeout)</code>, which will wait for the for the port to connect,
+      up to the specified timeout. This function can be called from the iocsh with the
+      new command <code>asynWaitConnect(const char *portName, double timeout)</code>.
+      This function makes it possible to wait longer for a port to connect then the current
+      value of the global autoconnect timeout described above.</li>
+  </ul>
+  <p>
+    Fixed problems with the SyncIO calls, which were caused by the implementation of
+    <code>pasynManager-&gt;lockPort()</code>:</p>
+  <ul>
+    <li>The SyncIO calls (e.g. asynOctetSyncIO) are implemented by calling <code>pasynManager-&gt;lockPort()</code>,
+      executing the I/O in the current thread, and then calling <code>pasynManager-&gt;unlockPort()</code>.
+      These SyncIO functions are designed to be called from threads that are allowed to
+      block, such as SNL programs, or other drivers. The problem with the previous implementation
+      was that <code>pasynManager-&gt;lockPort()</code> immediately took the port mutex
+      when it was available, rather than queueing a request to take the mutex. This could
+      lead to one thread effectively getting exclusive access to the port, even if other
+      threads had queued requests or tried to do SyncIO calls themselves. For example,
+      if a device could send unsolicited input, then one might create a thread that simply
+      called <code>pasynOctetSyncIO-&gt;read()</code> with a short timeout in a tight
+      loop. The problem with this was that as soon as that thread released the port mutex
+      when the read timed out, it would take the mutex again, blocking other threads that
+      were trying to access the port.&nbsp; Previously the only solution to this problem
+      was to add a short <code>epicsThreadSleep()</code> in the read loop.</li>
+    <li>This problem has been fixed by reimplementing <code>pasynManager-&gt;lockPort()</code>,
+      which now queues a request to access the port and then blocks until the queue request
+      callback runs in the portThread. When the queue request runs, the thread that called
+      <code>pasynManager-&gt;lockPort()</code> executes, and the portThread blocks, until
+      <code>pasynManager-&gt;unlockPort()</code> is called.</li>
+  </ul>
+  <div style="text-align: center">
+    <h2>
       Release 4-13-1</h2>
     <h2>
       May 20, 2010</h2>
@@ -112,11 +178,11 @@
     iocInit(). This means, for example, that calls to asynSetOption() to set serial
     port parameters fail if done in a startup script before iocInit(). R4-12 fixes this
     problem by decoupling autoconnect operations from iocInit(). NOTE: The first call
-    to the pasynCommon->connect() function now happens almost immediately after pasynManager->registerInterface()
+    to the pasynCommon-&gt;connect() function now happens almost immediately after pasynManager-&gt;registerInterface()
     is called for the asynCommon interface. This timing is different from all previous
     asyn releases, and it means that port drivers must initialize everything required
-    by asynCommon->connect() before they register the asynCommon interface. This may
-    require minor re-ordering of the initialization sequence in some drivers.</p>
+    by asynCommon-&gt;connect() before they register the asynCommon interface. This
+    may require minor re-ordering of the initialization sequence in some drivers.</p>
   <h3>
     drvAsynSerialPort</h3>
   <p>
