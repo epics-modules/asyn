@@ -132,6 +132,8 @@ typedef struct asynManager {
     asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*setAutoConnectTimeout)(double timeout);
+    asynStatus (*waitConnect)(asynUser *pasynUser, double timeout);
     /*The following are methods for interrupts*/
     asynStatus (*registerInterruptSource)(const char *portName,
                                asynInterface *pasynInterface, void **pasynPvt);
