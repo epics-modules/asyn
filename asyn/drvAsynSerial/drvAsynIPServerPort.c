@@ -246,7 +246,14 @@ static void connectionListener(void *drvPvt)
         }
         /* Set the existing port to use the new file descriptor */
         pl->pasynUser->reason = clientFd;
-        pasynCommonSyncIO->connectDevice(pl->pasynUser);
+        status = pasynCommonSyncIO->connectDevice(pl->pasynUser);
+        if (status!=asynSuccess) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s drvAsynIPServerPort: error calling "
+                "pasynCommonSyncIO->connectDevice %s\n",
+                pl->portName,pl->pasynUser->errorMessage);
+            continue;
+        }
         pl->pasynUser->reason = 0;
         /* Set the new port to initially have the same trace mask that we have */
         pasynTrace->setTraceMask(pl->pasynUser,   pasynTrace->getTraceMask(pasynUser));
