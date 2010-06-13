@@ -18,6 +18,7 @@
 #include <string.h>
 
 #include <cantProceed.h>
+#include <epicsEvent.h>
 
 #define epicsExportSharedSymbols
 #include <shareLib.h>
@@ -25,11 +26,17 @@
 #include "asynDrvUser.h"
 #include "asynCommonSyncIO.h"
 
+#define DEFAULT_CONNECT_TIMEOUT 1.0
+
 typedef struct ioPvt{
    asynCommon   *pasynCommon;
    void         *pcommonPvt;
    asynDrvUser  *pasynDrvUser;
    void         *drvUserPvt;
+   epicsEventId connectEvent;
+   int          connect;
+   asynStatus   connectStatus;
+   
 }ioPvt;
 
 /*asynCommonSyncIO methods*/
@@ -47,6 +54,9 @@ static asynCommonSyncIO interface = {
     report
 };
 epicsShareDef asynCommonSyncIO *pasynCommonSyncIO = &interface;
+
+/* Private methods */
+static void connectDeviceCallback(asynUser *pasynUser);
 
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)
@@ -57,7 +67,7 @@ static asynStatus connect(const char *port, int addr,
     asynInterface *pasynInterface;
 
     pioPvt = (ioPvt *)callocMustSucceed(1, sizeof(ioPvt),"asynCommonSyncIO");
-    pasynUser = pasynManager->createAsynUser(0,0);
+    pasynUser = pasynManager->createAsynUser(connectDeviceCallback,0);
     pasynUser->userPvt = pioPvt;
     *ppasynUser = pasynUser;
     status = pasynManager->connectDevice(pasynUser, port, addr);    
@@ -89,6 +99,7 @@ static asynStatus connect(const char *port, int addr,
             }
         }
     }
+    pioPvt->connectEvent = epicsEventMustCreate(epicsEventEmpty);
     return asynSuccess ;
 }
 
@@ -107,43 +118,46 @@ static asynStatus disconnect(asynUser *pasynUser)
     if(status!=asynSuccess) {
         return status;
     }
+    epicsEventDestroy(pioPvt->connectEvent);
     free(pioPvt);
     return asynSuccess;
 }
  
 
-static asynStatus connectDevice(asynUser *pasynUser)
+static void connectDeviceCallback(asynUser *pasynUser)
 {
-    asynStatus status, unlockStatus;
+    asynStatus status;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
-    status = pasynManager->lockPort(pasynUser);
-    if(status!=asynSuccess) {
-        return status;
-    }
-    status = pioPvt->pasynCommon->connect(pioPvt->pcommonPvt, pasynUser);
-    unlockStatus = pasynManager->unlockPort(pasynUser);
-    if (unlockStatus != asynSuccess) {
-        return(unlockStatus);
-    }
-    return(status);
+    if (pioPvt->connect)
+        pioPvt->connectStatus = pioPvt->pasynCommon->connect(pioPvt->pcommonPvt, pasynUser);
+    else
+        pioPvt->connectStatus = pioPvt->pasynCommon->disconnect(pioPvt->pcommonPvt, pasynUser);
+    epicsEventSignal(pioPvt->connectEvent);
+}
+
+static asynStatus connectDevice(asynUser *pasynUser)
+{
+    asynStatus status;
+    ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
+
+    pioPvt->connect = 1;
+    status = pasynManager->queueRequest(pasynUser, asynQueuePriorityConnect, 0.);
+    if (status != asynSuccess) return(status);
+    epicsEventMustWait(pioPvt->connectEvent);
+    return(pioPvt->connectStatus);
 }
 
 static asynStatus disconnectDevice(asynUser *pasynUser)
 {
-    asynStatus status, unlockStatus;
+    asynStatus status;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
-    status = pasynManager->lockPort(pasynUser);
-    if(status!=asynSuccess) {
-        return status;
-    }
-    status = pioPvt->pasynCommon->disconnect(pioPvt->pcommonPvt, pasynUser);
-    unlockStatus = pasynManager->unlockPort(pasynUser); 
-    if (unlockStatus != asynSuccess) {
-        return(unlockStatus);
-    }
-    return(status);
+    pioPvt->connect = 0;
+    status = pasynManager->queueRequest(pasynUser, asynQueuePriorityConnect, 0.);
+    if (status != asynSuccess) return(status);
+    epicsEventMustWait(pioPvt->connectEvent);
+    return(pioPvt->connectStatus);
 }
 
 static asynStatus report(asynUser *pasynUser, FILE *fp, int details)
