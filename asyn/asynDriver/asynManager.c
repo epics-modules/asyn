@@ -683,11 +683,12 @@ static void connectAttempt(dpCommon *pdpCommon)
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d autoConnect\n",pport->portName,addr);
     pasynUser->errorMessage[0] = '\0';
-    epicsMutexMustLock(pport->synchronousLock);
     /* When we were called we were not connected, but we could have connected since that test? */
-    if (!pdpCommon->connected)
+    if (!pdpCommon->connected) {
+        epicsMutexMustLock(pport->synchronousLock);
         status = pasynCommon->connect(drvPvt,pasynUser);
-    epicsMutexUnlock(pport->synchronousLock);
+        epicsMutexUnlock(pport->synchronousLock);
+    }
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s %s %d autoConnect could not connect\n",
@@ -809,7 +810,7 @@ static void portThread(port *pport)
             if(!puserPvt) break; /*while(1)*/
             pasynUser = userPvtToAsynUser(puserPvt);
             pasynUser->errorMessage[0] = '\0';
-            asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s callback\n",pport->portName);
+            asynPrint(pasynUser,ASYN_TRACE_FLOW,"asynManager::portThread port=%s callback\n",pport->portName);
             puserPvt->state = callbackActive;
             timeout = puserPvt->timeout;
             epicsMutexUnlock(pport->asynManagerLock);
@@ -862,17 +863,19 @@ static void lockPortCallback(asynUser *pasynUser)
 
     /* Signal the epicsEvent to let the waiting thread we have been called */
     asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-        "%s asynManager::lockPortCallback calling epicsEventShow, plockPortPvt=%p, lockPortEvent=%p\n", 
-        pport->portName, plockPortPvt, plockPortPvt->lockPortEvent);
-    epicsEventShow(plockPortPvt->lockPortEvent, 1);
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-        "%s asynManager::lockPortCallback signaling begin event, plockPortPvt=%p\n", 
-        pport->portName, plockPortPvt);
+        "%s asynManager::lockPortCallback signaling begin event\n", 
+        pport->portName);
     epicsEventSignal(plockPortPvt->lockPortEvent);
     /* Wait for mutex from unlockPort */
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+        "%s asynManager::lockPortCallback waiting for mutex from unlockPort\n", 
+        pport->portName);
     epicsMutexMustLock(plockPortPvt->lockPortMutex);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPortCallback got completion mutex\n", pport->portName);
     epicsMutexUnlock(plockPortPvt->lockPortMutex);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+        "%s asynManager::lockPortCallback got mutex from unlockPort, signaling end event\n", 
+        pport->portName);
+    epicsEventSignal(plockPortPvt->lockPortEvent);
 }
 
 
@@ -1651,7 +1654,7 @@ static asynStatus lockPort(asynUser *pasynUser)
     pasynUserCopy->userPvt = plockPortPvt;
     /* Take the mutex which will block the callback port thread */
     /* Wait until the queued request executes the callback */
-     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort taking mutex %p\n", 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort taking mutex %p\n", 
         pport->portName, plockPortPvt->lockPortMutex);
     epicsMutexMustLock(plockPortPvt->lockPortMutex);
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort queueing request\n", pport->portName);
@@ -1694,9 +1697,12 @@ static asynStatus unlockPort(asynUser *pasynUser)
         status = pport->pasynLockPortNotify->unlock(
            pport->lockPortNotifyPvt,pasynUser);
     }
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort unlock mutex %p\n", 
-        pport->portName, plockPortPvt->lockPortMutex);
     epicsMutexUnlock(plockPortPvt->lockPortMutex);
+    /* Wait for event from the port thread in the lockPortCallback function which signals it has freed mutex */
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::unlockPort waiting for event\n", pport->portName);
+    epicsEventMustWait(plockPortPvt->lockPortEvent);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort unlock mutex %p complete.\n", 
+        pport->portName, plockPortPvt->lockPortMutex);
     return status;
 }
 
@@ -2488,9 +2494,9 @@ static int traceVprintIO(asynUser *pasynUser,int reason,
     nBytes = (len<traceTruncateSize) ? len : traceTruncateSize;
     if((traceIOMask&ASYN_TRACEIO_ASCII) && (nBytes>0)) {
        if(fp) {
-           nout += fprintf(fp,"%.*s\n",nBytes,buffer);
+           nout += fprintf(fp,"%.*s\n",(int)nBytes,buffer);
        } else {
-           nout += errlogPrintf("%.*s\n",nBytes,buffer);
+           nout += errlogPrintf("%.*s\n",(int)nBytes,buffer);
        }
     }
     if(traceIOMask&ASYN_TRACEIO_ESCAPE) {
