@@ -29,7 +29,7 @@
 #include <registryFunction.h>
 #include <epicsExport.h>
 
-#define BUFFER_SIZE 80
+#define MESSAGE_SIZE 80
 #define READ_TIMEOUT -1.0
 #define WRITE_TIMEOUT 2.0
 
@@ -42,10 +42,10 @@ typedef struct myData {
     void         *registrarPvt;
 }myData;
 
-static void echoHandler(myData *pPvt)
+static void echoListener(myData *pPvt)
 {
     asynUser *pasynUser;
-    char buffer[BUFFER_SIZE];
+    char buffer[MESSAGE_SIZE];
     size_t nread, nwrite;
     int eomReason;
     asynStatus status;
@@ -53,66 +53,65 @@ static void echoHandler(myData *pPvt)
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: unable to connect to port %s\n", 
+                  "echoListener: unable to connect to port %s\n", 
                   pPvt->portName);
         return;
     }
     status = pasynOctetSyncIO->setInputEos(pasynUser, "\r\n", 2);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: unable to set input EOS on %s: %s\n", 
+                  "echoListener: unable to set input EOS on %s: %s\n", 
                   pPvt->portName, pasynUser->errorMessage);
         return;
     }
     status = pasynOctetSyncIO->setOutputEos(pasynUser, "\r\n", 2);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoHandler: unable to set output EOS on %s: %s\n", 
+                  "echoListener: unable to set output EOS on %s: %s\n", 
                   pPvt->portName, pasynUser->errorMessage);
         return;
     }
     while(1) {
         /* Erase buffer */
         buffer[0] = 0;
-        status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE, 
+        status = pasynOctetSyncIO->read(pasynUser, buffer, MESSAGE_SIZE, 
                                         pPvt->readTimeout, &nread, &eomReason);
         switch (status) {
         case asynSuccess:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                      "echoHandler: %s read %d: %s\n", 
+                      "echoListener: %s read %d: %s\n", 
                       pPvt->portName, nread, buffer);
             status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer),
                                              WRITE_TIMEOUT, &nwrite);
             if (status) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                          "echoHandler: write error on: %s: %s\n",
+                          "echoListener: write error on: %s: %s\n",
                           pPvt->portName, pasynUser->errorMessage);
                 goto done;
             }
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                      "echoHandler: %s wrote %d: %s\n",
+                      "echoListener: %s wrote %d: %s\n",
                       pPvt->portName, nwrite, buffer);
             break;
 
         case asynTimeout:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoHandler: timeout on: %s read %d: %s\n", 
+                      "echoListener: timeout on: %s read %d: %s\n", 
                       pPvt->portName, nread, buffer);
             break;
 
         default:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoHandler: read error on: %s: status=%d error=%s\n", 
+                      "echoListener: read error on: %s: status=%d error=%s\n", 
                       pPvt->portName, status, pasynUser->errorMessage);
             goto done;
-            break;
         }
     }
     done:
     status = pasynManager->freeAsynUser(pasynUser);
     if (status != asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                              "echoHandler: Can't free port %s asynUser\n",
+                              "echoListener: Can't free port %s asynUser\n",
                                                                pPvt->portName);
     }
     free(pPvt->portName);
@@ -120,7 +119,8 @@ static void echoHandler(myData *pPvt)
 }
 
                          
-static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName, size_t len, int eomReason)
+static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName, 
+                               size_t len, int eomReason)
 {
     myData     *pPvt = (myData *)drvPvt;
     myData     *newPvt = calloc(1, sizeof(myData));
@@ -136,7 +136,7 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName
     epicsThreadCreate(pPvt->portName,
                       epicsThreadPriorityLow,
                       epicsThreadGetStackSize(epicsThreadStackSmall),
-                      (EPICSTHREADFUNC)echoHandler, newPvt);
+                      (EPICSTHREADFUNC)echoListener, newPvt);
 }
 
 static void ipEchoServer(const char *portName, int readTimeout)
@@ -166,7 +166,7 @@ static void ipEchoServer(const char *portName, int readTimeout)
     if (readTimeout == 0) 
         pPvt->readTimeout = READ_TIMEOUT;
     else 
-        pPvt->readTimeout = (double)readTimeout;
+        pPvt->readTimeout = readTimeout/1000.;
     pPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pPvt->octetPvt = pasynInterface->drvPvt;
     status = pPvt->pasynOctet->registerInterruptUser(
@@ -179,7 +179,7 @@ static void ipEchoServer(const char *portName, int readTimeout)
 }
 
 static const iocshArg ipEchoServerArg0 = {"port", iocshArgString};
-static const iocshArg ipEchoServerArg1 = {"read timeout", iocshArgInt};
+static const iocshArg ipEchoServerArg1 = {"read timeout (msec)", iocshArgInt};
 static const iocshArg *const ipEchoServerArgs[] = {
     &ipEchoServerArg0,
     &ipEchoServerArg1};
