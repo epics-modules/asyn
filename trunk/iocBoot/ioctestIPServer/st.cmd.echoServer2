@@ -14,5 +14,5 @@ dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
 
 iocInit()
 
-ipEchoServer2("P5001", 2000)
+ipEchoServer2("P5001", 50)
 
