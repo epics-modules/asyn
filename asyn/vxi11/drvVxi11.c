@@ -849,6 +849,19 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     asynStatus  status;
     struct sockaddr_in vxiServer;
 
+    /* Previously this pasynUser was created and connected to the port in vxi11Configure 
+     * after calling pasynGpib->registerPort
+     * But in asyn R4-12 and later a call to pasynCommon->connect (which calls this function) 
+     * can happen almost immediately when pasynGpib->registerPort is called, so we move the code here. */
+    if (!pvxiPort->pasynUser) {
+        pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
+        pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
+        status = pasynManager->connectDevice(
+            pvxiPort->pasynUser,pvxiPort->portName,-1);
+        if (status!=asynSuccess) 
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "vxiConnectPort: connectDevice failed %s\n",pvxiPort->pasynUser->errorMessage);
+    }
     if(pvxiPort->server.connected) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiConnectPort but already connected\n",pvxiPort->portName);
@@ -1705,12 +1718,15 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
         printf("registerPort failed\n");
         return 0;
     }
-    pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
-    pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
-    status = pasynManager->connectDevice(
-        pvxiPort->pasynUser,pvxiPort->portName,-1);
-    if(status!=asynSuccess) 
-        printf("connectDevice failed %s\n",pvxiPort->pasynUser->errorMessage);
+    /* pvxiPort->pasynUser may have been created already by a connection callback to vxiConnectPort */
+    if (!pvxiPort->pasynUser) {
+        pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
+        pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
+        status = pasynManager->connectDevice(
+            pvxiPort->pasynUser,pvxiPort->portName,-1);
+        if (status!=asynSuccess) 
+            printf("vxiConnectPort: connectDevice failed %s\n",pvxiPort->pasynUser->errorMessage);
+    }
     pvxiPort->option.interfaceType = asynOptionType;
     pvxiPort->option.pinterface  = (void *)&vxiOption;
     pvxiPort->option.drvPvt = pvxiPort;
