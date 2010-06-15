@@ -8,8 +8,8 @@ drvAsynIPServerPortConfigure("P5001","localhost:5001",2,0,0,0)
 drvAsynIPServerPortConfigure("P5002","localhost:5002",1,0,0,0)
 
 #asynSetTraceFile("P5001",-1,"")
+asynSetTraceIOMask("P5001",-1,0x2)
 #asynSetTraceMask("P5001",-1,0xff)
-#asynSetTraceIOMask("P5001",-1,0x2)
 
 dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
 
