@@ -25,8 +25,8 @@
   <ul>
     <li>If a port was multi-device and auto-connect, and was only accessed using SyncIO
       calls, then asynManager would never connect to the devices. If regular queued requests
-      were used, which happens if an asyn record is connected to that port, and device,
-      then it would connect.</li>
+      were used, which happens if an asyn record is connected to that port and device,
+      then it would connect once the first queue request was done.</li>
     <li>For all auto-connect ports there was a race condition, such that the port might
       or might not be connected when the first queued request or SyncIO call was done
       on that port. This arose because when the port registered its asynCommon interface,
@@ -41,42 +41,68 @@
     <li>When the port registers its asynCommon interface and asynManager queues the connection
       request, it now waits for a short time for the connection callback to complete.
       The default time is 0.5 seconds, but this time can be changed with a call to the
-      new function <code>pasynManager-&gt;setAutoConnectTimeout(double timeout)</code>.
-      This function can be accessed from the iocsh shell with the new <code>asynSetAutoConnectTimeout(double
-        timeout)</code> command. This short timeout is designed to allow devices to time
-      to connect if they are available, but not to excessively slow down booting of the
-      IOC by waiting, for example, for the system timeout on TCP connections. </li>
-    <li>There is an additional new function, <code>pasynManager-&gt;waitConnect(asynUser
-      *pasynUser, double timeout)</code>, which will wait for the for the port to connect,
-      up to the specified timeout. This function can be called from the iocsh with the
-      new command <code>asynWaitConnect(const char *portName, double timeout)</code>.
-      This function makes it possible to wait longer for a port to connect then the current
-      value of the global autoconnect timeout described above.</li>
+      new function pasynManager-&gt;setAutoConnectTimeout(double timeout). This function
+      can be accessed from the iocsh shell with the new asynSetAutoConnectTimeout(double
+      timeout) command. This short timeout is designed to allow devices to time to connect
+      if they are available, but not to excessively slow down booting of the IOC by waiting,
+      for example, for the system timeout on TCP connections. Note that this change means
+      that it is now very likely that the pasynCommon-&gt;connect() call will occur as
+      soon as the asynCommon interface is registered. As noted in the R4-12 release notes,
+      this means that the driver must have already done all initialization required for
+      the asynCommon-&gt;connect() callback before it registers the asynCommon interface!</li>
+    <li>There is an additional new function, pasynManager-&gt;waitConnect(asynUser *pasynUser,
+      double timeout), which will wait for the for the port to connect, up to the specified
+      timeout. This function can be called from the iocsh with the new command asynWaitConnect(const
+      char *portName, double timeout). This function makes it possible to wait longer
+      for a port to connect then the current value of the global autoconnect timeout described
+      above.</li>
   </ul>
   <p>
     Fixed problems with the SyncIO calls, which were caused by the implementation of
-    <code>pasynManager-&gt;lockPort()</code>:</p>
+    pasynManager-&gt;lockPort():</p>
   <ul>
-    <li>The SyncIO calls (e.g. asynOctetSyncIO) are implemented by calling <code>pasynManager-&gt;lockPort()</code>,
-      executing the I/O in the current thread, and then calling <code>pasynManager-&gt;unlockPort()</code>.
+    <li>The SyncIO calls (e.g. asynOctetSyncIO) are implemented by calling pasynManager-&gt;lockPort(),
+      executing the I/O in the current thread, and then calling pasynManager-&gt;unlockPort().
       These SyncIO functions are designed to be called from threads that are allowed to
       block, such as SNL programs, or other drivers. The problem with the previous implementation
-      was that <code>pasynManager-&gt;lockPort()</code> immediately took the port mutex
-      when it was available, rather than queueing a request to take the mutex. This could
-      lead to one thread effectively getting exclusive access to the port, even if other
-      threads had queued requests or tried to do SyncIO calls themselves. For example,
-      if a device could send unsolicited input, then one might create a thread that simply
-      called <code>pasynOctetSyncIO-&gt;read()</code> with a short timeout in a tight
-      loop. The problem with this was that as soon as that thread released the port mutex
-      when the read timed out, it would take the mutex again, blocking other threads that
-      were trying to access the port.&nbsp; Previously the only solution to this problem
-      was to add a short <code>epicsThreadSleep()</code> in the read loop.</li>
-    <li>This problem has been fixed by reimplementing <code>pasynManager-&gt;lockPort()</code>,
-      which now queues a request to access the port and then blocks until the queue request
+      was that pasynManager-&gt;lockPort() immediately took the port mutex when it was
+      available, rather than queueing a request to take the mutex. This could lead to
+      one thread effectively getting exclusive access to the port, even if other threads
+      had queued requests or tried to do SyncIO calls themselves. For example, if a device
+      could send unsolicited input, then one might create a thread that simply called
+      pasynOctetSyncIO-&gt;read() with a short timeout in a tight loop. The problem with
+      this was that as soon as that thread released the port mutex when the read timed
+      out, it would take the mutex again, blocking other threads that were trying to access
+      the port.&nbsp; Previously the only solution to this problem was to add a short
+      epicsThreadSleep() in the read loop.</li>
+    <li>This problem has been fixed by reimplementing pasynManager-&gt;lockPort(), which
+      now queues a request to access the port and then blocks until the queue request
       callback runs in the portThread. When the queue request runs, the thread that called
-      <code>pasynManager-&gt;lockPort()</code> executes, and the portThread blocks, until
-      <code>pasynManager-&gt;unlockPort()</code> is called.</li>
+      pasynManager-&gt;lockPort() executes, and the portThread blocks, until pasynManager-&gt;unlockPort()
+      is called.</li>
+    <li>Note that this change to lockPort() does change its functionality in one respect:
+      previously it was OK to call lockPort() on a port that was not connected. This is
+      no longer possible, because the queueRequest call in lockPort will now return an
+      error if the port is not connected.</li>
+    <li>The change to lockPort did not require any changes to the asynXXXSyncIO functions
+      except asynCommonSyncIO. The asynCommonSyncIO-&gt;connectDevice and asynCommonSyncIO-&gt;connectDevice
+      calls cannot use lockPort() any more, because as noted above it does not work with
+      disconnected ports. Rather, these functions now directly queue a connection request
+      with a private callback function to connect or disconnect the port.</li>
   </ul>
+  <h3>
+    vxi11</h3>
+  <p>
+    Fixed a bug in driver initialization. The driver had not completed all required
+    initialization before it called pasynGpib-&gt;registerPort. Because pasynGpib-&gt;registerPort
+    register the asynCommon interface, that now normally triggers an immediate callback
+    to vxiConnect, and the driver was not yet properly initialized to handle that callback.</p>
+  <h3>
+    testIPServerApp</h3>
+  <p>
+    Changed ipEchoServer2.c to eliminate the epicsThreadSleep(0.01) in the listener
+    thread. This sleep is no longer necessary because of the change to lockPort described
+    above, so the example program was changed to test and demonstrate this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-13-1</h2>
