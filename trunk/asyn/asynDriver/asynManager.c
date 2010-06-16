@@ -95,7 +95,6 @@ typedef struct asynBase {
     ELLLIST           memList[nMemList];
     /* following for connectPort */
     epicsTimerQueueId connectPortTimerQueue;
-    epicsThreadPrivateId lockPortId;
     double            autoConnectTimeout;
 }asynBase;
 static asynBase *pasynBase = 0;
@@ -200,6 +199,7 @@ struct port {
     asynUser      *pconnectUser;
     asynInterface *pcommonInterface;
     epicsTimerId  connectTimer;
+    epicsThreadPrivateId lockPortId;
     double        secondsBetweenPortConnect;
 };
 
@@ -418,7 +418,6 @@ static void asynInit(void)
     for(i=0; i<nMemList; i++) ellInit(&pasynBase->memList[i]);
     pasynBase->connectPortTimerQueue = epicsTimerQueueAllocate(
         0,epicsThreadPriorityScanLow);
-    pasynBase->lockPortId = epicsThreadPrivateCreate();
     pasynBase->autoConnectTimeout = DEFAULT_AUTOCONNECT_TIMEOUT;
 }
 
@@ -1633,7 +1632,7 @@ static asynStatus lockPort(asynUser *pasynUser)
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
-    plockPortPvt = epicsThreadPrivateGet(pasynBase->lockPortId);
+    plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
     if (!plockPortPvt) {
         /* This is the first time lockPort has been called for this thread */
         plockPortPvt = callocMustSucceed(1,sizeof(lockPortPvt),"asynManager::lockPort");
@@ -1641,7 +1640,7 @@ static asynStatus lockPort(asynUser *pasynUser)
             pport->portName, plockPortPvt);
         plockPortPvt->lockPortEvent = epicsEventMustCreate(epicsEventEmpty);
         plockPortPvt->lockPortMutex = epicsMutexMustCreate();
-        epicsThreadPrivateSet(pasynBase->lockPortId, plockPortPvt);
+        epicsThreadPrivateSet(pport->lockPortId, plockPortPvt);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p, event=%p, mutex=%p\n", 
             pport->portName, plockPortPvt, plockPortPvt->lockPortEvent, plockPortPvt->lockPortMutex);
     }
@@ -1687,7 +1686,7 @@ static asynStatus unlockPort(asynUser *pasynUser)
                 "asynManager::unlockPort not connected\n");
         return asynError;
     }
-    plockPortPvt = epicsThreadPrivateGet(pasynBase->lockPortId);
+    plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
     if (!plockPortPvt) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::unlockPort lockPort never called for this thread\n");
@@ -1770,6 +1769,7 @@ static asynStatus registerPort(const char *portName,
     pport->attributes = attributes;
     pport->asynManagerLock = epicsMutexMustCreate();
     pport->synchronousLock = epicsMutexMustCreate();
+    pport->lockPortId = epicsThreadPrivateCreate();
     dpCommonInit(pport,0,autoConnect);
     pport->pasynUser = createAsynUser(0,0);
     ellInit(&pport->deviceList);
