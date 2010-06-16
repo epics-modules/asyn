@@ -1624,7 +1624,7 @@ static asynStatus lockPort(asynUser *pasynUser)
     port     *pport = puserPvt->pport;
     lockPortPvt *plockPortPvt;
     asynUser *pasynUserCopy;
-    asynStatus status;
+    asynStatus status = asynSuccess;
 
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort locking port\n", pport->portName);
     if(!pport) {
@@ -1632,45 +1632,55 @@ static asynStatus lockPort(asynUser *pasynUser)
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
-    plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
-    if (!plockPortPvt) {
-        /* This is the first time lockPort has been called for this thread */
-        plockPortPvt = callocMustSucceed(1,sizeof(lockPortPvt),"asynManager::lockPort");
-        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p\n", 
-            pport->portName, plockPortPvt);
-        plockPortPvt->lockPortEvent = epicsEventMustCreate(epicsEventEmpty);
-        plockPortPvt->lockPortMutex = epicsMutexMustCreate();
-        epicsThreadPrivateSet(pport->lockPortId, plockPortPvt);
-        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p, event=%p, mutex=%p\n", 
-            pport->portName, plockPortPvt, plockPortPvt->lockPortEvent, plockPortPvt->lockPortMutex);
+    if (pport->attributes & ASYN_CANBLOCK) {   /* Asynchronous driver */
+        plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
+        if (!plockPortPvt) {
+            /* This is the first time lockPort has been called for this thread */
+            plockPortPvt = callocMustSucceed(1,sizeof(lockPortPvt),"asynManager::lockPort");
+            asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p\n", 
+                pport->portName, plockPortPvt);
+            plockPortPvt->lockPortEvent = epicsEventMustCreate(epicsEventEmpty);
+            plockPortPvt->lockPortMutex = epicsMutexMustCreate();
+            epicsThreadPrivateSet(pport->lockPortId, plockPortPvt);
+            asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p, event=%p, mutex=%p\n", 
+                pport->portName, plockPortPvt, plockPortPvt->lockPortEvent, plockPortPvt->lockPortMutex);
+        }
+        pasynUserCopy = pasynManager->duplicateAsynUser(pasynUser, lockPortCallback, 0);
+        if (!pasynUserCopy){
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "asynManager::lockPort duplicateAsynUser failed\n");
+            return asynError;
+        }
+        pasynUserCopy->userPvt = plockPortPvt;
+        /* Take the mutex which will block the callback port thread */
+        /* Wait until the queued request executes the callback */
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort taking mutex %p\n", 
+            pport->portName, plockPortPvt->lockPortMutex);
+        epicsMutexMustLock(plockPortPvt->lockPortMutex);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort queueing request\n", pport->portName);
+        status = pasynManager->queueRequest(pasynUserCopy, asynQueuePriorityLow, 0.0);
+        if (status) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager::lockPort queueRequest failed: %s\n", 
+                pasynUserCopy->errorMessage);
+            epicsMutexUnlock(plockPortPvt->lockPortMutex);
+            return asynError;
+        }
+        /* Wait for event from the port thread in the lockPortCallback function */
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort waiting for event\n", pport->portName);
+        epicsEventMustWait(plockPortPvt->lockPortEvent);
+        pasynManager->freeAsynUser(pasynUserCopy);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort got event from callback\n", pport->portName);
+    } else {
+        /* Synchronous driver */
+        epicsMutexMustLock(pport->synchronousLock);
     }
-    pasynUserCopy = pasynManager->duplicateAsynUser(pasynUser, lockPortCallback, 0);
-    if (!pasynUserCopy){
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager::lockPort duplicateAsynUser failed\n");
-        return asynError;
+    if(pport->pasynLockPortNotify) {
+        asynStatus status;
+        status = pport->pasynLockPortNotify->lock(
+           pport->lockPortNotifyPvt,pasynUser);
     }
-    pasynUserCopy->userPvt = plockPortPvt;
-    /* Take the mutex which will block the callback port thread */
-    /* Wait until the queued request executes the callback */
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort taking mutex %p\n", 
-        pport->portName, plockPortPvt->lockPortMutex);
-    epicsMutexMustLock(plockPortPvt->lockPortMutex);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort queueing request\n", pport->portName);
-    status = pasynManager->queueRequest(pasynUserCopy, asynQueuePriorityLow, 0.0);
-    if (status) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager::lockPort queueRequest failed: %s\n", 
-            pasynUserCopy->errorMessage);
-        epicsMutexUnlock(plockPortPvt->lockPortMutex);
-        return asynError;
-    }
-    /* Wait for event from the port thread in the lockPortCallback function */
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort waiting for event\n", pport->portName);
-    epicsEventMustWait(plockPortPvt->lockPortEvent);
-    pasynManager->freeAsynUser(pasynUserCopy);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort got event from callback\n", pport->portName);
-    return asynSuccess;
+    return status;
 }
 
 static asynStatus unlockPort(asynUser *pasynUser)
@@ -1686,22 +1696,27 @@ static asynStatus unlockPort(asynUser *pasynUser)
                 "asynManager::unlockPort not connected\n");
         return asynError;
     }
-    plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
-    if (!plockPortPvt) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "asynManager::unlockPort lockPort never called for this thread\n");
-        return asynError;
-    }
     if(pport->pasynLockPortNotify) {
         status = pport->pasynLockPortNotify->unlock(
            pport->lockPortNotifyPvt,pasynUser);
     }
-    epicsMutexUnlock(plockPortPvt->lockPortMutex);
-    /* Wait for event from the port thread in the lockPortCallback function which signals it has freed mutex */
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::unlockPort waiting for event\n", pport->portName);
-    epicsEventMustWait(plockPortPvt->lockPortEvent);
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort unlock mutex %p complete.\n", 
-        pport->portName, plockPortPvt->lockPortMutex);
+    if (pport->attributes & ASYN_CANBLOCK) {   /* Asynchronous driver */
+        plockPortPvt = epicsThreadPrivateGet(pport->lockPortId);
+        if (!plockPortPvt) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "asynManager::unlockPort lockPort never called for this thread\n");
+            return asynError;
+        }
+        epicsMutexUnlock(plockPortPvt->lockPortMutex);
+        /* Wait for event from the port thread in the lockPortCallback function which signals it has freed mutex */
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::unlockPort waiting for event\n", pport->portName);
+        epicsEventMustWait(plockPortPvt->lockPortEvent);
+        asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort unlock mutex %p complete.\n", 
+            pport->portName, plockPortPvt->lockPortMutex);
+    } else {
+        /* Synchronous driver */
+        epicsMutexUnlock(pport->synchronousLock);
+    }    
     return status;
 }
 
