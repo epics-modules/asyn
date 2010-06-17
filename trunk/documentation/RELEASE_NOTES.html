@@ -103,6 +103,11 @@
     Changed ipEchoServer2.c to eliminate the epicsThreadSleep(0.01) in the listener
     thread. This sleep is no longer necessary because of the change to lockPort described
     above, so the example program was changed to test and demonstrate this.</p>
+  <p>
+    Added an additional example driver, asynPortTest, that uses asynPortDriver. It implements
+    the asynInt32, asynFloat64, and asynOctet interfaces to communicate with the echo
+    server using asynOctetSyncIO calls. This tests nested SyncIO calls. Added a new
+    startup script, database and medm screen for testing this new driver.</p>
   <div style="text-align: center">
     <h2>
       Release 4-13-1</h2>
