@@ -1,0 +1,14 @@
+< envPaths
+
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+
+drvAsynIPPortConfigure("moxa1", "164.54.160.50:4001",0,0,0)
+# Connect with 5 second timeout on I/O operations
+asynOctetConnect moxa1 moxa1 0 5
+asynSetTraceMask moxa1 0 255
+asynSetTraceIOMask moxa1 0 2
+
+# Test a read, which should timeout after 5 seconds
+asynOctetRead moxa1
+

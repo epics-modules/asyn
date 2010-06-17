@@ -1,0 +1,7 @@
+include "base.dbd"
+include "asyn.dbd"
+include "drvAsynIPPort.dbd"
+registrar("ipEchoServerRegister")
+registrar("ipEchoServer2Register")
+registrar("ipSNCServerRegistrar")
+registrar("asynPortTestRegister")
