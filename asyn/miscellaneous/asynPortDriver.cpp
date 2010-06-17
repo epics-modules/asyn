@@ -1457,7 +1457,7 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
               "%s:%s: function=%d, value=%s\n", 
               driverName, functionName, function, value);
-    *eomReason = ASYN_EOM_END;
+    if (eomReason) *eomReason = ASYN_EOM_END;
     *nActual = strlen(value);
     return(status);
 }
