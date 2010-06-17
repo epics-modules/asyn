@@ -186,7 +186,7 @@ asynPortTest::asynPortTest(const char *portName, const char *echoPortName)
                     NUM_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynOctetMask,  /* Interrupt mask */
-                    0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                    ASYN_CANBLOCK, /* asynFlags.  This driver blocks and it is not multi-device*/
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/    
