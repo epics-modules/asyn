@@ -1,0 +1,9 @@
+include "base.dbd"
+include "asyn.dbd"
+include "devTestBlock.dbd"
+include "drvAsynSerialPort.dbd"
+include "drvAsynIPPort.dbd"
+registrar("asynExampleRegister")
+registrar("echoDriverRegister")
+registrar("addrChangeDriverRegister")
+registrar("interposeInterfaceRegister")
