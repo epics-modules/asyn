@@ -1,0 +1,2 @@
+device(waveform,INST_IO,asynFloat32ArrayWfIn,"asynFloat32ArrayIn")
+device(waveform,INST_IO,asynFloat32ArrayWfOut,"asynFloat32ArrayOut")

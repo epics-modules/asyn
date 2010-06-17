@@ -1,0 +1,725 @@
+
+file {
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/testGpibApp/adl/test.adl"
+	version=030004
+}
+display {
+	object {
+		x=365
+		y=32
+		width=500
+		height=250
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=80
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_llo"
+		clr=14
+		bclr=4
+	}
+	label="LLO"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=80
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_llo"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=100
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_sdc"
+		clr=14
+		bclr=4
+	}
+	label="SDC"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=100
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_sdc"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=120
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_gtl"
+		clr=14
+		bclr=4
+	}
+	label="GTL"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=120
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_gtl"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=1
+		y=60
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_dcl"
+		clr=14
+		bclr=4
+	}
+	label="DCL"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=100
+		y=60
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_dcl"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+menu {
+	object {
+		x=1
+		y=40
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_ren"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=100
+		y=40
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_ren"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+composite {
+	object {
+		x=1
+		y=20
+		width=199
+		height=20
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=100
+				y=20
+				width=100
+				height=20
+			}
+			monitor {
+				chan="$(P)$(R)_P$(PORT)_ifc"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=1
+				y=20
+				width=100
+				height=20
+			}
+			control {
+				chan="$(P)$(R)_P$(PORT)_ifc"
+				clr=14
+				bclr=4
+			}
+			label="IFC"
+			press_msg="1"
+		}
+	}
+}
+text {
+	object {
+		x=200
+		y=0
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="DESE"
+	align="horiz. centered"
+}
+"text entry" {
+	object {
+		x=200
+		y=20
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_setDESE"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=300
+		y=0
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	"dynamic attribute" {
+		chan="ESE"
+	}
+	textix="ESE"
+	align="horiz. centered"
+}
+"text entry" {
+	object {
+		x=300
+		y=20
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_setESE"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=320
+		y=40
+		width=80
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_getESE"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
+	}
+}
+text {
+	object {
+		x=400
+		y=0
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="SRE"
+	align="horiz. centered"
+}
+"text entry" {
+	object {
+		x=400
+		y=20
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_setSRE"
+		clr=14
+		bclr=4
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=420
+		y=40
+		width=80
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_getSRE"
+		clr=14
+		bclr=4
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=300
+		y=40
+		width=20
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_getESE.PROC"
+		clr=14
+		bclr=4
+	}
+	label="get"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=400
+		y=40
+		width=20
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_getSRE.PROC"
+		clr=14
+		bclr=4
+	}
+	label="get"
+	press_msg="1"
+}
+composite {
+	object {
+		x=200
+		y=40
+		width=100
+		height=21
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=200
+				y=41
+				width=20
+				height=20
+			}
+			control {
+				chan="$(P)$(R)_P$(PORT)_getDESE.PROC"
+				clr=14
+				bclr=4
+			}
+			label="get"
+			press_msg="1"
+		}
+		"text update" {
+			object {
+				x=220
+				y=40
+				width=80
+				height=20
+			}
+			monitor {
+				chan="$(P)$(R)_P$(PORT)_getDESE"
+				clr=14
+				bclr=4
+			}
+			align="horiz. centered"
+			format="hexadecimal"
+			limits {
+			}
+		}
+	}
+}
+"message button" {
+	object {
+		x=200
+		y=80
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_XXXJUNK.PROC"
+		clr=14
+		bclr=4
+	}
+	label="causeSRQ"
+	press_msg="1"
+}
+"message button" {
+	object {
+		x=300
+		y=80
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_getESR.PROC"
+		clr=14
+		bclr=4
+	}
+	label="getESR"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=200
+		y=100
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_srqHandler"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=300
+		y=100
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_getESR"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=300
+		y=120
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_srqCount"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=400
+		y=80
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_getSTB.PROC"
+		clr=14
+		bclr=4
+	}
+	label="getSTB"
+	press_msg="1"
+}
+"text update" {
+	object {
+		x=400
+		y=100
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_getSTB"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="hexadecimal"
+	limits {
+	}
+}
+text {
+	object {
+		x=0
+		y=180
+		width=250
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Test of GPIBREAD"
+}
+text {
+	object {
+		x=250
+		y=180
+		width=250
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Test of GPIBREADW"
+}
+"message button" {
+	object {
+		x=0
+		y=200
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_idn.PROC"
+		clr=14
+		bclr=4
+	}
+	label="getIDN"
+	press_msg="1"
+}
+composite {
+	object {
+		x=250
+		y=200
+		width=250
+		height=20
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=250
+				y=200
+				width=100
+				height=20
+			}
+			control {
+				chan="$(P)$(R)_P$(PORT)_saveSRE.PROC"
+				clr=14
+				bclr=4
+			}
+			label="getIDNWait"
+			press_msg="1"
+		}
+		"text update" {
+			object {
+				x=350
+				y=200
+				width=150
+				height=20
+			}
+			monitor {
+				chan="$(P)$(R)_P$(PORT)_idnvalueWait"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+"text update" {
+	object {
+		x=100
+		y=200
+		width=150
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R)_P$(PORT)_idnvalue"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	format="string"
+	limits {
+	}
+}
+"message button" {
+	object {
+		x=100
+		y=180
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_idnvalue"
+		clr=14
+		bclr=4
+	}
+	label="clear"
+	press_msg="0"
+}
+"message button" {
+	object {
+		x=360
+		y=180
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R)_P$(PORT)_idnvalueWait"
+		clr=14
+		bclr=4
+	}
+	label="clear"
+	press_msg="0"
+}
