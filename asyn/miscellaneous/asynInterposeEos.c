@@ -186,12 +186,12 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
     eosPvt *peosPvt = (eosPvt *)ppvt;
     size_t thisRead;
     int nRead = 0;
+    int eom = 0;
     asynStatus status = asynSuccess;
     if(!peosPvt->processEosIn) {
         return peosPvt->poctet->read(peosPvt->octetPvt,
             pasynUser,data,maxchars,nbytesTransfered,eomReason);
     }
-    if(eomReason) *eomReason = 0;
     for (;;) {
         if ((peosPvt->inBufTail != peosPvt->inBufHead)) {
             char c = *data++ = peosPvt->inBuf[peosPvt->inBufTail++];
@@ -203,7 +203,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
                         nRead -= peosPvt->eosInLen;
                         data -= peosPvt->eosInLen;
                         *(data+1) = 0;
-                        if(eomReason) *eomReason |= ASYN_EOM_EOS;
+                        eom |= ASYN_EOM_EOS;
                         break;
                     }
                 } else {
@@ -222,26 +222,30 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
                 }
             }
             if (nRead >= maxchars)  {
-                if(eomReason) *eomReason |= ASYN_EOM_CNT;
+                eom |= ASYN_EOM_CNT;
                 break;
             }
             continue;
         }
-        if(eomReason && *eomReason) break;
+        if(eom) break;
         status = peosPvt->poctet->read(peosPvt->octetPvt,
-             pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,eomReason);
+             pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,&eom);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,peosPvt->inBuf,thisRead,
                 "%s read\n",peosPvt->portName);
-        /* read could have returned *eomReason=ASYN_EOM_CNT because the number of octets available
-         * exceeded inBufSize.  This is not a reason for us to stop reading, so set eomReason to 0. */
-        if(eomReason && *eomReason == ASYN_EOM_CNT) *eomReason = 0;
+            /*
+             * Read could have returned with ASYN_EOM_CNT set in eom because
+             * the number of octets available exceeded inBufSize.  This is not
+             * a reason for us to stop reading.
+             */
+            eom &= ~ASYN_EOM_CNT;
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
         peosPvt->inBufHead = thisRead;
     }
     if(nRead<maxchars) *data = 0; /*null terminate string if room*/
+    if (eomReason) *eomReason = eom;
     *nbytesTransfered = nRead;
     return status;
 }
