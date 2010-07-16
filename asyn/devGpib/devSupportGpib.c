@@ -867,6 +867,8 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = pgpibCmd->type;
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
+    asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
+    void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
     int nchars = 0, lenmsg = 0;
     asynStatus status;
 
@@ -887,6 +889,14 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
         if(!pgpibCmd->cmd) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s pgpibCmd->cmd is null\n",precord->name);
+            failure = -1; break;
+        }
+        status = pasynOctet->flush(asynOctetPvt,pasynUser);
+        if(status != asynSuccess) {
+            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                "%s flush error\n",
+                precord->name);
+            recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             failure = -1; break;
         }
         lenmsg = strlen(pgpibCmd->cmd);
