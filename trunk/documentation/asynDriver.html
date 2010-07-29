@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-13-1</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-14</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum and Mark
         Rivers</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">May 20, 2010</span></p>
+      <span style="font-weight: bold; font-size: 14pt">July 29, 2010</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -180,9 +180,8 @@
     <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
     <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack module.</li>
     <li>ni1014: A low level driver for the National Instruments VME 1014D.</li>
-    <li>Serial Bus Support: The asynManager lockPort/unlockPort methods and the asynLockPortNotify
-      interface were added to make it easier to support serial bus drivers that use the
-      standard serial support.</li>
+    <li>Serial Bus Support: The asynLockPortNotify interface was added to make it easier
+      to support serial bus drivers that use the standard serial support.</li>
   </ul>
   <p>
     The following are some of the existing EPICS general purpose device support systems
@@ -526,7 +525,12 @@
         called. If the port blocks then lockPort and all calls to the port driver may block.
         lockPort/unlockPort are provided for use by code that is willing to block or for
         communication with synchronous ports. A call to lockPort locks all addresses associated
-        with a multi-address port.</p>
+        with a multi-address port. Prior to asyn R4-14 pasynManager-&gt;lockPort() immediately
+        took the port mutex when it was available, rather than queueing a request to take
+        the mutex. As of asyn R4-14 lockPort queues a request to access the port and then
+        blocks until the queue request callback runs in the portThread. When the queue request
+        runs, the thread that called pasynManager-&gt;lockPort() executes, and the portThread
+        blocks, until pasynManager-&gt;unlockPort() is called.</p>
       <p>
         blockProcessCallback is a request to prevent acccess to a device or port by other
         asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
@@ -556,14 +560,30 @@
     </li>
     <li>Connection services
       <p>
-        Methods: enable,autoConnect</p>
+        Methods: enable,autoConnect,setAutoConnectTimeout</p>
       <p>
         These methods can be called by any code that has access to the asynUser.</p>
       <p>
         These methods can be called to set the enable and autoConnect settings for a port
-        and/or device. queueManager implements autoConnect by calling asynCommon:connect
-        just before it calls processCallback. It does this if autoConnect is true and a
-        port/device is enabled but not connected.</p>
+        and/or device. If autoConnect is true then asynManager does the following:</p>
+      <ul>
+        <li>When the port registers its asynCommon interface, asynManager queues a connection
+          request. It then waits for a short time for the connection callback to complete.
+          The default time is 0.5 seconds, but this time can be changed with a call to the
+          function pasynManager-&gt;setAutoConnectTimeout(double timeout). This function can
+          be accessed from the iocsh shell with the asynSetAutoConnectTimeout(double timeout)
+          command. This short timeout is designed to allow devices time to connect if they
+          are available, but not to excessively slow down booting of the IOC by waiting, for
+          example, for the system timeout on TCP connections. Note that this means that it
+          is very likely that the pasynCommon-&gt;connect() call will occur as soon as the
+          asynCommon interface is registered, which means that the driver must have already
+          done all initialization required for the asynCommon-&gt;connect() callback before
+          it registers the asynCommon interface. If the port does not connect initially, or
+          if it subsequently disconnects, then asynManager will queue a connection request
+          every 20 seconds. If autoConnect is true and port/device is enabled but the device
+          is not connected, then queueManager calls calling asynCommon:connect just before
+          it calls processCallback.</li>
+      </ul>
     </li>
     <li>Exception services
       <p>
@@ -661,8 +681,8 @@
     </li>
     <li>autoConnect
       <p>
-        Does asynManager call connect if it finds the port or device disconnected? This
-        is initialized to the state specified in the call to registerPort.</p>
+        Does asynManager automatically attempt to connect if it finds the port or device
+        disconnected? This is initialized to the state specified in the call to registerPort.</p>
     </li>
   </ul>
   <p>
@@ -696,8 +716,9 @@
     set, then asynManager creates a thread for the port. Each portThread has its own
     set of queues for the calls to queueRequest. Four queues are maintained. One queue
     is used only for asynCommon:connect and asynCommon:disconnect requests. The other
-    queues provide different priorities: low, medium, and high. portThread runs forever
-    implementing the following algorithm:</p>
+    queues provide different priorities: low, medium, and high. queueRequests to any
+    queue other then the connection queue will be rejected if the port is not connected.
+    portThread runs forever implementing the following algorithm:</p>
   <ol>
     <li>Wait for work by calling epicsEventMustWait. Other code such as queueRequest call
       epicsEventSignal.</li>
@@ -708,9 +729,6 @@
         <li>Calls the user's callback</li>
       </ul>
     </li>
-    <li>If the port is not connected and autoConnect is true for the port, then attempt
-      to connect to the port.</li>
-    <li>If the port is still not connected, go back to 1.</li>
     <li>For each element of the queues asynQueuePriorityHigh, ...,asynQueuePriorityLow.
       <ul>
         <li>If disabled, skip this element.</li>
@@ -721,9 +739,9 @@
         <li>If not blocked and user has requested blocking, then blocked.</li>
         <li>Remove from queue and:
           <ul>
-            <li>lockPort</li>
+            <li>lock port</li>
             <li>call user callback</li>
-            <li>unlockPort</li>
+            <li>unlock port</li>
           </ul>
         </li>
       </ul>
@@ -847,11 +865,11 @@
   <ol>
     <li>Record processing calls device support.</li>
     <li>Device support calls queueRequest.</li>
-    <li>Since the port is synchronous, i.e. can not block, queueRequest calls lockPort
-      and than the processCallback.</li>
+    <li>Since the port is synchronous, i.e. can not block, queueRequest locks the port
+      and then calls the processCallback.</li>
     <li>processCallback calls the low-level driver read or write routine. The low-level
       driver routine returns the results of the I/O operation to processCallback.</li>
-    <li>processCallback returns to queueRequest, which calls unlockPort and returns to
+    <li>processCallback returns to queueRequest, which unlocks the port and returns to
       device support, which returns to record support, which completes record processing.</li>
   </ol>
   <hr />
@@ -1190,11 +1208,11 @@ typedef struct asynManager {
     asynStatus (*queueRequest)(asynUser *pasynUser,
                               asynQueuePriority priority,double timeout);
     asynStatus (*cancelRequest)(asynUser *pasynUser,int *wasQueued);
-    asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*blockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*unblockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*lockPort)(asynUser *pasynUser);
     asynStatus (*unlockPort)(asynUser *pasynUser);
+    asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
     /* drivers call the following*/
@@ -1214,6 +1232,8 @@ typedef struct asynManager {
     asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
+    asynStatus (*setAutoConnectTimeout)(double timeout);
+    asynStatus (*waitConnect)(asynUser *pasynUser, double timeout);
     /*The following are methods for interrupts*/
     asynStatus (*registerInterruptSource)(const char *portName,
                                asynInterface *pasynInterface, void **pasynPvt);
@@ -1227,6 +1247,7 @@ typedef struct asynManager {
                                   interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
     asynStatus (*interruptEnd)(void *pasynPvt);
+    const char *(*strStatus)(asynStatus status);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;</pre>
   <table border="1">
@@ -1292,7 +1313,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
         <td>
           connectDevice</td>
         <td>
-          Connect to a device specified by portName, addr.. The port Name is the same as that
+          Connect to a device specified by portName, addr. The port Name is the same as that
           specified in a call to registerPort. The call will fail if the asynUser is already
           connected. If the port does not support multiple devices, than addr is ignored.
           The call will fail if the asynUser is already connected to a device. connectDevice
@@ -1376,7 +1397,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
             If a timeout callback was not passed to createAsynUser and a queueRequest with a
             non-zero timeout is requested, the request fails.</p>
           <p>
-            Attempts to queue a request other than a connection request to a disconnected device
+            Attempts to queue a request other than a connection request to a disconnected port
             will fail unless the reason is ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED.</p>
         </td>
       </tr>
@@ -1413,7 +1434,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         <td>
           lockPort/unlockPort</td>
         <td>
-          Lock access to a port driver. This is used by code that is willing toj block while
+          Lock access to a port driver. This is used by code that is willing to block while
           making calls to a port driver. The code can call lockPort, make an arbitrary number
           of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
           and/or lockPort will be delayed between the calls to lockPort and unlockPort.</td>
@@ -1537,6 +1558,21 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
+          setAutoConnectTimeout</td>
+        <td>
+          Changes the timeout when waiting for the initial connection callback from port drivers.
+          This callback occurs in response to asynManager queueing a connection request, which
+          happens when the port driver registers its asynCommon interface. The default timeout
+          is 0.5 seconds.</td>
+      </tr>
+      <tr>
+        <td>
+          waitConnect</td>
+        <td>
+          Wait for up to timeout seconds for the port/device to connect.</td>
+      </tr>
+      <tr>
+        <td>
           registerInterruptSource</td>
         <td>
           If a low level driver supports interrupts it must call this for each interface that
@@ -1548,7 +1584,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           getInterruptPvt</td>
         <td>
           Any code that wants to call createInterruptNode but does not know the adresss of
-          pasynPvt can find it via this method.. The caller must be connected to a device,
+          pasynPvt can find it via this method. The caller must be connected to a device,
           i.e. must have called connectDevice. If the caller is not connected, getInterruptPvt
           returns asynError.</td>
       </tr>
@@ -1593,6 +1629,12 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           to obtain the list of callbacks. When it is done it calls interruptEnd. If any requests
           are made to addInterruptUser/removeInterruptUser between the calls to interruptStart
           and interruptEnd, asynManager delays the requests until interruptEnd is called.</td>
+      </tr>
+      <tr>
+        <td>
+          strStatus</td>
+        <td>
+          Returns a descriptive string corresponding to the asynStatus value.</td>
       </tr>
     </tbody>
   </table>
@@ -1728,7 +1770,7 @@ typedef struct  asynLockPortNotify {
 }asynLockPortNotify;</pre>
   <table border="1">
     <caption>
-      asynDrvUser</caption>
+      asynLockPortNotify</caption>
     <tbody>
       <tr>
         <td>
@@ -5080,6 +5122,8 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     asynSetOption(portName,addr,key,val)
     asynShowOption(portName,addr,key)
     asynAutoConnect(portName,addr,yesNo)
+    asynSetAutoConnectTimeout(timeout)
+    asynWaitConnect(portName, timeout)
     asynEnable(portName,addr,yesNo)
     asynOctetConnect(entry,portName,addr,timeout,buffer_len,drvInfo)
     asynOctetRead(entry,nread)
