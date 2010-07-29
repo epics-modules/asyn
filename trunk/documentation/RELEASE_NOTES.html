@@ -15,7 +15,7 @@
     <h2>
       Release 4-14</h2>
     <h2>
-      June XXX, 2010</h2>
+      July 29, 2010</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -43,7 +43,7 @@
       The default time is 0.5 seconds, but this time can be changed with a call to the
       new function pasynManager-&gt;setAutoConnectTimeout(double timeout). This function
       can be accessed from the iocsh shell with the new asynSetAutoConnectTimeout(double
-      timeout) command. This short timeout is designed to allow devices to time to connect
+      timeout) command. This short timeout is designed to allow devices time to connect
       if they are available, but not to excessively slow down booting of the IOC by waiting,
       for example, for the system timeout on TCP connections. Note that this change means
       that it is now very likely that the pasynCommon-&gt;connect() call will occur as
@@ -95,24 +95,31 @@
   <p>
     Fixed a bug in driver initialization. The driver had not completed all required
     initialization before it called pasynGpib-&gt;registerPort. Because pasynGpib-&gt;registerPort
-    register the asynCommon interface, that now normally triggers an immediate callback
+    registers the asynCommon interface, that now normally triggers an immediate callback
     to vxiConnect, and the driver was not yet properly initialized to handle that callback.</p>
-  <h3>
-    testIPServerApp</h3>
-  <p>
-    Changed ipEchoServer2.c to eliminate the epicsThreadSleep(0.01) in the listener
-    thread. This sleep is no longer necessary because of the change to lockPort described
-    above, so the example program was changed to test and demonstrate this.</p>
   <p>
     Added an additional example driver, asynPortTest, that uses asynPortDriver. It implements
     the asynInt32, asynFloat64, and asynOctet interfaces to communicate with the echo
     server using asynOctetSyncIO calls. This tests nested SyncIO calls. Added a new
     startup script, database and medm screen for testing this new driver.</p>
   <h3>
+    devGpib</h3>
+  <p>
+    Added a call to asynOctet-&gt;flush() just before the call to asynOctet-&gt;write()
+    operation when doing write/read operations. This eliminates any stale input that
+    may have already been sent by the device and would otherwise be incorrectly returned
+    by the read operation.</p>
+  <h3>
     interposeEOS</h3>
   <p>
-  Now behaves properly even when eomReason is NULL.</p>
-<div style="text-align: center">
+    Now behaves properly even when eomReason is NULL.</p>
+  <h3>
+    testIPServerApp</h3>
+  <p>
+    Changed ipEchoServer2.c to eliminate the epicsThreadSleep(0.01) in the listener
+    thread. This sleep is no longer necessary because of the change to lockPort described
+    above, so the example program was changed to test and demonstrate this.</p>
+  <div style="text-align: center">
     <h2>
       Release 4-13-1</h2>
     <h2>
