@@ -20,7 +20,9 @@
 /* NOTE: This is needed for interruptAccept */
 #include <dbAccess.h>
 
+#include <asynStandardInterfaces.h>
 #define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynPortDriver.h"
 
 static const char *driverName = "asynPortDriver";
