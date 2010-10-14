@@ -6,8 +6,6 @@
 
 #include <asynStandardInterfaces.h>
 
-#include <shareLib.h>
-
 #ifdef __cplusplus
 
 /** Masks for each of the asyn standard interfaces */
