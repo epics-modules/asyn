@@ -14,10 +14,10 @@
 #include <ctype.h>
 
 #include <iocsh.h>
-#include <epicsExport.h>
 
 #include "asynPortDriver.h"
 #include "asynOctetSyncIO.h"
+#include <epicsExport.h>
 
 #define MAX_MESSAGE_SIZE 80
 #define TIMEOUT 1.0
