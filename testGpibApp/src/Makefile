@@ -40,7 +40,7 @@ testGpibVx_SRCS_vxWorks += testGpibVx_registerRecordDeviceDriver.cpp
 
 testGpib_LIBS += devTestGpib
 testGpib_LIBS += testSupport asyn
-SYS_PROD_LIBS_cygwin32 += rpc
+SYS_PROD_LIBS_cygwin32 += $(CYGWIN_RPC_LIB)
 testGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 testGpibVx_OBJS_vxWorks += $(EPICS_BASE_BIN)/vxComLibrary
