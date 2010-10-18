@@ -25,11 +25,11 @@
 #include <epicsTimer.h>
 #include <epicsMutex.h>
 #include <epicsEvent.h>
-#include <epicsExport.h>
 #include <iocsh.h>
 
 #include "asynPortDriver.h"
 #include "testAsynPortDriver.h"
+#include <epicsExport.h>
 
 #define FREQUENCY 1000       /* Frequency in Hz */
 #define AMPLITUDE 1.0        /* Plus and minus peaks of sin wave */
