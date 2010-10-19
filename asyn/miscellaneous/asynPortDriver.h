@@ -115,98 +115,98 @@ private:
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
   * with standard asyn interfaces and a parameter library. */
-class asynPortDriver {
+class epicsShareFunc asynPortDriver {
 public:
-    epicsShareFunc asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
-    epicsShareFunc virtual ~asynPortDriver();
-    epicsShareFunc virtual asynStatus lock();
-    epicsShareFunc virtual asynStatus unlock();
-    epicsShareFunc virtual asynStatus getAddress(asynUser *pasynUser, int *address); 
-    epicsShareFunc virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
-    epicsShareFunc virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
-    epicsShareFunc virtual asynStatus readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus setInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask, interruptReason reason);
-    epicsShareFunc virtual asynStatus clearInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus getInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason);
-    epicsShareFunc virtual asynStatus getBounds(asynUser *pasynUser, epicsInt32 *low, epicsInt32 *high);
-    epicsShareFunc virtual asynStatus readFloat64(asynUser *pasynUser, epicsFloat64 *value);
-    epicsShareFunc virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    epicsShareFunc virtual asynStatus readOctet(asynUser *pasynUser, char *value, size_t maxChars,
+     virtual ~asynPortDriver();
+     virtual asynStatus lock();
+     virtual asynStatus unlock();
+     virtual asynStatus getAddress(asynUser *pasynUser, int *address); 
+     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
+     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+     virtual asynStatus readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask);
+     virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
+     virtual asynStatus setInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask, interruptReason reason);
+     virtual asynStatus clearInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask);
+     virtual asynStatus getInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason);
+     virtual asynStatus getBounds(asynUser *pasynUser, epicsInt32 *low, epicsInt32 *high);
+     virtual asynStatus readFloat64(asynUser *pasynUser, epicsFloat64 *value);
+     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
+     virtual asynStatus readOctet(asynUser *pasynUser, char *value, size_t maxChars,
                                         size_t *nActual, int *eomReason);
-    epicsShareFunc virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars,
+     virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars,
                                         size_t *nActual);
-    epicsShareFunc virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
+     virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                         size_t nElements, size_t *nIn);
-    epicsShareFunc virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
+     virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements);
-    epicsShareFunc virtual asynStatus doCallbacksInt8Array(epicsInt8 *value,
+     virtual asynStatus doCallbacksInt8Array(epicsInt8 *value,
                                         size_t nElements, int reason, int addr);
-    epicsShareFunc virtual asynStatus readInt16Array(asynUser *pasynUser, epicsInt16 *value,
+     virtual asynStatus readInt16Array(asynUser *pasynUser, epicsInt16 *value,
                                         size_t nElements, size_t *nIn);
-    epicsShareFunc virtual asynStatus writeInt16Array(asynUser *pasynUser, epicsInt16 *value,
+     virtual asynStatus writeInt16Array(asynUser *pasynUser, epicsInt16 *value,
                                         size_t nElements);
-    epicsShareFunc virtual asynStatus doCallbacksInt16Array(epicsInt16 *value,
+     virtual asynStatus doCallbacksInt16Array(epicsInt16 *value,
                                         size_t nElements, int reason, int addr);
-    epicsShareFunc virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value,
+     virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                         size_t nElements, size_t *nIn);
-    epicsShareFunc virtual asynStatus writeInt32Array(asynUser *pasynUser, epicsInt32 *value,
+     virtual asynStatus writeInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                         size_t nElements);
-    epicsShareFunc virtual asynStatus doCallbacksInt32Array(epicsInt32 *value,
+     virtual asynStatus doCallbacksInt32Array(epicsInt32 *value,
                                         size_t nElements, int reason, int addr);
-    epicsShareFunc virtual asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
+     virtual asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
                                         size_t nElements, size_t *nIn);
-    epicsShareFunc virtual asynStatus writeFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
+     virtual asynStatus writeFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
                                         size_t nElements);
-    epicsShareFunc virtual asynStatus doCallbacksFloat32Array(epicsFloat32 *value,
+     virtual asynStatus doCallbacksFloat32Array(epicsFloat32 *value,
                                         size_t nElements, int reason, int addr);
-    epicsShareFunc virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
+     virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements, size_t *nIn);
-    epicsShareFunc virtual asynStatus writeFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
+     virtual asynStatus writeFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements);
-    epicsShareFunc virtual asynStatus doCallbacksFloat64Array(epicsFloat64 *value,
+     virtual asynStatus doCallbacksFloat64Array(epicsFloat64 *value,
                                         size_t nElements, int reason, int addr);
-    epicsShareFunc virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
-    epicsShareFunc virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
-    epicsShareFunc virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
-    epicsShareFunc virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
+     virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
+     virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
+     virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
+     virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
                                      const char **pptypeName, size_t *psize);
-    epicsShareFunc virtual asynStatus drvUserGetType(asynUser *pasynUser,
+     virtual asynStatus drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize);
-    epicsShareFunc virtual asynStatus drvUserDestroy(asynUser *pasynUser);
-    epicsShareFunc virtual void report(FILE *fp, int details);
-    epicsShareFunc virtual asynStatus connect(asynUser *pasynUser);
-    epicsShareFunc virtual asynStatus disconnect(asynUser *pasynUser);
+     virtual asynStatus drvUserDestroy(asynUser *pasynUser);
+     virtual void report(FILE *fp, int details);
+     virtual asynStatus connect(asynUser *pasynUser);
+     virtual asynStatus disconnect(asynUser *pasynUser);
    
-    epicsShareFunc virtual asynStatus createParam(const char *name, asynParamType type, int *index);
-    epicsShareFunc virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
-    epicsShareFunc virtual asynStatus findParam(const char *name, int *index);
-    epicsShareFunc virtual asynStatus findParam(int list, const char *name, int *index);
-    epicsShareFunc virtual asynStatus getParamName(int index, const char **name);
-    epicsShareFunc virtual asynStatus getParamName(int list, int index, const char **name);
-    epicsShareFunc virtual void       reportSetParamErrors(asynStatus status, int index, int list, const char *functionName);
-    epicsShareFunc virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
-    epicsShareFunc virtual asynStatus setIntegerParam(int index, int value);
-    epicsShareFunc virtual asynStatus setIntegerParam(int list, int index, int value);
-    epicsShareFunc virtual asynStatus setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus setDoubleParam(int index, double value);
-    epicsShareFunc virtual asynStatus setDoubleParam(int list, int index, double value);
-    epicsShareFunc virtual asynStatus setStringParam(int index, const char *value);
-    epicsShareFunc virtual asynStatus setStringParam(int list, int index, const char *value);
-    epicsShareFunc virtual asynStatus getIntegerParam(int index, int * value);
-    epicsShareFunc virtual asynStatus getIntegerParam(int list, int index, int * value);
-    epicsShareFunc virtual asynStatus getUIntDigitalParam(int index, epicsUInt32 *value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus getUIntDigitalParam(int list, int index, epicsUInt32 *value, epicsUInt32 mask);
-    epicsShareFunc virtual asynStatus getDoubleParam(int index, double * value);
-    epicsShareFunc virtual asynStatus getDoubleParam(int list, int index, double * value);
-    epicsShareFunc virtual asynStatus getStringParam(int index, int maxChars, char *value);
-    epicsShareFunc virtual asynStatus getStringParam(int list, int index, int maxChars, char *value);
-    epicsShareFunc virtual asynStatus callParamCallbacks();
-    epicsShareFunc virtual asynStatus callParamCallbacks(int addr);
-    epicsShareFunc virtual asynStatus callParamCallbacks(int list, int addr);
-    epicsShareFunc virtual void reportParams(FILE *fp, int details);
+     virtual asynStatus createParam(const char *name, asynParamType type, int *index);
+     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
+     virtual asynStatus findParam(const char *name, int *index);
+     virtual asynStatus findParam(int list, const char *name, int *index);
+     virtual asynStatus getParamName(int index, const char **name);
+     virtual asynStatus getParamName(int list, int index, const char **name);
+     virtual void       reportSetParamErrors(asynStatus status, int index, int list, const char *functionName);
+     virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
+     virtual asynStatus setIntegerParam(int index, int value);
+     virtual asynStatus setIntegerParam(int list, int index, int value);
+     virtual asynStatus setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 mask);
+     virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 mask);
+     virtual asynStatus setDoubleParam(int index, double value);
+     virtual asynStatus setDoubleParam(int list, int index, double value);
+     virtual asynStatus setStringParam(int index, const char *value);
+     virtual asynStatus setStringParam(int list, int index, const char *value);
+     virtual asynStatus getIntegerParam(int index, int * value);
+     virtual asynStatus getIntegerParam(int list, int index, int * value);
+     virtual asynStatus getUIntDigitalParam(int index, epicsUInt32 *value, epicsUInt32 mask);
+     virtual asynStatus getUIntDigitalParam(int list, int index, epicsUInt32 *value, epicsUInt32 mask);
+     virtual asynStatus getDoubleParam(int index, double * value);
+     virtual asynStatus getDoubleParam(int list, int index, double * value);
+     virtual asynStatus getStringParam(int index, int maxChars, char *value);
+     virtual asynStatus getStringParam(int list, int index, int maxChars, char *value);
+     virtual asynStatus callParamCallbacks();
+     virtual asynStatus callParamCallbacks(int addr);
+     virtual asynStatus callParamCallbacks(int list, int addr);
+     virtual void reportParams(FILE *fp, int details);
 
     char *portName;         /**< The name of this asyn port */
 
