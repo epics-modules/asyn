@@ -27,7 +27,6 @@
 #include <epicsEvent.h>
 #include <iocsh.h>
 
-#include "asynPortDriver.h"
 #include "testAsynPortDriver.h"
 #include <epicsExport.h>
 

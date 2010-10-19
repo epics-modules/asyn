@@ -11,6 +11,9 @@
  *
  * Created Feb. 5, 2009
  */
+
+#include "asynPortDriver.h"
+
 /* These are the drvInfo strings that are used to identify the parameters.
  * They are used by asyn clients, including standard asyn device support */
 #define P_RunString                "SCOPE_RUN"             /* asynInt32,    r/w */
