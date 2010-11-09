@@ -13,6 +13,26 @@
   <hr />
   <div style="text-align: center">
     <h2>
+      Release 4-14-1</h2>
+    <h2>
+      November XXX, 2010</h2>
+  </div>
+  <h3>
+    devEpics</h3>
+  <p>
+    Bug fix for devAsynXXXArray: it was calling drvUserCreate in the port driver even
+    if there was no userParam in the link, which could crash the driver.</p>
+  <h3>
+    Many files</h3>
+  <p>
+    Changes to allow building dynamically on WIN32 (i.e. making DLLs).</p>
+  <h3>
+    Makefiles</h3>
+  <p>
+    Changes to allow building on Cygwin 1.7.x or 1.5.x; replaced rpc with $(CYGWIN_RPC_LIB),
+    which allows it to link with rpc on 1.5.x and tirpc on 1.7.x.</p>
+  <div style="text-align: center">
+    <h2>
       Release 4-14</h2>
     <h2>
       July 29, 2010</h2>
