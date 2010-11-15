@@ -1664,6 +1664,7 @@ static asynStatus lockPort(asynUser *pasynUser)
                 "asynManager::lockPort queueRequest failed: %s\n", 
                 pasynUserCopy->errorMessage);
             epicsMutexUnlock(plockPortPvt->lockPortMutex);
+            pasynManager->freeAsynUser(pasynUserCopy);
             return asynError;
         }
         /* Wait for event from the port thread in the lockPortCallback function */
