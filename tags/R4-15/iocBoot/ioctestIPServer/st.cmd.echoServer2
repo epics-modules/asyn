@@ -1,0 +1,18 @@
+< envPaths
+
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+
+#The following command starts a server on port 5001
+drvAsynIPServerPortConfigure("P5001","localhost:5001",2,0,0,0)
+
+#asynSetTraceFile("P5001",-1,"")
+#asynSetTraceMask("P5001",-1,0xff)
+#asynSetTraceIOMask("P5001",-1,0x2)
+
+dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
+
+iocInit()
+
+ipEchoServer2("P5001", 50)
+
