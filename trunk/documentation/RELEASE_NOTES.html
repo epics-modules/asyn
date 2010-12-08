@@ -13,7 +13,7 @@
   <hr />
   <div style="text-align: center">
     <h2>
-      Release 4-14-1</h2>
+      Release 4-15</h2>
     <h2>
       December 8, 2010</h2>
   </div>
@@ -32,10 +32,10 @@
   <h3>
     devEpics</h3>
   <p>
-    Bug fix for devAsynInt32: it was not freeing the mutex in processAiAverage if numAverage==0,
-    i.e. there had been no callbacks from the driver since the record last processed.
-    This would hang the next thread that tried to take the mutex, typically the driver
-    callback thread.</p>
+    Bug fix for devAsynInt32 and devAsynFloat64: it was not freeing the mutex in processAiAverage
+    if numAverage==0, i.e. there had been no callbacks from the driver since the record
+    last processed. This would hang the next thread that tried to take the mutex, typically
+    the driver callback thread.</p>
   <p>
     Bug fix for devAsynXXXArray: it was calling drvUserCreate in the port driver even
     if there was no userParam in the link, which could crash the driver.</p>
