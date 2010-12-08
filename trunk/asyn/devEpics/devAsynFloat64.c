@@ -515,6 +515,7 @@ static long processAiAverage(aiRecord *pai)
     if (pPvt->numAverage == 0) {
         recGblSetSevr(pai, UDF_ALARM, INVALID_ALARM);
         pai->udf = 1;
+        epicsMutexUnlock(pPvt->mutexId);
         return -2;
     }
     pai->udf = 0;
