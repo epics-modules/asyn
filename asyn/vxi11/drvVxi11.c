@@ -51,6 +51,9 @@
 #endif
 #define BOOL int
 
+#define FLAG_RECOVER_WITH_IFC   0x1
+#define FLAG_LOCK_DEVICES       0x2
+
 #define DEFAULT_RPC_TIMEOUT 4
 
 typedef struct devLink {
@@ -86,6 +89,7 @@ typedef struct vxiPort {
     linkPrimary   primary[NUM_GPIB_ADDRESSES];
     asynUser      *pasynUser;
     unsigned char recoverWithIFC;/*fire out IFC pulse on timeout (read/write)*/
+    unsigned char lockDevices;/*lock devices when creating link*/
     asynInterface option;
     epicsEventId  srqThreadDone;
     int           srqBindSock; /*socket for bind*/
@@ -260,7 +264,7 @@ static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
     asynUser         *pasynUser = pvxiPort->pasynUser;
 
     crLinkP.clientId = (long) pvxiPort->rpcClient;
-    crLinkP.lockDevice = 0;  /* do not try to lock the device */
+    crLinkP.lockDevice = (pvxiPort->lockDevices != 0); 
     crLinkP.lock_timeout = 0;/* if device is locked, forget it */
     crLinkP.device = devName;
     /* initialize crLinkR */
@@ -1656,7 +1660,7 @@ static asynStatus vxiGetPortOption(void *drvPvt,
     return asynSuccess;
 }
 
-int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
+int vxi11Configure(char *dn, char *hostName, int flags,
     double defTimeout,
     char *vxiName,
     unsigned int priority,
@@ -1701,7 +1705,8 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
     pvxiPort->vxiName = epicsStrDup(vxiName);
     pvxiPort->defTimeout = (defTimeout>.0001) ? 
         defTimeout : (double)DEFAULT_RPC_TIMEOUT ;
-    if(recoverWithIFC) pvxiPort->recoverWithIFC = TRUE;
+    if(flags & FLAG_RECOVER_WITH_IFC) pvxiPort->recoverWithIFC = TRUE;
+    if(flags & FLAG_LOCK_DEVICES) pvxiPort->lockDevices = TRUE;
     pvxiPort->inAddr = inAddr;
     pvxiPort->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
@@ -1741,7 +1746,7 @@ int vxi11Configure(char *dn, char *hostName, int recoverWithIFC,
 #include <iocsh.h>
 static const iocshArg vxi11ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
-static const iocshArg vxi11ConfigureArg2 = { "recover with IFC?",iocshArgInt};
+static const iocshArg vxi11ConfigureArg2 = { "flags (lock devices : recover with IFC)",iocshArgInt};
 static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
 static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
