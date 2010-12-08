@@ -15,10 +15,27 @@
     <h2>
       Release 4-14-1</h2>
     <h2>
-      November XXX, 2010</h2>
+      December 8, 2010</h2>
   </div>
   <h3>
+    vxi11</h3>
+  <p>
+    The third argument to the vxi11Configure command is now a bit-map. The least significant
+    bit (value 0x1) remains the 'recover with IFC' control. The next-to-least significant
+    bit (value 0x2) when set will cause all devices to be locked when a connection is
+    made. This allows for cooperative exclusive access to devices.</p>
+  <h3>
+    asynManager</h3>
+  <p>
+    Fixed memory leak in lockPort() when an error occured, was not calling freeAsynUser().
+    Thanks to Andrew Starritt for finding this.</p>
+  <h3>
     devEpics</h3>
+  <p>
+    Bug fix for devAsynInt32: it was not freeing the mutex in processAiAverage if numAverage==0,
+    i.e. there had been no callbacks from the driver since the record last processed.
+    This would hang the next thread that tried to take the mutex, typically the driver
+    callback thread.</p>
   <p>
     Bug fix for devAsynXXXArray: it was calling drvUserCreate in the port driver even
     if there was no userParam in the link, which could crash the driver.</p>
