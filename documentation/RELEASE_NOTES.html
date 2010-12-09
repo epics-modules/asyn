@@ -47,7 +47,15 @@
     Makefiles</h3>
   <p>
     Changes to allow building on Cygwin 1.7.x or 1.5.x; replaced rpc with $(CYGWIN_RPC_LIB),
-    which allows it to link with rpc on 1.5.x and tirpc on 1.7.x.</p>
+    which allows it to link with rpc on 1.5.x and tirpc on 1.7.x. You need to add one
+    of the following 2 lines to <code>base/configure/os/CONFIG_SITE.cygwin-x86.cygwin-x86</code></p>
+  <pre>
+    For Cygwin 1.7.x:
+    CYGWIN_RPC_LIB = tirpc
+
+    For Cygwin 1.5.x
+    CYGWIN_RPC_LIB = rpc
+  </pre>
   <div style="text-align: center">
     <h2>
       Release 4-14</h2>
