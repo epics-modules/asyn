@@ -22,11 +22,11 @@
 extern "C" {
 #endif /* __cplusplus */
 
-extern int vxi11Config(char *portName,char *hostName,int recoverWithIFC,
-        double defTimeout,
+extern int vxi11Configure(char *portName, char *hostName, int flags,
+        char *defTimeoutString,
         char *vxiName,
-        unsigned int priority, unsigned int stackSize,
-        int isSingleLink);
+        unsigned int priority,
+        int noAutoConnect);
 extern int vxi11SetRpcTimeout(double timeout);
 
 extern int E5810Reboot(char * inetAddr,char *password);
