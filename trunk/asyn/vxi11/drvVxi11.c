@@ -28,6 +28,7 @@
 #include <epicsEvent.h>
 #include <epicsSignal.h>
 #include <epicsStdio.h>
+#include <epicsStdlib.h>
 #include <osiSock.h>
 #include <epicsThread.h>
 #include <epicsTime.h>
@@ -903,6 +904,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         return asynError;
     }
     /* now establish a link to the gateway (for docmds etc.) */
+    pvxiPort->abortPort = 0;
     if(!vxiCreateDeviceLink(pvxiPort,pvxiPort->vxiName,&link)) return asynError;
     pvxiPort->server.lid = link;
     pvxiPort->server.connected = TRUE;
@@ -1661,7 +1663,7 @@ static asynStatus vxiGetPortOption(void *drvPvt,
 }
 
 int vxi11Configure(char *dn, char *hostName, int flags,
-    double defTimeout,
+    char *defTimeoutString,
     char *vxiName,
     unsigned int priority,
     int noAutoConnect)
@@ -1673,6 +1675,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
     asynStatus status;
     struct sockaddr_in ip;
     struct in_addr     inAddr;
+    double defTimeout=0.;
     int     len;
     int     attributes;
 
@@ -1703,6 +1706,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
         }
     }
     pvxiPort->vxiName = epicsStrDup(vxiName);
+    if (defTimeoutString) defTimeout = epicsStrtod(defTimeoutString, NULL);
     pvxiPort->defTimeout = (defTimeout>.0001) ? 
         defTimeout : (double)DEFAULT_RPC_TIMEOUT ;
     if(flags & FLAG_RECOVER_WITH_IFC) pvxiPort->recoverWithIFC = TRUE;
@@ -1747,7 +1751,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
 static const iocshArg vxi11ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
 static const iocshArg vxi11ConfigureArg2 = { "flags (lock devices : recover with IFC)",iocshArgInt};
-static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
+static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgString};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
 static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
 static const iocshArg vxi11ConfigureArg6 = { "disable auto-connect",iocshArgInt};
@@ -1758,7 +1762,7 @@ static const iocshFuncDef vxi11ConfigureFuncDef = {"vxi11Configure",7,vxi11Confi
 static void vxi11ConfigureCallFunc(const iocshArgBuf *args)
 {
     vxi11Configure (args[0].sval, args[1].sval, args[2].ival,
-                    args[3].dval, args[4].sval, args[5].ival, args[6].ival);
+                    args[3].sval, args[4].sval, args[5].ival, args[6].ival);
 }
 
 extern int E5810Reboot(char * inetAddr,char *password);
