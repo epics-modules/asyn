@@ -108,6 +108,7 @@ epicsShareFunc int
     if (findInterface(portName, addr, asynOptionType, setOption,
                                     &pasynUser, &pasynInterface) != asynSuccess)
         return asynError;
+    pasynUser->timeout = 2;
     pasynUser->userPvt = &optionargs;
     pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
     optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
@@ -155,6 +156,7 @@ epicsShareFunc int
     if (findInterface(portName, addr, asynOptionType, showOption,
                                     &pasynUser, &pasynInterface) != asynSuccess)
         return asynError;
+    pasynUser->timeout = 2;
     pasynUser->userPvt = &optionargs;
     pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
     optionargs.pasynOption = (asynOption *)pasynInterface->pinterface;
