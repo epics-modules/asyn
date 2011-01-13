@@ -4820,7 +4820,10 @@ asynSetOption("L0",0,"baud","9600")</pre>
       udp"). If no protocol is specified, TCP will be used. UDP broadcasts are supported
       by specifying IP protocol "UDP*" and the network broadcast address (e.g. "192.168.1.255:1234
       UDP*"). TCP servers which perform a single transaction per connection are supported
-      by specifying IP protocol "HTTP".</li>
+      by specifying IP protocol "HTTP".  Ethernet/Serial adapters which use the TELNET
+      RFC 2217 protocol are supported by specifying IP protocol "COM".  This allows port
+      parameters (speed, parity, etc.) to be set with subsequent asynSetOption commands
+      just as for local serial ports.  The default parameters are 9600-8-N-1 with no flow control.</li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically

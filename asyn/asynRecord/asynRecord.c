@@ -288,6 +288,7 @@ static long init_record(asynRecord * pasynRec, int pass)
     /* Initialize asyn, connect to device */
     pasynUser = pasynManager->createAsynUser(
                      asynCallbackProcess, queueTimeoutCallbackProcess);
+    pasynUser->timeout = 1;
     pasynUser->userPvt = pasynRecPvt;
     pasynRecPvt->pasynUser = pasynUser;
     pasynRecPvt->state = stateNoDevice;
