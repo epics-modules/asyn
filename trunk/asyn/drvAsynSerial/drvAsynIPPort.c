@@ -55,6 +55,8 @@
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
+#include "asynInterposeCom.h"
+#include "asynInterposeEos.h"
 #include "drvAsynIPPort.h"
 
 #if defined(__rtems__)
@@ -606,6 +608,7 @@ drvAsynIPPortConfigure(const char *portName,
     char protocol[6];
     int nbytes;
     asynOctet *pasynOctet;
+    int isCom = 0;
     static int firstTime = 1;
 
     /*
@@ -669,6 +672,10 @@ drvAsynIPPortConfigure(const char *portName,
      || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
         tty->socketType = SOCK_STREAM;
     }
+    else if (epicsStrCaseCmp(protocol, "com") == 0) {
+        isCom = 1;
+        tty->socketType = SOCK_STREAM;
+    }
     else if (epicsStrCaseCmp(protocol, "http") == 0) {
         tty->socketType = SOCK_STREAM;
         tty->flags |= FLAG_CONNECT_PER_TRANSACTION;
@@ -714,13 +721,19 @@ drvAsynIPPortConfigure(const char *portName,
     tty->octet.interfaceType = asynOctetType;
     tty->octet.pinterface  = pasynOctet;
     tty->octet.drvPvt = tty;
-    status = pasynOctetBase->initialize(tty->portName,&tty->octet,
-        (noProcessEos ? 0 : 1), (noProcessEos ? 0 : 1), 1);
+    status = pasynOctetBase->initialize(tty->portName,&tty->octet, 0, 0, 1);
     if(status != asynSuccess) {
         printf("drvAsynIPPortConfigure: pasynOctetBase->initialize failed.\n");
         ttyCleanup(tty);
         return -1;
     }
+    if (isCom && (asynInterposeCOM(tty->portName) != 0)) {
+        printf("drvAsynIPPortConfigure: asynInterposeCOM failed.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    if (!noProcessEos)
+        asynInterposeEosConfig(tty->portName, -1, 1, 1);
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
     if(status != asynSuccess) {

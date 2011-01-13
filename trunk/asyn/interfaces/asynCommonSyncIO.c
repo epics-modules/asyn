@@ -126,7 +126,6 @@ static asynStatus disconnect(asynUser *pasynUser)
 
 static void connectDeviceCallback(asynUser *pasynUser)
 {
-    asynStatus status;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     if (pioPvt->connect)
