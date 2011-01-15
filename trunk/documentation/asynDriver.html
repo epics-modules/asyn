@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-15</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-16</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum and Mark
         Rivers</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">December 8, 2010</span></p>
+      <span style="font-weight: bold; font-size: 14pt">January 17, 2011</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -4818,20 +4818,18 @@ asynSetOption("L0",0,"baud","9600")</pre>
     <li>hostInfo - The Internet host name, port number and optional IP protocol of the
       device (e.g. "164.54.9.90:4002", "serials8n3:4002", "serials8n3:4002 TCP" or "164.54.17.43:5186
       udp"). If no protocol is specified, TCP will be used. Possible protocols are
-     <ul>
-       <li>TCP</li>
-       <li>UDP</li>
-       <li>UDP* &#x2014; UDP broadcasts. The address portion of the argument must be
-         the network broadcast address (e.g. "192.168.1.255:1234 UDP*").</li>
-       <li>HTTP &#x2014; Like TCP but for servers which close the connection after
-         each transaction.</li>
-       <li>COM &#x2014; For Ethernet/Serial adapters which use the TELNET RFC 2217
-         protocol. This allows port parameters (speed, parity, etc.) to be set
-         with subsequent asynSetOption commands just as for local serial
-         ports. The default parameters are 9600-8-N-1 with no flow
-       control.</li>
-     </ul>
-   </li>
+      <ul>
+        <li>TCP</li>
+        <li>UDP</li>
+        <li>UDP* &#x2014; UDP broadcasts. The address portion of the argument must be the
+          network broadcast address (e.g. "192.168.1.255:1234 UDP*").</li>
+        <li>HTTP &#x2014; Like TCP but for servers which close the connection after each transaction.</li>
+        <li>COM &#x2014; For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol.
+          This allows port parameters (speed, parity, etc.) to be set with subsequent asynSetOption
+          commands just as for local serial ports. The default parameters are 9600-8-N-1 with
+          no flow control.</li>
+      </ul>
+    </li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
