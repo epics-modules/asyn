@@ -314,9 +314,11 @@ static asynOctet octetMethods = {
 /*
  * Tell that server that we WILL do something
  * and verify that it will actually DO it.
+ * Or, tell the server to DO something
+ * and verify that it WILL.
  */
 static asynStatus
-will(interposePvt *pinterposePvt, asynUser *pasynUser, int code)
+willdo(interposePvt *pinterposePvt, asynUser *pasynUser, int command, int code)
 {
     char          cbuf[3];
     asynStatus    status;
@@ -325,7 +327,7 @@ will(interposePvt *pinterposePvt, asynUser *pasynUser, int code)
     size_t        nbytes;
 
     cbuf[0] = C_IAC;
-    cbuf[1] = C_WILL;
+    cbuf[1] = command;
     cbuf[2] = code;
     status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvPvt,
                                                 pasynUser, cbuf, 3, &nbytes);
@@ -346,6 +348,12 @@ will(interposePvt *pinterposePvt, asynUser *pasynUser, int code)
             if ((c = nextChar(pinterposePvt, pasynUser)) == EOF)
                 return asynError;
             if (c != cbuf[2]) continue;
+            if (cbuf[1] == (char)C_DO) {
+                epicsSnprintf(pasynUser->errorMessage,
+                          pasynUser->errorMessageSize,
+                          "Received response %#x in response to DO.", c);
+                return asynError;
+            }
             if (wd == C_DONT) {
                 epicsSnprintf(pasynUser->errorMessage,
                               pasynUser->errorMessageSize,
@@ -354,11 +362,26 @@ will(interposePvt *pinterposePvt, asynUser *pasynUser, int code)
             }
             return asynSuccess;
 
-        /*
-         * Some stupid devices send notifications even thought they've not
-         * been asked to.   Silently consume these.  If they come during
-         * normal data transfer I'll be really annoyed.
-         */
+        case C_WILL:
+        case C_WONT:
+            wd = c;
+            if ((c = nextChar(pinterposePvt, pasynUser)) == EOF)
+                return asynError;
+            if (c != cbuf[2]) continue;
+            if (cbuf[1] == (char)C_WILL) {
+                epicsSnprintf(pasynUser->errorMessage,
+                              pasynUser->errorMessageSize,
+                              "Received response %#x in response to WILL.", c);
+                return asynError;
+            }
+            if (wd == C_WONT) {
+                epicsSnprintf(pasynUser->errorMessage,
+                              pasynUser->errorMessageSize,
+                              "Device says WON'T %#x.", c);
+                return asynError;
+            }
+            return asynSuccess;
+
         case C_SB:
             if (nextChar(pinterposePvt, pasynUser) != SB_COM_PORT_OPTION)
                 break;
@@ -616,9 +639,14 @@ restoreSettings(interposePvt *pinterposePvt, asynUser *pasynUser)
 
     xBuf[0] = CPO_SET_MODEMSTATE_MASK;
     xBuf[1] = 0;
-    if (((s = will(pinterposePvt, pasynUser, WD_TRANSMIT_BINARY)) != asynSuccess)
-     || ((s = will(pinterposePvt, pasynUser, SB_COM_PORT_OPTION)) != asynSuccess)
-     || ((s = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf))  != asynSuccess))
+    if (((s = willdo(pinterposePvt, pasynUser, C_DO,   WD_TRANSMIT_BINARY))
+                                                                != asynSuccess)
+     || ((s = willdo(pinterposePvt, pasynUser, C_WILL, WD_TRANSMIT_BINARY))
+                                                                != asynSuccess)
+     || ((s = willdo(pinterposePvt, pasynUser, C_WILL, SB_COM_PORT_OPTION))
+                                                                != asynSuccess)
+     || ((s = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf))
+                                                                != asynSuccess))
         return s;
     for (i = 0 ; i < (sizeof keys / sizeof keys[0]) ; i++) {
         s = getOption(pinterposePvt, pasynUser, keys[i], val, sizeof val);
