@@ -1,0 +1,8 @@
+# vxWorks startup file
+< cdCommands
+
+cd topbin
+ld < testAsynPortDriver.munch
+cd startup
+< st.cmd
+

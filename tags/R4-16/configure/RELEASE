@@ -1,0 +1,9 @@
+#RELEASE Location of external products
+#  IPAC is only necessary if support for Greensprings IP488 is required
+#  IPAC release V2-7 or later is required.
+IPAC=/corvette/home/epics/devel/ipac-2-10
+# SEQ is required for testIPServer
+SNCSEQ=/corvette/home/epics/devel/seq-2-0-12
+#  EPICS_BASE 3.14.6 or later is required
+LINUX_GPIB=NO
+EPICS_BASE=/corvette/usr/local/epics/base-3.14.12
