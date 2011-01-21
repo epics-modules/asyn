@@ -312,10 +312,10 @@ static asynOctet octetMethods = {
  */
 
 /*
- * Tell that server that we WILL do something
- * and verify that it will actually DO it.
- * Or, tell the server to DO something
- * and verify that it WILL.
+ * Two possible actions depending upon the 'command':
+ *    1) Tell that server that we WILL do something and
+ *       verify that it will allow us to DO so.
+ *    2) Tell the server to DO something and verify that it WILL.
  */
 static asynStatus
 willdo(interposePvt *pinterposePvt, asynUser *pasynUser, int command, int code)
