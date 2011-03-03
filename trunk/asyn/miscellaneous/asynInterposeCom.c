@@ -18,6 +18,7 @@
 #include <cantProceed.h>
 #include <epicsStdio.h>
 #include <epicsString.h>
+#include <epicsTypes.h>
 
 #include "asynDriver.h"
 #include "asynOctet.h"
