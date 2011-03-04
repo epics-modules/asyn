@@ -363,32 +363,12 @@ static long special(struct dbAddr * paddr, int after)
     asynStatus status = asynSuccess;
     int        traceMask;
     FILE       *fd;
-    callbackState state = pasynRecPvt->state;
     asynQueuePriority priority;
 
     if(!after) {
-        if(fieldIndex==asynRecordSOCK) {
-            if(state!=stateNoDevice) {
-                reportError(pasynRec, asynSuccess,
-                        "PORT has already been configured");
-                return -1;
-            }
-        } /* else if(fieldIndex!=asynRecordAQR && state==stateNoDevice) {
-            reportError(pasynRec, asynSuccess,
-                        "no device specify valid PORT,ADDR");
-            return -1;
-        } */
         return 0;
     }
     resetError(pasynRec);
-    if(fieldIndex == asynRecordSOCK) {
-        status = drvAsynIPPortConfigure(pasynRec->port,pasynRec->sock,0,0,0);
-        if(status) {
-            reportError(pasynRec,asynSuccess,"drvAsynIPPortConfigure failed\n");
-            return 0;
-        }
-        fieldIndex = asynRecordPORT;
-    }
     /* The first set of fields can be handled even if state != stateIdle */
     switch (fieldIndex) {
     case asynRecordAQR:
