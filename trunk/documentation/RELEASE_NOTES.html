@@ -13,6 +13,29 @@
   <hr />
   <div style="text-align: center">
     <h2>
+      Release 4-17</h2>
+    <h2>
+      March XXX, 2011</h2>
+  </div>
+  <h3>
+    asynRecord</h3>
+  <p>
+    Fixed asynRecord.dbd to include promptgroup for fields that need it. Removed the
+    SOCK field; the record no longer supports creating sockets, which can easily be
+    done with the iocsh drvAsynIPPortConfigure command.</p>
+  <h3>
+    asynInterposeCom.c</h3>
+  <p>
+    Added missing include file, which caused asyn not to build on EPICS base versions
+    before 3.14.10.</p>
+  <h3>
+    vxi11core_xdr.c</h3>
+  <p>
+    Removed unneeded declarations of 'register int32_t *buf' from many functions. Removed
+    register keyword from remaining instances, because address was being taken, which
+    is illegal in C, and was causing errors on vxWorks Pentium cross-compiler.</p>
+  <div style="text-align: center">
+    <h2>
       Release 4-16</h2>
     <h2>
       January 17, 2011</h2>
