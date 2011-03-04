@@ -58,7 +58,6 @@
     <li>Control the the baud rate, parity, etc. for serial ports whose drivers support
       the asynOption interface.</li>
     <li>Control the GPIB address and execute global and addressed commands for GPIB devices.</li>
-    <li>Create asyn socket ports dynamically at run time for new TCP/IP or UDP/IP connections.</li>
   </ul>
   <p>
     For the asynOctet interface there are two output fields, AOUT (ASCII Output) and
@@ -174,22 +173,6 @@
       </tr>
       <tr>
         <td>
-          SOCK</td>
-        <td>
-          R/W</td>
-        <td>
-          "Socket address"</td>
-        <td>
-          DBF_STRING</td>
-        <td>
-          The name of a server:port for a TCP/IP or UDP/IP socket connection. This field can
-          be changed at any time to connect to a new socket. It creates a new port with the
-          same name as the socket string, and connects the record to that port. Syntax is
-          "server:port [protocol]", e.g. "corvette:21", "164.54.160.50:21", or "corvette:21
-          udp". The protocol specifier is optional. TCP is used by default.</td>
-      </tr>
-      <tr>
-        <td>
           DRVINFO</td>
         <td>
           R/W</td>
@@ -235,9 +218,6 @@
     automatically attempt to connect to the port, it is usually not necessary to write
     to the PCNCT field to connect to the port. The PCNCT field is useful for determining
     if the port is connected, and for forcing a disconnect if desired.</p>
-  <p>
-    Writing to the SOCK field causes the record to create a new asyn port with the same
-    name as the SOCK field. This is done with drvAsynIPPortConfigure.</p>
   <p>
   </p>
   <hr />
@@ -1647,12 +1627,6 @@
       GPIB setup screen, asynGPIBSetup.adl</h3>
     <p>
       <img alt="asynGPIBSetup.gif" src="asynGPIBSetup.gif" /></p>
-    <p>
-    </p>
-    <h3>
-      Socket setup screen, asynSocketSetup.adl</h3>
-    <p>
-      <img alt="asynSocketSetup.gif" src="asynSocketSetup.gif" /></p>
     <p>
     </p>
     <hr />
