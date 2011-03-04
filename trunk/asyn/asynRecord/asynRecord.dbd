@@ -105,17 +105,16 @@ menu(gpibACMD) {
 
 recordtype(asyn) {
     include "dbCommon.dbd" 
-    field(VAL,DBF_STRING) {
+    field(VAL,DBF_LONG) {
         prompt("Value field (unused)")
-        promptgroup(GUI_INPUTS)
         asl(ASL0)
-        size(40)
+        interest(4)
     }
 
 # Address fields
     field(PORT,DBF_STRING) {
         prompt("asyn port")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
         interest(1)
         initial("")
@@ -123,91 +122,94 @@ recordtype(asyn) {
     }
     field(ADDR,DBF_LONG) {
         prompt("asyn address")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
         interest(1)
         initial("0")
     }
     field(PCNCT,DBF_MENU) {
         prompt("Port Connect/Disconnect")
-        promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
-        interest(1)
+        interest(2)
         menu(asynCONNECT)
     }
     field(DRVINFO,DBF_STRING) {
         prompt("Driver info string")
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
+        interest(2)
         initial("")
         size(40)
     }
     field(REASON,DBF_LONG) {
         prompt("asynUser->reason")
+        interest(2)
         special(SPC_MOD)
-    }
-    field(SOCK,DBF_STRING) {
-        prompt("socket address")
-        promptgroup(GUI_DISPLAY)
-        special(SPC_MOD)
-        interest(1)
-        initial("")
-        size(40)
     }
 
 # Input/output control fields
     field(TMOD,DBF_MENU) {
         prompt("Transaction mode")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
         interest(1)
         menu(asynTMOD)
     }
     field(TMOT,DBF_DOUBLE) {
         prompt("Timeout (sec)")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         interest(1)
         initial("1.0")
     }
     field(IFACE,DBF_MENU) {
         prompt("Interface")
-        menu(asynINTERFACE)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
+        interest(2)
+        menu(asynINTERFACE)
     }
     field(OCTETIV, DBF_LONG) {
         prompt("asynOctet is valid")
+        interest(2)
     }
     field(OPTIONIV, DBF_LONG) {
         prompt("asynOption is valid")
+        interest(2)
     }
     field(GPIBIV, DBF_LONG) {
         prompt("asynGPIB is valid")
+        interest(2)
     }
     field(I32IV, DBF_LONG) {
         prompt("asynInt32 is valid")
+        interest(2)
     }
     field(UI32IV, DBF_LONG) {
         prompt("asynUInt32Digital is valid")
+        interest(2)
     }
     field(F64IV, DBF_LONG) {
         prompt("asynFloat64 is valid")
+        interest(2)
     }
 
 # asynOctet output control fields
     field(AOUT,DBF_STRING) {
         prompt("Output (command) string")
-        promptgroup(GUI_INPUTS)
-        asl(ASL0)
+        promptgroup(GUI_OUTPUT)
+        interest(1)
         pp(TRUE)
         size(40)
     }
     field(OEOS,DBF_STRING) {
         prompt("Output delimiter")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_OUTPUT)
+        interest(1)
         special(SPC_MOD)
         size(40)
     }
     field(BOUT,DBF_CHAR) {
         prompt("Output binary data")
-        asl(ASL0)
+        interest(1)
         special(SPC_DBADDR)
         pp(TRUE)
     }
@@ -215,30 +217,28 @@ recordtype(asyn) {
         prompt("Output buffer pointer")
         special(SPC_NOMOD)
         interest(4)
-        size(4)
         extra("void *optr")
     }
     field(OMAX,DBF_LONG) {
         prompt("Max. size of output array")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_OUTPUT)
         special(SPC_NOMOD)
         interest(1)
         initial("80")
     }
     field(NOWT,DBF_LONG) {
         prompt("Number of bytes to write")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_OUTPUT)
         interest(1)
         initial("80")
     }
     field(NAWT,DBF_LONG) {
         prompt("Number of bytes actually written")
-        promptgroup(GUI_DISPLAY)
         interest(1)
     }
     field(OFMT,DBF_MENU) {
         prompt("Output format")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_OUTPUT)
         interest(1)
         menu(asynFMT)
     }
@@ -246,21 +246,21 @@ recordtype(asyn) {
 # asynOctet input control fields
     field(AINP,DBF_STRING) {
         prompt("Input (response) string")
-        promptgroup(GUI_INPUTS)
-        asl(ASL0)
+        interest(1)
         special(SPC_NOMOD)
         size(40)
     }
     field(TINP,DBF_STRING) {
         prompt("Translated input string")
-        promptgroup(GUI_INPUTS)
         asl(ASL0)
+        interest(1)
         special(SPC_NOMOD)
         size(40)
     }
     field(IEOS,DBF_STRING) {
         prompt("Input Delimiter")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
+        interest(1)
         special(SPC_MOD)
         size(40)
     }
@@ -278,31 +278,29 @@ recordtype(asyn) {
     }
     field(IMAX,DBF_LONG) {
         prompt("Max. size of input array")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_NOMOD)
         interest(1)
         initial("80")
     }
     field(NRRD,DBF_LONG) {
         prompt("Number of bytes to read")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         interest(1)
     }
     field(NORD,DBF_LONG) {
         prompt("Number of bytes read")
-        promptgroup(GUI_DISPLAY)
         special(SPC_NOMOD)
         interest(1)
     }
     field(IFMT,DBF_MENU) {
         prompt("Input format")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
         interest(1)
         menu(asynFMT)
     }
     field(EOMR,DBF_MENU) {
         prompt("EOM reason")
-        promptgroup(GUI_DISPLAY)
         special(SPC_NOMOD)
         interest(1)
         menu(asynEOMREASON)
@@ -312,73 +310,84 @@ recordtype(asyn) {
     field(I32INP,DBF_LONG) {
         prompt("asynInt32 input")
         special(SPC_NOMOD)
-        interest(1)
+        interest(2)
     }
     field(I32OUT,DBF_LONG) {
         prompt("asynInt32 output")
-        interest(1)
+        promptgroup(GUI_OUTPUT)
+        interest(2)
         pp(TRUE)
     }
     field(UI32INP,DBF_ULONG) {
         prompt("asynUInt32Digital input")
         special(SPC_NOMOD)
-        interest(1)
+        interest(2)
     }
     field(UI32OUT,DBF_ULONG) {
         prompt("asynUInt32Digital output")
-        interest(1)
+        promptgroup(GUI_OUTPUT)
+        interest(2)
         pp(TRUE)
     }
     field(UI32MASK,DBF_ULONG) {
         prompt("asynUInt32Digital mask")
+        promptgroup(GUI_OUTPUT)
         initial("0xffffffff")
         special(SPC_MOD)
+        interest(2)
     }
     field(F64INP,DBF_DOUBLE) {
         prompt("asynFloat64 input")
         special(SPC_NOMOD)
-        interest(1)
+        interest(2)
     }
     field(F64OUT,DBF_DOUBLE) {
         prompt("asynFloat64 output")
-        interest(1)
+        promptgroup(GUI_OUTPUT)
+        interest(2)
         pp(TRUE)
     }
 
 # Serial control fields
     field(BAUD,DBF_MENU) {
         prompt("Baud rate")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialBAUD)
     }
     field(PRTY,DBF_MENU) {
         prompt("Parity")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialPRTY)
     }
     field(DBIT,DBF_MENU) {
         prompt("Data bits")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialDBIT)
     }
     field(SBIT,DBF_MENU) {
         prompt("Stop bits")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialSBIT)
     }
     field(MCTL,DBF_MENU) {
         prompt("Modem control")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialMCTL)
     }
     field(FCTL,DBF_MENU) {
         prompt("Flow control")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_INPUTS)
+        interest(2)
         special(SPC_MOD)
         menu(serialFCTL)
     }
@@ -386,22 +395,21 @@ recordtype(asyn) {
 # GPIB control fields
     field(UCMD,DBF_MENU) {
         prompt("Universal command")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_OUTPUT)
         pp(TRUE)
-        interest(1)
+        interest(2)
         menu(gpibUCMD)
     }
     field(ACMD,DBF_MENU) {
         prompt("Addressed command")
-        promptgroup(GUI_COMMON)
+        promptgroup(GUI_OUTPUT)
         pp(TRUE)
-        interest(1)
+        interest(2)
         menu(gpibACMD)
     }
     field(SPR,DBF_UCHAR) {
         prompt("Serial poll response")
-        promptgroup(GUI_INPUTS)
-        asl(ASL0)
+        interest(2)
         special(SPC_NOMOD)
     }
 
@@ -491,21 +499,21 @@ recordtype(asyn) {
 # Connection management fields
     field(AUCT,DBF_MENU) {
         prompt("Autoconnect")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
         interest(1)
         menu(asynAUTOCONNECT)
     }
     field(CNCT,DBF_MENU) {
         prompt("Connect/Disconnect")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
         interest(1)
         menu(asynCONNECT)
     }
     field(ENBL,DBF_MENU) {
         prompt("Enable/Disable")
-        promptgroup(GUI_DISPLAY)
+        promptgroup(GUI_INPUTS)
         special(SPC_MOD)
         interest(1)
         menu(asynENABLE)
@@ -515,11 +523,12 @@ recordtype(asyn) {
     field(ERRS,DBF_NOACCESS) {
         prompt("Error string")
         special(SPC_DBADDR)
-        interest(1)
+        interest(4)
         extra("char *errs")
     }
     field(AQR,DBF_UCHAR) {
         prompt("Abort queueRequest")
         special(SPC_MOD)
+        interest(4)
     }
 }
