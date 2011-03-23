@@ -707,6 +707,82 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 
     return(status);
 }
 
+/** Sets the interrupt mask and reason in the parameter library
+  * Calls paramList::setUInt32Interrupt (0, index, mask, reason) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. 
+  * \param[in] reason Interrupt reason. */
+asynStatus asynPortDriver::setUInt32DigitalInterrupt(int index, epicsUInt32 mask, interruptReason reason)
+{
+    return this->setUInt32DigitalInterrupt(0, index, mask, reason);
+}
+
+/** Sets the interrupt mask and reason in the parameter library
+  * Calls paramList::setUInt32Interrupt (index, mask, reason) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. 
+  * \param[in] reason Interrupt reason. */
+asynStatus asynPortDriver::setUInt32DigitalInterrupt(int list, int index, epicsUInt32 mask, interruptReason reason)
+{
+    asynStatus status;
+    static const char *functionName = "setUIntDigitalInterrupt";
+    
+    status = this->params[list]->setUInt32Interrupt(index, mask, reason);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Clears the interrupt mask in the parameter library
+  * Calls paramList::clearUInt32Interrupt (0, index, mask) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. */
+asynStatus asynPortDriver::clearUInt32DigitalInterrupt(int index, epicsUInt32 mask)
+{
+    return this->clearUInt32DigitalInterrupt(0, index, mask);
+}
+
+/** Clears the interrupt mask in the parameter library
+  * Calls paramList::clearUInt32Interrupt (index, mask) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. */
+asynStatus asynPortDriver::clearUInt32DigitalInterrupt(int list, int index, epicsUInt32 mask)
+{
+    asynStatus status;
+    static const char *functionName = "clearUIntDigitalInterrupt";
+    
+    status = this->params[list]->clearUInt32Interrupt(index, mask);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the interrupt mask and reason in the parameter library
+  * Calls paramList::getUInt32Interrupt (0, index, mask, reason) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. 
+  * \param[in] reason Interrupt reason. */
+asynStatus asynPortDriver::getUInt32DigitalInterrupt(int index, epicsUInt32 *mask, interruptReason reason)
+{
+    return this->getUInt32DigitalInterrupt(0, index, mask, reason);
+}
+
+/** Gets the interrupt mask and reason in the parameter library
+  * Calls paramList::getUInt32Interrupt (index, mask, reason) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] mask Interrupt mask. 
+  * \param[in] reason Interrupt reason. */
+asynStatus asynPortDriver::getUInt32DigitalInterrupt(int list, int index, epicsUInt32 *mask, interruptReason reason)
+{
+    asynStatus status;
+    static const char *functionName = "getUIntDigitalInterrupt";
+    
+    status = this->params[list]->getUInt32Interrupt(index, mask, reason);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
 /** Sets the value for a double in the parameter library.
   * Calls setDoubleParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
