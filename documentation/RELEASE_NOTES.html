@@ -34,6 +34,11 @@
     Removed unneeded declarations of 'register int32_t *buf' from many functions. Removed
     register keyword from remaining instances, because address was being taken, which
     is illegal in C, and was causing errors on vxWorks Pentium cross-compiler.</p>
+  <h3>
+    asynPortDriver</h3>
+  <p>
+    Added 3 new asynPortDriver methods: setUInt32DigitalInterrupt, clearUInt32Interrupt,
+    getUInt32Interrupt. These were needed to complete the asynUInt32Digital support.</p>
   <div style="text-align: center">
     <h2>
       Release 4-16</h2>
