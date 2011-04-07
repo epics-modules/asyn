@@ -2396,3 +2396,22 @@ asynPortDriver::~asynPortDriver()
     }
     free(this->params);
 }
+
+// This is a utility function that returns a pointer to an asynPortDriver object from its name
+void* findAsynPortDriver(const char *portName)
+{
+    asynUser *pasynUser;
+    asynInterface *pasynInterface;
+    asynStatus status;
+    
+    pasynUser = pasynManager->createAsynUser(NULL, NULL);
+    status = pasynManager->connectDevice(pasynUser, portName, 0);
+    if (status) return NULL;
+    pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
+    if (!pasynInterface) return NULL;
+    pasynManager->disconnect(pasynUser);
+    pasynManager->freeAsynUser(pasynUser);
+    return pasynInterface->drvPvt;
+}
+    
+

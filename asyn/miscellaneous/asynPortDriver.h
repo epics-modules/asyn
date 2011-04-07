@@ -6,6 +6,8 @@
 
 #include <asynStandardInterfaces.h>
 
+epicsShareFunc void* findAsynPortDriver(const char *portName);
+
 #ifdef __cplusplus
 
 /** Masks for each of the asyn standard interfaces */
