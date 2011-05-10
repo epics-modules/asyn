@@ -2496,6 +2496,32 @@ static asynGenericPointer ifaceGenericPointer =
 static asynDrvUser ifaceDrvUser =
 { drvUserCreate, drvUserGetType, drvUserDestroy };
 
+/**
+ * allocate space for the parameter list
+ */
+asynStatus asynPortDriver::allocateParamList(int paramTableSize)
+{
+  asynStatus status;
+  /* Allocate space for the parameter objects */
+  this->params = (paramList**) (calloc(maxAddr, sizeof(paramList*)));
+  if (this->params != NULL)
+  {
+    /* Initialize the parameter library */
+    int addr;
+    for (addr = 0; addr < maxAddr; addr++)
+    {
+      this->params[addr] = new paramList(paramTableSize,
+          &this->asynStdInterfaces);
+    }
+    status = asynSuccess;
+  }
+  else
+  {
+    status = asynError;
+  }
+  return status;
+}
+
 /** Constructor for the asynPortDriver class.
  * \param[in] portName The name of the asyn port driver to be created.
  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports.
@@ -2623,14 +2649,7 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
     return;
   }
 
-  /* Allocate space for the parameter objects */
-  this->params = (paramList **) calloc(maxAddr, sizeof(paramList *));
-  /* Initialize the parameter library */
-  for (addr = 0; addr < maxAddr; addr++)
-  {
-    this->params[addr]
-        = new paramList(paramTableSize, &this->asynStdInterfaces);
-  }
+  allocateParamList(paramTableSize);
 
   /* Connect to our device for asynTrace */
   status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
@@ -2784,14 +2803,7 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
     return;
   }
 
-  /* Allocate space for the parameter objects */
-  this->params = (paramList **) calloc(maxAddr, sizeof(paramList *));
-  /* Initialize the parameter library */
-  for (addr = 0; addr < maxAddr; addr++)
-  {
-    this->params[addr]
-        = new paramList(paramTableSize, &this->asynStdInterfaces);
-  }
+  allocateParamList(paramTableSize);
 
   /* Connect to our device for asynTrace */
   status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
