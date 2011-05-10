@@ -2522,6 +2522,36 @@ asynStatus asynPortDriver::allocateParamList(int paramTableSize)
   return status;
 }
 
+asynStatus asynPortDriver::initializePortDriver()
+{
+  const char functionName[] = "initializePortDriver";
+  asynStatus status;
+  allocateParamList(getNumParams());
+
+  /* Connect to our device for asynTrace */
+  status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
+  if (status != asynSuccess)
+  {
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+        "%s:%s:, connectDevice failed\n", driverName, functionName);
+    return asynError;
+  }
+
+  /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
+  status = (asynStatus)(
+      epicsThreadCreate("asynPortDriverCallback", epicsThreadPriorityMedium,
+          epicsThreadGetStackSize(epicsThreadStackMedium),
+          (EPICSTHREADFUNC) callbackTaskC, this) == NULL);
+  if (status)
+  {
+    printf("%s:%s epicsThreadCreate failure for callback task\n", driverName,
+        functionName);
+    return asynError;
+  }
+
+  return asynSuccess;
+}
+
 /** Constructor for the asynPortDriver class.
  * \param[in] portName The name of the asyn port driver to be created.
  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports.
@@ -2550,7 +2580,6 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
   asynStatus status;
   const char *functionName = "asynPortDriver";
   asynStandardInterfaces *pInterfaces;
-  int addr;
 
   /* Initialize some members to 0 */
   pInterfaces = &this->asynStdInterfaces;
@@ -2583,7 +2612,8 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
   /* Create asynUser for debugging and for standardInterfacesBase */
   this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
 
-  /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */asynPrint(
+  /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
+  asynPrint(
       this->pasynUserSelf, ASYN_TRACE_FLOW,
       "%s:%s: creating port %s maxAddr=%d, paramTableSize=%d\n"
         "    interfaceMask=0x%X, interruptMask=0x%X\n"
@@ -2702,7 +2732,6 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
   asynStatus status;
   const char *functionName = "asynPortDriver";
   asynStandardInterfaces *pInterfaces;
-  int addr;
 
   /* Initialize some members to 0 */
   pInterfaces = &this->asynStdInterfaces;
@@ -2737,7 +2766,8 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
 
   int paramTableSize = getNumParams();
 
-  /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */asynPrint(
+  /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
+  asynPrint(
       this->pasynUserSelf, ASYN_TRACE_FLOW,
       "%s:%s: creating port %s maxAddr=%d, paramTableSize=%d\n"
         "    interfaceMask=0x%X, interruptMask=0x%X\n"
@@ -2800,29 +2830,6 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
     asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
         "%s:%s ERROR: Can't register interfaces: %s.\n", driverName,
         functionName, this->pasynUserSelf->errorMessage);
-    return;
-  }
-
-  allocateParamList(paramTableSize);
-
-  /* Connect to our device for asynTrace */
-  status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
-  if (status != asynSuccess)
-  {
-    asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-        "%s:%s:, connectDevice failed\n", driverName, functionName);
-    return;
-  }
-
-  /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
-  status = (asynStatus)(
-      epicsThreadCreate("asynPortDriverCallback", epicsThreadPriorityMedium,
-          epicsThreadGetStackSize(epicsThreadStackMedium),
-          (EPICSTHREADFUNC) callbackTaskC, this) == NULL);
-  if (status)
-  {
-    printf("%s:%s epicsThreadCreate failure for callback task\n", driverName,
-        functionName);
     return;
   }
 
