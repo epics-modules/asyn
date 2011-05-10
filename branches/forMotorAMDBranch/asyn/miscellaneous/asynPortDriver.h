@@ -121,6 +121,8 @@ class epicsShareFunc asynPortDriver {
 public:
     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
+    asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
+                   int asynFlags, int autoConnect, int priority, int stackSize);
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
@@ -215,7 +217,7 @@ public:
     virtual asynStatus callParamCallbacks(          int addr);
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual void reportParams(FILE *fp, int details);
-
+    virtual int        getNumParams();
     char *portName;         /**< The name of this asyn port */
 
     int maxAddr;            /**< The maximum asyn address (addr) supported by this driver */

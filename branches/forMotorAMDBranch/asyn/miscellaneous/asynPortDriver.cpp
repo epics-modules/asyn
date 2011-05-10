@@ -533,6 +533,16 @@ void paramList::report(FILE *fp, int details)
     }
 }
 
+/** Return the number of parameters defined by the port controller.  This is a template method
+  * used by the constructor to allocate space for the parameter list.  This should be overridden 
+  * by any subclass that increases the number of parameters.  This override should take care 
+  * to account for parameters defined by the parent.
+  */
+int asynPortDriver::getNumParams()
+{
+  return 0;
+}
+
 /** Locks the driver to prevent multiple threads from accessing memory at the same time.
   * This function is called whenever asyn clients call the functions on the asyn interfaces.
   * Drivers with their own background threads must call lock() to protect conflicts with
@@ -2252,7 +2262,7 @@ static asynDrvUser ifaceDrvUser = {
     drvUserDestroy
 };
 
-
+
 
 /** Constructor for the asynPortDriver class.
   * \param[in] portName The name of the asyn port driver to be created.
@@ -2311,6 +2321,139 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
 
     /* Create asynUser for debugging and for standardInterfacesBase */
     this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
+    
+    /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
+    asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
+        "%s:%s: creating port %s maxAddr=%d, paramTableSize=%d\n"
+        "    interfaceMask=0x%X, interruptMask=0x%X\n"
+        "    asynFlags=0x%X, autoConnect=%d, priority=%d, stackSize=%d\n",
+        driverName, functionName, this->portName, this->maxAddr, paramTableSize, 
+        interfaceMask, interruptMask, 
+        asynFlags, autoConnect, priority, stackSize);
+
+     /* Set addresses of asyn interfaces */
+    if (interfaceMask & asynCommonMask)         pInterfaces->common.pinterface        = (void *)&ifaceCommon;
+    if (interfaceMask & asynDrvUserMask)        pInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
+    if (interfaceMask & asynInt32Mask)          pInterfaces->int32.pinterface         = (void *)&ifaceInt32;
+    if (interfaceMask & asynUInt32DigitalMask)  pInterfaces->uInt32Digital.pinterface = (void *)&ifaceUInt32Digital;
+    if (interfaceMask & asynFloat64Mask)        pInterfaces->float64.pinterface       = (void *)&ifaceFloat64;
+    if (interfaceMask & asynOctetMask)          pInterfaces->octet.pinterface         = (void *)&ifaceOctet;
+    if (interfaceMask & asynInt8ArrayMask)      pInterfaces->int8Array.pinterface     = (void *)&ifaceInt8Array;
+    if (interfaceMask & asynInt16ArrayMask)     pInterfaces->int16Array.pinterface    = (void *)&ifaceInt16Array;
+    if (interfaceMask & asynInt32ArrayMask)     pInterfaces->int32Array.pinterface    = (void *)&ifaceInt32Array;
+    if (interfaceMask & asynFloat32ArrayMask)   pInterfaces->float32Array.pinterface  = (void *)&ifaceFloat32Array;
+    if (interfaceMask & asynFloat64ArrayMask)   pInterfaces->float64Array.pinterface  = (void *)&ifaceFloat64Array;
+    if (interfaceMask & asynGenericPointerMask) pInterfaces->genericPointer.pinterface= (void *)&ifaceGenericPointer;
+
+    /* Define which interfaces can generate interrupts */
+    if (interruptMask & asynInt32Mask)          pInterfaces->int32CanInterrupt          = 1;
+    if (interruptMask & asynUInt32DigitalMask)  pInterfaces->uInt32DigitalCanInterrupt  = 1;
+    if (interruptMask & asynFloat64Mask)        pInterfaces->float64CanInterrupt        = 1;
+    if (interruptMask & asynOctetMask)          pInterfaces->octetCanInterrupt          = 1;
+    if (interruptMask & asynInt8ArrayMask)      pInterfaces->int8ArrayCanInterrupt      = 1;
+    if (interruptMask & asynInt16ArrayMask)     pInterfaces->int16ArrayCanInterrupt     = 1;
+    if (interruptMask & asynInt32ArrayMask)     pInterfaces->int32ArrayCanInterrupt     = 1;
+    if (interruptMask & asynFloat32ArrayMask)   pInterfaces->float32ArrayCanInterrupt   = 1;
+    if (interruptMask & asynFloat64ArrayMask)   pInterfaces->float64ArrayCanInterrupt   = 1;
+    if (interruptMask & asynGenericPointerMask) pInterfaces->genericPointerCanInterrupt = 1;
+
+    status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
+                                                     this->pasynUserSelf, this);
+    if (status != asynSuccess) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s ERROR: Can't register interfaces: %s.\n",
+            driverName, functionName, this->pasynUserSelf->errorMessage);
+        return;
+    }
+
+    /* Allocate space for the parameter objects */
+    this->params = (paramList **) calloc(maxAddr, sizeof(paramList *));    
+    /* Initialize the parameter library */
+    for (addr=0; addr<maxAddr; addr++) {
+        this->params[addr] = new paramList(paramTableSize, &this->asynStdInterfaces);
+    }
+
+    /* Connect to our device for asynTrace */
+    status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
+    if (status != asynSuccess) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s:, connectDevice failed\n", driverName, functionName);
+        return;
+    }
+
+    /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
+    status = (asynStatus)(epicsThreadCreate("asynPortDriverCallback",
+                                epicsThreadPriorityMedium,
+                                epicsThreadGetStackSize(epicsThreadStackMedium),
+                                (EPICSTHREADFUNC)callbackTaskC,
+                                this) == NULL);
+    if (status) {
+        printf("%s:%s epicsThreadCreate failure for callback task\n", 
+            driverName, functionName);
+        return;
+    }
+
+}
+
+/** Constructor for the asynPortDriver class.
+  * \param[in] portName The name of the asyn port driver to be created.
+  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports.
+               Often it is 1 (which is the minimum), but some drivers, for example a 
+			   16-channel D/A or A/D would support values &gt; 1. 
+			   This controls the number of parameter tables that are created.
+  * \param[in] paramTableSize The number of parameters that this driver supports.
+               This controls the size of the parameter tables.
+  * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
+                The bit mask values are defined in asynPortDriver.h, e.g. asynInt32Mask.
+  * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks).
+               The bit mask values are defined in asynPortDriver.h, e.g. asynInt8ArrayMask.
+  * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK and ASYN_MULTIDEVICE.
+  * \param[in] autoConnect The autoConnect flag for the asyn port driver. 
+               1 if the driver should autoconnect.
+  * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+               If it is 0 then the default value of epicsThreadPriorityMedium will be assigned by asynManager.
+  * \param[in] stackSize The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
+               If it is 0 then the default value of epicsThreadGetStackSize(epicsThreadStackMedium)
+               will be assigned by asynManager.
+  */
+asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
+                               int asynFlags, int autoConnect, int priority, int stackSize)
+{
+    asynStatus status;
+    const char *functionName = "asynPortDriver";
+    asynStandardInterfaces *pInterfaces;
+    int addr;
+
+    /* Initialize some members to 0 */
+    pInterfaces = &this->asynStdInterfaces;
+    memset(pInterfaces, 0, sizeof(asynStdInterfaces));
+       
+    this->portName = epicsStrDup(portName);
+    if (maxAddr < 1) maxAddr = 1;
+    this->maxAddr = maxAddr;
+    interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
+
+    /* Create the epicsMutex for locking access to data structures from other threads */
+    this->mutexId = epicsMutexCreate();
+    if (!this->mutexId) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s::%s epicsMutexCreate failure\n", driverName, functionName);
+        return;
+    }
+
+    status = pasynManager->registerPort(portName,
+                                        asynFlags,    /* multidevice and canblock flags */
+                                        autoConnect,  /* autoconnect flag */
+                                        priority,     /* priority */
+                                        stackSize);   /* stack size */
+    if (status != asynSuccess) {
+        printf("%s:%s: ERROR: Can't register port\n", driverName, functionName);
+    }
+
+    /* Create asynUser for debugging and for standardInterfacesBase */
+    this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
+    
+    int paramTableSize = getNumParams();
     
     /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
