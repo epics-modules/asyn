@@ -2522,11 +2522,16 @@ asynStatus asynPortDriver::allocateParamList(int paramTableSize)
   return status;
 }
 
+asynStatus asynPortDriver::createDriverParams(){
+  return asynSuccess;
+}
+
 asynStatus asynPortDriver::initializePortDriver()
 {
   const char functionName[] = "initializePortDriver";
   asynStatus status;
   allocateParamList(getNumParams());
+  createDriverParams();
 
   /* Connect to our device for asynTrace */
   status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);

@@ -224,6 +224,7 @@ public:
   virtual int getNumParams();
   asynStatus allocateParamList(int paramTableSize);
   asynStatus initializePortDriver();
+  virtual asynStatus createDriverParams();
   char *portName; /**< The name of this asyn port */
 
   int maxAddr; /**< The maximum asyn address (addr) supported by this driver */
