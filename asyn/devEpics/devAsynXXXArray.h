@@ -223,7 +223,7 @@ static void callbackWfOut(asynUser *pasynUser) \
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, \
               "%s %s::callbackWfOut\n", pwf->name, driverName); \
     status = pPvt->pArray->write(pPvt->arrayPvt, \
-        pPvt->pasynUser, pwf->bptr, pwf->nelm); \
+        pPvt->pasynUser, pwf->bptr, pwf->nord); \
     if (status == asynSuccess) { \
         pwf->udf=0; \
     } else { \
