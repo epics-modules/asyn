@@ -119,6 +119,11 @@ asynStatus paramList::findParam(const char *name, int *index)
   return asynParamNotFound;
 }
 
+bool paramList::isIndexInvalid(int & index)
+{
+    return index < 0 || index >= this->nVals;
+}
+
 /** Sets the value for an integer in the parameter library.
  * \param[in] index The parameter number
  * \param[in] value Value to set.
@@ -690,7 +695,7 @@ asynStatus asynPortDriver::createParam(int list, const char *name,
   static const char *functionName = "createParam";
 
   status = this->params[list]->findParam(name, &itemp);
-  if (status == asynParamAlreadyExists)
+  if (status != asynParamNotFound)
   {
     asynPrint(
         this->pasynUserSelf,
@@ -721,6 +726,14 @@ asynStatus asynPortDriver::findParam(const char *name, int *index)
   return this->findParam(0, name, index);
 }
 
+/**
+ * Test if the input address is valid
+ */
+bool asynPortDriver::isAddrInvalid(int & addr)
+{
+    return addr < 0 || addr >= maxAddr;
+}
+
 /** Finds a parameter in the parameter library.
  * Calls paramList::findParam (name, index) for the parameter list indexed by list.
  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
@@ -728,7 +741,12 @@ asynStatus asynPortDriver::findParam(const char *name, int *index)
  * \param[out] index Parameter number */
 asynStatus asynPortDriver::findParam(int list, const char *name, int *index)
 {
-  return this->params[list]->findParam(name, index);
+  asynStatus status = asynError;
+  if (!isAddrInvalid(list))
+  {
+    status = this->params[list]->findParam(name, index);
+  }
+  return status;
 }
 
 /** Returns the name of a parameter in the parameter library.
@@ -747,7 +765,12 @@ asynStatus asynPortDriver::getParamName(int index, const char **name)
  * \param[out] name Parameter name */
 asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
 {
-  return this->params[list]->getName(index, name);
+  asynStatus status = asynError;
+  if (!isAddrInvalid(list))
+  {
+    status = this->params[list]->getName(index, name);
+  }
+  return status;
 }
 
 /** Reports errors when setting parameters.  
@@ -2525,11 +2548,28 @@ asynStatus asynPortDriver::allocateParamList(int paramTableSize)
 asynStatus asynPortDriver::createDriverParams(){
   return asynSuccess;
 }
+asynStatus asynPortDriver::preDriverInit()
+{
+  return asynSuccess;
+}
+
+asynStatus asynPortDriver::postDriverInit()
+{
+  return asynSuccess;
+}
 
 asynStatus asynPortDriver::initializePortDriver()
 {
   const char functionName[] = "initializePortDriver";
   asynStatus status;
+  status =  preDriverInit();
+  if (status)
+  {
+    printf("%s:%s trouble reported by preDriverInit()\n", driverName,
+        functionName);
+    return asynError;
+  }
+
   allocateParamList(getNumParams());
   createDriverParams();
 
@@ -2550,6 +2590,14 @@ asynStatus asynPortDriver::initializePortDriver()
   if (status)
   {
     printf("%s:%s epicsThreadCreate failure for callback task\n", driverName,
+        functionName);
+    return asynError;
+  }
+
+  status =  postDriverInit();
+  if (status)
+  {
+    printf("%s:%s trouble reported by postDriverInit()\n", driverName,
         functionName);
     return asynError;
   }
