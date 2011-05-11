@@ -1,11 +1,11 @@
 /*************************************************************************\
 * Copyright (c) 2009 UChicago Argonne LLC, as Operator of Argonne
-*     National Laboratory.
-* Copyright (c) 2002 The Regents of the University of California, as
-*     Operator of Los Alamos National Laboratory.
-* EPICS BASE is distributed subject to a Software License Agreement found
-* in file LICENSE that is included with this distribution. 
-\*************************************************************************/
+ *     National Laboratory.
+ * Copyright (c) 2002 The Regents of the University of California, as
+ *     Operator of Los Alamos National Laboratory.
+ * EPICS BASE is distributed subject to a Software License Agreement found
+ * in file LICENSE that is included with this distribution.
+ \*************************************************************************/
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,30 +14,31 @@
 #include "asynPortDriver.h"
 #include "epicsUnitTest.h"
 #include "testMain.h"
-  const char PARAM1[] = "PARAM1";
-  const char PARAM2[] = "PARAM2";
-  const char PARAM3[] = "PARAM3";
-  const char PARAM4[] = "PARAM4";
-  const char PARAM5[] = "PARAM5";
-  const char PARAM6[] = "PARAM6";
-  const char PARAM7[] = "PARAM7";
-  const char PARAM8[] = "PARAM8";
-  const char PARAM9[] = "PARAM9";
-  const char PARAM10[] = "PARAM10";
-  const char PARAM11[] = "PARAM11";
+const char PARAM1[] = "PARAM1";
+const char PARAM2[] = "PARAM2";
+const char PARAM3[] = "PARAM3";
+const char PARAM4[] = "PARAM4";
+const char PARAM5[] = "PARAM5";
+const char PARAM6[] = "PARAM6";
+const char PARAM7[] = "PARAM7";
+const char PARAM8[] = "PARAM8";
+const char PARAM9[] = "PARAM9";
+const char PARAM10[] = "PARAM10";
+const char PARAM11[] = "PARAM11";
 
-void testCreateParam(const char *paramName, paramList *pList, asynParamType pType, 
-   asynStatus expResult, int expIndex)
+void testCreateParam(const char *paramName, paramList *pList,
+    asynParamType pType, asynStatus expResult, int expIndex)
 {
   int index = -999;
   asynStatus status;
   status = pList->createParam(paramName, pType, &index);
-  
+
   bool result = (status == expResult);
   testOk(result, "Create param %s", paramName);
-  if (result) testOk( index == expIndex, " Parameter index %d expected %d", index, expIndex); 
+  if (result)
+    testOk(index == expIndex, " Parameter index %d expected %d", index,
+        expIndex);
 }
-
 
 void testCreateParams(paramList *pList)
 {
@@ -52,16 +53,22 @@ void testCreateParams(paramList *pList)
   testCreateParam(PARAM8, pList, asynParamFloat32Array, asynSuccess, 7);
   testCreateParam(PARAM9, pList, asynParamFloat64Array, asynSuccess, 8);
   testCreateParam(PARAM10, pList, asynParamGenericPointer, asynSuccess, 9);
-  testCreateParam(PARAM11, pList, asynParamGenericPointer, asynParamBadIndex, 10);
-  testCreateParam(PARAM11, pList, asynParamGenericPointer, asynParamBadIndex, 10);
+  testCreateParam(PARAM11, pList, asynParamGenericPointer, asynParamBadIndex,
+      10);
+  testCreateParam(PARAM11, pList, asynParamGenericPointer, asynParamBadIndex,
+      10);
 }
 
-void tesstFindParams(const char *paramName, paramList *pList, asynStatus expStatus, int expIndex){
+void tesstFindParams(const char *paramName, paramList *pList,
+    asynStatus expStatus, int expIndex)
+{
   asynStatus status;
   int index = -999;
   status = pList->findParam(paramName, &index);
-  testOk( status == expStatus, "Trying to find parameter %s", paramName);
-  if (status == expStatus) testOk( index==expIndex, "Comparing index and expected index %d, %d", index, expIndex);
+  testOk(status == expStatus, "Trying to find parameter %s", paramName);
+  if (status == expStatus)
+    testOk(index == expIndex, "Comparing index and expected index %d, %d",
+        index, expIndex);
 
 }
 
@@ -80,13 +87,16 @@ void testFindParams(paramList *pList)
   tesstFindParams(PARAM11, pList, asynParamNotFound, 0);
 }
 
-void testGetName(int index, paramList *pList, asynStatus expStatus, const char *expName){
+void testGetName(int index, paramList *pList, asynStatus expStatus,
+    const char *expName)
+{
   asynStatus status;
   const char *value;
   status = pList->getName(index, &value);
   testOk(status == expStatus, "Testing getName for index %d", index);
-  if (status == asynSuccess) testOk((strcmp(value, expName) == 0), "  Comparing retrieved:expected %s:%s", value,
-  expName);
+  if (status == asynSuccess)
+    testOk((strcmp(value, expName) == 0),
+        "  Comparing retrieved:expected %s:%s", value, expName);
 
 }
 
@@ -105,19 +115,23 @@ void testGetNames(paramList *pList)
   testGetName(10, pList, asynParamBadIndex, PARAM1);
 }
 
-void testSetInteger(int index, int value, paramList *pList, asynStatus expStatus)
+void testSetInteger(int index, int value, paramList *pList,
+    asynStatus expStatus)
 {
   asynStatus status;
   status = pList->setInteger(index, value);
-  testOk( status == expStatus, "Test setInteger for param %d", index);
-  if (expStatus == asynSuccess && status == expStatus) {
+  testOk(status == expStatus, "Test setInteger for param %d", index);
+  if (expStatus == asynSuccess && status == expStatus)
+  {
     int retVal;
     status == pList->getInteger(index, &retVal);
-    testOk( status == asynSuccess, "Check status on getInteger for param %d", index);
-    if ( status == asynSuccess ) 
+    testOk(status == asynSuccess, "Check status on getInteger for param %d",
+        index);
+    if (status == asynSuccess)
     {
-      testOk( retVal == value, "Checking returned:expected Value for param %d, %d:%d",
-      index, retVal, value);
+      testOk(retVal == value,
+          "Checking returned:expected Value for param %d, %d:%d", index,
+          retVal, value);
     }
   }
 }
@@ -153,9 +167,8 @@ MAIN(asynParamListTest)
   totalTests += numFindTests;
   totalTests += numGetNameTests;
   totalTests += numSetIntegerTests;
-		       
-  testPlan(totalTests);
-  asynStatus status;
+
+  testPlan( totalTests);
   asynStandardInterfaces asynStdInterfaces;
   int nVals = 10;
   paramList pList(nVals, &asynStdInterfaces);
