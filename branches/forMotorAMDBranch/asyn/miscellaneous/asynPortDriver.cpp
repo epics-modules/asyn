@@ -2817,15 +2817,14 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr,
   /* Create asynUser for debugging and for standardInterfacesBase */
   this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
 
-  int paramTableSize = getNumParams();
 
   /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
   asynPrint(
       this->pasynUserSelf, ASYN_TRACE_FLOW,
-      "%s:%s: creating port %s maxAddr=%d, paramTableSize=%d\n"
+      "%s:%s: creating port %s maxAddr=%d\n"
         "    interfaceMask=0x%X, interruptMask=0x%X\n"
         "    asynFlags=0x%X, autoConnect=%d, priority=%d, stackSize=%d\n",
-      driverName, functionName, this->portName, this->maxAddr, paramTableSize,
+      driverName, functionName, this->portName, this->maxAddr,
       interfaceMask, interruptMask, asynFlags, autoConnect, priority, stackSize);
 
   /* Set addresses of asyn interfaces */
