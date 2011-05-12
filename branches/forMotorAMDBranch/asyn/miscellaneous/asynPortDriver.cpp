@@ -2548,12 +2548,12 @@ asynStatus asynPortDriver::allocateParamList(int paramTableSize)
 asynStatus asynPortDriver::createDriverParams(){
   return asynSuccess;
 }
-asynStatus asynPortDriver::preDriverInit()
+asynStatus asynPortDriver::preInitDriver()
 {
   return asynSuccess;
 }
 
-asynStatus asynPortDriver::postDriverInit()
+asynStatus asynPortDriver::postInitDriver()
 {
   return asynSuccess;
 }
@@ -2562,7 +2562,7 @@ asynStatus asynPortDriver::initializePortDriver()
 {
   const char functionName[] = "initializePortDriver";
   asynStatus status;
-  status =  preDriverInit();
+  status =  preInitDriver();
   if (status)
   {
     printf("%s:%s trouble reported by preDriverInit()\n", driverName,
@@ -2594,7 +2594,7 @@ asynStatus asynPortDriver::initializePortDriver()
     return asynError;
   }
 
-  status =  postDriverInit();
+  status =  postInitDriver();
   if (status)
   {
     printf("%s:%s trouble reported by postDriverInit()\n", driverName,

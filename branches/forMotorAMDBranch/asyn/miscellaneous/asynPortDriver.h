@@ -202,8 +202,8 @@ public:
     virtual void reportParams(FILE *fp, int details);
     virtual int getNumParams();
     asynStatus allocateParamList(int paramTableSize);
-    virtual asynStatus preDriverInit();
-    virtual asynStatus postDriverInit();
+    virtual asynStatus preInitDriver();
+    virtual asynStatus postInitDriver();
     asynStatus initializePortDriver();
     virtual asynStatus createDriverParams();
     char *portName;
