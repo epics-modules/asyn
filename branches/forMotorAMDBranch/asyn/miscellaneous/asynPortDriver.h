@@ -201,19 +201,19 @@ public:
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual void reportParams(FILE *fp, int details);
     virtual int getNumParams();
-    asynStatus allocateParamList(int paramTableSize);
-    virtual asynStatus preInitDriver();
-    virtual asynStatus postInitDriver();
     asynStatus initializePortDriver();
-    virtual asynStatus createDriverParams();
     char *portName;
     int maxAddr;
     void callbackTask();
     bool isAddrInvalid(int & addr);
 protected:
+    virtual asynStatus createDriverParams();
+    virtual asynStatus preInitDriver();
+    virtual asynStatus postInitDriver();
     asynUser *pasynUserSelf;
     asynStandardInterfaces asynStdInterfaces;
 private:
+  asynStatus allocateParamList(int paramTableSize);
   paramList **params;
   epicsMutexId mutexId;
 
