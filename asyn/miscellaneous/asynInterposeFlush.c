@@ -26,7 +26,6 @@
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
-#include "asynShellCommands.h"
 #include "asynInterposeFlush.h"
 #include <epicsExport.h>
 
