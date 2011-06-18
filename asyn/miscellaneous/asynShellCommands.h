@@ -48,13 +48,13 @@ epicsShareFunc int
 epicsShareFunc int 
  asynOctetFlush(const char *entry);
 epicsShareFunc int 
- asynOctetSetInputEos(const char *port, int addr,const char *eos,const char *drvInfo);
+ asynOctetSetInputEos(const char *port, int addr,const char *eos);
 epicsShareFunc int 
- asynOctetGetInputEos(const char *port, int addr,const char *drvInfo);
+ asynOctetGetInputEos(const char *port, int addr);
 epicsShareFunc int 
- asynOctetSetOutputEos(const char *port, int addr,const char *eos,const char *drvInfo);
+ asynOctetSetOutputEos(const char *port, int addr,const char *eos);
 epicsShareFunc int 
- asynOctetGetOutputEos(const char *port, int addr,const char *drvInfo);
+ asynOctetGetOutputEos(const char *port, int addr);
 
 #ifdef __cplusplus
 }
