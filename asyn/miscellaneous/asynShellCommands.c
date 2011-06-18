@@ -23,6 +23,7 @@
 #define epicsExportSharedSymbols
 #include <shareLib.h>
 #include "asynDriver.h"
+#include "asynOctet.h"
 #include "asynOption.h"
 #include "asynOctetSyncIO.h"
 #include "asynShellCommands.h"
@@ -173,6 +174,131 @@ epicsShareFunc int
     epicsEventDestroy(optionargs.done);
     pasynManager->freeAsynUser(pasynUser);
     return asynSuccess;
+}
+
+enum eosType { eosIn, eosOut };
+typedef struct eosArgs {
+    enum eosType    type;
+    char            eos[10];
+    size_t          eosLen;
+    asynOctet      *pasynOctet;
+    void           *drvPvt;
+    asynStatus      status;
+    epicsEventId    done;
+} eosArgs;
+
+static void
+setEos(asynUser *pasynUser)
+{
+    eosArgs *peosargs = (eosArgs *)pasynUser->userPvt;
+    asynStatus (*setFunc)(void *drvPvt, asynUser *pasynUser, const char *eos, int eoslen);
+
+    switch(peosargs->type) {
+    case eosIn:  setFunc = peosargs->pasynOctet->setInputEos;    break;
+    case eosOut: setFunc = peosargs->pasynOctet->setOutputEos;   break;
+    default:     setFunc = NULL;                                 break;
+    }
+    if (setFunc) {
+        peosargs->status = (*setFunc)(peosargs->drvPvt, pasynUser, peosargs->eos, peosargs->eosLen);
+    }
+    else {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                            "No way to set EOS");
+        peosargs->status = asynError;
+    }
+    epicsEventSignal(peosargs->done);
+}
+
+static asynStatus
+asynSetEos(const char *portName, int addr, enum eosType type, const char *eos)
+{
+    asynUser *pasynUser;
+    asynInterface *pasynInterface;
+    eosArgs eosargs;
+
+    if (eos == NULL) {
+        printf("Missing EOS argument\n");
+        return asynError;
+    }
+    eosargs.eosLen = epicsStrnRawFromEscaped(eosargs.eos, sizeof eosargs.eos, eos, strlen(eos));
+    if (eosargs.eosLen >= sizeof eosargs.eos) {
+        printf("End of string argument \"%s\" too long.\n", eos);
+        return asynError;
+    }
+    if (findInterface(portName, addr, asynOctetType, setEos,
+                                        &pasynUser, &pasynInterface) != asynSuccess)
+        return asynError;
+    pasynUser->timeout = 2;
+    pasynUser->userPvt = &eosargs;
+    pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
+    eosargs.pasynOctet = (asynOctet *)pasynInterface->pinterface;
+    eosargs. drvPvt = pasynInterface->drvPvt;
+    eosargs.type = type;
+    eosargs.done = epicsEventMustCreate(epicsEventEmpty);
+    eosargs.status = pasynManager->queueRequest(pasynUser, asynQueuePriorityConnect, 0.0);
+    if (eosargs.status == asynSuccess)
+        epicsEventWait(eosargs.done);
+    epicsEventDestroy(eosargs.done);
+    if (eosargs.status != asynSuccess)
+        printf("Set EOS failed: %s\n", pasynUser->errorMessage);
+    pasynManager->freeAsynUser(pasynUser);
+    return eosargs.status;
+}
+
+static void
+getEos(asynUser *pasynUser)
+{
+    eosArgs *peosargs = (eosArgs *)pasynUser->userPvt;
+    asynStatus (*getFunc)(void *drvPvt, asynUser *pasynUser, char *eos, int eossize, int *eoslen);
+
+    switch(peosargs->type) {
+    case eosIn:  getFunc = peosargs->pasynOctet->getInputEos;     break;
+    case eosOut: getFunc = peosargs->pasynOctet->getOutputEos;    break;
+    default:     getFunc = NULL;                                  break;
+    }
+    if (getFunc) {
+        int l;
+        peosargs->status = (*getFunc)(peosargs->drvPvt, pasynUser, peosargs->eos, sizeof peosargs->eos, &l);
+        peosargs->eosLen = l;
+    }
+    else {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                            "No way to get EOS");
+        peosargs->status = asynError;
+    }
+    epicsEventSignal(peosargs->done);
+}
+
+epicsShareFunc int
+asynShowEos(const char *portName, int addr, enum eosType type)
+{
+    asynInterface *pasynInterface;
+    eosArgs eosargs;
+    asynUser *pasynUser;
+
+    if (findInterface(portName, addr, asynOctetType, getEos,
+                                        &pasynUser, &pasynInterface) != asynSuccess)
+        return asynError;
+    pasynUser->timeout = 2;
+    pasynUser->userPvt = &eosargs;
+    pasynUser->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
+    eosargs.pasynOctet = (asynOctet *)pasynInterface->pinterface;
+    eosargs. drvPvt = pasynInterface->drvPvt;
+    eosargs.type = type;
+    eosargs.done = epicsEventMustCreate(epicsEventEmpty);
+    eosargs.status = pasynManager->queueRequest(pasynUser, asynQueuePriorityConnect, 0.0);
+    if (eosargs.status == asynSuccess)
+        epicsEventWait(eosargs.done);
+    epicsEventDestroy(eosargs.done);
+    if (eosargs.status != asynSuccess)
+        printf("Set EOS failed: %s\n", pasynUser->errorMessage);
+    pasynManager->freeAsynUser(pasynUser);
+    if (eosargs.status == asynSuccess) {
+        char cbuf[4*sizeof eosargs.eos + 2];
+        epicsStrnEscapedFromRaw(cbuf, sizeof cbuf, eosargs.eos, eosargs.eosLen);
+        printf("\"%s\"\n", cbuf);
+    }
+    return eosargs.status;
 }
 
 /* Default timeout for reading */
@@ -390,97 +516,27 @@ epicsShareFunc int
 }
 
 epicsShareFunc int
-    asynOctetSetInputEos(const char *portName, int addr,
-    const char *eosin,const char *drvInfo)
+    asynOctetSetInputEos(const char *portName, int addr, const char *eosin)
 {
-    int eoslen;
-    char eos[10];
-    asynStatus status;
-
-    if(strlen(eosin)>10) {
-        printf("eos is too long\n");
-        return -1;
-    }
-    eoslen = dbTranslateEscape(eos,eosin);
-    if(eoslen>2) {
-        printf("translateted eos is too long\n");
-        return -1;
-    }
-    status = pasynOctetSyncIO->setInputEosOnce(portName,addr,
-        eos,eoslen,drvInfo);
-    return (status==asynSuccess) ? 0 : -1;
+   return asynSetEos(portName, addr, eosIn, eosin) == asynSuccess ? 0 : -1;
 }
 
 epicsShareFunc int
-    asynOctetGetInputEos(const char *portName, int addr,const char *drvInfo)
+    asynOctetGetInputEos(const char *portName, int addr)
 {
-    char eos[2],eostran[10];
-    int  eoslen = 0;
-    int  tranlen = 0;
-    asynStatus  status;
-
-    status = pasynOctetSyncIO->getInputEosOnce(portName,addr,
-       eos,2,&eoslen,drvInfo);
-    if(status!=asynSuccess) return -1;
-    if(eoslen==0) {
-        printf("eoslen is 0\n");
-        return -1;
-    }
-    tranlen = epicsStrSnPrintEscaped(eostran,sizeof(eostran),eos,eoslen);
-    if(tranlen<=0) {
-        printf("epicsStrSnPrintEscaped failed\n");
-        return -1;
-    }
-    eostran[tranlen] = 0;
-    printf("%s\n",eostran);
-    return -1;
+   return asynShowEos(portName, addr, eosIn) == asynSuccess ? 0 : -1;
 }
 
 epicsShareFunc int
-    asynOctetSetOutputEos(const char *portName, int addr,
-    const char *eosin,const char *drvInfo)
+    asynOctetSetOutputEos(const char *portName, int addr, const char *eosout)
 {
-    int eoslen;
-    char eos[10];
-    asynStatus status;
-
-    if(strlen(eosin)>10) {
-        printf("eos is too long\n");
-        return -1;
-    }
-    eoslen = dbTranslateEscape(eos,eosin);
-    if(eoslen>2) {
-        printf("translated eos is too long\n");
-        return -1;
-    }
-    status = pasynOctetSyncIO->setOutputEosOnce(portName,addr,
-        eos,eoslen,drvInfo);
-    return (status==asynSuccess) ? 0 : -1;
+   return asynSetEos(portName, addr, eosOut, eosout)==asynSuccess ? 0 : -1;
 }
 
 epicsShareFunc int
-    asynOctetGetOutputEos(const char *portName, int addr,const char *drvInfo)
+    asynOctetGetOutputEos(const char *portName, int addr)
 {
-    char eos[2],eostran[10];
-    int  eoslen = 0;
-    int  tranlen = 0;
-    asynStatus  status;
-
-    status = pasynOctetSyncIO->getOutputEosOnce(portName,addr,
-       eos,2,&eoslen,drvInfo);
-    if(status!=asynSuccess) return -1;
-    if(eoslen==0) {
-        printf("eoslen is 0\n");
-        return -1;
-    }
-    tranlen = epicsStrSnPrintEscaped(eostran,sizeof(eostran),eos,eoslen);
-    if(tranlen<=0) {
-        printf("epicsStrSnPrintEscaped failed\n");
-        return -1;
-    }
-    eostran[tranlen] = 0;
-    printf("%s\n",eostran);
-    return -1;
+   return asynShowEos(portName, addr, eosOut) == asynSuccess ? 0 : -1;
 }
 
 epicsShareFunc int
@@ -854,65 +910,55 @@ static void asynOctetFlushCall(const iocshArgBuf * args) {
 static const iocshArg asynOctetSetInputEosArg0 = {"portName", iocshArgString};
 static const iocshArg asynOctetSetInputEosArg1 = {"addr", iocshArgInt};
 static const iocshArg asynOctetSetInputEosArg2 = {"eos", iocshArgString};
-static const iocshArg asynOctetSetInputEosArg3 = {"drvInfo", iocshArgString};
 static const iocshArg *const asynOctetSetInputEosArgs[] = {
     &asynOctetSetInputEosArg0, &asynOctetSetInputEosArg1,
-    &asynOctetSetInputEosArg2, &asynOctetSetInputEosArg3};
+    &asynOctetSetInputEosArg2};
 static const iocshFuncDef asynOctetSetInputEosDef =
-    {"asynOctetSetInputEos", 4, asynOctetSetInputEosArgs};
+    {"asynOctetSetInputEos", 3, asynOctetSetInputEosArgs};
 static void asynOctetSetInputEosCall(const iocshArgBuf * args) {
     const char *portName   = args[0].sval;
     int addr               = args[1].ival;
     const char *eos        = args[2].sval;
-    const char *drvInfo    = args[3].sval;
-    asynOctetSetInputEos( portName, addr, eos , drvInfo);
+    asynOctetSetInputEos( portName, addr, eos);
 }
 
 static const iocshArg asynOctetGetInputEosArg0 = {"portName", iocshArgString};
 static const iocshArg asynOctetGetInputEosArg1 = {"addr", iocshArgInt};
-static const iocshArg asynOctetGetInputEosArg2 = {"drvInfo", iocshArgString};
 static const iocshArg *const asynOctetGetInputEosArgs[] = {
-    &asynOctetGetInputEosArg0, &asynOctetGetInputEosArg1,
-    &asynOctetGetInputEosArg2};
+    &asynOctetGetInputEosArg0, &asynOctetGetInputEosArg1};
 static const iocshFuncDef asynOctetGetInputEosDef =
-    {"asynOctetGetInputEos", 3, asynOctetGetInputEosArgs};
+    {"asynOctetGetInputEos", 2, asynOctetGetInputEosArgs};
 static void asynOctetGetInputEosCall(const iocshArgBuf * args) {
     const char *portName   = args[0].sval;
     int addr               = args[1].ival;
-    const char *drvInfo    = args[2].sval;
-    asynOctetGetInputEos( portName, addr, drvInfo);
+    asynOctetGetInputEos( portName, addr);
 }
 
 static const iocshArg asynOctetSetOutputEosArg0 = {"portName", iocshArgString};
 static const iocshArg asynOctetSetOutputEosArg1 = {"addr", iocshArgInt};
 static const iocshArg asynOctetSetOutputEosArg2 = {"eos", iocshArgString};
-static const iocshArg asynOctetSetOutputEosArg3 = {"drvInfo", iocshArgString};
 static const iocshArg *const asynOctetSetOutputEosArgs[] = {
     &asynOctetSetOutputEosArg0, &asynOctetSetOutputEosArg1,
-    &asynOctetSetOutputEosArg2, &asynOctetSetOutputEosArg3};
+    &asynOctetSetOutputEosArg2};
 static const iocshFuncDef asynOctetSetOutputEosDef =
-    {"asynOctetSetOutputEos", 4, asynOctetSetOutputEosArgs};
+    {"asynOctetSetOutputEos", 3, asynOctetSetOutputEosArgs};
 static void asynOctetSetOutputEosCall(const iocshArgBuf * args) {
     const char *portName   = args[0].sval;
     int addr               = args[1].ival;
     const char *eos        = args[2].sval;
-    const char *drvInfo    = args[3].sval;
-    asynOctetSetOutputEos( portName, addr, eos , drvInfo);
+    asynOctetSetOutputEos( portName, addr, eos);
 }
 
 static const iocshArg asynOctetGetOutputEosArg0 = {"portName", iocshArgString};
 static const iocshArg asynOctetGetOutputEosArg1 = {"addr", iocshArgInt};
-static const iocshArg asynOctetGetOutputEosArg2 = {"drvInfo", iocshArgString};
 static const iocshArg *const asynOctetGetOutputEosArgs[] = {
-    &asynOctetGetOutputEosArg0, &asynOctetGetOutputEosArg1,
-    &asynOctetGetOutputEosArg2};
+    &asynOctetGetOutputEosArg0, &asynOctetGetOutputEosArg1};
 static const iocshFuncDef asynOctetGetOutputEosDef =
-    {"asynOctetGetOutputEos", 3, asynOctetGetOutputEosArgs};
+    {"asynOctetGetOutputEos", 2, asynOctetGetOutputEosArgs};
 static void asynOctetGetOutputEosCall(const iocshArgBuf * args) {
     const char *portName   = args[0].sval;
     int addr               = args[1].ival;
-    const char *drvInfo    = args[2].sval;
-    asynOctetGetOutputEos( portName, addr, drvInfo);
+    asynOctetGetOutputEos( portName, addr);
 }
 
 static const iocshArg asynWaitConnectArg0 = {"portName", iocshArgString};
