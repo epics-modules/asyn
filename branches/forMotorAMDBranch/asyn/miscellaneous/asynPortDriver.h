@@ -5,6 +5,7 @@
 #include <epicsMutex.h>
 
 #include <asynStandardInterfaces.h>
+#include <asynParamTypes.h>
 
 epicsShareFunc void* findAsynPortDriver(const char *portName);
 
@@ -24,22 +25,6 @@ epicsShareFunc void* findAsynPortDriver(const char *portName);
 #define asynFloat32ArrayMask    0x00000400
 #define asynFloat64ArrayMask    0x00000800
 #define asynGenericPointerMask  0x00001000
-
-/** Parameter data types for the parameter library */
-typedef enum
-{
-  asynParamUndefined, /**< Undefined */
-  asynParamInt32,
-  asynParamUInt32Digital,
-  asynParamFloat64,
-  asynParamOctet,
-  asynParamInt8Array,
-  asynParamInt16Array,
-  asynParamInt32Array,
-  asynParamFloat32Array,
-  asynParamFloat64Array,
-  asynParamGenericPointer
-} asynParamType;
 
 /** Structure for storing parameter value in parameter library */
 typedef struct
@@ -66,12 +51,8 @@ typedef struct
   } data;
 } paramVal;
 
-/* Synonyms for some unused asyn error codes for use by parameter library */
-#define asynParamAlreadyExists  asynTimeout
-#define asynParamNotFound       asynOverflow
-#define asynParamWrongType      asynDisconnected
-#define asynParamBadIndex       asynDisabled
-#define asynParamUndefined      asynError
+//Forward Declaration
+class ParamVal;
 
 /** Class to support parameter library (also called parameter list); 
  * set and get values indexed by parameter number (pasynUser->reason)
@@ -82,10 +63,12 @@ class paramList
 {
 public:
   paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
+ // paramList();
   ~paramList();
   asynStatus createParam(const char *name, asynParamType type, int *index);
   asynStatus findParam(const char *name, int *index);
   asynStatus getName(int index, const char **name);
+
   asynStatus setInteger(int index, int value);
   asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 mask);
   asynStatus setDouble(int index, double value);
@@ -99,25 +82,27 @@ public:
   asynStatus clearUInt32Interrupt(int index, epicsUInt32 mask);
   asynStatus getUInt32Interrupt(int index, epicsUInt32 *mask,
       interruptReason reason);
+
   asynStatus callCallbacks(int addr);
   asynStatus callCallbacks();
   void report(FILE *fp, int details);
   bool isIndexInvalid(int & index);
-
-private:
   asynStatus setFlag(int index);
+  asynStatus float64Callback(int command, int addr, epicsFloat64 value);
   asynStatus int32Callback(int command, int addr, epicsInt32 value);
+  asynStatus octetCallback(int command, int addr, char *value);
   asynStatus uint32Callback(int command, int addr, epicsUInt32 value,
       epicsUInt32 interruptMask);
-  asynStatus float64Callback(int command, int addr, epicsFloat64 value);
-  asynStatus octetCallback(int command, int addr, char *value);
+
+private:
   int nextParam;
   int nVals;
   int nFlags;
   asynStandardInterfaces *pasynInterfaces;
   int *flags;
-  paramVal *vals;
+  ParamVal **vals;
 };
+
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
  * with standard asyn interfaces and a parameter library. */

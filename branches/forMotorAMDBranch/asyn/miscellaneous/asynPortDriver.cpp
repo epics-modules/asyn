@@ -23,6 +23,8 @@
 #define epicsExportSharedSymbols
 #include <shareLib.h>
 #include "asynPortDriver.h"
+#include "ParamVal.h"
+#include "ParamFactory.h"
 
 static const char *driverName = "asynPortDriver";
 
@@ -57,9 +59,20 @@ void asynPortDriver::callbackTask()
 paramList::paramList(int nVals, asynStandardInterfaces *pasynInterfaces) :
   nextParam(0), nVals(nVals), nFlags(0), pasynInterfaces(pasynInterfaces)
 {
-  vals = (paramVal *) calloc(nVals, sizeof(paramVal));
+  vals = (ParamVal **) calloc(nVals, sizeof(ParamVal));
+  int ii;
+  char emptyName[10];
+  for (ii=0; ii<nVals; ii++){
+    sprintf(emptyName, "Empty_%d", ii);
+    vals[ii] = new ParamVal(emptyName, ii, this);
+  }
   flags = (int *) calloc(nVals, sizeof(int));
 }
+
+/*paramList::paramList() : nextParam(0), nVals(0), nFlags(0), pasynInterfaces(0)
+{
+
+}*/
 
 /** Destructor for paramList class; frees resources allocated in constructor */
 paramList::~paramList()
@@ -98,9 +111,11 @@ asynStatus paramList::createParam(const char *name, asynParamType type,
   *index = this->nextParam++;
   if (*index < 0 || *index >= this->nVals)
     return asynParamBadIndex;
-  this->vals[*index].name = epicsStrDup(name);
-  this->vals[*index].type = type;
-  this->vals[*index].valueDefined = 0;
+  delete this->vals[*index];
+  this->vals[*index] = ParamFactory::createParam(name, type, *index, this);
+//  this->vals[*index].name = epicsStrDup(name);
+//  this->vals[*index].type = type;
+//  this->vals[*index].valueDefined = 0;
   return asynSuccess;
 }
 
@@ -112,8 +127,8 @@ asynStatus paramList::findParam(const char *name, int *index)
 {
   for (*index = 0; *index < this->nVals; (*index)++)
   {
-    if (name && this->vals[*index].name && (epicsStrCaseCmp(name,
-        this->vals[*index].name) == 0))
+    if (name && this->vals[*index]->getName() && (epicsStrCaseCmp(name,
+        this->vals[*index]->getName()) == 0))
       return asynSuccess;
   }
   return asynParamNotFound;
@@ -130,9 +145,12 @@ bool paramList::isIndexInvalid(int & index)
  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parametertype is not asynParamInt32. */
 asynStatus paramList::setInteger(int index, int value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamInt32)
+  retStat = this->vals[index]->set(value);
+  /*
+  if (this->vals[index].getType() != asynParamInt32)
     return asynParamWrongType;
   if ((!this->vals[index].valueDefined) || (this->vals[index].data.ival
       != value))
@@ -141,7 +159,8 @@ asynStatus paramList::setInteger(int index, int value)
     setFlag(index);
     this->vals[index].data.ival = value;
   }
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Sets the value for an integer in the parameter library.
@@ -151,21 +170,24 @@ asynStatus paramList::setInteger(int index, int value)
  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
 asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 mask)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamUInt32Digital)
-    return asynParamWrongType;
-  if ((!this->vals[index].valueDefined) || (this->vals[index].data.uival
-      != value))
-  {
-    this->vals[index].valueDefined = 1;
-    setFlag(index);
-    /* Set any bits that are set in the value and the mask */
-    this->vals[index].data.uival |= (value & mask);
-    /* Clear bits that are clear in the value and set in the mask */
-    this->vals[index].data.uival &= (value | ~mask);
-  }
-  return asynSuccess;
+  retStat = this->vals[index]->set(value, mask);
+
+//  if (this->vals[index].getType() != asynParamUInt32Digital)
+//    return asynParamWrongType;
+//  if ((!this->vals[index].valueDefined) || (this->vals[index].data.uival
+//      != value))
+//  {
+//    this->vals[index].valueDefined = 1;
+//    setFlag(index);
+//    /* Set any bits that are set in the value and the mask */
+//    this->vals[index].data.uival |= (value & mask);
+//    /* Clear bits that are clear in the value and set in the mask */
+//    this->vals[index].data.uival &= (value | ~mask);
+//  }
+  return retStat;
 }
 
 /** Sets the value for a double in the parameter library.
@@ -174,9 +196,12 @@ asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 mask)
  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamFloat64. */
 asynStatus paramList::setDouble(int index, double value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamFloat64)
+  retStat = this->vals[index]->set(value);
+  /*
+  if (this->vals[index].getType() != asynParamFloat64)
     return asynParamWrongType;
   if ((!this->vals[index].valueDefined) || (this->vals[index].data.dval
       != value))
@@ -185,7 +210,8 @@ asynStatus paramList::setDouble(int index, double value)
     setFlag(index);
     this->vals[index].data.dval = value;
   }
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Sets the value for a string in the parameter library.
@@ -194,9 +220,11 @@ asynStatus paramList::setDouble(int index, double value)
  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
 asynStatus paramList::setString(int index, const char *value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamOctet)
+  retStat = this->vals[index]->set(value);
+  /*  if (this->vals[index].getType() != asynParamOctet)
     return asynParamWrongType;
   if ((!this->vals[index].valueDefined) || (strcmp(this->vals[index].data.sval,
       value)))
@@ -206,7 +234,8 @@ asynStatus paramList::setString(int index, const char *value)
     free(this->vals[index].data.sval);
     this->vals[index].data.sval = epicsStrDup(value);
   }
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Returns the value for an integer from the parameter library.
@@ -216,14 +245,18 @@ asynStatus paramList::setString(int index, const char *value)
  * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getInteger(int index, int *value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamInt32)
+  retStat = this->vals[index]->get(value);
+/*
+  if (this->vals[index].getType() != asynParamInt32)
     return asynParamWrongType;
   if (!this->vals[index].valueDefined)
     return asynParamUndefined;
   *value = this->vals[index].data.ival;
-  return asynSuccess;
+*/
+  return retStat;
 }
 
 /** Returns the value for an integer from the parameter library.
@@ -234,14 +267,18 @@ asynStatus paramList::getInteger(int index, int *value)
  * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamUInt32Digital)
+  retStat = this->vals[index]->get(value, mask);
+/*
+  if (this->vals[index].getType() != asynParamUInt32Digital)
     return asynParamWrongType;
   if (!this->vals[index].valueDefined)
     return asynParamUndefined;
   *value = this->vals[index].data.uival & mask;
-  return asynSuccess;
+*/
+  return retStat;
 }
 
 /** Returns the value for a double from the parameter library.
@@ -251,14 +288,18 @@ asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
  * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getDouble(int index, double *value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamFloat64)
+  retStat = this->vals[index]->get(value);
+/*
+  if (this->vals[index].getType() != asynParamFloat64)
     return asynParamWrongType;
   if (!this->vals[index].valueDefined)
     return asynParamUndefined;
   *value = this->vals[index].data.dval;
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Sets the value of the UInt32Interrupt in the parameter library.
@@ -270,13 +311,17 @@ asynStatus paramList::getDouble(int index, double *value)
 asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
     interruptReason reason)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamUInt32Digital)
+  retStat = this->vals[index]->setUInt32Interrupt(mask, reason);
+  /*
+  if (this->vals[index].getType() != asynParamUInt32Digital)
     return asynParamWrongType;
   this->vals[index].uInt32InterruptMask = mask;
   this->vals[index].uInt32InterruptReason = reason;
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Clears the UInt32Interrupt in the parameter library.
@@ -286,12 +331,16 @@ asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
  * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
 asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamUInt32Digital)
+  retStat = this->vals[index]->clearUInt32Interrupt(mask);
+  /*
+  if (this->vals[index].getType() != asynParamUInt32Digital)
     return asynParamWrongType;
   this->vals[index].uInt32InterruptMask = mask;
-  return asynSuccess;
+  */
+  return retStat;
 }
 
 /** Returns the UInt32Interrupt from the parameter library.
@@ -303,12 +352,16 @@ asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
 asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
     interruptReason reason)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamUInt32Digital)
+  retStat = this->vals[index]->getUInt32Interrupt(mask, reason);
+/*
+  if (this->vals[index].getType() != asynParamUInt32Digital)
     return asynParamWrongType;
   *mask = this->vals[index].uInt32InterruptMask;
-  return asynSuccess;
+*/
+  return retStat;
 }
 
 /** Returns the value for a string from the parameter library.
@@ -319,9 +372,12 @@ asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
  * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getString(int index, int maxChars, char *value)
 {
+  asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  if (this->vals[index].type != asynParamOctet)
+  retStat = this->vals[index]->get(maxChars, value);
+  /*
+  if (this->vals[index].getType() != asynParamOctet)
     return asynParamWrongType;
   if (!this->vals[index].valueDefined)
     return asynParamUndefined;
@@ -330,7 +386,8 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
     strncpy(value, this->vals[index].data.sval, maxChars - 1);
     value[maxChars - 1] = '\0';
   }
-  return asynSuccess;
+*/
+  return retStat;
 }
 
 /** Returns the name of a parameter from the parameter library.
@@ -341,7 +398,7 @@ asynStatus paramList::getName(int index, const char **value)
 {
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  *value = (const char *) this->vals[index].name;
+  *value = (const char *) this->vals[index]->getName();
   return asynSuccess;
 }
 
@@ -489,9 +546,11 @@ asynStatus paramList::callCallbacks(int addr)
   for (i = 0; i < this->nFlags; i++)
   {
     index = this->flags[i];
-    if (!this->vals[index].valueDefined)
+    this->vals[index]->callCallback(addr);
+    /*
+    if (!this->vals[index].isValueDefined())
       return (status);
-    switch (this->vals[index].type)
+    switch (this->vals[index].getType())
     {
     case asynParamInt32:
       status = int32Callback(index, addr, this->vals[index].data.ival);
@@ -509,6 +568,7 @@ asynStatus paramList::callCallbacks(int addr)
     default:
       break;
     }
+ */
   }
   this->nFlags = 0;
   return (status);
@@ -533,6 +593,9 @@ void paramList::report(FILE *fp, int details)
     return;
   for (i = 0; i < this->nVals; i++)
   {
+    this->vals[i]->report(fp, details);
+/**
+ *
     switch (this->vals[i].type)
     {
     case asynParamInt32:
@@ -624,8 +687,9 @@ void paramList::report(FILE *fp, int details)
     default:
       fprintf(fp, "Parameter %d is undefined, name=%s\n", i, this->vals[i].name);
       break;
-    }
+    }*/
   }
+
 }
 
 /** Return the number of parameters defined by the port controller.  This is a template method
