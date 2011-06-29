@@ -14,7 +14,7 @@ OctetParam::OctetParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
                       sValue(0)
 {
-  type = asynParamInt32Array;
+  type = asynParamOctet;
 }
 
 asynStatus OctetParam::get(unsigned int maxChars, char *value){

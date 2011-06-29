@@ -15,8 +15,10 @@ public:
   OctetParam(const char *name, int index, paramList *parentList);
   virtual asynStatus get(unsigned int maxChars, char *value);
   virtual asynStatus set(const char *value);
-  virtual void reportDefinedValue(FILE *fp, int details);
   virtual asynStatus callCallback(int addr);
+
+protected:
+  virtual void reportDefinedValue(FILE *fp, int details);
 
 private:
   char *sValue;
