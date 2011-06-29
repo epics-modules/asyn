@@ -26,30 +26,30 @@ epicsShareFunc void* findAsynPortDriver(const char *portName);
 #define asynFloat64ArrayMask    0x00000800
 #define asynGenericPointerMask  0x00001000
 
-/** Structure for storing parameter value in parameter library */
-typedef struct
-{
-  asynParamType type; /**< Parameter data type */
-  char *name; /**< Parameter name */
-  bool valueDefined;
-  epicsUInt32 uInt32Mask;
-  epicsUInt32 uInt32InterruptMask;
-  epicsUInt32 uInt32InterruptReason;
-  /** Union for parameter value */
-  union
-  {
-    epicsInt32 ival;
-    epicsUInt32 uival;
-    epicsFloat64 dval;
-    char *sval;
-    epicsInt8 *pi8;
-    epicsInt16 *pi16;
-    epicsInt32 *pi32;
-    epicsFloat32 *pf32;
-    epicsFloat64 *pf64;
-    void *pgp;
-  } data;
-} paramVal;
+///** Structure for storing parameter value in parameter library */
+//typedef struct
+//{
+//  asynParamType type; /**< Parameter data type */
+//  char *name; /**< Parameter name */
+//  bool valueDefined;
+//  epicsUInt32 uInt32Mask;
+// epicsUInt32 uInt32InterruptMask;
+//  epicsUInt32 uInt32InterruptReason;
+//  /** Union for parameter value */
+//  union
+//  {
+//    epicsInt32 ival;
+//    epicsUInt32 uival;
+//    epicsFloat64 dval;
+//    char *sval;
+//    epicsInt8 *pi8;
+//    epicsInt16 *pi16;
+//    epicsInt32 *pi32;
+//    epicsFloat32 *pf32;
+//    epicsFloat64 *pf64;
+//    void *pgp;
+//  } data;
+//} paramVal;
 
 //Forward Declaration
 class ParamVal;
@@ -69,10 +69,10 @@ public:
   asynStatus findParam(const char *name, int *index);
   asynStatus getName(int index, const char **name);
 
-  asynStatus setInteger(int index, int value);
-  asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 mask);
-  asynStatus setDouble(int index, double value);
-  asynStatus setString(int index, const char *string);
+//  asynStatus setInteger(int index, int value);
+//  asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 mask);
+//  asynStatus setDouble(int index, double value);
+//  asynStatus setString(int index, const char *string);
   asynStatus getInteger(int index, int *value);
   asynStatus getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask);
   asynStatus getDouble(int index, double *value);
@@ -86,7 +86,9 @@ public:
   asynStatus callCallbacks(int addr);
   asynStatus callCallbacks();
   void report(FILE *fp, int details);
-  bool isIndexInvalid(int & index);
+  bool isIndexValid(int &index);
+  ParamVal* getParam(int &index);
+
   asynStatus setFlag(int index);
   asynStatus float64Callback(int command, int addr, epicsFloat64 value);
   asynStatus int32Callback(int command, int addr, epicsInt32 value);

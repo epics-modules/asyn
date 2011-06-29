@@ -134,109 +134,121 @@ asynStatus paramList::findParam(const char *name, int *index)
   return asynParamNotFound;
 }
 
-bool paramList::isIndexInvalid(int & index)
+bool paramList::isIndexValid(int & index)
 {
-    return index < 0 || index >= this->nVals;
+    return (index >= 0) && (index < this->nVals);
+}
+
+ParamVal* paramList::getParam(int &index)
+{
+  ParamVal* retParam = NULL;
+  if(isIndexValid(index)){
+    retParam = vals[index];
+  }
+  else {
+    // TODO - need to find the appropriate flag for this.
+  }
+  return retParam;
 }
 
 /** Sets the value for an integer in the parameter library.
  * \param[in] index The parameter number
  * \param[in] value Value to set.
  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parametertype is not asynParamInt32. */
-asynStatus paramList::setInteger(int index, int value)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  retStat = this->vals[index]->set(value);
-  /*
-  if (this->vals[index].getType() != asynParamInt32)
-    return asynParamWrongType;
-  if ((!this->vals[index].valueDefined) || (this->vals[index].data.ival
-      != value))
-  {
-    this->vals[index].valueDefined = 1;
-    setFlag(index);
-    this->vals[index].data.ival = value;
-  }
-  */
-  return retStat;
-}
-
-/** Sets the value for an integer in the parameter library.
- * \param[in] index The parameter number
- * \param[in] value Value to set.
- * \param[in] mask Mask to use when setting the value.
- * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
-asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 mask)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  retStat = this->vals[index]->set(value, mask);
-
-//  if (this->vals[index].getType() != asynParamUInt32Digital)
+//asynStatus paramList::setInteger(int index, int value)
+//{
+//  asynStatus retStat = asynSuccess;
+//  if (!isIndexValid(index))
+//    return asynParamBadIndex;
+//  retStat = this->vals[index]->set(value);
+//  /*
+//  if (this->vals[index].getType() != asynParamInt32)
 //    return asynParamWrongType;
-//  if ((!this->vals[index].valueDefined) || (this->vals[index].data.uival
+//  if ((!this->vals[index].valueDefined) || (this->vals[index].data.ival
 //      != value))
 //  {
 //    this->vals[index].valueDefined = 1;
 //    setFlag(index);
-//    /* Set any bits that are set in the value and the mask */
-//    this->vals[index].data.uival |= (value & mask);
-//    /* Clear bits that are clear in the value and set in the mask */
-//    this->vals[index].data.uival &= (value | ~mask);
+//    this->vals[index].data.ival = value;
 //  }
-  return retStat;
-}
+//  */
+//  return retStat;
+//}
 
-/** Sets the value for a double in the parameter library.
- * \param[in] index The parameter number
- * \param[in] value Value to set.
- * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamFloat64. */
-asynStatus paramList::setDouble(int index, double value)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  retStat = this->vals[index]->set(value);
-  /*
-  if (this->vals[index].getType() != asynParamFloat64)
-    return asynParamWrongType;
-  if ((!this->vals[index].valueDefined) || (this->vals[index].data.dval
-      != value))
-  {
-    this->vals[index].valueDefined = 1;
-    setFlag(index);
-    this->vals[index].data.dval = value;
-  }
-  */
-  return retStat;
-}
+///** Sets the value for an integer in the parameter library.
+// * \param[in] index The parameter number
+// * \param[in] value Value to set.
+// * \param[in] mask Mask to use when setting the value.
+// * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
+//asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 mask)
+//{
+//  asynStatus retStat = asynSuccess;
+//  if (index < 0 || index >= this->nVals)
+//    return asynParamBadIndex;
+//  retStat = this->vals[index]->set(value, mask);
+//
+////  if (this->vals[index].getType() != asynParamUInt32Digital)
+////    return asynParamWrongType;
+////  if ((!this->vals[index].valueDefined) || (this->vals[index].data.uival
+////      != value))
+////  {
+////    this->vals[index].valueDefined = 1;
+////    setFlag(index);
+////    /* Set any bits that are set in the value and the mask */
+////    this->vals[index].data.uival |= (value & mask);
+////    /* Clear bits that are clear in the value and set in the mask */
+////    this->vals[index].data.uival &= (value | ~mask);
+////  }
+//  return retStat;
+//}
 
-/** Sets the value for a string in the parameter library.
- * \param[in] index The parameter number
- * \param[out] value Address of value to set.
- * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
-asynStatus paramList::setString(int index, const char *value)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  retStat = this->vals[index]->set(value);
-  /*  if (this->vals[index].getType() != asynParamOctet)
-    return asynParamWrongType;
-  if ((!this->vals[index].valueDefined) || (strcmp(this->vals[index].data.sval,
-      value)))
-  {
-    this->vals[index].valueDefined = 1;
-    setFlag(index);
-    free(this->vals[index].data.sval);
-    this->vals[index].data.sval = epicsStrDup(value);
-  }
-  */
-  return retStat;
-}
+///** Sets the value for a double in the parameter library.
+// * \param[in] index The parameter number
+// * \param[in] value Value to set.
+// * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamFloat64. */
+//asynStatus paramList::setDouble(int index, double value)
+//{
+//  asynStatus retStat = asynSuccess;
+//  if (index < 0 || index >= this->nVals)
+//    return asynParamBadIndex;
+//  retStat = this->vals[index]->set(value);
+//  /*
+//  if (this->vals[index].getType() != asynParamFloat64)
+//    return asynParamWrongType;
+//  if ((!this->vals[index].valueDefined) || (this->vals[index].data.dval
+//      != value))
+//  {
+//    this->vals[index].valueDefined = 1;
+//    setFlag(index);
+//    this->vals[index].data.dval = value;
+//  }
+//  */
+//  return retStat;
+//}
+
+///** Sets the value for a string in the parameter library.
+// * \param[in] index The parameter number
+// * \param[out] value Address of value to set.
+// * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
+//asynStatus paramList::setString(int index, const char *value)
+//{
+//  asynStatus retStat = asynSuccess;
+//  if (index < 0 || index >= this->nVals)
+//    return asynParamBadIndex;
+//  retStat = this->vals[index]->set(value);
+//  /*  if (this->vals[index].getType() != asynParamOctet)
+//    return asynParamWrongType;
+//  if ((!this->vals[index].valueDefined) || (strcmp(this->vals[index].data.sval,
+//      value)))
+//  {
+//    this->vals[index].valueDefined = 1;
+//    setFlag(index);
+//    free(this->vals[index].data.sval);
+//    this->vals[index].data.sval = epicsStrDup(value);
+//  }
+//  */
+//  return retStat;
+//}
 
 /** Returns the value for an integer from the parameter library.
  * \param[in] index The parameter number
@@ -877,8 +889,11 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
 {
   asynStatus status;
   static const char *functionName = "setIntegerParam";
-
-  status = this->params[list]->setInteger(index, value);
+  if (this->params[list]->isIndexValid(index))
+    status = this->params[list]->getParam(index)->set(value);
+  else
+    status = asynParamBadIndex;
+//  status = this->params[list]->setInteger(index, value);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -906,8 +921,11 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index,
 {
   asynStatus status;
   static const char *functionName = "setUIntDigitalParam";
-
-  status = this->params[list]->setUInt32(index, value, mask);
+  if (this->params[list]->isIndexValid(index))
+    status = this->params[list]->getParam(index)->set(value, mask);
+  else
+    status = asynParamBadIndex;
+//  status = this->params[list]->setUInt32(index, value, mask);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -1016,8 +1034,12 @@ asynStatus asynPortDriver::setDoubleParam(int list, int index, double value)
 {
   asynStatus status;
   static const char *functionName = "setDoubleParam";
+  if (this->params[list]->isIndexValid(index))
+    status = this->params[list]->getParam(index)->set(value);
+  else
+    status = asynParamBadIndex;
 
-  status = this->params[list]->setDouble(index, value);
+//  status = this->params[list]->setDouble(index, value);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -1043,7 +1065,11 @@ asynStatus asynPortDriver::setStringParam(int list, int index,
   asynStatus status;
   static const char *functionName = "setStringParam";
 
-  status = this->params[list]->setString(index, value);
+  if (this->params[list]->isIndexValid(index))
+    status = this->params[list]->getParam(index)->set(value);
+  else
+    status = asynParamBadIndex;
+//  status = this->params[list]->setString(index, value);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
