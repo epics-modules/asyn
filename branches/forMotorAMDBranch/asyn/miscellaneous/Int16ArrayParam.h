@@ -13,6 +13,8 @@ class Int16ArrayParam: public ParamVal
 {
 public:
   Int16ArrayParam(const char *name, int index, paramList *parentList);
+
+protected:
   virtual void reportDefinedValue(FILE *fp, int details);
 
 private:

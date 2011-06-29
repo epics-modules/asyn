@@ -15,8 +15,10 @@ public:
   Int32Param(const char *name, int index, paramList *parentList);
   virtual asynStatus get(int *value);
   virtual asynStatus set(int value);
-  virtual void reportDefinedValue(FILE *fp, int details);
   virtual asynStatus callCallback(int addr);
+
+protected:
+  virtual void reportDefinedValue(FILE *fp, int details);
 
 private:
   epicsInt32 value;
