@@ -12,7 +12,7 @@ Float64Param::Float64Param(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
                          value(0.0)
 {
-  type = asynParamInt32;
+  type = asynParamFloat64;
 }
 
 /** Get the value of the parameter as an double
@@ -48,7 +48,7 @@ asynStatus Float64Param::set(double value)
   return asynSuccess;
 }
 
-void Float64Param::report(FILE *fp, int details)
+void Float64Param::reportDefinedValue(FILE *fp, int details)
 {
   fprintf(fp, "Parameter %d type=%s, name=%s, value=%f\n", getIndex(),
       getTypeName(), getName(), value);

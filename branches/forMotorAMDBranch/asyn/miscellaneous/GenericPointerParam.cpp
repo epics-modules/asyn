@@ -14,7 +14,7 @@ GenericPointerParam::GenericPointerParam(const char *name, int index, paramList 
   type = asynParamGenericPointer;
 }
 
-void GenericPointerParam::report(FILE *fp, int details)
+void GenericPointerParam::reportDefinedValue(FILE *fp, int details)
 {
   fprintf(fp, "Parameter %d type=%s, name=%s, value=%p\n",
       getIndex(), getTypeName(), getName(), pValue);

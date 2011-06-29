@@ -14,7 +14,9 @@ class GenericPointerParam: public ParamVal
 {
 public:
   GenericPointerParam(const char *name, int index, paramList *parentList);
-  virtual void report(FILE *fp, int details);
+
+protected:
+  virtual void reportDefinedValue(FILE *fp, int details);
 private:
   void *pValue;
 };

@@ -15,8 +15,10 @@ public:
   Float64Param(const char *name, int index, paramList *parentList);
   virtual asynStatus get(double *value);
   virtual asynStatus set(double value);
-  virtual void report(FILE *fp, int details);
   virtual asynStatus callCallback(int addr);
+
+protected:
+  virtual void reportDefinedValue(FILE *fp, int details);
 
 private:
   epicsFloat64 value;
