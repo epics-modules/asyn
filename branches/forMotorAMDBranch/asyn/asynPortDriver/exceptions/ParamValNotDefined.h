@@ -10,6 +10,10 @@
 #include <ParamVal.h>
 #include <ParamValException.h>
 
+/** This is an Exception that should be thrown when a
+ * parameter method is trying to return a value when
+ * the value has not been defined.
+ */
 class ParamValNotDefined: public ParamValException
 {
 public:
