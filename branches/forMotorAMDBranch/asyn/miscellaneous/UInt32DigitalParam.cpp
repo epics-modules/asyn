@@ -11,12 +11,12 @@
 UInt32DigitalParam::UInt32DigitalParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList), value(0)
 {
-  type = asynParamInt32Array;
+  type = asynParamUInt32Digital;
   uInt32InterruptMask = 0;
   uInt32InterruptReason = 0;
 }
 
-asynStatus UInt32DigitalParam::setUInt32(epicsUInt32 value, epicsUInt32 mask)
+asynStatus UInt32DigitalParam::set(epicsUInt32 value, epicsUInt32 mask)
 {
   setMaskedSetBits(value, mask);
   clearMaskedClearBits(value, mask);
@@ -25,7 +25,7 @@ asynStatus UInt32DigitalParam::setUInt32(epicsUInt32 value, epicsUInt32 mask)
   return asynSuccess;
 }
 
-asynStatus UInt32DigitalParam::getUInt32(epicsUInt32 *value, epicsUInt32 mask)
+asynStatus UInt32DigitalParam::get(epicsUInt32 *value, epicsUInt32 mask)
 {
   asynStatus retStat = asynParamUndefined;
   if (isValueDefined())
