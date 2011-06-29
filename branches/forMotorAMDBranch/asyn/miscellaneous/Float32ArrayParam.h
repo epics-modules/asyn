@@ -13,6 +13,8 @@ class Float32ArrayParam: public ParamVal
 {
 public:
   Float32ArrayParam(const char *name, int index, paramList *parentList);
+
+protected:
   virtual void reportDefinedValue(FILE *fp, int details);
 
 private:
