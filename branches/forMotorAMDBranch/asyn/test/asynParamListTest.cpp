@@ -12,6 +12,9 @@
 #include <string.h>
 
 #include "asynPortDriver.h"
+#include "ParamVal.h"
+#include "ParamListInvalidIndex.h"
+#include "ParamValInvalidMethod.h"
 #include "epicsUnitTest.h"
 #include "testMain.h"
 const char PARAM1[] = "PARAM1";
@@ -25,6 +28,13 @@ const char PARAM8[] = "PARAM8";
 const char PARAM9[] = "PARAM9";
 const char PARAM10[] = "PARAM10";
 const char PARAM11[] = "PARAM11";
+const char paramListPassMessage[] =
+    "ParamList::%s for index %d should have passed";
+const char paramListFailMessage[] =
+    "ParamList::%s for index %d should have failed";
+const char paramListFailWrongReasonMessage[] =
+    "ParamList::%s for index %d should have failed, "
+      "but failed for the wrong reason";
 
 void testCreateParam(const char *paramName, paramList *pList,
     asynParamType pType, asynStatus expResult, int expIndex)
@@ -57,6 +67,48 @@ void testCreateParams(paramList *pList)
       10);
   testCreateParam(PARAM11, pList, asynParamGenericPointer, asynParamBadIndex,
       10);
+}
+
+void testGetParam(paramList *pList, int index, bool expectToPass)
+{
+  const char getParamString[] = "getParam";
+  if (expectToPass)
+  {
+    try
+    {
+      pList->getParam(index);
+      testPass(paramListPassMessage, getParamString, index);
+    } catch (ParamListInvalidIndex&)
+    {
+      testFail(paramListPassMessage, getParamString, index);
+    }
+  }
+  else
+  {
+    try
+    {
+      pList->getParam(index);
+      testFail(paramListFailMessage, getParamString, index);
+    } catch (ParamListInvalidIndex&)
+    {
+      testPass(paramListFailMessage, getParamString, index);
+    }
+  }
+}
+
+void testGetParams(paramList *pList)
+{
+  testGetParam(pList, 0, true);
+  testGetParam(pList, 1, true);
+  testGetParam(pList, 2, true);
+  testGetParam(pList, 3, true);
+  testGetParam(pList, 4, true);
+  testGetParam(pList, 5, true);
+  testGetParam(pList, 6, true);
+  testGetParam(pList, 7, true);
+  testGetParam(pList, 8, true);
+  testGetParam(pList, 9, true);
+  testGetParam(pList, 10, false);
 }
 
 void tesstFindParams(const char *paramName, paramList *pList,
@@ -115,64 +167,126 @@ void testGetNames(paramList *pList)
   testGetName(10, pList, asynParamBadIndex, PARAM1);
 }
 
-void testSetInteger(int index, int value, paramList *pList,
-    asynStatus expStatus)
+void testTryFailureMode(bool expectToPass, int expectedReason, int reason,
+    const char *method, int index)
+{
+  if (!expectToPass && (reason == expectedReason))
+  {
+    testPass(paramListFailMessage, method, index);
+  }
+  else
+  {
+    if (reason == expectedReason)
+    {
+      testFail(paramListFailMessage, method, index);
+    }
+    else
+    {
+      testFail(paramListFailWrongReasonMessage, method, index);
+    }
+
+  }
+}
+void testSetInteger(int index, int value, paramList *pList, bool expectToPass,
+    int expectedReason)
 {
   asynStatus status;
-  status = pList->setInteger(index, value);
-  testOk(status == expStatus, "Test setInteger for param %d", index);
-  if (expStatus == asynSuccess && status == expStatus)
+  const char setIntegerString[] = "(ParamVal->setInteger)";
+  const char getIntegerString[] = "(ParamVal->getInteger)";
+  bool passedSet = false;
+  try
   {
-    int retVal;
-    status == pList->getInteger(index, &retVal);
-    testOk(status == asynSuccess, "Check status on getInteger for param %d",
-        index);
-    if (status == asynSuccess)
+    pList->getParam(index)->setInteger(value);
+    if (expectToPass)
     {
+      testPass(paramListPassMessage, setIntegerString, index);
+      passedSet = true;
+    }
+    else
+    {
+      testFail(paramListPassMessage, setIntegerString, index);
+    }
+  }
+  catch (ParamListInvalidIndex&)
+  {
+    int reason = 2;
+    testTryFailureMode(expectToPass, expectedReason, reason, setIntegerString,
+        index);
+  }
+  catch (ParamValInvalidMethod&)
+  {
+    int reason = 1;
+    testTryFailureMode(expectToPass, expectedReason, reason, setIntegerString,
+        index);
+  }
+
+  if (expectToPass && passedSet)
+  {
+    int retVal = 32;
+    try
+    {
+      retVal = pList->getParam(index)->getInteger();
+      testPass(paramListPassMessage, getIntegerString, index);
       testOk(retVal == value,
-          "Checking returned:expected Value for param %d, %d:%d", index,
-          retVal, value);
+          "Checking returned:expected Value for param %d, %d:%d",
+          index, retVal, value);
+    }
+    catch (ParamListInvalidIndex&)
+    {
+      int reason = 2;
+      testTryFailureMode(expectToPass, expectedReason, reason,
+          setIntegerString, index);
+    }
+    catch (ParamValInvalidMethod&)
+    {
+      int reason = 1;
+      testTryFailureMode(expectToPass, expectedReason, reason,
+          setIntegerString, index);
     }
   }
 }
 
 void testSetIntegers(paramList *pList)
 {
-  testSetInteger(0, 5, pList, asynSuccess);
-  testSetInteger(0, -5, pList, asynSuccess);
-  testSetInteger(0, 0, pList, asynSuccess);
-  testSetInteger(0, -2147483648, pList, asynSuccess);
-  testSetInteger(0, 2147483647, pList, asynSuccess);
-  testSetInteger(1, 5, pList, asynParamWrongType);
-  testSetInteger(2, 5, pList, asynParamWrongType);
-  testSetInteger(3, 5, pList, asynParamWrongType);
-  testSetInteger(4, 5, pList, asynParamWrongType);
-  testSetInteger(5, 5, pList, asynParamWrongType);
-  testSetInteger(6, 5, pList, asynParamWrongType);
-  testSetInteger(7, 5, pList, asynParamWrongType);
-  testSetInteger(8, 5, pList, asynParamWrongType);
-  testSetInteger(9, 5, pList, asynParamWrongType);
-  testSetInteger(10, 5, pList, asynParamBadIndex);
+  testSetInteger(0, 5, pList, true, 0);
+  testSetInteger(0, -5, pList, true, 0);
+  testSetInteger(0, 0, pList, true, 0);
+  testSetInteger(0, -2147483648, pList, true, 0);
+  testSetInteger(0, 2147483647, pList, true, 0);
+  testSetInteger(1, 5, pList, false, 1);
+  testSetInteger(2, 5, pList, false, 1);
+  testSetInteger(3, 5, pList, false, 1);
+  testSetInteger(4, 5, pList, false, 1);
+  testSetInteger(5, 5, pList, false, 1);
+  testSetInteger(6, 5, pList, false, 1);
+  testSetInteger(7, 5, pList, false, 1);
+  testSetInteger(8, 5, pList, false, 1);
+  testSetInteger(9, 5, pList, false, 1);
+  testSetInteger(10, 5, pList, false, 2);
 }
 
 MAIN(asynParamListTest)
 {
-  int numCreateTests = 22;
+  int numCreateTests = 26;
+  int numGetParamsTests = 11;
   int numFindTests = 22;
-  int numGetNameTests = 22;
+  int numGetNameTests = 21;
   int numSetIntegerTests = 25;
 
   int totalTests = 0;
   totalTests += numCreateTests;
+  totalTests += numGetParamsTests;
   totalTests += numFindTests;
   totalTests += numGetNameTests;
   totalTests += numSetIntegerTests;
 
-  testPlan( totalTests);
   asynStandardInterfaces asynStdInterfaces;
   int nVals = 10;
   paramList pList(nVals, &asynStdInterfaces);
+
+  testPlan(totalTests);
   testCreateParams(&pList);
+  testGetParams(&pList);
   testFindParams(&pList);
   testGetNames(&pList);
   testSetIntegers(&pList);
