@@ -73,11 +73,6 @@ paramList::paramList(int nVals, asynStandardInterfaces *pasynInterfaces) :
   flags = (int *) calloc(nVals, sizeof(int));
 }
 
-/*paramList::paramList() : nextParam(0), nVals(0), nFlags(0), pasynInterfaces(0)
-{
-
-}*/
-
 /** Destructor for paramList class; frees resources allocated in constructor */
 paramList::~paramList()
 {
