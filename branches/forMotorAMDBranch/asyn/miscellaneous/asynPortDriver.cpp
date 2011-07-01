@@ -152,69 +152,6 @@ ParamVal* paramList::getParam(int &index)
   return retParam;
 }
 
-///** Sets the value of the UInt32Interrupt in the parameter library.
-// * \param[in] index The parameter number
-// * \param[in] mask The interrupt mask.
-// * \param[in] reason The interrupt reason.
-// * \return Returns asynParamBadIndex if the index is not valid,
-// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-//asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
-//    interruptReason reason)
-//{
-//  asynStatus retStat = asynSuccess;
-//  if (index < 0 || index >= this->nVals)
-//    return asynParamBadIndex;
-//  try
-//  {
-//    this->vals[index]->setUInt32Interrupt(mask, reason);
-//  }
-//  catch (ParamValInvalidMethod&){
-//    retStat = asynParamWrongType;
-//  }
-//  return retStat;
-//}
-
-///** Clears the UInt32Interrupt in the parameter library.
-// * \param[in] index The parameter number
-// * \param[in] mask The interrupt mask.
-// * \return Returns asynParamBadIndex if the index is not valid,
-// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-//asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
-//{
-//  asynStatus retStat = asynSuccess;
-//  if (index < 0 || index >= this->nVals)
-//    return asynParamBadIndex;
-//  try
-//  {
-//    this->vals[index]->clearUInt32Interrupt(mask);
-//  }
-//  catch (ParamValInvalidMethod&){
-//    retStat = asynParamWrongType;
-//  }
-//  return retStat;
-//}
-
-///** Returns the UInt32Interrupt from the parameter library.
-// * \param[in] index The parameter number
-// * \param[out] mask The address of the interrupt mask to return.
-// * \param[in] reason The interrupt reason.
-// * \return Returns asynParamBadIndex if the index is not valid,
-// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-//asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
-//    interruptReason reason)
-//{
-//  asynStatus retStat = asynSuccess;
-//  if (index < 0 || index >= this->nVals)
-//    return asynParamBadIndex;
-//  try
-//  {
-//    *mask = this->vals[index]->getUInt32Interrupt(reason);
-//  }
-//  catch (ParamValInvalidMethod&){
-//    retStat = asynParamWrongType;
-//  }
-//  return retStat;
-//}
 
 /** Returns the name of a parameter from the parameter library.
  * \param[in] index The parameter number
