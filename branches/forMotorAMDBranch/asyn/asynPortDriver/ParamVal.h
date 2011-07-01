@@ -9,7 +9,6 @@
 #define ASYNPARAMETER_H_
 #include <asynStandardInterfaces.h>
 #include <asynParamTypes.h>
-#include <asynStandardInterfaces.h>
 class paramList;
 
 class ParamVal
@@ -37,12 +36,12 @@ public:
   static const char *typeNames[];
 
 protected:
+  virtual void reportDefinedValue(FILE *fp, int details);
   asynParamType type;
   bool isValueDefined();
   void markValueIsDefined();
   void notifyList();
   int getIndex();
-  virtual void reportDefinedValue(FILE *fp, int details);
   paramList *parentList;
 
 private:
