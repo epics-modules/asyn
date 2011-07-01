@@ -152,160 +152,66 @@ ParamVal* paramList::getParam(int &index)
   return retParam;
 }
 
-///** Returns the value for an integer from the parameter library.
+///** Sets the value of the UInt32Interrupt in the parameter library.
 // * \param[in] index The parameter number
-// * \param[out] value Address of value to get.
-// * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamInt32,
-// * or asynParamUndefined if the value has not been defined. */
-//asynStatus paramList::getInteger(int index, int *value)
+// * \param[in] mask The interrupt mask.
+// * \param[in] reason The interrupt reason.
+// * \return Returns asynParamBadIndex if the index is not valid,
+// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
+//asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
+//    interruptReason reason)
 //{
 //  asynStatus retStat = asynSuccess;
 //  if (index < 0 || index >= this->nVals)
 //    return asynParamBadIndex;
 //  try
 //  {
-//    *value = this->vals[index]->getInteger();
+//    this->vals[index]->setUInt32Interrupt(mask, reason);
 //  }
 //  catch (ParamValInvalidMethod&){
 //    retStat = asynParamWrongType;
-//  }
-//  catch (ParamValNotDefined&){
-//    retStat = asynParamUndefined;
 //  }
 //  return retStat;
 //}
 
-///** Returns the value for an integer from the parameter library.
+///** Clears the UInt32Interrupt in the parameter library.
 // * \param[in] index The parameter number
-// * \param[out] value Address of value to get.
-// * \param[in] mask The mask to use when getting the value.
-// * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamUInt32Digital,
-// * or asynParamUndefined if the value has not been defined. */
-//asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
+// * \param[in] mask The interrupt mask.
+// * \return Returns asynParamBadIndex if the index is not valid,
+// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
+//asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
 //{
 //  asynStatus retStat = asynSuccess;
 //  if (index < 0 || index >= this->nVals)
 //    return asynParamBadIndex;
 //  try
 //  {
-//  *value = this->vals[index]->getUInt32(mask);
+//    this->vals[index]->clearUInt32Interrupt(mask);
 //  }
 //  catch (ParamValInvalidMethod&){
 //    retStat = asynParamWrongType;
-//  }
-//  catch (ParamValNotDefined&){
-//    retStat = asynParamUndefined;
 //  }
 //  return retStat;
 //}
 
-///** Returns the value for a double from the parameter library.
+///** Returns the UInt32Interrupt from the parameter library.
 // * \param[in] index The parameter number
-// * \param[out] value Address of value to get.
-// * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamFloat64,
-// * or asynParamUndefined if the value has not been defined. */
-//asynStatus paramList::getDouble(int index, double *value)
+// * \param[out] mask The address of the interrupt mask to return.
+// * \param[in] reason The interrupt reason.
+// * \return Returns asynParamBadIndex if the index is not valid,
+// * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
+//asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
+//    interruptReason reason)
 //{
 //  asynStatus retStat = asynSuccess;
 //  if (index < 0 || index >= this->nVals)
 //    return asynParamBadIndex;
 //  try
 //  {
-//    *value = this->vals[index]->getDouble();
+//    *mask = this->vals[index]->getUInt32Interrupt(reason);
 //  }
 //  catch (ParamValInvalidMethod&){
 //    retStat = asynParamWrongType;
-//  }
-//  catch (ParamValNotDefined&){
-//    retStat = asynParamUndefined;
-//  }
-//  return retStat;
-//}
-
-/** Sets the value of the UInt32Interrupt in the parameter library.
- * \param[in] index The parameter number
- * \param[in] mask The interrupt mask.
- * \param[in] reason The interrupt reason.
- * \return Returns asynParamBadIndex if the index is not valid,
- * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
-    interruptReason reason)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  try
-  {
-    this->vals[index]->setUInt32Interrupt(mask, reason);
-  }
-  catch (ParamValInvalidMethod&){
-    retStat = asynParamWrongType;
-  }
-  return retStat;
-}
-
-/** Clears the UInt32Interrupt in the parameter library.
- * \param[in] index The parameter number
- * \param[in] mask The interrupt mask.
- * \return Returns asynParamBadIndex if the index is not valid,
- * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  try
-  {
-    this->vals[index]->clearUInt32Interrupt(mask);
-  }
-  catch (ParamValInvalidMethod&){
-    retStat = asynParamWrongType;
-  }
-  return retStat;
-}
-
-/** Returns the UInt32Interrupt from the parameter library.
- * \param[in] index The parameter number
- * \param[out] mask The address of the interrupt mask to return.
- * \param[in] reason The interrupt reason.
- * \return Returns asynParamBadIndex if the index is not valid,
- * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
-asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
-    interruptReason reason)
-{
-  asynStatus retStat = asynSuccess;
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  try
-  {
-    *mask = this->vals[index]->getUInt32Interrupt(reason);
-  }
-  catch (ParamValInvalidMethod&){
-    retStat = asynParamWrongType;
-  }
-  return retStat;
-}
-
-///** Returns the value for a string from the parameter library.
-// * \param[in] index The parameter number
-// * \param[in] maxChars Maximum number of characters to return.
-// * \param[out] value Address of value to get.
-// * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamOctet,
-// * or asynParamUndefined if the value has not been defined. */
-//asynStatus paramList::getString(int index, int maxChars, char *value)
-//{
-//  asynStatus retStat = asynSuccess;
-//  if (index < 0 || index >= this->nVals)
-//    return asynParamBadIndex;
-//  try
-//  {
-//    this->vals[index]->getString(maxChars, value);
-//  }
-//  catch (ParamValInvalidMethod&){
-//    retStat = asynParamWrongType;
-//  }
-//  catch (ParamValNotDefined&){
-//    retStat = asynParamUndefined;
 //  }
 //  return retStat;
 //}
@@ -764,10 +670,19 @@ asynStatus asynPortDriver::setUInt32DigitalInterrupt(int index,
 asynStatus asynPortDriver::setUInt32DigitalInterrupt(int list, int index,
     epicsUInt32 mask, interruptReason reason)
 {
-  asynStatus status;
+  asynStatus status = asynSuccess;
   static const char *functionName = "setUIntDigitalInterrupt";
+  try
+  {
+    this->params[list]->getParam(index)->setUInt32Interrupt(mask, reason);
+  }
+  catch (ParamValInvalidMethod&){
+    status = asynParamWrongType;
+  }
+  catch (ParamListInvalidIndex&){
+    status = asynParamBadIndex;
+  }
 
-  status = this->params[list]->setUInt32Interrupt(index, mask, reason);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -791,10 +706,19 @@ asynStatus asynPortDriver::clearUInt32DigitalInterrupt(int index,
 asynStatus asynPortDriver::clearUInt32DigitalInterrupt(int list, int index,
     epicsUInt32 mask)
 {
-  asynStatus status;
+  asynStatus status = asynSuccess;
   static const char *functionName = "clearUIntDigitalInterrupt";
+  try
+  {
+    this->params[list]->getParam(index)->clearUInt32Interrupt(mask);
+  } catch (ParamValInvalidMethod&)
+  {
+    status = asynParamWrongType;
+  } catch (ParamListInvalidIndex&)
+  {
+    status = asynParamBadIndex;
+  }
 
-  status = this->params[list]->clearUInt32Interrupt(index, mask);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -820,10 +744,20 @@ asynStatus asynPortDriver::getUInt32DigitalInterrupt(int index,
 asynStatus asynPortDriver::getUInt32DigitalInterrupt(int list, int index,
     epicsUInt32 *mask, interruptReason reason)
 {
-  asynStatus status;
+  asynStatus status = asynSuccess;
   static const char *functionName = "getUIntDigitalInterrupt";
 
-  status = this->params[list]->getUInt32Interrupt(index, mask, reason);
+  try
+  {
+    *mask = this->params[list]->getParam(index)->getUInt32Interrupt(reason);
+  } catch (ParamValInvalidMethod&)
+  {
+    status = asynParamWrongType;
+  } catch (ParamListInvalidIndex&)
+  {
+    status = asynParamBadIndex;
+  }
+
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -1480,7 +1414,7 @@ asynStatus asynPortDriver::setInterruptUInt32Digital(asynUser *pasynUser,
     return (status);
 
   /* Set the parameters in the parameter library. */
-  status = this->params[addr]->setUInt32Interrupt(function, mask, reason);
+  status = this->setUInt32DigitalInterrupt(addr, function, mask, reason);
 
   if (status)
     epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -1527,7 +1461,7 @@ asynStatus asynPortDriver::clearInterruptUInt32Digital(asynUser *pasynUser,
     return (status);
 
   /* Set the parameters in the parameter library. */
-  status = this->params[addr]->clearUInt32Interrupt(function, mask);
+  status = this->clearUInt32DigitalInterrupt(addr, function, mask);
 
   if (status)
     epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -1573,7 +1507,7 @@ asynStatus asynPortDriver::getInterruptUInt32Digital(asynUser *pasynUser,
     return (status);
 
   /* Get the parameters in the parameter library. */
-  status = this->params[addr]->getUInt32Interrupt(function, mask, reason);
+  status = this->getUInt32DigitalInterrupt(addr, function, mask, reason);
 
   if (status)
     epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,

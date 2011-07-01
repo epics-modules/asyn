@@ -48,11 +48,11 @@ public:
 //  asynStatus getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask);
 //  asynStatus getDouble(int index, double *value);
 //  asynStatus getString(int index, int maxChars, char *value);
-  asynStatus setUInt32Interrupt(int index, epicsUInt32 mask,
-      interruptReason reason);
-  asynStatus clearUInt32Interrupt(int index, epicsUInt32 mask);
-  asynStatus getUInt32Interrupt(int index, epicsUInt32 *mask,
-      interruptReason reason);
+//  asynStatus setUInt32Interrupt(int index, epicsUInt32 mask,
+//      interruptReason reason);
+//  asynStatus clearUInt32Interrupt(int index, epicsUInt32 mask);
+//  asynStatus getUInt32Interrupt(int index, epicsUInt32 *mask,
+//      interruptReason reason);
 
   asynStatus callCallbacks(int addr);
   asynStatus callCallbacks();
