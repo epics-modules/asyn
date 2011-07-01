@@ -6,7 +6,6 @@
  */
 
 #include "ParamValNotDefined.h"
-#include <epicsString.h>
 
 ParamValNotDefined::ParamValNotDefined(ParamVal *param) :
   ParamValException(param, "ParamValNotDefined", "this is a generic indicator")

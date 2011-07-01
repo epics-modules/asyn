@@ -7,20 +7,18 @@
 
 #ifndef PARAMVALEXCEPTION_H_
 #define PARAMVALEXCEPTION_H_
-#include <ParamVal.h>
+#include <APDException.h>
+class ParamVal;
 
-class ParamValException
+class ParamValException: public APDException
 {
 public:
   ParamValException(ParamVal *param, char *name, char *description);
-  virtual ~ParamValException();
 
   virtual char* getMessageString();
 
 protected:
   ParamVal *param;
-  char *description;
-  char *name;
 };
 
 #endif /* PARAMVALEXCEPTION_H_ */
