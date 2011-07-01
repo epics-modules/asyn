@@ -129,9 +129,9 @@ void ParamVal::setInteger(int value)
  * as a string.  Subclasses should override this method if
  * they can set the value as an string.
  */
-asynStatus ParamVal::set(const char *value)
+void ParamVal::setString(const char *value)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to set the value of the parameter

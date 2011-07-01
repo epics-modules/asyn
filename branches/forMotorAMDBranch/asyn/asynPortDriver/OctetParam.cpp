@@ -11,6 +11,7 @@
 #include <OctetParam.h>
 #include <ParamValStringSizeRequestTooBig.h>
 #include <ParamValNotDefined.h>
+#include <ParamListCallbackError.h>
 
 OctetParam::OctetParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -40,14 +41,20 @@ char* OctetParam::getString(unsigned int maxChars, char* value){
   return value;
 }
 
-asynStatus OctetParam::set(const char *value){
+void OctetParam::setString(const char *value){
   if (!isValueDefined() || strcmp(sValue, value) ){
     free(sValue);
     sValue = epicsStrDup(value);
     markValueIsDefined();
-    notifyList();
+    try
+    {
+      notifyList() ;
+    }
+    catch (ParamListCallbackError ex)
+    {
+      throw ex;
+    }
   }
-  return asynSuccess;
 }
 
 void OctetParam::reportDefinedValue(FILE *fp, int details)

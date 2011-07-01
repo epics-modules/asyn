@@ -27,7 +27,7 @@ public:
   virtual epicsUInt32 getUInt32Interrupt(interruptReason reason);
   virtual void setDouble(double value);
   virtual void setInteger(int value);
-  virtual asynStatus set(const char *string);
+  virtual void setString(const char *string);
   virtual void setUInt32(epicsUInt32 value, epicsUInt32 mask);
   virtual void setUInt32Interrupt(epicsUInt32 mask, interruptReason reason);
   virtual void clearUInt32Interrupt(epicsUInt32 mask);

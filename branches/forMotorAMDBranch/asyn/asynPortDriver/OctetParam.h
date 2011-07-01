@@ -14,7 +14,7 @@ class OctetParam: public ParamVal
 public:
   OctetParam(const char *name, int index, paramList *parentList);
   virtual char* getString(unsigned int maxChars, char *value);
-  virtual asynStatus set(const char *value);
+  virtual void setString(const char *value);
   virtual asynStatus callCallback(int addr);
 
 protected:
