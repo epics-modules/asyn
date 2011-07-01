@@ -140,6 +140,24 @@ asyn_SRCS += UInt32DigitalParam.cpp
 asyn_SRCS += ParamVal.cpp
 asyn_SRCS += ParamFactory.cpp
 
+SRC_DIRS += $(ASYN)/asynPortDriver/exceptions
+INC += APDException.h
+INC += ParamValException.h
+INC += ParamValNotDefined.h
+INC += ParamValInvalidMethod.h
+INC += ParamValStringSizeRequestTooBig.h
+INC += ParamListException.h
+INC += ParamListCallbackError.h
+INC += ParamListInvalidIndex.h
+asyn_SRCS += APDException.cpp
+asyn_SRCS += ParamValException.cpp
+asyn_SRCS += ParamValNotDefined.cpp
+asyn_SRCS += ParamValInvalidMethod.cpp
+asyn_SRCS += ParamValStringSizeRequestTooBig.cpp
+asyn_SRCS += ParamListException.cpp
+asyn_SRCS += ParamListCallbackError.cpp
+asyn_SRCS += ParamListInvalidIndex.cpp
+
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
 DBD += devAsynRecord.dbd
