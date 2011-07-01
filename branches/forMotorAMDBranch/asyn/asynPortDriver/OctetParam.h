@@ -13,11 +13,12 @@ class OctetParam: public ParamVal
 {
 public:
   OctetParam(const char *name, int index, paramList *parentList);
-  virtual asynStatus get(unsigned int maxChars, char *value);
+  virtual char* getString(unsigned int maxChars, char *value);
   virtual asynStatus set(const char *value);
   virtual asynStatus callCallback(int addr);
 
 protected:
+  bool requestedSizeOK(unsigned int & maxChars);
   virtual void reportDefinedValue(FILE *fp, int details);
 
 private:

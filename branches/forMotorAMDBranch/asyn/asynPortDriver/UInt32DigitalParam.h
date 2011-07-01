@@ -13,11 +13,11 @@ class UInt32DigitalParam: public ParamVal
 {
 public:
   UInt32DigitalParam(const char *name, int index, paramList *parentList);
-  virtual asynStatus set(epicsUInt32 value, epicsUInt32 mask);
-  virtual asynStatus get(epicsUInt32 *value, epicsUInt32 mask);
-  virtual asynStatus setUInt32Interrupt(epicsUInt32 mask, interruptReason reason);
-  virtual asynStatus clearUInt32Interrupt(epicsUInt32 mask);
-  virtual asynStatus getUInt32Interrupt(epicsUInt32 *mask, interruptReason reason);
+  virtual void setUInt32(epicsUInt32 value, epicsUInt32 mask);
+  virtual epicsUInt32 getUInt32(epicsUInt32 mask);
+  virtual void setUInt32Interrupt(epicsUInt32 mask, interruptReason reason);
+  virtual void clearUInt32Interrupt(epicsUInt32 mask);
+  virtual epicsUInt32 getUInt32Interrupt(interruptReason reason);
   virtual asynStatus callCallback(int addr);
 
 protected:

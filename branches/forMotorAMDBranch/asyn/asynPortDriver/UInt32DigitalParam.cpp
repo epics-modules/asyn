@@ -7,6 +7,7 @@
 
 #include <UInt32DigitalParam.h>
 #include <asynPortDriver.h>
+#include <ParamValNotDefined.h>
 
 UInt32DigitalParam::UInt32DigitalParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList), value(0)
@@ -16,44 +17,38 @@ UInt32DigitalParam::UInt32DigitalParam(const char *name, int index, paramList *p
   uInt32InterruptReason = 0;
 }
 
-asynStatus UInt32DigitalParam::set(epicsUInt32 value, epicsUInt32 mask)
+void UInt32DigitalParam::setUInt32(epicsUInt32 value, epicsUInt32 mask)
 {
   setMaskedSetBits(value, mask);
   clearMaskedClearBits(value, mask);
   markValueIsDefined();
   notifyList();
-  return asynSuccess;
 }
 
-asynStatus UInt32DigitalParam::get(epicsUInt32 *value, epicsUInt32 mask)
+epicsUInt32 UInt32DigitalParam::getUInt32(epicsUInt32 mask)
 {
-  asynStatus retStat = asynParamUndefined;
-  if (isValueDefined())
+  if (!isValueDefined())
   {
-    *value = this->value &mask;
-    retStat = asynSuccess;
+    throw ParamValNotDefined(this);
   }
-  return retStat;
+  return this->value &mask;
 }
 
-asynStatus UInt32DigitalParam::setUInt32Interrupt(epicsUInt32 mask,
+void UInt32DigitalParam::setUInt32Interrupt(epicsUInt32 mask,
     interruptReason reason)
 {
   this->uInt32InterruptMask = mask;
   this->uInt32InterruptReason = reason;
-  return asynSuccess;
 }
 
-asynStatus UInt32DigitalParam::clearUInt32Interrupt(epicsUInt32 mask)
+void UInt32DigitalParam::clearUInt32Interrupt(epicsUInt32 mask)
 {
   this->uInt32InterruptMask = mask;
-  return asynSuccess;
 }
 
-asynStatus UInt32DigitalParam::getUInt32Interrupt(epicsUInt32 *mask, interruptReason reason)
+epicsUInt32 UInt32DigitalParam::getUInt32Interrupt(interruptReason reason)
 {
-  *mask = this->uInt32InterruptMask;
-  return asynSuccess;
+  return this->uInt32InterruptMask;
 }
 
 /** Set any bits that are set in the value and the mask

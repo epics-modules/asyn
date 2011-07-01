@@ -6,6 +6,8 @@
  */
 #include <Int32Param.h>
 #include <asynPortDriver.h>
+#include <ParamValNotDefined.h>
+#include <ParamListCallbackError.h>
 
 Int32Param::Int32Param(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -19,15 +21,13 @@ Int32Param::Int32Param(const char *name, int index, paramList *parentList)
  * \return Returns asynParamUndefined if the value of the parameter has
  * never been set, otherwise returns asynSuccess.
  */
-asynStatus Int32Param::get(int *value)
+int Int32Param::getInteger()
 {
-  asynStatus retStat = asynParamUndefined;
-  if (isValueDefined())
+  if (!isValueDefined())
   {
-    *value = this->value;
-    retStat = asynSuccess;
+    throw ParamValNotDefined(this);
   }
-  return retStat;
+  return value;
 }
 
 /** sets the integer value.  Also marks the value as defined.
@@ -35,12 +35,18 @@ asynStatus Int32Param::get(int *value)
  * \return asynSuccess
  *
  */
-asynStatus Int32Param::set(int value)
+void Int32Param::setInteger(int value)
 {
  this->value = value;
   markValueIsDefined();
-  notifyList();
-  return asynSuccess;
+  try
+  {
+    notifyList() ;
+  }
+  catch (ParamListCallbackError ex)
+  {
+    throw ex;
+  }
 }
 
 void Int32Param::reportDefinedValue(FILE *fp, int details)

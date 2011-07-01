@@ -5,6 +5,10 @@
  *      Author: hammonds
  */
 #include <ParamVal.h>
+#include <ParamValInvalidMethod.h>
+#include <ParamListCallbackError.h>
+
+#include <stdlib.h>
 #include <epicsTypes.h>
 #include <epicsString.h>
 #include <asynPortDriver.h>
@@ -28,7 +32,7 @@ ParamVal::ParamVal()
 
 ParamVal::~ParamVal()
 {
-
+  //free(name);
 }
 
 const char* ParamVal::typeNames[] = {
@@ -63,62 +67,62 @@ asynParamType ParamVal::getType()
  * as a double.  Subclasses should override this method if
  * they can return the value as a double.
  */
-asynStatus ParamVal::get(double *value)
+double ParamVal::getDouble()
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to return the value of the parameter
  * as an Integer.  Subclasses should override this method if
  * they can return the value as an integer.
  */
-asynStatus ParamVal::get(int *value)
+int ParamVal::getInteger()
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to return the value of the parameter
  * as a string.  Subclasses should override this method if
  * they can return the value as an String.
  */
-asynStatus ParamVal::get(unsigned int maxChars, char *value)
+char* ParamVal::getString(unsigned int maxChars, char *value)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to return the value of the parameter
  * as an unsigned Int32.  Subclasses should override this method if
  * they can return the value as a UInt32
  */
-asynStatus ParamVal::get(epicsUInt32 *value, epicsUInt32 mask)
+epicsUInt32 ParamVal::getUInt32(epicsUInt32 mask)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to return the Interrupt mask for the parameter.
  *   Subclasses should override this method if appropriate.
  */
-asynStatus ParamVal::getUInt32Interrupt(epicsUInt32 *value, interruptReason reason)
+epicsUInt32 ParamVal::getUInt32Interrupt(interruptReason reason)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to set the value of the parameter
  * as a double.  Subclasses should override this method if
  * they can set the value as a double.
  */
-asynStatus ParamVal::set(double value)
+void ParamVal::setDouble(double value)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to set the value of the parameter
  * as an Integer.  Subclasses should override this method if
  * they can set the value as an integer.
  */
-asynStatus ParamVal::set(int value)
+void ParamVal::setInteger(int value)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to set the value of the parameter
@@ -134,25 +138,25 @@ asynStatus ParamVal::set(const char *value)
  * as an unsigned Int32.  Subclasses should override this method if
  * they can set the value as a UInt32
  */
-asynStatus ParamVal::set(epicsUInt32 value, epicsUInt32 mask)
+void ParamVal::setUInt32(epicsUInt32 value, epicsUInt32 mask)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to return the Interrupt mask for the parameter.
  *   Subclasses should override this method if appropriate.
  */
-asynStatus ParamVal::setUInt32Interrupt(epicsUInt32 mask, interruptReason reason)
+void ParamVal::setUInt32Interrupt(epicsUInt32 mask, interruptReason reason)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Place holder function to clear the Interrupt mask for the
  * parameter.  Subclasses should override this as appropriate.
  */
-asynStatus ParamVal::clearUInt32Interrupt(epicsUInt32 mask)
+void ParamVal::clearUInt32Interrupt(epicsUInt32 mask)
 {
-  return asynParamWrongType;
+  throw ParamValInvalidMethod(this);
 }
 
 /** Check if the value has been set.
@@ -174,7 +178,9 @@ void ParamVal::markValueIsDefined()
  */
 void ParamVal::notifyList()
 {
-  parentList->setFlag(index);
+  if (parentList->setFlag(index) != asynSuccess){
+    throw ParamListCallbackError(parentList);
+  }
 }
 
 /** Return a descriptive name associated with parameter type.

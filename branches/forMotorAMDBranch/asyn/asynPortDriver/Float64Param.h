@@ -13,8 +13,8 @@ class Float64Param: public ParamVal
 {
 public:
   Float64Param(const char *name, int index, paramList *parentList);
-  virtual asynStatus get(double *value);
-  virtual asynStatus set(double value);
+  virtual double getDouble();
+  virtual void setDouble(double value);
   virtual asynStatus callCallback(int addr);
 
 protected:

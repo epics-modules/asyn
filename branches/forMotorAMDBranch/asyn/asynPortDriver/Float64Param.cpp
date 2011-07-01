@@ -7,6 +7,8 @@
 
 #include <Float64Param.h>
 #include <asynPortDriver.h>
+#include <ParamValNotDefined.h>
+#include <ParamListCallbackError.h>
 
 Float64Param::Float64Param(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -20,19 +22,13 @@ Float64Param::Float64Param(const char *name, int index, paramList *parentList)
  * \return Returns asynParamUndefined if the value of the parameter has
  * never been set, otherwise returns asynSuccess.
  */
-asynStatus Float64Param::get(double *value)
+double Float64Param::getDouble()
 {
-  asynStatus retStat = asynSuccess;
-  if (isValueDefined())
+  if (!isValueDefined())
   {
-    *value = this->value;
-    retStat = asynSuccess;
+    throw ParamValNotDefined(this);
   }
-  else
-  {
-    retStat = asynParamUndefined;
-  }
-  return retStat;
+  return this->value;
 }
 
 /** sets the double value.  Also marks the value as defined.
@@ -40,12 +36,18 @@ asynStatus Float64Param::get(double *value)
  * \return asynSuccess
  *
  */
-asynStatus Float64Param::set(double value)
+void Float64Param::setDouble(double value)
 {
   this->value = value;
   markValueIsDefined();
-  notifyList();
-  return asynSuccess;
+  try
+  {
+    notifyList() ;
+  }
+  catch (ParamListCallbackError ex)
+  {
+    throw ex;
+  }
 }
 
 void Float64Param::reportDefinedValue(FILE *fp, int details)

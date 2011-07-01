@@ -13,8 +13,8 @@ class Int32Param: public ParamVal
 {
 public:
   Int32Param(const char *name, int index, paramList *parentList);
-  virtual asynStatus get(int *value);
-  virtual asynStatus set(int value);
+  virtual int getInteger();
+  virtual void setInteger(int value);
   virtual asynStatus callCallback(int addr);
 
 protected:

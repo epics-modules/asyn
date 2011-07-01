@@ -9,6 +9,8 @@
 #include <epicsString.h>
 #include <asynPortDriver.h>
 #include <OctetParam.h>
+#include <ParamValStringSizeRequestTooBig.h>
+#include <ParamValNotDefined.h>
 
 OctetParam::OctetParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -17,21 +19,25 @@ OctetParam::OctetParam(const char *name, int index, paramList *parentList)
   type = asynParamOctet;
 }
 
-asynStatus OctetParam::get(unsigned int maxChars, char *value){
-  asynStatus retVal = asynParamUndefined;
+bool OctetParam::requestedSizeOK(unsigned int & maxChars)
+{
+    return (maxChars > 0) && (maxChars <= strlen(sValue));
+}
+
+char* OctetParam::getString(unsigned int maxChars, char* value){
   if (isValueDefined())
   {
-    if ((maxChars >0) && (maxChars <= strlen(sValue)))
-    {
-      strncpy(value, sValue, maxChars-1);
-      retVal = asynSuccess;
-    }
-    else
-    {
-      retVal = asynError;
-    }
+    throw ParamValNotDefined(this);
   }
-  return retVal;
+  if (!requestedSizeOK(maxChars))
+  {
+    throw ParamValStringSizeRequestTooBig(this);
+  }
+
+  value = new char[maxChars];
+  strncpy(value, sValue, maxChars-1);
+
+  return value;
 }
 
 asynStatus OctetParam::set(const char *value){
