@@ -25,6 +25,10 @@
 #include "asynPortDriver.h"
 #include "ParamVal.h"
 #include "ParamFactory.h"
+#include "ParamValNotDefined.h"
+#include "ParamValInvalidMethod.h"
+#include "ParamListCallbackError.h"
+#include "ParamListInvalidIndex.h"
 
 static const char *driverName = "asynPortDriver";
 
@@ -85,7 +89,7 @@ asynStatus paramList::setFlag(int index)
 {
   int i;
 
-  if (index < 0 || index >= this->nVals)
+  if (!isIndexValid(index))
     return asynParamBadIndex;
   /* See if we have already set the flag for this parameter */
   for (i = 0; i < this->nFlags; i++)
@@ -109,13 +113,10 @@ asynStatus paramList::createParam(const char *name, asynParamType type,
   if (this->findParam(name, index) == asynSuccess)
     return asynParamAlreadyExists;
   *index = this->nextParam++;
-  if (*index < 0 || *index >= this->nVals)
+  if (!isIndexValid(*index))
     return asynParamBadIndex;
   delete this->vals[*index];
   this->vals[*index] = ParamFactory::createParam(name, type, *index, this);
-//  this->vals[*index].name = epicsStrDup(name);
-//  this->vals[*index].type = type;
-//  this->vals[*index].valueDefined = 0;
   return asynSuccess;
 }
 
@@ -127,8 +128,8 @@ asynStatus paramList::findParam(const char *name, int *index)
 {
   for (*index = 0; *index < this->nVals; (*index)++)
   {
-    if (name && this->vals[*index]->getName() && (epicsStrCaseCmp(name,
-        this->vals[*index]->getName()) == 0))
+    if (name && getParam(*index)->getName() &&
+        (epicsStrCaseCmp(name, getParam(*index)->getName()) == 0))
       return asynSuccess;
   }
   return asynParamNotFound;
@@ -146,7 +147,7 @@ ParamVal* paramList::getParam(int &index)
     retParam = vals[index];
   }
   else {
-    // TODO - need to find the appropriate flag for this.
+    throw ParamListInvalidIndex(this);
   }
   return retParam;
 }
@@ -260,14 +261,16 @@ asynStatus paramList::getInteger(int index, int *value)
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->get(value);
-/*
-  if (this->vals[index].getType() != asynParamInt32)
-    return asynParamWrongType;
-  if (!this->vals[index].valueDefined)
-    return asynParamUndefined;
-  *value = this->vals[index].data.ival;
-*/
+  try
+  {
+    *value = this->vals[index]->getInteger();
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
+  catch (ParamValNotDefined&){
+    retStat = asynParamUndefined;
+  }
   return retStat;
 }
 
@@ -282,14 +285,16 @@ asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->get(value, mask);
-/*
-  if (this->vals[index].getType() != asynParamUInt32Digital)
-    return asynParamWrongType;
-  if (!this->vals[index].valueDefined)
-    return asynParamUndefined;
-  *value = this->vals[index].data.uival & mask;
-*/
+  try
+  {
+  *value = this->vals[index]->getUInt32(mask);
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
+  catch (ParamValNotDefined&){
+    retStat = asynParamUndefined;
+  }
   return retStat;
 }
 
@@ -303,14 +308,16 @@ asynStatus paramList::getDouble(int index, double *value)
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->get(value);
-/*
-  if (this->vals[index].getType() != asynParamFloat64)
-    return asynParamWrongType;
-  if (!this->vals[index].valueDefined)
-    return asynParamUndefined;
-  *value = this->vals[index].data.dval;
-  */
+  try
+  {
+    *value = this->vals[index]->getDouble();
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
+  catch (ParamValNotDefined&){
+    retStat = asynParamUndefined;
+  }
   return retStat;
 }
 
@@ -326,13 +333,13 @@ asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask,
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->setUInt32Interrupt(mask, reason);
-  /*
-  if (this->vals[index].getType() != asynParamUInt32Digital)
-    return asynParamWrongType;
-  this->vals[index].uInt32InterruptMask = mask;
-  this->vals[index].uInt32InterruptReason = reason;
-  */
+  try
+  {
+    this->vals[index]->setUInt32Interrupt(mask, reason);
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
   return retStat;
 }
 
@@ -346,12 +353,13 @@ asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->clearUInt32Interrupt(mask);
-  /*
-  if (this->vals[index].getType() != asynParamUInt32Digital)
-    return asynParamWrongType;
-  this->vals[index].uInt32InterruptMask = mask;
-  */
+  try
+  {
+    this->vals[index]->clearUInt32Interrupt(mask);
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
   return retStat;
 }
 
@@ -367,12 +375,13 @@ asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask,
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->getUInt32Interrupt(mask, reason);
-/*
-  if (this->vals[index].getType() != asynParamUInt32Digital)
-    return asynParamWrongType;
-  *mask = this->vals[index].uInt32InterruptMask;
-*/
+  try
+  {
+    *mask = this->vals[index]->getUInt32Interrupt(reason);
+  }
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
   return retStat;
 }
 
@@ -387,18 +396,16 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
   asynStatus retStat = asynSuccess;
   if (index < 0 || index >= this->nVals)
     return asynParamBadIndex;
-  retStat = this->vals[index]->get(maxChars, value);
-  /*
-  if (this->vals[index].getType() != asynParamOctet)
-    return asynParamWrongType;
-  if (!this->vals[index].valueDefined)
-    return asynParamUndefined;
-  if (maxChars > 0)
+  try
   {
-    strncpy(value, this->vals[index].data.sval, maxChars - 1);
-    value[maxChars - 1] = '\0';
+    this->vals[index]->getString(maxChars, value);
   }
-*/
+  catch (ParamValInvalidMethod&){
+    retStat = asynParamWrongType;
+  }
+  catch (ParamValNotDefined&){
+    retStat = asynParamUndefined;
+  }
   return retStat;
 }
 
@@ -408,10 +415,16 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
  * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::getName(int index, const char **value)
 {
-  if (index < 0 || index >= this->nVals)
-    return asynParamBadIndex;
-  *value = (const char *) this->vals[index]->getName();
-  return asynSuccess;
+  asynStatus retStat = asynSuccess;
+  try
+  {
+    *value = (const char *) getParam(index)->getName();
+  }
+  catch (ParamListInvalidIndex&)
+  {
+    retStat = asynParamBadIndex;
+  }
+  return retStat;
 }
 
 /** Calls the registered asyn callback functions for all clients for an integer parameter */
@@ -890,10 +903,20 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
   asynStatus status;
   static const char *functionName = "setIntegerParam";
   if (this->params[list]->isIndexValid(index))
-    status = this->params[list]->getParam(index)->set(value);
+  {
+    try
+    {
+      this->params[list]->getParam(index)->setInteger(value);
+    }
+    catch (ParamValInvalidMethod&){
+      status = asynParamWrongType;
+    }
+    catch (ParamListCallbackError&){
+      status = asynError;
+    }
+  }
   else
     status = asynParamBadIndex;
-//  status = this->params[list]->setInteger(index, value);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -922,10 +945,17 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index,
   asynStatus status;
   static const char *functionName = "setUIntDigitalParam";
   if (this->params[list]->isIndexValid(index))
-    status = this->params[list]->getParam(index)->set(value, mask);
+    try {
+      this->params[list]->getParam(index)->setUInt32(value, mask);
+    }
+    catch (ParamValInvalidMethod&){
+      status = asynParamWrongType;
+    }
+    catch (ParamValNotDefined&){
+      status = asynParamUndefined;
+    }
   else
     status = asynParamBadIndex;
-//  status = this->params[list]->setUInt32(index, value, mask);
   if (status)
     reportSetParamErrors(status, index, list, functionName);
   return (status);
@@ -1035,7 +1065,18 @@ asynStatus asynPortDriver::setDoubleParam(int list, int index, double value)
   asynStatus status;
   static const char *functionName = "setDoubleParam";
   if (this->params[list]->isIndexValid(index))
-    status = this->params[list]->getParam(index)->set(value);
+  {
+    try
+    {
+      this->params[list]->getParam(index)->setDouble(value);
+    }
+    catch (ParamValInvalidMethod&){
+      status = asynParamWrongType;
+    }
+    catch (ParamListCallbackError&){
+      status = asynError;
+    }
+  }
   else
     status = asynParamBadIndex;
 
