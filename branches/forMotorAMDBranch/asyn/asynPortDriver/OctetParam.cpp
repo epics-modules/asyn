@@ -20,22 +20,24 @@ OctetParam::OctetParam(const char *name, int index, paramList *parentList)
   type = asynParamOctet;
 }
 
-bool OctetParam::requestedSizeOK(unsigned int & maxChars)
+bool OctetParam::requestedSizeOK(unsigned int & maxChars, char *value)
 {
-    return (maxChars > 0) && (maxChars <= strlen(sValue));
+//    return (maxChars > 0) && (maxChars <= strlen(value));
+    return (maxChars > 0);
 }
 
+
 char* OctetParam::getString(unsigned int maxChars, char* value){
-  if (isValueDefined())
+  if (!isValueDefined())
   {
     throw ParamValNotDefined(this);
   }
-  if (!requestedSizeOK(maxChars))
+  if (!requestedSizeOK(maxChars, value))
   {
     throw ParamValStringSizeRequestTooBig(this);
   }
 
-  value = new char[maxChars];
+//  value = new char[maxChars];
   strncpy(value, sValue, maxChars-1);
 
   return value;

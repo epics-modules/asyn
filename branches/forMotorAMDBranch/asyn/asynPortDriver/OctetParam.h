@@ -9,6 +9,11 @@
 #define OCTETPARAM_H_
 #include <ParamVal.h>
 
+/**
+ * This class implements the ParamVal interface and stores an
+ * octet (string) value.  It overrides the get/setString methods,
+ * as well as callCallback and reportDefined Value.
+  */
 class OctetParam: public ParamVal
 {
 public:
@@ -18,7 +23,7 @@ public:
   virtual asynStatus callCallback(int addr);
 
 protected:
-  bool requestedSizeOK(unsigned int & maxChars);
+  bool requestedSizeOK(unsigned int & maxChars, char *value);
   virtual void reportDefinedValue(FILE *fp, int details);
 
 private:
