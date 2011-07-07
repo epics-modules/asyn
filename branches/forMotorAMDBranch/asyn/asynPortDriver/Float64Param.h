@@ -9,6 +9,11 @@
 #define FLOAT64PARAM_H_
 #include <ParamVal.h>
 
+/**
+ * This class implements the ParamVal interface and stores a
+ * float value.  It overrides the get/setDouble methods,
+ * as well as callCallback and reportDefined Value.
+  */
 class Float64Param: public ParamVal
 {
 public:

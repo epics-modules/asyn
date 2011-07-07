@@ -9,6 +9,11 @@
 #define INT32PARAM_H_
 #include <ParamVal.h>
 
+/**
+ * This class implements the ParamVal interface and stores a
+ * Int 32 value.  It overrides the get/setInteger methods,
+ * as well as callCallback and reportDefined Value.
+  */
 class Int32Param: public ParamVal
 {
 public:

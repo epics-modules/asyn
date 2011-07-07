@@ -9,6 +9,12 @@
 #define UINT32DIGITALPARAM_H_
 #include <ParamVal.h>
 
+/**
+ * This class implements the ParamVal interface and stores a
+ * UInt32 value.  It overrides the get/setUInt32 methods,
+ * get/set/clearUInt32Interrupt methods,
+ * as well as callCallback and reportDefined Value.
+  */
 class UInt32DigitalParam: public ParamVal
 {
 public:
