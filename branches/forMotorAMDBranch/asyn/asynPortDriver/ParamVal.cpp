@@ -200,15 +200,26 @@ void ParamVal::report(FILE *fp, int details)
 
 }
 
+/** Method to respond to report request if the value of
+ * the parameter is defined.  Subclasses should override this method to
+ * provide an appropriate report for the data stored in the parameter.
+ */
 void ParamVal::reportDefinedValue(FILE *fp, int details){
   fprintf(fp, "This report is coming from the base class ParamVal.  "
       "This method report should come from a subclass\n");
 }
 
+/** Method to provide parameter specific actions when the parameter value is set.
+ * Subclasses should override this as appropriate.
+ *
+ */
 asynStatus ParamVal::callCallback(int addr){
   return asynSuccess;
 }
 
+/**Accessor method to get the index # for this parameter.  The index is a
+ * reference to where this is stored in the paramList.
+ */
 int ParamVal::getIndex()
 {
   return index;
