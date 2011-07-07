@@ -19,6 +19,7 @@ class ParamListException: public APDException
 public:
   ParamListException(paramList *param, char *name, char *description);
   virtual char* getMessageString();
+  paramList* getParamList();
 
 protected:
   paramList *pList;

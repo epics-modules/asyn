@@ -29,3 +29,8 @@ char* ParamListException::getMessageString()
   sprintf(retString, formatString, name, description);
   return retString;
 }
+
+paramList* ParamListException::getParamList()
+{
+    return pList;
+}
