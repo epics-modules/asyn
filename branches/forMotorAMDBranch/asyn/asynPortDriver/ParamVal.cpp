@@ -32,7 +32,7 @@ ParamVal::ParamVal()
 
 ParamVal::~ParamVal()
 {
-  //free(name);
+  free(name);
 }
 
 const char* ParamVal::typeNames[] = {
