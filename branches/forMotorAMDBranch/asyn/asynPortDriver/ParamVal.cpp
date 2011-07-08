@@ -7,6 +7,7 @@
 #include <ParamVal.h>
 #include <ParamValInvalidMethod.h>
 #include <ParamListCallbackError.h>
+#include <ParamListInvalidIndex.h>
 
 #include <stdlib.h>
 #include <epicsTypes.h>
@@ -178,9 +179,13 @@ void ParamVal::markValueIsDefined()
  */
 void ParamVal::notifyList()
 {
-  if (parentList->setFlag(index) != asynSuccess){
-    throw ParamListCallbackError(parentList);
-  }
+    try{
+       parentList->setFlag(index);
+    }
+    catch (ParamListInvalidIndex ex){
+       throw ParamListCallbackError(ex.getParamList());
+    }
+
 }
 
 /** Return a descriptive name associated with parameter type.
