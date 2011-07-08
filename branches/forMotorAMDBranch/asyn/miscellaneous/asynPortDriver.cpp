@@ -27,8 +27,10 @@
 #include "ParamFactory.h"
 #include "ParamValNotDefined.h"
 #include "ParamValInvalidMethod.h"
+#include "ParamValStringSizeRequestTooBig.h"
 #include "ParamListCallbackError.h"
 #include "ParamListInvalidIndex.h"
+#include "ParamListParamNotFound.h"
 
 static const char *driverName = "asynPortDriver";
 
@@ -80,12 +82,12 @@ paramList::~paramList()
   free(flags);
 }
 
-asynStatus paramList::setFlag(int index)
+void paramList::setFlag(int index)
 {
   int i;
 
   if (!isIndexValid(index))
-    return asynParamBadIndex;
+    throw ParamListInvalidIndex(this);
   /* See if we have already set the flag for this parameter */
   for (i = 0; i < this->nFlags; i++)
     if (this->flags[i] == index)
@@ -93,7 +95,6 @@ asynStatus paramList::setFlag(int index)
   /* If not found add a flag */
   if (i == this->nFlags)
     this->flags[this->nFlags++] = index;
-  return asynSuccess;
 }
 
 /** Adds a new parameter to the parameter library.
@@ -105,8 +106,13 @@ asynStatus paramList::setFlag(int index)
 asynStatus paramList::createParam(const char *name, asynParamType type,
     int *index)
 {
-  if (this->findParam(name, index) == asynSuccess)
-    return asynParamAlreadyExists;
+    try {
+       this->findParam(name, index);
+       return asynParamAlreadyExists;
+    }
+    catch (ParamListParamNotFound&){
+       //We should not find a param
+    }
   *index = this->nextParam++;
   if (!isIndexValid(*index))
     return asynParamBadIndex;
@@ -119,15 +125,15 @@ asynStatus paramList::createParam(const char *name, asynParamType type,
  * \param[in] name The name of this parameter
  * \param[out] index The parameter number
  * \return Returns asynParamNotFound if name is not found in the parameter list. */
-asynStatus paramList::findParam(const char *name, int *index)
+void paramList::findParam(const char *name, int *index)
 {
   for (*index = 0; *index < this->nVals; (*index)++)
   {
     if (name && getParam(*index)->getName() &&
         (epicsStrCaseCmp(name, getParam(*index)->getName()) == 0))
-      return asynSuccess;
+      return;
   }
-  return asynParamNotFound;
+  throw ParamListParamNotFound(this, (char *)name);
 }
 
 bool paramList::isIndexValid(int & index)
@@ -406,15 +412,19 @@ asynStatus asynPortDriver::createParam(int list, const char *name,
   int itemp;
   static const char *functionName = "createParam";
 
-  status = this->params[list]->findParam(name, &itemp);
-  if (status != asynParamNotFound)
+  try
   {
+  	this->params[list]->findParam(name, &itemp);
     asynPrint(
         this->pasynUserSelf,
         ASYN_TRACE_ERROR,
         "%s:%s: port=%s error adding parameter %s to list %d, parameter already exists.\n",
         driverName, functionName, portName, name, list);
     return (asynError);
+  }
+  catch (ParamListParamNotFound&)
+  {
+  	// should not create a parameter if one is found
   }
   status = this->params[list]->createParam(name, type, index);
   if (status == asynParamBadIndex)
@@ -456,7 +466,13 @@ asynStatus asynPortDriver::findParam(int list, const char *name, int *index)
   asynStatus status = asynError;
   if (!isAddrInvalid(list))
   {
-    status = this->params[list]->findParam(name, index);
+  	try {
+  		this->params[list]->findParam(name, index);
+  		status = asynSuccess;
+  	}
+    catch (ParamListParamNotFound&){
+    	status = asynParamNotFound;
+  	}
   }
   return status;
 }
@@ -950,6 +966,9 @@ asynStatus asynPortDriver::getStringParam(int list, int index, int maxChars,
   } catch (ParamListInvalidIndex&)
   {
     status = asynParamBadIndex;
+  } catch (ParamValStringSizeRequestTooBig&)
+  {
+    status = asynError;
   }
 
   if (status)

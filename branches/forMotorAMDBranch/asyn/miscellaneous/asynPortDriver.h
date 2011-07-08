@@ -40,7 +40,7 @@ public:
   paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
   ~paramList();
   asynStatus createParam(const char *name, asynParamType type, int *index);
-  asynStatus findParam(const char *name, int *index);
+  void findParam(const char *name, int *index);
   asynStatus getName(int index, const char **name);
 
   asynStatus callCallbacks(int addr);
@@ -49,7 +49,7 @@ public:
   bool isIndexValid(int &index);
   ParamVal* getParam(int &index);
 
-  asynStatus setFlag(int index);
+  void setFlag(int index);
   asynStatus float64Callback(int command, int addr, epicsFloat64 value);
   asynStatus int32Callback(int command, int addr, epicsInt32 value);
   asynStatus octetCallback(int command, int addr, char *value);
