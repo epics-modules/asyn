@@ -149,6 +149,7 @@ INC += ParamValStringSizeRequestTooBig.h
 INC += ParamListException.h
 INC += ParamListCallbackError.h
 INC += ParamListInvalidIndex.h
+INC += ParamListParamNotFound.h
 asyn_SRCS += APDException.cpp
 asyn_SRCS += ParamValException.cpp
 asyn_SRCS += ParamValNotDefined.cpp
@@ -157,6 +158,7 @@ asyn_SRCS += ParamValStringSizeRequestTooBig.cpp
 asyn_SRCS += ParamListException.cpp
 asyn_SRCS += ParamListCallbackError.cpp
 asyn_SRCS += ParamListInvalidIndex.cpp
+asyn_SRCS += ParamListParamNotFound.cpp
 
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
