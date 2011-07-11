@@ -175,10 +175,13 @@ vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
 	cp ../vxi11/rpc/*.[ch] .
 else
 RPCGEN_FLAGS_solaris = -M
-vxi11core_xdr.c drvVxi11.c: ../vxi11/vxi11core.rpcl ../vxi11/vxi11intr.rpcl
+vxi11core_xdr.c: vxi11core.h
+vxi11core.h:
 	cp ../vxi11/vxi11core.rpcl .
-	cp ../vxi11/vxi11intr.rpcl .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11core.rpcl
+drvVxi11.c: vxi11intr.h
+vxi11intr.h:
+	cp ../vxi11/vxi11intr.rpcl .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11intr.rpcl
 endif
 endif
