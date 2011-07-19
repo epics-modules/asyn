@@ -8,6 +8,7 @@
 #include <UInt32DigitalParam.h>
 #include <asynPortDriver.h>
 #include <ParamValNotDefined.h>
+#include <UInt32DigitalCallback.h>
 
 UInt32DigitalParam::UInt32DigitalParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList), value(0)
@@ -78,7 +79,13 @@ asynStatus UInt32DigitalParam::callCallback(int addr)
 {
   asynStatus retStat = asynSuccess;
   if(isValueDefined())
-    retStat = parentList->uint32Callback(getIndex(), addr, value,
-        uInt32InterruptMask);
+  {
+//    retStat = parentList->uint32Callback(getIndex(), addr, value,
+//        uInt32InterruptMask);
+		UInt32DigitalCallback<epicsUInt32, asynUInt32DigitalInterrupt> callback(getIndex(), addr,
+				parentList->standardInterfaces()->uInt32DigitalInterruptPvt, value, uInt32InterruptMask);
+		callback.doCallback();
+
+  }
   return retStat;
 }

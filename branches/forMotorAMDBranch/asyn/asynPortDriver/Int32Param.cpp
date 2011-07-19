@@ -6,14 +6,16 @@
  */
 #include <Int32Param.h>
 #include <asynPortDriver.h>
+#include <ScalarParamCallback.h>
 #include <ParamValNotDefined.h>
 #include <ParamListCallbackError.h>
+#include <epicsTypes.h>
 
-Int32Param::Int32Param(const char *name, int index, paramList *parentList)
-: ParamVal(name, index, parentList),
-                         value(0)
+
+Int32Param::Int32Param(const char *name, int index, paramList *parentList) :
+	ParamVal(name, index, parentList), value(0)
 {
-  type = asynParamInt32;
+	type = asynParamInt32;
 }
 
 /** Get the value of the parameter as an integer
@@ -23,11 +25,11 @@ Int32Param::Int32Param(const char *name, int index, paramList *parentList)
  */
 int Int32Param::getInteger()
 {
-  if (!isValueDefined())
-  {
-    throw ParamValNotDefined(this);
-  }
-  return value;
+	if (!isValueDefined())
+	{
+		throw ParamValNotDefined(this);
+	}
+	return value;
 }
 
 /** sets the integer value.  Also marks the value as defined.
@@ -37,28 +39,32 @@ int Int32Param::getInteger()
  */
 void Int32Param::setInteger(int value)
 {
- this->value = value;
-  markValueIsDefined();
-  try
-  {
-    notifyList() ;
-  }
-  catch (ParamListCallbackError ex)
-  {
-    throw ex;
-  }
+	this->value = value;
+	markValueIsDefined();
+	try
+	{
+		notifyList();
+	} catch (ParamListCallbackError ex)
+	{
+		throw ex;
+	}
 }
 
 void Int32Param::reportDefinedValue(FILE *fp, int details)
 {
-    fprintf(fp, "Parameter %d type=%s, name=%s, value=%d\n", getIndex(),
-        getTypeName(), getName(), value);
+	fprintf(fp, "Parameter %d type=%s, name=%s, value=%d\n", getIndex(),
+			getTypeName(), getName(), value);
 }
 
 asynStatus Int32Param::callCallback(int addr)
 {
-  asynStatus retStat = asynSuccess;
-  if ( isValueDefined())
-    retStat = parentList->int32Callback(getIndex(), addr, value);
-  return retStat;
+	asynStatus retStat = asynSuccess;
+	if (isValueDefined())
+	{
+		//retStat = parentList->int32Callback(getIndex(), addr, value);
+		ScalarParamCallback<epicsInt32, asynInt32Interrupt> callback(getIndex(), addr,
+				parentList->standardInterfaces()->int32InterruptPvt, value);
+		callback.doCallback();
+	}
+	return retStat;
 }

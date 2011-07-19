@@ -160,6 +160,14 @@ asyn_SRCS += ParamListCallbackError.cpp
 asyn_SRCS += ParamListInvalidIndex.cpp
 asyn_SRCS += ParamListParamNotFound.cpp
 
+SRC_DIRS += $(ASYN)/asynPortDriver/callbacks
+INC += ParamCallback.h
+INC += ScalarParamCallback.h
+#INC += Int32Callback.h
+#INC += Float64Callback.h
+INC += UInt32DigitalCallback.h
+INC += ArrayParamCallback.h
+
 SRC_DIRS += $(ASYN)/asynRecord
 DBDINC += asynRecord
 DBD += devAsynRecord.dbd

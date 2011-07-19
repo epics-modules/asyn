@@ -9,6 +9,7 @@
 #include <asynPortDriver.h>
 #include <ParamValNotDefined.h>
 #include <ParamListCallbackError.h>
+#include <ScalarParamCallback.h>
 
 Float64Param::Float64Param(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -60,7 +61,12 @@ asynStatus Float64Param::callCallback(int addr)
 {
   asynStatus retStat = asynSuccess;
   if(isValueDefined())
-    retStat = parentList->float64Callback(getIndex(), addr, value);
+  {
+//    retStat = parentList->float64Callback(getIndex(), addr, value);
+		ScalarParamCallback<epicsFloat64, asynFloat64Interrupt> callback(getIndex(), addr,
+				(void *)parentList->standardInterfaces()->float64InterruptPvt, value);
+		callback.doCallback();
+  }
   return retStat;
 }
 
