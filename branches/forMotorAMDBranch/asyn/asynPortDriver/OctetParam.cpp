@@ -12,6 +12,7 @@
 #include <ParamValStringSizeRequestTooBig.h>
 #include <ParamValNotDefined.h>
 #include <ParamListCallbackError.h>
+#include <OctetCallback.h>
 
 OctetParam::OctetParam(const char *name, int index, paramList *parentList)
 : ParamVal(name, index, parentList),
@@ -22,7 +23,6 @@ OctetParam::OctetParam(const char *name, int index, paramList *parentList)
 
 bool OctetParam::requestedSizeOK(unsigned int & maxChars, char *value)
 {
-//    return (maxChars > 0) && (maxChars <= strlen(value));
     return (maxChars > 0);
 }
 
@@ -69,6 +69,12 @@ asynStatus OctetParam::callCallback(int addr)
 {
   asynStatus retStat = asynSuccess;
   if(isValueDefined())
-    retStat = parentList->octetCallback(getIndex(), addr, sValue);
+  {
+    //retStat = parentList->octetCallback(getIndex(), addr, sValue);
+		OctetCallback<char*, asynOctetInterrupt> callback(getIndex(), addr,
+				(void *)parentList->standardInterfaces()->octetInterruptPvt, sValue);
+		callback.doCallback();
+
+  }
   return retStat;
 }

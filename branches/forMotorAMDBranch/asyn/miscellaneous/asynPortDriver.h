@@ -51,11 +51,6 @@ public:
   asynStandardInterfaces* standardInterfaces();
 
   void setFlag(int index);
-  asynStatus float64Callback(int command, int addr, epicsFloat64 value);
-  asynStatus int32Callback(int command, int addr, epicsInt32 value);
-  asynStatus octetCallback(int command, int addr, char *value);
-  asynStatus uint32Callback(int command, int addr, epicsUInt32 value,
-      epicsUInt32 interruptMask);
 
 private:
   int nextParam;

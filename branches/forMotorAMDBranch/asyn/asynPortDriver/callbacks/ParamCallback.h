@@ -80,7 +80,6 @@ template<class epicsType, class interruptType> void ParamCallback<epicsType,
 	pNode = (interruptNode *) ellFirst(this->pclientList);
 	while (pNode)
 	{
-		//	interruptType *pInterrupt = (interruptType *) pNode->drvPvt;
 		this->sendCallback((void*) pNode->drvPvt);
 		pNode = (interruptNode *) ellNext(&pNode->node);
 	}

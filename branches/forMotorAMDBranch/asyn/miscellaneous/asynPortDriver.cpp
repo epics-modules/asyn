@@ -177,131 +177,131 @@ asynStandardInterfaces* paramList::standardInterfaces()
 	return pasynInterfaces;
 }
 
-/** Calls the registered asyn callback functions for all clients for an integer parameter */
-asynStatus paramList::int32Callback(int command, int addr, epicsInt32 value)
-{
-  ELLLIST *pclientList;
-  interruptNode *pnode;
-  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
-  int address;
+///** Calls the registered asyn callback functions for all clients for an integer parameter */
+//asynStatus paramList::int32Callback(int command, int addr, epicsInt32 value)
+//{
+//  ELLLIST *pclientList;
+//  interruptNode *pnode;
+//  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
+//  int address;
+//
+//  /* Pass int32 interrupts */
+//  if (!pInterfaces->int32InterruptPvt)
+//    return (asynParamNotFound);
+//  pasynManager->interruptStart(pInterfaces->int32InterruptPvt, &pclientList);
+//  pnode = (interruptNode *) ellFirst(pclientList);
+//  while (pnode)
+//  {
+//    asynInt32Interrupt *pInterrupt = (asynInt32Interrupt *) pnode->drvPvt;
+//    pasynManager->getAddr(pInterrupt->pasynUser, &address);
+//    /* If this is not a multi-device then address is -1, change to 0 */
+//    if (address == -1)
+//      address = 0;
+//    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
+//    {
+//      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value);
+//    }
+//    pnode = (interruptNode *) ellNext(&pnode->node);
+//  }
+//  pasynManager->interruptEnd(pInterfaces->int32InterruptPvt);
+//  return (asynSuccess);
+//}
 
-  /* Pass int32 interrupts */
-  if (!pInterfaces->int32InterruptPvt)
-    return (asynParamNotFound);
-  pasynManager->interruptStart(pInterfaces->int32InterruptPvt, &pclientList);
-  pnode = (interruptNode *) ellFirst(pclientList);
-  while (pnode)
-  {
-    asynInt32Interrupt *pInterrupt = (asynInt32Interrupt *) pnode->drvPvt;
-    pasynManager->getAddr(pInterrupt->pasynUser, &address);
-    /* If this is not a multi-device then address is -1, change to 0 */
-    if (address == -1)
-      address = 0;
-    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
-    {
-      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value);
-    }
-    pnode = (interruptNode *) ellNext(&pnode->node);
-  }
-  pasynManager->interruptEnd(pInterfaces->int32InterruptPvt);
-  return (asynSuccess);
-}
+///** Calls the registered asyn callback functions for all clients for an UInt32 parameter */
+//asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 value,
+//    epicsUInt32 interruptMask)
+//{
+//  ELLLIST *pclientList;
+//  interruptNode *pnode;
+//  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
+//  int address;
+//
+//  /* Pass UInt32Digital interrupts */
+//  if (!pInterfaces->uInt32DigitalInterruptPvt)
+//    return (asynParamNotFound);
+//  pasynManager->interruptStart(pInterfaces->uInt32DigitalInterruptPvt,
+//      &pclientList);
+//  pnode = (interruptNode *) ellFirst(pclientList);
+//  while (pnode)
+//  {
+//    asynUInt32DigitalInterrupt *pInterrupt =
+//        (asynUInt32DigitalInterrupt *) pnode->drvPvt;
+//    pasynManager->getAddr(pInterrupt->pasynUser, &address);
+//    /* If this is not a multi-device then address is -1, change to 0 */
+//    if (address == -1)
+//      address = 0;
+//    if ((command == pInterrupt->pasynUser->reason) && (address == addr)
+//        && (pInterrupt->mask & interruptMask))
+//    {
+//      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser,
+//          pInterrupt->mask & value);
+//    }
+//    pnode = (interruptNode *) ellNext(&pnode->node);
+//  }
+//  pasynManager->interruptEnd(pInterfaces->uInt32DigitalInterruptPvt);
+//  return (asynSuccess);
+//}
 
-/** Calls the registered asyn callback functions for all clients for an UInt32 parameter */
-asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 value,
-    epicsUInt32 interruptMask)
-{
-  ELLLIST *pclientList;
-  interruptNode *pnode;
-  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
-  int address;
+///** Calls the registered asyn callback functions for all clients for a double parameter */
+//asynStatus paramList::float64Callback(int command, int addr, epicsFloat64 value)
+//{
+//  ELLLIST *pclientList;
+//  interruptNode *pnode;
+//  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
+//  int address;
+//
+//  /* Pass float64 interrupts */
+//  if (!pInterfaces->float64InterruptPvt)
+//    return (asynParamNotFound);
+//  pasynManager->interruptStart(pInterfaces->float64InterruptPvt, &pclientList);
+//  pnode = (interruptNode *) ellFirst(pclientList);
+//  while (pnode)
+//  {
+//    asynFloat64Interrupt *pInterrupt = (asynFloat64Interrupt *) pnode->drvPvt;
+//    pasynManager->getAddr(pInterrupt->pasynUser, &address);
+//    /* If this is not a multi-device then address is -1, change to 0 */
+//    if (address == -1)
+//      address = 0;
+//    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
+//    {
+//      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value);
+//    }
+//    pnode = (interruptNode *) ellNext(&pnode->node);
+//  }
+//  pasynManager->interruptEnd(pInterfaces->float64InterruptPvt);
+//  return (asynSuccess);
+//}
 
-  /* Pass UInt32Digital interrupts */
-  if (!pInterfaces->uInt32DigitalInterruptPvt)
-    return (asynParamNotFound);
-  pasynManager->interruptStart(pInterfaces->uInt32DigitalInterruptPvt,
-      &pclientList);
-  pnode = (interruptNode *) ellFirst(pclientList);
-  while (pnode)
-  {
-    asynUInt32DigitalInterrupt *pInterrupt =
-        (asynUInt32DigitalInterrupt *) pnode->drvPvt;
-    pasynManager->getAddr(pInterrupt->pasynUser, &address);
-    /* If this is not a multi-device then address is -1, change to 0 */
-    if (address == -1)
-      address = 0;
-    if ((command == pInterrupt->pasynUser->reason) && (address == addr)
-        && (pInterrupt->mask & interruptMask))
-    {
-      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser,
-          pInterrupt->mask & value);
-    }
-    pnode = (interruptNode *) ellNext(&pnode->node);
-  }
-  pasynManager->interruptEnd(pInterfaces->uInt32DigitalInterruptPvt);
-  return (asynSuccess);
-}
-
-/** Calls the registered asyn callback functions for all clients for a double parameter */
-asynStatus paramList::float64Callback(int command, int addr, epicsFloat64 value)
-{
-  ELLLIST *pclientList;
-  interruptNode *pnode;
-  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
-  int address;
-
-  /* Pass float64 interrupts */
-  if (!pInterfaces->float64InterruptPvt)
-    return (asynParamNotFound);
-  pasynManager->interruptStart(pInterfaces->float64InterruptPvt, &pclientList);
-  pnode = (interruptNode *) ellFirst(pclientList);
-  while (pnode)
-  {
-    asynFloat64Interrupt *pInterrupt = (asynFloat64Interrupt *) pnode->drvPvt;
-    pasynManager->getAddr(pInterrupt->pasynUser, &address);
-    /* If this is not a multi-device then address is -1, change to 0 */
-    if (address == -1)
-      address = 0;
-    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
-    {
-      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value);
-    }
-    pnode = (interruptNode *) ellNext(&pnode->node);
-  }
-  pasynManager->interruptEnd(pInterfaces->float64InterruptPvt);
-  return (asynSuccess);
-}
-
-/** Calls the registered asyn callback functions for all clients for a string parameter */
-asynStatus paramList::octetCallback(int command, int addr, char *value)
-{
-  ELLLIST *pclientList;
-  interruptNode *pnode;
-  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
-  int address;
-
-  /* Pass octet interrupts */
-  if (!pInterfaces->octetInterruptPvt)
-    return (asynParamNotFound);
-  pasynManager->interruptStart(pInterfaces->octetInterruptPvt, &pclientList);
-  pnode = (interruptNode *) ellFirst(pclientList);
-  while (pnode)
-  {
-    asynOctetInterrupt *pInterrupt = (asynOctetInterrupt *) pnode->drvPvt;
-    pasynManager->getAddr(pInterrupt->pasynUser, &address);
-    /* If this is not a multi-device then address is -1, change to 0 */
-    if (address == -1)
-      address = 0;
-    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
-    {
-      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value,
-          strlen(value), ASYN_EOM_END);
-    }
-    pnode = (interruptNode *) ellNext(&pnode->node);
-  }
-  pasynManager->interruptEnd(pInterfaces->octetInterruptPvt);
-  return (asynSuccess);
-}
+///** Calls the registered asyn callback functions for all clients for a string parameter */
+//asynStatus paramList::octetCallback(int command, int addr, char *value)
+//{
+//  ELLLIST *pclientList;
+//  interruptNode *pnode;
+//  asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
+//  int address;
+//
+//  /* Pass octet interrupts */
+//  if (!pInterfaces->octetInterruptPvt)
+//    return (asynParamNotFound);
+//  pasynManager->interruptStart(pInterfaces->octetInterruptPvt, &pclientList);
+//  pnode = (interruptNode *) ellFirst(pclientList);
+//  while (pnode)
+//  {
+//    asynOctetInterrupt *pInterrupt = (asynOctetInterrupt *) pnode->drvPvt;
+//    pasynManager->getAddr(pInterrupt->pasynUser, &address);
+//    /* If this is not a multi-device then address is -1, change to 0 */
+//    if (address == -1)
+//      address = 0;
+//    if ((command == pInterrupt->pasynUser->reason) && (address == addr))
+//    {
+//      pInterrupt->callback(pInterrupt->userPvt, pInterrupt->pasynUser, value,
+//          strlen(value), ASYN_EOM_END);
+//    }
+//    pnode = (interruptNode *) ellNext(&pnode->node);
+//  }
+//  pasynManager->interruptEnd(pInterfaces->octetInterruptPvt);
+//  return (asynSuccess);
+//}
 
 /** Calls the registered asyn callback functions for all clients for any parameters that have changed
  * since the last time this function was called.
