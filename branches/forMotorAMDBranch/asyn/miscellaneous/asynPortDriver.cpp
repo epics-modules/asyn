@@ -172,6 +172,11 @@ asynStatus paramList::getName(int index, const char **value)
   return retStat;
 }
 
+asynStandardInterfaces* paramList::standardInterfaces()
+{
+	return pasynInterfaces;
+}
+
 /** Calls the registered asyn callback functions for all clients for an integer parameter */
 asynStatus paramList::int32Callback(int command, int addr, epicsInt32 value)
 {

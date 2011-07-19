@@ -48,6 +48,7 @@ public:
   void report(FILE *fp, int details);
   bool isIndexValid(int &index);
   ParamVal* getParam(int &index);
+  asynStandardInterfaces* standardInterfaces();
 
   void setFlag(int index);
   asynStatus float64Callback(int command, int addr, epicsFloat64 value);
