@@ -15,7 +15,7 @@
     <h2>
       Release 4-17</h2>
     <h2>
-      June XXX, 2011</h2>
+      July XXX, 2011</h2>
   </div>
   <h3>
     asynRecord</h3>
@@ -47,19 +47,25 @@
   <p>
     Added 3 new asynPortDriver methods: setUInt32DigitalInterrupt, clearUInt32Interrupt,
     getUInt32Interrupt. These were needed to complete the asynUInt32Digital support.</p>
-  <h3> 
+  <h3>
     asynShellCommands</h3>
   <p>
     The asynOctetSetInputEos, asynOctetSetOutputEos, asynOctetShowInputEos and asynOctetShowOutputEos
-    commands now take effect even if the port is not connected. This
-    makes startup scripts more robust in the face of devices that are not
-    accessible at IOC startup.</p>
+    commands now take effect even if the port is not connected. This makes startup scripts
+    more robust in the face of devices that are not accessible at IOC startup. Removed
+    the unused "drvInfo" parameter from each of these functions.</p>
   <h3>
     drvAsynIPPort</h3>
   <p>
-    Host name lookup is now deferred until port connection time. This makes startup scripts robust in the
-    face of a device that is offline at IOC startup and has been offline for so long that it's DNS entry 
-    has been deleted.</p>
+    Host name lookup is now deferred until port connection time. This makes startup
+    scripts robust in the face of a device that is offline at IOC startup and has been
+    offline for so long that it's DNS entry has been deleted.</p>
+  <h3>
+    drvAsynSerialPort</h3>
+  <p>
+    Added support for serial line software handshake flags (ixon/ixoff/xany) on most
+    architectures (e.g. Linux, Cygwin, Darwin; see: man stty) and vxWorks (ixon only).
+    Thanks to Dirk Zimoch for this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-16</h2>
@@ -118,8 +124,7 @@
     Changes to allow building on Cygwin 1.7.x or 1.5.x; replaced rpc with $(CYGWIN_RPC_LIB),
     which allows it to link with rpc on 1.5.x and tirpc on 1.7.x. You need to add one
     of the following 2 lines to <code>base/configure/os/CONFIG_SITE.cygwin-x86.cygwin-x86</code></p>
-  <pre>
-    For Cygwin 1.7.x:
+  <pre>    For Cygwin 1.7.x:
     CYGWIN_RPC_LIB = tirpc
 
     For Cygwin 1.5.x
