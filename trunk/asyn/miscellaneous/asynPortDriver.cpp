@@ -2295,8 +2295,7 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
     /* Create the epicsMutex for locking access to data structures from other threads */
     this->mutexId = epicsMutexCreate();
     if (!this->mutexId) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s::%s epicsMutexCreate failure\n", driverName, functionName);
+        printf("%s::%s ERROR: epicsMutexCreate failure\n", driverName, functionName);
         return;
     }
 
