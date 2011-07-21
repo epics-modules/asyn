@@ -1,6 +1,6 @@
 
 file {
-	name="testAsynPortDriverTop.adl"
+	name="/home/epics/devel/asyn/testAsynPortDriverApp/adl/testAsynPortDriverTop.adl"
 	version=030102
 }
 display {
@@ -98,6 +98,11 @@ display {
 		label="testAsynPortDriver"
 		name="testAsynPortDriver.adl"
 		args="P=testAPD:, R=scope1:"
+	}
+	display[1] {
+		label="asyn record"
+		name="asynRecord.adl"
+		args="P=testAPD:, R=asyn1"
 	}
 	clr=14
 	bclr=4
