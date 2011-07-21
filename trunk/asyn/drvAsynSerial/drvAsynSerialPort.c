@@ -172,6 +172,27 @@ getOption(void *drvPvt, asynUser *pasynUser,
 #endif
         l = epicsSnprintf(val, valSize, "%c", c);
     }
+    else if (epicsStrCaseCmp(key, "ixon") == 0) {
+#ifdef vxWorks
+        l = epicsSnprintf(val, valSize, "%c",  (ioctl(tty->fd, FIOGETOPTIONS, 0) & OPT_TANDEM) ? 'Y' : 'N');
+#else
+        l = epicsSnprintf(val, valSize, "%c",  (tty->termios.c_iflag & IXON) ? 'Y' : 'N');
+#endif
+    }
+    else if (epicsStrCaseCmp(key, "ixany") == 0) {
+#ifdef vxWorks
+        l = epicsSnprintf(val, valSize, "%c",  'N');
+#else
+        l = epicsSnprintf(val, valSize, "%c",  (tty->termios.c_iflag & IXANY) ? 'Y' : 'N');
+#endif
+    }
+    else if (epicsStrCaseCmp(key, "ixoff") == 0) {
+#ifdef vxWorks
+        l = epicsSnprintf(val, valSize, "%c",  'N');
+#else
+        l = epicsSnprintf(val, valSize, "%c",  (tty->termios.c_iflag & IXOFF) ? 'Y' : 'N');
+#endif
+    }
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -328,6 +349,67 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                       "Invalid crtscts value.");
             return asynError;
         }
+    }
+    else if (epicsStrCaseCmp(key, "ixon") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+#ifdef vxWorks
+            ioctl(tty->fd, FIOSETOPTIONS, ioctl(tty->fd, FIOGETOPTIONS, 0) | OPT_TANDEM);
+            return asynSuccess;
+#else
+            tty->termios.c_iflag |= IXON;
+#endif
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+#ifdef vxWorks
+            ioctl(tty->fd, FIOSETOPTIONS, ioctl(tty->fd, FIOGETOPTIONS, 0) & ~OPT_TANDEM);
+            return asynSuccess;
+#else
+            tty->termios.c_iflag &= ~IXON;
+#endif
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid ixon value.");
+            return asynError;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "ixany") == 0) {
+#ifdef vxWorks
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Option ixany not supported on vxWorks");
+            return asynError;       
+#else
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            tty->termios.c_iflag |= IXANY;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            tty->termios.c_iflag &= ~IXANY;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid ixany value.");
+            return asynError;
+        }
+#endif
+    }
+    else if (epicsStrCaseCmp(key, "ixoff") == 0) {
+#ifdef vxWorks
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Option ixoff not supported on vxWorks");
+            return asynError;       
+#else
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            tty->termios.c_iflag |= IXOFF;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            tty->termios.c_iflag &= ~IXOFF;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid ixoff value.");
+            return asynError;
+        }
+#endif
     }
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
