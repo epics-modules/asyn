@@ -85,6 +85,11 @@ menu(serialFCTL) {
     choice(serialFCTL_None,"None")
     choice(serialFCTL_Hardware,"Hardware")
 }
+menu(serialIX) {
+    choice(serialIX_unknown,"Unknown")
+    choice(serialIX_No,"No")
+    choice(serialIX_Yes,"Yes")
+}
 menu(gpibUCMD) {
     choice(gpibUCMD_None,"None")
     choice(gpibUCMD_Device_Clear__DCL_,"Device Clear (DCL)")
@@ -390,6 +395,27 @@ recordtype(asyn) {
         interest(2)
         special(SPC_MOD)
         menu(serialFCTL)
+    }
+    field(IXON,DBF_MENU) {
+        prompt("Output XON/XOFF")
+        promptgroup(GUI_INPUTS)
+        interest(2)
+        special(SPC_MOD)
+        menu(serialIX)
+    }
+    field(IXOFF,DBF_MENU) {
+        prompt("Input XON/XOFF")
+        promptgroup(GUI_INPUTS)
+        interest(2)
+        special(SPC_MOD)
+        menu(serialIX)
+    }
+    field(IXANY,DBF_MENU) {
+        prompt("XON=any character")
+        promptgroup(GUI_INPUTS)
+        interest(2)
+        special(SPC_MOD)
+        menu(serialIX)
     }
 
 # GPIB control fields
