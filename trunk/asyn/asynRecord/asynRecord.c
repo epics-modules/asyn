@@ -60,6 +60,8 @@ static char *stop_bit_choices[NUM_SBIT_CHOICES] = {"Unknown", "1", "2"};
 static char *modem_control_choices[NUM_MODEM_CHOICES] = {"Unknown", "Y", "N"};
 #define NUM_FLOW_CHOICES 3
 static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "N", "Y"};
+#define NUM_IX_CHOICES 3
+static char *ix_control_choices[NUM_IX_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
@@ -168,6 +170,9 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 sbit;       /* Stop bits */
     epicsEnum16 mctl;       /* Modem control */
     epicsEnum16 fctl;       /* Flow control */
+    epicsEnum16 ixon;       /* Output XON/XOFF */
+    epicsEnum16 ixoff;      /* Input XON/XOFF */
+    epicsEnum16 ixany;      /* XON=any character */
     epicsEnum16 ucmd;       /* Universal command */
     epicsEnum16 acmd;       /* Addressed command */
     unsigned char spr;      /* Serial poll response */
@@ -509,6 +514,9 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordSBIT:
     case asynRecordMCTL:
     case asynRecordFCTL:
+    case asynRecordIXON:
+    case asynRecordIXOFF:
+    case asynRecordIXANY:
         pmsg->fieldIndex = fieldIndex;
         pmsg->callbackType = callbackSetOption;
         break;
@@ -1726,6 +1734,18 @@ static void setOption(asynUser * pasynUser)
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
            pasynUser, "crtscts", flow_control_choices[pasynRec->fctl]);
         break;
+    case asynRecordIXON:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+           pasynUser, "ixon", ix_control_choices[pasynRec->ixon]);
+        break;
+    case asynRecordIXOFF:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+           pasynUser, "ixoff", ix_control_choices[pasynRec->ixoff]);
+        break;
+    case asynRecordIXANY:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+           pasynUser, "ixany", ix_control_choices[pasynRec->ixany]);
+        break;
     }
     if(status != asynSuccess) {
         reportError(pasynRec, status,
@@ -1755,6 +1775,9 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(dbit);
     REMEMBER_STATE(mctl);
     REMEMBER_STATE(fctl);
+    REMEMBER_STATE(ixon);
+    REMEMBER_STATE(ixoff);
+    REMEMBER_STATE(ixany);
     /* Get port options */
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
@@ -1792,12 +1815,33 @@ static void getOptions(asynUser * pasynUser)
     for (i = 0; i < NUM_FLOW_CHOICES; i++)
         if(strcmp(optbuff, flow_control_choices[i]) == 0)
             pasynRec->fctl = i;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
+                                        "ixon", optbuff, OPT_SIZE);
+    pasynRec->ixon = 0;
+    for (i = 0; i < NUM_IX_CHOICES; i++)
+        if(strcmp(optbuff, ix_control_choices[i]) == 0)
+            pasynRec->ixon = i;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
+                                        "ixoff", optbuff, OPT_SIZE);
+    pasynRec->ixoff = 0;
+    for (i = 0; i < NUM_IX_CHOICES; i++)
+        if(strcmp(optbuff, ix_control_choices[i]) == 0)
+            pasynRec->ixoff = i;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
+                                        "ixany", optbuff, OPT_SIZE);
+    pasynRec->ixany = 0;
+    for (i = 0; i < NUM_IX_CHOICES; i++)
+        if(strcmp(optbuff, ix_control_choices[i]) == 0)
+            pasynRec->ixany = i;
     POST_IF_NEW(baud);
     POST_IF_NEW(prty);
     POST_IF_NEW(sbit);
     POST_IF_NEW(dbit);
     POST_IF_NEW(mctl);
     POST_IF_NEW(fctl);
+    POST_IF_NEW(ixon);
+    POST_IF_NEW(ixoff);
+    POST_IF_NEW(ixany);
 }
 
 
