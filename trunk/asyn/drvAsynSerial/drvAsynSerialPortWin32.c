@@ -1,5 +1,8 @@
 /**********************************************************************
-* Asyn device support using local serial interface                    *
+* Asyn device support using local serial interface on WIN32
+*
+* Mark Rivers
+* July 26, 2011
 **********************************************************************/       
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
@@ -125,19 +128,19 @@ getOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%d",  (tty->commConfig.dcb.StopBits == 2) ? 2 : 1);
     }
     else if (epicsStrCaseCmp(key, "clocal") == 0) {
-        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fRtsControl == RTS_CONTROL_DISABLE) ? 'Y' : 'N');
+        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fOutxDsrFlow == TRUE) ? 'N' : 'Y');
     }
     else if (epicsStrCaseCmp(key, "crtscts") == 0) {
-        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fRtsControl == RTS_CONTROL_DISABLE) ? 'N' : 'Y');
+        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fOutxCtsFlow == TRUE) ? 'Y' : 'N');
     }
     else if (epicsStrCaseCmp(key, "ixon") == 0) {
-        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fOutX == 0) ? 'N' : 'Y');
+        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fOutX == TRUE) ? 'Y' : 'N');
     }
     else if (epicsStrCaseCmp(key, "ixany") == 0) {
         l = epicsSnprintf(val, valSize, "%c",  'N');
     }
     else if (epicsStrCaseCmp(key, "ixoff") == 0) {
-        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fInX == 0) ? 'N' : 'Y');
+        l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fInX == TRUE) ? 'Y' : 'N');
     }
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -229,10 +232,14 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     }
     else if (epicsStrCaseCmp(key, "clocal") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
-            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_DISABLE;
+            tty->commConfig.dcb.fOutxDsrFlow = FALSE;
+            tty->commConfig.dcb.fDsrSensitivity = FALSE;
+            tty->commConfig.dcb.fDtrControl = DTR_CONTROL_ENABLE;
         }
         else if (epicsStrCaseCmp(val, "N") == 0) {
-            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+            tty->commConfig.dcb.fOutxDsrFlow = TRUE;
+            tty->commConfig.dcb.fDsrSensitivity = TRUE;
+            tty->commConfig.dcb.fDtrControl = DTR_CONTROL_HANDSHAKE;
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -242,10 +249,12 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     }
     else if (epicsStrCaseCmp(key, "crtscts") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
-            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_DISABLE;
+            tty->commConfig.dcb.fOutxCtsFlow = TRUE;
+            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
         }
         else if (epicsStrCaseCmp(val, "N") == 0) {
-            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_HANDSHAKE;
+            tty->commConfig.dcb.fOutxCtsFlow = FALSE;
+            tty->commConfig.dcb.fRtsControl = RTS_CONTROL_ENABLE;
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -255,10 +264,10 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     }
     else if (epicsStrCaseCmp(key, "ixon") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
-            tty->commConfig.dcb.fOutX = 0;
+            tty->commConfig.dcb.fOutX = TRUE  ;
         }
         else if (epicsStrCaseCmp(val, "N") == 0) {
-            tty->commConfig.dcb.fOutX = 1;
+            tty->commConfig.dcb.fOutX = FALSE;
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -273,10 +282,10 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     }
     else if (epicsStrCaseCmp(key, "ixoff") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
-            tty->commConfig.dcb.fInX = 0;
+            tty->commConfig.dcb.fInX = TRUE;
         }
         else if (epicsStrCaseCmp(val, "N") == 0) {
-            tty->commConfig.dcb.fInX = 1;
+            tty->commConfig.dcb.fInX = FALSE;
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
