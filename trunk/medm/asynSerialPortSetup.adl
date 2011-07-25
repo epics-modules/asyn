@@ -1,14 +1,14 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/medm/asynSerialPortSetup.adl"
-	version=030004
+	name="/home/epics/devel/asyn/medm/asynSerialPortSetup.adl"
+	version=030102
 }
 display {
 	object {
-		x=149
-		y=24
+		x=154
+		y=74
 		width=260
-		height=200
+		height=275
 	}
 	clr=14
 	bclr=4
@@ -210,19 +210,6 @@ text {
 text {
 	object {
 		x=8
-		y=176
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Flow control:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=8
 		y=126
 		width=135
 		height=20
@@ -233,92 +220,172 @@ text {
 	textix="Parity:"
 	align="horiz. right"
 }
-composite {
+menu {
 	object {
 		x=150
 		y=51
 		width=102
-		height=145
+		height=20
 	}
-	"composite name"=""
-	children {
-		menu {
-			object {
-				x=150
-				y=51
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).BAUD"
-				clr=14
-				bclr=51
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=76
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).DBIT"
-				clr=14
-				bclr=51
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=101
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).SBIT"
-				clr=14
-				bclr=51
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=126
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PRTY"
-				clr=14
-				bclr=51
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=151
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).MCTL"
-				clr=14
-				bclr=51
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=176
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).FCTL"
-				clr=14
-				bclr=51
-			}
-		}
+	control {
+		chan="$(P)$(R).BAUD"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=76
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).DBIT"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=101
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).SBIT"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=126
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PRTY"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=151
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).MCTL"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=8
+		y=176
+		width=135
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Flow control:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=176
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).FCTL"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=8
+		y=201
+		width=135
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XOFF output:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=201
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXON"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=8
+		y=226
+		width=135
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XOFF input:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=226
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXOFF"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=8
+		y=251
+		width=135
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XON=any:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=251
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXANY"
+		clr=14
+		bclr=51
 	}
 }
