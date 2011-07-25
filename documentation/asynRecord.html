@@ -1027,6 +1027,51 @@
           Flow control. Choices are "Unknown", "None" and "Hardware". Default="Unknown". Hardware
           means to use the cts (clear to send) and rts (request to send) signals</td>
       </tr>
+      <tr valign="top">
+        <td>
+          IXON</td>
+        <td>
+          R/W</td>
+        <td>
+          "Output XOFF/XON"</td>
+        <td>
+          DBF_RECCHOICE</td>
+        <td>
+          XOFF/XON control on output. Choices are "Unknown", "No" and "Yes". Default="Unknown".
+          If the IOC receives an XOFF character, it suspends output until an XON character
+          is received.</td>
+      </tr>
+      <tr valign="top">
+        <td>
+          IXOFF</td>
+        <td>
+          R/W</td>
+        <td>
+          "Input XOFF/XON"</td>
+        <td>
+          DBF_RECCHOICE</td>
+        <td>
+          XOFF/XON control on input. Choices are "Unknown", "No" and "Yes". Default="Unknown".
+          The IOC sends XOFF and XON characters as necessary to prevent input from coming
+          in faster than programs are reading it. The external device sending the input data
+          must respond to an XOFF character by suspending transmission, and to an XON character
+          by resuming transmission.</td>
+      </tr>
+      <tr valign="top">
+        <td>
+          IXANY</td>
+        <td>
+          R/W</td>
+        <td>
+          "XON=any character"</td>
+        <td>
+          DBF_RECCHOICE</td>
+        <td>
+          Choices are "Unknown", "No" and "Yes". Default="Unknown". Allows any input character
+          to restart output when output has been suspended with the XOFF character. Otherwise,
+          only the XON character restarts output. This flag is not available on all systems,
+          including WIN32.</td>
+      </tr>
     </tbody>
   </table>
   <p>
@@ -1606,27 +1651,27 @@
     <h3>
       Main control screen, asynRecord.adl</h3>
     <p>
-      <img alt="asynRecord.gif" src="asynRecord.gif" /></p>
+      <img alt="asynRecord.png" src="asynRecord.png" /></p>
     <p>
     </p>
     <h3>
       asynOctet I/O screen, asynOctet.adl</h3>
     <p>
-      <img alt="asynOctet.gif" src="asynOctet.gif" /></p>
+      <img alt="asynOctet.png" src="asynOctet.png" /></p>
     <h3>
       asyn register device I/O screen, asynRegister.adl</h3>
     <p>
-      <img alt="asynRegister.gif" src="asynRegister.gif" /></p>
+      <img alt="asynRegister.png" src="asynRegister.png" /></p>
     <h3>
       Serial port setup screen, asynSerialPortSetup.adl</h3>
     <p>
-      <img alt="asynSerialPortSetup.gif" src="asynSerialPortSetup.gif" /></p>
+      <img alt="asynSerialPortSetup.png" src="asynSerialPortSetup.png" /></p>
     <p>
     </p>
     <h3>
       GPIB setup screen, asynGPIBSetup.adl</h3>
     <p>
-      <img alt="asynGPIBSetup.gif" src="asynGPIBSetup.gif" /></p>
+      <img alt="asynGPIBSetup.png" src="asynGPIBSetup.png" /></p>
     <p>
     </p>
     <hr />
