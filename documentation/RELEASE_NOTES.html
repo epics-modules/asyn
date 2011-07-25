@@ -21,8 +21,11 @@
     asynRecord</h3>
   <p>
     Fixed asynRecord.dbd to include promptgroup for fields that need it. Removed the
-    SOCK field; the record no longer supports creating sockets, which can easily be
-    done with the iocsh drvAsynIPPortConfigure command.</p>
+    SOCK field and asynSocketSetup.adl; the record no longer supports creating sockets,
+    which can easily be done with the iocsh drvAsynIPPortConfigure command.</p>
+  <p>
+    Added IXON, IXOFF, and IXANY fields for new XON/XOFF support on serial ports. These
+    fields were added to the asynSerialPortSetup.adl medm screen.</p>
   <h3>
     devAsynXXXArray</h3>
   <p>
@@ -64,11 +67,11 @@
     drvAsynSerialPort</h3>
   <p>
     Added support for local serial ports on Windows, i.e.win32-x86 and windows-x64 architectures.
-    Previous local serial ports were only supported on the cygwin-x86 architecture.</p>
+    Previously Windows local serial ports were only supported on the cygwin-x86 architecture.</p>
   <p>
     Added support for serial line software handshake flags (ixon/ixoff/xany) on most
-    architectures (e.g. Linux, Cygwin, Darwin; see: man stty) and vxWorks (ixon only).
-    Thanks to Dirk Zimoch for this.</p>
+    architectures (e.g. Linux, Cygwin, Darwin, WIN32; see: man stty) and vxWorks (ixon
+    only). Thanks to Dirk Zimoch for this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-16</h2>
