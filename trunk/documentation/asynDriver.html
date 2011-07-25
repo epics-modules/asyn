@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-16</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-17</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Marty Kraimer, Eric Norum and Mark
         Rivers</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">January 17, 2011</span></p>
+      <span style="font-weight: bold; font-size: 14pt">July 26, 2011</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -4205,7 +4205,7 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
     The following medm display appears.</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynRecord" src="./asynRecord.gif" /></p>
+      <img alt="asynRecord.png" src="./asynRecord.png" /></p>
   </div>
   <div style="text-align: center">
     <hr />
@@ -4433,7 +4433,7 @@ src/
     Executing "medm -x test.adl" produces the display:</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynTest" src="./asynTest.gif" /></p>
+      <img alt="asynTest.png" src="asynTest.png" /></p>
   </div>
   <p>
     It assumes that an ioc has been started via:</p>
@@ -4714,7 +4714,7 @@ struct asynGpibPort {
     where the arguments are:</p>
   <ul>
     <li>portName - The portName that is registered with asynGpib.</li>
-    <li>ttyName - The name of the local serial port (e.g. "/dev/ttyS0").</li>
+    <li>ttyName - The name of the local serial port (e.g. "/dev/ttyS0", "COM1").</li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing,then epicsThreadPriorityMedium is used.</li>
     <li>addr - This argument is ignored since serial devices are configured with multiDevice=0.</li>
@@ -4775,6 +4775,24 @@ struct asynGpibPort {
         <td>
           N Y</td>
       </tr>
+      <tr>
+        <td>
+          ixon</td>
+        <td>
+          N Y</td>
+      </tr>
+      <tr>
+        <td>
+          ixoff</td>
+        <td>
+          N Y</td>
+      </tr>
+      <tr>
+        <td>
+          ixany</td>
+        <td>
+          N Y</td>
+      </tr>
     </tbody>
   </table>
   <p>
@@ -4788,6 +4806,18 @@ struct asynGpibPort {
     It also uses clocal for what is actually crtscts. For vxWorks the standard serial
     support accepts both clocal and crtscts for getOption and setOption. clocal=Y implies
     crtscts=N and clocal=N implies crtscts=Y.</p>
+  <p>
+    ixon controls XON/OFF flow control on output. If the IOC receives an XOFF character,
+    it suspends output until an XON character is received.</p>
+  <p>
+    ixoff controls XON/OFF flow control on input. The IOC sends XOFF and XON characters
+    as necessary to prevent input from coming in faster than programs are reading it.
+    The external device sending the input data must respond to an XOFF character by
+    suspending transmission, and to an XON character by resuming transmission.</p>
+  <p>
+    The ixany flag allows any input character to restart output when output has been
+    suspended with the XOFF character. Otherwise, only the XON character restarts output.
+    This flag is not available on all systems, including WIN32.</p>
   <p>
     vxWorks IOC serial ports may need to be set up using hardware-specific commands.
     Once this is done, the standard drvAsynSerialPortConfigure and asynSetOption commands
