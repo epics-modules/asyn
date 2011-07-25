@@ -1,7 +1,7 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynOctet.adl"
-	version=020306
+	name="/home/epics/devel/asyn/medm/asynOctet.adl"
+	version=030102
 }
 display {
 	object {
@@ -813,11 +813,6 @@ text {
 	display[3] {
 		label="GPIB parameters"
 		name="asynGPIBSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[4] {
-		label="Socket parameters"
-		name="asynSocketSetup.adl"
 		args="P=$(P),R=$(R)"
 	}
 	clr=14
