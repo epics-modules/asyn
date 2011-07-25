@@ -1,6 +1,6 @@
 
 file {
-	name="/home/phoebus/NORUME/src/EPICS/modules/soft/asyn/medm/asynRecord.adl"
+	name="/home/epics/devel/asyn/medm/asynRecord.adl"
 	version=030102
 }
 display {
@@ -956,11 +956,6 @@ text {
 	display[3] {
 		label="GPIB parameters"
 		name="asynGPIBSetup.adl"
-		args="P=$(P),R=$(R)"
-	}
-	display[4] {
-		label="Socket parameters"
-		name="asynSocketSetup.adl"
 		args="P=$(P),R=$(R)"
 	}
 	clr=14
