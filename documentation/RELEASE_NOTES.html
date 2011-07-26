@@ -63,6 +63,12 @@
     Host name lookup is now deferred until port connection time. This makes startup
     scripts robust in the face of a device that is offline at IOC startup and has been
     offline for so long that it's DNS entry has been deleted.</p>
+  <p>
+    Prevent reconnects during IOC shutdown. The IP Port exithandler runs before record
+    scanning stops. In that interval, if a record is scanned then it will trigger a
+    reconnect, and new connection can be shutdown without sending data, or without waiting
+    for a reply. Some embedded TCP/IP stacks have problems dealing with this. Thanks
+    to Michael Davidsaver for this fix.</p>
   <h3>
     drvAsynSerialPort</h3>
   <p>
@@ -72,6 +78,11 @@
     Added support for serial line software handshake flags (ixon/ixoff/xany) on most
     architectures (e.g. Linux, Cygwin, Darwin, WIN32; see: man stty) and vxWorks (ixon
     only). Thanks to Dirk Zimoch for this.</p>
+  <h3>
+    Miscelleaneous</h3>
+  <p>
+    Changed asyn/Makefile to fix build dependencies for rpcgen of vxi11. Thanks to Michael
+    Davidsaver for this fix.</p>
   <div style="text-align: center">
     <h2>
       Release 4-16</h2>
