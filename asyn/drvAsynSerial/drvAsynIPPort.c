@@ -105,6 +105,7 @@ typedef struct {
 
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
+#define FLAG_SHUTDOWN                   0x4
 
 #ifdef FAKE_POLL
 /*
@@ -214,15 +215,25 @@ asynCommonReport(void *drvPvt, FILE *fp, int details)
 static void
 cleanup (void *arg)
 {
+    asynStatus status;
     ttyController_t *tty = (ttyController_t *)arg;
 
     if (!tty) return;
+    status=pasynManager->lockPort(tty->pasynUser);
+    if(status!=asynSuccess)
+        asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "%s: cleanup locking error\n", tty->portName);
+
     if (tty->fd >= 0) {
+        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "%s: shutdown socket\n", tty->portName);
+        tty->flags |= FLAG_SHUTDOWN; /* prevent reconnect */
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         /* If this delay is not present then the sockets are not always really closed cleanly */
         epicsThreadSleep(CLOSE_SOCKET_DELAY);
     }
+
+    if(status==asynSuccess)
+        pasynManager->unlockPort(tty->pasynUser);
 }
 
 /*
@@ -247,6 +258,10 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     if (tty->fd >= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "%s: Link already open!", tty->IPDeviceName);
+        return asynError;
+    } else if(tty->flags & FLAG_SHUTDOWN) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s: Link shutdown!", tty->IPDeviceName);
         return asynError;
     }
 
