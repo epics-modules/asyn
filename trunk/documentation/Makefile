@@ -13,7 +13,6 @@ install:
 	cp *.html ../html
 	cp *.jpg ../html
 	cp *.png ../html
-	cp *.gif ../html
 	cp *.pdf ../html
 	cp -r asynDoxygenHTML ../html
 	mkdir -p ../html/gpibCoreConversion ; cp gpibCoreConversion/*html gpibCoreConversion/*pdf ../html/gpibCoreConversion
