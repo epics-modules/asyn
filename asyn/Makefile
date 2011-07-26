@@ -166,23 +166,28 @@ asyn_SRCS += boSRQonOff.c
 include $(TOP)/configure/RULES
 
 ifdef T_A
-ifeq ($(OS_CLASS),vxWorks)
-vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
-	cp ../vxi11/rpc/*.[ch] .
+ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
+
+vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
+% : ../vxi11/rpc/%
+	cp $< $@
+
 else
-ifeq ($(OS_CLASS),RTEMS)
-vxi11core_xdr.c: ../vxi11/rpc/vxi11core_xdr.c
-	cp ../vxi11/rpc/*.[ch] .
-else
+
 RPCGEN_FLAGS_solaris = -M
-vxi11core_xdr.c: vxi11core.h
-vxi11core.h:
+vxi11core.h vxi11core_xdr.c: ../vxi11/vxi11core.rpcl
 	cp ../vxi11/vxi11core.rpcl .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11core.rpcl
-drvVxi11.c: vxi11intr.h
-vxi11intr.h:
+
+vxi11intr.h vxi11intr_xdr.c: ../vxi11/vxi11intr.rpcl
 	cp ../vxi11/vxi11intr.rpcl .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11intr.rpcl
+
 endif
+
+vxi11core_xdr.c: vxi11core.h
+vxi11intr_xdr.c: vxi11intr.h
+
 endif
-endif
+
+$(ASYN)/vxi11/drvVxi11.c: vxi11intr.h
