@@ -1,0 +1,116 @@
+
+port cantBlockSingle addr 0
+test lock/unlock. thread0 first
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+test lock/unlock. thread1 first
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+
+port cantBlockMulti addr 0
+test lock/unlock. thread0 first
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+test lock/unlock. thread1 first
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+
+port canBlockSingle addr 0
+test lock/unlock. thread0 first
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread1 lock/unlock first queueRequest
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+test lock/unlock. thread1 first
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread0 lock/unlock first queueRequest
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+test cancelRequest
+thread0 cancelRequest  cancelRequest should remove
+thread0 cancelRequest cancelRequest wasQueued 1
+thread0 cancelRequest should find callback active
+thread0 cancelRequest cancelCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest should find timeout active
+thread0 cancelRequest timeoutCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest all done
+
+port canBlockMulti addr 0
+test lock/unlock. thread0 first
+thread0 lock/unlock first queueRequest
+thread0 lock/unlock lockCallback
+thread1 lock/unlock first queueRequest
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+thread1 lock/unlock lockCallback
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+test lock/unlock. thread1 first
+thread1 lock/unlock first queueRequest
+thread1 lock/unlock lockCallback
+thread0 lock/unlock first queueRequest
+thread1 lock/unlock second queueRequest
+thread1 lock/unlock lockCallback
+thread1 lock/unlock all done
+thread0 lock/unlock lockCallback
+thread0 lock/unlock second queueRequest
+thread0 lock/unlock lockCallback
+thread0 lock/unlock all done
+test cancelRequest
+thread0 cancelRequest  cancelRequest should remove
+thread0 cancelRequest cancelRequest wasQueued 1
+thread0 cancelRequest should find callback active
+thread0 cancelRequest cancelCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest should find timeout active
+thread0 cancelRequest timeoutCallback
+thread0 cancelRequest cancelRequest wasQueued 0
+thread0 cancelRequest all done
