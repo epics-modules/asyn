@@ -174,6 +174,7 @@ vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 
 else
 
+RPCGEN_FLAGS_darwin = -C
 RPCGEN_FLAGS_solaris = -M
 vxi11core.h vxi11core_xdr.c: ../vxi11/vxi11core.rpcl
 	cp ../vxi11/vxi11core.rpcl .
