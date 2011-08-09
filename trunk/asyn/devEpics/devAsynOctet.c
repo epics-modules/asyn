@@ -274,17 +274,15 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
-    unsigned            num;
+    unsigned        num;
+    char           *pbuf = (char *)pwf->bptr;
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
-    if(num>=0) {
-        char *pbuf = (char *)pwf->bptr;
-        memcpy(pbuf,data,num);
-        if(num<pwf->nelm) pbuf[num] = 0;
-        pwf->nord = num;
-        pwf->udf = 0;
-    }
+    memcpy(pbuf,data,num);
+    if(num<pwf->nelm) pbuf[num] = 0;
+    pwf->nord = num;
+    pwf->udf = 0;
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
