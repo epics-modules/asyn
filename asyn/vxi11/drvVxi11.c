@@ -199,7 +199,7 @@ static char *vxiError(Device_ErrorCode error)
     case VXI_ABORT:     return ("VXI: abort");
     case VXI_CHANEXIST: return ("VXI: channel already established");
     default:
-        printf("vxiError error = %ld\n", error);
+        printf("vxiError error = %d\n", (int)error);
         return ("VXI: unknown error");
     }
 }

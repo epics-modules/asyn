@@ -32,7 +32,7 @@
  *
  */
 
-typedef long Device_Link;
+typedef int Device_Link;
 
 enum Device_AddrFamily
 {
@@ -40,9 +40,9 @@ enum Device_AddrFamily
 	DEVICE_UDP
 };
 
-typedef long Device_Flags;
+typedef int Device_Flags;
 
-typedef long Device_ErrorCode;
+typedef int Device_ErrorCode;
 
 struct Device_Error
 {
@@ -51,9 +51,9 @@ struct Device_Error
 
 struct Create_LinkParms
 {
-	long				clientId;		/* implementation specific value */
+	int 				clientId;		/* implementation specific value */
 	bool				lockDevice;		/* attempt to lock the device */
-	unsigned long		lock_timeout;	/* time to wait for lock */
+	unsigned int		lock_timeout;	/* time to wait for lock */
 	string				device<>;		/* name of device */
 };
 struct Create_LinkResp
@@ -61,34 +61,34 @@ struct Create_LinkResp
 	Device_ErrorCode	error;
 	Device_Link			lid;
 	unsigned short		abortPort;		/* for the abort RPC */
-	unsigned long		maxRecvSize;	/* max # of bytes accepted on write */
+	unsigned int		maxRecvSize;	/* max # of bytes accepted on write */
 };
 struct Device_WriteParms
 {
 	Device_Link			lid;			/* link id from create_link */
-	unsigned long		io_timeout;		/* time to wait for I/O */
-	unsigned long		lock_timeout;	/* time to wait for lock */
+	unsigned int		io_timeout;		/* time to wait for I/O */
+	unsigned int		lock_timeout;	/* time to wait for lock */
 	Device_Flags		flags;			/* flags with options */
 	opaque				data<>;			/* the data length and the data itself */
 };
 struct Device_WriteResp
 {
 	Device_ErrorCode	error;
-	unsigned long		size;			/* # of bytes written */
+	unsigned int		size;			/* # of bytes written */
 };
 struct Device_ReadParms
 {
 	Device_Link			lid;			/* link id from create_link */
-	unsigned long		requestSize;	/* # of bytes requested */
-	unsigned long		io_timeout;		/* time to wait for I/O */
-	unsigned long		lock_timeout;	/* time to wait for lock */
+	unsigned int		requestSize;	/* # of bytes requested */
+	unsigned int		io_timeout;		/* time to wait for I/O */
+	unsigned int		lock_timeout;	/* time to wait for lock */
 	Device_Flags		flags;			/* flags with options */
 	char				termChar;		/* valid if flags & termchrset */
 };
 struct Device_ReadResp
 {
 	Device_ErrorCode	error;
-	long				reason;			/* why read completed */
+	int 				reason;			/* why read completed */
 	opaque				data<>;			/* the data length and the data itself */
 };
 struct Device_ReadStbResp
@@ -100,15 +100,15 @@ struct Device_GenericParms
 {
 	Device_Link			lid;			/* link id from create_link */
 	Device_Flags		flags;			/* flags with options */
-	unsigned long		lock_timeout;	/* time to wait for lock */
-	unsigned long		io_timeout;		/* time to wait for I/O */
+	unsigned int		lock_timeout;	/* time to wait for lock */
+	unsigned int		io_timeout;		/* time to wait for I/O */
 };
 struct Device_RemoteFunc
 {
-	unsigned long		hostAddr;		/* host servicing interrupt */
-	unsigned long		hostPort;		/* valid port # on client */
-	unsigned long		progNum;		/* DEVICE_INTR */
-	unsigned long		progVers;		/* DEVICE_INTR_VERSION */
+	unsigned int		hostAddr;		/* host servicing interrupt */
+	unsigned int		hostPort;		/* valid port # on client */
+	unsigned int		progNum;		/* DEVICE_INTR */
+	unsigned int		progVers;		/* DEVICE_INTR_VERSION */
 	Device_AddrFamily	progFamily;		/* DEVICE_UDP | DEVICE_TCP */
 };
 struct Device_EnableSrqParms
@@ -121,17 +121,17 @@ struct Device_LockParms
 {
 	Device_Link			lid;			/* link id from create_link */
 	Device_Flags		flags;			/* contains the waitlock flag */
-	unsigned long		lock_timeout;	/* time to wait for lock */
+	unsigned int		lock_timeout;	/* time to wait for lock */
 };
 struct Device_DocmdParms
 {
 	Device_Link			lid;			/* link id from create_link */
 	Device_Flags		flags;			/* flags with options */
-	unsigned long		io_timeout;		/* time to wait for I/O */
-	unsigned long		lock_timeout;	/* time to wait for lock */
-	long				cmd;			/* which command to execute */
+	unsigned int		io_timeout;		/* time to wait for I/O */
+	unsigned int		lock_timeout;	/* time to wait for lock */
+	int 				cmd;			/* which command to execute */
 	bool				network_order;	/* client's byte order */
-	long				datasize;		/* size of individual data elements */
+	int 				datasize;		/* size of individual data elements */
 	opaque				data_in<>;		/* docmd data parameters */
 };
 struct Device_DocmdResp
