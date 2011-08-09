@@ -19,6 +19,7 @@ ctlBgColor1 index 34
 ctlBgColor2 index 35
 topShadowColor index 37
 botShadowColor index 44
+title "asynRecord $(P)$(R)"
 showGrid
 snapToGrid
 gridSize 4
