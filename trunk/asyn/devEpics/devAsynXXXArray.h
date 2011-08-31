@@ -117,8 +117,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,  \
             pPvt->userParam,0,0); \
         if(status!=asynSuccess) { \
             errlogPrintf( \
-                "devAsynLong::initCommon, %s drvUserInit failed %s\n", \
-                pr->name, pasynUser->errorMessage); \
+                "%s::initCommon, %s drvUserCreate failed %s\n", \
+                driverName, pr->name, pasynUser->errorMessage); \
             goto bad; \
         } \
     } \
