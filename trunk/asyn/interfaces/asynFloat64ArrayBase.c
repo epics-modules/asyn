@@ -23,5 +23,5 @@
 #include "asynXXXArrayBase.h"
  
 ASYN_XXX_ARRAY_BASE_FUNCS(asynFloat64Array, asynFloat64ArrayType, asynFloat64ArrayBase, pasynFloat64ArrayBase,
-                          asynFloat64ArrayInterrupt, interruptCallbackFloat64Array, epicsFloat64);
+                          asynFloat64ArrayInterrupt, interruptCallbackFloat64Array, epicsFloat64)
 
