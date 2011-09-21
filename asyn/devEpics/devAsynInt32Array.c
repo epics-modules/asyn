@@ -45,5 +45,5 @@
 
 ASYN_XXX_ARRAY_FUNCS("devAsynInt32Array", asynInt32Array, asynInt32ArrayType,
                      interruptCallbackInt32Array, epicsInt32, asynInt32ArrayWfIn, asynInt32ArrayWfOut,
-                     menuFtypeLONG, menuFtypeULONG);
+                     menuFtypeLONG, menuFtypeULONG)
 

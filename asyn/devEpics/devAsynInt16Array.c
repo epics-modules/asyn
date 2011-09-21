@@ -45,5 +45,5 @@
 
 ASYN_XXX_ARRAY_FUNCS("devAsynInt16Array", asynInt16Array, asynInt16ArrayType,
                      interruptCallbackInt16Array, epicsInt16, asynInt16ArrayWfIn, asynInt16ArrayWfOut,
-                     menuFtypeSHORT, menuFtypeUSHORT);
+                     menuFtypeSHORT, menuFtypeUSHORT)
 
