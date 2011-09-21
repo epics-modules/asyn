@@ -243,7 +243,6 @@ flushIt(void *ppvt, asynUser *pasynUser)
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     return pinterposePvt->pasynOctetDrv->flush(pinterposePvt->drvPvt, pasynUser);
-    return(asynSuccess);
 }
 
 static asynStatus
