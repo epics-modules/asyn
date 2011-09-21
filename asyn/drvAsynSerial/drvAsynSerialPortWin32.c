@@ -578,6 +578,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
         if (tty->timeoutFlag)
             break;
+        if (tty->readTimeout == 0) /* Timeout of 0 means return immediately */
+            break;
     }
     if (timerStarted) epicsTimerCancel(tty->timer);
     if (tty->timeoutFlag && (status == asynSuccess))
