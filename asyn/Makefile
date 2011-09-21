@@ -20,6 +20,7 @@ USR_INCLUDES_cygwin32 += -I/usr/include/tirpc
 ifeq (vxWorks,$(findstring vxWorks, $(T_A)))
 CODE_CXXFLAGS=
 endif
+USR_CXXFLAGS_solaris-sparc=-instances=global
 
 LIBRARY_IOC += asyn
 asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
