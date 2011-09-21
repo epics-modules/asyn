@@ -29,7 +29,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser, \
 static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser, \
                                void *registrarPvt); \
  \
- \
+ \
 asynStatus initialize(const char *portName, asynInterface *pdriver) \
 { \
     INTERFACE *pInterface = (INTERFACE *)pdriver->pinterface; \
@@ -79,7 +79,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser, \
     return asynError; \
 } \
  \
- \
+ \
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser, \
       INTERRUPT_CALLBACK callback, void *userPvt,void **registrarPvt) \
 { \
