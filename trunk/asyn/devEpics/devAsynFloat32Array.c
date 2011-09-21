@@ -45,5 +45,5 @@
 
 ASYN_XXX_ARRAY_FUNCS("devAsynFloat32Array", asynFloat32Array, asynFloat32ArrayType,
                      interruptCallbackFloat32Array, epicsFloat32, asynFloat32ArrayWfIn, asynFloat32ArrayWfOut,
-                     menuFtypeFLOAT, menuFtypeFLOAT);
+                     menuFtypeFLOAT, menuFtypeFLOAT)
 

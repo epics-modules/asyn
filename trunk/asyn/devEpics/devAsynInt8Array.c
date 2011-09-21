@@ -45,5 +45,5 @@
 
 ASYN_XXX_ARRAY_FUNCS("devAsynInt8Array", asynInt8Array, asynInt8ArrayType,
                      interruptCallbackInt8Array, epicsInt8, asynInt8ArrayWfIn, asynInt8ArrayWfOut,
-                     menuFtypeCHAR, menuFtypeUCHAR);
+                     menuFtypeCHAR, menuFtypeUCHAR)
 
