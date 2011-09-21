@@ -51,10 +51,10 @@ void asynPortDriver::callbackTask()
 
 
 /** Constructor for paramList class.
-  * \param[in] nVals Number of parameters in the list.
+  * \param[in] nValues Number of parameters in the list.
   * \param[in] pasynInterfaces Pointer to asynStandardInterfaces structure, used for callbacks */
-paramList::paramList(int nVals, asynStandardInterfaces *pasynInterfaces)
-    : nextParam(0), nVals(nVals), nFlags(0), pasynInterfaces(pasynInterfaces)
+paramList::paramList(int nValues, asynStandardInterfaces *pasynInterfaces)
+    : nextParam(0), nVals(nValues), nFlags(0), pasynInterfaces(pasynInterfaces)
 {
     vals = (paramVal *) calloc(nVals, sizeof(paramVal));
     flags = (int *) calloc(nVals, sizeof(int));
@@ -2255,8 +2255,8 @@ static asynDrvUser ifaceDrvUser = {
 
 
 /** Constructor for the asynPortDriver class.
-  * \param[in] portName The name of the asyn port driver to be created.
-  * \param[in] maxAddr The maximum  number of asyn addr addresses this driver supports.
+  * \param[in] portNameIn The name of the asyn port driver to be created.
+  * \param[in] maxAddrIn The maximum  number of asyn addr addresses this driver supports.
                Often it is 1 (which is the minimum), but some drivers, for example a 
 			   16-channel D/A or A/D would support values &gt; 1. 
 			   This controls the number of parameter tables that are created.
@@ -2275,7 +2275,7 @@ static asynDrvUser ifaceDrvUser = {
                If it is 0 then the default value of epicsThreadGetStackSize(epicsThreadStackMedium)
                will be assigned by asynManager.
   */
-asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
                                int asynFlags, int autoConnect, int priority, int stackSize)
 {
     asynStatus status;
@@ -2287,9 +2287,9 @@ asynPortDriver::asynPortDriver(const char *portName, int maxAddr, int paramTable
     pInterfaces = &this->asynStdInterfaces;
     memset(pInterfaces, 0, sizeof(asynStdInterfaces));
        
-    this->portName = epicsStrDup(portName);
-    if (maxAddr < 1) maxAddr = 1;
-    this->maxAddr = maxAddr;
+    this->portName = epicsStrDup(portNameIn);
+    if (maxAddrIn < 1) maxAddrIn = 1;
+    this->maxAddr = maxAddrIn;
     interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
 
     /* Create the epicsMutex for locking access to data structures from other threads */
