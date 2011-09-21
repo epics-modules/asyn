@@ -22,9 +22,18 @@
   <p>
     Changes to avoid compiler warnings on 64-bit Darwin.</p>
   <p>
+    Changes to avoid compiler warnings and errors on older Solaris compiler.</p>
+  <p>
     Changed non-standard __VAR_ARGS__ to __VA_ARGS__ in asynPrint macro.</p>
   <p>
     Added titles to EDM screens.</p>
+  <p>
+    Added CSS BOY screens.</p>
+  <h3>
+    drvAsynSeriaPort</h3>
+  <p>
+    Bug fix on WIN32.  It was waiting forever when timeout=0 when it should return
+    whatever characters are available without waiting at all.</p>
   <div style="text-align: center">
     <h2>
       Release 4-17</h2>
