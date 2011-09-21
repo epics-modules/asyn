@@ -18,7 +18,7 @@
     March 26, 2008 \
 */ \
  \
- \
+ \
 typedef struct devAsynWfPvt{ \
     dbCommon        *pr; \
     asynUser        *pasynUser; \
@@ -70,7 +70,7 @@ epicsExportAddress(dset, DSET_IN); \
 epicsExportAddress(dset, DSET_OUT); \
 \
 static char *driverName = DRIVER_NAME; \
- \
+ \
 static long initCommon(dbCommon *pr, DBLINK *plink,  \
     userCallback callback, INTERRUPT interruptCallback) \
 { \
@@ -187,7 +187,7 @@ static long initWfArrayOut(waveformRecord *pwf) \
 static long initWfArrayIn(waveformRecord *pwf) \
 { return initCommon((dbCommon *)pwf, (DBLINK *)&pwf->inp,  \
     callbackWf, interruptCallbackInput); }  \
- \
+ \
 static long processCommon(dbCommon *pr) \
 { \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt; \
@@ -276,7 +276,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     pPvt->nord = len; \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
- \
+ \
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,  \
                 EPICS_TYPE *value, size_t len) \
 { \
