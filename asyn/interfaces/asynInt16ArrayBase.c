@@ -23,5 +23,5 @@
 #include "asynXXXArrayBase.h"
 
 ASYN_XXX_ARRAY_BASE_FUNCS(asynInt16Array, asynInt16ArrayType, asynInt16ArrayBase, pasynInt16ArrayBase,
-                          asynInt16ArrayInterrupt, interruptCallbackInt16Array, epicsInt16);
+                          asynInt16ArrayInterrupt, interruptCallbackInt16Array, epicsInt16)
 
