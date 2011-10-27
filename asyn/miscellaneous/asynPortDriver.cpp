@@ -236,6 +236,7 @@ asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask, interruptR
     if (this->vals[index].type != asynParamUInt32Digital) return asynParamWrongType;
     this->vals[index].uInt32InterruptMask = mask;
     this->vals[index].uInt32InterruptReason = reason;
+    setFlag(index);
     return asynSuccess;
 }
 
