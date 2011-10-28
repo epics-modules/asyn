@@ -15,7 +15,7 @@
     <h2>
       Release 4-18</h2>
     <h2>
-      Sept. XXX, 2011</h2>
+      October 28, 2011</h2>
   </div>
   <h3>
     Miscellaneous</h3>
@@ -30,10 +30,18 @@
   <p>
     Added CSS BOY screens.</p>
   <h3>
+    asynPortDriver</h3>
+  <p>
+    Bug fix for interrupt callbacks on asynUInt32Digital interface. It was not doing
+    callbacks if the value had not changed but an interrupt had occured for bits in
+    the mask. This would happen when interrupts were only enabled on the falling or
+    rising edges but not both. paramList::setUNit32Interrupt was not calling setFlag()
+    when it needed to. This bug made the quadEM not work correctly with the ipUnidig.</p>
+  <h3>
     drvAsynSeriaPort</h3>
   <p>
-    Bug fix on WIN32.  It was waiting forever when timeout=0 when it should return
-    whatever characters are available without waiting at all.</p>
+    Bug fix on WIN32. It was waiting forever when timeout=0 when it should return whatever
+    characters are available without waiting at all.</p>
   <div style="text-align: center">
     <h2>
       Release 4-17</h2>
