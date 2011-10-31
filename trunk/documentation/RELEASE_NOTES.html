@@ -32,11 +32,14 @@
   <h3>
     asynPortDriver</h3>
   <p>
-    Bug fix for interrupt callbacks on asynUInt32Digital interface. It was not doing
+    Cleaned up logic for callbacks on asynUInt32Digital interface. It was not doing
     callbacks if the value had not changed but an interrupt had occured for bits in
     the mask. This would happen when interrupts were only enabled on the falling or
-    rising edges but not both. paramList::setUNit32Interrupt was not calling setFlag()
-    when it needed to. This bug made the quadEM not work correctly with the ipUnidig.</p>
+    rising edges but not both. Added an additional form of setUIntDigitalParam that
+    takes an interruptMask argument. In the previous releases drivers were calling setUInt32Interrupt
+    for callbacks which is not correct. That function should only be called by device
+    support to tell the driver which interrupts to recognize. These problems made the
+    quadEM not work correctly with the ipUnidig.</p>
   <h3>
     drvAsynSeriaPort</h3>
   <p>
