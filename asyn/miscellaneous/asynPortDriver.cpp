@@ -128,20 +128,29 @@ asynStatus paramList::setInteger(int index, int value)
 /** Sets the value for an integer in the parameter library.
   * \param[in] index The parameter number 
   * \param[in] value Value to set.
-  * \param[in] mask Mask to use when setting the value.
+  * \param[in] valueMask Mask to use when setting the value.
+  * \param[in] interruptMask Mask of bits that have changed even if the value has not changed
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
-asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 mask)
+asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
 {
+    epicsUInt32 oldValue;
+    
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
     if (this->vals[index].type != asynParamUInt32Digital) return asynParamWrongType;
-    if ((!this->vals[index].valueDefined) || (this->vals[index].data.uival != value))
-    {
-        this->vals[index].valueDefined = 1;
-        setFlag(index);
-        /* Set any bits that are set in the value and the mask */
-        this->vals[index].data.uival |= (value & mask);
-        /* Clear bits that are clear in the value and set in the mask */
-        this->vals[index].data.uival &= (value | ~mask);
+    this->vals[index].valueDefined = 1;
+    oldValue = this->vals[index].data.uival;
+    /* Set any bits that are set in the value and the mask */
+    this->vals[index].data.uival |= (value & valueMask);
+    /* Clear bits that are clear in the value and set in the mask */
+    this->vals[index].data.uival &= (value | ~valueMask);
+    if (this->vals[index].data.uival != oldValue) {
+      /* Set the bits in the callback mask that have changed */
+      this->vals[index].uInt32CallbackMask |= (this->vals[index].data.uival ^ oldValue);
+      setFlag(index);
+    }
+    if (interruptMask) {
+      this->vals[index].uInt32CallbackMask |= interruptMask;
+      setFlag(index);
     }
     return asynSuccess;
 }
@@ -234,9 +243,18 @@ asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask, interruptR
 {
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
     if (this->vals[index].type != asynParamUInt32Digital) return asynParamWrongType;
-    this->vals[index].uInt32InterruptMask = mask;
-    this->vals[index].uInt32InterruptReason = reason;
-    setFlag(index);
+    switch (reason) {
+      case interruptOnZeroToOne:
+        this->vals[index].uInt32RisingMask = mask;
+        break;
+      case interruptOnOneToZero:
+        this->vals[index].uInt32FallingMask = mask;
+        break;
+      case interruptOnBoth:
+        this->vals[index].uInt32RisingMask = mask;
+        this->vals[index].uInt32FallingMask = mask;
+        break;
+    }
     return asynSuccess;
 }
 
@@ -249,7 +267,8 @@ asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
 {
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
     if (this->vals[index].type != asynParamUInt32Digital) return asynParamWrongType;
-    this->vals[index].uInt32InterruptMask = mask;
+    this->vals[index].uInt32RisingMask &= ~mask;
+    this->vals[index].uInt32FallingMask &= ~mask;
     return asynSuccess;
 }
 
@@ -263,7 +282,17 @@ asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask, interrupt
 {
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
     if (this->vals[index].type != asynParamUInt32Digital) return asynParamWrongType;
-    *mask = this->vals[index].uInt32InterruptMask;
+    switch (reason) {
+      case interruptOnZeroToOne:
+        *mask = this->vals[index].uInt32RisingMask;
+        break;
+      case interruptOnOneToZero:
+        *mask = this->vals[index].uInt32FallingMask;
+        break;
+      case interruptOnBoth:
+        *mask = this->vals[index].uInt32RisingMask | this->vals[index].uInt32FallingMask;
+        break;
+    }
     return asynSuccess;
 }
 
@@ -436,7 +465,8 @@ asynStatus paramList::callCallbacks(int addr)
                 status = int32Callback(index, addr, this->vals[index].data.ival);
                 break;
             case asynParamUInt32Digital:
-                status = uint32Callback(index, addr, this->vals[index].data.uival, this->vals[index].uInt32InterruptMask);
+                status = uint32Callback(index, addr, this->vals[index].data.uival, this->vals[index].uInt32CallbackMask);
+                this->vals[index].uInt32CallbackMask = 0;
                 break;
             case asynParamFloat64:
                 status = float64Callback(index, addr, this->vals[index].data.dval);
@@ -480,8 +510,9 @@ void paramList::report(FILE *fp, int details)
                 break;
             case asynParamUInt32Digital:
                 if (this->vals[i].valueDefined)
-                    fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=%u, mask=%u\n", i, this->vals[i].name, 
-                        this->vals[i].data.uival, this->vals[i].uInt32Mask );
+                    fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=%u, risingMask=%u, fallingMask=%u, callbackMask=%u\n", 
+                        i, this->vals[i].name, this->vals[i].data.uival, 
+                        this->vals[i].uInt32RisingMask, this->vals[i].uInt32FallingMask, this->vals[i].uInt32CallbackMask );
                 else
                     fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value is undefined\n", i, this->vals[i].name);
                 break;
@@ -686,24 +717,45 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
   * Calls setUIntDigitalParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
   * \param[in] value Value to set. 
-  * \param[in] mask The mask to use when setting the value. */
-asynStatus asynPortDriver::setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 mask)
+  * \param[in] valueMask The mask to use when setting the value. */
+asynStatus asynPortDriver::setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 valueMask)
 {
-    return this->setUIntDigitalParam(0, index, value, mask);
+    return this->setUIntDigitalParam(0, index, value, valueMask, 0);
 }
 
 /** Sets the value for a UInt32Digital in the parameter library.
   * Calls paramList::setInteger (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
+  * \param[in] valueMask The mask to use when setting the value. */
+asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask)
+{
+    return this->setUIntDigitalParam(list, index, value, valueMask, 0);
+}
+
+/** Sets the value for a UInt32Digital in the parameter library.
+  * Calls setUIntDigitalParam(0, index, value) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
   * \param[in] value Value to set. 
-  * \param[in] mask The mask to use when setting the value. */
-asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 mask)
+  * \param[in] valueMask The mask to use when setting the value. 
+  * \param[in] interruptMask A mask that indicates which bits have changed even if the value is the same, so callbacks will be done */
+asynStatus asynPortDriver::setUIntDigitalParam(int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
+{
+    return this->setUIntDigitalParam(0, index, value, valueMask, interruptMask);
+}
+
+/** Sets the value for a UInt32Digital in the parameter library.
+  * Calls paramList::setInteger (index, value) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] valueMask The mask to use when setting the value. 
+  * \param[in] interruptMask A mask that indicates which bits have changed even if the value is the same, so callbacks will be done */
+asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
 {
     asynStatus status;
     static const char *functionName = "setUIntDigitalParam";
     
-    status = this->params[list]->setUInt32(index, value, mask);
+    status = this->params[list]->setUInt32(index, value, valueMask, interruptMask);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return(status);
 }
