@@ -47,9 +47,9 @@ typedef struct
     asynParamType type; /**< Parameter data type */
     char *name;         /**< Parameter name */
     bool valueDefined;
-    epicsUInt32 uInt32Mask;
-    epicsUInt32 uInt32InterruptMask;
-    epicsUInt32 uInt32InterruptReason;
+    epicsUInt32 uInt32RisingMask;
+    epicsUInt32 uInt32FallingMask;
+    epicsUInt32 uInt32CallbackMask;
     /** Union for parameter value */
     union
     {
@@ -87,7 +87,7 @@ public:
     asynStatus findParam(const char *name, int *index);
     asynStatus getName(int index, const char **name);
     asynStatus setInteger(int index, int value);
-    asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 mask);
+    asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
     asynStatus setDouble(int index, double value);
     asynStatus setString(int index, const char *string);
     asynStatus getInteger(int index, int *value);
@@ -191,8 +191,10 @@ public:
     virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual asynStatus setIntegerParam(          int index, int value);
     virtual asynStatus setIntegerParam(int list, int index, int value);
-    virtual asynStatus setUIntDigitalParam(          int index, epicsUInt32 value, epicsUInt32 mask);
-    virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 mask);
+    virtual asynStatus setUIntDigitalParam(          int index, epicsUInt32 value, epicsUInt32 valueMask);
+    virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask);
+    virtual asynStatus setUIntDigitalParam(          int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
+    virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
     virtual asynStatus setUInt32DigitalInterrupt(          int index, epicsUInt32 mask, interruptReason reason);
     virtual asynStatus setUInt32DigitalInterrupt(int list, int index, epicsUInt32 mask, interruptReason reason);
     virtual asynStatus clearUInt32DigitalInterrupt(         int index, epicsUInt32 mask);
