@@ -714,7 +714,7 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
 }
 
 /** Sets the value for a UInt32Digital in the parameter library.
-  * Calls setUIntDigitalParam(0, index, value) i.e. for parameter list 0.
+  * Calls setUIntDigitalParam(0, index, value, valueMask, 0) i.e. for parameter list 0.
   * \param[in] index The parameter number 
   * \param[in] value Value to set. 
   * \param[in] valueMask The mask to use when setting the value. */
@@ -724,9 +724,10 @@ asynStatus asynPortDriver::setUIntDigitalParam(int index, epicsUInt32 value, epi
 }
 
 /** Sets the value for a UInt32Digital in the parameter library.
-  * Calls paramList::setInteger (index, value) for the parameter list indexed by list.
+  * Calls paramList::setUIntDigitalParam(list, index, value, valueMask, 0) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
+  * \param[in] value Value to set. 
   * \param[in] valueMask The mask to use when setting the value. */
 asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask)
 {
@@ -734,7 +735,7 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 
 }
 
 /** Sets the value for a UInt32Digital in the parameter library.
-  * Calls setUIntDigitalParam(0, index, value) i.e. for parameter list 0.
+  * Calls setUIntDigitalParam(0, index, value, valueMask, interruptMask) i.e. for parameter list 0.
   * \param[in] index The parameter number 
   * \param[in] value Value to set. 
   * \param[in] valueMask The mask to use when setting the value. 
@@ -748,6 +749,7 @@ asynStatus asynPortDriver::setUIntDigitalParam(int index, epicsUInt32 value, epi
   * Calls paramList::setInteger (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
+  * \param[in] value Value to set 
   * \param[in] valueMask The mask to use when setting the value. 
   * \param[in] interruptMask A mask that indicates which bits have changed even if the value is the same, so callbacks will be done */
 asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
