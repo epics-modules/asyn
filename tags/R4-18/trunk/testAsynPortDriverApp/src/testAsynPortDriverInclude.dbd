@@ -1,3 +1,0 @@
-include "base.dbd"
-include "asyn.dbd"
-registrar("testAsynPortDriverRegister")
