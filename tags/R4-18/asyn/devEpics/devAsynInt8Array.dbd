@@ -1,0 +1,2 @@
+device(waveform,INST_IO,asynInt8ArrayWfIn,"asynInt8ArrayIn")
+device(waveform,INST_IO,asynInt8ArrayWfOut,"asynInt8ArrayOut")

@@ -1,0 +1,70 @@
+record(stringin, "$(P)$(R)IDN")
+{
+    field(DESC, "SCPI identification string")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @0")
+    field(PINI, "YES")
+}
+
+record(bo, "$(P)$(R)RST")
+{
+    field(DESC, "SCPI Reset")
+    field(DTYP, "_NAME_")
+    field(OUT,  "#L$(L) A$(A) @1")
+}
+
+record(bo, "$(P)$(R)CLS")
+{
+    field(DESC, "SCPI Clear status")
+    field(DTYP, "_NAME_")
+    field(OUT,  "#L$(L) A$(A) @2")
+}
+
+record(longin, "$(P)$(R)GetSTB")
+{
+    field(DESC, "SCPI get status byte")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @3")
+}
+
+record(longin, "$(P)$(R)GetESR")
+{
+    field(DESC, "SCPI get event status")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @4")
+}
+
+record(longout, "$(P)$(R)SetESE")
+{
+    field(DESC, "SCPI enable event status")
+    field(DTYP, "_NAME_")
+    field(OUT,  "#L$(L) A$(A) @5")
+}
+
+record(longin, "$(P)$(R)GetESE")
+{
+    field(DESC, "SCPI enabled event status")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @6")
+}
+
+record(longout, "$(P)$(R)SetSRE")
+{
+    field(DESC, "SCPI enable service requests")
+    field(DTYP, "_NAME_")
+    field(OUT,  "#L$(L) A$(A) @7")
+}
+
+record(longin, "$(P)$(R)GetSRE")
+{
+    field(DESC, "Enabled service requests")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @8")
+}
+
+record(longin, "$(P)$(R)GetOPC")
+{
+    field(DESC, "Output completion status")
+    field(DTYP, "_NAME_")
+    field(INP,  "#L$(L) A$(A) @9")
+}
