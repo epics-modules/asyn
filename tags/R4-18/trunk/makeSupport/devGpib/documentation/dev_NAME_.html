@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+      "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+  <title>_NAME_ Instrument Support</title>
+  <meta name="generator" content="amaya 8.5, see http://www.w3.org/Amaya/" />
+</head>
+
+<body>
+<h1>Using _NAME_ instrument support in an application</h1>
+
+<p>Several files need minor modifications to use _NAME_ instrument support in
+an application.</p>
+<ol>
+  <li>Add the full path to the _NAME_ support directory to the
+    application <tt>configure/RELEASE</tt> file:<br />
+    <tt>_NAME_=</tt><em>xxxx</em><tt>/modules/instrument/_LOWERNAME_/&lt;release&gt;</tt><br />
+Where <tt>&lt;release&gt;</tt> is the release number of of the _NAME_ support.</li>
+  <li>Add instrument support to application database definition file<br />
+    The application database definition file must include the database
+    definition files for the _NAME_ instrument and for any needed ASYN
+    drivers. There are two ways that this can be done:
+    <ul>
+      <li>If you are building your application database definition file from
+      an <em>xxx</em><tt>Include.dbd</tt> file you include the additional database
+      definitions in that file:<br />
+      <tt>include "base.dbd"</tt><br />
+      <tt>include "dev_NAME_.dbd"</tt><br />
+      <tt>include "drvAsynIPPort.dbd"</tt></li>
+      <li>If you are building your application database definition file from
+      the application Makefile you specify the aditional database
+      definitions there:<br />
+      <em>xxx</em><tt>_DBD += base.dbd</tt><br />
+      <em>xxx</em><tt>_DBD += dev_NAME_.dbd</tt><br />
+      <em>xxx</em><tt>_DBD += drvAsynIPPort.dbd</tt><br /></li>
+    </ul>
+  </li>
+  <li>Add the _NAME_ support libraries to the application<br />
+    You must link the _NAME_ support library and the ASYN support library
+    with the application. Add the following lines: <br />
+    <em>xxx</em><tt>_LIBS += dev_NAME_</tt><br />
+    <em>xxx</em><tt>_LIBS += asyn</tt><br />
+    before the <br />
+    <em>xxx</em><tt>_LIBS += $(EPICS_BASE_IOC_LIBS)</tt><br />
+    in the application Makefile.</li>
+  <li>Load the _NAME_ support database records in the application startup script:<br />
+    <tt>cd $(_NAME_)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt>(<tt>cd _NAME_</tt> if using the vxWorks shell)<br />
+    <tt>dbLoadRecords("db/dev_NAME_.db,"P=</tt><em>&lt;P&gt;</em><tt>,R=</tt><em>&lt;R&gt;</em><tt>,L=</tt><em>&lt;L&gt;</em><tt>,A=</tt><em>&lt;A&gt;</em><tt>")</tt><br />
+    You'll have to provide appropriate values for the PV name prefixes
+    (<em>&lt;P&gt;</em> and <em>&lt;R&gt;</em>), the link number (<em>&lt;L&gt;</em>) and the device address
+    (<em>&lt;A&gt;</em>).   The link number must match the value specified in
+    an ASYN <tt>drv</tt><em>xxxxx</em><tt>Configure</tt> command.
+  </li>
+</ol>
+<h1>Installation and Building</h1>
+After obtaining a copy of the distribution, it must be installed and built
+for use at your site.
+<ol>
+  <li>Create an installation directory for the module. The path name
+  of this directory should end with <tt>modules/instrument/_LOWERNAME_</tt>.</li>
+  <li>Place the distribution file into this directory.</li>
+  <li>Execute the following commands:<br />
+    <tt>cd modules/instrument/_LOWERNAME_</tt><br />
+    <tt>gunzip _LOWERNAME_&lt;release&gt;.tar.gz</tt><br />
+    <tt>tar xvf _LOWERNAME_&lt;release&gt;.tar</tt><br />
+    <tt>cd &lt;release&gt;</tt><br />
+Where <tt>&lt;release&gt;</tt> is the release number of of the _NAME_ support.
+  </li>
+  <li>Edit the <tt>configure/RELEASE</tt> file and set the paths to your
+    installation of EPICS base and ASYN.</li>
+  <li>Execute <tt>make</tt> in the top level directory.</li>
+</ol>
+</body>
+</html>
+ 
+ 
