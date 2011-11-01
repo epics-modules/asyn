@@ -510,7 +510,7 @@ void paramList::report(FILE *fp, int details)
                 break;
             case asynParamUInt32Digital:
                 if (this->vals[i].valueDefined)
-                    fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=%u, risingMask=%u, fallingMask=%u, callbackMask=%u\n", 
+                    fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=0x%x, risingMask=0x%x, fallingMask=0x%x, callbackMask=0x%x\n", 
                         i, this->vals[i].name, this->vals[i].data.uival, 
                         this->vals[i].uInt32RisingMask, this->vals[i].uInt32FallingMask, this->vals[i].uInt32CallbackMask );
                 else
@@ -1101,9 +1101,16 @@ void reportInterrupt(FILE *fp, void *interruptPvt, const char *interruptTypeStri
         pnode = (interruptNode *)ellFirst(pclientList);
         while (pnode) {
             interruptType *pInterrupt = (interruptType *)pnode->drvPvt;
-            fprintf(fp, "    %s callback client address=%p, addr=%d, reason=%d, userPvt=%p\n",
-                    interruptTypeString, pInterrupt->callback, pInterrupt->addr,
-                    pInterrupt->pasynUser->reason, pInterrupt->userPvt);
+            if (strcmp(interruptTypeString, "uint32") == 0) {
+                asynUInt32DigitalInterrupt *pInt = (asynUInt32DigitalInterrupt *) pInterrupt;
+                fprintf(fp, "    %s callback client address=%p, addr=%d, reason=%d, mask=0x%x, userPvt=%p\n",
+                        interruptTypeString, pInt->callback, pInt->addr,
+                        pInt->pasynUser->reason, pInt->mask, pInt->userPvt);
+            } else {
+                fprintf(fp, "    %s callback client address=%p, addr=%d, reason=%d, userPvt=%p\n",
+                        interruptTypeString, pInterrupt->callback, pInterrupt->addr,
+                        pInterrupt->pasynUser->reason, pInterrupt->userPvt);
+            }
             pnode = (interruptNode *)ellNext(&pnode->node);
         }
         pasynManager->interruptEnd(interruptPvt);
