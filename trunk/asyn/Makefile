@@ -172,23 +172,20 @@ ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
 vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 % : ../vxi11/rpc/%
 	cp $< $@
+vxi11core_xdr.o: vxi11core.h
+vxi11intr_xrd.o: vxi11intr.h
 
 else
 
+.SECONDARY: vxi11core_xdr.c vxi11intr_xdr.c
+
 RPCGEN_FLAGS_darwin = -C
 RPCGEN_FLAGS_solaris = -M
-vxi11core.h vxi11core_xdr.c: ../vxi11/vxi11core.rpcl
-	cp ../vxi11/vxi11core.rpcl .
-	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11core.rpcl
-
-vxi11intr.h vxi11intr_xdr.c: ../vxi11/vxi11intr.rpcl
-	cp ../vxi11/vxi11intr.rpcl .
-	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) vxi11intr.rpcl
+%.h %_xdr.c: ../vxi11/%.rpcl
+	cp $< .
+	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) $*.rpcl
 
 endif
-
-vxi11core_xdr.c: vxi11core.h
-vxi11intr_xdr.c: vxi11intr.h
 
 endif
 
