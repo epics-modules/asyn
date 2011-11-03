@@ -1,0 +1,5 @@
+include "drvIpac.dbd"
+include "tyGSOctal.dbd"
+registrar(vipc616Registrar)
+registrar(mv162ipRegistrar)
+registrar(tvme200Registrar)
