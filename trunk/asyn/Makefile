@@ -85,12 +85,15 @@ INC += asynShellCommands.h
 INC += asynInterposeCom.h
 INC += asynInterposeEos.h
 INC += asynInterposeFlush.h
-INC += asynPortDriver.h
 asyn_SRCS += asynShellCommands.c
 asyn_SRCS += asynInterposeCom.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
+
+SRC_DIRS += $(ASYN)/asynPortDriver
+INC += asynPortDriver.h
 asyn_SRCS += asynPortDriver.cpp
+
 
 SRC_DIRS += $(ASYN)/devEpics
 DBD += devAsynOctet.dbd
