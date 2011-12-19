@@ -46,7 +46,7 @@ private:
     int nFlags;
     asynStandardInterfaces *pasynInterfaces;
     int *flags;
-    paramVal *vals;
+    ParamVal **vals;
 };
 
 #endif /* cplusplus */
