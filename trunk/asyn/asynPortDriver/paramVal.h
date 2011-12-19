@@ -1,13 +1,16 @@
-#ifndef asynParamType_H
-#define asynParamType_H
+#ifndef asynParamVal_H
+#define asynParamVal_H
 
 
+#include "epicsTypes.h"
 #include "asynParamType.h"
+#ifdef __cplusplus
 
 /** Structure for storing parameter value in parameter library */
-typedef struct
-{
-    asynParamType type; /**< Parameter data type */
+class epicsShareFunc ParamVal {
+public:
+	ParamVal(const char *name);
+	asynParamType type; /**< Parameter data type */
     char *name;         /**< Parameter name */
     bool valueDefined;
     epicsUInt32 uInt32RisingMask;
@@ -27,6 +30,8 @@ typedef struct
         epicsFloat64  *pf64;
         void         *pgp;
     } data;
-} paramVal;
+};
+
+#endif /* cplusplus */
 
 #endif
