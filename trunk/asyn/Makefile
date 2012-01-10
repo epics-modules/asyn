@@ -90,6 +90,20 @@ asyn_SRCS += asynInterposeCom.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 
+SRC_DIRS += $(ASYN)/asynPortDriver/exceptions
+INC += ParamListInvalidIndex.h
+INC += ParamListParamNotFound.h
+INC += ParamValNotDefined.h
+INC += ParamValStringSizeRequestTooBig.h
+INC += ParamValWrongType.h
+INC += ParamValValueNotChanged.h
+asyn_SRCS += ParamListInvalidIndex.cpp
+asyn_SRCS += ParamListParamNotFound.cpp
+asyn_SRCS += ParamValNotDefined.cpp
+asyn_SRCS += ParamValStringSizeRequestTooBig.cpp
+asyn_SRCS += ParamValWrongType.cpp
+asyn_SRCS += ParamValValueNotChanged.cpp
+
 SRC_DIRS += $(ASYN)/asynPortDriver
 INC += asynParamType.h
 INC += paramVal.h

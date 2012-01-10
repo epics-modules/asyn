@@ -1,7 +1,7 @@
 #ifndef asynParamVal_H
 #define asynParamVal_H
 
-
+#include "stdio.h"
 #include "epicsTypes.h"
 #include "asynParamType.h"
 #ifdef __cplusplus
@@ -10,9 +10,21 @@
 class epicsShareFunc ParamVal {
 public:
 	ParamVal(const char *name);
+	ParamVal(const char *name, asynParamType type);
+	bool isDefined();
+	void setDefined(bool defined);
+	bool hasValueChanged();
+	void setValueChanged();
+	void resetValueChanged();
+	char* getName();
+	bool nameEquals(const char* name);
+	void setInteger(int value);
+	void setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
+	void setDouble(double value);
+	void setString(const char *value);
+	void report(int id, FILE *fp, int details);
+	const char* getTypeName();
 	asynParamType type; /**< Parameter data type */
-    char *name;         /**< Parameter name */
-    bool valueDefined;
     epicsUInt32 uInt32RisingMask;
     epicsUInt32 uInt32FallingMask;
     epicsUInt32 uInt32CallbackMask;
@@ -30,6 +42,12 @@ public:
         epicsFloat64  *pf64;
         void         *pgp;
     } data;
+    static const char* typeNames[];
+
+protected:
+    bool valueDefined;
+    bool valueChanged;
+    char *name;         /**< Parameter name */
 };
 
 #endif /* cplusplus */
