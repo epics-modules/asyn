@@ -17,6 +17,7 @@ class paramList {
 public:
     paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
     ~paramList();
+    ParamVal* getParameter(int index);
     asynStatus createParam(const char *name, asynParamType type, int *index);
     asynStatus findParam(const char *name, int *index);
     asynStatus getName(int index, const char **name);
@@ -41,6 +42,7 @@ private:
     asynStatus uint32Callback(int command, int addr, epicsUInt32 value, epicsUInt32 interruptMask);
     asynStatus float64Callback(int command, int addr, epicsFloat64 value);
     asynStatus octetCallback(int command, int addr, char *value);
+    void registerParameterChange(ParamVal *param, int index);
     int nextParam;
     int nVals;
     int nFlags;
