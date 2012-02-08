@@ -1163,7 +1163,8 @@
         <td>
           drvPvt</td>
         <td>
-          For the exclusive use of the code that called registerPort or interposeInterface.</td>
+          For the exclusive use of the code that called registerPort or interposeInterface.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -1278,7 +1279,8 @@ epicsShareExtern asynManager *pasynManager;</pre>
         <td>
           Creates an asynUser by calling createAsynUser. It then initializes the new asynUser
           as follows: The fields timeout, userPvt, userData, and drvUser are initialized with
-          values taken from pasynUser. Its connectDevice state is the same as that for pasynUser.</td>
+          values taken from pasynUser. Its connectDevice state is the same as that for pasynUser.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1300,7 +1302,8 @@ epicsShareExtern asynManager *pasynManager;</pre>
           Allocate/Free memory. memMalloc/memFree maintain a set of freelists of different
           sizes. Thus any application that needs storage for a short time can use memMalloc/memFree
           to allocate and free the storage without causing memory fragmentation. The size
-          passed to memFree MUST be the same as the value specified in the call to memMalloc.</td>
+          passed to memFree MUST be the same as the value specified in the call to memMalloc.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1331,7 +1334,8 @@ epicsShareExtern asynManager *pasynManager;</pre>
         <td>
           Disconnect from the port,addr to which connectDevice is connected. The call will
           fail if the asynUser is queued or locked, or has a callback registered via exceptionCallbackAdd.
-          Note that asynManager:disconnect and asynCommon:disconnect are completely different.</td>
+          Note that asynManager:disconnect and asynCommon:disconnect are completely different.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1339,7 +1343,8 @@ epicsShareExtern asynManager *pasynManager;</pre>
         <td>
           Callback will be called whenever one of the exceptions defined by asynException
           occurs. The callback can call isConnected, isEnabled, or isAutoConnect to find the
-          connection state. asynTrace provides methods to find out the current trace settings.</td>
+          connection state. asynTrace provides methods to find out the current trace settings.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1461,7 +1466,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         <td>
           getPortName</td>
         <td>
-          *pportName is set equal to the name of the port to which the user is connected.</td>
+          *pportName is set equal to the name of the port to which the user is connected.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1477,7 +1483,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           is 0, the default value of epicsThreadGetStackSize(epicsThreadStackMedium) will
           be assigned. The portName argument specifies the name by which the upper levels
           of the asyn code will refer to this communication interface instance. The registerPort
-          method makes an internal copy of the string to which the name argument points.</td>
+          method makes an internal copy of the string to which the name argument points.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1577,7 +1584,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
         <td>
           If a low level driver supports interrupts it must call this for each interface that
           supports interrupts. pasynPvt must be the address of a void * that will be given
-          a value by registerInterruptSource. This argument is passed interruptStart and interruptEnd.</td>
+          a value by registerInterruptSource. This argument is passed interruptStart and interruptEnd.
+        </td>
       </tr>
       <tr>
         <td>
@@ -1628,7 +1636,8 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           call the callback specified in the calls to registerInterruptUser, it calls interruptStart
           to obtain the list of callbacks. When it is done it calls interruptEnd. If any requests
           are made to addInterruptUser/removeInterruptUser between the calls to interruptStart
-          and interruptEnd, asynManager delays the requests until interruptEnd is called.</td>
+          and interruptEnd, asynManager delays the requests until interruptEnd is called.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2128,7 +2137,8 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
           registerInterruptUser</td>
         <td>
           Register a user that will be called whenever a new message is received. NOTE: The
-          callback must not block and must not call registerInterruptUser or cancelInterruptUser.</td>
+          callback must not block and must not call registerInterruptUser or cancelInterruptUser.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2269,7 +2279,8 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         <td>
           connect</td>
         <td>
-          Connects to an asyn port and address, returns a pointer to an asynUser structure.</td>
+          Connects to an asyn port and address, returns a pointer to an asynUser structure.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2289,7 +2300,8 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         <td>
           write</td>
         <td>
-          Calls asynOctet-&gt;write and waits for the operation to complete or time out.</td>
+          Calls asynOctet-&gt;write and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2525,14 +2537,16 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
         <td>
           getBounds</td>
         <td>
-          Get the bounds. For example a 16 bit ADC might set low=-32768 and high = 32767.</td>
+          Get the bounds. For example a 16 bit ADC might set low=-32768 and high = 32767.
+        </td>
       </tr>
       <tr>
         <td>
           registerInterruptUser</td>
         <td>
           Registers a callback that will be called whenever new data is available. Since it
-          can be called directly rather than via a queueRequest this method must not block.</td>
+          can be called directly rather than via a queueRequest this method must not block.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2560,7 +2574,8 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynInt32Base-&gt;initialize(...</pre>
-          Any null methods in the asynInterface are replaced by default implementations.</td>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -2646,19 +2661,22 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
         <td>
           write</td>
         <td>
-          Calls pasynInt32-&gt;write and waits for the operation to complete or time out.</td>
+          Calls pasynInt32-&gt;write and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
           read</td>
         <td>
-          Calls pasynInt32-&gt;read and waits for the operation to complete or time out.</td>
+          Calls pasynInt32-&gt;read and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
           getBounds</td>
         <td>
-          Calls pasynInt32-&gt;getBounds and waits for the operation to complete or time out.</td>
+          Calls pasynInt32-&gt;getBounds and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
@@ -2798,7 +2816,8 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynUInt32DigitalBase-&gt;initialize(...</pre>
-          Any null methods in the asynInterface are replaced by default implementations.</td>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -3033,7 +3052,8 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynFloat64Base-&gt;initialize(...</pre>
-          Any null methods in the asynInterface are replaced by default implementations.</td>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -3108,13 +3128,15 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
         <td>
           write</td>
         <td>
-          Calls pasynFloat64-&gt;write and waits for the operation to complete or time out.</td>
+          Calls pasynFloat64-&gt;write and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
           read</td>
         <td>
-          Calls pasynFloat64-&gt;read and waits for the operation to complete or time out.</td>
+          Calls pasynFloat64-&gt;read and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
@@ -3213,7 +3235,8 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynXXXArrayBase-&gt;initialize(...</pre>
-          Any null methods in the asynInterface are replaced by default implementations.</td>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -3290,13 +3313,15 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
         <td>
           write</td>
         <td>
-          Calls pasynXXXArray-&gt;write and waits for the operation to complete or time out.</td>
+          Calls pasynXXXArray-&gt;write and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
           read</td>
         <td>
-          Calls pasynXXXArray-&gt;read and waits for the operation to complete or time out.</td>
+          Calls pasynXXXArray-&gt;read and waits for the operation to complete or time out.
+        </td>
       </tr>
       <tr>
         <td>
@@ -3400,7 +3425,8 @@ epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;</pre>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynGenericPointerBase-&gt;initialize(...</pre>
-          Any null methods in the asynInterface are replaced by default implementations.</td>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
       </tr>
     </tbody>
   </table>
@@ -3819,7 +3845,8 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     The asynMask format allows device support to work with drivers that cannot return
     meaningful values from getBounds() because they do not know the range of the device.
     This is true, for example, of Modbus ADCs. The nbits parameter is defined as follows:</p>
-  <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1 <br />
+  <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1
+<br />
 nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
            Values read with the asynInt32 interface will be sign extended
            using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).</pre>
@@ -3958,6 +3985,25 @@ device(waveform,INST_IO,asynIntXXXArrayWfOut,"asynIntXXXArrayOut")</pre>
     devAsynIntXXXArray.c provides EPICS device support for drivers that implement interface
     asynIntXXXArray. It has support for both reading and writing a waveform. SCAN "I/O
     Intr" is supported similar to the aiRecord in devAsynInt32 device support.</p>
+  <h2>
+    asynXXXTimeSeries device support (XXX=Int32 or Float64)</h2>
+  <p>
+    The following support is available:</p>
+  <pre>device(waveform,INST_IO,asynInt32TimeSeries,"asynInt32TimeSeries")
+device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimSeries")</pre>
+  <p>
+    devAsynXXXTimeSeries.c provides EPICS device support to collect a time series of
+    values into a waveform record. It works with drivers that implement callbacks on
+    the asynInt32 or asynFloat64 interfaces. This permits more rapid and efficient acquisition
+    of values from a driver than can be obtained using record support and database operations.
+    The waveform record RARM field is used to control acquisition as follows:</p>
+  <ul>
+    <li>RARM=1 Erase and start acquisition, i.e. clear the waveform record to 0, set NORD=0,
+      BUSY=1 and enable callbacks.</li>
+    <li>RARM=2 Stop acquisition, set BUSY=0.</li>
+    <li>RARM=3 Start acquisition (set BUSY=1) without clearing the waveform or setting
+      NORD=0.</li>
+  </ul>
   <h2>
     devAsynUInt32Digital</h2>
   <p>
@@ -4606,7 +4652,8 @@ struct asynGpibPort {
         <td>
           registerPort</td>
         <td>
-          Register a port. When asynGpib receives this request, it calls asynManager.registerPort.</td>
+          Register a port. When asynGpib receives this request, it calls asynManager.registerPort.
+        </td>
       </tr>
       <tr>
         <td>
