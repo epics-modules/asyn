@@ -28,6 +28,13 @@ record(ai,"asyndevAiInt32Average") {
     field(EGUL,"-100.0")
     field(PREC,"3")
 }
+record(waveform,"asyndevInt32TimeSeries") {
+    field(DTYP,"asynInt32TimeSeries")
+    field(INP,"@asyn( int32 , 0 , 1.0) ")
+    field(NELM, "2048")
+    field(FTVL, "LONG")
+    field(SCAN, "1 second")
+}
 
 record(longout,"asyndevLoInt32") {
     field(DTYP,"asynInt32")
