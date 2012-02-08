@@ -1,13 +1,13 @@
 
 file {
-	name="/home/phoebus3/MRK/epics/modules/soft/asyn/testEpicsApp/adl/testInt32.adl"
-	version=030004
+	name="/home/epics/devel/asyn/testEpicsApp/adl/testInt32.adl"
+	version=030105
 }
 display {
 	object {
-		x=683
-		y=157
-		width=500
+		x=416
+		y=118
+		width=530
 		height=120
 	}
 	clr=14
@@ -202,7 +202,7 @@ menu {
 	control {
 		chan="asyndevMbboInt32"
 		clr=14
-		bclr=4
+		bclr=51
 	}
 }
 "text update" {
@@ -317,4 +317,20 @@ menu {
 		clr=14
 		bclr=4
 	}
+}
+"related display" {
+	object {
+		x=411
+		y=20
+		width=100
+		height=20
+	}
+	display[0] {
+		label="Time series"
+		name="asynTimeSeries.adl"
+		args="P=asyndevInt32,R=TimeSeries"
+	}
+	clr=14
+	bclr=51
+	label="Time series"
 }
