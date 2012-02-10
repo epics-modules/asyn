@@ -290,7 +290,7 @@ menu {
 		height=20
 	}
 	control {
-		chan="$(P)$(R).SCAN"
+		chan="$(P)$(R)Read.SCAN"
 		clr=14
 		bclr=51
 	}
@@ -315,7 +315,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(P)$(R).PROC"
+		chan="$(P)$(R)Read.PROC"
 		clr=14
 		bclr=51
 	}
