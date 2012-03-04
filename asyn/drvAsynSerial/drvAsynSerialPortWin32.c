@@ -179,7 +179,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s error calling SetCommConfig %d", tty->serialDeviceName, error);
+                            "%s error calling GetCommConfig %d", tty->serialDeviceName, error);
         return asynError;
     }
 
@@ -302,7 +302,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s error calling GetCommConfig %d", tty->serialDeviceName, error);
+                            "%s error calling SetCommConfig %d", tty->serialDeviceName, error);
         return asynError;
     }
     return asynSuccess;
