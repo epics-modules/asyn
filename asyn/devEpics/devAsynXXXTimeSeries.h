@@ -50,6 +50,7 @@ typedef struct devAsynWfPvt{ \
     INTERFACE       *pInterface; \
     void            *ifacePvt; \
     void            *registrarPvt; \
+    CALLBACK        callback; \
     int             busy; \
     int             nord; \
     char            *portName; \
@@ -140,14 +141,6 @@ static long initRecord(dbCommon *pr) \
     } \
     pPvt->pInterface = pasynInterface->pinterface; \
     pPvt->ifacePvt = pasynInterface->drvPvt; \
-    status = pPvt->pInterface->registerInterruptUser( \
-       pPvt->ifacePvt, pPvt->pasynUser, \
-       interruptCallback, pPvt, &pPvt->registrarPvt); \
-    if(status!=asynSuccess) { \
-        errlogPrintf(\
-            "%s %s registerInterruptUser %s\n", \
-            pr->name, driverName, pPvt->pasynUser->errorMessage); \
-    } \
     return 0; \
 bad: \
    pr->pact=1; \
@@ -160,6 +153,7 @@ static long process(dbCommon *pr) \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt; \
     waveformRecord *pwf = (waveformRecord *)pr; \
     int busy; \
+    asynStatus status; \
  \
     epicsMutexLock(pPvt->lock); \
     busy = pPvt->busy; \
@@ -185,6 +179,26 @@ static long process(dbCommon *pr) \
     if (pwf->busy != busy) { \
       pwf->busy = busy; \
       db_post_events(pwf, &pwf->busy, DBE_VALUE | DBE_LOG); \
+      /* BUSY has changed state so either register or cancel callbacks */ \
+      if (busy) { \
+        status = pPvt->pInterface->registerInterruptUser( \
+           pPvt->ifacePvt, pPvt->pasynUser, \
+           interruptCallback, pPvt, &pPvt->registrarPvt); \
+        if(status!=asynSuccess) { \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
+                "%s %s registerInterruptUser %s\n", \
+                pr->name, driverName, pPvt->pasynUser->errorMessage); \
+        } \
+      } \
+      else {\
+        status = pPvt->pInterface->cancelInterruptUser( \
+           pPvt->ifacePvt, pPvt->pasynUser, pPvt->registrarPvt); \
+        if(status!=asynSuccess) { \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
+                "%s %s cancelInterruptUser %s\n", \
+                pr->name, driverName, pPvt->pasynUser->errorMessage); \
+        } \
+      } \
     } \
     pPvt->busy = pwf->busy; \
     pwf->rarm = 0; \
@@ -202,7 +216,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser, EPICS_TYPE valu
     epicsMutexLock(pPvt->lock); \
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE, \
         "%s %s::interruptCallback, value=%f, nord=%d\n", \
-        pwf->name, driverName, (double)value, pwf->nord); \
+        pwf->name, driverName, (double)value, pPvt->nord); \
     /* If we are not acquiring then nothing to do */  \
     if (pPvt->busy) { \
       if (pPvt->nord < pwf->nelm) { \
@@ -211,6 +225,8 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser, EPICS_TYPE valu
       } \
       else { \
         pPvt->busy = 0; \
+        /* When acquisition completes process record */ \
+        callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf); \
       } \
     } \
     epicsMutexUnlock(pPvt->lock); \
