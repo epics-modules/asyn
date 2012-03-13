@@ -5,6 +5,9 @@
  *      Author: hammonds
  */
 
+#include <string.h>
+#include <stdlib.h>
+
 #include "epicsString.h"
 #include "paramVal.h"
 #include "ParamValWrongType.h"
@@ -28,13 +31,13 @@ const char* ParamVal::typeNames[] = {
 ParamVal::ParamVal(const char *name):
 	type(asynParamUndefined), valueDefined(false), valueChanged(false){
 	this->name = epicsStrDup(name);
-	this->data.ival = 0;
+	this->data.sval = 0;
 }
 
 ParamVal::ParamVal(const char *name, asynParamType type):
 	type(type), valueDefined(false), valueChanged(false){
 	this->name = epicsStrDup(name);
-	this->data.ival = 0;
+	this->data.sval = 0;
 }
 
 /* Returns true if the value is defined (has been set)
@@ -144,7 +147,7 @@ void ParamVal::setString(const char *value)
     if (!isDefined() || (strcmp(data.sval, value)))
     {
         setDefined(true);
-//        if (data.sval != NULL)
+        if (data.sval != NULL)
         	free(data.sval);
         data.sval = epicsStrDup(value);
         setValueChanged();
