@@ -16,6 +16,7 @@
 
 #include <cantProceed.h>
 #include <epicsStdio.h>
+#include <epicsStdioRedirect.h>
 #include <epicsAssert.h>
 #include <link.h>
 #include <epicsMutex.h>
