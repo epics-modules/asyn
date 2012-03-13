@@ -24,6 +24,15 @@
     These use callbacks from the driver on those respective interfaces to collect a
     time series of values in a waveform record. Added new medm file asynTimeSeries.adl
     for this, and added an example waveform record to testEpics/Db/devInt32.db.</p>
+  <h3>
+    asynDriver and asynShellCommands</h3>
+  <p>
+    Added support for I/O redirection to the "dbior" and "asynPrint" commands.</p>
+  <h3>
+    asynReportDriver</h3>
+  <p>
+    Moved this from the miscellaneous directory to its own directory. Improved the internals,
+    but did not change the API. Thanks to John Hammonds for this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-18</h2>
