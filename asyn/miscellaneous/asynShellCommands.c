@@ -17,6 +17,7 @@
 
 #include <epicsEvent.h>
 #include <epicsString.h>
+#include <epicsStdioRedirect.h>
 #include <iocsh.h>
 #include <gpHash.h>
 
