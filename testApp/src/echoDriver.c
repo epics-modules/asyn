@@ -278,7 +278,7 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
         "%s echoDriver:write addr %d\n",pechoPvt->portName,addr);
     if(addr<0 || addr>=NUM_DEVICES) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "addr %d is illegal. Must be 0 or 1\n",addr);
+            "addr %d is illegal. Must be 0 or 1",addr);
         return asynError;
     }
     pdeviceInfo = &pechoPvt->device[addr];
@@ -287,7 +287,7 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
             "%s echoDriver:write device %d not connected\n",
             pechoPvt->portName,addr);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver:write device %d not connected\n",
+            "%s echoDriver:write device %d not connected",
             pechoPvt->portName,addr);
         return asynError;
     }
@@ -296,7 +296,7 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s echoDriver write timeout\n",pechoPvt->portName);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver write timeout\n",pechoPvt->portName);
+            "%s echoDriver write timeout",pechoPvt->portName);
         return asynTimeout;
     }
     pdeviceBuffer = &pdeviceInfo->buffer;
@@ -332,7 +332,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
         "%s echoDriver:read addr %d\n",pechoPvt->portName,addr);
     if(addr<0 || addr>=NUM_DEVICES) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "addr %d is illegal. Must be 0 or 1\n",addr);
+            "addr %d is illegal. Must be 0 or 1",addr);
         return(0);
     }
     pdeviceInfo = &pechoPvt->device[addr];
@@ -341,7 +341,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
             "%s echoDriver:read device %d not connected\n",
             pechoPvt->portName,addr);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver:read device %d not connected\n",
+            "%s echoDriver:read device %d not connected",
             pechoPvt->portName,addr);
         return asynError;
     }
@@ -350,7 +350,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s echoDriver read timeout\n",pechoPvt->portName);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s echoDriver read timeout\n",pechoPvt->portName);
+            "%s echoDriver read timeout",pechoPvt->portName);
         return asynTimeout;
     }
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
@@ -409,7 +409,7 @@ static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser)
         "%s echoDriver:flush addr %d\n",pechoPvt->portName,addr);
     if(addr<0 || addr>=NUM_DEVICES) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "addr %d is illegal. Must be 0 or 1\n",addr);
+            "addr %d is illegal. Must be 0 or 1",addr);
         return(0);
     }
     pdeviceInfo = &pechoPvt->device[addr];
@@ -434,7 +434,7 @@ static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
 
     if(eoslen>2 || eoslen<0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "setEos illegal eoslen %d\n",eoslen);
+            "setEos illegal eoslen %d",eoslen);
         return(asynError);
     }
     pechoPvt->eoslen = eoslen;
