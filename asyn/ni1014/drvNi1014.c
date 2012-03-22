@@ -653,7 +653,7 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     status = readGpib(pniport,data,maxchars,&actual,addr,timeout,eomReason);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s readGpib failed %s\n",pniport->portName,pniport->errorMessage);
+            "%s readGpib failed %s",pniport->portName,pniport->errorMessage);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s addr %d gpibPortRead\n",pniport->portName,addr);
@@ -678,10 +678,10 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     status = writeGpib(pniport,data,numchars,&actual,addr,timeout);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s writeGpib failed %s\n",pniport->portName,pniport->errorMessage);
+            "%s writeGpib failed %s",pniport->portName,pniport->errorMessage);
     } else if(actual!=numchars) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s requested %d but sent %d bytes\n",pniport->portName,numchars,actual);
+            "%s requested %d but sent %d bytes",pniport->portName,numchars,actual);
         status = asynError;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
@@ -765,7 +765,7 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     }
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s writeGpib failed %s\n",pniport->portName,pniport->errorMessage);
+            "%s writeGpib failed %s",pniport->portName,pniport->errorMessage);
     }
     actual = length - pniport->bytesRemainingCmd;
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
@@ -789,7 +789,7 @@ static asynStatus gpibPortUniversalCmd(void *pdrvPvt, asynUser *pasynUser, int c
     status = writeCmd(pniport,buffer,1,timeout,transferStateIdle);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s writeGpib failed %s\n",pniport->portName,pniport->errorMessage);
+            "%s writeGpib failed %s",pniport->portName,pniport->errorMessage);
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         buffer,1,"%s gpibPortUniversalCmd\n",pniport->portName);
