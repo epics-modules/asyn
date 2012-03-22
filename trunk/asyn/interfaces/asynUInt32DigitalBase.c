@@ -72,7 +72,7 @@ static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "write is not supported\n");
+        "write is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d write is not supported\n",portName,addr);
     return asynError;
@@ -90,7 +90,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "write is not supported\n");
+        "write is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d read is not supported\n",portName,addr);
     return asynError;
@@ -108,7 +108,7 @@ static asynStatus setInterrupt(void *drvPvt, asynUser *pasynUser,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "setInterrupt is not supported\n");
+        "setInterrupt is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d setInterrupt is not supported\n",portName,addr);
     return asynError;
@@ -126,7 +126,7 @@ static asynStatus clearInterrupt(void *drvPvt, asynUser *pasynUser,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "clearInterrupt is not supported\n");
+        "clearInterrupt is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d clearInterrupt is not supported\n",portName,addr);
     return asynError;
@@ -144,7 +144,7 @@ static asynStatus getInterrupt(void *drvPvt, asynUser *pasynUser,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "getInterrupt is not supported\n");
+        "getInterrupt is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d getInterrupt is not supported\n",portName,addr);
     return asynError;

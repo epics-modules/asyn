@@ -379,7 +379,7 @@ static asynStatus showFailure(asynUser *pasynUser,const char *method)
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s %s not implemented\n",portName,method);
+        "%s %s not implemented",portName,method);
     return asynError;
 }
 
