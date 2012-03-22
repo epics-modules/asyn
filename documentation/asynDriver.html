@@ -1061,6 +1061,10 @@
           via a call to:
           <pre>epicsSnprintf(pasynUser-&gt;errorMessage,pasynUser-&gt;errorMessageSize,</pre>
           <pre>              "&lt;format&gt;",...)</pre>
+          The error message should <em>not</em> end with (nor contain) a newline character
+          sequence (e.g. <tt>\n</tt>). It is up to user code to decide whether and how to
+          display the error message. Keeping newlines out of the error message make it easy
+          for user code to embed the error message in another message or output format.
         </td>
       </tr>
       <tr>
@@ -2286,7 +2290,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -2655,7 +2659,7 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -2928,7 +2932,7 @@ epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -3122,7 +3126,7 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -3307,7 +3311,7 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -3495,7 +3499,7 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
         <td>
           disconnect</td>
         <td>
-          Disconnect. This frees all resources allocated by create.</td>
+          Disconnect. This frees all resources allocated by connect.</td>
       </tr>
       <tr>
         <td>
@@ -5292,7 +5296,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     The commands asynOctetConnect, asynOctetDisconnect, asynOctetRead, asynOctetWrite,
     asynOctetWriteRead, asynOctetFlush allow I/O to a device from the ioc shell. Examples
     are:</p>
-  <pre>asynOctetConnect("myid","A",0,"\n","\n",1,20)
+  <pre>asynOctetConnect("myid","A",0,1,20)
 asynOctetWrite("myid","testnew")
 asynOctetRead("myid")
 testnew\n
