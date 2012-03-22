@@ -392,7 +392,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
                                   );
     if (tty->commHandle == INVALID_HANDLE_VALUE) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s Can't open  %s\n",
+                            "%s Can't open  %s",
                                     tty->serialDeviceName, strerror(errno));
         return asynError;
     }
@@ -525,7 +525,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (maxchars <= 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s maxchars %d Why <=0?\n",tty->serialDeviceName,(int)maxchars);
+            "%s maxchars %d Why <=0?",tty->serialDeviceName,(int)maxchars);
         return asynError;
     }
     if (tty->readTimeout != pasynUser->timeout) {
