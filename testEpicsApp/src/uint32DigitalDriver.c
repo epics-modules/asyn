@@ -170,7 +170,7 @@ static asynStatus getAddr(drvPvt *pdrvPvt,asynUser *pasynUser,
     if(*paddr>=-1 && *paddr<NCHANNELS) return asynSuccess;
     if(!portOK && *paddr>=0) return asynSuccess;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "%s addr %d is illegal; Must be >= %d and < %d\n",
+        "%s addr %d is illegal; Must be >= %d and < %d",
         pdrvPvt->portName,*paddr,
         (portOK ? -1 : 0),NCHANNELS);
     return asynError;
@@ -297,7 +297,7 @@ static asynStatus uint32Write(void *pvt,asynUser *pasynUser,
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s uint32DigitalDriver:read not connected\n",pdrvPvt->portName);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s uint32DigitalDriver:read not connected\n",pdrvPvt->portName);
+            "%s uint32DigitalDriver:read not connected",pdrvPvt->portName);
         return asynError;
     }
     epicsMutexMustLock(pdrvPvt->lock);
@@ -337,7 +337,7 @@ static asynStatus uint32Read(void *pvt,asynUser *pasynUser,
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s uint32DigitalDriver:read  not connected\n",pdrvPvt->portName);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s uint32DigitalDriver:read not connected\n",pdrvPvt->portName);
+            "%s uint32DigitalDriver:read not connected",pdrvPvt->portName);
         return asynError;
     }
     epicsMutexMustLock(pdrvPvt->lock);
@@ -395,7 +395,7 @@ static asynStatus float64Read(void *pvt,asynUser *pasynUser,
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s uint32DigitalDriver:read  not connected\n",pdrvPvt->portName);
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s uint32DigitalDriver:read not connected\n",pdrvPvt->portName);
+            "%s uint32DigitalDriver:read not connected",pdrvPvt->portName);
         return asynError;
     }
     epicsMutexMustLock(pdrvPvt->lock);
@@ -451,7 +451,7 @@ static asynStatus create(void *drvPvt,asynUser *pasynUser,
 error:
     printf("asynDrvUser failed. got |%s| expecting reason(<int>)\n",drvInfo);
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "asynDrvUser failed. got |%s| expecting reason(<int>)\n",drvInfo);
+        "asynDrvUser failed. got |%s| expecting reason(<int>)",drvInfo);
     return asynError;
 }
 
