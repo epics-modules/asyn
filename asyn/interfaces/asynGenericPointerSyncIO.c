@@ -75,7 +75,7 @@ static asynStatus connect(const char *port, int addr,
     pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
     if (!pasynInterface) {
        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "interface %s is not supported by port\n",asynCommonType);
+           "interface %s is not supported by port",asynCommonType);
        return asynError;
     }
     pioPvt->pasynCommon = (asynCommon *)pasynInterface->pinterface;
@@ -83,7 +83,7 @@ static asynStatus connect(const char *port, int addr,
     pasynInterface = pasynManager->findInterface(pasynUser, asynGenericPointerType, 1);
     if (!pasynInterface) {
        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "interface %s is not supported by port\n",asynGenericPointerType);
+           "interface %s is not supported by port",asynGenericPointerType);
        return asynError;
     }
     pioPvt->pasynGenericPointer = (asynGenericPointer *)pasynInterface->pinterface;

@@ -80,7 +80,7 @@ static asynStatus connect(const char *port, int addr,
     pasynInterface = pasynManager->findInterface(pasynUser, asynCommonType, 1);
     if (!pasynInterface) {
        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "port does not implement interface %s\n",asynCommonType);
+           "port does not implement interface %s",asynCommonType);
        return asynError;
     }
     pioPvt->pasynCommon = (asynCommon *)pasynInterface->pinterface;
@@ -88,7 +88,7 @@ static asynStatus connect(const char *port, int addr,
     pasynInterface = pasynManager->findInterface(pasynUser, asynInt32Type, 1);
     if (!pasynInterface) {
        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-           "port does not implement interface %s\n",asynInt32Type);
+           "port does not implement interface %s",asynInt32Type);
        return asynError;
     }
     pioPvt->pasynInt32 = (asynInt32 *)pasynInterface->pinterface;
