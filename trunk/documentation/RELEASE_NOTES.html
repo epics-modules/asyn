@@ -29,10 +29,15 @@
   <p>
     Added support for I/O redirection to the "dbior" and "asynPrint" commands.</p>
   <h3>
-    asynReportDriver</h3>
+    asynPortDriver</h3>
   <p>
     Moved this from the miscellaneous directory to its own directory. Improved the internals,
     but did not change the API. Thanks to John Hammonds for this.</p>
+  <h3>
+    Other</h3>
+  <p>
+    Removed the newline terminator from all messages in pasynUser-&gt;errorMessage.
+    This formatting does not belong in the error message. Thanks to Lewis Muir for this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-18</h2>
