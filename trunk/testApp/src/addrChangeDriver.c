@@ -248,10 +248,10 @@ static asynStatus lockPort(void *drvPvt,asynUser *pasynUser)
     status = pasynManager->lockPort(pasynUserLower);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s lockPort to %s %s\n",
+            "%s lockPort to %s %s",
             paddrChangePvt->portName,plowerPort->portName,
             pasynUserLower->errorMessage);
-        asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s",pasynUser->errorMessage);
+        asynPrint(pasynUser,ASYN_TRACE_ERROR, "%s\n",pasynUser->errorMessage);
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
