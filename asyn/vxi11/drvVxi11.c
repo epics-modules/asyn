@@ -1039,7 +1039,7 @@ static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser)
         "%s addr %d vxiConnect\n",pvxiPort->portName,addr);
     if(pdevLink->connected) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s addr %d vxiConnect request but already connected\n",
+            "%s addr %d vxiConnect request but already connected",
             pvxiPort->portName,addr);
         return asynError;
     }
@@ -1079,14 +1079,14 @@ static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser)
         "%s addr %d vxiDisconnect\n",pvxiPort->portName,addr);
     if(!pdevLink->connected) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s addr %d vxiDisconnect request but not connected\n",
+            "%s addr %d vxiDisconnect request but not connected",
             pvxiPort->portName,addr);
         return asynError;
     }
     if(addr==-1) return vxiDisconnectPort(pvxiPort);
     if(!vxiDestroyDevLink(pvxiPort,pdevLink->lid)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s vxiDestroyDevLink failed for addr %d\n",pvxiPort->portName,addr);
+            "%s vxiDestroyDevLink failed for addr %d",pvxiPort->portName,addr);
         status = asynError;
     }
     pdevLink->lid = 0;
@@ -1113,12 +1113,12 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
     assert(data);
     if(!pdevLink) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s No devLink. Why?\n",pvxiPort->portName);
+            "%s No devLink. Why?",pvxiPort->portName);
         return asynError;
     }
     if(!vxiIsPortConnected(pvxiPort,pasynUser) || !pdevLink->connected) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s port is not connected\n",pvxiPort->portName);
+            "%s port is not connected",pvxiPort->portName);
         return asynError;
     }
     devReadP.lid = pdevLink->lid;
@@ -1146,14 +1146,14 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
         }
         if(clntStat != RPC_SUCCESS) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s RPC failed\n",pvxiPort->portName);
+                "%s RPC failed",pvxiPort->portName);
             status = asynError;
             break;
         } else if(devReadR.error != VXI_OK) {
             if((devReadR.error == VXI_IOTIMEOUT) && (pvxiPort->recoverWithIFC))
                 vxiIfc(drvPvt, pasynUser);
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s read request failed\n",pvxiPort->portName);
+                "%s read request failed",pvxiPort->portName);
             status = (devReadR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
             break;
         } 
@@ -1200,12 +1200,12 @@ static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
         "%s %d vxiWrite numchars %d\n",pvxiPort->portName,addr,numchars);
     if(!pdevLink) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s No devLink. Why?\n",pvxiPort->portName);
+            "%s No devLink. Why?",pvxiPort->portName);
         return asynError;
     }
     if(!vxiIsPortConnected(pvxiPort,pasynUser) || !pdevLink->connected) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s port is not connected\n",pvxiPort->portName);
+            "%s port is not connected",pvxiPort->portName);
         return asynError;
     }
     devWriteP.lid = pdevLink->lid;;
@@ -1230,14 +1230,14 @@ static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
             (const xdrproc_t) xdr_Device_WriteResp,(void *) &devWriteR);
         if(clntStat != RPC_SUCCESS) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s RPC failed\n",pvxiPort->portName);
+                "%s RPC failed",pvxiPort->portName);
             status = asynError;
             break;
         } else if(devWriteR.error != VXI_OK) {
             if(devWriteR.error == VXI_IOTIMEOUT && pvxiPort->recoverWithIFC) 
                 vxiIfc(drvPvt, pasynUser);
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                "%s write request failed\n",pvxiPort->portName);
+                "%s write request failed",pvxiPort->portName);
             status = (devWriteR.error==VXI_IOTIMEOUT) ? asynTimeout : asynError;
             break;
         } else {
@@ -1359,7 +1359,7 @@ static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
     nWrite = vxiWriteCmd(pvxiPort,pasynUser,(char *)data,length);
     if(nWrite!=length) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s %d vxiAddressedCmd requested %d but sent %d bytes\n",
+            "%s %d vxiAddressedCmd requested %d but sent %d bytes",
             pvxiPort->portName,addr,length,nWrite);
         status = asynError;
     }
@@ -1381,7 +1381,7 @@ static asynStatus vxiUniversalCmd(void *drvPvt, asynUser *pasynUser, int cmd)
     nout = vxiWriteCmd(pvxiPort,pasynUser, data, 1);
     if(nout!=1) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "%s vxiUniversalCmd failed\n", pvxiPort->portName);
+            "%s vxiUniversalCmd failed", pvxiPort->portName);
         status = asynError;
     }
     return status;
