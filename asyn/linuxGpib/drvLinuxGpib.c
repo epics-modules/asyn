@@ -460,7 +460,7 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 	status=checkError(pdrvPvt,pasynUser,addr);
 	if(status!=asynSuccess){
 		epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-				            "%s readGpib failed %s\n",pGpibBoardPvt->portName,gpib_error_string(pGpibBoardPvt->iberr));
+				            "%s readGpib failed %s",pGpibBoardPvt->portName,gpib_error_string(pGpibBoardPvt->iberr));
 	
 		return status;
 	}	
@@ -510,7 +510,7 @@ static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess){
 	        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-	            "%s writeGpib failed %s\n",pGpibBoardPvt->portName,gpib_error_string(pGpibBoardPvt->iberr));
+	            "%s writeGpib failed %s",pGpibBoardPvt->portName,gpib_error_string(pGpibBoardPvt->iberr));
 		
 	            return status;
 	}
