@@ -899,7 +899,7 @@
     than asynSuccess, and one of the arguments to the method is pasynUser, then the
     method is expected to write a message into pasynUser-&gt;errorMessage.</p>
   <pre>typedef enum {
-    asynSuccess,asynTimeout,asynOverflow,asynError
+    asynSuccess,asynTimeout,asynOverflow,asynError,asynDisconnected,asynDisabled
 }asynStatus;</pre>
   <table border="1">
     <caption>
@@ -930,6 +930,18 @@
           asynError</td>
         <td>
           Some other error occured.</td>
+      </tr>
+      <tr>
+        <td>
+          asynDisconnected</td>
+        <td>
+          The request failed because the port is not connected.</td>
+      </tr>
+      <tr>
+        <td>
+          asynDisabled</td>
+        <td>
+          The request failed because the port or device is disabled.</td>
       </tr>
     </tbody>
   </table>
