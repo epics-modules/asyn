@@ -301,6 +301,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             if(hostToIPAddr(tty->IPHostName, &tty->farAddr.ia.sin_addr) < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                             "Unknown host \"%s\"", tty->IPHostName);
+                epicsSocketDestroy(fd);
                 return asynError;
             }
             tty->haveAddress = 1;
