@@ -487,7 +487,7 @@ void paramList::report(FILE *fp, int details)
 }
 
 /** Get a parameter from the list by index
- *  \param[in] the index of the desired parameter in the list
+ *  \param[in] index The index of the desired parameter in the list
  *  \return The parameter associated with the input index
  *  \throws ParamListInvalidIndex if the index is outside the list
  *  boundaries
