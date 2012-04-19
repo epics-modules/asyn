@@ -573,8 +573,14 @@ WARN_LOGFILE           =
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = ../asyn/miscellaneous/asynPortDriver.cpp \
-                         ../asyn/miscellaneous/asynPortDriver.h \
+INPUT                  = ../asyn/asynPortDriver/asynPortDriver.cpp \
+                         ../asyn/asynPortDriver/asynPortDriver.h \
+                         ../asyn/asynPortDriver/paramVal.h \
+                         ../asyn/asynPortDriver/paramList.h \
+                         ../asyn/asynPortDriver/paramList.cpp \
+                         ../asyn/asynPortDriver/paramErrors.h \
+                         ../asyn/asynPortDriver/asynParamType.h \
+                         ../asyn/asynPortDriver/ParamVal.cpp \
                          ../testAsynPortDriverApp/src/
 
 # This tag can be used to specify the character encoding of the source files 
