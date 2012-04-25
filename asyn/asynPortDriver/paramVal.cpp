@@ -1,5 +1,5 @@
 /*
- * ParamVal.cpp
+ * paramVal.cpp
  *
  *  Created on: Dec 19, 2011
  *      Author: hammonds
@@ -10,9 +10,9 @@
 
 #include "epicsString.h"
 #include "paramVal.h"
-#include "ParamValWrongType.h"
+#include "paramValWrongType.h"
 
-const char* ParamVal::typeNames[] = {
+const char* paramVal::typeNames[] = {
     "asynParamTypeUndefined",
     "asynParamInt32",
     "asynParamUInt32Digital",
@@ -28,66 +28,66 @@ const char* ParamVal::typeNames[] = {
 
 
 
-ParamVal::ParamVal(const char *name):
-	type(asynParamUndefined), valueDefined(false), valueChanged(false){
-	this->name = epicsStrDup(name);
-	this->data.sval = 0;
+paramVal::paramVal(const char *name):
+    type(asynParamUndefined), valueDefined(false), valueChanged(false){
+    this->name = epicsStrDup(name);
+    this->data.sval = 0;
 }
 
-ParamVal::ParamVal(const char *name, asynParamType type):
-	type(type), valueDefined(false), valueChanged(false){
-	this->name = epicsStrDup(name);
-	this->data.sval = 0;
+paramVal::paramVal(const char *name, asynParamType type):
+    type(type), valueDefined(false), valueChanged(false){
+    this->name = epicsStrDup(name);
+    this->data.sval = 0;
 }
 
 /* Returns true if the value is defined (has been set)
  *
  */
-bool ParamVal::isDefined(){
-	return valueDefined;
+bool paramVal::isDefined(){
+    return valueDefined;
 }
 
-bool ParamVal::hasValueChanged(){
-	return valueChanged;
+bool paramVal::hasValueChanged(){
+    return valueChanged;
 }
 
-void ParamVal::setValueChanged(){
-	valueChanged = true;
+void paramVal::setValueChanged(){
+    valueChanged = true;
 }
 
-void ParamVal::resetValueChanged(){
-	valueChanged = false;
+void paramVal::resetValueChanged(){
+    valueChanged = false;
 }
 
 /*
  * Set valueDefined to indicate that the value has been set.
  */
-void ParamVal::setDefined(bool defined){
-	valueDefined = defined;
+void paramVal::setDefined(bool defined){
+    valueDefined = defined;
 }
 
-char* ParamVal::getName(){
-	return name;
+char* paramVal::getName(){
+    return name;
 }
 
-bool ParamVal::nameEquals(const char* name){
-	return (name &&
-			this->name &&
-			(epicsStrCaseCmp(name, this->name) == 0));
+bool paramVal::nameEquals(const char* name){
+    return (name &&
+            this->name &&
+            (epicsStrCaseCmp(name, this->name) == 0));
 }
 
 /** Sets the value for an integer.
   * \param[in] value Value to set.
-  * \throws ParamValWrongType if type is not asynParamInt32
-  * \throws ParamValNotChanged if the value does not need to change
+  * \throws paramValWrongType if type is not asynParamInt32
+  * \throws paramValNotChanged if the value does not need to change
   */
-void ParamVal::setInteger(int value)
+void paramVal::setInteger(int value)
 {
     if (type != asynParamInt32)
-    	throw ParamValWrongType("paramVal::setInteger can only handle asynParamInt32");
+        throw paramValWrongType("paramVal::setInteger can only handle asynParamInt32");
     if (!isDefined() || (data.ival != value))
     {
-    	setDefined(true);
+        setDefined(true);
         data.ival = value;
         setValueChanged();
     }
@@ -98,63 +98,63 @@ void ParamVal::setInteger(int value)
   * \param[in] valueMask Mask to use when setting the value.
   * \param[in] interruptMask Mask of bits that have changed even if the value has not changed
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
-void ParamVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
+void paramVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
 {
-	epicsUInt32 oldValue;
+    epicsUInt32 oldValue;
 
-	if (type != asynParamUInt32Digital)
-		throw ParamValWrongType("paramVal::setUInt32 can only handle asynParamUInt32Digital");
-	setDefined(true);
-	oldValue = data.uival;
-	/* Set any bits that are set in the value and the mask */
-	data.uival |= (value & valueMask);
-	/* Clear bits that are clear in the value and set in the mask */
-	data.uival &= (value | ~valueMask);
-	if (data.uival != oldValue) {
-	  /* Set the bits in the callback mask that have changed */
-	  uInt32CallbackMask |= (data.uival ^ oldValue);
-	  setValueChanged();
-	}
-	if (interruptMask) {
-	  uInt32CallbackMask |= interruptMask;
-	  setValueChanged();
-	}
+    if (type != asynParamUInt32Digital)
+        throw paramValWrongType("paramVal::setUInt32 can only handle asynParamUInt32Digital");
+    setDefined(true);
+    oldValue = data.uival;
+    /* Set any bits that are set in the value and the mask */
+    data.uival |= (value & valueMask);
+    /* Clear bits that are clear in the value and set in the mask */
+    data.uival &= (value | ~valueMask);
+    if (data.uival != oldValue) {
+      /* Set the bits in the callback mask that have changed */
+      uInt32CallbackMask |= (data.uival ^ oldValue);
+      setValueChanged();
+    }
+    if (interruptMask) {
+      uInt32CallbackMask |= interruptMask;
+      setValueChanged();
+    }
 }
 
 
 /** Sets the value for a double in the parameter library.
   * \param[in] value Value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamFloat64. */
-void ParamVal::setDouble(double value)
+void paramVal::setDouble(double value)
 {
-	if (type != asynParamFloat64)
-    	throw ParamValWrongType("paramVal::setDouble can only handle asynParamFloat64");
-	if (!isDefined() || (data.dval != value))
-	{
-		setDefined(true);
-		data.dval = value;
-		setValueChanged();
-	}
+    if (type != asynParamFloat64)
+        throw paramValWrongType("paramVal::setDouble can only handle asynParamFloat64");
+    if (!isDefined() || (data.dval != value))
+    {
+        setDefined(true);
+        data.dval = value;
+        setValueChanged();
+    }
 }
 
 /** Sets the value for a string in the parameter library.
   * \param[out] value Address of value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
-void ParamVal::setString(const char *value)
+void paramVal::setString(const char *value)
 {
     if (type != asynParamOctet)
-    	throw ParamValWrongType("paramVal::setString can only handle asynParamOctet");
+        throw paramValWrongType("paramVal::setString can only handle asynParamOctet");
     if (!isDefined() || (strcmp(data.sval, value)))
     {
         setDefined(true);
         if (data.sval != NULL)
-        	free(data.sval);
+            free(data.sval);
         data.sval = epicsStrDup(value);
         setValueChanged();
     }
 }
 
-void ParamVal::report(int id, FILE *fp, int details)
+void paramVal::report(int id, FILE *fp, int details)
 {
     switch (type)
     {
@@ -220,6 +220,6 @@ void ParamVal::report(int id, FILE *fp, int details)
     }
 }
 
-const char* ParamVal::getTypeName(){
-	return typeNames[type];
+const char* paramVal::getTypeName(){
+    return typeNames[type];
 }
