@@ -294,7 +294,6 @@ static void processCallbackInput(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s devAsynUInt32Digital::process read error %s\n",
             pr->name, pasynUser->errorMessage);
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
     }
     pPvt->status = status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
@@ -315,7 +314,6 @@ static void processCallbackOutput(asynUser *pasynUser)
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
            "%s devAsynUInt32Digital process error %s\n",
            pr->name, pasynUser->errorMessage);
-       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
     }
     pPvt->status = status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
@@ -372,6 +370,8 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
          * new element to the ring buffer, not if we just replaced an element. */
         scanIoRequest(pPvt->ioScanPvt);
     }    
+    /* The driver flags problems by setting pasynUser->auxStatus */
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; 
     epicsMutexUnlock(pPvt->mutexId);
 }
 
@@ -390,6 +390,8 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     if (count != size) {
         pPvt->ringBufferOverflows++;
     }
+    /* The driver flags problems by setting pasynUser->auxStatus */
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; 
     epicsMutexUnlock(pPvt->mutexId);
     scanOnce(pr);
 }
@@ -412,10 +414,12 @@ static void getCallbackValue(devPvt *pPvt)
                 "%s devAsynUInt32Digital::getCallbackValue from ringBuffer value=%lu\n",pPvt->pr->name,pPvt->value);
             pPvt->gotValue = 1;
         }
-        else 
+        else {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital getCallbackValue error, ring read failed\n",
                 pPvt->pr->name);
+            pPvt->status = asynError;
+        }
     }
     epicsMutexUnlock(pPvt->mutexId);
 }
@@ -461,10 +465,15 @@ static long processBi(biRecord *pr)
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
+    pr->rval = pPvt->value & pr->mask; 
     if(pPvt->status==asynSuccess) {
-        pr->rval = pPvt->value & pr->mask; pr->udf=0;
+        pr->udf=0;
     }
-    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    else {
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    pPvt->gotValue = 0; 
+    pPvt->status = asynSuccess;
     return 0;
 }
 
@@ -548,10 +557,15 @@ static long processLi(longinRecord *pr)
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
+    pr->val = pPvt->value; 
     if(pPvt->status==asynSuccess) {
-        pr->val = pPvt->value; pr->udf=0;
+        pr->udf=0;
     }
-    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    else {
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    pPvt->gotValue = 0; 
+    pPvt->status = asynSuccess;
     return 0;
 }
 
@@ -633,10 +647,15 @@ static long processMbbi(mbbiRecord *pr)
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
+    pr->rval = pPvt->value & pr->mask; 
     if(pPvt->status==asynSuccess) {
-        pr->rval = pPvt->value & pr->mask; pr->udf=0;
+        pr->udf=0;
     }
-    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    else {
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    pPvt->gotValue = 0; 
+    pPvt->status = asynSuccess;
     return 0;
 }
 
@@ -740,10 +759,15 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
+    pr->rval = pPvt->value & pr->mask; 
     if(pPvt->status==asynSuccess) {
-        pr->rval = pPvt->value & pr->mask; pr->udf=0;
+        pr->udf=0;
     }
-    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    else {
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    pPvt->gotValue = 0; 
+    pPvt->status = asynSuccess;
     return 0;
 }
 
