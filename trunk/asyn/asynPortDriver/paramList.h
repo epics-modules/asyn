@@ -17,7 +17,7 @@ class paramList {
 public:
     paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
     ~paramList();
-    ParamVal* getParameter(int index);
+    paramVal* getParameter(int index);
     asynStatus createParam(const char *name, asynParamType type, int *index);
     asynStatus findParam(const char *name, int *index);
     asynStatus getName(int index, const char **name);
@@ -34,21 +34,23 @@ public:
     asynStatus getUInt32Interrupt(int index, epicsUInt32 *mask, interruptReason reason);
     asynStatus callCallbacks(int addr);
     asynStatus callCallbacks();
+    asynStatus setStatus(int index, asynStatus status);
+    asynStatus getStatus(int index, asynStatus *status);
     void report(FILE *fp, int details);
 
 private:
     asynStatus setFlag(int index);
-    asynStatus int32Callback(int command, int addr, epicsInt32 value);
-    asynStatus uint32Callback(int command, int addr, epicsUInt32 value, epicsUInt32 interruptMask);
-    asynStatus float64Callback(int command, int addr, epicsFloat64 value);
-    asynStatus octetCallback(int command, int addr, char *value);
-    void registerParameterChange(ParamVal *param, int index);
+    asynStatus int32Callback(int command, int addr);
+    asynStatus uint32Callback(int command, int addr, epicsUInt32 interruptMask);
+    asynStatus float64Callback(int command, int addr);
+    asynStatus octetCallback(int command, int addr);
+    void registerParameterChange(paramVal *param, int index);
     int nextParam;
     int nVals;
     int nFlags;
     asynStandardInterfaces *pasynInterfaces;
     int *flags;
-    ParamVal **vals;
+    paramVal **vals;
 };
 
 #endif /* cplusplus */
