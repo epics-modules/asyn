@@ -252,11 +252,10 @@ static void processCallbackInput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = (dbCommon *)pPvt->pr;
-    int status=asynSuccess;
 
-    status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser,
+    pPvt->status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser,
         &pPvt->value);
-    if (status == asynSuccess) {
+    if (pPvt->status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process value=%f\n", pr->name,pPvt->value);
         pr->udf=0;
@@ -264,7 +263,6 @@ static void processCallbackInput(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s devAsynFloat64::process read error %s\n",
             pr->name, pasynUser->errorMessage);
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
@@ -273,19 +271,16 @@ static void processCallbackOutput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = pPvt->pr;
-    int status=asynSuccess;
 
-    status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser,pPvt->value);
-    if(status == asynSuccess) {
+    pPvt->status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser,pPvt->value);
+    if(pPvt->status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process val %f\n",pr->name,pPvt->value);
     } else {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
            "%s devAsynFloat64 process error %s\n",
            pr->name, pasynUser->errorMessage);
-       recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
     }
-    pPvt->status = status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
@@ -340,6 +335,8 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
          * new element to the ring buffer, not if we just replaced an element. */
         scanIoRequest(pPvt->ioScanPvt);
     }    
+    /* The driver flags problems by setting pasynUser->auxStatus */
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; 
     epicsMutexUnlock(pPvt->mutexId);
 }
 
@@ -358,6 +355,8 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     if (count != size) {
         pPvt->ringBufferOverflows++;
     }
+    /* The driver flags problems by setting pasynUser->auxStatus */
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; 
     epicsMutexUnlock(pPvt->mutexId);
     scanOnce(pr);
 }
@@ -374,6 +373,8 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     epicsMutexLock(pPvt->mutexId);
     pPvt->numAverage++;
     pPvt->sum += value;
+    /* The driver flags problems by setting pasynUser->auxStatus */
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; 
     epicsMutexUnlock(pPvt->mutexId);
 }
 
@@ -395,10 +396,12 @@ static void getCallbackValue(devPvt *pPvt)
                 "%s devAsynFloat64::getCallbackValue from ringBuffer value=%f\n",pPvt->pr->name,pPvt->value);
             pPvt->gotValue = 1;
         }
-        else 
+        else {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynFloat64 getCallbackValue error, ring read failed\n",
                 pPvt->pr->name);
+            pPvt->status = asynError;
+        }
     }
     epicsMutexUnlock(pPvt->mutexId);
 }
@@ -433,10 +436,15 @@ static long processAi(aiRecord *pr)
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
+    pr->val = pPvt->value; 
     if(pPvt->status==asynSuccess) {
-        pr->val = pPvt->value; pr->udf=0;
+        pr->udf=0;
     }
-    pPvt->gotValue = 0; pPvt->status = asynSuccess;
+    else {
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+    }
+    pPvt->gotValue = 0; 
+    pPvt->status = asynSuccess;
     return 2;
 }
 
@@ -518,10 +526,16 @@ static long processAiAverage(aiRecord *pai)
         epicsMutexUnlock(pPvt->mutexId);
         return -2;
     }
-    pai->udf = 0;
+    if (pPvt->status == asynSuccess) {
+        pai->udf = 0;
+    }
+    else {
+        recGblSetSevr(pai, READ_ALARM, INVALID_ALARM);
+    }
     pai->val = pPvt->sum/pPvt->numAverage;
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
+    pPvt->status = asynSuccess;
     epicsMutexUnlock(pPvt->mutexId);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
               "%s devAsynFloat64::callbackAiAverage val=%f\n",
