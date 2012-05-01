@@ -3,6 +3,7 @@ testEpics_registerRecordDeviceDriver(pdbbase)
 
 int32DriverInit("int32",-32768,32767)
 dbLoadRecords("../../db/devInt32.db")
+dbLoadRecords("../../db/asynInt32TimeSeries.db","P=asyndev,R=Int32TimeSeries,PORT=int32,ADDR=0,TIMEOUT=1,SCAN=6,NELM=2048,DRVINFO=,")
 
 uint32DigitalDriverInit("digital")
 dbLoadRecords("../../db/devDigital.db")
