@@ -10,7 +10,8 @@
 
 #include "epicsString.h"
 #include "paramVal.h"
-#include "paramValWrongType.h"
+#include "ParamValWrongType.h"
+#include "ParamValNotDefined.h"
 
 const char* paramVal::typeNames[] = {
     "asynParamTypeUndefined",
@@ -59,6 +60,19 @@ void paramVal::resetValueChanged(){
     valueChanged = false;
 }
 
+void paramVal::setStatus(asynStatus status){
+    if (status_ != status) {
+        setValueChanged();
+        status_ = status;
+        // We need to do callbacks on all bits if the status has changed
+        if (type == asynParamUInt32Digital) uInt32CallbackMask = 0xFFFFFFFF;
+    }
+}
+
+asynStatus paramVal::getStatus(){
+    return status_;
+}
+
 /*
  * Set valueDefined to indicate that the value has been set.
  */
@@ -78,13 +92,12 @@ bool paramVal::nameEquals(const char* name){
 
 /** Sets the value for an integer.
   * \param[in] value Value to set.
-  * \throws paramValWrongType if type is not asynParamInt32
-  * \throws paramValNotChanged if the value does not need to change
+  * \throws ParamValWrongType if type is not asynParamInt32
   */
 void paramVal::setInteger(int value)
 {
     if (type != asynParamInt32)
-        throw paramValWrongType("paramVal::setInteger can only handle asynParamInt32");
+        throw ParamValWrongType("paramVal::setInteger can only handle asynParamInt32");
     if (!isDefined() || (data.ival != value))
     {
         setDefined(true);
@@ -93,7 +106,21 @@ void paramVal::setInteger(int value)
     }
 }
 
-/** Sets the value for an integer in the parameter library.
+/** Gets the value for an integer in the parameter library.
+  * \param[in] value Value to set.
+  * \throws ParamValWrongType if type is not asynParamInt32
+  * \throws paramValNotDefined if the value is not defined
+  */
+int paramVal::getInteger()
+{
+    if (type != asynParamInt32)
+        throw ParamValWrongType("paramVal::getInteger can only handle asynParamInt32");
+    if (!isDefined())
+        throw ParamValNotDefined("paramVal::getInteger value not defined");
+    return data.ival;
+}
+
+/** Sets the value for a UInt32 in the parameter library.
   * \param[in] value Value to set.
   * \param[in] valueMask Mask to use when setting the value.
   * \param[in] interruptMask Mask of bits that have changed even if the value has not changed
@@ -103,7 +130,7 @@ void paramVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 i
     epicsUInt32 oldValue;
 
     if (type != asynParamUInt32Digital)
-        throw paramValWrongType("paramVal::setUInt32 can only handle asynParamUInt32Digital");
+        throw ParamValWrongType("paramVal::setUInt32 can only handle asynParamUInt32Digital");
     setDefined(true);
     oldValue = data.uival;
     /* Set any bits that are set in the value and the mask */
@@ -121,6 +148,18 @@ void paramVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 i
     }
 }
 
+/** Gets the value for a UInt32 in the parameter library.
+  * \param[in] valueMask Mask to use when getting the value.
+  * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
+epicsUInt32 paramVal::getUInt32(epicsUInt32 valueMask)
+{
+    if (type != asynParamUInt32Digital)
+        throw ParamValWrongType("paramVal::getUInt32 can only handle asynParamUInt32Digital");
+    if (!isDefined())
+        throw ParamValNotDefined("paramVal::getUInt32 value not defined");
+    return data.uival & valueMask;
+}
+
 
 /** Sets the value for a double in the parameter library.
   * \param[in] value Value to set.
@@ -128,7 +167,7 @@ void paramVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 i
 void paramVal::setDouble(double value)
 {
     if (type != asynParamFloat64)
-        throw paramValWrongType("paramVal::setDouble can only handle asynParamFloat64");
+        throw ParamValWrongType("paramVal::setDouble can only handle asynParamFloat64");
     if (!isDefined() || (data.dval != value))
     {
         setDefined(true);
@@ -137,13 +176,27 @@ void paramVal::setDouble(double value)
     }
 }
 
+/** Gets the value for an double in the parameter library.
+  * \param[in] value Value to set.
+  * \throws ParamValWrongType if type is not asynParamFloat64
+  * \throws paramValNotDefined if the value is not defined
+  */
+double paramVal::getDouble()
+{
+    if (type != asynParamFloat64)
+        throw ParamValWrongType("paramVal::getDouble can only handle asynParamFloat64");
+    if (!isDefined())
+        throw ParamValNotDefined("paramVal::getDouble value not defined");
+    return data.dval;
+}
+
 /** Sets the value for a string in the parameter library.
   * \param[out] value Address of value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
 void paramVal::setString(const char *value)
 {
     if (type != asynParamOctet)
-        throw paramValWrongType("paramVal::setString can only handle asynParamOctet");
+        throw ParamValWrongType("paramVal::setString can only handle asynParamOctet");
     if (!isDefined() || (strcmp(data.sval, value)))
     {
         setDefined(true);
@@ -154,63 +207,77 @@ void paramVal::setString(const char *value)
     }
 }
 
+/** Gets the value for a string in the parameter library.
+  * \param[in] value Value to set.
+  * \throws ParamValWrongType if type is not asynParamOctet
+  * \throws paramValNotDefined if the value is not defined
+  */
+char* paramVal::getString()
+{
+    if (type != asynParamOctet)
+        throw ParamValWrongType("paramVal::getString can only handle asynParamOctet");
+    if (!isDefined())
+        throw ParamValNotDefined("paramVal::geString value not defined");
+    return data.sval;
+}
+
 void paramVal::report(int id, FILE *fp, int details)
 {
     switch (type)
     {
         case asynParamInt32:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynInt32, name=%s, value=%d\n", id, getName(), data.ival );
+                fprintf(fp, "Parameter %d type=asynInt32, name=%s, value=%d, status=%d\n", id, getName(), getInteger(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=asynInt32, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamUInt32Digital:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=0x%x, risingMask=0x%x, fallingMask=0x%x, callbackMask=0x%x\n",
-                    id, getName(), data.uival,
+                fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value=0x%x, status=%d, risingMask=0x%x, fallingMask=0x%x, callbackMask=0x%x\n",
+                    id, getName(), getUInt32(0xFFFFFFFF), getStatus(),
                     uInt32RisingMask, uInt32FallingMask, uInt32CallbackMask );
             else
                 fprintf(fp, "Parameter %d type=asynUInt32Digital, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamFloat64:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value=%f\n", id, getName(), data.dval );
+                fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value=%f, status=%d\n", id, getName(), getDouble(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamOctet:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=string, name=%s, value=%s\n", id, getName(), data.sval );
+                fprintf(fp, "Parameter %d type=string, name=%s, value=%s, status=%d\n", id, getName(), getString(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=string, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamInt8Array:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynInt8Array, name=%s, value=%p\n", id, getName(), data.pi8 );
+                fprintf(fp, "Parameter %d type=asynInt8Array, name=%s, value=%p, status=%d\n", id, getName(), data.pi8, getStatus());
             else
                 fprintf(fp, "Parameter %d type=asynInt8Array, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamInt16Array:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynInt16Array, name=%s, value=%p\n", id, getName(), data.pi16 );
+                fprintf(fp, "Parameter %d type=asynInt16Array, name=%s, value=%p, status=%d\n", id, getName(), data.pi16, getStatus() );
             else
                 fprintf(fp, "Parameter %d type=asynInt16Array, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamInt32Array:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynInt32Array, name=%s, value=%p\n", id, getName(), data.pi32 );
+                fprintf(fp, "Parameter %d type=asynInt32Array, name=%s, value=%p, status=%d\n", id, getName(), data.pi32, getStatus() );
             else
                 fprintf(fp, "Parameter %d type=asynInt32Array, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamFloat32Array:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynFloat32Array, name=%s, value=%p\n", id, getName(), data.pf32 );
+                fprintf(fp, "Parameter %d type=asynFloat32Array, name=%s, value=%p, status=%d\n", id, getName(), data.pf32, getStatus() );
             else
                 fprintf(fp, "Parameter %d type=asynFloat32Array, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamFloat64Array:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynFloat64Array, name=%s, value=%p\n", id, getName(), data.pf64 );
+                fprintf(fp, "Parameter %d type=asynFloat64Array, name=%s, value=%p, status=%d\n", id, getName(), data.pf64, getStatus() );
             else
                 fprintf(fp, "Parameter %d type=asynFloat64Array, name=%s, value is undefined\n", id, getName());
             break;
