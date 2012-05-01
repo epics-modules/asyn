@@ -5,8 +5,8 @@ file {
 }
 display {
 	object {
-		x=390
-		y=52
+		x=383
+		y=46
 		width=200
 		height=50
 	}
@@ -100,9 +100,14 @@ display {
 		args="P=testErrors:"
 	}
 	display[1] {
-		label="asyn record"
+		label="asynRecord debug"
 		name="asynRecord.adl"
 		args="P=testErrors:, R=asyn1"
+	}
+	display[2] {
+		label="asynRecord I/O"
+		name="asynRecord.adl"
+		args="P=testErrors:, R=asynTest"
 	}
 	clr=14
 	bclr=51
