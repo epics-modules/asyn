@@ -18,6 +18,7 @@
 #include "asynParamType.h"
 #include "ParamListInvalidIndex.h"
 #include "ParamValWrongType.h"
+#include "ParamValNotDefined.h"
 
 /** Constructor for paramList class.
   * \param[in] nValues Number of parameters in the list.
@@ -27,9 +28,9 @@ paramList::paramList(int nValues, asynStandardInterfaces *pasynInterfaces)
 {
     char eName[6];
     sprintf(eName, "empty");
-	vals = (ParamVal **) calloc(nVals, sizeof(ParamVal));
+    vals = (paramVal **) calloc(nVals, sizeof(paramVal));
     for (int ii=0; ii<nVals; ii++){
-    	vals[ii] = new ParamVal(eName);
+        vals[ii] = new paramVal(eName);
     }
     flags = (int *) calloc(nVals, sizeof(int));
 }
@@ -64,8 +65,8 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
     if (this->findParam(name, index) == asynSuccess) return asynParamAlreadyExists;
     *index = this->nextParam++;
     if (*index < 0 || *index >= this->nVals) return asynParamBadIndex;
-      delete this->vals[*index];
-      this->vals[*index] = new ParamVal(name, type);
+    delete this->vals[*index];
+    this->vals[*index] = new paramVal(name, type);
     return asynSuccess;
 }
 
@@ -81,7 +82,7 @@ asynStatus paramList::findParam(const char *name, int *index)
     return asynParamNotFound;
 }
 
-void paramList::registerParameterChange(ParamVal *param,int index)
+void paramList::registerParameterChange(paramVal *param,int index)
 {
     if(param->hasValueChanged()){
         setFlag(index);
@@ -96,14 +97,14 @@ void paramList::registerParameterChange(ParamVal *param,int index)
 asynStatus paramList::setInteger(int index, int value)
 {
     try{
-    	getParameter(index)->setInteger(value);
-    	registerParameterChange(getParameter(index), index);
+        getParameter(index)->setInteger(value);
+        registerParameterChange(getParameter(index), index);
     }
     catch (ParamValWrongType&) {
-    	return asynParamWrongType;
+        return asynParamWrongType;
     }
     catch (ParamListInvalidIndex&){
-    	return asynParamBadIndex;
+        return asynParamBadIndex;
     }
 
     return asynSuccess;
@@ -118,14 +119,14 @@ asynStatus paramList::setInteger(int index, int value)
 asynStatus paramList::setUInt32(int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
 {
     try {
-    	getParameter(index)->setUInt32(value, valueMask, interruptMask);
-    	registerParameterChange(getParameter(index), index);
+        getParameter(index)->setUInt32(value, valueMask, interruptMask);
+        registerParameterChange(getParameter(index), index);
     }
     catch (ParamValWrongType&) {
-    	return asynParamWrongType;
+        return asynParamWrongType;
     }
     catch (ParamListInvalidIndex&) {
-    	return asynParamBadIndex;
+        return asynParamBadIndex;
     }
 
     return asynSuccess;
@@ -139,15 +140,15 @@ asynStatus paramList::setDouble(int index, double value)
 {
     try
     {
-    	getParameter(index)->setDouble(value);
-    	registerParameterChange(getParameter(index), index);
+        getParameter(index)->setDouble(value);
+        registerParameterChange(getParameter(index), index);
     }
     catch (ParamValWrongType&)
     {
-    	return asynParamWrongType;
+        return asynParamWrongType;
     }
     catch (ParamListInvalidIndex&) {
-    	return asynParamBadIndex;
+        return asynParamBadIndex;
     }
     return asynSuccess;
 }
@@ -160,14 +161,14 @@ asynStatus paramList::setString(int index, const char *value)
 {
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
     try {
-    	getParameter(index)->setString(value);
-    	registerParameterChange(getParameter(index), index);
+        getParameter(index)->setString(value);
+        registerParameterChange(getParameter(index), index);
     }
     catch (ParamValWrongType&){
-    	return asynParamWrongType;
+        return asynParamWrongType;
     }
     catch (ParamListInvalidIndex&) {
-    	return asynParamBadIndex;
+        return asynParamBadIndex;
     }
     return asynSuccess;
 }
@@ -179,11 +180,23 @@ asynStatus paramList::setString(int index, const char *value)
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getInteger(int index, int *value)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
-    if (this->vals[index]->type != asynParamInt32) return asynParamWrongType;
-    if (!this->vals[index]->isDefined()) return asynParamUndefined;
-    *value = this->vals[index]->data.ival;
-    return asynSuccess;
+    asynStatus status;
+    
+    try {
+        paramVal *pVal = getParameter(index);
+        *value = pVal->getInteger();
+        status = pVal->getStatus();
+    }
+    catch (ParamValWrongType&){
+        return asynParamWrongType;
+    }
+    catch (ParamValNotDefined&){
+        return asynParamUndefined;
+    }
+    catch (ParamListInvalidIndex&) {
+        return asynParamBadIndex;
+    }
+    return status;
 }
 
 /** Returns the value for an integer from the parameter library.
@@ -194,11 +207,23 @@ asynStatus paramList::getInteger(int index, int *value)
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
-    if (this->vals[index]->type != asynParamUInt32Digital) return asynParamWrongType;
-    if (!this->vals[index]->isDefined()) return asynParamUndefined;
-    *value = this->vals[index]->data.uival & mask;
-    return asynSuccess;
+    asynStatus status;
+    
+    try {
+        paramVal *pVal = getParameter(index);
+        *value = pVal->getUInt32(mask);
+        status = pVal->getStatus();
+    }
+    catch (ParamValWrongType&){
+        return asynParamWrongType;
+    }
+    catch (ParamValNotDefined&){
+        return asynParamUndefined;
+    }
+    catch (ParamListInvalidIndex&) {
+        return asynParamBadIndex;
+    }
+    return status;
 }
 
 /** Returns the value for a double from the parameter library.
@@ -208,10 +233,45 @@ asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getDouble(int index, double *value)
 {
+    asynStatus status;
+    
+    try {
+        paramVal *pVal = getParameter(index);
+        *value = pVal->getDouble();
+        status = pVal->getStatus();
+    }
+    catch (ParamValWrongType&){
+        return asynParamWrongType;
+    }
+    catch (ParamValNotDefined&){
+        return asynParamUndefined;
+    }
+    catch (ParamListInvalidIndex&) {
+        return asynParamBadIndex;
+    }
+    return status;
+}
+
+/** Returns the status for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[out] status Address of status to get
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::getStatus(int index, asynStatus *status)
+{
     if (index < 0 || index >= this->nVals) return asynParamBadIndex;
-    if (this->vals[index]->type != asynParamFloat64) return asynParamWrongType;
-    if (!this->vals[index]->isDefined()) return asynParamUndefined;
-    *value = this->vals[index]->data.dval;
+    *status = this->vals[index]->getStatus();
+    return asynSuccess;
+}
+
+/** Sets the status for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[in] status Status to set
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::setStatus(int index, asynStatus status)
+{
+    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    this->vals[index]->setStatus(status);
+    registerParameterChange(getParameter(index), index);
     return asynSuccess;
 }
 
@@ -286,12 +346,24 @@ asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask, interrupt
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getString(int index, int maxChars, char *value)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
-    if (this->vals[index]->type != asynParamOctet) return asynParamWrongType;
-    if (!this->vals[index]->isDefined()) return asynParamUndefined;
-    if (maxChars > 0) {
-        strncpy(value, this->vals[index]->data.sval, maxChars-1);
-        value[maxChars-1] = '\0';
+    asynStatus status;
+    
+    try {
+        if (maxChars > 0) {
+            paramVal *pVal = getParameter(index);
+            status = pVal->getStatus();
+            strncpy(value, pVal->getString(), maxChars-1);
+            value[maxChars-1] = '\0';
+        }
+    }
+    catch (ParamValWrongType&){
+        return asynParamWrongType;
+    }
+    catch (ParamValNotDefined&){
+        return asynParamUndefined;
+    }
+    catch (ParamListInvalidIndex&) {
+        return asynParamBadIndex;
     }
     return asynSuccess;
 }
@@ -308,20 +380,25 @@ asynStatus paramList::getName(int index, const char **value)
 }
 
 /** Calls the registered asyn callback functions for all clients for an integer parameter */
-asynStatus paramList::int32Callback(int command, int addr, epicsInt32 value)
+asynStatus paramList::int32Callback(int command, int addr)
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
     int address;
+    epicsInt32 value;
+    asynStatus status;
 
     /* Pass int32 interrupts */
+    status = getInteger(command, &value);
     if (!pInterfaces->int32InterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->int32InterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynInt32Interrupt *pInterrupt = (asynInt32Interrupt *) pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &address);
+        /* Set the status for the callback */
+        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (address == -1) address = 0;
         if ((command == pInterrupt->pasynUser->reason) &&
@@ -337,20 +414,25 @@ asynStatus paramList::int32Callback(int command, int addr, epicsInt32 value)
 }
 
 /** Calls the registered asyn callback functions for all clients for an UInt32 parameter */
-asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 value, epicsUInt32 interruptMask)
+asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 interruptMask)
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
     int address;
+    epicsUInt32 value;
+    asynStatus status;
 
     /* Pass UInt32Digital interrupts */
+    status = getUInt32(command, &value, 0xFFFFFFFF);
     if (!pInterfaces->uInt32DigitalInterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->uInt32DigitalInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynUInt32DigitalInterrupt *pInterrupt = (asynUInt32DigitalInterrupt *) pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &address);
+        /* Set the status for the callback */
+        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (address == -1) address = 0;
         if ((command == pInterrupt->pasynUser->reason) &&
@@ -367,20 +449,25 @@ asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 value, e
 }
 
 /** Calls the registered asyn callback functions for all clients for a double parameter */
-asynStatus paramList::float64Callback(int command, int addr, epicsFloat64 value)
+asynStatus paramList::float64Callback(int command, int addr)
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
     int address;
+    epicsFloat64 value;
+    asynStatus status;
 
     /* Pass float64 interrupts */
+    status = getDouble(command, &value);
     if (!pInterfaces->float64InterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->float64InterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynFloat64Interrupt *pInterrupt = (asynFloat64Interrupt *) pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &address);
+        /* Set the status for the callback */
+        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (address == -1) address = 0;
         if ((command == pInterrupt->pasynUser->reason) &&
@@ -396,20 +483,26 @@ asynStatus paramList::float64Callback(int command, int addr, epicsFloat64 value)
 }
 
 /** Calls the registered asyn callback functions for all clients for a string parameter */
-asynStatus paramList::octetCallback(int command, int addr, char *value)
+asynStatus paramList::octetCallback(int command, int addr)
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStandardInterfaces *pInterfaces = this->pasynInterfaces;
     int address;
+    char *value;
+    asynStatus status;
 
     /* Pass octet interrupts */
+    value = getParameter(command)->getString();
+    getStatus(command, &status);
     if (!pInterfaces->octetInterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->octetInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynOctetInterrupt *pInterrupt = (asynOctetInterrupt *) pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &address);
+        /* Set the status for the callback */
+        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (address == -1) address = 0;
         if ((command == pInterrupt->pasynUser->reason) &&
@@ -438,27 +531,32 @@ asynStatus paramList::callCallbacks(int addr)
 
     if (!interruptAccept) return(asynSuccess);
 
-    for (i = 0; i < this->nFlags; i++)
-    {
-        index = this->flags[i];
-        if (!this->vals[index]->isDefined()) return(status);
-        switch(this->vals[index]->type) {
-            case asynParamInt32:
-                status = int32Callback(index, addr, this->vals[index]->data.ival);
-                break;
-            case asynParamUInt32Digital:
-                status = uint32Callback(index, addr, this->vals[index]->data.uival, this->vals[index]->uInt32CallbackMask);
-                this->vals[index]->uInt32CallbackMask = 0;
-                break;
-            case asynParamFloat64:
-                status = float64Callback(index, addr, this->vals[index]->data.dval);
-                break;
-            case asynParamOctet:
-                status = octetCallback(index, addr, this->vals[index]->data.sval);
-                break;
-            default:
-                break;
+    try {
+        for (i = 0; i < this->nFlags; i++)
+        {
+            index = this->flags[i];
+            if (!getParameter(index)->isDefined()) return status;
+            switch(getParameter(index)->type) {
+                case asynParamInt32:
+                    status = int32Callback(index, addr);
+                    break;
+                case asynParamUInt32Digital:
+                    status = uint32Callback(index, addr, this->vals[index]->uInt32CallbackMask);
+                    this->vals[index]->uInt32CallbackMask = 0;
+                    break;
+                case asynParamFloat64:
+                    status = float64Callback(index, addr);
+                    break;
+                case asynParamOctet:
+                    status = octetCallback(index, addr);
+                    break;
+                default:
+                    break;
+            }
         }
+    }
+    catch (ParamListInvalidIndex&) {
+        return asynParamBadIndex;
     }
     this->nFlags=0;
     return(status);
@@ -478,11 +576,11 @@ void paramList::report(FILE *fp, int details)
 {
     int i;
 
-    printf( "Number of parameters is: %d\n", this->nVals );
+    fprintf(fp, "Number of parameters is: %d\n", this->nVals );
     if (details <= 1) return;
     for (i=0; i<this->nVals; i++)
     {
-    	this->vals[i]->report(i, fp, details);
+        this->vals[i]->report(i, fp, details);
     }
 }
 
@@ -492,9 +590,9 @@ void paramList::report(FILE *fp, int details)
  *  \throws ParamListInvalidIndex if the index is outside the list
  *  boundaries
  */
-ParamVal* paramList::getParameter(int index)
+paramVal* paramList::getParameter(int index)
 {
-    if (index < 0 || index >= this->nVals) throw ParamListInvalidIndex("paramVal::setDouble can only handle asynParamOctet");
+    if (index < 0 || index >= this->nVals) throw ParamListInvalidIndex("paramList::getParameter invalid index");
     return this->vals[index];
 }
 
