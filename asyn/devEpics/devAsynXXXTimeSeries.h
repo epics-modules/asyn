@@ -57,6 +57,7 @@ typedef struct devAsynWfPvt{ \
     char            *userParam; \
     epicsMutexId    lock; \
     int             addr; \
+    asynStatus      status; \
 } devAsynWfPvt; \
  \
 static long initRecord(dbCommon *pr); \
@@ -203,7 +204,11 @@ static long process(dbCommon *pr) \
     pPvt->busy = pwf->busy; \
     pwf->rarm = 0; \
     pwf->udf = 0; \
+    if (pPvt->status != asynSuccess) { \
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
+    } \
     epicsMutexUnlock(pPvt->lock); \
+    pPvt->status = asynSuccess; \
     return 0; \
 }  \
  \
@@ -229,6 +234,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser, EPICS_TYPE valu
         callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf); \
       } \
     } \
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
     epicsMutexUnlock(pPvt->lock); \
 } \
 
