@@ -356,3 +356,19 @@ record(waveform, "$(P)WfFloat64")
     field(SCAN, "I/O Intr")
 }
 
+###################################################################
+#  asynRecord to test I/O Intr scanning                           #
+###################################################################
+record(asyn, "$(P)asynTest")
+{
+    field(DTYP, "asynRecordDevice")
+    field(PORT, "$(PORT)")
+    field(ADDR, "$(ADDR)")
+    field(DRVINFO, "OCTET_VALUE")
+    field(IMAX, "500")
+    field(IFMT, "Binary")
+    field(TMOT, "$(TIMEOUT)")
+    field(TMOD, "READ")
+    field(SCAN, "I/O Intr")
+}
+
