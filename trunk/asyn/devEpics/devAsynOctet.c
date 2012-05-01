@@ -77,7 +77,8 @@ typedef struct devPvt{
     CALLBACK    callback;
     IOSCANPVT   ioScanPvt;
     void        *registrarPvt;
-    int         gotValue; /*For interruptCallback*/
+    int         gotValue; /* For interruptCallback */
+    asynStatus  status;
     interruptCallbackOctet asynCallback;
 }devPvt;
 
@@ -266,6 +267,8 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
         psi->udf = 0;
         if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     }
+    /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
+    if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
@@ -283,6 +286,8 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
     if(num<pwf->nelm) pbuf[num] = 0;
     pwf->nord = num;
     pwf->udf = 0;
+    /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
+    if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
@@ -410,6 +415,12 @@ static long processCommon(dbCommon *precord)
             recGblSetSevr(precord,READ_ALARM,INVALID_ALARM);
         }
     }
+    /* If the callback function set a bad status put the record in alarm */
+    if (pdevPvt->status != asynSuccess) {
+        recGblSetSevr(precord,READ_ALARM,INVALID_ALARM);
+    }
+    pdevPvt->status = asynSuccess;
+        
     return(0);
 }
 
