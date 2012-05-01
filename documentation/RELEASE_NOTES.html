@@ -15,10 +15,31 @@
     <h2>
       Release 4-19</h2>
     <h2>
-      February XXX, 2012</h2>
+      May XXX, 2012</h2>
   </div>
   <h3>
     devEpics</h3>
+  <p>
+    Added support for putting input records with SCAN=I/O Intr into alarm. Device support
+    now uses the pasynUser->auxStatus field in the pasynUser passed to the callback
+    function. If auxStatus != asynSuccess then the record is alarm is set to STAT=READ
+    and SEVR=INVALID. This change should be backwards compatible with all drivers because
+    the pasynUser that is used for the callbacks is private to the callback function,
+    and the auxStatus field is initialized to 0, which is asynSuccess.</p>
+  <p>
+    asyn port drivers can now signal error status to clients in callback functions can
+    now do so by setting pasynUser->auxStatus to asynError, asynSuccess, etc.</p>
+  <p>
+    Added support in asynPortDriver for passing status information to clients in callbacks.
+    Each parameter in the parameter library now has an associated asynStatus variable.
+    New functions setParamStatus() and getParamStatus() are provided to access this
+    variable. If setParamStatus(paramIndex, asynError) is called then callParamCallbacks()
+    will cause any input records with SCAN=I/O Intr to go into alarm state.</p>
+  <p>
+    Added a new test application, testErrorsApp. This application uses a driver based
+    on asynPortDriver to test error handling for all interfaces and all records support
+    by the asyn standard device support (asyn/devEpics). It can be used to test error
+    handling of records with both periodic scanning and I/O Intr scanning.</p>
   <p>
     Added new waveform record device support, asynInt32TimeSeries and asynFloat64TimeSeries.
     These use callbacks from the driver on those respective interfaces to collect a
