@@ -675,6 +675,8 @@ static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
 
+    /* If the IOC has not finished initializing we must not call scanIoRequest */
+    if (!interruptAccept) return;
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
@@ -695,6 +697,8 @@ static void callbackInterruptInt32(void *drvPvt, asynUser *pasynUser,
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
 
+    /* If the IOC has not finished initializing we must not call scanIoRequest */
+    if (!interruptAccept) return;
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
@@ -714,6 +718,8 @@ static void callbackInterruptUInt32(void *drvPvt, asynUser *pasynUser,
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
 
+    /* If the IOC has not finished initializing we must not call scanIoRequest */
+    if (!interruptAccept) return;
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
@@ -733,6 +739,8 @@ static void callbackInterruptFloat64(void *drvPvt, asynUser *pasynUser,
     asynRecPvt *pasynRecPvt = (asynRecPvt *)drvPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
 
+    /* If the IOC has not finished initializing we must not call scanIoRequest */
+    if (!interruptAccept) return;
     /* If gotValue==1 then the record has not yet finished processing
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
@@ -753,6 +761,8 @@ static asynStatus cancelIOInterruptScan(asynRecord *pasynRec)
     asynStatus status=asynSuccess;
 
     if (pasynRec->scan != menuScanI_O_Intr) return(status);
+    /* Must not call dbPutField before interruptAccept */
+    if (!interruptAccept) return status;
     /* Change to passive */
     dbPutField(&pasynRecPvt->scanAddr,DBR_LONG,&passiveScan,1);
     return(asynSuccess);
