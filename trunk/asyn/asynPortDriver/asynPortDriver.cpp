@@ -176,6 +176,54 @@ void asynPortDriver::reportSetParamErrors(asynStatus status, int index, int list
     }
 }
 
+/** Sets the status for a parameter in the parameter library.
+  * Calls setParamStatus(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] status Status to set. */
+asynStatus asynPortDriver::setParamStatus(int index, asynStatus status)
+{
+    return this->setParamStatus(0, index, status);
+}
+
+/** Sets the status for a parameter in the parameter library.
+  * Calls paramList::setStatus(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] status Status to set. */
+asynStatus asynPortDriver::setParamStatus(int list, int index, asynStatus paramStatus)
+{
+    asynStatus status;
+    static const char *functionName = "setParamStatus";
+    
+    status = this->params[list]->setStatus(index, paramStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the status for a parameter in the parameter library.
+  * Calls getParamStatus(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[out] status Address of tatus to get. */
+asynStatus asynPortDriver::getParamStatus(int index, asynStatus *status)
+{
+    return this->getParamStatus(0, index, status);
+}
+
+/** Gets the status for a parameter in the parameter library.
+  * Calls paramList::setStatus(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[out] status Address of tatus to get. */
+asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *paramStatus)
+{
+    asynStatus status;
+    static const char *functionName = "setParamStatus";
+    
+    status = this->params[list]->getStatus(index, paramStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
 /** Sets the value for an integer in the parameter library.
   * Calls setIntegerParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
@@ -551,18 +599,22 @@ asynStatus writeArray(asynUser *pasynUser, epicsType *value, size_t nElements)
 
 
 template <typename epicsType, typename interruptType> 
-asynStatus doCallbacksArray(epicsType *value, size_t nElements,
-                            int reason, int address, void *interruptPvt)
+asynStatus asynPortDriver::doCallbacksArray(epicsType *value, size_t nElements,
+                                            int reason, int address, void *interruptPvt)
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
+    asynStatus status;
     int addr;
 
     pasynManager->interruptStart(interruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
+    getParamStatus(address, reason, &status);
     while (pnode) {
         interruptType *pInterrupt = (interruptType *)pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &addr);
+        /* Set the status for the callback */
+        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (addr == -1) addr = 0;
         if ((pInterrupt->pasynUser->reason == reason) &&
@@ -1807,8 +1859,8 @@ static asynDrvUser ifaceDrvUser = {
   * \param[in] portNameIn The name of the asyn port driver to be created.
   * \param[in] maxAddrIn The maximum  number of asyn addr addresses this driver supports.
                Often it is 1 (which is the minimum), but some drivers, for example a 
-			   16-channel D/A or A/D would support values &gt; 1. 
-			   This controls the number of parameter tables that are created.
+               16-channel D/A or A/D would support values &gt; 1. 
+               This controls the number of parameter tables that are created.
   * \param[in] paramTableSize The number of parameters that this driver supports.
                This controls the size of the parameter tables.
   * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
