@@ -103,6 +103,10 @@ public:
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(          int index, const char **name);
     virtual asynStatus getParamName(int list, int index, const char **name);
+    virtual asynStatus setParamStatus(          int index, asynStatus status);
+    virtual asynStatus setParamStatus(int list, int index, asynStatus status);
+    virtual asynStatus getParamStatus(          int index, asynStatus *status);
+    virtual asynStatus getParamStatus(int list, int index, asynStatus *status);
     virtual void       reportSetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual asynStatus setIntegerParam(          int index, int value);
@@ -146,6 +150,9 @@ protected:
 private:
     paramList **params;
     epicsMutexId mutexId;
+    template <typename epicsType, typename interruptType> 
+        asynStatus doCallbacksArray(epicsType *value, size_t nElements,
+                                    int reason, int address, void *interruptPvt);
 
 };
 
