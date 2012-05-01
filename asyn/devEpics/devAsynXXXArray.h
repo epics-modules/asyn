@@ -206,11 +206,15 @@ static long processCommon(dbCommon *pr) \
             recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
         } \
     } \
+    if (pPvt->status != asynSuccess) { \
+        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
+    } \
     if (pPvt->gotValue) { \
-	pwf->nord = pPvt->nord; \
+        pwf->nord = pPvt->nord; \
         pwf->udf = 0; \
     } \
     pPvt->gotValue = 0; \
+    pPvt->status = asynSuccess; \
     return 0; \
 }  \
  \
@@ -274,6 +278,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     for (i=0; i<(int)len; i++) pData[i] = value[i]; \
     pPvt->gotValue = 1; \
     pPvt->nord = len; \
+    if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
  \
