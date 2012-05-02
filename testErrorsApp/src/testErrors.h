@@ -16,7 +16,7 @@
 
 /* These are the drvInfo strings that are used to identify the parameters.
  * They are used by asyn clients, including standard asyn device support */
-#define P_GenerateErrorsString        "GENERATE_ERRORS"       /* asynInt32,    r/w */
+#define P_StatusReturnString          "STATUS_RETURN"         /* asynInt32,    r/w */
 #define P_Int32ValueString            "INT32_VALUE"           /* asynInt32,    r/w */
 #define P_Float64ValueString          "FLOAT64_VALUE"         /* asynFloat64,  r/w */
 #define P_UInt32DigitalValueString    "UINT32D_VALUE"         /* asynUInt32Digital,  r/w */
@@ -36,7 +36,9 @@ public:
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    virtual asynStatus writeUInt32D(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
+    virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
+    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, 
+                                  size_t nChars, size_t *nActual);
     virtual asynStatus readInt8Array   (asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readInt16Array  (asynUser *pasynUser, epicsInt16 *value,
@@ -53,8 +55,8 @@ public:
 
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
-    int P_GenerateErrors;
-    #define FIRST_COMMAND P_GenerateErrors
+    int P_StatusReturn;
+    #define FIRST_COMMAND P_StatusReturn
     int P_Int32Value;
     int P_Float64Value;
     int P_UInt32DigitalValue;
