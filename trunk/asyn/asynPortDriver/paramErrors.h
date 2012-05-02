@@ -8,12 +8,12 @@
 #ifndef ASYNPORTDRIVERERRORSTATES_H_
 #define ASYNPORTDRIVERERRORSTATES_H_
 
-/* Synonyms for some unused asyn error codes for use by parameter library */
-#define asynParamAlreadyExists  asynTimeout
-#define asynParamNotFound       asynOverflow
-#define asynParamWrongType      asynDisconnected
-#define asynParamBadIndex       asynDisabled
-#define asynParamUndefined      asynError
+/* Extend asynManager error list.  We should have a way of knowing what the last error in asyn is */
+#define asynParamAlreadyExists (asynStatus)(asynDisabled + 1)
+#define asynParamNotFound      (asynStatus)(asynDisabled + 2)
+#define asynParamWrongType     (asynStatus)(asynDisabled + 3)
+#define asynParamBadIndex      (asynStatus)(asynDisabled + 4)
+#define asynParamUndefined     (asynStatus)(asynDisabled + 5)
 
 
 #endif /* ASYNPORTDRIVERERRORSTATES_H_ */
