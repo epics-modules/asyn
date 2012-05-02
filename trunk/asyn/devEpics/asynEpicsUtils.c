@@ -17,6 +17,7 @@
 #include <errno.h>
 
 #include <link.h>
+#include <alarm.h>
 #include <epicsAssert.h>
 #include <epicsString.h>
 #include <cantProceed.h>
@@ -33,9 +34,12 @@ static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink,
                    char **port, int *addr, epicsUInt32 *mask,char **userParam);
 static asynStatus parseLinkFree(asynUser *pasynUser,
                    char **port, char **userParam);
+static void asynStatusToEpicsAlarm(asynStatus status, 
+                                   epicsAlarmCondition defaultStat, epicsAlarmCondition *pStat, 
+                                   epicsAlarmSeverity defaultSevr, epicsAlarmSeverity *pSevr);
 
 static asynEpicsUtils utils = {
-    parseLink,parseLinkMask,parseLinkFree
+    parseLink,parseLinkMask,parseLinkFree,asynStatusToEpicsAlarm
 };
 
 epicsShareDef asynEpicsUtils *pasynEpicsUtils = &utils;
@@ -238,4 +242,40 @@ static asynStatus parseLinkFree(asynUser *pasynUser,
     free(*port); *port = 0;
     free(*userParam); *userParam = 0;
     return(asynSuccess);
+}
+
+static void asynStatusToEpicsAlarm(asynStatus status, 
+                                   epicsAlarmCondition defaultStat, epicsAlarmCondition *pStat, 
+                                   epicsAlarmSeverity defaultSevr, epicsAlarmSeverity *pSevr)
+{
+    switch (status) {
+        case asynSuccess:
+            *pStat = epicsAlarmNone;
+            *pSevr = epicsSevNone;
+            break;
+        case asynTimeout:
+            *pStat = epicsAlarmTimeout;
+            *pSevr = defaultSevr;
+            break;
+        case asynOverflow:
+            *pStat = epicsAlarmHwLimit;
+            *pSevr = defaultSevr;
+            break;
+        case asynError:
+            *pStat = defaultStat;
+            *pSevr = defaultSevr;
+            break;
+        case asynDisconnected:
+            *pStat = epicsAlarmComm;
+            *pSevr = defaultSevr;
+            break;
+        case asynDisabled:
+            *pStat = epicsAlarmDisable;
+            *pSevr = defaultSevr;
+            break;
+        default:
+            *pStat = defaultStat;
+            *pSevr = defaultSevr;
+            break;
+    }
 }
