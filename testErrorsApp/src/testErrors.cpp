@@ -48,7 +48,7 @@ testErrors::testErrors(const char *portName)
     asynStatus status;
     const char *functionName = "testErrors";
 
-    createParam(P_GenerateErrorsString,     asynParamInt32,         &P_GenerateErrors);
+    createParam(P_StatusReturnString,       asynParamInt32,         &P_StatusReturn);
     createParam(P_Int32ValueString,         asynParamInt32,         &P_Int32Value);
     createParam(P_Float64ValueString,       asynParamFloat64,       &P_Float64Value);
     createParam(P_UInt32DigitalValueString, asynParamUInt32Digital, &P_UInt32DigitalValue);
@@ -59,8 +59,10 @@ testErrors::testErrors(const char *portName)
     createParam(P_Float32ArrayValueString,  asynParamFloat32Array,  &P_Float32ArrayValue);
     createParam(P_Float64ArrayValueString,  asynParamFloat64Array,  &P_Float64ArrayValue);
     
-    setIntegerParam(P_GenerateErrors, 0);
+    setIntegerParam(P_StatusReturn, asynSuccess);
     setIntegerParam(P_Int32Value, 0);
+    // Need to force callbacks with the interruptMask once 
+    setUIntDigitalParam(P_UInt32DigitalValue, (epicsUInt32)0x0, 0xFFFFFFFF, 0xFFFFFFFF);
     
     /* Create the thread that computes the waveforms in the background */
     status = (asynStatus)(epicsThreadCreate("testErrorsTask",
@@ -87,7 +89,6 @@ static void callbackTask(void *drvPvt)
 void testErrors::callbackTask(void)
 {
     asynStatus currentStatus;
-    int generateErrors;
     epicsInt32 iVal;
     epicsFloat64 dVal;
     int i;
@@ -96,8 +97,7 @@ void testErrors::callbackTask(void)
     /* Loop forever */    
     while (1) {
         lock();
-        getIntegerParam(P_GenerateErrors, &generateErrors);
-        currentStatus = generateErrors ? asynError : asynSuccess;
+        getIntegerParam(P_StatusReturn, (int*)&currentStatus);
         getIntegerParam(P_Int32Value, &iVal);
         iVal++;
         if (iVal > 15) iVal=0;
@@ -144,20 +144,20 @@ asynStatus testErrors::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int generateErrors;
     const char *paramName;
     const char* functionName = "writeInt32";
 
     /* Get the current error status */
-    getIntegerParam(P_GenerateErrors, &generateErrors);
-    status = generateErrors ? asynError : asynSuccess;
+    getIntegerParam(P_StatusReturn, (int*)&status);
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
 
     /* Set the parameter value in the parameter library. */
     setIntegerParam(function, value);
-    /* Set the parameter status in the parameter library. */
+    /* Set the parameter status in the parameter library except for P_StatusReturn which is always OK */
+    if (function == P_StatusReturn) 
+        status = asynSuccess;
     setParamStatus(function, status);
     
     /* Do callbacks so higher layers see any changes */
@@ -181,13 +181,11 @@ asynStatus testErrors::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int generateErrors;
     const char *paramName;
     const char* functionName = "writeFloat64";
 
     /* Get the current error status */
-    getIntegerParam(P_GenerateErrors, &generateErrors);
-    status = generateErrors ? asynError : asynSuccess;
+    getIntegerParam(P_StatusReturn, (int*)&status);
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
@@ -215,17 +213,15 @@ asynStatus testErrors::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
   * For all parameters it sets the value in the parameter library and calls any registered callbacks..
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
   * \param[in] value Value to write. */
-asynStatus testErrors::writeUInt32D(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask)
+asynStatus testErrors::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int generateErrors;
     const char *paramName;
     const char* functionName = "writeUInt32D";
 
     /* Get the current error status */
-    getIntegerParam(P_GenerateErrors, &generateErrors);
-    status = generateErrors ? asynError : asynSuccess;
+    getIntegerParam(P_StatusReturn, (int*)&status);
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
@@ -249,6 +245,42 @@ asynStatus testErrors::writeUInt32D(asynUser *pasynUser, epicsUInt32 value, epic
     return status;
 }
 
+/** Called when asyn clients call pasynOctet->write().
+  * Simply sets the value in the parameter library and 
+  * calls any registered callbacks for this pasynUser->reason and address.  
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Address of the string to write.
+  * \param[in] nChars Number of characters to write.
+  * \param[out] nActual Number of characters actually written. */
+asynStatus testErrors::writeOctet(asynUser *pasynUser, const char *value, 
+                                  size_t nChars, size_t *nActual)
+{
+    int function = pasynUser->reason;
+    asynStatus status = asynSuccess;
+    const char *functionName = "writeOctet";
+
+    /* Get the current error status */
+    getIntegerParam(P_StatusReturn, (int*)&status);
+
+    /* Set the parameter in the parameter library. */
+    setStringParam(function, (char *)value);
+    /* Set the parameter status in the parameter library. */
+    setParamStatus(function, status);
+
+     /* Do callbacks so higher layers see any changes */
+    callParamCallbacks();
+
+    if (status) 
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                  "%s:%s: status=%d, function=%d, value=%s", 
+                  driverName, functionName, status, function, value);
+    else        
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
+              "%s:%s: function=%d, value=%s\n", 
+              driverName, functionName, function, value);
+    *nActual = nChars;
+    return status;
+}
 
 
 template <typename epicsType> 
@@ -258,12 +290,10 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
     int function = pasynUser->reason;
     size_t ncopy = MAX_ARRAY_POINTS;
     asynStatus status = asynSuccess;
-    int generateErrors;
     const char *functionName = "doReadArray";
 
     /* Get the current error status */
-    getIntegerParam(P_GenerateErrors, &generateErrors);
-    status = generateErrors ? asynError : asynSuccess;
+    getIntegerParam(P_StatusReturn, (int*)&status);
 
     if (nElements < ncopy) ncopy = nElements;
     if (function == paramIndex) {
