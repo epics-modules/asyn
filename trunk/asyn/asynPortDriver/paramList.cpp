@@ -346,7 +346,7 @@ asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask, interrupt
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getString(int index, int maxChars, char *value)
 {
-    asynStatus status;
+    asynStatus status=asynSuccess;
     
     try {
         if (maxChars > 0) {
@@ -365,7 +365,7 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
     catch (ParamListInvalidIndex&) {
         return asynParamBadIndex;
     }
-    return asynSuccess;
+    return status;
 }
 
 /** Returns the name of a parameter from the parameter library.
