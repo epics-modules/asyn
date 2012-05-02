@@ -74,6 +74,8 @@ typedef struct devPvt{
     char              *userParam;
     int               addr;
     asynStatus        status;
+    epicsAlarmCondition alarmStat;
+    epicsAlarmSeverity alarmSevr;
 }devPvt;
 
 #define NUM_BITS 16
@@ -282,11 +284,10 @@ static void processCallbackInput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = (dbCommon *)pPvt->pr;
-    asynStatus status;
 
-    status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
+    pPvt->status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
         &pPvt->value,pPvt->mask);
-    if (status == asynSuccess) {
+    if (pPvt->status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynUInt32Digital::process value=%lu\n",
             pr->name,pPvt->value);
@@ -295,7 +296,6 @@ static void processCallbackInput(asynUser *pasynUser)
             "%s devAsynUInt32Digital::process read error %s\n",
             pr->name, pasynUser->errorMessage);
     }
-    pPvt->status = status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
@@ -303,11 +303,10 @@ static void processCallbackOutput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = pPvt->pr;
-    int status=asynSuccess;
 
-    status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
+    pPvt->status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
         pPvt->value,pPvt->mask);
-    if(status == asynSuccess) {
+    if(pPvt->status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynUInt32Digital process value %lu\n",pr->name,pPvt->value);
     } else {
@@ -315,7 +314,6 @@ static void processCallbackOutput(asynUser *pasynUser)
            "%s devAsynUInt32Digital process error %s\n",
            pr->name, pasynUser->errorMessage);
     }
-    pPvt->status = status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
 }
 
@@ -459,10 +457,10 @@ static long processBi(biRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     pr->rval = pPvt->value & pr->mask; 
@@ -470,7 +468,9 @@ static long processBi(biRecord *pr)
         pr->udf=0;
     }
     else {
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0; 
     pPvt->status = asynSuccess;
@@ -502,7 +502,7 @@ static long initBo(boRecord *pbo)
 static long processBo(boRecord *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    int status;
+    asynStatus status;
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
@@ -517,11 +517,16 @@ static long processBo(boRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital:process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
+    }
+    if(pPvt->status != asynSuccess) {
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, WRITE_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0;
     return 0;
@@ -551,10 +556,10 @@ static long processLi(longinRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         }
     }
     pr->val = pPvt->value; 
@@ -562,7 +567,9 @@ static long processLi(longinRecord *pr)
         pr->udf=0;
     }
     else {
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0; 
     pPvt->status = asynSuccess;
@@ -592,7 +599,7 @@ static long initLo(longoutRecord *pr)
 static long processLo(longoutRecord *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    int status;
+    asynStatus status;
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
@@ -605,11 +612,16 @@ static long processLo(longoutRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
+    }
+    if(pPvt->status != asynSuccess) {
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, WRITE_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0;
     return 0;
@@ -641,10 +653,10 @@ static long processMbbi(mbbiRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
     pr->rval = pPvt->value & pr->mask; 
@@ -652,7 +664,9 @@ static long processMbbi(mbbiRecord *pr)
         pr->udf=0;
     }
     else {
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0; 
     pPvt->status = asynSuccess;
@@ -683,7 +697,7 @@ static long initMbbo(mbboRecord *pr)
 static long processMbbo(mbboRecord *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    int status;
+    asynStatus status;
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
@@ -717,11 +731,16 @@ static long processMbbo(mbboRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
+    }
+    if(pPvt->status != asynSuccess) {
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, WRITE_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0;
     return 0;
@@ -753,10 +772,10 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital queueRequest %s\n", 
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
         } 
     }
     pr->rval = pPvt->value & pr->mask; 
@@ -764,7 +783,9 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
         pr->udf=0;
     }
     else {
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM);
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0; 
     pPvt->status = asynSuccess;
@@ -795,7 +816,7 @@ static long initMbboDirect(mbboDirectRecord *pr)
 static long processMbboDirect(mbboDirectRecord *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    int status;
+    asynStatus status;
 
     getCallbackValue(pPvt);
     if(pPvt->gotValue) {
@@ -820,11 +841,16 @@ static long processMbboDirect(mbboDirectRecord *pr)
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
         if(status != asynSuccess) {
+            pPvt->status = status;
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynUInt32Digital::process error queuing request %s\n",
                 pr->name,pPvt->pasynUser->errorMessage);
-            recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
         }
+    }
+    if(pPvt->status != asynSuccess) {
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, WRITE_ALARM, &pPvt->alarmStat,
+                                                INVALID_ALARM, &pPvt->alarmSevr);
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
     }
     pPvt->gotValue = 0;
     return 0;
