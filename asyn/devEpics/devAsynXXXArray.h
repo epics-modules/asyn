@@ -29,6 +29,8 @@ typedef struct devAsynWfPvt{ \
     CALLBACK        callback; \
     IOSCANPVT       ioScanPvt; \
     asynStatus      status; \
+    epicsAlarmCondition alarmStat; \
+    epicsAlarmSeverity alarmSevr; \
     int             gotValue; /*For interruptCallbackInput */ \
     int             nord; \
     INTERRUPT       interruptCallback; \
@@ -192,22 +194,22 @@ static long processCommon(dbCommon *pr) \
 { \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt; \
     waveformRecord *pwf = (waveformRecord *)pr; \
-    int status; \
  \
     if (!pPvt->gotValue && !pr->pact) {   /* This is an initial call from record */ \
         if(pPvt->canBlock) pr->pact = 1; \
-        status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0); \
-        if((status==asynSuccess) && pPvt->canBlock) return 0; \
+        pPvt->status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0); \
+        if((pPvt->status==asynSuccess) && pPvt->canBlock) return 0; \
         if(pPvt->canBlock) pr->pact = 0; \
-        if (status != asynSuccess) { \
+        if (pPvt->status != asynSuccess) { \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
                 "%s processCommon, error queuing request %s\n", \
                  pr->name, pPvt->pasynUser->errorMessage); \
-            recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
         } \
     } \
     if (pPvt->status != asynSuccess) { \
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat, \
+                                                INVALID_ALARM, &pPvt->alarmSevr); \
+        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr); \
     } \
     if (pPvt->gotValue) { \
         pwf->nord = pPvt->nord; \
@@ -234,7 +236,9 @@ static void callbackWfOut(asynUser *pasynUser) \
         asynPrint(pasynUser, ASYN_TRACE_ERROR, \
               "%s %s::callbackWfOut write error %s\n", \
               pwf->name, driverName, pasynUser->errorMessage); \
-        recGblSetSevr(pwf, WRITE_ALARM, INVALID_ALARM); \
+        pasynEpicsUtils->asynStatusToEpicsAlarm(status, WRITE_ALARM, &pPvt->alarmStat, \
+                                                INVALID_ALARM, &pPvt->alarmSevr); \
+        recGblSetSevr(pwf, pPvt->alarmStat, pPvt->alarmSevr); \
     } \
     if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf); \
 }  \
@@ -257,7 +261,9 @@ static void callbackWf(asynUser *pasynUser) \
         asynPrint(pasynUser, ASYN_TRACE_ERROR, \
               "%s %s::callbackWf read error %s\n", \
               pwf->name, driverName, pasynUser->errorMessage); \
-        recGblSetSevr(pwf, READ_ALARM, INVALID_ALARM); \
+        pasynEpicsUtils->asynStatusToEpicsAlarm(status, READ_ALARM, &pPvt->alarmStat, \
+                                                INVALID_ALARM, &pPvt->alarmSevr); \
+        recGblSetSevr(pwf, pPvt->alarmStat, pPvt->alarmSevr); \
     } \
     if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf); \
 } \
