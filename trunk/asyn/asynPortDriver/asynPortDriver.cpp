@@ -189,7 +189,7 @@ asynStatus asynPortDriver::setParamStatus(int index, asynStatus status)
   * Calls paramList::setStatus(index, status) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
-  * \param[in] status Status to set. */
+  * \param[in] paramStatus Status to set. */
 asynStatus asynPortDriver::setParamStatus(int list, int index, asynStatus paramStatus)
 {
     asynStatus status;
@@ -213,7 +213,7 @@ asynStatus asynPortDriver::getParamStatus(int index, asynStatus *status)
   * Calls paramList::setStatus(index, status) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
-  * \param[out] status Address of tatus to get. */
+  * \param[out] paramStatus Address of status to get. */
 asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *paramStatus)
 {
     asynStatus status;
