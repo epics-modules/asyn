@@ -19,7 +19,7 @@ record(waveform, "$(P)$(R)IDNwf")
     field(DTYP, "stream")
     field(INP,  "@dev_NAME_.proto getIDN(199) $(PORT) $(A)")
     field(PINI, "YES")
-    field(FTYP, "CHAR")
+    field(FTVL, "CHAR")
     field(NELM, "200")
 }
 
