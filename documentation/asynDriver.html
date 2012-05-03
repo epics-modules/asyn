@@ -3780,24 +3780,32 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     devices other support is required. This release provides the following:</p>
   <ul>
     <li>devAsynInt32 - support for drivers that implement interface asynInt32</li>
+    <li>devAsynInt32TimeSeries - waveform record support for drivers that implement callbacks
+      on interface asynInt32</li>
     <li>devAsynInt8Array - support for drivers that implement interface asynInt8Array</li>
     <li>devAsynInt16Array - support for drivers that implement interface asynInt16Array</li>
     <li>devAsynInt32Array - support for drivers that implement interface asynInt32Array</li>
     <li>devAsynUInt32Digital - support for drivers that implement interface asynUInt32Digital</li>
     <li>devAsynFloat64 - support for drivers that implement interface asynFloat64</li>
+    <li>devAsynFloat64TimeSeries - waveform record support for drivers that implement
+      callbacks on interface asynFloat64</li>
     <li>devAsynFloat32Array - support for drivers that implement interface asynFloat32Array</li>
     <li>devAsynFloat64Array - support for drivers that implement interface asynFloat64Array</li>
     <li>devAsynOctet - support for drivers that implement interface asynOctet</li>
     <li>devEpics - This is just a single file devEpics.dbd that includes the dbd files
       for the above support.</li>
+    <li>asynEpicsUtils.c - This provides utility functions. parseLink(), parseLinkMask()
+      and parseLinkFree() parse record the record INP and OUT links described below. asynStatusToEpicsAlarm()
+      converts asynStatus enum values to EPICS record STAT and SEVR values setting record
+      alarms.</li>
   </ul>
   <p>
     The support uses the following conventions for DTYP and INP. OUT fields are the
     same as INP.</p>
   <pre>    field(DTYP,"asynXXX")
-    field(INP,"@asyn(portName,addr,timeout) drvParams")
+    field(INP,"@asyn(portName,addr,timeout)drvParams")
      or
-    field(INP,"@asynMask(portName,addr,mask,timeout) drvParams")</pre>
+    field(INP,"@asynMask(portName,addr,mask,timeout)drvParams")</pre>
   <pre>where</pre>
   <ul>
     <li>XXX - The name of the type of interface supported.</li>
@@ -3813,16 +3821,14 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
   <p>
     For example:</p>
   <pre>    field(DTYP,"asynInt32")
-    field(INP,"@asyn(portA,0,.1) thisIsForDriver")</pre>
+    field(INP,"@asyn(portA,0,.1)thisIsForDriver")</pre>
   <h2>
     asynManager interrupts and EPICS device support</h2>
   <p>
-    devAsynInt32, devAsynInt8Array, devAsynInt16Array, devAsynInt32Array, devAsynFloat64,
-    devAsynFloat32Array, devAsynFloat64Array, devAsynUInt32Digital, and devAsynOctet
-    call registerInterruptUser for input records. The callback is used in one of two
-    ways:</p>
+    All of the device support files can call registerInterruptUser for input records.
+    The callback is used in one of two ways:</p>
   <ul>
-    <li>Input Records except Average
+    <li>Input Records except Average and TimeSeries
       <p>
         It is used to support SCAN = "I/O Intr".</p>
     </li>
@@ -3832,6 +3838,11 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
         is used to calculate an average value between record processes. If the record is
         processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
         UDF is set to TRUE, and the value is left unchanged.</p>
+    </li>
+    <li>Input records that are waveform time series, i.e. asynInt32TimeSeries or asynFloat64TimeSeries.
+      <p>
+        These records are normally scanned periodically. The registerInterruptUser callback
+        is used to append values to the time series.</p>
     </li>
   </ul>
   <h2>
@@ -4239,6 +4250,33 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
       asynDrvUser. When the record is processed a read request is made. The result is
       read into the record.</li>
   </ul>
+  <h2>
+    Record alarms</h2>
+  <p>
+    The generic EPICS device support sets the record alarm status and severity when
+    errors occur. For records that do not use callbacks (not SCAN=I/O Intr or asynXXXAverage
+    or asynXXXTimeSeries) the status information is passed from the driver to device
+    support in the asynStatus return of the interface function call, e.g. pasynInt32->read().
+    The driver maps the asynStatus values to the record STAT and SEVR values using the
+    function pasynEpicsUtils->asynUserToEpicsAlarm(). The SEVR field is currently always
+    set to INVALID_ALARM for any error. The STAT field is set using following mapping:</p>
+  <pre>
+  asynSuccess = epicsAlarmNone
+  asynTimeout = epicsAlarmTimeout
+  asynOverflow = epicsAlarmHWLimit
+  asynError = epicsAlarmRead or epicsAlarmWrite
+  asynDisconnected = epicsAlarmComm
+  asynDisabled = epicsAlarmDisable
+  </pre>
+  <p>
+    For records that use callbacks, the status information is passed from the driver
+    to device support using the pasynUser->auxStatus field in the pasynUser that is
+    passed in the callback. This feature was added in asyn R4-19. Prior to that release
+    it was not possible for drivers to control the alarm state of records that used
+    callbacks. Drivers should set pasynUser->auxStatus to asynSuccess for normal operation
+    and to another value to indicate a problem. The same mapping described above is
+    used to control the values of STAT and SEVR.
+  </p>
   <hr />
   <div style="text-align: center">
     <h2 id="asynRecord">
