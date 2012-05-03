@@ -5049,7 +5049,7 @@ asynSetOption("L0",0,"baud","9600")</pre>
     The following commands may be specified in the st.cmd file</p>
   <pre>    E2050Reboot("inet_addr")
     E5810Reboot("inet_addr","password")
-    vxi11Configure("portName","inet_addr",flags,timeout,
+    vxi11Configure("portName","inet_addr",flags,"timeout",
         "vxiName",priority,noAutoConnect)</pre>
   <p>
     where</p>
@@ -5064,8 +5064,9 @@ asynSetOption("L0",0,"baud","9600")</pre>
         <li>Bit 0 (0x1) recoverWithIFC - (0,1) =&gt; (don't, do) issue IFC when error occurs.</li>
       </ul>
     </li>
-    <li>timeout - I/O operation timeout in seconds as datatype double. If 0.0, then a
-      default is assigned.</li>
+    <li>timeout - I/O operation timeout in seconds as a string. Prior to release R4-16
+      this was a double, but was changed to a string because it is not safe to pass doubles
+      on the vxWorks shell. If "0.0", then a default is assigned.</li>
     <li>vxiName - Must be chosen as specified above. NOTE: For the Agilent E2050 vxiName
       must be "hpib". For the Agilent E5810 use the name "gpib0". For an instrument that
       supports VXI11 try "inst0".</li>
