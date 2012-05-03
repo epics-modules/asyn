@@ -107,7 +107,6 @@ void paramVal::setInteger(int value)
 }
 
 /** Gets the value for an integer in the parameter library.
-  * \param[in] value Value to set.
   * \throws ParamValWrongType if type is not asynParamInt32
   * \throws paramValNotDefined if the value is not defined
   */
@@ -177,7 +176,6 @@ void paramVal::setDouble(double value)
 }
 
 /** Gets the value for an double in the parameter library.
-  * \param[in] value Value to set.
   * \throws ParamValWrongType if type is not asynParamFloat64
   * \throws paramValNotDefined if the value is not defined
   */
@@ -208,7 +206,6 @@ void paramVal::setString(const char *value)
 }
 
 /** Gets the value for a string in the parameter library.
-  * \param[in] value Value to set.
   * \throws ParamValWrongType if type is not asynParamOctet
   * \throws paramValNotDefined if the value is not defined
   */
