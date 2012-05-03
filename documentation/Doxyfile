@@ -580,7 +580,7 @@ INPUT                  = ../asyn/asynPortDriver/asynPortDriver.cpp \
                          ../asyn/asynPortDriver/paramList.cpp \
                          ../asyn/asynPortDriver/paramErrors.h \
                          ../asyn/asynPortDriver/asynParamType.h \
-                         ../asyn/asynPortDriver/ParamVal.cpp \
+                         ../asyn/asynPortDriver/paramVal.cpp \
                          ../testAsynPortDriverApp/src/
 
 # This tag can be used to specify the character encoding of the source files 
