@@ -7,7 +7,7 @@
 static const iocshArg vxi11ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
 static const iocshArg vxi11ConfigureArg2 = { "flags (lock devices : recover with IFC)",iocshArgInt};
-static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgDouble};
+static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgString};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
 static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
 static const iocshArg vxi11ConfigureArg6 = { "disable auto-connect",iocshArgInt};
