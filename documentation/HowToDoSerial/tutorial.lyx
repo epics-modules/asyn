@@ -2093,7 +2093,7 @@ The configuration command for the same oscilloscope connected to an Ethernet
 \end_layout
 
 \begin_layout LyX-Code
-vxi11Configure("L0", "192.168.8.129", 0, 0.0, "gpib0", 0)
+vxi11Configure("L0", "192.168.8.129", 0, "0.0", "gpib0", 0)
 \end_layout
 
 \begin_layout Standard
