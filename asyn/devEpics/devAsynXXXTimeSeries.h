@@ -155,6 +155,8 @@ static long process(dbCommon *pr) \
     waveformRecord *pwf = (waveformRecord *)pr; \
     int busy; \
     asynStatus status; \
+    epicsAlarmCondition alarmStat; \
+    epicsAlarmSeverity alarmSevr; \
  \
     epicsMutexLock(pPvt->lock); \
     busy = pPvt->busy; \
@@ -205,7 +207,9 @@ static long process(dbCommon *pr) \
     pwf->rarm = 0; \
     pwf->udf = 0; \
     if (pPvt->status != asynSuccess) { \
-        recGblSetSevr(pr, READ_ALARM, INVALID_ALARM); \
+        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &alarmStat, \
+                                                INVALID_ALARM, &alarmSevr); \
+        recGblSetSevr(pr, alarmStat, alarmSevr); \
     } \
     epicsMutexUnlock(pPvt->lock); \
     pPvt->status = asynSuccess; \
