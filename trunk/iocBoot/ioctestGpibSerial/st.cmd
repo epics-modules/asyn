@@ -7,7 +7,7 @@ testGpibSerial_registerRecordDeviceDriver(pdbbase)
 dbLoadRecords("../../db/asynRecord.db","P=asyn,R=Record,PORT=L0,ADDR=0,OMAX=0,IMAX=0")
 
 #The following command is for a serial line terminal concentrator
-#drvAsynIPPortConfigure("L0","serials8n3:4004",0,0,0)
+#drvAsynIPPortConfigure("L0","serials8n3:4004 COM",0,0,0)
 #
 #The following commands are for a USB-tty or a local serial line
 #drvAsynSerialPortConfigure("L0","/dev/ttyUSB0",0,0,0)
