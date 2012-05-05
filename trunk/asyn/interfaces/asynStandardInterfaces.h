@@ -27,6 +27,7 @@
 #include <asynFloat64.h>
 #include <asynFloat64Array.h>
 #include <asynGenericPointer.h>
+#include <asynEnum.h>
 #include <asynOctet.h>
 #include <asynDrvUser.h>
 #include <asynOption.h>
@@ -84,6 +85,10 @@ typedef struct asynStandardInterfaces {
     asynInterface genericPointer;
     int genericPointerCanInterrupt;
     void *genericPointerInterruptPvt;
+
+    asynInterface Enum;
+    int enumCanInterrupt;
+    void *enumInterruptPvt;
 
 } asynStandardInterfaces;
 
