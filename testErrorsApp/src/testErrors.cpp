@@ -26,6 +26,49 @@ static const char *driverName="testErrors";
 
 #define CALLBACK_PERIOD 0.5
 
+#define MAX_STATUS_ENUMS 6
+static char *statusEnumStrings[MAX_STATUS_ENUMS] = {
+    "asynSuccess",
+    "asynTimeout",
+    "asynOverFlow",
+    "asynError",
+    "asynDisconnect",
+    "asynDisable"
+};
+static int statusEnumValues[MAX_STATUS_ENUMS]     = {0, 1, 2, 3, 4, 5};
+static int statusEnumSeverities[MAX_STATUS_ENUMS] = {0, 2, 1, 2, 3, 3};
+
+#define MAX_INT32_ENUMS 16
+static char *int32EnumStrings[MAX_INT32_ENUMS] = {
+    "Zero",
+    "One",
+    "Two",
+    "Three",
+    "Four",
+    "Five",
+    "Six",
+    "Seven",
+    "Eight",
+    "Nine",
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen"
+};
+static int int32EnumValues[MAX_INT32_ENUMS]     = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static int int32EnumSeverities[MAX_INT32_ENUMS] = {0, 0, 0, 0, 1, 1, 1, 1, 1, 2,  2,  2,  2,  3,  3,  3};
+
+#define MAX_UINT32_ENUMS 3
+static char *uint32EnumStrings[MAX_UINT32_ENUMS] = {
+    "Zero",
+    "One",
+    "Three"
+};
+static int uint32EnumValues[MAX_UINT32_ENUMS]     = {0, 1, 3};
+static int uint32EnumSeverities[MAX_UINT32_ENUMS] = {0, 1, 1};
+
 static void callbackTask(void *drvPvt);
 
 
@@ -36,10 +79,11 @@ testErrors::testErrors(const char *portName)
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
                     NUM_PARAMS,
-                    asynInt32Mask | asynFloat64Mask | asynUInt32DigitalMask | asynOctetMask | 
-                    asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask | asynFloat32ArrayMask | asynFloat64ArrayMask | asynDrvUserMask, /* Interface mask */
-                    asynInt32Mask | asynFloat64Mask | asynUInt32DigitalMask | asynOctetMask | 
-                    asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask | asynFloat32ArrayMask | asynFloat64ArrayMask, /* Interrupt mask */
+                    asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
+                      asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
+                      asynEnumMask      | asynDrvUserMask, /* Interface mask */
+                    asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
+                      asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask, /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
@@ -282,6 +326,43 @@ asynStatus testErrors::writeOctet(asynUser *pasynUser, const char *value,
     return status;
 }
 
+asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn)
+{
+    int function = pasynUser->reason;
+    size_t i;
+
+    if (function == P_StatusReturn) {
+        for (i=0; ((i<MAX_STATUS_ENUMS) && (i<nElements)); i++) {
+            if (strings[i]) free(strings[i]);
+            strings[i] = epicsStrDup(statusEnumStrings[i]);
+            values[i] = statusEnumValues[i];
+            severities[i] = statusEnumSeverities[i];
+        }
+    }
+    else if (function == P_Int32Value) {
+        for (i=0; ((i<MAX_INT32_ENUMS) && (i<nElements)); i++) {
+            if (strings[i]) free(strings[i]);
+            strings[i] = epicsStrDup(int32EnumStrings[i]);
+            values[i] = int32EnumValues[i];
+            severities[i] = int32EnumSeverities[i];
+        }
+    }
+    else if (function == P_UInt32DigitalValue) {
+        for (i=0; ((i<MAX_UINT32_ENUMS) && (i<nElements)); i++) {
+            if (strings[i]) free(strings[i]);
+            strings[i] = epicsStrDup(uint32EnumStrings[i]);
+            values[i] = uint32EnumValues[i];
+            severities[i] = uint32EnumSeverities[i];
+        }
+    }
+    else {
+        *nIn = 0;
+        return asynError;
+    }
+    *nIn = i;
+    return asynSuccess;   
+
+}
 
 template <typename epicsType> 
 asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value, 
