@@ -49,6 +49,8 @@ public:
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements, size_t *nIn);
+    virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
+                                size_t nElements, size_t *nIn);
 
     /* These are the methods that are new to this class */
     void callbackTask(void);
