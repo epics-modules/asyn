@@ -27,6 +27,7 @@ epicsShareFunc void* findAsynPortDriver(const char *portName);
 #define asynFloat32ArrayMask    0x00000400
 #define asynFloat64ArrayMask    0x00000800
 #define asynGenericPointerMask  0x00001000
+#define asynEnumMask            0x00002000
 
 
 
@@ -88,6 +89,9 @@ public:
     virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
+    virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
+    virtual asynStatus writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements);
+    virtual asynStatus doCallbacksEnum(char *strings[], int values[], int severities[], size_t nElements, int reason, int addr);
     virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
                                      const char **pptypeName, size_t *psize);
     virtual asynStatus drvUserGetType(asynUser *pasynUser,
