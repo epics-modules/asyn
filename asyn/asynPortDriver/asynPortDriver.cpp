@@ -1583,6 +1583,87 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
 }
 
 
+/* asynEnums interface methods */
+extern "C" {static asynStatus readEnum(void *drvPvt, asynUser *pasynUser, char *strings[], int values[], int severities[], 
+                                       size_t nElements, size_t *nIn)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+ 
+    pPvt->lock();
+    status = pPvt->readEnum(pasynUser, strings, values, severities, nElements, nIn);
+    pPvt->unlock();
+    return(status);    
+}}
+
+/** Called when asyn clients call pasynEnum->read().
+  * The base class implementation simply prints an error message.  
+  * Derived classes may reimplement this function if required.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] value Array of string pointers. 
+  * \param[in] nElements Size of value array 
+  * \param[out] nIn Number of elements actually returned */
+asynStatus asynPortDriver::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn)
+{
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "%s:readEnum not implemented", driverName);
+    return(asynError);
+}
+
+extern "C" {static asynStatus writeEnum(void *drvPvt, asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->writeEnum(pasynUser, strings, values, severities, nElements);
+    pPvt->unlock();
+    return(status);    
+}}
+
+/** Called when asyn clients call pasynEnum->write().
+  * The base class implementation simply prints an error message.  
+  * Derived classes may reimplement this function if required.
+  * \param[in] value Array of string pointers. 
+  * \param[in] nElements Size of value array */
+asynStatus asynPortDriver::writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements)
+{
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "%s:writeEnum not implemented", driverName);
+    return(asynError);
+}
+
+
+/** Called by driver to do the callbacks to registered clients on the asynEnum interface.
+  * \param[in] value Array of string pointers. 
+  * \param[in] nElements Size of value array 
+  * \param[in] reason A client will be called if reason matches pasynUser->reason registered for that client.
+  * \param[in] address A client will be called if address matches the address registered for that client. */
+asynStatus asynPortDriver::doCallbacksEnum(char *strings[], int values[], int severities[], size_t nElements, int reason, int address)
+{
+    ELLLIST *pclientList;
+    interruptNode *pnode;
+    int addr;
+
+    pasynManager->interruptStart(this->asynStdInterfaces.enumInterruptPvt, &pclientList);
+    pnode = (interruptNode *)ellFirst(pclientList);
+    while (pnode) {
+        asynEnumInterrupt *pInterrupt = (asynEnumInterrupt *)pnode->drvPvt;
+        pasynManager->getAddr(pInterrupt->pasynUser, &addr);
+        /* If this is not a multi-device then address is -1, change to 0 */
+        if (addr == -1) addr = 0;
+        if ((pInterrupt->pasynUser->reason == reason) &&
+            (address == addr)) {
+            pInterrupt->callback(pInterrupt->userPvt,
+                                 pInterrupt->pasynUser,
+                                 strings, values, severities, nElements);
+        }
+        pnode = (interruptNode *)ellNext(&pnode->node);
+    }
+    pasynManager->interruptEnd(this->asynStdInterfaces.enumInterruptPvt);
+    return(asynSuccess);
+}
+
 
 /* asynDrvUser interface methods */
 extern "C" {static asynStatus drvUserCreate(void *drvPvt, asynUser *pasynUser,
@@ -1729,6 +1810,7 @@ void asynPortDriver::report(FILE *fp, int details)
         reportInterrupt<asynFloat32ArrayInterrupt>  (fp, pInterfaces->float32ArrayInterruptPvt, "float32Array");
         reportInterrupt<asynFloat64ArrayInterrupt>  (fp, pInterfaces->float64ArrayInterruptPvt, "float64Array");
         reportInterrupt<asynGenericPointerInterrupt>(fp, pInterfaces->genericPointerInterruptPvt, "genericPointer");
+        reportInterrupt<asynEnumInterrupt>          (fp, pInterfaces->enumInterruptPvt,         "Enum");
     }
 }
 
@@ -1847,6 +1929,11 @@ static asynGenericPointer ifaceGenericPointer = {
     readGenericPointer
 };
 
+static asynEnum ifaceEnum = {
+    writeEnum,
+    readEnum
+};
+
 static asynDrvUser ifaceDrvUser = {
     drvUserCreate,
     drvUserGetType,
@@ -1934,6 +2021,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     if (interfaceMask & asynFloat32ArrayMask)   pInterfaces->float32Array.pinterface  = (void *)&ifaceFloat32Array;
     if (interfaceMask & asynFloat64ArrayMask)   pInterfaces->float64Array.pinterface  = (void *)&ifaceFloat64Array;
     if (interfaceMask & asynGenericPointerMask) pInterfaces->genericPointer.pinterface= (void *)&ifaceGenericPointer;
+    if (interfaceMask & asynEnumMask)           pInterfaces->Enum.pinterface          = (void *)&ifaceEnum;
 
     /* Define which interfaces can generate interrupts */
     if (interruptMask & asynInt32Mask)          pInterfaces->int32CanInterrupt          = 1;
@@ -1946,6 +2034,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     if (interruptMask & asynFloat32ArrayMask)   pInterfaces->float32ArrayCanInterrupt   = 1;
     if (interruptMask & asynFloat64ArrayMask)   pInterfaces->float64ArrayCanInterrupt   = 1;
     if (interruptMask & asynGenericPointerMask) pInterfaces->genericPointerCanInterrupt = 1;
+    if (interruptMask & asynEnumMask)           pInterfaces->enumCanInterrupt           = 1;
 
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      this->pasynUserSelf, this);
