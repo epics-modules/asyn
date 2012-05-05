@@ -263,6 +263,26 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             }
         }
     }
+
+    if (pInterfaces->Enum.pinterface) {
+        pInterfaces->Enum.interfaceType = asynEnumType;
+        pInterfaces->Enum.drvPvt = pPvt;
+        status = pasynEnumBase->initialize(portName, &pInterfaces->Enum);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register enum");
+            return(asynError);
+        }
+        if (pInterfaces->enumCanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->Enum,
+                                                           &pInterfaces->enumInterruptPvt);
+            if (status != asynSuccess) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "Can't register enum interrupt");
+                return(asynError);
+            }
+        }
+    }
      
     return(asynSuccess);
 }
