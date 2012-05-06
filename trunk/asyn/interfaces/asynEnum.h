@@ -23,13 +23,13 @@
 extern "C" {
 #endif  /* __cplusplus */
 
-typedef void (*interruptCallbackEnumStrings)(
+typedef void (*interruptCallbackEnum)(
               void *userPvt, asynUser *pasynUser,
               char *strings[], int values[], int severities[], size_t nelements);
 typedef struct asynEnumInterrupt {
     asynUser *pasynUser;
     int addr;
-    interruptCallbackEnumStrings callback;
+    interruptCallbackEnum callback;
     void *userPvt;
 } asynEnumInterrupt;
 #define asynEnumType "asynEnum"
@@ -39,7 +39,7 @@ typedef struct asynEnum {
     asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
                        char *strings[], int values[], int severities[], size_t nelements, size_t *nIn);
     asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
-             interruptCallbackEnumStrings callback, void *userPvt,
+             interruptCallbackEnum callback, void *userPvt,
              void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
              void *registrarPvt);
@@ -48,7 +48,7 @@ typedef struct asynEnum {
 #define asynEnumBaseType "asynEnumBase"
 typedef struct asynEnumBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pEnumStringsInterface);
+                            asynInterface *pEnumInterface);
 } asynEnumBase;
 epicsShareExtern asynEnumBase *pasynEnumBase;
 
