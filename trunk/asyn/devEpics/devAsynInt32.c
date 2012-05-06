@@ -268,12 +268,15 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
         goto bad;
     }
     /* Initialize enumString synchronous interface */
-    status = pasynEnumSyncIO->connect(pPvt->portName, pPvt->addr, 
+    pasynInterface = pasynManager->findInterface(pPvt->pasynUser,asynEnumType,1);
+    if (pasynInterface) {
+        status = pasynEnumSyncIO->connect(pPvt->portName, pPvt->addr, 
                  &pPvt->pasynUserEnumSync, pPvt->userParam);
-    if (status != asynSuccess) {
-        printf("%s devAsynInt32::initCommon EnumSyncIO->connect failed %s\n",
-               pr->name, pPvt->pasynUserEnumSync->errorMessage);
-        goto bad;
+        if (status != asynSuccess) {
+            printf("%s devAsynInt32::initCommon EnumSyncIO->connect failed %s\n",
+                   pr->name, pPvt->pasynUserEnumSync->errorMessage);
+            goto bad;
+        }
     }
     return 0;
 bad:
@@ -837,15 +840,13 @@ static long initBi(biRecord *pr)
 {
     devInt32Pvt *pPvt;
     asynStatus status;
-    asynInterface *pasynInterface;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput);
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* If the driver implements the asynEnum interface then try to read the enums */
-    pasynInterface = pasynManager->findInterface(pPvt->pasynUser,asynEnumType,1);
-    if (pasynInterface) {
+    if (pPvt->pasynUserEnumSync) {
         size_t numRead;
         status = pasynEnumSyncIO->read(pPvt->pasynUserEnumSync,
                     pPvt->enumStrings, pPvt->enumValues, pPvt->enumSeverities, 2, 
@@ -895,15 +896,13 @@ static long initBo(boRecord *pr)
     devInt32Pvt *pPvt;
     asynStatus status;
     epicsInt32 value;
-    asynInterface *pasynInterface;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput);
     if (status != asynSuccess) return 0;
     pPvt = pr->dpvt;
     /* If the driver implements the asynEnum interface then try to read the enums */
-    pasynInterface = pasynManager->findInterface(pPvt->pasynUser,asynEnumType,1);
-    if (pasynInterface) {
+    if (pPvt->pasynUserEnumSync) {
         size_t numRead;
         status = pasynEnumSyncIO->read(pPvt->pasynUserEnumSync,
                     pPvt->enumStrings, pPvt->enumValues, pPvt->enumSeverities, 2, 
@@ -960,7 +959,6 @@ static long initMbbi(mbbiRecord *pr)
 {
     devInt32Pvt *pPvt;
     asynStatus status;
-    asynInterface *pasynInterface;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput);
@@ -969,8 +967,7 @@ static long initMbbi(mbbiRecord *pr)
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
     /* If the driver implements the asynEnum interface then try to read the enumStrings */
-    pasynInterface = pasynManager->findInterface(pPvt->pasynUser,asynEnumType,1);
-    if (pasynInterface) {
+    if (pPvt->pasynUserEnumSync) {
         size_t numRead;
         status = pasynEnumSyncIO->read(pPvt->pasynUserEnumSync,
                     pPvt->enumStrings, pPvt->enumValues, pPvt->enumSeverities, MAX_ENUM_STATES, 
@@ -1021,7 +1018,6 @@ static long initMbbo(mbboRecord *pr)
     devInt32Pvt *pPvt;
     asynStatus status;
     epicsInt32 value;
-    asynInterface *pasynInterface;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput);
@@ -1030,8 +1026,7 @@ static long initMbbo(mbboRecord *pr)
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
     /* If the driver implements the asynEnum interface then try to read the enumStrings */
-    pasynInterface = pasynManager->findInterface(pPvt->pasynUser,asynEnumType,1);
-    if (pasynInterface) {
+    if (pPvt->pasynUserEnumSync) {
         size_t numRead;
         status = pasynEnumSyncIO->read(pPvt->pasynUserEnumSync,
                     pPvt->enumStrings, pPvt->enumValues, pPvt->enumSeverities, MAX_ENUM_STATES, 
