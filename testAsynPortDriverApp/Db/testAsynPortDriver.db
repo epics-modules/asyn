@@ -37,12 +37,31 @@ record(longin, "$(P)$(R)MaxPoints_RBV")
 ###################################################################
 #  These records are the time per division                        #
 ###################################################################
-record(ao, "$(P)$(R)TimePerDiv")
+record(mbbo, "$(P)$(R)TimePerDivSelect")
 {
    field(PINI, "1")
-   field(DTYP, "asynFloat64")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV")
-   field(PREC, "5")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV_SELECT")
+   field(ZRST, "0.01 msec")
+   field(ZRVL, "10")
+   field(ONST, "0.02 msec")
+   field(ONVL, "20")
+   field(TWST, "0.05 msec")
+   field(TWVL, "50")
+   field(THST, "0.1 msec")
+   field(THVL, "100")
+   field(FRST, "0.2 msec")
+   field(FRVL, "200")
+   field(FVST, "0.5 msec")
+   field(FVVL, "500")
+   field(SXST, "1 msec")
+   field(SXVL, "1000")
+   field(SVST, "2 msec")
+   field(SVVL, "2000")
+   field(EIST, "5 msec")
+   field(EIVL, "5000")
+   field(NIST, "10 msec")
+   field(NIVL, "10000")
 }
 
 record(ai, "$(P)$(R)TimePerDiv_RBV")
@@ -55,14 +74,50 @@ record(ai, "$(P)$(R)TimePerDiv_RBV")
 }
 
 ###################################################################
-#  These records are the volts per division                       #
+#  These records are the vertical gain                            #
 ###################################################################
-record(ao, "$(P)$(R)VoltsPerDiv")
+record(mbbo, "$(P)$(R)VertGainSelect")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VERT_GAIN_SELECT")
+   field(ZRST, "1")
+   field(ZRVL, "1")
+   field(ONST, "10")
+   field(ONVL, "10")
+   field(TWST, "100")
+   field(TWVL, "100")
+}
+
+record(ai, "$(P)$(R)VertGain_RBV")
 {
    field(PINI, "1")
    field(DTYP, "asynFloat64")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV")
-   field(PREC, "3")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VERT_GAIN")
+   field(PREC, "0")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the volts per division.                      #
+#  The driver sets these dynamically based on the vertical gain   #
+###################################################################
+record(mbbo, "$(P)$(R)VoltsPerDivSelect")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV_SELECT")
+   field(ZRST, "Garbage")
+   field(ZRVL, "0")
+}
+
+record(mbbi, "$(P)$(R)VoltsPerDivSelect_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV_SELECT")
+   field(ZRST, "Garbage")
+   field(ZRVL, "0")
+   field(SCAN, "I/O Intr")
 }
 
 record(ai, "$(P)$(R)VoltsPerDiv_RBV")
@@ -70,7 +125,7 @@ record(ai, "$(P)$(R)VoltsPerDiv_RBV")
    field(PINI, "1")
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV")
-   field(PREC, "3")
+   field(PREC, "2")
    field(SCAN, "I/O Intr")
 }
 
