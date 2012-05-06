@@ -30,7 +30,7 @@ typedef struct ioPvt{
    asynCommon   *pasynCommon;
    void         *pcommonPvt;
    asynEnum     *pasynEnum;
-   void         *enumStringsPvt;
+   void         *enumPvt;
    asynDrvUser  *pasynDrvUser;
    void         *drvUserPvt;
 }ioPvt;
@@ -88,7 +88,7 @@ static asynStatus connect(const char *port, int addr,
        return asynError;
     }
     pioPvt->pasynEnum = (asynEnum *)pasynInterface->pinterface;
-    pioPvt->enumStringsPvt = pasynInterface->drvPvt;
+    pioPvt->enumPvt = pasynInterface->drvPvt;
     if(drvInfo) {
         /* Check for asynDrvUser interface */
         pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
@@ -139,7 +139,7 @@ static asynStatus writeOp(asynUser *pasynUser, char *strings[], int values[], in
     if(status!=asynSuccess) {
         return status;
     }
-    status = pioPvt->pasynEnum->write(pioPvt->enumStringsPvt, pasynUser, strings, values, severities, nElements);
+    status = pioPvt->pasynEnum->write(pioPvt->enumPvt, pasynUser, strings, values, severities, nElements);
     if (status==asynSuccess) {
         int i;
         for (i=0; i<nElements; i++) {
@@ -164,7 +164,7 @@ static asynStatus readOp(asynUser *pasynUser, char *strings[], int values[], int
     if(status!=asynSuccess) {
         return status;
     }
-    status = pioPvt->pasynEnum->read(pioPvt->enumStringsPvt, pasynUser, strings, values, severities, nElements, nIn);
+    status = pioPvt->pasynEnum->read(pioPvt->enumPvt, pasynUser, strings, values, severities, nElements, nIn);
     if (status==asynSuccess) {
         int i;
         for (i=0; i<*nIn; i++) {
