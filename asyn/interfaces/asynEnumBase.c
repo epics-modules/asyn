@@ -19,17 +19,17 @@
 #include "asynDriver.h"
 #include "asynEnum.h"
 
-static asynStatus initialize(const char *portName, asynInterface *penumStringsInterface);
+static asynStatus initialize(const char *portName, asynInterface *pEnumInterface);
 
-static asynEnumBase enumStringsBase = {initialize};
-epicsShareDef asynEnumBase *pasynEnumBase = &enumStringsBase;
+static asynEnumBase enumBase = {initialize};
+epicsShareDef asynEnumBase *pasynEnumBase = &enumBase;
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
                               char *strings[], int values[], int severities[], size_t nElements);
 static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
                               char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
-                               interruptCallbackEnumStrings callback, void *userPvt,
+                               interruptCallbackEnum callback, void *userPvt,
                                void **registrarPvt);
 static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
                                void *registrarPvt);
@@ -85,7 +85,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
 }
 
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
-                               interruptCallbackEnumStrings callback, void *userPvt,
+                               interruptCallbackEnum callback, void *userPvt,
                                void **registrarPvt)
 {
     const char    *portName;
