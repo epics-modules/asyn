@@ -13,10 +13,15 @@
 
 #define MAX_ARRAY_POINTS 100
 #define OCTET_LENGTH 20
+#define MAX_STATUS_ENUMS 6
+#define MAX_INT32_ENUMS 16
+#define MAX_UINT32_ENUMS 3
+#define MAX_ENUM_STRING_SIZE 20
 
 /* These are the drvInfo strings that are used to identify the parameters.
  * They are used by asyn clients, including standard asyn device support */
 #define P_StatusReturnString          "STATUS_RETURN"         /* asynInt32,    r/w */
+#define P_EnumOrderString             "ENUM_ORDER"            /* asynInt32,    r/w */
 #define P_Int32ValueString            "INT32_VALUE"           /* asynInt32,    r/w */
 #define P_Float64ValueString          "FLOAT64_VALUE"         /* asynFloat64,  r/w */
 #define P_UInt32DigitalValueString    "UINT32D_VALUE"         /* asynUInt32Digital,  r/w */
@@ -59,6 +64,7 @@ protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_StatusReturn;
     #define FIRST_COMMAND P_StatusReturn
+    int P_EnumOrder;
     int P_Int32Value;
     int P_Float64Value;
     int P_UInt32DigitalValue;
@@ -72,9 +78,16 @@ protected:
  
 private:
     /* Our data */
-    epicsInt8     int8ArrayValue_[MAX_ARRAY_POINTS];
-    epicsInt16    int16ArrayValue_[MAX_ARRAY_POINTS];
-    epicsInt32    int32ArrayValue_[MAX_ARRAY_POINTS];
+    char *int32EnumStrings_  [MAX_INT32_ENUMS];
+    int int32EnumValues_     [MAX_INT32_ENUMS];
+    int int32EnumSeverities_ [MAX_INT32_ENUMS];
+    char *uint32EnumStrings_ [MAX_UINT32_ENUMS];
+    int uint32EnumValues_    [MAX_UINT32_ENUMS];
+    int uint32EnumSeverities_[MAX_UINT32_ENUMS];
+    void setEnums();
+    epicsInt8     int8ArrayValue_   [MAX_ARRAY_POINTS];
+    epicsInt16    int16ArrayValue_  [MAX_ARRAY_POINTS];
+    epicsInt32    int32ArrayValue_  [MAX_ARRAY_POINTS];
     epicsFloat32  float32ArrayValue_[MAX_ARRAY_POINTS];
     epicsFloat64  float64ArrayValue_[MAX_ARRAY_POINTS];
     template <typename epicsType> 
