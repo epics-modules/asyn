@@ -26,7 +26,6 @@ static const char *driverName="testErrors";
 
 #define CALLBACK_PERIOD 0.5
 
-#define MAX_STATUS_ENUMS 6
 static char *statusEnumStrings[MAX_STATUS_ENUMS] = {
     "asynSuccess",
     "asynTimeout",
@@ -38,36 +37,16 @@ static char *statusEnumStrings[MAX_STATUS_ENUMS] = {
 static int statusEnumValues[MAX_STATUS_ENUMS]     = {0, 1, 2, 3, 4, 5};
 static int statusEnumSeverities[MAX_STATUS_ENUMS] = {0, 2, 1, 2, 3, 3};
 
-#define MAX_INT32_ENUMS 16
-static char *int32EnumStrings[MAX_INT32_ENUMS] = {
-    "Zero",
-    "One",
-    "Two",
-    "Three",
-    "Four",
-    "Five",
-    "Six",
-    "Seven",
-    "Eight",
-    "Nine",
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen"
+static char *allInt32EnumStrings[MAX_INT32_ENUMS] = {
+    "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
+    "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"
 };
-static int int32EnumValues[MAX_INT32_ENUMS]     = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-static int int32EnumSeverities[MAX_INT32_ENUMS] = {0, 0, 0, 0, 1, 1, 1, 1, 1, 2,  2,  2,  2,  3,  3,  3};
+static int allInt32EnumValues[MAX_INT32_ENUMS]     =  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+static int allInt32EnumSeverities[MAX_INT32_ENUMS] =  {0, 0, 0, 0, 1, 1, 1, 1, 1, 2,  2,  2,  2,  3,  3,  3};
 
-#define MAX_UINT32_ENUMS 3
-static char *uint32EnumStrings[MAX_UINT32_ENUMS] = {
-    "Zero",
-    "One",
-    "Three"
-};
-static int uint32EnumValues[MAX_UINT32_ENUMS]     = {0, 1, 3};
-static int uint32EnumSeverities[MAX_UINT32_ENUMS] = {0, 1, 1};
+static char *allUInt32EnumStrings[MAX_UINT32_ENUMS] =  {"Zero", "One", "Three"};
+static int allUInt32EnumValues[MAX_UINT32_ENUMS]     = {0, 1, 3};
+static int allUInt32EnumSeverities[MAX_UINT32_ENUMS] = {0, 1, 1};
 
 static void callbackTask(void *drvPvt);
 
@@ -79,20 +58,25 @@ testErrors::testErrors(const char *portName)
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
                     NUM_PARAMS,
+                     /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
-                      asynEnumMask      | asynDrvUserMask, /* Interface mask */
+                      asynEnumMask      | asynDrvUserMask,
+                    /* Interrupt mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
-                      asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask, /* Interrupt mask */
+                      asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
+                      asynEnumMask,
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/    
 {
     asynStatus status;
+    int i;
     const char *functionName = "testErrors";
 
     createParam(P_StatusReturnString,       asynParamInt32,         &P_StatusReturn);
+    createParam(P_EnumOrderString,          asynParamInt32,         &P_EnumOrder);
     createParam(P_Int32ValueString,         asynParamInt32,         &P_Int32Value);
     createParam(P_Float64ValueString,       asynParamFloat64,       &P_Float64Value);
     createParam(P_UInt32DigitalValueString, asynParamUInt32Digital, &P_UInt32DigitalValue);
@@ -103,8 +87,16 @@ testErrors::testErrors(const char *portName)
     createParam(P_Float32ArrayValueString,  asynParamFloat32Array,  &P_Float32ArrayValue);
     createParam(P_Float64ArrayValueString,  asynParamFloat64Array,  &P_Float64ArrayValue);
     
+    for (i=0; i<MAX_INT32_ENUMS; i++) {
+        int32EnumStrings_[i] = (char*)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
+    }
+    for (i=0; i<MAX_UINT32_ENUMS; i++) {
+        uint32EnumStrings_[i] = (char*)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
+    }
     setIntegerParam(P_StatusReturn, asynSuccess);
     setIntegerParam(P_Int32Value, 0);
+    setIntegerParam(P_EnumOrder, 0);
+    setEnums();
     // Need to force callbacks with the interruptMask once 
     setUIntDigitalParam(P_UInt32DigitalValue, (epicsUInt32)0x0, 0xFFFFFFFF, 0xFFFFFFFF);
     
@@ -179,6 +171,32 @@ void testErrors::callbackTask(void)
     }
 }
 
+void testErrors::setEnums()
+{
+    int order, offset=0, dir=1, i, j;
+    
+    getIntegerParam(P_EnumOrder, &order);
+    if (order != 0) {
+        offset = MAX_INT32_ENUMS-1;
+        dir = -1;
+    }
+    for (i=0, j=offset; i<MAX_INT32_ENUMS; i++, j+=dir) {
+        strcpy(int32EnumStrings_[i],  allInt32EnumStrings[j]);
+        int32EnumValues_[i]         = allInt32EnumValues[j];
+        int32EnumSeverities_[i]     = allInt32EnumSeverities[j];
+    }
+    if (order != 0) {
+        offset = MAX_UINT32_ENUMS-1;
+    }
+    for (i=0, j=offset; i<MAX_UINT32_ENUMS; i++, j+=dir) {
+        strcpy(uint32EnumStrings_[i],  allUInt32EnumStrings[j]);
+        uint32EnumValues_[i]         = allUInt32EnumValues[j];
+        uint32EnumSeverities_[i]     = allUInt32EnumSeverities[j];
+    }
+    doCallbacksEnum(int32EnumStrings_,  int32EnumValues_,  int32EnumSeverities_,  MAX_INT32_ENUMS,  P_Int32Value,         0);
+    doCallbacksEnum(uint32EnumStrings_, uint32EnumValues_, uint32EnumSeverities_, MAX_UINT32_ENUMS, P_UInt32DigitalValue, 0);
+}
+
 /** Called when asyn clients call pasynInt32->write().
   * This function sends a signal to the simTask thread if the value of P_Run has changed.
   * For all parameters it sets the value in the parameter library and calls any registered callbacks..
@@ -200,8 +218,12 @@ asynStatus testErrors::writeInt32(asynUser *pasynUser, epicsInt32 value)
     /* Set the parameter value in the parameter library. */
     setIntegerParam(function, value);
     /* Set the parameter status in the parameter library except for P_StatusReturn which is always OK */
-    if (function == P_StatusReturn) 
+    if (function == P_StatusReturn) {
         status = asynSuccess;
+    }
+    else if (function == P_EnumOrder) {
+        setEnums();
+    }
     setParamStatus(function, status);
     
     /* Do callbacks so higher layers see any changes */
@@ -342,17 +364,17 @@ asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values
     else if (function == P_Int32Value) {
         for (i=0; ((i<MAX_INT32_ENUMS) && (i<nElements)); i++) {
             if (strings[i]) free(strings[i]);
-            strings[i] = epicsStrDup(int32EnumStrings[i]);
-            values[i] = int32EnumValues[i];
-            severities[i] = int32EnumSeverities[i];
+            strings[i] = epicsStrDup(int32EnumStrings_[i]);
+            values[i] = int32EnumValues_[i];
+            severities[i] = int32EnumSeverities_[i];
         }
     }
     else if (function == P_UInt32DigitalValue) {
         for (i=0; ((i<MAX_UINT32_ENUMS) && (i<nElements)); i++) {
             if (strings[i]) free(strings[i]);
-            strings[i] = epicsStrDup(uint32EnumStrings[i]);
-            values[i] = uint32EnumValues[i];
-            severities[i] = uint32EnumSeverities[i];
+            strings[i] = epicsStrDup(uint32EnumStrings_[i]);
+            values[i] = uint32EnumValues_[i];
+            severities[i] = uint32EnumSeverities_[i];
         }
     }
     else {
