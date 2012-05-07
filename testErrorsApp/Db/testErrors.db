@@ -10,6 +10,18 @@ record(mbbo, "$(P)StatusReturn")
     field(ZRVL, "0")
 }
 
+###################################################################
+#  These records control the order of enum strings, values,       # 
+#  and severities                                                 # 
+###################################################################
+record(bo, "$(P)EnumOrder")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ENUM_ORDER")
+    field(ZNAM, "Normal")
+    field(ONAM, "Reversed")
+}
 
 ###################################################################
 #  Records that use devAsynInt32                                  #
