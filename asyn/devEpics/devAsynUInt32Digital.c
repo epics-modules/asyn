@@ -22,6 +22,7 @@
 #include <recGbl.h>
 #include <dbAccess.h>
 #include <dbDefs.h>
+#include <dbEvent.h>
 #include <dbStaticLib.h>
 #include <link.h>
 #include <epicsPrint.h>
@@ -461,6 +462,7 @@ static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv, 
              strings, values, severities, nElements, MAX_ENUM_STATES);
+    db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
 
@@ -474,6 +476,7 @@ static void interruptCallbackEnumMbbo(void *drvPvt, asynUser *pasynUser,
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv, 
              strings, values, severities, nElements, MAX_ENUM_STATES);
+    db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
 
@@ -487,6 +490,7 @@ static void interruptCallbackEnumBi(void *drvPvt, asynUser *pasynUser,
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->znam, NULL, &pr->zsv, 
              strings, NULL, severities, nElements, 2);
+    db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
 
@@ -500,6 +504,7 @@ static void interruptCallbackEnumBo(void *drvPvt, asynUser *pasynUser,
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->znam, NULL, &pr->zsv, 
              strings, NULL, severities, nElements, 2);
+    db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
 
