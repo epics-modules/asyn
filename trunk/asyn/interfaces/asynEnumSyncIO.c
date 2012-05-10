@@ -45,7 +45,7 @@ static asynStatus readOp(asynUser *pasynUser, char *strings[], int values[], int
                          size_t nElements, size_t *nIn, double timeout);
 static asynStatus writeOpOnce(const char *port, int addr, char *strings[], int values[], int severities[], 
                               size_t nElements, double timeout,const char *drvInfo);
-static asynStatus readOpOnce(const char *port, int addr, char *strings[], int values[0], int severities[], 
+static asynStatus readOpOnce(const char *port, int addr, char *strings[], int values[], int severities[], 
                              size_t nElements, size_t *nIn, double timeout, const char *drvInfo);
 static asynEnumSyncIO interface = {
     connect,
@@ -141,7 +141,7 @@ static asynStatus writeOp(asynUser *pasynUser, char *strings[], int values[], in
     }
     status = pioPvt->pasynEnum->write(pioPvt->enumPvt, pasynUser, strings, values, severities, nElements);
     if (status==asynSuccess) {
-        int i;
+        size_t i;
         for (i=0; i<nElements; i++) {
           asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                     "asynEnumSyncIO wrote: %d string=%s, value=%d severity=%d\n", i, strings[i], values[i], severities[i]);
@@ -166,7 +166,7 @@ static asynStatus readOp(asynUser *pasynUser, char *strings[], int values[], int
     }
     status = pioPvt->pasynEnum->read(pioPvt->enumPvt, pasynUser, strings, values, severities, nElements, nIn);
     if (status==asynSuccess) {
-        int i;
+        size_t i;
         for (i=0; i<*nIn; i++) {
           asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                     "asynEnumSyncIO read: %d string=%s, value=%d, severity=%d\n", i, strings[i], values[i], severities[i]);
