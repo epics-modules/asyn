@@ -2416,15 +2416,15 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     <li>Int32Array - Arrays of 32 bit integers.</li>
     <li>Float32Array - Arrays of single precision floats.</li>
     <li>Float64Array - Arrays of double precision floats.</li>
+    <li>Enum - Arrays of strings, integer values and integer severities.</li>
     <li>GenericPointer - void* pointer.</li>
   </ul>
   <p>
     Note that hardware may have registers with smaller sizes, e.g. 16 bit registers.
     The standard interfaces can still be used by setting the unused bits to 0.</p>
   <p>
-    For Int32, Int8Array, Int16Array, Int32Array, UInt32Digital, Float64, Float32Array,
-    and Float64Array three interfaces are provided. In addition a default implementation
-    and a synchronous inplementation are provided. Lets use Int32 as an example.</p>
+    For all of these interfaces a default implementation and a synchronous inplementation
+    are provided. Lets use Int32 as an example.</p>
   <ul>
     <li>asynInt32 - An interface with methods: read, write, getBounds, registerInterruptUser,
       and cancelInterruptUser.</li>
@@ -3360,6 +3360,234 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
     </tbody>
   </table>
   <h3>
+    asynEnum</h3>
+  <p>
+    asynEnum describes the methods implemented by drivers to define the enum strings,
+    values, and severities for a device.
+  </p>
+  <p>
+    This interface is typically used by drivers to set the enum strings and values for
+    EPICS bi, bo, mbbi, and mbbo records. The strings[] are used to define the ZNAM
+    and ONAM fields in bi and bo records, and the ZRST, ONST, ...FFST fields in mbbi
+    and mbbo records. The integer values[] are ignored for bi and bo records, since
+    these always have the values of 0 and 1 corresponding to the ZNAM and ONAM states.
+    The integer values[] are used to assign the ZRVL, ONVL, ... FFVL fields for mbbi
+    and mbbo records. The integer severities[] are used to set the ZSV and OSV fields
+    of bi and bo records, and the ZRSV, ONSV, ... FFSV fields of mbbi and mbbo records.
+    The nelements parameter in the write() and read() functions is used by the client
+    to specify the dimensions of the strings[], values[], and severities[] arrays. The
+    driver must not access these arrays beyond element nElements-1. The nIn parameter
+    in the read() is used by the driver to set the actual number of value enum strings,
+    values, and severities. There is no size limitation on nElements imposed by the
+    asynEnum interface. However, the bi and bo records limit nElements to 2, and mbbi
+    and mbbo records limit nElements to 16. There is no size limitation on the strings
+    imposed by the asynEnum interface. However, the string fields in the bi, bo, mbbo,
+    and mbbi records are currently limited to 26 characters.</p>
+  <p>
+    Clients must ensure that the char* pointers passed in strings[] in the read() function
+    are either set to NULL or have been allocated by malloc(). The driver read() function
+    must first call free() if a string pointer contains a non-NULL value. The driver
+    must then allocate the strings using malloc() before copying the current enum string
+    values to them.</p>
+  <pre>
+typedef void (*interruptCallbackEnum)
+              void *userPvt, asynUser *pasynUser,
+              char *strings[], int values[], int severities[], size_t nelements);
+typedef struct asynEnumInterrupt {
+    asynUser *pasynUser;
+    int addr;
+    interruptCallbackEnum callback;
+    void *userPvt;
+} asynEnumInterrupt;
+#define asynEnumType "asynEnum"
+typedef struct asynEnum {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser,
+                       char *strings[], int values[], int severities[], size_t nelements);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser,
+                       char *strings[], int values[], int severities[], size_t nelements, size_t *nIn);
+    asynStatus (*registerInterruptUser)(void *drvPvt, asynUser *pasynUser,
+             interruptCallbackEnum callback, void *userPvt,
+             void **registrarPvt);
+    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
+             void *registrarPvt);
+} asynEnum;
+
+/* asynEnumBase does the following:
+   calls registerInterface for asynEnum.
+   Implements registerInterruptUser and cancelInterruptUser
+   Provides default implementations of all methods.
+   registerInterruptUser and cancelInterruptUser can be called
+   directly rather than via queueRequest.
+*/
+
+#define asynEnumBaseType "asynEnumBase"
+typedef struct asynEnumBase {
+    asynStatus (*initialize)(const char *portName,
+                            asynInterface *pEnumInterface);
+} asynEnumBase;
+epicsShareExtern asynEnumBase *pasynEnumBase;
+</pre>
+  <table border="1">
+    <caption>
+      asynEnum</caption>
+    <tbody>
+      <tr>
+        <td>
+          write</td>
+        <td>
+          Writes the enum strings, enum values and enum severities to the driver.</td>
+      </tr>
+      <tr>
+        <td>
+          read</td>
+        <td>
+          Reads the enum strings, enum values and enum severities to the driver.</td>
+      </tr>
+      <tr>
+        <td>
+          registerInterruptUser</td>
+        <td>
+          Registers a callback that will be called whenever there are new enum strings, values
+          and severities. Since it can be called directly rather than via a queueRequest this
+          method must not block. </td>
+      </tr>
+      <tr>
+        <td>
+          cancelInterruptUser</td>
+        <td>
+          Cancels the callback. Since it can be called directly rather than via a queueRequest
+          this method must not block.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+  </p>
+  <p>
+    asynEnumBase is an interface and associated code that is used by drivers that implement
+    interface asynEnum. asynEnumBase provides code to handle registerInterruptUser/cancelInterruptUser.
+    The driver must itself call the callbacks via calls to asynManager:interruptStart
+    and asynManager:interruptEnd.</p>
+  <table border="1">
+    <caption>
+      asynEnumBase</caption>
+    <tbody>
+      <tr>
+        <td>
+          initialize</td>
+        <td>
+          After a driver calls registerPort it can call:
+          <pre>pasynEnumBase-&gt;initialize(...</pre>
+          Any null methods in the asynInterface are replaced by default implementations.
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+  </p>
+  <p>
+    The default implementation of each method does the following:</p>
+  <table border="1">
+    <caption>
+      asynEnum</caption>
+    <tbody>
+      <tr>
+        <td>
+          write</td>
+        <td>
+          Reports an error "write is not supported" and returns asynError</td>
+      </tr>
+      <tr>
+        <td>
+          read</td>
+        <td>
+          Reports an error "read is not supported" and returns asynError</td>
+      </tr>
+      <tr>
+        <td>
+          registerInterruptUser</td>
+        <td>
+          registers an interrupt callback.</td>
+      </tr>
+      <tr>
+        <td>
+          cancelInterruptUser</td>
+        <td>
+          Cancels the callback</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>
+    asynEnumSyncIO</h3>
+  <p>
+    asynEnumSyncIO describes a synchronous interface to asynEnum. The code that calls
+    it must be willing to block.</p>
+  <pre>#define asynEnumSyncIOType "asynEnumSyncIO"
+typedef struct asynEnumSyncIO {
+    asynStatus (*connect)(const char *port, int addr, 
+                          asynUser **ppasynUser, const char *drvInfo);
+    asynStatus (*disconnect)(asynUser *pasynUser);
+    asynStatus (*write)(asynUser *pasynUser, char *strings[], int values[], int severities[], 
+                       size_t nElements, double timeout);
+    asynStatus (*read)(asynUser *pasynUser, char *string[], int values[],  int severities[], 
+                       size_t nElements, size_t *nIn, double timeout);
+    asynStatus (*writeOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+                           size_t nElements, double timeout, const char *drvInfo);
+    asynStatus (*readOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+                           size_t nElements, size_t *nIn, double timeout, const char *drvInfo);
+} asynEnumSyncIO;
+epicsShareExtern asynEnumSyncIO *pasynEnumSyncIO;
+</pre>
+  <table border="1">
+    <caption>
+      asynEnumSyncIO</caption>
+    <tbody>
+      <tr>
+        <td>
+          connect</td>
+        <td>
+          Connects to a port and address, returns a pointer to an asynUser.</td>
+      </tr>
+      <tr>
+        <td>
+          disconnect</td>
+        <td>
+          Disconnect. This frees all resources allocated by connect.</td>
+      </tr>
+      <tr>
+        <td>
+          write</td>
+        <td>
+          Calls pasynEnum-&gt;write and waits for the operation to complete or time out.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          read</td>
+        <td>
+          Calls pasynEnum-&gt;read and waits for the operation to complete or time out.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          writeOnce</td>
+        <td>
+          This does a connect, write, and disconnect.</td>
+      </tr>
+      <tr>
+        <td>
+          readOnce</td>
+        <td>
+          This does a connect, read, and disconnect.</td>
+      </tr>
+      <tr>
+        <td>
+          getBoundsOnce</td>
+        <td>
+          This does a connect, getBounds, and disconnect.</td>
+      </tr>
+    </tbody>
+  </table>
+  <h3>
     asynGenericPointer</h3>
   <p>
     asynGenericPointer describes the methods for communicating via void* pointers. asyn
@@ -3573,12 +3801,18 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
 
     asynInterface drvUser;
 
+    asynInterface option;
+
     asynInterface octet;
     int octetProcessEosIn;
     int octetProcessEosOut;
     int octetInterruptProcess;
     int octetCanInterrupt;
     void *octetInterruptPvt;
+
+    asynInterface uInt32Digital;
+    int uInt32DigitalCanInterrupt;
+    void *uInt32DigitalInterruptPvt;
 
     asynInterface int32;
     int int32CanInterrupt;
@@ -3611,6 +3845,10 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     asynInterface genericPointer;
     int genericPointerCanInterrupt;
     void *genericPointerInterruptPvt;
+
+    asynInterface Enum;
+    int enumCanInterrupt;
+    void *enumInterruptPvt;
 
 } asynStandardInterfaces;</pre>
   <h2>
@@ -3844,6 +4082,41 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
         These records are normally scanned periodically. The registerInterruptUser callback
         is used to append values to the time series.</p>
     </li>
+  </ul>
+  <h2>
+    Initial values of output records</h2>
+  <p>
+    The device support for output records on register based interfaces (bo, mbbo, ao,
+    longout) does an initial read() of the value from the driver in init_record. If
+    this read() returns asynSuccess then the record value is set to the value returned
+    from read(). If read() returns anything other than asynSuccess then the record value
+    is not modified. This mechanism supports &quot;bumpless reboots&quot; where the
+    initial value of output records will match the current value of the hardware when
+    the IOC starts. Drivers should only return asynSuccess from the read() function
+    if the value is known to be valid. Note that this value read from the device will
+    replace the value in the database when iocInit begins. However, the value read from
+    the device may in turn be replaced by any value from save/restore, because the auto
+    restore happens later in iocInit.</p>
+  <h2>
+    Enum values for bi, bo, mbbi, and mbbo records</h2>
+  <p>
+    Beginning in asyn R4-19 support was added for asyn port drivers to control the values
+    of the enum strings, enum values and enum severities in bi, bo, mbbi, and mbbo records.
+    This is implemented in the asynInt32 and asynUInt32Digital device support as follows:</p>
+  <ul>
+    <li>In the device support init_record function the device support attempts to find
+      the asynEnum interface in the driver. If it is found then the driver calls pasynEnumSyncIO->read()
+      to read the current values of the enums from the driver. If the read() returns asynSuccess
+      then the enum fields are set to the values returned by the driver. If the asynEnum
+      interface is not supported, or if read() returns anything except asynSuccess then
+      the enum fields are not modified.</li>
+    <li>Device support registers for callbacks on the asynEnum interface. Drivers can
+      make callbacks to dynamically change the values of enums at run-time. For example,
+      changing the gain of an ADC might change the allowed choices for the speed, etc.
+      Device support calls db_post_events(pr, &pr->val, DBE_PROPERTY) when the enum fields
+      change. This notifies clients that the enum values have changed. Older clients like
+      medm and edm will not change the enum widgets until the window is closed and reopened,
+      but newer clients like CSS should dynamically change the enum widgets.</li>
   </ul>
   <h2>
     asynInt32 device support</h2>
