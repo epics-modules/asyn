@@ -15,6 +15,7 @@
 #include <link.h>
 #include <shareLib.h>
 #include <epicsTypes.h>
+#include <alarm.h>
 #include "asynDriver.h"
 
 #ifdef __cplusplus
