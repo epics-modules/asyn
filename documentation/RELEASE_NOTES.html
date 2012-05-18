@@ -15,10 +15,24 @@
     <h2>
       Release 4-19</h2>
     <h2>
-      May XXX, 2012</h2>
+      May 18, 2012</h2>
   </div>
   <h3>
+    Interfaces</h3>
+  <p>
+    Added a new interface, asynEnum. This interface is designed to allow drivers to
+    set the strings, values, and severities for record enum fields. This can be done
+    both at iocInit(), in init_record() with the pasynEnumSyncIO->read() function, and
+    after iocInit via callbacks to device support.
+  </p>
+  <h3>
     devEpics</h3>
+  <p>
+    Added support for the new asynEnum interface for bo, bi, mbbo, and mbbi records
+    in the asynInt32 and asynUInt32Digital device support. These records now attempt
+    to read the initial values of the strings, values (mbbo and mbbi only) and severities
+    for the enum fields. They also support callbacks on the asynEnum interface, so that
+    enum values can be set dynamically at run-time.</p>
   <p>
     Improved the support for setting the alarm status of records. Previously for records
     that were not I/O Intr scanned STAT was always to READ_ALARM or WRITE_ALARM, and
@@ -52,6 +66,8 @@
   <h3>
     asynPortDriver</h3>
   <p>
+    Added support for the new asynEnum interface described above.</p>
+  <p>
     Added support in asynPortDriver for passing status information to clients in callbacks.
     Each parameter in the parameter library now has an associated asynStatus variable.
     New functions setParamStatus() and getParamStatus() are provided to access this
@@ -66,7 +82,8 @@
     Added a new test application, testErrorsApp. This application uses a driver based
     on asynPortDriver to test error handling for all interfaces and all records support
     by the asyn standard device support (asyn/devEpics). It can be used to test error
-    handling of records with both periodic scanning and I/O Intr scanning.</p>
+    handling of records with both periodic scanning and I/O Intr scanning. It also tests
+    the new asynEnum interface for setting enum strings, values, and severities at iocInit.</p>
   <p>
     Removed the newline terminator from all messages in pasynUser-&gt;errorMessage.
     This formatting does not belong in the error message. Thanks to Lewis Muir for this.</p>
