@@ -1600,7 +1600,9 @@ extern "C" {static asynStatus readEnum(void *drvPvt, asynUser *pasynUser, char *
   * The base class implementation simply prints an error message.  
   * Derived classes may reimplement this function if required.
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
-  * \param[in] value Array of string pointers. 
+  * \param[in] strings Array of string pointers. 
+  * \param[in] values Array of values 
+  * \param[in] severities Array of severities 
   * \param[in] nElements Size of value array 
   * \param[out] nIn Number of elements actually returned */
 asynStatus asynPortDriver::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn)
@@ -1624,7 +1626,10 @@ extern "C" {static asynStatus writeEnum(void *drvPvt, asynUser *pasynUser, char 
 /** Called when asyn clients call pasynEnum->write().
   * The base class implementation simply prints an error message.  
   * Derived classes may reimplement this function if required.
-  * \param[in] value Array of string pointers. 
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] strings Array of string pointers. 
+  * \param[in] values Array of values 
+  * \param[in] severities Array of severities 
   * \param[in] nElements Size of value array */
 asynStatus asynPortDriver::writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements)
 {
@@ -1635,7 +1640,9 @@ asynStatus asynPortDriver::writeEnum(asynUser *pasynUser, char *strings[], int v
 
 
 /** Called by driver to do the callbacks to registered clients on the asynEnum interface.
-  * \param[in] value Array of string pointers. 
+  * \param[in] strings Array of string pointers. 
+  * \param[in] values Array of values 
+  * \param[in] severities Array of severities 
   * \param[in] nElements Size of value array 
   * \param[in] reason A client will be called if reason matches pasynUser->reason registered for that client.
   * \param[in] address A client will be called if address matches the address registered for that client. */
