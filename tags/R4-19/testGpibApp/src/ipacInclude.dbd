@@ -1,3 +1,0 @@
-include "drvGsIP488.dbd"
-include "drvIpac.dbd"
-registrar(mv162ipRegistrar)
