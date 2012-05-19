@@ -1,0 +1,274 @@
+###################################################################
+#  These records control run/stop                                 # 
+###################################################################
+record(bo, "$(P)$(R)Run")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_RUN")
+    field(ZNAM, "Stop")
+    field(ONAM, "Run")
+}
+
+record(bi, "$(P)$(R)Run_RBV")
+{
+    field(PINI, "1")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_RUN")
+    field(ZNAM, "Done")
+    field(ZSV,  "NO_ALARM")
+    field(ONAM, "Running")
+    field(OSV,  "MINOR")
+    field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This records is the number of points                           # 
+###################################################################
+
+record(longin, "$(P)$(R)MaxPoints_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_MAX_POINTS")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the time per division                        #
+###################################################################
+record(mbbo, "$(P)$(R)TimePerDivSelect")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV_SELECT")
+   field(ZRST, "0.01 msec")
+   field(ZRVL, "10")
+   field(ONST, "0.02 msec")
+   field(ONVL, "20")
+   field(TWST, "0.05 msec")
+   field(TWVL, "50")
+   field(THST, "0.1 msec")
+   field(THVL, "100")
+   field(FRST, "0.2 msec")
+   field(FRVL, "200")
+   field(FVST, "0.5 msec")
+   field(FVVL, "500")
+   field(SXST, "1 msec")
+   field(SXVL, "1000")
+   field(SVST, "2 msec")
+   field(SVVL, "2000")
+   field(EIST, "5 msec")
+   field(EIVL, "5000")
+   field(NIST, "10 msec")
+   field(NIVL, "10000")
+}
+
+record(ai, "$(P)$(R)TimePerDiv_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV")
+   field(PREC, "5")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the vertical gain                            #
+###################################################################
+record(mbbo, "$(P)$(R)VertGainSelect")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VERT_GAIN_SELECT")
+   field(ZRST, "1")
+   field(ZRVL, "1")
+   field(ONST, "10")
+   field(ONVL, "10")
+   field(TWST, "100")
+   field(TWVL, "100")
+}
+
+record(ai, "$(P)$(R)VertGain_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VERT_GAIN")
+   field(PREC, "0")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the volts per division.                      #
+#  The driver sets these dynamically based on the vertical gain   #
+###################################################################
+record(mbbo, "$(P)$(R)VoltsPerDivSelect")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV_SELECT")
+   field(ZRST, "Garbage")
+   field(ZRVL, "0")
+}
+
+record(mbbi, "$(P)$(R)VoltsPerDivSelect_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV_SELECT")
+   field(ZRST, "Garbage")
+   field(ZRVL, "0")
+   field(SCAN, "I/O Intr")
+}
+
+record(ai, "$(P)$(R)VoltsPerDiv_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLTS_PER_DIV")
+   field(PREC, "2")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the volt offset                              #
+###################################################################
+record(ao, "$(P)$(R)VoltOffset")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLT_OFFSET")
+   field(PREC, "3")
+}
+
+record(ai, "$(P)$(R)VoltOffset_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_VOLT_OFFSET")
+   field(PREC, "3")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the trigger delay                            #
+###################################################################
+record(ao, "$(P)$(R)TriggerDelay")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TRIGGER_DELAY")
+   field(PREC, "5")
+}
+
+record(ai, "$(P)$(R)TriggerDelay_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TRIGGER_DELAY")
+   field(PREC, "5")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the noise amplitude                           #
+###################################################################
+record(ao, "$(P)$(R)NoiseAmplitude")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_NOISE_AMPLITUDE")
+   field(PREC, "3")
+}
+
+record(ai, "$(P)$(R)NoiseAmplitude_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_NOISE_AMPLITUDE")
+   field(PREC, "3")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the update time                              #
+###################################################################
+record(ao, "$(P)$(R)UpdateTime")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_UPDATE_TIME")
+   field(PREC, "3")
+}
+
+record(ai, "$(P)$(R)UpdateTime_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_UPDATE_TIME")
+   field(PREC, "3")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the waveform                                    #
+###################################################################
+record(waveform, "$(P)$(R)Waveform_RBV")
+{
+    field(DTYP, "asynFloat64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_WAVEFORM")
+    field(FTVL, "DOUBLE")
+    field(NELM, "$(NPOINTS)")
+    field(LOPR, "0")
+    field(HOPR, "10")
+    field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the time base                                   #
+###################################################################
+record(waveform, "$(P)$(R)TimeBase_RBV")
+{
+    field(PINI, "1")
+    field(DTYP, "asynFloat64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_BASE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "$(NPOINTS)")
+    field(LOPR, "0")
+    field(HOPR, "10")
+}
+
+###################################################################
+#  This record is the minimum value                               #
+###################################################################
+record(ai, "$(P)$(R)MinValue_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_MIN_VALUE")
+   field(PREC, "4")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the maximum value                               #
+###################################################################
+record(ai, "$(P)$(R)MaxValue_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_MAX_VALUE")
+   field(PREC, "4")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the mean value                               #
+###################################################################
+record(ai, "$(P)$(R)MeanValue_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_MEAN_VALUE")
+   field(PREC, "4")
+   field(SCAN, "I/O Intr")
+}

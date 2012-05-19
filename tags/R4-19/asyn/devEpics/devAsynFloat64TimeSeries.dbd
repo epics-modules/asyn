@@ -1,0 +1,1 @@
+device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimeSeries")

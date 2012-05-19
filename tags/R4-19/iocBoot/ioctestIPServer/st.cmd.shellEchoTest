@@ -1,0 +1,37 @@
+# This script tests using the shell command asynOctetWriteRead to write/read to ipEchoServer
+
+< envPaths
+
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+
+#The following command starts a server on port 5001
+drvAsynIPServerPortConfigure("P5001","localhost:5001",2,0,0,0)
+drvAsynIPServerPortConfigure("P5002","localhost:5002",1,0,0,0)
+
+#asynSetTraceMask("P5001",0,0xff)
+#asynSetTraceIOMask("P5001",0,0x2)
+
+dbLoadRecords("../../db/testIPServer.db", "P=testIPServer:")
+
+iocInit()
+
+ipEchoServer("P5001", -1)
+seq("ipSNCServer", "P=testIPServer:, PORT=P5002")
+
+# Wait till the servers start running
+epicsThreadSleep(1)
+
+# Create a client port that connects to the echo server
+drvAsynIPPortConfigure("client5001","localhost:5001",0,0,0)
+
+#asynSetTraceMask("client5001",0,255)
+#asynSetTraceIOMask("client5001",0,0x2)
+asynOctetSetOutputEos("client5001",0,"\r\n")
+asynOctetSetInputEos("client5001",0,"\r\n")
+
+# Connect to that port from iocsh
+asynOctetConnect("test1","client5001")
+
+# Write to the port, should get echo back
+asynOctetWriteRead("test1","hello world")
