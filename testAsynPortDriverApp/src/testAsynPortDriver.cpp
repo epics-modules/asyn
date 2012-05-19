@@ -357,7 +357,7 @@ void testAsynPortDriver::setVertGain()
     for (i=0; i<NUM_VERT_SELECTIONS; i++) {
         epicsSnprintf(voltsPerDivStrings_[i], MAX_ENUM_STRING_SIZE, "%.2f", allVoltsPerDivSelections[i] / gain);
         // The values are in mV
-        voltsPerDivValues_[i] = allVoltsPerDivSelections[i] / gain * 1000. + 0.5;
+        voltsPerDivValues_[i] = (int)(allVoltsPerDivSelections[i] / gain * 1000. + 0.5);
     }
     doCallbacksEnum(voltsPerDivStrings_, voltsPerDivValues_, voltsPerDivSeverities_, NUM_VERT_SELECTIONS, P_VoltsPerDivSelect, 0);
 }
