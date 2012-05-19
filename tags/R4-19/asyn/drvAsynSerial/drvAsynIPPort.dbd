@@ -1,3 +1,0 @@
-registrar(drvAsynIPPortRegisterCommands)
-registrar(drvAsynIPServerPortRegisterCommands)
-include "asyn.dbd"
