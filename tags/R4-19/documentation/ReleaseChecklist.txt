@@ -1,7 +1,0 @@
-Release checklist for asyn
-
-- Make sure to add the date and release number to asynDriver.html, RELEASE_NOTES.html and Doxyfile
-- Update the asyn version number in asynDriver.h
-- Do "svn status -u" at the top level to make sure everything is up to date and checked in
-- Make the SVN repository tag with "make_asyn_release RX-Y" from the devel directory
-- Make a tar file to send to Andrew with "make_asyn_tar_file RX-Y" from the devel directory
