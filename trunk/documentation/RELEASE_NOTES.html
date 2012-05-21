@@ -87,6 +87,10 @@
   <p>
     Removed the newline terminator from all messages in pasynUser-&gt;errorMessage.
     This formatting does not belong in the error message. Thanks to Lewis Muir for this.</p>
+  <p>
+    drvAsynIPServerPort. Added call to epicsSocketEnableAddressReuseDuringTimeWaitState
+    which fixes problems when the IOC is restarted and the port is still in TIME_WAIT
+    state. Thanks to Lewis Muir for this.</p>
   <div style="text-align: center">
     <h2>
       Release 4-18</h2>
