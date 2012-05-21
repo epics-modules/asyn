@@ -403,16 +403,18 @@ int drvAsynIPServerPortConfigure(const char *portName,
         return -1;
     }
 
-     serverAddr.sin_family = AF_INET;
-     serverAddr.sin_addr.s_addr = INADDR_ANY;
-     serverAddr.sin_port = htons(tty->portNumber);
-     if (bind(tty->fd, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0)
-     {
-         printf("Error in binding %s: %s\n", tty->serverInfo, strerror(errno));
+    epicsSocketEnableAddressReuseDuringTimeWaitState(tty->fd);
+
+    serverAddr.sin_family = AF_INET;
+    serverAddr.sin_addr.s_addr = INADDR_ANY;
+    serverAddr.sin_port = htons(tty->portNumber);
+    if (bind(tty->fd, (struct sockaddr *) &serverAddr, sizeof(serverAddr)) < 0)
+    {
+        printf("Error in binding %s: %s\n", tty->serverInfo, strerror(errno));
         epicsSocketDestroy(tty->fd);
         tty->fd = -1;
         return -1;
-     }
+    }
 
     /*
      * Enable listening on this port
