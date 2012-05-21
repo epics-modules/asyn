@@ -1,0 +1,19 @@
+record(calc,"$(P)$(R)_P$(PORT)_A$(A)_calc") {
+    field(DESC, "Counter")
+    field(SCAN,"Passive")
+    field(CALC, "(A<99)?(A+1):0")
+    field(INPA,"$(P)$(R)_P$(PORT)_A$(A)_calc NPP NMS")
+    field(FLNK,"$(P)$(R)_P$(PORT)_A$(A)_so")
+    field(EGU, "Counts")
+    field(HOPR, "10")
+    field(FLNK,"$(P)$(R)_P$(PORT)_A$(A)_so")
+}
+record(stringout,"$(P)$(R)_P$(PORT)_A$(A)_so") {
+    field(DOL,"$(P)$(R)_P$(PORT)_A$(A)_calc NPP NMS")
+    field(OMSL,"closed_loop")
+    field(FLNK,"$(P)$(R)_P$(PORT)_A$(A)_si")
+}
+record(stringin,"$(P)$(R)_P$(PORT)_A$(A)_si") {
+    field(DTYP,"asynOctetWriteRead")
+    field(INP,"@asyn($(PORT),$(A)) $(P)$(R)_P$(PORT)_A$(A)_so")
+}
