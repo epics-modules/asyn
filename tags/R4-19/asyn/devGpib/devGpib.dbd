@@ -1,0 +1,1 @@
+device(ai,GPIB_IO,devGpib,"GPIB init/report")
