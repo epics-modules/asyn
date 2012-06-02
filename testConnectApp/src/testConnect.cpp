@@ -98,7 +98,8 @@ void testConnect::pollerTask(void)
         status = pasynManager->isConnected(pasynUserIPPort_, &isConnected);
         if (status) {
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: error calling pasynManager->isConnected, status=%d\n", driverName, functionName, status);
+                "%s:%s: error calling pasynManager->isConnected, status=%d, error=%s\n", 
+                driverName, functionName, status, pasynUserIPPort_->errorMessage);
         }
         asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER,
             "%s:%s: isConnected = %d\n", driverName, functionName, isConnected);
@@ -108,7 +109,8 @@ void testConnect::pollerTask(void)
                                              1.0, &numWrite, &numRead, &eomReason);
         if (status) {
             asynPrint(pasynUserSelf, ASYN_TRACE_ERROR,
-                "%s:%s: error calling pasynOctetSyncIO->writeRead, status=%d\n", driverName, functionName, status);
+                "%s:%s: error calling pasynOctetSyncIO->writeRead, status=%d, error=%s\n", 
+                driverName, functionName, status, pasynUserIPPort_->errorMessage);
         }
         else {
             asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER,
