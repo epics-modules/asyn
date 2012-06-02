@@ -1,5 +1,5 @@
-dbLoadDatabase("../../dbd/testErrors.dbd")
-testErrors_registerRecordDeviceDriver(pdbbase)
+dbLoadDatabase("../../dbd/testConnect.dbd")
+testConnect_registerRecordDeviceDriver(pdbbase)
 
 # This is a bogus IP address that will never connect
 #drvAsynIPPortConfigure("IPPort", "164.54.160.220:20", 0, 0, 1);
