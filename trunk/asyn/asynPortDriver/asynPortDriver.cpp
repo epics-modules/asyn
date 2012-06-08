@@ -99,17 +99,15 @@ asynStatus asynPortDriver::createParam(const char *name, asynParamType type, int
 asynStatus asynPortDriver::createParam(int list, const char *name, asynParamType type, int *index)
 {
     asynStatus status;
-    int itemp;
     static const char *functionName = "createParam";
     
-    status = this->params[list]->findParam(name, &itemp);
+    status = this->params[list]->createParam(name, type, index);
     if (status == asynParamAlreadyExists) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error adding parameter %s to list %d, parameter already exists.\n",
             driverName, functionName, portName, name, list);
         return(asynError);
     }
-    status = this->params[list]->createParam(name, type, index);
     if (status == asynParamBadIndex) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error adding parameter %s to list %d, too many parameters\n",
