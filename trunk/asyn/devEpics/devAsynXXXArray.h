@@ -254,6 +254,7 @@ static void callbackWf(asynUser *pasynUser) \
         pPvt->pasynUser, pwf->bptr, pwf->nelm, &nread); \
     asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, \
               "%s %s::callbackWf\n", pwf->name, driverName); \
+    pwf->time = pasynUser->timestamp; \
     if (status == asynSuccess) { \
         pwf->udf=0; \
         pwf->nord = nread; \
@@ -284,6 +285,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     for (i=0; i<(int)len; i++) pData[i] = value[i]; \
     pPvt->gotValue = 1; \
     pPvt->nord = len; \
+    pwf->time = pasynUser->timestamp; \
     if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
