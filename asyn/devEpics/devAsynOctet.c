@@ -271,6 +271,7 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
     }
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
+    psi->time = pasynUser->timestamp;
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
@@ -290,6 +291,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
     pwf->udf = 0;
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
+    pwf->time = pasynUser->timestamp;
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
