@@ -1048,18 +1048,19 @@
     Code must allocate and free an asynUser by calling asynManager:createAsynUser (or
     asynManager:duplicateAsynUser) and asynManager:freeAsynUser.</p>
   <pre>typedef struct asynUser {
-    char *errorMessage;
-    int errorMessageSize;
+    char          *errorMessage;
+    int            errorMessageSize;
     /* timeout must be set by the user */
-    double       timeout;  /*Timeout for I/O operations*/
-    void         *userPvt;
-    void         *userData;
+    double         timeout;  /*Timeout for I/O operations*/
+    void          *userPvt;
+    void          *userData;
     /*The following is for user to/from driver communication*/
-    void         *drvUser;
-    /*The following is normally set by driver*/
-    int          reason;
+    void          *drvUser;
+    /*The following are normally set by driver*/
+    int            reason;
+    epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int          auxStatus; /*For auxillary status*/
+    int            auxStatus; /*For auxillary status*/
 }asynUser;</pre>
   <table border="1">
     <caption>
@@ -1140,6 +1141,12 @@
           to decide if the users callback should be called. Values of reason less than 0 are
           reserved for standard meanings. For example ASYN_REASON_SIGNAL is used to mean "out
           of band" request. The devGpib support uses this to report SRQs.</td>
+      </tr>
+      <tr>
+        <td>
+          timestamp</td>
+        <td>
+          Devices which provide their own time stamps use this field to provide the time value for records whose TSE field is set to "-2".</td>
       </tr>
       <tr>
         <td>
@@ -4119,6 +4126,14 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
       medm and edm will not change the enum widgets until the window is closed and reopened,
       but newer clients like CSS should dynamically change the enum widgets.</li>
   </ul>
+    <h2>Time stamps<br>
+    </h2>
+    <p> Beginning in asyn R4-20 support was added for asyn port drivers
+      to set the TIME field of input records. This is done by setting
+      the TSE field of the record to "-2" and setting the desired value
+      into the timestamp field of the pasynUser structure referred to in
+      the device read method or interrupt callback.<br>
+    </p>
   <h2>
     asynInt32 device support</h2>
   <p>
