@@ -1146,7 +1146,8 @@
         <td>
           timestamp</td>
         <td>
-          Devices which provide their own time stamps use this field to provide the time value for records whose TSE field is set to "-2".</td>
+          Devices which provide their own time stamps use this field to provide the time value
+          for records whose TSE field is set to "-2".</td>
       </tr>
       <tr>
         <td>
@@ -4126,14 +4127,15 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
       medm and edm will not change the enum widgets until the window is closed and reopened,
       but newer clients like CSS should dynamically change the enum widgets.</li>
   </ul>
-    <h2>Time stamps<br>
-    </h2>
-    <p> Beginning in asyn R4-20 support was added for asyn port drivers
-      to set the TIME field of input records. This is done by setting
-      the TSE field of the record to "-2" and setting the desired value
-      into the timestamp field of the pasynUser structure referred to in
-      the device read method or interrupt callback.<br>
-    </p>
+  <h2>
+    Time stamps
+  </h2>
+  <p>
+    Beginning in asyn R4-20 support was added for asyn port drivers to set the TIME
+    field of input records. This is done by setting the TSE field of the record to "-2"
+    and setting the desired value into the timestamp field of the pasynUser structure
+    referred to in the device read method or interrupt callback.
+  </p>
   <h2>
     asynInt32 device support</h2>
   <p>
