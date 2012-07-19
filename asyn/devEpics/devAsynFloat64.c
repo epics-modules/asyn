@@ -281,7 +281,6 @@ static void processCallbackOutput(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process val %f\n",pr->name,pPvt->result.value);
     } else {
-printf("========== set pPvt->result.status = %d\n", pPvt->result.status);
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
            "%s devAsynFloat64 pPvt->result.status=%d, process error %s\n",
            pr->name, pPvt->result.status, pasynUser->errorMessage);
@@ -484,7 +483,6 @@ static long processAo(aoRecord *pr)
         }
     }
     if(pPvt->result.status != asynSuccess) {
-printf("++++ set record error state from %d\n");
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status,
                 WRITE_ALARM, &pPvt->alarmStat, INVALID_ALARM, &pPvt->alarmSevr);
         recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
