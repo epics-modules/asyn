@@ -12,17 +12,26 @@
   </div>
   <hr />
   <div style="text-align: center">
-  <h2>
-    Release 4-20</h2>
-  <h2>
-    June XXX, 2012</h2>
+    <h2>
+      Release 4-20</h2>
+    <h2>
+      July XXX, 2012</h2>
   </div>
   <h3>
     devEpics</h3>
   <p>
-    Added support for setting the record timestamp from the driver, using a new field, pasynUser->timeStamp. 
-    The driver can set this field in read and callback operations.
+    Added support for setting the record timestamp from the driver, using a new field,
+    pasynUser->timeStamp. The driver can set this field in read and callback operations.
   </p>
+  <p>
+    Fixed a long-standing bug in devAsynXXXArray support for input waveform records
+    with SCAN=I/O Intr. The data were being copied to the record without using dbScanLock.
+    This meant that the data could change while the record was processing.</p>
+  <p>
+    Changed the "ring buffer overflow" messages from "ASYN_TRACE_ERROR" to "ASYN_TRACEIO_DEVICE",
+    so they do not appear by default. These messages are not really errors, but warnings
+    that record processing it not keeping up with the rate of driver callbacks for records
+    with SCAN=I/O Intr.</p>
   <div style="text-align: center">
     <h2>
       Release 4-19</h2>
