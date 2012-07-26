@@ -281,11 +281,13 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
         (char *)value, len*sizeof(EPICS_TYPE), \
         "%s %s::interruptCallbackInput\n", \
         pwf->name, driverName); \
+    dbScanLock((dbCommon *)pwf); \
     if (len > pwf->nelm) len = pwf->nelm; \
     for (i=0; i<(int)len; i++) pData[i] = value[i]; \
+    pwf->time = pasynUser->timestamp; \
+    dbScanUnlock((dbCommon *)pwf); \
     pPvt->gotValue = 1; \
     pPvt->nord = len; \
-    pwf->time = pasynUser->timestamp; \
     if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
