@@ -206,6 +206,7 @@ struct port {
 typedef struct lockPortPvt {
     epicsEventId  lockPortEvent;
     epicsMutexId  lockPortMutex;
+    unsigned int  lockPortCount;
 }lockPortPvt;
 
 #define interruptNodeToPvt(pinterruptNode) \
@@ -1641,9 +1642,16 @@ static asynStatus lockPort(asynUser *pasynUser)
                 pport->portName, plockPortPvt);
             plockPortPvt->lockPortEvent = epicsEventMustCreate(epicsEventEmpty);
             plockPortPvt->lockPortMutex = epicsMutexMustCreate();
+            plockPortPvt->lockPortCount = 0;
             epicsThreadPrivateSet(pport->lockPortId, plockPortPvt);
             asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort created lockPortPvt=%p, event=%p, mutex=%p\n", 
                 pport->portName, plockPortPvt, plockPortPvt->lockPortEvent, plockPortPvt->lockPortMutex);
+        }
+        /* If lockPort has been called recursively, we already have the lock. */
+        /* Thus, we just increase the counter and return. */
+        if (plockPortPvt->lockPortCount > 0) {
+            plockPortPvt->lockPortCount++;
+            return status;
         }
         pasynUserCopy = pasynManager->duplicateAsynUser(pasynUser, lockPortCallback, 0);
         if (!pasynUserCopy){
@@ -1672,6 +1680,8 @@ static asynStatus lockPort(asynUser *pasynUser)
         epicsEventMustWait(plockPortPvt->lockPortEvent);
         pasynManager->freeAsynUser(pasynUserCopy);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::lockPort got event from callback\n", pport->portName);
+        /* Remember that the port is locked by this thread. */
+        plockPortPvt->lockPortCount++;
     } else {
         /* Synchronous driver */
         epicsMutexMustLock(pport->synchronousLock);
@@ -1708,12 +1718,26 @@ static asynStatus unlockPort(asynUser *pasynUser)
                     "asynManager::unlockPort lockPort never called for this thread");
             return asynError;
         }
+        /* It is an error to call unlockPort() if the port is not locked. */
+        if (plockPortPvt->lockPortCount == 0) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                    "asynManager::unlockPort port is not locked by calling thread");
+            return asynError;
+        }
+        /* If the counter is greater than one, lockPort() has been called multiple times. */
+        /* Thus, we do not release the lock but just decrease the counter and return. */
+        if (plockPortPvt->lockPortCount > 1) {
+            plockPortPvt->lockPortCount--;
+            return status;
+        }
         epicsMutexUnlock(plockPortPvt->lockPortMutex);
         /* Wait for event from the port thread in the lockPortCallback function which signals it has freed mutex */
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::unlockPort waiting for event\n", pport->portName);
         epicsEventMustWait(plockPortPvt->lockPortEvent);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort unlock mutex %p complete.\n", 
             pport->portName, plockPortPvt->lockPortMutex);
+        /* Remember the port is not locked any longer by this thread. */
+        plockPortPvt->lockPortCount--;
     } else {
         /* Synchronous driver */
         epicsMutexUnlock(pport->synchronousLock);
