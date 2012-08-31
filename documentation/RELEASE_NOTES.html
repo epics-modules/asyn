@@ -39,6 +39,27 @@
     so they do not appear by default. These messages are not really errors, but warnings
     that record processing it not keeping up with the rate of driver callbacks for records
     with SCAN=I/O Intr.</p>
+  <h3>
+    asynPortDriver</h3>
+  <p>
+    Fixed a bug when adding a parameter that already existed. Thanks to Hinko Kocevar
+    for fixing this.</p>
+  <h3>
+    Documentation</h3>
+  <p>
+    Added new document "HowToDoSerial_StreamDevice.html".</p>
+  <h3>
+    Test programs</h3>
+  <p>
+    Added new test program, testConnectApp. It uses asynPortDriver, and has a polling
+    thread that sends a user-defined string to a device and reads the response. It can
+    be used to test the behavior when the device is disconnected and then reconnects,
+    etc.</p>
+  <h3>
+    Build system</h3>
+  <p>
+    Added a rule in asyn/Makefile to fix a problem that could cause parallel make to
+    fail.</p>
   <div style="text-align: center">
     <h2>
       Release 4-19</h2>
