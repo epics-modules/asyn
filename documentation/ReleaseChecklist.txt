@@ -1,5 +1,6 @@
 Release checklist for asyn
 
+- Do "svn diff [--summarize] -rXXX:HEAD" against the previous release (XXX) to make sure everything is in the release notes
 - Make sure to add the date and release number to asynDriver.html, RELEASE_NOTES.html and Doxyfile
 - Update the asyn version number in asynDriver.h
 - Do "svn status -u" at the top level to make sure everything is up to date and checked in
