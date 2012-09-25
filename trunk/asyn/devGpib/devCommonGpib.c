@@ -470,12 +470,21 @@ static void evFinish(gpibDpvt * pgpibDpvt,int failure)
             "%s no msg buffer\n",pev->name);
         failure = -1;
     } else {/* interpret msg with predefined format and write into val/rval */
-        char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "hu";
-        if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
-            pev->val = value;
-            pev->udf = FALSE;
-        } else { /* sscanf did not find or assign the parameter */
-            failure = -1;
+        if (sizeof pev->val == sizeof value) {
+            char *format = (pgpibCmd->format) ? (pgpibCmd->format) : "hu";
+            if (sscanf(pgpibDpvt->msg, format, &value) == 1) {
+                memcpy(&pev->val, &value, sizeof pev->val);
+                pev->udf = FALSE;
+            } else { /* sscanf did not find or assign the parameter */
+                failure = -1;
+            }
+        }
+        else {
+            if (sscanf(pgpibDpvt->msg, " %39s", pev->val) == 1) {
+                pev->udf = FALSE;
+            } else { /* sscanf did not find or assign the parameter */
+                failure = -1;
+            }
         }
     }
     if(failure==-1) recGblSetSevr(pev, READ_ALARM, INVALID_ALARM);
