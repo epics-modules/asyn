@@ -339,7 +339,12 @@ static long init_ai(int parm)
   <p>
     The actual DSETs are created by devGpib.h based on which DSET_xx definitions are
     defined. A #define must appear for each record type required. DSET_AI must be defined
-    because an init_ai routine must be implemented as described below.</p>
+    because an init_ai routine must be implemented as described below.
+    If you also define DSET_AIRAW the associated .dbd file  must specify different
+    DTYP strings for the DSET_AI and DSET_AIRAW device declarations.</p>
+  <p>
+    Likewise, if you define both DSET_AO and DSET_AORAW the associated .dbd file  must specify different
+    DTYP strings for the DSET_AO and DSET_AORAW device declarations.</p>
   <p>
     devCommonGpib provides device support for many standard record types. It is also
     possible to create custom support, but this is more difficult.</p>
