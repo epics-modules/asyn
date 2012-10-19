@@ -17,7 +17,9 @@
  *      A device support module must define one or more of the following:
  *
  *      DSET_AI
+ *      DSET_AIRAW
  *      DSET_AO
+ *      DSET_AORAW
  *      DSET_BI
  *      DSET_BO
  *      DSET_EV
@@ -51,6 +53,16 @@ static gDset DSET_AI = {
 };
 epicsExportAddress(dset,DSET_AI);
 
+#ifdef DSET_AIRAW
+static long dummySpecialLinconvAIRAW(struct aiRecord * pai, int after) { return 0; }
+static gDset DSET_AIRAW = {
+    6,
+    {0, init_ai, devGpib_initAi, 0, devGpib_readAi, dummySpecialLinconvAIRAW},
+    &devSupParms
+};
+epicsExportAddress(dset,DSET_AIRAW);
+#endif
+
 #ifdef DSET_AO
 static gDset DSET_AO = {
     6,
@@ -58,6 +70,16 @@ static gDset DSET_AO = {
     &devSupParms
 };
 epicsExportAddress(dset,DSET_AO);
+#endif
+
+#ifdef DSET_AORAW
+static long dummySpecialLinconvAORAW(struct aoRecord * pao, int after) { return 0; }
+static gDset DSET_AORAW = {
+    6,
+    {0, 0, devGpib_initAo, 0, devGpib_writeAo, dummySpecialLinconvAORAW},
+    &devSupParms
+};
+epicsExportAddress(dset,DSET_AORAW);
 #endif
 
 #ifdef DSET_BI
