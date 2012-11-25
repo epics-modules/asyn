@@ -403,13 +403,11 @@ getCallbackValue(devPvt *pPvt)
 
 static long initAi(aiRecord *pai)
 {
-    devPvt *pPvt = (devPvt *)pai->dpvt;
     asynStatus status;
 
     status = initCommon((dbCommon *)pai,&pai->inp,
         processCallbackInput,interruptCallbackInput);
     if(status != asynSuccess) return 0;
-    pPvt = pai->dpvt;
     return(0);
 }
 
