@@ -34,8 +34,12 @@
 #include "asynDriver.h"
 
 #define BOOL int
+#ifndef TRUE
 #define TRUE 1
+#endif
+#ifndef FALSE
 #define FALSE 0
+#endif
 #define ERROR_MESSAGE_SIZE 160
 #define NUMBER_QUEUE_PRIORITIES (asynQueuePriorityConnect + 1)
 #define DEFAULT_TRACE_TRUNCATE_SIZE 80
