@@ -60,11 +60,11 @@ struct niport {
     transferState_t nextTransferState;
     /*bytesRemaining and nextByte are used by interruptHandler*/
     int	        bytesRemainingCmd;
-    epicsUInt8  *nextByteCmd;
+    const char  *nextByteCmd;
     int	        bytesRemainingWrite;
-    epicsUInt8  *nextByteWrite;
+    const char  *nextByteWrite;
     int	        bytesRemainingRead;
-    epicsUInt8  *nextByteRead;
+    char        *nextByteRead;
     int         eomReason;
     int         eos; /* -1 means no end of string character*/
     asynStatus  status; /*status of ip transfer*/
@@ -469,11 +469,11 @@ static asynStatus writeCmd(niport *pniport,const char *buf, int cnt,
         return asynTimeout;
     }
     pniport->bytesRemainingCmd = cnt-1;
-    pniport->nextByteCmd = (epicsUInt8 *)(buf+1);
+    pniport->nextByteCmd = (buf+1);
     pniport->transferState = transferStateCmd;
     pniport->nextTransferState = nextState;
     pniport->status = asynSuccess;
-    writeRegister(pniport,CDOR,(epicsUInt8)buf[0]);
+    writeRegister(pniport,CDOR,buf[0]);
     waitTimeout(pniport,timeout);
     return pniport->status;
 }
@@ -481,7 +481,7 @@ static asynStatus writeCmd(niport *pniport,const char *buf, int cnt,
 static asynStatus writeAddr(niport *pniport,int talk, int listen,
     double timeout,transferState_t nextState)
 {
-    epicsUInt8 cmdbuf[4];
+    char cmdbuf[4];
     int        lenCmd = 0;
     int        primary,secondary;
 
@@ -509,12 +509,12 @@ static asynStatus writeAddr(niport *pniport,int talk, int listen,
 static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
     int *actual, int addr, double timeout)
 {
-    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
+    char cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
 
     *actual=0;
     pniport->bytesRemainingWrite = cnt;
-    pniport->nextByteWrite = (epicsUInt8 *)buf;
+    pniport->nextByteWrite = buf;
     pniport->status = asynSuccess;
     status = writeAddr(pniport,0,addr,timeout,transferStateWrite);
     if(status!=asynSuccess) return status;
@@ -528,7 +528,7 @@ static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
 asynStatus readGpib(niport *pniport,char *buf, int cnt, int *actual,
     int addr, double timeout,int *eomReason)
 {
-    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
+    char cmdbuf[2] = {IBUNT,IBUNL};
     asynStatus status;
     epicsUInt8 isr1 = pniport->isr1;
 
@@ -751,7 +751,7 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     int        addr = 0;
     int        actual;
     asynStatus status;
-    epicsUInt8 cmdbuf[2] = {IBUNT,IBUNL};
+    char cmdbuf[2] = {IBUNT,IBUNL};
 
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
@@ -851,7 +851,7 @@ static asynStatus gpibPortSerialPoll(void *pdrvPvt, int addr,
     double timeout,int *statusByte)
 {
     niport     *pniport = (niport *)pdrvPvt;
-    epicsUInt8 buffer[1];
+    char buffer[1];
 
     buffer[0] = 0;
     pniport->bytesRemainingRead = 1;
