@@ -133,7 +133,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsInt8 *pvalue,size_t nelem,dou
     ioPvt      *pPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -143,7 +143,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsInt8 *pvalue,size_t nelem,dou
                   "asynInt8ArraySyncIO wrote: %d\n",
                   *pvalue);
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
@@ -156,7 +156,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsInt8 *pvalue,size_t nelem,size
     asynStatus status, unlockStatus;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -165,7 +165,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsInt8 *pvalue,size_t nelem,size
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                   "asynInt8ArraySyncIO read: %d\n", *pvalue);
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
