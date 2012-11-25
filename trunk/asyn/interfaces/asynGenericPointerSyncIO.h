@@ -29,10 +29,13 @@ typedef struct asynGenericPointerSyncIO {
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,void *pvalue,double timeout);
     asynStatus (*read)(asynUser *pasynUser,void *pvalue,double timeout);
+    asynStatus (*writeRead)(asynUser *pasynUser,void *pwrite_buffer,void *pread_buffer,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
                        void *pvalue,double timeout,const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
                        void *pvalue,double timeout,const char *drvInfo);
+    asynStatus (*writeReadOnce)(const char *port, int addr,
+                       void *pwrite_buffer,void *pread_buffer,double timeout,const char *drvInfo);
 } asynGenericPointerSyncIO;
 epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;
 
