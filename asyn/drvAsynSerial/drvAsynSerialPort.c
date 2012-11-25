@@ -452,7 +452,7 @@ timeoutHandler(void *p)
     tcflush(tty->fd, TCOFLUSH);
 #endif
 #ifdef vxWorks
-    ioctl(tty->fd, FIOCANCEL, NULL);
+    ioctl(tty->fd, FIOCANCEL, 0);
     /*
      * Since it is possible, though unlikely, that we got here before the
      * slow system call actually started, we arrange to poke the thread
