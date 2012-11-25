@@ -1691,7 +1691,6 @@ static asynStatus lockPort(asynUser *pasynUser)
         epicsMutexMustLock(pport->synchronousLock);
     }
     if(pport->pasynLockPortNotify) {
-        asynStatus status;
         status = pport->pasynLockPortNotify->lock(
            pport->lockPortNotifyPvt,pasynUser);
     }
