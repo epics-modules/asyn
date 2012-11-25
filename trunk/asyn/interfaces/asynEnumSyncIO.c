@@ -135,7 +135,7 @@ static asynStatus writeOp(asynUser *pasynUser, char *strings[], int values[], in
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -147,7 +147,7 @@ static asynStatus writeOp(asynUser *pasynUser, char *strings[], int values[], in
                     "asynEnumSyncIO wrote: %d string=%s, value=%d severity=%d\n", i, strings[i], values[i], severities[i]);
         }
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
@@ -160,7 +160,7 @@ static asynStatus readOp(asynUser *pasynUser, char *strings[], int values[], int
     asynStatus status, unlockStatus;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -172,7 +172,7 @@ static asynStatus readOp(asynUser *pasynUser, char *strings[], int values[], int
                     "asynEnumSyncIO read: %d string=%s, value=%d, severity=%d\n", i, strings[i], values[i], severities[i]);
         }
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }

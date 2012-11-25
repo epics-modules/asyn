@@ -139,7 +139,7 @@ static asynStatus writeOp(asynUser *pasynUser,void *pvalue,double timeout)
     ioPvt      *pPvt = (ioPvt *)pasynUser->userPvt;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -149,7 +149,7 @@ static asynStatus writeOp(asynUser *pasynUser,void *pvalue,double timeout)
                   "asynGenericPointerSyncIO wrote: %p\n",
                   pvalue);
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
@@ -162,7 +162,7 @@ static asynStatus readOp(asynUser *pasynUser,void *pvalue,double timeout)
     asynStatus status, unlockStatus;
 
     pasynUser->timeout = timeout;
-    status = pasynManager->lockPort(pasynUser);
+    status = pasynManager->queueLockPort(pasynUser);
     if(status!=asynSuccess) {
         return status;
     }
@@ -171,7 +171,7 @@ static asynStatus readOp(asynUser *pasynUser,void *pvalue,double timeout)
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
                   "asynGenericPointerSyncIO read: %p\n", pvalue);
     }
-    unlockStatus = pasynManager->unlockPort(pasynUser);
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
@@ -187,7 +187,7 @@ static asynStatus writeReadOp(asynUser *pasynUser,
   ioPvt      *pPvt = (ioPvt *)pasynUser->userPvt;
 
   pasynUser->timeout = timeout;
-  status = pasynManager->lockPort( pasynUser );
+  status = pasynManager->queueLockPort( pasynUser );
   if( status != asynSuccess ) {
     return status;
   }
@@ -209,7 +209,7 @@ static asynStatus writeReadOp(asynUser *pasynUser,
   }
 
  bad:
-  unlockStatus = pasynManager->unlockPort(pasynUser);
+  unlockStatus = pasynManager->queueUnlockPort(pasynUser);
   if (unlockStatus != asynSuccess) {
     return unlockStatus;
   }
