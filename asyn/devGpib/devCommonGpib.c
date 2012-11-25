@@ -480,7 +480,7 @@ static void evFinish(gpibDpvt * pgpibDpvt,int failure)
             }
         }
         else {
-            if (sscanf(pgpibDpvt->msg, " %39s", pev->val) == 1) {
+            if (sscanf(pgpibDpvt->msg, " %39s", (char *)&pev->val) == 1) {
                 pev->udf = FALSE;
             } else { /* sscanf did not find or assign the parameter */
                 failure = -1;
