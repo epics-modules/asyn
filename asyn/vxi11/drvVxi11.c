@@ -561,7 +561,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     }
     while(TRUE) {
         stat = clnt_call(pvxiPort->rpcClient,
-            req, proc1, addr1, proc2, addr2, pvxiPort->vxiRpcTimeout);
+            req, proc1, addr1, proc2, addr2, rpcTimeout);
         if(timeout>=0.0 || stat!=RPC_TIMEDOUT) break;
     }
     if(stat!=RPC_SUCCESS) {
@@ -1326,7 +1326,6 @@ static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
     int      nWrite;
     int     addr;
     devLink *pdevLink;
-    Device_Link lid;
     char    addrBuffer[2];
     int     lenCmd = 0;
     int     primary,secondary;
@@ -1347,7 +1346,6 @@ static asynStatus vxiAddressedCmd(void *drvPvt,asynUser *pasynUser,
     if(!pdevLink) return asynError;
     if(!vxiIsPortConnected(pvxiPort,pasynUser)) return asynError;
     if(!pdevLink->connected) return -1;
-    lid = pdevLink->lid;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
         "%s %d vxiAddressedCmd %2.2x\n",pvxiPort->portName,addr,data);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
