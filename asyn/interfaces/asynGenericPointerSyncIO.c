@@ -42,17 +42,23 @@ static asynStatus connect(const char *port, int addr,
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeOp(asynUser *pasynUser,void *pvalue,double timeout);
 static asynStatus readOp(asynUser *pasynUser,void *pvalue,double timeout);
+static asynStatus writeReadOp( asynUser *pasynUser, void *pwrite_buffer,
+                               void *pread_buffer, double timeout );
 static asynStatus writeOpOnce(const char *port, int addr,
                      void *pvalue, double timeout, const char *drvInfo);
 static asynStatus readOpOnce(const char *port, int addr,
                      void *pvalue,double timeout, const char *drvInfo);
+static asynStatus writeReadOpOnce( const char *port, int addr,
+                     void *pwrite_buffer, void *pread_buffer, double timeout, const char *drvInfo );
 static asynGenericPointerSyncIO interface = {
     connect,
     disconnect,
     writeOp,
     readOp,
+    writeReadOp,
     writeOpOnce,
-    readOpOnce
+    readOpOnce,
+    writeReadOpOnce
 };
 epicsShareDef asynGenericPointerSyncIO *pasynGenericPointerSyncIO = &interface;
 
@@ -171,6 +177,44 @@ static asynStatus readOp(asynUser *pasynUser,void *pvalue,double timeout)
     }
     return status;
 }
+
+static asynStatus writeReadOp(asynUser *pasynUser,
+                              void *pwrite_buffer,
+                              void *pread_buffer,
+                              double timeout )
+{
+  asynStatus status, unlockStatus;
+  ioPvt      *pPvt = (ioPvt *)pasynUser->userPvt;
+
+  pasynUser->timeout = timeout;
+  status = pasynManager->lockPort( pasynUser );
+  if( status != asynSuccess ) {
+    return status;
+  }
+  status = pPvt->pasynGenericPointer->write( pPvt->pointerPvt, pasynUser, pwrite_buffer );
+  if( status != asynSuccess ) {
+    goto bad;
+  } else {
+    asynPrint( pasynUser, ASYN_TRACEIO_DEVICE,
+               "asynGenericPointerSyncIO wrote: %p\n",
+               pwrite_buffer );
+  }
+  status = pPvt->pasynGenericPointer->read( pPvt->pointerPvt, pasynUser, pread_buffer );
+  if ( status != asynSuccess ) {
+    goto bad;
+  } else {
+    asynPrint( pasynUser, ASYN_TRACEIO_DEVICE,
+               "asynGenericPointerSyncIO read: %p\n",
+               pread_buffer );
+  }
+
+ bad:
+  unlockStatus = pasynManager->unlockPort(pasynUser);
+  if (unlockStatus != asynSuccess) {
+    return unlockStatus;
+  }
+  return status;
+}
 
 static asynStatus writeOpOnce(const char *port, int addr,
     void *pvalue,double timeout,const char *drvInfo)
@@ -217,3 +261,27 @@ static asynStatus readOpOnce(const char *port, int addr,
     disconnect(pasynUser);
     return status;
 }
+
+static asynStatus writeReadOpOnce(const char *port, int addr,
+                   void *pwrite_buffer, void *pread_buffer, double timeout,const char *drvInfo)
+{
+    asynStatus status;
+    asynUser   *pasynUser;
+
+    status = connect(port,addr,&pasynUser,drvInfo);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+           "asynGenericPointerSyncIO connect failed %s\n",
+           pasynUser->errorMessage);
+        disconnect(pasynUser);
+        return status;
+    }
+    status = writeReadOp(pasynUser,pwrite_buffer,pread_buffer,timeout);
+    if(status!=asynSuccess) {
+       asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "asynGenericPointerSyncIO writeReadOp failed %s\n",pasynUser->errorMessage);
+    }
+    disconnect(pasynUser);
+    return status;
+}
+
