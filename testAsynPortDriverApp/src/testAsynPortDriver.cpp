@@ -156,7 +156,7 @@ void testAsynPortDriver::simTask(void)
         getDoubleParam(P_UpdateTime, &updateTime);
         getIntegerParam(P_Run, &run);
         if (run) epicsEventWaitWithTimeout(eventId_, updateTime);
-        else     epicsEventWait(eventId_);
+        else     (void) epicsEventWait(eventId_);
         /* run could have changed while we were waiting */
         getIntegerParam(P_Run, &run);
         if (!run) continue;
