@@ -246,7 +246,6 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
     asynOctet  *pasynOctet = poctetPvt->pasynOctet;
     double     savetimeout = pasynUser->timeout;
     char       buffer[100]; 
-    asynStatus status;
     size_t     nbytesTransfered;
 
 
@@ -256,7 +255,7 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
     pasynUser->timeout = .05;
     while(1) {
         nbytesTransfered = 0;
-        status = pasynOctet->read(poctetPvt->drvPvt,pasynUser,
+        pasynOctet->read(poctetPvt->drvPvt,pasynUser,
             buffer,sizeof(buffer),&nbytesTransfered,0);
         if(nbytesTransfered==0) break;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
