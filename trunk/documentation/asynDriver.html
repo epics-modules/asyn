@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-20</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-21</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">August 30, 2012</span></p>
+      <span style="font-weight: bold; font-size: 14pt">November XXX, 2012</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -460,6 +460,10 @@
     <span style="font-weight: bold">asynUInt32Digital</span> methods for devices that
     read/write arrays of digital values. This interface provides a mask to address individual
     bits within registers.</p>
+  <p>
+    <span style="font-weight: bold">asynGenericPointer</span> methods for devices that
+    read/write arbitrary structures, passed via a void* pointer.  The client and the server
+    of course need to agree on the structure type being pointed to.</p>
   <h3>
     asynManager</h3>
   <p>
@@ -3728,10 +3732,13 @@ typedef struct asynGenericPointerSyncIO {
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,void *pvalue,double timeout);
     asynStatus (*read)(asynUser *pasynUser,void *pvalue,double timeout);
+    asynStatus (*writeRead)(asynUser *pasynUser,void *pwrite_buffer,void *pread_buffer,double timeout);
     asynStatus (*writeOnce)(const char *port, int addr,
                        void *pvalue,double timeout,const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
                        void *pvalue,double timeout,const char *drvInfo);
+    asynStatus (*writeReadOnce)(const char *port, int addr,
+                       void *pwrite_buffer,void *pread_buffer,double timeout,const char *drvInfo);
 } asynGenericPointerSyncIO;
 epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
   <table border="1">
@@ -3766,6 +3773,13 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
       </tr>
       <tr>
         <td>
+          writeRead</td>
+        <td>
+          Calls pasynGenericPointer-&gt;write, then pasynGenericPointer-&gt;read.
+          Waits for the operations to complete or time out.</td>
+      </tr>
+      <tr>
+        <td>
           writeOnce</td>
         <td>
           This does a connect, write, and disconnect.</td>
@@ -3775,6 +3789,12 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
           readOnce</td>
         <td>
           This does a connect, read, and disconnect.</td>
+      </tr>
+      <tr>
+        <td>
+          writeReadOnce</td>
+        <td>
+          This does a connect, writeRead, and disconnect.</td>
       </tr>
     </tbody>
   </table>
