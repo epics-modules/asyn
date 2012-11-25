@@ -764,7 +764,6 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
     char portName[80];
     portInstance *pportInstance;
     deviceInstance *pdeviceInstance;
-    srqPvt *psrqPvt;
     asynStatus status;
    
     if(!pcommonGpibPvt) commonGpibPvtInit();
@@ -793,7 +792,6 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
         pdeviceInstance = (deviceInstance *)ellNext(&pdeviceInstance->node);
     }
     if(!pdeviceInstance) {
-        psrqPvt = &pdeviceInstance->srq;
         pdeviceInstance = (deviceInstance *)callocMustSucceed(
             1,sizeof(deviceInstance),"devSupportGpib");
         pdeviceInstance->pportInstance = pportInstance;
@@ -967,7 +965,6 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
     size_t nchars = 0;
-    asynStatus status;
 
     if(failure) goto done;
     if(cmdType&GPIBCVTIO) goto done;
@@ -976,7 +973,7 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
             "%s pgpibDpvt->msg is null\n",precord->name);
         nchars = 0; failure = -1; goto done;
     } else {
-        status = pasynOctet->read(asynOctetPvt,pasynUser,
+        pasynOctet->read(asynOctetPvt,pasynUser,
             pgpibDpvt->msg,pgpibCmd->msgLen,&nchars,0);
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibRead nchars %d\n",
@@ -1284,7 +1281,6 @@ static void waitTimeoutCallback(void *parm)
     gpibDpvt *pgpibDpvt;
     dbCommon *precord;
     asynUser *pasynUser;
-    devGpibPvt *pdevGpibPvt;
 
     epicsMutexMustLock(pportInstance->lock);
     if(psrqPvt->waitState!=srqWait) {
@@ -1297,7 +1293,6 @@ static void waitTimeoutCallback(void *parm)
     precord = pgpibDpvt->precord;
     pasynUser = pgpibDpvt->pasynUser;
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s waitTimeout\n", precord->name);
-    pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
     psrqPvt->waitState = srqWaitTimedOut;
     epicsMutexUnlock(pportInstance->lock);
     queueIt(psrqPvt->pgpibDpvt);
