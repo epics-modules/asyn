@@ -1133,7 +1133,7 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
               "%s:%s: function=%d, value=%s\n", 
               driverName, functionName, function, value);
     if (eomReason) *eomReason = ASYN_EOM_END;
-    *nActual = strlen(value);
+    *nActual = strlen(value)+1;
     return(status);
 }
 

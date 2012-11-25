@@ -509,7 +509,7 @@ asynStatus paramList::octetCallback(int command, int addr)
             (address == addr)) {
             pInterrupt->callback(pInterrupt->userPvt,
                                  pInterrupt->pasynUser,
-                                 value, strlen(value), ASYN_EOM_END);
+                                 value, strlen(value)+1, ASYN_EOM_END);
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
