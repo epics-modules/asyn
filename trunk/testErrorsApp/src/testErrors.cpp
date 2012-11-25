@@ -26,7 +26,7 @@ static const char *driverName="testErrors";
 
 #define CALLBACK_PERIOD 0.5
 
-static char *statusEnumStrings[MAX_STATUS_ENUMS] = {
+static const char *statusEnumStrings[MAX_STATUS_ENUMS] = {
     "asynSuccess",
     "asynTimeout",
     "asynOverFlow",
@@ -37,14 +37,14 @@ static char *statusEnumStrings[MAX_STATUS_ENUMS] = {
 static int statusEnumValues[MAX_STATUS_ENUMS]     = {0, 1, 2, 3, 4, 5};
 static int statusEnumSeverities[MAX_STATUS_ENUMS] = {0, 2, 1, 2, 3, 3};
 
-static char *allInt32EnumStrings[MAX_INT32_ENUMS] = {
+static const char *allInt32EnumStrings[MAX_INT32_ENUMS] = {
     "Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight",
     "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen"
 };
 static int allInt32EnumValues[MAX_INT32_ENUMS]     =  {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 static int allInt32EnumSeverities[MAX_INT32_ENUMS] =  {0, 0, 0, 0, 1, 1, 1, 1, 1, 2,  2,  2,  2,  3,  3,  3};
 
-static char *allUInt32EnumStrings[MAX_UINT32_ENUMS] =  {"Zero", "One", "Three"};
+static const char *allUInt32EnumStrings[MAX_UINT32_ENUMS] =  {"Zero", "One", "Three"};
 static int allUInt32EnumValues[MAX_UINT32_ENUMS]     = {0, 1, 3};
 static int allUInt32EnumSeverities[MAX_UINT32_ENUMS] = {0, 1, 1};
 
