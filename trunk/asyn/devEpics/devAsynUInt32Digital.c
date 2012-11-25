@@ -634,14 +634,12 @@ static long processBo(boRecord *pr)
 
 static long initLi(longinRecord *pr)
 {
-    devPvt *pPvt;
     asynStatus status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, NULL,
         0, NULL, NULL, NULL);
     if (status != asynSuccess) return 0;
-    pPvt = pr->dpvt;
     return 0;
 }
 

@@ -553,11 +553,9 @@ static void callbackSiRead(asynUser *pasynUser)
 static long initSoWrite(stringoutRecord *pso)
 {
     asynStatus status;
-    devPvt     *pdevPvt;
 
     status = initCommon((dbCommon *)pso,&pso->out,callbackSoWrite);
     if(status!=asynSuccess) return 0;
-    pdevPvt = (devPvt *)pso->dpvt;
     initDrvUser((devPvt *)pso->dpvt);
     return 0;
 }
@@ -566,9 +564,8 @@ static void callbackSoWrite(asynUser *pasynUser)
 {
     devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
     stringoutRecord *pso = (stringoutRecord *)pdevPvt->precord;
-    asynStatus      status;
 
-    status = writeIt(pasynUser,pso->val,strlen(pso->val));
+    writeIt(pasynUser,pso->val,strlen(pso->val));
     finish((dbCommon *)pso);
 }
 
@@ -669,12 +666,10 @@ static void callbackWfRead(asynUser *pasynUser)
 static long initWfWrite(waveformRecord *pwf)
 {
     asynStatus status;
-    devPvt     *pdevPvt;
 
     if(initWfCommon(pwf)) return 0;
     status = initCommon((dbCommon *)pwf,&pwf->inp,callbackWfWrite);
     if(status!=asynSuccess) return 0;
-    pdevPvt = (devPvt *)pwf->dpvt;
     initDrvUser((devPvt *)pwf->dpvt);
     return 0;
 }
@@ -683,8 +678,7 @@ static void callbackWfWrite(asynUser *pasynUser)
 {
     devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
     waveformRecord  *pwf = (waveformRecord *)pdevPvt->precord;
-    asynStatus      status;
 
-    status = writeIt(pasynUser,pwf->bptr,pwf->nord);
+    writeIt(pasynUser,pwf->bptr,pwf->nord);
     finish((dbCommon *)pwf);
 }
