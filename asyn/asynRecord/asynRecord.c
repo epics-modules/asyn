@@ -1901,7 +1901,6 @@ static void getEos(asynUser * pasynUser)
     char outputEosTranslate[EOS_SIZE];
     char inputEosTranslate[EOS_SIZE];
     int eosSize;
-    int ntranslate;
     asynStatus status;
     unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
@@ -1914,16 +1913,16 @@ static void getEos(asynUser * pasynUser)
     status = pasynRecPvt->pasynOctet->getInputEos(pasynRecPvt->asynOctetPvt, 
                                           pasynUser, eosBuff, EOS_SIZE, &eosSize);
     if ((status == asynSuccess) && (eosSize > 0)) {
-        ntranslate = epicsStrSnPrintEscaped(inputEosTranslate, 
-                                            sizeof(inputEosTranslate),
-                                            eosBuff, eosSize);
+        epicsStrSnPrintEscaped(inputEosTranslate, 
+                               sizeof(inputEosTranslate),
+                               eosBuff, eosSize);
     }
     status = pasynRecPvt->pasynOctet->getOutputEos(pasynRecPvt->asynOctetPvt, 
                                           pasynUser, eosBuff, EOS_SIZE, &eosSize);
     if ((status == asynSuccess) && (eosSize > 0)) {
-        ntranslate = epicsStrSnPrintEscaped(outputEosTranslate, 
-                                            sizeof(outputEosTranslate),
-                                            eosBuff, eosSize);
+        epicsStrSnPrintEscaped(outputEosTranslate, 
+                               sizeof(outputEosTranslate),
+                               eosBuff, eosSize);
     }
     post:
     if (strcmp(inputEosTranslate, pasynRec->ieos) != 0) {
