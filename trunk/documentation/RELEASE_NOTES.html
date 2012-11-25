@@ -15,7 +15,7 @@
     <h2>
       Release 4-21</h2>
     <h2>
-      September XXX, 2012</h2>
+      November XXX, 2012</h2>
   </div>
   <h3>
     devGpib</h3>
@@ -26,10 +26,31 @@
     Added support for DSET_AIRAW and DSET_AORAW definitions.</p>
   <h3>
     devEpics</h3>
+  <p>Fixed a bug in devAsynUInt32Digital.c, which was missing a call to 
+     epicsMutexLock in interruptCallbackInput. 
+     Thanks to Angus Gratton for this fix.</p>
   <p>
     Changed the "ring buffer overflow" messages from "ASYN_TRACE_ERROR" to "ASYN_TRACEIO_DEVICE",
     for devAsynFloat64. This was done for other device support in R4-20, but float64
     was overlooked.</p>
+  <h3>
+    Interfaces</h3>
+  <p>Added writeRead and writeReadOnce functions to the asynGenericPointer interface. 
+     Thanks to Florian Feldbauer for this addition.</p>
+  <h3>
+    asynPortDriver</h3>
+  <p>Changed the code so that the length of string parameters returned in readOctet and
+    octetCallback is now strlen(string)+1, rather than strlen(string).  The length
+    thus now includes the terminating nil.  This fixes problems with clients
+    that request long strings or subscribe to monitors with a length of 0, 
+    but don't check for a nil terminator.</p>
+  <h3>
+    asynPortDriver/exceptions</h3>
+  <p>Changes to allow compiling with the old vxWorks Tornado 2.0.2.1 compiler. 
+     Thanks to Dirk Zimoch for this fix.</p>
+  <h3>
+    Other</h3>
+  <p>Many minor changes to avoid compiler warnings. Thanks to Dirk Zimoch for these.</p>
   <div style="text-align: center">
     <h2>
       Release 4-20</h2>
