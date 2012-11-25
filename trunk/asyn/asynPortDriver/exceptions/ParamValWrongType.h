@@ -10,7 +10,8 @@
 
 #include <stdexcept>
 
-class ParamValWrongType: public std::logic_error {
+using std::logic_error;
+class ParamValWrongType: public logic_error {
 public:
 	ParamValWrongType(const std::string& description);
 };
