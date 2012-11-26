@@ -44,7 +44,7 @@ typedef struct cmdInfo {
 struct threadInfo {
     char          *portName;
     int           addr;
-    int           size;
+    size_t        size;
     char          *threadName;
     cmdInfo       *pcmdInfo;
     epicsEventId  work;
@@ -271,7 +271,7 @@ static int testInit(const char *port,int addr,
     asynUser   *pasynUser;
     asynStatus status;
     asynInterface *pasynInterface;
-    int        size;
+    size_t     size;
 
     pcmdInfo = (cmdInfo *)pasynManager->memMalloc(sizeof(cmdInfo));
     memset(pcmdInfo,0,sizeof(cmdInfo));
