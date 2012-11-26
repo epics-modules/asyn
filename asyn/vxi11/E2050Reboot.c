@@ -27,7 +27,7 @@
 int E2050Reboot(char * inetAddr)
 {
     struct sockaddr_in serverAddr;
-    int fd;
+    SOCKET fd;
     int status;
     int nbytes;
 
@@ -49,12 +49,12 @@ int E2050Reboot(char * inetAddr)
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(status) {
         printf("can't connect %s\n",strerror (errno));
-        close(fd);
+        epicsSocketDestroy(fd);
         return(-1);
     }
     nbytes = send(fd,"reboot\ny\n",9,0);
     if(nbytes!=9) printf("nbytes %d expected 9\n",nbytes);
-    close(fd);
+    epicsSocketDestroy(fd);
     epicsThreadSleep(20.0);
     return(0);
 }

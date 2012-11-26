@@ -28,7 +28,7 @@ char *defaultPassword = "E5810";
 int E5810Reboot(char * inetAddr,char *password)
 {
     struct sockaddr_in serverAddr;
-    int fd;
+    SOCKET fd;
     int status;
     int nbytes;
 
@@ -51,20 +51,20 @@ int E5810Reboot(char * inetAddr,char *password)
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(status) {
         printf("can't connect %s\n",strerror (errno));
-        close(fd);
+        epicsSocketDestroy(fd);
         return(-1);
     }
     nbytes = send(fd,"reboot\n",7,0);
     if(nbytes!=7) printf("nbytes %d expected 7\n",nbytes);
     epicsThreadSleep(1.0);
-    nbytes = send(fd,password,strlen(password),0);
+    nbytes = send(fd,password,(int)strlen(password),0);
     if(nbytes!=strlen(password)) 
         printf("nbytes %d expected %d\n",nbytes,(int)strlen(password));
     epicsThreadSleep(1.0);
     nbytes = send(fd,"\ny\n",3,0);
     if(nbytes!=3) printf("nbytes %d expected 3\n",nbytes);
     epicsThreadSleep(1.0);
-    close(fd);
+    epicsSocketDestroy(fd);
     epicsThreadSleep(20.0);
     return(0);
 }
