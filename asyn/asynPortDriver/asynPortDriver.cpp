@@ -568,11 +568,14 @@ asynStatus asynPortDriver::callParamCallbacks(int list, int addr)
 
 /** Calls paramList::report(fp, details) for each parameter list that the driver supports. 
   * \param[in] fp The file pointer on which report information will be written
-  * \param[in] details The level of report detail desired. */
+  * \param[in] details The level of report detail desired; always report details on address 0; >=2 report all addresses */
 void asynPortDriver::reportParams(FILE *fp, int details)
 {
     int i;
-    for (i=0; i<this->maxAddr; i++) {
+    int numAddr = 1;
+    
+    if (details >= 2) numAddr = this->maxAddr;
+    for (i=0; i<numAddr; i++) {
         fprintf(fp, "Parameter list %d\n", i);
         this->params[i]->report(fp, details);
     }
@@ -1789,10 +1792,10 @@ extern "C" {static void report(void *drvPvt, FILE *fp, int details)
 
 /** Reports on status of the driver
   * \param[in] fp The file pointer on which report information will be written
-  * \param[in] details The level of report detail desired
-  *
-  * If details > 1 then information is printed about the contents of the parameter library.
-  * If details > 2 then information is printed about all of the interrupt callbacks registered.
+  * \param[in] details The level of report detail desired;
+  * If details >= 1 then information is printed about the contents of the parameter library for address 0
+  * If details >= 2 then information is printed about the contents of the parameter library for all addresses
+  * If details >= 3 then information is printed about all of the interrupt callbacks registered.
   * Derived classes typically reimplement this function to print driver-specific details and then
   * call this base class function. */
 void asynPortDriver::report(FILE *fp, int details)
@@ -1800,10 +1803,10 @@ void asynPortDriver::report(FILE *fp, int details)
     asynStandardInterfaces *pInterfaces = &this->asynStdInterfaces;
 
     fprintf(fp, "Port: %s\n", this->portName);
-    if (details > 1) {
+    if (details >= 1) {
         this->reportParams(fp, details);
     }
-    if (details >= 2) {
+    if (details >= 3) {
         /* Report interrupt clients */
         reportInterrupt<asynInt32Interrupt>         (fp, pInterfaces->int32InterruptPvt,        "int32");
         reportInterrupt<asynUInt32DigitalInterrupt> (fp, pInterfaces->uInt32DigitalInterruptPvt,"uint32");
