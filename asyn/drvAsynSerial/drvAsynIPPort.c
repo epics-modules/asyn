@@ -94,7 +94,7 @@ typedef struct {
     char              *portName;
     int                socketType;
     int                flags;
-    int                fd;
+    SOCKET             fd;
     unsigned long      nRead;
     unsigned long      nWritten;
     int                haveAddress;
@@ -114,7 +114,7 @@ typedef struct {
 #define POLLIN  0x1
 #define POLLOUT 0x2
 struct pollfd {
-    int fd;
+    SOCKET fd;
     short events;
     short revents;
 };
@@ -144,7 +144,7 @@ static int poll(struct pollfd fds[], int nfds, int timeout)
 /*
  * OSI function to control blocking/non-blocking I/O
  */
-static int setNonBlock(int fd, int nonBlockFlag)
+static int setNonBlock(SOCKET fd, int nonBlockFlag)
 {
 #if defined(vxWorks)
     int flags;
@@ -243,7 +243,7 @@ static asynStatus
 connectIt(void *drvPvt, asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    int fd;
+    SOCKET fd;
     int i;
 
     /*
@@ -431,7 +431,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         poll(&pollfd, 1, writePollmsec);
 #endif
         for (;;) {
-            thisWrite = send(tty->fd, (char *)data, numchars, 0);
+            thisWrite = send(tty->fd, (char *)data, (int)numchars, 0);
             if (thisWrite >= 0) break;
             if (SOCKERRNO == SOCK_EWOULDBLOCK || SOCKERRNO == SOCK_EINTR) {
                 if (!haveStartTime) {
@@ -451,7 +451,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
             } else break;
         }
         if (thisWrite > 0) {
-            tty->nWritten += thisWrite;
+            tty->nWritten += (unsigned long)thisWrite;
             *nbytesTransfered += thisWrite;
             numchars -= thisWrite;
             if (numchars == 0)
@@ -534,11 +534,11 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         poll(&pollfd, 1, readPollmsec);
     }
 #endif
-    thisRead = recv(tty->fd, data, maxchars, 0);
+    thisRead = recv(tty->fd, data, (int)maxchars, 0);
     if (thisRead > 0) {
         asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
                    "%s read %d\n", tty->IPDeviceName, thisRead);
-        tty->nRead += thisRead;
+        tty->nRead += (unsigned long)thisRead;
     }
     if (thisRead < 0) {
         if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {

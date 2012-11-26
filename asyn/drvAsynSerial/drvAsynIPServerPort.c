@@ -61,7 +61,7 @@ typedef struct {
     int                priority;
     int                noAutoConnect;
     int                noProcessEos;
-    int                fd;
+    SOCKET             fd;
     asynInterface      common;
     asynInterface      int32;
     asynInterface      octet;
@@ -165,7 +165,7 @@ static void connectionListener(void *drvPvt)
     interruptNode *pnode;
     asynOctetInterrupt *pinterrupt;
     asynUser *pasynUser;
-    int len;
+    size_t len;
     asynStatus status;
     int i;
     portList_t *pl, *p;
@@ -181,7 +181,7 @@ static void connectionListener(void *drvPvt)
               "drvAsynIPServerPort: %s started listening for connections on %s\n", 
               tty->serverInfo);
     while (1) {
-        clientFd = epicsSocketAccept(tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
+        clientFd = epicsSocketAccept((int)tty->fd, (struct sockaddr *)&clientAddr, &clientLen);
         asynPrint(pasynUser, ASYN_TRACE_FLOW,
                   "drvAsynIPServerPort: new connection, socket=%d on %s\n", 
                   clientFd, tty->serverInfo);
