@@ -418,7 +418,7 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
             nt--;
         }
     }
-    if(nt<maxchars) data[nt] = 0;
+    if(nt<(int)maxchars) data[nt] = 0;
     if((nt==maxchars) && eomReason) *eomReason |= ASYN_EOM_CNT;
     *nbytesTransfered = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
