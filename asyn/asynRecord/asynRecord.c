@@ -1050,7 +1050,7 @@ static void monitorStatus(asynRecord * pasynRec)
         pasynRec->enbl = yesNo;
     else
         pasynRec->enbl = 0;
-    pasynRec->tsiz = pasynTrace->getTraceIOTruncateSize(pasynUser);
+    pasynRec->tsiz = (int)pasynTrace->getTraceIOTruncateSize(pasynUser);
     traceFd = pasynTrace->getTraceFile(pasynUser);
     POST_IF_NEW(tmsk);
     POST_IF_NEW(tb0);
@@ -1456,7 +1456,7 @@ static void performOctetIO(asynUser * pasynUser)
         inlen = pasynRec->imax;
     }
     /* Make sure nrrd is not more than inlen */
-    if(pasynRec->nrrd > inlen) pasynRec->nrrd = inlen;
+    if(pasynRec->nrrd > (int)inlen) pasynRec->nrrd = (int)inlen;
     if(pasynRec->nrrd != 0) 
         nread = pasynRec->nrrd;
     else
@@ -1490,7 +1490,7 @@ static void performOctetIO(asynUser * pasynUser)
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
                                  pasynUser, outptr, nwrite, &nbytesTransfered);
         }
-        pasynRec->nawt = nbytesTransfered;
+        pasynRec->nawt = (int)nbytesTransfered;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
            "%s: nwrite=%d, status=%d, nawt=%d\n", pasynRec->name, nwrite,
                     status, nbytesTransfered);
@@ -1553,14 +1553,14 @@ static void performOctetIO(asynUser * pasynUser)
             /* terminate response with \0 */
             inptr[sizeof(pasynRec->ainp) - 1] = '\0';
         } else if((pasynRec->ifmt == asynFMT_Hybrid) &&
-                   (nbytesTransfered >= pasynRec->imax)) {
+                   ((int)nbytesTransfered >= pasynRec->imax)) {
             reportError(pasynRec, status, "Overflow nread %d %s",
                 nbytesTransfered, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MINOR_ALARM);
             /* terminate response with \0 */
             inptr[pasynRec->imax - 1] = '\0';
         } else if((pasynRec->ifmt == asynFMT_Binary) &&
-                   (nbytesTransfered > pasynRec->imax)) {
+                   ((int)nbytesTransfered > pasynRec->imax)) {
             /* This should not be able to happen */
             reportError(pasynRec, status, "Overflow nread %d %s",
                 nbytesTransfered, pasynUser->errorMessage);
@@ -1570,7 +1570,7 @@ static void performOctetIO(asynUser * pasynUser)
             /* Add null at end of input.  This is safe because of tests above */
             inptr[nbytesTransfered] = '\0';
         }
-        pasynRec->nord = nbytesTransfered;    /* Number of bytes read */
+        pasynRec->nord = (int)nbytesTransfered;    /* Number of bytes read */
         /* Copy to tinp with dbTranslateEscape */
         ntranslate = epicsStrSnPrintEscaped(pasynRec->tinp, 
                                            sizeof(pasynRec->tinp),
