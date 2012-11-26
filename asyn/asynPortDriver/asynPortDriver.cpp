@@ -1123,7 +1123,7 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     /* We just read the current value of the parameter from the parameter library.
      * Those values are updated whenever anything could cause them to change */
-    status = (asynStatus)getStringParam(addr, function, maxChars, value);
+    status = (asynStatus)getStringParam(addr, function, (int)maxChars, value);
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%s", 
