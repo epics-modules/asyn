@@ -200,7 +200,7 @@ setEos(asynUser *pasynUser)
     default:     setFunc = NULL;                                 break;
     }
     if (setFunc) {
-        peosargs->status = (*setFunc)(peosargs->drvPvt, pasynUser, peosargs->eos, peosargs->eosLen);
+        peosargs->status = (*setFunc)(peosargs->drvPvt, pasynUser, peosargs->eos, (int)peosargs->eosLen);
     }
     else {
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -415,7 +415,7 @@ epicsShareFunc int
     fprintf(stdout,"eomReason 0x%x\n",eomReason);
     epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
     fprintf(stdout,"\n");
-    return(ninp);
+    return (int)ninp;
 }
 
 epicsShareFunc int
@@ -448,7 +448,7 @@ epicsShareFunc int
                  nout, len,pasynUser->errorMessage);
        return(-1);
     }
-    return(nout);
+    return (int)nout;
 }
 
 epicsShareFunc int
@@ -490,7 +490,7 @@ epicsShareFunc int
     fprintf(stdout,"eomReason 0x%x\n",eomReason);
     epicsStrPrintEscaped(stdout, pPvt->read_buffer, ninp);
     fprintf(stdout,"\n");
-    return(ninp);
+    return (int)ninp;
 }
 
 epicsShareFunc int
