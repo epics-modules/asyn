@@ -90,7 +90,7 @@ static int int32DriverInit(const char *dn,int low,int high)
     drvPvt    *pdrvPvt;
     char       *portName;
     asynStatus status;
-    int        nbytes;
+    size_t     nbytes;
     int        addr;
     asynInt32  *pasynInt32;
     asynFloat64 *pasynFloat64;

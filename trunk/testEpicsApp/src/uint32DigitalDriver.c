@@ -87,7 +87,7 @@ static int uint32DigitalDriverInit(const char *dn)
     drvPvt    *pdrvPvt;
     char       *portName;
     asynStatus status;
-    int        nbytes;
+    size_t     nbytes;
     int        addr;
     asynUInt32Digital *pasynUInt32Digital;
     asynFloat64       *pasynFloat64;
