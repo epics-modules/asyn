@@ -52,7 +52,7 @@ typedef struct devAsynWfPvt{ \
     void            *registrarPvt; \
     CALLBACK        callback; \
     int             busy; \
-    int             nord; \
+    epicsUInt32     nord; \
     char            *portName; \
     char            *userParam; \
     epicsMutexId    lock; \

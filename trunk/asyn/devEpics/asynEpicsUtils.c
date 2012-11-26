@@ -61,7 +61,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
 {
     struct vmeio *pvmeio;
     struct instio *pinstio;
-    int len;
+    size_t len;
     char *p;
     char *endp;
     char *pnext;
@@ -164,7 +164,7 @@ static asynStatus parseLinkMask(asynUser *pasynUser, DBLINK *plink,
                    char **port, int *addr, epicsUInt32 *mask,char **userParam)
 {
     struct instio *pinstio;
-    int len;
+    size_t len;
     char *p;
     char *endp;
     char *pnext;

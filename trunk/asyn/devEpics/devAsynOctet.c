@@ -260,7 +260,7 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
-    int            num;
+    size_t         num;
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
@@ -280,14 +280,14 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
-    unsigned        num;
+    size_t         num;
     char           *pbuf = (char *)pwf->bptr;
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
     memcpy(pbuf,data,num);
     if(num<pwf->nelm) pbuf[num] = 0;
-    pwf->nord = num;
+    pwf->nord = (epicsUInt32)num;
     pwf->udf = 0;
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
@@ -320,7 +320,7 @@ static void initDrvUser(devPvt *pdevPvt)
 
 static void initCmdBuffer(devPvt *pdevPvt)
 {
-    int       len;
+    size_t   len;
     dbCommon *precord = pdevPvt->precord;
 
     len = strlen(pdevPvt->userParam);
@@ -592,7 +592,7 @@ static void callbackWfCmdResponse(asynUser *pasynUser)
     status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
-        if(status==asynSuccess) pwf->nord = nBytesRead;
+        if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     }
     finish((dbCommon *)pwf);
 }
@@ -632,7 +632,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     status = writeIt(pasynUser,translate,strlen(translate));
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
-        if(status==asynSuccess) pwf->nord = nBytesRead;
+        if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     }
     finish((dbCommon *)pwf);
 }
@@ -659,7 +659,7 @@ static void callbackWfRead(asynUser *pasynUser)
     asynStatus     status;
 
     status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);
-    if(status==asynSuccess) pwf->nord = nBytesRead;
+    if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     finish((dbCommon *)pwf);
 }
 
