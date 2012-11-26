@@ -49,7 +49,7 @@ void simTask(void *drvPvt);
 testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    NUM_SCOPE_PARAMS,
+                    (int)NUM_SCOPE_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
