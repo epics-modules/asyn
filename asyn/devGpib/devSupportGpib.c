@@ -444,7 +444,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
     long ltmp;
     asynStatus status;
     size_t nread;
-    int count;
+    size_t count;
     char *endptr;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
@@ -461,7 +461,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         if (*pgpibCmd->eos == '\0')
             saveEosLen = 1;
         else
-            saveEosLen = strlen(pgpibCmd->eos);
+            saveEosLen = (int)strlen(pgpibCmd->eos);
         saveEos = pgpibCmd->eos;
     }
     else {
@@ -534,7 +534,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
                  "Arbitrary block program data number of bytes (%s) is not numeric",buf);
             return -1;
         }
-        if ((ltmp <= 0) || (ltmp >= bufSize)) {
+        if ((ltmp <= 0) || (ltmp >= (long)bufSize)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
               "Arbitrary block program data number of bytes (%lu) exceeds buffer space",ltmp);
             return -1;
@@ -577,7 +577,7 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
             return -1;
         }
     }
-    pgpibDpvt->msgInputLen = buf - pgpibDpvt->msg;
+    pgpibDpvt->msgInputLen = (int)(buf - pgpibDpvt->msg);
     if (pgpibDpvt->msgInputLen < pgpibCmd->msgLen)
         *buf = '\0'; /* Add a hidden trailing NUL as a professional courtesy */
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt->msg,pgpibDpvt->msgInputLen,
@@ -596,7 +596,7 @@ static int setEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
     int eosLen;
 
     if(!pgpibCmd->eos) return 0;
-    eosLen = strlen(pgpibCmd->eos);
+    eosLen = (int)strlen(pgpibCmd->eos);
     if(eosLen==0) eosLen = 1;
     status = pasynOctet->getInputEos(drvPvt,pasynUser,
         pdeviceInstance->saveEos,sizeof(pdeviceInstance->saveEos),
@@ -718,7 +718,7 @@ static portInstance *createPortInstance(
     asynInterface *pasynInterface;
     int           portNameSize;
 
-    portNameSize = strlen(portName) + 1;
+    portNameSize = (int)strlen(portName) + 1;
     pportInstance = (portInstance *)callocMustSucceed(
         1,sizeof(portInstance) + portNameSize,"devSupportGpib");
     ellInit(&pportInstance->deviceInstanceList);
@@ -897,7 +897,7 @@ static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
             failure = -1; break;
         }
-        lenmsg = strlen(pgpibCmd->cmd);
+        lenmsg = (int)strlen(pgpibCmd->cmd);
         nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenmsg);
         if(nchars!=lenmsg) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -989,8 +989,8 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
         gpibErrorHappened(pgpibDpvt);
         failure = -1; goto done;
     }
-    pgpibDpvt->msgInputLen = nchars;
-    if(nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
+    pgpibDpvt->msgInputLen = (int)nchars;
+    if((int)nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
     if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
@@ -1039,7 +1039,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
                 "%s pgpibDpvt->msg is null\n",precord->name);
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            if(lenMessage==0) lenMessage = strlen(pgpibDpvt->msg);
+            if(lenMessage==0) lenMessage = (int)strlen(pgpibDpvt->msg);
             nchars = writeIt(pgpibDpvt,pgpibDpvt->msg,lenMessage);
         }
         break;
@@ -1049,7 +1049,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
                 "%s pgpibCmd->cmd is null\n",precord->name);
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            if(lenMessage==0) lenMessage = strlen(pgpibCmd->cmd);
+            if(lenMessage==0) lenMessage = (int)strlen(pgpibCmd->cmd);
             nchars = writeIt(pgpibDpvt,pgpibCmd->cmd,lenMessage);
         }
         break;
@@ -1064,7 +1064,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
                 "%s pgpibCmd->cmd is null\n",precord->name);
             recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
         } else {
-            if(lenMessage==0) lenMessage = strlen(pgpibCmd->cmd);
+            if(lenMessage==0) lenMessage = (int)strlen(pgpibCmd->cmd);
             nchars = pasynGpib->addressedCmd(
                 asynGpibPvt,pgpibDpvt->pasynUser,
                 pgpibCmd->cmd,lenMessage);
@@ -1083,7 +1083,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         efasto = pgpibCmd->P3[pgpibDpvt->efastVal];
         if (pgpibCmd->cmd != NULL) {
             if(pgpibDpvt->msg
-            && (pgpibCmd->msgLen > (strlen(efasto)+strlen(pgpibCmd->cmd)))) {
+            && (pgpibCmd->msgLen > (int)(strlen(efasto)+strlen(pgpibCmd->cmd)))) {
                 sprintf(pgpibDpvt->msg, "%s%s", pgpibCmd->cmd, efasto);
             } else {
                 recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
@@ -1095,7 +1095,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         } else {
             msg = efasto;
         }
-        lenMessage = msg ? strlen(msg) : 0;
+        lenMessage = msg ? (int)strlen(msg) : 0;
         if(lenMessage>0) {
             nchars = writeIt(pgpibDpvt,msg,lenMessage);
         } else {
@@ -1379,7 +1379,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
     dbCommon *precord = pgpibDpvt->precord;
     asynOctet *pasynOctet = pgpibDpvt->pasynOctet;
     void *asynOctetPvt = pgpibDpvt->asynOctetPvt;
-    int respond2Writes = pgpibDpvt->pdevGpibParmBlock->respond2Writes;
+    int respond2Writes = (int)pgpibDpvt->pdevGpibParmBlock->respond2Writes;
     asynStatus status;
     size_t nchars;
 
@@ -1405,7 +1405,7 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
         }
         restoreEos(pgpibDpvt,pgpibCmd);
     }
-    return nchars;
+    return (int)nchars;
 }
 
 static void gpibErrorHappened(gpibDpvt *pgpibDpvt)
