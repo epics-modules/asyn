@@ -53,7 +53,7 @@ static int testManagerDriverInit(const char *dn, int canBlock,
     testManagerPvt    *ptestManagerPvt;
     char       *portName;
     asynStatus status;
-    int        nbytes;
+    size_t     nbytes;
     int        attributes;
 
     nbytes = sizeof(testManagerPvt) + strlen(dn) + 1;
