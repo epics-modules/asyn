@@ -18,39 +18,61 @@
       November XXX, 2012</h2>
   </div>
   <h3>
+    asynDriver</h3>
+  <p>
+    Restored the original versions of pasynManager->lockPort and unlockPort that were
+    used in asyn prior to R4-14. These versions just call epicsMutexLock and epicsMutexUnlock.
+    In R4-14 these versions were replaced with versions that queued requests to lock
+    the port. The R4-14 versions fixed a problem with the interfaces/asynXXXSyncIO functions,
+    but it has become clear that the original versions are useful in some circumstances.
+    The change was done as follows:</p>
+  <ul>
+    <li>The lockPort and unlockPort functions in R4-20 were renamed to pasynManager->queueLockPort
+      and queueUnlockPort.</li>
+    <li>The interfaces/asynXXXSyncIO functions were all changed to call the queueLockPort
+      and queueUnlockPort, so they function identically to how they have since R4-14.</li>
+    <li>The versions of lockPort and unlockPort that existed prior to R4-14 were restored
+      to pasynManager.</li>
+  </ul>
+  <h3>
     devGpib</h3>
   <p>
-    Changed event code readback to support the original 'short' VAL
-      field and the new 'string' VAL field.</p>
+    Changed event code readback to support both the original 'short' VAL field (EPICS
+    3.14 and earlier) and the new 'string' VAL field (EPICS 3.15 and later).</p>
   <p>
     Added support for DSET_AIRAW and DSET_AORAW definitions.</p>
   <h3>
     devEpics</h3>
-  <p>Fixed a bug in devAsynUInt32Digital.c, which was missing a call to 
-     epicsMutexLock in interruptCallbackInput. 
-     Thanks to Angus Gratton for this fix.</p>
+  <p>
+    Fixed a bug in devAsynUInt32Digital.c, which was missing a call to epicsMutexLock
+    in interruptCallbackInput. Thanks to Angus Gratton for this fix.</p>
   <p>
     Changed the "ring buffer overflow" messages from "ASYN_TRACE_ERROR" to "ASYN_TRACEIO_DEVICE",
     for devAsynFloat64. This was done for other device support in R4-20, but float64
     was overlooked.</p>
   <h3>
     Interfaces</h3>
-  <p>Added writeRead and writeReadOnce functions to the asynGenericPointer interface. 
-     Thanks to Florian Feldbauer for this addition.</p>
+  <p>
+    Added writeRead and writeReadOnce functions to the asynGenericPointer interface.
+    Thanks to Florian Feldbauer for this addition.</p>
   <h3>
     asynPortDriver</h3>
-  <p>Changed the code so that the length of string parameters returned in readOctet and
-    octetCallback is now strlen(string)+1, rather than strlen(string).  The length
-    thus now includes the terminating nil.  This fixes problems with clients
-    that request long strings or subscribe to monitors with a length of 0, 
-    but don't check for a nil terminator.</p>
+  <p>
+    Changed the code so that the length of string parameters returned in readOctet and
+    octetCallback is now strlen(string)+1, rather than strlen(string). The length thus
+    now includes the terminating nil. This fixes problems with clients that request
+    long strings or subscribe to monitors with a length of 0, but don't check for a
+    nil terminator.</p>
   <h3>
     asynPortDriver/exceptions</h3>
-  <p>Changes to allow compiling with the old vxWorks Tornado 2.0.2.1 compiler. 
-     Thanks to Dirk Zimoch for this fix.</p>
+  <p>
+    Changes to allow compiling with the old vxWorks Tornado 2.0.2.1 compiler. Thanks
+    to Dirk Zimoch for this fix.</p>
   <h3>
     Other</h3>
-  <p>Many minor changes to avoid compiler warnings. Thanks to Dirk Zimoch for these.</p>
+  <p>
+    Many minor changes to avoid compiler warnings on Linux, vxWorks, and WIN32. Thanks
+    to Dirk Zimoch for many of these.</p>
   <div style="text-align: center">
     <h2>
       Release 4-20</h2>
