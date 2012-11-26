@@ -201,7 +201,7 @@ static const iocshFuncDef asynInterposeFlushConfigFuncDef =
     {"asynInterposeFlushConfig", 3, asynInterposeFlushConfigArgs};
 static void asynInterposeFlushConfigCallFunc(const iocshArgBuf *args)
 {
-    asynInterposeFlushConfig(args[0].sval,args[1].ival,args[2].dval);
+    asynInterposeFlushConfig(args[0].sval,args[1].ival,(int)args[2].dval);
 }
 
 static void asynInterposeFlushRegister(void)

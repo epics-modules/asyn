@@ -185,7 +185,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
     size_t thisRead;
-    int nRead = 0;
+    size_t nRead = 0;
     int eom = 0;
     asynStatus status = asynSuccess;
     if(!peosPvt->processEosIn) {
@@ -242,7 +242,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
-        peosPvt->inBufHead = thisRead;
+        peosPvt->inBufHead = (int)thisRead;
     }
     if(nRead<maxchars) *data = 0; /*null terminate string if room*/
     if (eomReason) *eomReason = eom;
