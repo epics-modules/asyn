@@ -1846,7 +1846,8 @@ static asynStatus registerPort(const char *portName,
     unsigned int priority,unsigned int stackSize)
 {
     port    *pport = locatePort(portName);
-    int     i,len;
+    int     i;
+    size_t  len;
 
     if(pport) {
         printf("asynCommon:registerDriver %s already registered\n",portName);
@@ -2536,7 +2537,7 @@ static int traceVprint(asynUser *pasynUser,int reason, const char *pformat, va_l
     if(!(reason&ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
     fp = getTraceFile(pasynUser);
-    nout += printTime(fp);
+    nout += (int)printTime(fp);
     if(fp) {
         nout = vfprintf(fp,pformat,pvar);
     } else {
@@ -2575,7 +2576,7 @@ static int traceVprintIO(asynUser *pasynUser,int reason,
     if(!(reason&traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
     fp = getTraceFile(pasynUser);
-    nout += printTime(fp);
+    nout += (int)printTime(fp);
     if(fp) {
         nout = vfprintf(fp,pformat,pvar);
     } else {
