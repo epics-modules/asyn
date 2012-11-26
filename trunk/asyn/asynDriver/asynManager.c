@@ -919,14 +919,18 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     port *pport = pprintPortArgs->pport;
     FILE *fp = pprintPortArgs->fp;
     int  details = pprintPortArgs->details;
+    int  showDevices = 1;
     int           i;
-    dpCommon      *pdpc;
-    device        *pdevice;
+    dpCommon *pdpc;
     interfaceNode *pinterfaceNode;
     asynCommon    *pasynCommon = 0;
     void          *drvPvt = 0;
     int           nQueued = 0;
 
+    if (details < 0) {
+        showDevices = 0;
+        details = -details;
+    }
     for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++) 
         nQueued += ellCount(&pport->queueList[i]);
     pdpc = &pport->dpc;
@@ -966,31 +970,33 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
                              "interposeInterfaceList");
         reportPrintInterfaceList(fp,&pport->interfaceList,"interfaceList");
     }
-    pdevice = (device *)ellFirst(&pport->deviceList);
-    while(pdevice) {
-        pdpc = &pdevice->dpc;
-        if(!pdpc->connected || details>=1) {
-            fprintf(fp,"    addr %d",pdevice->addr);
-            fprintf(fp," autoConnect %s enabled %s "
-                "connected %s exceptionActive %s\n",
-                (pdpc->autoConnect ? "Yes" : "No"),
-                (pdpc->enabled ? "Yes" : "No"),
-                (pdpc->connected ? "Yes" : "No"),
-                (pdpc->exceptionActive ? "Yes" : "No"));
+    if (showDevices) {
+        device   *pdevice = (device *)ellFirst(&pport->deviceList);
+        while(pdevice) {
+            pdpc = &pdevice->dpc;
+            if(!pdpc->connected || details>=1) {
+                fprintf(fp,"    addr %d",pdevice->addr);
+                fprintf(fp," autoConnect %s enabled %s "
+                    "connected %s exceptionActive %s\n",
+                    (pdpc->autoConnect ? "Yes" : "No"),
+                    (pdpc->enabled ? "Yes" : "No"),
+                    (pdpc->connected ? "Yes" : "No"),
+                    (pdpc->exceptionActive ? "Yes" : "No"));
+            }
+            if(details>=1) {
+                fprintf(fp,"    exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
+                    (pdpc->exceptionActive ? "Yes" : "No"),
+                    ellCount(&pdpc->exceptionUserList),
+                    ellCount(&pdpc->exceptionNotifyList));
+                fprintf(fp,"    blocked %s\n",
+                    (pdpc->pblockProcessHolder ? "Yes" : "No"));
+            }
+            if(details>=2) {
+                reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
+                                     "interposeInterfaceList");
+            }
+            pdevice = (device *)ellNext(&pdevice->node);
         }
-        if(details>=1) {
-            fprintf(fp,"    exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
-                (pdpc->exceptionActive ? "Yes" : "No"),
-                ellCount(&pdpc->exceptionUserList),
-                ellCount(&pdpc->exceptionNotifyList));
-            fprintf(fp,"    blocked %s\n",
-                (pdpc->pblockProcessHolder ? "Yes" : "No"));
-        }
-        if(details>=2) {
-            reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
-                                 "interposeInterfaceList");
-        }
-        pdevice = (device *)ellNext(&pdevice->node);
     }
     pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
     while(pinterfaceNode) {
@@ -1006,10 +1012,10 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
         pasynCommon->report(drvPvt,fp,details);
     }
 #ifdef CYGWIN32
-/* This is a (hopefully) temporary fix for a problem with POSIX threads on Cygwin.
- * If a thread is very short-lived, which this report thread will be if the amount of
- * output is small, then it crashes when it exits.  The workaround is a short delay.
- * This should should be fixed in base/src/osi/os/posix/osdThread.c */
+    /* This is a (hopefully) temporary fix for a problem with POSIX threads on Cygwin.
+     * If a thread is very short-lived, which this report thread will be if the amount of
+     * output is small, then it crashes when it exits.  The workaround is a short delay.
+     * This should should be fixed in base/src/osi/os/posix/osdThread.c */
     epicsThreadSleep(.001);
 #endif
     epicsEventSignal(done);
