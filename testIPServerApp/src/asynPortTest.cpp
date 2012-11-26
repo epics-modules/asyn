@@ -183,7 +183,7 @@ asynStatus asynPortTest::writeOctet(asynUser *pasynUser, const char *value,
 asynPortTest::asynPortTest(const char *portName, const char *echoPortName) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    NUM_PARAMS,
+                    (int)NUM_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynOctetMask,  /* Interrupt mask */
                     ASYN_CANBLOCK, /* asynFlags.  This driver blocks and it is not multi-device*/
