@@ -32,7 +32,7 @@ typedef struct devAsynWfPvt{ \
     epicsAlarmCondition alarmStat; \
     epicsAlarmSeverity alarmSevr; \
     int             gotValue; /*For interruptCallbackInput */ \
-    int             nord; \
+    epicsUInt32     nord; \
     INTERRUPT       interruptCallback; \
     char            *portName; \
     char            *userParam; \
@@ -257,7 +257,7 @@ static void callbackWf(asynUser *pasynUser) \
     pwf->time = pasynUser->timestamp; \
     if (status == asynSuccess) { \
         pwf->udf=0; \
-        pwf->nord = nread; \
+        pwf->nord = (epicsUInt32)nread; \
     } else { \
         asynPrint(pasynUser, ASYN_TRACE_ERROR, \
               "%s %s::callbackWf read error %s\n", \
@@ -287,7 +287,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     pwf->time = pasynUser->timestamp; \
     dbScanUnlock((dbCommon *)pwf); \
     pPvt->gotValue = 1; \
-    pPvt->nord = len; \
+    pPvt->nord = (epicsUInt32)len; \
     if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
