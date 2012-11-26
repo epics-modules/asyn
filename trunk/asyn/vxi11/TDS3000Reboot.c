@@ -24,14 +24,14 @@
 int TDS3000Reboot(char * inetAddr)
 {
     struct sockaddr_in serverAddr;
-    int fd;
+    SOCKET fd;
     int status;
     int nbytes;
     char *url;
     int urlLen;
 
     url = "GET /resetinst.cgi HTTP/1.0\n\n";
-    urlLen = strlen(url);
+    urlLen = (int)strlen(url);
     errno = 0;
     fd = epicsSocketCreate(PF_INET, SOCK_STREAM, 0);
     if(fd == -1) {
@@ -50,11 +50,11 @@ int TDS3000Reboot(char * inetAddr)
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
     if(status) {
         printf("can't connect %s\n",strerror (errno));
-        close(fd);
+        epicsSocketDestroy(fd);
         return(-1);
     }
     nbytes = send(fd,url,urlLen,0);
     if(nbytes!=urlLen) printf("nbytes %d expected %d\n",nbytes,urlLen);
-    close(fd);
+    epicsSocketDestroy(fd);
     return(0);
 }
