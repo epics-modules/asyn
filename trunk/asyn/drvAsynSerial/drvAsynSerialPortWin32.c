@@ -435,7 +435,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
-    int nleft = numchars;
+    int nleft = (int)numchars;
     int timerStarted = 0;
     BOOL ret;
     DWORD error;
@@ -459,7 +459,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         tty->writeTimeout = pasynUser->timeout;
     }
     tty->timeoutFlag = 0;
-    nleft = numchars;
+    nleft = (int)numchars;
     if (tty->writeTimeout > 0)
         {
         epicsTimerStartDelay(tty->timer, tty->writeTimeout);
@@ -586,7 +586,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         status = asynTimeout;
     *nbytesTransfered = nRead;
     /* If there is room add a null byte */
-    if (nRead < maxchars)
+    if (nRead < (int)maxchars)
         data[nRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
