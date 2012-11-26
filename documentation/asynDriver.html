@@ -112,10 +112,10 @@
     <li>asynManager controls access to a port
       <p>
         asynManager, a component of asynDriver, provides exclusive access to a driver via
-        calls to queueRequest or lockPort/unlockPort. Once device support has access, it
-        can make an arbitrary number of calls to the driver knowing that no other support
-        can call the driver. Device and driver support do not need to implement queues or
-        semaphores since asynManager does this for them.</p>
+        calls to queueRequest, lockPort/unlockPort, and queueLockPort/queueUnlockPort. Once
+        device support has access, it can make an arbitrary number of calls to the driver
+        knowing that no other support can call the driver. Device and driver support do
+        not need to implement queues or semaphores since asynManager does this for them.</p>
     </li>
     <li>asynTrace provides a general purpose diagnostic facility
       <p>
@@ -462,8 +462,8 @@
     bits within registers.</p>
   <p>
     <span style="font-weight: bold">asynGenericPointer</span> methods for devices that
-    read/write arbitrary structures, passed via a void* pointer.  The client and the server
-    of course need to agree on the structure type being pointed to.</p>
+    read/write arbitrary structures, passed via a void* pointer. The client and the
+    server of course need to agree on the structure type being pointed to.</p>
   <h3>
     asynManager</h3>
   <p>
@@ -505,8 +505,8 @@
     </li>
     <li>Queuing services
       <p>
-        Methods: queueRequest, cancelRequest, lockPort, unlockPort, blockProcessCallback,
-        unblockProcessCallback</p>
+        Methods: queueRequest, cancelRequest, lockPort, unlockPort, queueLockPort, queueUnlockPort,
+        blockProcessCallback, unblockProcessCallback</p>
       <p>
         queueRequest is a request to call the processCallback specified in the call to createAsynUser.
         Most interface methods must only be called from processCallback via a call to queueRequest
@@ -531,10 +531,12 @@
         communication with synchronous ports. A call to lockPort locks all addresses associated
         with a multi-address port. Prior to asyn R4-14 pasynManager-&gt;lockPort() immediately
         took the port mutex when it was available, rather than queueing a request to take
-        the mutex. As of asyn R4-14 lockPort queues a request to access the port and then
-        blocks until the queue request callback runs in the portThread. When the queue request
-        runs, the thread that called pasynManager-&gt;lockPort() executes, and the portThread
-        blocks, until pasynManager-&gt;unlockPort() is called.</p>
+        the mutex. From asyn R4-14 to R4-20 lockPort queues a request to access the port
+        and then blocks until the queue request callback runs in the portThread. When the
+        queue request runs, the thread that called pasynManager-&gt;lockPort() executes,
+        and the portThread blocks, until pasynManager-&gt;unlockPort() is called. In R4-21
+        the queued lockPort and unlockPort functions were renamed to queueLockPort and queueUnlockPort,
+        and the original lightweight lockPort and unlockPort functions were restored.</p>
       <p>
         blockProcessCallback is a request to prevent acccess to a device or port by other
         asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
@@ -703,12 +705,12 @@
     Protecting a Thread from Blocking</h3>
   <p>
     The methods asynManager:report and asynCommon:report can be called by any thread,
-    but the caller is blocked until the report finishes. lockPort, unlockPort and most
-    port methods may block. The other asynManager methods can be called by any thread
-    including portThread. None of these methods block.</p>
+    but the caller is blocked until the report finishes. lockPort, unlockPort, queueLockPort,
+    queueUnlockPort, and most port methods may block. The other asynManager methods
+    can be called by any thread including portThread. None of these methods block.</p>
   <p>
     Unless stated otherwise the methods for other interfaces must only be called by
-    processCallback or by calls between lockPort/unlockPort.</p>
+    processCallback or by calls between lockPort/unlockPort, or queueLockPort/queueUnlockPort.</p>
   <p>
     Interface methods registerInterruptUser and cancelInterruptUser must never block.
     The registerInterruptUser callback must not block because it could be called by
@@ -802,7 +804,7 @@
       <p>
         The processCallback passed to createAsynUser makes calls to the port interfaces.</p>
     </li>
-    <li>lockPort/unlockPort -
+    <li>lockPort/unlockPort, queueLockPort/queueUnlockPort -
       <p>
         The caller can make calls to the port interfaces while the lock is held. These calls
         and calls to the port may block and thus should NOT be used by code that should
@@ -819,8 +821,8 @@
     to a port must be made from processCallback. queueRequest does not block. If queueRequest
     is called for a port that can block the request is queued to a thread dedicated
     to the port. If queueRequest is called for a port does not block it just calls processCallback.
-    guarantee is valid only if low level drivers are only accessed by calling queueRequest
-    and/or lockPort/unlockPort</p>
+    guarantee is valid only if low level drivers are only accessed by calling queueRequest,
+    lockPort/unlockPort, and/or queueLockPort/queueUnlockPort</p>
   <p>
     The following examples are based on EPICS IOC record/device support.</p>
   <p>
@@ -1242,6 +1244,8 @@ typedef struct asynManager {
     asynStatus (*unblockProcessCallback)(asynUser *pasynUser, int allDevices);
     asynStatus (*lockPort)(asynUser *pasynUser);
     asynStatus (*unlockPort)(asynUser *pasynUser);
+    asynStatus (*queueLockPort)(asynUser *pasynUser);
+    asynStatus (*queueUnlockPort)(asynUser *pasynUser);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
@@ -1472,6 +1476,21 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           making calls to a port driver. The code can call lockPort, make an arbitrary number
           of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
           and/or lockPort will be delayed between the calls to lockPort and unlockPort.</td>
+      </tr>
+      <tr>
+        <td>
+          queueLockPort/queueUnlockPort</td>
+        <td>
+          Lock access to a port driver. This is used by code that is willing to block while
+          making calls to a port driver. The code can call lockPort, make an arbitrary number
+          of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
+          and/or lockPort will be delayed between the calls to lockPort and unlockPort. The
+          difference between lockPort and queueLockPort is that queueLockPort queues a request
+          to lock the port, using the same queues as queueRequest. This means that a thread
+          that repeatedly calls queueLockPort without sleeping between calls will still allow
+          other threads to access the port. This is not true with lockPort, which will take
+          a mutex as soon as the port is free, and can prevent other threads from accessing
+          the port at all.</td>
       </tr>
       <tr>
         <td>
@@ -3775,8 +3794,8 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
         <td>
           writeRead</td>
         <td>
-          Calls pasynGenericPointer-&gt;write, then pasynGenericPointer-&gt;read.
-          Waits for the operations to complete or time out.</td>
+          Calls pasynGenericPointer-&gt;write, then pasynGenericPointer-&gt;read. Waits for
+          the operations to complete or time out.</td>
       </tr>
       <tr>
         <td>
