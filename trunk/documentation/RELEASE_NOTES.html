@@ -34,6 +34,10 @@
     <li>The versions of lockPort and unlockPort that existed prior to R4-14 were restored
       to pasynManager.</li>
   </ul>
+  <p>
+    Changed the report() function so that if details<0 then asynManager does not print
+    information for each device (address). It calls pasynCommon->report(-details) in
+    this case so driver report functions will not be affected.</p>
   <h3>
     devGpib</h3>
   <p>
@@ -63,6 +67,15 @@
     now includes the terminating nil. This fixes problems with clients that request
     long strings or subscribe to monitors with a length of 0, but don't check for a
     nil terminator.</p>
+  <p>
+    Changed the meaning of the "details" argument in the asynPortDriver::report() function.
+    The new meaning is:</p>
+  <ul>
+    <li>0 = no details</li>
+    <li>&gt;=1: print details for parameter list (address) 0</li>
+    <li>&gt;=2: print details for all parameters lists (addresses)</li>
+    <li>&gt;=3: print interrupt callback information</li>
+  </ul>
   <h3>
     asynPortDriver/exceptions</h3>
   <p>
