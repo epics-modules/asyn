@@ -114,7 +114,8 @@ static void echoWriter(myData *pPvt)
 {
     asynUser *pasynUser;
     char buffer[MESSAGE_SIZE];
-    size_t nread, nwrite;
+    int nread;
+    size_t nwrite;
     asynStatus status;
 
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
