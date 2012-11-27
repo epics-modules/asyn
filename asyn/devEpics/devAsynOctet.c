@@ -264,11 +264,9 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
     
     pdevPvt->gotValue = 1; 
     num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
-    if(num>=0) {
-        strncpy(psi->val,data,num);
-        psi->udf = 0;
-        if(num<MAX_STRING_SIZE) psi->val[num] = 0;
-    }
+    strncpy(psi->val,data,num);
+    psi->udf = 0;
+    if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
     psi->time = pasynUser->timestamp;
