@@ -813,7 +813,7 @@ static void asynCallbackSpecial(asynUser * pasynUser)
         break;
     case callbackSetEos:
         setEos(pasynUser);
-        /* no break - every time an option is set call getOptions to verify */
+        /* no break - every time an option is set call getEos to verify */
     case callbackGetEos:
         getEos(pasynUser);
         break;
