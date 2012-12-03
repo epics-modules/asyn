@@ -125,6 +125,7 @@ static void callbackTask(void *drvPvt)
 void testErrors::callbackTask(void)
 {
     asynStatus currentStatus;
+    int itemp;
     epicsInt32 iVal;
     epicsFloat64 dVal;
     int i;
@@ -133,7 +134,7 @@ void testErrors::callbackTask(void)
     /* Loop forever */    
     while (1) {
         lock();
-        getIntegerParam(P_StatusReturn, (int*)&currentStatus);
+        getIntegerParam(P_StatusReturn, &itemp); currentStatus = (asynStatus)itemp;
         getIntegerParam(P_Int32Value, &iVal);
         iVal++;
         if (iVal > 15) iVal=0;
@@ -206,11 +207,12 @@ asynStatus testErrors::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
+    int itemp;
     const char *paramName;
     const char* functionName = "writeInt32";
 
     /* Get the current error status */
-    getIntegerParam(P_StatusReturn, (int*)&status);
+    getIntegerParam(P_StatusReturn, &itemp); status = (asynStatus)itemp;
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
@@ -247,11 +249,12 @@ asynStatus testErrors::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
+    int itemp;
     const char *paramName;
     const char* functionName = "writeFloat64";
 
     /* Get the current error status */
-    getIntegerParam(P_StatusReturn, (int*)&status);
+    getIntegerParam(P_StatusReturn, &itemp);  status = (asynStatus)itemp;
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
@@ -283,11 +286,12 @@ asynStatus testErrors::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
+    int itemp;
     const char *paramName;
     const char* functionName = "writeUInt32D";
 
     /* Get the current error status */
-    getIntegerParam(P_StatusReturn, (int*)&status);
+    getIntegerParam(P_StatusReturn, &itemp); status = (asynStatus)itemp;
 
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
@@ -323,10 +327,11 @@ asynStatus testErrors::writeOctet(asynUser *pasynUser, const char *value,
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
+    int itemp;
     const char *functionName = "writeOctet";
 
     /* Get the current error status */
-    getIntegerParam(P_StatusReturn, (int*)&status);
+    getIntegerParam(P_StatusReturn, &itemp); status = (asynStatus)itemp;
 
     /* Set the parameter in the parameter library. */
     setStringParam(function, (char *)value);
@@ -392,11 +397,11 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
 {
     int function = pasynUser->reason;
     size_t ncopy = MAX_ARRAY_POINTS;
-    asynStatus status = asynSuccess;
+    int status = asynSuccess;
     const char *functionName = "doReadArray";
 
     /* Get the current error status */
-    getIntegerParam(P_StatusReturn, (int*)&status);
+    getIntegerParam(P_StatusReturn, &status);
 
     if (nElements < ncopy) ncopy = nElements;
     if (function == paramIndex) {
@@ -412,7 +417,7 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
               "%s:%s: function=%d\n", 
               driverName, functionName, function);
-    return status;
+    return (asynStatus)status;
 }
     
 asynStatus testErrors::readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
