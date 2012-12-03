@@ -69,14 +69,14 @@ ss ipSNCServer
 static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portName, size_t len, int eomReason)
 {
     struct UserVar  *pVar = (struct UserVar *)drvPvt;
-    asynUser *pasynUser = (asynUser *)pVar->pasynUser;
+    asynUser *pasynUser;
     asynStatus status;
 
     pVar->IOPortName = epicsStrDup(portName);
+    status = pasynOctetSyncIO->connect(portName, 0, &pasynUser, NULL);
+    pVar->pasynUser = (char *)pasynUser;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "ipSNCServer: connectionCallback, portName=%s\n", portName);
-    status = pasynOctetSyncIO->connect(portName, 0, (asynUser **)&pVar->pasynUser, NULL);
-    pasynUser = (asynUser *)pVar->pasynUser;
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:connectionCallback: unable to connect to port %s\n",
@@ -108,6 +108,7 @@ static void initialize(SS_ID ssId, struct UserVar *pVar)
     asynInterface *pasynInterface;
     asynUser *pasynUser;
     asynOctet *pasynOctet;
+    void *registrarPvt;
     int status;
 
     pVar->eventId = (char *)epicsEventCreate(epicsEventEmpty);
@@ -127,7 +128,8 @@ static void initialize(SS_ID ssId, struct UserVar *pVar)
     pasynOctet = (asynOctet *)pasynInterface->pinterface;
     status = pasynOctet->registerInterruptUser(
                  pasynInterface->drvPvt, pasynUser,
-                 connectionCallback,pVar,(void **)&pVar->registrarPvt);
+                 connectionCallback,pVar, &registrarPvt);
+    pVar->registrarPvt = registrarPvt;
     if(status!=asynSuccess) {
         printf("ipSNCServer devAsynOctet registerInterruptUser %s\n",
                pasynUser->errorMessage);
