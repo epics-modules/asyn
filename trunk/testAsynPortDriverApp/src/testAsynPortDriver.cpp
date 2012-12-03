@@ -301,10 +301,11 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 {
     int function = pasynUser->reason;
     size_t ncopy;
+    int itemp;
     asynStatus status = asynSuccess;
     const char *functionName = "readFloat64Array";
 
-    getIntegerParam(P_MaxPoints, (epicsInt32 *)&ncopy);
+    getIntegerParam(P_MaxPoints, &itemp); ncopy = itemp;
     if (nElements < ncopy) ncopy = nElements;
     if (function == P_Waveform) {
         memcpy(value, pData_, ncopy*sizeof(epicsFloat64));
