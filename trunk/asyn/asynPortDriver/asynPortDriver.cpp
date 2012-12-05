@@ -1584,6 +1584,57 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
 }
 
 
+/* asynOption interface methods */
+extern "C" {static asynStatus readOption(void *drvPvt, asynUser *pasynUser, const char *key, char *value, int maxChars)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+ 
+    pPvt->lock();
+    status = pPvt->readOption(pasynUser, key, value, maxChars);
+    pPvt->unlock();
+    return(status);    
+}}
+
+/** Called when asyn clients call pasynOption->read().
+  * The base class implementation simply prints an error message.  
+  * Derived classes may reimplement this function if required.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] key Option key string. 
+  * \param[in] value Address of value string to be returned
+  * \param[in] maxChars Size of value string */
+asynStatus asynPortDriver::readOption(asynUser *pasynUser, const char *key, char *value, int maxChars)
+{
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "%s:readOption not implemented", driverName);
+    return(asynError);
+}
+
+extern "C" {static asynStatus writeOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *value)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->writeOption(pasynUser, key, value);
+    pPvt->unlock();
+    return(status);    
+}}
+
+/** Called when asyn clients call pasynOption->write().
+  * The base class implementation simply prints an error message.  
+  * Derived classes may reimplement this function if required.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] key Option key string. 
+  * \param[in] value Value string. */
+asynStatus asynPortDriver::writeOption(asynUser *pasynUser, const char *key, const char *value)
+{
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "%s:writeOption not implemented", driverName);
+    return(asynError);
+}
+
+
 /* asynEnums interface methods */
 extern "C" {static asynStatus readEnum(void *drvPvt, asynUser *pasynUser, char *strings[], int values[], int severities[], 
                                        size_t nElements, size_t *nIn)
@@ -1937,6 +1988,11 @@ static asynGenericPointer ifaceGenericPointer = {
     readGenericPointer
 };
 
+static asynOption ifaceOption = {
+    writeOption,
+    readOption
+};
+
 static asynEnum ifaceEnum = {
     writeEnum,
     readEnum
@@ -2029,6 +2085,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     if (interfaceMask & asynFloat32ArrayMask)   pInterfaces->float32Array.pinterface  = (void *)&ifaceFloat32Array;
     if (interfaceMask & asynFloat64ArrayMask)   pInterfaces->float64Array.pinterface  = (void *)&ifaceFloat64Array;
     if (interfaceMask & asynGenericPointerMask) pInterfaces->genericPointer.pinterface= (void *)&ifaceGenericPointer;
+    if (interfaceMask & asynOptionMask)         pInterfaces->option.pinterface        = (void *)&ifaceOption;
     if (interfaceMask & asynEnumMask)           pInterfaces->Enum.pinterface          = (void *)&ifaceEnum;
 
     /* Define which interfaces can generate interrupts */
