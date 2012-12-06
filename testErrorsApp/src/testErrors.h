@@ -54,6 +54,8 @@ public:
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements, size_t *nIn);
+    virtual asynStatus readOption(asynUser *pasynUser, const char *key, char *value, int maxChars);
+    virtual asynStatus writeOption(asynUser *pasynUser, const char *key, const char *value);
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
                                 size_t nElements, size_t *nIn);
 
