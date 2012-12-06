@@ -62,6 +62,9 @@
   <h3>
     asynPortDriver</h3>
   <p>
+    Added support for the asynOption interface. Added code to demonstrate and test this
+    to the testErrors test application.</p>
+  <p>
     Changed the code so that the length of string parameters returned in readOctet and
     octetCallback is now strlen(string)+1, rather than strlen(string). The length thus
     now includes the terminating nil. This fixes problems with clients that request
