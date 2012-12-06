@@ -61,7 +61,7 @@ testErrors::testErrors(const char *portName)
                      /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
-                      asynEnumMask      | asynDrvUserMask,
+                      asynOptionMask    | asynEnumMask      | asynDrvUserMask,
                     /* Interrupt mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
@@ -95,6 +95,7 @@ testErrors::testErrors(const char *portName)
     }
     setIntegerParam(P_StatusReturn, asynSuccess);
     setIntegerParam(P_Int32Value, 0);
+    setDoubleParam(P_Float64Value, 0.0);
     setIntegerParam(P_EnumOrder, 0);
     setEnums();
     // Need to force callbacks with the interruptMask once 
@@ -390,6 +391,31 @@ asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values
     return asynSuccess;   
 
 }
+
+asynStatus testErrors::readOption(asynUser *pasynUser, const char *key, char *value, int maxChars)
+{
+    asynStatus status = asynSuccess;
+    
+    strcpy(value, "");
+    if (strcmp(key, "key1") == 0) strncpy(value, "value1", maxChars);
+    else if (strcmp(key, "key2") == 0) strncpy(value, "value2", maxChars);
+    else status = asynError;
+    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+        "testErrors::readOption, key=%s, value=%s, status=%d\n",
+        key, value, status);
+    return status;
+}
+
+asynStatus testErrors::writeOption(asynUser *pasynUser, const char *key, const char *value)
+{
+    asynStatus status = asynSuccess;
+    
+    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+        "testErrors::writeOption, key=%s, value=%s\n",
+        key, value);
+    return status;
+}
+
 
 template <typename epicsType> 
 asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value, 
