@@ -89,6 +89,8 @@ public:
     virtual asynStatus readGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus writeGenericPointer(asynUser *pasynUser, void *pointer);
     virtual asynStatus doCallbacksGenericPointer(void *pointer, int reason, int addr);
+    virtual asynStatus readOption(asynUser *pasynUser, const char *key, char *value, int maxChars);
+    virtual asynStatus writeOption(asynUser *pasynUser, const char *key, const char *value);
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
     virtual asynStatus writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements);
     virtual asynStatus doCallbacksEnum(char *strings[], int values[], int severities[], size_t nElements, int reason, int addr);
