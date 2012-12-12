@@ -8,7 +8,7 @@ SUPPORT=/corvette/home/epics/devel
 IPAC=$(SUPPORT)/ipac-2-11
 
 # SEQ is required for testIPServer
-SNCSEQ=$(SUPPORT)/seq-2-1-9
+SNCSEQ=$(SUPPORT)/seq-2-1-10
 
 #  EPICS_BASE 3.14.6 or later is required
 LINUX_GPIB=NO
