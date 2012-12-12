@@ -34,7 +34,7 @@ epicsShareFunc void* findAsynPortDriver(const char *portName);
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
   * with standard asyn interfaces and a parameter library. */
-class epicsShareFunc asynPortDriver {
+class epicsShareClass asynPortDriver {
 public:
     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
