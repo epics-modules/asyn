@@ -8,7 +8,7 @@
 #ifdef __cplusplus
 
 /** Structure for storing parameter value in parameter library */
-class epicsShareFunc paramVal {
+class paramVal {
 public:
     paramVal(const char *name);
     paramVal(const char *name, asynParamType type);
