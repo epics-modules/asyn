@@ -31,7 +31,7 @@ typedef struct devAsynWfPvt{ \
     asynStatus      status; \
     epicsAlarmCondition alarmStat; \
     epicsAlarmSeverity alarmSevr; \
-    int             gotValue; /*For interruptCallbackInput */ \
+    int             gotValue; /* For interruptCallbackInput */ \
     epicsUInt32     nord; \
     INTERRUPT       interruptCallback; \
     char            *portName; \
@@ -214,8 +214,13 @@ static long processCommon(dbCommon *pr) \
     if (pPvt->gotValue) { \
         pwf->nord = pPvt->nord; \
         pwf->udf = 0; \
+        pPvt->gotValue--; \
+        if (pPvt->gotValue) { \
+            asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE, \
+                "%s processCommon, warning, multiple interrupt callbacks between processing\n", \
+                 pr->name); \
+        } \
     } \
-    pPvt->gotValue = 0; \
     pPvt->status = asynSuccess; \
     return 0; \
 }  \
@@ -285,10 +290,10 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,  \
     if (len > pwf->nelm) len = pwf->nelm; \
     for (i=0; i<(int)len; i++) pData[i] = value[i]; \
     pwf->time = pasynUser->timestamp; \
-    dbScanUnlock((dbCommon *)pwf); \
-    pPvt->gotValue = 1; \
+    pPvt->gotValue++; \
     pPvt->nord = (epicsUInt32)len; \
     if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus; \
+    dbScanUnlock((dbCommon *)pwf); \
     scanIoRequest(pPvt->ioScanPvt); \
 } \
  \
