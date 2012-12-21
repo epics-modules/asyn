@@ -578,7 +578,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                             "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                            "%s write %d\n", tty->serialDeviceName, numchars);
+                            "%s write %lu\n", tty->serialDeviceName, (unsigned long)numchars);
     if (tty->fd < 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s disconnected:", tty->serialDeviceName);
@@ -775,8 +775,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         data[nRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %d, return %d\n",
-                            tty->serialDeviceName, *nbytesTransfered, status);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %lu, return %d\n",
+                            tty->serialDeviceName, (unsigned long)*nbytesTransfered, status);
     return status;
 }
 
