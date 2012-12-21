@@ -681,8 +681,8 @@ static void callbackInterruptOctet(void *drvPvt, asynUser *pasynUser,
      * the previous interrupt, just return */
     if (pasynRecPvt->gotValue == 1) return;
     asynPrint(pasynRecPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s callbackInterruptOctet new value=%s numchars %d eomReason %d\n",
-        pasynRec->name, data, numchars, eomReason);
+        "%s callbackInterruptOctet new value=%s numchars %lu eomReason %d\n",
+        pasynRec->name, data, (unsigned long)numchars, eomReason);
     epicsMutexLock(pasynRecPvt->interruptLock);
     pasynRecPvt->gotValue = 1;
     epicsStrSnPrintEscaped(pasynRec->tinp,sizeof(pasynRec->tinp),
@@ -1492,8 +1492,8 @@ static void performOctetIO(asynUser * pasynUser)
         }
         pasynRec->nawt = (int)nbytesTransfered;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
-           "%s: nwrite=%d, status=%d, nawt=%d\n", pasynRec->name, nwrite,
-                    status, nbytesTransfered);
+           "%s: nwrite=%lu, status=%d, nawt=%lu\n", pasynRec->name, (unsigned long)nwrite,
+                    status, (unsigned long)nbytesTransfered);
         if(status != asynSuccess || nbytesTransfered != nwrite) {
             /* Something is wrong if we couldn't write everything */
             reportError(pasynRec, status, "Write error, nout=%d, %s",
@@ -1531,8 +1531,8 @@ static void performOctetIO(asynUser * pasynUser)
                 "Error %s", pasynUser->errorMessage);
         } else {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
-             "%s: inlen=%d, status=%d, ninp=%d\n", pasynRec->name, inlen,
-                    status, nbytesTransfered);
+             "%s: inlen=%lu, status=%d, ninp=%lu\n", pasynRec->name, (unsigned long)inlen,
+                    status, (unsigned long)nbytesTransfered);
         }
         pasynRec->eomr = eomReason;
         inlen = nbytesTransfered;
@@ -1576,8 +1576,8 @@ static void performOctetIO(asynUser * pasynUser)
                                            sizeof(pasynRec->tinp),
                                            inptr, inlen);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-             "%s: inlen=%d, nbytesTransfered=%d, ntranslate=%d \n",
-             pasynRec->name, inlen, nbytesTransfered, ntranslate);
+             "%s: inlen=%lu, nbytesTransfered=%lu, ntranslate=%d\n",
+             pasynRec->name, (unsigned long)inlen, (unsigned long)nbytesTransfered, ntranslate);
     }
 }
 
