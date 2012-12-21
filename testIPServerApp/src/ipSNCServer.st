@@ -155,7 +155,7 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
     }
     else {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "ipSNCServer:readSocket: %s read %s: %s: %s\n",
+                  "ipSNCServer:readSocket: %s read %s\n",
                    pVar->IOPortName, buffer);
         strcpy(pVar->input, buffer);
     }

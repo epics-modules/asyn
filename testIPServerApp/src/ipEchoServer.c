@@ -79,8 +79,8 @@ static void echoListener(myData *pPvt)
         switch (status) {
         case asynSuccess:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                      "echoListener: %s read %d: %s\n", 
-                      pPvt->portName, nread, buffer);
+                      "echoListener: %s read %lu: %s\n", 
+                      pPvt->portName, (unsigned long)nread, buffer);
             status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer),
                                              WRITE_TIMEOUT, &nwrite);
             if (status) {
@@ -90,14 +90,14 @@ static void echoListener(myData *pPvt)
                 goto done;
             }
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                      "echoListener: %s wrote %d: %s\n",
-                      pPvt->portName, nwrite, buffer);
+                      "echoListener: %s wrote %lu: %s\n",
+                      pPvt->portName, (unsigned long)nwrite, buffer);
             break;
 
         case asynTimeout:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoListener: timeout on: %s read %d: %s\n", 
-                      pPvt->portName, nread, buffer);
+                      "echoListener: timeout on: %s read %lu: %s\n", 
+                      pPvt->portName, (unsigned long)nread, buffer);
             break;
 
         default:
