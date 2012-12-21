@@ -262,7 +262,7 @@ static void processCallbackInput(asynUser *pasynUser)
     pPvt->result.status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pPvt->result.value);
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64 process value=%d\n",pr->name,pPvt->result.value);
+            "%s devAsynFloat64 process value=%f\n",pr->name,pPvt->result.value);
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
               "%s devAsynFloat64 process read error %s\n",
@@ -392,7 +392,7 @@ getCallbackValue(devPvt *pPvt)
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64::getCallbackValue from ringBuffer value=%d\n",
+            "%s devAsynFloat64::getCallbackValue from ringBuffer value=%f\n",
                                             pPvt->pr->name,pPvt->result.value);
         ret = 1;
     }

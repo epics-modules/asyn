@@ -344,7 +344,7 @@ static void processCallbackInput(asynUser *pasynUser)
         &pPvt->result.value,pPvt->mask);
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynUInt32Digital::process value=%lu\n",
+            "%s devAsynUInt32Digital::process value=%u\n",
             pr->name,pPvt->result.value);
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -363,7 +363,7 @@ static void processCallbackOutput(asynUser *pasynUser)
         pPvt->result.value,pPvt->mask);
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynUInt32Digital process value %lu\n",pr->name,pPvt->result.value);
+            "%s devAsynUInt32Digital process value %u\n",pr->name,pPvt->result.value);
     } else {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
            "%s devAsynUInt32Digital process error %s\n",
@@ -380,7 +380,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     ringBufferElement *rp;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::interruptCallbackInput new value=%lu\n",
+        "%s devAsynUInt32Digital::interruptCallbackInput new value=%u\n",
         pr->name, value);
     /* There is a problem.  A driver could be calling us with a value after
      * this record has registered for callbacks but before EPICS has set interruptAccept,
@@ -426,7 +426,7 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     int nextHead;
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynUInt32Digital::interruptCallbackOutput new value=%lu\n",
+        "%s devAsynUInt32Digital::interruptCallbackOutput new value=%u\n",
         pr->name, value);
     epicsMutexLock(pPvt->mutexId);
     nextHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;

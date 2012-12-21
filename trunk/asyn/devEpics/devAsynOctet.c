@@ -367,8 +367,8 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     }
     if(nbytes != nbytesTransfered) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s devAsynOctet: writeIt requested %d but sent %d bytes\n",
-            precord->name,nbytes,nbytesTransfered);
+            "%s devAsynOctet: writeIt requested %lu but sent %lu bytes\n",
+            precord->name,(unsigned long)nbytes,(unsigned long)nbytesTransfered);
         recGblSetSevr(precord, WRITE_ALARM, MINOR_ALARM);
         return asynError;
     }
