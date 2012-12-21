@@ -263,7 +263,7 @@ static asynStatus getInterrupt(asynUser *pasynUser,
         pioPvt->uint32DigitalPvt, pasynUser,mask,reason);
     if(status==asynSuccess) {
        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
-                   "asynUInt32DigitalSyncIO getInterrupt: 0x%x\n",mask);
+                   "asynUInt32DigitalSyncIO getInterrupt: 0x%x\n", *mask);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
