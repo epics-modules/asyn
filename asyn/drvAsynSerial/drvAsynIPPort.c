@@ -391,7 +391,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s write.\n", tty->IPDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                "%s write %d\n", tty->IPDeviceName, numchars);
+                "%s write %lu\n", tty->IPDeviceName, (unsigned long)numchars);
     *nbytesTransfered = 0;
     if (tty->fd < 0) {
         if (tty->flags & FLAG_CONNECT_PER_TRANSACTION) {
