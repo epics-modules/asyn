@@ -38,6 +38,12 @@
     Changed the report() function so that if details<0 then asynManager does not print
     information for each device (address). It calls pasynCommon->report(-details) in
     this case so driver report functions will not be affected.</p>
+  <p>
+    Changed the asynTrace print, printIO, vprint, vprintIO functions so they use EPICS_PRINTF_STYLE.
+    This causes the GCC (version 3.0 and higher) and clang compilers to check the agreement
+    of format strings with function arguments when using asynPrint() and asynPrintIO(),
+    just as they do with printf(). This is very helpful in finding errors, and uncovered
+    a number in asyn itself, which have been fixed.</p>
   <h3>
     devGpib</h3>
   <p>
@@ -50,6 +56,14 @@
   <p>
     Fixed a bug in devAsynUInt32Digital.c, which was missing a call to epicsMutexLock
     in interruptCallbackInput. Thanks to Angus Gratton for this fix.</p>
+  <p>
+    Fixed a bug in devAsynXXXArray.h to handle case of multiple interrupt callbacks
+    between record processing. Previously this would result in a call to the asynXXXArray->read()
+    in the driver, which is not correct. The asynXXXArray device support does not have
+    a ring buffer, so multiple interrupt callbacks between processing results in data
+    being "lost", i.e. the record processes more than once with the same data. This
+    is not really an error, but we now issue an ASYN_TRACEIO_DEVICE warning. This is
+    analogous to ring buffer overflow for non-array data types.</p>
   <p>
     Changed the "ring buffer overflow" messages from "ASYN_TRACE_ERROR" to "ASYN_TRACEIO_DEVICE",
     for devAsynFloat64. This was done for other device support in R4-20, but float64
