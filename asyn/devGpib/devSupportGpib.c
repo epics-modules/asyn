@@ -976,15 +976,15 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
         pasynOctet->read(asynOctetPvt,pasynUser,
             pgpibDpvt->msg,pgpibCmd->msgLen,&nchars,0);
     }
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibRead nchars %d\n",
-        precord->name,nchars);
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s gpibRead nchars %lu\n",
+        precord->name,(unsigned long)nchars);
     if(nchars > 0) {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt->msg,nchars,
             "%s gpibRead\n",precord->name);
     } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s read status \"%s\" nin %d\n",
-            precord->name, pasynUser->errorMessage,nchars);
+            "%s read status \"%s\" nin %lu\n",
+            precord->name, pasynUser->errorMessage,(unsigned long)nchars);
         pgpibDpvt->msgInputLen = 0;
         gpibErrorHappened(pgpibDpvt);
         failure = -1; goto done;
@@ -1389,8 +1389,8 @@ static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
                                             "%s writeIt\n",precord->name);
     } else {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s write status \"%s\" requested %d but sent %d bytes\n",
-                precord->name,pasynUser->errorMessage,len,nchars);
+            "%s write status \"%s\" requested %lu but sent %lu bytes\n",
+                precord->name,pasynUser->errorMessage,(unsigned long)len,(unsigned long)nchars);
             gpibErrorHappened(pgpibDpvt);
     }
     if(respond2Writes>=0 && rspLen>0) {
