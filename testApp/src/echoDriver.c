@@ -303,7 +303,7 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
     if(nchars>BUFFERSIZE) nchars = BUFFERSIZE;
     if(nchars>0) memcpy(pdeviceBuffer->buffer,data,nchars);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,
-            "echoWrite nchars %d\n",nchars);
+            "echoWrite nchars %lu\n",(unsigned long)nchars);
     pdeviceBuffer->nchars = nchars;
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
     *nbytesTransfered = nchars;
@@ -390,7 +390,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     pasynOctetBase->callInterruptUsers(pasynUser,pechoPvt->pasynPvt,
         data,nbytesTransfered,eomReason);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
-        "echoRead nbytesTransfered %d\n",*nbytesTransfered);
+        "echoRead nbytesTransfered %lu\n",(unsigned long)*nbytesTransfered);
     return status;
 }
 

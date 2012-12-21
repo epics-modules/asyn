@@ -50,7 +50,7 @@ static void queueCallback(asynUser *pasynUser) {
     } else {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
             pmydata->buffer,strlen(pmydata->buffer),
-            "queueCallback write sent %d bytes\n",writeBytes);
+            "queueCallback write sent %lu bytes\n",(unsigned long)writeBytes);
     }
     status = pasynOctet->read(drvPvt,pasynUser,pmydata->buffer,
          BUFFER_SIZE,&readBytes,&eomReason);
@@ -60,8 +60,8 @@ static void queueCallback(asynUser *pasynUser) {
     } else {
         asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
             pmydata->buffer,BUFFER_SIZE,
-            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
-            readBytes,eomReason,pmydata->buffer);
+            "queueCallback read returned: retlen %lu eomReason 0x%x data %s\n",
+            (unsigned long)readBytes,eomReason,pmydata->buffer);
     }
     if(pmydata->done) {
         epicsEventSignal(pmydata->done);
