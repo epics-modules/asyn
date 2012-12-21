@@ -213,7 +213,7 @@ typedef struct asynTrace {
     int        (*vprintIO)(asynUser *pasynUser,int reason,
                const char *buffer, size_t len,const char *pformat, va_list pvar);
 #else
-    int        (*print) asynUser *pasynUser,int reason, const char *pformat, ...) EPICS_PRINTF_STYLE(3,4);
+    int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...) EPICS_PRINTF_STYLE(3,4);
     int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(3,0);
     int        (*printIO)(asynUser *pasynUser,int reason,
                const char *buffer, size_t len,const char *pformat, ...) EPICS_PRINTF_STYLE(5,6);
