@@ -204,12 +204,22 @@ typedef struct asynTrace {
     FILE       *(*getTraceFile)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
     size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
+#if defined(__GNUC__) && (__GNUC__ < 3)
+    /* GCC 2.95 does not allow EPICS_PRINTF_STYLE on function pointers */
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
     int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar);
     int        (*printIO)(asynUser *pasynUser,int reason,
                const char *buffer, size_t len,const char *pformat, ...);
     int        (*vprintIO)(asynUser *pasynUser,int reason,
                const char *buffer, size_t len,const char *pformat, va_list pvar);
+#else
+    int        (*print) asynUser *pasynUser,int reason, const char *pformat, ...) EPICS_PRINTF_STYLE(3,4);
+    int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(3,0);
+    int        (*printIO)(asynUser *pasynUser,int reason,
+               const char *buffer, size_t len,const char *pformat, ...) EPICS_PRINTF_STYLE(5,6);
+    int        (*vprintIO)(asynUser *pasynUser,int reason,
+               const char *buffer, size_t len,const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(5,0);
+#endif
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;
 
