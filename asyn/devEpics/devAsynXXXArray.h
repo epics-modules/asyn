@@ -162,7 +162,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt) \
            pPvt->interruptCallback, pPvt, &pPvt->registrarPvt); \
         if(status!=asynSuccess) { \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
-                      "%s %s registerInterruptUser %s\n", \
+                      "%s %s::getIoIntInfo registerInterruptUser %s\n", \
                       pr->name, driverName, pPvt->pasynUser->errorMessage); \
         } \
     } else { \
@@ -173,8 +173,8 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt) \
              pPvt->pasynUser, pPvt->registrarPvt); \
         if(status!=asynSuccess) { \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
-                      "%s %s cancelInterruptUser %s\n", \
-                      pr->name,pPvt->pasynUser->errorMessage); \
+                      "%s %s::getIoIntInfo cancelInterruptUser %s\n", \
+                      pr->name, driverName,pPvt->pasynUser->errorMessage); \
         } \
     } \
     *iopvt = pPvt->ioScanPvt; \
@@ -202,8 +202,8 @@ static long processCommon(dbCommon *pr) \
         if(pPvt->canBlock) pr->pact = 0; \
         if (pPvt->status != asynSuccess) { \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, \
-                "%s processCommon, error queuing request %s\n", \
-                 pr->name, pPvt->pasynUser->errorMessage); \
+                "%s %s::processCommon, error queuing request %s\n", \
+                 pr->name, driverName, pPvt->pasynUser->errorMessage); \
         } \
     } \
     if (pPvt->status != asynSuccess) { \
@@ -217,8 +217,8 @@ static long processCommon(dbCommon *pr) \
         pPvt->gotValue--; \
         if (pPvt->gotValue) { \
             asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE, \
-                "%s processCommon, warning, multiple interrupt callbacks between processing\n", \
-                 pr->name); \
+                "%s %s::processCommon, warning, multiple interrupt callbacks between processing\n", \
+                 pr->name, driverName); \
         } \
     } \
     pPvt->status = asynSuccess; \
