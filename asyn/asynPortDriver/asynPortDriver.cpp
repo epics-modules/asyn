@@ -669,9 +669,9 @@ asynStatus asynPortDriver::getAddress(asynUser *pasynUser, int *address)
     pasynManager->getAddr(pasynUser, address);
     /* If this is not a multi-device then address is -1, change to 0 */
     if (*address == -1) *address = 0;
-    if (*address > this->maxAddr-1) {
+    if ((*address < 0) || (*address > this->maxAddr-1)) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "%s:%s: %s invalid address=%d, max=%d\n",
+            "%s:%s: %s invalid address=%d, must be in range 0 to %d\n",
             driverName, functionName, portName, *address, this->maxAddr-1);
         return(asynError);
     }
@@ -702,7 +702,7 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
-    const char *functionName = "readInt32";
+    static const char *functionName = "readInt32";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     /* We just read the current value of the parameter from the parameter library.
@@ -821,7 +821,7 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
-    const char *functionName = "readUInt32Digital";
+    static const char *functionName = "readUInt32Digital";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     /* We just read the current value of the parameter from the parameter library.
@@ -1029,7 +1029,7 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
-    const char *functionName = "readFloat64";
+    static const char *functionName = "readFloat64";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     /* We just read the current value of the parameter from the parameter library.
@@ -1070,7 +1070,7 @@ asynStatus asynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
     int addr=0;
-    const char *functionName = "writeFloat64";
+    static const char *functionName = "writeFloat64";
 
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
  
@@ -1121,7 +1121,7 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
-    const char *functionName = "readOctet";
+    static const char *functionName = "readOctet";
    
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     /* We just read the current value of the parameter from the parameter library.
@@ -1167,7 +1167,7 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
     int addr=0;
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    const char *functionName = "writeOctet";
+    static const char *functionName = "writeOctet";
 
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
 
@@ -1749,7 +1749,7 @@ asynStatus asynPortDriver::drvUserCreate(asynUser *pasynUser,
                                        const char *drvInfo, 
                                        const char **pptypeName, size_t *psize)
 {
-    const char *functionName = "drvUserCreate";
+    static const char *functionName = "drvUserCreate";
     asynStatus status;
     int index;
     int addr;
@@ -1792,7 +1792,7 @@ asynStatus asynPortDriver::drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize)
 {
     /* This is not currently supported, because we can't get the strings for driver-specific commands */
-    const char *functionName = "drvUserGetType";
+    static const char *functionName = "drvUserGetType";
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s:%s: entered", driverName, functionName);
@@ -1819,7 +1819,7 @@ extern "C" {static asynStatus drvUserDestroy(void *drvPvt, asynUser *pasynUser)
   * but asynPortDriver classes typically do not need to do so. */
 asynStatus asynPortDriver::drvUserDestroy(asynUser *pasynUser)
 {
-    const char *functionName = "drvUserDestroy";
+    static const char *functionName = "drvUserDestroy";
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s:%s: this=%p, pasynUser=%p\n",
@@ -1885,12 +1885,16 @@ extern "C" {static asynStatus connect(void *drvPvt, asynUser *pasynUser)
 }}
 
 /** Connects driver to device; 
-  * the base class implementation simply calls pasynManager->exceptionConnect.
+  * The base class implementation simply calls pasynManager->exceptionConnect if address is valid
   * Derived classes can reimplement this function for real connection management.
   * \param[in] pasynUser The pasynUser structure which contains information about the port and address */
 asynStatus asynPortDriver::connect(asynUser *pasynUser)
 {
-    const char *functionName = "connect";
+    int addr;
+    asynStatus status;
+    static const char *functionName = "connect";
+    
+    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
     
     pasynManager->exceptionConnect(pasynUser);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -1917,8 +1921,12 @@ extern "C" {static asynStatus disconnect(void *drvPvt, asynUser *pasynUser)
   * \param[in] pasynUser The pasynUser structure which contains information about the port and address */
 asynStatus asynPortDriver::disconnect(asynUser *pasynUser)
 {
-    const char *functionName = "disconnect";
+    int addr;
+    asynStatus status;
+    static const char *functionName = "disconnect";
     
+    status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
+
     pasynManager->exceptionDisconnect(pasynUser);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s:%s:, pasynUser=%p\n", 
@@ -2031,7 +2039,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
                                int asynFlags, int autoConnect, int priority, int stackSize)
 {
     asynStatus status;
-    const char *functionName = "asynPortDriver";
+    static const char *functionName = "asynPortDriver";
     asynStandardInterfaces *pInterfaces;
     int addr;
 
