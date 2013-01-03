@@ -15,7 +15,7 @@
     <h2>
       Release 4-21</h2>
     <h2>
-      December XXX, 2012</h2>
+      January XXX, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -73,6 +73,9 @@
   <p>
     Added writeRead and writeReadOnce functions to the asynGenericPointer interface.
     Thanks to Florian Feldbauer for this addition.</p>
+  <p>
+    Fixed a bug in asynCommonSyncIO that could cause a crash if the connect() function
+    returned an error.</p>
   <h3>
     asynPortDriver</h3>
   <p>
@@ -93,6 +96,9 @@
     <li>&gt;=2: print details for all parameters lists (addresses)</li>
     <li>&gt;=3: print interrupt callback information</li>
   </ul>
+  <p>
+    Changed the connect() and disconnect() methods to return an error if the device
+    address specfified by the pasynUser is invalid (i.e. &lt;-1 or &gt;MAX_ADDR-1).</p>
   <p>
     Fixed problem that was causing dynamic builds (e.g. SHARED_LIBRARIES=YES) to fail
     on Windows.</p>
