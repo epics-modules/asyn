@@ -67,6 +67,7 @@ static asynStatus connect(const char *port, int addr,
     asynInterface *pasynInterface;
 
     pioPvt = (ioPvt *)callocMustSucceed(1, sizeof(ioPvt),"asynCommonSyncIO");
+    pioPvt->connectEvent = epicsEventMustCreate(epicsEventEmpty);
     pasynUser = pasynManager->createAsynUser(connectDeviceCallback,0);
     pasynUser->userPvt = pioPvt;
     *ppasynUser = pasynUser;
@@ -99,7 +100,6 @@ static asynStatus connect(const char *port, int addr,
             }
         }
     }
-    pioPvt->connectEvent = epicsEventMustCreate(epicsEventEmpty);
     return asynSuccess ;
 }
 
