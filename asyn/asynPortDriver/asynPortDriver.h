@@ -56,6 +56,7 @@ public:
                                         size_t *nActual, int *eomReason);
     virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars,
                                         size_t *nActual);
+    virtual asynStatus flushOctet(asynUser *pasynUser);
     virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                         size_t nElements, size_t *nIn);
     virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,

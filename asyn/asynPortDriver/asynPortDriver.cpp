@@ -1189,6 +1189,41 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
     return status;
 }
 
+extern "C" {static asynStatus flushOctet(void *drvPvt, asynUser *pasynUser)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->flushOctet(pasynUser);
+    pPvt->unlock();
+    return(status);
+}}
+
+/** Called when asyn clients call pasynOctet->flush().
+  * The base class implementation duplicates the function in asynOctetBase.c, i.e.
+  * it does reads with a timeout of 0.05 seconds until the underlying driver returns
+  * no more data. 
+  * Derived classes will reimplement this function if they desire a different behavior.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address. */
+asynStatus asynPortDriver::flushOctet(asynUser *pasynUser)
+{
+    double     savetimeout = pasynUser->timeout;
+    char       buffer[100]; 
+    size_t     nbytesTransfered;
+    static const char *functionName = "writeOctet";
+
+    pasynUser->timeout = .05;
+    while(1) {
+        nbytesTransfered = 0;
+        readOctet(pasynUser, buffer, sizeof(buffer), &nbytesTransfered, 0);
+        if (nbytesTransfered==0) break;
+        asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
+            buffer, nbytesTransfered, "%s:%s\n", driverName, functionName);
+    }
+    pasynUser->timeout = savetimeout;
+    return asynSuccess;
+}
 
 
 
@@ -1964,6 +1999,7 @@ static asynFloat64 ifaceFloat64 = {
 static asynOctet ifaceOctet = {
     writeOctet,
     readOctet,
+    flushOctet
 };
 
 static asynInt8Array ifaceInt8Array = {
