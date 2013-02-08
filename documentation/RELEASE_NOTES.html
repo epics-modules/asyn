@@ -15,7 +15,7 @@
     <h2>
       Release 4-21</h2>
     <h2>
-      January XXX, 2013</h2>
+      February XXX, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -81,6 +81,12 @@
   <p>
     Added support for the asynOption interface. Added code to demonstrate and test this
     to the testErrors test application.</p>
+  <p>
+    Added new method asynPortDriver::flushOctet(), which implements asynOctet::flush().
+    The base class implementation reproduces the behavior of asynOctetBase.c::flushIt,
+    i.e. it calls pasynOctet->read() repeatedly with a timeout of 0.05 seconds until
+    it gets no data back. But now drivers can implement their own version of flush()
+    if a different behavior is desired, which was not previously possible.</p>
   <p>
     Changed the code so that the length of string parameters returned in readOctet and
     octetCallback is now strlen(string)+1, rather than strlen(string). The length thus
