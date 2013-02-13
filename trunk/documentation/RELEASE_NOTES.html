@@ -15,7 +15,7 @@
     <h2>
       Release 4-21</h2>
     <h2>
-      February XXX, 2013</h2>
+      February 13, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -51,6 +51,10 @@
     3.14 and earlier) and the new 'string' VAL field (EPICS 3.15 and later).</p>
   <p>
     Added support for DSET_AIRAW and DSET_AORAW definitions.</p>
+  <p>
+    Replace strcpy with strncpy in devCommonGpib.c to reduce possibility of errors.
+    Use NELEMENTS macro in devSkeletonGpib.c rather than hardcoding. Thanks to Andrew
+    Johnson for these.</p>
   <h3>
     devEpics</h3>
   <p>
