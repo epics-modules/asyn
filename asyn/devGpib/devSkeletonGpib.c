@@ -53,28 +53,28 @@
  ******************************************************************************/
 
 static char  *offOnList[] = { "Off","On" };
-static struct devGpibNames   offOn = { 2,offOnList,0,1 };
+static struct devGpibNames   offOn = { NELEMENTS(offOnList),offOnList,0,1 };
 
 static char  *initNamesList[] = { "Init","Init" };
-static struct devGpibNames initNames = { 2,initNamesList,0,1 };
+static struct devGpibNames initNames = { NELEMENTS(initNamesList),initNamesList,0,1 };
 
 static char  *disableEnableList[] = { "Disable","Enable" };
-static struct devGpibNames disableEnable = { 2,disableEnableList,0,1 };
+static struct devGpibNames disableEnable = { NELEMENTS(disableEnableList),disableEnableList,0,1 };
 
 static char  *resetList[] = { "Reset","Reset" };
-static struct devGpibNames reset = { 2,resetList,0,1 };
+static struct devGpibNames reset = { NELEMENTS(resetList),resetList,0,1 };
 
 static char  *lozHizList[] = { "50 OHM","IB_Q_HIGH Z" };
-static struct devGpibNames lozHiz = {2,lozHizList,0,1};
+static struct devGpibNames lozHiz = {NELEMENTS(lozHizList),lozHizList,0,1};
 
 static char  *invertNormList[] = { "INVERT","NORM" };
-static struct devGpibNames invertNorm = { 2,invertNormList,0,1 };
+static struct devGpibNames invertNorm = { NELEMENTS(intvertNormList),invertNormList,0,1 };
 
 static char  *fallingRisingList[] = { "FALLING","RISING" };
-static struct devGpibNames fallingRising = { 2,fallingRisingList,0,1 };
+static struct devGpibNames fallingRising = { NELEMENTS(fallingRisingList),fallingRisingList,0,1 };
 
 static char  *clearList[] = { "CLEAR","CLEAR" };
-static struct devGpibNames clear = { 2,clearList,0,1 };
+static struct devGpibNames clear = { NELEMENTS(clearList),clearList,0,1 };
 
 /******************************************************************************
  * Structures used by the init routines to fill in the onst,twst,... and the
