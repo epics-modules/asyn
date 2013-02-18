@@ -901,12 +901,22 @@ static long initMbboDirect(mbboDirectRecord *pr)
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
+
     /* Read the current value from the device */
     status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
-        pr->rval = value & pr->mask;
-        return 0;
+        epicsUInt8 *pBn = &pr->b0;
+        int i;
+
+        value &= pr->mask;
+        if (pr->shft > 0) value >>= pr->shft;
+        pr->val =  (unsigned short) value;
+        pr->udf = FALSE;
+        for (i = 0; i < 16; i++) {
+            *pBn++ = !! (value & 1);
+            value >>= 1;
+        }
     }
     return 2;
 }
