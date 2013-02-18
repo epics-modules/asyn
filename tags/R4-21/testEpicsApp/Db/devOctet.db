@@ -1,0 +1,71 @@
+record(stringin,"devSiAsynCmdResponse")
+{
+    field(DTYP,"asynOctetCmdResponse")
+    field(INP,"@asyn($(PORT),$(ADDR)) cmdForCmdResponse")
+}
+record(stringin,"devSiAsynCmdForWriteRead")
+{
+    field(VAL,"devSiAsynWriteRead test")
+    field(FLNK,"devSiAsynWriteRead")
+}
+record(stringin,"devSiAsynWriteRead")
+{
+    field(DTYP,"asynOctetWriteRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) devSiAsynCmdForWriteRead")
+}
+record(stringin,"devSiAsynRead")
+{
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+}
+record(stringout,"devSoAsynWrite")
+{
+    field(DTYP,"asynOctetWrite")
+    field(OUT,"@asyn($(PORT),$(ADDR))")
+    field(VAL,"devSiAsynWrite test")
+}
+record(waveform,"devWfAsynCmdResponse")
+{
+    field(DTYP,"asynOctetCmdResponse")
+    field(INP,"@asyn($(PORT),$(ADDR)) cmdForCmdResponse")
+    field(NELM,"40")
+    field(FTVL,"UCHAR")
+}
+record(stringin,"devWfAsynCmdForWriteRead")
+{
+    field(VAL,"devWfAsynWriteRead test")
+    field(FLNK,"devWfAsynWriteRead")
+}
+record(waveform,"devWfAsynWriteRead")
+{
+    field(DTYP,"asynOctetWriteRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) devWfAsynCmdForWriteRead")
+    field(NELM,"40")
+    field(FTVL,"CHAR")
+}
+record(waveform,"devWfAsynRead")
+{
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+    field(NELM,"40")
+    field(FTVL,"CHAR")
+}
+record(waveform,"devWfAsynWrite")
+{
+    field(DTYP,"asynOctetWrite")
+    field(INP,"@asyn($(PORT),$(ADDR))")
+    field(NELM,"40")
+    field(FTVL,"CHAR")
+}
+record(stringin,"devSiAsynReadIntr")
+{
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+}
+record(stringin,"devWfAsynReadIntr")
+{
+    field(SCAN,"I/O Intr")
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+}
