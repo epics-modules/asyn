@@ -15,7 +15,7 @@
     <h2>
       Release 4-21</h2>
     <h2>
-      February 13, 2013</h2>
+      February 18, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -57,6 +57,11 @@
     Johnson for these.</p>
   <h3>
     devEpics</h3>
+  <p>
+    Improved the initMbboDirect function in devAsynUInt32Digital.c. If an initial value
+    is read successfully from the driver it now sets the .Bn fields in the record. It
+    also sets VAL rather than RVAL and returns 2 rather than 0. Thanks to Andrew Johnson
+    for this.</p>
   <p>
     Fixed a bug in devAsynUInt32Digital.c, which was missing a call to epicsMutexLock
     in interruptCallbackInput. Thanks to Angus Gratton for this fix.</p>
@@ -108,7 +113,7 @@
   </ul>
   <p>
     Changed the connect() and disconnect() methods to return an error if the device
-    address specfified by the pasynUser is invalid (i.e. &lt;-1 or &gt;MAX_ADDR-1).</p>
+    address specified by the pasynUser is invalid (i.e. &lt;-1 or &gt;MAX_ADDR-1).</p>
   <p>
     Fixed problem that was causing dynamic builds (e.g. SHARED_LIBRARIES=YES) to fail
     on Windows.</p>
