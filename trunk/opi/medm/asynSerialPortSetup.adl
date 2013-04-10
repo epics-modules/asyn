@@ -1,14 +1,14 @@
 
 file {
-	name="/home/epics/devel/asyn/medm/asynSerialPortSetup.adl"
-	version=030102
+	name="/home/epics/devel/asyn/opi/medm/asynSerialPortSetup.adl"
+	version=030105
 }
 display {
 	object {
 		x=154
 		y=74
 		width=260
-		height=275
+		height=300
 	}
 	clr=14
 	bclr=4
@@ -100,45 +100,6 @@ rectangle {
 }
 text {
 	object {
-		x=8
-		y=51
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Baud rate:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=8
-		y=76
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Data bits:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=8
-		y=101
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Stop bits:"
-	align="horiz. right"
-}
-text {
-	object {
 		x=23
 		y=0
 		width=199
@@ -197,27 +158,14 @@ text {
 text {
 	object {
 		x=8
-		y=151
+		y=51
 		width=135
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Modem control:"
-	align="horiz. right"
-}
-text {
-	object {
-		x=8
-		y=126
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Parity:"
+	textix="Baud rate:"
 	align="horiz. right"
 }
 menu {
@@ -233,159 +181,250 @@ menu {
 		bclr=51
 	}
 }
-menu {
+text {
+	object {
+		x=8
+		y=76
+		width=135
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Baud rate:"
+	align="horiz. right"
+}
+composite {
+	object {
+		x=8
+		y=101
+		width=244
+		height=195
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=8
+				y=101
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Data bits:"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=8
+				y=126
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Stop bits:"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=8
+				y=176
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Modem control:"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=8
+				y=151
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Parity:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=150
+				y=101
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).DBIT"
+				clr=14
+				bclr=51
+			}
+		}
+		menu {
+			object {
+				x=150
+				y=126
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).SBIT"
+				clr=14
+				bclr=51
+			}
+		}
+		menu {
+			object {
+				x=150
+				y=151
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).PRTY"
+				clr=14
+				bclr=51
+			}
+		}
+		menu {
+			object {
+				x=150
+				y=176
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).MCTL"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=8
+				y=201
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Flow control:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=150
+				y=201
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).FCTL"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=8
+				y=226
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="XOFF output:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=150
+				y=226
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).IXON"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=8
+				y=251
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="XOFF input:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=150
+				y=251
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).IXOFF"
+				clr=14
+				bclr=51
+			}
+		}
+		text {
+			object {
+				x=8
+				y=276
+				width=135
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="XON=any:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=150
+				y=276
+				width=102
+				height=20
+			}
+			control {
+				chan="$(P)$(R).IXANY"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+"text entry" {
 	object {
 		x=150
 		y=76
 		width=102
-		height=20
+		height=18
 	}
 	control {
-		chan="$(P)$(R).DBIT"
+		chan="$(P)$(R).LBAUD"
 		clr=14
 		bclr=51
 	}
-}
-menu {
-	object {
-		x=150
-		y=101
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).SBIT"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=150
-		y=126
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).PRTY"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=150
-		y=151
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).MCTL"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=8
-		y=176
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="Flow control:"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=150
-		y=176
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).FCTL"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=8
-		y=201
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="XOFF output:"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=150
-		y=201
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).IXON"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=8
-		y=226
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="XOFF input:"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=150
-		y=226
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).IXOFF"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=8
-		y=251
-		width=135
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="XON=any:"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=150
-		y=251
-		width=102
-		height=20
-	}
-	control {
-		chan="$(P)$(R).IXANY"
-		clr=14
-		bclr=51
+	limits {
 	}
 }
