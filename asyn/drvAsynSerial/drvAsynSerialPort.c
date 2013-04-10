@@ -221,9 +221,14 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                                 "Bad number");
             return asynError;
         }
-#ifndef vxWorks
+#ifndef vxWorks         
         {
         speed_t baudCode;
+/* On this system is the baud code the actual baud rate?  
+ * If so use it directly, else compare against known baud codes */
+#if (defined(B300) && (B300 == 300) && defined(B9600) && (B9600 == 9600))
+        baudCode = baud;
+#else
         switch(baud) {
             case 50:     baudCode = B50 ;     break;
             case 75:     baudCode = B75 ;     break;
@@ -243,14 +248,57 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             case 28800:  baudCode = B28800 ;  break;
 #endif
             case 38400:  baudCode = B38400 ;  break;
+#ifdef B57600
             case 57600:  baudCode = B57600 ;  break;
+#endif
+#ifdef B115200
             case 115200: baudCode = B115200 ; break;
+#endif
+#ifdef B230400
             case 230400: baudCode = B230400 ; break;
+#endif
+#ifdef B460800
+            case 460800: baudCode = B460800 ; break;
+#endif
+#ifdef B500000
+            case 500000: baudCode = B500000 ; break;
+#endif
+#ifdef B576000
+            case 576000: baudCode = B576000 ; break;
+#endif
+#ifdef B921600
+            case 921600: baudCode = B921600 ; break;
+#endif
+#ifdef B1000000
+            case 1000000: baudCode = B1000000 ; break;
+#endif
+#ifdef B1152000
+            case 1152000: baudCode = B1152000 ; break;
+#endif
+#ifdef B1500000
+            case 1500000: baudCode = B1500000 ; break;
+#endif
+#ifdef B2000000
+            case 2000000: baudCode = B2000000 ; break;
+#endif
+#ifdef B2500000
+            case 2500000: baudCode = B2500000 ; break;
+#endif
+#ifdef B3000000
+            case 3000000: baudCode = B3000000 ; break;
+#endif
+#ifdef B3500000
+            case 3500000: baudCode = B3500000 ; break;
+#endif
+#ifdef B4000000
+            case 4000000: baudCode = B4000000 ; break;
+#endif
             default:
                 epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                       "Unsupported data rate (%d baud)", baud);
                 return asynError;
         }
+#endif /* Baudcode is baud */
         if(cfsetispeed(&tty->termios,baudCode) < 0 ) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "cfsetispeed returned %s",strerror(errno));
@@ -262,7 +310,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             return asynError;
         }
         }
-#endif
+#endif /* vxWorks */
         tty->baud = baud;
     }
     else if (epicsStrCaseCmp(key, "bits") == 0) {
