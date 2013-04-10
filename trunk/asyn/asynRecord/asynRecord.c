@@ -45,11 +45,11 @@
 
 #undef GEN_SIZE_OFFSET
 /* These should be in a header file*/
-#define NUM_BAUD_CHOICES 12
+#define NUM_BAUD_CHOICES 16
 static char *baud_choices[NUM_BAUD_CHOICES] = {"Unknown",
     "300", "600", "1200", "2400", "4800",
     "9600", "19200", "38400", "57600",
-"115200", "230400"};
+    "115200", "230400", "460800", "576000", "921600", "1152000"};
 #define NUM_PARITY_CHOICES 4
 static char *parity_choices[NUM_PARITY_CHOICES] = {"Unknown", "none", "even", "odd"};
 #define NUM_DBIT_CHOICES 5
@@ -164,7 +164,8 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsInt32 nrrd;        /* Number of bytes to read */
     epicsInt32 nord;        /* Number of bytes read */
     epicsEnum16 eomr;       /* EOM reason */
-    epicsEnum16 baud;       /* Baud rate */
+    epicsEnum16 baud;       /* Baud rate as enum*/
+    epicsInt32 lbaud;       /* Baud rate as int */
     epicsEnum16 prty;       /* Parity */
     epicsEnum16 dbit;       /* Data bits */
     epicsEnum16 sbit;       /* Stop bits */
@@ -509,6 +510,7 @@ static long special(struct dbAddr * paddr, int after)
         pmsg->callbackType = callbackConnect;
         break;
     case asynRecordBAUD:
+    case asynRecordLBAUD:
     case asynRecordPRTY:
     case asynRecordDBIT:
     case asynRecordSBIT:
@@ -1707,6 +1709,7 @@ static void setOption(asynUser * pasynUser)
     callbackMessage *pmsg = (callbackMessage *)pasynUser->userData;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
+    char optionString[20];
 
     /* If port does not have an asynOption interface report error and return */
     if (!pasynRec->optioniv) {
@@ -1723,6 +1726,11 @@ static void setOption(asynUser * pasynUser)
     case asynRecordBAUD:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "baud", baud_choices[pasynRec->baud]);
+        break;
+    case asynRecordLBAUD:
+        sprintf(optionString, "%d", pasynRec->lbaud);
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+            pasynUser, "baud", optionString);
         break;
     case asynRecordPRTY:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
@@ -1780,6 +1788,7 @@ static void getOptions(asynUser * pasynUser)
     /* For fields that could have been changed externally we need to remember
      * their current value */
     REMEMBER_STATE(baud);
+    REMEMBER_STATE(lbaud);
     REMEMBER_STATE(prty);
     REMEMBER_STATE(sbit);
     REMEMBER_STATE(dbit);
@@ -1792,6 +1801,7 @@ static void getOptions(asynUser * pasynUser)
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
     pasynRec->baud = 0;
+    sscanf(optbuff, "%d", &pasynRec->lbaud);
     for (i = 0; i < NUM_BAUD_CHOICES; i++)
         if(strcmp(optbuff, baud_choices[i]) == 0)
             pasynRec->baud = i;
@@ -1844,6 +1854,7 @@ static void getOptions(asynUser * pasynUser)
         if(strcmp(optbuff, ix_control_choices[i]) == 0)
             pasynRec->ixany = i;
     POST_IF_NEW(baud);
+    POST_IF_NEW(lbaud);
     POST_IF_NEW(prty);
     POST_IF_NEW(sbit);
     POST_IF_NEW(dbit);
