@@ -59,6 +59,14 @@
 #include "asynInterposeEos.h"
 #include "drvAsynIPPort.h"
 
+#if !defined(_WIN32) && !defined(vxWorks) && defined(AF_UNIX)
+# define HAS_AF_UNIX 1
+#endif
+
+#if defined(HAS_AF_UNIX)
+# include <sys/un.h>
+#endif
+
 #if defined(__rtems__)
 # define USE_SOCKTIMEOUT
 #else
@@ -97,8 +105,13 @@ typedef struct {
     SOCKET             fd;
     unsigned long      nRead;
     unsigned long      nWritten;
-    int                haveAddress;
-    osiSockAddr        farAddr;
+    union {
+      osiSockAddr        oa;
+#if defined(HAS_AF_UNIX)
+      struct sockaddr_un ua;
+#endif
+    }                  farAddr;
+    size_t             farAddrSize;
     asynInterface      common;
     asynInterface      octet;
 } ttyController_t;
@@ -106,6 +119,8 @@ typedef struct {
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
 #define FLAG_SHUTDOWN                   0x4
+#define FLAG_NEED_LOOKUP                0x100
+#define FLAG_DONE_LOOKUP                0x200
 
 #ifdef FAKE_POLL
 /*
@@ -273,7 +288,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         /*
          * Create the socket
          */
-        if ((fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
+        if ((fd = epicsSocketCreate(tty->farAddr.oa.sa.sa_family, tty->socketType, 0)) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                   "Can't create socket: %s", strerror(SOCKERRNO));
             return asynError;
@@ -297,14 +312,15 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * We delay doing this until now in case a device
          * has just appeared in a DNS database.
          */
-        if (!tty->haveAddress) {
-            if(hostToIPAddr(tty->IPHostName, &tty->farAddr.ia.sin_addr) < 0) {
+        if (tty->flags & FLAG_NEED_LOOKUP) {
+            if(hostToIPAddr(tty->IPHostName, &tty->farAddr.oa.ia.sin_addr) < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                             "Unknown host \"%s\"", tty->IPHostName);
                 epicsSocketDestroy(fd);
                 return asynError;
             }
-            tty->haveAddress = 1;
+            tty->flags &= ~FLAG_NEED_LOOKUP;
+            tty->flags |=  FLAG_DONE_LOOKUP;
         }
 
         /*
@@ -312,17 +328,19 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * If the connect fails, arrange for another DNS lookup in case the
          * problem is just that the device has DHCP'd itself an new number.
          */
-        if (connect(fd, &tty->farAddr.sa, sizeof tty->farAddr.ia) < 0) {
+        if (connect(fd, &tty->farAddr.oa.sa, tty->farAddrSize) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
             epicsSocketDestroy(fd);
-            tty->haveAddress = 0;
+            if (tty->flags & FLAG_DONE_LOOKUP)
+                tty->flags |=  FLAG_NEED_LOOKUP;
             return asynError;
         }
     }
     i = 1;
     if ((tty->socketType == SOCK_STREAM)
+     && (tty->farAddr.oa.sa.sa_family == AF_INET)
      && (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (void *)&i, sizeof i) < 0)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                       "Can't set %s socket NODELAY option: %s",
@@ -639,8 +657,6 @@ drvAsynIPPortConfigure(const char *portName,
     asynInterface *pasynInterface;
     asynStatus status;
     char *cp;
-    int port;
-    char protocol[6];
     int nbytes;
     asynOctet *pasynOctet;
     int isCom = 0;
@@ -677,49 +693,74 @@ drvAsynIPPortConfigure(const char *portName,
           "drvAsynIPPortConfigure()");
     pasynOctet = (asynOctet *)(tty+1);
     tty->fd = INVALID_SOCKET;
+    tty->flags = 0;
     tty->IPDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
 
     /*
      * Parse configuration parameters
      */
-    protocol[0] = '\0';
-    if (((cp = strchr(tty->IPDeviceName, ':')) == NULL)
-     || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
-        printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
-                                                        tty->IPDeviceName);
+    if (strncmp(tty->IPDeviceName, "unix://", 7) == 0) {
+#   if defined(HAS_AF_UNIX)
+        const char *cp = tty->IPDeviceName + 7;
+        size_t l = strlen(cp);
+        if ((l == 0) || (l >= sizeof(tty->farAddr.ua.sun_path)-1)) {
+            printf("Path name \"%s\" invalid.\n", cp);
+            ttyCleanup(tty);
+            return -1;
+        }
+        tty->farAddr.ua.sun_family = AF_UNIX;
+        strcpy(tty->farAddr.ua.sun_path, cp);
+        tty->farAddrSize = sizeof(tty->farAddr.ua) -
+                           sizeof(tty->farAddr.ua.sun_path) + l + 1;
+        tty->socketType = SOCK_STREAM;
+#   else
+        printf("AF_UNIX not available on this platform.\n");
         ttyCleanup(tty);
         return -1;
-    }
-    *cp = '\0';
-    tty->IPHostName = epicsStrDup(tty->IPDeviceName);
-    *cp = ':';
-    tty->farAddr.ia.sin_port = htons(port);
-    tty->farAddr.ia.sin_family = AF_INET;
-    tty->flags = 0;
-    if ((protocol[0] ==  '\0')
-     || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
-        tty->socketType = SOCK_STREAM;
-    }
-    else if (epicsStrCaseCmp(protocol, "com") == 0) {
-        isCom = 1;
-        tty->socketType = SOCK_STREAM;
-    }
-    else if (epicsStrCaseCmp(protocol, "http") == 0) {
-        tty->socketType = SOCK_STREAM;
-        tty->flags |= FLAG_CONNECT_PER_TRANSACTION;
-    }
-    else if (epicsStrCaseCmp(protocol, "udp") == 0) {
-        tty->socketType = SOCK_DGRAM;
-    }
-    else if (epicsStrCaseCmp(protocol, "udp*") == 0) {
-        tty->socketType = SOCK_DGRAM;
-        tty->flags |= FLAG_BROADCAST;
+#   endif
     }
     else {
-        printf("drvAsynIPPortConfigure: Unknown protocol \"%s\".\n", protocol);
-        ttyCleanup(tty);
-        return -1;
+        int port;
+        char protocol[6];
+        protocol[0] = '\0';
+        if (((cp = strchr(tty->IPDeviceName, ':')) == NULL)
+         || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
+            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
+                                                            tty->IPDeviceName);
+            ttyCleanup(tty);
+            return -1;
+        }
+        *cp = '\0';
+        tty->IPHostName = epicsStrDup(tty->IPDeviceName);
+        *cp = ':';
+        tty->farAddr.oa.ia.sin_family = AF_INET;
+        tty->farAddr.oa.ia.sin_port = htons(port);
+        tty->farAddrSize = sizeof(tty->farAddr.oa.ia);
+        if ((protocol[0] ==  '\0')
+         || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
+            tty->socketType = SOCK_STREAM;
+        }
+        else if (epicsStrCaseCmp(protocol, "com") == 0) {
+            isCom = 1;
+            tty->socketType = SOCK_STREAM;
+        }
+        else if (epicsStrCaseCmp(protocol, "http") == 0) {
+            tty->socketType = SOCK_STREAM;
+            tty->flags |= FLAG_CONNECT_PER_TRANSACTION;
+        }
+        else if (epicsStrCaseCmp(protocol, "udp") == 0) {
+            tty->socketType = SOCK_DGRAM;
+        }
+        else if (epicsStrCaseCmp(protocol, "udp*") == 0) {
+            tty->socketType = SOCK_DGRAM;
+            tty->flags |= FLAG_BROADCAST;
+        }
+        else {
+            printf("drvAsynIPPortConfigure: Unknown protocol \"%s\".\n", protocol);
+            ttyCleanup(tty);
+            return -1;
+        }
     }
 
     /*
