@@ -19,9 +19,10 @@
   </div>
   <h3>
     asynOctetSyncIO</h3>
-<p>Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort 
-for end-of-string manipulations (setInputEos, getInputEos, setOutputEos, getOutputEos).
-This ensures that these operations can take place even with device disconnected.<p>
+  <p>
+    Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort for
+    end-of-string manipulations (setInputEos, getInputEos, setOutputEos, getOutputEos).
+    This ensures that these operations can take place even with device disconnected.</p>
   <h3>
     drvAsynIPPort</h3>
   <p>
@@ -33,11 +34,16 @@ This ensures that these operations can take place even with device disconnected.
   <h3>
     asynRecord</h3>
   <p>
-    Added 4 additional baud rates to the BAUD field (460800, 576000, 921600,  1152000).  However, the BAUD field
-    can still only support 16 fixed baud rates because it is type DBF_ENUM.</p>
-  <p>Added a new LBAUD (long baud rate) field of type DBF_LONG.  This allows selection of any baud rate, not just those
-  in the BAUD menu.  Changing the BAUD field changes the LBAUD field.  Changing the LBAUD field changes the BAUD field to
-  the appropriate selection if it is a supported value, or to "Unknown" if not.</p>
+    Added 4 additional baud rates to the BAUD field (460800, 576000, 921600, 1152000).
+    However, the BAUD field can still only support 16 fixed baud rates because it is
+    type DBF_ENUM.</p>
+  <p>
+    Added a new LBAUD (long baud rate) field of type DBF_LONG. This allows selection
+    of any baud rate, not just those in the BAUD menu. Changing the BAUD field changes
+    the LBAUD field. Changing the LBAUD field changes the BAUD field to the appropriate
+    selection if it is a supported value, or to "Unknown" if not.</p>
+  <div style="text-align: center">
+    <hr />
     <h2>
       Release 4-21</h2>
     <h2>
