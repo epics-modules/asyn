@@ -5174,7 +5174,7 @@ struct asynGpibPort {
         <td>
           baud</td>
         <td>
-          9600 50 75 110 134 150 200 300 600 1200 ... 230400</td>
+          50 75 110 134 150 200 300 600 1200 2400 9600 ...</td>
       </tr>
       <tr>
         <td>
@@ -5226,6 +5226,11 @@ struct asynGpibPort {
       </tr>
     </tbody>
   </table>
+  <p>
+    On some systems (e.g. Windows, Darwin) the driver accepts any numeric value for
+    the baud rate, which must, of course be supported by the system hardware. On Linux
+    the choices are limited to the values like B300, B9600, etc. which are defined in
+    /usr/include/bits/termios.h.</p>
   <p>
     The clocal and crtscts parameter names are taken from the POSIX termios serial interface
     definition. The clocal parameter controls whether the modem control lines (Data
@@ -5290,7 +5295,9 @@ asynSetOption("L0",0,"baud","9600")</pre>
           commands just as for local serial ports. The default parameters are 9600-8-N-1 with
           no flow control.</li>
       </ul>
-    </li>
+      If the hostInfo argument begins wih the characters <span style="font-weight: bold">
+        unix://</span> the remainder of the argument is taken to be the name of a UNIX-domain
+      stream socket. </li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
