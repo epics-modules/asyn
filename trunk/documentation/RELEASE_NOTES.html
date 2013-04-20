@@ -42,6 +42,12 @@
     of any baud rate, not just those in the BAUD menu. Changing the BAUD field changes
     the LBAUD field. Changing the LBAUD field changes the BAUD field to the appropriate
     selection if it is a supported value, or to "Unknown" if not.</p>
+  <h3>
+    testAsynPortDriver</h3>
+  <p>
+    Added calls to lock() and unlock() in simTask.  This was previously a serious omission
+    in this example driver.  Thanks to Kay Kasemir for spotting this.</p>
+    
   <div style="text-align: center">
     <hr />
     <h2>
