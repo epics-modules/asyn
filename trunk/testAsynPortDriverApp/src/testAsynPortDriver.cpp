@@ -151,12 +151,17 @@ void testAsynPortDriver::simTask(void)
     int run, i, maxPoints;
     double pi=4.0*atan(1.0);
     
+    lock();
     /* Loop forever */    
     while (1) {
         getDoubleParam(P_UpdateTime, &updateTime);
         getIntegerParam(P_Run, &run);
+        // Release the lock while we wait for a command to start or wait for updateTime
+        unlock();
         if (run) epicsEventWaitWithTimeout(eventId_, updateTime);
         else     (void) epicsEventWait(eventId_);
+        // Take the lock again
+        lock(); 
         /* run could have changed while we were waiting */
         getIntegerParam(P_Run, &run);
         if (!run) continue;
