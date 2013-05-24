@@ -16,7 +16,7 @@ install:
 	cp *.pdf ../html
 	cp -r asynDoxygenHTML ../html
 	mkdir -p ../html/gpibCoreConversion ; cp gpibCoreConversion/*html gpibCoreConversion/*pdf gpibCoreConversion/*css ../html/gpibCoreConversion
-	mkdir -p ../html/HowToDoSerial ; cp HowToDoSerial/*pdf ../html/HowToDoSerial
+	mkdir -p ../html/HowToDoSerial ; cp HowToDoSerial/*pdf HowToDoSerial/*.html ../html/HowToDoSerial
 
 clean:
 
