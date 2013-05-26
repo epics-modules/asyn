@@ -737,6 +737,7 @@ drvAsynIPPortConfigure(const char *portName,
         tty->farAddr.oa.ia.sin_family = AF_INET;
         tty->farAddr.oa.ia.sin_port = htons(port);
         tty->farAddrSize = sizeof(tty->farAddr.oa.ia);
+        tty->flags |= FLAG_NEED_LOOKUP;
         if ((protocol[0] ==  '\0')
          || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
             tty->socketType = SOCK_STREAM;
