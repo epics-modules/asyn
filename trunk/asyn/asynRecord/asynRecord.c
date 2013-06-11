@@ -183,11 +183,16 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 tb2;        /* Trace IO filter */
     epicsEnum16 tb3;        /* Trace IO driver */
     epicsEnum16 tb4;        /* Trace flow */
+    epicsEnum16 tb5;        /* Trace warning */
     epicsInt32 tiom;        /* Trace I/O mask */
     epicsEnum16 tib0;       /* Trace IO ASCII */
     epicsEnum16 tib1;       /* Trace IO escape */
     epicsEnum16 tib2;       /* Trace IO hex */
     epicsInt32 tsiz;        /* Trace IO truncate size */
+    epicsInt32 tinm;        /* Trace Info mask */
+    epicsEnum16 tinb0;      /* Trace Info time */
+    epicsEnum16 tinb1;      /* Trace Info port */
+    epicsEnum16 tinb2;      /* Trace Info source */
     char tfil[40];          /* Trace IO file */
     FILE *traceFd;          /* Trace file descriptor */
     epicsEnum16 auct;       /* Autoconnect */
@@ -401,11 +406,13 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordTB2:
     case asynRecordTB3:
     case asynRecordTB4:
+    case asynRecordTB5:
         traceMask = (pasynRec->tb0 ? ASYN_TRACE_ERROR : 0) |
-            (pasynRec->tb1 ? ASYN_TRACEIO_DEVICE : 0) |
-            (pasynRec->tb2 ? ASYN_TRACEIO_FILTER : 0) |
-            (pasynRec->tb3 ? ASYN_TRACEIO_DRIVER : 0) |
-            (pasynRec->tb4 ? ASYN_TRACE_FLOW : 0);
+                    (pasynRec->tb1 ? ASYN_TRACEIO_DEVICE : 0) |
+                    (pasynRec->tb2 ? ASYN_TRACEIO_FILTER : 0) |
+                    (pasynRec->tb3 ? ASYN_TRACEIO_DRIVER : 0) |
+                    (pasynRec->tb4 ? ASYN_TRACE_FLOW : 0) |
+                    (pasynRec->tb5 ? ASYN_TRACE_WARNING : 0);
         pasynTrace->setTraceMask(pasynUser, traceMask);
         return 0;
     case asynRecordTIOM:
@@ -415,9 +422,20 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordTIB1:
     case asynRecordTIB2:
         traceMask = (pasynRec->tib0 ? ASYN_TRACEIO_ASCII : 0) |
-            (pasynRec->tib1 ? ASYN_TRACEIO_ESCAPE : 0) |
-            (pasynRec->tib2 ? ASYN_TRACEIO_HEX : 0);
+                    (pasynRec->tib1 ? ASYN_TRACEIO_ESCAPE : 0) |
+                    (pasynRec->tib2 ? ASYN_TRACEIO_HEX : 0);
         pasynTrace->setTraceIOMask(pasynUser, traceMask);
+        return 0;
+    case asynRecordTINM:
+        pasynTrace->setTraceInfoMask(pasynUser, pasynRec->tinm);
+        return 0;
+    case asynRecordTINB0:
+    case asynRecordTINB1:
+    case asynRecordTINB2:
+        traceMask = (pasynRec->tinb0 ? ASYN_TRACEINFO_TIME : 0) |
+                    (pasynRec->tinb1 ? ASYN_TRACEINFO_PORT : 0) |
+                    (pasynRec->tinb2 ? ASYN_TRACEINFO_SOURCE : 0);
+        pasynTrace->setTraceInfoMask(pasynUser, traceMask);
         return 0;
     case asynRecordTSIZ:
         pasynTrace->setTraceIOTruncateSize(pasynUser, pasynRec->tsiz);
@@ -1016,10 +1034,15 @@ static void monitorStatus(asynRecord * pasynRec)
     REMEMBER_STATE(tb2);
     REMEMBER_STATE(tb3);
     REMEMBER_STATE(tb4);
+    REMEMBER_STATE(tb5);
     REMEMBER_STATE(tiom);
     REMEMBER_STATE(tib0);
     REMEMBER_STATE(tib1);
     REMEMBER_STATE(tib2);
+    REMEMBER_STATE(tinm);
+    REMEMBER_STATE(tinb0);
+    REMEMBER_STATE(tinb1);
+    REMEMBER_STATE(tinb2);
     REMEMBER_STATE(tsiz);
     REMEMBER_STATE(auct);
     REMEMBER_STATE(cnct);
@@ -1032,11 +1055,17 @@ static void monitorStatus(asynRecord * pasynRec)
     pasynRec->tb2 = (traceMask & ASYN_TRACEIO_FILTER) ? 1 : 0;
     pasynRec->tb3 = (traceMask & ASYN_TRACEIO_DRIVER) ? 1 : 0;
     pasynRec->tb4 = (traceMask & ASYN_TRACE_FLOW) ? 1 : 0;
+    pasynRec->tb5 = (traceMask & ASYN_TRACE_WARNING) ? 1 : 0;
     traceMask = pasynTrace->getTraceIOMask(pasynUser);
     pasynRec->tiom = traceMask;
     pasynRec->tib0 = (traceMask & ASYN_TRACEIO_ASCII) ? 1 : 0;
     pasynRec->tib1 = (traceMask & ASYN_TRACEIO_ESCAPE) ? 1 : 0;
     pasynRec->tib2 = (traceMask & ASYN_TRACEIO_HEX) ? 1 : 0;
+    traceMask = pasynTrace->getTraceInfoMask(pasynUser);
+    pasynRec->tinm = traceMask;
+    pasynRec->tinb0 = (traceMask & ASYN_TRACEINFO_TIME) ? 1 : 0;
+    pasynRec->tinb1 = (traceMask & ASYN_TRACEINFO_PORT) ? 1 : 0;
+    pasynRec->tinb2 = (traceMask & ASYN_TRACEINFO_SOURCE) ? 1 : 0;
     status = pasynManager->isAutoConnect(pasynUser, &yesNo);
     if(status == asynSuccess)
         pasynRec->auct = yesNo;
@@ -1060,10 +1089,15 @@ static void monitorStatus(asynRecord * pasynRec)
     POST_IF_NEW(tb2);
     POST_IF_NEW(tb3);
     POST_IF_NEW(tb4);
+    POST_IF_NEW(tb5);
     POST_IF_NEW(tiom);
     POST_IF_NEW(tib0);
     POST_IF_NEW(tib1);
     POST_IF_NEW(tib2);
+    POST_IF_NEW(tinm);
+    POST_IF_NEW(tinb0);
+    POST_IF_NEW(tinb1);
+    POST_IF_NEW(tinb2);
     POST_IF_NEW(tsiz);
     if(traceFd != pasynRecPvt->old.traceFd) {
         pasynRecPvt->old.traceFd = traceFd;
