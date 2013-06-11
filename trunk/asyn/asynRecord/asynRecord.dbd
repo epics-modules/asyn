@@ -491,6 +491,13 @@ recordtype(asyn) {
         interest(1)
         menu(asynTRACE)
     }
+    field(TB5,DBF_MENU) {
+        prompt("Trace warning")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
     field(TIOM,DBF_LONG) {
         prompt("Trace I/O mask")
         promptgroup(GUI_DISPLAY)
@@ -513,6 +520,33 @@ recordtype(asyn) {
     }
     field(TIB2,DBF_MENU) {
         prompt("Trace IO hex")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
+    field(TINM,DBF_LONG) {
+        prompt("Trace Info mask")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+    }
+    field(TINB0,DBF_MENU) {
+        prompt("Trace Info Time")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
+    field(TINB1,DBF_MENU) {
+        prompt("Trace Info Port")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
+    field(TINB2,DBF_MENU) {
+        prompt("Trace Info Source")
         promptgroup(GUI_DISPLAY)
         special(SPC_MOD)
         interest(1)
