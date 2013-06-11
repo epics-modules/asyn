@@ -679,6 +679,42 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     asynSetTraceIOMask(portName,addr,mask);
 }
 
+static const iocshArg asynSetTraceInfoMaskArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetTraceInfoMaskArg1 = {"addr", iocshArgInt};
+static const iocshArg asynSetTraceInfoMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg *const asynSetTraceInfoMaskArgs[] = {
+    &asynSetTraceInfoMaskArg0,&asynSetTraceInfoMaskArg1,&asynSetTraceInfoMaskArg2};
+static const iocshFuncDef asynSetTraceInfoMaskDef =
+    {"asynSetTraceInfoMask", 3, asynSetTraceInfoMaskArgs};
+epicsShareFunc int
+ asynSetTraceInfoMask(const char *portName,int addr,int mask)
+{
+    asynUser *pasynUser=NULL;
+    asynStatus status;
+
+    if (portName && (strlen(portName) > 0)) {
+        pasynUser = pasynManager->createAsynUser(0,0);
+        status = pasynManager->connectDevice(pasynUser,portName,addr);
+        if(status!=asynSuccess) {
+            printf("%s\n",pasynUser->errorMessage);
+            pasynManager->freeAsynUser(pasynUser);
+            return -1;
+        }
+    }
+    status = pasynTrace->setTraceInfoMask(pasynUser,mask);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    if (pasynUser) pasynManager->freeAsynUser(pasynUser);
+    return 0;
+}
+static void asynSetTraceInfoMaskCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    int addr = args[1].ival;
+    int mask = args[2].ival;
+    asynSetTraceInfoMask(portName,addr,mask);
+}
+
 epicsShareFunc int
  asynSetTraceFile(const char *portName,int addr,const char *filename)
 {
@@ -995,6 +1031,7 @@ static void asynRegister(void)
     iocshRegister(&asynShowOptionDef,asynShowOptionCall);
     iocshRegister(&asynSetTraceMaskDef,asynSetTraceMaskCall);
     iocshRegister(&asynSetTraceIOMaskDef,asynSetTraceIOMaskCall);
+    iocshRegister(&asynSetTraceInfoMaskDef,asynSetTraceInfoMaskCall);
     iocshRegister(&asynSetTraceFileDef,asynSetTraceFileCall);
     iocshRegister(&asynSetTraceIOTruncateSizeDef,asynSetTraceIOTruncateSizeCall);
     iocshRegister(&asynEnableDef,asynEnableCall);
