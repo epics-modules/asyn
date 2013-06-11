@@ -1,14 +1,14 @@
 
 file {
-	name="/home/epics/devel/asyn/medm/asynRecord.adl"
-	version=030102
+	name="/home/epics/devel/asyn-4-22/opi/medm/asynRecord.adl"
+	version=030105
 }
 display {
 	object {
 		x=72
 		y=61
-		width=442
-		height=465
+		width=440
+		height=570
 	}
 	clr=14
 	bclr=4
@@ -268,345 +268,201 @@ rectangle {
 		fill="outline"
 	}
 }
-composite {
+text {
+	object {
+		x=68
+		y=316
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceError"
+}
+text {
+	object {
+		x=68
+		y=385
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIODriver"
+}
+text {
+	object {
+		x=68
+		y=362
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOFilter"
+}
+text {
+	object {
+		x=68
+		y=339
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIODevice"
+}
+text {
+	object {
+		x=9
+		y=269
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceMask"
+}
+text {
+	object {
+		x=242
+		y=362
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOHex"
+}
+"choice button" {
+	object {
+		x=9
+		y=316
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB0"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=9
+		y=385
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB3"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=9
+		y=362
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=9
+		y=339
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=183
+		y=362
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=242
+		y=385
+		width=104
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Truncate size"
+}
+"text entry" {
+	object {
+		x=183
+		y=385
+		width=50
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TSIZ"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+rectangle {
 	object {
 		x=5
 		y=267
 		width=430
-		height=185
+		height=295
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=68
-				y=316
-				width=96
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceError"
-		}
-		text {
-			object {
-				x=68
-				y=385
-				width=96
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIODriver"
-		}
-		text {
-			object {
-				x=68
-				y=408
-				width=96
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceFlow"
-		}
-		text {
-			object {
-				x=68
-				y=362
-				width=96
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIOFilter"
-		}
-		text {
-			object {
-				x=68
-				y=339
-				width=96
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIODevice"
-		}
-		text {
-			object {
-				x=9
-				y=269
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceMask"
-		}
-		text {
-			object {
-				x=183
-				y=269
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIOMask"
-		}
-		text {
-			object {
-				x=242
-				y=316
-				width=100
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIOASCII"
-		}
-		text {
-			object {
-				x=242
-				y=339
-				width=100
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIOEscape"
-		}
-		text {
-			object {
-				x=242
-				y=362
-				width=100
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="traceIOHex"
-		}
-		"choice button" {
-			object {
-				x=9
-				y=316
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB0"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=9
-				y=385
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB3"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=9
-				y=408
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB4"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=9
-				y=362
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB2"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=9
-				y=339
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TB1"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=183
-				y=316
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TIB0"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=183
-				y=339
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TIB1"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		"choice button" {
-			object {
-				x=183
-				y=362
-				width=55
-				height=18
-			}
-			control {
-				chan="$(P)$(R).TIB2"
-				clr=14
-				bclr=51
-			}
-			stacking="column"
-		}
-		text {
-			object {
-				x=242
-				y=385
-				width=104
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Truncate size"
-		}
-		"text entry" {
-			object {
-				x=183
-				y=385
-				width=50
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TSIZ"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		text {
-			object {
-				x=9
-				y=431
-				width=80
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Trace file:"
-		}
-		"text entry" {
-			object {
-				x=99
-				y=429
-				width=330
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TFIL"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		rectangle {
-			object {
-				x=5
-				y=267
-				width=430
-				height=185
-			}
-			"basic attribute" {
-				clr=14
-				fill="outline"
-			}
-		}
-		"text entry" {
-			object {
-				x=9
-				y=293
-				width=70
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TMSK"
-				clr=14
-				bclr=51
-			}
-			format="hexadecimal"
-			limits {
-			}
-		}
-		"text entry" {
-			object {
-				x=183
-				y=293
-				width=70
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TIOM"
-				clr=14
-				bclr=51
-			}
-			format="hexadecimal"
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+"text entry" {
+	object {
+		x=9
+		y=293
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TMSK"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
 	}
 }
 composite {
@@ -960,4 +816,280 @@ text {
 	}
 	clr=14
 	bclr=51
+}
+text {
+	object {
+		x=183
+		y=269
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOMask"
+}
+text {
+	object {
+		x=242
+		y=316
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOASCII"
+}
+text {
+	object {
+		x=242
+		y=339
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceIOEscape"
+}
+"choice button" {
+	object {
+		x=183
+		y=316
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB0"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"choice button" {
+	object {
+		x=183
+		y=339
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TIB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+"text entry" {
+	object {
+		x=183
+		y=293
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TIOM"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+text {
+	object {
+		x=183
+		y=415
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceInfoMask"
+}
+"text entry" {
+	object {
+		x=183
+		y=439
+		width=70
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TINM"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+composite {
+	object {
+		x=9
+		y=535
+		width=420
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=9
+				y=537
+				width=80
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Trace file:"
+		}
+		"text entry" {
+			object {
+				x=99
+				y=535
+				width=330
+				height=20
+			}
+			control {
+				chan="$(P)$(R).TFIL"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+	}
+}
+"choice button" {
+	object {
+		x=9
+		y=408
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB4"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=68
+		y=408
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceFlow"
+}
+"choice button" {
+	object {
+		x=9
+		y=431
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TB5"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=68
+		y=431
+		width=96
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceWarning"
+}
+text {
+	object {
+		x=242
+		y=485
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceInfoPort"
+}
+"choice button" {
+	object {
+		x=183
+		y=485
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TINB1"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=242
+		y=508
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceInfoSource"
+}
+"choice button" {
+	object {
+		x=183
+		y=508
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TINB2"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=242
+		y=462
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceInfoTime"
+}
+"choice button" {
+	object {
+		x=183
+		y=462
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TINB0"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
 }
