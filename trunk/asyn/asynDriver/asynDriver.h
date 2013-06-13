@@ -198,8 +198,8 @@ typedef struct  asynLockPortNotify {
         const char *buffer, size_t len, const char *format, ... ); 
 */
 typedef struct asynTrace {
-    /* lock/unlock are only necessary if caller performs I/O other then*/
-    /* by calling asynTrace methods                                    */
+    /* lock/unlock are only necessary if caller performs I/O other than */
+    /* by calling asynTrace methods                                     */
     asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*setTraceMask)(asynUser *pasynUser,int mask);
