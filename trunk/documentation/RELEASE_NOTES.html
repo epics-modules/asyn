@@ -15,8 +15,39 @@
     <h2>
       Release 4-22</h2>
     <h2>
-      April XXX, 2013</h2>
+      June XXX, 2013</h2>
   </div>
+  <h3>
+    asynDriver</h3>
+  <p>
+    Added a new bit to asynTraceMask, ASYN_TRACE_WARNING. This is intended to be used
+    for messages that are less serious than ASYN_TRACE_ERROR, but more serious than
+    ASYN_TRACE_FLOW.</p>
+  <p>
+    Added new asynTraceInfoMask. This mask controls the information printed at the beginning
+    of each message by asynPrint and asynPrintIO. The mask is defined with the following
+    bits:</p>
+  <pre>
+#define ASYN_TRACEINFO_TIME 0x0001
+#define ASYN_TRACEINFO_PORT 0x0002
+#define ASYN_TRACEINFO_SOURCE 0x0004
+    </pre>
+  <ul>
+    <li>ASYN_TRACEINFO_TIME prints what has been printed in previous versions of asyn,
+      the date and time of the message.</li>
+    <li>ASYN_TRACEINFO_PORT prints [port,addr,reason], where port is the port name, addr
+      is the asyn address, and reason is pasynUser->reason. These are the 3 pieces of
+      "addressing" information in asyn.</li>
+    <li>ASYN_TRACEINFO_SOURCE prints the file name and line number, i.e. [__FILE__,__LINE__]
+      where the asynPrint statement occurs.</li>
+  </ul>
+  <p>
+    Added a new shell command to control this mask.</p>
+  <pre>
+    asynSetTraceInfoMask port,addr,mask
+    </pre>
+  <p>
+    Modified the asynRecord to support ASYN_TRACE_WARNING and asynTraceInfoMask.</p>
   <h3>
     asynOctetSyncIO</h3>
   <p>
@@ -45,9 +76,8 @@
   <h3>
     testAsynPortDriver</h3>
   <p>
-    Added calls to lock() and unlock() in simTask.  This was previously a serious omission
-    in this example driver.  Thanks to Kay Kasemir for spotting this.</p>
-    
+    Added calls to lock() and unlock() in simTask. This was previously a serious omission
+    in this example driver. Thanks to Kay Kasemir for spotting this.</p>
   <div style="text-align: center">
     <hr />
     <h2>
