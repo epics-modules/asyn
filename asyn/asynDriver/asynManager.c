@@ -2607,9 +2607,9 @@ static size_t printSource(FILE *fp, const char *file, int line)
     int      nout = 0;
 
     if(fp) {
-        nout = fprintf(fp,"[%s,%d] ", file, line);
+        nout = fprintf(fp,"[%s:%d] ", file, line);
     } else {
-        nout = errlogPrintf("[%s,%d] ", file, line);
+        nout = errlogPrintf("[%s:%d] ", file, line);
     }
     return nout;
 }
