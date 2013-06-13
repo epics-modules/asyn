@@ -269,6 +269,9 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     if (function == P_UpdateTime) {
         /* Make sure the update time is valid. If not change it and put back in parameter library */
         if (value < MIN_UPDATE_TIME) {
+            asynPrint(pasynUser, ASYN_TRACE_WARNING,
+                "%s:%s: warning, update time too small, changed from %f to %f\n", 
+                driverName, functionName, value, MIN_UPDATE_TIME);
             value = MIN_UPDATE_TIME;
             setDoubleParam(P_UpdateTime, value);
         }
