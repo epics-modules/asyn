@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-21</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-22</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 18, 2012</span></p>
+      <span style="font-weight: bold; font-size: 14pt">June 13, 2013</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -957,7 +957,7 @@
     Defines the exceptions for method exceptionOccurred</p>
   <pre>typedef enum {
     asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
-    asynExceptionTraceMask,asynExceptionTraceIOMask,
+    asynExceptionTraceMask,asynExceptionTraceIOMask,asynExceptionTraceInfoMask,
     asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
 } asynException;</pre>
   <table border="1">
@@ -993,6 +993,12 @@
           asynExceptionTraceIOMask</td>
         <td>
           The traceIOMask for the port or device has changed.</td>
+      </tr>
+      <tr>
+        <td>
+          asynExceptionTraceInfoMask</td>
+        <td>
+          The traceInfoMask for the port or device has changed.</td>
       </tr>
       <tr>
         <td>
@@ -1886,35 +1892,70 @@ typedef struct asynOption {
 #define ASYN_TRACEIO_FILTER  0x0004
 #define ASYN_TRACEIO_DRIVER  0x0008
 #define ASYN_TRACE_FLOW      0x0010
+#define ASYN_TRACE_WARNING   0x0020
 
 /* traceIO mask definitions*/
 #define ASYN_TRACEIO_NODATA 0x0000
 #define ASYN_TRACEIO_ASCII  0x0001
 #define ASYN_TRACEIO_ESCAPE 0x0002
 #define ASYN_TRACEIO_HEX    0x0004
+
+/* traceInfo mask definitions*/
+#define ASYN_TRACEINFO_TIME 0x0001
+#define ASYN_TRACEINFO_PORT 0x0002
+#define ASYN_TRACEINFO_SOURCE 0x0004
+
 /* asynPrint and asynPrintIO are macros that act like
-   int asynPrint(asynUser *pasynUser,int reason, const char *format, ... );
-   int asynPrintIO(asynUser *pasynUser,int reason,
-        const char *buffer, size_t len, const char *format, ... );
+   int asynPrintSource(asynUser *pasynUser,int reason, __FILE__, __LINE__, const char *format, ... );
+   int asynPrintIOSource(asynUser *pasynUser,int reason,
+        const char *buffer, size_t len, __FILE__, __LINE__, const char *format, ... );
 */
 typedef struct asynTrace {
-    /* lock/unlock are only necessary if caller performs I/O other then*/
-    /* by calling asynTrace methods                                    */
+    /* lock/unlock are only necessary if caller performs I/O other than */
+    /* by calling asynTrace methods                                     */
     asynStatus (*lock)(asynUser *pasynUser);
     asynStatus (*unlock)(asynUser *pasynUser);
     asynStatus (*setTraceMask)(asynUser *pasynUser,int mask);
     int        (*getTraceMask)(asynUser *pasynUser);
     asynStatus (*setTraceIOMask)(asynUser *pasynUser,int mask);
     int        (*getTraceIOMask)(asynUser *pasynUser);
+    asynStatus (*setTraceInfoMask)(asynUser *pasynUser,int mask);
+    int        (*getTraceInfoMask)(asynUser *pasynUser);
     asynStatus (*setTraceFile)(asynUser *pasynUser,FILE *fp);
     FILE       *(*getTraceFile)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
     size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
+#if defined(__GNUC__) && (__GNUC__ < 3)
+    /* GCC 2.95 does not allow EPICS_PRINTF_STYLE on function pointers */
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
+    int        (*printSource)(asynUser *pasynUser,int reason, const char *fileName, int line, const char *pformat, ...);
+    int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar);
+    int        (*vprintSource)(asynUser *pasynUser,int reason, const char *file, int line, const char *pformat, va_list pvar);
     int        (*printIO)(asynUser *pasynUser,int reason,
-               const char *buffer, size_t len,const char *pformat, ...);
+                    const char *buffer, size_t len,const char *pformat, ...);
+    int        (*printIOSource)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *file, int line, const char *pformat, ...);
+    int        (*vprintIO)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *pformat, va_list pvar);
+    int        (*vprintIOSource)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *file, int line, const char *pformat, va_list pvar);
+#else
+    int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...) EPICS_PRINTF_STYLE(3,4);
+    int        (*printSource)(asynUser *pasynUser,int reason, const char *fileName, int line, const char *pformat, ...) EPICS_PRINTF_STYLE(5,6);
+    int        (*vprint)(asynUser *pasynUser,int reason, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(3,0);
+    int        (*vprintSource)(asynUser *pasynUser,int reason, const char *file, int line, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(5,0);
+    int        (*printIO)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *pformat, ...) EPICS_PRINTF_STYLE(5,6);
+    int        (*printIOSource)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *file, int line, const char *pformat, ...) EPICS_PRINTF_STYLE(7,8);
+    int        (*vprintIO)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(5,0);
+    int        (*vprintIOSource)(asynUser *pasynUser,int reason,
+                    const char *buffer, size_t len,const char *file, int line, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(7,0);
+#endif
 }asynTrace;
-epicsShareExtern asynTrace *pasynTrace;</pre>
+epicsShareExtern asynTrace *pasynTrace;
+</pre>
   <h3>
     asynTrace</h3>
   <p>
@@ -1935,6 +1976,8 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           callbacks entered, and all calls to drivers. Layers between device support and low
           level drivers should report all calls they make to lower level drivers. Low level
           drivers report calls they make to other support.</li>
+        <li>ASYN_TRACE_WARNING Report warnings, i.e. conditions that are between ASYN_TRACE_ERROR
+          and ASYN_TRACE_FLOW.</li>
       </ul>
     </li>
     <li>Another mask determines how message buffers are printed. The various choices can
@@ -1944,6 +1987,17 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
         <li>ASYN_TRACEIO_ASCII Print with a "%s" style format.</li>
         <li>ASYN_TRACEIO_ESCAPE Call epicsStrPrintEscaped.</li>
         <li>ASYN_TRACEIO_HEX Print each byte with " %2.2x".</li>
+      </ul>
+    </li>
+    <li>Another mask determines what information is printed at the beginning of each message.
+      The various choices can be ORed together.
+      <ul>
+        <li>ASYN_TRACEINFO_TIME prints the date and time of the message.</li>
+        <li>ASYN_TRACEINFO_PORT prints [port,addr,reason], where port is the port name, addr
+          is the asyn address, and reason is pasynUser-&gt;reason. These are the 3 pieces
+          of "addressing" information in asyn.</li>
+        <li>ASYN_TRACEINFO_SOURCE prints the file name and line number, i.e. [__FILE__,__LINE__]
+          where the asynPrint or asynPrintIO statement occurs.</li>
       </ul>
     </li>
   </ul>
@@ -2024,6 +2078,22 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
       </tr>
       <tr>
         <td>
+          setTraceInfoMask</td>
+        <td>
+          Set the traceInfo mask. Normally set by the user requesting it via a shell command
+          or the devTrace device support. Setting the traceInfo mask for a port also sets
+          the traceInfo mask for all devices connected to that port</td>
+      </tr>
+      <tr>
+        <td>
+          getTraceInfoMask</td>
+        <td>
+          Get the traceInfo mask. Support that wants to issue its own IO messages instead
+          of calling asynPrint should call this and honor the mask settings. Most code will
+          not need it.</td>
+      </tr>
+      <tr>
+        <td>
           setTraceFile</td>
         <td>
           Set the stream to use for output. A NULL argument means use errlog. Normally set
@@ -2062,7 +2132,29 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
           print</td>
         <td>
           If reason ORed with the current traceMask is not zero, then the message is printed.
-          Most code should call asynPrint instead of calling this method.</td>
+          This method is provided for backwards compatibility. The asynPrint macro now calls
+          printSource().</td>
+      </tr>
+      <tr>
+        <td>
+          printSource</td>
+        <td>
+          If reason ORed with the current traceMask is not zero, then the message is printed.
+          Most code should call asynPrint instead of calling this method. This method is the
+          same as print() but with the additional <b>file</b> and <b>line</b> arguments.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          vprint</td>
+        <td>
+          This is the same as print, but using a va_list as its final argument.</td>
+      </tr>
+      <tr>
+        <td>
+          vprintSource</td>
+        <td>
+          This is the same as printSource, but using a va_list as its final argument.</td>
       </tr>
       <tr>
         <td>
@@ -2070,7 +2162,30 @@ epicsShareExtern asynTrace *pasynTrace;</pre>
         <td>
           If reason ORed with the current traceMask is not zero then the message is printed.
           If len is &gt;0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
-          Most code should call asynPrintIO instead of calling this method.</td>
+          This method is provided for backwards compatibility. The asynPrintIO macro now calls
+          printIOSource().</td>
+      </tr>
+      <tr>
+        <td>
+          printIOSource</td>
+        <td>
+          If reason ORed with the current traceMask is not zero then the message is printed.
+          If len is &gt;0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
+          Most code should call asynPrintIO instead of calling this method. This method is
+          the same as printIO() but with the additional <b>file</b> and <b>line</b> arguments.
+        </td>
+      </tr>
+      <tr>
+        <td>
+          vprintIO</td>
+        <td>
+          This is the same as printIO, but using a va_list as its final argument.</td>
+      </tr>
+      <tr>
+        <td>
+          vprintIOSource</td>
+        <td>
+          This is the same as printIOSource, but using a va_list as its final argument.</td>
       </tr>
     </tbody>
   </table>
@@ -5600,6 +5715,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     asynInterposeEosConfig(portName,addr,processIn,processOut)
     asynSetTraceMask(portName,addr,mask)
     asynSetTraceIOMask(portName,addr,mask)
+    asynSetTraceInfoMask(portName,addr,mask)
     asynSetTraceFile(portName,addr,filename)
     asynSetTraceIOTruncateSize(portName,addr,size)
     asynSetOption(portName,addr,key,val)
@@ -5635,6 +5751,10 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
   <p>
     <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code> for
     the specified port and address. If portName is zero length then the global traceIO
+    mask is set.</p>
+  <p>
+    <code>asynSetTraceInfoMask</code> calls <code>asynTrace:setTraceInfoMask</code>
+    for the specified port and address. If portName is zero length then the global traceInfo
     mask is set.</p>
   <p>
     <code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>. The filename
