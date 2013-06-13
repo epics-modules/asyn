@@ -260,7 +260,7 @@ epicsShareExtern asynTrace *pasynTrace;
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L) || defined(_WIN32)
 #define asynPrintIO(pasynUser,reason,buffer,len, ...) \
    ((pasynTrace->getTraceMask((pasynUser))&(reason)) \
-    ? pasynTrace->printIOSource((pasynUser),(reason),(buffer),(len),__FILE__,__LINE____VA_ARGS__) \
+    ? pasynTrace->printIOSource((pasynUser),(reason),(buffer),(len),__FILE__,__LINE__,__VA_ARGS__) \
     : 0)
 #elif defined(__GNUC__)
 #define asynPrintIO(pasynUser,reason,buffer,len,format...) \
