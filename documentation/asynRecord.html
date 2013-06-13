@@ -1353,6 +1353,18 @@
       </tr>
       <tr>
         <td>
+          TB5</td>
+        <td>
+          R/W</td>
+        <td>
+          "Trace warning"</td>
+        <td>
+          DBF_MENU</td>
+        <td>
+          The ASYN_TRACE_WARNING bit. Choices are "Off" and "On".</td>
+      </tr>
+      <tr>
+        <td>
           TIOM</td>
         <td>
           R/W</td>
@@ -1401,6 +1413,54 @@
       </tr>
       <tr>
         <td>
+          TINM</td>
+        <td>
+          R/W</td>
+        <td>
+          "Trace Info mask"</td>
+        <td>
+          DBF_LONG</td>
+        <td>
+          The asynTraceInfoMask.</td>
+      </tr>
+      <tr>
+        <td>
+          TINB0</td>
+        <td>
+          R/W</td>
+        <td>
+          "Trace Info Time"</td>
+        <td>
+          DBF_MENU</td>
+        <td>
+          The ASYN_TRACEINFO_TIME bit. Choices are "Off" and "On".</td>
+      </tr>
+      <tr>
+        <td>
+          TINB1</td>
+        <td>
+          R/W</td>
+        <td>
+          "Trace Info Port"</td>
+        <td>
+          DBF_MENU</td>
+        <td>
+          The ASYN_TRACEINFO_PORT bit. Choices are "Off" and "On".</td>
+      </tr>
+      <tr>
+        <td>
+          TINB2</td>
+        <td>
+          R/W</td>
+        <td>
+          "Trace Info Source"</td>
+        <td>
+          DBF_MENU</td>
+        <td>
+          The ASYN_TRACEINFO_SOURCE bit. Choices are "Off" and "On".</td>
+      </tr>
+      <tr>
+        <td>
           TSIZ</td>
         <td>
           R/W</td>
@@ -1430,14 +1490,16 @@
     The above fields are used to control the asynTrace facility. They allow one to turn
     on and off debugging output printed at the shell or written to the trace file.</p>
   <p>
-    The TMSK field allows one to read/write the entire asynTraceMask word. The TB0-TB4
-    fields allow one to read/write the individual bits in asynTraceMask. Similarly,
-    the TIOM field allows one to read/write the entire asynTraceIOMask word, and the
-    TIB0-TIB2 fields allow one to read/write the individual bits in asynTraceIOMask</p>
+    The TMSK field allows one to read/write the entire asynTraceMask word. The TB0-TB5
+    fields allow one to read/write the individual bits in asynTraceMask. The TIOM field
+    allows one to read/write the entire asynTraceIOMask word, and the TIB0-TIB2 fields
+    allow one to read/write the individual bits in asynTraceIOMask. The TINM field allows
+    one to read/write the entire asynTraceInfoMask word, and the TINB0-TINB2 fields
+    allow one to read/write the individual bits in asynTraceInfoMask.</p>
   <p>
     When the asyn record is connected to a new device with the PORT and ADDR fields
-    the above trace fields are automatically updated to reflect the current asynTrace
-    and asynTraceIO masks for that device.</p>
+    the above trace fields are automatically updated to reflect the current asynTrace,
+    asynTraceIO, and asynTraceInfo masks for that device.</p>
   <p>
     The TFIL field is used to set the name of the trace file. It is not possible for
     the asyn record to determine the current file name if the record did not set it.
