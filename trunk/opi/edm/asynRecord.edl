@@ -3,10 +3,10 @@ beginScreenProperties
 major 4
 minor 0
 release 1
-x 65
-y 86
-w 480
-h 500
+x 372
+y 570
+w 444
+h 574
 font "helvetica-medium-r-18.0"
 ctlFont "helvetica-medium-r-8.0"
 btnFont "helvetica-medium-r-18.0"
@@ -49,7 +49,7 @@ release 0
 x 8
 y 292
 w 432
-h 192
+h 276
 lineColor index 14
 fillColor index 14
 lineWidth 0
@@ -63,7 +63,7 @@ minor 0
 release 0
 x 8
 y 180
-w 464
+w 432
 h 48
 lineColor index 14
 fillColor index 14
@@ -74,7 +74,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 34
 y 177
@@ -91,17 +91,18 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 12
 y 208
-w 456
+w 424
 h 12
 controlPv "$(P)$(R).ERRS"
 format "string"
@@ -115,6 +116,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
@@ -122,7 +124,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 192
 w 42
@@ -142,7 +144,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 312
 y 240
 w 91
@@ -166,7 +168,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 324
 y 240
 w 77
@@ -190,7 +192,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 176
 y 236
 w 70
@@ -213,7 +215,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 192
 y 240
 w 56
@@ -237,7 +239,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 264
 y 100
 w 49
@@ -256,7 +258,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 318
 y 97
@@ -276,6 +278,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Menu Button)
@@ -322,7 +325,7 @@ endObjectProperties
 object activeMessageButtonClass
 beginObjectProperties
 major 4
-minor 0
+minor 1
 release 0
 x 8
 y 152
@@ -345,7 +348,7 @@ endObjectProperties
 object relatedDisplayClass
 beginObjectProperties
 major 4
-minor 2
+minor 4
 release 0
 x 344
 y 152
@@ -404,10 +407,10 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 196
 y 16
-w 81
+w 72
 h 15
 font "courier-bold-r-14.0"
 fontAlign "center"
@@ -425,7 +428,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 48
 w 35
@@ -444,7 +447,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 64
 y 44
@@ -464,6 +467,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
@@ -471,7 +475,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 256
 y 48
 w 56
@@ -490,7 +494,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 316
 y 44
@@ -510,6 +514,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Menu Button)
@@ -537,7 +542,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 325
 y 70
 w 62
@@ -561,7 +566,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 310
 y 70
 w 80
@@ -585,7 +590,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 20
 y 100
 w 56
@@ -604,7 +609,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 88
 y 97
@@ -624,6 +629,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Menu Button)
@@ -651,7 +657,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 36
 y 124
 w 70
@@ -691,7 +697,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 44
 y 240
 w 63
@@ -715,7 +721,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 32
 y 240
 w 84
@@ -907,7 +913,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 88
 y 336
 w 70
@@ -927,7 +933,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 88
 y 404
 w 91
@@ -947,7 +953,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 88
 y 428
 w 63
@@ -967,7 +973,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 88
 y 384
 w 91
@@ -987,7 +993,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 88
 y 360
 w 96
@@ -1006,7 +1012,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 28
 y 296
 w 63
@@ -1026,7 +1032,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 204
 y 296
 w 77
@@ -1046,7 +1052,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 264
 y 336
 w 84
@@ -1066,7 +1072,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 264
 y 360
 w 91
@@ -1086,7 +1092,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 264
 y 384
 w 70
@@ -1106,7 +1112,7 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
+release 1
 x 264
 y 404
 w 91
@@ -1125,7 +1131,7 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 204
 y 404
@@ -1145,6 +1151,7 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Static Text)
@@ -1152,9 +1159,9 @@ object activeXTextClass
 beginObjectProperties
 major 4
 minor 1
-release 0
-x 20
-y 460
+release 1
+x 16
+y 544
 w 77
 h 13
 font "courier-medium-r-12.0"
@@ -1171,10 +1178,10 @@ endObjectProperties
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
-x 104
-y 456
+x 100
+y 540
 w 332
 h 20
 controlPv "$(P)$(R).TFIL"
@@ -1191,13 +1198,14 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 28
 y 312
@@ -1217,13 +1225,14 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
 endObjectProperties
 
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
 major 4
-minor 2
+minor 6
 release 0
 x 204
 y 312
@@ -1243,5 +1252,217 @@ fastUpdate
 useHexPrefix
 newPos
 objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 204
+y 464
+w 55
+h 18
+fgColor index 13
+bgColor index 62
+selectColor index 60
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 13
+controlPv "$(P)$(R).TINB0"
+font "courier-medium-r-12.0"
+orientation "horizontal"
+endObjectProperties
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 204
+y 488
+w 55
+h 18
+fgColor index 13
+bgColor index 62
+selectColor index 60
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 13
+controlPv "$(P)$(R).TINB1"
+font "courier-medium-r-12.0"
+orientation "horizontal"
+endObjectProperties
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 204
+y 512
+w 55
+h 18
+fgColor index 13
+bgColor index 62
+selectColor index 60
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 13
+controlPv "$(P)$(R).TINB2"
+font "courier-medium-r-12.0"
+orientation "horizontal"
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 204
+y 424
+w 91
+h 13
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 0
+useDisplayBg
+value {
+  "traceInfoMask"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 264
+y 464
+w 91
+h 13
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 0
+useDisplayBg
+value {
+  "traceInfoTime"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 264
+y 488
+w 91
+h 13
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 0
+useDisplayBg
+value {
+  "traceInfoPort"
+}
+autoSize
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 264
+y 512
+w 105
+h 13
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 0
+useDisplayBg
+value {
+  "traceInfoSource"
+}
+autoSize
+endObjectProperties
+
+# (Text Control)
+object activeXTextDspClass
+beginObjectProperties
+major 4
+minor 6
+release 0
+x 204
+y 440
+w 70
+h 17
+controlPv "$(P)$(R).TINM"
+format "hex"
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 2
+editable
+autoHeight
+motifWidget
+nullColor index 32
+smartRefresh
+fastUpdate
+useHexPrefix
+newPos
+objType "controls"
+noExecuteClipMask
+endObjectProperties
+
+# (Static Text)
+object activeXTextClass
+beginObjectProperties
+major 4
+minor 1
+release 1
+x 88
+y 452
+w 84
+h 13
+font "courier-medium-r-12.0"
+fgColor index 13
+bgColor index 0
+useDisplayBg
+value {
+  "traceWarning"
+}
+autoSize
+endObjectProperties
+
+# (Choice Button)
+object activeChoiceButtonClass
+beginObjectProperties
+major 4
+minor 0
+release 0
+x 28
+y 452
+w 55
+h 18
+fgColor index 14
+bgColor index 62
+selectColor index 60
+inconsistentColor index 14
+topShadowColor index 0
+botShadowColor index 13
+controlPv "$(P)$(R).TB5"
+font "courier-medium-r-12.0"
+orientation "horizontal"
 endObjectProperties
 
