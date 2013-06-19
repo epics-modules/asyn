@@ -193,6 +193,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 tinb0;      /* Trace Info time */
     epicsEnum16 tinb1;      /* Trace Info port */
     epicsEnum16 tinb2;      /* Trace Info source */
+    epicsEnum16 tinb3;      /* Trace Info thread */
     char tfil[40];          /* Trace IO file */
     FILE *traceFd;          /* Trace file descriptor */
     epicsEnum16 auct;       /* Autoconnect */
@@ -432,9 +433,11 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordTINB0:
     case asynRecordTINB1:
     case asynRecordTINB2:
+    case asynRecordTINB3:
         traceMask = (pasynRec->tinb0 ? ASYN_TRACEINFO_TIME : 0) |
                     (pasynRec->tinb1 ? ASYN_TRACEINFO_PORT : 0) |
-                    (pasynRec->tinb2 ? ASYN_TRACEINFO_SOURCE : 0);
+                    (pasynRec->tinb2 ? ASYN_TRACEINFO_SOURCE : 0) |
+                    (pasynRec->tinb3 ? ASYN_TRACEINFO_THREAD : 0);
         pasynTrace->setTraceInfoMask(pasynUser, traceMask);
         return 0;
     case asynRecordTSIZ:
@@ -1043,6 +1046,7 @@ static void monitorStatus(asynRecord * pasynRec)
     REMEMBER_STATE(tinb0);
     REMEMBER_STATE(tinb1);
     REMEMBER_STATE(tinb2);
+    REMEMBER_STATE(tinb3);
     REMEMBER_STATE(tsiz);
     REMEMBER_STATE(auct);
     REMEMBER_STATE(cnct);
@@ -1066,6 +1070,7 @@ static void monitorStatus(asynRecord * pasynRec)
     pasynRec->tinb0 = (traceMask & ASYN_TRACEINFO_TIME) ? 1 : 0;
     pasynRec->tinb1 = (traceMask & ASYN_TRACEINFO_PORT) ? 1 : 0;
     pasynRec->tinb2 = (traceMask & ASYN_TRACEINFO_SOURCE) ? 1 : 0;
+    pasynRec->tinb3 = (traceMask & ASYN_TRACEINFO_THREAD) ? 1 : 0;
     status = pasynManager->isAutoConnect(pasynUser, &yesNo);
     if(status == asynSuccess)
         pasynRec->auct = yesNo;
@@ -1098,6 +1103,7 @@ static void monitorStatus(asynRecord * pasynRec)
     POST_IF_NEW(tinb0);
     POST_IF_NEW(tinb1);
     POST_IF_NEW(tinb2);
+    POST_IF_NEW(tinb3);
     POST_IF_NEW(tsiz);
     if(traceFd != pasynRecPvt->old.traceFd) {
         pasynRecPvt->old.traceFd = traceFd;
