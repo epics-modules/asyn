@@ -25,12 +25,13 @@
     ASYN_TRACE_FLOW.</p>
   <p>
     Added new asynTraceInfoMask. This mask controls the information printed at the beginning
-    of each message by asynPrint and asynPrintIO. The mask is defined with the following
-    bits:</p>
+    of each message by asynPrint and asynPrintIO. Thanks to Ulrik Pedersen for help with this.
+    The mask is defined with the following bits:</p>
   <pre>
 #define ASYN_TRACEINFO_TIME 0x0001
 #define ASYN_TRACEINFO_PORT 0x0002
 #define ASYN_TRACEINFO_SOURCE 0x0004
+#define ASYN_TRACEINFO_THREAD 0x0008
     </pre>
   <ul>
     <li>ASYN_TRACEINFO_TIME prints what has been printed in previous versions of asyn,
@@ -40,6 +41,8 @@
       "addressing" information in asyn.</li>
     <li>ASYN_TRACEINFO_SOURCE prints the file name and line number, i.e. [__FILE__,__LINE__]
       where the asynPrint statement occurs.</li>
+    <li>ASYN_TRACEINFO_THREAD prints the thread name, thread ID and thread priority, i.e.
+      [epicsThreadGetNameSelf(), epicsThreadGetIdSelf(), epicsThreadGetPrioritySelf()].</li>
   </ul>
   <p>
     Added a new shell command to control this mask.</p>
