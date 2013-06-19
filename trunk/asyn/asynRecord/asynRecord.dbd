@@ -552,6 +552,13 @@ recordtype(asyn) {
         interest(1)
         menu(asynTRACE)
     }
+    field(TINB3,DBF_MENU) {
+        prompt("Trace Info Thread")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
     field(TSIZ,DBF_LONG) {
         prompt("Trace IO truncate size")
         promptgroup(GUI_DISPLAY)
