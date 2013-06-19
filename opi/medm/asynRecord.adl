@@ -8,7 +8,7 @@ display {
 		x=72
 		y=61
 		width=440
-		height=570
+		height=589
 	}
 	clr=14
 	bclr=4
@@ -442,7 +442,7 @@ rectangle {
 		x=5
 		y=267
 		width=430
-		height=295
+		height=315
 	}
 	"basic attribute" {
 		clr=14
@@ -928,7 +928,7 @@ text {
 composite {
 	object {
 		x=9
-		y=535
+		y=555
 		width=420
 		height=20
 	}
@@ -937,7 +937,7 @@ composite {
 		text {
 			object {
 				x=9
-				y=537
+				y=557
 				width=80
 				height=18
 			}
@@ -949,7 +949,7 @@ composite {
 		"text entry" {
 			object {
 				x=99
-				y=535
+				y=555
 				width=330
 				height=20
 			}
@@ -1092,4 +1092,30 @@ text {
 		bclr=51
 	}
 	stacking="column"
+}
+"choice button" {
+	object {
+		x=183
+		y=531
+		width=55
+		height=18
+	}
+	control {
+		chan="$(P)$(R).TINB3"
+		clr=14
+		bclr=51
+	}
+	stacking="column"
+}
+text {
+	object {
+		x=242
+		y=531
+		width=100
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="traceInfoThread"
 }
