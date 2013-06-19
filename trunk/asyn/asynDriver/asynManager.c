@@ -2560,6 +2560,21 @@ static size_t getTraceIOTruncateSize(asynUser *pasynUser)
 
     return ptracePvt->traceTruncateSize;
 }
+
+static size_t printThread(FILE *fp)
+{
+    size_t nout = 0;
+    unsigned int threadPriority = epicsThreadGetPrioritySelf();
+    epicsThreadId threadId = epicsThreadGetIdSelf();
+    if(fp) {
+        nout = fprintf(fp,"[%s,%p,%d] ",epicsThreadGetNameSelf(),
+                       (void*)threadId,threadPriority);
+    } else {
+        nout = errlogPrintf("[%s,%p,%d] ",epicsThreadGetNameSelf(),
+                            (void*)threadId,threadPriority);
+    }
+    return nout;
+}
 
 static size_t printTime(FILE *fp)
 {
@@ -2654,6 +2669,7 @@ static int traceVprintSource(asynUser *pasynUser,int reason, const char *file, i
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_TIME) nout += (int)printTime(fp);
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_PORT) nout += (int)printPort(fp, pasynUser);
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_SOURCE) nout += (int)printSource(fp, file, line);
+    if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_THREAD) nout += (int)printThread(fp);
     if(fp) {
         nout += vfprintf(fp,pformat,pvar);
     } else {
@@ -2713,6 +2729,7 @@ static int traceVprintIOSource(asynUser *pasynUser,int reason,
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_TIME) nout += (int)printTime(fp);
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_PORT) nout += (int)printPort(fp, pasynUser);
     if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_SOURCE) nout += (int)printSource(fp, file, line);
+    if (ptracePvt->traceInfoMask & ASYN_TRACEINFO_THREAD) nout += (int)printThread(fp);
     if(fp) {
         nout += vfprintf(fp,pformat,pvar);
     } else {
