@@ -1225,6 +1225,115 @@ asynStatus asynPortDriver::flushOctet(asynUser *pasynUser)
     return asynSuccess;
 }
 
+extern "C" {static asynStatus setInputEosOctet(void *drvPvt, asynUser *pasynUser, 
+                                const char *eos, int eosLen)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->setInputEosOctet(pasynUser, eos, eosLen);
+    pPvt->unlock();
+    return(status);
+}}
+
+/** Called when asyn clients call pasynOctet->setInputEos().
+  * The base class implementation simply copies the inputEos to the class private data. 
+  * Derived classes will reimplement this function if they desire a different behavior.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] eos The input eos
+  * \param[in] eosLen The number of characters in the eos */
+asynStatus asynPortDriver::setInputEosOctet(asynUser *pasynUser, const char *eos, int eosLen)
+{
+    free(inputEosOctet);
+    inputEosOctet = (char *) calloc(eosLen, sizeof(char));
+    strncpy(inputEosOctet, eos, eosLen);
+    inputEosLenOctet = eosLen;
+    return asynSuccess;
+} 
+
+extern "C" {static asynStatus getInputEosOctet(void *drvPvt, asynUser *pasynUser, 
+                                char *eos, int eosSize, int *eosLen)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->getInputEosOctet(pasynUser, eos, eosSize, eosLen);
+    pPvt->unlock();
+    return(status);
+}}
+
+/** Called when asyn clients call pasynOctet->getInputEos().
+  * The base class implementation simply copies the inputEos from the class private data. 
+  * Derived classes will reimplement this function if they desire a different behavior.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[out] eos The input eos
+  * \param[in] eosSize The number of characters in the eos
+  * \param[out] eosLen The returned eos length */
+asynStatus asynPortDriver::getInputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen)
+{
+    *eosLen = inputEosLenOctet;
+    if (*eosLen > eosSize) *eosLen = eosSize;
+    strncpy(eos, inputEosOctet, *eosLen);
+    return asynSuccess;
+} 
+
+extern "C" {static asynStatus setOutputEosOctet(void *drvPvt, asynUser *pasynUser, 
+                                const char *eos, int eosLen)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->setOutputEosOctet(pasynUser, eos, eosLen);
+    pPvt->unlock();
+    return(status);
+}}
+
+/** Called when asyn clients call pasynOctet->setOutputEos().
+  * The base class implementation simply copies the outputEos to the class private data. 
+  * Derived classes will reimplement this function if they desire a different behavior.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[in] eos The output eos
+  * \param[in] eosLen The number of characters in the eos */
+asynStatus asynPortDriver::setOutputEosOctet(asynUser *pasynUser, const char *eos, int eosLen)
+{
+    free(outputEosOctet);
+    outputEosOctet = (char *) calloc(eosLen, sizeof(char));
+    strncpy(outputEosOctet, eos, eosLen);
+    outputEosLenOctet = eosLen;
+    return asynSuccess;
+} 
+
+extern "C" {static asynStatus getOutputEosOctet(void *drvPvt, asynUser *pasynUser, 
+                                char *eos, int eosSize, int *eosLen)
+{
+    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
+    asynStatus status;
+    
+    pPvt->lock();
+    status = pPvt->getOutputEosOctet(pasynUser, eos, eosSize, eosLen);
+    pPvt->unlock();
+    return(status);
+}}
+
+/** Called when asyn clients call pasynOctet->getOutputEos().
+  * The base class implementation simply copies the outputEos from the class private data. 
+  * Derived classes will reimplement this function if they desire a different behavior.
+  * \param[in] pasynUser pasynUser structure that encodes the reason and address.
+  * \param[out] eos The output eos
+  * \param[in] eosSize The number of characters in the eos
+  * \param[out] eosLen The returned eos length */
+asynStatus asynPortDriver::getOutputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen)
+{
+    *eosLen = outputEosLenOctet;
+    if (*eosLen > eosSize) *eosLen = eosSize;
+    strncpy(eos, outputEosOctet, *eosLen);
+    return asynSuccess;
+} 
+
+
 
 
 /* asynInt8Array interface methods */
@@ -1890,6 +1999,12 @@ void asynPortDriver::report(FILE *fp, int details)
 
     fprintf(fp, "Port: %s\n", this->portName);
     if (details >= 1) {
+        fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet); 
+        epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
+        fprintf(fp, "\n");
+        fprintf(fp, "  Output EOS[%d]: ", this->outputEosLenOctet); 
+        epicsStrPrintEscaped(fp, this->outputEosOctet, this->outputEosLenOctet);
+        fprintf(fp, "\n");
         this->reportParams(fp, details);
     }
     if (details >= 3) {
@@ -1999,7 +2114,13 @@ static asynFloat64 ifaceFloat64 = {
 static asynOctet ifaceOctet = {
     writeOctet,
     readOctet,
-    flushOctet
+    flushOctet,
+    NULL,  /* registerInterruptUser */
+    NULL,  /* cancelInterruptUser */
+    setInputEosOctet,
+    getInputEosOctet,
+    setOutputEosOctet,
+    getOutputEosOctet
 };
 
 static asynInt8Array ifaceInt8Array = {
@@ -2094,6 +2215,11 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
         printf("%s::%s ERROR: epicsMutexCreate failure\n", driverName, functionName);
         return;
     }
+    
+    inputEosOctet = epicsStrDup("");
+    inputEosLenOctet = 0;
+    outputEosOctet = epicsStrDup("");
+    outputEosLenOctet = 0;
 
     status = pasynManager->registerPort(portName,
                                         asynFlags,    /* multidevice and canblock flags */
