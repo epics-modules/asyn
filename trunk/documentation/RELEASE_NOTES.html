@@ -15,7 +15,7 @@
     <h2>
       Release 4-22</h2>
     <h2>
-      June XXX, 2013</h2>
+      August XXX, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -25,8 +25,8 @@
     ASYN_TRACE_FLOW.</p>
   <p>
     Added new asynTraceInfoMask. This mask controls the information printed at the beginning
-    of each message by asynPrint and asynPrintIO. Thanks to Ulrik Pedersen for help with this.
-    The mask is defined with the following bits:</p>
+    of each message by asynPrint and asynPrintIO. Thanks to Ulrik Pedersen for help
+    with this. The mask is defined with the following bits:</p>
   <pre>
 #define ASYN_TRACEINFO_TIME 0x0001
 #define ASYN_TRACEINFO_PORT 0x0002
@@ -76,6 +76,12 @@
     of any baud rate, not just those in the BAUD menu. Changing the BAUD field changes
     the LBAUD field. Changing the LBAUD field changes the BAUD field to the appropriate
     selection if it is a supported value, or to "Unknown" if not.</p>
+  <h3>
+    synPortDriver</h3>
+  <p>
+    Added new virtual methods to support Eos operations on the asynOctet interface.
+    These are setInputEosOctet(), getInputEosOctet(), setOutputEosOctet(), getOutputEosOctet().
+    Changed the report() method to print the current values of the inputEos and outputEos.</p>
   <h3>
     testAsynPortDriver</h3>
   <p>
