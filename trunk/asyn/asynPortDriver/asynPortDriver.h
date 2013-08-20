@@ -57,6 +57,10 @@ public:
     virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, size_t maxChars,
                                         size_t *nActual);
     virtual asynStatus flushOctet(asynUser *pasynUser);
+    virtual asynStatus setInputEosOctet(asynUser *pasynUser, const char *eos, int eosLen);
+    virtual asynStatus getInputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
+    virtual asynStatus setOutputEosOctet(asynUser *pasynUser, const char *eos, int eosLen);
+    virtual asynStatus getOutputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
     virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
                                         size_t nElements, size_t *nIn);
     virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
@@ -157,6 +161,10 @@ protected:
 private:
     paramList **params;
     epicsMutexId mutexId;
+    char *inputEosOctet;
+    int inputEosLenOctet;
+    char *outputEosOctet;
+    int outputEosLenOctet;
     template <typename epicsType, typename interruptType> 
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
