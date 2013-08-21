@@ -446,7 +446,16 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
-        poll(&pollfd, 1, writePollmsec);
+        epicsTimeGetCurrent(&startTime);
+        while (poll(&pollfd, 1, writePollmsec) < 0) {
+            if (errno != EINTR) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                          "Poll() failed: %s", strerror(errno));
+                return asynError;
+            }
+            epicsTimeGetCurrent(&endTime);
+            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000 > writePollmsec) break; 
+        }
 #endif
         for (;;) {
             thisWrite = send(tty->fd, (char *)data, (int)numchars, 0);
@@ -506,6 +515,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     int thisRead;
     int readPollmsec;
     int reason = 0;
+    epicsTimeStamp startTime;
+    epicsTimeStamp endTime;
     asynStatus status = asynSuccess;
 
     assert(tty);
@@ -549,7 +560,16 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLIN;
-        poll(&pollfd, 1, readPollmsec);
+        epicsTimeGetCurrent(&startTime);
+        while (poll(&pollfd, 1, readPollmsec) < 0) {
+            if (errno != EINTR) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                          "Poll() failed: %s", strerror(errno));
+                return asynError;
+            }
+            epicsTimeGetCurrent(&endTime);
+            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000. > readPollmsec) break; 
+        }
     }
 #endif
     thisRead = recv(tty->fd, data, (int)maxchars, 0);
