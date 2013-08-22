@@ -60,6 +60,17 @@
   <h3>
     drvAsynIPPort</h3>
   <p>
+    Fixed a bug in calling poll(). Previously the status return from poll() was not
+    being checked; it was assumed that when poll() returned the port either had new
+    data or had timed out. This is not correct, because poll() can return prematurely
+    with errno=EINTR if a Posix signal occurs before data is received or the timeout
+    expires. This can happen, for example, when the Posix high-resolution timer routines
+    (timer_create, etc.) are used in the IOC. The Prosilica vendor library uses the
+    Posix timer routines, and there were problems using asyn IP ports in IOCs that were
+    also running Prosilica cameras. The problem was fixed by calling poll() again if
+    it returns EINTR and the desired timeout time has not expired since poll() was first
+    called.</p>
+  <p>
     Added support for AF_UNIX sockets on systems that provide them.</p>
   <h3>
     drvAsynSerialPort</h3>
@@ -77,7 +88,7 @@
     the LBAUD field. Changing the LBAUD field changes the BAUD field to the appropriate
     selection if it is a supported value, or to "Unknown" if not.</p>
   <h3>
-    synPortDriver</h3>
+    asynPortDriver</h3>
   <p>
     Added new virtual methods to support Eos operations on the asynOctet interface.
     These are setInputEosOctet(), getInputEosOctet(), setOutputEosOctet(), getOutputEosOctet().
