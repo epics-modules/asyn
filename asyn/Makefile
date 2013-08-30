@@ -219,8 +219,6 @@ endif
 
 endif
 
-$(ASYN)/vxi11/drvVxi11.c: vxi11intr.h
-
 # Parallel build sometimes fails.
 # Make dependences on new records explicit.
 asynRecord$(OBJ): $(COMMON_DIR)/asynRecord.h
