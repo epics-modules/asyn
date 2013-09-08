@@ -419,6 +419,7 @@ static void processCallbackInput(asynUser *pasynUser)
     dbCommon *pr = (dbCommon *)pPvt->pr;
 
     pPvt->result.status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pPvt->result.value);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
     if (pPvt->bipolar && (pPvt->result.value & pPvt->signBit)) pPvt->result.value |= ~pPvt->mask;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
@@ -594,8 +595,7 @@ static void interruptCallbackEnumBo(void *drvPvt, asynUser *pasynUser,
 }
 
 
-static int
-getCallbackValue(devInt32Pvt *pPvt)
+static int getCallbackValue(devInt32Pvt *pPvt)
 {
     int ret = 0;
     epicsMutexLock(pPvt->mutexId);
