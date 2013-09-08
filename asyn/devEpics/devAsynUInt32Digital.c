@@ -342,6 +342,7 @@ static void processCallbackInput(asynUser *pasynUser)
 
     pPvt->result.status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
         &pPvt->result.value,pPvt->mask);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynUInt32Digital::process value=%u\n",
