@@ -135,6 +135,7 @@ void testErrors::callbackTask(void)
     /* Loop forever */    
     while (1) {
         lock();
+        updateTimeStamp();
         getIntegerParam(P_StatusReturn, &itemp); currentStatus = (asynStatus)itemp;
         getIntegerParam(P_Int32Value, &iVal);
         iVal++;
@@ -424,10 +425,15 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
     int function = pasynUser->reason;
     size_t ncopy = MAX_ARRAY_POINTS;
     int status = asynSuccess;
+    epicsTimeStamp timestamp;
     const char *functionName = "doReadArray";
 
     /* Get the current error status */
     getIntegerParam(P_StatusReturn, &status);
+    
+    /* Get the current timestamp */
+    getTimeStamp(&timestamp);
+    pasynUser->timestamp = timestamp;
 
     if (nElements < ncopy) ncopy = nElements;
     if (function == paramIndex) {
