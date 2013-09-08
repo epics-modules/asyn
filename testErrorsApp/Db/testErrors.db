@@ -39,6 +39,7 @@ record(ai, "$(P)AiInt32")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -62,6 +63,7 @@ record(longin, "$(P)LonginInt32")
 {
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -81,6 +83,7 @@ record(bi, "$(P)BiInt32")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -120,6 +123,7 @@ record(mbbi, "$(P)MbbiInt32")
    field(FRVL, "40")
    field(FVST, "Junk5")
    field(FVVL, "50")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -140,6 +144,7 @@ record(longin, "$(P)LonginUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
    field(INP,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -159,6 +164,7 @@ record(bi, "$(P)BiUInt32D")
    field(INP,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))UINT32D_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -186,6 +192,7 @@ record(mbbi, "$(P)MbbiUInt32D")
    field(ONVL, "20")
    field(TWST, "Junk2")
    field(TWVL, "30")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -201,6 +208,7 @@ record(mbbiDirect, "$(P)MbbiDUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
    field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -222,6 +230,7 @@ record(ai, "$(P)AiFloat64")
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
    field(PREC, "1")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -248,6 +257,7 @@ record(stringin, "$(P)SiOctet")
 {
    field(DTYP, "asynOctetRead")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -266,6 +276,7 @@ record(waveform, "$(P)WfInOctet")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(NELM, "100")
    field(FTVL, "CHAR")
+   field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
 
@@ -279,6 +290,7 @@ record(waveform, "$(P)WfInt8")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
     field(FTVL, "CHAR")
     field(NELM, "100")
+    field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
 }
 
@@ -288,6 +300,7 @@ record(waveform, "$(P)WfInt16")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
     field(FTVL, "SHORT")
     field(NELM, "100")
+    field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
 }
 
@@ -297,6 +310,7 @@ record(waveform, "$(P)WfInt32")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
     field(FTVL, "LONG")
     field(NELM, "100")
+    field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
 }
 
@@ -306,6 +320,7 @@ record(waveform, "$(P)WfFloat32")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
     field(FTVL, "FLOAT")
     field(NELM, "100")
+    field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
 }
 
@@ -315,6 +330,7 @@ record(waveform, "$(P)WfFloat64")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
     field(FTVL, "DOUBLE")
     field(NELM, "100")
+    field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
 }
 
