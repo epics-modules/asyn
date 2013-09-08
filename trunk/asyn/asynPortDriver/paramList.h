@@ -2,7 +2,7 @@
 #define paramList_H
 
 #ifdef __cplusplus
-#include "asynStandardInterfaces.h"
+#include "asynPortDriver.h"
 #include "asynParamType.h"
 #include "paramVal.h"
 
@@ -15,7 +15,7 @@
   * and dynamic-length strings. */
 class paramList {
 public:
-    paramList(int nVals, asynStandardInterfaces *pasynInterfaces);
+    paramList(int nVals, asynPortDriver *pPort);
     ~paramList();
     paramVal* getParameter(int index);
     asynStatus createParam(const char *name, asynParamType type, int *index);
@@ -48,7 +48,7 @@ private:
     int nextParam;
     int nVals;
     int nFlags;
-    asynStandardInterfaces *pasynInterfaces;
+    asynPortDriver *pasynPortDriver;
     int *flags;
     paramVal **vals;
 };
