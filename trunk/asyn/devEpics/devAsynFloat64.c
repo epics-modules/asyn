@@ -260,6 +260,7 @@ static void processCallbackInput(asynUser *pasynUser)
     dbCommon *pr = (dbCommon *)pPvt->pr;
 
     pPvt->result.status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pPvt->result.value);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process value=%f\n",pr->name,pPvt->result.value);
@@ -429,6 +430,7 @@ static long processAi(aiRecord *pr)
         }
     }
     pr->val = pPvt->result.value; 
+    pr->time = pPvt->result.time; 
     if(pPvt->result.status==asynSuccess) {
         pr->udf=0;
     }
