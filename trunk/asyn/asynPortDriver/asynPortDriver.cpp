@@ -72,6 +72,11 @@ asynStatus asynPortDriver::unlock()
     return(asynSuccess);
 }
 
+asynStandardInterfaces* asynPortDriver::getAsynStdInterfaces()
+{
+    return &this->asynStdInterfaces;
+}
+
 /** Creates a parameter in the parameter library.
   * Calls paramList::createParam (list, name, index) for all parameters lists.
   * \param[in] name Parameter name
@@ -614,12 +619,14 @@ asynStatus asynPortDriver::doCallbacksArray(epicsType *value, size_t nElements,
     while (pnode) {
         interruptType *pInterrupt = (interruptType *)pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &addr);
-        /* Set the status for the callback */
-        pInterrupt->pasynUser->auxStatus = status;
         /* If this is not a multi-device then address is -1, change to 0 */
         if (addr == -1) addr = 0;
         if ((pInterrupt->pasynUser->reason == reason) &&
             (address == addr)) {
+            /* Set the status for the callback */
+            pInterrupt->pasynUser->auxStatus = status;
+            /* Set the timestamp for the callback */
+            pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
                                  pInterrupt->pasynUser,
                                  value, nElements);
@@ -708,6 +715,8 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
     /* We just read the current value of the parameter from the parameter library.
      * Those values are updated whenever anything could cause them to change */
     status = (asynStatus) getIntegerParam(addr, function, value);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%d", 
@@ -827,6 +836,8 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
     /* We just read the current value of the parameter from the parameter library.
      * Those values are updated whenever anything could cause them to change */
     status = (asynStatus) getUIntDigitalParam(addr, function, value, mask);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%u mask=%u", 
@@ -1035,6 +1046,8 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     /* We just read the current value of the parameter from the parameter library.
      * Those values are updated whenever anything could cause them to change */
     status = (asynStatus) getDoubleParam(addr, function, value);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%f", 
@@ -1127,6 +1140,8 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     /* We just read the current value of the parameter from the parameter library.
      * Those values are updated whenever anything could cause them to change */
     status = (asynStatus)getStringParam(addr, function, (int)maxChars, value);
+    /* Set the timestamp */
+    pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%s", 
@@ -1717,6 +1732,10 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
         if (addr == -1) addr = 0;
         if ((pInterrupt->pasynUser->reason == reason) &&
             (address == addr)) {
+            /* Set the status for the callback */
+            // PROBLEM - WE DON'T HAVE A WAY TO STORE THE STATUS EXCEPT IN PARAMETER LIST
+            /* Set the timestamp for the callback */
+            pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
                                  pInterrupt->pasynUser,
                                  genericPointer);
@@ -1999,6 +2018,9 @@ void asynPortDriver::report(FILE *fp, int details)
 
     fprintf(fp, "Port: %s\n", this->portName);
     if (details >= 1) {
+        char buff[256];
+        epicsTimeToStrftime(buff, sizeof(buff), "%Y/%m/%d %H:%M:%S.%03f", &this->timeStamp);
+        fprintf(fp, "  Timestamp: %s\n", buff);
         fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet); 
         epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
         fprintf(fp, "\n");
@@ -2021,6 +2043,41 @@ void asynPortDriver::report(FILE *fp, int details)
         reportInterrupt<asynGenericPointerInterrupt>(fp, pInterfaces->genericPointerInterruptPvt, "genericPointer");
         reportInterrupt<asynEnumInterrupt>          (fp, pInterfaces->enumInterruptPvt,         "Enum");
     }
+}
+
+//* Time stamp support functions
+
+static void defaultTimeStampSource(void *userPvt, epicsTimeStamp *pTimeStamp)
+{
+    epicsTimeGetCurrent(pTimeStamp);
+}
+
+void asynPortDriver::registerUserTimeStampSource(void *userPvt, userTimeStampFunction timeStampSource)
+{
+    this->userTimeStampPvt = userPvt;
+    this->userTimeStampSource = timeStampSource;
+}
+
+asynStatus asynPortDriver::updateTimeStamp()
+{
+    if (this->userTimeStampSource) {
+        this->userTimeStampSource(this->userTimeStampPvt, &this->timeStamp);
+        return asynSuccess;
+    } else {
+        return asynError;
+    }
+}
+
+void asynPortDriver::getTimeStamp(epicsTimeStamp *pTimeStamp)
+{
+    pTimeStamp->secPastEpoch = this->timeStamp.secPastEpoch;
+    pTimeStamp->nsec = this->timeStamp.nsec;
+}
+
+void asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
+{
+    this->timeStamp.secPastEpoch = pTimeStamp->secPastEpoch;
+    this->timeStamp.nsec = pTimeStamp->nsec;
 }
 
 extern "C" {static asynStatus connect(void *drvPvt, asynUser *pasynUser)
@@ -2203,7 +2260,11 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     /* Initialize some members to 0 */
     pInterfaces = &this->asynStdInterfaces;
     memset(pInterfaces, 0, sizeof(asynStdInterfaces));
-       
+    
+    this->userTimeStampPvt = 0;
+    this->userTimeStampSource = 0;
+    registerUserTimeStampSource(0, defaultTimeStampSource);
+    
     this->portName = epicsStrDup(portNameIn);
     if (maxAddrIn < 1) maxAddrIn = 1;
     this->maxAddr = maxAddrIn;
@@ -2284,7 +2345,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     this->params = (paramList **) calloc(maxAddr, sizeof(paramList *));    
     /* Initialize the parameter library */
     for (addr=0; addr<maxAddr; addr++) {
-        this->params[addr] = new paramList(paramTableSize, &this->asynStdInterfaces);
+        this->params[addr] = new paramList(paramTableSize, this);
     }
 
     /* Connect to our device for asynTrace */
