@@ -465,6 +465,7 @@ static void callbackSiCmdResponse(asynUser *pasynUser)
     status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
     if(status==asynSuccess) {
         status = readIt(pasynUser,psi->val,len,&nBytesRead);
+        psi->time = pasynUser->timestamp;
         if(status==asynSuccess) {
             psi->udf = 0;
             if(nBytesRead==len) nBytesRead--;
@@ -509,6 +510,7 @@ static void callbackSiWriteRead(asynUser *pasynUser)
     status = writeIt(pasynUser,translate,strlen(translate));
     if(status==asynSuccess) {
         status = readIt(pasynUser,psi->val,len,&nBytesRead);
+        psi->time = pasynUser->timestamp;
         if(status==asynSuccess) {
             psi->udf = 0;
             if(nBytesRead==len) nBytesRead--;
@@ -540,6 +542,7 @@ static void callbackSiRead(asynUser *pasynUser)
     size_t         len = sizeof(psi->val);
 
     status = readIt(pasynUser,psi->val,len,&nBytesRead);
+    psi->time = pasynUser->timestamp;
     if(status==asynSuccess) {
         psi->udf = 0;
         if(nBytesRead==len) nBytesRead--;
@@ -590,6 +593,7 @@ static void callbackWfCmdResponse(asynUser *pasynUser)
     status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
+        pwf->time = pasynUser->timestamp;
         if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     }
     finish((dbCommon *)pwf);
@@ -630,6 +634,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     status = writeIt(pasynUser,translate,strlen(translate));
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
+        pwf->time = pasynUser->timestamp;
         if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     }
     finish((dbCommon *)pwf);
@@ -657,6 +662,7 @@ static void callbackWfRead(asynUser *pasynUser)
     asynStatus     status;
 
     status = readIt(pasynUser,pwf->bptr,pwf->nelm,&nBytesRead);
+    pwf->time = pasynUser->timestamp;
     if(status==asynSuccess) pwf->nord = (epicsUInt32)nBytesRead;
     finish((dbCommon *)pwf);
 }
