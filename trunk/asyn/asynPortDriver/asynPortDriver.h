@@ -10,6 +10,7 @@
 class paramList;
 
 epicsShareFunc void* findAsynPortDriver(const char *portName);
+typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp);
 
 #ifdef __cplusplus
 
@@ -28,7 +29,6 @@ epicsShareFunc void* findAsynPortDriver(const char *portName);
 #define asynFloat64ArrayMask    0x00000800
 #define asynGenericPointerMask  0x00001000
 #define asynEnumMask            0x00002000
-
 
 
 
@@ -147,6 +147,11 @@ public:
     virtual asynStatus callParamCallbacks();
     virtual asynStatus callParamCallbacks(          int addr);
     virtual asynStatus callParamCallbacks(int list, int addr);
+    virtual void registerUserTimeStampSource(void *userPvt, userTimeStampFunction callback);
+    virtual asynStatus updateTimeStamp();
+    virtual void getTimeStamp(epicsTimeStamp *pTimeStamp);
+    virtual void setTimeStamp(const epicsTimeStamp *pTimeStamp);
+    asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
 
     char *portName;         /**< The name of this asyn port */
@@ -156,15 +161,18 @@ public:
 
 protected:
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
-    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
+    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
     paramList **params;
     epicsMutexId mutexId;
     char *inputEosOctet;
     int inputEosLenOctet;
     char *outputEosOctet;
     int outputEosLenOctet;
+    epicsTimeStamp timeStamp;
+    userTimeStampFunction userTimeStampSource;
+    void *userTimeStampPvt;
     template <typename epicsType, typename interruptType> 
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
