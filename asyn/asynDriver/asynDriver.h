@@ -82,6 +82,7 @@ typedef struct asynInterface{
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
+typedef void (*timeStampCallback)(void *userPvt, epicsTimeStamp *pTimeStamp);
 
 typedef struct interruptNode{
     ELLNODE node;
@@ -151,6 +152,13 @@ typedef struct asynManager {
                                   interruptNode*pinterruptNode);
     asynStatus (*interruptStart)(void *pasynPvt,ELLLIST **plist);
     asynStatus (*interruptEnd)(void *pasynPvt);
+    /* Time stamp functions */
+    asynStatus (*registerTimeStampSource)(asynUser *pasynUser, void *userPvt, timeStampCallback callback);
+    asynStatus (*unregisterTimeStampSource)(asynUser *pasynUser);
+    asynStatus (*updateTimeStamp)(asynUser *pasynUser);
+    asynStatus (*getTimeStamp)(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
+    asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
+
     const char *(*strStatus)(asynStatus status);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
