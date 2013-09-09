@@ -611,6 +611,7 @@ asynStatus asynPortDriver::doCallbacksArray(epicsType *value, size_t nElements,
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStatus status;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     int addr;
 
     pasynManager->interruptStart(interruptPvt, &pclientList);
@@ -709,6 +710,7 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     static const char *functionName = "readInt32";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
@@ -830,6 +832,7 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     static const char *functionName = "readUInt32Digital";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
@@ -1040,6 +1043,7 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     static const char *functionName = "readFloat64";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
@@ -1134,6 +1138,7 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     int function = pasynUser->reason;
     int addr=0;
     asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     static const char *functionName = "readOctet";
    
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
@@ -1721,6 +1726,7 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
 {
     ELLLIST *pclientList;
     interruptNode *pnode;
+    epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     int addr;
 
     pasynManager->interruptStart(this->asynStdInterfaces.genericPointerInterruptPvt, &pclientList);
@@ -2019,7 +2025,8 @@ void asynPortDriver::report(FILE *fp, int details)
     fprintf(fp, "Port: %s\n", this->portName);
     if (details >= 1) {
         char buff[256];
-        epicsTimeToStrftime(buff, sizeof(buff), "%Y/%m/%d %H:%M:%S.%03f", &this->timeStamp);
+        epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
+        epicsTimeToStrftime(buff, sizeof(buff), "%Y/%m/%d %H:%M:%S.%03f", &timeStamp);
         fprintf(fp, "  Timestamp: %s\n", buff);
         fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet); 
         epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
@@ -2047,37 +2054,19 @@ void asynPortDriver::report(FILE *fp, int details)
 
 //* Time stamp support functions
 
-static void defaultTimeStampSource(void *userPvt, epicsTimeStamp *pTimeStamp)
-{
-    epicsTimeGetCurrent(pTimeStamp);
-}
-
-void asynPortDriver::registerUserTimeStampSource(void *userPvt, userTimeStampFunction timeStampSource)
-{
-    this->userTimeStampPvt = userPvt;
-    this->userTimeStampSource = timeStampSource;
-}
-
 asynStatus asynPortDriver::updateTimeStamp()
 {
-    if (this->userTimeStampSource) {
-        this->userTimeStampSource(this->userTimeStampPvt, &this->timeStamp);
-        return asynSuccess;
-    } else {
-        return asynError;
-    }
+    return pasynManager->updateTimeStamp(pasynUserSelf);
 }
 
-void asynPortDriver::getTimeStamp(epicsTimeStamp *pTimeStamp)
+asynStatus asynPortDriver::getTimeStamp(epicsTimeStamp *pTimeStamp)
 {
-    pTimeStamp->secPastEpoch = this->timeStamp.secPastEpoch;
-    pTimeStamp->nsec = this->timeStamp.nsec;
+    return pasynManager->getTimeStamp(pasynUserSelf,pTimeStamp);
 }
 
-void asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
+asynStatus asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
 {
-    this->timeStamp.secPastEpoch = pTimeStamp->secPastEpoch;
-    this->timeStamp.nsec = pTimeStamp->nsec;
+    return pasynManager->setTimeStamp(pasynUserSelf, pTimeStamp);
 }
 
 extern "C" {static asynStatus connect(void *drvPvt, asynUser *pasynUser)
@@ -2260,11 +2249,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     /* Initialize some members to 0 */
     pInterfaces = &this->asynStdInterfaces;
     memset(pInterfaces, 0, sizeof(asynStdInterfaces));
-    
-    this->userTimeStampPvt = 0;
-    this->userTimeStampSource = 0;
-    registerUserTimeStampSource(0, defaultTimeStampSource);
-    
+        
     this->portName = epicsStrDup(portNameIn);
     if (maxAddrIn < 1) maxAddrIn = 1;
     this->maxAddr = maxAddrIn;
