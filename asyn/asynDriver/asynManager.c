@@ -205,6 +205,11 @@ struct port {
     asynInterface *pcommonInterface;
     epicsTimerId  connectTimer;
     epicsThreadPrivateId queueLockPortId;
+    /* The following are for timestamp support */
+    epicsTimeStamp timeStamp;
+    timeStampCallback timeStampSource;
+    void           *timeStampPvt;
+
     double        secondsBetweenPortConnect;
 };
 
@@ -306,6 +311,12 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
                                    interruptNode*pinterruptNode);
 static asynStatus interruptStart(void *pasynPvt,ELLLIST **plist);
 static asynStatus interruptEnd(void *pasynPvt);
+static void defaultTimeStampSource(void *userPvt, epicsTimeStamp *pTimeStamp);
+static asynStatus registerTimeStampSource(asynUser *pasynUser, void *userPvt, timeStampCallback callback);
+static asynStatus unregisterTimeStampSource(asynUser *pasynUser);
+static asynStatus updateTimeStamp(asynUser *pasynUser);
+static asynStatus getTimeStamp(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
+static asynStatus setTimeStamp(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
 static const char *strStatus(asynStatus status);
 
 static asynManager manager = {
@@ -352,6 +363,11 @@ static asynManager manager = {
     removeInterruptUser,
     interruptStart,
     interruptEnd,
+    registerTimeStampSource,
+    unregisterTimeStampSource,
+    updateTimeStamp,
+    getTimeStamp,
+    setTimeStamp,
     strStatus
 };
 epicsShareDef asynManager *pasynManager = &manager;
@@ -1885,6 +1901,7 @@ static asynStatus registerPort(const char *portName,
     pport->asynManagerLock = epicsMutexMustCreate();
     pport->synchronousLock = epicsMutexMustCreate();
     pport->queueLockPortId = epicsThreadPrivateCreate();
+    pport->timeStampSource = defaultTimeStampSource;
     dpCommonInit(pport,0,autoConnect);
     pport->pasynUser = createAsynUser(0,0);
     ellInit(&pport->deviceList);
@@ -2349,6 +2366,105 @@ static asynStatus interruptEnd(void *pasynPvt)
     epicsMutexUnlock(pport->asynManagerLock);
     return asynSuccess;
 }
+
+/* Time stamp functions */
+
+static void defaultTimeStampSource(void *userPvt, epicsTimeStamp *pTimeStamp)
+{
+    epicsTimeGetCurrent(pTimeStamp);
+}
+
+
+static asynStatus registerTimeStampSource(asynUser *pasynUser, void *pPvt, timeStampCallback callback) 
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:getAddr not connected to device");
+        return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pport->timeStampSource = callback;
+    pport->timeStampPvt = pPvt;
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus unregisterTimeStampSource(asynUser *pasynUser) 
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:getAddr not connected to device");
+        return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pport->timeStampSource = defaultTimeStampSource;
+    pport->timeStampPvt = 0;
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus updateTimeStamp(asynUser *pasynUser) 
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
+    asynStatus status=asynSuccess;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:updateTimeStamp not connected to device");
+        return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    if (pport->timeStampSource) {
+        pport->timeStampSource(pport->timeStampPvt, &pport->timeStamp);
+    } else {
+        status = asynError;
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+    return status;
+}
+
+static asynStatus getTimeStamp(asynUser *pasynUser, epicsTimeStamp *pTimeStamp) 
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:getTimeStamp not connected to device");
+        return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pTimeStamp->secPastEpoch = pport->timeStamp.secPastEpoch;
+    pTimeStamp->nsec = pport->timeStamp.nsec;
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+static asynStatus setTimeStamp(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp) 
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port *pport = puserPvt->pport;
+
+    if(!pport) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:setTimeStamp not connected to device");
+        return asynError;
+    }
+    epicsMutexMustLock(pport->asynManagerLock);
+    pport->timeStamp.secPastEpoch = pTimeStamp->secPastEpoch;
+    pport->timeStamp.nsec = pTimeStamp->nsec;
+    epicsMutexUnlock(pport->asynManagerLock);
+    return asynSuccess;
+}
+
+
 
 static asynStatus traceLock(asynUser *pasynUser)
 {
