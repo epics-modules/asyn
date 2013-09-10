@@ -6,16 +6,16 @@ testErrorsConfigure("PORT1",)
 asynSetTraceIOMask("PORT1",0,0x2)
 
 # Use I/O Intr scanning and normal timestamp (TSE=0)
-dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=0,SCAN=I/O Intr")
+#dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=0,SCAN=I/O Intr")
 # Use periodic scanning and normal timestamp (TSE=0)
 #dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=0,SCAN=2 second")
 # Use I/O Intr scanning and timestamp from device support (TSE=-2)
-#dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=-2,SCAN=I/O Intr")
+dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=-2,SCAN=I/O Intr")
 # Use periodic scanning and timestamp from device support (TSE=-2)
 #dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=-2,SCAN=2 second")
 
 # Use user-defined time stamp source by uncommenting this line
-testUserTimeStampSource("PORT1")
+registerMyTimeStampSource("PORT1")
 
 dbLoadRecords("../../db/asynRecord.db","P=testErrors:,R=asyn1,PORT=PORT1,ADDR=0,OMAX=80,IMAX=80")
 
