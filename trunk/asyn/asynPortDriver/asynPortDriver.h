@@ -148,6 +148,7 @@ public:
     virtual asynStatus callParamCallbacks(          int addr);
     virtual asynStatus callParamCallbacks(int list, int addr);
     virtual asynStatus updateTimeStamp();
+    virtual asynStatus updateTimeStamp(epicsTimeStamp *pTimeStamp);
     virtual asynStatus getTimeStamp(epicsTimeStamp *pTimeStamp);
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
     asynStandardInterfaces *getAsynStdInterfaces();
