@@ -1,4 +1,4 @@
 include "base.dbd"
 include "asyn.dbd"
 registrar("testErrorsRegister")
-registrar("testUserTimeStampSourceRegister")
+function("myTimeStampSource")
