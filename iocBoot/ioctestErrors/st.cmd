@@ -18,7 +18,7 @@ asynSetTraceIOMask("PORT1",0,0x2)
 dbLoadRecords("../../db/testErrors.db","P=testErrors:,PORT=PORT1,ADDR=0,TIMEOUT=1,TSE=-2,SCAN=I/O Intr")
 
 ### Use user-defined time stamp source by uncommenting this line
-registerTimeStampSource("PORT1", "myTimeStampSource")
+asynRegisterTimeStampSource("PORT1", "myTimeStampSource")
 
 dbLoadRecords("../../db/asynRecord.db","P=testErrors:,R=asyn1,PORT=PORT1,ADDR=0,OMAX=80,IMAX=80")
 
