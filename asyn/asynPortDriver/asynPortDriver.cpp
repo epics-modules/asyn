@@ -2059,9 +2059,17 @@ asynStatus asynPortDriver::updateTimeStamp()
     return pasynManager->updateTimeStamp(pasynUserSelf);
 }
 
+asynStatus asynPortDriver::updateTimeStamp(epicsTimeStamp *pTimeStamp)
+{
+    asynStatus status;
+    status = pasynManager->updateTimeStamp(pasynUserSelf);
+    if (status == asynSuccess) status = pasynManager->getTimeStamp(pasynUserSelf, pTimeStamp);
+    return status;
+}
+
 asynStatus asynPortDriver::getTimeStamp(epicsTimeStamp *pTimeStamp)
 {
-    return pasynManager->getTimeStamp(pasynUserSelf,pTimeStamp);
+    return pasynManager->getTimeStamp(pasynUserSelf, pTimeStamp);
 }
 
 asynStatus asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
