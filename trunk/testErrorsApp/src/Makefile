@@ -9,7 +9,7 @@ DBD += testErrors.dbd
 
 LIBRARY_IOC += testErrorsSupport
 testErrorsSupport_SRCS += testErrors.cpp
-testErrorsSupport_SRCS += testUserTimeStampSource.cpp
+testErrorsSupport_SRCS += myTimeStampSource.cpp
 testErrorsSupport_LIBS += asyn
 testErrorsSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
