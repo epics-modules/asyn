@@ -57,6 +57,8 @@ epicsShareFunc int
  asynOctetSetOutputEos(const char *port, int addr,const char *eos);
 epicsShareFunc int 
  asynOctetGetOutputEos(const char *port, int addr);
+epicsShareFunc int registerTimeStampSource(const char *portName, const char *functionName);
+epicsShareFunc int unregisterTimeStampSource(const char *portName);
 
 #ifdef __cplusplus
 }
