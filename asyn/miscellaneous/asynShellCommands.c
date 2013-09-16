@@ -1021,25 +1021,25 @@ static void asynSetAutoConnectTimeoutCall(const iocshArgBuf * args) {
     pasynManager->setAutoConnectTimeout(timeout);
 }
 
-static const iocshArg registerTimeStampSourceArg0 = { "portName",iocshArgString};
-static const iocshArg registerTimeStampSourceArg1 = { "functionName",iocshArgString};
-static const iocshArg * const registerTimeStampSourceArgs[] = {
-    &registerTimeStampSourceArg0, &registerTimeStampSourceArg1};
-static const iocshFuncDef registerTimeStampSourceDef = 
-    {"registerTimeStampSource",2,registerTimeStampSourceArgs};
-static const iocshFuncDef unregisterTimeStampSourceDef = 
-    {"unregisterTimeStampSource",1,registerTimeStampSourceArgs};
+static const iocshArg asynRegisterTimeStampSourceArg0 = { "portName",iocshArgString};
+static const iocshArg asynRegisterTimeStampSourceArg1 = { "functionName",iocshArgString};
+static const iocshArg * const asynRegisterTimeStampSourceArgs[] = {
+    &asynRegisterTimeStampSourceArg0, &asynRegisterTimeStampSourceArg1};
+static const iocshFuncDef asynRegisterTimeStampSourceDef = 
+    {"asynRegisterTimeStampSource",2,asynRegisterTimeStampSourceArgs};
+static const iocshFuncDef asynUnregisterTimeStampSourceDef = 
+    {"asynUnregisterTimeStampSource",1,asynRegisterTimeStampSourceArgs};
 
-static void registerTimeStampSourceCall(const iocshArgBuf *args)
+static void asynRegisterTimeStampSourceCall(const iocshArgBuf *args)
 {
-    registerTimeStampSource(args[0].sval, args[1].sval);
+    asynRegisterTimeStampSource(args[0].sval, args[1].sval);
 }
 
-static void unregisterTimeStampSourceCall(const iocshArgBuf *args)
+static void asynUnregisterTimeStampSourceCall(const iocshArgBuf *args)
 {
-    unregisterTimeStampSource(args[0].sval);
+    asynUnregisterTimeStampSource(args[0].sval);
 }
-epicsShareFunc int registerTimeStampSource(const char *portName, const char *functionName)
+epicsShareFunc int asynRegisterTimeStampSource(const char *portName, const char *functionName)
 {
     asynUser *pasynUser;
     asynStatus status;
@@ -1052,31 +1052,31 @@ epicsShareFunc int registerTimeStampSource(const char *portName, const char *fun
     pasynUser = pasynManager->createAsynUser(0, 0);
     status = pasynManager->connectDevice(pasynUser, portName, 0);
     if (status) {
-        printf("registerUserStampSource, cannot connect to port %s\n", portName);
+        printf("asynRegisterUserStampSource, cannot connect to port %s\n", portName);
         return -1;
     }
     pFunction = (timeStampCallback)registryFunctionFind(functionName);
     if (!pFunction) {
-        printf("registerUserStampSource, cannot find function %s\n", functionName);
+        printf("asynRegisterUserStampSource, cannot find function %s\n", functionName);
         return -1;
     }
     pasynManager->registerTimeStampSource(pasynUser, 0, pFunction);
     return 0;
 }
 
-epicsShareFunc int unregisterTimeStampSource(const char *portName)
+epicsShareFunc int asynUnregisterTimeStampSource(const char *portName)
 {
     asynUser *pasynUser;
     asynStatus status;
     
     if (!portName || (strlen(portName) == 0)) {
-        printf("Usage: unregisterTimeStampSource portName\n");
+        printf("Usage: asynUnregisterTimeStampSource portName\n");
         return -1;
     }
     pasynUser = pasynManager->createAsynUser(0, 0);
     status = pasynManager->connectDevice(pasynUser, portName, 0);
     if (status) {
-        printf("unregisterTimeStampSource, cannot connect to port %s\n", portName);
+        printf("asynUnregisterTimeStampSource, cannot connect to port %s\n", portName);
         return -1;
     }
     pasynManager->unregisterTimeStampSource(pasynUser);
@@ -1111,7 +1111,7 @@ static void asynRegister(void)
     iocshRegister(&asynOctetGetOutputEosDef,asynOctetGetOutputEosCall);
     iocshRegister(&asynWaitConnectDef,asynWaitConnectCall);
     iocshRegister(&asynSetAutoConnectTimeoutDef,asynSetAutoConnectTimeoutCall);
-    iocshRegister(&registerTimeStampSourceDef, registerTimeStampSourceCall);
-    iocshRegister(&unregisterTimeStampSourceDef, unregisterTimeStampSourceCall);
+    iocshRegister(&asynRegisterTimeStampSourceDef, asynRegisterTimeStampSourceCall);
+    iocshRegister(&asynUnregisterTimeStampSourceDef, asynUnregisterTimeStampSourceCall);
 }
 epicsExportRegistrar(asynRegister);
