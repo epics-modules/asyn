@@ -1,4 +1,9 @@
 TOP = ../..
 include $(TOP)/configure/CONFIG
-#nothing to do
+#ARCH = solaris-sparc
+#ARCH = linux-x86
+ARCH = vxWorks-ppc604_long
+TARGETS += envPaths cdCommands
+
 include $(TOP)/configure/RULES.ioc
+
