@@ -196,7 +196,10 @@ asyn_SRCS += boSRQonOff.c
 
 include $(TOP)/configure/RULES
 
+# For 3.14
 drvVxi11$(OBJ): vxi11intr.h
+# For 3.15
+drvVxi11$(DEP): vxi11intr.h
 
 ifdef T_A
 ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
