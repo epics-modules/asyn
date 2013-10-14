@@ -188,6 +188,7 @@ void testAsynPortDriver::simTask(void)
             pData_[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData_[i]);
             time += timeStep;
         }
+        updateTimeStamp();
         meanValue = meanValue/maxPoints;
         setDoubleParam(P_MinValue, minValue);
         setDoubleParam(P_MaxValue, maxValue);
@@ -311,8 +312,11 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
     size_t ncopy;
     int itemp;
     asynStatus status = asynSuccess;
+    epicsTimeStamp timeStamp;
     const char *functionName = "readFloat64Array";
 
+    getTimeStamp(&timeStamp);
+    pasynUser->timestamp = timeStamp;
     getIntegerParam(P_MaxPoints, &itemp); ncopy = itemp;
     if (nElements < ncopy) ncopy = nElements;
     if (function == P_Waveform) {
