@@ -56,7 +56,7 @@ void asynPortDriver::callbackTask()
   * This function is called whenever asyn clients call the functions on the asyn interfaces.
   * Drivers with their own background threads must call lock() to protect conflicts with
   * asyn clients.  They can call unlock() to permit asyn clients to run during times that the driver
-  * thread is idle or is performing compute bound work that does not access memory also accessible by clients. */
+  * thread is idle or is performing compute bound work that does not access memory also accessible by other threads. */
 asynStatus asynPortDriver::lock()
 {
     int status;
@@ -65,13 +65,14 @@ asynStatus asynPortDriver::lock()
     else return(asynSuccess);
 }
 
-/** Unocks the driver; called when an asyn client or driver is done accessing common memory. */
+/** Unlocks the driver; called when an asyn client or driver is done accessing common memory. */
 asynStatus asynPortDriver::unlock()
 {
     epicsMutexUnlock(this->mutexId);
     return(asynSuccess);
 }
 
+/** Returns the asynStdInterfaces structure used by asynPortDriver. */
 asynStandardInterfaces* asynPortDriver::getAsynStdInterfaces()
 {
     return &this->asynStdInterfaces;
@@ -2028,12 +2029,14 @@ void asynPortDriver::report(FILE *fp, int details)
         epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
         epicsTimeToStrftime(buff, sizeof(buff), "%Y/%m/%d %H:%M:%S.%03f", &timeStamp);
         fprintf(fp, "  Timestamp: %s\n", buff);
-        fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet); 
-        epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
-        fprintf(fp, "\n");
-        fprintf(fp, "  Output EOS[%d]: ", this->outputEosLenOctet); 
-        epicsStrPrintEscaped(fp, this->outputEosOctet, this->outputEosLenOctet);
-        fprintf(fp, "\n");
+        if (asynStdInterfaces.octet.pinterface) {
+            fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet); 
+            epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
+            fprintf(fp, "\n");
+            fprintf(fp, "  Output EOS[%d]: ", this->outputEosLenOctet); 
+            epicsStrPrintEscaped(fp, this->outputEosOctet, this->outputEosLenOctet);
+            fprintf(fp, "\n");
+        }
         this->reportParams(fp, details);
     }
     if (details >= 3) {
@@ -2053,12 +2056,18 @@ void asynPortDriver::report(FILE *fp, int details)
 }
 
 //* Time stamp support functions
-
+/** Updates the timestamp for this port in pasynManager.
+  * Drivers typically call this function when they receive new data and want 
+  * records with TSE=-2 to use this time as their timestamp. */
 asynStatus asynPortDriver::updateTimeStamp()
 {
     return pasynManager->updateTimeStamp(pasynUserSelf);
 }
 
+/** Updates the timestamp for this port in pasynManager, and returns this timestamp.
+  * Drivers typically call this function when they receive new data and want 
+  * records with TSE=-2 to use this time as their timestamp. 
+  * \param[out] pTimeStamp A pointer to an epicsTimeStamp to receive the new timestamp. */
 asynStatus asynPortDriver::updateTimeStamp(epicsTimeStamp *pTimeStamp)
 {
     asynStatus status;
@@ -2067,11 +2076,15 @@ asynStatus asynPortDriver::updateTimeStamp(epicsTimeStamp *pTimeStamp)
     return status;
 }
 
+/** Gets the most recent timestamp for this port from pasynManager.
+  * \param[out] pTimeStamp A pointer to an epicsTimeStamp to receive the timestamp. */
 asynStatus asynPortDriver::getTimeStamp(epicsTimeStamp *pTimeStamp)
 {
     return pasynManager->getTimeStamp(pasynUserSelf, pTimeStamp);
 }
 
+/** Sets the timestamp for this port in pasynManager.
+  * \param[in] pTimeStamp A pointer to the epicsTimeStamp to set. */
 asynStatus asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
 {
     return pasynManager->setTimeStamp(pasynUserSelf, pTimeStamp);
@@ -2375,7 +2388,7 @@ asynPortDriver::~asynPortDriver()
     free(this->params);
 }
 
-// This is a utility function that returns a pointer to an asynPortDriver object from its name
+/** Utility function that returns a pointer to an asynPortDriver object from its name */
 void* findAsynPortDriver(const char *portName)
 {
     asynUser *pasynUser;
