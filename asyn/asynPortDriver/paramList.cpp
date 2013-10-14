@@ -22,7 +22,7 @@
 
 /** Constructor for paramList class.
   * \param[in] nValues Number of parameters in the list.
-  * \param[in] pasynInterfaces Pointer to asynStandardInterfaces structure, used for callbacks */
+  * \param[in] pPort Pointer to asynPortDriver port for this paramList. */
 paramList::paramList(int nValues, asynPortDriver *pPort)
     : nextParam(0), nVals(nValues), nFlags(0), pasynPortDriver(pPort)
 {
