@@ -15,10 +15,33 @@
     <h2>
       Release 4-22</h2>
     <h2>
-      August XXX, 2013</h2>
+      October XXX, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
+  <p>
+    Added support functions for setting timestamps in asyn port drivers. These can be
+    used to set the timestamp when the port driver received data. The driver can then
+    set the asynUser->timeStamp field to this value for all input records on read and
+    callback operations. Records that have TSE=-2 will have this timestamp. There is
+    support for registering a user-supplied function to provide the timestamp, which
+    will override the default source that just calls epicsTimeGetCurrent().
+  </p>
+  <p>
+    Added the following new functions to pasynManager for timestamp support.</p>
+  <pre>
+asynStatus (*registerTimeStampSource)(asynUser *pasynUser, void *userPvt, timeStampCallback callback);
+asynStatus (*unregisterTimeStampSource)(asynUser *pasynUser);
+asynStatus (*updateTimeStamp)(asynUser *pasynUser);
+asynStatus (*getTimeStamp)(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
+asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
+</pre>
+  <p>
+    Added the following shell commands for timestamp support.</p>
+  <pre>
+asynRegisterTimeStampSource(const char *portName, const char *functionName);
+asynUnregisterTimeStampSource(const char *portName);
+   </pre>
   <p>
     Added a new bit to asynTraceMask, ASYN_TRACE_WARNING. This is intended to be used
     for messages that are less serious than ASYN_TRACE_ERROR, but more serious than
@@ -49,14 +72,20 @@
   <pre>
     asynSetTraceInfoMask port,addr,mask
     </pre>
-  <p>
-    Modified the asynRecord to support ASYN_TRACE_WARNING and asynTraceInfoMask.</p>
   <h3>
     asynOctetSyncIO</h3>
   <p>
     Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort for
     end-of-string manipulations (setInputEos, getInputEos, setOutputEos, getOutputEos).
     This ensures that these operations can take place even with device disconnected.</p>
+  <h3>
+    devEpics</h3>
+  <p>
+    Finished the support for setting the record TIME field for input records, both for
+    read operations and for callback operations (i.e. records with SCAN=I/O Intr". This
+    work was begin in R4-20, but it was not complete. Fixes were made in devAsynOctet,
+    devAsynInt32, devAsynFloat64, and devAsynUInt32Digital.
+  </p>
   <h3>
     drvAsynIPPort</h3>
   <p>
@@ -77,6 +106,14 @@
   <p>
     Support for all baud rates supported by the operating system.</p>
   <h3>
+    Changes to work with EPICS base 3.15</h3>
+  <p>
+    Removed include of asyn.dbd, from drvAsynSerialPort.dbd, drvAsynIPPort.dbd, drvVxi11.dbd,
+    and drvGsIP488.dbd.
+  </p>
+  <p>
+    Fixed Makefile rule for vxi11intr.h for parallel builds.</p>
+  <h3>
     asynRecord</h3>
   <p>
     Added 4 additional baud rates to the BAUD field (460800, 576000, 921600, 1152000).
@@ -87,12 +124,34 @@
     of any baud rate, not just those in the BAUD menu. Changing the BAUD field changes
     the LBAUD field. Changing the LBAUD field changes the BAUD field to the appropriate
     selection if it is a supported value, or to "Unknown" if not.</p>
+  <p>
+    Added support for ASYN_TRACE_WARNING and asynTraceInfoMask, including the opi screens.</p>
   <h3>
     asynPortDriver</h3>
   <p>
     Added new virtual methods to support Eos operations on the asynOctet interface.
     These are setInputEosOctet(), getInputEosOctet(), setOutputEosOctet(), getOutputEosOctet().
     Changed the report() method to print the current values of the inputEos and outputEos.</p>
+  <p>
+    Added new virtual methods for timestamp support. These are updateTimeStamp(), setTimeStamp(),
+    getTimeStamp().</p>
+  <p>
+    Added new function getAsynStdInterfaces() to access the asynStdInterfaces structure,
+    which is now private.
+  </p>
+  <p>
+    Changed the functions that do callbacks when callParamCallbacks() is called to call
+    pasynManager->getTimeStamp() and set the pasynUser->timestamp field to this value
+    in the callbacks.</p>
+  <p>
+    Changed the base class readXXX() functions (e.g. readInt32(), readFloat64(), etc.)
+    to call pasynManager->getTimeStamp() and set the pasynUser->timestamp field to this
+    value. The readXXX() functions in derived classes should also do this, so that records
+    with TSE=-2 will get the timestamp from the driver.</p>
+  <h3>
+    testErrorApp, iocTestErrors</h3>
+  <p>
+    Added an example of a user-supplied timestamp source.</p>
   <h3>
     testAsynPortDriver</h3>
   <p>
