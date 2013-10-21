@@ -385,7 +385,7 @@ getCallbackValue(devPvt *pPvt)
     epicsMutexLock(pPvt->mutexId);
     if (pPvt->ringTail != pPvt->ringHead) {
         if (pPvt->ringBufferOverflows > 0) {
-            asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
                 "%s devAsynFloat64 getCallbackValue error, %d ring buffer overflows\n",
                                     pPvt->pr->name, pPvt->ringBufferOverflows);
             pPvt->ringBufferOverflows = 0;
