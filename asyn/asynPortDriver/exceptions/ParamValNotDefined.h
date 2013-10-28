@@ -8,6 +8,7 @@
 #ifndef PARAMVALNOTDEFINED_H_
 #define PARAMVALNOTDEFINED_H_
 
+#include <string>
 #include <stdexcept>
 
 using std::logic_error;
