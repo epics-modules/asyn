@@ -1,0 +1,1735 @@
+
+file {
+	name="/home/phoebus3/MRK/epics/modules/soft/asyn/testApp/adl/test.adl"
+	version=030004
+}
+display {
+	object {
+		x=49
+		y=26
+		width=874
+		height=600
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+composite {
+	object {
+		x=0
+		y=275
+		width=850
+		height=106
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=275
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=291
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=283
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=0
+				y=309
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=325
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=317
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=0
+				y=349
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=365
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=357
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=400
+				y=289
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PMA_A-1"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=400
+				y=309
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PMA_A0"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=400
+				y=349
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PMA_A1"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=550
+				y=309
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PMA_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		menu {
+			object {
+				x=550
+				y=349
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PMA_A1_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=309
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PMA_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=349
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PMA_A1_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=309
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PMA_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=349
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PMA_A1_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=275
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=291
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=283
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=309
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=325
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=317
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=349
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=365
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=357
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=275
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=291
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=283
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=309
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=325
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=317
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=349
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=365
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PMA_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=357
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PMA_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=0
+		y=30
+		width=850
+		height=32
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=38
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=400
+				y=30
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PA_A0"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=550
+				y=30
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PA_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=30
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PA_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=30
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PA_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=38
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=30
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=46
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=38
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PA_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=250
+		y=0
+		width=350
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="A is single device port"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=200
+		y=232
+		width=450
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="MA is two device port connected to A"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=0
+		y=100
+		width=850
+		height=106
+	}
+	"composite name"=""
+	children {
+		"message button" {
+			object {
+				x=0
+				y=100
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=116
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=108
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A-1.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=0
+				y=134
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=150
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=142
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A0.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=0
+				y=174
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="enable"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=0
+				y=190
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			label="disable"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=60
+				y=182
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A1.ENBL"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=400
+				y=114
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PB_A-1"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=400
+				y=134
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PB_A0"
+			align="horiz. right"
+		}
+		text {
+			object {
+				x=400
+				y=174
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testClient_PB_A1"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=550
+				y=134
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PB_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		menu {
+			object {
+				x=550
+				y=174
+				width=100
+				height=18
+			}
+			control {
+				chan="testClient_PB_A1_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=134
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PB_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=650
+				y=174
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PB_A1_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=134
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PB_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=750
+				y=174
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testClient_PB_A1_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=100
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=116
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=108
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A-1.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=134
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=150
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=142
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A0.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=260
+				y=174
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="connect"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=260
+				y=190
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			label="disconnect"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=320
+				y=182
+				width=80
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A1.CNCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=100
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=116
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=108
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A-1.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=134
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=150
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=142
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A0.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+		"message button" {
+			object {
+				x=130
+				y=174
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="auto"
+			press_msg="1"
+		}
+		"message button" {
+			object {
+				x=130
+				y=190
+				width=60
+				height=16
+			}
+			control {
+				chan="asynRecord_PB_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			label="noAuto"
+			press_msg="0"
+		}
+		"text update" {
+			object {
+				x=190
+				y=182
+				width=60
+				height=16
+			}
+			monitor {
+				chan="asynRecord_PB_A1.AUCT"
+				clr=14
+				bclr=4
+			}
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=250
+		y=73
+		width=350
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="B is two device port"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=250
+		y=420
+		width=350
+		height=22
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="blockProcessCallback test"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=200
+		y=460
+		width=450
+		height=48
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=200
+				y=490
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testBlock_PB_A1"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=350
+				y=490
+				width=100
+				height=18
+			}
+			control {
+				chan="testBlock_PB_A1_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=450
+				y=490
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A1_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=550
+				y=490
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A1_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=200
+				y=460
+				width=150
+				height=18
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="testBlock_PB_A0"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=350
+				y=460
+				width=100
+				height=18
+			}
+			control {
+				chan="testBlock_PB_A0_calc.SCAN"
+				clr=14
+				bclr=4
+			}
+		}
+		"text update" {
+			object {
+				x=450
+				y=460
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A0_so"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=550
+				y=460
+				width=100
+				height=18
+			}
+			monitor {
+				chan="testBlock_PB_A0_si"
+				clr=14
+				bclr=4
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			format="string"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=200
+		y=548
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="testBlockAll_PB_A1"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=350
+		y=548
+		width=100
+		height=18
+	}
+	control {
+		chan="testBlockAll_PB_A1_calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=450
+		y=548
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A1_so"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=550
+		y=548
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A1_si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+text {
+	object {
+		x=200
+		y=518
+		width=150
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="testBlockAll_PB_A0"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=350
+		y=518
+		width=100
+		height=18
+	}
+	control {
+		chan="testBlockAll_PB_A0_calc.SCAN"
+		clr=14
+		bclr=4
+	}
+}
+"text update" {
+	object {
+		x=450
+		y=518
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A0_so"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=550
+		y=518
+		width=100
+		height=18
+	}
+	monitor {
+		chan="testBlockAll_PB_A0_si"
+		clr=14
+		bclr=4
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
