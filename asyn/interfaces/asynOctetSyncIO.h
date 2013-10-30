@@ -30,7 +30,6 @@ typedef struct asynOctetSyncIO {
    asynStatus (*connect)(const char *port, int addr,
                          asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
-   asynStatus (*openSocket)(const char *server, int port, char **portName);
    asynStatus (*write)(asynUser *pasynUser, char const *buffer, size_t buffer_len,
                   double timeout,size_t *nbytesTransfered);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len, 
