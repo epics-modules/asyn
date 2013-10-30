@@ -998,6 +998,8 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
             (pdpc->exceptionActive ? "Yes" : "No"),
             ellCount(&pdpc->exceptionUserList),
             ellCount(&pdpc->exceptionNotifyList));
+        fprintf(fp,"    traceMask:0x%x traceIOMask:0x%x traceInfoMask:0x%x\n",
+            pdpc->trace.traceMask, pdpc->trace.traceIOMask, pdpc->trace.traceInfoMask);
     }
     if(details>=2) {
         reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
@@ -1018,12 +1020,14 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
                     (pdpc->exceptionActive ? "Yes" : "No"));
             }
             if(details>=1) {
-                fprintf(fp,"    exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
+                fprintf(fp,"        exceptionActive %s exceptionUsers %d exceptionNotifys %d\n",
                     (pdpc->exceptionActive ? "Yes" : "No"),
                     ellCount(&pdpc->exceptionUserList),
                     ellCount(&pdpc->exceptionNotifyList));
-                fprintf(fp,"    blocked %s\n",
+                fprintf(fp,"        blocked %s\n",
                     (pdpc->pblockProcessHolder ? "Yes" : "No"));
+                fprintf(fp,"        traceMask:0x%x traceIOMask:0x%x traceInfoMask:0x%x\n",
+                    pdpc->trace.traceMask, pdpc->trace.traceIOMask, pdpc->trace.traceInfoMask);
             }
             if(details>=2) {
                 reportPrintInterfaceList(fp,&pdpc->interposeInterfaceList,
