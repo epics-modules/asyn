@@ -430,6 +430,7 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 	int secondaryAddr = 0;		
         asynStatus status=asynSuccess;
         double timeout = pasynUser->timeout;
+        int ibsta;
 
 	if(DEBUG) printf("drvGpibBoard:gpibRead!!\n");
 	epicsThreadSleep(epicsThreadSleepQuantum());
@@ -450,12 +451,17 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 							
 	
 	/*read data*/
-	ibrd(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],data,maxchars);
-	
+	ibsta = ibrd(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],data,maxchars);
 
 	/*ibcnt holds number of bytes transfered*/
 	*nbytesTransfered=ibcnt;
 	
+	if (eomReason != NULL)
+        {
+            *eomReason = 0;
+            if (ibsta & END) *eomReason = ASYN_EOM_END;
+            if (ibcnt == maxchars) *eomReason = ASYN_EOM_CNT;
+        }
 	
 	status=checkError(pdrvPvt,pasynUser,addr);
 	if(status!=asynSuccess){
@@ -560,6 +566,7 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 	}
 	
 	if(eoslen==1){
+                ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOScmp,1);
 		ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSchar,*eos);
 
                 status=checkError(pdrvPvt,pasynUser,addr);
@@ -575,24 +582,10 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 								 
 	}
 	else{
-		if(eos==0){
-			pGpibBoardPvt->ibsta=ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,0);
-			if(DEBUG) printf("Disabling EOS\n");
-	                status=checkError(pdrvPvt,pasynUser,addr);
-        	        if(status!=asynSuccess)return status;
-		}
-		else{
-			ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSchar,'\0');
-			
-	                status=checkError(pdrvPvt,pasynUser,addr);
-	                if(status!=asynSuccess)return status;
-
-			ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,1);
-	                if(DEBUG)printf("Seting EOS: %u\n",*eos);
-
-			status=checkError(pdrvPvt,pasynUser,addr);
-			if(status!=asynSuccess)return status;
-		}
+		pGpibBoardPvt->ibsta=ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,0);
+		if(DEBUG) printf("Disabling EOS\n");
+	        status=checkError(pdrvPvt,pasynUser,addr);
+        	if(status!=asynSuccess)return status;
 	}
 	return asynSuccess;
 }
