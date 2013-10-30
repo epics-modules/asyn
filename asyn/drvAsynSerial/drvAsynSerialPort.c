@@ -930,6 +930,9 @@ drvAsynSerialPortConfigure(char *portName,
     tty->termios.c_lflag = 0;
     tty->termios.c_cc[VMIN] = 0;
     tty->termios.c_cc[VTIME] = 0;
+    tty->termios.c_cc[VSTOP]  = 0x13; /* ^S */
+    tty->termios.c_cc[VSTART] = 0x11; /* ^Q */
+
     cfsetispeed(&tty->termios, B9600);
     cfsetospeed(&tty->termios, B9600);
 #endif
