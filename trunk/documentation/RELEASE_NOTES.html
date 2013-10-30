@@ -15,7 +15,7 @@
     <h2>
       Release 4-22</h2>
     <h2>
-      October XXX, 2013</h2>
+      October 30, 2013</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -72,20 +72,25 @@ asynUnregisterTimeStampSource(const char *portName);
   <pre>
     asynSetTraceInfoMask port,addr,mask
     </pre>
+  <p>
+    Added asynTrace information to the output of asynReport if details &gt;=1.</p>
   <h3>
     asynOctetSyncIO</h3>
   <p>
     Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort for
     end-of-string manipulations (setInputEos, getInputEos, setOutputEos, getOutputEos).
-    This ensures that these operations can take place even with device disconnected.</p>
+    This ensures that these operations can take place even with the device disconnected.</p>
   <h3>
     devEpics</h3>
   <p>
     Finished the support for setting the record TIME field for input records, both for
     read operations and for callback operations (i.e. records with SCAN=I/O Intr). This
     work was begun in R4-20, but it was not complete. Fixes were made in devAsynOctet,
-    devAsynInt32, devAsynFloat64, and devAsynUInt32Digital.
-  </p>
+    devAsynInt32, devAsynFloat64, and devAsynUInt32Digital.</p>
+  <p>
+    Changed the ring buffer overflow messages that are printed in devAsynInt32, devAsynFloat64,
+    and devAsynUInt32Digital. These now use the new ASYN_TRACE_WARNING mask. Prior to
+    asyn R4-20 these used ASYN_TRACE_ERROR, and in asyn R4-20 and R4-21 they used ASYN_TRACEIO_DEVICE.</p>
   <h3>
     drvAsynIPPort</h3>
   <p>
@@ -105,6 +110,8 @@ asynUnregisterTimeStampSource(const char *portName);
     drvAsynSerialPort</h3>
   <p>
     Support for all baud rates supported by the operating system.</p>
+  <p>
+    Fix for XON/XOFF support from Dirk Zimoch.</p>
   <h3>
     Changes to work with EPICS base 3.15</h3>
   <p>
@@ -113,6 +120,15 @@ asynUnregisterTimeStampSource(const char *portName);
   </p>
   <p>
     Fixed Makefile rule for vxi11intr.h for parallel builds.</p>
+  <h3>
+    drvLinuxGpib</h3>
+  <p>
+    Fixes for eomReason and EOS handling from Dirk Zimoch.</p>
+  <h3>
+    asynOctetSyncIO interface</h3>
+  <p>
+    Removed the openSocket() function from this interface. This method really did not
+    belong in this interface, since it just wrapped the call to drvAsynIPPortConfigure().</p>
   <h3>
     asynRecord</h3>
   <p>
