@@ -135,7 +135,7 @@
             The port or port,addr can be changed dynamically. Thus with one asynRecord in an
             IOC, it is possible to talk to any device that has an asyn compatible driver.</p>
         </li>
-        <li>asynTrace - All asynTrace options can be specified asynRecord.</li>
+        <li>asynTrace - All asynTrace options can be controlled with the asynRecord.</li>
         <li>Connection Management
           <p>
             Display and change connection, enable, and autoConnect state</p>
@@ -2006,7 +2006,7 @@ epicsShareExtern asynTrace *pasynTrace;
     <li>Trace has a global trace mask for asynUsers not connected to a port or port, addr.</li>
     <li>The output is sent to a file or to stdout or to errlog.</li>
     <li>A mask determines the type of information that can be displayed. The various choices
-      can be ORed together.
+      can be ORed together. The default value of this mask when a port is created is ASYN_TRACE_ERROR.
       <ul>
         <li>ASYN_TRACE_ERROR Run time errors are reported, e.g. timeouts.</li>
         <li>ASYN_TRACEIO_DEVICE Device support reports I/O activity.</li>
@@ -2022,7 +2022,7 @@ epicsShareExtern asynTrace *pasynTrace;
       </ul>
     </li>
     <li>Another mask determines how message buffers are printed. The various choices can
-      be ORed together.
+      be ORed together. The default value of this mask when a port is created is ASYN_TRACEIO_NODATA.
       <ul>
         <li>ASYN_TRACEIO_NODATA Don't print any data from the message buffers.</li>
         <li>ASYN_TRACEIO_ASCII Print with a "%s" style format.</li>
@@ -2031,7 +2031,8 @@ epicsShareExtern asynTrace *pasynTrace;
       </ul>
     </li>
     <li>Another mask determines what information is printed at the beginning of each message.
-      The various choices can be ORed together.
+      The various choices can be ORed together. The default value of this mask when a
+      port is created is ASYN_TRACEINFO_TIME.
       <ul>
         <li>ASYN_TRACEINFO_TIME prints the date and time of the message.</li>
         <li>ASYN_TRACEINFO_PORT prints [port,addr,reason], where port is the port name, addr
@@ -5745,7 +5746,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     Additional Drivers</h3>
   <p>
     The drivers noted above are included as part of the ASYN distribution.&nbsp; Additional
-    drivers are available, including:<br>
+    drivers are available, including:<br />
   </p>
   <ul>
     <li><a href="http://sourceforge.net/p/epics/wiki/ASYN%20USB%20TMC%20Support/">Driver
