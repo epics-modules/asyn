@@ -290,7 +290,7 @@ static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
             pvxiPort->maxRecvSize = crLinkR.maxRecvSize;
         } else if(pvxiPort->maxRecvSize!=crLinkR.maxRecvSize) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
-                "%s vxiCreateDeviceLink maxRecvSize changed from %lu to %u\n",
+                "%s vxiCreateDeviceLink maxRecvSize changed from %lu to %lu\n",
                             devName,pvxiPort->maxRecvSize,crLinkR.maxRecvSize);
         }
         if(pvxiPort->abortPort==0) {
@@ -1140,7 +1140,7 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
             clntStat = clientIoCall(pvxiPort, pasynUser, device_read,
                 (const xdrproc_t) xdr_Device_ReadParms,(void *) &devReadP,
                 (const xdrproc_t) xdr_Device_ReadResp,(void *) &devReadR);
-            if(devReadP.io_timeout!=ULONG_MAX
+            if(devReadP.io_timeout!=UINT_MAX
             || devReadR.error!=VXI_IOTIMEOUT
             || devReadR.data.data_len>0) break;
         }
