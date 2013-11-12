@@ -219,7 +219,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
             pPvt->bipolar = 1;
         }
         pPvt->signBit = 1 << (nbits-1);
-        pPvt->mask = pPvt->signBit*2 - 1;
+        pPvt->mask = ~(~0 << nbits);
         if (pPvt->bipolar) {
             pPvt->deviceLow = ~(pPvt->mask/2)+1;
             pPvt->deviceHigh = (pPvt->mask/2);
