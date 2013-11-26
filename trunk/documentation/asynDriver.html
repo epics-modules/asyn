@@ -4367,7 +4367,7 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     The asynMask format allows device support to work with drivers that cannot return
     meaningful values from getBounds() because they do not know the range of the device.
     This is true, for example, of Modbus ADCs. The nbits parameter is defined as follows:</p>
-  <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1.  Values weill be masked to the specified number of bits.
+  <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1.  Values will be masked to the specified number of bits.
 <br />
 nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
            Values read with the asynInt32 interface will be sign extended
