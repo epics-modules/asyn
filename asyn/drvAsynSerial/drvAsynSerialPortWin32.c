@@ -530,11 +530,20 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (tty->readTimeout != pasynUser->timeout) {
         if (pasynUser->timeout >= 0) {
-            ctimeout.ReadIntervalTimeout          = (int)(pasynUser->timeout*1000.); 
-            ctimeout.ReadTotalTimeoutMultiplier   = 1; 
-            ctimeout.ReadTotalTimeoutConstant     = (int)(pasynUser->timeout*1000.); 
-            ctimeout.WriteTotalTimeoutMultiplier  = 1; 
-            ctimeout.WriteTotalTimeoutConstant    = (int)(pasynUser->timeout*1000.); 
+            if (pasynUser->timeout == 0) {
+                ctimeout.ReadIntervalTimeout          = MAXDWORD; 
+                ctimeout.ReadTotalTimeoutMultiplier   = 0; 
+                ctimeout.ReadTotalTimeoutConstant     = 0; 
+                ctimeout.WriteTotalTimeoutMultiplier  = 0; 
+                ctimeout.WriteTotalTimeoutConstant    = 0;
+            }
+            else {
+                ctimeout.ReadIntervalTimeout          = (int)(pasynUser->timeout*1000.); 
+                ctimeout.ReadTotalTimeoutMultiplier   = 1; 
+                ctimeout.ReadTotalTimeoutConstant     = (int)(pasynUser->timeout*1000.); 
+                ctimeout.WriteTotalTimeoutMultiplier  = 1; 
+                ctimeout.WriteTotalTimeoutConstant    = (int)(pasynUser->timeout*1000.);
+            } 
 
             ret = SetCommTimeouts(tty->commHandle, &ctimeout);
             if (ret == 0) {
@@ -575,6 +584,10 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
             nRead = thisRead;
             tty->nRead += thisRead;
             break;
+        }
+        else {
+            if (tty->readTimeout == 0)
+                tty->timeoutFlag = 1;
         }
         if (tty->timeoutFlag)
             break;
