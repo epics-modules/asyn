@@ -15,7 +15,7 @@
     <h2>
       Release 4-23</h2>
     <h2>
-      December XXX, 2013</h2>
+      March XXX, 2014</h2>
   </div>
   <h3>
     drvAsynSerialPortWin32 (Windows serial port driver)</h3>
@@ -31,6 +31,16 @@
   <p>
     Sign-extend positive or unsigned values as well as negative values when DTYP=asynInt32
     and asynMask value is non-zero.</p>
+  <h3>
+    asynPortDriver</h3>
+  <p>
+    Undid the change in R4-22 that changed the asynStdInterfaces from protected to private.
+    That change was not compatible with areaDetector R1-9-1.</p>
+  <h3>
+    asynOctetSyncIO</h3>
+  <p>
+    Fixed a bug that could cause the values of *nbytesOut, *nbytesIn, and *eomReason
+    to be garbage if an I/O error occurred.</p>
   <div style="text-align: center">
     <hr />
     <h2>
