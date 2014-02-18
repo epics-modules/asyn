@@ -161,9 +161,9 @@ public:
 
 protected:
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
+    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
-    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
     paramList **params;
     epicsMutexId mutexId;
     char *inputEosOctet;
