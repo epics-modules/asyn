@@ -1,8 +1,6 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<head>
-  <meta content="text/html; charset=iso-8859-1" http-equiv="Content-Type" />
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
   <title>asynDriver</title>
 </head>
 <body>
@@ -22,7 +20,7 @@
       <span style="font-weight: bold; font-size: 14pt">Gasper Jansa (cosyLab) - linuxGpib
         support.</span></p>
   </div>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       License Agreement</h2>
@@ -30,38 +28,38 @@
   <p>
     This product is available via the <a href="#LicenseAgreement">open source license</a>
     described at the end of this document.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Contents</h2>
   </div>
   <div>
     <a href="#Purpose">Purpose</a>
-    <br />
+    <br>
     <a href="#Status">Status</a>
-    <br />
+    <br>
     <a href="#Acknowledgments">Acknowledgments</a>
-    <br />
+    <br>
     <a href="#Overview">Overview of asynDriver</a>
-    <br />
+    <br>
     <a href="#theoryOfOperation">Theory of Operation</a>
-    <br />
+    <br>
     <a href="#asynDriver">asynDriver Structures and Interfaces</a>
-    <br />
-    <a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br />
-    <a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br />
-    <a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br />
+    <br>
+    <a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br>
+    <a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br>
+    <a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br>
     <a href="#interposeInterfaces">Standard Interpose Interfaces</a>
-    <br />
-    <a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br />
+    <br>
+    <a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br>
     <a href="#asynRecord">asynRecord: Generic Record Support</a>
-    <br />
+    <br>
     <a href="#Example">Example</a>
-    <br />
+    <br>
     <a href="#Test">Test Example</a>
-    <br />
+    <br>
     <a href="#asynGpib">asynGpib</a>
-    <br />
+    <br>
     <a href="#PortDrivers">Port Drivers</a>
     <ul>
       <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
@@ -73,14 +71,14 @@
       <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
       <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
     </ul>
-    <a href="#asynPortDriver ">asynPortDriver C++ base class</a>
-    <br />
+    <a href="#asynPortDriver%20">asynPortDriver C++ base class</a>
+    <br>
     <a href="#DiagnosticAids">Diagnostic Aids</a>
-    <br />
+    <br>
     <a href="#InstallBuild">Install and Build</a>
-    <br />
+    <br>
   </div>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="Purpose">
       Purpose</h2>
@@ -154,7 +152,7 @@
         ethernet.</p>
     </li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="Status">
       Status</h2>
@@ -200,7 +198,7 @@
       record replaces them. The areaDetector module was written to use asyn, and was the
       original motivation for the development of asynPortDriver.</li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="Acknowledgments">
       Acknowledgments</h2>
@@ -257,7 +255,7 @@
       queue timeouts and cancels. He provides an expert and welcome set of eyes to look
       at difficult code!!!</dd>
   </dl>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="Overview">
       Overview of asynDriver</h2>
@@ -748,7 +746,7 @@
   <p>
     The actual code is more complicated because it unlocks before it calls code outside
     asynManager. This means that the queues can be modified and exceptions may occur.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="theoryOfOperation">
       Theory of Operation</h2>
@@ -822,7 +820,7 @@
   <p>
   </p>
   <div style="text-align: center">
-    <img alt="AsynFlow.jpg" src="AsynFlow.jpg" />
+    <img alt="AsynFlow.jpg" src="AsynFlow.jpg">
     <p>
     </p>
     <p>
@@ -853,7 +851,7 @@
   <p>
   </p>
   <div style="text-align: center">
-    <img alt="AsynSynFlow.jpg" src="AsynSynFlow.jpg" />
+    <img alt="AsynSynFlow.jpg" src="AsynSynFlow.jpg">
     <p>
       Figure 2: Synchronous Control Flow</p>
   </div>
@@ -870,7 +868,7 @@
     <li>processCallback returns to queueRequest, which unlocks the port and returns to
       device support, which returns to record support, which completes record processing.</li>
   </ol>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="asynDriver">
       asynDriver Structures and Interfaces</h2>
@@ -1966,7 +1964,7 @@ typedef struct asynTrace {
     FILE       *(*getTraceFile)(asynUser *pasynUser);
     asynStatus (*setTraceIOTruncateSize)(asynUser *pasynUser,size_t size);
     size_t     (*getTraceIOTruncateSize)(asynUser *pasynUser);
-#if defined(__GNUC__) && (__GNUC__ < 3)
+#if defined(__GNUC__) &amp;&amp; (__GNUC__ &lt; 3)
     /* GCC 2.95 does not allow EPICS_PRINTF_STYLE on function pointers */
     int        (*print)(asynUser *pasynUser,int reason, const char *pformat, ...);
     int        (*printSource)(asynUser *pasynUser,int reason, const char *fileName, int line, const char *pformat, ...);
@@ -2233,7 +2231,7 @@ epicsShareExtern asynTrace *pasynTrace;
       </tr>
     </tbody>
   </table>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="standardMessageInterfaces">
       Standard Message Based Interfaces</h2>
@@ -2587,7 +2585,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     can all handle EOS processing. An application developer must decide what policy
     will be followed for individual devices. The policy will be determined by the device,
     the device support, and the driver.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="standardRegisterInterfaces">
       Standard Register Based Interfaces</h2>
@@ -3079,9 +3077,11 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
       </tr>
       <tr>
         <td>
-        </td>
+        <br>
+</td>
         <td>
-        </td>
+        <br>
+</td>
       </tr>
     </tbody>
   </table>
@@ -3447,7 +3447,7 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
       </tr>
     </tbody>
   </table>
-  <hr />
+  <hr>
   <p>
   </p>
   <p>
@@ -3580,8 +3580,7 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
     must first call free() if a string pointer contains a non-NULL value. The driver
     must then allocate the strings using malloc() before copying the current enum string
     values to them.</p>
-  <pre>
-typedef void (*interruptCallbackEnum)
+  <pre>typedef void (*interruptCallbackEnum)
               void *userPvt, asynUser *pasynUser,
               char *strings[], int values[], int severities[], size_t nelements);
 typedef struct asynEnumInterrupt {
@@ -4214,7 +4213,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
   </ul>
   <p>
     this command should appear immediately after the command that initializes a port</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="genericEpicsSupport">
       Generic Device Support for EPICS records</h2>
@@ -4297,7 +4296,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     longout) does an initial read() of the value from the driver in init_record. If
     this read() returns asynSuccess then the record value is set to the value returned
     from read(). If read() returns anything other than asynSuccess then the record value
-    is not modified. This mechanism supports &quot;bumpless reboots&quot; where the
+    is not modified. This mechanism supports "bumpless reboots" where the
     initial value of output records will match the current value of the hardware when
     the IOC starts. Drivers should only return asynSuccess from the read() function
     if the value is known to be valid. Note that this value read from the device will
@@ -4312,7 +4311,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     This is implemented in the asynInt32 and asynUInt32Digital device support as follows:</p>
   <ul>
     <li>In the device support init_record function the device support attempts to find
-      the asynEnum interface in the driver. If it is found then the driver calls pasynEnumSyncIO->read()
+      the asynEnum interface in the driver. If it is found then the driver calls pasynEnumSyncIO-&gt;read()
       to read the current values of the enums from the driver. If the read() returns asynSuccess
       then the enum fields are set to the values returned by the driver. If the asynEnum
       interface is not supported, or if read() returns anything except asynSuccess then
@@ -4320,7 +4319,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>Device support registers for callbacks on the asynEnum interface. Drivers can
       make callbacks to dynamically change the values of enums at run-time. For example,
       changing the gain of an ADC might change the allowed choices for the speed, etc.
-      Device support calls db_post_events(pr, &pr->val, DBE_PROPERTY) when the enum fields
+      Device support calls db_post_events(pr, &amp;pr-&gt;val, DBE_PROPERTY) when the enum fields
       change. This notifies clients that the enum values have changed. Older clients like
       medm and edm will not change the enum widgets until the window is closed and reopened,
       but newer clients like CSS should dynamically change the enum widgets.</li>
@@ -4368,7 +4367,7 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     meaningful values from getBounds() because they do not know the range of the device.
     This is true, for example, of Modbus ADCs. The nbits parameter is defined as follows:</p>
   <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1.  Values will be masked to the specified number of bits.
-<br />
+<br>
 nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
            Values read with the asynInt32 interface will be sign extended
            using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).</pre>
@@ -4751,12 +4750,11 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     The generic EPICS device support sets the record alarm status and severity when
     errors occur. For records that do not use callbacks (not SCAN=I/O Intr or asynXXXAverage
     or asynXXXTimeSeries) the status information is passed from the driver to device
-    support in the asynStatus return of the interface function call, e.g. pasynInt32->read().
+    support in the asynStatus return of the interface function call, e.g. pasynInt32-&gt;read().
     The driver maps the asynStatus values to the record STAT and SEVR values using the
-    function pasynEpicsUtils->asynUserToEpicsAlarm(). The SEVR field is currently always
+    function pasynEpicsUtils-&gt;asynUserToEpicsAlarm(). The SEVR field is currently always
     set to INVALID_ALARM for any error. The STAT field is set using following mapping:</p>
-  <pre>
-  asynSuccess = epicsAlarmNone
+  <pre>  asynSuccess = epicsAlarmNone
   asynTimeout = epicsAlarmTimeout
   asynOverflow = epicsAlarmHWLimit
   asynError = epicsAlarmRead or epicsAlarmWrite
@@ -4765,14 +4763,14 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
   </pre>
   <p>
     For records that use callbacks, the status information is passed from the driver
-    to device support using the pasynUser->auxStatus field in the pasynUser that is
+    to device support using the pasynUser-&gt;auxStatus field in the pasynUser that is
     passed in the callback. This feature was added in asyn R4-19. Prior to that release
     it was not possible for drivers to control the alarm state of records that used
-    callbacks. Drivers should set pasynUser->auxStatus to asynSuccess for normal operation
+    callbacks. Drivers should set pasynUser-&gt;auxStatus to asynSuccess for normal operation
     and to another value to indicate a problem. The same mapping described above is
     used to control the values of STAT and SEVR.
   </p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="asynRecord">
       asynRecord: Generic EPICS Record Support</h2>
@@ -4800,10 +4798,10 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
     The following medm display appears.</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynRecord.png" src="./asynRecord.png" /></p>
+      <img alt="asynRecord.png" src="./asynRecord.png"></p>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2 id="Example">
       Example</h2>
   </div>
@@ -4901,7 +4899,7 @@ static void asynExample(const char *port,int addr,const char *message)
     <li>When it is ready to communicate with the driver it calls queueRequest.</li>
     <li>queueCallback is called. It calls the port driver's write and read methods.</li>
   </ol>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="Test">
       Test Application</h2>
@@ -5028,7 +5026,7 @@ src/
     Executing "medm -x test.adl" produces the display:</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynTest.png" src="asynTest.png" /></p>
+      <img alt="asynTest.png" src="asynTest.png"></p>
   </div>
   <p>
     It assumes that an ioc has been started via:</p>
@@ -5045,7 +5043,7 @@ src/
   <p>
     It loads six versions of test.db and four versions of testBlock.db The test.adl
     file attaches to these database records.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="asynGpib">
       asynGpib</h2>
@@ -5291,7 +5289,7 @@ struct asynGpibPort {
       </tr>
     </tbody>
   </table>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="PortDrivers">
       Port Drivers</h2>
@@ -5452,10 +5450,10 @@ asynSetOption("L0",0,"baud","9600")</pre>
       <ul>
         <li>TCP</li>
         <li>UDP</li>
-        <li>UDP* &#x2014; UDP broadcasts. The address portion of the argument must be the
+        <li>UDP* &#8212; UDP broadcasts. The address portion of the argument must be the
           network broadcast address (e.g. "192.168.1.255:1234 UDP*").</li>
-        <li>HTTP &#x2014; Like TCP but for servers which close the connection after each transaction.</li>
-        <li>COM &#x2014; For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol.
+        <li>HTTP &#8212; Like TCP but for servers which close the connection after each transaction.</li>
+        <li>COM &#8212; For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol.
           This allows port parameters (speed, parity, etc.) to be set with subsequent asynSetOption
           commands just as for local serial ports. The default parameters are 9600-8-N-1 with
           no flow control.</li>
@@ -5746,7 +5744,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     Additional Drivers</h3>
   <p>
     The drivers noted above are included as part of the ASYN distribution.&nbsp; Additional
-    drivers are available, including:<br />
+    drivers are available, including:<br>
   </p>
   <ul>
     <li><a href="http://sourceforge.net/p/epics/wiki/ASYN%20USB%20TMC%20Support/">Driver
@@ -5754,7 +5752,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     <li><a href="http://www.aps.anl.gov/epics/download/modules/PrologixGPIB-1.1.tar.gz">
       Driver for Prologix LAN/GPIB adapter</a></li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="asynPortDriver">
       asynPortDriver C++ base class</h2>
@@ -5765,7 +5763,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     an asyn port driver, because it takes care of all of the tasks like registering
     the port, registering the interfaces, and calling interrupt clients. It is documented
     separately in <a href="asynPortDriver.html">asynPortDriver.html</a>.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="DiagnosticAids">
       Diagnostic Aids</h2>
@@ -5877,14 +5875,14 @@ asynOctetWriteRead("myid","this is test")
 this is test\n
 asynOctetDisconnect("myid")</pre>
   <p>
-    <code>asynRegisterTimeStampSource</code> calls <code>pasynManager->registerTimeStampSource</code>
+    <code>asynRegisterTimeStampSource</code> calls <code>pasynManager-&gt;registerTimeStampSource</code>
     for the specified port. The time stamp source function must be defined as a "function"
     in the application dbd file.</p>
   <p>
-    <code>asynUnregisterTimeStampSource</code> calls <code>pasynManager->runegisterTimeStampSource</code>
+    <code>asynUnregisterTimeStampSource</code> calls <code>pasynManager-&gt;runegisterTimeStampSource</code>
     for the specified port. This reverts to the default timestamp source function in
     asynManager.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="InstallBuild">
       Install and Build</h2>
@@ -5929,17 +5927,31 @@ tar xvf &lt;file&gt;.tar</pre>
       <pre>        &lt;app&gt;_LIBS += asyn
     </pre>
     </li>
-    <li>Add the following to <code>&lt;app&gt;Include.dbd</code> and uncomment the line
-      or lines appropriate for your application:
-      <pre>      include "asyn.dbd"
-      #include "drvAsynSerialPort.dbd"
-      #include "drvAsynIPPort.dbd"
-      #include "drvVxi11.dbd"
-      #include "drvGsIP488.dbd"
-      #include "drvIpac.dbd"
-      #registrar(mv162ipRegistrar)
-    </pre>
-    </li>
+    <li>The application database definition file must include the 
+database definition files for the stream package and for any needed ASYN
+ drivers. There are two ways that this can be done:<br>
+<ul>
+  <li>If you are building your application database definition file from
+ the application Makefile you specify the aditional database definitions
+ there (uncomment the lines appropriate to your application):<br>
+    <tt>include "asyn.dbd"</tt><tt><br>
+    </tt><tt>#include "drvAsynSerialPort.dbd"</tt><tt><br>
+    </tt><tt>#include "drvAsynIPPort.dbd"</tt><tt><br>
+    </tt><tt>#include "drvVxi11.dbd"</tt><tt><br>
+    </tt><tt>#include "</tt><tt><tt>drvGsIP488</tt>.dbd"</tt><tt><br>
+    </tt><tt>#include </tt><tt>"</tt><tt><tt>drvIpac</tt>.dbd"</tt><br>
+  </li>
+  <li>If you are building your application database definition file from
+ the application Makefile you specify the aditional database definitions
+ there (again, uncomment the lines appropriate to your application):<br>
+    <tt><i>xxx</i>_DBD += asyn.dbd</tt><tt><br>
+    </tt><tt>#<i>xxx</i>_DBD += </tt><tt>drvAsynSerialPort.dbd</tt><tt><br>
+    </tt><tt>#<i>xxx</i>_DBD += </tt><tt>drvAsynIPPort.dbd</tt><tt><br>
+    </tt><tt>#<i>xxx</i>_DBD += </tt><tt>drvVxi11.dbd</tt><tt><br>
+    </tt><tt>#<i>xxx</i>_DBD += </tt><tt>drvGsIP488.dbd</tt><tt><br>
+    </tt><tt>#</tt><i><tt>xxx</tt></i><tt>_DBD += </tt><tt>drvIpac.dbd</tt></li>
+</ul>
+</li>
   </ul>
   <p>
     In the <code>st.cmd</code> file add:</p>
@@ -5955,7 +5967,7 @@ tar xvf &lt;file&gt;.tar</pre>
   <p>
     You must provide correct values for &lt;ioc&gt; and &lt;record&gt;. Once asynRecord
     is started, it can be connected to different devices.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2 id="LicenseAgreement">
       License Agreement</h2>
@@ -6023,5 +6035,6 @@ Software: asynDriver
     CONTRACT, TORT (INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR
     OTHERWISE, EVEN IF ANY OF SAID PARTIES HAS BEEN WARNED OF THE
     POSSIBILITY OF SUCH LOSS OR DAMAGES.</pre>
-</body>
-</html>
+
+
+</body></html>
