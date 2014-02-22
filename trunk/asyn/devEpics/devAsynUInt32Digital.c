@@ -661,7 +661,7 @@ static long processLi(longinRecord *pr)
                 pr->name,pPvt->pasynUser->errorMessage);
         }
     }
-    pr->val = pPvt->result.value; 
+    pr->val = pPvt->result.value & pPvt->mask;
     pr->time = pPvt->result.time; 
     if(pPvt->result.status==asynSuccess) {
         pr->udf=0;
@@ -703,9 +703,9 @@ static long processLo(longoutRecord *pr)
 
     if(getCallbackValue(pPvt)) {
         /* This code is for I/O Intr scanned output records, which are not tested yet. */
-        pr->val = pPvt->result.value;
+        pr->val = pPvt->result.value & pPvt->mask;
     } else if(pr->pact == 0) {
-        pPvt->result.value = pr->val;;
+        pPvt->result.value = pr->val & pPvt->mask;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
