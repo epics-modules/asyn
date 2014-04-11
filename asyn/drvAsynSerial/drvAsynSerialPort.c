@@ -648,6 +648,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                             "Can't set %s file flags: %s",
                                     tty->serialDeviceName, strerror(errno));
+                closeConnection(pasynUser,tty);
                 return asynError;
             }
         }
@@ -735,6 +736,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                             "Can't set %s file flags: %s",
                                     tty->serialDeviceName, strerror(errno));
+                closeConnection(pasynUser,tty);
                 return asynError;
             }
         }
@@ -761,6 +763,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't set \"%s\" c_cc[VTIME]: %s",
                                        tty->serialDeviceName, strerror(errno));
+            closeConnection(pasynUser,tty);
             return asynError;
         }
 #endif
