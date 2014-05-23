@@ -1053,7 +1053,12 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     status = (asynStatus) getDoubleParam(addr, function, value);
     /* Set the timestamp */
     pasynUser->timestamp = timeStamp;
-    if (status) 
+    if (status == asynParamUndefined) 
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                  "%s:%s: status=%d, function=%d, value is undefined", 
+                  driverName, functionName, status, function);
+    
+    else if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, value=%f", 
                   driverName, functionName, status, function, *value);
