@@ -10,7 +10,6 @@ include $(TOP)/configure/CONFIG
 
 ifeq ($(DRV_USBTMC),YES)
 PROD_HOST += testUSBTMC
-endif
 
 # testUSBTMC.dbd will be created and installed
 DBD += testUSBTMC.dbd
@@ -38,6 +37,8 @@ testUSBTMC_SRCS_vxWorks += -nil-
 
 # Finally link to the EPICS Base libraries
 testUSBTMC_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+endif
 
 #===========================
 
