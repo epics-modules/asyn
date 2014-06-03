@@ -1,0 +1,40 @@
+###############################################################################
+#                                                                             #
+#                  Example database for USB TMC (488) devices                 #
+#                                                                             #
+###############################################################################
+
+
+###############################################################################
+#                                                                             #
+# asynInt32 records (non-Octet)                                               #
+#                                                                             #
+###############################################################################
+#
+# Uncomment to enable SRQ callback processing
+#
+#record(longin, "$(P)$(R)SRQ")
+#{
+#    field(DESC, "Device status byte from Service Request")
+#    field(DTYP, "asynInt32")
+#    field(INP,  "@asyn($(PORT), 0, 0) SRQ")
+#    field(SCAN, "I/O Intr")
+#}
+
+record(bo, "$(P)$(R)REN")
+{
+    field(DESC, "REN control")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asynMask($(PORT), 0, 1, 0) REN")
+    field(ZNAM, "Disable")
+    field(ONAM, "Enable")
+}
+
+record(longin, "$(P)$(R)STB")
+{
+    field(DESC, "Device status byte")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT), 0, 0) STB")
+    field(PINI, "YES")
+}
+

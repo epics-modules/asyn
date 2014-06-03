@@ -173,6 +173,18 @@ asyn_LIBS_vxWorks += Ipac
 asyn_LIBS_RTEMS += Ipac
 endif
 
+ifneq (, $(findstring RTEMS, $(T_A)))
+DRV_USBTMC = NO
+endif
+ifneq (, $(findstring vxWorks, $(T_A)))
+DRV_USBTMC = NO
+endif
+ifeq ($(DRV_USBTMC),YES)
+SRC_DIRS += $(ASYN)/drvAsynUSBTMC
+asyn_SRCS += drvAsynUSBTMC.c
+DBD += drvAsynUSBTMC.dbd
+endif
+
 SRC_DIRS += $(ASYN)/ni1014
 asyn_SRCS_vxWorks += drvNi1014.c
 asyn_SRCS_RTEMS += drvNi1014.c
