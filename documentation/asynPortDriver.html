@@ -12,7 +12,7 @@
     <h1>
       C++ Base Class for Asyn Port Drivers</h1>
     <h2>
-      April 1, 2010</h2>
+      May 6, 2014</h2>
     <h2>
       Mark Rivers</h2>
     <h2>
@@ -57,10 +57,30 @@
     <li><a href="asynDoxygenHTML/asyn_port_driver_8h.html">asynPortDriver.h file reference</a></li>
   </ul>
   <p>
-    Users should look at the example driver in asyn (testAsynPortDriver) to see how
-    this class is used. More complex examples can be found in the drivers and plugins
-    provided with the <a href="http://cars.uchicago.edu/software/epics/areaDetector.html">
-      areaDetector</a> module.
+    The example driver in asyn (testAsynPortDriver) is a simple example of how to use
+    this class</p>
+  <p>
+    The <a href="http://cars.uchicago.edu/software/epics/measComp.html">synApps measComp
+      module</a> contains a detailed example of writing an asynPortDriver driver. The
+    driver is for the Measurement Computing USB-1608GX-2AO USB device. The example starts
+    with a very simple driver that only uses a few of the features of the device, and
+    is fewer than 150 lines of code. There are 5 versions of the driver that each add
+    additional features. There is a document describing the code for each driver in
+    detail, which was the basis of a talk at an EPICS short course on asyn. The following
+    are links to this example:</p>
+  <ul>
+    <li><a href="https://subversion.xray.aps.anl.gov/synApps/measComp/trunk/documentation/measCompDriverTalk.pdf">
+      Introductory talk about the Measurement Computing USB-1608GX-2AO driver.</a></li>
+    <li><a href="https://subversion.xray.aps.anl.gov/synApps/measComp/trunk/documentation/measCompTutorial.pdf">
+      Tutorial talk about writing the USB-1608GX-2AO driver step-by step, from a simple
+      driver to a complex one.</a></li>
+    <li><a href="https://subversion.xray.aps.anl.gov/synApps/measComp/trunk/measCompApp/demoSrc">
+      Directory containing the source code for all 5 versions of the the example driver.</a></li>
+  </ul>
+  <p>
+    More complex examples can be found in the drivers and plugins provided with the
+    <a href="http://cars.uchicago.edu/software/epics/areaDetector.html">areaDetector</a>
+    module.
   </p>
   <h2>
     Example driver - testAsynPortDriver</h2>
