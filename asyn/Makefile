@@ -194,7 +194,7 @@ ifeq ($(LINUX_GPIB),YES)
 SRC_DIRS += $(ASYN)/linuxGpib
 asyn_SRCS_Linux += drvLinuxGpib.c
 DBD += drvLinuxGpib.dbd
-asyn_LIBS += gpib
+asyn_SYS_LIBS += gpib
 endif
 
 SRC_DIRS += $(ASYN)/devGpib
