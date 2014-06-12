@@ -1191,7 +1191,7 @@ static void *memMalloc(size_t size)
         if(size<=memListSize[ind]) break;
     }
     if(ind>=nMemList) {
-        return mallocMustSucceed(size,"asynManager::memCalloc");
+        return mallocMustSucceed(size,"asynManager::memMalloc");
     }
     pmemList = &pasynBase->memList[ind];
     epicsMutexMustLock(pasynBase->lock);
@@ -1201,7 +1201,7 @@ static void *memMalloc(size_t size)
      } else {
         /* Note: pmemNode->memory must be multiple of 16 in order to hold any data type */
         pmemNode = mallocMustSucceed(NODESIZE + memListSize[ind],
-             "asynManager::memCalloc");
+             "asynManager::memMalloc");
         pmemNode->memory = (char *)pmemNode + NODESIZE;
      }
      epicsMutexUnlock(pasynBase->lock);
