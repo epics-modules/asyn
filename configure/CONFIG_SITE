@@ -31,3 +31,17 @@ CHECK_RELEASE = YES
 # You must rebuild in the iocBoot directory for this to
 #   take effect.
 #IOCS_APPL_TOP = </IOC/path/to/application/top>
+
+# If you have the local Linux GPIB support installed (http://sourceforge.net/projects/linux-gpib/)
+# then set LINUX_GPIB=YES
+LINUX_GPIB=NO
+
+# If you have libusb-1.0 revision 16 or newer and want the USB TMC support set DRV_USBTMC=YES
+#DRV_USBTMC=YES
+
+# You can also define this on a per-architecture basis.  
+# In this example DRV_USBTMC would be built only for linux-x86_64, and not for other architectures
+#ifeq (linux-x86_64, $(T_A))
+#  DRV_USBTMC=YES
+#endif
+
