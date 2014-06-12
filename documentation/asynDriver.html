@@ -179,7 +179,7 @@
     <li>drvAsynIPPort: Support for TCP/IP and UDP/IP socket communication, including serial
       devices accessed via Ethernet/Serial converter boxes.</li>
     <li>drvAsynIPServerPort: Support for asyn socket servers that are accessed from remote
-      clients. TCP/IP sockets are supported, UDP is not currently supported.</li>
+      clients. TCP/IP sockets and UDP are supported.</li>
     <li>VXI-11: A replacement for the VXI-11 support of the Franksen gpibCore support.</li>
     <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
     <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack module.</li>
@@ -5478,12 +5478,12 @@ asynSetOption("L0",0,"baud","9600")</pre>
     TCP/IP Server</h3>
   <p>
     The drvAsynIPServerPort driver supports asyn socket servers by listening for TCP/IP
-    connections from remote clients. The listener thread then creates a new drvAsynIPPort
+    or UDP connections from remote clients. The listener thread then creates a new drvAsynIPPort
     port by calling drvAsynIPPortConfigure (or re-uses a disconnected port it previously
     created), and calls back any registered asyn clients with the name of the new port.
     These asyn clients will typically be socket servers.</p>
   <p>
-    TCP/IP server listeners are configured with the <tt>drvAsynIPServerPortConfigure</tt>
+    IP server listeners are configured with the <tt>drvAsynIPServerPortConfigure</tt>
     command:</p>
   <pre> drvAsynIPServerPortConfigure("portName", "serverInfo", maxClients, priority, 
       noAutoConnect, noProcessEos);</pre>
@@ -5492,7 +5492,7 @@ asynSetOption("L0",0,"baud","9600")</pre>
   <ul>
     <li>portName - The portName that is registered with asynManager.</li>
     <li>serverInfo - The Internet host name and port number to listen for connections
-      on (e.g. "localhost:4002"). TCP is the only protocol currently supported.</li>
+      on (e.g. "localhost:4002" for TCP, "localhost:4002 UDP" for UDP).</li>
     <li>maxClients - the maximum number of IP clients that can be simultaneously connected
       on this port. Additional connect requests will fail.</li>
     <li>priority - Priority at which the listener thread and any asyn I/O ports it creates
