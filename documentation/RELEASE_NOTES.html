@@ -33,6 +33,12 @@
     <li>Enabled by setting DRV_USBTMC=YES in configure/CONFIG_SITE.</li>
   </ul>
   <h3>
+    drvAsynSerialPort</h3>
+  <p>
+    Fixed bug: the port was not always being disconnected when the OS returned serious
+    errors. This was preventing USB serial devices from disconnecting and reconnecting
+    properly.</p>
+  <h3>
     drvAsynSerialPortWin32 (Windows serial port driver)</h3>
   <p>
     Fixed 2 bugs in pasynOctet-&gt;read() when pasynUserTimeout=0:</p>
@@ -41,6 +47,19 @@
     <li>If there were no characters to be read it was not returning asynTimeout, it was
       returning asynSuccess. This prevented StreamDevice from working correctly.</li>
   </ul>
+  <h3>
+    drvVxi11</h3>
+  <p>
+    Fixed several 32/64 bit issues.</p>
+  <h3>
+    drvAsynIPServerPort</h3>
+  <p>
+    Added support for UDP servers, in addition to TCP servers. Thanks to Helge Brands
+    and Dirk Zimoch from PSI for this.</p>
+  <h3>
+    drvLinuxGpib</h3>
+  <p>
+    Fix to Makefile to link with system libgpib library.</p>
   <h3>
     devEpics (asynInt32)</h3>
   <p>
@@ -55,11 +74,21 @@
   <p>
     Undid the change in R4-22 that changed the asynStdInterfaces from protected to private.
     That change was not compatible with areaDetector R1-9-1.</p>
+  <p>
+    Added links to asynPortDriver.html to detailed tutorial on how to write a driver
+    using asynPortDriver.</p>
   <h3>
     asynOctetSyncIO</h3>
   <p>
     Fixed a bug that could cause the values of *nbytesOut, *nbytesIn, and *eomReason
     to be garbage if an I/O error occurred.</p>
+  <h3>
+    configure directory</h3>
+  <p>
+    Updated the files in the configure directory to the versions from EPICS base 3.14.12.3.
+    Paths to EPICS base and other modules are still defined in configure/RELEASE. However,
+    other configuration values, such as LINUX_GPIB and DRV_USBTMC are now defined in
+    configure/CONFIG_SITE, not in RELEASE.</p>
   <div style="text-align: center">
     <hr />
     <h2>
