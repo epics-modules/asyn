@@ -10,10 +10,6 @@ IPAC=$(SUPPORT)/ipac-2-11
 # SEQ is required for testIPServer
 SNCSEQ=$(SUPPORT)/seq-2-1-10
 
-# Requires libusb-1.0 revision 16 or newer
-# DRV_USBTMC=YES
-
 #  EPICS_BASE 3.14.6 or later is required
-LINUX_GPIB=NO
-EPICS_BASE=/corvette/usr/local/epics/base-3.14.12.3
+EPICS_BASE=/corvette/usr/local/epics/base-3.14.12.4
 -include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
