@@ -1,6 +1,8 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
-  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type">
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" 
+       "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
   <title>asynDriver</title>
 </head>
 <body>
@@ -20,7 +22,7 @@
       <span style="font-weight: bold; font-size: 14pt">Gasper Jansa (cosyLab) - linuxGpib
         support.</span></p>
   </div>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       License Agreement</h2>
@@ -28,46 +30,44 @@
   <p>
     This product is available via the <a href="#LicenseAgreement">open source license</a>
     described at the end of this document.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Contents</h2>
   </div>
   <div>
     <a href="#Purpose">Purpose</a>
-    <br>
+    <br />
     <a href="#Status">Status</a>
-    <br>
+    <br />
     <a href="#Acknowledgments">Acknowledgments</a>
-    <br>
+    <br />
     <a href="#Overview">Overview of asynDriver</a>
-    <br>
+    <br />
     <a href="#theoryOfOperation">Theory of Operation</a>
-    <br>
+    <br />
     <a href="#asynDriver">asynDriver Structures and Interfaces</a>
-    <br>
-    <a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br>
-    <a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br>
-    <a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br>
+    <br />
+    <a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br />
+    <a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br />
+    <a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br />
     <a href="#interposeInterfaces">Standard Interpose Interfaces</a>
-    <br>
-    <a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br>
+    <br />
+    <a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br />
     <a href="#asynRecord">asynRecord: Generic Record Support</a>
-    <br>
+    <br />
     <a href="#Example">Example</a>
-    <br>
+    <br />
     <a href="#Test">Test Example</a>
-    <br>
+    <br />
     <a href="#asynGpib">asynGpib</a>
-    <br>
+    <br />
     <a href="#PortDrivers">Port Drivers</a>
     <ul>
       <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
       <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
       <li><a href="#drvAsynIPServerPort">TCP/IP or UDP/IP Server</a></li>
-<li><a href="file:///usr/local/epics/src/asynMirror/asyn/trunk/documentation/asynDriver.html#usbtmc">USB TMC (Test and Measurement Class)</a><br>
-</li>
-
+      <li><a href="#usbtmc">USB TMC (Test and Measurement Class)</a></li>
       <li><a href="#vxi11">VXI-11</a></li>
       <li><a href="#Linux-gpib">Linux-Gpib</a></li>
       <li><a href="#gsIP488">Green Springs IP488</a></li>
@@ -75,13 +75,13 @@
       <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
     </ul>
     <a href="#asynPortDriver">asynPortDriver C++ base class</a>
-    <br>
+    <br />
     <a href="#DiagnosticAids">Diagnostic Aids</a>
-    <br>
+    <br />
     <a href="#InstallBuild">Install and Build</a>
-    <br>
+    <br />
   </div>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="Purpose">
       Purpose</h2>
@@ -155,7 +155,7 @@
         ethernet.</p>
     </li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="Status">
       Status</h2>
@@ -201,7 +201,7 @@
       record replaces them. The areaDetector module was written to use asyn, and was the
       original motivation for the development of asynPortDriver.</li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="Acknowledgments">
       Acknowledgments</h2>
@@ -258,7 +258,7 @@
       queue timeouts and cancels. He provides an expert and welcome set of eyes to look
       at difficult code!!!</dd>
   </dl>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="Overview">
       Overview of asynDriver</h2>
@@ -749,7 +749,7 @@
   <p>
     The actual code is more complicated because it unlocks before it calls code outside
     asynManager. This means that the queues can be modified and exceptions may occur.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="theoryOfOperation">
       Theory of Operation</h2>
@@ -823,7 +823,7 @@
   <p>
   </p>
   <div style="text-align: center">
-    <img alt="AsynFlow.jpg" src="AsynFlow.jpg">
+    <img alt="AsynFlow.jpg" src="AsynFlow.jpg" />
     <p>
     </p>
     <p>
@@ -854,7 +854,7 @@
   <p>
   </p>
   <div style="text-align: center">
-    <img alt="AsynSynFlow.jpg" src="AsynSynFlow.jpg">
+    <img alt="AsynSynFlow.jpg" src="AsynSynFlow.jpg" />
     <p>
       Figure 2: Synchronous Control Flow</p>
   </div>
@@ -871,7 +871,7 @@
     <li>processCallback returns to queueRequest, which unlocks the port and returns to
       device support, which returns to record support, which completes record processing.</li>
   </ol>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="asynDriver">
       asynDriver Structures and Interfaces</h2>
@@ -2234,7 +2234,7 @@ epicsShareExtern asynTrace *pasynTrace;
       </tr>
     </tbody>
   </table>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="standardMessageInterfaces">
       Standard Message Based Interfaces</h2>
@@ -2588,7 +2588,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     can all handle EOS processing. An application developer must decide what policy
     will be followed for individual devices. The policy will be determined by the device,
     the device support, and the driver.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="standardRegisterInterfaces">
       Standard Register Based Interfaces</h2>
@@ -3442,7 +3442,7 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
       </tr>
     </tbody>
   </table>
-  <hr>
+  <hr />
   <p>
   </p>
   <p>
@@ -4208,7 +4208,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
   </ul>
   <p>
     this command should appear immediately after the command that initializes a port</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="genericEpicsSupport">
       Generic Device Support for EPICS records</h2>
@@ -4362,7 +4362,7 @@ device(longout,INST_IO,asynLoInt32,"asynInt32")</pre>
     meaningful values from getBounds() because they do not know the range of the device.
     This is true, for example, of Modbus ADCs. The nbits parameter is defined as follows:</p>
   <pre>nbits &gt; 0  Device is unipolar with a range from 0 to 2^nbits-1.  Values will be masked to the specified number of bits.
-<br>
+<br />
 nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
            Values read with the asynInt32 interface will be sign extended
            using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).</pre>
@@ -4766,7 +4766,7 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     operation and to another value to indicate a problem. The same mapping described
     above is used to control the values of STAT and SEVR.
   </p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="asynRecord">
       asynRecord: Generic EPICS Record Support</h2>
@@ -4794,10 +4794,10 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
     The following medm display appears.</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynRecord.png" src="./asynRecord.png"></p>
+      <img alt="asynRecord.png" src="./asynRecord.png" /></p>
   </div>
   <div style="text-align: center">
-    <hr>
+    <hr />
     <h2 id="Example">
       Example</h2>
   </div>
@@ -4895,7 +4895,7 @@ static void asynExample(const char *port,int addr,const char *message)
     <li>When it is ready to communicate with the driver it calls queueRequest.</li>
     <li>queueCallback is called. It calls the port driver's write and read methods.</li>
   </ol>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="Test">
       Test Application</h2>
@@ -5022,7 +5022,7 @@ src/
     Executing "medm -x test.adl" produces the display:</p>
   <div style="text-align: center">
     <p>
-      <img alt="asynTest.png" src="asynTest.png"></p>
+      <img alt="asynTest.png" src="asynTest.png" /></p>
   </div>
   <p>
     It assumes that an ioc has been started via:</p>
@@ -5039,7 +5039,7 @@ src/
   <p>
     It loads six versions of test.db and four versions of testBlock.db The test.adl
     file attaches to these database records.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="asynGpib">
       asynGpib</h2>
@@ -5285,7 +5285,7 @@ struct asynGpibPort {
       </tr>
     </tbody>
   </table>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="PortDrivers">
       Port Drivers</h2>
@@ -5736,100 +5736,98 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     interface chip requires it. The first time ni1014Config is executed code is run
     to determine a variable used by the delay routine. It assumes that there is no higher
     priority thread running that consumes lots of cpu cycles.</p>
-<h3><a name="usbtmc"></a>USB TMC (Test and Measurement Class) driver</h3>
-<li>Configure each instance of the driver in the application startup script:<br>&nbsp;&nbsp; <tt>usbtmcConfigure("&lt;asynPort&gt;",
- &lt;vendorId&gt;, &lt;productId&gt;, "&lt;serialNumber&gt;", 
-&lt;priority&gt;, &lt;flags&gt;)</tt><br>
-    The <tt>&lt;asynPort&gt;</tt> and <tt>&lt;serialNumber&gt;</tt> arguments are strings and the other arguments are integers.&nbsp; A missing or 0 <tt>&lt;vendorId&gt;</tt> or&nbsp; <tt>&lt;productId&gt;</tt> matches any value and a missing or empty<tt> &lt;serialNumber&gt;</tt> string matches any value.&nbsp; Thus the command<br>
-  <tt>&nbsp; usbtmcConfigure("usbtmc1")</tt><br>
-will associate ASYN port usbtmc1 with the first USB TMC device discovered.<br>
-A missing or 0 priority will set the worker thread priority to its default value of 50 (<tt>epicsThreadPriorityMedium</tt>). <br>
-A missing flags argument is taken to be 0.&nbsp;&nbsp; As of now only 
-one bit is used: Bit 0 (0x1) &#8211; Disable/enable (1/0) automatic port 
-connection.
-
-  
-<ul>
-
-</ul>
-
-</li>
-
-
-<h4 style="margin-left: 40px;">Non-octet records</h4>
-<div style="margin-left: 40px;">
-In addition to the asynOctet stream this support module provides some 
-values for records with DTYP=asynInt32. Since the port is a 
-single-address device the 
-subaddress field of the INP or OUT '@asyn()' descriptor can not be used.
-Instead the 'drvUser' string at the end of the INP or OUT field is used 
-to distinguish the parameter to be read or written.
-</div>
-<blockquote style="margin-left: 40px;">
-  <h5>Service Request (SRQ) handling</h5>
-
-The presence of one or more records with INP="@asyn(<i>&lt;port&gt;</i><port>, 0, 0) SRQ")
- will cause the driver to create an extra thread to read from the device
- Interrupt-In endpoint.&nbsp; The SCAN field must be "I/O 
-Intr".&nbsp; Record processing will occur when the device sends a service 
-request message on the Interrupt-In endpoint and the value will be the 
-device status byte sent as part of the service request message.</port>&nbsp;  Typically the record type will be longin or mbbiDirect.
-  <port>
-<h5>Device Status Byte (STB)</h5>
-The USBTMC/USB488 device status byte is read by a record with</port><port> INP="@asyn(</port><i>&lt;port&gt;</i><port><port>, 0, 0) STB").&nbsp; Typically the record type will be longin or mbbiDirect.</port></port><br>
-</blockquote>
-<div style="margin-left: 40px;">
-</div>
-<blockquote style="margin-left: 40px;"><port><port>
-      <h5>Remote Enable (REN)</h5>
-
-The device remote enable is written by a record with OUT="@asyn(</port></port><port><port><i>&lt;port&gt;</i>, 0, 0) REN").&nbsp; Typically the record type will be bo.</port></port></blockquote>
-<div style="margin-left: 40px;">
-</div>
-<port><port><h4 style="margin-left: 40px;">Linux udev configuration<br>
-</h4>
-<div style="margin-left: 40px;">If attempts to communicate with a device result in error messages of the form &#8220;Access denied (insufficient permissions)&#8221;
- you must add udev entries to allow access.&nbsp; In the 
-/etc/udev/rules.d directory create a file, 55-usbtmc.rules for example, 
-with a line for each device of interest.<br>
-  <br>
-To allow everyone in the &#8220;usbtmc&#8221; group access to a device with 
-vendor code 1BFA (hexadecimal) and product code 0498 (hexadecimal) the 
-line would look like:<tt><br>
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", GROUP="usbtmc", MODE="0660"</tt><br>
-  <br>
-To allow everyone access the line would look like:<tt><br>
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"</tt><br>
-  <br>
-The <tt>{idVendor}</tt> and <tt>{idProduct}</tt> values must match those of the device with which you wish to communicate.<br>
-  <h4>StreamDevice Exception Handlers</h4>
-  <p>The USBTMC driver attempts to take correct action when it detects 
-that the device has been unplugged or become unresponsive.&nbsp; The 
-effectiveness of this depends somewhat on the level of support provided 
-by the underlying operating system so it is good practice to also 
-specify the following StreamDevice global exception handlers:<br>
-    <span style="font-family: monospace;">@mismatch&nbsp;&nbsp;&nbsp;&nbsp; { disconnect; }</span><span style="font-family: monospace;"><br>
-    </span><span style="font-family: monospace;">@writetimeout { disconnect; }</span><span style="font-family: monospace;"><br>
-    </span><span style="font-family: monospace;">@readtimeout&nbsp; { disconnect; }</span><span style="font-family: monospace;"><br>
-    </span><span style="font-family: monospace;">@replyTimeout { disconnect; }</span><br>
-    <br>
+  <h3 id="usbtmc">
+    USB TMC (Test and Measurement Class) driver</h3>
+  <p>
+    Configure each instance of the driver in the application startup script:</p>
+  <pre>usbtmcConfigure("asynPort", vendorId, productId, "serialNumber", priority, flags)</pre>
+  <p>
+    The <tt>asynPort</tt> and <tt>serialNumber</tt> arguments are strings and the other
+    arguments are integers. A missing or 0 <tt>vendorId</tt> or <tt>productId</tt> matches
+    any value and a missing or empty <tt>serialNumber</tt> string matches any value.
+    Thus the command:</p>
+  <pre>usbtmcConfigure("usbtmc1")</pre>
+  <p>
+    will associate ASYN port usbtmc1 with the first USB TMC device discovered. A missing
+    or 0 priority will set the worker thread priority to its default value of 50 (<tt>epicsThreadPriorityMedium</tt>).</p>
+  <p>
+    A missing flags argument is taken to be 0. As of now only one bit is used: Bit 0
+    (0x1) Disable/enable (1/0) automatic port connection.</p>
+  <h4>
+    Non-octet records</h4>
+  <p>
+    In addition to the asynOctet stream this support module provides some values for
+    records with DTYP=asynInt32. Since the port is a single-address device the subaddress
+    field of the INP or OUT '@asyn()' descriptor can not be used. Instead the 'drvUser'
+    string at the end of the INP or OUT field is used to distinguish the parameter to
+    be read or written.
   </p>
   <h5>
-  </h5>
-</div>
-</port></port><port><port>
-  </port></port><port><port>
+    Service Request (SRQ) handling</h5>
+  <p>
+    The presence of one or more records with INP="@asyn(port, 0, 0) SRQ") will cause
+    the driver to create an extra thread to read from the device Interrupt-In endpoint.
+    The SCAN field must be "I/O Intr". Record processing will occur when the device
+    sends a service request message on the Interrupt-In endpoint and the value will
+    be the device status byte sent as part of the service request message. Typically
+    the record type will be longin or mbbiDirect.</p>
+  <h5>
+    Device Status Byte (STB)</h5>
+  <p>
+    The USBTMC/USB488 device status byte is read by a record with</p>
+  <pre>INP="@asyn(port, 0, 0) STB").</pre>
+  <p>
+    Typically the record type will be longin or mbbiDirect.</p>
+  <h5>
+    Remote Enable (REN)</h5>
+  <p>
+    The device remote enable is written by a record with</p>
+  <pre>OUT="@asyn(port, 0, 0) REN") </pre>
+  <p>
+    Typically the record type will be bo.</p>
+  <h4>
+    Linux udev configuration</h4>
+  <p>
+    If attempts to communicate with a device result in error messages of the form "Access
+    denied (insufficient permissions)" you must add udev entries to allow access. In
+    the /etc/udev/rules.d directory create a file, 55-usbtmc.rules for example, with
+    a line for each device of interest.</p>
+  <p>
+    To allow everyone in the "usbtmc" group access to a device with vendor code 1BFA
+    (hexadecimal) and product code 0498 (hexadecimal) the line would look like:</p>
+  <pre>
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", GROUP="usbtmc", MODE="0660"</pre>
+  <p>
+    To allow everyone access the line would look like:</p>
+  <pre>
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"</pre>
+  <p>
+    The <tt>{idVendor}</tt> and <tt>{idProduct}</tt> values must match those of the
+    device with which you wish to communicate.</p>
+  <h4>
+    StreamDevice Exception Handlers</h4>
+  <p>
+    The USBTMC driver attempts to take correct action when it detects that the device
+    has been unplugged or become unresponsive. The effectiveness of this depends somewhat
+    on the level of support provided by the underlying operating system so it is good
+    practice to also specify the following StreamDevice global exception handlers:</p>
+  <pre>
+    @mismatch { disconnect; }
+    @writetimeout { disconnect; }
+    @readtimeout { disconnect; }
+    @replyTimeout { disconnect; }
+</pre>
   <h3 id="Additional_Drivers">
     Additional Drivers</h3>
   <p>
     The drivers noted above are included as part of the ASYN distribution.&nbsp; Additional
-    drivers are available, including:<br>
+    drivers are available, including:<br />
   </p>
   <ul>
     <li><a href="http://www.aps.anl.gov/epics/download/modules/PrologixGPIB-1.1.tar.gz">
       Driver for Prologix LAN/GPIB adapter</a></li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="asynPortDriver">
       asynPortDriver C++ base class</h2>
@@ -5840,7 +5838,7 @@ specify the following StreamDevice global exception handlers:<br>
     an asyn port driver, because it takes care of all of the tasks like registering
     the port, registering the interfaces, and calling interrupt clients. It is documented
     separately in <a href="asynPortDriver.html">asynPortDriver.html</a>.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="DiagnosticAids">
       Diagnostic Aids</h2>
@@ -5959,7 +5957,7 @@ asynOctetDisconnect("myid")</pre>
     <code>asynUnregisterTimeStampSource</code> calls <code>pasynManager-&gt;runegisterTimeStampSource</code>
     for the specified port. This reverts to the default timestamp source function in
     asynManager.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="InstallBuild">
       Install and Build</h2>
@@ -6006,7 +6004,7 @@ tar xvf &lt;file&gt;.tar</pre>
     </li>
     <li>The application database definition file must include the database definition
       files for the stream package and for any needed ASYN drivers. There are two ways
-      that this can be done:<br>
+      that this can be done:<br />
       <ul>
         <li>If you are building your application database definition file from the application
           Makefile you specify the aditional database definitions there (uncomment the lines
@@ -6049,7 +6047,7 @@ tar xvf &lt;file&gt;.tar</pre>
   <p>
     You must provide correct values for &lt;ioc&gt; and &lt;record&gt;. Once asynRecord
     is started, it can be connected to different devices.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2 id="LicenseAgreement">
       License Agreement</h2>
@@ -6117,7 +6115,5 @@ Software: asynDriver
     CONTRACT, TORT (INCLUDING NEGLIGENCE OR STRICT LIABILITY), OR
     OTHERWISE, EVEN IF ANY OF SAID PARTIES HAS BEEN WARNED OF THE
     POSSIBILITY OF SUCH LOSS OR DAMAGES.</pre>
-
-
-
-</port></port></body></html>
+</body>
+</html>
