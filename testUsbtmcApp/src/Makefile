@@ -23,7 +23,6 @@ testUSBTMC_DBD += asyn.dbd
 
 # Add all the support libraries needed by this IOC
 testUSBTMC_LIBS += asyn
-SYS_PROD_LIBS += usb-1.0
 
 # testUSBTMC_registerRecordDeviceDriver.cpp derives from testUSBTMC.dbd
 testUSBTMC_SRCS += testUSBTMC_registerRecordDeviceDriver.cpp
