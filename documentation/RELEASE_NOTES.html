@@ -14,7 +14,7 @@
     <h2>
       Release 4-23</h2>
     <h2>
-      June XXX, 2014</h2>
+      June 12, 2014</h2>
   </div>
   <h3>
     asynManager.c</h3>
@@ -22,7 +22,7 @@
     Fixed a bug in pasynManager->memMalloc. It could return a pointer that was not a
     multiple of 8 bytes. This led to subtle problems on some architectures (e.g. ARM)
     if a double was stored in the memory returned by memMalloc. Fixed the code so the
-    pointer is always a multiple of 8 bytes.</p>
+    pointer is always a multiple of 16 bytes (for future safety).</p>
   <h3>
     drvAsynUSBTMC</h3>
   <ul>
