@@ -182,6 +182,7 @@ endif
 ifeq ($(DRV_USBTMC),YES)
 SRC_DIRS += $(ASYN)/drvAsynUSBTMC
 asyn_SRCS += drvAsynUSBTMC.c
+asyn_SYS_LIBS += usb-1.0
 DBD += drvAsynUSBTMC.dbd
 endif
 
