@@ -20,11 +20,9 @@
 #include <menuFtype.h>
 #include <dbEvent.h>
 
-#include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynEpicsUtils.h"
-#include <epicsExport.h>
 
 #define ASYN_XXX_TIME_SERIES_FUNCS(DRIVER_NAME, INTERFACE, INTERFACE_TYPE, \
                                    INTERRUPT, EPICS_TYPE, DSET, \
