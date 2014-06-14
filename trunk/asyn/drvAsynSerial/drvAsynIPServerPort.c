@@ -192,11 +192,11 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         thisRead = 0;
     } else {
 
-        for (x = 0; x < maxchars - 1; x++) {
+        for (x = 0; x < (int)maxchars - 1; x++) {
             data[x] = tty->UDPbuffer[x + tty->UDPbufferPos];
         }
-        thisRead = maxchars - 1;
-        tty->UDPbufferPos = tty->UDPbufferPos + maxchars;
+        thisRead = (int)maxchars - 1;
+        tty->UDPbufferPos = tty->UDPbufferPos + (int)maxchars;
         if (tty->UDPbufferSize <= tty->UDPbufferPos) {
             tty->UDPbufferPos = 0;
             tty->UDPbufferSize = 0;
@@ -356,7 +356,7 @@ static void connectionListener(void *drvPvt)
                     continue;
                 }
                 /* Create a new asyn port with a unique name */
-                len = strlen(tty->portName) + 10; /* Room for port name + ":" + numClients */
+                len = (int)strlen(tty->portName) + 10; /* Room for port name + ":" + numClients */
                 pl = &tty->portList[tty->numClients];
                 pl->portName = callocMustSucceed(1, len, "drvAsynIPServerPort:connectionListener");
                 pl->fd = clientFd;
@@ -420,7 +420,7 @@ int createServerSocket(ttyController_t *tty) {
      * Create the socket
      */
     if (tty->fd == -1) {
-        if ((tty->fd = epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
+        if ((tty->fd = (int)epicsSocketCreate(PF_INET, tty->socketType, 0)) < 0) {
             printf("Can't create socket: %s", strerror(SOCKERRNO));
             return -1;
         }
