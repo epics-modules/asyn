@@ -30,7 +30,7 @@ const char* paramVal::typeNames[] = {
 
 
 paramVal::paramVal(const char *name):
-    type(asynParamUndefined), status_(asynSuccess), valueDefined(false), valueChanged(false){
+    type(asynParamNotDefined), status_(asynSuccess), valueDefined(false), valueChanged(false){
     this->name = epicsStrDup(name);
     this->data.sval = 0;
 }
