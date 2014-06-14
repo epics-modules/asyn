@@ -23,8 +23,9 @@
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynOption.h"
-#include "asynInterposeCom.h"
+
 #include <epicsExport.h>
+#include "asynInterposeCom.h"
 
 /*
  * TELNET special characters
