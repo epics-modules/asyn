@@ -15,11 +15,10 @@
 #include <epicsTypes.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
-#include "asynFloat64Array.h"
 
+#include <epicsExport.h>
+#include "asynFloat64Array.h"
 #include "asynXXXArrayBase.h"
  
 ASYN_XXX_ARRAY_BASE_FUNCS(asynFloat64Array, asynFloat64ArrayType, asynFloat64ArrayBase, pasynFloat64ArrayBase,

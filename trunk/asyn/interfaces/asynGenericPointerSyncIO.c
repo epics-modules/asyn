@@ -19,12 +19,11 @@
 
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynGenericPointer.h"
 #include "asynDrvUser.h"
-#include "drvAsynIPPort.h"
+
+#include <epicsExport.h>
 #include "asynGenericPointerSyncIO.h"
 
 typedef struct ioPvt{
