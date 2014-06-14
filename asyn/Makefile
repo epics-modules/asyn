@@ -109,10 +109,8 @@ asyn_SRCS += ParamValValueNotChanged.cpp
 SRC_DIRS += $(ASYN)/asynPortDriver
 INC += asynParamType.h
 INC += paramVal.h
-INC += paramList.h
 INC += asynPortDriver.h
 asyn_SRCS += paramVal.cpp
-asyn_SRCS += paramList.cpp
 asyn_SRCS += asynPortDriver.cpp
 
 
