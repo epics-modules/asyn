@@ -22,11 +22,8 @@
 #include <epicsString.h>
 #include <cantProceed.h>
 
-
-#define epicsExportSharedSymbols
-#include <shareLib.h>
-#include "asynEpicsUtils.h"
 #include <epicsExport.h>
+#include "asynEpicsUtils.h"
 
 static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink, 
                    char **port, int *addr, char **userParam);
