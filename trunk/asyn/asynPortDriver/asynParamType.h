@@ -10,7 +10,7 @@
 
 /** Parameter data types for the parameter library */
 typedef enum {
-    asynParamUndefined,     /**< Undefined */
+    asynParamNotDefined,     /**< Undefined */
     asynParamInt32,
     asynParamUInt32Digital,
     asynParamFloat64,
