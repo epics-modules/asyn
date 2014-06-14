@@ -8,6 +8,8 @@
 #ifndef ASYNPORTDRIVERERRORSTATES_H_
 #define ASYNPORTDRIVERERRORSTATES_H_
 
+#include <asynDriver.h>
+
 /* Extend asynManager error list.  We should have a way of knowing what the last error in asyn is */
 #define asynParamAlreadyExists (asynStatus)(asynDisabled + 1)
 #define asynParamNotFound      (asynStatus)(asynDisabled + 2)
