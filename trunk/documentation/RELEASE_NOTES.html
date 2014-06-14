@@ -14,7 +14,7 @@
     <h2>
       Release 4-23</h2>
     <h2>
-      June 12, 2014</h2>
+      June 16, 2014</h2>
   </div>
   <h3>
     asynManager.c</h3>
@@ -75,6 +75,11 @@
     Undid the change in R4-22 that changed the asynStdInterfaces from protected to private.
     That change was not compatible with areaDetector R1-9-1.</p>
   <p>
+    Removed paramList.h and paramList.cpp, put the code into asynPortDriver.cpp. These
+    two classes had many interdependencies, so needed to include each other's header
+    files. This was difficult when building dynamically on Windows, where imported and
+    exported symbols need to be distinguished.</p>
+  <p>
     Added links to asynPortDriver.html to detailed tutorial on how to write a driver
     using asynPortDriver.</p>
   <h3>
@@ -82,6 +87,14 @@
   <p>
     Fixed a bug that could cause the values of *nbytesOut, *nbytesIn, and *eomReason
     to be garbage if an I/O error occurred.</p>
+  <h3>
+    Many files</h3>
+  <p>
+    Handled exporting symbols consistently, which is important when building dynamically
+    for Windows with Visual Studio. Eliminated all references to epicsSharedSymbols,
+    now just #include &lt;epicsexport.h&gt; just before the #include for the header
+    file that defines symbols for this file, and after all other #include statements.
+    Thanks to Peter Heesterberg for the initial version of this fix.</p>
   <h3>
     configure directory</h3>
   <p>
