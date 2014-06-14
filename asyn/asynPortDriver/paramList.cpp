@@ -13,12 +13,14 @@
 #include <dbAccess.h>
 
 #include "paramVal.h"
-#include "paramList.h"
 #include "paramErrors.h"
 #include "asynParamType.h"
 #include "ParamListInvalidIndex.h"
 #include "ParamValWrongType.h"
 #include "ParamValNotDefined.h"
+
+#include <epicsExport.h>
+#include "paramList.h"
 
 /** Constructor for paramList class.
   * \param[in] nValues Number of parameters in the list.
