@@ -328,7 +328,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * If the connect fails, arrange for another DNS lookup in case the
          * problem is just that the device has DHCP'd itself an new number.
          */
-        if (connect(fd, &tty->farAddr.oa.sa, tty->farAddrSize) < 0) {
+        if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't connect to %s: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
