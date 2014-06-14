@@ -15,9 +15,10 @@
 #include <epicsThread.h>
 #include <epicsString.h>
 #include <iocsh.h>
-#include <epicsExport.h>
 #include <asynPortDriver.h>
 #include <asynOctetSyncIO.h>
+
+#include <epicsExport.h>
 
 class testConnect : public asynPortDriver {
 public:
