@@ -1,0 +1,141 @@
+record(bo,"$(P)$(R)_P$(PORT)_ifc") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @0")
+    field(HIGH,"1.0")
+}
+record(bo,"$(P)$(R)_P$(PORT)_ren") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @1")
+    field(VAL,"1")
+}
+record(bo,"$(P)$(R)_P$(PORT)_dcl") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @2")
+    field(HIGH,"1.0")
+}
+record(bo,"$(P)$(R)_P$(PORT)_llo") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @3")
+    field(HIGH,"1.0")
+}
+record(bo,"$(P)$(R)_P$(PORT)_sdc") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @4")
+    field(HIGH,"1.0")
+}
+record(bo,"$(P)$(R)_P$(PORT)_gtl") {
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @5")
+    field(HIGH,"1.0")
+}
+record(longout,"$(P)$(R)_P$(PORT)_setDESE") {
+    field(DESC,"DESE = CME|EXE|DDE")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @8")
+    field(VAL,"0x36")
+    field(PINI,"1")
+    field(FLNK,"$(P)$(R)_P$(PORT)_getDESE")
+}
+record(longout,"$(P)$(R)_P$(PORT)_setESE") {
+    field(DESC,"*ESE = CME|EXE|DDE")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @9")
+    field(VAL,"0x36")
+    field(PINI,"1")
+    field(FLNK,"$(P)$(R)_P$(PORT)_getESE")
+}
+record(longout,"$(P)$(R)_P$(PORT)_setSRE") {
+    field(DESC,"*SRE = ESB")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @10")
+    field(VAL,"0x20")
+    field(PINI,"1")
+    field(FLNK,"$(P)$(R)_P$(PORT)_getSRE")
+}
+record(longin,"$(P)$(R)_P$(PORT)_getDESE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @11")
+}
+record(longin,"$(P)$(R)_P$(PORT)_getESR") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @12")
+    field(PINI,"1")
+}
+record(longin,"$(P)$(R)_P$(PORT)_getESE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @13")
+}
+record(longin,"$(P)$(R)_P$(PORT)_getSTB") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @14")
+    field(PINI,"1")
+}
+record(longin,"$(P)$(R)_P$(PORT)_getSRE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @15")
+}
+record(longin,"$(P)$(R)_P$(PORT)_srqHandler") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @7")
+    field(FLNK,"$(P)$(R)_P$(PORT)_fanout")
+}
+record(fanout,"$(P)$(R)_P$(PORT)_fanout") {
+    field(LNK1,"$(P)$(R)_P$(PORT)_getESR")
+    field(LNK2,"$(P)$(R)_P$(PORT)_srqCount")
+}
+record(calc,"$(P)$(R)_P$(PORT)_srqCount") {
+    field(DESC, "Count unsollicited SRQs")
+    field(CALC, "A+B")
+    field(INPA, "$(P)$(R)_P$(PORT)_srqCount")
+    field(INPB,"1")
+    field(EGU, "interrupts")
+}
+
+record(bo,"$(P)$(R)_P$(PORT)_XXXJUNK") {
+    field(DESC,"Cause illegal command SRQ")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @18")
+}
+
+record(stringin,"$(P)$(R)_P$(PORT)_idn") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @16")
+    field(FLNK,"$(P)$(R)_P$(PORT)_putidnvalue")
+}
+record(stringout,"$(P)$(R)_P$(PORT)_putidnvalue") {
+    field(DOL,"$(P)$(R)_P$(PORT)_idn")
+    field(OUT,"$(P)$(R)_P$(PORT)_idnvalue PP")
+    field(OMSL,"closed_loop")
+}
+record(stringin,"$(P)$(R)_P$(PORT)_idnvalue") {
+}
+
+record(longin,"$(P)$(R)_P$(PORT)_saveSRE") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @15")
+    field(FLNK,"$(P)$(R)_P$(PORT)_setSRE1")
+}
+record(longout,"$(P)$(R)_P$(PORT)_setSRE1") {
+    field(DESC,"*SRE = ESB|MAV")
+    field(DTYP,"GPIB Test")
+    field(OUT,"#$(PORT) A$(A) @10")
+    field(VAL,"0x30")
+    field(FLNK,"$(P)$(R)_P$(PORT)_idnWait")
+}
+record(stringin,"$(P)$(R)_P$(PORT)_idnWait") {
+    field(DTYP,"GPIB Test")
+    field(INP,"#$(PORT) A$(A) @17")
+    field(FLNK,"$(P)$(R)_P$(PORT)_restore")
+}
+record(fanout,"$(P)$(R)_P$(PORT)_restore") {
+    field(LNK1,"$(P)$(R)_P$(PORT)_getSTB")
+    field(LNK2,"$(P)$(R)_P$(PORT)_setSRE")
+    field(LNK3,"$(P)$(R)_P$(PORT)_putidnvalueWait")
+}
+record(stringout,"$(P)$(R)_P$(PORT)_putidnvalueWait") {
+    field(DOL,"$(P)$(R)_P$(PORT)_idnWait")
+    field(OUT,"$(P)$(R)_P$(PORT)_idnvalueWait PP")
+    field(OMSL,"closed_loop")
+}
+record(stringin,"$(P)$(R)_P$(PORT)_idnvalueWait") {
+}

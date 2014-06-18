@@ -1,0 +1,40 @@
+record(longout,"$(P)IntDataOut") {
+    field(PINI, "1")
+    field(DTYP, "asynInt32")
+    field(OUT, "@asyn($(PORT),0,1)INT32_DATA")
+    field(VAL, "100")
+}
+
+record(longin,"$(P)IntDataIn") {
+    field(DTYP, "asynInt32")
+    field(INP, "@asyn($(PORT),0,1)INT32_DATA")
+    field(SCAN, "I/O Intr")
+}
+
+record(ao,"$(P)DoubleDataOut") {
+    field(PINI, "1")
+    field(DTYP, "asynFloat64")
+    field(OUT, "@asyn($(PORT),0,1)FLOAT64_DATA")
+    field(PREC, "3")
+    field(VAL, "10.")
+}
+
+record(ai,"$(P)DoubleDataIn") {
+    field(DTYP, "asynFloat64")
+    field(INP, "@asyn($(PORT),0,1)FLOAT64_DATA")
+    field(PREC, "3")
+    field(SCAN, "I/O Intr")
+}
+
+record(stringout,"$(P)OctetDataOut") {
+    field(PINI, "1")
+    field(DTYP, "asynOctetWrite")
+    field(OUT, "@asyn($(PORT),0,1)OCTET_DATA")
+    field(VAL, "This is a test")
+}
+
+record(stringin,"$(P)OctetDataIn") {
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),0,1)OCTET_DATA")
+    field(SCAN, "I/O Intr")
+}
