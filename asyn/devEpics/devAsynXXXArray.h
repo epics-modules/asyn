@@ -1,3 +1,7 @@
+#define INIT_OK 0
+#define INIT_DO_NOT_CONVERT 2
+#define INIT_ERROR -1
+
 #define ASYN_XXX_ARRAY_FUNCS(DRIVER_NAME, INTERFACE, INTERFACE_TYPE, \
                              INTERRUPT, EPICS_TYPE, DSET_IN, DSET_OUT, \
                              SIGNED_TYPE, UNSIGNED_TYPE) \
@@ -78,7 +82,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,  \
 { \
     waveformRecord *pwf = (waveformRecord *)pr; \
     devAsynWfPvt *pPvt; \
-    asynStatus status; \
+    int status; \
     asynUser *pasynUser; \
     asynInterface *pasynInterface; \
  \
@@ -139,15 +143,16 @@ static long initCommon(dbCommon *pr, DBLINK *plink,  \
     pasynManager->canBlock(pasynUser, &pPvt->canBlock); \
     return 0; \
 bad: \
-   pr->pact=1; \
-   return -1; \
+    recGblSetSevr(pr,LINK_ALARM,INVALID_ALARM); \
+    pr->pact=1; \
+    return INIT_ERROR; \
 } \
  \
  \
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt) \
 { \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt; \
-    asynStatus status; \
+    int status; \
  \
     /* If initCommon failed then pPvt->pArray is NULL, return error */ \
     if (!pPvt->pArray) return -1; \
@@ -178,7 +183,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt) \
         } \
     } \
     *iopvt = pPvt->ioScanPvt; \
-    return 0; \
+    return INIT_OK; \
 } \
  \
  \
