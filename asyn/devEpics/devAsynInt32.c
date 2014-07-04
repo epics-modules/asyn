@@ -56,6 +56,10 @@
 #include "asynEpicsUtils.h"
 #include <epicsExport.h>
 
+#define INIT_OK 0
+#define INIT_DO_NOT_CONVERT 2
+#define INIT_ERROR -1
+
 #define DEFAULT_RING_BUFFER_SIZE 10
 /* We should be getting these from db_access.h, but get errors including that file? */
 #define MAX_ENUM_STATES 16
@@ -304,10 +308,11 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                    pr->name,pPvt->pasynUser->errorMessage);
         }
     }
-    return 0;
+    return INIT_OK;
 bad:
-   pr->pact=1;
-   return -1;
+    recGblSetSevr(pr,LINK_ALARM,INVALID_ALARM);
+    pr->pact=1;
+    return INIT_ERROR;
 }
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
@@ -629,12 +634,12 @@ static int getCallbackValue(devInt32Pvt *pPvt)
 static long initAi(aiRecord *pr)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, NULL,
         0, NULL, NULL, NULL);
-    if(status != asynSuccess) return 0;
+    if(status != INIT_OK) return status;
     pPvt = pr->dpvt;
     /* Don't call getBounds if we already have non-zero values from
      * parseLinkMask */
@@ -643,7 +648,7 @@ static long initAi(aiRecord *pr)
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
     }
     convertAi(pr, 1);
-    return 0;
+    return INIT_OK;
 }
 static long processAi(aiRecord *pr)
 {
@@ -678,12 +683,12 @@ static long processAi(aiRecord *pr)
 static long initAiAverage(aiRecord *pr)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr, &pr->inp,
         NULL, interruptCallbackAverage, NULL, 
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     status = pPvt->pint32->registerInterruptUser(
                  pPvt->int32Pvt,pPvt->pasynUser,
@@ -699,7 +704,7 @@ static long initAiAverage(aiRecord *pr)
                                 &pPvt->deviceLow, &pPvt->deviceHigh);
     }
     convertAi(pr, 1);
-    return 0;
+    return INIT_OK;
 }
 
 static long processAiAverage(aiRecord *pr)
@@ -738,13 +743,13 @@ static long processAiAverage(aiRecord *pr)
 static long initAo(aoRecord *pao)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
     epicsInt32 value;
 
     status = initCommon((dbCommon *)pao,&pao->out,
         processCallbackOutput,interruptCallbackOutput, NULL,
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pao->dpvt;
     /* Don't call getBounds if we already have non-zero values from
      * parseLinkMask */
@@ -762,9 +767,9 @@ static long initAo(aoRecord *pao)
     }
     if (status == asynSuccess) {
         pao->rval = value;
-        return 0;
+        return INIT_OK;
     }
-    return 2; /* Do not convert */
+    return INIT_DO_NOT_CONVERT; /* Do not convert */
 }
 
 static long processAo(aoRecord *pr)
@@ -821,14 +826,13 @@ done:
 
 static long initLi(longinRecord *pr)
 {
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
        processCallbackInput,interruptCallbackInput, NULL,
        0, NULL, NULL, NULL);
 
-    if (status != asynSuccess) return 0;
-    return 0;
+    return status;
 }
 
 static long processLi(longinRecord *pr)
@@ -865,13 +869,13 @@ static long processLi(longinRecord *pr)
 static long initLo(longoutRecord *pr)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
     epicsInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, NULL,
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
     status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
@@ -880,7 +884,7 @@ static long initLo(longoutRecord *pr)
         pr->val = value;
         pr->udf = 0;
     }
-    return 0;
+    return INIT_OK;
 }
 
 static long processLo(longoutRecord *pr)
@@ -915,13 +919,12 @@ static long processLo(longoutRecord *pr)
 
 static long initBi(biRecord *pr)
 {
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, interruptCallbackEnumBi,
         2, (char*)&pr->znam, NULL, &pr->zsv);
-    if (status != asynSuccess) return 0;
-    return 0;
+    return status;
 }
 
 static long processBi(biRecord *pr)
@@ -958,22 +961,22 @@ static long processBi(biRecord *pr)
 static long initBo(boRecord *pr)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
     epicsInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, interruptCallbackEnumBo,
         2, (char*)&pr->znam, NULL, &pr->zsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
     status = pasynInt32SyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value;
-        return 0;
+        return INIT_OK;
     }
-    return 2;
+    return INIT_DO_NOT_CONVERT;
 }
 
 static long processBo(boRecord *pr)
@@ -1009,15 +1012,15 @@ static long processBo(boRecord *pr)
 
 static long initMbbi(mbbiRecord *pr)
 {
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, interruptCallbackEnumMbbi,
         MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
-    return 0;
+    return INIT_OK;
 }
 
 static long processMbbi(mbbiRecord *pr)
@@ -1054,13 +1057,13 @@ static long processMbbi(mbbiRecord *pr)
 static long initMbbo(mbboRecord *pr)
 {
     devInt32Pvt *pPvt;
-    asynStatus status;
+    int status;
     epicsInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, interruptCallbackEnumMbbo,
         MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
@@ -1069,9 +1072,9 @@ static long initMbbo(mbboRecord *pr)
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
-        return 0;
+        return INIT_OK;
     }
-    return 2;
+    return INIT_DO_NOT_CONVERT;
 }
 static long processMbbo(mbboRecord *pr)
 {

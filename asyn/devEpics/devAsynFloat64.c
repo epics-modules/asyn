@@ -43,6 +43,10 @@
 #include "asynFloat64.h"
 #include <epicsExport.h>
 
+#define INIT_OK 0
+#define INIT_DO_NOT_CONVERT 2
+#define INIT_ERROR -1
+
 #define DEFAULT_RING_BUFFER_SIZE 10
 
 typedef struct ringBufferElement {
@@ -192,10 +196,11 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     scanIoInit(&pPvt->ioScanPvt);
     pPvt->interruptCallback = interruptCallback;
 
-    return 0;
+    return INIT_OK;
 bad:
-   pr->pact=1;
-   return -1;
+    recGblSetSevr(pr,LINK_ALARM,INVALID_ALARM);
+    pr->pact=1;
+    return INIT_ERROR;
 }
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
@@ -404,12 +409,11 @@ getCallbackValue(devPvt *pPvt)
 
 static long initAi(aiRecord *pai)
 {
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pai,&pai->inp,
         processCallbackInput,interruptCallbackInput);
-    if(status != asynSuccess) return 0;
-    return(0);
+    return status;
 }
 
 static long processAi(aiRecord *pr)
@@ -446,12 +450,12 @@ static long processAi(aiRecord *pr)
 static long initAo(aoRecord *pao)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
     epicsFloat64 value;
 
     status = initCommon((dbCommon *)pao,&pao->out,
         processCallbackOutput,interruptCallbackOutput);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pao->dpvt;
     /* Read the current value from the device */
     status = pasynFloat64SyncIO->read(pPvt->pasynUserSync,
@@ -461,7 +465,7 @@ static long initAo(aoRecord *pao)
         pao->udf = 0;
     }
     pasynFloat64SyncIO->disconnect(pPvt->pasynUserSync);
-    return 2; /* Do not convert */
+    return INIT_DO_NOT_CONVERT; /* Do not convert */
 }
 
 static long processAo(aoRecord *pr)
@@ -492,12 +496,12 @@ static long processAo(aoRecord *pr)
 
 static long initAiAverage(aiRecord *pai)
 {
-    asynStatus status;
+    int status;
     devPvt *pPvt;
 
     status = initCommon((dbCommon *)pai,&pai->inp,
         0,interruptCallbackAverage);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pai->dpvt;
     status = pPvt->pfloat64->registerInterruptUser(
                  pPvt->float64Pvt,pPvt->pasynUser,
@@ -506,7 +510,7 @@ static long initAiAverage(aiRecord *pai)
         printf("%s devAsynFloat64 registerInterruptUser %s\n",
                pai->name,pPvt->pasynUser->errorMessage);
     }
-    return(0);
+    return INIT_OK;
 }
 
 static long processAiAverage(aiRecord *pai)
