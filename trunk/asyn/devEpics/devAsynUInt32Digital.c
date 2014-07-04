@@ -53,6 +53,10 @@
 #include "asynEpicsUtils.h"
 #include <epicsExport.h>
 
+#define INIT_OK 0
+#define INIT_DO_NOT_CONVERT 2
+#define INIT_ERROR -1
+
 #define DEFAULT_RING_BUFFER_SIZE 10
 /* We should be getting these from db_access.h, but get errors including that file? */
 #define MAX_ENUM_STATES 16
@@ -264,10 +268,11 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                    pr->name,pPvt->pasynUser->errorMessage);
         }
     }
-    return 0;
+    return INIT_OK;
 bad:
-   pr->pact=1;
-   return -1;
+    recGblSetSevr(pr,LINK_ALARM,INVALID_ALARM);
+    pr->pact=1;
+    return INIT_ERROR;
 }
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
@@ -538,15 +543,15 @@ static int computeShift(epicsUInt32 mask)
 static long initBi(biRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, interruptCallbackEnumBi,
         2, (char*)&pr->znam, NULL, &pr->zsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
-    return 0;
+    return INIT_OK;
 }
 static long processBi(biRecord *pr)
 {
@@ -582,13 +587,13 @@ static long processBi(biRecord *pr)
 static long initBo(boRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
     epicsUInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, interruptCallbackEnumBo,
         2, (char*)&pr->znam, NULL, &pr->zsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     /* Read the current value from the device */
@@ -597,9 +602,9 @@ static long initBo(boRecord *pr)
     pasynUInt32DigitalSyncIO->disconnect(pPvt->pasynUserSync);
     if (status == asynSuccess) {
         pr->rval = value;
-        return 0;
+        return INIT_OK;
     }
-    return 2; /* Do not convert */
+    return INIT_DO_NOT_CONVERT; /* Do not convert */
 }
 
 static long processBo(boRecord *pr)
@@ -635,13 +640,13 @@ static long processBo(boRecord *pr)
 
 static long initLi(longinRecord *pr)
 {
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, NULL,
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
-    return 0;
+    if (status != INIT_OK) return status;
+    return INIT_OK;
 }
 
 static long processLi(longinRecord *pr)
@@ -678,13 +683,13 @@ static long processLi(longinRecord *pr)
 static long initLo(longoutRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
     epicsUInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
        processCallbackOutput,interruptCallbackOutput, NULL,
        0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     /* Read the current value from the device */
     status = pasynUInt32DigitalSyncIO->read(pPvt->pasynUserSync,
@@ -693,7 +698,7 @@ static long initLo(longoutRecord *pr)
         pr->val = value;
         pr->udf = 0;
     }
-    return 0;
+    return INIT_OK;
 }
 
 static long processLo(longoutRecord *pr)
@@ -728,16 +733,16 @@ static long processLo(longoutRecord *pr)
 static long initMbbi(mbbiRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, interruptCallbackEnumMbbi,
         MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
-    return 0;
+    return INIT_OK;
 }
 
 static long processMbbi(mbbiRecord *pr)
@@ -774,13 +779,13 @@ static long processMbbi(mbbiRecord *pr)
 static long initMbbo(mbboRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
     epicsUInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, interruptCallbackEnumMbbo,
         MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
@@ -789,9 +794,9 @@ static long initMbbo(mbboRecord *pr)
                       &value, pPvt->mask, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
         pr->rval = value & pr->mask;
-        return 0;
+        return INIT_OK;
     }
-    return 2;
+    return INIT_DO_NOT_CONVERT;
 }
 static long processMbbo(mbboRecord *pr)
 {
@@ -846,16 +851,16 @@ static long processMbbo(mbboRecord *pr)
 static long initMbbiDirect(mbbiDirectRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, NULL,
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
-    return 0;
+    return INIT_OK;
 }
 
 static long processMbbiDirect(mbbiDirectRecord *pr)
@@ -892,13 +897,13 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
 static long initMbboDirect(mbboDirectRecord *pr)
 {
     devPvt *pPvt;
-    asynStatus status;
+    int status;
     epicsUInt32 value;
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, NULL,
         0, NULL, NULL, NULL);
-    if (status != asynSuccess) return 0;
+    if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     pr->mask = pPvt->mask;
     pr->shft = computeShift(pPvt->mask);
@@ -919,7 +924,7 @@ static long initMbboDirect(mbboDirectRecord *pr)
             value >>= 1;
         }
     }
-    return 2;
+    return INIT_DO_NOT_CONVERT;
 }
 static long processMbboDirect(mbboDirectRecord *pr)
 {

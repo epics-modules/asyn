@@ -136,6 +136,7 @@ asynStatus paramList::findParam(const char *name, int *index)
     for (*index=0; *index<this->nVals; (*index)++) {
         if (this->vals[*index]->nameEquals(name)) return asynSuccess;
     }
+    *index=-1;
     return asynParamNotFound;
 }
 
