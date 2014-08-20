@@ -112,6 +112,8 @@ typedef struct {
 #endif
     }                  farAddr;
     size_t             farAddrSize;
+    osiSockAddr        localAddr;
+    size_t             localAddrSize;
     asynInterface      common;
     asynInterface      octet;
 } ttyController_t;
@@ -321,6 +323,19 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             }
             tty->flags &= ~FLAG_NEED_LOOKUP;
             tty->flags |=  FLAG_DONE_LOOKUP;
+        }
+        
+        /*
+         * Bind to the local IP address if it was specified.
+         * This is a very unusual configuration
+         */
+        if (tty->localAddrSize > 0) {
+            if (bind(fd, &tty->localAddr.sa, tty->localAddrSize)) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                            "unable to bind to local port: %s", strerror(SOCKERRNO));
+                epicsSocketDestroy(fd);
+                return asynError;
+            }
         }
 
         /*
@@ -742,18 +757,39 @@ drvAsynIPPortConfigure(const char *portName,
     }
     else {
         int port;
+        int localPort = -1;
         char protocol[6];
+        char *secondColon, *blank;
         protocol[0] = '\0';
-        if (((cp = strchr(tty->IPDeviceName, ':')) == NULL)
-         || (sscanf(cp, ":%d %5s", &port, protocol) < 1)) {
-            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port> [protocol]\"\n",
-                                                            tty->IPDeviceName);
+        if ((cp = strchr(tty->IPDeviceName, ':')) == NULL) {
+            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                                                                tty->IPDeviceName);
             ttyCleanup(tty);
             return -1;
         }
         *cp = '\0';
         tty->IPHostName = epicsStrDup(tty->IPDeviceName);
         *cp = ':';
+        if (sscanf(cp, ":%d", &port) < 1) {
+            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                                                                tty->IPDeviceName);
+            ttyCleanup(tty);
+            return -1;
+        }
+        if ((secondColon = strchr(cp+1, ':')) != NULL) {
+            if (sscanf(secondColon, ":%d", &localPort) < 1) {
+                printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                                                                tty->IPDeviceName);
+                ttyCleanup(tty);
+                return -1;
+            }
+            tty->localAddr.ia.sin_family = AF_INET;
+            tty->localAddr.ia.sin_port = htons(localPort);
+            tty->localAddrSize = sizeof(tty->localAddr.ia);
+        }
+        if ((blank = strchr(cp, ' ')) != NULL) {
+            sscanf(blank+1, "%5s", protocol);
+        }
         tty->farAddr.oa.ia.sin_family = AF_INET;
         tty->farAddr.oa.ia.sin_port = htons(port);
         tty->farAddrSize = sizeof(tty->farAddr.oa.ia);
