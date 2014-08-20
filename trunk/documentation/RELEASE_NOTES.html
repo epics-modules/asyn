@@ -12,6 +12,39 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-24</h2>
+    <h2>
+      August XXX, 2014</h2>
+  </div>
+  <h3>
+    drvAsynIPPort.c</h3>
+  <p>
+    Added capability to specify the local port that the server should use for the connection.
+    Normally the local host choses a random local port that it binds to and passes to
+    the server. There are a few servers that only accept a specific local port or range
+    of local ports, for which this capability is required. The new syntax is:</p>
+  <p>
+    &lt;host&gt;:&lt;port&gt;[:localPort] [protocol]</p>
+  <p>
+    For example</p>
+  <p>
+    164.54.160.100:5000:10101 UDP</p>
+  <p>
+    where 10101 is the optional local port number.</p>
+  <h3>
+    devEpics</h3>
+  <p>
+    Fixed all initialization routines so that if there is an error they do the following:</p>
+  <ul>
+    <li>Call recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM)</li>
+    <li>Set precord->pact=1</li>
+    <li>return(INIT_ERROR), where INIT_ERROR=-1</li>
+  </ul>
+  <p>
+    Thanks to Nick Rees for these fixes.</p>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-23</h2>
     <h2>
       June 16, 2014</h2>
