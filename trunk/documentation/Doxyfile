@@ -576,8 +576,6 @@ WARN_LOGFILE           =
 INPUT                  = ../asyn/asynPortDriver/asynPortDriver.cpp \
                          ../asyn/asynPortDriver/asynPortDriver.h \
                          ../asyn/asynPortDriver/paramVal.h \
-                         ../asyn/asynPortDriver/paramList.h \
-                         ../asyn/asynPortDriver/paramList.cpp \
                          ../asyn/asynPortDriver/paramErrors.h \
                          ../asyn/asynPortDriver/asynParamType.h \
                          ../asyn/asynPortDriver/paramVal.cpp \
