@@ -5440,9 +5440,12 @@ asynSetOption("L0",0,"baud","9600")</pre>
     where the arguments are:</p>
   <ul>
     <li>portName - The portName that is registered with asynManager.</li>
-    <li>hostInfo - The Internet host name, port number and optional IP protocol of the
-      device (e.g. "164.54.9.90:4002", "serials8n3:4002", "serials8n3:4002 TCP" or "164.54.17.43:5186
-      udp"). If no protocol is specified, TCP will be used. Possible protocols are
+    <li>hostInfo - The Internet host name, port number, optional local port number, and
+      optional IP protocol of the device. The format is:<br />
+      &lt;host&gt;:&lt;port&gt;[:localPort] [protocol]<br />
+      (e.g. "164.54.9.90:4002", "164.54.9.90:4001:10101", "serials8n3:4002", "serials8n3:4002
+      TCP" or "164.54.17.43:5186 udp"). If no protocol is specified, TCP will be used.
+      Possible protocols are
       <ul>
         <li>TCP</li>
         <li>UDP</li>
@@ -5456,7 +5459,12 @@ asynSetOption("L0",0,"baud","9600")</pre>
       </ul>
       If the hostInfo argument begins wih the characters <span style="font-weight: bold">
         unix://</span> the remainder of the argument is taken to be the name of a UNIX-domain
-      stream socket. </li>
+      stream socket.
+      <br />
+      Note that the localPort should almost never be used because normally the local host
+      choses an unused random local port that it binds to and passes to the server. However,
+      there are some unusual servers that only accept a specific local port or range of
+      local ports, in which case localPort must be specified.</li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
