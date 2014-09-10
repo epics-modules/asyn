@@ -50,6 +50,7 @@
 
 #include <devCommonGpib.h>
 #include <devGpib.h>
+#include <epicsExport.h>
 
 #define	TIMEOUT	1.0
 #define TIMEWINDOW  2.0
