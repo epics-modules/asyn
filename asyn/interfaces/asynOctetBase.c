@@ -21,10 +21,10 @@
 #include <epicsString.h>
 #include <epicsTypes.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynInterposeEos.h"
-
-#include <epicsExport.h>
 #include "asynOctet.h"
 
 #define overrideWrite                        0x0001

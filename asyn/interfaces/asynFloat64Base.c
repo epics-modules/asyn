@@ -15,9 +15,9 @@
 #include <epicsStdio.h>
 #include <cantProceed.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
-
-#include <epicsExport.h>
 #include "asynFloat64.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pfloat64Interface);

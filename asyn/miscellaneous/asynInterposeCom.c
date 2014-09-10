@@ -20,11 +20,11 @@
 #include <epicsString.h>
 #include <epicsTypes.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynOption.h"
-
-#include <epicsExport.h>
 #include "asynInterposeCom.h"
 
 /*

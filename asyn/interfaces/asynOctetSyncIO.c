@@ -25,11 +25,11 @@
 
 #include <cantProceed.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynDrvUser.h"
-
-#include <epicsExport.h>
 #include "asynOctetSyncIO.h"
 
 typedef struct ioPvt {

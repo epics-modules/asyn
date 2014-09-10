@@ -16,9 +16,10 @@
 #include <epicsStdio.h>
 #include <cantProceed.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include <asynDriver.h>
 
-#include <epicsExport.h>
 #include "asynGenericPointer.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pGenericPointerInterface);

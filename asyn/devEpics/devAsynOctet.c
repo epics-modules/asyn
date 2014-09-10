@@ -56,7 +56,6 @@
 #include "asynDrvUser.h"
 #include "asynOctet.h"
 #include "asynEpicsUtils.h"
-#include <epicsExport.h>
 
 #define INIT_OK 0
 #define INIT_ERROR -1

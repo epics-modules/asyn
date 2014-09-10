@@ -1,29 +1,3 @@
-#include <stdlib.h>
-#include <stddef.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <alarm.h>
-#include <recGbl.h>
-#include <dbAccess.h>
-#include <callback.h>
-#include <dbDefs.h>
-#include <link.h>
-#include <errlog.h>
-#include <epicsMutex.h>
-#include <cantProceed.h>
-#include <dbCommon.h>
-#include <dbScan.h>
-#include <waveformRecord.h>
-#include <recSup.h>
-#include <devSup.h>
-#include <menuFtype.h>
-#include <dbEvent.h>
-
-#include "asynDriver.h"
-#include "asynDrvUser.h"
-#include "asynEpicsUtils.h"
-
 #define ASYN_XXX_TIME_SERIES_FUNCS(DRIVER_NAME, INTERFACE, INTERFACE_TYPE, \
                                    INTERRUPT, EPICS_TYPE, DSET, \
                                    SIGNED_TYPE, UNSIGNED_TYPE) \

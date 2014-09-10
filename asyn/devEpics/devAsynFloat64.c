@@ -41,7 +41,6 @@
 #include "asynFloat64SyncIO.h"
 #include "asynEpicsUtils.h"
 #include "asynFloat64.h"
-#include <epicsExport.h>
 
 #define INIT_OK 0
 #define INIT_DO_NOT_CONVERT 2
