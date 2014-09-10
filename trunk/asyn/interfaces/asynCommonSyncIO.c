@@ -20,10 +20,10 @@
 #include <cantProceed.h>
 #include <epicsEvent.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynDrvUser.h"
-
-#include <epicsExport.h>
 #include "asynCommonSyncIO.h"
 
 #define DEFAULT_CONNECT_TIMEOUT 1.0

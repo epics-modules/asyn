@@ -22,13 +22,14 @@
 #include <gpHash.h>
 #include <registryFunction.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynOption.h"
 #include "asynOctetSyncIO.h"
-
-#include <epicsExport.h>
 #include "asynShellCommands.h"
+#include <epicsExport.h>
 
 #define MAX_EOS_LEN 10
 typedef struct asynIOPvt {

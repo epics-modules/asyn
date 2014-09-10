@@ -1,4 +1,4 @@
-/*  asynInt8ArrayBase.c */
+/*  asynInt16ArrayBase.c */
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -15,10 +15,11 @@
 #include <epicsTypes.h>
 #include <cantProceed.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "asynDriver.h"
-
-#include <epicsExport.h>
 #include "asynInt16Array.h"
+
 #include "asynXXXArrayBase.h"
 
 ASYN_XXX_ARRAY_BASE_FUNCS(asynInt16Array, asynInt16ArrayType, asynInt16ArrayBase, pasynInt16ArrayBase,

@@ -37,7 +37,6 @@
 #include "asynDrvUser.h"
 #include "asynInt8Array.h"
 #include "asynEpicsUtils.h"
-#include <epicsExport.h>
 
 #include "devAsynXXXArray.h"
 

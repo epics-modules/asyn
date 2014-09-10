@@ -20,14 +20,14 @@
 /* NOTE: This is needed for interruptAccept */
 #include <dbAccess.h>
 
+#define epicsExportSharedSymbols
+#include <shareLib.h>
 #include "paramVal.h"
 #include "paramErrors.h"
 #include "asynParamType.h"
 #include "ParamListInvalidIndex.h"
 #include "ParamValWrongType.h"
 #include "ParamValNotDefined.h"
-
-#include <epicsExport.h>
 #include "asynPortDriver.h"
 
 static const char *driverName = "asynPortDriver";
