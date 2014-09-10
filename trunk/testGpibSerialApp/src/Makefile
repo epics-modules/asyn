@@ -17,6 +17,12 @@ endif
 DBD += testGpibSerial.dbd
 testGpibSerial_DBD += testGpibSerialSupport.dbd
 
+LIBRARY_IOC = testGpibSerialSupport
+testGpibSerialSupport_SRCS += devTestGpibSerial.c
+testGpibSerialSupport_LIBS += testSupport asyn
+testGpibSerialSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+
 #=============================
 
 PROD_IOC_DEFAULT += testGpibSerial
@@ -25,12 +31,14 @@ PROD_IOC_vxWorks += testGpibSerialVx
 # <name>_registerRecordDeviceDriver.cpp will be created from <name>.dbd
 testGpibSerial_SRCS_DEFAULT += testGpibSerial_registerRecordDeviceDriver.cpp testGpibSerialMain.cpp
 testGpibSerialVx_SRCS_vxWorks  += testGpibSerialVx_registerRecordDeviceDriver.cpp
-testGpibSerial_SRCS += devTestGpibSerial.c
-testGpibSerial_LIBS += testSupport asyn
+testGpibSerial_LIBS += testSupport
+testGpibSerial_LIBS += testGpibSerialSupport
+testGpibSerial_LIBS += asyn
 testGpibSerial_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-testGpibSerialVx_SRCS += devTestGpibSerial.c
-testGpibSerialVx_LIBS += testSupport asyn
+testGpibSerialVx_LIBS += testSupport
+testGpibSerialVx_LIBS += testGpibSerialSupport
+testGpibSerialVx_LIBS += asyn
 testGpibSerialVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 ifdef IPAC
 testGpibSerialVx_DBD += ipacInclude.dbd
