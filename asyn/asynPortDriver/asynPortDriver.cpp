@@ -239,6 +239,7 @@ asynStatus paramList::setString(int index, const char *value)
 asynStatus paramList::getInteger(int index, int *value)
 {
     asynStatus status;
+    *value = 0;
     
     try {
         paramVal *pVal = getParameter(index);
@@ -266,6 +267,7 @@ asynStatus paramList::getInteger(int index, int *value)
 asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
 {
     asynStatus status;
+    *value = 0;
     
     try {
         paramVal *pVal = getParameter(index);
@@ -292,6 +294,7 @@ asynStatus paramList::getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask)
 asynStatus paramList::getDouble(int index, double *value)
 {
     asynStatus status;
+    *value = 0.;
     
     try {
         paramVal *pVal = getParameter(index);
