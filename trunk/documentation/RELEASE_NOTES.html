@@ -14,7 +14,7 @@
     <h2>
       Release 4-24</h2>
     <h2>
-      September XXX, 2014</h2>
+      October 14, 2014</h2>
   </div>
   <h3>
     drvAsynIPPort.c</h3>
@@ -45,13 +45,14 @@
   <h3>
     Many source files</h3>
   <p>
-    Fixed problem with location of #define epicsExportSharedSymbols and/or #include &lt;epicsExport.h&gt;.
-    In previous versions these were placed immediately before the #include statements defining symbols 
-    for that <it>source file</it>.  However, this was incorrect, they must be placed before all of the #include
-    statements defining symbols <it>for that DLL</it>.  This mistake causes 
-    the same symbol being defined with both dllExport
-    and dllImport when building the DLL.  The Visual Studio compiler does not even warn about this error,
-    but it produces a fatal error with the GCC compiler under Cygwin.</p>
+    Fixed problem with location of #define epicsExportSharedSymbols and/or #include
+    &lt;epicsExport.h&gt;. In previous versions these were placed immediately before
+    the #include statements defining symbols for that <em>source file</em> . However,
+    this was incorrect, they must be placed before all of the #include statements defining
+    symbols <em>for that DLL</em> . This mistake causes the same symbol being defined
+    with both dllExport and dllImport when building the DLL. The Visual Studio compiler
+    does not even warn about this error, but it produces a fatal error with the GCC
+    compiler under Cygwin.</p>
   <div style="text-align: center">
     <hr />
     <h2>
