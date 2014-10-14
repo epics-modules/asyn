@@ -1,0 +1,3 @@
+Make a new version of setXXXParam that has a forceUpdate flag.
+
+Make asynPortDriver disable the port if the constructor throws an exception
