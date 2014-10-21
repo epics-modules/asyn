@@ -2436,7 +2436,6 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
    asynStatus (*connect)(const char *port, int addr,
                          asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
-   asynStatus (*openSocket)(const char *server, int port, char **portName);
    asynStatus (*write)(asynUser *pasynUser,
                   char const *buffer, size_t buffer_len,
                   double timeout,size_t *nbytesTransfered);
@@ -2495,14 +2494,6 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
           disconnect</td>
         <td>
           Disconnect. This frees all resources allocated by connect.</td>
-      </tr>
-      <tr>
-        <td>
-          openSocket</td>
-        <td>
-          Opens a new connection to a TCP/IP or UDP/IP socket, returning the name of a newly
-          created asyn port. The name of the port created is of the form "server:port [protocol]",
-          i.e. "corvette:21" or "164.54.160.50:21" or "corvette:21 UDP".</td>
       </tr>
       <tr>
         <td>
