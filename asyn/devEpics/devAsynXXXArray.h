@@ -265,9 +265,9 @@ static long processCommon(dbCommon *pr)                                         
             pwf->nord = pPvt->nord;                                                                \
             pPvt->gotValue--;                                                                      \
             if (pPvt->gotValue) {                                                                  \
-                asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                    \
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,                                     \
                     "%s %s::processCommon, "                                                       \
-                    "warning multiple interrupt callbacks between processing\n",                   \
+                    "warning: multiple interrupt callbacks between processing\n",                  \
                      pr->name, driverName);                                                        \
             }                                                                                      \
         } else {                                                                                   \
@@ -275,10 +275,18 @@ static long processCommon(dbCommon *pr)                                         
             EPICS_TYPE *pData = (EPICS_TYPE *)pwf->bptr;                                           \
             ringBufferElement *rp = &pPvt->result;                                                 \
             int i;                                                                                 \
+            /* Need to copy the array with the lock because that is shared even though             \
+               pPvt->result is a copy */                                                           \
+            epicsMutexLock(pPvt->mutexId);                                                         \
             for (i=0; i<(int)rp->len; i++) pData[i] = rp->pValue[i];                               \
-            pPvt->nord = rp->len;                                                                  \
-            pr->time = rp->time;                                                                   \
+            epicsMutexUnlock(pPvt->mutexId);                                                       \
+            pwf->nord = rp->len;                                                                   \
+            pwf->time = rp->time;                                                                  \
             pPvt->status = rp->status;                                                             \
+            asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                      \
+                (char *)pData, pwf->nord*sizeof(EPICS_TYPE),                                       \
+                "%s %s::processCommon nord=%d",                                                    \
+                pwf->name, driverName, pwf->nord);                                                 \
         }                                                                                          \
     }                                                                                              \
     if (pPvt->status == asynSuccess) {                                                             \
@@ -348,15 +356,16 @@ static int getRingBufferValue(devAsynWfPvt *pPvt)                               
     if (pPvt->ringTail != pPvt->ringHead) {                                                        \
         if (pPvt->ringBufferOverflows > 0) {                                                       \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,                                         \
-                "%s devAsynXXXArray getCallbackValue error, %d ring buffer overflows\n",           \
-                                    pPvt->pr->name, pPvt->ringBufferOverflows);                    \
+                "%s %s::getRingBufferValue error, %d ring buffer overflows\n",                     \
+                pPvt->pr->name, driverName, pPvt->ringBufferOverflows);                            \
             pPvt->ringBufferOverflows = 0;                                                         \
         }                                                                                          \
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];                                           \
-        pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;                  \
-        asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                            \
-            "%s devAsynXXXArray::getCallbackValue from ringBuffer len=%d\n",                       \
-            pPvt->pr->name, (int)pPvt->result.len);                                                \
+        pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;                \
+        asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                          \
+            (char *)pPvt->result.pValue, pPvt->result.len*sizeof(EPICS_TYPE),                      \
+            "%s %s::getRingBufferValue from ringBuffer len=%d",                                    \
+            pPvt->pr->name, driverName, (int)pPvt->result.len);                                    \
         ret = 1;                                                                                   \
     }                                                                                              \
     epicsMutexUnlock(pPvt->mutexId);                                                               \
@@ -373,7 +382,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
                                                                                                    \
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                              \
         (char *)value, len*sizeof(EPICS_TYPE),                                                     \
-        "%s %s::interruptCallbackInput ringSize=%d\n",                                             \
+        "%s %s::interruptCallbackInput ringSize=%d",                                               \
         pwf->name, driverName, pPvt->ringSize);                                                    \
     if (pPvt->ringSize == 0) {                                                                     \
         /* Not using a ring buffer */                                                              \
@@ -404,13 +413,13 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
         for (i=0; i<(int)len; i++) rp->pValue[i] = value[i];                                       \
         rp->time = pasynUser->timestamp;                                                           \
         rp->status = pasynUser->auxStatus;                                                         \
-        pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;                  \
+        pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize-1) ? 0 : pPvt->ringHead+1;                \
         if (pPvt->ringHead == pPvt->ringTail) {                                                    \
             /* There was no room in the ring buffer.  In the past we just threw away               \
              * the new value.  However, it is better to remove the oldest value from the           \
              * ring buffer and add the new one.  That way the final value the record receives      \
              * is guaranteed to be the most recent value */                                        \
-            pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;              \
+            pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;            \
             pPvt->ringBufferOverflows++;                                                           \
         } else {                                                                                   \
             /* We only need to request the record to process if we added a new                     \
