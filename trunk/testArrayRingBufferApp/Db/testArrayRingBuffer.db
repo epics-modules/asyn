@@ -12,7 +12,6 @@ record(bo, "$(P)$(R)Run")
 
 record(bi, "$(P)$(R)Run_RBV")
 {
-    field(PINI, "1")
     field(DTYP, "asynInt32")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))RUN_STOP")
     field(ZNAM, "Done")
@@ -28,7 +27,6 @@ record(bi, "$(P)$(R)Run_RBV")
 
 record(longin, "$(P)$(R)MaxArrayLength_RBV")
 {
-   field(PINI, "1")
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MAX_ARRAY_LENGTH")
    field(SCAN, "I/O Intr")
@@ -61,6 +59,7 @@ record(longout, "$(P)$(R)BurstLength")
    field(PINI, "1")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_LENGTH")
+   field(VAL,  "5")
 }
 
 record(longin, "$(P)$(R)BurstLength_RBV")
@@ -79,11 +78,11 @@ record(ao, "$(P)$(R)LoopPeriod")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_PERIOD")
    field(PREC, "5")
+   field(VAL,  "0.5")
 }
 
 record(ai, "$(P)$(R)LoopPeriod_RBV")
 {
-   field(PINI, "1")
    field(DTYP, "asynFloat64")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_PERIOD")
    field(PREC, "5")
@@ -91,9 +90,19 @@ record(ai, "$(P)$(R)LoopPeriod_RBV")
 }
 
 ###################################################################
-#  This record is the array data                                  #
+#  These records are the array data with and without ring buffer  #
 ###################################################################
-record(waveform, "$(P)$(R)ArrayData")
+#record(waveform, "$(P)$(R)ArrayDataRing")
+#{
+#    field(DTYP, "asynInt32ArrayIn")
+#    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+#    field(FTVL, "LONG")
+#    field(NELM, "$(NELM)")
+#    field(SCAN, "I/O Intr")
+#    info(FIFO,  "$(RING_SIZE)")
+#}
+
+record(waveform, "$(P)$(R)ArrayDataNoRing")
 {
     field(DTYP, "asynInt32ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
