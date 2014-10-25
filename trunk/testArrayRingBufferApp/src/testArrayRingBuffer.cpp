@@ -77,7 +77,7 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
                     1, /* maxAddr */ 
                     (int)NUM_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask | asynDrvUserMask, /* Interface mask */
-                    asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask,                 /* Interrupt mask */
+                    asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask,                   /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
@@ -101,6 +101,7 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
     createParam(P_ArrayDataString,          asynParamInt32Array,    &P_ArrayData);
     
     /* Set the initial values of some parameters */
+    setIntegerParam(P_MaxArrayLength,     maxArrayLength);
     setIntegerParam(P_ArrayLength,       maxArrayLength);
     
     /* Create the thread that does the array callbacks in the background */
@@ -153,9 +154,9 @@ void testArrayRingBuffer::arrayGenTask(void)
             for (i=0; i<arrayLength; i++) {
                 pData_[i] = j;
             }
+            doCallbacksInt32Array(pData_, arrayLength, P_ArrayData, 0);
         }
         callParamCallbacks();
-        doCallbacksInt32Array(pData_, arrayLength, P_ArrayData, 0);
     }
 }
 
