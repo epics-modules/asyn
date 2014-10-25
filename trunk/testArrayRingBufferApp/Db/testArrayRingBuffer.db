@@ -92,15 +92,15 @@ record(ai, "$(P)$(R)LoopPeriod_RBV")
 ###################################################################
 #  These records are the array data with and without ring buffer  #
 ###################################################################
-#record(waveform, "$(P)$(R)ArrayDataRing")
-#{
-#    field(DTYP, "asynInt32ArrayIn")
-#    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
-#    field(FTVL, "LONG")
-#    field(NELM, "$(NELM)")
-#    field(SCAN, "I/O Intr")
-#    info(FIFO,  "$(RING_SIZE)")
-#}
+record(waveform, "$(P)$(R)ArrayDataRing")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+    field(FTVL, "LONG")
+    field(NELM, "$(NELM)")
+    field(SCAN, "I/O Intr")
+    info(FIFO,  "$(RING_SIZE)")
+}
 
 record(waveform, "$(P)$(R)ArrayDataNoRing")
 {
