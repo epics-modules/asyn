@@ -1,14 +1,14 @@
 
 file {
-	name="/home/epics/devel/asyn-4-24/testArrayRingBufferApp/adl/testArrayRingBuffer.adl"
+	name="C:\EPICS\devel\asyn-4-24\testArrayRingBufferApp\adl\testArrayRingBuffer.adl"
 	version=030107
 }
 display {
 	object {
-		x=317
-		y=111
-		width=830
-		height=490
+		x=443
+		y=112
+		width=330
+		height=310
 	}
 	clr=14
 	bclr=4
@@ -89,52 +89,34 @@ display {
 }
 text {
 	object {
-		x=20
-		y=320
-		width=90
-		height=20
+		x=33
+		y=11
+		width=264
+		height=25
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Array length"
-	align="horiz. right"
-}
-"text entry" {
-	object {
-		x=118
-		y=320
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)$(R)NoiseAmplitude"
-		clr=14
-		bclr=51
-	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=204
-		y=322
-		width=80
-		height=18
-	}
-	monitor {
-		chan="$(P)$(R)NoiseAmplitude_RBV"
-		clr=54
-		bclr=4
-	}
+	textix="Test Array Ring Buffer"
 	align="horiz. centered"
-	limits {
-	}
 }
 text {
 	object {
-		x=30
-		y=420
+		x=117
+		y=41
+		width=96
+		height=25
+	}
+	"basic attribute" {
+		clr=26
+	}
+	textix="$(P)$(R)"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=53
+		y=100
 		width=80
 		height=20
 	}
@@ -146,8 +128,8 @@ text {
 }
 "choice button" {
 	object {
-		x=118
-		y=400
+		x=138
+		y=80
 		width=80
 		height=40
 	}
@@ -159,8 +141,8 @@ text {
 }
 "text update" {
 	object {
-		x=207
-		y=422
+		x=223
+		y=102
 		width=80
 		height=18
 	}
@@ -170,15 +152,57 @@ text {
 		bclr=2
 	}
 	clrmod="alarm"
-	align="horiz. centered"
 	limits {
 	}
 }
 text {
 	object {
-		x=10
-		y=240
-		width=100
+		x=12
+		y=175
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Array length"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=139
+		y=175
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)ArrayLength"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=228
+		y=176
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ArrayLength_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=12
+		y=200
+		width=120
 		height=20
 	}
 	"basic attribute" {
@@ -189,8 +213,8 @@ text {
 }
 "text entry" {
 	object {
-		x=118
-		y=240
+		x=139
+		y=200
 		width=80
 		height=20
 	}
@@ -204,8 +228,8 @@ text {
 }
 "text update" {
 	object {
-		x=205
-		y=242
+		x=228
+		y=201
 		width=80
 		height=18
 	}
@@ -214,33 +238,187 @@ text {
 		clr=54
 		bclr=4
 	}
-	align="horiz. centered"
 	limits {
 	}
 }
 text {
 	object {
-		x=320
-		y=5
-		width=360
-		height=25
+		x=22
+		y=250
+		width=110
+		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="Test Array Ring Buffer"
-	align="horiz. centered"
+	textix="Loop period"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=139
+		y=250
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)LoopPeriod"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=228
+		y=251
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)LoopPeriod_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
 }
 text {
 	object {
-		x=464
-		y=35
-		width=96
-		height=25
+		x=49
+		y=125
+		width=170
+		height=20
 	}
 	"basic attribute" {
-		clr=26
+		clr=14
 	}
-	textix="$(P)$(R)"
-	align="horiz. centered"
+	textix="Max. array length"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=228
+		y=126
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)MaxArrayLength_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=22
+		y=225
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Burst delay"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=139
+		y=225
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)BurstDelay"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=228
+		y=226
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)BurstDelay_RBV"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
+}
+composite {
+	object {
+		x=59
+		y=150
+		width=249
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=59
+				y=150
+				width=160
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Ring buffer size"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=228
+				y=151
+				width=80
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)RingBufferSize_RBV"
+				clr=54
+				bclr=4
+			}
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=59
+		y=275
+		width=160
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Scalar data"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=228
+		y=276
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)ScalarData"
+		clr=54
+		bclr=4
+	}
+	limits {
+	}
 }

@@ -1,6 +1,6 @@
 
 file {
-	name="/home/epics/devel/asyn-4-24/testArrayRingBufferApp/adl/testArrayRingBufferTop.adl"
+	name="C:\EPICS\devel\asyn-4-24\testArrayRingBufferApp\adl\testArrayRingBufferTop.adl"
 	version=030107
 }
 display {
