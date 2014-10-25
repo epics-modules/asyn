@@ -1,7 +1,7 @@
 
 file {
-	name="/home/epics/devel/asyn/testAsynPortDriverApp/adl/testAsynPortDriverTop.adl"
-	version=030102
+	name="/home/epics/devel/asyn-4-24/testArrayRingBufferApp/adl/testArrayRingBufferTop.adl"
+	version=030107
 }
 display {
 	object {
@@ -89,20 +89,20 @@ display {
 }
 "related display" {
 	object {
-		x=191
+		x=201
 		y=12
 		width=80
 		height=20
 	}
 	display[0] {
-		label="testAsynPortDriver"
-		name="testAsynPortDriver.adl"
-		args="P=testAPD:, R=scope1:"
+		label="testArrayRingBuffer"
+		name="testArrayRingBuffer.adl"
+		args="P=testARB:, R=A1:"
 	}
 	display[1] {
 		label="asyn record"
 		name="asynRecord.adl"
-		args="P=testAPD:, R=asyn1"
+		args="P=testARB:, R=asyn1"
 	}
 	clr=14
 	bclr=4
@@ -111,11 +111,11 @@ text {
 	object {
 		x=6
 		y=12
-		width=180
+		width=190
 		height=20
 	}
 	"basic attribute" {
 		clr=14
 	}
-	textix="testAsynPortDriver"
+	textix="testArrayRingBuffer"
 }
