@@ -1,0 +1,103 @@
+###################################################################
+#  These records control run/stop                                 # 
+###################################################################
+record(bo, "$(P)$(R)Run")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))RUN_STOP")
+    field(ZNAM, "Stop")
+    field(ONAM, "Run")
+}
+
+record(bi, "$(P)$(R)Run_RBV")
+{
+    field(PINI, "1")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))RUN_STOP")
+    field(ZNAM, "Done")
+    field(ZSV,  "NO_ALARM")
+    field(ONAM, "Running")
+    field(OSV,  "MINOR")
+    field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the maximum array length                        # 
+###################################################################
+
+record(longin, "$(P)$(R)MaxArrayLength_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MAX_ARRAY_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the desired array length                     # 
+###################################################################
+
+record(longout, "$(P)$(R)ArrayLength")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_LENGTH")
+}
+
+record(longin, "$(P)$(R)ArrayLength_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the burst length                             # 
+###################################################################
+
+record(longout, "$(P)$(R)BurstLength")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_LENGTH")
+}
+
+record(longin, "$(P)$(R)BurstLength_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the loop period                              #
+###################################################################
+record(ao, "$(P)$(R)LoopPeriod")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_PERIOD")
+   field(PREC, "5")
+}
+
+record(ai, "$(P)$(R)LoopPeriod_RBV")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_PERIOD")
+   field(PREC, "5")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the array data                                  #
+###################################################################
+record(waveform, "$(P)$(R)ArrayData")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+    field(FTVL, "LONG")
+    field(NELM, "$(NELM)")
+    field(SCAN, "I/O Intr")
+}
