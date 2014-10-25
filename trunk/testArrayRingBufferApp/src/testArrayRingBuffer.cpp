@@ -27,8 +27,10 @@ static const char *driverName="testArrayRingBuffer";
 #define P_RunStopString            "RUN_STOP"            /* asynInt32,    r/w */
 #define P_MaxArrayLengthString     "MAX_ARRAY_LENGTH"    /* asynInt32,    r/o */
 #define P_ArrayLengthString        "ARRAY_LENGTH"        /* asynInt32,    r/w */
-#define P_LoopPeriodString         "LOOP_PERIOD"         /* asynFloat64,  r/w */
+#define P_LoopDelayString          "LOOP_DELAY"          /* asynFloat64,  r/w */
 #define P_BurstLengthString        "BURST_LENGTH"        /* asynInt32,    r/w */
+#define P_BurstDelayString         "BURST_DELAY"         /* asynFloat64,  r/w */
+#define P_ScalarDataString         "SCALAR_DATA"         /* asynInt32,    r/w */
 #define P_ArrayDataString          "ARRAY_DATA"          /* asynInt32Array,  r/w */
 
 class testArrayRingBuffer : public asynPortDriver {
@@ -49,8 +51,10 @@ protected:
     #define FIRST_COMMAND P_RunStop
     int P_MaxArrayLength;
     int P_ArrayLength;
-    int P_LoopPeriod;
+    int P_LoopDelay;
     int P_BurstLength;
+    int P_BurstDelay;
+    int P_ScalarData;
     int P_ArrayData;
     #define LAST_COMMAND P_ArrayData
  
@@ -96,12 +100,14 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
     createParam(P_RunStopString,            asynParamInt32,         &P_RunStop);
     createParam(P_MaxArrayLengthString,     asynParamInt32,         &P_MaxArrayLength);
     createParam(P_ArrayLengthString,        asynParamInt32,         &P_ArrayLength);
-    createParam(P_LoopPeriodString,         asynParamFloat64,       &P_LoopPeriod);
+    createParam(P_LoopDelayString,          asynParamFloat64,       &P_LoopDelay);
     createParam(P_BurstLengthString,        asynParamInt32,         &P_BurstLength);
+    createParam(P_BurstDelayString,         asynParamFloat64,       &P_BurstDelay);
+    createParam(P_ScalarDataString,         asynParamInt32,         &P_ScalarData);
     createParam(P_ArrayDataString,          asynParamInt32Array,    &P_ArrayData);
     
     /* Set the initial values of some parameters */
-    setIntegerParam(P_MaxArrayLength,     maxArrayLength);
+    setIntegerParam(P_MaxArrayLength,    maxArrayLength);
     setIntegerParam(P_ArrayLength,       maxArrayLength);
     
     /* Create the thread that does the array callbacks in the background */
@@ -122,10 +128,11 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
   * it periodically generates a burst of arrays. */
 void testArrayRingBuffer::arrayGenTask(void)
 {
-    double loopPeriod;
+    double loopDelay;
     int runStop; 
     int i, j;
     int burstLength;
+    double burstDelay;
     int maxArrayLength;
     int arrayLength;
     
@@ -133,12 +140,13 @@ void testArrayRingBuffer::arrayGenTask(void)
     /* Loop forever */ 
     getIntegerParam(P_MaxArrayLength, &maxArrayLength);   
     while (1) {
-        getDoubleParam(P_LoopPeriod, &loopPeriod);
+        getDoubleParam(P_LoopDelay, &loopDelay);
+        getDoubleParam(P_BurstDelay, &burstDelay);
         getIntegerParam(P_RunStop, &runStop);
         // Release the lock while we wait for a command to start or wait for updateTime
         unlock();
-        if (runStop) epicsEventWaitWithTimeout(eventId_, loopPeriod);
-        else     (void) epicsEventWait(eventId_);
+        if (runStop) epicsEventWaitWithTimeout(eventId_, loopDelay);
+        else         epicsEventWait(eventId_);
         // Take the lock again
         lock(); 
         /* runStop could have changed while we were waiting */
@@ -150,13 +158,16 @@ void testArrayRingBuffer::arrayGenTask(void)
             setIntegerParam(P_ArrayLength, arrayLength);
         }
         getIntegerParam(P_BurstLength, &burstLength);
-        for (j=0; j<burstLength; j++) {
-            for (i=0; i<arrayLength; i++) {
-                pData_[i] = j;
+        for (i=0; i<burstLength; i++) {
+            for (j=0; j<arrayLength; j++) {
+                pData_[j] = i;
             }
+            setIntegerParam(P_ScalarData, i);
+            callParamCallbacks();
             doCallbacksInt32Array(pData_, arrayLength, P_ArrayData, 0);
+            if (burstDelay > 0.0) 
+                epicsThreadSleep(burstDelay);
         }
-        callParamCallbacks();
     }
 }
 
