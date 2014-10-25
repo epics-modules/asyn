@@ -21,6 +21,7 @@
 #include <dbAccess.h>
 #include <callback.h>
 #include <dbDefs.h>
+#include <dbStaticLib.h>
 #include <link.h>
 #include <errlog.h>
 #include <epicsMutex.h>
