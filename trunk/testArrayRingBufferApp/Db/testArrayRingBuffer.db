@@ -114,7 +114,7 @@ record(ao, "$(P)$(R)LoopDelay")
 record(ai, "$(P)$(R)LoopDelay_RBV")
 {
    field(DTYP, "asynFloat64")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_DELAY)
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_DELAY")
    field(PREC, "5")
    field(SCAN, "I/O Intr")
 }
