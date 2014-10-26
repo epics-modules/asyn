@@ -251,7 +251,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="Loop period"
+	textix="Loop delay"
 	align="horiz. right"
 }
 "text entry" {
@@ -262,7 +262,7 @@ text {
 		height=20
 	}
 	control {
-		chan="$(P)$(R)LoopPeriod"
+		chan="$(P)$(R)LoopDelay"
 		clr=14
 		bclr=51
 	}
@@ -277,7 +277,7 @@ text {
 		height=18
 	}
 	monitor {
-		chan="$(P)$(R)LoopPeriod_RBV"
+		chan="$(P)$(R)LoopDelay_RBV"
 		clr=54
 		bclr=4
 	}
