@@ -17,11 +17,10 @@
 * found in file LICENSE that is included with this distribution.                                   \
 ***********************************************************************/                           \
 /*                                                                                                 \
-    Author:  Geoff Savage                                                                          \
+    Oroginal author:  Geoff Savage                                                                 \
     19NOV2004                                                                                      \
                                                                                                    \
-    Modified by Mark Rivers, converted to giant macro                                              \
-    March 26, 2008                                                                                 \
+    Current author: Mark Rivers                                                                    \
 */                                                                                                 \
                                                                                                    \
                                                                                                    \
@@ -284,8 +283,8 @@ static long processCommon(dbCommon *pr)                                         
             pwf->time = rp->time;                                                                  \
             pPvt->status = rp->status;                                                             \
             asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                      \
-                (char *)pData, pwf->nord*sizeof(EPICS_TYPE),                                       \
-                "%s %s::processCommon nord=%d",                                                    \
+                (char *)pwf->bptr, pwf->nord*sizeof(EPICS_TYPE),                                   \
+                "%s %s::processCommon nord=%d, pwf->bptr data:",                                   \
                 pwf->name, driverName, pwf->nord);                                                 \
         }                                                                                          \
     }                                                                                              \
@@ -362,10 +361,6 @@ static int getRingBufferValue(devAsynWfPvt *pPvt)                               
         }                                                                                          \
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];                                           \
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;                \
-        asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                          \
-            (char *)pPvt->result.pValue, pPvt->result.len*sizeof(EPICS_TYPE),                      \
-            "%s %s::getRingBufferValue from ringBuffer len=%d",                                    \
-            pPvt->pr->name, driverName, (int)pPvt->result.len);                                    \
         ret = 1;                                                                                   \
     }                                                                                              \
     epicsMutexUnlock(pPvt->mutexId);                                                               \
@@ -382,8 +377,8 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
                                                                                                    \
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                              \
         (char *)value, len*sizeof(EPICS_TYPE),                                                     \
-        "%s %s::interruptCallbackInput ringSize=%d",                                               \
-        pwf->name, driverName, pPvt->ringSize);                                                    \
+        "%s %s::interruptCallbackInput ringSize=%d, len=%d, callback data:",                       \
+        pwf->name, driverName, pPvt->ringSize, len);                                               \
     if (pPvt->ringSize == 0) {                                                                     \
         /* Not using a ring buffer */                                                              \
         dbScanLock((dbCommon *)pwf);                                                               \
