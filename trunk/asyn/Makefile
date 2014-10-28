@@ -113,6 +113,9 @@ INC += asynPortDriver.h
 asyn_SRCS += paramVal.cpp
 asyn_SRCS += asynPortDriver.cpp
 
+SRC_DIRS += $(ASYN)/asynPortClient
+INC += asynPortClient.h
+asyn_SRCS += asynPortClient.cpp
 
 SRC_DIRS += $(ASYN)/devEpics
 DBD += devAsynOctet.dbd
