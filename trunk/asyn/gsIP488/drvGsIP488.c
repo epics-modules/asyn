@@ -56,7 +56,7 @@ typedef struct gsport {
     CALLBACK    callback;
     epicsUInt8  isr0; 
     epicsUInt8  isr1;
-    epicsBoolean srqEnabled;
+    int         srqEnabled;
     transferState_t transferState;
     transferState_t nextTransferState;
     /*bytesRemaining and nextByte are used by interruptHandler*/
@@ -777,7 +777,7 @@ static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
 
-    pgsport->srqEnabled = (onOff ? epicsTrue : epicsFalse);
+    pgsport->srqEnabled = (onOff != 0);
     writeRegister(pgsport,IMR1,ERR|MA|(pgsport->srqEnabled ? SRQ : 0));
     return asynSuccess;
 }

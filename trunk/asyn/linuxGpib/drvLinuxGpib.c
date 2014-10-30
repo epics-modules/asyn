@@ -53,9 +53,9 @@ typedef struct GpibBoardPvt {
     int sad;
     int boardIndex;
     int timeout;
-    epicsBoolean srqEnabled;
+    int srqEnabled;
     CALLBACK    callback;
-    epicsBoolean srqHappened;
+    int srqHappened;
     pid_t worker_pid;
     asynInterface option;
 }GpibBoardPvt;
@@ -776,7 +776,7 @@ static asynStatus srqStatus (void *pdrvPvt,int *isSet)
 	
 	*isSet=pGpibBoardPvt->srqHappened;
 	
-	pGpibBoardPvt->srqHappened = epicsFalse;
+	pGpibBoardPvt->srqHappened = 0;
 	
 	return asynSuccess;
 }
@@ -787,7 +787,7 @@ static asynStatus srqEnable (void *pdrvPvt, int onOff)
 	GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
 	if(DEBUG)printf("drvGpibBoard:srqEnable\n");
 
-	pGpibBoardPvt->srqEnabled = (onOff ? epicsTrue : epicsFalse);
+	pGpibBoardPvt->srqEnabled = (onOff != 0);
 	
 	return  asynSuccess;
 }
@@ -931,7 +931,7 @@ static void srqCallback(CALLBACK *pcallback)
 
 	callbackGetUser(pGpibBoardPvt,pcallback);
 	if(!pGpibBoardPvt->srqEnabled) return;
-	pGpibBoardPvt->srqHappened = epicsTrue;	
+	pGpibBoardPvt->srqHappened = 1;	
 	pasynGpib->srqHappened(pGpibBoardPvt->asynGpibPvt);
 }
 
