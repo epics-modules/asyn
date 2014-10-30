@@ -55,7 +55,7 @@ struct niport {
     CALLBACK    callback;
     epicsUInt8  isr1; 
     epicsUInt8  isr2;
-    epicsBoolean srqEnabled;
+    int         srqEnabled;
     transferState_t transferState;
     transferState_t nextTransferState;
     /*bytesRemaining and nextByte are used by interruptHandler*/
@@ -830,7 +830,7 @@ static asynStatus gpibPortSrqEnable(void *pdrvPvt, int onOff)
 {
     niport *pniport = (niport *)pdrvPvt;
 
-    pniport->srqEnabled = (onOff ? epicsTrue : epicsFalse);
+    pniport->srqEnabled = (onOff != 0);
     writeRegister(pniport,IMR2,COIE|(pniport->srqEnabled ? SRQIE : 0));
     return asynSuccess;
 }
