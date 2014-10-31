@@ -378,7 +378,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                              \
         (char *)value, len*sizeof(EPICS_TYPE),                                                     \
         "%s %s::interruptCallbackInput ringSize=%d, len=%d, callback data:",                       \
-        pwf->name, driverName, pPvt->ringSize, len);                                               \
+        pwf->name, driverName, pPvt->ringSize, (int)len);                                          \
     if (pPvt->ringSize == 0) {                                                                     \
         /* Not using a ring buffer */                                                              \
         dbScanLock((dbCommon *)pwf);                                                               \
