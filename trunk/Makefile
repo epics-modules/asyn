@@ -24,6 +24,8 @@ DIRS += testUsbtmcApp
 testUsbtmcApp_DEPEND_DIRS = asyn
 DIRS += testArrayRingBufferApp
 testArrayRingBufferApp_DEPEND_DIRS = asyn
+DIRS += testAsynPortClientApp
+testAsynPortClientApp_DEPEND_DIRS = asyn
 
 ifdef SNCSEQ
 DIRS += testIPServerApp
