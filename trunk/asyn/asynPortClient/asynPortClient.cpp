@@ -22,10 +22,12 @@
 asynClient::asynClient(const char *portName, int addr, const char *asynInterfaceType, const char *drvInfo, 
                        double timeout)
     : pasynUser_(NULL), pasynUserSyncIO_(NULL), timeout_(timeout), portName_(epicsStrDup(portName)),
-      addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(epicsStrDup(drvInfo))
+      addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL)
 {
     asynStatus status;
 
+    if (drvInfo) drvInfo_=epicsStrDup(drvInfo);
+    pasynUser_ = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(pasynUser_, portName, addr);
     if (status) {
         throw std::runtime_error(std::string("connectDevice failed:") + pasynUser_->errorMessage);
