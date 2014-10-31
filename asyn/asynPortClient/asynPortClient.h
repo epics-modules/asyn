@@ -1,7 +1,8 @@
 #ifndef asynPortClient_H
 #define asynPortClient_H
 
-#include <epicsTypes.h>
+#include <stdexcept>
+
 #include <epicsString.h>
 
 #include <asynDriver.h>
@@ -188,7 +189,12 @@ private:
 
 class asynInt8ArrayClient : public asynClient {
 public:
-    asynInt8ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
+    asynInt8ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
+        pInterface_ = (asynInt8Array *)pasynInterface_->pinterface;
+        if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynInt8ArraySyncIO->connect failed"));
+    };
     virtual ~asynInt8ArrayClient() {
         pasynInt8ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
@@ -209,7 +215,12 @@ private:
 
 class asynInt16ArrayClient : public asynClient {
 public:
-    asynInt16ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
+    asynInt16ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
+        pInterface_ = (asynInt16Array *)pasynInterface_->pinterface;
+        if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynInt16ArraySyncIO->connect failed"));
+    };
     virtual ~asynInt16ArrayClient() {
         pasynInt16ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
@@ -230,7 +241,12 @@ private:
 
 class asynInt32ArrayClient : public asynClient {
 public:
-    asynInt32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
+    asynInt32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
+        pInterface_ = (asynInt32Array *)pasynInterface_->pinterface;
+        if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynInt32ArraySyncIO->connect failed"));
+    };
     virtual ~asynInt32ArrayClient() {
         pasynInt32ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
@@ -250,7 +266,12 @@ private:
 
 class asynFloat32ArrayClient : public asynClient {
 public:
-    asynFloat32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
+    asynFloat32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
+        pInterface_ = (asynFloat32Array *)pasynInterface_->pinterface;
+        if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
+    };
     virtual ~asynFloat32ArrayClient() {
         pasynFloat32ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
@@ -271,7 +292,12 @@ private:
 
 class asynFloat64ArrayClient : public asynClient {
 public:
-    asynFloat64ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
+    asynFloat64ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
+        pInterface_ = (asynFloat64Array *)pasynInterface_->pinterface;
+        if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
+    };
     virtual ~asynFloat64ArrayClient() {
         pasynFloat64ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
