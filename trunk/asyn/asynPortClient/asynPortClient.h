@@ -26,6 +26,11 @@
 #include <asynFloat64ArraySyncIO.h>
 #include <asynGenericPointer.h>
 #include <asynGenericPointerSyncIO.h>
+#include <asynEnum.h>
+#include <asynEnumSyncIO.h>
+#include <asynOption.h>
+#include <asynOptionSyncIO.h>
+#include <asynCommonSyncIO.h>
 
 #define DEFAULT_TIMEOUT 1.0
 
@@ -318,8 +323,15 @@ private:
 
 class asynGenericPointerClient : public asynClient {
 public:
-    asynGenericPointerClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
-    virtual ~asynGenericPointerClient();
+    asynGenericPointerClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
+        pInterface_ = (asynGenericPointer *)pasynInterface_->pinterface;
+        if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynGenericPointerSyncIO->connect failed"));
+    };
+    virtual ~asynGenericPointerClient() {
+        pasynGenericPointerSyncIO->disconnect(pasynUserSyncIO_);
+    };
     virtual asynStatus read(void *pointer) {
         return pasynGenericPointerSyncIO->read(pasynUserSyncIO_, pointer, timeout_);
     };
@@ -337,29 +349,70 @@ private:
 
 class asynOptionClient : public asynClient {
 public:
-    asynOptionClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
-    virtual ~asynOptionClient();
-    virtual asynStatus read(const char *key, char *value, int maxChars);
-    virtual asynStatus write(const char *key, const char *value);
+    asynOptionClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynOptionType, drvInfo, timeout) {
+        pInterface_ = (asynOption *)pasynInterface_->pinterface;
+        if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynOptionSyncIO->connect failed"));
+    };
+    virtual ~asynOptionClient() {
+        pasynOptionSyncIO->disconnect(pasynUserSyncIO_);
+    };
+    virtual asynStatus getOption(const char *key, char *value, int maxChars) {
+        return pasynOptionSyncIO->getOption(pasynUserSyncIO_, key, value, maxChars, timeout_);
+    };
+    virtual asynStatus setOption(const char *key, const char *value) {
+        return pasynOptionSyncIO->setOption(pasynUserSyncIO_, key, value, timeout_);
+    };
+private:
+    asynOption *pInterface_;
 };
 
 
 class asynEnumClient : public asynClient {
 public:
-    asynEnumClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
-    virtual ~asynEnumClient();
-    virtual asynStatus read(char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
-    virtual asynStatus write(char *strings[], int values[], int severities[], size_t nElements);
+    asynEnumClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynEnumType, drvInfo, timeout) {
+        pInterface_ = (asynEnum *)pasynInterface_->pinterface;
+        if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynEnumSyncIO->connect failed"));
+    };
+    virtual ~asynEnumClient() {
+        pasynEnumSyncIO->disconnect(pasynUserSyncIO_);
+    };
+    virtual asynStatus read(char *strings[], int values[], int severities[], size_t nElements, size_t *nIn) {
+        return pasynEnumSyncIO->read(pasynUserSyncIO_, strings, values, severities, nElements, nIn, timeout_);
+    };
+    virtual asynStatus write(char *strings[], int values[], int severities[], size_t nElements) {
+        return pasynEnumSyncIO->write(pasynUserSyncIO_, strings, values, severities, nElements, timeout_);
+    };
+private:
+    asynEnum *pInterface_;
 };
 
 
 class asynCommonClient : public asynClient {
 public:
-    asynCommonClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT);
-    virtual ~asynCommonClient();
-    virtual void report(FILE *fp, int details);
-    virtual asynStatus connect();
-    virtual asynStatus disconnect();
+    asynCommonClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
+    : asynClient(portName, addr, asynCommonType, drvInfo, timeout) {
+        pInterface_ = (asynCommon *)pasynInterface_->pinterface;
+        if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+            throw std::runtime_error(std::string("pasynCommonSyncIO->connect failed"));
+    };
+    virtual ~asynCommonClient() {
+        pasynCommonSyncIO->disconnect(pasynUserSyncIO_);
+    };
+    virtual void report(FILE *fp, int details) {
+        pasynCommonSyncIO->report(pasynUserSyncIO_, fp, details);
+    };
+    virtual asynStatus connect() {
+        return pasynCommonSyncIO->connectDevice(pasynUserSyncIO_);
+    };
+    virtual asynStatus disconnect() {
+        return pasynCommonSyncIO->disconnectDevice(pasynUserSyncIO_);
+    };
+private:
+    asynCommon *pInterface_;
 };  
     
 #endif

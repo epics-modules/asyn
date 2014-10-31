@@ -30,11 +30,11 @@ asynClient::asynClient(const char *portName, int addr, const char *asynInterface
     pasynUser_ = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(pasynUser_, portName, addr);
     if (status) {
-        throw std::runtime_error(std::string("connectDevice failed:") + pasynUser_->errorMessage);
+        throw std::runtime_error(std::string("connectDevice failed:").append(pasynUser_->errorMessage));
     }
     pasynInterface_ = pasynManager->findInterface(pasynUser_, asynInterfaceType, 1);
     if (status) {
-        throw std::runtime_error(std::string("findInterface failed:") + asynInterfaceType);
+        throw std::runtime_error(std::string("findInterface failed:").append(asynInterfaceType));
     }
 }
 
