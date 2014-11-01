@@ -18,12 +18,16 @@ USR_INCLUDES_cygwin32 += -I/usr/include/tirpc
 # so we get automatic template instantiation.
 # This is what we want for miscellaneous/asynPortDriver.cpp
 ifeq (vxWorks,$(findstring vxWorks, $(T_A)))
-CODE_CXXFLAGS=
+  CODE_CXXFLAGS=
 endif
 USR_CXXFLAGS_solaris-sparc=-instances=global
 
 LIBRARY_IOC += asyn
-asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+ifeq ($(EPICS_LIBCOM_ONLY),YES)
+  asyn_LIBS += Com
+else
+  asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+endif
 asyn_SYS_LIBS_WIN32 = ws2_32
 asyn_SYS_LIBS_cygwin32 = $(CYGWIN_RPC_LIB)
 
@@ -40,9 +44,9 @@ asyn_SRCS += asynGpib.c
 SRC_DIRS += $(ASYN)/drvAsynSerial
 INC += drvAsynSerialPort.h
 ifeq ($(OS_CLASS), WIN32)
-asyn_SRCS += drvAsynSerialPortWin32.c
+  asyn_SRCS += drvAsynSerialPortWin32.c
 else
-asyn_SRCS += drvAsynSerialPort.c
+  asyn_SRCS += drvAsynSerialPort.c
 endif
 DBD += drvAsynSerialPort.dbd
 INC += drvAsynIPPort.h
@@ -88,7 +92,9 @@ INC += asynShellCommands.h
 INC += asynInterposeCom.h
 INC += asynInterposeEos.h
 INC += asynInterposeFlush.h
-asyn_SRCS += asynShellCommands.c
+ifneq ($(EPICS_LIBCOM_ONLY),YES)
+  asyn_SRCS += asynShellCommands.c
+endif
 asyn_SRCS += asynInterposeCom.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
@@ -108,6 +114,10 @@ asyn_SRCS += ParamValWrongType.cpp
 asyn_SRCS += ParamValValueNotChanged.cpp
 
 SRC_DIRS += $(ASYN)/asynPortDriver
+ifeq ($(EPICS_LIBCOM_ONLY),YES)
+   USR_CXXFLAGS += -DEPICS_LIBCOM_ONLY
+   USR_CFLAGS   += -DEPICS_LIBCOM_ONLY
+endif
 INC += asynParamType.h
 INC += paramVal.h
 INC += asynPortDriver.h
@@ -118,48 +128,50 @@ SRC_DIRS += $(ASYN)/asynPortClient
 INC += asynPortClient.h
 asyn_SRCS += asynPortClient.cpp
 
-SRC_DIRS += $(ASYN)/devEpics
-DBD += devAsynOctet.dbd
-DBD += devAsynInt32.dbd
-DBD += devAsynInt8Array.dbd
-DBD += devAsynInt16Array.dbd
-DBD += devAsynInt32Array.dbd
-DBD += devAsynInt32TimeSeries.dbd
-DBD += devAsynUInt32Digital.dbd
-DBD += devAsynFloat64.dbd
-DBD += devAsynFloat32Array.dbd
-DBD += devAsynFloat64Array.dbd
-DBD += devAsynFloat64TimeSeries.dbd
-DBD += devEpics.dbd
-DB  += asynInt32TimeSeries.db
-DB  += asynFloat64TimeSeries.db
-INC += asynEpicsUtils.h
-asyn_SRCS += devAsynOctet.c
-asyn_SRCS += asynEpicsUtils.c
-asyn_SRCS += devAsynInt32.c
-asyn_SRCS += devAsynInt8Array.c
-asyn_SRCS += devAsynInt16Array.c
-asyn_SRCS += devAsynInt32Array.c
-asyn_SRCS += devAsynInt32TimeSeries.c
-asyn_SRCS += devAsynUInt32Digital.c
-asyn_SRCS += devAsynFloat64.c
-asyn_SRCS += devAsynFloat32Array.c
-asyn_SRCS += devAsynFloat64Array.c
-asyn_SRCS += devAsynFloat64TimeSeries.c
+ifneq ($(EPICS_LIBCOM_ONLY),YES)
+  SRC_DIRS += $(ASYN)/devEpics
+  DBD += devAsynOctet.dbd
+  DBD += devAsynInt32.dbd
+  DBD += devAsynInt8Array.dbd
+  DBD += devAsynInt16Array.dbd
+  DBD += devAsynInt32Array.dbd
+  DBD += devAsynInt32TimeSeries.dbd
+  DBD += devAsynUInt32Digital.dbd
+  DBD += devAsynFloat64.dbd
+  DBD += devAsynFloat32Array.dbd
+  DBD += devAsynFloat64Array.dbd
+  DBD += devAsynFloat64TimeSeries.dbd
+  DBD += devEpics.dbd
+  DB  += asynInt32TimeSeries.db
+  DB  += asynFloat64TimeSeries.db
+  INC += asynEpicsUtils.h
+  asyn_SRCS += devAsynOctet.c
+  asyn_SRCS += asynEpicsUtils.c
+  asyn_SRCS += devAsynInt32.c
+  asyn_SRCS += devAsynInt8Array.c
+  asyn_SRCS += devAsynInt16Array.c
+  asyn_SRCS += devAsynInt32Array.c
+  asyn_SRCS += devAsynInt32TimeSeries.c
+  asyn_SRCS += devAsynUInt32Digital.c
+  asyn_SRCS += devAsynFloat64.c
+  asyn_SRCS += devAsynFloat32Array.c
+  asyn_SRCS += devAsynFloat64Array.c
+  asyn_SRCS += devAsynFloat64TimeSeries.c
 
-SRC_DIRS += $(ASYN)/asynRecord
-DBDINC += asynRecord
-DBD += devAsynRecord.dbd
-asyn_SRCS += asynRecord.c
-asyn_SRCS += drvAsyn.c
-DB += asynRecord.db
+  SRC_DIRS += $(ASYN)/asynRecord
+  DBDINC += asynRecord
+  DBD += devAsynRecord.dbd
+  asyn_SRCS += asynRecord.c
+  asyn_SRCS += drvAsyn.c
+  DB += asynRecord.db
+endif
 
 SRC_DIRS += $(ASYN)/vxi11
 ifeq ($(OS_CLASS), WIN32)
-asyn_SRCS += drvVxi11Win32.c
+  asyn_SRCS += drvVxi11Win32.c
 else
-asyn_SRCS += vxi11core_xdr.c
-asyn_SRCS += drvVxi11.c
+  asyn_SRCS += vxi11core_xdr.c
+  asyn_SRCS += drvVxi11.c
 endif
 asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
@@ -167,25 +179,25 @@ asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
 ifdef IPAC
-SRC_DIRS += $(ASYN)/gsIP488
-asyn_SRCS_vxWorks += drvGsIP488.c
-asyn_SRCS_RTEMS += drvGsIP488.c
-DBD += drvGsIP488.dbd
-asyn_LIBS_vxWorks += Ipac
-asyn_LIBS_RTEMS += Ipac
+  SRC_DIRS += $(ASYN)/gsIP488
+  asyn_SRCS_vxWorks += drvGsIP488.c
+  asyn_SRCS_RTEMS += drvGsIP488.c
+  DBD += drvGsIP488.dbd
+  asyn_LIBS_vxWorks += Ipac
+  asyn_LIBS_RTEMS += Ipac
 endif
 
 ifneq (, $(findstring RTEMS, $(T_A)))
-DRV_USBTMC = NO
+  DRV_USBTMC = NO
 endif
 ifneq (, $(findstring vxWorks, $(T_A)))
-DRV_USBTMC = NO
+  DRV_USBTMC = NO
 endif
 ifeq ($(DRV_USBTMC),YES)
-SRC_DIRS += $(ASYN)/drvAsynUSBTMC
-asyn_SRCS += drvAsynUSBTMC.c
-asyn_SYS_LIBS += usb-1.0
-DBD += drvAsynUSBTMC.dbd
+  SRC_DIRS += $(ASYN)/drvAsynUSBTMC
+  asyn_SRCS += drvAsynUSBTMC.c
+  asyn_SYS_LIBS += usb-1.0
+  DBD += drvAsynUSBTMC.dbd
 endif
 
 SRC_DIRS += $(ASYN)/ni1014
@@ -194,10 +206,10 @@ asyn_SRCS_RTEMS += drvNi1014.c
 DBD += drvNi1014.dbd
 
 ifeq ($(LINUX_GPIB),YES)
-SRC_DIRS += $(ASYN)/linuxGpib
-asyn_SRCS_Linux += drvLinuxGpib.c
-DBD += drvLinuxGpib.dbd
-asyn_SYS_LIBS += gpib
+  SRC_DIRS += $(ASYN)/linuxGpib
+  asyn_SRCS_Linux += drvLinuxGpib.c
+  DBD += drvLinuxGpib.dbd
+  asyn_SYS_LIBS += gpib
 endif
 
 SRC_DIRS += $(ASYN)/devGpib
@@ -205,8 +217,10 @@ INC += devGpib.h
 INC += devSupportGpib.h
 INC += devCommonGpib.h
 DBD += devGpib.dbd
-asyn_SRCS += devCommonGpib.c
-asyn_SRCS += devSupportGpib.c
+ifneq ($(EPICS_LIBCOM_ONLY),YES)
+  asyn_SRCS += devCommonGpib.c
+  asyn_SRCS += devSupportGpib.c
+endif
 asyn_SRCS += boSRQonOff.c
 
 include $(TOP)/configure/RULES
@@ -217,7 +231,7 @@ drvVxi11$(OBJ): vxi11intr.h
 drvVxi11$(DEP): vxi11intr.h
 
 ifdef T_A
-ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
+  ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
 
 vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 % : ../vxi11/rpc/%
@@ -225,7 +239,7 @@ vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 vxi11core_xdr.o: vxi11core.h
 vxi11intr_xrd.o: vxi11intr.h
 
-else
+  else
 
 .SECONDARY: vxi11core_xdr.c vxi11intr_xdr.c
 
@@ -235,7 +249,7 @@ RPCGEN_FLAGS_solaris = -M
 	cp $< .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) $*.rpcl
 
-endif
+  endif
 
 endif
 
