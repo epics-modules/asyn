@@ -17,8 +17,12 @@
 #include <epicsMutex.h>
 #include <epicsThread.h>
 #include <cantProceed.h>
-/* NOTE: This is needed for interruptAccept */
-#include <dbAccess.h>
+/* NOTE: interruptAccept is define in dbAccess.h if using EPICS IOC, else set it to 1 */
+#ifdef EPICS_LIBCOM_ONLY
+    static int interruptAccept=1;
+#else 
+    #include <dbAccess.h>
+#endif
 
 #define epicsExportSharedSymbols
 #include <shareLib.h>
