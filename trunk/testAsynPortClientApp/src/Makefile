@@ -8,7 +8,11 @@ PROD_HOST += testAsynIPPortClient
 PROD_SRCS += testAsynIPPortClient.cpp
 
 PROD_LIBS += asyn
-PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+ifeq ($(EPICS_LIBCOM_ONLY),YES)
+  PROD_LIBS += Com
+else
+  PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+endif
 
 include $(TOP)/configure/RULES
 #----------------------------------------
