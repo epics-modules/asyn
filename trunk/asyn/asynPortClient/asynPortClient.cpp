@@ -25,6 +25,8 @@ asynClient::asynClient(const char *portName, int addr, const char *asynInterface
       addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL)
 {
     asynStatus status;
+    asynInterface *pinterface;
+    asynDrvUser *pDrvUser;
 
     if (drvInfo) drvInfo_=epicsStrDup(drvInfo);
     pasynUser_ = pasynManager->createAsynUser(0,0);
@@ -35,6 +37,14 @@ asynClient::asynClient(const char *portName, int addr, const char *asynInterface
     pasynInterface_ = pasynManager->findInterface(pasynUser_, asynInterfaceType, 1);
     if (status) {
         throw std::runtime_error(std::string("findInterface failed:").append(asynInterfaceType));
+    }
+    if (!drvInfo) return;
+    pinterface = pasynManager->findInterface(pasynUser_, asynDrvUserType, 1);
+    if (!pinterface) return;
+    pDrvUser = (asynDrvUser *)pinterface->pinterface;
+    status = pDrvUser->create(pinterface->drvPvt, pasynUser_, drvInfo, 0, 0);
+    if (status) {
+        throw std::runtime_error(std::string("drvUser->create failed:"));
     }
 }
 

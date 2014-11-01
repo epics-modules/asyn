@@ -31,6 +31,7 @@
 #include <asynOption.h>
 #include <asynOptionSyncIO.h>
 #include <asynCommonSyncIO.h>
+#include <asynDrvUser.h>
 
 #define DEFAULT_TIMEOUT 1.0
 
