@@ -35,7 +35,7 @@
 #define DEFAULT_TIMEOUT 1.0
 
 
-class asynClient {
+class epicsShareClass asynClient {
 public:
     asynClient(const char *portName, int addr, const char* asynInterfaceType, const char *drvInfo, double timeout);
     virtual ~asynClient();
@@ -56,7 +56,7 @@ protected:
 };
 
 
-class asynInt32Client : public asynClient {
+class epicsShareClass asynInt32Client : public asynClient {
 public:
     asynInt32Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynInt32Type, drvInfo, timeout) {
@@ -85,7 +85,7 @@ private:
 };
 
 
-class asynUInt32DigitalClient : public asynClient {
+class epicsShareClass asynUInt32DigitalClient : public asynClient {
 public:
     asynUInt32DigitalClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynUInt32DigitalType, drvInfo, timeout) {
@@ -120,7 +120,7 @@ private:
 };
 
 
-class asynFloat64Client : public asynClient {
+class epicsShareClass asynFloat64Client : public asynClient {
 public:
     asynFloat64Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynFloat64Type, drvInfo, timeout) {
@@ -146,7 +146,7 @@ private:
 };
 
 
-class asynOctetClient : public asynClient {
+class epicsShareClass asynOctetClient : public asynClient {
 public:
     asynOctetClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynOctetType, drvInfo, timeout) {
@@ -192,7 +192,7 @@ private:
 };
   
 
-class asynInt8ArrayClient : public asynClient {
+class epicsShareClass asynInt8ArrayClient : public asynClient {
 public:
     asynInt8ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
@@ -218,7 +218,7 @@ private:
 };
 
 
-class asynInt16ArrayClient : public asynClient {
+class epicsShareClass asynInt16ArrayClient : public asynClient {
 public:
     asynInt16ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
@@ -244,7 +244,7 @@ private:
 };
 
 
-class asynInt32ArrayClient : public asynClient {
+class epicsShareClass asynInt32ArrayClient : public asynClient {
 public:
     asynInt32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
@@ -269,7 +269,7 @@ private:
     asynInt32Array *pInterface_;
 };
 
-class asynFloat32ArrayClient : public asynClient {
+class epicsShareClass asynFloat32ArrayClient : public asynClient {
 public:
     asynFloat32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
@@ -295,7 +295,7 @@ private:
 };
 
 
-class asynFloat64ArrayClient : public asynClient {
+class epicsShareClass asynFloat64ArrayClient : public asynClient {
 public:
     asynFloat64ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
@@ -321,7 +321,7 @@ private:
 };
 
 
-class asynGenericPointerClient : public asynClient {
+class epicsShareClass asynGenericPointerClient : public asynClient {
 public:
     asynGenericPointerClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
@@ -347,7 +347,7 @@ private:
 };
 
 
-class asynOptionClient : public asynClient {
+class epicsShareClass asynOptionClient : public asynClient {
 public:
     asynOptionClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynOptionType, drvInfo, timeout) {
@@ -369,7 +369,7 @@ private:
 };
 
 
-class asynEnumClient : public asynClient {
+class epicsShareClass asynEnumClient : public asynClient {
 public:
     asynEnumClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynEnumType, drvInfo, timeout) {
@@ -391,7 +391,7 @@ private:
 };
 
 
-class asynCommonClient : public asynClient {
+class epicsShareClass asynCommonClient : public asynClient {
 public:
     asynCommonClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynClient(portName, addr, asynCommonType, drvInfo, timeout) {
