@@ -12,6 +12,86 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-25</h2>
+    <h2>
+      November XXX, 2014</h2>
+  </div>
+  <h3>
+    devAsynOctet</h3>
+  <p>
+    Fixed 2 bugs:</p>
+  <ol>
+    <li>The interrupt callback function for stringin records (e.g. with SCAN=I/O Intr)
+      did not null-terminate the string if the driver returned MAX_STRING_SIZE or more
+      characters.</li>
+    <li>The interrupt callback function for stringin and waveform records were not properly
+      locking the record when modifying the record fields.</li>
+  </ol>
+  <h3>
+    devAsynXXXArray</h3>
+  <p>
+    Added optional support for ring buffers with waveform records. Ring buffers were
+    added to asyn device support for scalar (non-array) records in R4-10. To enable
+    ring buffer support on a waveform record the record info tag FIFO can be set to
+    a value greater than 0. For example this line in a db file for a waveform record
+    sets a ring buffer size of 20 elements.</p>
+  <pre>
+       info("FIFO", "20") 
+    </pre>
+  <p>
+    Ring buffers are only used when records have SCAN=I/O Intr. They allow the record
+    to process all of the arrays from a rapid burst of callbacks from the driver. However,
+    because Channel Access does not provide any buffering for arrays, even if the record
+    processes for each new array callback, Channel Access will not necessarily send
+    events for each value, because it just sends the current record value when the CA
+    callbacks are done.</p>
+  <p>
+    A new test application, testArrayRingBufferApp was added to test this array ring
+    buffer support. A new iocBoot/ioctestRingBuffer directory was also added.</p>
+  <h3>
+    Interfaces</h3>
+  <p>
+    Added new asynOptionSyncIO interface. This interface is needed so that the asynOption
+    interface can be called synchronously when it is OK to block.</p>
+  <h3>
+    Building asyn with only using libCom from EPICS base</h3>
+  <p>
+    It has always been asserted that except for devEpics asyn only really depends on
+    libCom from EPICS base. People who are interested in using asyn drivers from other
+    control systems, want to minimize the dependencies of libraries from EPICS base.
+    The following lines have been added to asyn/configure/CONFIG_SITE:</p>
+  <pre>
+-------------------------------------------------------------------------------
+# If you want to build asyn so the only dependency on EPICS base is libCom then set the following flag
+#EPICS_LIBCOM_ONLY=YES
+-------------------------------------------------------------------------------
+</pre>
+  <p>
+    If EPICS_LIBCOM_ONLY is YES then the build is done so that only libCom is needed.
+    This does the following:</p>
+  <ul>
+    <li>Omits building all of the device support for EPICS records</li>
+    <li>Omits building the test applications that create IOC applications</li>
+    <li>Sets asyn_LIBS to Com rather than $(EPICS_BASE_IOCS_LIBS) when creating the library</li>
+    <li>Changes the logic in asynPortDriver which uses interruptAccept. If EPICS_LIBCOM_ONLY
+      is set then dbDefs.h is not included and interruptAccept is defined as a static
+      variable set to 1.</li>
+  </ul>
+  <p>
+    A new C++ class was added, asyn/asynPortClient/asynPortClient.cpp. This class makes
+    it easy to write a C++ application that starts existing asyn port drivers and communicates
+    with them over standard asyn interfaces without running an IOC.</p>
+  <p>
+    A new test application directory was added testAsynPortClient. This tests running
+    C++ applications that communicate with asyn port drivers without running an IOC.
+    This currently contains a single test application, testAsynIPPortClient.cpp. This
+    program creates an asynIPPort driver, and uses the command line arguments to set
+    the hosttInfo string, a single command string to send to the server, and optionally
+    the input and output EOS. It then prints out the response from the server. There
+    are 3 example shell scipts that show how to use testAsynIPPortClient to communicate
+    with a Web server, XPS motor controller, and a telnet host respectively.</p>
+  <div style="text-align: center">
+    <h2>
       Release 4-24</h2>
     <h2>
       October 14, 2014</h2>
