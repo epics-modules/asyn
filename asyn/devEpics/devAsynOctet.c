@@ -263,16 +263,18 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
 {
     devPvt         *pdevPvt = (devPvt *)drvPvt;
     stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
-    size_t         num;
+    size_t         maxChars = sizeof(psi->val)-1;
     
-    pdevPvt->gotValue = 1; 
-    num = (numchars>=MAX_STRING_SIZE ? MAX_STRING_SIZE : numchars);
-    strncpy(psi->val,data,num);
+    dbScanLock(pdevPvt->precord);
+    pdevPvt->gotValue = 1;
+    if (numchars < maxChars) numchars = maxChars;
+    strncpy(psi->val,data,numchars);
+    psi->val[numchars] = 0;
     psi->udf = 0;
-    if(num<MAX_STRING_SIZE) psi->val[num] = 0;
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
     psi->time = pasynUser->timestamp;
+    dbScanUnlock(pdevPvt->precord);
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
@@ -284,6 +286,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
     size_t         num;
     char           *pbuf = (char *)pwf->bptr;
     
+    dbScanLock(pdevPvt->precord);
     pdevPvt->gotValue = 1; 
     num = (numchars>=pwf->nelm ? pwf->nelm : numchars);
     memcpy(pbuf,data,num);
@@ -293,6 +296,7 @@ static void interruptCallbackWaveform(void *drvPvt, asynUser *pasynUser,
     /* Set the status from pasynUser->auxStatus so I/O Intr scanned records can set alarms */
     if (pdevPvt->status == asynSuccess) pdevPvt->status = pasynUser->auxStatus;
     pwf->time = pasynUser->timestamp;
+    dbScanUnlock(pdevPvt->precord);
     scanIoRequest(pdevPvt->ioScanPvt);
 }
 
