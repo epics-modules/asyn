@@ -267,7 +267,7 @@ static void interruptCallbackSi(void *drvPvt, asynUser *pasynUser,
     
     dbScanLock(pdevPvt->precord);
     pdevPvt->gotValue = 1;
-    if (numchars < maxChars) numchars = maxChars;
+    if (numchars > maxChars) numchars = maxChars;
     strncpy(psi->val,data,numchars);
     psi->val[numchars] = 0;
     psi->udf = 0;
