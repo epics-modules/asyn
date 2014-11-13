@@ -228,7 +228,8 @@ include $(TOP)/configure/RULES
 # For 3.14
 drvVxi11$(OBJ): vxi11intr.h
 # For 3.15
-drvVxi11$(DEP): vxi11intr.h
+drvVxi11$(DEP): vxi11intr.h vxi11core.h
+vxi11core_xdr.c$(DEP): vxi11core.h
 
 ifdef T_A
   ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
