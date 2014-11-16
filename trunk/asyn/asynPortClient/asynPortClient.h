@@ -38,10 +38,10 @@
 
 /** Base class for asyn port clients; handles most of the bookkeeping for writing an asyn port client
   * with standard asyn interfaces. */
-class epicsShareClass asynClient {
+class epicsShareClass asynPortClient {
 public:
-    asynClient(const char *portName, int addr, const char* asynInterfaceType, const char *drvInfo, double timeout);
-    virtual ~asynClient();
+    asynPortClient(const char *portName, int addr, const char* asynInterfaceType, const char *drvInfo, double timeout);
+    virtual ~asynPortClient();
     void setTimeout(double timeout)
         { timeout_ = timeout; };
     void report(FILE *fp, int details);
@@ -60,7 +60,7 @@ protected:
 
 
 /** Class for asyn port clients to communicate on the asynInt32 interface */
-class epicsShareClass asynInt32Client : public asynClient {
+class epicsShareClass asynInt32Client : public asynPortClient {
 public:
     /** Constructor for asynInt32Client class
       * \param[in] portName  The name of the asyn port to connect to
@@ -69,7 +69,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynInt32Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynInt32Type, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynInt32Type, drvInfo, timeout) {
         pInterface_ = (asynInt32 *)pasynInterface_->pinterface;
         if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynInt32SyncIO->connect failed"));
@@ -105,7 +105,8 @@ private:
 };
 
 
-class epicsShareClass asynUInt32DigitalClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynUInt32Digital interface */
+class epicsShareClass asynUInt32DigitalClient : public asynPortClient {
 public:
     /** Constructor for asynUInt32DigitalClient class
       * \param[in] portName  The name of the asyn port to connect to
@@ -114,7 +115,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynUInt32DigitalClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynUInt32DigitalType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynUInt32DigitalType, drvInfo, timeout) {
         pInterface_ = (asynUInt32Digital *)pasynInterface_->pinterface;
         if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32SyncIO->connect failed"));
@@ -164,7 +165,8 @@ private:
 };
 
 
-class epicsShareClass asynFloat64Client : public asynClient {
+/** Class for asyn port clients to communicate on the asynFloat64 interface */
+class epicsShareClass asynFloat64Client : public asynPortClient {
 public:
     /** Constructor for asynFloat64Client class
       * \param[in] portName  The name of the asyn port to connect to
@@ -173,7 +175,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynFloat64Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynFloat64Type, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynFloat64Type, drvInfo, timeout) {
         pInterface_ = (asynFloat64 *)pasynInterface_->pinterface;
         if (pasynFloat64SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynFloat64SyncIO->connect failed"));
@@ -203,7 +205,8 @@ private:
 };
 
 
-class epicsShareClass asynOctetClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynOctet interface */
+class epicsShareClass asynOctetClient : public asynPortClient {
 public:
     /** Constructor for asynOctetClient class
       * \param[in] portName  The name of the asyn port to connect to
@@ -212,7 +215,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynOctetClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynOctetType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynOctetType, drvInfo, timeout) {
         pInterface_ = (asynOctet *)pasynInterface_->pinterface;
         if (pasynOctetSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynOctetSyncIO->connect failed"));
@@ -290,7 +293,8 @@ private:
 };
   
 
-class epicsShareClass asynInt8ArrayClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynInt8Array interface */
+class epicsShareClass asynInt8ArrayClient : public asynPortClient {
 public:
     /** Constructor for asynInt8Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -299,7 +303,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynInt8ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt8Array *)pasynInterface_->pinterface;
         if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynInt8ArraySyncIO->connect failed"));
@@ -332,7 +336,8 @@ private:
 };
 
 
-class epicsShareClass asynInt16ArrayClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynInt16Array interface */
+class epicsShareClass asynInt16ArrayClient : public asynPortClient {
 public:
     /** Constructor for asynInt16Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -341,7 +346,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynInt16ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt16Array *)pasynInterface_->pinterface;
         if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynInt16ArraySyncIO->connect failed"));
@@ -374,7 +379,8 @@ private:
 };
 
 
-class epicsShareClass asynInt32ArrayClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynInt32Array interface */
+class epicsShareClass asynInt32ArrayClient : public asynPortClient {
 public:
     /** Constructor for asynInt32Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -383,7 +389,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynInt32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt32Array *)pasynInterface_->pinterface;
         if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynInt32ArraySyncIO->connect failed"));
@@ -415,7 +421,9 @@ private:
     asynInt32Array *pInterface_;
 };
 
-class epicsShareClass asynFloat32ArrayClient : public asynClient {
+
+/** Class for asyn port clients to communicate on the asynFloat32Array interface */
+class epicsShareClass asynFloat32ArrayClient : public asynPortClient {
 public:
     /** Constructor for asynFloat32Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -424,7 +432,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynFloat32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat32Array *)pasynInterface_->pinterface;
         if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
@@ -457,7 +465,8 @@ private:
 };
 
 
-class epicsShareClass asynFloat64ArrayClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynFloat64Array interface */
+class epicsShareClass asynFloat64ArrayClient : public asynPortClient {
 public:
     /** Constructor for asynFloat64Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -466,7 +475,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynFloat64ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat64Array *)pasynInterface_->pinterface;
         if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
@@ -499,7 +508,8 @@ private:
 };
 
 
-class epicsShareClass asynGenericPointerClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynGenericPointer interface */
+class epicsShareClass asynGenericPointerClient : public asynPortClient {
 public:
     /** Constructor for asynGenericPointer class
       * \param[in] portName  The name of the asyn port to connect to
@@ -508,7 +518,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynGenericPointerClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
         pInterface_ = (asynGenericPointer *)pasynInterface_->pinterface;
         if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynGenericPointerSyncIO->connect failed"));
@@ -538,7 +548,8 @@ private:
 };
 
 
-class epicsShareClass asynOptionClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynOption interface */
+class epicsShareClass asynOptionClient : public asynPortClient {
 public:
     /** Constructor for asynOption class
       * \param[in] portName  The name of the asyn port to connect to
@@ -547,7 +558,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynOptionClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynOptionType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynOptionType, drvInfo, timeout) {
         pInterface_ = (asynOption *)pasynInterface_->pinterface;
         if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynOptionSyncIO->connect failed"));
@@ -574,7 +585,8 @@ private:
 };
 
 
-class epicsShareClass asynEnumClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynEnum interface */
+class epicsShareClass asynEnumClient : public asynPortClient {
 public:
     /** Constructor for asynEnum class
       * \param[in] portName  The name of the asyn port to connect to
@@ -583,7 +595,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynEnumClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynEnumType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynEnumType, drvInfo, timeout) {
         pInterface_ = (asynEnum *)pasynInterface_->pinterface;
         if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynEnumSyncIO->connect failed"));
@@ -614,7 +626,8 @@ private:
 };
 
 
-class epicsShareClass asynCommonClient : public asynClient {
+/** Class for asyn port clients to communicate on the asynCommon interface */
+class epicsShareClass asynCommonClient : public asynPortClient {
 public:
     /** Constructor for asynCommon class
       * \param[in] portName  The name of the asyn port to connect to
@@ -623,7 +636,7 @@ public:
       * \param[in] timeout   The default timeout for all communications between the client and the port driver 
     */
     asynCommonClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
-    : asynClient(portName, addr, asynCommonType, drvInfo, timeout) {
+    : asynPortClient(portName, addr, asynCommonType, drvInfo, timeout) {
         pInterface_ = (asynCommon *)pasynInterface_->pinterface;
         if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
             throw std::runtime_error(std::string("pasynCommonSyncIO->connect failed"));
