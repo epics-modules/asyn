@@ -1,5 +1,5 @@
 /*
- * testAsynPortClient.cpp
+ * testAsynIPPortClient.cpp
  * 
  * Program that creates an asyn IP port driver without an IOC and communicates over standard asyn interfaces
  *
@@ -16,6 +16,17 @@
 #include <drvAsynIPPort.h>
 #include <asynPortClient.h>
 
+/** Test program that demonstrates how to write C++ program that instantiates an asyn port driver
+  * and communicates with it directly over the asyn interfaces without running an EPICS IOC. 
+  * It creates an asynIPPort driver, and uses the command line arguments to set
+  * the hostInfo string, a single command string to send to the server, and optionally
+  * the input and output EOS. It then prints out the response from the server. There
+  * are 3 example shell scipts provides that show how to use testAsynIPPortClient to communicate
+  * with a Web server, XPS motor controller, and a telnet host respectively.
+  * 
+  * Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]
+  *
+  * Example: testAsynIPPortClient cars.uchicago.edu:80 "GET / HTTP/1.0" "\n\n" */
 int main(int argc, char **argv)
 {
   char input[10000], inputEos[10], outputEos[10];
@@ -23,7 +34,7 @@ int main(int argc, char **argv)
   int eomReason;
   
   if (argc < 3) {
-      printf("Usage: testAsynPortClient hostInfo outputString [outputEos] [inputEos]\n");
+      printf("Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]\n");
       return 0;
   }
   
