@@ -19,6 +19,13 @@
 
 //static const char *driverName = "asynPortClient";
 
+/** Constructor for asynClient class
+  * \param[in] portName  The name of the asyn port to connect to
+  * \param[in] addr The address on the asyn port to connect to
+  * \param[in] asynInterfaceType The name of the asynInterface to connect to (e.g.asynInt32, asynOctet, etc.)
+  * \param[in] drvInfo  The drvInfo string to identify which property of the port is being connected to
+  * \param[in] timeout The default timeout for all communications between the client and the port driver 
+*/
 asynClient::asynClient(const char *portName, int addr, const char *asynInterfaceType, const char *drvInfo, 
                        double timeout)
     : pasynUser_(NULL), pasynUserSyncIO_(NULL), timeout_(timeout), portName_(epicsStrDup(portName)),
@@ -48,6 +55,9 @@ asynClient::asynClient(const char *portName, int addr, const char *asynInterface
     }
 }
 
+/** Destructor for asynClient class
+  * Frees all allocated resources 
+*/
 asynClient::~asynClient()
 {
     if (portName_) free(portName_);
@@ -56,6 +66,8 @@ asynClient::~asynClient()
     if (pasynUser_) pasynManager->freeAsynUser(pasynUser_);
 }
 
+/** Reports the properties of this client
+*/
 void asynClient::report(FILE *fp, int details)
 {
     fprintf(fp, "\n");
