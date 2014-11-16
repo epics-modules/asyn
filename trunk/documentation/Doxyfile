@@ -581,7 +581,8 @@ INPUT                  = ../asyn/asynPortDriver/asynPortDriver.cpp \
                          ../asyn/asynPortDriver/paramVal.cpp \
                          ../asyn/asynPortClient/asynPortClient.h \
                          ../asyn/asynPortClient/asynPortClient.cpp \
-                         ../testAsynPortDriverApp/src/
+                         ../testAsynPortDriverApp/src/ \
+                         ../testAsynPortClientApp/src/
 
 # This tag can be used to specify the character encoding of the source files 
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding, which is 
