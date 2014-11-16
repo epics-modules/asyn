@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-24</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-25</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">October 14, 2014</span></p>
+      <span style="font-weight: bold; font-size: 14pt">November XXX, 2014</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -75,6 +75,8 @@
       <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
     </ul>
     <a href="#asynPortDriver">asynPortDriver C++ base class</a>
+    <br />
+    <a href="#asynPortClient">asynPortClient C++ classes</a>
     <br />
     <a href="#DiagnosticAids">Diagnostic Aids</a>
     <br />
@@ -168,6 +170,8 @@
       asynCommon, asynOctet, asynGpib, and other interfaces.</li>
     <li>asynPortDriver: a C++ base class that makes it easy to write asyn drivers, with
       much of the boilerplate asyn code handled in the base class methods.</li>
+    <li>asynPortClient: C++ classes that makes it easy to write C++ asyn clients that
+      communicate directly with asyn port drivers without running an EPICS IOC.</li>
     <li>standard interfaces: Standard message and register based interfaces are defined.
       Low Level Drivers implement standard interfaces. Device support communicates with
       low level drivers via standard interfaces.</li>
@@ -5837,6 +5841,19 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     an asyn port driver, because it takes care of all of the tasks like registering
     the port, registering the interfaces, and calling interrupt clients. It is documented
     separately in <a href="asynPortDriver.html">asynPortDriver.html</a>.</p>
+  <hr />
+  <div style="text-align: center">
+    <h2 id="asynPortClient">
+      asynPortClient C++ classes</h2>
+  </div>
+  <p>
+    asynPortClient is a set of C++ classes that are designed to simplify the task of
+    writing a client that directly communicates with an asyn port driver, without running
+    an EPICS IOC. They handle the details of connecting to the driver, finding the required
+    interfaces, etc. They only uses the synchronous interfaces, so all calls are blocking.
+    If clients need asynchronous operation then they can use the normal C interface
+    with pasynManager->queueRequest. It is documented separately in <a href="asynPortClient.html">
+      asynPortClient.html</a>.</p>
   <hr />
   <div style="text-align: center">
     <h2 id="DiagnosticAids">
