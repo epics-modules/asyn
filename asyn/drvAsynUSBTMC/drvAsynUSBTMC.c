@@ -798,6 +798,7 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
             maxchars -= nCopy;
             *nbytesTransfered += nCopy;
             pdpvt->bytesReceivedCount += nCopy;
+            data += nCopy;
             if (maxchars == 0)
                 eom |= ASYN_EOM_CNT;
         }
