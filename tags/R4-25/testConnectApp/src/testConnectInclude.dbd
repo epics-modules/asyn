@@ -1,5 +1,0 @@
-include "base.dbd"
-include "asyn.dbd"
-include "drvAsynIPPort.dbd"
-registrar("testConnectRegister")
-
