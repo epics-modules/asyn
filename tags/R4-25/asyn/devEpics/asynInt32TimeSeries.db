@@ -1,0 +1,13 @@
+record(waveform,"$(P)$(R)") {
+    field(DTYP,"asynInt32TimeSeries")
+    field(INP,"@asyn($(PORT),$(ADDR),$(TIMEOUT))$(DRVINFO)")
+    field(NELM, "$(NELM)")
+    field(FTVL, "LONG")
+}
+
+record(bo,"$(P)$(R)Read") {
+    field(SDIS,"$(P)$(R).BUSY NPP NMS")
+    field(DISV, "0")
+    field(SCAN, "$(SCAN)")
+    field(FLNK, "$(P)$(R).PROC")
+}

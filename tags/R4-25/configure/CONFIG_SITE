@@ -1,0 +1,50 @@
+# CONFIG_SITE
+
+# Make any application-specific changes to the EPICS build
+#   configuration variables in this file.
+#
+# Host/target specific settings can be specified in files named
+#   CONFIG_SITE.$(EPICS_HOST_ARCH).Common
+#   CONFIG_SITE.Common.$(T_A)
+#   CONFIG_SITE.$(EPICS_HOST_ARCH).$(T_A)
+
+# CHECK_RELEASE controls the consistency checking of the support
+#   applications pointed to by the RELEASE* files.
+# Normally CHECK_RELEASE should be set to YES.
+# Set CHECK_RELEASE to NO to disable checking completely.
+# Set CHECK_RELEASE to WARN to perform consistency checking but
+#   continue building anyway if conflicts are found.
+CHECK_RELEASE = YES
+
+# Set this when you only want to compile this application
+#   for a subset of the cross-compiled target architectures
+#   that Base is built for.
+#CROSS_COMPILER_TARGET_ARCHS = vxWorks-68040
+
+# To install files into a location other than $(TOP) define
+#   INSTALL_LOCATION here.
+#INSTALL_LOCATION=</path/name/to/install/top>
+
+# Set this when your IOC and the host use different paths
+#   to access the application. This will be needed to boot
+#   from a Microsoft FTP server or with some NFS mounts.
+# You must rebuild in the iocBoot directory for this to
+#   take effect.
+#IOCS_APPL_TOP = </IOC/path/to/application/top>
+
+# If you have the local Linux GPIB support installed (http://sourceforge.net/projects/linux-gpib/)
+# then set LINUX_GPIB=YES
+LINUX_GPIB=NO
+
+# If you have libusb-1.0 revision 16 or newer and want the USB TMC support set DRV_USBTMC=YES
+#DRV_USBTMC=YES
+
+# You can also define this on a per-architecture basis.  
+# In this example DRV_USBTMC would be built only for linux-x86_64, and not for other architectures
+#ifeq (linux-x86_64, $(T_A))
+#  DRV_USBTMC=YES
+#endif
+
+# If you want to build asyn so the only dependency on EPICS base is libCom then set the following flag
+#EPICS_LIBCOM_ONLY=YES
+
