@@ -5414,12 +5414,24 @@ struct asynGpibPort {
     can be issued. For example, the following example shows the configuration procedure
     for a port on a GreenSprings octal UART Industry-Pack module on a GreenSprings VIP616-01
     carrier.</p>
-  <pre>ipacAddVIPC616_01("0x6000,B0000000")
+  <pre>
+ipacAddVIPC616_01("0x6000,B0000000")
 tyGSOctalDrv(1)
-tyGSOctalModuleInit("RS232", 0x80, 0, 0)
-tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
-drvAsynSerialPortConfigure("tyGS/0/0","/tyGS/0/0",0,0,0)
-asynSetOption("tyGS/0/0",0,"baud","9600")</pre>
+tyGSOctalModuleInit("Mod0","232", 0x80, 0, 0)
+tyGSOctalDevCreate("/tyGS/0/0","Mod0",0,0,1000,1000)
+drvAsynSerialPortConfigure("/tyGS/0/0","/tyGS/0/0",0,0,0)
+asynSetOption("/tyGS/0/0",0,"baud","9600")
+
+For the IP520:
+
+IP520Drv(1)
+IP520ModuleInit("UART_0", "232", 0xC2, 0, 0)
+IP520DevCreate("A1", "UART_0", 0, 0, 1000, 1000)
+drvAsynSerialPortConfigure("A1","A1",0,0,0)
+asynSetOption("A1",0,"baud",9600)
+asynOctetSetInputEos( "A1",0,"\r")
+asynOctetSetOutputEos("A1",0,"\r")
+</pre>
   <h3 id="drvAsynIPPort">
     TCP/IP or UDP/IP Port</h3>
   <p>
