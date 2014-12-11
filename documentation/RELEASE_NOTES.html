@@ -1,7 +1,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml"><head>
+<html xml:lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
   <title>asynDriver: Asynchronous Driver Support - Release Notes</title>
-  <meta content="text/html; charset=windows-1252" http-equiv="Content-Type">
+  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
 </head>
 <body xml:lang="en">
   <div style="text-align: center">
@@ -9,11 +10,11 @@
       asynDriver: Asynchronous Driver Support - Release Notes</h1>
   </div>
   <div style="text-align: center">
-    <hr>
+    <hr />
     <h2>
       Release 4-25</h2>
     <h2>
-      November XXX, 2014</h2>
+      December 10, 2014</h2>
   </div>
   <h3>
     devAsynOctet</h3>
@@ -86,12 +87,14 @@
     the hostInfo string, a single command string to send to the server, and optionally
     the input and output EOS. It then prints out the response from the server. There
     are 3 example shell scipts that show how to use testAsynIPPortClient to communicate
-    with a Web server, XPS motor controller, and a telnet host respectively.<br>
-</p>
-<h3>drvAsynUSBTMC</h3>
-Bruno Martins found and fixed a problem with data transfers that spanned multiple USB packets.<br>
-<br>
-<div style="text-align: center">
+    with a Web server, XPS motor controller, and a telnet host respectively.<br />
+  </p>
+  <h3>
+    drvAsynUSBTMC</h3>
+  <p>
+    Bruno Martins found and fixed a problem with data transfers that spanned multiple
+    USB packets.</p>
+  <div style="text-align: center">
     <h2>
       Release 4-24</h2>
     <h2>
@@ -135,7 +138,7 @@ Bruno Martins found and fixed a problem with data transfers that spanned multipl
     does not even warn about this error, but it produces a fatal error with the GCC
     compiler under Cygwin.</p>
   <div style="text-align: center">
-    <hr>
+    <hr />
     <h2>
       Release 4-23</h2>
     <h2>
@@ -144,8 +147,8 @@ Bruno Martins found and fixed a problem with data transfers that spanned multipl
   <h3>
     asynManager.c</h3>
   <p>
-    Fixed a bug in pasynManager-&gt;memMalloc. It could return a pointer that was not a
-    multiple of 8 bytes. This led to subtle problems on some architectures (e.g. ARM)
+    Fixed a bug in pasynManager-&gt;memMalloc. It could return a pointer that was not
+    a multiple of 8 bytes. This led to subtle problems on some architectures (e.g. ARM)
     if a double was stored in the memory returned by memMalloc. Fixed the code so the
     pointer is always a multiple of 16 bytes (for future safety).</p>
   <h3>
@@ -228,7 +231,7 @@ Bruno Martins found and fixed a problem with data transfers that spanned multipl
     other configuration values, such as LINUX_GPIB and DRV_USBTMC are now defined in
     configure/CONFIG_SITE, not in RELEASE.</p>
   <div style="text-align: center">
-    <hr>
+    <hr />
     <h2>
       Release 4-22</h2>
     <h2>
@@ -387,7 +390,7 @@ asynUnregisterTimeStampSource(const char *portName);
     Added calls to lock() and unlock() in simTask. This was previously a serious omission
     in this example driver. Thanks to Kay Kasemir for spotting this.</p>
   <div style="text-align: center">
-    <hr>
+    <hr />
     <h2>
       Release 4-21</h2>
     <h2>
@@ -1325,7 +1328,7 @@ if (saveEosLen)
     drvGsIP488</h3>
   <p>
     Hold off SRQ callbacks until iocInit.</p>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Release 4-7</h2>
@@ -1377,7 +1380,7 @@ if (saveEosLen)
     Fix timeout settings on RTEMS.</p>
   <p>
     Add support for UDP broadcasts. Specify "UDP*" and the network broadcast address
-    in the port configuration command:<br>
+    in the port configuration command:<br />
     <code>drvAsynIPPortConfigure("L0", "192.168.1.255:1234 UDP*", 0, 0, 0)</code></p>
   <h3>
     drvAsynSerialPort</h3>
@@ -1925,7 +1928,7 @@ if (saveEosLen)
       </ul>
     </li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Release 2-1</h2>
@@ -1964,7 +1967,7 @@ if (saveEosLen)
       </ul>
     </li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Release 1-2</h2>
@@ -1977,7 +1980,7 @@ if (saveEosLen)
     <li>Use sscanf to convert GPIB stringin response.</li>
     <li>Fix race condition in GPIB finish routines.</li>
   </ul>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Release 1-1</h2>
@@ -1999,7 +2002,7 @@ if (saveEosLen)
     <li>Added dbior support.</li>
     <li>Changed devGPIB to no longer cache EOS.</li>
   </ol>
-  <hr>
+  <hr />
   <div style="text-align: center">
     <h2>
       Release 1-0alpha2</h2>
@@ -2051,6 +2054,5 @@ if (saveEosLen)
   <p>
     Two Device Support modules have been converted from the 3.13 gpib support: DG535
     and TDS3014B Scope.</p>
-
-
-</body></html>
+</body>
+</html>
