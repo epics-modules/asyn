@@ -1,1 +1,0 @@
-medm  -x -macro "P=gpib,R=Test,PORT=L0" test.adl

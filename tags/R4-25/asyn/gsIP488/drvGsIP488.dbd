@@ -1,2 +1,0 @@
-registrar(gsIP488RegisterCommands)
-variable(gsip488Debug,int)
