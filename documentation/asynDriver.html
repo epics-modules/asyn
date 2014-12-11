@@ -5418,8 +5418,8 @@ struct asynGpibPort {
 tyGSOctalDrv(1)
 tyGSOctalModuleInit("RS232", 0x80, 0, 0)
 tyGSOctalDevCreate("/tyGS/0/0",0,0,1000,1000)
-drvAsynSerialPortConfigure("L0","/tyGS/0/0",0,0,0)
-asynSetOption("L0",0,"baud","9600")</pre>
+drvAsynSerialPortConfigure("tyGS/0/0","/tyGS/0/0",0,0,0)
+asynSetOption("tyGS/0/0",0,"baud","9600")</pre>
   <h3 id="drvAsynIPPort">
     TCP/IP or UDP/IP Port</h3>
   <p>
