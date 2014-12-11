@@ -23,7 +23,7 @@
   <ol>
     <li>The interrupt callback function for stringin records (e.g. with SCAN=I/O Intr)
       did not null-terminate the string if the driver returned MAX_STRING_SIZE or more
-      characters.</li>
+      characters. Thanks to Freddie Akeroyd for fixing this.</li>
     <li>The interrupt callback function for stringin and waveform records were not properly
       locking the record when modifying the record fields.</li>
   </ol>
