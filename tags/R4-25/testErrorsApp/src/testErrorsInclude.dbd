@@ -1,0 +1,4 @@
+include "base.dbd"
+include "asyn.dbd"
+registrar("testErrorsRegister")
+function("myTimeStampSource")

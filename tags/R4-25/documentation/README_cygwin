@@ -1,0 +1,13 @@
+In order to build ASYN on cygwin 1.5.x you need to download
+and install the cygwin "Sun RPC" module.  On 1.7.x you need
+the "tirpc" module.
+
+You should add one of the following lines to 
+base/configure/os/CONFIG_SITE.cygwin-x86.cygwin-x86
+
+For Cygwin 1.7.x:
+CYGWIN_RPC_LIB = tirpc
+
+For Cygwin 1.5.x
+CYGWIN_RPC_LIB = rpc
+

@@ -1,0 +1,777 @@
+
+file {
+	name="/home/epics/devel/asyn/testAsynPortDriverApp/adl/testAsynPortDriver.adl"
+	version=030105
+}
+display {
+	object {
+		x=317
+		y=111
+		width=830
+		height=490
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+text {
+	object {
+		x=20
+		y=39
+		width=230
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="1 kHz, 1 volt, sin wave"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=20
+		y=320
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Noise (V)"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=118
+		y=320
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)NoiseAmplitude"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=118
+		y=297
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)NoiseAmplitude_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=30
+		y=420
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Run/stop"
+	align="horiz. right"
+}
+"choice button" {
+	object {
+		x=118
+		y=400
+		width=80
+		height=40
+	}
+	control {
+		chan="$(P)$(R)Run"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=118
+		y=378
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)Run_RBV"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=10
+		y=240
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Offset (V)"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=118
+		y=240
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)VoltOffset"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=118
+		y=217
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)VoltOffset_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=20
+		y=180
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Volts/div"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=117
+		y=134
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)VoltsPerDiv_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+menu {
+	object {
+		x=117
+		y=180
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)VoltsPerDivSelect"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=20
+		y=100
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Vert gain"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=118
+		y=77
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)VertGain_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+menu {
+	object {
+		x=118
+		y=100
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R)VertGainSelect"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=117
+		y=157
+		width=80
+		height=18
+	}
+	monitor {
+		chan="$(P)$(R)VoltsPerDivSelect_RBV"
+		clr=54
+		bclr=4
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+composite {
+	object {
+		x=220
+		y=66
+		width=601
+		height=407
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=221
+				y=66
+				width=600
+				height=300
+			}
+			plotcom {
+				title="Digital scope simulator"
+				xlabel="Horizontal divisions"
+				ylabel="Vertical divisions"
+				clr=14
+				bclr=51
+			}
+			style="line"
+			trace[0] {
+				xdata="$(P)$(R)TimeBase_RBV"
+				ydata="$(P)$(R)Waveform_RBV"
+				data_clr=14
+			}
+		}
+		composite {
+			object {
+				x=616
+				y=370
+				width=200
+				height=100
+			}
+			"composite name"=""
+			children {
+				rectangle {
+					object {
+						x=616
+						y=370
+						width=200
+						height=100
+					}
+					"basic attribute" {
+						clr=14
+						fill="outline"
+					}
+				}
+				composite {
+					object {
+						x=661
+						y=372
+						width=110
+						height=21
+					}
+					"composite name"=""
+					children {
+						rectangle {
+							object {
+								x=661
+								y=372
+								width=110
+								height=21
+							}
+							"basic attribute" {
+								clr=2
+							}
+						}
+						text {
+							object {
+								x=664
+								y=372
+								width=103
+								height=20
+							}
+							"basic attribute" {
+								clr=54
+							}
+							textix="Statistics"
+							align="horiz. centered"
+						}
+					}
+				}
+				composite {
+					object {
+						x=627
+						y=395
+						width=178
+						height=70
+					}
+					"composite name"=""
+					children {
+						composite {
+							object {
+								x=627
+								y=395
+								width=157
+								height=20
+							}
+							"composite name"=""
+							children {
+								text {
+									object {
+										x=627
+										y=395
+										width=70
+										height=20
+									}
+									"basic attribute" {
+										clr=14
+									}
+									textix="Minimum"
+									align="horiz. right"
+								}
+								"text update" {
+									object {
+										x=702
+										y=396
+										width=82
+										height=18
+									}
+									monitor {
+										chan="$(P)$(R)MinValue_RBV"
+										clr=54
+										bclr=4
+									}
+									limits {
+									}
+								}
+							}
+						}
+						composite {
+							object {
+								x=627
+								y=420
+								width=157
+								height=20
+							}
+							"composite name"=""
+							children {
+								text {
+									object {
+										x=627
+										y=420
+										width=70
+										height=20
+									}
+									"basic attribute" {
+										clr=14
+									}
+									textix="Maximum"
+									align="horiz. right"
+								}
+								"text update" {
+									object {
+										x=702
+										y=421
+										width=82
+										height=18
+									}
+									monitor {
+										chan="$(P)$(R)MaxValue_RBV"
+										clr=54
+										bclr=4
+									}
+									limits {
+									}
+								}
+							}
+						}
+						composite {
+							object {
+								x=657
+								y=445
+								width=148
+								height=20
+							}
+							"composite name"=""
+							children {
+								text {
+									object {
+										x=657
+										y=445
+										width=40
+										height=20
+									}
+									"basic attribute" {
+										clr=14
+									}
+									textix="Mean"
+									align="horiz. right"
+								}
+								"text update" {
+									object {
+										x=702
+										y=446
+										width=103
+										height=18
+									}
+									monitor {
+										chan="$(P)$(R)MeanValue_RBV"
+										clr=54
+										bclr=4
+									}
+									limits {
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=455
+				y=370
+				width=130
+				height=68
+			}
+			"composite name"=""
+			children {
+				"text entry" {
+					object {
+						x=490
+						y=393
+						width=60
+						height=20
+					}
+					control {
+						chan="$(P)$(R)TriggerDelay"
+						clr=14
+						bclr=51
+					}
+					limits {
+					}
+				}
+				text {
+					object {
+						x=455
+						y=418
+						width=130
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Trigger delay"
+					align="horiz. right"
+				}
+				"text update" {
+					object {
+						x=490
+						y=370
+						width=61
+						height=18
+					}
+					monitor {
+						chan="$(P)$(R)TriggerDelay_RBV"
+						clr=54
+						bclr=4
+					}
+					align="horiz. centered"
+					limits {
+					}
+				}
+			}
+		}
+		composite {
+			object {
+				x=220
+				y=370
+				width=110
+				height=68
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=220
+						y=418
+						width=110
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Update time"
+					align="horiz. right"
+				}
+				"text entry" {
+					object {
+						x=245
+						y=393
+						width=60
+						height=20
+					}
+					control {
+						chan="$(P)$(R)UpdateTime"
+						clr=14
+						bclr=51
+					}
+					limits {
+					}
+				}
+				"text update" {
+					object {
+						x=245
+						y=370
+						width=61
+						height=18
+					}
+					monitor {
+						chan="$(P)$(R)UpdateTime_RBV"
+						clr=54
+						bclr=4
+					}
+					align="horiz. centered"
+					limits {
+					}
+				}
+			}
+		}
+		text {
+			object {
+				x=362
+				y=418
+				width=80
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Time/div"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=372
+				y=370
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)$(R)TimePerDiv_RBV"
+				clr=54
+				bclr=4
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=352
+				y=393
+				width=100
+				height=20
+			}
+			control {
+				chan="$(P)$(R)TimePerDivSelect"
+				clr=14
+				bclr=51
+			}
+		}
+		composite {
+			object {
+				x=221
+				y=453
+				width=235
+				height=20
+			}
+			"composite name"=""
+			children {
+				text {
+					object {
+						x=221
+						y=453
+						width=130
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Waveform scan"
+					align="horiz. right"
+				}
+				menu {
+					object {
+						x=356
+						y=453
+						width=100
+						height=20
+					}
+					control {
+						chan="$(P)$(R)Waveform_RBV.SCAN"
+						clr=14
+						bclr=51
+					}
+				}
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=320
+		y=5
+		width=360
+		height=55
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=320
+				y=5
+				width=360
+				height=25
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Simple digital scope simulator"
+			align="horiz. centered"
+		}
+		text {
+			object {
+				x=464
+				y=35
+				width=96
+				height=25
+			}
+			"basic attribute" {
+				clr=26
+			}
+			textix="$(P)$(R)"
+			align="horiz. centered"
+		}
+	}
+}

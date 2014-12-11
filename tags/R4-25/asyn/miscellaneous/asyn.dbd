@@ -1,0 +1,13 @@
+registrar(asynRegister)
+registrar(asynInterposeFlushRegister)
+registrar(asynInterposeEosRegister)
+
+#
+# The following ties this to EPICS records.
+# Applications which wish to use ASYN without EPICS
+# records can comment out the following lines.
+include "asynRecord.dbd"
+
+include "devEpics.dbd"
+
+driver(drvAsyn)
