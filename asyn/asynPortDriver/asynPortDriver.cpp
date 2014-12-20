@@ -616,7 +616,7 @@ asynStatus paramList::callCallbacks(int addr)
         for (i = 0; i < this->nFlags; i++)
         {
             index = this->flags[i];
-            if (!getParameter(index)->isDefined()) return status;
+            if (!getParameter(index)->isDefined()) continue;
             switch(getParameter(index)->type) {
                 case asynParamInt32:
                     status = int32Callback(index, addr);
