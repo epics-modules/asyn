@@ -17,6 +17,7 @@
 #include <epicsTime.h>
 #include <epicsThread.h>
 #include <epicsString.h>
+#include <epicsEvent.h>
 #include <iocsh.h>
 
 #include "testErrors.h"
@@ -24,7 +25,7 @@
 
 static const char *driverName="testErrors";
 
-#define CALLBACK_PERIOD 0.5
+#define UINT32_DIGITAL_MASK 0xFFFFFFFF
 
 static const char *statusEnumStrings[MAX_STATUS_ENUMS] = {
     "asynSuccess",
@@ -77,6 +78,7 @@ testErrors::testErrors(const char *portName)
 
     createParam(P_StatusReturnString,       asynParamInt32,         &P_StatusReturn);
     createParam(P_EnumOrderString,          asynParamInt32,         &P_EnumOrder);
+    createParam(P_DoUpdateString,           asynParamInt32,         &P_DoUpdate);
     createParam(P_Int32ValueString,         asynParamInt32,         &P_Int32Value);
     createParam(P_Float64ValueString,       asynParamFloat64,       &P_Float64Value);
     createParam(P_UInt32DigitalValueString, asynParamUInt32Digital, &P_UInt32DigitalValue);
@@ -100,6 +102,8 @@ testErrors::testErrors(const char *portName)
     setEnums();
     // Need to force callbacks with the interruptMask once 
     setUIntDigitalParam(P_UInt32DigitalValue, (epicsUInt32)0x0, 0xFFFFFFFF, 0xFFFFFFFF);
+    
+    eventId_ = epicsEventCreate(epicsEventEmpty);
     
     /* Create the thread that computes the waveforms in the background */
     status = (asynStatus)(epicsThreadCreate("testErrorsTask",
@@ -128,6 +132,7 @@ void testErrors::callbackTask(void)
     asynStatus currentStatus;
     int itemp;
     epicsInt32 iVal;
+    epicsUInt32 uiVal;
     epicsFloat64 dVal;
     int i;
     char octetValue[20];
@@ -137,20 +142,28 @@ void testErrors::callbackTask(void)
         lock();
         updateTimeStamp();
         getIntegerParam(P_StatusReturn, &itemp); currentStatus = (asynStatus)itemp;
+
         getIntegerParam(P_Int32Value, &iVal);
         iVal++;
         if (iVal > 15) iVal=0;
         setIntegerParam(P_Int32Value, iVal);
         setParamStatus(P_Int32Value, currentStatus);
+
+        getUIntDigitalParam(P_UInt32DigitalValue, &uiVal, UINT32_DIGITAL_MASK);
+        uiVal++;
+        if (uiVal > 32) uiVal=0;
+        setUIntDigitalParam(P_UInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
+        setParamStatus(P_UInt32DigitalValue, currentStatus);
+
         getDoubleParam(P_Float64Value, &dVal);
         dVal += 0.1;
         setDoubleParam(P_Float64Value, dVal);
         setParamStatus(P_Float64Value, currentStatus);
+
         sprintf(octetValue, "%.1f", dVal); 
-        setParamStatus(P_UInt32DigitalValue, currentStatus);
         setStringParam(P_OctetValue, octetValue);
         setParamStatus(P_OctetValue, currentStatus);
-        setParamStatus(P_Float64ArrayValue, currentStatus);
+
         for (i=0; i<MAX_ARRAY_POINTS; i++) {
             int8ArrayValue_[i]    = iVal;
             int16ArrayValue_[i]   = iVal;
@@ -170,7 +183,7 @@ void testErrors::callbackTask(void)
         setParamStatus(P_Float64ArrayValue, currentStatus);
         doCallbacksFloat64Array(float64ArrayValue_, MAX_ARRAY_POINTS, P_Float64ArrayValue, 0);
         unlock();
-        epicsThreadSleep(CALLBACK_PERIOD);
+        epicsEventWait(eventId_);
     }
 }
 
@@ -213,22 +226,26 @@ asynStatus testErrors::writeInt32(asynUser *pasynUser, epicsInt32 value)
     const char *paramName;
     const char* functionName = "writeInt32";
 
-    /* Get the current error status */
-    getIntegerParam(P_StatusReturn, &itemp); status = (asynStatus)itemp;
-
     /* Fetch the parameter string name for use in debugging */
     getParamName(function, &paramName);
 
     /* Set the parameter value in the parameter library. */
     setIntegerParam(function, value);
-    /* Set the parameter status in the parameter library except for P_StatusReturn which is always OK */
-    if (function == P_StatusReturn) {
-        status = asynSuccess;
+
+    if (function == P_DoUpdate) {
+        epicsEventSignal(eventId_);
+    }
+    else if (function == P_StatusReturn) {
     }
     else if (function == P_EnumOrder) {
         setEnums();
     }
-    setParamStatus(function, status);
+    else {
+        /* Set the parameter status in the parameter library except for the above commands with always return OK */
+        /* Get the current error status */
+        getIntegerParam(P_StatusReturn, &itemp); status = (asynStatus)itemp;
+        setParamStatus(function, status);
+    }
     
     /* Do callbacks so higher layers see any changes */
     callParamCallbacks();
