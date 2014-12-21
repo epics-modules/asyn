@@ -1,5 +1,5 @@
 ###################################################################
-#  These records control turning error status on and off          # 
+#  This record controls turning error status on and off           # 
 ###################################################################
 record(mbbo, "$(P)StatusReturn")
 {
@@ -11,7 +11,7 @@ record(mbbo, "$(P)StatusReturn")
 }
 
 ###################################################################
-#  These records control the order of enum strings, values,       # 
+#  This record controls the order of enum strings, values,        # 
 #  and severities                                                 # 
 ###################################################################
 record(bo, "$(P)EnumOrder")
@@ -24,6 +24,18 @@ record(bo, "$(P)EnumOrder")
 }
 
 ###################################################################
+#  This record triggers an update                                 # 
+###################################################################
+record(bo, "$(P)DoUpdate")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DO_UPDATE")
+    field(ZNAM, "Done")
+    field(ONAM, "Update")
+    field(SCAN, "1 second")
+}
+
+###################################################################
 #  Records that use devAsynInt32                                  #
 ###################################################################
 
@@ -33,6 +45,15 @@ record(ao, "$(P)AoInt32")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
    field(VAL, "0")
+}
+
+record(ao, "$(P)AoInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
 }
 
 record(ai, "$(P)AiInt32")
@@ -59,6 +80,15 @@ record(longout, "$(P)LongoutInt32")
    field(VAL, "0")
 }
 
+record(longout, "$(P)LongoutInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
 record(longin, "$(P)LonginInt32")
 {
    field(DTYP, "asynInt32")
@@ -75,6 +105,17 @@ record(bo, "$(P)BoInt32")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL, "0")
+}
+
+record(bo, "$(P)BoInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
 }
 
 record(bi, "$(P)BiInt32")
@@ -105,6 +146,27 @@ record(mbbo, "$(P)MbboInt32")
    field(FVST, "Junk5")
    field(FVVL, "50")
    field(VAL, "0")
+}
+
+record(mbbo, "$(P)MbboInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "0")
+   field(ONST, "Junk1")
+   field(ONVL, "10")
+   field(TWST, "Junk2")
+   field(TWVL, "20")
+   field(THST, "Junk3")
+   field(THVL, "30")
+   field(FRST, "Junk4")
+   field(FRVL, "40")
+   field(FVST, "Junk5")
+   field(FVVL, "50")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
 }
 
 record(mbbi, "$(P)MbbiInt32")
@@ -140,6 +202,15 @@ record(longout, "$(P)LongoutUInt32D")
    field(VAL, "0")
 }
 
+record(longout, "$(P)LongoutUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
 record(longin, "$(P)LonginUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
@@ -156,6 +227,17 @@ record(bo, "$(P)BoUInt32D")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL,  "0")
+}
+
+record(bo, "$(P)BoUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))UINT32D_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
 }
 
 record(bi, "$(P)BiUInt32D")
@@ -182,6 +264,21 @@ record(mbbo, "$(P)MbboUInt32D")
    field(VAL,  "0")
 }
 
+record(mbbo, "$(P)MbboUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "10")
+   field(ONST, "Junk1")
+   field(ONVL, "20")
+   field(TWST, "Junk2")
+   field(TWVL, "30")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
+}
+
 record(mbbi, "$(P)MbbiUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
@@ -204,6 +301,15 @@ record(mbboDirect, "$(P)MbboDUInt32D")
    field(VAL,  "0")
 }
 
+record(mbboDirect, "$(P)MbboDUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
+}
+
 record(mbbiDirect, "$(P)MbbiDUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
@@ -223,6 +329,15 @@ record(ao, "$(P)AoFloat64")
    field(DTYP, "asynFloat64")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
    field(PREC, "1")
+}
+
+record(ao, "$(P)AoFloat64RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+   info(asyn:READBACK,"1")
 }
 
 record(ai, "$(P)AiFloat64")
@@ -253,6 +368,15 @@ record(stringout, "$(P)SoOctet")
    field(VAL,  "test")
 }
 
+record(stringout, "$(P)SoOctetRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(VAL,  "test")
+   info(asyn:READBACK,"1")
+}
+
 record(stringin, "$(P)SiOctet")
 {
    field(DTYP, "asynOctetRead")
@@ -270,6 +394,16 @@ record(waveform, "$(P)WfOutOctet")
    field(FTVL, "CHAR")
 }
 
+record(waveform, "$(P)WfOutOctetRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(NELM, "100")
+   field(FTVL, "CHAR")
+   info(asyn:READBACK,"1")
+}
+
 record(waveform, "$(P)WfInOctet")
 {
    field(DTYP, "asynOctetRead")
@@ -284,7 +418,7 @@ record(waveform, "$(P)WfInOctet")
 ###################################################################
 #  Records that use devAsynXXXArray                               #
 ###################################################################
-record(waveform, "$(P)WfInt8")
+record(waveform, "$(P)WfInt8In")
 {
     field(DTYP, "asynInt8ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
@@ -294,7 +428,26 @@ record(waveform, "$(P)WfInt8")
     field(SCAN, "$(SCAN)")
 }
 
-record(waveform, "$(P)WfInt16")
+record(waveform, "$(P)WfInt8Out")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfInt8OutRB")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(waveform, "$(P)WfInt16In")
 {
     field(DTYP, "asynInt16ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
@@ -304,7 +457,26 @@ record(waveform, "$(P)WfInt16")
     field(SCAN, "$(SCAN)")
 }
 
-record(waveform, "$(P)WfInt32")
+record(waveform, "$(P)WfInt16Out")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfInt16OutRB")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(waveform, "$(P)WfInt32In")
 {
     field(DTYP, "asynInt32ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
@@ -314,7 +486,26 @@ record(waveform, "$(P)WfInt32")
     field(SCAN, "$(SCAN)")
 }
 
-record(waveform, "$(P)WfFloat32")
+record(waveform, "$(P)WfInt32Out")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfInt32OutRB")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(waveform, "$(P)WfFloat32In")
 {
     field(DTYP, "asynFloat32ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
@@ -324,7 +515,26 @@ record(waveform, "$(P)WfFloat32")
     field(SCAN, "$(SCAN)")
 }
 
-record(waveform, "$(P)WfFloat64")
+record(waveform, "$(P)WfFloat32Out")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfFloat32OutRB")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(waveform, "$(P)WfFloat64In")
 {
     field(DTYP, "asynFloat64ArrayIn")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
@@ -332,6 +542,25 @@ record(waveform, "$(P)WfFloat64")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+}
+
+record(waveform, "$(P)WfFloat64Out")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfFloat64OutRB")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
 }
 
 ###################################################################
