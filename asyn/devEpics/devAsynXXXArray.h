@@ -24,7 +24,7 @@
 */                                                                                                 \
                                                                                                    \
                                                                                                    \
- typedef struct ringBufferElement {                                                                \
+typedef struct ringBufferElement {                                                                 \
     EPICS_TYPE      *pValue;                                                                       \
     size_t          len;                                                                           \
     epicsTimeStamp  time;                                                                          \
@@ -43,7 +43,7 @@ typedef struct devAsynWfPvt{                                                    
     asynStatus          status;                                                                    \
     epicsAlarmCondition alarmStat;                                                                 \
     epicsAlarmSeverity  alarmSevr;                                                                 \
-    epicsMutexId        mutexId;                                                                   \
+    epicsMutexId        ringBufferLock;                                                            \
     ringBufferElement   *ringBuffer;                                                               \
     int                 ringHead;                                                                  \
     int                 ringTail;                                                                  \
@@ -102,13 +102,13 @@ static long initCommon(dbCommon *pr, DBLINK *plink,                             
     asynUser *pasynUser;                                                                           \
     asynInterface *pasynInterface;                                                                 \
                                                                                                    \
-    pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynWf::initCommon");                           \
+    pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynXXXArray::initCommon");                     \
     pr->dpvt = pPvt;                                                                               \
     pPvt->pr = pr;                                                                                 \
     pasynUser = pasynManager->createAsynUser(callback, 0);                                         \
     pasynUser->userPvt = pPvt;                                                                     \
     pPvt->pasynUser = pasynUser;                                                                   \
-    pPvt->mutexId = epicsMutexCreate();                                                            \
+    pPvt->ringBufferLock = epicsMutexCreate();                                                     \
     /* This device support only supports signed and unsigned versions of the EPICS data type  */   \
     if ((pwf->ftvl != SIGNED_TYPE) && (pwf->ftvl != UNSIGNED_TYPE)) {                              \
         errlogPrintf("%s::initCommon, %s field type must be SIGNED_TYPE or UNSIGNED_TYPE\n",       \
@@ -186,8 +186,8 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)               
             status = dbFindRecord(pdbentry, pr->name);                                             \
             if (status)                                                                            \
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                       \
-                    "%s devAsynFloat64::getIoIntInfo error finding record\n",                      \
-                    pr->name);                                                                     \
+                    "%s %s::getIoIntInfo error finding record\n",                                  \
+                    pr->name, driverName);                                                         \
             sizeString = dbGetInfo(pdbentry, "FIFO");                                              \
             if (sizeString) pPvt->ringSize = atoi(sizeString);                                     \
             if (pPvt->ringSize > 0) {                                                              \
@@ -276,9 +276,9 @@ static long processCommon(dbCommon *pr)                                         
             int i;                                                                                 \
             /* Need to copy the array with the lock because that is shared even though             \
                pPvt->result is a copy */                                                           \
-            epicsMutexLock(pPvt->mutexId);                                                         \
+            epicsMutexLock(pPvt->ringBufferLock);                                                  \
             for (i=0; i<(int)rp->len; i++) pData[i] = rp->pValue[i];                               \
-            epicsMutexUnlock(pPvt->mutexId);                                                       \
+            epicsMutexUnlock(pPvt->ringBufferLock);                                                \
             pwf->nord = rp->len;                                                                   \
             pwf->time = rp->time;                                                                  \
             pPvt->status = rp->status;                                                             \
@@ -351,7 +351,7 @@ static void callbackWfIn(asynUser *pasynUser)                                   
 static int getRingBufferValue(devAsynWfPvt *pPvt)                                                  \
 {                                                                                                  \
     int ret = 0;                                                                                   \
-    epicsMutexLock(pPvt->mutexId);                                                                 \
+    epicsMutexLock(pPvt->ringBufferLock);                                                          \
     if (pPvt->ringTail != pPvt->ringHead) {                                                        \
         if (pPvt->ringBufferOverflows > 0) {                                                       \
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,                                         \
@@ -363,7 +363,7 @@ static int getRingBufferValue(devAsynWfPvt *pPvt)                               
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;                \
         ret = 1;                                                                                   \
     }                                                                                              \
-    epicsMutexUnlock(pPvt->mutexId);                                                               \
+    epicsMutexUnlock(pPvt->ringBufferLock);                                                        \
     return ret;                                                                                    \
 }                                                                                                  \
                                                                                                    \
@@ -399,9 +399,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
          * read will do a read from the driver, which should be OK. */                             \
         if (!interruptAccept) return;                                                              \
                                                                                                    \
-        /* Note that we put a lock around epicsRingBytesPut and Get because we potentially have    \
-         * more than one reader, since the reader is whatever thread is processing the record */   \
-        epicsMutexLock(pPvt->mutexId);                                                             \
+        epicsMutexLock(pPvt->ringBufferLock);                                                      \
         rp = &pPvt->ringBuffer[pPvt->ringHead];                                                    \
         if (len > pwf->nelm) len = pwf->nelm;                                                      \
         rp->len = len;                                                                             \
@@ -421,7 +419,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
              * element to the ring buffer, not if we just replaced an element. */                  \
             scanIoRequest(pPvt->ioScanPvt);                                                        \
         }                                                                                          \
-        epicsMutexUnlock(pPvt->mutexId);                                                           \
+        epicsMutexUnlock(pPvt->ringBufferLock);                                                    \
     }                                                                                              \
 }                                                                                                  \
                                                                                                    \
