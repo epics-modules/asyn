@@ -172,15 +172,15 @@ void testErrors::callbackTask(void)
             float64ArrayValue_[i] = dVal;
         }
         callParamCallbacks();
-        setParamStatus(P_Int8ArrayValue, currentStatus);
-        doCallbacksInt8Array(int8ArrayValue_, MAX_ARRAY_POINTS, P_Int8ArrayValue, 0);
-        setParamStatus(P_Int16ArrayValue, currentStatus);
-        doCallbacksInt16Array(int16ArrayValue_, MAX_ARRAY_POINTS, P_Int16ArrayValue, 0);
-        setParamStatus(P_Int32ArrayValue, currentStatus);
-        doCallbacksInt32Array(int32ArrayValue_, MAX_ARRAY_POINTS, P_Int32ArrayValue, 0);
+        setParamStatus(P_Int8ArrayValue,    currentStatus);
+        setParamStatus(P_Int16ArrayValue,   currentStatus);
+        setParamStatus(P_Int32ArrayValue,   currentStatus);
         setParamStatus(P_Float32ArrayValue, currentStatus);
-        doCallbacksFloat32Array(float32ArrayValue_, MAX_ARRAY_POINTS, P_Float32ArrayValue, 0);
         setParamStatus(P_Float64ArrayValue, currentStatus);
+        doCallbacksInt8Array(int8ArrayValue_,       MAX_ARRAY_POINTS, P_Int8ArrayValue,    0);
+        doCallbacksInt16Array(int16ArrayValue_,     MAX_ARRAY_POINTS, P_Int16ArrayValue,   0);
+        doCallbacksInt32Array(int32ArrayValue_,     MAX_ARRAY_POINTS, P_Int32ArrayValue,   0);
+        doCallbacksFloat32Array(float32ArrayValue_, MAX_ARRAY_POINTS, P_Float32ArrayValue, 0);
         doCallbacksFloat64Array(float64ArrayValue_, MAX_ARRAY_POINTS, P_Float64ArrayValue, 0);
         unlock();
         epicsEventWait(eventId_);
