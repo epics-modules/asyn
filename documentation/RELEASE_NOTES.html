@@ -12,6 +12,43 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-26</h2>
+    <h2>
+      January XXX, 2015</h2>
+  </div>
+  <h3>
+    devEpics</h3>
+  <ul>
+    <li>Added capability for output records to update their values with a callback from the driver.  This
+      is enabled by adding the following info tag to the output record:<br />
+      <code>info(asyn:READBACK, "1")</code><br />
+      The output record value will update any time the driver does a callback with a new value.
+      The output record alarm status and severity will also update to reflect the value
+      passed by the driver in pasynUser->auxStatus. The driver callbacks use the same ring buffer
+      mechanism that input records do.  The default ring buffer size is 10 for all records except
+      waveform records, for which the default is 0.<br />
+      NOTE: Output record updates are not yet implemented for devAsynOctet or devAsynXXXArray, i.e. for
+      stringout records or waveform output records. This will be added before R4-26 is released.</li>
+    <li>Updated the test application testErrorsApp to demonstrate and test output record updates.</li>
+    <li>Added ring buffer support to devAsynOctet.  The default ring buffer size is 10 for stringin and
+     stringout records, and 0 for waveform input and output records. <br />
+     NOTE: This is not yet complete, but will be done before R4-26 is released.</li>
+    <li>Changed the info tag that is used to control the size of the ring buffer for driver callbacks.
+      The tag has been changed from FIFO to asyn:FIFO, adding the asyn: namespace to prevent
+      future conflicts with any other facility. <em>NOTE:</em>This change is not backwards compatible, 
+      any databases using the FIFO info tag will need to be changed to asyn:FIFO.  It is not expected
+      that this will affect many users, since the default ring buffer size is used in nearly all cases.</li>
+   </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Bug fix: If setParamStatus() was called for an array or generic pointer parameter then 
+    callParamCallbacks() could return prematurely and not do the callbacks for all modified parameters.</li>
+  </ul>
+
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-25</h2>
     <h2>
       December 10, 2014</h2>
