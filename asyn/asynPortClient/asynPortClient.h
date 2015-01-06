@@ -2,6 +2,7 @@
 #define asynPortClient_H
 
 #include <stdexcept>
+#include <string>
 
 #include <epicsString.h>
 
