@@ -411,8 +411,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     epicsMutexUnlock(pPvt->ringBufferLock);
 }
 
-static int
-getCallbackValue(devPvt *pPvt)
+static int getCallbackValue(devPvt *pPvt)
 {
     int ret = 0;
     epicsMutexLock(pPvt->ringBufferLock);
