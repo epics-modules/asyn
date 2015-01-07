@@ -128,7 +128,7 @@ record(longin, "$(P)$(R)ScalarData")
    field(DTYP, "asynInt32")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCALAR_DATA")
    field(SCAN, "I/O Intr")
-   info(FIFO,  "$(RING_SIZE)")
+   info(asyn:FIFO, "$(RING_SIZE)")
 }
 
 ###################################################################
@@ -141,7 +141,7 @@ record(waveform, "$(P)$(R)ArrayDataWRB")
     field(FTVL, "LONG")
     field(NELM, "$(NELM)")
     field(SCAN, "I/O Intr")
-    info(FIFO,  "$(RING_SIZE)")
+    info(asyn:FIFO, "$(RING_SIZE)")
 }
 
 record(waveform, "$(P)$(R)ArrayDataNRB")
