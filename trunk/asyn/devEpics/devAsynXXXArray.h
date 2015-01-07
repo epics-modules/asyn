@@ -41,6 +41,7 @@ typedef struct devAsynWfPvt{                                                    
     CALLBACK            callback;                                                                  \
     IOSCANPVT           ioScanPvt;                                                                 \
     asynStatus          status;                                                                    \
+    int                 isOutput;                                                                  \
     epicsAlarmCondition alarmStat;                                                                 \
     epicsAlarmSeverity  alarmSevr;                                                                 \
     epicsMutexId        ringBufferLock;                                                            \
@@ -60,7 +61,7 @@ typedef struct devAsynWfPvt{                                                    
                                                                                                    \
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);                                 \
 static long initCommon(dbCommon *pr, DBLINK *plink,                                                \
-    userCallback callback, INTERRUPT interruptCallback);                                           \
+    userCallback callback, INTERRUPT interruptCallback, int isOutput);                             \
 static long processCommon(dbCommon *pr);                                                           \
 static long initWfArrayIn(waveformRecord *pwf);                                                    \
 static long initWfArrayOut(waveformRecord *pwf);                                                   \
@@ -68,9 +69,8 @@ static long initWfArrayOut(waveformRecord *pwf);                                
 static void callbackWfIn(asynUser *pasynUser);                                                     \
 static void callbackWfOut(asynUser *pasynUser);                                                    \
 static int getRingBufferValue(devAsynWfPvt *pPvt);                                                 \
-static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,                              \
-                EPICS_TYPE *value, size_t len);                                                    \
-static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,                             \
+static long createRingBuffer(dbCommon *pr);                                                        \
+static void interruptCallback(void *drvPvt, asynUser *pasynUser,                                   \
                 EPICS_TYPE *value, size_t len);                                                    \
                                                                                                    \
 typedef struct analogDset { /* analog  dset */                                                     \
@@ -94,7 +94,7 @@ epicsExportAddress(dset, DSET_OUT);                                             
 static char *driverName = DRIVER_NAME;                                                             \
                                                                                                    \
 static long initCommon(dbCommon *pr, DBLINK *plink,                                                \
-    userCallback callback, INTERRUPT interruptCallback)                                            \
+    userCallback callback, INTERRUPT interruptCallback, int isOutput)                              \
 {                                                                                                  \
     waveformRecord *pwf = (waveformRecord *)pr;                                                    \
     devAsynWfPvt *pPvt;                                                                            \
@@ -105,6 +105,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,                             
     pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynXXXArray::initCommon");                     \
     pr->dpvt = pPvt;                                                                               \
     pPvt->pr = pr;                                                                                 \
+    pPvt->isOutput = isOutput;                                                                     \
+    pPvt->interruptCallback = interruptCallback;                                                   \
     pasynUser = pasynManager->createAsynUser(callback, 0);                                         \
     pasynUser->userPvt = pPvt;                                                                     \
     pPvt->pasynUser = pasynUser;                                                                   \
@@ -154,8 +156,34 @@ static long initCommon(dbCommon *pr, DBLINK *plink,                             
     }                                                                                              \
     pPvt->pArray = pasynInterface->pinterface;                                                     \
     pPvt->arrayPvt = pasynInterface->drvPvt;                                                       \
+    /* If this is an output record and the info field "asyn:READBACK" is 1                         \
+     * then register for callbacks on output records */                                            \
+    if (pPvt->isOutput) {                                                                          \
+        int enableCallbacks=0;                                                                     \
+        const char *callbackString;                                                                \
+        DBENTRY *pdbentry = dbAllocEntry(pdbbase);                                                 \
+        status = dbFindRecord(pdbentry, pr->name);                                                 \
+        if (status) {                                                                              \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                           \
+                "%s %s::initCommon error finding record\n",                                        \
+                pr->name, driverName);                                                             \
+            goto bad;                                                                              \
+        }                                                                                          \
+        callbackString = dbGetInfo(pdbentry, "asyn:READBACK");                                     \
+        if (callbackString) enableCallbacks = atoi(callbackString);                                \
+        if (enableCallbacks) {                                                                     \
+            status = createRingBuffer(pr);                                                         \
+            if (status != asynSuccess) goto bad;                                                   \
+            status = pPvt->pArray->registerInterruptUser(                                          \
+               pPvt->arrayPvt, pPvt->pasynUser,                                                    \
+               pPvt->interruptCallback, pPvt, &pPvt->registrarPvt);                                \
+            if(status != asynSuccess) {                                                            \
+                printf("%s %s::initCommon error calling registerInterruptUser %s\n",               \
+                       pr->name, driverName, pPvt->pasynUser->errorMessage);                       \
+            }                                                                                      \
+        }                                                                                          \
+    }                                                                                              \
     scanIoInit(&pPvt->ioScanPvt);                                                                  \
-    pPvt->interruptCallback = interruptCallback;                                                   \
     /* Determine if device can block */                                                            \
     pasynManager->canBlock(pasynUser, &pPvt->canBlock);                                            \
     return 0;                                                                                      \
@@ -165,12 +193,44 @@ bad:                                                                            
     return INIT_ERROR;                                                                             \
 }                                                                                                  \
                                                                                                    \
+static long createRingBuffer(dbCommon *pr)                                                         \
+{                                                                                                  \
+    devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt;                                                 \
+    asynStatus status;                                                                             \
+    waveformRecord *pwf = (waveformRecord *)pr;                                                    \
+    const char *sizeString;                                                                        \
+                                                                                                   \
+    if (!pPvt->ringBuffer) {                                                                       \
+        DBENTRY *pdbentry = dbAllocEntry(pdbbase);                                                 \
+        pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;                                                 \
+        status = dbFindRecord(pdbentry, pr->name);                                                 \
+        if (status)                                                                                \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                           \
+                "%s %s::getIoIntInfo error finding record\n",                                      \
+                pr->name, driverName);                                                             \
+        sizeString = dbGetInfo(pdbentry, "asyn:FIFO");                                             \
+        if (sizeString) pPvt->ringSize = atoi(sizeString);                                         \
+        if (pPvt->ringSize > 0) {                                                                  \
+            int i;                                                                                 \
+            pPvt->ringBuffer = callocMustSucceed(                                                  \
+                                   pPvt->ringSize, sizeof(*pPvt->ringBuffer),                      \
+                                   "devAsynXXXArray::getIoIntInfo creating ring buffer");          \
+            /* Allocate array for each ring buffer element */                                      \
+            for (i=0; i<pPvt->ringSize; i++) {                                                     \
+                pPvt->ringBuffer[i].pValue =                                                       \
+                    (EPICS_TYPE *)callocMustSucceed(                                               \
+                        pwf->nelm, sizeof(EPICS_TYPE),                                             \
+                        "devAsynXXXArray::getIoIntInfo creating ring element array");              \
+            }                                                                                      \
+        }                                                                                          \
+    }                                                                                              \
+    return asynSuccess;                                                                            \
+}                                                                                                  \
+                                                                                                   \
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)                                  \
 {                                                                                                  \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)pr->dpvt;                                                 \
-    waveformRecord *pwf = (waveformRecord *)pr;                                                    \
     int status;                                                                                    \
-    const char *sizeString;                                                                        \
                                                                                                    \
     /* If initCommon failed then pPvt->pArray is NULL, return error */                             \
     if (!pPvt->pArray) return -1;                                                                  \
@@ -180,30 +240,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)               
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,                                                \
             "%s %s::getIoIntInfo registering interrupt\n",                                         \
             pr->name, driverName);                                                                 \
-        if (!pPvt->ringBuffer) {                                                                   \
-            DBENTRY *pdbentry = dbAllocEntry(pdbbase);                                             \
-            pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;                                             \
-            status = dbFindRecord(pdbentry, pr->name);                                             \
-            if (status)                                                                            \
-                asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                       \
-                    "%s %s::getIoIntInfo error finding record\n",                                  \
-                    pr->name, driverName);                                                         \
-            sizeString = dbGetInfo(pdbentry, "FIFO");                                              \
-            if (sizeString) pPvt->ringSize = atoi(sizeString);                                     \
-            if (pPvt->ringSize > 0) {                                                              \
-                int i;                                                                             \
-                pPvt->ringBuffer = callocMustSucceed(                                              \
-                                       pPvt->ringSize, sizeof(*pPvt->ringBuffer),                  \
-                                       "devAsynXXXArray::getIoIntInfo creating ring buffer");      \
-                /* Allocate array for each ring buffer element */                                  \
-                for (i=0; i<pPvt->ringSize; i++) {                                                 \
-                    pPvt->ringBuffer[i].pValue =                                                   \
-                        (EPICS_TYPE *)callocMustSucceed(                                           \
-                            pwf->nelm, sizeof(EPICS_TYPE),                                         \
-                            "devAsynXXXArray::getIoIntInfo creating ring element array");          \
-                }                                                                                  \
-            }                                                                                      \
-        }                                                                                          \
+        createRingBuffer(pr);                                                                      \
         status = pPvt->pArray->registerInterruptUser(                                              \
            pPvt->arrayPvt, pPvt->pasynUser,                                                        \
            pPvt->interruptCallback, pPvt, &pPvt->registrarPvt);                                    \
@@ -230,11 +267,11 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)               
                                                                                                    \
 static long initWfArrayOut(waveformRecord *pwf)                                                    \
 { return  initCommon((dbCommon *)pwf, (DBLINK *)&pwf->inp,                                         \
-    callbackWfOut, interruptCallbackOutput); }                                                     \
+    callbackWfOut, interruptCallback, 1); }                                                        \
                                                                                                    \
 static long initWfArrayIn(waveformRecord *pwf)                                                     \
 { return initCommon((dbCommon *)pwf, (DBLINK *)&pwf->inp,                                          \
-    callbackWfIn, interruptCallbackInput); }                                                       \
+    callbackWfIn, interruptCallback, 0); }                                                         \
                                                                                                    \
 static long processCommon(dbCommon *pr)                                                            \
 {                                                                                                  \
@@ -260,7 +297,7 @@ static long processCommon(dbCommon *pr)                                         
     }                                                                                              \
     if (newInputData) {                                                                            \
         if (pPvt->ringSize == 0){                                                                  \
-            /* Data has already been copied to the record in interruptCallbackInput */             \
+            /* Data has already been copied to the record in interruptCallback */                  \
             pwf->nord = pPvt->nord;                                                                \
             pPvt->gotValue--;                                                                      \
             if (pPvt->gotValue) {                                                                  \
@@ -367,7 +404,7 @@ static int getRingBufferValue(devAsynWfPvt *pPvt)                               
     return ret;                                                                                    \
 }                                                                                                  \
                                                                                                    \
-static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,                              \
+static void interruptCallback(void *drvPvt, asynUser *pasynUser,                                   \
                 EPICS_TYPE *value, size_t len)                                                     \
 {                                                                                                  \
     devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;                                                   \
@@ -389,7 +426,10 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
         pPvt->nord = (epicsUInt32)len;                                                             \
         if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus;                      \
         dbScanUnlock((dbCommon *)pwf);                                                             \
-        scanIoRequest(pPvt->ioScanPvt);                                                            \
+        if (pPvt->isOutput)                                                                        \
+            scanOnce((dbCommon *)pwf);                                                             \
+        else                                                                                       \
+            scanIoRequest(pPvt->ioScanPvt);                                                        \
     } else {                                                                                       \
         /* Using a ring buffer */                                                                  \
         ringBufferElement *rp;                                                                     \
@@ -417,21 +457,12 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,           
         } else {                                                                                   \
             /* We only need to request the record to process if we added a new                     \
              * element to the ring buffer, not if we just replaced an element. */                  \
-            scanIoRequest(pPvt->ioScanPvt);                                                        \
+            if (pPvt->isOutput)                                                                    \
+                scanOnce((dbCommon *)pwf);                                                         \
+            else                                                                                   \
+                scanIoRequest(pPvt->ioScanPvt);                                                    \
         }                                                                                          \
         epicsMutexUnlock(pPvt->ringBufferLock);                                                    \
     }                                                                                              \
-}                                                                                                  \
-                                                                                                   \
-static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,                             \
-                EPICS_TYPE *value, size_t len)                                                     \
-{                                                                                                  \
-    devAsynWfPvt *pPvt = (devAsynWfPvt *)drvPvt;                                                   \
-    dbCommon *pr = pPvt->pr;                                                                       \
-                                                                                                   \
-    asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                                   \
-        "%s %s::interruptCallbackOutput not supported yet!\n",                                     \
-        pr->name, driverName);                                                                     \
-    /* scanOnce(pr); */                                                                            \
 }                                                                                                  \
 
