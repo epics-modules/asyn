@@ -101,7 +101,7 @@ record(bo, "$(P)BoInt32")
 {
    field(PINI, "1")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL, "0")
@@ -111,7 +111,7 @@ record(bo, "$(P)BoInt32RB")
 {
    field(PINI, "1")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL, "0")
@@ -121,7 +121,7 @@ record(bo, "$(P)BoInt32RB")
 record(bi, "$(P)BiInt32")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(TSE,  "$(TSE)")
@@ -132,7 +132,7 @@ record(mbbo, "$(P)MbboInt32")
 {
    field(PINI, "1")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "0")
    field(ONST, "Junk1")
@@ -152,7 +152,7 @@ record(mbbo, "$(P)MbboInt32RB")
 {
    field(PINI, "1")
    field(DTYP, "asynInt32")
-   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "0")
    field(ONST, "Junk1")
@@ -172,7 +172,7 @@ record(mbbo, "$(P)MbboInt32RB")
 record(mbbi, "$(P)MbbiInt32")
 {
    field(DTYP, "asynInt32")
-   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "0")
    field(ONST, "Junk1")
@@ -223,7 +223,7 @@ record(bo, "$(P)BoUInt32D")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL,  "0")
@@ -233,7 +233,7 @@ record(bo, "$(P)BoUInt32DRB")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(VAL,  "0")
@@ -243,7 +243,7 @@ record(bo, "$(P)BoUInt32DRB")
 record(bi, "$(P)BiUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
-   field(INP,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))UINT32D_VALUE")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
    field(ZNAM, "Junk")
    field(ONAM, "Garbage")
    field(TSE,  "$(TSE)")
@@ -254,7 +254,7 @@ record(mbbo, "$(P)MbboUInt32D")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "10")
    field(ONST, "Junk1")
@@ -268,7 +268,7 @@ record(mbbo, "$(P)MbboUInt32DRB")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "10")
    field(ONST, "Junk1")
@@ -282,7 +282,7 @@ record(mbbo, "$(P)MbboUInt32DRB")
 record(mbbi, "$(P)MbbiUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
-   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(ZRST, "Junk0")
    field(ZRVL, "10")
    field(ONST, "Junk1")
@@ -297,7 +297,7 @@ record(mbboDirect, "$(P)MbboDUInt32D")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(VAL,  "0")
 }
 
@@ -305,7 +305,7 @@ record(mbboDirect, "$(P)MbboDUInt32DRB")
 {
    field(PINI, "1")
    field(DTYP, "asynUInt32Digital")
-   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(VAL,  "0")
    info(asyn:READBACK,"1")
 }
@@ -313,7 +313,7 @@ record(mbboDirect, "$(P)MbboDUInt32DRB")
 record(mbbiDirect, "$(P)MbbiDUInt32D")
 {
    field(DTYP, "asynUInt32Digital")
-   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))UINT32D_VALUE")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
    field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
 }
@@ -366,6 +366,7 @@ record(stringout, "$(P)SoOctet")
    field(DTYP, "asynOctetWrite")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(VAL,  "test")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 record(stringout, "$(P)SoOctetRB")
@@ -375,6 +376,7 @@ record(stringout, "$(P)SoOctetRB")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(VAL,  "test")
    info(asyn:READBACK,"1")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 record(stringin, "$(P)SiOctet")
@@ -383,6 +385,7 @@ record(stringin, "$(P)SiOctet")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfOutOctet")
@@ -392,6 +395,7 @@ record(waveform, "$(P)WfOutOctet")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(NELM, "100")
    field(FTVL, "CHAR")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfOutOctetRB")
@@ -402,6 +406,7 @@ record(waveform, "$(P)WfOutOctetRB")
    field(NELM, "100")
    field(FTVL, "CHAR")
    info(asyn:READBACK,"1")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInOctet")
@@ -412,6 +417,7 @@ record(waveform, "$(P)WfInOctet")
    field(FTVL, "CHAR")
    field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
+   info("asyn:FIFO", "$(FIFO)")
 }
 
 
@@ -426,6 +432,7 @@ record(waveform, "$(P)WfInt8In")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt8Out")
@@ -435,6 +442,7 @@ record(waveform, "$(P)WfInt8Out")
     field(FTVL, "CHAR")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt8OutRB")
@@ -445,6 +453,7 @@ record(waveform, "$(P)WfInt8OutRB")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt16In")
@@ -455,6 +464,7 @@ record(waveform, "$(P)WfInt16In")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt16Out")
@@ -464,6 +474,7 @@ record(waveform, "$(P)WfInt16Out")
     field(FTVL, "SHORT")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt16OutRB")
@@ -484,6 +495,7 @@ record(waveform, "$(P)WfInt32In")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInt32Out")
@@ -503,6 +515,7 @@ record(waveform, "$(P)WfInt32OutRB")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfFloat32In")
@@ -513,6 +526,7 @@ record(waveform, "$(P)WfFloat32In")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfFloat32Out")
@@ -532,6 +546,7 @@ record(waveform, "$(P)WfFloat32OutRB")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfFloat64In")
@@ -542,6 +557,7 @@ record(waveform, "$(P)WfFloat64In")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfFloat64Out")
@@ -551,6 +567,7 @@ record(waveform, "$(P)WfFloat64Out")
     field(FTVL, "DOUBLE")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 record(waveform, "$(P)WfFloat64OutRB")
@@ -561,6 +578,7 @@ record(waveform, "$(P)WfFloat64OutRB")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
     info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
 }
 
 ###################################################################
