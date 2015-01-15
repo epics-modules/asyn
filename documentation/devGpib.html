@@ -15,10 +15,14 @@
     <p>
       <span style="font-weight: bold; font-size: 14pt">October 19, 2007</span></p>
     <hr />
+    <h2 style="color: red">
+      NOTE: This module is obsolete and should not be used for new applications. <a href="http://epics.web.psi.ch/software/streamdevice">
+        StreamDevice</a> should be used instead.</h2>
+    <hr />
     <h2>
       Contents</h2>
-    </div>
-    <p>
+  </div>
+  <p>
     <a href="#Introduction">Introduction</a>
     <br />
     <a href="#Acknowledgments">Acknowledgments</a>
@@ -34,10 +38,10 @@
     <a href="#ChangesToPrevious">Changes to Previous EPICS GPIB Support</a><br />
     <a href="#GeneralGPIBProblems">General GPIB Problems</a><br />
     <a href="#LicenseAgreement">License Agreement</a><br />
-    </p>
-    <hr />
-    <h2 style="text-align:center">
-      License Agreement</h2>
+  </p>
+  <hr />
+  <h2 style="text-align: center">
+    License Agreement</h2>
   <p>
     This product is available via the open source license described at the end of this
     document.</p>
@@ -339,12 +343,12 @@ static long init_ai(int parm)
   <p>
     The actual DSETs are created by devGpib.h based on which DSET_xx definitions are
     defined. A #define must appear for each record type required. DSET_AI must be defined
-    because an init_ai routine must be implemented as described below.
-    If you also define DSET_AIRAW the associated .dbd file  must specify different
-    DTYP strings for the DSET_AI and DSET_AIRAW device declarations.</p>
+    because an init_ai routine must be implemented as described below. If you also define
+    DSET_AIRAW the associated .dbd file must specify different DTYP strings for the
+    DSET_AI and DSET_AIRAW device declarations.</p>
   <p>
-    Likewise, if you define both DSET_AO and DSET_AORAW the associated .dbd file  must specify different
-    DTYP strings for the DSET_AO and DSET_AORAW device declarations.</p>
+    Likewise, if you define both DSET_AO and DSET_AORAW the associated .dbd file must
+    specify different DTYP strings for the DSET_AO and DSET_AORAW device declarations.</p>
   <p>
     devCommonGpib provides device support for many standard record types. It is also
     possible to create custom support, but this is more difficult.</p>
