@@ -1,0 +1,599 @@
+###################################################################
+#  This record controls turning error status on and off           # 
+###################################################################
+record(mbbo, "$(P)StatusReturn")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))STATUS_RETURN")
+    field(ZRST, "Junk")
+    field(ZRVL, "0")
+}
+
+###################################################################
+#  This record controls the order of enum strings, values,        # 
+#  and severities                                                 # 
+###################################################################
+record(bo, "$(P)EnumOrder")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ENUM_ORDER")
+    field(ZNAM, "Normal")
+    field(ONAM, "Reversed")
+}
+
+###################################################################
+#  This record triggers an update                                 # 
+###################################################################
+record(bo, "$(P)DoUpdate")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DO_UPDATE")
+    field(ZNAM, "Done")
+    field(ONAM, "Update")
+    field(SCAN, "1 second")
+}
+
+###################################################################
+#  Records that use devAsynInt32                                  #
+###################################################################
+
+record(ao, "$(P)AoInt32")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+}
+
+record(ao, "$(P)AoInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(ai, "$(P)AiInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(ai, "$(P)AiInt32Average")
+{
+   field(DTYP, "asynInt32Average")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(PREC, "1")
+   field(SCAN, "1 second")
+}
+
+record(longout, "$(P)LongoutInt32")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+}
+
+record(longout, "$(P)LongoutInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(longin, "$(P)LonginInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(bo, "$(P)BoInt32")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL, "0")
+}
+
+record(bo, "$(P)BoInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(bi, "$(P)BiInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(mbbo, "$(P)MbboInt32")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "0")
+   field(ONST, "Junk1")
+   field(ONVL, "10")
+   field(TWST, "Junk2")
+   field(TWVL, "20")
+   field(THST, "Junk3")
+   field(THVL, "30")
+   field(FRST, "Junk4")
+   field(FRVL, "40")
+   field(FVST, "Junk5")
+   field(FVVL, "50")
+   field(VAL, "0")
+}
+
+record(mbbo, "$(P)MbboInt32RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "0")
+   field(ONST, "Junk1")
+   field(ONVL, "10")
+   field(TWST, "Junk2")
+   field(TWVL, "20")
+   field(THST, "Junk3")
+   field(THVL, "30")
+   field(FRST, "Junk4")
+   field(FRVL, "40")
+   field(FVST, "Junk5")
+   field(FVVL, "50")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(mbbi, "$(P)MbbiInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MULTIBIT_INT32_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "0")
+   field(ONST, "Junk1")
+   field(ONVL, "10")
+   field(TWST, "Junk2")
+   field(TWVL, "20")
+   field(THST, "Junk3")
+   field(THVL, "30")
+   field(FRST, "Junk4")
+   field(FRVL, "40")
+   field(FVST, "Junk5")
+   field(FVVL, "50")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+
+###################################################################
+#  Records that use devAsynUInt32Digital                          #
+###################################################################
+
+record(longout, "$(P)LongoutUInt32D")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
+   field(VAL, "0")
+}
+
+record(longout, "$(P)LongoutUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(longin, "$(P)LonginUInt32D")
+{
+   field(DTYP, "asynUInt32Digital")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(bo, "$(P)BoUInt32D")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL,  "0")
+}
+
+record(bo, "$(P)BoUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
+}
+
+record(bi, "$(P)BiUInt32D")
+{
+   field(DTYP, "asynUInt32Digital")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
+   field(ZNAM, "Junk")
+   field(ONAM, "Garbage")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(mbbo, "$(P)MbboUInt32D")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "10")
+   field(ONST, "Junk1")
+   field(ONVL, "20")
+   field(TWST, "Junk2")
+   field(TWVL, "30")
+   field(VAL,  "0")
+}
+
+record(mbbo, "$(P)MbboUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "10")
+   field(ONST, "Junk1")
+   field(ONVL, "20")
+   field(TWST, "Junk2")
+   field(TWVL, "30")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
+}
+
+record(mbbi, "$(P)MbbiUInt32D")
+{
+   field(DTYP, "asynUInt32Digital")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(ZRST, "Junk0")
+   field(ZRVL, "10")
+   field(ONST, "Junk1")
+   field(ONVL, "20")
+   field(TWST, "Junk2")
+   field(TWVL, "30")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(mbboDirect, "$(P)MbboDUInt32D")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(VAL,  "0")
+}
+
+record(mbboDirect, "$(P)MbboDUInt32DRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(VAL,  "0")
+   info(asyn:READBACK,"1")
+}
+
+record(mbbiDirect, "$(P)MbbiDUInt32D")
+{
+   field(DTYP, "asynUInt32Digital")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+
+###################################################################
+#  Records that use devAsynFloat64                                #
+###################################################################
+
+record(ao, "$(P)AoFloat64")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+}
+
+record(ao, "$(P)AoFloat64RB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+   info(asyn:READBACK,"1")
+}
+
+record(ai, "$(P)AiFloat64")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(ai, "$(P)AiFloat64Average")
+{
+   field(DTYP, "asynFloat64Average")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+   field(SCAN, "1 second")
+}
+
+###################################################################
+#  Records that use devAsynOctet                                  #
+###################################################################
+record(stringout, "$(P)SoOctet")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(VAL,  "test")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+record(stringout, "$(P)SoOctetRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(VAL,  "test")
+   info(asyn:READBACK,"1")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+record(stringin, "$(P)SiOctet")
+{
+   field(DTYP, "asynOctetRead")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfOutOctet")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(NELM, "100")
+   field(FTVL, "CHAR")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfOutOctetRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynOctetWrite")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(NELM, "100")
+   field(FTVL, "CHAR")
+   info(asyn:READBACK,"1")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInOctet")
+{
+   field(DTYP, "asynOctetRead")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(NELM, "100")
+   field(FTVL, "CHAR")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+   info("asyn:FIFO", "$(FIFO)")
+}
+
+
+###################################################################
+#  Records that use devAsynXXXArray                               #
+###################################################################
+record(waveform, "$(P)WfInt8In")
+{
+    field(DTYP, "asynInt8ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt8Out")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt8OutRB")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt16In")
+{
+    field(DTYP, "asynInt16ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt16Out")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt16OutRB")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(waveform, "$(P)WfInt32In")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt32Out")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfInt32OutRB")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfFloat32In")
+{
+    field(DTYP, "asynFloat32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfFloat32Out")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfFloat32OutRB")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfFloat64In")
+{
+    field(DTYP, "asynFloat64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfFloat64Out")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfFloat64OutRB")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+###################################################################
+#  asynRecord to test I/O Intr scanning                           #
+###################################################################
+record(asyn, "$(P)asynTest")
+{
+    field(DTYP, "asynRecordDevice")
+    field(PORT, "$(PORT)")
+    field(ADDR, "$(ADDR)")
+    field(DRVINFO, "OCTET_VALUE")
+    field(IMAX, "500")
+    field(IFMT, "Binary")
+    field(TMOT, "$(TIMEOUT)")
+    field(TMOD, "Read")
+    field(SCAN, "$(SCAN)")
+}
+

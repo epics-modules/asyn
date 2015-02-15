@@ -1,0 +1,851 @@
+
+file {
+	name="/home/epics/devel/asyn/medm/asynRegister.adl"
+	version=030102
+}
+display {
+	object {
+		x=570
+		y=110
+		width=510
+		height=345
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+composite {
+	object {
+		x=6
+		y=43
+		width=424
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=6
+				y=43
+				width=140
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Timeout (sec):"
+		}
+		"text entry" {
+			object {
+				x=151
+				y=43
+				width=50
+				height=20
+			}
+			control {
+				chan="$(P)$(R).TMOT"
+				clr=14
+				bclr=51
+			}
+			limits {
+			}
+		}
+		composite {
+			object {
+				x=225
+				y=43
+				width=205
+				height=20
+			}
+			"composite name"=""
+			children {
+				menu {
+					object {
+						x=320
+						y=43
+						width=110
+						height=20
+					}
+					control {
+						chan="$(P)$(R).TMOD"
+						clr=14
+						bclr=51
+					}
+				}
+				text {
+					object {
+						x=225
+						y=43
+						width=90
+						height=20
+					}
+					"basic attribute" {
+						clr=14
+					}
+					textix="Transfer:"
+					align="horiz. right"
+				}
+			}
+		}
+	}
+}
+text {
+	object {
+		x=10
+		y=284
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="I/O Status:"
+}
+text {
+	object {
+		x=217
+		y=284
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="I/O Severity:"
+}
+"text update" {
+	object {
+		x=122
+		y=284
+		width=85
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).STAT"
+		clr=14
+		bclr=2
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=349
+		y=284
+		width=85
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).SEVR"
+		clr=14
+		bclr=2
+	}
+	clrmod="alarm"
+	limits {
+	}
+}
+rectangle {
+	object {
+		x=6
+		y=279
+		width=430
+		height=25
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+}
+composite {
+	object {
+		x=9
+		y=310
+		width=250
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=9
+				y=310
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Scan:"
+			align="horiz. right"
+		}
+		menu {
+			object {
+				x=64
+				y=310
+				width=110
+				height=20
+			}
+			control {
+				chan="$(P)$(R).SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"message button" {
+			object {
+				x=179
+				y=310
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)$(R).PROC"
+				clr=14
+				bclr=51
+			}
+			label="Process"
+			press_msg="1"
+		}
+	}
+}
+composite {
+	object {
+		x=135
+		y=5
+		width=241
+		height=29
+	}
+	"composite name"=""
+	children {
+		rectangle {
+			object {
+				x=135
+				y=5
+				width=241
+				height=29
+			}
+			"basic attribute" {
+				clr=2
+			}
+		}
+		text {
+			object {
+				x=139
+				y=9
+				width=236
+				height=21
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="$(P)$(R)"
+			align="horiz. centered"
+		}
+	}
+}
+text {
+	object {
+		x=27
+		y=251
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Mask (hex):"
+}
+text {
+	object {
+		x=17
+		y=226
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Input (hex):"
+}
+text {
+	object {
+		x=77
+		y=201
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Input:"
+}
+text {
+	object {
+		x=7
+		y=176
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Output (hex):"
+}
+text {
+	object {
+		x=67
+		y=151
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Output:"
+}
+menu {
+	object {
+		x=5
+		y=101
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IFACE"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=37
+		y=76
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Interface:"
+}
+"text update" {
+	object {
+		x=147
+		y=226
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).I32INP"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=147
+		y=201
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).I32INP"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=147
+		y=176
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).I32OUT"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=147
+		y=151
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).I32OUT"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=167
+		y=126
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=1"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Active"
+}
+text {
+	object {
+		x=157
+		y=126
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="!(A=1)"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Inactive"
+}
+text {
+	object {
+		x=152
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).I32IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=142
+		y=101
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).I32IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=172
+		y=76
+		width=50
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Int32"
+}
+"text entry" {
+	object {
+		x=272
+		y=251
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32MASK"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=272
+		y=226
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).UI32INP"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=272
+		y=201
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).UI32INP"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=272
+		y=176
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32OUT"
+		clr=14
+		bclr=51
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=272
+		y=151
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UI32OUT"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=292
+		y=126
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=2"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Active"
+}
+text {
+	object {
+		x=282
+		y=126
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="!(A=2)"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Inactive"
+}
+text {
+	object {
+		x=267
+		y=101
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).UI32IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=277
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).UI32IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=257
+		y=76
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="UInt32Digital"
+}
+"text update" {
+	object {
+		x=397
+		y=201
+		width=100
+		height=20
+	}
+	monitor {
+		chan="$(P)$(R).F64INP"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=397
+		y=151
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)$(R).F64OUT"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=417
+		y=126
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="A=3"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Active"
+}
+text {
+	object {
+		x=407
+		y=126
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="calc"
+		calc="!(A=3)"
+		chan="$(P)$(R).IFACE"
+	}
+	textix="Inactive"
+}
+text {
+	object {
+		x=392
+		y=101
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).F64IV"
+	}
+	textix="Unsupported"
+}
+text {
+	object {
+		x=402
+		y=101
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=17
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).F64IV"
+	}
+	textix="Supported"
+}
+text {
+	object {
+		x=412
+		y=76
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Float64"
+}
+text {
+	object {
+		x=364
+		y=310
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+		fill="outline"
+	}
+	textix="More..."
+}
+"related display" {
+	object {
+		x=439
+		y=310
+		width=56
+		height=20
+	}
+	display[0] {
+		label="Record parameters"
+		name="asynRecord.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[1] {
+		label="Register interfaces I/O"
+		name="asynRegister.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[2] {
+		label="Serial port parameters"
+		name="asynSerialPortSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[3] {
+		label="GPIB parameters"
+		name="asynGPIBSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	clr=14
+	bclr=51
+}

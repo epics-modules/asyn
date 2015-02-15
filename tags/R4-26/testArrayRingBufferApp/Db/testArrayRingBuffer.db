@@ -1,0 +1,154 @@
+###################################################################
+#  These records control run/stop                                 # 
+###################################################################
+record(bo, "$(P)$(R)Run")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))RUN_STOP")
+    field(ZNAM, "Stop")
+    field(ONAM, "Run")
+}
+
+record(bi, "$(P)$(R)Run_RBV")
+{
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))RUN_STOP")
+    field(ZNAM, "Done")
+    field(ZSV,  "NO_ALARM")
+    field(ONAM, "Running")
+    field(OSV,  "MINOR")
+    field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the maximum array length                        # 
+###################################################################
+
+record(longin, "$(P)$(R)MaxArrayLength_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))MAX_ARRAY_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record contains the ring buffer size                      # 
+###################################################################
+
+record(longin, "$(P)$(R)RingBufferSize_RBV")
+{
+   field(VAL, "$(RING_SIZE)")
+}
+
+###################################################################
+#  These records are the desired array length                     # 
+###################################################################
+
+record(longout, "$(P)$(R)ArrayLength")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_LENGTH")
+}
+
+record(longin, "$(P)$(R)ArrayLength_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the burst length                             # 
+###################################################################
+
+record(longout, "$(P)$(R)BurstLength")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_LENGTH")
+   field(VAL,  "5")
+}
+
+record(longin, "$(P)$(R)BurstLength_RBV")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_LENGTH")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the burst delay                              # 
+###################################################################
+
+record(ao, "$(P)$(R)BurstDelay")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_DELAY")
+   field(PREC, "5")
+   field(VAL,  "0.0")
+}
+
+record(ai, "$(P)$(R)BurstDelay_RBV")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BURST_DELAY")
+   field(PREC, "5")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  These records are the loop delay                              #
+###################################################################
+record(ao, "$(P)$(R)LoopDelay")
+{
+   field(PINI, "1")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_DELAY")
+   field(PREC, "5")
+   field(VAL,  "0.5")
+}
+
+record(ai, "$(P)$(R)LoopDelay_RBV")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))LOOP_DELAY")
+   field(PREC, "5")
+   field(SCAN, "I/O Intr")
+}
+
+###################################################################
+#  This record is the scalar data                                 # 
+###################################################################
+
+record(longin, "$(P)$(R)ScalarData")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SCALAR_DATA")
+   field(SCAN, "I/O Intr")
+   info(asyn:FIFO, "$(RING_SIZE)")
+}
+
+###################################################################
+#  These records are the array data with and without ring buffer  #
+###################################################################
+record(waveform, "$(P)$(R)ArrayDataWRB")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+    field(FTVL, "LONG")
+    field(NELM, "$(NELM)")
+    field(SCAN, "I/O Intr")
+    info(asyn:FIFO, "$(RING_SIZE)")
+}
+
+record(waveform, "$(P)$(R)ArrayDataNRB")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+    field(FTVL, "LONG")
+    field(NELM, "$(NELM)")
+    field(SCAN, "I/O Intr")
+}
