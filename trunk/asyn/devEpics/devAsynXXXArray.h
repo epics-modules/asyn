@@ -57,6 +57,7 @@ typedef struct devAsynWfPvt{                                                    
     char                *portName;                                                                 \
     char                *userParam;                                                                \
     int                 addr;                                                                      \
+    asynStatus          previousQueueRequestStatus;                                                \
 } devAsynWfPvt;                                                                                    \
                                                                                                    \
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);                                 \
@@ -265,6 +266,22 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)               
     return INIT_OK;                                                                                \
 }                                                                                                  \
                                                                                                    \
+static void reportQueueRequestStatus(devAsynWfPvt *pPvt, asynStatus status)                        \
+{                                                                                                  \
+    if (pPvt->previousQueueRequestStatus != status) {                                              \
+        pPvt->previousQueueRequestStatus = status;                                                 \
+        if (status == asynSuccess) {                                                               \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                           \
+                "%s %s queueRequest status returned to normal\n",                                  \
+                pPvt->pr->name, driverName);                                                       \
+        } else {                                                                                   \
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                           \
+                "%s %s queueRequest %s\n",                                                         \
+                pPvt->pr->name, driverName, pPvt->pasynUser->errorMessage);                        \
+        }                                                                                          \
+    }                                                                                              \
+}                                                                                                  \
+                                                                                                   \
 static long initWfArrayOut(waveformRecord *pwf)                                                    \
 { return  initCommon((dbCommon *)pwf, (DBLINK *)&pwf->inp,                                         \
     callbackWfOut, interruptCallback, 1); }                                                        \
@@ -289,11 +306,7 @@ static long processCommon(dbCommon *pr)                                         
         pPvt->status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);                          \
         if((pPvt->status==asynSuccess) && pPvt->canBlock) return 0;                                \
         if(pPvt->canBlock) pr->pact = 0;                                                           \
-        if (pPvt->status != asynSuccess) {                                                         \
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,                                           \
-                "%s %s::processCommon, error queuing request %s\n",                                \
-                 pr->name, driverName, pPvt->pasynUser->errorMessage);                             \
-        }                                                                                          \
+        reportQueueRequestStatus(pPvt, pPvt->status);                                                    \
     }                                                                                              \
     if (newInputData) {                                                                            \
         if (pPvt->ringSize == 0){                                                                  \

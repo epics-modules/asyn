@@ -79,6 +79,7 @@ typedef struct devPvt{
     char              *portName;
     char              *userParam;
     int               addr;
+    asynStatus        previousQueueRequestStatus;
 }devPvt;
 
 static long initCommon(dbCommon *pr, DBLINK *plink,
@@ -433,6 +434,23 @@ static int getCallbackValue(devPvt *pPvt)
     return ret;
 }
 
+static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
+{
+    pPvt->result.status = status;
+    if (pPvt->previousQueueRequestStatus != status) {
+        pPvt->previousQueueRequestStatus = status;
+        if (status == asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynFloat64 queueRequest status returned to normal\n", 
+                pPvt->pr->name);
+        } else {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynFloat64 queueRequest %s\n", 
+                pPvt->pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+}
+
 
 static long initAi(aiRecord *pai)
 {
@@ -453,12 +471,7 @@ static long processAi(aiRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64 queueRequest %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     pr->val = pPvt->result.value; 
     pr->time = pPvt->result.time; 
@@ -511,12 +524,7 @@ static long processAo(aoRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64:process error queuing request %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     if(pPvt->result.status != asynSuccess) {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status,
