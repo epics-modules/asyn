@@ -2766,7 +2766,6 @@ asynStatus asynPortDriver::connect(asynUser *pasynUser)
     static const char *functionName = "connect";
     
     status = getAddress(pasynUser, &addr); if (status != asynSuccess) return(status);
-    
     pasynManager->exceptionConnect(pasynUser);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%s:%s:, pasynUser=%p\n", 
