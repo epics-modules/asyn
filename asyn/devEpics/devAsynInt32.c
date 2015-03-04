@@ -104,6 +104,7 @@ typedef struct devInt32Pvt{
     char              *enumStrings[MAX_ENUM_STATES];
     int               enumValues[MAX_ENUM_STATES];
     int               enumSeverities[MAX_ENUM_STATES];
+    asynStatus        previousQueueRequestStatus;
 }devInt32Pvt;
 
 static void setEnums(char *outStrings, int *outVals, epicsEnum16 *outSeverities, 
@@ -671,6 +672,24 @@ static int getCallbackValue(devInt32Pvt *pPvt)
     epicsMutexUnlock(pPvt->ringBufferLock);
     return ret;
 }
+
+static void reportQueueRequestStatus(devInt32Pvt *pPvt, asynStatus status)
+{
+    pPvt->result.status = status;
+    if (pPvt->previousQueueRequestStatus != status) {
+        pPvt->previousQueueRequestStatus = status;
+        if (status == asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynInt32 queueRequest status returned to normal\n", 
+                pPvt->pr->name);
+        } else {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynInt32 queueRequest %s\n", 
+                pPvt->pr->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+}
+
 
 static long initAi(aiRecord *pr)
 {
@@ -701,12 +720,7 @@ static long processAi(aiRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n", 
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     pr->rval = pPvt->result.value; 
     pr->time = pPvt->result.time; 
@@ -851,12 +865,7 @@ static long processAo(aoRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     if(pPvt->result.status != asynSuccess) {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
@@ -889,12 +898,7 @@ static long processLi(longinRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n", 
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     pr->val = pPvt->result.value;
     pr->time = pPvt->result.time;
@@ -948,12 +952,7 @@ static long processLo(longoutRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     if(pPvt->result.status != asynSuccess) {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
@@ -985,12 +984,7 @@ static long processBi(biRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n", 
-                pr->name,pPvt->pasynUser->errorMessage);
-        } 
+        reportQueueRequestStatus(pPvt, status);
     }
     pr->rval = pPvt->result.value;
     pr->time = pPvt->result.time;
@@ -1045,12 +1039,7 @@ static long processBo(boRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32::processCommon, error queuing request %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     if(pPvt->result.status != asynSuccess) {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
@@ -1084,12 +1073,7 @@ static long processMbbi(mbbiRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32 queueRequest %s\n", 
-                pr->name,pPvt->pasynUser->errorMessage);
-        } 
+        reportQueueRequestStatus(pPvt, status);
     }
     pr->rval = pPvt->result.value & pr->mask;
     pr->time = pPvt->result.time;
@@ -1163,12 +1147,7 @@ static long processMbbo(mbboRecord *pr)
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
-        if(status != asynSuccess) {
-            pPvt->result.status = status;
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynInt32::processCommon, error queuing request %s\n",
-                pr->name,pPvt->pasynUser->errorMessage);
-        }
+        reportQueueRequestStatus(pPvt, status);
     }
     if(pPvt->result.status != asynSuccess) {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,

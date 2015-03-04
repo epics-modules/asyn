@@ -109,6 +109,7 @@ typedef struct devPvt {
     epicsAlarmCondition alarmStat;
     epicsAlarmSeverity  alarmSevr;
     interruptCallbackOctet interruptCallback;
+    asynStatus          previousQueueRequestStatus;
 } devPvt;
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback, 
@@ -553,6 +554,21 @@ static asynStatus readIt(asynUser *pasynUser,char *message,
     return status;
 }
 
+static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
+{
+    if (pPvt->previousQueueRequestStatus != status) {
+        pPvt->previousQueueRequestStatus = status;
+        if (status == asynSuccess) {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynOctet queueRequest status returned to normal\n", 
+                pPvt->precord->name);
+        } else {
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
+                "%s devAsynOctet queueRequest %s\n", 
+                pPvt->precord->name,pPvt->pasynUser->errorMessage);
+        }
+    }
+}
 static long processCommon(dbCommon *precord)
 {
     devPvt *pdevPvt = (devPvt *)precord->dpvt;
@@ -572,10 +588,8 @@ static long processCommon(dbCommon *precord)
            pdevPvt->pasynUser, asynQueuePriorityMedium, 0.0);
         if((status==asynSuccess) && pdevPvt->canBlock) return 0;
         if(pdevPvt->canBlock) precord->pact = 0;
+        reportQueueRequestStatus(pdevPvt, status);
         if (status != asynSuccess) {
-            asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s::processCommon, error queuing request %s\n", 
-                precord->name, driverName, pdevPvt->pasynUser->errorMessage);
             pasynEpicsUtils->asynStatusToEpicsAlarm(status, 
                                                     pdevPvt->isOutput ? WRITE_ALARM : READ_ALARM, 
                                                     &pdevPvt->alarmStat,
