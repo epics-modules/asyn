@@ -675,7 +675,7 @@ static int getCallbackValue(devInt32Pvt *pPvt)
 
 static void reportQueueRequestStatus(devInt32Pvt *pPvt, asynStatus status)
 {
-    pPvt->result.status = status;
+    if (status != asynSuccess) pPvt->result.status = status;
     if (pPvt->previousQueueRequestStatus != status) {
         pPvt->previousQueueRequestStatus = status;
         if (status == asynSuccess) {
