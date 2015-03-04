@@ -1475,7 +1475,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                     "port %s or device %d not connected",pport->portName,addr);
                 epicsMutexUnlock(pport->asynManagerLock);
-                return asynError;
+                return asynDisconnected;
             }
         }
         epicsMutexUnlock(pport->asynManagerLock);
