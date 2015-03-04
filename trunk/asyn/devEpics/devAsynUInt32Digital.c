@@ -580,7 +580,7 @@ static int computeShift(epicsUInt32 mask)
 
 static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
 {
-    pPvt->result.status = status;
+    if (status != asynSuccess) pPvt->result.status = status;
     if (pPvt->previousQueueRequestStatus != status) {
         pPvt->previousQueueRequestStatus = status;
         if (status == asynSuccess) {
