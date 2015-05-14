@@ -12,6 +12,36 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-27</h2>
+    <h2>
+      May XXX, 2015</h2>
+  </div>
+  <h3>
+    Repository location</h3>
+  <p>
+    The source code repository was move from <a href="https://svn.aps.anl.gov/epics/asyn">
+      https://svn.aps.anl.gov/epics/asyn</a> to <a href="https://github.com/epics-modules/asyn">
+        https://github.com/epics-modules/asyn</a>. This should make it easier for others
+    to collaborate in the development of asyn.</p>
+  <h3>
+    devEpics</h3>
+  <ul>
+    <li>Changed error reporting if pasynManager->queueRequest returned an error. Previously
+      error messages were printed on every call, which would cause a large number of messages
+      if the port was disconnected and records were periodically processing. Now an error
+      message is only printed when the status return from pasynManager->queueRequest changes,
+      so there will be single message for each record when a port disconnects and a single
+      message when it reconnects.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Changed the status return from pasynManager->queueRequest from asynError to asynDisconnected
+      if a port with ASYN_CANBLOCK=0 is disconencted.</li>
+  </ul>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-26</h2>
     <h2>
       February 15, 2015</h2>
