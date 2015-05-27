@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/epics-modules/asyn.svg?branch=master)](https://travis-ci.org/epics-modules/asyn)
+
 asyn
 ====
 This is a general purpose facility for interfacing device specific

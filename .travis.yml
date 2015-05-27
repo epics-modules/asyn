@@ -1,0 +1,32 @@
+language: cpp
+compiler: gcc
+
+env:
+  - EPICS_BASE=/usr/lib/epics EPICS_HOST_ARCH=linux-x86_64
+  
+before_install:
+  # Enabling the NSLS-II EPICS debian package repositories
+  - curl http://epics.nsls2.bnl.gov/debian/repo-key.pub | sudo apt-key add -
+  - echo "deb http://epics.nsls2.bnl.gov/debian/ wheezy main contrib" | sudo tee -a /etc/apt/sources.list
+  - echo "deb-src http://epics.nsls2.bnl.gov/debian/ wheezy main contrib" | sudo tee -a /etc/apt/sources.list
+  
+  # Installing EPICS base
+  - sudo apt-get update -qq
+  - sudo apt-get install epics-dev epics-synapps-dev
+  
+  # Setup configure/RELEASE for the environment
+  - echo "EPICS_BASE=/usr/lib/epics" > configure/RELEASE
+  - echo "SNCSEQ=/usr/lib/epics" >> configure/RELEASE
+
+install: 
+  # Build the module
+  - make
+
+# Run the tests. Currently we have no fully automatic tests to run, 
+# so we just list the build products...
+script:
+  - ls bin/linux-x86_64
+  - ls lib/linux-x86_64
+  - ls include
+
+
