@@ -23,7 +23,7 @@ epicsShareFunc int drvAsynIPPortConfigure(const char *portName,
                                           const char *hostInfo,
                                           unsigned int priority,
                                           int noAutoConnect,
-                                          int noProcessEos);
+                                          int userFlags);
 
 #ifdef __cplusplus
 }
