@@ -5479,6 +5479,11 @@ asynOctetSetOutputEos("A1",0,"\r")
   <pre>   drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,
         noProcessEos)</pre>
   <p>
+    or with the <tt>drvAsynIPPortConfigure2</tt>
+  command:</p>
+  <pre>   drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,
+        noProcessEos, userFlags)</pre>
+  <p>
     where the arguments are:</p>
   <ul>
     <li>portName - The portName that is registered with asynManager.</li>
@@ -5513,6 +5518,13 @@ asynOctetSetOutputEos("A1",0,"\r")
       connect. Non-zero if explicit connect command must be issued.</li>
     <li>noProcessEos If 0 then asynInterposeEosConfig is called specifying both processEosIn
       and processEosOut.</li>
+    <li>userFlags: bit-wise ored:
+      <ul>
+        <li>Bit 0 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will 
+          be closed when read() returns a timeout. </li>
+        <li>Bit 1--31 are reserved, set to zero. </li>
+      </ul>
+    </li>
   </ul>
   <p>
     Only asynOctet methods write, read, and flush are implemented. Calling the other
