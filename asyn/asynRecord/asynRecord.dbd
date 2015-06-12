@@ -365,11 +365,22 @@ recordtype(asyn) {
         special(SPC_MOD)
         menu(serialBAUD)
     }
+    field(PBAUD,DBF_MENU) {
+        prompt("Last valid BAUD")
+        interest(2)
+        special(SPC_NOMOD)
+        menu(serialBAUD)
+    }
     field(LBAUD,DBF_LONG) {
         prompt("Baud rate")
         promptgroup(GUI_INPUTS)
         interest(2)
         special(SPC_MOD)
+    }
+    field(PLBAUD,DBF_LONG) {
+        prompt("Last valid LBAUD")
+        interest(2)
+        special(SPC_NOMOD)
     }
     field(PRTY,DBF_MENU) {
         prompt("Parity")
