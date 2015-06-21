@@ -674,6 +674,7 @@ drvAsynSerialPortConfigure(char *portName,
 {
     ttyController_t *tty;
     asynStatus status;
+    char winTtyName[MAX_PATH];
 
 
     /*
@@ -704,7 +705,17 @@ drvAsynSerialPortConfigure(char *portName,
         return -1;
     }
     tty->commHandle = INVALID_HANDLE_VALUE;
-    tty->serialDeviceName = epicsStrDup(ttyName);
+    if ( (epicsStrnCaseCmp(ttyName, "COM", 3) == 0) && (strlen(ttyName) > 4) && (ttyName[3] >= '0') && (ttyName[3] <= '9') ) {
+        /* 
+         * we can open COM1 to COM9 directly as they are reserved names, but for higher ports like COM18 
+         * we need \\.\ prepended to access device rather than file namespace
+         */
+        epicsSnprintf(winTtyName, sizeof(winTtyName), "\\\\.\\%s", ttyName);
+    } 
+    else {
+        strncpy(winTtyName, ttyName, sizeof(winTtyName));
+    }   
+    tty->serialDeviceName = epicsStrDup(winTtyName);
     tty->portName = epicsStrDup(portName);
 
     /*
