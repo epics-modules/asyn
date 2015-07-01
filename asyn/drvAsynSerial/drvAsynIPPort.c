@@ -102,6 +102,7 @@ typedef struct {
     char              *portName;
     int                socketType;
     int                flags;
+    int                userFlags;
     SOCKET             fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -123,6 +124,8 @@ typedef struct {
 #define FLAG_SHUTDOWN                   0x4
 #define FLAG_NEED_LOOKUP                0x100
 #define FLAG_DONE_LOOKUP                0x200
+
+#define USERFLAG_CLOSE_ON_READ_TIMEOUT  0x1
 
 #ifdef FAKE_POLL
 /*
@@ -594,7 +597,9 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         tty->nRead += (unsigned long)thisRead;
     }
     if (thisRead < 0) {
-        if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {
+         int should_close = (tty->userFlags & USERFLAG_CLOSE_ON_READ_TIMEOUT) ||
+                            ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR));
+         if (should_close) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
@@ -680,13 +685,15 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 
 /*
  * Configure and register an IP socket from a hostInfo string
+ * Has userFlags as an extra parameter
  */
 epicsShareFunc int
-drvAsynIPPortConfigure(const char *portName,
+drvAsynIPPortConfigure2(const char *portName,
                        const char *hostInfo,
                        unsigned int priority,
                        int noAutoConnect,
-                       int noProcessEos)
+                       int noProcessEos,
+                       int userFlags)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -729,6 +736,7 @@ drvAsynIPPortConfigure(const char *portName,
     pasynOctet = (asynOctet *)(tty+1);
     tty->fd = INVALID_SOCKET;
     tty->flags = 0;
+    tty->userFlags = userFlags;
     tty->IPDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
 
@@ -877,6 +885,24 @@ drvAsynIPPortConfigure(const char *portName,
 }
 
 /*
+ * Configure and register an IP socket from a hostInfo string
+ */
+epicsShareFunc int
+drvAsynIPPortConfigure(const char *portName,
+                       const char *hostInfo,
+                       unsigned int priority,
+                       int noAutoConnect,
+                       int noProcessEos)
+{
+  return drvAsynIPPortConfigure2(portName,
+                                 hostInfo,
+                                 priority,
+                                 noAutoConnect,
+                                 noProcessEos,
+                                 0);
+}
+
+/*
  * IOC shell command registration
  */
 static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString};
@@ -884,18 +910,30 @@ static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocs
 static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynIPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
 static const iocshArg drvAsynIPPortConfigureArg4 = { "noProcessEos",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg5 = { "userFlags",iocshArgInt};
 static const iocshArg *drvAsynIPPortConfigureArgs[] = {
     &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
     &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
     &drvAsynIPPortConfigureArg4};
+static const iocshArg *drvAsynIPPortConfigure2Args[] = {
+    &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
+    &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
+    &drvAsynIPPortConfigureArg4, &drvAsynIPPortConfigureArg5};
 static const iocshFuncDef drvAsynIPPortConfigureFuncDef =
                       {"drvAsynIPPortConfigure",5,drvAsynIPPortConfigureArgs};
+static const iocshFuncDef drvAsynIPPortConfigure2FuncDef =
+                      {"drvAsynIPPortConfigure2",6,drvAsynIPPortConfigure2Args};
 static void drvAsynIPPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynIPPortConfigure(args[0].sval, args[1].sval, args[2].ival,
                            args[3].ival, args[4].ival);
 }
 
+static void drvAsynIPPortConfigure2CallFunc(const iocshArgBuf *args)
+{
+    drvAsynIPPortConfigure2(args[0].sval, args[1].sval, args[2].ival,
+                            args[3].ival, args[4].ival, args[5].ival);
+}
 /*
  * This routine is called before multitasking has started, so there's
  * no race condition in the test/set of firstTime.
@@ -906,6 +944,7 @@ drvAsynIPPortRegisterCommands(void)
     static int firstTime = 1;
     if (firstTime) {
         iocshRegister(&drvAsynIPPortConfigureFuncDef,drvAsynIPPortConfigureCallFunc);
+        iocshRegister(&drvAsynIPPortConfigure2FuncDef,drvAsynIPPortConfigure2CallFunc);
         firstTime = 0;
     }
 }
