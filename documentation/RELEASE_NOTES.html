@@ -50,14 +50,14 @@
     asynShellCommands</h3>
   <ul>
     <li>Added new command asynSetMinTimerPeriod, and corresponding C function. This command
-      is currently only implemented in the WIN32 architectures, and simply prints an error
-      messages on all other architectures. It allows reducing the minimum time for epicsThreadSleep()
+      is currently only implemented on the WIN32 architectures, and simply prints an error
+      message on all other architectures. It allows reducing the minimum time for epicsThreadSleep()
       from the default of 10 ms to the minimum supported Windows system value. On most
       systems this is 1 ms. Note that epicsThreadSleepQuantum() does not seem to report
       the correct value whether or not this function is called. On my system it always
-      reports 0.0156 seconds. Note that this function really has nothing to do with asyn,
-      and the equivalent functionality should probably be moved into EPICS base at some
-      time.</li>
+      reports 0.0156 seconds. Note also that this function really has nothing to do with
+      asyn, and the equivalent functionality should probably be moved into EPICS base
+      at some time.</li>
   </ul>
   <div style="text-align: center">
     <hr />
