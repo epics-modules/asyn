@@ -15,12 +15,18 @@
 #include <stdio.h>
 #include <errno.h>
 
+#include <epicsExit.h>
+#include <epicsThread.h>
 #include <epicsEvent.h>
 #include <epicsString.h>
 #include <epicsStdioRedirect.h>
 #include <iocsh.h>
 #include <gpHash.h>
 #include <registryFunction.h>
+
+#ifdef _WIN32
+  #include <windows.h>
+#endif
 
 #define epicsExportSharedSymbols
 #include <shareLib.h>
@@ -571,6 +577,8 @@ epicsShareFunc int
     if (isConnected) return asynSuccess; 
     return asynError;
 }
+
+
 static const iocshArg asynReportArg0 = {"level", iocshArgInt};
 static const iocshArg asynReportArg1 = {"port", iocshArgString};
 static const iocshArg *const asynReportArgs[] = {
@@ -1083,6 +1091,58 @@ epicsShareFunc int asynUnregisterTimeStampSource(const char *portName)
     return 0;
 }
 
+#ifdef _WIN32
+static unsigned int minPeriodMs;
+
+static void resetTimer(void *Pvt)
+{
+    /* printf("Calling timeEndPeriod(%d)\n", minPeriodMs); */
+    timeEndPeriod(minPeriodMs);
+}
+
+epicsShareFunc int asynSetMinTimerPeriod(double minPeriod)
+{
+    TIMECAPS timeCaps;
+    MMRESULT status;
+   
+    if (minPeriodMs == 0) { /* First time */
+        epicsAtExit(resetTimer, 0);
+    } else {
+        resetTimer(0);
+    }
+    
+    timeGetDevCaps(&timeCaps, sizeof(timeCaps));
+    /* printf("Minimum time=%d, maximum time=%d, sleepQuantum=%f\n", 
+      timeCaps.wPeriodMin, timeCaps.wPeriodMax, epicsThreadSleepQuantum()); */
+    minPeriodMs = (int)(minPeriod*1000. + 0.5);
+    if (minPeriodMs < timeCaps.wPeriodMin) minPeriodMs = timeCaps.wPeriodMin;
+    if (minPeriodMs > timeCaps.wPeriodMax) minPeriodMs = timeCaps.wPeriodMax;
+    status = timeBeginPeriod(minPeriodMs);
+    /* printf("Called timePeriodBegin(%d), status=%d, sleepQuantum=%f\n", 
+      minPeriodMs, status, epicsThreadSleepQuantum()); */
+    return (int)status; 
+}
+
+#else /* _WIN32 */
+
+epicsShareFunc int asynSetMinTimerPeriod(double minPeriod)
+{
+    printf("asynSetMinTimerPeriod is not currently supported on this OS\n");
+    return -1;
+}
+
+#endif /* _WIN32 */
+
+static const iocshArg asynSetMinTimerPeriodArg0 = { "minimum period", iocshArgDouble };
+static const iocshArg *asynSetMinTimerPeriodArgs[] = 
+    {&asynSetMinTimerPeriodArg0};
+static const iocshFuncDef asynSetMinTimerPeriodDef =
+    {"asynSetMinTimerPeriod", 1, asynSetMinTimerPeriodArgs};
+static void asynSetMinTimerPeriodCall(const iocshArgBuf *args)
+{
+    asynSetMinTimerPeriod(args[0].dval);
+}
+
 
 static void asynRegister(void)
 {
@@ -1113,5 +1173,6 @@ static void asynRegister(void)
     iocshRegister(&asynSetAutoConnectTimeoutDef,asynSetAutoConnectTimeoutCall);
     iocshRegister(&asynRegisterTimeStampSourceDef, asynRegisterTimeStampSourceCall);
     iocshRegister(&asynUnregisterTimeStampSourceDef, asynUnregisterTimeStampSourceCall);
+    iocshRegister(&asynSetMinTimerPeriodDef, asynSetMinTimerPeriodCall);
 }
 epicsExportRegistrar(asynRegister);
