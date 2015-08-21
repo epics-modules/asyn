@@ -28,7 +28,7 @@ ifeq ($(EPICS_LIBCOM_ONLY),YES)
 else
   asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 endif
-asyn_SYS_LIBS_WIN32 = ws2_32
+asyn_SYS_LIBS_WIN32 = ws2_32 Winmm
 asyn_SYS_LIBS_cygwin32 = $(CYGWIN_RPC_LIB)
 
 SRC_DIRS += $(ASYN)/asynDriver
