@@ -340,13 +340,14 @@ static long processCommon(dbCommon *pr)                                         
     }                                                                                              \
     if (pPvt->status == asynSuccess) {                                                             \
         pwf->udf = 0;                                                                              \
+        return 0;                                                                                  \
     } else {                                                                                       \
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,        \
                                                 INVALID_ALARM, &pPvt->alarmSevr);                  \
         recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);                                       \
+        pPvt->status = asynSuccess;                                                                \
+        return -1;                                                                                 \
     }                                                                                              \
-    pPvt->status = asynSuccess;                                                                    \
-    return 0;                                                                                      \
 }                                                                                                  \
                                                                                                    \
 static void callbackWfOut(asynUser *pasynUser)                                                     \
