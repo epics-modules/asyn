@@ -631,14 +631,14 @@ static long processCommon(dbCommon *precord)
     /* If interrupt callbacks set an error status put record in alarm */
     if (pdevPvt->status == asynSuccess) {
         pdevPvt->precord->udf = 0;
+        return 0;
     } else {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pdevPvt->status, READ_ALARM, &pdevPvt->alarmStat,
                                                 INVALID_ALARM, &pdevPvt->alarmSevr);
         recGblSetSevr(precord, pdevPvt->alarmStat, pdevPvt->alarmSevr);
+        pdevPvt->status = asynSuccess;
+        return -1;
     }
-    pdevPvt->status = asynSuccess;
-        
-    return 0;
 }
 
 static void finish(dbCommon *pr)
