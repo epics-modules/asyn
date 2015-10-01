@@ -811,6 +811,7 @@ static long processMbbi(mbbiRecord *pr)
     if(pPvt->result.status==asynSuccess) {
         pr->rval = pPvt->result.value & pr->mask; 
         pr->udf=0;
+        return 0;
     }
     else {
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
