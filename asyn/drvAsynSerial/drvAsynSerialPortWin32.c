@@ -705,10 +705,9 @@ drvAsynSerialPortConfigure(char *portName,
         return -1;
     }
     tty->commHandle = INVALID_HANDLE_VALUE;
-    if ( (epicsStrnCaseCmp(ttyName, "COM", 3) == 0) && (strlen(ttyName) > 4) && (ttyName[3] >= '0') && (ttyName[3] <= '9') ) {
+    if ( (epicsStrnCaseCmp(ttyName, "\\\\.\\", 4) != 0)) {
         /* 
-         * we can open COM1 to COM9 directly as they are reserved names, but for higher ports like COM18 
-         * we need \\.\ prepended to access device rather than file namespace
+         * The user did not pass a Windows device name, so prepend \\.\
          */
         epicsSnprintf(winTtyName, sizeof(winTtyName), "\\\\.\\%s", ttyName);
     } 
