@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-26</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-27</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 15, 2015</span></p>
+      <span style="font-weight: bold; font-size: 14pt">October 6, 2015</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -5511,12 +5511,12 @@ asynOctetSetOutputEos("A1",0,"\r")
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
       connect. Non-zero if explicit connect command must be issued.</li>
-    <li>userFlags: bit-wise ored:
+    <li>userFlags: bit-wise ORed:
       <ul>
-        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS
-          If 0 then asynInterposeEosConfig is called specifying both processEosIn and processEosOut. </li>
-        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will 
-          be closed when read() returns a timeout. </li>
+        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS If 0 then asynInterposeEosConfig is called specifying
+          both processEosIn and processEosOut. </li>
+        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will be closed when
+          read() returns a timeout. </li>
         <li>Bit 2--31 are reserved, set to zero. </li>
       </ul>
     </li>
