@@ -5513,10 +5513,10 @@ asynOctetSetOutputEos("A1",0,"\r")
       connect. Non-zero if explicit connect command must be issued.</li>
     <li>userFlags: bit-wise ORed:
       <ul>
-        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS If 0 then asynInterposeEosConfig is called specifying
+        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS. If 0 then asynInterposeEosConfig is called specifying
           both processEosIn and processEosOut. </li>
-        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will be closed when
-          read() returns a timeout. </li>
+        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT. If 1 then the (TCP) socket will be closed
+          when read() returns a timeout. </li>
         <li>Bit 2--31 are reserved, set to zero. </li>
       </ul>
     </li>
