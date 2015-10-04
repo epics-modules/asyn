@@ -14,21 +14,45 @@
     <h2>
       Release 4-27</h2>
     <h2>
-      August, 2015</h2>
+      October 6, 2015</h2>
   </div>
   <h3>
     Repository location</h3>
   <p>
-    The source code repository was move from <a href="https://svn.aps.anl.gov/epics/asyn">
+    The source code repository was moved from <a href="https://svn.aps.anl.gov/epics/asyn">
       https://svn.aps.anl.gov/epics/asyn</a> to <a href="https://github.com/epics-modules/asyn">
         https://github.com/epics-modules/asyn</a>. This should make it easier for others
     to collaborate in the development of asyn.</p>
   <h3>
     drvAsynSerialPortWin32.c</h3>
   <ul>
-    <li>Fix to automatically prefix COM port names larger than COM9 (e.g. COM10, COM11,
-      etc.) with "\.\". This is needed for all ports except COM1-COM9. Thanks to Freddie
-      Akeroyd for this fix.</li>
+    <li>Fix to automatically prefix COM port names with "\\.\" unless the port name already
+      begins with "\\.\". This is valid syntax for all COM ports and is required for all
+      ports except COM1-COM9. Note the when passing the port string from the iocsh if
+      the port name is in quotes then backslash characters should not be escaped, e.g.
+      "\\.\COM10". If the port name is not in quotes then the backslash characters must
+      be escaped, e.g. \\\\.\\COM10. Thanks to Freddie Akeroyd for the initial version
+      of this fix.</li>
+  </ul>
+  <h3>
+    drvAsynIPPort.c</h3>
+  <ul>
+    <li>Added the option to automatically close the port when there is a read timeout.
+      This was done by changing the syntax of the drvAsynIPConfigure command from<br />
+      <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,noProcessEos)</code>
+      to
+      <br />
+      <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,userFlags)</code><br />
+      userFlags: bit-wise ORed:
+      <ul>
+        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS If 0 then asynInterposeEosConfig is called specifying
+          both processEosIn and processEosOut. </li>
+        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will be closed when
+          read() returns a timeout. </li>
+        <li>Bit 2--31 are reserved, set to zero. </li>
+      </ul>
+      This change is backwards compatible since bit 0 is the same as the previous noProcessEos.
+      Thanks to Torsten Bogershausen for this change. </li>
   </ul>
   <h3>
     devEpics</h3>
@@ -39,12 +63,23 @@
       message is only printed when the status return from pasynManager->queueRequest changes,
       so there will be single message for each record when a port disconnects and a single
       message when it reconnects.</li>
+    <li>Changed error handling when any of the following errors are encounted:
+      <ul>
+        <li>pasynManager->queueRequest returns an error</li>
+        <li>The I/O call to the driver (e.g. pasynInt32->read()) returns an error.</li>
+        <li>The interrupt callback function is passed an error code in pasynUser->auxStatus</li>
+      </ul>
+      Previously such errors did correctly set the record alarm status and severity. However,
+      they did not return an error code to the function that called the device support
+      write() or read() function. They also updated the record VAL or RVAL field when
+      there was an error, which they should not. Now these functions return an error code
+      and do not update VAL or RVAL when there is an error. </li>
   </ul>
   <h3>
     asynPortDriver</h3>
   <ul>
     <li>Changed the status return from pasynManager->queueRequest from asynError to asynDisconnected
-      if a port with ASYN_CANBLOCK=0 is disconencted.</li>
+      if a port with ASYN_CANBLOCK=0 is disconnected.</li>
   </ul>
   <h3>
     asynShellCommands</h3>
