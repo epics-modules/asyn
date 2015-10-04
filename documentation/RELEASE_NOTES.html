@@ -28,7 +28,7 @@
   <ul>
     <li>Fix to automatically prefix COM port names with "\\.\" unless the port name already
       begins with "\\.\". This is valid syntax for all COM ports and is required for all
-      ports except COM1-COM9. Note the when passing the port string from the iocsh if
+      ports except COM1-COM9. Note that when passing the port string from the iocsh if
       the port name is in quotes then backslash characters should not be escaped, e.g.
       "\\.\COM10". If the port name is not in quotes then the backslash characters must
       be escaped, e.g. \\\\.\\COM10. Thanks to Freddie Akeroyd for the initial version
@@ -45,10 +45,10 @@
       <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,userFlags)</code><br />
       userFlags: bit-wise ORed:
       <ul>
-        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS If 0 then asynInterposeEosConfig is called specifying
+        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS. If 0 then asynInterposeEosConfig is called specifying
           both processEosIn and processEosOut. </li>
-        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT, the (TCP) socket will be closed when
-          read() returns a timeout. </li>
+        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT. If 1 then the (TCP) socket will be closed
+          when read() returns a timeout. </li>
         <li>Bit 2--31 are reserved, set to zero. </li>
       </ul>
       This change is backwards compatible since bit 0 is the same as the previous noProcessEos.
@@ -63,7 +63,7 @@
       message is only printed when the status return from pasynManager->queueRequest changes,
       so there will be single message for each record when a port disconnects and a single
       message when it reconnects.</li>
-    <li>Changed error handling when any of the following errors are encounted:
+    <li>Changed error handling when any of the following errors are encountered:
       <ul>
         <li>pasynManager->queueRequest returns an error</li>
         <li>The I/O call to the driver (e.g. pasynInt32->read()) returns an error.</li>
