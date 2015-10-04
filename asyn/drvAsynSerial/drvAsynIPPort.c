@@ -102,6 +102,7 @@ typedef struct {
     char              *portName;
     int                socketType;
     int                flags;
+    int                userFlags;
     SOCKET             fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -123,6 +124,11 @@ typedef struct {
 #define FLAG_SHUTDOWN                   0x4
 #define FLAG_NEED_LOOKUP                0x100
 #define FLAG_DONE_LOOKUP                0x200
+
+#define USERFLAG_NO_PROCESS_EOS         0x1
+#define USERFLAG_CLOSE_ON_READ_TIMEOUT  0x2
+#define USERFLAG_RESERVED               (~0x3)
+
 
 #ifdef FAKE_POLL
 /*
@@ -594,7 +600,9 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         tty->nRead += (unsigned long)thisRead;
     }
     if (thisRead < 0) {
-        if ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)) {
+        int should_close = (tty->userFlags & USERFLAG_CLOSE_ON_READ_TIMEOUT) ||
+                           ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR));
+        if (should_close) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
@@ -686,7 +694,7 @@ drvAsynIPPortConfigure(const char *portName,
                        const char *hostInfo,
                        unsigned int priority,
                        int noAutoConnect,
-                       int noProcessEos)
+                       int userFlags)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -708,7 +716,10 @@ drvAsynIPPortConfigure(const char *portName,
         printf("TCP host information missing.\n");
         return -1;
     }
-
+    if (USERFLAG_RESERVED & userFlags) {
+        printf("Reserved userFlags must be 0\n");
+        return -1;
+    }
     /*
      * Perform some one-time-only initializations
      */
@@ -729,6 +740,7 @@ drvAsynIPPortConfigure(const char *portName,
     pasynOctet = (asynOctet *)(tty+1);
     tty->fd = INVALID_SOCKET;
     tty->flags = 0;
+    tty->userFlags = userFlags;
     tty->IPDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
 
@@ -859,7 +871,7 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    if (!noProcessEos)
+    if (!(tty->userFlags & USERFLAG_NO_PROCESS_EOS))
         asynInterposeEosConfig(tty->portName, -1, 1, 1);
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
@@ -883,7 +895,7 @@ static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString}
 static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocshArgString};
 static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynIPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynIPPortConfigureArg4 = { "noProcessEos",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg4 = { "userFlags",iocshArgInt};
 static const iocshArg *drvAsynIPPortConfigureArgs[] = {
     &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
     &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
