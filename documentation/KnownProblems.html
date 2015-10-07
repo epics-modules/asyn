@@ -16,43 +16,47 @@
   <h2 style="text-align: center">
     Release 4-27 (and all other releases with asynPortDriver)</h2>
   <p>
-    There is a potential deadlock issue with asynchronous asyn port drivers (ASYN_CANBLOCK=1)
-    and asyn device support. The problem occurs under the following conditions:</p>
+    There is a potential deadlock issue with synchronous asyn port drivers (ASYN_CANBLOCK=0)
+    and asyn device support. Thanks to Ambroz Bizjak of CosyLab for finding this problem.
+    The problem occurs under the following conditions:</p>
   <ul>
     <li>The driver starts a thread that does callbacks to device support. Such threads
       are often used for polling and do callback to input records that have SCAN=I/O Intr.</li>
     <li>The thread locks a mutex in the driver when doing the callbacks. This mutex is
       designed to protect the data structures that are used for the callbacks from being
       modified by other calls to the driver while callbacks are being done.</li>
-    <li>Record A is an input record with SCAN=I/O Intr.</li>
+    <li>Record A is an input record with SCAN=I/O Intr. that does not use ring buffers
+      for interrupt callbacks.</li>
     <li>Record B is an output record.</li>
     <li>Records A and B are in the same lockset.</li>
     <li>The following sequence of operations occurs:
       <ol>
-        <li>Record B begins processing, takes the lockset mutex, and queues a request for
-          asynchronous device support processing.</li>
-        <li>The driver thread takes the driver mutex and does a callback to device support
-          to process record A.</li>
-        <li>The driver thread blocks because it calls dbScanLock and the record lockset mutex
-          was locked in step 1.</li>
-        <li>Record B device support callbacks occurs, and it calls the driver. It blocks because
-          it tries to take the driver mutex, which the driver thread has locked.</li>
+        <li>The driver thread takes the driver mutex.</li>
+        <li>Record B begins processing, takes the lockset mutex, and calls the driver. It
+          blocks because the driver mutex was locked in step 1 above.</li>
+        <li>The driver thread does a callback to device support and calls dbScanLock. It blocks
+          because the record lockset mutex was locked in step 2 above.</li>
         <li>We have a deadlock, both threads are blocked.</li>
       </ol>
     </li>
   </ul>
   <p>
-    Note that the deadlock will not occur unless records A and B are in the same lockset.
-    The deadlock will also not occur if the input record's device support interrupt
-    callback function does not call dbScanLock. Records that are using ring buffers
-    for the callback values do not call dbScanLock, so they don't have the deadlock
-    problem. However, waveform and stringin records do not use ring buffers by default,
-    so they can have a deadlock. Because the problem only occurs for records in the
-    same lockset when the input record&nbsp; is not using ring buffers, the deadlock
-    issue has rarely been a problem in practice.</p>
+    Note that the deadlock will not occur unless the following 3 conditions are met:</p>
+  <ol>
+    <li>The driver is synchronous, i.e. ASYN_CANBLOCK=0.</li>
+    <li>Records A and B are in the same lockset.</li>
+    <li>The input record is not using ring buffers, so it calls dbScanLock. All records
+      except waveform and stringin records use ring buffers by default.</li>
+  </ol>
+  <p>
+    Because the problem only occurs when the above conditions are met, the problem has
+    been very rare in practice.</p>
   <p>
     I don't see a simple solution to this problem. Drivers need to take a mutex to protect
-    data structures when they are accessed for doing callbacks.</p>
+    data structures when they are accessed for doing callbacks. However, the problem
+    can be worked around by either setting the driver to be asynchronous (ASYN_CANBLOCK=1)
+    or by enabling ring buffers on any stringin or waveform records that are in the
+    same lockset as asyn output records.</p>
   <p>
     The problem can be reproduced using the following files in testAsynPortDriverApp:</p>
   <ul>
