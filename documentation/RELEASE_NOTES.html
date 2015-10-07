@@ -31,7 +31,7 @@
       Previously if a call to setOption() failed, then subsequent calls to getOption()
       would return the value that failed. Now subsequent calls to getOption() will return
       the previous valid option, which is presumably the one that the underlying OS driver
-      is still using.</li>
+      is still using. Thanks to Ron Sluiter for the initial fix to this problem.</li>
   </ul>
   <h3>
     drvAsynSerialPortWin32</h3>
@@ -103,6 +103,13 @@
       reports 0.0156 seconds. Note also that this function really has nothing to do with
       asyn, and the equivalent functionality should probably be moved into EPICS base
       at some time.</li>
+  </ul>
+  <h3>
+    Deadlock issue</h3>
+  <ul>
+    <li>There is a potential deadlock issue when using input records with SCAN=I/O Intr.
+      This is discussed in the <a href="KnownProblems.html">KnownProblems document</a>.
+      Thanks to Ambroz Bizjak for finding this problem.</li>
   </ul>
   <div style="text-align: center">
     <hr />
