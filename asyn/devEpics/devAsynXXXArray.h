@@ -52,7 +52,6 @@ typedef struct devAsynWfPvt{                                                    
     int                 ringBufferOverflows;                                                       \
     ringBufferElement   result;                                                                    \
     int                 gotValue; /* For interruptCallbackInput */                                 \
-    epicsUInt32         nord;                                                                      \
     INTERRUPT           interruptCallback;                                                         \
     char                *portName;                                                                 \
     char                *userParam;                                                                \
@@ -311,7 +310,6 @@ static long processCommon(dbCommon *pr)                                         
     if (newInputData) {                                                                            \
         if (pPvt->ringSize == 0){                                                                  \
             /* Data has already been copied to the record in interruptCallback */                  \
-            pwf->nord = pPvt->nord;                                                                \
             pPvt->gotValue--;                                                                      \
             if (pPvt->gotValue) {                                                                  \
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,                                     \
@@ -326,27 +324,30 @@ static long processCommon(dbCommon *pr)                                         
             int i;                                                                                 \
             /* Need to copy the array with the lock because that is shared even though             \
                pPvt->result is a copy */                                                           \
-            epicsMutexLock(pPvt->ringBufferLock);                                                  \
-            for (i=0; i<(int)rp->len; i++) pData[i] = rp->pValue[i];                               \
-            epicsMutexUnlock(pPvt->ringBufferLock);                                                \
-            pwf->nord = rp->len;                                                                   \
+            if (rp->status == asynSuccess) {                                                       \
+                epicsMutexLock(pPvt->ringBufferLock);                                              \
+                for (i=0; i<(int)rp->len; i++) pData[i] = rp->pValue[i];                           \
+                epicsMutexUnlock(pPvt->ringBufferLock);                                            \
+                pwf->nord = rp->len;                                                               \
+                asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                  \
+                    (char *)pwf->bptr, pwf->nord*sizeof(EPICS_TYPE),                               \
+                    "%s %s::processCommon nord=%d, pwf->bptr data:",                               \
+                    pwf->name, driverName, pwf->nord);                                             \
+            }                                                                                      \
             pwf->time = rp->time;                                                                  \
             pPvt->status = rp->status;                                                             \
-            asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                      \
-                (char *)pwf->bptr, pwf->nord*sizeof(EPICS_TYPE),                                   \
-                "%s %s::processCommon nord=%d, pwf->bptr data:",                                   \
-                pwf->name, driverName, pwf->nord);                                                 \
         }                                                                                          \
     }                                                                                              \
     if (pPvt->status == asynSuccess) {                                                             \
         pwf->udf = 0;                                                                              \
+        return 0;                                                                                  \
     } else {                                                                                       \
         pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->status, READ_ALARM, &pPvt->alarmStat,        \
                                                 INVALID_ALARM, &pPvt->alarmSevr);                  \
         recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);                                       \
+        pPvt->status = asynSuccess;                                                                \
+        return -1;                                                                                 \
     }                                                                                              \
-    pPvt->status = asynSuccess;                                                                    \
-    return 0;                                                                                      \
 }                                                                                                  \
                                                                                                    \
 static void callbackWfOut(asynUser *pasynUser)                                                     \
@@ -433,10 +434,12 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,                
         /* Not using a ring buffer */                                                              \
         dbScanLock((dbCommon *)pwf);                                                               \
         if (len > pwf->nelm) len = pwf->nelm;                                                      \
-        for (i=0; i<(int)len; i++) pData[i] = value[i];                                            \
+        if (pasynUser->auxStatus == asynSuccess) {                                                 \
+            for (i=0; i<(int)len; i++) pData[i] = value[i];                                        \
+            pwf->nord = (epicsUInt32)len;                                                          \
+        }                                                                                          \
         pwf->time = pasynUser->timestamp;                                                          \
         pPvt->gotValue++;                                                                          \
-        pPvt->nord = (epicsUInt32)len;                                                             \
         if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus;                      \
         dbScanUnlock((dbCommon *)pwf);                                                             \
         if (pPvt->isOutput)                                                                        \
