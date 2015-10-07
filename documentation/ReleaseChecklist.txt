@@ -1,8 +1,9 @@
 Release checklist for asyn
 
-- Do "svn diff [--summarize] -rXXX:HEAD" against the previous release (XXX) to make sure everything is in the release notes
+- Do "git pull" to make sure everything is up to date and checked in
+- Do "git diff --name-status RX-Y" against the previous release (RX-Y) to make sure everything is in the release notes
 - Make sure to add the date and release number to asynDriver.html, RELEASE_NOTES.html and Doxyfile
 - Update the asyn version number in asynDriver.h
-- Do "svn status -u" at the top level to make sure everything is up to date and checked in
-- Make the SVN repository tag with "make_asyn_release RX-Y" from the devel directory
+- Make the git repository tag with "git tag RX-Y"
+- Push the repository and tags to github with "git push" and "git push --tags"
 - Make a tar file to send to Andrew with "make_asyn_tar_file RX-Y" from the devel directory
