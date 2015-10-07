@@ -210,10 +210,17 @@ static asynStatus
 setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    struct termios termiosPrev;
+    int baudPrev;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "%s setOption key %s val %s\n", tty->portName, key, val);
+    
+    /* Make a copy of tty->termios and tty->baud so we can restore them in case of errors */                
+    termiosPrev = tty->termios;
+    baudPrev = tty->baud;
+
     if (epicsStrCaseCmp(key, "baud") == 0) {
         int baud;
         if(sscanf(val, "%d", &baud) != 1) {
@@ -464,8 +471,14 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                 "Unsupported key \"%s\"", key);
         return asynError;
     }
-    if (tty->fd >= 0)
-        return applyOptions(pasynUser, tty);
+    if (tty->fd >= 0) {
+        if (applyOptions(pasynUser, tty) != asynSuccess) {
+            /* Restore previous values of tty->baud and tty->termios */
+            tty->baud = baudPrev;
+            tty->termios = termiosPrev;
+            return asynError;
+        }
+    }
     return asynSuccess;
 }
 static const struct asynOption asynOptionMethods = { setOption, getOption };
