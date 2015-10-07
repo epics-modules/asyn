@@ -14,7 +14,7 @@
     <h2>
       Release 4-27</h2>
     <h2>
-      October 6, 2015</h2>
+      October 7, 2015</h2>
   </div>
   <h3>
     Repository location</h3>
@@ -23,6 +23,16 @@
       https://svn.aps.anl.gov/epics/asyn</a> to <a href="https://github.com/epics-modules/asyn">
         https://github.com/epics-modules/asyn</a>. This will make it much easier for
     others to collaborate in the development of asyn.</p>
+  <h3>
+    drvAsynSerialPort</h3>
+  <ul>
+    <li>Fix to save the previous values of the baud rate and termios structures before
+      attempting to change them. If the change fails then the previous values are restored.
+      Previously if a call to setOption() failed, then subsequent calls to getOption()
+      would return the value that failed. Now subsequent calls to getOption() will return
+      the previous valid option, which is presumably the one that the underlying OS driver
+      is still using.</li>
+  </ul>
   <h3>
     drvAsynSerialPortWin32</h3>
   <ul>
