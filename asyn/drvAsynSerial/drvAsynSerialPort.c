@@ -210,6 +210,7 @@ static asynStatus
 setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    int prebaud;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -311,6 +312,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         }
         }
 #endif /* vxWorks */
+        prebaud = tty->baud;    /* Save previous value in case request in invalid. */
         tty->baud = baud;
     }
     else if (epicsStrCaseCmp(key, "bits") == 0) {
@@ -465,7 +467,13 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         return asynError;
     }
     if (tty->fd >= 0)
-        return applyOptions(pasynUser, tty);
+    {
+        asynStatus status;
+        status = applyOptions(pasynUser, tty);
+        if (status != asynSuccess)
+            tty->baud = prebaud;
+        return(status);
+    }
     return asynSuccess;
 }
 static const struct asynOption asynOptionMethods = { setOption, getOption };

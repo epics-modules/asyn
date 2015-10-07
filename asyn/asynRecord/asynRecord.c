@@ -378,6 +378,10 @@ static long special(struct dbAddr * paddr, int after)
     asynQueuePriority priority;
 
     if(!after) {
+        if (fieldIndex == asynRecordBAUD)   /* Save previous value in case requested value is invalid. */
+            pasynRec->pbaud = pasynRec->baud;
+        else if (fieldIndex == asynRecordLBAUD)
+            pasynRec->plbaud = pasynRec->lbaud;
         return 0;
     }
     resetError(pasynRec);
@@ -1766,11 +1770,15 @@ static void setOption(asynUser * pasynUser)
     case asynRecordBAUD:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "baud", baud_choices[pasynRec->baud]);
+        if (status != asynSuccess)
+            pasynRec->baud = pasynRec->pbaud;
         break;
     case asynRecordLBAUD:
         sprintf(optionString, "%d", pasynRec->lbaud);
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
             pasynUser, "baud", optionString);
+        if (status != asynSuccess)
+            pasynRec->lbaud = pasynRec->plbaud;
         break;
     case asynRecordPRTY:
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
