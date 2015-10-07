@@ -10,9 +10,59 @@
     <h1>
       asynDriver: Asynchronous Driver Support - Known Problems</h1>
     <h1>
-      May 14, 2010</h1>
+      October 7, 2015</h1>
     <hr />
   </div>
+  <h2 style="text-align: center">
+    Release 4-27 (and all other releases with asynPortDriver)</h2>
+  <p>
+    There is a potential deadlock issue with asynchronous asyn port drivers (ASYN_CANBLOCK=1)
+    and asyn device support. The problem occurs under the following conditions:</p>
+  <ul>
+    <li>The driver starts a thread that does callbacks to device support. Such threads
+      are often used for polling and do callback to input records that have SCAN=I/O Intr.</li>
+    <li>The thread locks a mutex in the driver when doing the callbacks. This mutex is
+      designed to protect the data structures that are used for the callbacks from being
+      modified by other calls to the driver while callbacks are being done.</li>
+    <li>Record A is an input record with SCAN=I/O Intr.</li>
+    <li>Record B is an output record.</li>
+    <li>Records A and B are in the same lockset.</li>
+    <li>The following sequence of operations occurs:
+      <ol>
+        <li>Record B begins processing, takes the lockset mutex, and queues a request for
+          asynchronous device support processing.</li>
+        <li>The driver thread takes the driver mutex and does a callback to device support
+          to process record A.</li>
+        <li>The driver thread blocks because it calls dbScanLock and the record lockset mutex
+          was locked in step 1.</li>
+        <li>Record B device support callbacks occurs, and it calls the driver. It blocks because
+          it tries to take the driver mutex, which the driver thread has locked.</li>
+        <li>We have a deadlock, both threads are blocked.</li>
+      </ol>
+    </li>
+  </ul>
+  <p>
+    Note that the deadlock will not occur unless records A and B are in the same lockset.
+    The deadlock will also not occur if the input record's device support interrupt
+    callback function does not call dbScanLock. Records that are using ring buffers
+    for the callback values do not call dbScanLock, so they don't have the deadlock
+    problem. However, waveform and stringin records do not use ring buffers by default,
+    so they can have a deadlock. Because the problem only occurs for records in the
+    same lockset when the input record&nbsp; is not using ring buffers, the deadlock
+    issue has rarely been a problem in practice.</p>
+  <p>
+    I don't see a simple solution to this problem. Drivers need to take a mutex to protect
+    data structures when they are accessed for doing callbacks.</p>
+  <p>
+    The problem can be reproduced using the following files in testAsynPortDriverApp:</p>
+  <ul>
+    <li>testAsynPortDriverApp.cpp.deadlock This simply adds an epicsThreadSleep to increase
+      the frequency of the problem.</li>
+    <li>testAsynPortDriver.db.deadlock This adds a calc record which causes NoiseAmplitude
+      and Waveform_RBV.NELM to be in the same lockset.</li>
+    <li>test_deadlock.pro This is a little IDL script that writes new values to NoiseAmplitude
+      at 100 Hz.</li>
+  </ul>
   <h2 style="text-align: center">
     Release 4-13</h2>
   <p>
