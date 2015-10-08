@@ -188,6 +188,7 @@ typedef struct  asynLockPortNotify {
 #define ASYN_TRACEIO_DRIVER  0x0008
 #define ASYN_TRACE_FLOW      0x0010
 #define ASYN_TRACE_WARNING   0x0020
+#define ASYN_TRACE_INFO      0x0040
 
 /* traceIO mask definitions*/
 #define ASYN_TRACEIO_NODATA 0x0000
