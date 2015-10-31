@@ -156,7 +156,7 @@ composite {
 			display[0] {
 				label="asyn record"
 				name="asynRecord.adl"
-				args="P=testErrors:,R=asyn1"
+				args="P=testOutputReadback:,R=asyn1"
 			}
 			clr=14
 			bclr=51
