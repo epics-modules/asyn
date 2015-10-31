@@ -7,7 +7,6 @@ record(ao, "$(P)AoInt32")
    field(PINI, "$(PINI)")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
-   field(VAL, "0")
 }
 
 record(ao, "$(P)AoInt32RB")
@@ -15,7 +14,6 @@ record(ao, "$(P)AoInt32RB")
    field(PINI, "$(PINI)")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
-   field(VAL, "0")
    info(asyn:READBACK,"1")
 }
 
@@ -31,7 +29,6 @@ record(longout, "$(P)LongoutInt32")
    field(PINI, "$(PINI)")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
-   field(VAL, "0")
 }
 
 record(longout, "$(P)LongoutInt32RB")
@@ -39,7 +36,6 @@ record(longout, "$(P)LongoutInt32RB")
    field(PINI, "$(PINI)")
    field(DTYP, "asynInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
-   field(VAL, "0")
    info(asyn:READBACK,"1")
 }
 
@@ -57,7 +53,6 @@ record(bo, "$(P)BoInt32")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
    field(ZNAM, "Zero")
    field(ONAM, "One")
-   field(VAL, "0")
 }
 
 record(bo, "$(P)BoInt32RB")
@@ -67,7 +62,6 @@ record(bo, "$(P)BoInt32RB")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))BINARY_INT32_VALUE")
    field(ZNAM, "Zero")
    field(ONAM, "One")
-   field(VAL, "0")
    info(asyn:READBACK,"1")
 }
 
@@ -97,7 +91,6 @@ record(mbbo, "$(P)MbboInt32")
    field(FRVL, "4")
    field(FVST, "State 5")
    field(FVVL, "5")
-   field(VAL, "0")
 }
 
 record(mbbo, "$(P)MbboInt32RB")
@@ -117,7 +110,6 @@ record(mbbo, "$(P)MbboInt32RB")
    field(FRVL, "4")
    field(FVST, "State 5")
    field(FVVL, "5")
-   field(VAL, "0")
    info(asyn:READBACK,"1")
 }
 
@@ -150,7 +142,6 @@ record(longout, "$(P)LongoutUInt32D")
    field(PINI, "$(PINI)")
    field(DTYP, "asynUInt32Digital")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
-   field(VAL, "0")
 }
 
 record(longout, "$(P)LongoutUInt32DRB")
@@ -158,7 +149,6 @@ record(longout, "$(P)LongoutUInt32DRB")
    field(PINI, "$(PINI)")
    field(DTYP, "asynUInt32Digital")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF, $(TIMEOUT))UINT32D_VALUE")
-   field(VAL, "0")
    info(asyn:READBACK,"1")
 }
 
@@ -176,7 +166,6 @@ record(bo, "$(P)BoUInt32D")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
    field(ZNAM, "Zero")
    field(ONAM, "One")
-   field(VAL,  "0")
 }
 
 record(bo, "$(P)BoUInt32DRB")
@@ -186,7 +175,6 @@ record(bo, "$(P)BoUInt32DRB")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0x1, $(TIMEOUT))BINARY_UINT32D_VALUE")
    field(ZNAM, "Zero")
    field(ONAM, "One")
-   field(VAL,  "0")
    info(asyn:READBACK,"1")
 }
 
@@ -210,7 +198,6 @@ record(mbbo, "$(P)MbboUInt32D")
    field(ONVL, "2")
    field(TWST, "State 3")
    field(TWVL, "3")
-   field(VAL,  "0")
 }
 
 record(mbbo, "$(P)MbboUInt32DRB")
@@ -224,7 +211,6 @@ record(mbbo, "$(P)MbboUInt32DRB")
    field(ONVL, "2")
    field(TWST, "State 3")
    field(TWVL, "3")
-   field(VAL,  "0")
    info(asyn:READBACK,"1")
 }
 
@@ -246,7 +232,6 @@ record(mbboDirect, "$(P)MbboDUInt32D")
    field(PINI, "$(PINI)")
    field(DTYP, "asynUInt32Digital")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
-   field(VAL,  "0")
 }
 
 record(mbboDirect, "$(P)MbboDUInt32DRB")
@@ -254,7 +239,6 @@ record(mbboDirect, "$(P)MbboDUInt32DRB")
    field(PINI, "$(PINI)")
    field(DTYP, "asynUInt32Digital")
    field(OUT,  "@asynMask($(PORT),$(ADDR),0xF, $(TIMEOUT))MULTIBIT_UINT32D_VALUE")
-   field(VAL,  "0")
    info(asyn:READBACK,"1")
 }
 
