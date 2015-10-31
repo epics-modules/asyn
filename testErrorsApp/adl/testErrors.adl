@@ -1,6 +1,6 @@
 
 file {
-	name="/home/epics/devel/asyn/testErrorsApp/adl/testErrors.adl"
+	name="/home/epics/devel/asyn-4-26/testErrorsApp/adl/testErrors.adl"
 	version=030107
 }
 display {
@@ -607,6 +607,7 @@ menu {
 		bclr=2
 	}
 	align="horiz. centered"
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -683,6 +684,7 @@ menu {
 		bclr=2
 	}
 	align="horiz. centered"
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -1234,6 +1236,7 @@ menu {
 		clr=14
 		bclr=2
 	}
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -1249,6 +1252,7 @@ menu {
 		clr=14
 		bclr=2
 	}
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -1789,6 +1793,7 @@ menu {
 		clr=14
 		bclr=2
 	}
+	format="hexadecimal"
 	limits {
 	}
 }
@@ -1804,6 +1809,7 @@ menu {
 		clr=14
 		bclr=2
 	}
+	format="hexadecimal"
 	limits {
 	}
 }
