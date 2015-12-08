@@ -1,0 +1,13 @@
+# Set the default gateway 
+routec "add default 164.54.160.1"
+
+# Set the UNIX uid/gid to the EPICS account
+nfsAuthUnixSet("corvette",401,400,0,0)
+
+# Mount drives with NFS
+nfsMount("corvette","/home","/corvette/home")
+nfsMount("corvette","/home","/home")
+
+# Define locations for logging and for APS EPICS process variables
+putenv("EPICS_IOC_LOG_INET=164.54.160.82")
+putenv("EPICS_CA_MAX_ARRAY_BYTES=65536")
