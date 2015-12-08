@@ -349,14 +349,16 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * If the connect fails, arrange for another DNS lookup in case the
          * problem is just that the device has DHCP'd itself an new number.
          */
-        if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
-            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "Can't connect to %s: %s",
-                          tty->IPDeviceName, strerror(SOCKERRNO));
-            epicsSocketDestroy(fd);
-            if (tty->flags & FLAG_DONE_LOOKUP)
-                tty->flags |=  FLAG_NEED_LOOKUP;
-            return asynError;
+        if (tty->socketType != SOCK_DGRAM) {
+            if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "Can't connect to %s: %s",
+                              tty->IPDeviceName, strerror(SOCKERRNO));
+                epicsSocketDestroy(fd);
+                if (tty->flags & FLAG_DONE_LOOKUP)
+                    tty->flags |=  FLAG_NEED_LOOKUP;
+                return asynError;
+            }
         }
     }
     i = 1;
@@ -479,7 +481,11 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         }
 #endif
         for (;;) {
-            thisWrite = send(tty->fd, (char *)data, (int)numchars, 0);
+            if (tty->socketType == SOCK_DGRAM) {
+                thisWrite = sendto(tty->fd, (char *)data, (int)numchars, 0, &tty->farAddr.oa.sa, (socklen_t)tty->farAddrSize);
+            } else {
+                thisWrite = send(tty->fd, (char *)data, (int)numchars, 0);
+            }
             if (thisWrite >= 0) break;
             if (SOCKERRNO == SOCK_EWOULDBLOCK || SOCKERRNO == SOCK_EINTR) {
                 if (!haveStartTime) {
@@ -593,7 +599,12 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
 #endif
-    thisRead = recv(tty->fd, data, (int)maxchars, 0);
+    if (tty->socketType == SOCK_DGRAM) {
+        socklen_t addrlen = tty->farAddrSize;
+        thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &tty->farAddr.oa.sa, &addrlen);
+    } else {
+        thisRead = recv(tty->fd, data, (int)maxchars, 0);
+    }
     if (thisRead > 0) {
         asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
                    "%s read %d\n", tty->IPDeviceName, thisRead);
@@ -653,8 +664,16 @@ flushIt(void *drvPvt,asynUser *pasynUser)
 #ifndef USE_POLL
         setNonBlock(tty->fd, 1);
 #endif
-        while (recv(tty->fd, cbuf, sizeof cbuf, 0) > 0)
-            continue;
+        while (1) {
+            int nread;
+            if (tty->socketType == SOCK_DGRAM) {
+                socklen_t addrlen = tty->farAddrSize;
+                nread = recvfrom(tty->fd, cbuf, sizeof cbuf, 0, &tty->farAddr.oa.sa, &addrlen);
+            } else {
+                nread = recv(tty->fd, cbuf, sizeof cbuf, 0);
+            } 
+            if (nread <= 0) break;
+        }
 #ifndef USE_POLL
         setNonBlock(tty->fd, 0);
 #endif
