@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     int eomReason;
     asynUser *pasynUser;
     
-    status = (asynStatus)drvAsynIPPortConfigure(PORT_NAME, "164.54.160.255:37747:37747 UDP*", 0, 0, 0);
+    status = (asynStatus)drvAsynIPPortConfigure(PORT_NAME, "164.54.160.255:37747 UDP*", 0, 0, 0);
     printf("Called drvAsynIPPortConfigure for UDP port, status=%d\n", status);
 
     // Connect to the broadcast port
@@ -41,7 +41,7 @@ int main(int argc, char *argv[]) {
     printf("Wrote to UDP port, status=%d, nwrite=%d\n", status, (int)nwrite);
     
     // Read the first response
-    status = pasynOctetSyncIO->read(pasynUser, buffer, sizeof(buffer), 1.0, &nread, &eomReason);
+    status = pasynOctetSyncIO->read(pasynUser, buffer, sizeof(buffer), 0.1, &nread, &eomReason);
     printf("Read from UDP port, status=%d, nread=%d, buffer=\n%s\n\n", status, (int)nread, buffer);
     
     asynReport(10, PORT_NAME);
