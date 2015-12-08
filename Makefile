@@ -24,6 +24,8 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   testErrorsApp_DEPEND_DIRS = asyn
   DIRS += testOutputReadbackApp
   testOutputReadbackApp_DEPEND_DIRS = asyn
+  DIRS += testBroadcastApp
+  testBroadcastApp_DEPEND_DIRS = asyn
   DIRS += testUsbtmcApp
   testUsbtmcApp_DEPEND_DIRS = asyn
   DIRS += testArrayRingBufferApp
