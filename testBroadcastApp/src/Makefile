@@ -1,0 +1,22 @@
+TOP=../..
+
+include $(TOP)/configure/CONFIG
+#----------------------------------------
+#  ADD MACRO DEFINITIONS AFTER THIS LINE
+#=============================
+
+PROD_IOC += testBroadcastAsyn
+testBroadcastAsyn_SRCS += testBroadcastAsyn
+testBroadcastAsyn_LIBS += asyn
+testBroadcastAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+PROD_IOC += testBroadcastNoAsyn
+testBroadcastNoAsyn_SRCS += testBroadcastNoAsyn
+testBroadcastNoAsyn_LIBS += asyn
+testBroadcastNoAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+#===========================
+
+include $(TOP)/configure/RULES
+#----------------------------------------
+#  ADD RULES AFTER THIS LINE
