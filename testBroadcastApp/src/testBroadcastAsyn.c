@@ -32,22 +32,30 @@ int main(int argc, char *argv[]) {
     status = (asynStatus)drvAsynIPPortConfigure(PORT_NAME, "164.54.160.255:37747 UDP*", 0, 0, 0);
     printf("Called drvAsynIPPortConfigure for UDP port, status=%d\n", status);
 
-    // Connect to the broadcast port
+    /* Set ASYN_TRACEIO_DRIVER for debugging */
+    status = (asynStatus)asynSetTraceIOMask(PORT_NAME, 0, 2);
+    printf("Called asynSetTraceIOMask for UDP port, status=%d\n", status);
+    status = (asynStatus)asynSetTraceMask(PORT_NAME, 0, 9);
+    printf("Called asynSetTraceMask for UDP port, status=%d\n", status);
+    
+    /* Connect to the broadcast port */
     status = pasynOctetSyncIO->connect(PORT_NAME, 0, &pasynUser, NULL);
     printf("Connected to UDP port, status=%d\n", status);
 
-    // Send the broadcast message
+    /* Send the broadcast message */
     status = pasynOctetSyncIO->write(pasynUser, "i\n", 2, 1.0, &nwrite);
     printf("Wrote to UDP port, status=%d, nwrite=%d\n", status, (int)nwrite);
     
-    // Read the first response
+    /* Read the first response */
     status = pasynOctetSyncIO->read(pasynUser, buffer, sizeof(buffer), 0.1, &nread, &eomReason);
     printf("Read from UDP port, status=%d, nread=%d, buffer=\n%s\n\n", status, (int)nread, buffer);
     
     asynReport(10, PORT_NAME);
 
-    system("netstat -a | grep 164.54.160.255 | grep -v ca-2");
-    
+#ifdef linux
+     system("netstat -a | grep 164.54.160.255 | grep -v ca-2");
+#endif
+
     return 0;
 }
     
