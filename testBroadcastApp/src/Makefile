@@ -10,11 +10,11 @@ testBroadcastAsyn_SRCS += testBroadcastAsyn
 testBroadcastAsyn_LIBS += asyn
 testBroadcastAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 
-# This is not portable so we don't build it by default
-#PROD_IOC += testBroadcastNoAsyn
-#testBroadcastNoAsyn_SRCS += testBroadcastNoAsyn
-#testBroadcastNoAsyn_LIBS += asyn
-#testBroadcastNoAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+# This is not portable, only builds on Linux
+PROD_IOC_Linux += testBroadcastNoAsyn
+testBroadcastNoAsyn_SRCS += testBroadcastNoAsyn
+testBroadcastNoAsyn_LIBS += asyn
+testBroadcastNoAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 #===========================
 
