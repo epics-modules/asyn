@@ -12,6 +12,31 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-28</h2>
+    <h2>
+      December 10, 2015</h2>
+  </div>
+  <h3>
+    drvAsynIPPort</h3>
+  <p>
+    Fixed problem with UDP broadcast sockets. Previously sending broadcast messages
+    worked correctly, but any responses from clients to those messages were rejected
+    by the IOC system. This is because connect() and send() were being called. This
+    is not correct, in this case connect() should not be called and sendto() should
+    be called rather than send(). Also changed the code to always call recvfrom() rather
+    than recv(). This returns the source address information, which is now printed with
+    the source message length and contents if ASYN_TRACEIO_DRIVER is set.</p>
+  <p>
+    New test application, testOutputReadbackApp. Tests that the initial values of output
+    records are set correctly.</p>
+  <p>
+    New test application directory, testBroadcastApp. It has 2 applications for sending
+    broadcasts and reading responses. One uses asyn, and the other native OS calls.
+    The native OS call version only builds on Linux. This is used for testing the UDP
+    broadcast problem fixed in this release.</p>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-27</h2>
     <h2>
       October 7, 2015</h2>
