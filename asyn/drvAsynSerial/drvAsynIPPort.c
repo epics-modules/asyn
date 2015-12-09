@@ -482,7 +482,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
 #endif
         for (;;) {
             if (tty->socketType == SOCK_DGRAM) {
-                thisWrite = sendto(tty->fd, (char *)data, (int)numchars, 0, &tty->farAddr.oa.sa, (socklen_t)tty->farAddrSize);
+                thisWrite = sendto(tty->fd, (char *)data, (int)numchars, 0, &tty->farAddr.oa.sa, (int)tty->farAddrSize);
             } else {
                 thisWrite = send(tty->fd, (char *)data, (int)numchars, 0);
             }
@@ -544,6 +544,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     int reason = 0;
     epicsTimeStamp startTime;
     epicsTimeStamp endTime;
+    unsigned int addrlen = tty->farAddrSize;
     asynStatus status = asynSuccess;
 
     assert(tty);
@@ -599,15 +600,11 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
 #endif
-    if (tty->socketType == SOCK_DGRAM) {
-        socklen_t addrlen = tty->farAddrSize;
-        thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &tty->farAddr.oa.sa, &addrlen);
-    } else {
-        thisRead = recv(tty->fd, data, (int)maxchars, 0);
-    }
+    thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &tty->farAddr.oa.sa, &addrlen);
     if (thisRead > 0) {
         asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                   "%s read %d\n", tty->IPDeviceName, thisRead);
+                   "%s (from %s) read %d\n", 
+                   tty->IPDeviceName, inet_ntoa(tty->farAddr.oa.ia.sin_addr), thisRead);
         tty->nRead += (unsigned long)thisRead;
     }
     if (thisRead < 0) {
@@ -653,6 +650,7 @@ static asynStatus
 flushIt(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    unsigned int addrlen = tty->farAddrSize;
     char cbuf[512];
 
     assert(tty);
@@ -664,16 +662,8 @@ flushIt(void *drvPvt,asynUser *pasynUser)
 #ifndef USE_POLL
         setNonBlock(tty->fd, 1);
 #endif
-        while (1) {
-            int nread;
-            if (tty->socketType == SOCK_DGRAM) {
-                socklen_t addrlen = tty->farAddrSize;
-                nread = recvfrom(tty->fd, cbuf, sizeof cbuf, 0, &tty->farAddr.oa.sa, &addrlen);
-            } else {
-                nread = recv(tty->fd, cbuf, sizeof cbuf, 0);
-            } 
-            if (nread <= 0) break;
-        }
+        while (recvfrom(tty->fd, cbuf, sizeof cbuf, 0, &tty->farAddr.oa.sa, &addrlen) > 0)
+            continue;
 #ifndef USE_POLL
         setNonBlock(tty->fd, 0);
 #endif
