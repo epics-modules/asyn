@@ -544,7 +544,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     int reason = 0;
     epicsTimeStamp startTime;
     epicsTimeStamp endTime;
-    unsigned int addrlen = tty->farAddrSize;
+    osiSockAddr oa;
+    unsigned int addrlen = sizeof(oa.ia);
     asynStatus status = asynSuccess;
 
     assert(tty);
@@ -600,11 +601,15 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
 #endif
-    thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &tty->farAddr.oa.sa, &addrlen);
+    thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &oa.sa, &addrlen);
     if (thisRead > 0) {
-        asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                   "%s (from %s) read %d\n", 
-                   tty->IPDeviceName, inet_ntoa(tty->farAddr.oa.ia.sin_addr), thisRead);
+        if (pasynTrace->getTraceMask(pasynUser) & ASYN_TRACEIO_DRIVER) {
+            char inetBuff[32];
+            ipAddrToDottedIP(&oa.ia, inetBuff, sizeof(inetBuff));
+            asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
+                      "%s (from %s) read %d\n", 
+                      tty->IPDeviceName, inetBuff, thisRead);
+        }
         tty->nRead += (unsigned long)thisRead;
     }
     if (thisRead < 0) {
@@ -650,7 +655,8 @@ static asynStatus
 flushIt(void *drvPvt,asynUser *pasynUser)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    unsigned int addrlen = tty->farAddrSize;
+    osiSockAddr oa;
+    unsigned int addrlen = sizeof(oa.ia);
     char cbuf[512];
 
     assert(tty);
@@ -662,7 +668,7 @@ flushIt(void *drvPvt,asynUser *pasynUser)
 #ifndef USE_POLL
         setNonBlock(tty->fd, 1);
 #endif
-        while (recvfrom(tty->fd, cbuf, sizeof cbuf, 0, &tty->farAddr.oa.sa, &addrlen) > 0)
+        while (recvfrom(tty->fd, cbuf, sizeof cbuf, 0, &oa.sa, &addrlen) > 0)
             continue;
 #ifndef USE_POLL
         setNonBlock(tty->fd, 0);
