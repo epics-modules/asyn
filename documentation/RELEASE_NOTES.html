@@ -14,7 +14,7 @@
     <h2>
       Release 4-28</h2>
     <h2>
-      December 10, 2015</h2>
+      December 12, 2015</h2>
   </div>
   <h3>
     drvAsynIPPort</h3>
@@ -23,9 +23,9 @@
     worked correctly, but any responses from clients to those messages were rejected
     by the IOC system. This is because connect() and send() were being called. This
     is not correct, in this case connect() should not be called and sendto() should
-    be called rather than send(). Also changed the code to always call recvfrom() rather
-    than recv(). This returns the source address information, which is now printed with
-    the source message length and contents if ASYN_TRACEIO_DRIVER is set.</p>
+    be called rather than send(). Also changed the code to call recvfrom() rather than
+    recv()for UDP sockets. This returns the source address information, which is now
+    printed with the source message length and contents if ASYN_TRACEIO_DRIVER is set.</p>
   <p>
     New test application, testOutputReadbackApp. Tests that the initial values of output
     records are set correctly.</p>
