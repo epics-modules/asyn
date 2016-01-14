@@ -13,8 +13,10 @@ testBroadcastAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
 # This is not portable, only builds on Linux
 PROD_IOC_Linux += testBroadcastNoAsyn
 testBroadcastNoAsyn_SRCS += testBroadcastNoAsyn
-testBroadcastNoAsyn_LIBS += asyn
 testBroadcastNoAsyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+
+PROD_IOC_Linux += testBroadcastBurst
+testBroadcastBurst_SRCS += testBroadcastBurst
 
 #===========================
 
