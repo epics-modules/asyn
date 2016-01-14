@@ -1,13 +1,15 @@
 /*
- * testBroadcastNoAsyn.c
+ * testBroadcastBurst.c
  * 
- * Program to test sending a broadcast message and reading the responses.
- * This version uses native socket calls, not asyn.
- * This program requires an NSLS electrometer to be present.
+ * Program to test sending a burst of broadcast messages in a loop.
+ * Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops delayTime
+ *
+ * This program was written to test problems with the CaenEls TetrAMM electrometer which was
+ * not responding to ping when a burst of broadcast messages was received.
  *
  * Author: Mark Rivers
  *
- * Created December 8, 2015
+ * Created January 14, 2015
  */
 
 #include <stdio.h>
