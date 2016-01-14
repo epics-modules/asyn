@@ -26,7 +26,6 @@ int main(int argc, char *argv[]) {
     size_t nwrite, nread;
     int status;
     int32_t usock;
-    uint32_t umsg;
     uint32_t arg;
     uint32_t local_addr;
     int32_t rem_len;
