@@ -55,6 +55,7 @@
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
+#include "asynOption.h"
 #include "asynInterposeCom.h"
 #include "asynInterposeEos.h"
 #include "drvAsynIPPort.h"
@@ -96,13 +97,13 @@
  * asyn link.  There is one for each IP socket.
  */
 typedef struct {
-    asynUser          *pasynUser;        /* Not currently used */
+    asynUser          *pasynUser;
     char              *IPDeviceName;
     char              *IPHostName;
     char              *portName;
     int                socketType;
     int                flags;
-    int                userFlags;
+    int                disconnectOnReadTimeout;
     SOCKET             fd;
     unsigned long      nRead;
     unsigned long      nWritten;
@@ -116,6 +117,7 @@ typedef struct {
     osiSockAddr        localAddr;
     size_t             localAddrSize;
     asynInterface      common;
+    asynInterface      option;
     asynInterface      octet;
 } ttyController_t;
 
@@ -124,11 +126,6 @@ typedef struct {
 #define FLAG_SHUTDOWN                   0x4
 #define FLAG_NEED_LOOKUP                0x100
 #define FLAG_DONE_LOOKUP                0x200
-
-#define USERFLAG_NO_PROCESS_EOS         0x1
-#define USERFLAG_CLOSE_ON_READ_TIMEOUT  0x2
-#define USERFLAG_RESERVED               (~0x3)
-
 
 #ifdef FAKE_POLL
 /*
@@ -623,9 +620,9 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
     if (thisRead < 0) {
-        int should_close = (tty->userFlags & USERFLAG_CLOSE_ON_READ_TIMEOUT) ||
+        int should_disconnect = (tty->disconnectOnReadTimeout) ||
                            ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR));
-        if (should_close) {
+        if (should_disconnect) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
@@ -701,6 +698,71 @@ ttyCleanup(ttyController_t *tty)
 }
 
 /*
+ * asynOption methods
+ */
+static asynStatus
+getOption(void *drvPvt, asynUser *pasynUser,
+                              const char *key, char *val, int valSize)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+    int l;
+
+    assert(tty);
+    if (epicsStrCaseCmp(key, "disconnectOnReadTimeout") == 0) {
+        l = epicsSnprintf(val, valSize, "%c", tty->disconnectOnReadTimeout ? 'Y' : 'N');
+    }
+    else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
+        l = epicsSnprintf(val, valSize, "%s", tty->IPDeviceName);
+    }
+    else {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+    if (l >= valSize) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                            "Value buffer for key '%s' is too small.", key);
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+static asynStatus
+setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
+{
+    ttyController_t *tty = (ttyController_t *)drvPvt;
+
+    assert(tty);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                    "%s setOption key %s val %s\n", tty->portName, key, val);
+    
+    if (epicsStrCaseCmp(key, "disconnectOnReadTimeout") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            tty->disconnectOnReadTimeout = 1;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            tty->disconnectOnReadTimeout = 0;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid disconnectOnReadTimeout value.");
+            return asynError;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
+        if (tty->IPDeviceName) free(tty->IPDeviceName);
+        tty->IPDeviceName = epicsStrDup(val);
+    }
+    else if (epicsStrCaseCmp(key, "") != 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+    return asynSuccess;
+}
+static const struct asynOption asynOptionMethods = { setOption, getOption };
+
+/*
  * asynCommon methods
  */
 static const struct asynCommon drvAsynIPPortAsynCommon = {
@@ -717,7 +779,7 @@ drvAsynIPPortConfigure(const char *portName,
                        const char *hostInfo,
                        unsigned int priority,
                        int noAutoConnect,
-                       int userFlags)
+                       int noProcessEos)
 {
     ttyController_t *tty;
     asynInterface *pasynInterface;
@@ -737,10 +799,6 @@ drvAsynIPPortConfigure(const char *portName,
     }
     if (hostInfo == NULL) {
         printf("TCP host information missing.\n");
-        return -1;
-    }
-    if (USERFLAG_RESERVED & userFlags) {
-        printf("Reserved userFlags must be 0\n");
         return -1;
     }
     /*
@@ -763,7 +821,6 @@ drvAsynIPPortConfigure(const char *portName,
     pasynOctet = (asynOctet *)(tty+1);
     tty->fd = INVALID_SOCKET;
     tty->flags = 0;
-    tty->userFlags = userFlags;
     tty->IPDeviceName = epicsStrDup(hostInfo);
     tty->portName = epicsStrDup(portName);
 
@@ -862,6 +919,9 @@ drvAsynIPPortConfigure(const char *portName,
     tty->common.interfaceType = asynCommonType;
     tty->common.pinterface  = (void *)&drvAsynIPPortAsynCommon;
     tty->common.drvPvt = tty;
+    tty->option.interfaceType = asynOptionType;
+    tty->option.pinterface  = (void *)&asynOptionMethods;
+    tty->option.drvPvt = tty;
     if (pasynManager->registerPort(tty->portName,
                                    ASYN_CANBLOCK,
                                    !noAutoConnect,
@@ -874,6 +934,12 @@ drvAsynIPPortConfigure(const char *portName,
     status = pasynManager->registerInterface(tty->portName,&tty->common);
     if(status != asynSuccess) {
         printf("drvAsynIPPortConfigure: Can't register common.\n");
+        ttyCleanup(tty);
+        return -1;
+    }
+    status = pasynManager->registerInterface(tty->portName,&tty->option);
+    if(status != asynSuccess) {
+        printf("drvAsynIPPortConfigure: Can't register option.\n");
         ttyCleanup(tty);
         return -1;
     }
@@ -894,7 +960,7 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    if (!(tty->userFlags & USERFLAG_NO_PROCESS_EOS))
+    if (!noProcessEos)
         asynInterposeEosConfig(tty->portName, -1, 1, 1);
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
@@ -918,7 +984,7 @@ static const iocshArg drvAsynIPPortConfigureArg0 = { "port name",iocshArgString}
 static const iocshArg drvAsynIPPortConfigureArg1 = { "host:port [protocol]",iocshArgString};
 static const iocshArg drvAsynIPPortConfigureArg2 = { "priority",iocshArgInt};
 static const iocshArg drvAsynIPPortConfigureArg3 = { "disable auto-connect",iocshArgInt};
-static const iocshArg drvAsynIPPortConfigureArg4 = { "userFlags",iocshArgInt};
+static const iocshArg drvAsynIPPortConfigureArg4 = { "noProcessEos",iocshArgInt};
 static const iocshArg *drvAsynIPPortConfigureArgs[] = {
     &drvAsynIPPortConfigureArg0, &drvAsynIPPortConfigureArg1,
     &drvAsynIPPortConfigureArg2, &drvAsynIPPortConfigureArg3,
