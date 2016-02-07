@@ -12,6 +12,50 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-29</h2>
+    <h2>
+      February XXX, 2016</h2>
+  </div>
+  <h3>
+    drvAsynIPPort</h3>
+  <ul>
+    <li>Revert the change made in R4-27 to drvAsynIPPortConfigure that changed the noProcessEos
+      flag to userFlags. The final argument to drvAsynIPPortConfigure is now noProcessEos
+      again.</li>
+    <li>Implemented the asynOption interface which allows configuring options using key/value
+      pairs. This interface is used in the drvAsynSerialPort driver for configuring baud
+      rate, stop bits, etc. It is also used on drvAsynIPPort for configuring these same
+      items if the port was configured with the COM qualifier, used for Ethernet/Serial
+      terminal servers that use the TELNET RFC 2217 protocol. For that drvAsynIPPort uses
+      the asynInterposeCOM to interpose the asynOctet and asynOption interfaces.</li>
+    <li>drvAsynIPPort now also directly supports the asynOption interface for 2 key/value
+      pairs.
+      <ul>
+        <li>key="disconnectOnReadTimeout", value="Y" or "N". This option replaces the USERFLAG_CLOSE_ON_READ_TIMEOUT
+          that was introduced in R4-27. The advantage of using the asynOption interface is
+          that this behavior can now be changed at run-time, rather than being set once when
+          the driver is created.</li>
+        <li>key="hostInfo", value="host:port protocol", i.e. the Internet host name, port
+          number and optional protocol, using the same syntax used in the drvAsynIPPortConfigure
+          command. This allows changing at run time the Internet host and port to which this
+          asyn port is connected. The only restriction is that the setting of the COM (TELNET
+          RFC 2217) protocol cannot be changed from that specified with drvAsynIPPortConfigure.
+          This is because if COM is specified in the drvAsynIPPortConfigure command then asynOctet
+          and asynOption interpose interfaces are used, and asynManager does not support removing
+          interpose interfaces.</li>
+      </ul>
+    </li>
+  </ul>
+  <h3>
+    testBroadcastApp</h3>
+  <p>
+    Added new test application testBroadcastBurst. This application peridically sends
+    a burst of broadcast packets. The number of packets per burst and the interval between
+    bursts can be specified on the command line. It is useful for testing devices to
+    see how tolerant they are of broadcast bursts.</p>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-28</h2>
     <h2>
       December 12, 2015</h2>
