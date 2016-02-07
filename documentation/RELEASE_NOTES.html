@@ -35,16 +35,31 @@
           that was introduced in R4-27. The advantage of using the asynOption interface is
           that this behavior can now be changed at run-time, rather than being set once when
           the driver is created.</li>
-        <li>key="hostInfo", value="host:port protocol", i.e. the Internet host name, port
-          number and optional protocol, using the same syntax used in the drvAsynIPPortConfigure
-          command. This allows changing at run time the Internet host and port to which this
-          asyn port is connected. The only restriction is that the setting of the COM (TELNET
-          RFC 2217) protocol cannot be changed from that specified with drvAsynIPPortConfigure.
-          This is because if COM is specified in the drvAsynIPPortConfigure command then asynOctet
-          and asynOption interpose interfaces are used, and asynManager does not support removing
-          interpose interfaces.</li>
+        <li>key="hostInfo", value="host:port[:localport] [protocol]", i.e. the Internet host
+          name, port number, optional local port number and optional protocol. This uses the
+          same syntax as the drvAsynIPPortConfigure command. This allows changing at run time
+          the Internet host and port to which this asyn port is connected. The only restriction
+          is that the setting of the COM (TELNET RFC 2217) protocol cannot be changed from
+          that specified with drvAsynIPPortConfigure. This is because if COM is specified
+          in the drvAsynIPPortConfigure command then asynOctet and asynOption interpose interfaces
+          are used, and asynManager does not support removing interpose interfaces.</li>
       </ul>
     </li>
+  </ul>
+  <h3>
+    asynRecord</h3>
+  <ul>
+    <li>Added 2 new record fields to read and control the new drvAsynIPPort options:
+      <ul>
+        <li>DRTO (Disconnect on Read Timeout)</li>
+        <li>HOSTINFO (hostInfo string)</li>
+      </ul>
+    </li>
+    <li>Added new OPI screen (asynIPPortSetup.[adl,.opi,.edl,.ui]). This screen allows
+      display and control of the new DRTO and HOSTINFO fields. It also allows display
+      and control of the serial port parameters for drvAsynIPPorts created with the COM
+      (RFC 2217) protocol. There was previously no GUI to control these options for IP
+      ports. This screen is accessed via the More menu in asynRecord.adl.</li>
   </ul>
   <h3>
     testBroadcastApp</h3>
