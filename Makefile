@@ -24,13 +24,13 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   testConnectApp_DEPEND_DIRS = asyn
   iocBoot_DEPEND_DIRS += testConnectApp
   DIRS += testEpicsApp
-  testEpicsApp_DEPEND_DIRS = asyn
+  testEpicsApp_DEPEND_DIRS = testApp asyn
   iocBoot_DEPEND_DIRS += testEpicsApp
   DIRS += testErrorsApp
   testErrorsApp_DEPEND_DIRS = asyn
   iocBoot_DEPEND_DIRS += testErrorsApp
   DIRS += testGpibApp
-  testGpibApp_DEPEND_DIRS = asyn
+  testGpibApp_DEPEND_DIRS = testApp asyn
   iocBoot_DEPEND_DIRS += testGpibApp
   DIRS += testGpibSerialApp
   testGpibSerialApp_DEPEND_DIRS = testApp testGpibApp
