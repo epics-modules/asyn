@@ -730,7 +730,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         osiSockAddr oa;
         unsigned int addrlen = sizeof(oa.ia);
         thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &oa.sa, &addrlen);
-        if (thisRead > 0) {
+        if (thisRead >= 0) {
             if (pasynTrace->getTraceMask(pasynUser) & ASYN_TRACEIO_DRIVER) {
                 char inetBuff[32];
                 ipAddrToDottedIP(&oa.ia, inetBuff, sizeof(inetBuff));
@@ -742,7 +742,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     } else {
         thisRead = recv(tty->fd, data, (int)maxchars, 0);
-        if (thisRead > 0) {
+        if (thisRead >= 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
                         "%s read %d\n", tty->IPDeviceName, thisRead);
             tty->nRead += (unsigned long)thisRead;
