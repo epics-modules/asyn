@@ -901,7 +901,7 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 };
 
 /*
- * Configure and register a the drvAsynIPPort driver
+ * Configure and register the drvAsynIPPort driver
 */
 epicsShareFunc int
 drvAsynIPPortConfigure(const char *portName,
@@ -954,7 +954,10 @@ drvAsynIPPortConfigure(const char *portName,
      * Create socket from hostInfo
      */
     status = parseHostInfo(tty, hostInfo);
-    if (status) return status;
+    if (status) {
+        ttyCleanup(tty);
+        return -1;
+    }
 
     /*
      *  Link with higher level routines
@@ -1003,6 +1006,8 @@ drvAsynIPPortConfigure(const char *portName,
         printf("drvAsynIPPortConfigure asynInterposeCOM failed.\n");
         return -1;
     }
+    if (!noProcessEos)
+        asynInterposeEosConfig(tty->portName, -1, 1, 1);
     tty->pasynUser = pasynManager->createAsynUser(0,0);
     status = pasynManager->connectDevice(tty->pasynUser,tty->portName,-1);
     if(status != asynSuccess) {
@@ -1010,8 +1015,6 @@ drvAsynIPPortConfigure(const char *portName,
         ttyCleanup(tty);
         return -1;
     }
-    if (!noProcessEos)
-        asynInterposeEosConfig(tty->portName, -1, 1, 1);
 
     /*
      * Register for socket cleanup
