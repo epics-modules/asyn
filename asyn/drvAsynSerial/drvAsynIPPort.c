@@ -270,8 +270,6 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
     int isCom = 0;
     static const char *functionName = "drvAsynIPPort::parseHostInfo";
 
-    /*asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "%s: entry\n", functionName);*/
-
     if (tty->fd != INVALID_SOCKET) {
         tty->flags |= FLAG_SHUTDOWN; /* prevent reconnect and force calling exceptionDisconnect */
         closeConnection(tty->pasynUser, tty, "drvAsynIPPort::parseHostInfo, closing socket to open new connection");
@@ -309,7 +307,7 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
                            sizeof(tty->farAddr.ua.sun_path) + l + 1;
         tty->socketType = SOCK_STREAM;
 #   else
-        printf("AF_UNIX not available on this platform.\n");
+        printf("%s: AF_UNIX not available on this platform.\n", functionName);
         return -1;
 #   endif
     }
@@ -320,22 +318,22 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
         char *secondColon, *blank;
         protocol[0] = '\0';
         if ((cp = strchr(tty->IPDeviceName, ':')) == NULL) {
-            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
-                                                                tty->IPDeviceName);
+            printf("%s: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                functionName, tty->IPDeviceName);
             return -1;
         }
         *cp = '\0';
         tty->IPHostName = epicsStrDup(tty->IPDeviceName);
         *cp = ':';
         if (sscanf(cp, ":%d", &port) < 1) {
-            printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
-                                                                tty->IPDeviceName);
+            printf("%s: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                functionName, tty->IPDeviceName);
             return -1;
         }
         if ((secondColon = strchr(cp+1, ':')) != NULL) {
             if (sscanf(secondColon, ":%d", &localPort) < 1) {
-                printf("drvAsynIPPortConfigure: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
-                                                                tty->IPDeviceName);
+                printf("%s: \"%s\" is not of the form \"<host>:<port>[:localPort] [protocol]\"\n",
+                    functionName, tty->IPDeviceName);
                 return -1;
             }
             tty->localAddr.ia.sin_family = AF_INET;
@@ -369,14 +367,15 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
             tty->flags |= FLAG_BROADCAST;
         }
         else {
-            printf("drvAsynIPPortConfigure: Unknown protocol \"%s\".\n", protocol);
+            printf("%s: Unknown protocol \"%s\".\n", functionName, protocol);
             return -1;
         }
         if (tty->isCom == ISCOM_UNKNOWN) {
             tty->isCom = isCom;
         } else {
             if (isCom != tty->isCom) {
-                printf("drvAsynIPPortConfigure: cannot change COM flag to %d from previous value %d\n", isCom, tty->isCom);
+                printf("%s: cannot change COM flag to %d from previous value %d\n", 
+                    functionName, isCom, tty->isCom);
                 return -1;
             }
         }
