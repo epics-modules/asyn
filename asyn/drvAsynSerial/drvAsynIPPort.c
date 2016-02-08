@@ -92,7 +92,7 @@
  * EAGAIN or EINTR before trying again */
 #define SEND_RETRY_DELAY 0.01
 
-#define ISCOM_UNKNOWN -1
+#define ISCOM_UNKNOWN (-1)
 
 /*
  * This structure holds the hardware-specific information for a single
