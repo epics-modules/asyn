@@ -1930,8 +1930,8 @@ static void getOptions(asynUser * pasynUser)
     POST_IF_NEW(ixany);
     POST_IF_NEW(drto);
     if (strncmp(pasynRec->hostinfo, pasynRecPvt->old.hostinfo, sizeof(pasynRec->hostinfo)) != 0) {
-        if(interruptAccept) \
-           db_post_events(pasynRec, &pasynRec->hostinfo, monitor_mask); \
+        if(interruptAccept)
+           db_post_events(pasynRec, &pasynRec->hostinfo, monitor_mask);
         strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRec->hostinfo));
     }
 }
