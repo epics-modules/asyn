@@ -123,6 +123,7 @@ void testConnect::pollerTask(void)
     }
 }
 
+extern "C" {
 int testConnectConfigure(const char *portName, const char *IPPortName, const char *outputString)
 {
     new testConnect(portName, IPPortName, outputString);
@@ -148,4 +149,4 @@ void testConnectRegister(void)
 }
 
 epicsExportRegistrar(testConnectRegister);
-
+}
