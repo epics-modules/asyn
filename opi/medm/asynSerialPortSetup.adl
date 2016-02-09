@@ -1,7 +1,7 @@
 
 file {
-	name="/home/epics/devel/asyn/opi/medm/asynSerialPortSetup.adl"
-	version=030105
+	name="/home/epics/devel/asyn-4-28/opi/medm/asynSerialPortSetup.adl"
+	version=030107
 }
 display {
 	object {
@@ -89,8 +89,8 @@ display {
 }
 rectangle {
 	object {
-		x=20
-		y=0
+		x=29
+		y=2
 		width=203
 		height=16
 	}
@@ -100,9 +100,9 @@ rectangle {
 }
 text {
 	object {
-		x=23
-		y=0
-		width=199
+		x=35
+		y=2
+		width=190
 		height=16
 	}
 	"basic attribute" {

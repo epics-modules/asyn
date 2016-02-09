@@ -94,6 +94,11 @@ menu(serialIX) {
     choice(serialIX_No,"No")
     choice(serialIX_Yes,"Yes")
 }
+menu(ipDRTO) {
+    choice(ipDRTO_unknown,"Unknown")
+    choice(ipDRTO_No,"No")
+    choice(ipDRTO_Yes,"Yes")
+}
 menu(gpibUCMD) {
     choice(gpibUCMD_None,"None")
     choice(gpibUCMD_Device_Clear__DCL_,"Device Clear (DCL)")
@@ -426,6 +431,23 @@ recordtype(asyn) {
         interest(2)
         special(SPC_MOD)
         menu(serialIX)
+    }
+
+# IP option fields
+    field(HOSTINFO,DBF_STRING) {
+        prompt("host info")
+        promptgroup(GUI_INPUTS)
+        special(SPC_MOD)
+        interest(1)
+        initial("")
+        size(40)
+    }
+    field(DRTO,DBF_MENU) {
+        prompt("Disconnect on timeout")
+        promptgroup(GUI_INPUTS)
+        interest(2)
+        special(SPC_MOD)
+        menu(ipDRTO)
     }
 
 # GPIB control fields

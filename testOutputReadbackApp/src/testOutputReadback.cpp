@@ -15,7 +15,7 @@
 #include "testOutputReadback.h"
 #include <epicsExport.h>
 
-static const char *driverName="testOutputReadback";
+// static const char *driverName="testOutputReadback";
 
 #define UINT32_DIGITAL_MASK 0xFFFFFFFF
 
