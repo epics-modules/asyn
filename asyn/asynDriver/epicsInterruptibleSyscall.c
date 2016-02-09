@@ -64,7 +64,7 @@ epicsInterruptibleSyscallMustCreate(const char *msg)
     epicsInterruptibleSyscallContext *c = epicsInterruptibleSyscallCreate();
 
     if (c == NULL)
-        cantProceed(msg);
+        cantProceed("%s", msg);
     return c;
 }
 
