@@ -870,8 +870,8 @@ asynStatus asynPortDriver::getParamStatus(int index, asynStatus *status)
 asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *paramStatus)
 {
     asynStatus status;
-    static const char *functionName = "setParamStatus";
-    
+    static const char *functionName = "getParamStatus";
+
     status = this->params[list]->getStatus(index, paramStatus);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return(status);
@@ -1886,7 +1886,7 @@ asynStatus asynPortDriver::flushOctet(asynUser *pasynUser)
     double     savetimeout = pasynUser->timeout;
     char       buffer[100]; 
     size_t     nbytesTransfered;
-    static const char *functionName = "writeOctet";
+    static const char *functionName = "flushOctet";
 
     pasynUser->timeout = .05;
     while(1) {

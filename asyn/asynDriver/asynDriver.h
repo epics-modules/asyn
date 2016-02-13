@@ -41,6 +41,12 @@ typedef enum {
     asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
 } asynException;
 
+#define		ASYN_EXCEPTION_STRINGS	\
+    "asynExceptionConnect",		"asynExceptionEnable",				"asynExceptionAutoConnect",	\
+    "asynExceptionTraceMask",	"asynExceptionTraceIOMask",			"asynExceptionTraceInfoMask",	\
+    "asynExceptionTraceFile",	"asynExceptionTraceIOTruncateSize"
+extern  const char * asynExceptionToString( asynException e );
+
 typedef enum {
     asynQueuePriorityLow,asynQueuePriorityMedium,asynQueuePriorityHigh,
     asynQueuePriorityConnect
