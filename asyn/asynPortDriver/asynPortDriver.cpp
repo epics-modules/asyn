@@ -1090,14 +1090,18 @@ void asynPortDriver::reportGetParamErrors(asynStatus status, int index, int list
             driverName, functionName, portName, index, list);
     }
     if (status == asynParamWrongType) {
+		const char *paramName;
+		getParamName(index, &paramName);
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s: port=%s error getting parameter %d in list %d, wrong type\n",
-            driverName, functionName, portName, index, list);
+            "%s:%s: port=%s error getting parameter %d %s, in list %d, wrong type\n",
+            driverName, functionName, portName, index, paramName, list);
     }
     if (status == asynParamUndefined) {
+		const char *paramName;
+		getParamName(index, &paramName);
         asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
-            "%s:%s: port=%s error getting parameter %d in list %d, value undefined\n",
-            driverName, functionName, portName, index, list);
+            "%s:%s: port=%s error getting parameter %d %s, in list %d, value undefined\n",
+            driverName, functionName, portName, index, paramName, list);
     }
 }
 
@@ -1358,6 +1362,8 @@ extern "C" {static asynStatus readInt32(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1371,12 +1377,12 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
     pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%d", 
-                  driverName, functionName, status, function, *value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+                  driverName, functionName, status, function, paramName, *value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d\n", 
-              driverName, functionName, function, *value);
+              "%s:%s: function=%d, name=%s, value=%d\n", 
+              driverName, functionName, function, paramName, *value);
     return(status);
 }
 
@@ -1402,6 +1408,8 @@ extern "C" {static asynStatus writeInt32(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "writeInt32";
@@ -1416,12 +1424,12 @@ asynStatus asynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
     
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%d", 
-                  driverName, functionName, status, function, value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+                  driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%d\n", 
+              driverName, functionName, function, paramName, value);
     return status;
 }
 
@@ -1480,6 +1488,8 @@ extern "C" {static asynStatus readUInt32Digital(void *drvPvt, asynUser *pasynUse
 asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1493,12 +1503,12 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
     pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%u mask=%u", 
-                  driverName, functionName, status, function, *value, mask);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%u mask=%u", 
+                  driverName, functionName, status, function, paramName, *value, mask);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%u, mask=%u\n", 
-              driverName, functionName, function, *value, mask);
+              "%s:%s: function=%d, name=%s, value=%u, mask=%u\n", 
+              driverName, functionName, function, paramName, *value, mask);
     return(status);
 }
 
@@ -1525,6 +1535,8 @@ extern "C" {static asynStatus writeUInt32Digital(void *drvPvt, asynUser *pasynUs
 asynStatus asynPortDriver::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "writeUInt32Digital";
@@ -1539,12 +1551,12 @@ asynStatus asynPortDriver::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 v
     
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%u, mask=%u", 
-                  driverName, functionName, status, function, value, mask);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%u, mask=%u", 
+                  driverName, functionName, status, function, paramName, value, mask);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d, mask=%u\n", 
-              driverName, functionName, function, value, mask);
+              "%s:%s: function=%d, name=%s, value=%d, mask=%u\n", 
+              driverName, functionName, function, paramName, value, mask);
     return status;
 }
 
@@ -1569,6 +1581,8 @@ extern "C" {static asynStatus setInterruptUInt32Digital(void *drvPvt, asynUser *
 asynStatus asynPortDriver::setInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask, interruptReason reason)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "setInterruptUInt32Digital";
@@ -1580,12 +1594,12 @@ asynStatus asynPortDriver::setInterruptUInt32Digital(asynUser *pasynUser, epicsU
 
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, mask=%u, reason=%d", 
-                  driverName, functionName, status, function, mask, reason);
+                  "%s:%s: status=%d, function=%d, name=%s, mask=%u, reason=%d", 
+                  driverName, functionName, status, function, paramName, mask, reason);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, mask=%u, reason=%d\n", 
-              driverName, functionName, function, mask, reason);
+              "%s:%s: function=%d, name=%s, mask=%u, reason=%d\n", 
+              driverName, functionName, function, paramName, mask, reason);
     return status;
 }
 
@@ -1609,6 +1623,8 @@ extern "C" {static asynStatus clearInterruptUInt32Digital(void *drvPvt, asynUser
 asynStatus asynPortDriver::clearInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "clearInterruptUInt32Digital";
@@ -1620,12 +1636,12 @@ asynStatus asynPortDriver::clearInterruptUInt32Digital(asynUser *pasynUser, epic
 
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, mask=%u", 
-                  driverName, functionName, status, function, mask);
+                  "%s:%s: status=%d, function=%d, name=%s, mask=%u", 
+                  driverName, functionName, status, function, paramName, mask);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, mask=%u\n", 
-              driverName, functionName, function, mask);
+              "%s:%s: function=%d, name=%s, mask=%u\n", 
+              driverName, functionName, function, paramName, mask);
     return status;
 }
 
@@ -1649,6 +1665,8 @@ extern "C" {static asynStatus getInterruptUInt32Digital(void *drvPvt, asynUser *
 asynStatus asynPortDriver::getInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "getInterruptUInt32Digital";
@@ -1660,12 +1678,12 @@ asynStatus asynPortDriver::getInterruptUInt32Digital(asynUser *pasynUser, epicsU
 
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, mask=%u, reason=%d", 
-                  driverName, functionName, status, function, *mask, reason);
+                  "%s:%s: status=%d, function=%d, name=%s, mask=%u, reason=%d", 
+                  driverName, functionName, status, function, paramName, *mask, reason);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, mask=%u, reason=%d\n", 
-              driverName, functionName, function, *mask, reason);
+              "%s:%s: function=%d, name=%s, mask=%u, reason=%d\n", 
+              driverName, functionName, function, paramName, *mask, reason);
     return status;
 }
 
@@ -1691,6 +1709,8 @@ extern "C" {static asynStatus readFloat64(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1704,17 +1724,17 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     pasynUser->timestamp = timeStamp;
     if (status == asynParamUndefined) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value is undefined", 
-                  driverName, functionName, status, function);
+                  "%s:%s: status=%d, function=%d, name=%s, value is undefined", 
+                  driverName, functionName, status, function, paramName );
     
     else if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%f", 
-                  driverName, functionName, status, function, *value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%f", 
+                  driverName, functionName, status, function, paramName, *value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%f\n", 
-              driverName, functionName, function, *value);
+              "%s:%s: function=%d, name=%s, value=%f\n", 
+              driverName, functionName, function, paramName, *value);
     return(status);
 }
 
@@ -1740,6 +1760,8 @@ extern "C" {static asynStatus writeFloat64(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     asynStatus status = asynSuccess;
     int addr=0;
     static const char *functionName = "writeFloat64";
@@ -1753,12 +1775,12 @@ asynStatus asynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
     callParamCallbacks(addr, addr);
     if (status) 
         asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-              "%s:%s: error, status=%d function=%d, value=%f\n", 
-              driverName, functionName, status, function, value);
+              "%s:%s: error, status=%d function=%d, name=%s, value=%f\n", 
+              driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%f\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%f\n", 
+              driverName, functionName, function, paramName, value);
     return status;
 }
 
@@ -1791,6 +1813,8 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
                             int *eomReason)
 {
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1804,12 +1828,12 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     pasynUser->timestamp = timeStamp;
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%s", 
-                  driverName, functionName, status, function, value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%s", 
+                  driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%s\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%s\n", 
+              driverName, functionName, function, paramName, value);
     if (eomReason) *eomReason = ASYN_EOM_END;
     *nActual = strlen(value)+1;
     return(status);
@@ -1841,6 +1865,8 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
 {
     int addr=0;
     int function = pasynUser->reason;
+	const char *paramName;
+	getParamName(function, &paramName);
     asynStatus status = asynSuccess;
     static const char *functionName = "writeOctet";
 
@@ -1854,12 +1880,12 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
 
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%s", 
-                  driverName, functionName, status, function, value);
+                  "%s:%s: status=%d, function=%d, name=%s, value=%s", 
+                  driverName, functionName, status, function, paramName, value);
     else        
         asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%s\n", 
-              driverName, functionName, function, value);
+              "%s:%s: function=%d, name=%s, value=%s\n", 
+              driverName, functionName, function, paramName, value);
     *nActual = nChars;
     return status;
 }
