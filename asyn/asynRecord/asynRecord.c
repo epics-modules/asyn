@@ -2022,10 +2022,11 @@ static void resetError(asynRecord * pasynRec)
 }
 
 
-static	const char * asynExceptionStrings[] = {	ASYN_EXCEPTION_STRINGS	};
+static const char * asynExceptionStrings[] = { ASYN_EXCEPTION_STRINGS };
 const char * asynExceptionToString( asynException e )
 {
-	if ( e < 0 || e > asynExceptionTraceIOTruncateSize )
-		return "Invalid Exception Number!";
-	return asynExceptionStrings[e];
+    if ( e < 0 || e > asynExceptionTraceIOTruncateSize )
+        return "Invalid Exception Number!";
+    return asynExceptionStrings[e];
 }
+

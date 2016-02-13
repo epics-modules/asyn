@@ -1084,21 +1084,21 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
   * \param[in] functionName The name of the function that generated the error  */
 void asynPortDriver::reportGetParamErrors(asynStatus status, int index, int list, const char *functionName)
 {
-    if (status == asynParamBadIndex) {
+    if (status == asynParamBadIndex) {        
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error getting parameter %d in list %d, bad index\n",
             driverName, functionName, portName, index, list);
     }
     if (status == asynParamWrongType) {
-		const char *paramName;
-		getParamName(index, &paramName);
+                const char *paramName;
+                getParamName(index, &paramName);
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error getting parameter %d %s, in list %d, wrong type\n",
             driverName, functionName, portName, index, paramName, list);
     }
     if (status == asynParamUndefined) {
-		const char *paramName;
-		getParamName(index, &paramName);
+                const char *paramName;
+                getParamName(index, &paramName);
         asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
             "%s:%s: port=%s error getting parameter %d %s, in list %d, value undefined\n",
             driverName, functionName, portName, index, paramName, list);
@@ -1362,8 +1362,8 @@ extern "C" {static asynStatus readInt32(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1408,8 +1408,8 @@ extern "C" {static asynStatus writeInt32(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "writeInt32";
@@ -1488,8 +1488,8 @@ extern "C" {static asynStatus readUInt32Digital(void *drvPvt, asynUser *pasynUse
 asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1535,8 +1535,8 @@ extern "C" {static asynStatus writeUInt32Digital(void *drvPvt, asynUser *pasynUs
 asynStatus asynPortDriver::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "writeUInt32Digital";
@@ -1581,8 +1581,8 @@ extern "C" {static asynStatus setInterruptUInt32Digital(void *drvPvt, asynUser *
 asynStatus asynPortDriver::setInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask, interruptReason reason)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "setInterruptUInt32Digital";
@@ -1623,8 +1623,8 @@ extern "C" {static asynStatus clearInterruptUInt32Digital(void *drvPvt, asynUser
 asynStatus asynPortDriver::clearInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "clearInterruptUInt32Digital";
@@ -1665,8 +1665,8 @@ extern "C" {static asynStatus getInterruptUInt32Digital(void *drvPvt, asynUser *
 asynStatus asynPortDriver::getInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     const char* functionName = "getInterruptUInt32Digital";
@@ -1709,8 +1709,8 @@ extern "C" {static asynStatus readFloat64(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1760,8 +1760,8 @@ extern "C" {static asynStatus writeFloat64(void *drvPvt, asynUser *pasynUser,
 asynStatus asynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     asynStatus status = asynSuccess;
     int addr=0;
     static const char *functionName = "writeFloat64";
@@ -1813,8 +1813,8 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
                             int *eomReason)
 {
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     int addr=0;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
@@ -1865,8 +1865,8 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
 {
     int addr=0;
     int function = pasynUser->reason;
-	const char *paramName;
-	getParamName(function, &paramName);
+        const char *paramName;
+        getParamName(function, &paramName);
     asynStatus status = asynSuccess;
     static const char *functionName = "writeOctet";
 

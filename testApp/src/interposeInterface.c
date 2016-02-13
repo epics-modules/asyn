@@ -89,7 +89,7 @@ static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
     status = pasynManager->interposeInterface(portName,addr,
         &pinterposePvt->octet,&poctetasynInterface);
     if((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface failed.\n",portName);
+        printf("%s interposeInterface failed.\n",portName);
         free(pinterposePvt);
         free(portName);
         free(interposeName);

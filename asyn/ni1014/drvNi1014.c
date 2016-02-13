@@ -59,11 +59,11 @@ struct niport {
     transferState_t transferState;
     transferState_t nextTransferState;
     /*bytesRemaining and nextByte are used by interruptHandler*/
-    int	        bytesRemainingCmd;
+    int         bytesRemainingCmd;
     const char  *nextByteCmd;
-    int	        bytesRemainingWrite;
+    int         bytesRemainingWrite;
     const char  *nextByteWrite;
-    int	        bytesRemainingRead;
+    int         bytesRemainingRead;
     char        *nextByteRead;
     int         eomReason;
     int         eos; /* -1 means no end of string character*/
@@ -315,7 +315,7 @@ static void writeRegister(niport *pniport,int offset, epicsUInt8 value)
      * Is required.
      */
     if (offset == AUXMR)
-	microSecondDelay(6);
+        microSecondDelay(6);
 }
 
 static void printStatus(niport *pniport, const char *source)
@@ -399,7 +399,7 @@ void ni1014(void *pvt)
     switch(state) {
     case transferStateCmd:
         if(!isr2&CO)
-	    goto exit;
+            goto exit;
         if(pniport->bytesRemainingCmd == 0) {
             pniport->transferState = pniport->nextTransferState;
             if(pniport->transferState==transferStateIdle) {
@@ -415,7 +415,7 @@ void ni1014(void *pvt)
         break;
     case transferStateWrite:
         if(!isr1&DO)
-	    goto exit;
+            goto exit;
         if(pniport->bytesRemainingWrite == 0) {
             pniport->transferState = transferStateIdle;
             writeRegister(pniport,AUXMR,AUXTCA);
@@ -446,7 +446,7 @@ void ni1014(void *pvt)
         break;
     case transferStateIdle:
         if(!isr1&DI)
-	    goto exit;
+            goto exit;
         octet = readRegister(pniport,DIR);
         sprintf(message,"%s ni1014IH transferStateIdle received %2.2x\n",
              pniport->portName,octet);
@@ -884,7 +884,7 @@ int ni1014Config(char *portNameA,char *portNameB,
     long   status;
 
     if(nloopsPerMicrosecond==0)
-	initAuxmrWait();
+        initAuxmrWait();
 
     nports = (portNameB==0 || strlen(portNameB)==0) ? 1 : 2;
     for(indPort=0; indPort<nports; indPort++) {

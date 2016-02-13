@@ -28,9 +28,9 @@
  *
 */
 
-#define	DSET_AI		devAiGpibConvertExample
-#define	DSET_SI		devSiGpibConvertExample
-#define	DSET_SO		devSoGpibConvertExample
+#define DSET_AI devAiGpibConvertExample
+#define DSET_SI devSiGpibConvertExample
+#define DSET_SO devSoGpibConvertExample
 
 #include <stddef.h>
 #include <string.h>
@@ -51,7 +51,7 @@
 #include <devSupportGpib.h>
 #include <devGpib.h>
 
-#define	TIMEOUT	1.0
+#define TIMEOUT 1.0
 #define TIMEWINDOW  2.0
 
 static int readString(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
@@ -82,7 +82,7 @@ static struct gpibCmd gpibCmds[] =
 
 
 /* The following is the number of elements in the command array above.  */
-#define NUMPARAMS	sizeof(gpibCmds)/sizeof(struct gpibCmd)
+#define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)
 
 /******************************************************************************
  *

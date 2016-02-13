@@ -290,7 +290,7 @@ static void writeRegister(gsport *pgsport,int offset, epicsUInt8 value)
      * Is required.
      */
     if (offset == AUXMR)
-	microSecondDelay(6);
+        microSecondDelay(6);
 }
 
 static void printStatus(gsport *pgsport, const char *source)
@@ -365,7 +365,7 @@ void gsip488(int parameter)
     switch(state) {
     case transferStateCmd:
         if(!isr0&BO)
-	    goto exit;
+            goto exit;
         if(pgsport->bytesRemainingCmd > 0) {
             octet = *pgsport->nextByteCmd;
             writeRegister(pgsport,CDOR,(epicsUInt8)octet);
@@ -376,7 +376,7 @@ void gsip488(int parameter)
         switch(pgsport->transferState) {
         case transferStateIdle:
             epicsEventSignal(pgsport->waitForInterrupt);
-	    goto exit;
+            goto exit;
         case transferStateWrite:
             auxCmd(pgsport,TONS); break;
         case transferStateRead:
@@ -386,10 +386,10 @@ void gsip488(int parameter)
         }
         auxCmd(pgsport,GTS);
         if(pgsport->transferState!=transferStateWrite)
-	    goto exit;
+            goto exit;
     case transferStateWrite:
         if(!isr0&BO)
-	    goto exit;
+            goto exit;
         if(pgsport->bytesRemainingWrite == 0) {
             pgsport->transferState = transferStateIdle;
             auxCmd(pgsport,TONC);
@@ -419,9 +419,9 @@ void gsip488(int parameter)
         break;
     case transferStateIdle: 
         if(readRegister(pgsport,ADSR&ATN))
-	    goto exit;
+            goto exit;
         if(!isr0&BI)
-	    goto exit;
+            goto exit;
         octet = readRegister(pgsport,DIR);
         sprintf(message,"%s gsip488 received %2.2x\n",
              pgsport->portName,octet);

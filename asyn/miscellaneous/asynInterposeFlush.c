@@ -80,7 +80,7 @@ asynInterposeFlushConfig(const char *portName,int addr,int timeout)
     status = pasynManager->interposeInterface(portName,addr,
         &pinterposePvt->octet,&poctetasynInterface);
     if((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface failed.\n",portName);
+        printf("%s interposeInterface failed.\n",portName);
         free((void *)pinterposePvt->portName);
         free(pinterposePvt);
         return(-1);

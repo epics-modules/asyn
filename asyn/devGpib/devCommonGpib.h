@@ -62,4 +62,4 @@ int boSRQonOff(struct gpibDpvt *pdpvt, int p1, int p2,char **p3);
 }
 #endif  /* __cplusplus */
 
-#endif	/* INCdevCommonGpibh */
+#endif  /* INCdevCommonGpibh */

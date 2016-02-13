@@ -11,16 +11,16 @@
 * asynDriver is distributed subject to a Software License Agreement
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
-#define	DSET_AI		devAiTestGpib
-#define	DSET_AO		devAoTestGpib
-#define	DSET_BI		devBiTestGpib
-#define	DSET_BO		devBoTestGpib
-#define	DSET_LI		devLiTestGpib
-#define	DSET_LO		devLoTestGpib
-#define	DSET_MBBO	devMbboTestGpib
-#define	DSET_MBBI	devMbbiTestGpib
-#define	DSET_SI		devSiTestGpib
-#define	DSET_SO		devSoTestGpib
+#define DSET_AI   devAiTestGpib
+#define DSET_AO   devAoTestGpib
+#define DSET_BI   devBiTestGpib
+#define DSET_BO   devBoTestGpib
+#define DSET_LI   devLiTestGpib
+#define DSET_LO   devLoTestGpib
+#define DSET_MBBO devMbboTestGpib
+#define DSET_MBBI devMbbiTestGpib
+#define DSET_SI   devSiTestGpib
+#define DSET_SO   devSoTestGpib
 
 #include <stddef.h>
 #include <string.h>
@@ -52,7 +52,7 @@
 #include <devGpib.h>
 #include <epicsExport.h>
 
-#define	TIMEOUT	1.0
+#define TIMEOUT 1.0
 #define TIMEWINDOW  2.0
 
 static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3);
@@ -109,7 +109,7 @@ static struct gpibCmd gpibCmds[] =
 
 
 /* The following is the number of elements in the command array above.  */
-#define NUMPARAMS	sizeof(gpibCmds)/sizeof(struct gpibCmd)
+#define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)
 
 /******************************************************************************
  *

@@ -16,8 +16,8 @@
  * 01-Mar-2004  Mark Rivers, created from old serialIO.h
  */
 
-#ifndef	INCasynOctetSyncIOh
-#define	INCasynOctetSyncIOh 1
+#ifndef INCasynOctetSyncIOh
+#define INCasynOctetSyncIOh 1
 
 #include <shareLib.h>
 #include "asynDriver.h"
