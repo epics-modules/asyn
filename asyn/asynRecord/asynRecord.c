@@ -895,8 +895,8 @@ static void exceptCallback(asynUser * pasynUser, asynException exception)
     asynRecord *pasynRec = pasynRecPvt->prec;
     int callLock = interruptAccept;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "%s: exception %d\n",
-              pasynRec->name, (int) exception);
+              "%s: exception %d, %s\n",
+              pasynRec->name, (int) exception, asynExceptionToString(exception) );
     if(callLock)
         dbScanLock((dbCommon *) pasynRec);
     /* There has been a change in connect or enable status */
@@ -2019,4 +2019,13 @@ static void resetError(asynRecord * pasynRec)
         monitor_mask = DBE_VALUE | DBE_LOG;
         db_post_events(pasynRec, pasynRec->errs, monitor_mask);
     }
+}
+
+
+static	const char * asynExceptionStrings[] = {	ASYN_EXCEPTION_STRINGS	};
+const char * asynExceptionToString( asynException e )
+{
+	if ( e < 0 || e > asynExceptionTraceIOTruncateSize )
+		return "Invalid Exception Number!";
+	return asynExceptionStrings[e];
 }

@@ -739,7 +739,7 @@ static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
         *eoslen = 1;
     }
     asynPrintIO(pasynUser, ASYN_TRACE_FLOW, eos, *eoslen,
-        "%s addr %d gpibPortGetEos eoslen %d\n",pniport->portName,addr,eoslen);
+        "%s addr %d gpibPortGetEos eoslen %p\n",pniport->portName,addr,eoslen);
     return asynSuccess;
 }
 
