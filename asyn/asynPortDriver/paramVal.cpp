@@ -195,6 +195,8 @@ void paramVal::setString(const char *value)
 {
     if (type != asynParamOctet)
         throw ParamValWrongType("paramVal::setString can only handle asynParamOctet");
+    if (value == NULL)
+        throw ParamValWrongType("paramVal::setString can only handle non-NULL values");
     if (!isDefined() || (strcmp(data.sval, value)))
     {
         setDefined(true);
