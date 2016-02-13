@@ -1,7 +1,7 @@
 
 file {
-	name="/home/epics/devel/asyn-4-22/opi/medm/asynRecord.adl"
-	version=030105
+	name="/home/epics/devel/asyn/opi/medm/asynRecord.adl"
+	version=030107
 }
 display {
 	object {
@@ -810,6 +810,11 @@ text {
 		args="P=$(P),R=$(R)"
 	}
 	display[3] {
+		label="IP port parameters"
+		name="asynIPPortSetup.adl"
+		args="P=$(P),R=$(R)"
+	}
+	display[4] {
 		label="GPIB parameters"
 		name="asynGPIBSetup.adl"
 		args="P=$(P),R=$(R)"

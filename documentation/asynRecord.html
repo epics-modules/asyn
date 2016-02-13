@@ -25,6 +25,7 @@
     <li><a href="#InputOutputControlFieldsforRegisterInterfaces">Input/Output Control
       Fields for Register Interfaces</a></li>
     <li><a href="#SerialControlFields">Serial Control Fields</a></li>
+    <li><a href="#IPControlFields">IP Control Fields</a></li>
     <li><a href="#GPIBControlFields">GPIB Control Fields</a></li>
     <li><a href="#TraceControlFields">Trace Control Fields</a></li>
     <li><a href="#ConnectionManagementFields">Connection Management Fields</a></li>
@@ -1131,6 +1132,60 @@
     sioLib has any concept of modem control, which is what POSIX calls CLOCAL. For vxWorks
     the standard serial support for asynDriver supplied in drvAsynSerialPort.c, accepts
     both MCTL and FCTL. MCTL=(CLOCAL,YES) is the same as FCTL=(None,Hardware).</p>
+  <p>
+  </p>
+  <hr />
+  <h2 id="IPControlFields" style="text-align: center">
+    IP Control Fields</h2>
+  <table border="1" cellpadding="5">
+    <tbody>
+      <tr valign="top">
+        <th>
+          Name</th>
+        <th>
+          Access</th>
+        <th>
+          Prompt</th>
+        <th>
+          Data type</th>
+        <th>
+          Description</th>
+      </tr>
+      <tr valign="top">
+        <td>
+          DRTO</td>
+        <td>
+          R/W</td>
+        <td>
+          "Disconnect on Read Timeout"</td>
+        <td>
+          DBF_MENU</td>
+        <td>
+          Choices are "Unknown", "No" and "Yes". Default="No". If Yes then the IP port will
+          be disconnected on a read timeout.</td>
+      </tr>
+      <tr valign="top">
+        <td>
+          HOSTINFO</td>
+        <td>
+          R/W</td>
+        <td>
+          "IP port hostInfo"</td>
+        <td>
+          DBF_STRING</td>
+        <td>
+          The IP port hostInfo string with the same syntax as the drvAsynIPPortConfigure command
+          i.e. host:port[:localport] [protocol].</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    Writing to the HOSTINFO field will cause the drvAsynIPPort driver to disconnect
+    from the current host (if any) and then attempt to connect to the new host.</p>
+  <p>
+    If the drvAsynIPPort was created with the COM (RFC 2217) protocol then the serial
+    control fields listed above can be used to control those settings on ther Ethernet/serial
+    adapter.</p>
   <hr />
   <h2 id="GPIBControlFields" style="text-align: center">
     GPIB Control Fields</h2>
@@ -1773,6 +1828,12 @@
       Serial port setup screen, asynSerialPortSetup.adl</h3>
     <p>
       <img alt="asynSerialPortSetup.png" src="asynSerialPortSetup.png" /></p>
+    <p>
+    </p>
+    <h3>
+      IP port setup screen, asynIPPortSetup.adl</h3>
+    <p>
+      <img alt="asynIPPortSetup.png" src="asynIPPortSetup.png" /></p>
     <p>
     </p>
     <h3>

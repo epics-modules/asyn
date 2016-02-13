@@ -115,13 +115,15 @@ void testConnect::pollerTask(void)
         }
         else {
             asynPrint(pasynUserSelf, ASYN_TRACEIO_DRIVER,
-                "%s:%s: numWrite=%d, wrote: %s, numRead=%d, response=%s\n", driverName, functionName, numWrite, outputString_, numRead, response);
+                "%s:%s: numWrite=%ld, wrote: %s, numRead=%ld, response=%s\n", 
+                driverName, functionName, (long)numWrite, outputString_, (long)numRead, response);
         }
         unlock();
         epicsThreadSleep(POLLER_PERIOD);
     }
 }
 
+extern "C" {
 int testConnectConfigure(const char *portName, const char *IPPortName, const char *outputString)
 {
     new testConnect(portName, IPPortName, outputString);
@@ -147,4 +149,4 @@ void testConnectRegister(void)
 }
 
 epicsExportRegistrar(testConnectRegister);
-
+}

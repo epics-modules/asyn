@@ -62,6 +62,8 @@ static char *modem_control_choices[NUM_MODEM_CHOICES] = {"Unknown", "Y", "N"};
 static char *flow_control_choices[NUM_FLOW_CHOICES] = {"Unknown", "N", "Y"};
 #define NUM_IX_CHOICES 3
 static char *ix_control_choices[NUM_IX_CHOICES] = {"Unknown", "N", "Y"};
+#define NUM_DRTO_CHOICES 3
+static char *drto_choices[NUM_DRTO_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
@@ -174,6 +176,8 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 ixon;       /* Output XON/XOFF */
     epicsEnum16 ixoff;      /* Input XON/XOFF */
     epicsEnum16 ixany;      /* XON=any character */
+    epicsEnum16 drto;       /* Disconnect on read timeout */
+    char hostinfo[40];      /* IP host info */
     epicsEnum16 ucmd;       /* Universal command */
     epicsEnum16 acmd;       /* Addressed command */
     unsigned char spr;      /* Serial poll response */
@@ -540,6 +544,8 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordIXON:
     case asynRecordIXOFF:
     case asynRecordIXANY:
+    case asynRecordDRTO:
+    case asynRecordHOSTINFO:
         pmsg->fieldIndex = fieldIndex;
         pmsg->callbackType = callbackSetOption;
         break;
@@ -1804,6 +1810,14 @@ static void setOption(asynUser * pasynUser)
         status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
            pasynUser, "ixany", ix_control_choices[pasynRec->ixany]);
         break;
+    case asynRecordDRTO:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+           pasynUser, "disconnectOnReadTimeout", drto_choices[pasynRec->drto]);
+        break;
+    case asynRecordHOSTINFO:
+        status = pasynRecPvt->pasynOption->setOption(pasynRecPvt->asynOptionPvt,
+           pasynUser, "hostInfo", pasynRec->hostinfo);
+        break;
     }
     if(status != asynSuccess) {
         reportError(pasynRec, status,
@@ -1837,6 +1851,8 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(ixon);
     REMEMBER_STATE(ixoff);
     REMEMBER_STATE(ixany);
+    REMEMBER_STATE(drto);
+    strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRec->hostinfo));
     /* Get port options */
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
@@ -1893,6 +1909,15 @@ static void getOptions(asynUser * pasynUser)
     for (i = 0; i < NUM_IX_CHOICES; i++)
         if(strcmp(optbuff, ix_control_choices[i]) == 0)
             pasynRec->ixany = i;
+    pasynRec->drto = 0;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
+                                        "disconnectOnReadTimeout", optbuff, OPT_SIZE);
+    for (i = 0; i < NUM_DRTO_CHOICES; i++)
+        if(strcmp(optbuff, drto_choices[i]) == 0)
+            pasynRec->drto = i;
+    pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
+                                        "hostinfo", optbuff, OPT_SIZE);
+    strncpy(pasynRec->hostinfo, optbuff, sizeof(pasynRec->hostinfo));
     POST_IF_NEW(baud);
     POST_IF_NEW(lbaud);
     POST_IF_NEW(prty);
@@ -1903,6 +1928,12 @@ static void getOptions(asynUser * pasynUser)
     POST_IF_NEW(ixon);
     POST_IF_NEW(ixoff);
     POST_IF_NEW(ixany);
+    POST_IF_NEW(drto);
+    if (strncmp(pasynRec->hostinfo, pasynRecPvt->old.hostinfo, sizeof(pasynRec->hostinfo)) != 0) {
+        if(interruptAccept)
+           db_post_events(pasynRec, &pasynRec->hostinfo, monitor_mask);
+        strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRec->hostinfo));
+    }
 }
 
 

@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-28</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-29</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">December 12, 2015</span></p>
+      <span style="font-weight: bold; font-size: 14pt">February XXX, 2016</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -5511,24 +5511,56 @@ asynOctetSetOutputEos("A1",0,"\r")
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
       connect. Non-zero if explicit connect command must be issued.</li>
-    <li>userFlags: bit-wise ORed:
-      <ul>
-        <li>Bit 0 is USERFLAG_NO_PROCESS_EOS. If 0 then asynInterposeEosConfig is called specifying
-          both processEosIn and processEosOut. </li>
-        <li>Bit 1 is USERFLAG_CLOSE_ON_READ_TIMEOUT. If 1 then the (TCP) socket will be closed
-          when read() returns a timeout. </li>
-        <li>Bit 2--31 are reserved, set to zero. </li>
-      </ul>
-    </li>
+    <li>noProcessEos If 0 then asynInterposeEosConfig is called specifying both processEosIn
+      and processEosOut.</li>
   </ul>
   <p>
     Only asynOctet methods write, read, and flush are implemented. Calling the other
-    methods will result in an error unless asynInterposeEos is used for the other asunOctet
+    methods will result in an error unless asynInterposeEos is used for the other asynOctet
     methods. read blocks until at least one character has been received or until a timeout
     occurs. read transfers as many characters as possible, limited by the specified
     count.</p>
   <p>
-    There are no asynSetOption key/value pairs associated with drvAsynIPPort connections.</p>
+    The following table summarizes the drvAsynIPPort driver asynSetOption keys and values.</p>
+  <table border="1">
+    <tbody>
+      <tr>
+        <th>
+          Key</th>
+        <th>
+          Value</th>
+        <th>
+          Description</th>
+      </tr>
+      <tr>
+        <td>
+          disconnectOnReadTimeout</td>
+        <td>
+          N Y</td>
+        <td>
+          Default=N. If Y then if a read operation times out the driver automatically disconnect
+          the IP port.</td>
+      </tr>
+      <tr>
+        <td>
+          hostInfo</td>
+        <td>
+          &lt;host&gt;:&lt;port&gt;[:localPort] [protocol]</td>
+        <td>
+          The IP port hostInfo specification using the same syntax as drvAsynIPPortConfigure.
+          This option allows changing at run time the Internet host and port to which this
+          asyn port is connected. The only restriction is that the setting of the COM (TELNET
+          RFC 2217) protocol cannot be changed from that specified with drvAsynIPPortConfigure.
+          This is because if COM is specified in the drvAsynIPPortConfigure command then asynOctet
+          and asynOption interpose interfaces are used, and asynManager does not support removing
+          interpose interfaces.</td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    In addition to these key/value pairs if the COM protocol is used then the drvAsynIPPort
+    driver uses the same key/value pairs as the drvAsynSerialPort driver for specifying
+    the serial parameters, i.e. "baud", "bits", etc.</p>
   <p>
     asynInterposeEos and asynInterposeFlush can be used to provide additional functionality.</p>
   <h3 id="drvAsynIPServerPort">

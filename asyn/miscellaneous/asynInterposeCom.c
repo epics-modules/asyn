@@ -64,12 +64,14 @@
 typedef struct interposePvt {
     const char    *portName;
 
-    asynInterface  octet;         /* This asynOctet interface */
-    asynInterface  option;        /* This asynOption interface */
-    asynOctet     *pasynOctetDrv; /* Methods of next lower interface */
-    void          *drvPvt;        /* Private data of next lower interface */
+    asynInterface  octet;          /* This asynOctet interface */
+    asynOctet     *pasynOctetDrv;  /* Methods of next lower interface */
+    void          *drvOctetPvt;    /* Private data of next lower interface */
+    asynInterface  option;         /* This asynOption interface */
+    asynOption    *pasynOptionDrv; /* Methods of next lower interface */
+    void          *drvOptionPvt;   /* Private data of next lower interface */
 
-    int            baud;          /* Serial line parameters */
+    int            baud;           /* Serial line parameters */
     int            parity;
     int            bits;
     int            stop;
@@ -94,7 +96,7 @@ nextChar(interposePvt *pinterposePvt, asynUser *pasynUser)
     int           eom;
     asynStatus    status;
 
-    status = poct->read(pinterposePvt->drvPvt, pasynUser, &c, 1, &nbytes, &eom);
+    status = poct->read(pinterposePvt->drvOctetPvt, pasynUser, &c, 1, &nbytes, &eom);
     if (status != asynSuccess)
         return EOF;
     return c & 0xFF;
@@ -181,7 +183,7 @@ writeIt(void *ppvt, asynUser *pasynUser,
         numchars += nIAC;
         data = pinterposePvt->xBuf;
     }
-    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvPvt,
+    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
                                 pasynUser, data, numchars, nbytesTransfered);
     if (*nbytesTransfered == numchars)
         *nbytesTransfered -= nIAC;
@@ -200,7 +202,7 @@ readIt(void *ppvt, asynUser *pasynUser,
     int unstuffed = 0;
     asynStatus status;
     
-    status = pinterposePvt->pasynOctetDrv->read(pinterposePvt->drvPvt,
+    status = pinterposePvt->pasynOctetDrv->read(pinterposePvt->drvOctetPvt,
                                     pasynUser, data, maxchars, &nRead, &eom);
     if (status != asynSuccess)
         return status;
@@ -243,7 +245,7 @@ flushIt(void *ppvt, asynUser *pasynUser)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
-    return pinterposePvt->pasynOctetDrv->flush(pinterposePvt->drvPvt, pasynUser);
+    return pinterposePvt->pasynOctetDrv->flush(pinterposePvt->drvOctetPvt, pasynUser);
 }
 
 static asynStatus
@@ -253,7 +255,7 @@ registerInterruptUser(void *ppvt, asynUser *pasynUser,
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     return pinterposePvt->pasynOctetDrv->registerInterruptUser(
-        pinterposePvt->drvPvt,
+        pinterposePvt->drvOctetPvt,
         pasynUser, callback, userPvt, registrarPvt);
 }
 
@@ -263,7 +265,7 @@ cancelInterruptUser(void *drvPvt, asynUser *pasynUser, void *registrarPvt)
     interposePvt *pinterposePvt = (interposePvt *)drvPvt;
 
     return pinterposePvt->pasynOctetDrv->cancelInterruptUser(
-        pinterposePvt->drvPvt, pasynUser, registrarPvt);
+        pinterposePvt->drvOctetPvt, pasynUser, registrarPvt);
 }
 
 static asynStatus
@@ -271,7 +273,7 @@ setInputEos(void *ppvt, asynUser *pasynUser, const char *eos, int eoslen)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
-    return pinterposePvt->pasynOctetDrv->setInputEos(pinterposePvt->drvPvt,
+    return pinterposePvt->pasynOctetDrv->setInputEos(pinterposePvt->drvOctetPvt,
         pasynUser, eos, eoslen);
 }
 
@@ -280,7 +282,7 @@ getInputEos(void *ppvt, asynUser *pasynUser, char *eos, int eossize, int *eoslen
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
-    return pinterposePvt->pasynOctetDrv->getInputEos(pinterposePvt->drvPvt,
+    return pinterposePvt->pasynOctetDrv->getInputEos(pinterposePvt->drvOctetPvt,
         pasynUser, eos, eossize, eoslen);
 }
 
@@ -289,7 +291,7 @@ setOutputEos(void *ppvt, asynUser *pasynUser, const char *eos, int eoslen)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
-    return pinterposePvt->pasynOctetDrv->setOutputEos(pinterposePvt->drvPvt,
+    return pinterposePvt->pasynOctetDrv->setOutputEos(pinterposePvt->drvOctetPvt,
         pasynUser, eos, eoslen);
 }
 
@@ -298,7 +300,7 @@ getOutputEos(void *ppvt, asynUser *pasynUser, char *eos, int eossize, int *eosle
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
-    return pinterposePvt->pasynOctetDrv->getOutputEos(pinterposePvt->drvPvt,
+    return pinterposePvt->pasynOctetDrv->getOutputEos(pinterposePvt->drvOctetPvt,
         pasynUser, eos, eossize, eoslen);
 }
 
@@ -330,7 +332,7 @@ willdo(interposePvt *pinterposePvt, asynUser *pasynUser, int command, int code)
     cbuf[0] = C_IAC;
     cbuf[1] = command;
     cbuf[2] = code;
-    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvPvt,
+    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
                                                 pasynUser, cbuf, 3, &nbytes);
     if (status != asynSuccess)
         return status;
@@ -421,7 +423,7 @@ sbComPortOption(interposePvt *pinterposePvt, asynUser *pasynUser, const char *xB
     memcpy(cbuf+3, xBuf, xLen);
     cbuf[3+xLen+0] = C_IAC;
     cbuf[3+xLen+1] = C_SE;
-    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvPvt,
+    status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
                                             pasynUser, cbuf, 5+xLen, &nbytes);
     if (status != asynSuccess)
         return status;
@@ -573,9 +575,14 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
         if (status == asynSuccess) pinterposePvt->flow = rBuf[0] & 0xFF;
     }
     else {
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+        if (pinterposePvt->pasynOptionDrv) {
+            /* Call the setOption function in the underlying driver */
+            status =  pinterposePvt->pasynOptionDrv->setOption(pinterposePvt->drvOptionPvt, pasynUser, key, val);
+        } else {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                           "Can't handle option \"%s\"", key);
-        return asynError;
+            return asynError;
+        }
     }
     return status;
 }
@@ -585,6 +592,7 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
     int l = 0;
+    asynStatus status = asynSuccess;
 
     if (epicsStrCaseCmp(key, "baud") == 0) {
         l = epicsSnprintf(val, valSize, "%d", pinterposePvt->baud);
@@ -615,16 +623,21 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
         }
     }
     else {
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+        if (pinterposePvt->pasynOptionDrv) {
+            /* Call the getOption function in the underlying driver */
+            status =  pinterposePvt->pasynOptionDrv->getOption(pinterposePvt->drvOptionPvt, pasynUser, key, val, valSize);
+        } else {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
-        return asynError;
+            return asynError;
+        }
     }
     if (l >= valSize) {
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                             "Value buffer for key '%s' is too small.", key);
         return asynError;
     }
-    return asynSuccess;
+    return status;
 }
 
 static asynOption optionMethods = { setOption, getOption }; 
@@ -704,7 +717,7 @@ asynInterposeCOM(const char *portName)
         return -1;
     }
     pinterposePvt->pasynOctetDrv = (asynOctet *)poctetasynInterface->pinterface;
-    pinterposePvt->drvPvt = poctetasynInterface->drvPvt;
+    pinterposePvt->drvOctetPvt = poctetasynInterface->drvPvt;
 
     /*
      * Advertise our asynOption interface
@@ -720,8 +733,11 @@ asynInterposeCOM(const char *portName)
         free(pinterposePvt);
         return -1;
     }
-    if (poptionasynInterface != NULL)
-        printf("WARNING -- asynInterposeCOM options overriding those of lower interface.\n");
+    if (poptionasynInterface != NULL) {
+        printf("INFO -- asynInterposeCOM options extending and perhaps overriding those of lower interface.\n");
+        pinterposePvt->pasynOptionDrv = (asynOption *)poptionasynInterface->pinterface;
+        pinterposePvt->drvOptionPvt = poptionasynInterface->drvPvt;
+    }
 
     /*
      * Set default parameters
