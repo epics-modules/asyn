@@ -45,6 +45,14 @@
           are used, and asynManager does not support removing interpose interfaces.</li>
       </ul>
     </li>
+    <li>Improved debugging output with ASYN_TRACEIO_DRIVER. Previously there was no asynTrace
+      output if recv() or recvfrom() returned &le;0. It is often useful to know if these
+      functions returned 0, so the asynTrace output is now only suppressed if these functions
+      return &lt;0.<br />
+      There was previously no ASYN_TRACEIO_DRIVER output from the flushIt() function,
+      which repeatedly calls recv() until the return value is &le;0. ASYN_TRACEIO_DRIVER
+      will now print a message with the total number of bytes flushed in this function,
+      including 0 bytes if nothing was received.</li>
   </ul>
   <h3>
     asynRecord</h3>
@@ -62,12 +70,39 @@
       ports. This screen is accessed via the More menu in asynRecord.adl.</li>
   </ul>
   <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Add paramName to error messages for easier debugging.</li>
+    <li>Throw exception if NULL pointer is passed to setStringParam().</li>
+  </ul>
+  <h3>
+    asynDriver</h3>
+  <ul>
+    <li>asynTrace now does flush after each write on files, previously it only did this
+      on stdin and stderr. This prevents trace information in files being lost if the
+      application crashes.</li>
+    <li>Fixed syntax of call to cantProceed().</li>
+    <li>Added definition of ASYN_EXCEPTION_STRINGS which provides strings corresponding
+      to each asynException enum value.</li>
+  </ul>
+  <h3>
     testBroadcastApp</h3>
-  <p>
-    Added new test application testBroadcastBurst. This application periodically sends
-    a burst of broadcast packets. The number of packets per burst and the interval between
-    bursts can be specified on the command line. It is useful for testing devices to
-    see how tolerant they are of broadcast bursts.</p>
+  <ul>
+    <li>Added new test application testBroadcastBurst. This application periodically sends
+      a burst of broadcast packets. The number of packets per burst and the interval between
+      bursts can be specified on the command line. It is useful for testing devices to
+      see how tolerant they are of broadcast bursts.</li>
+  </ul>
+  <h3>
+    testConnectApp</h3>
+  <ul>
+    <li>Added missing extern "C" required to build dynamically on Windows.</li>
+  </ul>
+  <h3>
+    Many source files</h3>
+  <ul>
+    <li>Replaced tab characters with spaces. Tabs in source files are bad practice.</li>
+  </ul>
   <div style="text-align: center">
     <hr />
     <h2>
