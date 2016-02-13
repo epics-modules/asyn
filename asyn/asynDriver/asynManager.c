@@ -2800,7 +2800,7 @@ static int traceVprintSource(asynUser *pasynUser,int reason, const char *file, i
     } else {
         nout += errlogVprintf(pformat,pvar);
     }
-    if(fp==stdout || fp==stderr) fflush(fp);
+    fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
 }
@@ -2904,7 +2904,7 @@ static int traceVprintIOSource(asynUser *pasynUser,int reason,
             nout += errlogPrintf("\n");
         }
     }
-    if(fp==stdout || fp==stderr) fflush(fp);
+    fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
 }
