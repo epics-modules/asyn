@@ -14,7 +14,7 @@
     <h2>
       Release 4-29</h2>
     <h2>
-      February XXX, 2016</h2>
+      February 17, 2016</h2>
   </div>
   <h3>
     drvAsynIPPort</h3>
@@ -52,7 +52,7 @@
       There was previously no ASYN_TRACEIO_DRIVER output from the flushIt() function,
       which repeatedly calls recv() until the return value is &le;0. ASYN_TRACEIO_DRIVER
       will now print a message with the total number of bytes flushed in this function,
-      including 0 bytes if nothing was received.</li>
+      if the number is greater than 0.</li>
   </ul>
   <h3>
     asynRecord</h3>
