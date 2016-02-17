@@ -812,7 +812,9 @@ flushIt(void *drvPvt,asynUser *pasynUser)
         setNonBlock(tty->fd, 0);
 #endif
     }
-    asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s flushed %d bytes\n", tty->IPDeviceName, numTotal);
+    if (numTotal > 0) {
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, "%s flushed %d bytes\n", tty->IPDeviceName, numTotal);
+    }
     return asynSuccess;
 }
 
