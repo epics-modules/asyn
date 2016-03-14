@@ -2953,6 +2953,8 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     this->portName = epicsStrDup(portNameIn);
     if (maxAddrIn < 1) maxAddrIn = 1;
     this->maxAddr = maxAddrIn;
+    /* If maxAddr > 1 then set the ASYN_MULTIDEVICE flag even if the caller neglected to set it */
+    if (this->maxAddr > 1) asynFlags |= ASYN_MULTIDEVICE;
     interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
 
     /* Create the epicsMutex for locking access to data structures from other threads */
