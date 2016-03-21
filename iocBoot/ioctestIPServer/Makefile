@@ -1,8 +1,5 @@
 TOP = ../..
 include $(TOP)/configure/CONFIG
-#ARCH = solaris-sparc
-ARCH = linux-x86
-TARGETS += envPaths
-#nothing to do
+ARCH = linux-x86_64
+TARGETS = envPaths cdCommands dllPath.bat
 include $(TOP)/configure/RULES.ioc
-

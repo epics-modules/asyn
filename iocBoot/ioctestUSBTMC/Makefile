@@ -1,5 +1,5 @@
 TOP = ../..
 include $(TOP)/configure/CONFIG
-ARCH = darwin-x86
-TARGETS = envPaths
+ARCH = linux-x86_64
+TARGETS = envPaths cdCommands dllPath.bat
 include $(TOP)/configure/RULES.ioc
