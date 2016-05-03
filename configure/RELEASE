@@ -1,15 +1,15 @@
 #RELEASE Location of external products
 
-SUPPORT=/corvette/home/epics/devel
+SUPPORT=/opt/epics/modules
 -include $(TOP)/../configure/SUPPORT.$(EPICS_HOST_ARCH)
 
 #  IPAC is only necessary if support for Greensprings IP488 is required
 #  IPAC release V2-7 or later is required.
-IPAC=$(SUPPORT)/ipac-2-13
+#IPAC=$(SUPPORT)/ipac-2-13
 
 # SEQ is required for testIPServer
-SNCSEQ=$(SUPPORT)/seq-2-2-3
+#SNCSEQ=$(SUPPORT)/seq-2-2-3
 
 #  EPICS_BASE 3.14.6 or later is required
-EPICS_BASE=/corvette/usr/local/epics/base-3.14.12.5
+EPICS_BASE=/opt/epics/base
 -include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
