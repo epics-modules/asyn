@@ -56,6 +56,7 @@
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynOctet.h"
+#include "asynOctetSyncIO.h"
 #include "asynEpicsUtils.h"
 
 #define INIT_OK 0
@@ -75,6 +76,7 @@ typedef struct ringBufferElement {
 typedef struct devPvt {
     dbCommon            *precord;
     asynUser            *pasynUser;
+    asynUser            *pasynUserSync;
     char                *portName;
     int                 addr;
     asynOctet           *poctet;
@@ -236,12 +238,37 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     if (useDrvUser) {
         if (initDrvUser(pdevPvt)) goto bad;
     }
-    /* If this is an output record and the info field "asyn:READBACK" is 1 
-     * then register for callbacks on output records */
+    /* Initialize synchronous interface */
+    status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
+                 &pdevPvt->pasynUserSync, pdevPvt->userParam);
+    if (status != asynSuccess) {
+        printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
+               precord->name, pdevPvt->pasynUserSync->errorMessage);
+        goto bad;
+    }
+
+    /* If this is an output record 
+     *  - Try to read the initial value from the driver
+     *  - If the info field "asyn:READBACK" is 1 then register for callbacks 
+    */
     if (pdevPvt->isOutput) {
-        int enableCallbacks=0;
+        int enableCallbacks = 0;
         const char *callbackString;
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
+        size_t nBytesRead;
+        int eomReason;
+        char *buffer = malloc(valSize);
+
+        status = pasynOctetSyncIO->read(pdevPvt->pasynUserSync, buffer, valSize,
+                                        pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
+        if (status == asynSuccess) {
+            precord->udf = 0;
+            if (nBytesRead == valSize) nBytesRead--;
+            buffer[nBytesRead] = 0;
+            strcpy(pValue, buffer);
+        }
+        free(buffer);
+
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
             asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
