@@ -190,6 +190,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     asynInterface *pasynInterface;
     commonDset    *pdset = (commonDset *)precord->dset;
     asynOctet     *poctet;
+    size_t        nBytesRead;
+    int           eomReason;
 
     pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
     precord->dpvt = pdevPvt;
@@ -274,6 +276,16 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
            printf("%s NELM must be > 0\n",pwf->name);
            pwf->pact = 1;
            goto bad;
+        }
+    }
+    /* Setup output records with initial values, if present */
+    if (pdevPvt->isOutput) {
+        status = poctet->read(pdevPvt->octetPvt,pasynUser,pValue,valSize,
+           &nBytesRead,&eomReason);
+        if (status==asynSuccess) {
+            precord->udf = 0;
+            if (nBytesRead==valSize) nBytesRead--;
+            pValue[nBytesRead] = 0;
         }
     }
     
