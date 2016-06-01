@@ -107,6 +107,7 @@ testErrors::testErrors(const char *portName)
     setIntegerParam(P_MultibitInt32Value, 0);
     setDoubleParam(P_Float64Value,        0.0);
     setIntegerParam(P_EnumOrder,          0);
+    setStringParam(P_OctetValue,         "0");
     setEnums();
     // Need to force callbacks with the interruptMask once 
     setUIntDigitalParam(P_UInt32DigitalValue,         (epicsUInt32)0x0, 0xFFFFFFFF, 0xFFFFFFFF);
@@ -147,8 +148,11 @@ void testErrors::callbackTask(void)
     int i;
     char octetValue[20];
     
+    lock();
     /* Loop forever */    
     while (1) {
+        unlock();
+        epicsEventWait(eventId_);
         lock();
         updateTimeStamp();
         getIntegerParam(P_StatusReturn, &itemp); currentStatus = (asynStatus)itemp;
@@ -216,8 +220,6 @@ void testErrors::callbackTask(void)
         doCallbacksInt32Array(int32ArrayValue_,     MAX_ARRAY_POINTS, P_Int32ArrayValue,   0);
         doCallbacksFloat32Array(float32ArrayValue_, MAX_ARRAY_POINTS, P_Float32ArrayValue, 0);
         doCallbacksFloat64Array(float64ArrayValue_, MAX_ARRAY_POINTS, P_Float64ArrayValue, 0);
-        unlock();
-        epicsEventWait(eventId_);
     }
 }
 
