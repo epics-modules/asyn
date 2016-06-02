@@ -264,7 +264,6 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
         size_t nBytesRead;
         int eomReason;
-        char *buffer = malloc(valSize);
         asynUser *pasynUserSync;
 
         status = dbFindRecord(pdbentry, precord->name);
@@ -299,6 +298,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                        precord->name, pasynUserSync->errorMessage);
                 goto bad;
             }
+            char *buffer = malloc(valSize);
             status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
                                             pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
             if (status == asynSuccess) {
