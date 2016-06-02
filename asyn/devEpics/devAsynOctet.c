@@ -253,7 +253,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     }
 
     /* If this is an output record 
-     *  - Try to read the initial value from the driver
+     *  - If the info field "asyn:INITIAL_READBACK" is 1 then try to read the initial value from the driver
      *  - If the info field "asyn:READBACK" is 1 then register for callbacks 
     */
     if (pdevPvt->isOutput) {
