@@ -76,7 +76,6 @@ typedef struct ringBufferElement {
 typedef struct devPvt {
     dbCommon            *precord;
     asynUser            *pasynUser;
-    asynUser            *pasynUserSync;
     char                *portName;
     int                 addr;
     asynOctet           *poctet;
@@ -192,6 +191,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     asynInterface *pasynInterface;
     commonDset    *pdset = (commonDset *)precord->dset;
     asynOctet     *poctet;
+    waveformRecord *pwf = (waveformRecord *)precord;
 
     pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
     precord->dpvt = pdevPvt;
@@ -238,13 +238,18 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     if (useDrvUser) {
         if (initDrvUser(pdevPvt)) goto bad;
     }
-    /* Initialize synchronous interface */
-    status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
-                 &pdevPvt->pasynUserSync, pdevPvt->userParam);
-    if (status != asynSuccess) {
-        printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
-               precord->name, pdevPvt->pasynUserSync->errorMessage);
-        goto bad;
+
+    if (pdevPvt->isWaveform) {
+        if(pwf->ftvl!=menuFtypeCHAR && pwf->ftvl!=menuFtypeUCHAR) {
+           printf("%s FTVL Must be CHAR or UCHAR\n",pwf->name);
+           pwf->pact = 1;
+           goto bad;
+        } 
+        if(pwf->nelm<=0) {
+           printf("%s NELM must be > 0\n",pwf->name);
+           pwf->pact = 1;
+           goto bad;
+        }
     }
 
     /* If this is an output record 
@@ -258,16 +263,27 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         size_t nBytesRead;
         int eomReason;
         char *buffer = malloc(valSize);
+        asynUser *pasynUserSync;
 
-        status = pasynOctetSyncIO->read(pdevPvt->pasynUserSync, buffer, valSize,
+        /* Initialize synchronous interface */
+        status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
+                     &pasynUserSync, pdevPvt->userParam);
+        if (status != asynSuccess) {
+            printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
+                   precord->name, pasynUserSync->errorMessage);
+            goto bad;
+        }
+        status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
                                         pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
         if (status == asynSuccess) {
             precord->udf = 0;
             if (nBytesRead == valSize) nBytesRead--;
             buffer[nBytesRead] = 0;
             strcpy(pValue, buffer);
+            if (pdevPvt->isWaveform) pwf->nord = nBytesRead;
         }
         free(buffer);
+        pasynOctetSyncIO->disconnect(pasynUserSync);
 
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
@@ -288,19 +304,6 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
                        precord->name, pdevPvt->pasynUser->errorMessage);
             }
-        }
-    }
-    if (pdevPvt->isWaveform) {
-        waveformRecord *pwf = (waveformRecord *)precord;
-        if(pwf->ftvl!=menuFtypeCHAR && pwf->ftvl!=menuFtypeUCHAR) {
-           printf("%s FTVL Must be CHAR or UCHAR\n",pwf->name);
-           pwf->pact = 1;
-           goto bad;
-        } 
-        if(pwf->nelm<=0) {
-           printf("%s NELM must be > 0\n",pwf->name);
-           pwf->pact = 1;
-           goto bad;
         }
     }
     
