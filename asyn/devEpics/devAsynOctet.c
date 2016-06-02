@@ -257,33 +257,15 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
      *  - If the info field "asyn:READBACK" is 1 then register for callbacks 
     */
     if (pdevPvt->isOutput) {
-        int enableCallbacks = 0;
-        const char *callbackString;
+        int enableReadbacks = 0;
+        const char *readbackString;
+        int enableInitialReadback = 0;
+        const char *initialReadbackString;
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
         size_t nBytesRead;
         int eomReason;
         char *buffer = malloc(valSize);
         asynUser *pasynUserSync;
-
-        /* Initialize synchronous interface */
-        status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
-                     &pasynUserSync, pdevPvt->userParam);
-        if (status != asynSuccess) {
-            printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
-                   precord->name, pasynUserSync->errorMessage);
-            goto bad;
-        }
-        status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
-                                        pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
-        if (status == asynSuccess) {
-            precord->udf = 0;
-            if (nBytesRead == valSize) nBytesRead--;
-            buffer[nBytesRead] = 0;
-            strcpy(pValue, buffer);
-            if (pdevPvt->isWaveform) pwf->nord = nBytesRead;
-        }
-        free(buffer);
-        pasynOctetSyncIO->disconnect(pasynUserSync);
 
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
@@ -292,9 +274,9 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 precord->name);
             goto bad;
         }
-        callbackString = dbGetInfo(pdbentry, "asyn:READBACK");
-        if (callbackString) enableCallbacks = atoi(callbackString);
-        if (enableCallbacks) {
+        readbackString = dbGetInfo(pdbentry, "asyn:READBACK");
+        if (readbackString) enableReadbacks = atoi(readbackString);
+        if (enableReadbacks) {
             status = createRingBuffer(precord);
             if (status != asynSuccess) goto bad;
             status = pdevPvt->poctet->registerInterruptUser(
@@ -304,6 +286,30 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
                        precord->name, pdevPvt->pasynUser->errorMessage);
             }
+        }
+
+        initialReadbackString = dbGetInfo(pdbentry, "asyn:INITIAL_READBACK");
+        if (initialReadbackString) enableInitialReadback = atoi(initialReadbackString);
+        if (enableInitialReadback) {
+            /* Initialize synchronous interface */
+            status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
+                         &pasynUserSync, pdevPvt->userParam);
+            if (status != asynSuccess) {
+                printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
+                       precord->name, pasynUserSync->errorMessage);
+                goto bad;
+            }
+            status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
+                                            pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
+            if (status == asynSuccess) {
+                precord->udf = 0;
+                if (nBytesRead == valSize) nBytesRead--;
+                buffer[nBytesRead] = 0;
+                strcpy(pValue, buffer);
+                if (pdevPvt->isWaveform) pwf->nord = nBytesRead;
+            }
+            free(buffer);
+            pasynOctetSyncIO->disconnect(pasynUserSync);
         }
     }
     
