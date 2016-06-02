@@ -107,7 +107,8 @@ testErrors::testErrors(const char *portName)
     setIntegerParam(P_MultibitInt32Value, 0);
     setDoubleParam(P_Float64Value,        0.0);
     setIntegerParam(P_EnumOrder,          0);
-    setStringParam(P_OctetValue,         "0");
+    // Comment or uncomment the following line to test initializing asynOctet input and output records
+    setStringParam(P_OctetValue,         "0.0");
     setEnums();
     // Need to force callbacks with the interruptMask once 
     setUIntDigitalParam(P_UInt32DigitalValue,         (epicsUInt32)0x0, 0xFFFFFFFF, 0xFFFFFFFF);
