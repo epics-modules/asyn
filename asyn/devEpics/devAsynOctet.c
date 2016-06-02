@@ -56,6 +56,7 @@
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynOctet.h"
+#include "asynOctetSyncIO.h"
 #include "asynEpicsUtils.h"
 
 #define INIT_OK 0
@@ -190,6 +191,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     asynInterface *pasynInterface;
     commonDset    *pdset = (commonDset *)precord->dset;
     asynOctet     *poctet;
+    waveformRecord *pwf = (waveformRecord *)precord;
 
     pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
     precord->dpvt = pdevPvt;
@@ -236,12 +238,53 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     if (useDrvUser) {
         if (initDrvUser(pdevPvt)) goto bad;
     }
-    /* If this is an output record and the info field "asyn:READBACK" is 1 
-     * then register for callbacks on output records */
+
+    if (pdevPvt->isWaveform) {
+        if(pwf->ftvl!=menuFtypeCHAR && pwf->ftvl!=menuFtypeUCHAR) {
+           printf("%s FTVL Must be CHAR or UCHAR\n",pwf->name);
+           pwf->pact = 1;
+           goto bad;
+        } 
+        if(pwf->nelm<=0) {
+           printf("%s NELM must be > 0\n",pwf->name);
+           pwf->pact = 1;
+           goto bad;
+        }
+    }
+
+    /* If this is an output record 
+     *  - Try to read the initial value from the driver
+     *  - If the info field "asyn:READBACK" is 1 then register for callbacks 
+    */
     if (pdevPvt->isOutput) {
-        int enableCallbacks=0;
+        int enableCallbacks = 0;
         const char *callbackString;
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
+        size_t nBytesRead;
+        int eomReason;
+        char *buffer = malloc(valSize);
+        asynUser *pasynUserSync;
+
+        /* Initialize synchronous interface */
+        status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
+                     &pasynUserSync, pdevPvt->userParam);
+        if (status != asynSuccess) {
+            printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
+                   precord->name, pasynUserSync->errorMessage);
+            goto bad;
+        }
+        status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
+                                        pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
+        if (status == asynSuccess) {
+            precord->udf = 0;
+            if (nBytesRead == valSize) nBytesRead--;
+            buffer[nBytesRead] = 0;
+            strcpy(pValue, buffer);
+            if (pdevPvt->isWaveform) pwf->nord = nBytesRead;
+        }
+        free(buffer);
+        pasynOctetSyncIO->disconnect(pasynUserSync);
+
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
             asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
@@ -261,19 +304,6 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
                        precord->name, pdevPvt->pasynUser->errorMessage);
             }
-        }
-    }
-    if (pdevPvt->isWaveform) {
-        waveformRecord *pwf = (waveformRecord *)precord;
-        if(pwf->ftvl!=menuFtypeCHAR && pwf->ftvl!=menuFtypeUCHAR) {
-           printf("%s FTVL Must be CHAR or UCHAR\n",pwf->name);
-           pwf->pact = 1;
-           goto bad;
-        } 
-        if(pwf->nelm<=0) {
-           printf("%s NELM must be > 0\n",pwf->name);
-           pwf->pact = 1;
-           goto bad;
         }
     }
     

@@ -32,7 +32,7 @@ record(bo, "$(P)DoUpdate")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DO_UPDATE")
     field(ZNAM, "Done")
     field(ONAM, "Update")
-    field(SCAN, "1 second")
+    field(SCAN, "Passive")
 }
 
 ###################################################################
