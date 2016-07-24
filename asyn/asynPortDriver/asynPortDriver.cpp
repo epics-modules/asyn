@@ -99,6 +99,11 @@ paramList::paramList(int nValues, asynPortDriver *pPort)
 /** Destructor for paramList class; frees resources allocated in constructor */
 paramList::~paramList()
 {
+    unsigned i;
+
+    for (i = 0; i < this->nVals; i++)
+        delete this->vals[i];
+
     free(vals);
     free(flags);
 }
@@ -3067,6 +3072,11 @@ asynPortDriver::~asynPortDriver()
         delete this->params[addr];
     }
     free(this->params);
+
+    pasynManager->freeAsynUser(this->pasynUserSelf);
+    free(this->inputEosOctet);
+    free(this->outputEosOctet);
+    free(this->portName);
 }
 
 /** Utility function that returns a pointer to an asynPortDriver object from its name */
