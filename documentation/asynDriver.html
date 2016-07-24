@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-29</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-30</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 17, 2016</span></p>
+      <span style="font-weight: bold; font-size: 14pt">July XXX, 2016</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -4293,6 +4293,12 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     in the database when iocInit begins. However, the value read from the device may
     in turn be replaced by any value from save/restore, because the auto restore happens
     later in iocInit.</p>
+  <p>
+    Beginning in R4-30 devAsynOctet was changed to also support the initial readback
+    for stringout and waveform output records. The initial readback is only done if
+    the record in the database contains the following line:<br />
+    <code>info(asyn:INITIAL_READBACK, "1")</code><br />
+    .</p>
   <h2>
     Enum values for bi, bo, mbbi, and mbbo records</h2>
   <p>
