@@ -191,6 +191,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     asynInterface *pasynInterface;
     commonDset    *pdset = (commonDset *)precord->dset;
     asynOctet     *poctet;
+    char          *buffer;
     waveformRecord *pwf = (waveformRecord *)precord;
 
     pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
@@ -298,7 +299,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                        precord->name, pasynUserSync->errorMessage);
                 goto bad;
             }
-            char *buffer = malloc(valSize);
+            buffer = malloc(valSize);
             status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
                                             pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
             if (status == asynSuccess) {
@@ -420,14 +421,14 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         (char *)value, len*sizeof(char),
         "%s %s::interruptCallbackInput ringSize=%d, len=%d, callback data:",
         pr->name, driverName, pPvt->ringSize, (int)len);
-    if (len > pPvt->valSize) len = pPvt->valSize;
+    if (len >= pPvt->valSize) len = pPvt->valSize-1;
     if (pPvt->ringSize == 0) {
         /* Not using a ring buffer */ 
         dbScanLock(pr);
         pr->time = pasynUser->timestamp;
         if (pasynUser->auxStatus == asynSuccess) {
             memcpy(pPvt->pValue, value, len);
-            if (len < pPvt->valSize) pPvt->pValue[len] = 0;
+            pPvt->pValue[len] = 0;
         }
         pPvt->nord = (epicsUInt32)len;
         pPvt->gotValue++;
@@ -450,7 +451,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         rp = &pPvt->ringBuffer[pPvt->ringHead];
         rp->len = len;
         memcpy(rp->pValue, value, len);        
-        if (len < pPvt->valSize) rp->pValue[len] = 0;
+        rp->pValue[len] = 0;
         rp->time = pasynUser->timestamp;
         rp->status = pasynUser->auxStatus;
         pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize-1) ? 0 : pPvt->ringHead+1;
@@ -797,14 +798,15 @@ static long initSoWrite(stringoutRecord *pso)
                       1, 0, 1, pso->val, sizeof(pso->val));
 }
 
-/* implementation of strnlen() as i'm not sure it is available everywhere */
+/* implementation of strnlen() as i'm not sure it is available everywhere.  
+   This is also special because the returned length includes the terminating nil if it is present! */
 static size_t my_strnlen(const char *str, size_t max_size)
 {
     const char * end = (const char *)memchr(str, '\0', max_size);
     if (end == NULL) {
         return max_size;
     } else {
-        return end - str;
+        return end - str + 1;
     }
 }
 
