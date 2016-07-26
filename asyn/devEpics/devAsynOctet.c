@@ -146,6 +146,8 @@ static long initWfRead(waveformRecord *pwf);
 static void callbackWfRead(asynUser *pasynUser);
 static long initWfWrite(waveformRecord *pwf);
 static void callbackWfWrite(asynUser *pasynUser);
+static long initWfWriteBinary(waveformRecord *pwf);
+static void callbackWfWriteBinary(asynUser *pasynUser);
 
 typedef struct commonDset {
     long          number;
@@ -172,6 +174,8 @@ commonDset asynWfOctetRead        = {
     5, 0, 0, initWfRead,        getIoIntInfo, processCommon};
 commonDset asynWfOctetWrite       = {
     5, 0, 0, initWfWrite,       0,            processCommon};
+commonDset asynWfOctetWriteBinary = {
+    5, 0, 0, initWfWriteBinary, 0,            processCommon};
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);
 epicsExportAddress(dset, asynSiOctetWriteRead);
@@ -181,6 +185,7 @@ epicsExportAddress(dset, asynWfOctetCmdResponse);
 epicsExportAddress(dset, asynWfOctetWriteRead);
 epicsExportAddress(dset, asynWfOctetRead);
 epicsExportAddress(dset, asynWfOctetWrite);
+epicsExportAddress(dset, asynWfOctetWriteBinary);
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback, 
                        int isOutput, int isWaveform, int useDrvUser, char *pValue, size_t valSize)
@@ -798,15 +803,14 @@ static long initSoWrite(stringoutRecord *pso)
                       1, 0, 1, pso->val, sizeof(pso->val));
 }
 
-/* implementation of strnlen() as i'm not sure it is available everywhere.  
-   This is also special because the returned length includes the terminating nil if it is present! */
+/* implementation of strnlen() as i'm not sure it is available everywhere */
 static size_t my_strnlen(const char *str, size_t max_size)
 {
     const char * end = (const char *)memchr(str, '\0', max_size);
     if (end == NULL) {
         return max_size;
     } else {
-        return end - str + 1;
+        return end - str;
     }
 }
 
@@ -922,6 +926,21 @@ static long initWfWrite(waveformRecord *pwf)
 }
 
 static void callbackWfWrite(asynUser *pasynUser)
+{
+    devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord  *pwf = (waveformRecord *)pdevPvt->precord;
+
+    writeIt(pasynUser, pwf->bptr, my_strnlen(pwf->bptr, pwf->nord));
+    finish((dbCommon *)pwf);
+}
+
+static long initWfWriteBinary(waveformRecord *pwf)
+{
+    return initCommon((dbCommon *)pwf, &pwf->inp, callbackWfWriteBinary,
+                      1, 1, 1, pwf->bptr, pwf->nelm);
+}
+
+static void callbackWfWriteBinary(asynUser *pasynUser)
 {
     devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
     waveformRecord  *pwf = (waveformRecord *)pdevPvt->precord;
