@@ -24,12 +24,11 @@
       asyn:INITIAL_READBACK is present for these records in the database. The testErrorsApp
       application was updated to test this feature.</li>
     <li>Check that FTVL is CHAR or UCHAR and return an error in init_record if it is not.</li>
-    <li>Changed the stringout device support so that the numchars argument in pasynOctet->write()
-      includes the trailing nil. This makes it consistent with the behavior of the waveform
-      record for string output. NOTE: there is a slight chance that this could break existing
-      applications that use the stringout records. There should be no problems in any
-      synApps databases or drivers, since none of them use the value of numchars passed
-      in pasynOctet->write().</li>
+    <li>Changed the waveform record device support asynOctetWrite to only support string
+      output. The numchars argument in pasynOctet->write() is obtained by calling strnlen().
+      This makes it consistent with the behavior of the stringout record. </li>
+    <li>Added a new waveform record device support asynOctetWriteBinary. This passes numchars=NORD
+      and does not call strnlen(), so it should be used for binary data.</li>
   </ul>
   <h3>
     asynPortDriver</h3>
