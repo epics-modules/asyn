@@ -4737,7 +4737,8 @@ device(stringout,INST_IO,asynSoOctetWrite,"asynOctetWrite")
 device(waveform,INST_IO,asynWfOctetCmdResponse,"asynOctetCmdResponse")
 device(waveform,INST_IO,asynWfOctetWriteRead,"asynOctetWriteRead")
 device(waveform,INST_IO,asynWfOctetRead,"asynOctetRead")
-device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
+device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")
+device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
   <p>
     Support for drivers that implement interface asynOctet. The support is for stringin/stringout
     and waveform records. The waveform support is similar to the string support. The
@@ -4746,7 +4747,11 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     support:</p>
   <ul>
     <li>unlimited size - string records hold a maximum of 40 characters.</li>
-    <li>non ascii - Thus arbitrary octet arrays are supported.</li>
+    <li>both string and binary data. Beginning in R4-30 asynWfWriteOctet calls strnlen()
+      to determine the length of the string, and passes this length to the driver, i.e.
+      does not include the trailing nil. This is consistent with the behavior of the devAsynOctet
+      for the stringout record. The asynOctetWriteBinary support added in R4-30 always
+      uses NORD as the length that it passes to the driver, and does not call strnlen().</li>
   </ul>
   <p>
     Four types of support are provided:</p>
@@ -6020,7 +6025,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     calls <code>asynCommon:getOption</code>.</p>
   <p>
     Thw asynOctetXXX commands provide shell access to asynOctetSyncIO methods. The entry
-    is a character string constant that identifys the port,addr.</p>
+    is a character string constant that identifies the port,addr.</p>
   <p>
     where</p>
   <ul>
