@@ -17,6 +17,37 @@
       July XXX, 2016</h2>
   </div>
   <h3>
+    asynDriver</h3>
+  <ul>
+    <li>Added new fields to the asynUser structure. These are <code>int alarmStatus</code>
+      and <code>int alarmSeverity</code>. They are intended to pass alarm information
+      back to device support, indepenent of the status return from the write() or read()
+      methods or the auxStatus field used for callbacks.</li>
+  </ul>
+  <h3>
+    devEpics</h3>
+  <ul>
+    <li>Previously when the status return or auxStatus were not asynSuccess then device
+      support did not update the value, and set the record STAT and SEVR based upon rules
+      in the generic device support. If the new alarmStatus and alarmSeverity fields are
+      0 (default) then the current behavior is retained. If these fields are non-zero,
+      then the record STAT and SEVR will be set to these values, independent of the status
+      return or the auxStatus values. This allows a driver to set the record value, while
+      still setting the STAT and SEVR to values other than NO_ALARM. The behavior of the
+      function asynStatusToEpicsAlarm() was changed, and this function is now always called
+      at the end of the process() function, even if the status or auxStatus is asynSuccess.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Added new methods setParamAlarmStatus(), setParamAlarmSeverity, getParamAlarmStatus(),
+      getParamAlarmSeverity to write and read the new pasynUser->alarmStatus and pasynUser->alarmSeverity
+      fields.</li>
+    <li>Changed the constructor so that it sets the ASYN_MULTIDEVICE flag if maxAddr>1
+      even if the caller neglected to set it.</li>
+    <li>Fixed destructor eliminate memory leaks. Thanks to Henrique Almeida.</li>
+  </ul>
+  <h3>
     devAsynOctet</h3>
   <ul>
     <li>Added support for initial readback from driver for stringout and waveform output
@@ -31,11 +62,10 @@
       and does not call strnlen(), so it should be used for binary data.</li>
   </ul>
   <h3>
-    asynPortDriver</h3>
+    testErrorsApp</h3>
   <ul>
-    <li>Changed the constructor so that it sets the ASYN_MULTIDEVICE flag if maxAddr>1
-      even if the caller neglected to set it.</li>
-    <li>Fixed destructor eliminate memory leaks. Thanks to Henrique Almeida.</li>
+    <li>Added new records AlarmStatus and AlarmSeverity that allow this driver to test
+      the new alarm handling behavior.</li>
   </ul>
   <div style="text-align: center">
     <hr />
