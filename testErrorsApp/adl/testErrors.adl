@@ -1,13 +1,13 @@
 
 file {
-	name="/home/epics/devel/asyn-4-26/testErrorsApp/adl/testErrors.adl"
+	name="/home/epics/devel/asyn-4-29/testErrorsApp/adl/testErrors.adl"
 	version=030107
 }
 display {
 	object {
-		x=159
-		y=90
-		width=1350
+		x=168
+		y=51
+		width=1360
 		height=1000
 	}
 	clr=14
@@ -3822,158 +3822,188 @@ composite {
 		}
 	}
 }
-composite {
+text {
 	object {
-		x=995
-		y=64
-		width=130
-		height=95
+		x=1032
+		y=89
+		width=100
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=995
-				y=114
-				width=130
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Status return"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=1025
-				y=89
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Enum order"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=1015
-				y=139
-				width=110
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="asyn record"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=1015
-				y=64
-				width=110
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Update rate"
-			align="horiz. right"
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Enum order"
+	align="horiz. right"
+}
+text {
+	object {
+		x=1022
+		y=64
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Update rate"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=1137
+		y=89
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)EnumOrder"
+		clr=14
+		bclr=51
 	}
 }
 composite {
 	object {
-		x=1130
+		x=1137
 		y=64
 		width=216
-		height=95
+		height=20
 	}
 	"composite name"=""
 	children {
 		menu {
 			object {
-				x=1130
-				y=114
+				x=1137
+				y=64
 				width=130
 				height=20
 			}
 			control {
-				chan="$(P)StatusReturn"
+				chan="$(P)DoUpdate.SCAN"
 				clr=14
 				bclr=51
 			}
 		}
-		menu {
+		"message button" {
 			object {
-				x=1130
-				y=89
-				width=100
+				x=1272
+				y=64
+				width=81
 				height=20
 			}
 			control {
-				chan="$(P)EnumOrder"
+				chan="$(P)DoUpdate"
 				clr=14
 				bclr=51
 			}
+			label="Update"
+			press_msg="1"
 		}
-		"related display" {
-			object {
-				x=1130
-				y=139
-				width=100
-				height=20
-			}
-			display[0] {
-				label="asyn record"
-				name="asynRecord.adl"
-				args="P=testErrors:,R=asyn1"
-			}
-			clr=14
-			bclr=51
-			label="asyn record"
-		}
-		composite {
-			object {
-				x=1130
-				y=64
-				width=216
-				height=20
-			}
-			"composite name"=""
-			children {
-				menu {
-					object {
-						x=1130
-						y=64
-						width=130
-						height=20
-					}
-					control {
-						chan="$(P)DoUpdate.SCAN"
-						clr=14
-						bclr=51
-					}
-				}
-				"message button" {
-					object {
-						x=1265
-						y=64
-						width=81
-						height=20
-					}
-					control {
-						chan="$(P)DoUpdate"
-						clr=14
-						bclr=51
-					}
-					label="Update"
-					press_msg="1"
-				}
-			}
-		}
+	}
+}
+text {
+	object {
+		x=1002
+		y=114
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Status return"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=1137
+		y=114
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)StatusReturn"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=1022
+		y=189
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="asyn record"
+	align="horiz. right"
+}
+"related display" {
+	object {
+		x=1137
+		y=189
+		width=100
+		height=20
+	}
+	display[0] {
+		label="asyn record"
+		name="asynRecord.adl"
+		args="P=testErrors:,R=asyn1"
+	}
+	clr=14
+	bclr=51
+	label="asyn record"
+}
+text {
+	object {
+		x=1012
+		y=139
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Alarm status"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=1137
+		y=139
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)AlarmStatus"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=992
+		y=164
+		width=140
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Alarm severity"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=1137
+		y=164
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)AlarmSeverity"
+		clr=14
+		bclr=51
 	}
 }
