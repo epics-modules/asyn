@@ -73,6 +73,32 @@ asynStatus paramVal::getStatus(){
     return status_;
 }
 
+void paramVal::setAlarmStatus(int alarmStatus){
+    if (alarmStatus_ != alarmStatus) {
+        setValueChanged();
+        alarmStatus_ = alarmStatus;
+        // We need to do callbacks on all bits if the status has changed
+        if (type == asynParamUInt32Digital) uInt32CallbackMask = 0xFFFFFFFF;
+    }
+}
+
+int paramVal::getAlarmStatus(){
+    return alarmStatus_;
+}
+
+void paramVal::setAlarmSeverity(int alarmSeverity){
+    if (alarmSeverity_ != alarmSeverity) {
+        setValueChanged();
+        alarmSeverity_ = alarmSeverity;
+        // We need to do callbacks on all bits if the status has changed
+        if (type == asynParamUInt32Digital) uInt32CallbackMask = 0xFFFFFFFF;
+    }
+}
+
+int paramVal::getAlarmSeverity(){
+    return alarmSeverity_;
+}
+
 /*
  * Set valueDefined to indicate that the value has been set.
  */
