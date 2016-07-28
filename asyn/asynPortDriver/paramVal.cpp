@@ -30,13 +30,16 @@ const char* paramVal::typeNames[] = {
 
 
 paramVal::paramVal(const char *name):
-    type(asynParamNotDefined), status_(asynSuccess), valueDefined(false), valueChanged(false){
+    type(asynParamNotDefined), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
+    valueDefined(false), valueChanged(false)
+{
     this->name = epicsStrDup(name);
     this->data.sval = 0;
 }
 
 paramVal::paramVal(const char *name, asynParamType type):
-    type(type), status_(asynSuccess), valueDefined(false), valueChanged(false){
+    type(type), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
+    valueDefined(false), valueChanged(false){
     this->name = epicsStrDup(name);
     this->data.sval = 0;
 }
