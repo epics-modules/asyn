@@ -11,6 +11,30 @@ record(mbbo, "$(P)StatusReturn")
 }
 
 ###################################################################
+#  This record controls setting the alarm status                  # 
+###################################################################
+record(mbbo, "$(P)AlarmStatus")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ALARM_STATUS")
+    field(ZRST, "Junk")
+    field(ZRVL, "0")
+}
+
+###################################################################
+#  This record controls setting the alarm severity                # 
+###################################################################
+record(mbbo, "$(P)AlarmSeverity")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ALARM_SEVERITY")
+    field(ZRST, "Junk")
+    field(ZRVL, "0")
+}
+
+###################################################################
 #  This record controls the order of enum strings, values,        # 
 #  and severities                                                 # 
 ###################################################################
