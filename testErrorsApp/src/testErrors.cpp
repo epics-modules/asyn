@@ -19,6 +19,8 @@
 #include <epicsString.h>
 #include <epicsEvent.h>
 #include <iocsh.h>
+#include <alarm.h>
+#include <alarmString.h>
 
 #include "testErrors.h"
 #include <epicsExport.h>
@@ -64,7 +66,7 @@ testErrors::testErrors(const char *portName)
                      /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
-                      asynOptionMask    | asynEnumMask      | asynDrvUserMask,
+                      asynOptionMask    | asynEnumMask       | asynDrvUserMask,
                     /* Interrupt mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
@@ -79,6 +81,8 @@ testErrors::testErrors(const char *portName)
     const char *functionName = "testErrors";
 
     createParam(P_StatusReturnString,               asynParamInt32,         &P_StatusReturn);
+    createParam(P_AlarmStatusString,                asynParamInt32,         &P_AlarmStatus);
+    createParam(P_AlarmSeverityString,              asynParamInt32,         &P_AlarmSeverity);
     createParam(P_EnumOrderString,                  asynParamInt32,         &P_EnumOrder);
     createParam(P_DoUpdateString,                   asynParamInt32,         &P_DoUpdate);
     createParam(P_Int32ValueString,                 asynParamInt32,         &P_Int32Value);
@@ -142,6 +146,8 @@ static void callbackTask(void *drvPvt)
 void testErrors::callbackTask(void)
 {
     asynStatus currentStatus;
+    int alarmStatus;
+    int alarmSeverity;
     int itemp;
     epicsInt32 iVal;
     epicsUInt32 uiVal;
@@ -157,51 +163,69 @@ void testErrors::callbackTask(void)
         lock();
         updateTimeStamp();
         getIntegerParam(P_StatusReturn, &itemp); currentStatus = (asynStatus)itemp;
+        getIntegerParam(P_AlarmStatus, &alarmStatus);
+        getIntegerParam(P_AlarmSeverity, &alarmSeverity);
 
         getIntegerParam(P_Int32Value, &iVal);
         iVal++;
         if (iVal > 64) iVal=0;
-        setIntegerParam(P_Int32Value, iVal);
-        setParamStatus( P_Int32Value, currentStatus);
+        setIntegerParam(      P_Int32Value, iVal);
+        setParamStatus(       P_Int32Value, currentStatus);
+        setParamAlarmStatus(  P_Int32Value, alarmStatus);
+        setParamAlarmSeverity(P_Int32Value, alarmSeverity);
 
         getIntegerParam(P_BinaryInt32Value, &iVal);
         iVal++;
         if (iVal > 1) iVal=0;
-        setIntegerParam(P_BinaryInt32Value, iVal);
-        setParamStatus( P_BinaryInt32Value, currentStatus);
+        setIntegerParam(      P_BinaryInt32Value, iVal);
+        setParamStatus(       P_BinaryInt32Value, currentStatus);
+        setParamAlarmStatus(  P_BinaryInt32Value, alarmStatus);
+        setParamAlarmSeverity(P_BinaryInt32Value, alarmSeverity);
 
         getIntegerParam(P_MultibitInt32Value, &iVal);
         iVal++;
         if (iVal > MAX_INT32_ENUMS-1) iVal=0;
-        setIntegerParam(P_MultibitInt32Value, iVal);
-        setParamStatus( P_MultibitInt32Value, currentStatus);
+        setIntegerParam(      P_MultibitInt32Value, iVal);
+        setParamStatus(       P_MultibitInt32Value, currentStatus);
+        setParamAlarmStatus(  P_MultibitInt32Value, alarmStatus);
+        setParamAlarmSeverity(P_MultibitInt32Value, alarmSeverity);
 
         getUIntDigitalParam(P_UInt32DigitalValue, &uiVal, UINT32_DIGITAL_MASK);
         uiVal++;
         if (uiVal > 64) uiVal=0;
-        setUIntDigitalParam(P_UInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
-        setParamStatus(     P_UInt32DigitalValue, currentStatus);
+        setUIntDigitalParam(  P_UInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
+        setParamStatus(       P_UInt32DigitalValue, currentStatus);
+        setParamAlarmStatus(  P_UInt32DigitalValue, alarmStatus);
+        setParamAlarmSeverity(P_UInt32DigitalValue, alarmSeverity);
 
         getUIntDigitalParam(P_BinaryUInt32DigitalValue, &uiVal, UINT32_DIGITAL_MASK);
         uiVal++;
         if (uiVal > 1) uiVal=0;
-        setUIntDigitalParam(P_BinaryUInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
-        setParamStatus(     P_BinaryUInt32DigitalValue, currentStatus);
+        setUIntDigitalParam(  P_BinaryUInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
+        setParamStatus(       P_BinaryUInt32DigitalValue, currentStatus);
+        setParamAlarmStatus(  P_BinaryUInt32DigitalValue, alarmStatus);
+        setParamAlarmSeverity(P_BinaryUInt32DigitalValue, alarmSeverity);
 
         getUIntDigitalParam(P_MultibitUInt32DigitalValue, &uiVal, UINT32_DIGITAL_MASK);
         uiVal++;
         if (uiVal > MAX_UINT32_ENUMS-1) uiVal=0;
-        setUIntDigitalParam(P_MultibitUInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
-        setParamStatus(     P_MultibitUInt32DigitalValue, currentStatus);
+        setUIntDigitalParam(  P_MultibitUInt32DigitalValue, uiVal, UINT32_DIGITAL_MASK);
+        setParamStatus(       P_MultibitUInt32DigitalValue, currentStatus);
+        setParamAlarmStatus(  P_MultibitUInt32DigitalValue, alarmStatus);
+        setParamAlarmSeverity(P_MultibitUInt32DigitalValue, alarmSeverity);
 
         getDoubleParam(P_Float64Value, &dVal);
         dVal += 0.1;
-        setDoubleParam(P_Float64Value, dVal);
-        setParamStatus(P_Float64Value, currentStatus);
+        setDoubleParam(       P_Float64Value, dVal);
+        setParamStatus(       P_Float64Value, currentStatus);
+        setParamAlarmStatus(  P_Float64Value, alarmStatus);
+        setParamAlarmSeverity(P_Float64Value, alarmSeverity);
 
         sprintf(octetValue, "%.1f", dVal); 
-        setStringParam(P_OctetValue, octetValue);
-        setParamStatus(P_OctetValue, currentStatus);
+        setStringParam(       P_OctetValue, octetValue);
+        setParamStatus(       P_OctetValue, currentStatus);
+        setParamAlarmStatus(  P_OctetValue, alarmStatus);
+        setParamAlarmSeverity(P_OctetValue, alarmSeverity);
 
         for (i=0; i<MAX_ARRAY_POINTS; i++) {
             int8ArrayValue_[i]    = iVal;
@@ -211,11 +235,21 @@ void testErrors::callbackTask(void)
             float64ArrayValue_[i] = dVal;
         }
         callParamCallbacks();
-        setParamStatus(P_Int8ArrayValue,    currentStatus);
-        setParamStatus(P_Int16ArrayValue,   currentStatus);
-        setParamStatus(P_Int32ArrayValue,   currentStatus);
-        setParamStatus(P_Float32ArrayValue, currentStatus);
-        setParamStatus(P_Float64ArrayValue, currentStatus);
+        setParamStatus(       P_Int8ArrayValue,    currentStatus);
+        setParamAlarmStatus(  P_Int8ArrayValue,    alarmStatus);
+        setParamAlarmSeverity(P_Int8ArrayValue,    alarmSeverity);
+        setParamStatus(       P_Int16ArrayValue,   currentStatus);
+        setParamAlarmStatus(  P_Int16ArrayValue,   alarmStatus);
+        setParamAlarmSeverity(P_Int16ArrayValue,   alarmSeverity);
+        setParamStatus(       P_Int32ArrayValue,   currentStatus);
+        setParamAlarmStatus(  P_Int32ArrayValue,   alarmStatus);
+        setParamAlarmSeverity(P_Int32ArrayValue,   alarmSeverity);
+        setParamStatus(       P_Float32ArrayValue, currentStatus);
+        setParamAlarmStatus(  P_Float32ArrayValue, alarmStatus);
+        setParamAlarmSeverity(P_Float32ArrayValue, alarmSeverity);
+        setParamStatus(       P_Float64ArrayValue, currentStatus);
+        setParamAlarmStatus(  P_Float64ArrayValue, alarmStatus);
+        setParamAlarmSeverity(P_Float64ArrayValue, alarmSeverity);
         doCallbacksInt8Array(int8ArrayValue_,       MAX_ARRAY_POINTS, P_Int8ArrayValue,    0);
         doCallbacksInt16Array(int16ArrayValue_,     MAX_ARRAY_POINTS, P_Int16ArrayValue,   0);
         doCallbacksInt32Array(int32ArrayValue_,     MAX_ARRAY_POINTS, P_Int32ArrayValue,   0);
@@ -428,6 +462,22 @@ asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values
             severities[i] = statusEnumSeverities[i];
         }
     }
+    else if (function == P_AlarmStatus) {
+        for (i=0; ((i<ALARM_NSTATUS) && (i<nElements)); i++) {
+            if (strings[i]) free(strings[i]);
+            strings[i] = epicsStrDup(epicsAlarmConditionStrings[i]);
+            values[i] = i;
+            severities[i] = NO_ALARM;
+        }
+    }
+    else if (function == P_AlarmSeverity) {
+        for (i=0; ((i<ALARM_NSEV) && (i<nElements)); i++) {
+            if (strings[i]) free(strings[i]);
+            strings[i] = epicsStrDup(epicsAlarmSeverityStrings[i]);
+            values[i] = i;
+            severities[i] = NO_ALARM;
+        }
+    }
     else if ((function == P_Int32Value)       ||
              (function == P_BinaryInt32Value) ||   
              (function == P_MultibitInt32Value)) {
@@ -498,6 +548,8 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
     /* Get the current timestamp */
     getTimeStamp(&timestamp);
     pasynUser->timestamp = timestamp;
+    getParamAlarmStatus(function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(function, &pasynUser->alarmSeverity);
 
     if (nElements < ncopy) ncopy = nElements;
     if (function == paramIndex) {
