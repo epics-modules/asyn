@@ -66,10 +66,12 @@
 static const char *driverName = "devAsynOctet";
 
 typedef struct ringBufferElement {
-    char            *pValue;
-    size_t          len;
-    epicsTimeStamp  time;
-    asynStatus      status;
+    char                *pValue;
+    size_t              len;
+    epicsTimeStamp      time;
+    asynStatus          status;
+    epicsAlarmCondition alarmStatus;
+    epicsAlarmSeverity  alarmSeverity;
 } ringBufferElement;
 
 
@@ -106,9 +108,6 @@ typedef struct devPvt {
     IOSCANPVT           ioScanPvt;
     void                *registrarPvt;
     int                 gotValue;
-    asynStatus          status;
-    epicsAlarmCondition alarmStat;
-    epicsAlarmSeverity  alarmSevr;
     interruptCallbackOctet interruptCallback;
     asynStatus          previousQueueRequestStatus;
 } devPvt;
@@ -119,9 +118,9 @@ static long createRingBuffer(dbCommon *pr);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void interruptCallback(void *drvPvt, asynUser *pasynUser,
                 char *value, size_t len, int eomReason);
-static int initDrvUser(devPvt *pdevPvt);
-static int initCmdBuffer(devPvt *pdevPvt);
-static int initDbAddr(devPvt *pdevPvt);
+static int initDrvUser(devPvt *pPvt);
+static int initCmdBuffer(devPvt *pPvt);
+static int initDbAddr(devPvt *pPvt);
 static asynStatus writeIt(asynUser *pasynUser, const char *message, 
                 size_t nbytes);
 static asynStatus readIt(asynUser *pasynUser, char *message,
@@ -190,7 +189,7 @@ epicsExportAddress(dset, asynWfOctetWriteBinary);
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback, 
                        int isOutput, int isWaveform, int useDrvUser, char *pValue, size_t valSize)
 {
-    devPvt        *pdevPvt;
+    devPvt        *pPvt;
     asynStatus    status;
     asynUser      *pasynUser;
     asynInterface *pasynInterface;
@@ -199,20 +198,20 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     char          *buffer;
     waveformRecord *pwf = (waveformRecord *)precord;
 
-    pdevPvt = callocMustSucceed(1,sizeof(*pdevPvt),"devAsynOctet::initCommon");
-    precord->dpvt = pdevPvt;
-    pdevPvt->precord = precord;
-    pdevPvt->isOutput = isOutput;
-    pdevPvt->isWaveform = isWaveform;
-    pdevPvt->pValue = pValue;
-    pdevPvt->valSize = valSize;
-    pdevPvt->interruptCallback = interruptCallback;
+    pPvt = callocMustSucceed(1,sizeof(*pPvt),"devAsynOctet::initCommon");
+    precord->dpvt = pPvt;
+    pPvt->precord = precord;
+    pPvt->isOutput = isOutput;
+    pPvt->isWaveform = isWaveform;
+    pPvt->pValue = pValue;
+    pPvt->valSize = valSize;
+    pPvt->interruptCallback = interruptCallback;
     /* Create asynUser */
     pasynUser = pasynManager->createAsynUser(callback, 0);
-    pasynUser->userPvt = pdevPvt;
-    pdevPvt->pasynUser = pasynUser;
+    pasynUser->userPvt = pPvt;
+    pPvt->pasynUser = pasynUser;
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
-                &pdevPvt->portName, &pdevPvt->addr,&pdevPvt->userParam);
+                &pPvt->portName, &pPvt->addr,&pPvt->userParam);
     if (status != asynSuccess) {
         printf("%s %s::initCommon error in link %s\n",
                      precord->name, driverName, pasynUser->errorMessage);
@@ -220,7 +219,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     }
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser,
-        pdevPvt->portName, pdevPvt->addr);
+        pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
         printf("%s %s::initCommon connectDevice failed %s\n",
                      precord->name, driverName, pasynUser->errorMessage);
@@ -232,20 +231,20 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
             precord->name, driverName, asynOctetType);
         goto bad;
     }
-    pdevPvt->poctet = poctet = pasynInterface->pinterface;
-    pdevPvt->octetPvt = pasynInterface->drvPvt;
+    pPvt->poctet = poctet = pasynInterface->pinterface;
+    pPvt->octetPvt = pasynInterface->drvPvt;
     /* Determine if device can block */
-    pasynManager->canBlock(pasynUser, &pdevPvt->canBlock);
+    pasynManager->canBlock(pasynUser, &pPvt->canBlock);
     if(pdset->get_ioint_info) {
-        scanIoInit(&pdevPvt->ioScanPvt);
+        scanIoInit(&pPvt->ioScanPvt);
     }
-    pdevPvt->ringBufferLock = epicsMutexCreate();                                                     \
+    pPvt->ringBufferLock = epicsMutexCreate();                                                     \
     /* If the drvUser interface should be used initialize it */
     if (useDrvUser) {
-        if (initDrvUser(pdevPvt)) goto bad;
+        if (initDrvUser(pPvt)) goto bad;
     }
 
-    if (pdevPvt->isWaveform) {
+    if (pPvt->isWaveform) {
         if(pwf->ftvl!=menuFtypeCHAR && pwf->ftvl!=menuFtypeUCHAR) {
            printf("%s FTVL Must be CHAR or UCHAR\n",pwf->name);
            pwf->pact = 1;
@@ -262,7 +261,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
      *  - If the info field "asyn:INITIAL_READBACK" is 1 then try to read the initial value from the driver
      *  - If the info field "asyn:READBACK" is 1 then register for callbacks 
     */
-    if (pdevPvt->isOutput) {
+    if (pPvt->isOutput) {
         int enableReadbacks = 0;
         const char *readbackString;
         int enableInitialReadback = 0;
@@ -274,7 +273,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
 
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
-            asynPrint(pdevPvt->pasynUser, ASYN_TRACE_ERROR,
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
                 "%s devAsynOctet::initCommon error finding record\n",
                 precord->name);
             goto bad;
@@ -284,12 +283,12 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         if (enableReadbacks) {
             status = createRingBuffer(precord);
             if (status != asynSuccess) goto bad;
-            status = pdevPvt->poctet->registerInterruptUser(
-               pdevPvt->octetPvt, pdevPvt->pasynUser,
-               pdevPvt->interruptCallback, pdevPvt, &pdevPvt->registrarPvt);
+            status = pPvt->poctet->registerInterruptUser(
+               pPvt->octetPvt, pPvt->pasynUser,
+               pPvt->interruptCallback, pPvt, &pPvt->registrarPvt);
             if(status != asynSuccess) {
                 printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
-                       precord->name, pdevPvt->pasynUser->errorMessage);
+                       precord->name, pPvt->pasynUser->errorMessage);
             }
         }
 
@@ -297,8 +296,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         if (initialReadbackString) enableInitialReadback = atoi(initialReadbackString);
         if (enableInitialReadback) {
             /* Initialize synchronous interface */
-            status = pasynOctetSyncIO->connect(pdevPvt->portName, pdevPvt->addr, 
-                         &pasynUserSync, pdevPvt->userParam);
+            status = pasynOctetSyncIO->connect(pPvt->portName, pPvt->addr, 
+                         &pasynUserSync, pPvt->userParam);
             if (status != asynSuccess) {
                 printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
                        precord->name, pasynUserSync->errorMessage);
@@ -306,13 +305,13 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
             }
             buffer = malloc(valSize);
             status = pasynOctetSyncIO->read(pasynUserSync, buffer, valSize,
-                                            pdevPvt->pasynUser->timeout, &nBytesRead, &eomReason);
+                                            pPvt->pasynUser->timeout, &nBytesRead, &eomReason);
             if (status == asynSuccess) {
                 precord->udf = 0;
                 if (nBytesRead == valSize) nBytesRead--;
                 buffer[nBytesRead] = 0;
                 strcpy(pValue, buffer);
-                if (pdevPvt->isWaveform) pwf->nord = nBytesRead;
+                if (pPvt->isWaveform) pwf->nord = nBytesRead;
             }
             free(buffer);
             pasynOctetSyncIO->disconnect(pasynUserSync);
@@ -363,37 +362,37 @@ static long createRingBuffer(dbCommon *pr)
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
-    devPvt *pdevPvt = (devPvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
 
-    /* If initCommon failed then pdevPvt->poctet is NULL, return error */
-    if (!pdevPvt->poctet) return -1;
+    /* If initCommon failed then pPvt->poctet is NULL, return error */
+    if (!pPvt->poctet) return -1;
 
     if (cmd == 0) {
         /* Add to scan list.  Register interrupts */
-        asynPrint(pdevPvt->pasynUser, ASYN_TRACE_FLOW,
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s %s::getIoIntInfo registering interrupt\n",
             pr->name, driverName);
         createRingBuffer(pr);
-        status = pdevPvt->poctet->registerInterruptUser(
-           pdevPvt->octetPvt,pdevPvt->pasynUser,
-           pdevPvt->interruptCallback,pdevPvt,&pdevPvt->registrarPvt);
+        status = pPvt->poctet->registerInterruptUser(
+           pPvt->octetPvt,pPvt->pasynUser,
+           pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
         if(status!=asynSuccess) {
             printf("%s %s::getIoIntInfo error calling registerInterruptUser %s\n",
-                   pr->name, driverName, pdevPvt->pasynUser->errorMessage);
+                   pr->name, driverName, pPvt->pasynUser->errorMessage);
         }
     } else {
-        asynPrint(pdevPvt->pasynUser, ASYN_TRACE_FLOW,
+        asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s %s::getIoIntInfo cancelling interrupt\n",
              pr->name, driverName);
-        status = pdevPvt->poctet->cancelInterruptUser(pdevPvt->octetPvt,
-             pdevPvt->pasynUser,pdevPvt->registrarPvt);
+        status = pPvt->poctet->cancelInterruptUser(pPvt->octetPvt,
+             pPvt->pasynUser,pPvt->registrarPvt);
         if(status!=asynSuccess) {
             printf("%s %s::getIoIntInfo error calling cancelInterruptUser %s\n",
-                   pr->name, driverName, pdevPvt->pasynUser->errorMessage);
+                   pr->name, driverName, pPvt->pasynUser->errorMessage);
         }
     }
-    *iopvt = pdevPvt->ioScanPvt;
+    *iopvt = pPvt->ioScanPvt;
     return 0;
 }
 
@@ -437,7 +436,10 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         }
         pPvt->nord = (epicsUInt32)len;
         pPvt->gotValue++;
-        if (pPvt->status == asynSuccess) pPvt->status = pasynUser->auxStatus;
+        pPvt->result.status = pasynUser->auxStatus;
+        pPvt->result.time = pasynUser->timestamp;
+        pPvt->result.alarmStatus = pasynUser->alarmStatus;
+        pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         dbScanUnlock(pPvt->precord);
         if (pPvt->isOutput) 
             scanOnce(pPvt->precord);
@@ -459,6 +461,8 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         rp->pValue[len] = 0;
         rp->time = pasynUser->timestamp;
         rp->status = pasynUser->auxStatus;
+        rp->alarmStatus = pasynUser->alarmStatus;
+        rp->alarmSeverity = pasynUser->alarmSeverity;
         pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize-1) ? 0 : pPvt->ringHead+1;
         if (pPvt->ringHead == pPvt->ringTail) {
             /* There was no room in the ring buffer.  Remove the oldest value from the
@@ -479,22 +483,22 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 }
 
 
-static int initDrvUser(devPvt *pdevPvt)
+static int initDrvUser(devPvt *pPvt)
 {
-    asynUser      *pasynUser = pdevPvt->pasynUser;
+    asynUser      *pasynUser = pPvt->pasynUser;
     asynStatus    status;
     asynInterface *pasynInterface;
-    dbCommon      *precord = pdevPvt->precord;
+    dbCommon      *precord = pPvt->precord;
 
     /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
-    if(pasynInterface && pdevPvt->userParam) {
+    if(pasynInterface && pPvt->userParam) {
         asynDrvUser *pasynDrvUser;
         void       *drvPvt;
 
         pasynDrvUser = (asynDrvUser *)pasynInterface->pinterface;
         drvPvt = pasynInterface->drvPvt;
-        status = pasynDrvUser->create(drvPvt,pasynUser,pdevPvt->userParam,0,0);
+        status = pasynDrvUser->create(drvPvt,pasynUser,pPvt->userParam,0,0);
         if(status!=asynSuccess) {
             precord->pact=1;
             printf("%s %s::initDrvUser drvUserCreate failed %s\n",
@@ -506,32 +510,32 @@ static int initDrvUser(devPvt *pdevPvt)
     return INIT_OK;
 }
 
-static int initCmdBuffer(devPvt *pdevPvt)
+static int initCmdBuffer(devPvt *pPvt)
 {
     size_t   len;
-    dbCommon *precord = pdevPvt->precord;
+    dbCommon *precord = pPvt->precord;
 
-    len = strlen(pdevPvt->userParam);
+    len = strlen(pPvt->userParam);
     if(len<=0) {
         printf("%s  no userParam\n",precord->name);
         precord->pact = 1;
         recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM);
         return INIT_ERROR;
     }
-    pdevPvt->buffer = callocMustSucceed(len,sizeof(char),"devAsynOctet");
-    dbTranslateEscape(pdevPvt->buffer,pdevPvt->userParam);
-    pdevPvt->bufSize = len;
-    pdevPvt->bufLen = strlen(pdevPvt->buffer);
+    pPvt->buffer = callocMustSucceed(len,sizeof(char),"devAsynOctet");
+    dbTranslateEscape(pPvt->buffer,pPvt->userParam);
+    pPvt->bufSize = len;
+    pPvt->bufLen = strlen(pPvt->buffer);
     return INIT_OK;
 }
 
-static int initDbAddr(devPvt *pdevPvt)
+static int initDbAddr(devPvt *pPvt)
 {
     char      *userParam;
-    dbCommon *precord = pdevPvt->precord;
+    dbCommon *precord = pPvt->precord;
 
-    userParam = pdevPvt->userParam;
-    if(dbNameToAddr(userParam,&pdevPvt->dbAddr)) {
+    userParam = pPvt->userParam;
+    if(dbNameToAddr(userParam,&pPvt->dbAddr)) {
         printf("%s %s::initDbAddr record %s not present\n",
             precord->name, driverName, userParam);
         precord->pact = 1;
@@ -543,22 +547,21 @@ static int initDbAddr(devPvt *pdevPvt)
 
 static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
 {
-    devPvt     *pdevPvt = (devPvt *)pasynUser->userPvt;
-    dbCommon   *precord = pdevPvt->precord;
-    asynOctet  *poctet = pdevPvt->poctet;
-    void       *octetPvt = pdevPvt->octetPvt;
-    asynStatus status;
+    devPvt     *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon   *precord = pPvt->precord;
+    asynOctet  *poctet = pPvt->poctet;
+    void       *octetPvt = pPvt->octetPvt;
     size_t     nbytesTransfered;
 
-    status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
-    if(status!=asynSuccess) {
+    pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
+    if(pPvt->result.status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s %s::writeIt failed %s\n",
             precord->name, driverName, pasynUser->errorMessage);
-        pasynEpicsUtils->asynStatusToEpicsAlarm(status, WRITE_ALARM, &pdevPvt->alarmStat,
-                                                INVALID_ALARM, &pdevPvt->alarmSevr);
-        recGblSetSevr(precord, pdevPvt->alarmStat, pdevPvt->alarmSevr);
-        return status;
+        return pPvt->result.status;
     }
     if(nbytes != nbytesTransfered) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -569,33 +572,32 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nbytes,
        "%s %s::writeIt\n",precord->name, driverName);
-    return status;
+    return pPvt->result.status;
 }
 
 static asynStatus readIt(asynUser *pasynUser,char *message,
         size_t maxBytes, size_t *nBytesRead)
 {
-    devPvt     *pdevPvt = (devPvt *)pasynUser->userPvt;
-    dbCommon   *precord = pdevPvt->precord;
-    asynOctet  *poctet = pdevPvt->poctet;
-    void       *octetPvt = pdevPvt->octetPvt;
-    asynStatus status;
+    devPvt     *pPvt = (devPvt *)pasynUser->userPvt;
+    dbCommon   *precord = pPvt->precord;
+    asynOctet  *poctet = pPvt->poctet;
+    void       *octetPvt = pPvt->octetPvt;
     int        eomReason;
 
-    status = poctet->read(octetPvt,pasynUser,message,maxBytes,
+    pPvt->result.status = poctet->read(octetPvt,pasynUser,message,maxBytes,
         nBytesRead,&eomReason);
-    if(status!=asynSuccess) {
+    pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
+    if(pPvt->result.status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s %s::readIt failed %s\n",
             precord->name, driverName, pasynUser->errorMessage);
-        pasynEpicsUtils->asynStatusToEpicsAlarm(status, READ_ALARM, &pdevPvt->alarmStat,
-                                                INVALID_ALARM, &pdevPvt->alarmSevr);
-        recGblSetSevr(precord, pdevPvt->alarmStat, pdevPvt->alarmSevr);
-        return status;
+        return pPvt->result.status;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,*nBytesRead,
        "%s %s::readIt eomReason %d\n",precord->name, driverName, eomReason);
-    return status;
+    return pPvt->result.status;
 }
 
 static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
@@ -615,74 +617,65 @@ static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
 }
 static long processCommon(dbCommon *precord)
 {
-    devPvt *pdevPvt = (devPvt *)precord->dpvt;
+    devPvt *pPvt = (devPvt *)precord->dpvt;
     waveformRecord *pwf = (waveformRecord *)precord;
-    asynStatus status;
     int gotCallbackData;
     
-    if (pdevPvt->ringSize == 0) {
-        gotCallbackData = pdevPvt->gotValue;
+    if (pPvt->ringSize == 0) {
+        gotCallbackData = pPvt->gotValue;
     } else {
-        gotCallbackData = getRingBufferValue(pdevPvt);
+        gotCallbackData = getRingBufferValue(pPvt);
     }
 
     if (!gotCallbackData && precord->pact == 0) {
-        if(pdevPvt->canBlock) precord->pact = 1;
-        status = pasynManager->queueRequest(
-           pdevPvt->pasynUser, asynQueuePriorityMedium, 0.0);
-        if((status==asynSuccess) && pdevPvt->canBlock) return 0;
-        if(pdevPvt->canBlock) precord->pact = 0;
-        reportQueueRequestStatus(pdevPvt, status);
-        if (status != asynSuccess) {
-            pasynEpicsUtils->asynStatusToEpicsAlarm(status, 
-                                                    pdevPvt->isOutput ? WRITE_ALARM : READ_ALARM, 
-                                                    &pdevPvt->alarmStat,
-                                                    INVALID_ALARM, &pdevPvt->alarmSevr);
-            recGblSetSevr(precord, pdevPvt->alarmStat, pdevPvt->alarmSevr);
-        }
+        if(pPvt->canBlock) precord->pact = 1;
+        pPvt->result.status = pasynManager->queueRequest(
+           pPvt->pasynUser, asynQueuePriorityMedium, 0.0);
+        if((pPvt->result.status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) precord->pact = 0;
+        reportQueueRequestStatus(pPvt, pPvt->result.status);
     }
     if (gotCallbackData) {
         int len;
-        if (pdevPvt->ringSize == 0) {
+        if (pPvt->ringSize == 0) {
             /* Data has already been copied to the record in interruptCallback */
-            pdevPvt->gotValue--;
-            if (pdevPvt->isWaveform && (pdevPvt->status == asynSuccess)) pwf->nord = pdevPvt->nord;
-            if (pdevPvt->gotValue) {
-                asynPrint(pdevPvt->pasynUser, ASYN_TRACE_WARNING,
+            pPvt->gotValue--;
+            if (pPvt->isWaveform && (pPvt->result.status == asynSuccess)) pwf->nord = pPvt->nord;
+            if (pPvt->gotValue) {
+                asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
                     "%s %s::processCommon, "
                     "warning: multiple interrupt callbacks between processing\n",
                      precord->name, driverName);
             }
         } else {
             /* Copy data from ring buffer */
-            ringBufferElement *rp = &pdevPvt->result;
+            ringBufferElement *rp = &pPvt->result;
             /* Need to copy the array with the lock because that is shared even though
                pPvt->result is a copy */
-            epicsMutexLock(pdevPvt->ringBufferLock);
+            epicsMutexLock(pPvt->ringBufferLock);
             if (rp->status == asynSuccess) {
-                memcpy(pdevPvt->pValue, rp->pValue, rp->len);
-                if (pdevPvt->isWaveform) pwf->nord = rp->len;
+                memcpy(pPvt->pValue, rp->pValue, rp->len);
+                if (pPvt->isWaveform) pwf->nord = rp->len;
             }
             precord->time = rp->time;
-            pdevPvt->status = rp->status;
-            epicsMutexUnlock(pdevPvt->ringBufferLock);
+            epicsMutexUnlock(pPvt->ringBufferLock);
         }
-        len = strlen(pdevPvt->pValue);
-        asynPrintIO(pdevPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            pdevPvt->pValue, len,
+        len = strlen(pPvt->pValue);
+        asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
+            pPvt->pValue, len,
             "%s %s::processCommon len=%d,  data:",
             precord->name, driverName, len);
     }
 
-    /* If interrupt callbacks set an error status put record in alarm */
-    if (pdevPvt->status == asynSuccess) {
-        pdevPvt->precord->udf = 0;
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            pPvt->isOutput ? WRITE_ALARM : READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(precord, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->result.status == asynSuccess) {
+        pPvt->precord->udf = 0;
         return 0;
     } else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pdevPvt->status, READ_ALARM, &pdevPvt->alarmStat,
-                                                INVALID_ALARM, &pdevPvt->alarmSevr);
-        recGblSetSevr(precord, pdevPvt->alarmStat, pdevPvt->alarmSevr);
-        pdevPvt->status = asynSuccess;
+        pPvt->result.status = asynSuccess;
         return -1;
     }
 }
@@ -696,25 +689,25 @@ static void finish(dbCommon *pr)
 
 static long initSiCmdResponse(stringinRecord *psi)
 {
-    devPvt     *pdevPvt;
+    devPvt     *pPvt;
     int        status;
 
     status = initCommon((dbCommon *)psi, &psi->inp, callbackSiCmdResponse, 
                         0, 0, 0, psi->val, sizeof(psi->val));
     if(status!=INIT_OK) return status;
-    pdevPvt = (devPvt *)psi->dpvt;
-    return initCmdBuffer(pdevPvt);
+    pPvt = (devPvt *)psi->dpvt;
+    return initCmdBuffer(pPvt);
 }
 
 static void callbackSiCmdResponse(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    stringinRecord *psi = (stringinRecord *)pPvt->precord;
     asynStatus     status;
     size_t         len = sizeof(psi->val);
     size_t         nBytesRead;
 
-    status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
+    status = writeIt(pasynUser,pPvt->buffer,pPvt->bufLen);
     if(status==asynSuccess) {
         status = readIt(pasynUser,psi->val,len,&nBytesRead);
         psi->time = pasynUser->timestamp;
@@ -730,19 +723,19 @@ static void callbackSiCmdResponse(asynUser *pasynUser)
 static long initSiWriteRead(stringinRecord *psi)
 {
     int        status;
-    devPvt     *pdevPvt;
+    devPvt     *pPvt;
 
     status = initCommon((dbCommon *)psi, &psi->inp, callbackSiWriteRead,
                         0, 0, 0, psi->val, sizeof(psi->val));
     if(status!=INIT_OK) return status;
-    pdevPvt = (devPvt *)psi->dpvt;
-    return initDbAddr(pdevPvt);
+    pPvt = (devPvt *)psi->dpvt;
+    return initDbAddr(pPvt);
 }
 
 static void callbackSiWriteRead(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    stringinRecord *psi = (stringinRecord *)pPvt->precord;
     asynStatus     status;
     size_t         nBytesRead;
     long           dbStatus;
@@ -750,7 +743,7 @@ static void callbackSiWriteRead(asynUser *pasynUser)
     char           translate[MAX_STRING_SIZE+1];
     size_t         len = sizeof(psi->val);
 
-    dbStatus = dbGet(&pdevPvt->dbAddr,DBR_STRING,raw,0,0,0);
+    dbStatus = dbGet(&pPvt->dbAddr,DBR_STRING,raw,0,0,0);
     raw[MAX_STRING_SIZE] = 0;
     if(dbStatus) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -781,8 +774,8 @@ static long initSiRead(stringinRecord *psi)
 
 static void callbackSiRead(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    stringinRecord *psi = (stringinRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    stringinRecord *psi = (stringinRecord *)pPvt->precord;
     size_t         nBytesRead;
     asynStatus     status;
     size_t         len = sizeof(psi->val);
@@ -816,8 +809,8 @@ static size_t my_strnlen(const char *str, size_t max_size)
 
 static void callbackSoWrite(asynUser *pasynUser)
 {
-    devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
-    stringoutRecord *pso = (stringoutRecord *)pdevPvt->precord;
+    devPvt          *pPvt = (devPvt *)pasynUser->userPvt;
+    stringoutRecord *pso = (stringoutRecord *)pPvt->precord;
 
     writeIt(pasynUser, pso->val, my_strnlen(pso->val, sizeof(pso->val)));
     finish((dbCommon *)pso);
@@ -835,13 +828,13 @@ static long initWfCmdResponse(waveformRecord *pwf)
 
 static void callbackWfCmdResponse(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord *pwf = (waveformRecord *)pPvt->precord;
     asynStatus     status;
     size_t         nBytesRead;
     char           *pbuf = (char *)pwf->bptr;
 
-    status = writeIt(pasynUser,pdevPvt->buffer,pdevPvt->bufLen);
+    status = writeIt(pasynUser,pPvt->buffer,pPvt->bufLen);
     if(status==asynSuccess) {
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
         pwf->time = pasynUser->timestamp;
@@ -865,8 +858,8 @@ static long initWfWriteRead(waveformRecord *pwf)
 
 static void callbackWfWriteRead(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord *pwf = (waveformRecord *)pPvt->precord;
     asynStatus     status;
     size_t         nBytesRead;
     long           dbStatus;
@@ -874,7 +867,7 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     char           translate[MAX_STRING_SIZE+1];
     char           *pbuf = (char *)pwf->bptr;
 
-    dbStatus = dbGet(&pdevPvt->dbAddr, DBR_STRING, raw, 0, 0, 0);
+    dbStatus = dbGet(&pPvt->dbAddr, DBR_STRING, raw, 0, 0, 0);
     raw[MAX_STRING_SIZE] = 0;
     if(dbStatus) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -904,8 +897,8 @@ static long initWfRead(waveformRecord *pwf)
 
 static void callbackWfRead(asynUser *pasynUser)
 {
-    devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;
-    waveformRecord *pwf = (waveformRecord *)pdevPvt->precord;
+    devPvt         *pPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord *pwf = (waveformRecord *)pPvt->precord;
     size_t         nBytesRead;
     asynStatus     status;
     char           *pbuf = (char *)pwf->bptr;
@@ -927,8 +920,8 @@ static long initWfWrite(waveformRecord *pwf)
 
 static void callbackWfWrite(asynUser *pasynUser)
 {
-    devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
-    waveformRecord  *pwf = (waveformRecord *)pdevPvt->precord;
+    devPvt          *pPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord  *pwf = (waveformRecord *)pPvt->precord;
 
     writeIt(pasynUser, pwf->bptr, my_strnlen(pwf->bptr, pwf->nord));
     finish((dbCommon *)pwf);
@@ -942,8 +935,8 @@ static long initWfWriteBinary(waveformRecord *pwf)
 
 static void callbackWfWriteBinary(asynUser *pasynUser)
 {
-    devPvt          *pdevPvt = (devPvt *)pasynUser->userPvt;
-    waveformRecord  *pwf = (waveformRecord *)pdevPvt->precord;
+    devPvt          *pPvt = (devPvt *)pasynUser->userPvt;
+    waveformRecord  *pwf = (waveformRecord *)pPvt->precord;
 
     writeIt(pasynUser, pwf->bptr, pwf->nord);
     finish((dbCommon *)pwf);
