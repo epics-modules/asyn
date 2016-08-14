@@ -15,7 +15,7 @@
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">July XXX, 2016</span></p>
+      <span style="font-weight: bold; font-size: 14pt">August 14, 2016</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -447,6 +447,12 @@
     <span style="font-weight: bold">asynGenericPointer</span> methods for devices that
     read/write arbitrary structures, passed via a void* pointer. The client and the
     server of course need to agree on the structure type being pointed to.</p>
+  <p>
+    <span style="font-weight: bold">asynEnum</span> methods for devices to define enum
+    strings, values, and severities.</p>
+  <p>
+    <span style="font-weight: bold">asynOption</span> methods for device configuration
+    using key/value pairs.</p>
   <h3>
     asynManager</h3>
   <p>
@@ -1065,16 +1071,18 @@
     char          *errorMessage;
     int            errorMessageSize;
     /* timeout must be set by the user */
-    double         timeout;  /*Timeout for I/O operations*/
-    void          *userPvt;
-    void          *userData;
-    /*The following is for user to/from driver communication*/
+    double         timeout;  /* Timeout for I/O operations*/
+    void          *userPvt; 
+    void          *userData; 
+    /* The following is for use by driver */
     void          *drvUser;
-    /*The following are normally set by driver*/
+    /* The following is normally set by driver via asynDrvUser->create() */
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus; /*For auxillary status*/
+    int            auxStatus;     /* For auxillary status*/
+    int            alarmStatus;   /* Typically for EPICS record alarm status */
+    int            alarmSeverity; /* Typically for EPICS record alarm severity */
 }asynUser;</pre>
   <table border="1">
     <caption>
@@ -1168,8 +1176,24 @@
           auxStatus</td>
         <td>
           Any method can provide additional return information in auxStatus. The meaning is
-          determined by the method. Callbacks use auxStatus to set record alarm status in
-          device support callback functions.</td>
+          determined by the method. Callbacks can use auxStatus to set record alarm status
+          in device support callback functions.</td>
+      </tr>
+      <tr>
+        <td>
+          alarmStatus</td>
+        <td>
+          Any method can provide additional return information in alarmStatus. The meaning
+          is determined by the method. Callbacks can use alarmStatus to set record alarm status
+          in device support callback functions.</td>
+      </tr>
+      <tr>
+        <td>
+          alarmSeverity</td>
+        <td>
+          Any method can provide additional return information in alarmStatus. The meaning
+          is determined by the method. Callbacks can use alarmSeverity to set record alarm
+          severity in device support callback functions.</td>
       </tr>
     </tbody>
   </table>
@@ -4784,13 +4808,20 @@ device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
     Record alarms</h2>
   <p>
     The generic EPICS device support sets the record alarm status and severity when
-    errors occur. For records that do not use callbacks (not SCAN=I/O Intr or asynXXXAverage
-    or asynXXXTimeSeries) the status information is passed from the driver to device
-    support in the asynStatus return of the interface function call, e.g. pasynInt32-&gt;read().
-    The driver maps the asynStatus values to the record STAT and SEVR values using the
-    function pasynEpicsUtils-&gt;asynUserToEpicsAlarm(). The SEVR field is currently
-    always set to INVALID_ALARM for any error. The STAT field is set using following
-    mapping:</p>
+    errors occur. Beginning in R4-30 the alarmStatus and alarmSeverity fields were added
+    to the asynUser structure. Drivers can use these fields to explicitly control the
+    record STAT and SEVERITY fields, independent of the function return status or the
+    asynUser.auxStatus field.</p>
+  <p>
+    If the pasynUser-&gt;alarmStatus or pasynUser-&gt;alarmSeverity field is zero then
+    the record alarm status or severity is controlled by the function return status
+    or the asynUser.auxStatus field. For records that do not use callbacks (not SCAN=I/O
+    Intr or asynXXXAverage or asynXXXTimeSeries) the status information is passed from
+    the driver to device support in the asynStatus return of the interface function
+    call, e.g. pasynInt32-&gt;read(). The driver maps the asynStatus values to the record
+    STAT and SEVR values using the function pasynEpicsUtils-&gt;asynUserToEpicsAlarm().
+    The SEVR field is currently always set to INVALID_ALARM for any error. The STAT
+    field is set using following mapping:</p>
   <pre>  asynSuccess = epicsAlarmNone
   asynTimeout = epicsAlarmTimeout
   asynOverflow = epicsAlarmHWLimit
@@ -4805,7 +4836,9 @@ device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
     it was not possible for drivers to control the alarm state of records that used
     callbacks. Drivers should set pasynUser-&gt;auxStatus to asynSuccess for normal
     operation and to another value to indicate a problem. The same mapping described
-    above is used to control the values of STAT and SEVR.
+    above is used to control the values of STAT and SEVR. If the pasynUser-&gt;alarmStatus
+    or pasynUser-&gt;alarmSeverity fields are non-zero then these values are used to
+    set the record STAT and SEVR fields, regardless of the value of asynUser.auxStatus.
   </p>
   <hr />
   <div style="text-align: center">
