@@ -50,16 +50,6 @@
 # include <termios.h>
 #endif
 
-/*
- * RS485 support on linux-arm
- */
-//#ifdef linux /* RS485 support */
-//# include <sys/ioctl.h>
-//# include <linux/serial.h>
-//
-//# define TIOCGRS485      0x542E
-//# define TIOCSRS485      0x542F
-//#endif
 #include "serial_rs485.h"
 
 #ifdef vxWorks
@@ -248,9 +238,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     struct termios termiosPrev;
     int baudPrev;
 
-#ifdef linux /* RS485 support */
     struct serial_rs485 rs485Prev;
-#endif
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -259,9 +247,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     /* Make a copy of tty->termios and tty->baud so we can restore them in case of errors */                
     termiosPrev = tty->termios;
     baudPrev = tty->baud;
-#ifdef linux /* RS485 support */
     rs485Prev = tty->rs485;
-#endif
 
     if (epicsStrCaseCmp(key, "baud") == 0) {
         int baud;
