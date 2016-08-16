@@ -124,13 +124,13 @@ applyOptions(asynUser *pasynUser, ttyController_t *tty)
     }
 #endif
 
-    if (ASYN_RS485_SUPPORTED) {
-        if( ioctl( tty->fd, TIOCSRS485, &tty->rs485 ) < 0 ) {
-          epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                                    "ioctl TIOCSRS485 failed: %s", strerror(errno));
-          return asynError;
-        }
+#ifdef ASYN_RS485_SUPPORTED
+    if( ioctl( tty->fd, TIOCSRS485, &tty->rs485 ) < 0 ) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                              "ioctl TIOCSRS485 failed: %s", strerror(errno));
+        return asynError;
     }
+#endif
 
     return asynSuccess;
 }
