@@ -217,7 +217,7 @@ void testErrors::callbackTask(void)
         doCallbacksFloat32Array(float32ArrayValue_, MAX_ARRAY_POINTS, P_Float32ArrayValue, 0);
         doCallbacksFloat64Array(float64ArrayValue_, MAX_ARRAY_POINTS, P_Float64ArrayValue, 0);
         unlock();
-        epicsEventWait(eventId_);
+        (void)epicsEventWait(eventId_);
     }
 }
 
