@@ -146,7 +146,7 @@ void testArrayRingBuffer::arrayGenTask(void)
         // Release the lock while we wait for a command to start or wait for updateTime
         unlock();
         if (runStop) epicsEventWaitWithTimeout(eventId_, loopDelay);
-        else         epicsEventWait(eventId_);
+        else         (void)epicsEventWait(eventId_);
         // Take the lock again
         lock(); 
         /* runStop could have changed while we were waiting */
