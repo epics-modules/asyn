@@ -124,14 +124,6 @@ applyOptions(asynUser *pasynUser, ttyController_t *tty)
     }
 #endif
 
-#ifdef ASYN_RS485_SUPPORTED
-    if( ioctl( tty->fd, TIOCSRS485, &tty->rs485 ) < 0 ) {
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                              "ioctl TIOCSRS485 failed: %s", strerror(errno));
-        return asynError;
-    }
-#endif
-
     return asynSuccess;
 }
 
@@ -239,8 +231,8 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     ttyController_t *tty = (ttyController_t *)drvPvt;
     struct termios termiosPrev;
     int baudPrev;
-
     struct serial_rs485 rs485Prev;
+    int rs485_changed = 0;
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -508,6 +500,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                     "Invalid rs485_enable value.");
             return asynError;
         }
+        rs485_changed = 1;
     }
     else if (epicsStrCaseCmp(key, "rs485_rts_on_send") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
@@ -521,6 +514,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                     "Invalid rs485_rts_on_send value.");
             return asynError;
         }
+        rs485_changed = 1;
     }
     else if (epicsStrCaseCmp(key, "rs485_rts_after_send") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
@@ -534,6 +528,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                     "Invalid rs485_rts_on_send value.");
             return asynError;
         }
+        rs485_changed = 1;
     }
     else if (epicsStrCaseCmp(key, "rs485_delay_rts_before_send") == 0) {
         unsigned delay;
@@ -543,6 +538,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             return asynError;
         }
         tty->rs485.delay_rts_before_send = delay;
+        rs485_changed = 1;
     }
     else if (epicsStrCaseCmp(key, "rs485_delay_rts_after_send") == 0) {
         unsigned delay;
@@ -552,6 +548,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             return asynError;
         }
         tty->rs485.delay_rts_after_send = delay;
+        rs485_changed = 1;
     }
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -563,10 +560,20 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             /* Restore previous values of tty->baud and tty->termios */
             tty->baud = baudPrev;
             tty->termios = termiosPrev;
-            tty->rs485 = rs485Prev;
             return asynError;
         }
+#ifdef ASYN_RS485_SUPPORTED
+        if (rs485_changed) {
+            if( ioctl( tty->fd, TIOCSRS485, &tty->rs485 ) < 0 ) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                              "ioctl TIOCSRS485 failed: %s", strerror(errno));
+                tty->rs485 = rs485Prev;
+                return asynError;
+            }
+        }
+#endif
     }
+
     return asynSuccess;
 }
 static const struct asynOption asynOptionMethods = { setOption, getOption };
