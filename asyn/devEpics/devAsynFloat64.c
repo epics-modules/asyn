@@ -49,9 +49,11 @@
 #define DEFAULT_RING_BUFFER_SIZE 10
 
 typedef struct ringBufferElement {
-    epicsFloat64    value;
-    epicsTimeStamp  time;
-    asynStatus      status;
+    epicsFloat64        value;
+    epicsTimeStamp      time;
+    asynStatus          status;
+    epicsAlarmCondition alarmStatus;
+    epicsAlarmSeverity  alarmSeverity;
 } ringBufferElement;
 
 typedef struct devPvt{
@@ -63,8 +65,6 @@ typedef struct devPvt{
     void              *registrarPvt;
     int               canBlock;
     epicsMutexId      ringBufferLock;
-    epicsAlarmCondition alarmStat;
-    epicsAlarmSeverity alarmSevr;
     ringBufferElement *ringBuffer;
     int               ringHead;
     int               ringTail;
@@ -298,6 +298,8 @@ static void processCallbackInput(asynUser *pasynUser)
 
     pPvt->result.status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pPvt->result.value);
     pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process value=%f\n",pr->name,pPvt->result.value);
@@ -315,6 +317,9 @@ static void processCallbackOutput(asynUser *pasynUser)
     dbCommon *pr = pPvt->pr;
 
     pPvt->result.status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser,pPvt->result.value);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynFloat64 process val %f\n",pr->name,pPvt->result.value);
@@ -354,6 +359,8 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     rp->value = value;
     rp->time = pasynUser->timestamp;
     rp->status = pasynUser->auxStatus;
+    rp->alarmStatus = pasynUser->alarmStatus;
+    rp->alarmSeverity = pasynUser->alarmSeverity;
     pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
     if (pPvt->ringHead == pPvt->ringTail) {
         /* There was no room in the ring buffer.  In the past we just threw away
@@ -386,6 +393,8 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     rp->value = value;
     rp->time = pasynUser->timestamp;
     rp->status = pasynUser->auxStatus;
+    rp->alarmStatus = pasynUser->alarmStatus;
+    rp->alarmSeverity = pasynUser->alarmSeverity;
     pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
     if (pPvt->ringHead == pPvt->ringTail) {
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
@@ -409,6 +418,8 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     pPvt->numAverage++;
     pPvt->sum += value;
     pPvt->result.status |= pasynUser->auxStatus;
+    pPvt->result.alarmStatus = pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
     epicsMutexUnlock(pPvt->ringBufferLock);
 }
 
@@ -474,15 +485,16 @@ static long processAi(aiRecord *pr)
         reportQueueRequestStatus(pPvt, status);
     }
     pr->time = pPvt->result.time; 
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
         pr->val = pPvt->result.value; 
         pr->udf=0;
         return 2;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                            INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         return -1;
     }
 }
@@ -527,13 +539,14 @@ static long processAo(aoRecord *pr)
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status,
+                                            WRITE_ALARM, &pPvt->result.alarmStatus, 
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status,
-                WRITE_ALARM, &pPvt->alarmStat, INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -574,6 +587,10 @@ static long processAiAverage(aiRecord *pai)
     pPvt->numAverage = 0;
     pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->ringBufferLock);
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pai, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if (pPvt->result.status == asynSuccess) {
         pai->val = dval;
         pai->udf = 0;
@@ -583,9 +600,6 @@ static long processAiAverage(aiRecord *pai)
         return 2;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                                    INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pai, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }

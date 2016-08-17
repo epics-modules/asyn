@@ -23,7 +23,7 @@
 /* Version number names similar to those provide by base
  * These macros are always numeric */
 #define ASYN_VERSION       4
-#define ASYN_REVISION     29
+#define ASYN_REVISION     30
 #define ASYN_MODIFICATION  0
 
 #ifdef __cplusplus
@@ -56,16 +56,18 @@ typedef struct asynUser {
     char          *errorMessage;
     int            errorMessageSize;
     /* timeout must be set by the user */
-    double         timeout;  /*Timeout for I/O operations*/
+    double         timeout;  /* Timeout for I/O operations*/
     void          *userPvt; 
     void          *userData; 
-    /*The following is for user to/from driver communication*/
+    /* The following is for use by driver */
     void          *drvUser;
-    /*The following is normally set by driver*/
+    /* The following is normally set by driver via asynDrvUser->create() */
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus; /*For auxillary status*/
+    int            auxStatus;     /* For auxillary status*/
+    int            alarmStatus;   /* Typically for EPICS record alarm status */
+    int            alarmSeverity; /* Typically for EPICS record alarm severity */
 }asynUser;
 
 typedef struct asynInterface{

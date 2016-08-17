@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-29</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-30</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 17, 2016</span></p>
+      <span style="font-weight: bold; font-size: 14pt">August 14, 2016</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -447,6 +447,12 @@
     <span style="font-weight: bold">asynGenericPointer</span> methods for devices that
     read/write arbitrary structures, passed via a void* pointer. The client and the
     server of course need to agree on the structure type being pointed to.</p>
+  <p>
+    <span style="font-weight: bold">asynEnum</span> methods for devices to define enum
+    strings, values, and severities.</p>
+  <p>
+    <span style="font-weight: bold">asynOption</span> methods for device configuration
+    using key/value pairs.</p>
   <h3>
     asynManager</h3>
   <p>
@@ -1065,16 +1071,18 @@
     char          *errorMessage;
     int            errorMessageSize;
     /* timeout must be set by the user */
-    double         timeout;  /*Timeout for I/O operations*/
-    void          *userPvt;
-    void          *userData;
-    /*The following is for user to/from driver communication*/
+    double         timeout;  /* Timeout for I/O operations*/
+    void          *userPvt; 
+    void          *userData; 
+    /* The following is for use by driver */
     void          *drvUser;
-    /*The following are normally set by driver*/
+    /* The following is normally set by driver via asynDrvUser->create() */
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus; /*For auxillary status*/
+    int            auxStatus;     /* For auxillary status*/
+    int            alarmStatus;   /* Typically for EPICS record alarm status */
+    int            alarmSeverity; /* Typically for EPICS record alarm severity */
 }asynUser;</pre>
   <table border="1">
     <caption>
@@ -1168,8 +1176,24 @@
           auxStatus</td>
         <td>
           Any method can provide additional return information in auxStatus. The meaning is
-          determined by the method. Callbacks use auxStatus to set record alarm status in
-          device support callback functions.</td>
+          determined by the method. Callbacks can use auxStatus to set record alarm status
+          in device support callback functions.</td>
+      </tr>
+      <tr>
+        <td>
+          alarmStatus</td>
+        <td>
+          Any method can provide additional return information in alarmStatus. The meaning
+          is determined by the method. Callbacks can use alarmStatus to set record alarm status
+          in device support callback functions.</td>
+      </tr>
+      <tr>
+        <td>
+          alarmSeverity</td>
+        <td>
+          Any method can provide additional return information in alarmStatus. The meaning
+          is determined by the method. Callbacks can use alarmSeverity to set record alarm
+          severity in device support callback functions.</td>
       </tr>
     </tbody>
   </table>
@@ -4293,6 +4317,12 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     in the database when iocInit begins. However, the value read from the device may
     in turn be replaced by any value from save/restore, because the auto restore happens
     later in iocInit.</p>
+  <p>
+    Beginning in R4-30 devAsynOctet was changed to also support the initial readback
+    for stringout and waveform output records. The initial readback is only done if
+    the record in the database contains the following line:<br />
+    <code>info(asyn:INITIAL_READBACK, "1")</code><br />
+    .</p>
   <h2>
     Enum values for bi, bo, mbbi, and mbbo records</h2>
   <p>
@@ -4731,7 +4761,8 @@ device(stringout,INST_IO,asynSoOctetWrite,"asynOctetWrite")
 device(waveform,INST_IO,asynWfOctetCmdResponse,"asynOctetCmdResponse")
 device(waveform,INST_IO,asynWfOctetWriteRead,"asynOctetWriteRead")
 device(waveform,INST_IO,asynWfOctetRead,"asynOctetRead")
-device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
+device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")
+device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
   <p>
     Support for drivers that implement interface asynOctet. The support is for stringin/stringout
     and waveform records. The waveform support is similar to the string support. The
@@ -4740,7 +4771,11 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     support:</p>
   <ul>
     <li>unlimited size - string records hold a maximum of 40 characters.</li>
-    <li>non ascii - Thus arbitrary octet arrays are supported.</li>
+    <li>both string and binary data. Beginning in R4-30 asynWfWriteOctet calls strnlen()
+      to determine the length of the string, and passes this length to the driver, i.e.
+      does not include the trailing nil. This is consistent with the behavior of the devAsynOctet
+      for the stringout record. The asynOctetWriteBinary support added in R4-30 always
+      uses NORD as the length that it passes to the driver, and does not call strnlen().</li>
   </ul>
   <p>
     Four types of support are provided:</p>
@@ -4773,13 +4808,20 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     Record alarms</h2>
   <p>
     The generic EPICS device support sets the record alarm status and severity when
-    errors occur. For records that do not use callbacks (not SCAN=I/O Intr or asynXXXAverage
-    or asynXXXTimeSeries) the status information is passed from the driver to device
-    support in the asynStatus return of the interface function call, e.g. pasynInt32-&gt;read().
-    The driver maps the asynStatus values to the record STAT and SEVR values using the
-    function pasynEpicsUtils-&gt;asynUserToEpicsAlarm(). The SEVR field is currently
-    always set to INVALID_ALARM for any error. The STAT field is set using following
-    mapping:</p>
+    errors occur. Beginning in R4-30 the alarmStatus and alarmSeverity fields were added
+    to the asynUser structure. Drivers can use these fields to explicitly control the
+    record STAT and SEVERITY fields, independent of the function return status or the
+    asynUser.auxStatus field.</p>
+  <p>
+    If the pasynUser-&gt;alarmStatus or pasynUser-&gt;alarmSeverity field is zero then
+    the record alarm status or severity is controlled by the function return status
+    or the asynUser.auxStatus field. For records that do not use callbacks (not SCAN=I/O
+    Intr or asynXXXAverage or asynXXXTimeSeries) the status information is passed from
+    the driver to device support in the asynStatus return of the interface function
+    call, e.g. pasynInt32-&gt;read(). The driver maps the asynStatus values to the record
+    STAT and SEVR values using the function pasynEpicsUtils-&gt;asynUserToEpicsAlarm().
+    The SEVR field is currently always set to INVALID_ALARM for any error. The STAT
+    field is set using following mapping:</p>
   <pre>  asynSuccess = epicsAlarmNone
   asynTimeout = epicsAlarmTimeout
   asynOverflow = epicsAlarmHWLimit
@@ -4794,7 +4836,9 @@ device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")</pre>
     it was not possible for drivers to control the alarm state of records that used
     callbacks. Drivers should set pasynUser-&gt;auxStatus to asynSuccess for normal
     operation and to another value to indicate a problem. The same mapping described
-    above is used to control the values of STAT and SEVR.
+    above is used to control the values of STAT and SEVR. If the pasynUser-&gt;alarmStatus
+    or pasynUser-&gt;alarmSeverity fields are non-zero then these values are used to
+    set the record STAT and SEVR fields, regardless of the value of asynUser.auxStatus.
   </p>
   <hr />
   <div style="text-align: center">
@@ -6014,7 +6058,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     calls <code>asynCommon:getOption</code>.</p>
   <p>
     Thw asynOctetXXX commands provide shell access to asynOctetSyncIO methods. The entry
-    is a character string constant that identifys the port,addr.</p>
+    is a character string constant that identifies the port,addr.</p>
   <p>
     where</p>
   <ul>

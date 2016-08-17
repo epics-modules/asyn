@@ -12,6 +12,64 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-30</h2>
+    <h2>
+      August 14, 2016</h2>
+  </div>
+  <h3>
+    asynDriver</h3>
+  <ul>
+    <li>Added new fields to the asynUser structure. These are <code>int alarmStatus</code>
+      and <code>int alarmSeverity</code>. They are intended to pass alarm information
+      back to device support, indepenent of the status return from the write() or read()
+      methods or the auxStatus field used for callbacks.</li>
+  </ul>
+  <h3>
+    devEpics</h3>
+  <ul>
+    <li>Previously when the status return or auxStatus were not asynSuccess then device
+      support did not update the value, and set the record STAT and SEVR based upon rules
+      in the generic device support. If the new alarmStatus and alarmSeverity fields are
+      0 (default) then the current behavior is retained. If these fields are non-zero,
+      then the record STAT and SEVR will be set to these values, independent of the status
+      return or the auxStatus values. This allows a driver to set the record value, while
+      still setting the STAT and SEVR to values other than NO_ALARM. The behavior of the
+      function asynStatusToEpicsAlarm() was changed, and this function is now always called
+      at the end of the process() function, even if the status or auxStatus is asynSuccess.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Added new methods setParamAlarmStatus(), setParamAlarmSeverity, getParamAlarmStatus(),
+      getParamAlarmSeverity to write and read the new pasynUser->alarmStatus and pasynUser->alarmSeverity
+      fields.</li>
+    <li>Changed the constructor so that it sets the ASYN_MULTIDEVICE flag if maxAddr&gt;1
+      even if the caller neglected to set it.</li>
+    <li>Fixed destructor eliminate memory leaks. Thanks to Henrique Almeida.</li>
+  </ul>
+  <h3>
+    devAsynOctet</h3>
+  <ul>
+    <li>Added support for initial readback from driver for stringout and waveform output
+      records to support bumpless reboots. This support is only enabled if the info tag
+      asyn:INITIAL_READBACK is present for these records in the database. The testErrorsApp
+      application was updated to test this feature.</li>
+    <li>Check that FTVL is CHAR or UCHAR and return an error in init_record if it is not.</li>
+    <li>Changed the waveform record device support asynOctetWrite to only support string
+      output. The numchars argument in pasynOctet->write() is obtained by calling strnlen().
+      This makes it consistent with the behavior of the stringout record. </li>
+    <li>Added a new waveform record device support asynOctetWriteBinary. This passes numchars=NORD
+      and does not call strnlen(), so it should be used for binary data.</li>
+  </ul>
+  <h3>
+    testErrorsApp</h3>
+  <ul>
+    <li>Added new records AlarmStatus and AlarmSeverity that allow this driver to test
+      the new alarm handling behavior.</li>
+  </ul>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-29</h2>
     <h2>
       February 17, 2016</h2>

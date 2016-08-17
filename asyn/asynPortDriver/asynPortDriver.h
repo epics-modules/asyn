@@ -118,6 +118,14 @@ public:
     virtual asynStatus setParamStatus(int list, int index, asynStatus status);
     virtual asynStatus getParamStatus(          int index, asynStatus *status);
     virtual asynStatus getParamStatus(int list, int index, asynStatus *status);
+    virtual asynStatus setParamAlarmStatus(          int index, int status);
+    virtual asynStatus setParamAlarmStatus(int list, int index, int status);
+    virtual asynStatus getParamAlarmStatus(          int index, int *status);
+    virtual asynStatus getParamAlarmStatus(int list, int index, int *status);
+    virtual asynStatus setParamAlarmSeverity(          int index, int severity);
+    virtual asynStatus setParamAlarmSeverity(int list, int index, int severity);
+    virtual asynStatus getParamAlarmSeverity(          int index, int *severity);
+    virtual asynStatus getParamAlarmSeverity(int list, int index, int *severity);
     virtual void       reportSetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual asynStatus setIntegerParam(          int index, int value);

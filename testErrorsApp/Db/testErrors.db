@@ -11,6 +11,30 @@ record(mbbo, "$(P)StatusReturn")
 }
 
 ###################################################################
+#  This record controls setting the alarm status                  # 
+###################################################################
+record(mbbo, "$(P)AlarmStatus")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ALARM_STATUS")
+    field(ZRST, "Junk")
+    field(ZRVL, "0")
+}
+
+###################################################################
+#  This record controls setting the alarm severity                # 
+###################################################################
+record(mbbo, "$(P)AlarmSeverity")
+{
+    field(PINI,  "1")
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ALARM_SEVERITY")
+    field(ZRST, "Junk")
+    field(ZRVL, "0")
+}
+
+###################################################################
 #  This record controls the order of enum strings, values,        # 
 #  and severities                                                 # 
 ###################################################################
@@ -32,7 +56,7 @@ record(bo, "$(P)DoUpdate")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))DO_UPDATE")
     field(ZNAM, "Done")
     field(ONAM, "Update")
-    field(SCAN, "1 second")
+    field(SCAN, "Passive")
 }
 
 ###################################################################
@@ -366,7 +390,8 @@ record(stringout, "$(P)SoOctet")
    field(DTYP, "asynOctetWrite")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(VAL,  "test")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:INITIAL_READBACK,"1")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 record(stringout, "$(P)SoOctetRB")
@@ -375,8 +400,9 @@ record(stringout, "$(P)SoOctetRB")
    field(DTYP, "asynOctetWrite")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(VAL,  "test")
+   info(asyn:INITIAL_READBACK,"1")
    info(asyn:READBACK,"1")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 record(stringin, "$(P)SiOctet")
@@ -385,7 +411,7 @@ record(stringin, "$(P)SiOctet")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 record(waveform, "$(P)WfOutOctet")
@@ -395,7 +421,8 @@ record(waveform, "$(P)WfOutOctet")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(NELM, "100")
    field(FTVL, "CHAR")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:INITIAL_READBACK, "1")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 record(waveform, "$(P)WfOutOctetRB")
@@ -405,8 +432,9 @@ record(waveform, "$(P)WfOutOctetRB")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(NELM, "100")
    field(FTVL, "CHAR")
+   info(asyn:INITIAL_READBACK, "1")
    info(asyn:READBACK,"1")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 record(waveform, "$(P)WfInOctet")
@@ -417,7 +445,7 @@ record(waveform, "$(P)WfInOctet")
    field(FTVL, "CHAR")
    field(TSE,  "$(TSE)")
    field(SCAN, "$(SCAN)")
-   info("asyn:FIFO", "$(FIFO)")
+   info(asyn:FIFO, "$(FIFO)")
 }
 
 

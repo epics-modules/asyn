@@ -64,6 +64,10 @@ public:
     asynStatus callCallbacks();
     asynStatus setStatus(int index, asynStatus status);
     asynStatus getStatus(int index, asynStatus *status);
+    asynStatus setAlarmStatus(int index, int alarmStatus);
+    asynStatus getAlarmStatus(int index, int *alarmStatus);
+    asynStatus setAlarmSeverity(int index, int alarmSeverity);
+    asynStatus getAlarmSeverity(int index, int *alarmSeverity);
     void report(FILE *fp, int details);
 
 private:
@@ -99,6 +103,11 @@ paramList::paramList(int nValues, asynPortDriver *pPort)
 /** Destructor for paramList class; frees resources allocated in constructor */
 paramList::~paramList()
 {
+    int i;
+
+    for (i = 0; i < this->nVals; i++)
+        delete this->vals[i];
+
     free(vals);
     free(flags);
 }
@@ -340,6 +349,52 @@ asynStatus paramList::setStatus(int index, asynStatus status)
     return asynSuccess;
 }
 
+/** Returns the alarmStatus for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[out] alarmStatus Address of status to get
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::getAlarmStatus(int index,  int *alarmStatus)
+{
+    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    *alarmStatus = this->vals[index]->getAlarmStatus();
+    return asynSuccess;
+}
+
+/** Sets the alarmStatus for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[in] alarmStatus Status to set
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::setAlarmStatus(int index, int alarmStatus)
+{
+    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    this->vals[index]->setAlarmStatus(alarmStatus);
+    registerParameterChange(getParameter(index), index);
+    return asynSuccess;
+}
+
+/** Returns the alarmSeverity for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[out] alarmSeverity Address of status to get
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::getAlarmSeverity(int index,  int *alarmSeverity)
+{
+    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    *alarmSeverity = this->vals[index]->getAlarmSeverity();
+    return asynSuccess;
+}
+
+/** Sets the alarmSeverity for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[in] alarmSeverity Severity to set
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::setAlarmSeverity(int index, int alarmSeverity)
+{
+    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    this->vals[index]->setAlarmSeverity(alarmSeverity);
+    registerParameterChange(getParameter(index), index);
+    return asynSuccess;
+}
+
 /** Sets the value of the UInt32Interrupt in the parameter library.
   * \param[in] index The parameter number
   * \param[in] mask The interrupt mask.
@@ -454,10 +509,14 @@ asynStatus paramList::int32Callback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsInt32 value;
+    int alarmStatus;
+    int alarmSeverity;
     asynStatus status;
 
     /* Pass int32 interrupts */
     status = getInteger(command, &value);
+    getAlarmStatus(command, &alarmStatus);
+    getAlarmSeverity(command, &alarmSeverity);
     if (!pInterfaces->int32InterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->int32InterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
@@ -470,6 +529,8 @@ asynStatus paramList::int32Callback(int command, int addr)
             (address == addr)) {
             /* Set the status for the callback */
             pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -492,10 +553,14 @@ asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 interrup
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsUInt32 value;
+    int alarmStatus;
+    int alarmSeverity;
     asynStatus status;
 
     /* Pass UInt32Digital interrupts */
     status = getUInt32(command, &value, 0xFFFFFFFF);
+    getAlarmStatus(command, &alarmStatus);
+    getAlarmSeverity(command, &alarmSeverity);
     if (!pInterfaces->uInt32DigitalInterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->uInt32DigitalInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
@@ -509,6 +574,8 @@ asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 interrup
             (pInterrupt->mask & interruptMask)) {
             /* Set the status for the callback */
             pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -531,10 +598,14 @@ asynStatus paramList::float64Callback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsFloat64 value;
+    int alarmStatus;
+    int alarmSeverity;
     asynStatus status;
 
     /* Pass float64 interrupts */
     status = getDouble(command, &value);
+    getAlarmStatus(command, &alarmStatus);
+    getAlarmSeverity(command, &alarmSeverity);
     if (!pInterfaces->float64InterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->float64InterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
@@ -547,6 +618,8 @@ asynStatus paramList::float64Callback(int command, int addr)
             (address == addr)) {
             /* Set the status for the callback */
             pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -569,11 +642,15 @@ asynStatus paramList::octetCallback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     char *value;
+    int alarmStatus;
+    int alarmSeverity;
     asynStatus status;
 
     /* Pass octet interrupts */
     value = getParameter(command)->getString();
     getStatus(command, &status);
+    getAlarmStatus(command, &alarmStatus);
+    getAlarmSeverity(command, &alarmSeverity);
     if (!pInterfaces->octetInterruptPvt) return(asynParamNotFound);
     pasynManager->interruptStart(pInterfaces->octetInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
@@ -586,6 +663,8 @@ asynStatus paramList::octetCallback(int command, int addr)
             (address == addr)) {
             /* Set the status for the callback */
             pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -873,6 +952,102 @@ asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *param
     static const char *functionName = "getParamStatus";
 
     status = this->params[list]->getStatus(index, paramStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Sets the alarmStatus for a parameter in the parameter library.
+  * Calls setParamAlarmStatus(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] alarmStatus Status to set. */
+asynStatus asynPortDriver::setParamAlarmStatus(int index, int alarmStatus)
+{
+    return this->setParamAlarmStatus(0, index, alarmStatus);
+}
+
+/** Sets the alarmStatus for a parameter in the parameter library.
+  * Calls paramList::setAlarmStatus(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] paramStatus Status to set. */
+asynStatus asynPortDriver::setParamAlarmStatus(int list, int index, int alarmStatus)
+{
+    asynStatus status;
+    static const char *functionName = "setParamAlarmStatus";
+    
+    status = this->params[list]->setAlarmStatus(index, alarmStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the alarmStatus for a parameter in the parameter library.
+  * Calls getParamAlarmStatus(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[out] status Address of alarmStatus to get. */
+asynStatus asynPortDriver::getParamAlarmStatus(int index, int *alarmStatus)
+{
+    return this->getParamAlarmStatus(0, index, alarmStatus);
+}
+
+/** Gets the alarmStatus for a parameter in the parameter library.
+  * Calls paramList::getAlarmStatus(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[out] alarmStatus Address of status to get. */
+asynStatus asynPortDriver::getParamAlarmStatus(int list, int index, int *alarmStatus)
+{
+    asynStatus status;
+    static const char *functionName = "getParamAlarmStatus";
+
+    status = this->params[list]->getAlarmStatus(index, alarmStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Sets the alarmSeverity for a parameter in the parameter library.
+  * Calls setParamAlarmSeverity(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[in] alarmSeverity Severity to set. */
+asynStatus asynPortDriver::setParamAlarmSeverity(int index, int alarmSeverity)
+{
+    return this->setParamAlarmSeverity(0, index, alarmSeverity);
+}
+
+/** Sets the alarmSeverity for a parameter in the parameter library.
+  * Calls paramList::setAlarmSeverity(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[in] alarmSeverity Severity to set. */
+asynStatus asynPortDriver::setParamAlarmSeverity(int list, int index, int alarmSeverity)
+{
+    asynStatus status;
+    static const char *functionName = "setParamAlarmSeverity";
+    
+    status = this->params[list]->setAlarmSeverity(index, alarmSeverity);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the alarmSeverity for a parameter in the parameter library.
+  * Calls getParamAlarmSeverity(0, index, status) i.e. for parameter list 0.
+  * \param[in] index The parameter number 
+  * \param[out] alarmStatus Address of alarmSeverity to get. */
+asynStatus asynPortDriver::getParamAlarmSeverity(int index, int *alarmSeverity)
+{
+    return this->getParamAlarmSeverity(0, index, alarmSeverity);
+}
+
+/** Gets the alarmSeverity for a parameter in the parameter library.
+  * Calls paramList::getAlarmSeverity(index, status) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number 
+  * \param[out] alarmSeverity Address of status to get. */
+asynStatus asynPortDriver::getParamAlarmSeverity(int list, int index, int *alarmSeverity)
+{
+    asynStatus status;
+    static const char *functionName = "getParamAlarmSeverity";
+
+    status = this->params[list]->getAlarmSeverity(index, alarmSeverity);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return(status);
 }
@@ -1265,12 +1440,16 @@ asynStatus asynPortDriver::doCallbacksArray(epicsType *value, size_t nElements,
     ELLLIST *pclientList;
     interruptNode *pnode;
     asynStatus status;
+    int alarmStatus;
+    int alarmSeverity;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
     int addr;
 
     pasynManager->interruptStart(interruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     getParamStatus(address, reason, &status);
+    getParamAlarmStatus(address, reason, &alarmStatus);
+    getParamAlarmSeverity(address, reason, &alarmSeverity);
     while (pnode) {
         interruptType *pInterrupt = (interruptType *)pnode->drvPvt;
         pasynManager->getAddr(pInterrupt->pasynUser, &addr);
@@ -1280,6 +1459,8 @@ asynStatus asynPortDriver::doCallbacksArray(epicsType *value, size_t nElements,
             (address == addr)) {
             /* Set the status for the callback */
             pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -1375,6 +1556,8 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
     status = (asynStatus) getIntegerParam(addr, function, value);
     /* Set the timestamp */
     pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, name=%s, value=%d", 
@@ -1501,6 +1684,8 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
     status = (asynStatus) getUIntDigitalParam(addr, function, value, mask);
     /* Set the timestamp */
     pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, name=%s, value=%u mask=%u", 
@@ -1722,6 +1907,8 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
     status = (asynStatus) getDoubleParam(addr, function, value);
     /* Set the timestamp */
     pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
     if (status == asynParamUndefined) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, name=%s, value is undefined", 
@@ -1826,6 +2013,8 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
     status = (asynStatus)getStringParam(addr, function, (int)maxChars, value);
     /* Set the timestamp */
     pasynUser->timestamp = timeStamp;
+    getParamAlarmStatus(addr, function, &pasynUser->alarmStatus);
+    getParamAlarmSeverity(addr, function, &pasynUser->alarmSeverity);
     if (status) 
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                   "%s:%s: status=%d, function=%d, name=%s, value=%s", 
@@ -2408,8 +2597,14 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
     ELLLIST *pclientList;
     interruptNode *pnode;
     epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
+    asynStatus status;
+    int alarmStatus;
+    int alarmSeverity;
     int addr;
 
+    getParamStatus(address, reason, &status);
+    getParamAlarmStatus(address, reason, &alarmStatus);
+    getParamAlarmSeverity(address, reason, &alarmSeverity);
     pasynManager->interruptStart(this->asynStdInterfaces.genericPointerInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
@@ -2420,7 +2615,9 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
         if ((pInterrupt->pasynUser->reason == reason) &&
             (address == addr)) {
             /* Set the status for the callback */
-            // PROBLEM - WE DON'T HAVE A WAY TO STORE THE STATUS EXCEPT IN PARAMETER LIST
+            pInterrupt->pasynUser->auxStatus = status;
+            pInterrupt->pasynUser->alarmStatus = alarmStatus;
+            pInterrupt->pasynUser->alarmSeverity = alarmSeverity;
             /* Set the timestamp for the callback */
             pInterrupt->pasynUser->timestamp = timeStamp;
             pInterrupt->callback(pInterrupt->userPvt,
@@ -3067,6 +3264,11 @@ asynPortDriver::~asynPortDriver()
         delete this->params[addr];
     }
     free(this->params);
+
+    pasynManager->freeAsynUser(this->pasynUserSelf);
+    free(this->inputEosOctet);
+    free(this->outputEosOctet);
+    free(this->portName);
 }
 
 /** Utility function that returns a pointer to an asynPortDriver object from its name */

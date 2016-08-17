@@ -248,32 +248,30 @@ static void asynStatusToEpicsAlarm(asynStatus status,
 {
     switch (status) {
         case asynSuccess:
-            *pStat = epicsAlarmNone;
-            *pSevr = epicsSevNone;
             break;
         case asynTimeout:
-            *pStat = epicsAlarmTimeout;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = epicsAlarmTimeout;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
         case asynOverflow:
-            *pStat = epicsAlarmHwLimit;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = epicsAlarmHwLimit;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
         case asynError:
-            *pStat = defaultStat;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = defaultStat;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
         case asynDisconnected:
-            *pStat = epicsAlarmComm;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = epicsAlarmComm;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
         case asynDisabled:
-            *pStat = epicsAlarmDisable;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = epicsAlarmDisable;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
         default:
-            *pStat = defaultStat;
-            *pSevr = defaultSevr;
+            if (*pStat == epicsAlarmNone) *pStat = defaultStat;
+            if (*pSevr == epicsSevNone)   *pSevr = defaultSevr;
             break;
     }
 }

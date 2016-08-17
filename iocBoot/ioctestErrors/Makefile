@@ -1,8 +1,5 @@
 TOP = ../..
-ARCH = linux-x86
-#ARCH = vxWorks-ppc603
-TARGETS = cdCommands envPaths
-
 include $(TOP)/configure/CONFIG
-#nothing to do
+ARCH = linux-x86_64
+TARGETS = envPaths cdCommands dllPath.bat
 include $(TOP)/configure/RULES.ioc

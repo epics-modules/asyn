@@ -62,9 +62,11 @@
 #define MAX_ENUM_STRING_SIZE 26
 
 typedef struct ringBufferElement {
-    epicsUInt32     value;
-    epicsTimeStamp  time;
-    asynStatus      status;
+    epicsUInt32         value;
+    epicsTimeStamp      time;
+    asynStatus          status;
+    epicsAlarmCondition alarmStatus;
+    epicsAlarmSeverity  alarmSeverity;
 } ringBufferElement;
 
 typedef struct devPvt{
@@ -90,8 +92,6 @@ typedef struct devPvt{
     char              *portName;
     char              *userParam;
     int               addr;
-    epicsAlarmCondition alarmStat;
-    epicsAlarmSeverity alarmSevr;
     char              *enumStrings[MAX_ENUM_STATES];
     int               enumValues[MAX_ENUM_STATES];
     int               enumSeverities[MAX_ENUM_STATES];
@@ -388,6 +388,8 @@ static void processCallbackInput(asynUser *pasynUser)
     pPvt->result.status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
         &pPvt->result.value,pPvt->mask);
     pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynUInt32Digital::process value=%u\n",
@@ -407,6 +409,9 @@ static void processCallbackOutput(asynUser *pasynUser)
 
     pPvt->result.status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
         pPvt->result.value,pPvt->mask);
+    pPvt->result.time = pPvt->pasynUser->timestamp;
+    pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
+    pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s devAsynUInt32Digital process value %u\n",pr->name,pPvt->result.value);
@@ -446,6 +451,8 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     rp->value = value;
     rp->time = pasynUser->timestamp;
     rp->status = pasynUser->auxStatus;
+    rp->alarmStatus = pasynUser->alarmStatus;
+    rp->alarmSeverity = pasynUser->alarmSeverity;
     pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
     if (pPvt->ringHead == pPvt->ringTail) {
         /* There was no room in the ring buffer.  In the past we just threw away
@@ -478,6 +485,8 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     rp->value = value;
     rp->time = pasynUser->timestamp;
     rp->status = pasynUser->auxStatus;
+    rp->alarmStatus = pasynUser->alarmStatus;
+    rp->alarmSeverity = pasynUser->alarmSeverity;
     pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
     if (pPvt->ringHead == pPvt->ringTail) {
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
@@ -622,15 +631,16 @@ static long processBi(biRecord *pr)
         reportQueueRequestStatus(pPvt, status);
     }
     pr->time = pPvt->result.time;
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
         pr->rval = pPvt->result.value & pr->mask; 
         pr->udf=0;
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -679,13 +689,14 @@ static long processBo(boRecord *pr)
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            WRITE_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -715,15 +726,16 @@ static long processLi(longinRecord *pr)
         reportQueueRequestStatus(pPvt, status);
     }
     pr->time = pPvt->result.time; 
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
         pr->val = pPvt->result.value & pPvt->mask;
         pr->udf=0;
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -769,13 +781,14 @@ static long processLo(longoutRecord *pr)
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            WRITE_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         return -1;
     }
 }
@@ -808,15 +821,16 @@ static long processMbbi(mbbiRecord *pr)
         reportQueueRequestStatus(pPvt, status);
     }
     pr->time = pPvt->result.time;
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
         pr->rval = pPvt->result.value & pr->mask; 
         pr->udf=0;
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -881,13 +895,14 @@ static long processMbbo(mbboRecord *pr)
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            WRITE_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -921,15 +936,16 @@ static long processMbbiDirect(mbbiDirectRecord *pr)
         reportQueueRequestStatus(pPvt, status);
     }
     pr->time = pPvt->result.time;
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            READ_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
         pr->rval = pPvt->result.value & pr->mask; 
         pr->udf=0;
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, READ_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }
@@ -997,13 +1013,14 @@ static long processMbboDirect(mbboDirectRecord *pr)
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
+    pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
+                                            WRITE_ALARM, &pPvt->result.alarmStatus,
+                                            INVALID_ALARM, &pPvt->result.alarmSeverity);
+    recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
     else {
-        pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, WRITE_ALARM, &pPvt->alarmStat,
-                                                INVALID_ALARM, &pPvt->alarmSevr);
-        recGblSetSevr(pr, pPvt->alarmStat, pPvt->alarmSevr);
         pPvt->result.status = asynSuccess;
         return -1;
     }

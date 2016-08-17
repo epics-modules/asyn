@@ -22,6 +22,8 @@
 /* These are the drvInfo strings that are used to identify the parameters.
  * They are used by asyn clients, including standard asyn device support */
 #define P_StatusReturnString                "STATUS_RETURN"           /* asynInt32,         r/w */
+#define P_AlarmStatusString                 "ALARM_STATUS"            /* asynInt32,         r/w */
+#define P_AlarmSeverityString               "ALARM_SEVERITY"          /* asynInt32,         r/w */
 #define P_EnumOrderString                   "ENUM_ORDER"              /* asynInt32,         r/w */
 #define P_DoUpdateString                    "DO_UPDATE"               /* asynInt32,         r/w */
 #define P_Int32ValueString                  "INT32_VALUE"             /* asynInt32,         r/w */
@@ -72,6 +74,8 @@ protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_StatusReturn;
     #define FIRST_COMMAND P_StatusReturn
+    int P_AlarmStatus;
+    int P_AlarmSeverity;
     int P_EnumOrder;
     int P_DoUpdate;
     int P_Int32Value;

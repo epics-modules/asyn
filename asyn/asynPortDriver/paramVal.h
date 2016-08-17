@@ -19,6 +19,10 @@ public:
     void resetValueChanged();
     void setStatus(asynStatus status);
     asynStatus getStatus();
+    void setAlarmStatus(int status);
+    int getAlarmStatus();
+    void setAlarmSeverity(int severity);
+    int getAlarmSeverity();
     char* getName();
     bool nameEquals(const char* name);
     void setInteger(epicsInt32 value);
@@ -39,6 +43,8 @@ public:
 
 protected:
     asynStatus status_;
+    int alarmStatus_;
+    int alarmSeverity_;
     bool valueDefined;
     bool valueChanged;
     char *name;         /**< Parameter name */
