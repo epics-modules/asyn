@@ -23,6 +23,7 @@ asynSetOption("L0", -1, "parity", "none")
 asynSetOption("L0", -1, "stop", "1")
 asynSetOption("L0", -1, "clocal", "Y")
 asynSetOption("L0", -1, "crtscts", "N")
+#asynSetOption("L0", -1, "rs485_enable", "Y")
 
 #asynSetTraceFile("L0",-1,"")
 #asynSetTraceMask("L0",-1,0x019)
