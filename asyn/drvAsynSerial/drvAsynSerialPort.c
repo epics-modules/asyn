@@ -73,7 +73,9 @@ typedef struct {
     unsigned long      nRead;
     unsigned long      nWritten;
     struct termios     termios;
+#ifdef ASYN_RS485_SUPPORTED
     struct serial_rs485  rs485;
+#endif
     int                baud;
     double             readTimeout;
     double             writeTimeout;
@@ -197,6 +199,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%c",  (tty->termios.c_iflag & IXOFF) ? 'Y' : 'N');
 #endif
     }
+#ifdef ASYN_RS485_SUPPORTED
     else if (epicsStrCaseCmp(key, "rs485_enable") == 0) {
         l = epicsSnprintf(val, valSize, "%c",  (tty->rs485.flags & SER_RS485_ENABLED) ? 'Y' : 'N');
     }
@@ -212,6 +215,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     else if (epicsStrCaseCmp(key, "rs485_delay_rts_after_send") == 0) {
         l = epicsSnprintf(val, valSize, "%d", tty->rs485.delay_rts_after_send);
     }
+#endif
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -231,8 +235,10 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     ttyController_t *tty = (ttyController_t *)drvPvt;
     struct termios termiosPrev;
     int baudPrev;
+#ifdef ASYN_RS485_SUPPORTED
     struct serial_rs485 rs485Prev;
     int rs485_changed = 0;
+#endif
 
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
@@ -241,7 +247,9 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     /* Make a copy of tty->termios and tty->baud so we can restore them in case of errors */                
     termiosPrev = tty->termios;
     baudPrev = tty->baud;
+#ifdef ASYN_RS485_SUPPORTED
     rs485Prev = tty->rs485;
+#endif
 
     if (epicsStrCaseCmp(key, "baud") == 0) {
         int baud;
@@ -488,6 +496,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         }
 #endif
     }
+#ifdef ASYN_RS485_SUPPORTED
     else if (epicsStrCaseCmp(key, "rs485_enable") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
            tty->rs485.flags |= SER_RS485_ENABLED;
@@ -550,6 +559,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         tty->rs485.delay_rts_after_send = delay;
         rs485_changed = 1;
     }
+#endif
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
