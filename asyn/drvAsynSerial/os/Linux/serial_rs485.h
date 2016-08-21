@@ -3,13 +3,14 @@
 
 #include <sys/ioctl.h>
 #include <linux/serial.h>
+#include <linux/version.h>
 
 #define TIOCGRS485      0x542E
 #define TIOCSRS485      0x542F
 
 /* Older Linux systems don't support RS485. 
- * Test for this by seeing if serial.h defined SER_RS485_ENABLED */
-#ifdef SER_RS485_ENABLED
+ * The features we need were introduced in 2.6.35 */
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
   #define ASYN_RS485_SUPPORTED      1
 #else
   #define SER_RS485_ENABLED         0x1
