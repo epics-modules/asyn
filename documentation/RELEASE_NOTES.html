@@ -14,7 +14,7 @@
     <h2>
       Release 4-30</h2>
     <h2>
-      August 14, 2016</h2>
+      August 23, 2016</h2>
   </div>
   <h3>
     asynDriver</h3>
@@ -60,6 +60,21 @@
       This makes it consistent with the behavior of the stringout record. </li>
     <li>Added a new waveform record device support asynOctetWriteBinary. This passes numchars=NORD
       and does not call strnlen(), so it should be used for binary data.</li>
+  </ul>
+  <h3>
+    drvAsynSerialPort</h3>
+  <ul>
+    <li>Added support for RS-485 on Linux. This is only supported on ports with hardware
+      RS-485 capability, and only on more recent Linux kernels. Thanks to Florian Feldbauer.
+      The following new options were added for the asynOption interface in this driver.
+      <ul>
+        <li>rs485_enable Y/N</li>
+        <li>rs485_rts_on_send Y/N</li>
+        <li>rs485_rts_after_send Y/N</li>
+        <li>rs485_delay_rts_before_send msec_delay</li>
+        <li>rs485_delay_rts_after_send msec_delay</li>
+      </ul>
+    </li>
   </ul>
   <h3>
     testErrorsApp</h3>
