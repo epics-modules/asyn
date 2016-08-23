@@ -969,7 +969,7 @@ asynStatus asynPortDriver::setParamAlarmStatus(int index, int alarmStatus)
   * Calls paramList::setAlarmStatus(index, status) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
-  * \param[in] paramStatus Status to set. */
+  * \param[in] alarmStatus Status to set. */
 asynStatus asynPortDriver::setParamAlarmStatus(int list, int index, int alarmStatus)
 {
     asynStatus status;
@@ -983,7 +983,7 @@ asynStatus asynPortDriver::setParamAlarmStatus(int list, int index, int alarmSta
 /** Gets the alarmStatus for a parameter in the parameter library.
   * Calls getParamAlarmStatus(0, index, status) i.e. for parameter list 0.
   * \param[in] index The parameter number 
-  * \param[out] status Address of alarmStatus to get. */
+  * \param[out] alarmStatus Address of alarmStatus to get. */
 asynStatus asynPortDriver::getParamAlarmStatus(int index, int *alarmStatus)
 {
     return this->getParamAlarmStatus(0, index, alarmStatus);
@@ -1031,7 +1031,7 @@ asynStatus asynPortDriver::setParamAlarmSeverity(int list, int index, int alarmS
 /** Gets the alarmSeverity for a parameter in the parameter library.
   * Calls getParamAlarmSeverity(0, index, status) i.e. for parameter list 0.
   * \param[in] index The parameter number 
-  * \param[out] alarmStatus Address of alarmSeverity to get. */
+  * \param[out] alarmSeverity Address of alarmSeverity to get. */
 asynStatus asynPortDriver::getParamAlarmSeverity(int index, int *alarmSeverity)
 {
     return this->getParamAlarmSeverity(0, index, alarmSeverity);
