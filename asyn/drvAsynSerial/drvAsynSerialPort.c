@@ -210,10 +210,10 @@ getOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%c",  (tty->rs485.flags & SER_RS485_RTS_AFTER_SEND) ? 'Y' : 'N');
     }
     else if (epicsStrCaseCmp(key, "rs485_delay_rts_before_send") == 0) {
-        l = epicsSnprintf(val, valSize, "%d", tty->rs485.delay_rts_before_send);
+        l = epicsSnprintf(val, valSize, "%u", tty->rs485.delay_rts_before_send);
     }
     else if (epicsStrCaseCmp(key, "rs485_delay_rts_after_send") == 0) {
-        l = epicsSnprintf(val, valSize, "%d", tty->rs485.delay_rts_after_send);
+        l = epicsSnprintf(val, valSize, "%u", tty->rs485.delay_rts_after_send);
     }
 #endif
     else {
