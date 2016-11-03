@@ -370,18 +370,15 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
             printf("%s: Unknown protocol \"%s\".\n", functionName, protocol);
             return -1;
         }
-        if (tty->isCom == ISCOM_UNKNOWN) {
-            tty->isCom = isCom;
-        } else {
-            if (isCom != tty->isCom) {
-                printf("%s: cannot change COM flag to %d from previous value %d\n", 
-                    functionName, isCom, tty->isCom);
-                return -1;
-            }
-        }
-        /* We successfully parsed the socket information, turn off the FLAG_SHUTDOWN flag */
-        tty->flags &= ~FLAG_SHUTDOWN;
     }
+    if (tty->isCom == ISCOM_UNKNOWN) {
+        tty->isCom = isCom;
+    } else if (isCom != tty->isCom) {
+        printf("%s: Ignoring attempt to change COM flag to %d from %d\n", 
+                                               functionName, isCom, tty->isCom);
+    }
+    /* Successfully parsed socket information, turn off FLAG_SHUTDOWN */
+    tty->flags &= ~FLAG_SHUTDOWN;
     return 0;
 }
 
