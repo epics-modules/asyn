@@ -509,9 +509,9 @@ asynStatus paramList::int32Callback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsInt32 value;
-    int alarmStatus;
-    int alarmSeverity;
-    asynStatus status;
+    int alarmStatus=0;
+    int alarmSeverity=0;
+    asynStatus status=asynSuccess;
 
     /* Pass int32 interrupts */
     status = getInteger(command, &value);
@@ -553,9 +553,9 @@ asynStatus paramList::uint32Callback(int command, int addr, epicsUInt32 interrup
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsUInt32 value;
-    int alarmStatus;
-    int alarmSeverity;
-    asynStatus status;
+    int alarmStatus=0;
+    int alarmSeverity=0;
+    asynStatus status=asynSuccess;
 
     /* Pass UInt32Digital interrupts */
     status = getUInt32(command, &value, 0xFFFFFFFF);
@@ -598,9 +598,9 @@ asynStatus paramList::float64Callback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     epicsFloat64 value;
-    int alarmStatus;
-    int alarmSeverity;
-    asynStatus status;
+    int alarmStatus=0;
+    int alarmSeverity=0;
+    asynStatus status=asynSuccess;
 
     /* Pass float64 interrupts */
     status = getDouble(command, &value);
@@ -642,9 +642,9 @@ asynStatus paramList::octetCallback(int command, int addr)
     this->pasynPortDriver->getTimeStamp(&timeStamp);
     int address;
     char *value;
-    int alarmStatus;
-    int alarmSeverity;
-    asynStatus status;
+    int alarmStatus=0;
+    int alarmSeverity=0;
+    asynStatus status=asynSuccess;
 
     /* Pass octet interrupts */
     value = getParameter(command)->getString();
