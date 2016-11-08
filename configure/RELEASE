@@ -11,5 +11,5 @@ IPAC=$(SUPPORT)/ipac-2-13
 SNCSEQ=$(SUPPORT)/seq-2-2-3
 
 #  EPICS_BASE 3.14.6 or later is required
-EPICS_BASE=/corvette/usr/local/epics/base-3.14.12.5
+EPICS_BASE=/corvette/usr/local/epics-devel/base-3.14.12.5
 -include $(TOP)/../configure/EPICS_BASE.$(EPICS_HOST_ARCH)
