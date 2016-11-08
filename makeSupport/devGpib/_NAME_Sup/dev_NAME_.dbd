@@ -12,5 +12,3 @@ device(mbboDirect,GPIB_IO, devMbbod_NAME_, "_NAME_")
 device(stringin,  GPIB_IO, devSi_NAME_,    "_NAME_")
 device(stringout, GPIB_IO, devSo_NAME_,    "_NAME_")
 device(waveform,  GPIB_IO, devWf_NAME_,    "_NAME_")
-
-include "asyn.dbd"
