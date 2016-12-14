@@ -32,11 +32,13 @@ namespace {
 typedef epicsGuard<asynPortDriver> Guard;
 
 epicsInt32 lastint32;
+size_t cbcount;
 
 void int32cb(void *userPvt, asynUser *pasynUser,
                                        epicsInt32 data)
 {
     testDiag("int32cb() called with %d", (int)data);
+    cbcount++;
     asynInt32Client *client = (asynInt32Client*)userPvt;
     lastint32 = data;
     epicsInt32 other;
@@ -104,11 +106,6 @@ void testA()
 
         testOk1(portA->getIntegerParam(0, idx1, &ival)==asynSuccess);
         testOk1(ival==42);
-
-        lastint32 = 1234;
-        portA->callParamCallbacks();
-        testOk1(lastint32==1234);
-
     }
 
     {
@@ -117,22 +114,31 @@ void testA()
         asynInt32Client client("portA", -1, "y");
         testOk1(client.registerInterruptUser(&int32cb)==asynSuccess);
 
+        lastint32 = 1234;
+        portA->callParamCallbacks();
+        testOk1(cbcount==0);
+        testOk1(lastint32==1234);
+
         epicsInt32 val;
         testOk1(client.read(&val)==asynParamUndefined);
 
         {
             Guard G(*portA);
+            // calls setFlag twice, but should only queue once
+            portA->setIntegerParam(0, idx1, 55);
             portA->setIntegerParam(0, idx1, 55);
             testOk1(portA->callParamCallbacks()==asynSuccess);
         }
 
         testOk1(lastint32==55);
+        testOk1(cbcount==1);
 
         client.write(43);
         testOk1(client.read(&val)==asynSuccess);
         testOk1(val==43);
 
         testOk1(lastint32==43);
+        testOk1(cbcount==2);
     }
 }
 
@@ -140,7 +146,7 @@ void testA()
 
 MAIN(asynPortDriverTest)
 {
-    testPlan(40);
+    testPlan(43);
     interruptAccept=1;
     try {
         testA();
