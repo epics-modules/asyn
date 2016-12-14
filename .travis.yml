@@ -22,11 +22,8 @@ install:
   # Build the module
   - make
 
-# Run the tests. Currently we have no fully automatic tests to run, 
-# so we just list the build products...
 script:
   - ls bin/linux-x86_64
   - ls lib/linux-x86_64
   - ls include
-
-
+  - ./asyn/asynPortDriver/unittest/O.linux-x86_64/asynPortDriverTest
