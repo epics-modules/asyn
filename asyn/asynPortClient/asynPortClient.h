@@ -77,6 +77,8 @@ public:
     };
     /** Destructor for asynInt32Client class.  Disconnects from port, frees resources. */
     virtual ~asynInt32Client() { 
+        if (pInterface_ && interruptPvt_)
+            pInterface_->cancelInterruptUser(pasynInterface_->drvPvt, pasynUser_, interruptPvt_);
         pasynInt32SyncIO->disconnect(pasynUserSyncIO_); 
     }; 
     /** Reads an epicsInt32 value from the port driver
@@ -98,6 +100,7 @@ public:
     /** Registers an interruptCallbackInt32 function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackInt32 pCallback) { 
+        if(interruptPvt_!=NULL) return asynError;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
                                                   pCallback, this, &interruptPvt_); 
     };

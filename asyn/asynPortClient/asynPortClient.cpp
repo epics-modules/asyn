@@ -30,6 +30,7 @@ asynPortClient::asynPortClient(const char *portName, int addr, const char *asynI
                        double timeout)
     : pasynUser_(NULL), pasynUserSyncIO_(NULL), timeout_(timeout), portName_(epicsStrDup(portName)),
       addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL)
+    ,interruptPvt_(NULL)
 {
     asynStatus status;
     asynInterface *pinterface;
