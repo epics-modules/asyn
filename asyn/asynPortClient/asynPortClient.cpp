@@ -42,7 +42,7 @@ asynPortClient::asynPortClient(const char *portName, int addr, const char *asynI
         throw std::runtime_error(std::string("connectDevice failed:").append(pasynUser_->errorMessage));
     }
     pasynInterface_ = pasynManager->findInterface(pasynUser_, asynInterfaceType, 1);
-    if (status) {
+    if (!pasynInterface_) {
         throw std::runtime_error(std::string("findInterface failed:").append(asynInterfaceType));
     }
     if (!drvInfo) return;
