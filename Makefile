@@ -6,6 +6,8 @@ DIRS += makeSupport
 
 DIRS += asyn
 asyn_DEPEND_DIRS = configure
+DIRS += asyn/asynPortDriver/unittest
+asyn/asynPortDriver/unittest_DEPEND_DIRS = asyn
 
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
   DIRS += testApp
