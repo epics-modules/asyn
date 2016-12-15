@@ -130,7 +130,7 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
     std::auto_ptr<paramVal> param(new paramVal(name, type));
 
     if (this->vals.size() == maxParams) {
-        asynPrint(pasynPortDriver->pasynUserSelf, ASYN_TRACE_ERROR,
+        asynPrint(pasynPortDriver->pasynUserSelf, ASYN_TRACE_WARNING,
                   "%s:%s %s Warning: parameter count for port is too low.  This will fail with older asynPortDriver.\n",
                   driverName, functionName, pasynPortDriver->portName);
     }
