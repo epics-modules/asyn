@@ -10,8 +10,8 @@ TOP=../../..
 
 include $(TOP)/configure/CONFIG
 
-PROD_LIBS += Com
 PROD_LIBS += asyn
+PROD_LIBS += Com
 
 #Tests for the parameters
 #TESTPROD_HOST += ParamValTest
