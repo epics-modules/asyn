@@ -8,6 +8,9 @@
  * Created April 27, 2008
  */
 
+#include <vector>
+#include <memory>
+
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
@@ -77,50 +80,36 @@ private:
     asynStatus float64Callback(int command, int addr);
     asynStatus octetCallback(int command, int addr);
     void registerParameterChange(paramVal *param, int index);
-    int nextParam;
-    int nVals;
-    int nFlags;
+
+    unsigned maxParams;
     asynPortDriver *pasynPortDriver;
-    int *flags;
-    paramVal **vals;
+    std::vector<unsigned> flags;
+    std::vector<paramVal*> vals;
 };
 
 /** Constructor for paramList class.
   * \param[in] nValues Number of parameters in the list.
   * \param[in] pPort Pointer to asynPortDriver port for this paramList. */
 paramList::paramList(int nValues, asynPortDriver *pPort)
-    : nextParam(0), nVals(nValues), nFlags(0), pasynPortDriver(pPort)
-{
-    char eName[6];
-    sprintf(eName, "empty");
-    vals = (paramVal **) calloc(nVals, sizeof(paramVal));
-    for (int ii=0; ii<nVals; ii++){
-        vals[ii] = new paramVal(eName);
-    }
-    flags = (int *) calloc(nVals, sizeof(int));
-}
+    : maxParams(nValues), pasynPortDriver(pPort)
+{}
 
 /** Destructor for paramList class; frees resources allocated in constructor */
 paramList::~paramList()
 {
-    int i;
-
-    for (i = 0; i < this->nVals; i++)
+    for (size_t i = 0; i < this->vals.size(); i++)
         delete this->vals[i];
-
-    free(vals);
-    free(flags);
 }
 
 asynStatus paramList::setFlag(int index)
 {
-    int i;
+    size_t i;
 
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     /* See if we have already set the flag for this parameter */
-    for (i=0; i<this->nFlags; i++) if (this->flags[i] == index) break;
+    for (i=0; i<flags.size(); i++) if (flags[i] == (unsigned)index) return asynSuccess;
     /* If not found add a flag */
-    if (i == this->nFlags) this->flags[this->nFlags++] = index;
+    this->flags.push_back((unsigned)index);
     return asynSuccess;
 }
 
@@ -128,15 +117,27 @@ asynStatus paramList::setFlag(int index)
   * \param[in] name The name of this parameter
   * \param[in] type The type of this parameter
   * \param[out] index The parameter number
-  * \return Returns asynParamAlreadyExists if the parameter already exists, or asynBadParamIndex if
-  * adding this parameter would exceed the size of the parameter list. */
+  * \return Returns asynParamAlreadyExists if the parameter already exists.
+  * If adding this parameter exceeds the pre-allocated size of the parameter list
+  * a warning is printed.
+  */
 asynStatus paramList::createParam(const char *name, asynParamType type, int *index)
 {
+    static const char *functionName = "createParam";
+
     if (this->findParam(name, index) == asynSuccess) return asynParamAlreadyExists;
-    *index = this->nextParam++;
-    if (*index < 0 || *index >= this->nVals) return asynParamBadIndex;
-    delete this->vals[*index];
-    this->vals[*index] = new paramVal(name, type);
+
+    std::auto_ptr<paramVal> param(new paramVal(name, type));
+
+    if (this->vals.size() == maxParams) {
+        asynPrint(pasynPortDriver->pasynUserSelf, ASYN_TRACE_WARNING,
+                  "%s:%s %s Warning: parameter count for port is too low.  This will fail with older asynPortDriver.\n",
+                  driverName, functionName, pasynPortDriver->portName);
+    }
+    vals.push_back(param.get());
+    flags.reserve(vals.size());
+    param.release();
+    *index = vals.size()-1;
     return asynSuccess;
 }
 
@@ -146,8 +147,11 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
   * \return Returns asynParamNotFound if name is not found in the parameter list. */
 asynStatus paramList::findParam(const char *name, int *index)
 {
-    for (*index=0; *index<this->nVals; (*index)++) {
-        if (this->vals[*index]->nameEquals(name)) return asynSuccess;
+    for (size_t i=0; i<this->vals.size(); i++) {
+        if (this->vals[i]->nameEquals(name)) {
+            *index = i;
+            return asynSuccess;
+        }
     }
     *index=-1;
     return asynParamNotFound;
@@ -230,7 +234,7 @@ asynStatus paramList::setDouble(int index, double value)
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
 asynStatus paramList::setString(int index, const char *value)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     try {
         getParameter(index)->setString(value);
         registerParameterChange(getParameter(index), index);
@@ -332,7 +336,7 @@ asynStatus paramList::getDouble(int index, double *value)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::getStatus(int index, asynStatus *status)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     *status = this->vals[index]->getStatus();
     return asynSuccess;
 }
@@ -343,7 +347,7 @@ asynStatus paramList::getStatus(int index, asynStatus *status)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::setStatus(int index, asynStatus status)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     this->vals[index]->setStatus(status);
     registerParameterChange(getParameter(index), index);
     return asynSuccess;
@@ -355,7 +359,7 @@ asynStatus paramList::setStatus(int index, asynStatus status)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::getAlarmStatus(int index,  int *alarmStatus)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     *alarmStatus = this->vals[index]->getAlarmStatus();
     return asynSuccess;
 }
@@ -366,7 +370,7 @@ asynStatus paramList::getAlarmStatus(int index,  int *alarmStatus)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::setAlarmStatus(int index, int alarmStatus)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     this->vals[index]->setAlarmStatus(alarmStatus);
     registerParameterChange(getParameter(index), index);
     return asynSuccess;
@@ -378,7 +382,7 @@ asynStatus paramList::setAlarmStatus(int index, int alarmStatus)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::getAlarmSeverity(int index,  int *alarmSeverity)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     *alarmSeverity = this->vals[index]->getAlarmSeverity();
     return asynSuccess;
 }
@@ -389,7 +393,7 @@ asynStatus paramList::getAlarmSeverity(int index,  int *alarmSeverity)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::setAlarmSeverity(int index, int alarmSeverity)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     this->vals[index]->setAlarmSeverity(alarmSeverity);
     registerParameterChange(getParameter(index), index);
     return asynSuccess;
@@ -403,7 +407,7 @@ asynStatus paramList::setAlarmSeverity(int index, int alarmSeverity)
   * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
 asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask, interruptReason reason)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     if (this->vals[index]->type != asynParamUInt32Digital) return asynParamWrongType;
     switch (reason) {
       case interruptOnZeroToOne:
@@ -427,7 +431,7 @@ asynStatus paramList::setUInt32Interrupt(int index, epicsUInt32 mask, interruptR
   * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
 asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     if (this->vals[index]->type != asynParamUInt32Digital) return asynParamWrongType;
     this->vals[index]->uInt32RisingMask &= ~mask;
     this->vals[index]->uInt32FallingMask &= ~mask;
@@ -442,7 +446,7 @@ asynStatus paramList::clearUInt32Interrupt(int index, epicsUInt32 mask)
   * or asynParamWrongType if the parameter type is not asynParamUInt32Digital */
 asynStatus paramList::getUInt32Interrupt(int index, epicsUInt32 *mask, interruptReason reason)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     if (this->vals[index]->type != asynParamUInt32Digital) return asynParamWrongType;
     switch (reason) {
       case interruptOnZeroToOne:
@@ -494,7 +498,7 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
   * \return Returns asynParamBadIndex if the index is not valid */
 asynStatus paramList::getName(int index, const char **value)
 {
-    if (index < 0 || index >= this->nVals) return asynParamBadIndex;
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     *value = (const char *)this->vals[index]->getName();
     return asynSuccess;
 }
@@ -686,17 +690,18 @@ asynStatus paramList::octetCallback(int command, int addr)
   */
 asynStatus paramList::callCallbacks(int addr)
 {
-    int i, index;
+    int index;
     asynStatus status = asynSuccess;
 
     if (!interruptAccept) return(asynSuccess);
 
     try {
-        for (i = 0; i < this->nFlags; i++)
+        for (size_t i = 0; i < this->flags.size(); i++)
         {
             index = this->flags[i];
-            if (!getParameter(index)->isDefined()) continue;
-            switch(getParameter(index)->type) {
+            paramVal *param(getParameter(index));
+            if (!param->isDefined()) continue;
+            switch(param->type) {
                 case asynParamInt32:
                     status = int32Callback(index, addr);
                     break;
@@ -718,7 +723,7 @@ asynStatus paramList::callCallbacks(int addr)
     catch (ParamListInvalidIndex&) {
         return asynParamBadIndex;
     }
-    this->nFlags=0;
+    flags.clear();
     return(status);
 }
 
@@ -734,10 +739,8 @@ asynStatus paramList::callCallbacks()
  */
 void paramList::report(FILE *fp, int details)
 {
-    int i;
-
-    fprintf(fp, "Number of parameters is: %d\n", this->nVals );
-    for (i=0; i<this->nVals; i++)
+    fprintf(fp, "Number of parameters is: %u\n", (unsigned)this->vals.size() );
+    for (size_t i=0; i<this->vals.size(); i++)
     {
         this->vals[i]->report(i, fp, details);
     }
@@ -751,7 +754,7 @@ void paramList::report(FILE *fp, int details)
  */
 paramVal* paramList::getParameter(int index)
 {
-    if (index < 0 || index >= this->nVals) throw ParamListInvalidIndex("paramList::getParameter invalid index");
+    if (index < 0 || (size_t)index >= this->vals.size()) throw ParamListInvalidIndex("paramList::getParameter invalid index");
     return this->vals[index];
 }
 
@@ -835,7 +838,7 @@ asynStatus asynPortDriver::createParam(int list, const char *name, asynParamType
     asynStatus status;
     static const char *functionName = "createParam";
     
-    status = this->params[list]->createParam(name, type, index);
+    status = this->params.at(list)->createParam(name, type, index);
     if (status == asynParamAlreadyExists) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error adding parameter %s to list %d, parameter already exists.\n",
@@ -3148,8 +3151,14 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     memset(pInterfaces, 0, sizeof(asynStdInterfaces));
         
     this->portName = epicsStrDup(portNameIn);
+
     if (maxAddrIn < 1) maxAddrIn = 1;
     this->maxAddr = maxAddrIn;
+    params.resize(maxAddr);
+    for (addr=0; addr<maxAddr; addr++) {
+        this->params[addr] = new paramList(paramTableSize, this);
+    }
+
     /* If maxAddr > 1 then set the ASYN_MULTIDEVICE flag even if the caller neglected to set it */
     if (this->maxAddr > 1) asynFlags |= ASYN_MULTIDEVICE;
     interfaceMask |= asynCommonMask;  /* Always need the asynCommon interface */
@@ -3225,13 +3234,6 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
         return;
     }
 
-    /* Allocate space for the parameter objects */
-    this->params = (paramList **) calloc(maxAddr, sizeof(paramList *));    
-    /* Initialize the parameter library */
-    for (addr=0; addr<maxAddr; addr++) {
-        this->params[addr] = new paramList(paramTableSize, this);
-    }
-
     /* Connect to our device for asynTrace */
     status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
     if (status != asynSuccess) {
@@ -3263,7 +3265,6 @@ asynPortDriver::~asynPortDriver()
     for (addr=0; addr<this->maxAddr; addr++) {
         delete this->params[addr];
     }
-    free(this->params);
 
     pasynManager->freeAsynUser(this->pasynUserSelf);
     free(this->inputEosOctet);

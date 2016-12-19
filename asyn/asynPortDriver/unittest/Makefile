@@ -12,12 +12,11 @@ include $(TOP)/configure/CONFIG
 
 PROD_LIBS += Com
 PROD_LIBS += asyn
-ASYNTEST = $(TOP)/asyn/test
 
 #Tests for the parameters
-TESTPROD_HOST += ParamValTest
-ParamValTest_SRCS += ParamValTest.cpp
-TESTS += ParamValTest
+#TESTPROD_HOST += ParamValTest
+#ParamValTest_SRCS += ParamValTest.cpp
+#TESTS += ParamValTest
 
 #tests for the paramList
 #TESTPROD_HOST += ParamListTest
@@ -25,9 +24,9 @@ TESTS += ParamValTest
 #TESTS += ParamListTest
 
 #tests for asynPortDriver
-#TESTPROD_HOST += asynPortDriverTest
-#asynPortDriverTest_SRCS += asynPortDriverTest.cpp
-#TESTS += asynPortDriverTest
+TESTPROD_HOST += asynPortDriverTest
+asynPortDriverTest_SRCS += asynPortDriverTest.cpp
+TESTS += asynPortDriverTest
 
 TESTSCRIPTS_HOST += $(TESTS:%=%.t)
 

@@ -133,6 +133,8 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s %d cancelInterruptUser\n",portName,addr);
     status = pasynManager->removeInterruptUser(pasynUser,pinterruptNode);
+    if(status==asynSuccess)
+        pasynManager->freeInterruptNode(pasynUser,pinterruptNode);
     pasynManager->freeAsynUser(pasynEnumInterrupt->pasynUser);
     pasynManager->memFree(pasynEnumInterrupt, sizeof(asynEnumInterrupt));
     return status;

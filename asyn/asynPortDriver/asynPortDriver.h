@@ -1,6 +1,8 @@
 #ifndef asynPortDriver_H
 #define asynPortDriver_H
 
+#include <vector>
+
 #include <epicsTypes.h>
 #include <epicsMutex.h>
 
@@ -172,7 +174,7 @@ protected:
     asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
-    paramList **params;
+    std::vector<paramList*> params;
     epicsMutexId mutexId;
     char *inputEosOctet;
     int inputEosLenOctet;
@@ -182,6 +184,7 @@ private:
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
 
+    friend class paramList;
 };
 
 #endif /* cplusplus */
