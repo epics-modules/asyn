@@ -838,7 +838,7 @@ asynStatus asynPortDriver::createParam(int list, const char *name, asynParamType
     asynStatus status;
     static const char *functionName = "createParam";
     
-    status = this->params.at(list)->createParam(name, type, index);
+    status = this->params[list]->createParam(name, type, index);
     if (status == asynParamAlreadyExists) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error adding parameter %s to list %d, parameter already exists.\n",
