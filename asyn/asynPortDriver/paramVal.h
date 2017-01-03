@@ -7,6 +7,8 @@
 #include "asynDriver.h"
 #ifdef __cplusplus
 
+#include <string>
+
 /** Structure for storing parameter value in parameter library */
 class paramVal {
 public:
@@ -31,8 +33,8 @@ public:
     epicsUInt32 getUInt32(epicsUInt32 valueMask);
     void setDouble(epicsFloat64 value);
     epicsFloat64 getDouble();
-    void setString(const char *value);
-    char *getString();
+    void setString(std::string value);
+    std::string getString();
     void report(int id, FILE *fp, int details);
     const char* getTypeName();
     asynParamType type; /**< Parameter data type */
@@ -54,7 +56,7 @@ protected:
         epicsInt32   ival;
         epicsUInt32  uival;
         epicsFloat64 dval;
-        char         *sval;
+        std::string  *sval;
         epicsInt8    *pi8;
         epicsInt16   *pi16;
         epicsInt32   *pi32;
