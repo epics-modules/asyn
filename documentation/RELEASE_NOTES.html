@@ -14,13 +14,36 @@
     <h2>
       Release 4-31</h2>
     <h2>
-      September XXX, 2016</h2>
+      January XXX, 2017</h2>
   </div>
   <h3>
     Build system</h3>
   <ul>
     <li>Minor change to build with mingw.</li>
   </ul>
+  <h3>
+    Unit tests</h3>
+  <ul>
+    <li>Added unit tests in asynPortDriver/unittest.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Changed the parameter list to be an std::vector. This means that it is no longer
+      necessary to pass the number of parameters in the constructor because the list grows
+      with each call to createParam().</li>
+    <li>Changed the internal storage of string parameters from char * to std::string.
+      Added new setStringParam() and getStringParam() methods that take an std::string&amp;
+      argument rather than char *. These do not require specifying a maximum string length,
+      unlike the char * methods.</li>
+  </ul>
+  <h3>
+    drvAsynIPPort</h3>
+  <ul>
+    <li>Fixed bugs in Unix sockets.</li>
+  </ul>
+  <div style="text-align: center">
+    <hr />
     <h2>
       Release 4-30</h2>
     <h2>
