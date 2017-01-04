@@ -56,7 +56,7 @@ public:
     asynStatus setUInt32(int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
     asynStatus setDouble(int index, double value);
     asynStatus setString(int index, const char *string);
-    asynStatus setString(int index, std::string& string);
+    asynStatus setString(int index, const std::string& string);
     asynStatus getInteger(int index, int *value);
     asynStatus getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask);
     asynStatus getDouble(int index, double *value);
@@ -254,7 +254,7 @@ asynStatus paramList::setString(int index, const char *value)
   * \param[in] index The parameter number
   * \param[out] value Address of value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
-asynStatus paramList::setString(int index, std::string& value)
+asynStatus paramList::setString(int index, const std::string& value)
 {
     if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     try {
@@ -1304,7 +1304,7 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
   * Calls setStringParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
   * \param[in] value Address of value to set. */
-asynStatus asynPortDriver::setStringParam(int index, std::string& value)
+asynStatus asynPortDriver::setStringParam(int index, const std::string& value)
 {
     return this->setStringParam(0, index, value);
 }
@@ -1314,7 +1314,7 @@ asynStatus asynPortDriver::setStringParam(int index, std::string& value)
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
   * \param[in] value Address of value to set. */
-asynStatus asynPortDriver::setStringParam(int list, int index, std::string& value)
+asynStatus asynPortDriver::setStringParam(int list, int index, const std::string& value)
 {
     asynStatus status;
     static const char *functionName = "setStringParam";
