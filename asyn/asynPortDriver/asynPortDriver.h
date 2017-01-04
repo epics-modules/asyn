@@ -8,7 +8,8 @@
 #include <epicsMutex.h>
 
 #include <asynStandardInterfaces.h>
-#include "paramVal.h"
+#include <asynParamType.h>
+#include <paramErrors.h>
 
 class paramList;
 
