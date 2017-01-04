@@ -147,8 +147,8 @@ public:
     virtual asynStatus setDoubleParam(int list, int index, double value);
     virtual asynStatus setStringParam(          int index, const char *value);
     virtual asynStatus setStringParam(int list, int index, const char *value);
-    virtual asynStatus setStringParam(          int index, std::string& value);
-    virtual asynStatus setStringParam(int list, int index, std::string& value);
+    virtual asynStatus setStringParam(          int index, const std::string& value);
+    virtual asynStatus setStringParam(int list, int index, const std::string& value);
     virtual asynStatus getIntegerParam(          int index, int * value);
     virtual asynStatus getIntegerParam(int list, int index, int * value);
     virtual asynStatus getUIntDigitalParam(          int index, epicsUInt32 *value, epicsUInt32 mask);
