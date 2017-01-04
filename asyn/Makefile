@@ -119,7 +119,7 @@ ifeq ($(EPICS_LIBCOM_ONLY),YES)
    USR_CFLAGS   += -DEPICS_LIBCOM_ONLY
 endif
 INC += asynParamType.h
-INC += paramVal.h
+INC += paramErrors.h
 INC += asynPortDriver.h
 asyn_SRCS += paramVal.cpp
 asyn_SRCS += asynPortDriver.cpp
