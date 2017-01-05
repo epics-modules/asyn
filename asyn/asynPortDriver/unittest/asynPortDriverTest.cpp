@@ -20,13 +20,6 @@
 extern "C" int interruptAccept;
 int interruptAccept=1;
 
-/* paramErrors.h isn't installed */
-#define asynParamAlreadyExists (asynStatus)(asynDisabled + 1)
-#define asynParamNotFound      (asynStatus)(asynDisabled + 2)
-#define asynParamWrongType     (asynStatus)(asynDisabled + 3)
-#define asynParamBadIndex      (asynStatus)(asynDisabled + 4)
-#define asynParamUndefined     (asynStatus)(asynDisabled + 5)
-
 namespace {
 
 typedef epicsGuard<asynPortDriver> Guard;
@@ -96,6 +89,8 @@ void testA()
     testOk1(portA->createParam(0, "more", asynParamFloat64, &idx1)==asynSuccess);
 
     testOk1(portA->findParam(0, "more", &idx2)==asynSuccess);
+    // this is a string parameter
+    testOk1(portA->createParam(0, "string", asynParamOctet, &idx1)==asynSuccess);
 
     {
         Guard G(*portA);
@@ -106,6 +101,25 @@ void testA()
 
         testOk1(portA->getIntegerParam(0, idx1, &ival)==asynSuccess);
         testOk1(ival==42);
+    }
+
+    {
+        Guard G(*portA);
+        std::string stdString;
+        char str[20];
+
+        testOk1(portA->findParam(0, "string", &idx1)==asynSuccess);
+
+        testOk1(portA->setStringParam(0, idx1, "Testing 123")==asynSuccess);
+        testOk1(portA->getStringParam(0, idx1, sizeof(str)-1, str)==asynSuccess);
+        testOk1(strcmp(str, "Testing 123")==0);
+        testOk1(portA->getStringParam(0, idx1, stdString)==asynSuccess);
+        testOk1(stdString == "Testing 123");
+        stdString = "Hello world";
+        testOk1(portA->setStringParam(0, idx1, stdString)==asynSuccess);
+        stdString = "";
+        testOk1(portA->getStringParam(0, idx1, stdString)==asynSuccess);
+        testOk1(stdString == "Hello world");
     }
 
     {
@@ -146,7 +160,7 @@ void testA()
 
 MAIN(asynPortDriverTest)
 {
-    testPlan(43);
+    testPlan(53);
     interruptAccept=1;
     try {
         testA();

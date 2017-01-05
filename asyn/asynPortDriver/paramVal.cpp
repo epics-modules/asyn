@@ -34,14 +34,12 @@ paramVal::paramVal(const char *name):
     valueDefined(false), valueChanged(false)
 {
     this->name = epicsStrDup(name);
-    this->data.sval = 0;
 }
 
 paramVal::paramVal(const char *name, asynParamType type):
     type(type), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
     valueDefined(false), valueChanged(false){
     this->name = epicsStrDup(name);
-    this->data.sval = 0;
 }
 
 /* Returns true if the value is defined (has been set)
@@ -220,18 +218,14 @@ double paramVal::getDouble()
 /** Sets the value for a string in the parameter library.
   * \param[out] value Address of value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
-void paramVal::setString(const char *value)
+void paramVal::setString(const std::string& value)
 {
     if (type != asynParamOctet)
         throw ParamValWrongType("paramVal::setString can only handle asynParamOctet");
-    if (value == NULL)
-        throw ParamValWrongType("paramVal::setString can only handle non-NULL values");
-    if (!isDefined() || (strcmp(data.sval, value)))
+    if (!isDefined() || (sval != value))
     {
         setDefined(true);
-        if (data.sval != NULL)
-            free(data.sval);
-        data.sval = epicsStrDup(value);
+        sval = value;
         setValueChanged();
     }
 }
@@ -240,13 +234,13 @@ void paramVal::setString(const char *value)
   * \throws ParamValWrongType if type is not asynParamOctet
   * \throws paramValNotDefined if the value is not defined
   */
-char* paramVal::getString()
+const std::string& paramVal::getString()
 {
     if (type != asynParamOctet)
         throw ParamValWrongType("paramVal::getString can only handle asynParamOctet");
     if (!isDefined())
-        throw ParamValNotDefined("paramVal::geString value not defined");
-    return data.sval;
+        throw ParamValNotDefined("paramVal::getString value not defined");
+    return sval;
 }
 
 void paramVal::report(int id, FILE *fp, int details)
@@ -275,7 +269,7 @@ void paramVal::report(int id, FILE *fp, int details)
             break;
         case asynParamOctet:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=string, name=%s, value=%s, status=%d\n", id, getName(), getString(), getStatus());
+                fprintf(fp, "Parameter %d type=string, name=%s, value=%s, status=%d\n", id, getName(), getString().c_str(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=string, name=%s, value is undefined\n", id, getName());
             break;
