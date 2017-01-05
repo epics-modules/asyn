@@ -232,7 +232,7 @@ asynStatus paramList::setDouble(int index, double value)
 
 /** Sets the value for a string in the parameter library.
   * \param[in] index The parameter number
-  * \param[out] value Address of value to set.
+  * \param[in] value Address of value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
 asynStatus paramList::setString(int index, const char *value)
 {
@@ -252,7 +252,7 @@ asynStatus paramList::setString(int index, const char *value)
 
 /** Sets the value for a string in the parameter library.
   * \param[in] index The parameter number
-  * \param[out] value Address of value to set.
+  * \param[in] value String value to set.
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamOctet. */
 asynStatus paramList::setString(int index, const std::string& value)
 {
@@ -516,7 +516,7 @@ asynStatus paramList::getString(int index, int maxChars, char *value)
 
 /** Returns the value for a string from the parameter library.
   * \param[in] index The parameter number
-  * \param[out] value Address of value to get.
+  * \param[out] value String value to get.
   * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamOctet,
   * or asynParamUndefined if the value has not been defined. */
 asynStatus paramList::getString(int index, std::string& value)
@@ -1303,7 +1303,7 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
 /** Sets the value for a string in the parameter library.
   * Calls setStringParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
-  * \param[in] value Address of value to set. */
+  * \param[in] value String value to set. */
 asynStatus asynPortDriver::setStringParam(int index, const std::string& value)
 {
     return this->setStringParam(0, index, value);
@@ -1313,7 +1313,7 @@ asynStatus asynPortDriver::setStringParam(int index, const std::string& value)
   * Calls paramList::setString (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
-  * \param[in] value Address of value to set. */
+  * \param[in] value String value to set. */
 asynStatus asynPortDriver::setStringParam(int list, int index, const std::string& value)
 {
     asynStatus status;
@@ -1456,19 +1456,19 @@ asynStatus asynPortDriver::getStringParam(int list, int index, int maxChars, cha
 }
 
 /** Returns the value for a string from the parameter library.
-  * Calls getStringParam(0, index, maxChars, value) i.e. for parameter list 0.
+  * Calls getStringParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
-  * \param[out] value Address of value to get. */
+  * \param[out] value String value to get. */
 asynStatus asynPortDriver::getStringParam(int index, std::string& value)
 {
     return this->getStringParam(0, index, value);
 }
 
 /** Returns the value for a string from the parameter library.
-  * Calls paramList::getString (index, maxChars, value) for the parameter list indexed by list.
+  * Calls paramList::getString (index, value) for the parameter list indexed by list.
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
-  * \param[out] value Address of value to get. */
+  * \param[out] value String value to get. */
 asynStatus asynPortDriver::getStringParam(int list, int index, std::string& value)
 {
     asynStatus status;
