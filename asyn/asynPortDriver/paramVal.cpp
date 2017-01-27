@@ -42,6 +42,10 @@ paramVal::paramVal(const char *name, asynParamType type):
     this->name = epicsStrDup(name);
 }
 
+paramVal::~paramVal(){
+    free(name);
+}
+
 /* Returns true if the value is defined (has been set)
  *
  */
