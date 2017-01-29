@@ -5759,9 +5759,9 @@ asynOctetSetOutputEos("A1",0,"\r")
     <li>portName - The portName that is registered with asynGib.</li>
     <li>flags - Bitmap
       <ul>
-        <li>Bit 1 (0x2) lockDevices - (0,1 ) =&gt; (don't, do) lock devices when creating
-          the link.</li>
         <li>Bit 0 (0x1) recoverWithIFC - (0,1) =&gt; (don't, do) issue IFC when error occurs.</li>
+        <li>Bit 1 (0x2) lockDevices - (0,1 ) =&gt; (don't, do) lock devices when creating the link.</li>
+        <li>Bit 2 (0x4) noSRQ - (0,1 ) =&gt; (do, don't) set up a VXI-11 SRQ channel.</li>
       </ul>
     </li>
     <li>timeout - I/O operation timeout in seconds as a string. Prior to release R4-16

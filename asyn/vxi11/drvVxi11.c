@@ -54,6 +54,7 @@
 
 #define FLAG_RECOVER_WITH_IFC   0x1
 #define FLAG_LOCK_DEVICES       0x2
+#define FLAG_NO_SRQ             0x4
 
 #define DEFAULT_RPC_TIMEOUT 4
 
@@ -80,6 +81,7 @@ typedef struct vxiPort {
     int           ctrlAddr;
     BOOL          isGpibLink;  /* Is the VXI-11.2 */
     BOOL          isSingleLink; /* Is this VXI-11.3 */
+    BOOL          hasSRQ;       /* VXI-11 has SRQ channel */
     BOOL          singleLinkInterrupt; /*Is there an unhandled interrupt */
     struct in_addr inAddr; /* ip address of gateway */
     CLIENT        *rpcClient; /* returned by clnttcp_create() */
@@ -957,7 +959,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
             }
         }
     }
-    vxiCreateIrqChannel(pvxiPort,pasynUser);
+    if (pvxiPort->hasSRQ) vxiCreateIrqChannel(pvxiPort,pasynUser);
     pasynManager->exceptionConnect(pvxiPort->pasynUser);
     return asynSuccess;
 }
@@ -1709,6 +1711,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
         defTimeout : (double)DEFAULT_RPC_TIMEOUT ;
     if(flags & FLAG_RECOVER_WITH_IFC) pvxiPort->recoverWithIFC = TRUE;
     if(flags & FLAG_LOCK_DEVICES) pvxiPort->lockDevices = TRUE;
+    if(!flags & FLAG_NO_SRQ) pvxiPort->hasSRQ = TRUE;
     pvxiPort->inAddr = inAddr;
     pvxiPort->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
@@ -1748,7 +1751,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
 #include <iocsh.h>
 static const iocshArg vxi11ConfigureArg0 = { "portName",iocshArgString};
 static const iocshArg vxi11ConfigureArg1 = { "host name",iocshArgString};
-static const iocshArg vxi11ConfigureArg2 = { "flags (lock devices : recover with IFC)",iocshArgInt};
+static const iocshArg vxi11ConfigureArg2 = { "flags (no SRQ : lock devices : recover with IFC)",iocshArgInt};
 static const iocshArg vxi11ConfigureArg3 = { "default timeout",iocshArgString};
 static const iocshArg vxi11ConfigureArg4 = { "vxiName",iocshArgString};
 static const iocshArg vxi11ConfigureArg5 = { "priority",iocshArgInt};
