@@ -14,6 +14,7 @@ class paramVal {
 public:
     paramVal(const char *name);
     paramVal(const char *name, asynParamType type);
+    ~paramVal();
     bool isDefined();
     void setDefined(bool defined);
     bool hasValueChanged();
