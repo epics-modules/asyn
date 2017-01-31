@@ -94,6 +94,8 @@
 
 #define ISCOM_UNKNOWN (-1)
 
+#define LECROY /* For optional LeCroy mode */
+
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each IP socket.
