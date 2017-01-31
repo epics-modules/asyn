@@ -122,7 +122,22 @@ typedef struct {
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
+#ifdef LECROY
+    int                lecroy;
+    int                lecroy_error;
+    int                lecroy_length;
+#endif /* LECROY */
 } ttyController_t;
+
+#ifdef LECROY
+typedef struct lecroy {
+    unsigned char operation;
+    unsigned char version;
+    unsigned char seq;
+    unsigned char spare;
+    unsigned int  length;
+} lecroy_t;
+#endif /* LECROY */
 
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
@@ -655,6 +670,43 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     return status;
 }
 
+#if 0
+/* A useful debugging routine, but not needed now. */
+#include<ctype.h>
+#define D(x) (isprint(data[x]) ? data[x] : '.')
+#define U(x) (0xff & (int)data[x])
+/* Like hexdump -C */
+static void hexdump(char *data, int length)
+{
+    int i, j, cnt;
+    for (i = 0; i + 16 < length; i += 16) { /* Full lines! */
+        printf("%08x  %02x %02x %02x %02x %02x %02x %02x %02x  %02x %02x %02x %02x %02x %02x %02x %02x  |%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c|\n",
+               i,
+               U(i+0), U(i+1), U(i+2), U(i+3), U(i+4), U(i+5), U(i+6), U(i+7), 
+               U(i+8), U(i+9), U(i+10), U(i+11), U(i+12), U(i+13), U(i+14), U(i+15), 
+               D(i+0), D(i+1), D(i+2), D(i+3), D(i+4), D(i+5), D(i+6), D(i+7), 
+               D(i+8), D(i+9), D(i+10), D(i+11), D(i+12), D(i+13), D(i+14), D(i+15));
+    }
+    cnt = length - i;  /* Length of the last line! */
+    printf("%08x", i);
+    for (j = 0; j < 16; j++) {
+        if (j < cnt)
+            printf("%s%02x", ((j & 7) == 0) ? "  " : " ", U(i+j));
+        else
+            printf("%s  ", ((j & 7) == 0) ? "  " : " ");
+    }
+    printf("  |");
+    for (j = 0; j < 16; j++) {
+        if (j < cnt)
+            printf("%c", D(i+j));
+        else
+            printf(" ");
+    }
+    printf("|\n");
+    printf("%08x\n", length);
+}
+#endif
+
 /*
  * Read from the TCP port
  */
@@ -771,6 +823,48 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
+    #ifdef LECROY
+    if (tty->lecroy) {
+        int offset = 0;
+        if (tty->lecroy_error) {
+            /* Something bad has happened.  Just skip until we have something headerish. */
+            while (offset < thisRead) {
+                if (data[offset] & 0x80)
+                    break;              /* Looks like a header to me! */
+                else
+                    offset++;
+            }
+            asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                      "%s found header at offset %d.\n", tty->IPDeviceName, offset);
+            memmove(data, data + offset, thisRead - offset);
+            thisRead -= offset;
+            offset = 0;
+        }
+        while (offset + tty->lecroy_length < thisRead) { /* The header start is in the buffer! */
+            if (offset + tty->lecroy_length + sizeof(lecroy_t) > thisRead) {
+                /* Ouch.  The end is *not* in the buffer.  Throw an error, since this shouldn't happen. */
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s read error: Lecroy header is split!",
+                              tty->IPDeviceName);
+                status = asynError;
+                tty->lecroy_error = 1;
+                tty->lecroy_length = 0;
+                thisRead = 0;
+                break;
+            } else {
+                char *dest = data + offset + tty->lecroy_length;
+                int newlen = ntohl(((lecroy_t *)dest)->length);
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                          "%s found header at offset %d.\n", tty->IPDeviceName, offset);
+                memmove(dest, dest + sizeof(lecroy_t), thisRead - tty->lecroy_length - offset - sizeof(lecroy_t));
+                thisRead -= sizeof(lecroy_t);
+                offset += tty->lecroy_length;
+                tty->lecroy_length = newlen;
+            }
+        }
+        tty->lecroy_length -= (thisRead - offset);
+    }
+    #endif /* LECROY */
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
@@ -847,6 +941,11 @@ getOption(void *drvPvt, asynUser *pasynUser,
     else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
         l = epicsSnprintf(val, valSize, "%s", tty->IPDeviceName);
     }
+    #ifdef LECROY
+    else if (epicsStrCaseCmp(key, "Lecroy") == 0) {
+        l = epicsSnprintf(val, valSize, "%c", tty->lecroy ? 'Y' : 'N');
+    }
+    #endif /* LECROY */
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -886,6 +985,25 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         int status = parseHostInfo(tty, val);
         if (status) return asynError;
     }
+    #ifdef LECROY
+    else if (epicsStrCaseCmp(key, "Lecroy") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            printf("Lecroy mode on!\n");
+            tty->lecroy = 1;
+            tty->lecroy_error = 0;
+            tty->lecroy_length = 0;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            printf("Lecroy mode off!\n");
+            tty->lecroy = 0;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid Lecroy value.");
+            return asynError;
+        }
+    }
+    #endif /* LECROY */
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
