@@ -944,7 +944,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%s", tty->IPDeviceName);
     }
     #ifdef LECROY
-    else if (epicsStrCaseCmp(key, "Lecroy") == 0) {
+    else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
         l = epicsSnprintf(val, valSize, "%c", tty->lecroy ? 'Y' : 'N');
     }
     #endif /* LECROY */
@@ -988,20 +988,20 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         if (status) return asynError;
     }
     #ifdef LECROY
-    else if (epicsStrCaseCmp(key, "Lecroy") == 0) {
+    else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
-            printf("Lecroy mode on!\n");
+            printf("LeCroy mode on!\n");
             tty->lecroy = 1;
             tty->lecroy_error = 0;
             tty->lecroy_length = 0;
         }
         else if (epicsStrCaseCmp(val, "N") == 0) {
-            printf("Lecroy mode off!\n");
+            printf("LeCroy mode off!\n");
             tty->lecroy = 0;
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                    "Invalid Lecroy value.");
+                                                    "Invalid LeCroy value, must be "Y" or "N".");
             return asynError;
         }
     }
