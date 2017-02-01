@@ -94,8 +94,6 @@
 
 #define ISCOM_UNKNOWN (-1)
 
-#define LECROY /* For optional LeCroy mode */
-
 /*
  * This structure holds the hardware-specific information for a single
  * asyn link.  There is one for each IP socket.
@@ -124,14 +122,11 @@ typedef struct {
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
-#ifdef LECROY
     int                lecroy;
     int                lecroy_error;
     int                lecroy_length;
-#endif /* LECROY */
 } ttyController_t;
 
-#ifdef LECROY
 typedef struct lecroy {
     unsigned char operation;
     unsigned char version;
@@ -139,7 +134,6 @@ typedef struct lecroy {
     unsigned char spare;
     unsigned int  length;
 } lecroy_t;
-#endif /* LECROY */
 
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
@@ -825,8 +819,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
-    #ifdef LECROY
-    if (tty->lecroy) {
+    if (tty->lecroy) { /* For optional LeCroy mode */
         int offset = 0;
         if (tty->lecroy_error) {
             /* Something bad has happened.  Just skip until we have something headerish. */
@@ -846,7 +839,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
             if (offset + tty->lecroy_length + sizeof(lecroy_t) > thisRead) {
                 /* Ouch.  The end is *not* in the buffer.  Throw an error, since this shouldn't happen. */
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "%s read error: Lecroy header is split!",
+                              "%s read error: LeCroy header is split!",
                               tty->IPDeviceName);
                 status = asynError;
                 tty->lecroy_error = 1;
@@ -866,7 +859,6 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
         tty->lecroy_length -= (thisRead - offset);
     }
-    #endif /* LECROY */
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
@@ -943,11 +935,9 @@ getOption(void *drvPvt, asynUser *pasynUser,
     else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
         l = epicsSnprintf(val, valSize, "%s", tty->IPDeviceName);
     }
-    #ifdef LECROY
     else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
         l = epicsSnprintf(val, valSize, "%c", tty->lecroy ? 'Y' : 'N');
     }
-    #endif /* LECROY */
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -987,7 +977,6 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         int status = parseHostInfo(tty, val);
         if (status) return asynError;
     }
-    #ifdef LECROY
     else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
             printf("LeCroy mode on!\n");
@@ -1005,7 +994,6 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             return asynError;
         }
     }
-    #endif /* LECROY */
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
