@@ -666,43 +666,6 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     return status;
 }
 
-#if 0
-/* A useful debugging routine, but not needed now. */
-#include<ctype.h>
-#define D(x) (isprint(data[x]) ? data[x] : '.')
-#define U(x) (0xff & (int)data[x])
-/* Like hexdump -C */
-static void hexdump(char *data, int length)
-{
-    int i, j, cnt;
-    for (i = 0; i + 16 < length; i += 16) { /* Full lines! */
-        printf("%08x  %02x %02x %02x %02x %02x %02x %02x %02x  %02x %02x %02x %02x %02x %02x %02x %02x  |%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c|\n",
-               i,
-               U(i+0), U(i+1), U(i+2), U(i+3), U(i+4), U(i+5), U(i+6), U(i+7), 
-               U(i+8), U(i+9), U(i+10), U(i+11), U(i+12), U(i+13), U(i+14), U(i+15), 
-               D(i+0), D(i+1), D(i+2), D(i+3), D(i+4), D(i+5), D(i+6), D(i+7), 
-               D(i+8), D(i+9), D(i+10), D(i+11), D(i+12), D(i+13), D(i+14), D(i+15));
-    }
-    cnt = length - i;  /* Length of the last line! */
-    printf("%08x", i);
-    for (j = 0; j < 16; j++) {
-        if (j < cnt)
-            printf("%s%02x", ((j & 7) == 0) ? "  " : " ", U(i+j));
-        else
-            printf("%s  ", ((j & 7) == 0) ? "  " : " ");
-    }
-    printf("  |");
-    for (j = 0; j < 16; j++) {
-        if (j < cnt)
-            printf("%c", D(i+j));
-        else
-            printf(" ");
-    }
-    printf("|\n");
-    printf("%08x\n", length);
-}
-#endif
-
 /*
  * Read from the TCP port
  */
