@@ -953,7 +953,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                                    "Invalid LeCroy value, must be "Y" or "N".");
+                                                    "Invalid LeCroy value, must be Y or N.");
             return asynError;
         }
     }
