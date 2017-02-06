@@ -127,7 +127,7 @@ expectChar(interposePvt *pinterposePvt, asynUser *pasynUser, int expect)
 /*
  * Double up IAC characters.
  * We assume that memchr and memcpy are nicely optimized so we're better off
- * using them than looking at and copying the characters one at a time ourself.
+ * using them than looking at and copying the characters one at a time ourselves.
  */
 static asynStatus
 writeIt(void *ppvt, asynUser *pasynUser,
