@@ -31,14 +31,14 @@ const char* paramVal::typeNames[] = {
 
 paramVal::paramVal(const char *name):
     type(asynParamNotDefined), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
-    valueDefined(false), valueChanged(false)
+    valueDefined(false), valueChanged(false), valueNew(false)
 {
     this->name = epicsStrDup(name);
 }
 
 paramVal::paramVal(const char *name, asynParamType type):
     type(type), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
-    valueDefined(false), valueChanged(false){
+    valueDefined(false), valueChanged(false), valueNew(false){
     this->name = epicsStrDup(name);
 }
 
@@ -59,10 +59,19 @@ bool paramVal::hasValueChanged(){
 
 void paramVal::setValueChanged(){
     valueChanged = true;
+    valueNew = true;
 }
 
 void paramVal::resetValueChanged(){
     valueChanged = false;
+}
+
+bool paramVal::isValueNew(){
+    return valueNew;
+}
+
+void paramVal::resetValueNew(){
+    valueNew = false;
 }
 
 void paramVal::setStatus(asynStatus status){
