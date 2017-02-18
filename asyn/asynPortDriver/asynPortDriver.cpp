@@ -3262,8 +3262,10 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     /* Create the epicsMutex for locking access to data structures from other threads */
     this->mutexId = epicsMutexCreate();
     if (!this->mutexId) {
-        printf("%s::%s ERROR: epicsMutexCreate failure\n", driverName, functionName);
-        return;
+        std::string msg = std::string(driverName) + ":" + functionName +
+            " ERROR: epicsMutexCreate failure: " + portName;
+        printf("%s\n", msg.c_str());
+        throw std::runtime_error(msg);
     }
     
     inputEosOctet = epicsStrDup("");
@@ -3277,7 +3279,10 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
                                         priority,     /* priority */
                                         stackSize);   /* stack size */
     if (status != asynSuccess) {
-        printf("%s:%s: ERROR: Can't register port\n", driverName, functionName);
+        std::string msg = std::string(driverName) + ":" + functionName +
+            " ERROR: Can't register port: " + portName;
+        printf("%s\n", msg.c_str());
+        throw std::runtime_error(msg);
     }
 
     /* Create asynUser for debugging and for standardInterfacesBase */
@@ -3324,19 +3329,20 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      this->pasynUserSelf, this);
     if (status != asynSuccess) {
-	std::string msg = std::string(driverName) + ":" + functionName +
-			  " ERROR: Can't register interfaces: " +
-			  this->pasynUserSelf->errorMessage + ".";
+        std::string msg = std::string(driverName) + ":" + functionName +
+            " ERROR: Can't register interfaces: " +
+            this->pasynUserSelf->errorMessage + ".";
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
-	throw std::runtime_error(msg);
+        throw std::runtime_error(msg);
     }
 
     /* Connect to our device for asynTrace */
     status = pasynManager->connectDevice(this->pasynUserSelf, portName, 0);
     if (status != asynSuccess) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s:, connectDevice failed\n", driverName, functionName);
-        return;
+        std::string msg = std::string(driverName) + ":" + functionName +
+            " ERROR: connectDevice failed: " + portName;
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
+        throw std::runtime_error(msg);
     }
 
     /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
@@ -3346,11 +3352,11 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
                                 (EPICSTHREADFUNC)callbackTaskC,
                                 this) == NULL);
     if (status) {
-        printf("%s:%s epicsThreadCreate failure for callback task\n", 
-            driverName, functionName);
-        return;
+        std::string msg = std::string(driverName) + ":" + functionName +
+            " ERROR: epicsThreadCreate failure for callback task: " + portName;
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
+        throw std::runtime_error(msg);
     }
-
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
