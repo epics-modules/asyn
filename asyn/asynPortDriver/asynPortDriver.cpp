@@ -3324,10 +3324,11 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
     status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                      this->pasynUserSelf, this);
     if (status != asynSuccess) {
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-            "%s:%s ERROR: Can't register interfaces: %s.\n",
-            driverName, functionName, this->pasynUserSelf->errorMessage);
-        return;
+	std::string msg = std::string(driverName) + ":" + functionName +
+			  " ERROR: Can't register interfaces: " +
+			  this->pasynUserSelf->errorMessage + ".";
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
+	throw std::runtime_error(msg);
     }
 
     /* Connect to our device for asynTrace */
