@@ -126,8 +126,8 @@ expectChar(interposePvt *pinterposePvt, asynUser *pasynUser, int expect)
 
 /*
  * Double up IAC characters.
- * We assume that memchr and memcpy are  nicely optimized so we're better of
- * using them than looking at and copying the characters one at a time ourself.
+ * We assume that memchr and memcpy are nicely optimized so we're better off
+ * using them than looking at and copying the characters one at a time ourselves.
  */
 static asynStatus
 writeIt(void *ppvt, asynUser *pasynUser,
@@ -699,7 +699,7 @@ asynInterposeCOM(const char *portName)
     asynUser *pasynUser;
 
     /*
-     * Interpose ourselve
+     * Interpose ourselves
      */
     pinterposePvt = callocMustSucceed(1, sizeof(interposePvt), "asynInterposeCOM");
     pinterposePvt->xBuf = NULL;
