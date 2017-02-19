@@ -14,7 +14,7 @@
     <h2>
       Release 4-31</h2>
     <h2>
-      January XXX, 2017</h2>
+      February 18, 2017</h2>
   </div>
   <h3>
     VXI-11</h3>
@@ -41,6 +41,10 @@
       Added new setStringParam() and getStringParam() methods that take an std::string&amp;
       argument rather than char *. These do not require specifying a maximum string length,
       unlike the char * methods.</li>
+    <li>Changed the constructor so that it throws an std::runtime_error exception in the
+      case of any error, rather than simply calling "return" and creating a non-functional
+      asynPortDriver object, which it did previously. It still prints an error message
+      as it has done previously.</li>
   </ul>
   <h3>
     drvAsynIPPort</h3>
