@@ -129,7 +129,7 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
 
     if (this->findParam(name, index) == asynSuccess) return asynParamAlreadyExists;
 
-    std::auto_ptr<paramVal> param(new paramVal(name, type));
+    std::unique_ptr<paramVal> param(new paramVal(name, type));
 
     if (this->vals.size() == maxParams) {
         asynPrint(pasynPortDriver->pasynUserSelf, ASYN_TRACE_WARNING,
