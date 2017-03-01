@@ -122,7 +122,18 @@ typedef struct {
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
+    int                lecroy;
+    int                lecroy_error;
+    int                lecroy_length;
 } ttyController_t;
+
+typedef struct lecroy {
+    unsigned char operation;
+    unsigned char version;
+    unsigned char seq;
+    unsigned char spare;
+    unsigned int  length;
+} lecroy_t;
 
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
@@ -771,6 +782,46 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
+    if (tty->lecroy) { /* For optional LeCroy mode */
+        int offset = 0;
+        if (tty->lecroy_error) {
+            /* Something bad has happened.  Just skip until we have something headerish. */
+            while (offset < thisRead) {
+                if (data[offset] & 0x80)
+                    break;              /* Looks like a header to me! */
+                else
+                    offset++;
+            }
+            asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                      "%s found header at offset %d.\n", tty->IPDeviceName, offset);
+            memmove(data, data + offset, thisRead - offset);
+            thisRead -= offset;
+            offset = 0;
+        }
+        while (offset + tty->lecroy_length < thisRead) { /* The header start is in the buffer! */
+            if (offset + tty->lecroy_length + sizeof(lecroy_t) > thisRead) {
+                /* Ouch.  The end is *not* in the buffer.  Throw an error, since this shouldn't happen. */
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                              "%s read error: LeCroy header is split!",
+                              tty->IPDeviceName);
+                status = asynError;
+                tty->lecroy_error = 1;
+                tty->lecroy_length = 0;
+                thisRead = 0;
+                break;
+            } else {
+                char *dest = data + offset + tty->lecroy_length;
+                int newlen = ntohl(((lecroy_t *)dest)->length);
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                          "%s found header at offset %d.\n", tty->IPDeviceName, offset);
+                memmove(dest, dest + sizeof(lecroy_t), thisRead - tty->lecroy_length - offset - sizeof(lecroy_t));
+                thisRead -= sizeof(lecroy_t);
+                offset += tty->lecroy_length;
+                tty->lecroy_length = newlen;
+            }
+        }
+        tty->lecroy_length -= (thisRead - offset);
+    }
     *nbytesTransfered = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
@@ -847,6 +898,9 @@ getOption(void *drvPvt, asynUser *pasynUser,
     else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
         l = epicsSnprintf(val, valSize, "%s", tty->IPDeviceName);
     }
+    else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
+        l = epicsSnprintf(val, valSize, "%c", tty->lecroy ? 'Y' : 'N');
+    }
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -885,6 +939,23 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     else if (epicsStrCaseCmp(key, "hostInfo") == 0) {
         int status = parseHostInfo(tty, val);
         if (status) return asynError;
+    }
+    else if (epicsStrCaseCmp(key, "LeCroy") == 0) {
+        if (epicsStrCaseCmp(val, "Y") == 0) {
+            printf("LeCroy mode on!\n");
+            tty->lecroy = 1;
+            tty->lecroy_error = 0;
+            tty->lecroy_length = 0;
+        }
+        else if (epicsStrCaseCmp(val, "N") == 0) {
+            printf("LeCroy mode off!\n");
+            tty->lecroy = 0;
+        }
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                                                    "Invalid LeCroy value, must be Y or N.");
+            return asynError;
+        }
     }
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
