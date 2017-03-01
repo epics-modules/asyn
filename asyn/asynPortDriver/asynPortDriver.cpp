@@ -73,6 +73,9 @@ public:
     asynStatus getAlarmStatus(int index, int *alarmStatus);
     asynStatus setAlarmSeverity(int index, int alarmSeverity);
     asynStatus getAlarmSeverity(int index, int *alarmSeverity);
+    asynStatus clearValueChanged(int index);
+    asynStatus setValueChanged(int index);
+    asynStatus hasValueChanged(int index, int *changed);
     void report(FILE *fp, int details);
 
 private:
@@ -86,6 +89,7 @@ private:
     unsigned maxParams;
     asynPortDriver *pasynPortDriver;
     std::vector<unsigned> flags;
+    std::vector<unsigned> valueChanged;
     std::vector<paramVal*> vals;
 };
 
@@ -112,6 +116,55 @@ asynStatus paramList::setFlag(int index)
     for (i=0; i<flags.size(); i++) if (flags[i] == (unsigned)index) return asynSuccess;
     /* If not found add a flag */
     this->flags.push_back((unsigned)index);
+    return asynSuccess;
+}
+
+asynStatus paramList::setValueChanged(int index)
+{
+    size_t i;
+
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
+    /* See if we have already set the value changed status for this parameter */
+    for (i=0; i<valueChanged.size(); i++) {
+        if (valueChanged[i] == (unsigned)index) {
+            return asynSuccess;
+        }
+    }
+    /* If not found add a flag */
+    this->valueChanged.push_back((unsigned)index);
+    return asynSuccess;
+}
+
+asynStatus paramList::clearValueChanged(int index)
+{
+    size_t i;
+
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
+    /* See if we have value changed status for this parameter */
+    for (i=0; i<valueChanged.size(); i++){
+        if (valueChanged[i] == (unsigned)index) {
+            valueChanged.erase(valueChanged.begin() + i);
+            break;
+        }
+    }
+    return asynSuccess;
+}
+
+asynStatus paramList::hasValueChanged(int index, int *changed)
+{
+    size_t i;
+
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
+
+    *changed = 0;
+
+    /* See if we have value changed status for this parameter */
+    for (i=0; i<valueChanged.size(); i++){
+    	if (valueChanged[i] == (unsigned)index) {
+    		*changed = 1;
+    		break;
+    	}
+    }
     return asynSuccess;
 }
 
@@ -163,6 +216,7 @@ void paramList::registerParameterChange(paramVal *param,int index)
 {
     if(param->hasValueChanged()){
         setFlag(index);
+        setValueChanged(index);
         param->resetValueChanged();
     }
 }
@@ -1003,6 +1057,52 @@ asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *param
     static const char *functionName = "getParamStatus";
 
     status = this->params[list]->getStatus(index, paramStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Clear the value changed status for a parameter in the parameter library.
+  * Calls clearParamValueChanged(0, index) i.e. for parameter list 0.
+  * \param[in] index The parameter number. */
+asynStatus asynPortDriver::clearParamValueChanged(int index)
+{
+    return this->clearParamValueChanged(0, index);
+}
+
+/** Clear the value changed status for a parameter in the parameter library.
+  * Calls paramList::clearValueChanged(index) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number. */
+asynStatus asynPortDriver::clearParamValueChanged(int list, int index)
+{
+    asynStatus status;
+    static const char *functionName = "clearParamValueChanged";
+
+    status = this->params[list]->clearValueChanged(index);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the value changed status for a parameter in the parameter library.
+  * Calls hasParamValueChanged(0, index, changed) for the parameter list indexed by list.
+  * \param[in] index The parameter number 
+  * \param[out] changed Value changed status. */
+asynStatus asynPortDriver::hasParamValueChanged(int index, int *changed)
+{
+    return this->hasParamValueChanged(0, index, changed);
+}
+
+/** Gets the value changed status for a parameter in the parameter library.
+  * Calls paramList::hasValueChanged(index, changed) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number
+  * \param[out] changed Value changed status. */
+asynStatus asynPortDriver::hasParamValueChanged(int list, int index, int *changed)
+{
+    asynStatus status;
+    static const char *functionName = "hasParamValueChanged";
+
+    status = this->params[list]->hasValueChanged(index, changed);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return(status);
 }
