@@ -24,9 +24,9 @@ char *registrarPvt; /* This is really void* */
 char *eventId;      /* Thus is really epicsEventId */
 
 /* Define escaped C functions at end of file */
-%% static void initialize(SS_ID ssId, struct UserVar *pVar);
-%% static int readSocket(SS_ID ssId, struct UserVar *pVar);
-%% static int writeSocket(SS_ID ssId, struct UserVar *pVar);
+%% static void initialize(SS_ID ssId, struct UserVar *pvar);
+%% static int readSocket(SS_ID ssId, struct UserVar *pvar);
+%% static int writeSocket(SS_ID ssId, struct UserVar *pvar);
 
 ss ipSNCServer
 {
@@ -68,13 +68,13 @@ ss ipSNCServer
 %{
 static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portName, size_t len, int eomReason)
 {
-    struct UserVar  *pVar = (struct UserVar *)drvPvt;
+    struct UserVar  *pvar = (struct UserVar *)drvPvt;
     asynUser *pasynUser;
     asynStatus status;
 
-    pVar->IOPortName = epicsStrDup(portName);
+    pvar->IOPortName = epicsStrDup(portName);
     status = pasynOctetSyncIO->connect(portName, 0, &pasynUser, NULL);
-    pVar->pasynUser = (char *)pasynUser;
+    pvar->pasynUser = (char *)pasynUser;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "ipSNCServer: connectionCallback, portName=%s\n", portName);
     if (status) {
@@ -98,11 +98,11 @@ static void connectionCallback(void *drvPvt, asynUser *pasynUserIn, char *portNa
         return;
     }
     /* Send an EPICS event to wake up the SNL program */
-    pVar->connected = 1;
-    epicsEventSignal( (epicsEventId)pVar->eventId);
+    pvar->connected = 1;
+    epicsEventSignal( (epicsEventId)pvar->eventId);
 }
 
-static void initialize(SS_ID ssId, struct UserVar *pVar)
+static void initialize(SS_ID ssId, struct UserVar *pvar)
 {
     int addr=0;
     asynInterface *pasynInterface;
@@ -111,13 +111,13 @@ static void initialize(SS_ID ssId, struct UserVar *pVar)
     void *registrarPvt;
     int status;
 
-    pVar->eventId = (char *)epicsEventCreate(epicsEventEmpty);
+    pvar->eventId = (char *)epicsEventCreate(epicsEventEmpty);
     pasynUser = pasynManager->createAsynUser(0,0);
-    pVar->pasynUser = (char *)pasynUser;
-    pasynUser->userPvt = pVar;
-    status = pasynManager->connectDevice(pasynUser, pVar->listenerPortName, addr);
+    pvar->pasynUser = (char *)pasynUser;
+    pasynUser->userPvt = pvar;
+    status = pasynManager->connectDevice(pasynUser, pvar->listenerPortName, addr);
     if(status!=asynSuccess) {
-        printf("can't connect to port %s: %s\n", pVar->listenerPortName, pasynUser->errorMessage);
+        printf("can't connect to port %s: %s\n", pvar->listenerPortName, pasynUser->errorMessage);
         return;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
@@ -128,20 +128,20 @@ static void initialize(SS_ID ssId, struct UserVar *pVar)
     pasynOctet = (asynOctet *)pasynInterface->pinterface;
     status = pasynOctet->registerInterruptUser(
                  pasynInterface->drvPvt, pasynUser,
-                 connectionCallback,pVar, &registrarPvt);
-    pVar->registrarPvt = registrarPvt;
+                 connectionCallback,pvar, &registrarPvt);
+    pvar->registrarPvt = registrarPvt;
     if(status!=asynSuccess) {
         printf("ipSNCServer devAsynOctet registerInterruptUser %s\n",
                pasynUser->errorMessage);
     }
 }
 
-static int readSocket(SS_ID ssId, struct UserVar *pVar)
+static int readSocket(SS_ID ssId, struct UserVar *pvar)
 {
     char buffer[BUFFER_SIZE];
     size_t nread;
     int eomReason;
-    asynUser *pasynUser = (asynUser *)pVar->pasynUser;
+    asynUser *pasynUser = (asynUser *)pvar->pasynUser;
     asynStatus status;
 
     status = pasynOctetSyncIO->read(pasynUser, buffer, BUFFER_SIZE,
@@ -149,37 +149,37 @@ static int readSocket(SS_ID ssId, struct UserVar *pVar)
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:readSocket: read error on: %s: %s\n",
-                  pVar->IOPortName, pasynUser->errorMessage);
-        pVar->connected = 0;
-        strcpy(pVar->input, "");
+                  pvar->IOPortName, pasynUser->errorMessage);
+        pvar->connected = 0;
+        strcpy(pvar->input, "");
     }
     else {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "ipSNCServer:readSocket: %s read %s\n",
-                   pVar->IOPortName, buffer);
-        strcpy(pVar->input, buffer);
+                   pvar->IOPortName, buffer);
+        strcpy(pvar->input, buffer);
     }
     return(status);
 }
 
-static int writeSocket(SS_ID ssId, struct UserVar *pVar)
+static int writeSocket(SS_ID ssId, struct UserVar *pvar)
 {
     size_t nwrite;
-    asynUser *pasynUser = (asynUser *)pVar->pasynUser;
+    asynUser *pasynUser = (asynUser *)pvar->pasynUser;
     asynStatus status;
 
-    status = pasynOctetSyncIO->write(pasynUser, pVar->output, strlen(pVar->output),
+    status = pasynOctetSyncIO->write(pasynUser, pvar->output, strlen(pvar->output),
                                      0.0, &nwrite);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
                   "ipSNCServer:writeSocket: write error on: %s: %s\n",
-                  pVar->IOPortName, pasynUser->errorMessage);
-        pVar->connected = 0;
+                  pvar->IOPortName, pasynUser->errorMessage);
+        pvar->connected = 0;
     }
     else {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                    "ipSNCServer:writeSocket: %s write %s\n",
-                   pVar->IOPortName, pVar->output);
+                   pvar->IOPortName, pvar->output);
     }
     return(status);
 }
