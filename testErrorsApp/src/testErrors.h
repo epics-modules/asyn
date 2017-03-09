@@ -73,7 +73,6 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_StatusReturn;
-    #define FIRST_COMMAND P_StatusReturn
     int P_AlarmStatus;
     int P_AlarmSeverity;
     int P_EnumOrder;
@@ -91,7 +90,6 @@ protected:
     int P_Int32ArrayValue;
     int P_Float32ArrayValue;
     int P_Float64ArrayValue;
-    #define LAST_COMMAND P_Float64ArrayValue
  
 private:
     /* Our data */
@@ -112,7 +110,3 @@ private:
         asynStatus doReadArray(asynUser *pasynUser, epicsType *value, 
                            size_t nElements, size_t *nIn, int paramIndex, epicsType *pValue);
 };
-
-
-#define NUM_PARAMS (int)(&LAST_COMMAND - &FIRST_COMMAND + 1)
-
