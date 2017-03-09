@@ -40,8 +40,10 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
   * with standard asyn interfaces and a parameter library. */
 class epicsShareClass asynPortDriver {
 public:
-    asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+    asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
+    asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+                   int asynFlags, int autoConnect, int priority, int stackSize) __attribute__((deprecated("Please remove 3rd argument (paramTableSize). It's not required anymore.")));
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
