@@ -178,6 +178,8 @@ public:
     void callbackTask();
 
 protected:
+    void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
+                    int autoConnect, int priority, int stackSize);
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
     asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 

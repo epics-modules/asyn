@@ -3231,6 +3231,33 @@ static asynDrvUser ifaceDrvUser = {
 asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask,
                                int asynFlags, int autoConnect, int priority, int stackSize)
 {
+    initialize(portNameIn, maxAddrIn, interfaceMask, interruptMask, asynFlags,
+               autoConnect, priority, stackSize);
+}
+
+/** Legacy constructor for the asynPortDriver class
+ * (DEPRECATED - please use the one above instead).
+ *
+ * asynPortDriver >=R4-32 handles the table size automatically. Thus the
+ * paramTableSize parameter has been removed from the constructor.
+ * This constructor is provided for backwards compatibility. Users should
+ * switch to using the constructor ASAP.
+ */
+asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
+                               int asynFlags, int autoConnect, int priority, int stackSize)
+{
+    initialize(portNameIn, maxAddrIn, interfaceMask, interruptMask, asynFlags,
+               autoConnect, priority, stackSize);
+}
+
+/** The following function is required to initialize from two constructors. Once
+ * we can rely on C++11 this code can be moved back into the primary
+ * constructor. The secondary constructor can then be converted into
+ * a delegating constructor.
+ */
+void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask,
+                               int asynFlags, int autoConnect, int priority, int stackSize)
+{
     asynStatus status;
     static const char *functionName = "asynPortDriver";
     asynStandardInterfaces *pInterfaces;
@@ -3350,19 +3377,6 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int interf
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
         throw std::runtime_error(msg);
     }
-}
-
-/** Legacy constructor for the asynPortDriver class
- * (DEPRECATED - please use the one above instead).
- *
- * asynPortDriver >=R4-32 handles the table size automatically. Thus the
- * paramTableSize parameter has been removed from the constructor.
- * This constructor is provided for backwards compatibility. Users should
- * switch to using the constructor ASAP.
-  */
-asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramTableSize, int interfaceMask, int interruptMask,
-                               int asynFlags, int autoConnect, int priority, int stackSize) : asynPortDriver(portNameIn, maxAddrIn, interfaceMask, interruptMask, asynFlags, autoConnect, priority, stackSize)
-{
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
