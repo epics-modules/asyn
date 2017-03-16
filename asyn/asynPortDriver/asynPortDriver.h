@@ -118,6 +118,8 @@ public:
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(          int index, const char **name);
     virtual asynStatus getParamName(int list, int index, const char **name);
+    virtual asynStatus getParamType(          int index, asynParamType *type);
+    virtual asynStatus getParamType(int list, int index, asynParamType *type);
     virtual asynStatus setParamStatus(          int index, asynStatus status);
     virtual asynStatus setParamStatus(int list, int index, asynStatus status);
     virtual asynStatus getParamStatus(          int index, asynStatus *status);
