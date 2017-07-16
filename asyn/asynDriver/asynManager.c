@@ -2908,6 +2908,14 @@ static int traceVprintIOSource(asynUser *pasynUser,int reason,
             nout += errlogPrintf("\n");
         }
     }
+    /* If the traceIOMask is 0 or traceTruncateSize <=0 we need to output a newline */
+    if((traceIOMask == 0) || (traceTruncateSize <=0)) {
+        if(fp) {
+            nout += fprintf(fp,"\n");
+        } else {
+            nout += errlogPrintf("\n");
+        }
+    }
     fflush(fp);
     epicsMutexUnlock(pasynBase->lockTrace);
     return nout;
