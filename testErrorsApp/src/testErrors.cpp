@@ -146,9 +146,9 @@ static void callbackTask(void *drvPvt)
 void testErrors::callbackTask(void)
 {
     asynStatus currentStatus;
-    int alarmStatus;
-    int alarmSeverity;
-    int itemp;
+    epicsInt32 alarmStatus;
+    epicsInt32 alarmSeverity;
+    epicsInt32 itemp;
     epicsInt32 iVal;
     epicsUInt32 uiVal;
     epicsFloat64 dVal;
@@ -260,7 +260,7 @@ void testErrors::callbackTask(void)
 
 void testErrors::setEnums()
 {
-    int order, offset=0, dir=1, i, j;
+    epicsInt32 order, offset=0, dir=1, i, j;
     
     getIntegerParam(P_EnumOrder, &order);
     if (order != 0) {
@@ -299,7 +299,7 @@ asynStatus testErrors::writeInt32(asynUser *pasynUser, epicsInt32 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int itemp;
+    epicsInt32 itemp;
     const char *paramName;
     const char* functionName = "writeInt32";
 
@@ -345,7 +345,7 @@ asynStatus testErrors::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int itemp;
+    epicsInt32 itemp;
     const char *paramName;
     const char* functionName = "writeFloat64";
 
@@ -382,7 +382,7 @@ asynStatus testErrors::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int itemp;
+    epicsInt32 itemp;
     const char *paramName;
     const char* functionName = "writeUInt32D";
 
@@ -423,7 +423,7 @@ asynStatus testErrors::writeOctet(asynUser *pasynUser, const char *value,
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int itemp;
+    epicsInt32 itemp;
     const char *functionName = "writeOctet";
 
     /* Get the current error status */
@@ -538,7 +538,7 @@ asynStatus testErrors::doReadArray(asynUser *pasynUser, epicsType *value,
 {
     int function = pasynUser->reason;
     size_t ncopy = MAX_ARRAY_POINTS;
-    int status = asynSuccess;
+    epicsInt32 status = asynSuccess;
     epicsTimeStamp timestamp;
     const char *functionName = "doReadArray";
 

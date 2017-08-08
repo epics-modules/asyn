@@ -57,7 +57,7 @@ public:
     asynStatus setDouble(int index, double value);
     asynStatus setString(int index, const char *string);
     asynStatus setString(int index, const std::string& string);
-    asynStatus getInteger(int index, int *value);
+    asynStatus getInteger(int index, epicsInt32 *value);
     asynStatus getUInt32(int index, epicsUInt32 *value, epicsUInt32 mask);
     asynStatus getDouble(int index, double *value);
     asynStatus getString(int index, int maxChars, char *value);
@@ -275,7 +275,7 @@ asynStatus paramList::setString(int index, const std::string& value)
   * \param[out] value Address of value to get.
   * \return Returns asynParamBadIndex if the index is not valid, asynParamWrongType if the parameter type is not asynParamInt32,
   * or asynParamUndefined if the value has not been defined. */
-asynStatus paramList::getInteger(int index, int *value)
+asynStatus paramList::getInteger(int index, epicsInt32 *value)
 {
     asynStatus status;
     *value = 0;
@@ -1359,7 +1359,7 @@ void asynPortDriver::reportGetParamErrors(asynStatus status, int index, int list
   * Calls getIntegerParam(0, index, value) i.e. for parameter list 0.
   * \param[in] index The parameter number 
   * \param[out] value Address of value to get. */
-asynStatus asynPortDriver::getIntegerParam(int index, int *value)
+asynStatus asynPortDriver::getIntegerParam(int index, epicsInt32 *value)
 {
     return this->getIntegerParam(0, index, value);
 }
@@ -1369,7 +1369,7 @@ asynStatus asynPortDriver::getIntegerParam(int index, int *value)
   * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
   * \param[in] index The parameter number 
   * \param[out] value Address of value to get. */
-asynStatus asynPortDriver::getIntegerParam(int list, int index, int *value)
+asynStatus asynPortDriver::getIntegerParam(int list, int index, epicsInt32 *value)
 {
     asynStatus status;
     static const char *functionName = "getIntegerParam";

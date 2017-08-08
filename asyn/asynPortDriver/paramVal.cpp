@@ -125,7 +125,7 @@ bool paramVal::nameEquals(const char* name){
   * \param[in] value Value to set.
   * \throws ParamValWrongType if type is not asynParamInt32
   */
-void paramVal::setInteger(int value)
+void paramVal::setInteger(epicsInt32 value)
 {
     if (type != asynParamInt32)
         throw ParamValWrongType("paramVal::setInteger can only handle asynParamInt32");
@@ -141,7 +141,7 @@ void paramVal::setInteger(int value)
   * \throws ParamValWrongType if type is not asynParamInt32
   * \throws paramValNotDefined if the value is not defined
   */
-int paramVal::getInteger()
+epicsInt32 paramVal::getInteger()
 {
     if (type != asynParamInt32)
         throw ParamValWrongType("paramVal::getInteger can only handle asynParamInt32");
