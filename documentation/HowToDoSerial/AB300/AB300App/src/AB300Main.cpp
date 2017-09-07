@@ -1,4 +1,4 @@
-/* AB300Main.cpp */
+/* _APPNAME_Main.cpp */
 /* Author:  Marty Kraimer Date:    17MAR2000 */
 
 #include <stddef.h>
@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "epicsExit.h"
 #include "epicsThread.h"
 #include "iocsh.h"
 
@@ -17,5 +18,6 @@ int main(int argc,char *argv[])
         epicsThreadSleep(.2);
     }
     iocsh(NULL);
+    epicsExit(0);
     return(0);
 }
