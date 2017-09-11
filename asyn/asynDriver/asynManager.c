@@ -925,6 +925,17 @@ static void queueLockPortCallback(asynUser *pasynUser)
     epicsEventSignal(plockPortPvt->queueLockPortEvent);
 }
 
+static void queueLockPortTimeoutCallback(asynUser *pasynUser)
+{
+    userPvt  *puserPvt = asynUserToUserPvt(pasynUser);
+    port     *pport = puserPvt->pport;
+
+    asynPrint(pasynUser, ASYN_TRACE_WARNING, 
+        "%s asynManager::queueLockPortTimeoutCallback WARNING: queueLockPort timeout\n", 
+        pport->portName);
+    /* We just execute the normal callback code */
+    queueLockPortCallback(pasynUser);
+};
 
 /* asynManager methods */
 static void reportPrintInterfaceList(FILE *fp,ELLLIST *plist,const char *title)
@@ -1757,7 +1768,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
             plockPortPvt->queueLockPortCount++;
             return status;
         }
-        pasynUserCopy = pasynManager->duplicateAsynUser(pasynUser, queueLockPortCallback, 0);
+        pasynUserCopy = pasynManager->duplicateAsynUser(pasynUser, queueLockPortCallback, queueLockPortTimeoutCallback);
         if (!pasynUserCopy){
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                     "asynManager::queueLockPort duplicateAsynUser failed");
@@ -1770,7 +1781,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
             pport->portName, plockPortPvt->queueLockPortMutex);
         epicsMutexMustLock(plockPortPvt->queueLockPortMutex);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort queueing request\n", pport->portName);
-        status = pasynManager->queueRequest(pasynUserCopy, asynQueuePriorityLow, 0.0);
+        status = pasynManager->queueRequest(pasynUserCopy, asynQueuePriorityLow, pasynUserCopy->timeout);
         if (status) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::queueLockPort queueRequest failed: %s", 
