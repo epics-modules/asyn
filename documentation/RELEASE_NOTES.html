@@ -27,14 +27,23 @@
           hang until the port reconnected. For example, calls to the asynXXXSyncIO functions
           would not return until the port reconnected.</li>
         <li>Added a timeout callback for the queueRequest in queueLockPort(). This callback
-          function prints a warning message with ASYN_TRACE_WARNING. It then calls the normal
-          queueLockPortCallback() function to complete the operation.</li>
-        <li>The timeout for the queue lock request is value of pasynUser-&gt;timeout for the
-          pasynUser that was passed to queueLockPort(). This is the value that has always
-          been used to specify the timeout to for reading or writing to the device. This means
-          that the timeout should now be set to the maximum of the time that the request may
-          wait in the queue, or the time for the device to respond. In some unusual cases
-          this may require increasing the timeout values in drivers.</li>
+          function prints a warning message with ASYN_TRACE_WARNING. It sets the psynUser-&gt;auxStatus
+          field to asynTimeout so that queueLockPort() detects an error and returns an error
+          status without locking the port. Callers must be sure to check the return status
+          of queueLockPort and not call any port driver functions if it does. This was already
+          done in all of the asynXXXSyncIO functions.</li>
+        <li>The timeout for the queueLockPort queue request is determined as follows
+          <ul>
+            <li>Each port now has a queueLockPortTimeout value. This is set to a default of 2.0
+              seconds when the port is created.</li>
+            <li>This can be changed with a new iocsh command
+              <pre>asynSetQueueLockPortTimeout(portName, timeout)</pre>
+            </li>
+            <li>If the pasynUser->timeout that is passed for a particular I/O operation is larger
+              than the port timeout value this larger value is used instead. This value typically
+              comes from the value specified in the record's INP or OUT field.</li>
+          </ul>
+        </li>
       </ul>
     </li>
     <li>In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
