@@ -10,12 +10,12 @@
     <h1>
       asynDriver: Asynchronous Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-31</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-32</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 18, 2017</span></p>
+      <span style="font-weight: bold; font-size: 14pt">September 12, 2017</span></p>
     <h3>
       Other Contributers</h3>
     <p>
@@ -525,7 +525,15 @@
         queue request runs, the thread that called pasynManager-&gt;lockPort() executes,
         and the portThread blocks, until pasynManager-&gt;unlockPort() is called. In R4-21
         the queued lockPort and unlockPort functions were renamed to queueLockPort and queueUnlockPort,
-        and the original lightweight lockPort and unlockPort functions were restored.</p>
+        and the original lightweight lockPort and unlockPort functions were restored. Up
+        to R4-32 when queueLockPort called queueRequest it did not specify a timeout. This
+        could lead to code being hung if the port disconnected after the call to queueRequest
+        but before the callback was called. The code would remain hung until the port reconnected.
+        In R4-32 the queueRequest is done with a timeout. The default timeout value is 2.0
+        seconds but this can be change with the shell command asynSetQueueLockPortTimeout(portName,
+        double timeout). If the pasynUser-&gt;timeout passed to queueLockPort is greater
+        than the current port timeout value this larger timeout from the pasynUser is used
+        instead.</p>
       <p>
         blockProcessCallback is a request to prevent acccess to a device or port by other
         asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
@@ -1242,15 +1250,20 @@
 /*standard values for asynUser.reason*/
 #define ASYN_REASON_SIGNAL -1
 
-typedef struct interruptNode{
-    ELLNODE node;
-    void    *drvPvt;
-}interruptNode;
+#define ASYN_REASON_RESERVED_LOW 0x70000000
+#define ASYN_REASON_RESERVED_HIGH 0x7FFFFFFF
+
+#define ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED ASYN_REASON_RESERVED_LOW
 
 typedef void (*userCallback)(asynUser *pasynUser);
 typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
 typedef void (*timeStampCallback)(void *userPvt, epicsTimeStamp *pTimeStamp);
 
+typedef struct interruptNode{
+    ELLNODE node;
+    void    *drvPvt;
+}interruptNode;
+
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
     asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
@@ -1279,6 +1292,7 @@ typedef struct asynManager {
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*queueLockPort)(asynUser *pasynUser);
     asynStatus (*queueUnlockPort)(asynUser *pasynUser);
+    asynStatus (*setQueueLockPortTimeout)(asynUser *pasynUser, double timeout);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
@@ -1521,15 +1535,24 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           queueLockPort/queueUnlockPort</td>
         <td>
           Lock access to a port driver. This is used by code that is willing to block while
-          making calls to a port driver. The code can call lockPort, make an arbitrary number
-          of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
-          and/or lockPort will be delayed between the calls to lockPort and unlockPort. The
-          difference between lockPort and queueLockPort is that queueLockPort queues a request
-          to lock the port, using the same queues as queueRequest. This means that a thread
-          that repeatedly calls queueLockPort without sleeping between calls will still allow
-          other threads to access the port. This is not true with lockPort, which will take
-          a mutex as soon as the port is free, and can prevent other threads from accessing
-          the port at all.</td>
+          making calls to a port driver. The code can call queueLockPort, make an arbitrary
+          number of calls to the port driver, and than call queueUnlockPort. Other code that
+          calls queueRequest and/or lockPort will be delayed between the calls to queueLockPort
+          and queueUnlockPort. The difference between lockPort and queueLockPort is that queueLockPort
+          queues a request to lock the port, using the same queues as queueRequest. This means
+          that a thread that repeatedly calls queueLockPort without sleeping between calls
+          will still allow other threads to access the port. This is not true with lockPort,
+          which will take a mutex as soon as the port is free, and can prevent other threads
+          from accessing the port at all.</td>
+      </tr>
+      <tr>
+        <td>
+          setQueueLockPortTimeout</td>
+        <td>
+          Sets the timeout passed to queueRequest() in queueLockPort(). The default value
+          of 2.0 seconds is set when the port is created. This function can be used to change
+          that value. Note that if the pasynUser-&gt;timeout value passed to queueLockPort
+          is larger than the current value then this larger timeout value is used.</td>
       </tr>
       <tr>
         <td>
