@@ -125,6 +125,7 @@ typedef struct asynManager {
     asynStatus (*unlockPort)(asynUser *pasynUser);
     asynStatus (*queueLockPort)(asynUser *pasynUser);
     asynStatus (*queueUnlockPort)(asynUser *pasynUser);
+    asynStatus (*setQueueLockPortTimeout)(asynUser *pasynUser, double timeout);
     asynStatus (*canBlock)(asynUser *pasynUser,int *yesNo);
     asynStatus (*getAddr)(asynUser *pasynUser,int *addr);
     asynStatus (*getPortName)(asynUser *pasynUser,const char **pportName);
