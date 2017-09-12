@@ -1143,6 +1143,37 @@ static void asynSetMinTimerPeriodCall(const iocshArgBuf *args)
     asynSetMinTimerPeriod(args[0].dval);
 }
 
+static const iocshArg asynSetQueueLockPortTimeoutArg0 = {"portName", iocshArgString};
+static const iocshArg asynSetQueueLockPortTimeoutArg1 = {"timeout", iocshArgDouble};
+static const iocshArg *const asynSetQueueLockPortTimeoutArgs[] = {
+    &asynSetQueueLockPortTimeoutArg0,&asynSetQueueLockPortTimeoutArg1};
+static const iocshFuncDef asynSetQueueLockPortTimeoutDef =
+    {"asynSetQueueLockPortTimeout", 2, asynSetQueueLockPortTimeoutArgs};
+epicsShareFunc int
+ asynSetQueueLockPortTimeout(const char *portName, double timeout)
+{
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pasynUser = pasynManager->createAsynUser(0,0);
+    status = pasynManager->connectDevice(pasynUser,portName,0);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return -1;
+    }
+    status = pasynManager->setQueueLockPortTimeout(pasynUser,timeout);
+    if(status!=asynSuccess) {
+        printf("%s\n",pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+    return 0;
+}
+static void asynSetQueueLockPortTimeoutCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    double timeout = args[1].dval;
+    asynSetQueueLockPortTimeout(portName,timeout);
+}
 
 static void asynRegister(void)
 {
@@ -1159,6 +1190,7 @@ static void asynRegister(void)
     iocshRegister(&asynSetTraceIOTruncateSizeDef,asynSetTraceIOTruncateSizeCall);
     iocshRegister(&asynEnableDef,asynEnableCall);
     iocshRegister(&asynAutoConnectDef,asynAutoConnectCall);
+    iocshRegister(&asynSetQueueLockPortTimeoutDef,asynSetQueueLockPortTimeoutCall);
     iocshRegister(&asynOctetConnectDef,asynOctetConnectCall);
     iocshRegister(&asynOctetDisconnectDef,asynOctetDisconnectCall);
     iocshRegister(&asynOctetReadDef,asynOctetReadCall);
