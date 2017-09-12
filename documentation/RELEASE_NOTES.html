@@ -14,12 +14,47 @@
     <h2>
       Release 4-32</h2>
     <h2>
-      July XXX, 2017</h2>
+      September XXX, 2017</h2>
   </div>
   <h3>
     asynManager.c</h3>
   <ul>
-    <li>In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize <=0 output a newline, otherwise output is garbled</li>
+    <li>Fixes to queueLockPort() which is used by the asynXXXSyncIO interfaces.
+      <ul>
+        <li>Previously queueLockPort() did not specify a timeout value or timeout callback
+          function in the call to pasynManager-&gt;queueRequest().</li>
+        <li>This meant that if a port disconnected while a lock request was queued it would
+          hang until the port reconnected. For example, calls to the asynXXXSyncIO functions
+          would not return until the port reconnected.</li>
+        <li>Added a timeout callback for the queueRequest in queueLockPort(). This callback
+          function prints a warning message with ASYN_TRACE_WARNING. It then calls the normal
+          queueLockPortCallback() function to complete the operation.</li>
+        <li>The timeout for the queue lock request is value of pasynUser-&gt;timeout for the
+          pasynUser that was passed to queueLockPort(). This is the value that has always
+          been used to specify the timeout to for reading or writing to the device. This means
+          that the timeout should now be set to the maximum of the time that the request may
+          wait in the queue, or the time for the device to respond. In some unusual cases
+          this may require increasing the timeout values in drivers.</li>
+      </ul>
+    </li>
+    <li>In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
+      a newline, otherwise output is garbled</li>
+  </ul>
+  <h3>
+    Test application *Main.cpp files</h3>
+  <ul>
+    <li>The main programs in all of the test applications have been updated to the version
+      in the template files in EPICS base 3.15.5. This includes a call to epicsExit()
+      after the iocsh() returns. This is needed for epicsAtExit to work correctly on some
+      platforms, including Windows.</li>
+  </ul>
+  <h3>
+    Files in configure/ directories</h3>
+  <ul>
+    <li>The Makefile, CONFIG, CONFIG_SITE, and RULES* files in configure/, makeSupport/top/configure/,
+      and documentation/HowToDoSerial/AB300/configure/ have been updated to the versions
+      in the template files in EPICS base 3.15.5. The new versions are better suited to
+      site-specific customization.</li>
   </ul>
   <div style="text-align: center">
     <hr />
