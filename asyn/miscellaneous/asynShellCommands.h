@@ -63,6 +63,8 @@ epicsShareFunc int
  asynUnregisterTimeStampSource(const char *portName);
 epicsShareFunc int
  asynSetMinTimerPeriod(double period);
+epicsShareFunc int
+ asynSetQueueLockPortTimeout(const char *portName, double timeout);
 
 #ifdef __cplusplus
 }
