@@ -129,12 +129,12 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
 void testArrayRingBuffer::arrayGenTask(void)
 {
     double loopDelay;
-    int runStop; 
+    epicsInt32 runStop; 
     int i, j;
-    int burstLength;
+    epicsInt32 burstLength;
     double burstDelay;
-    int maxArrayLength;
-    int arrayLength;
+    epicsInt32 maxArrayLength;
+    epicsInt32 arrayLength;
     
     lock();
     /* Loop forever */ 
@@ -223,7 +223,7 @@ asynStatus testArrayRingBuffer::readInt32Array(asynUser *pasynUser, epicsInt32 *
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int nCopy;
+    epicsInt32 nCopy;
     const char *functionName = "readFloat64Array";
 
     getIntegerParam(P_ArrayLength, &nCopy);

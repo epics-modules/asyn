@@ -148,7 +148,7 @@ void testAsynPortDriver::simTask(void)
     double updateTime, minValue, maxValue, meanValue;
     double time, timeStep;
     double noise, yScale;
-    int run, i, maxPoints;
+    epicsInt32 run, i, maxPoints;
     double pi=4.0*atan(1.0);
     
     lock();
@@ -257,7 +257,7 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int run;
+    epicsInt32 run;
     const char *paramName;
     const char* functionName = "writeFloat64";
 
@@ -310,7 +310,7 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
 {
     int function = pasynUser->reason;
     size_t ncopy;
-    int itemp;
+    epicsInt32 itemp;
     asynStatus status = asynSuccess;
     epicsTimeStamp timeStamp;
     const char *functionName = "readFloat64Array";
@@ -361,7 +361,7 @@ asynStatus testAsynPortDriver::readEnum(asynUser *pasynUser, char *strings[], in
 
 void testAsynPortDriver::setVertGain()
 {
-    int igain, i;
+    epicsInt32 igain, i;
     double gain;
     
     getIntegerParam(P_VertGainSelect, &igain);
@@ -377,7 +377,7 @@ void testAsynPortDriver::setVertGain()
 
 void testAsynPortDriver::setVoltsPerDiv()
 {
-    int mVPerDiv;
+    epicsInt32 mVPerDiv;
     
     // Integer volts are in mV
     getIntegerParam(P_VoltsPerDivSelect, &mVPerDiv);
@@ -386,7 +386,7 @@ void testAsynPortDriver::setVoltsPerDiv()
 
 void testAsynPortDriver::setTimePerDiv()
 {
-    int microSecPerDiv;
+    epicsInt32 microSecPerDiv;
     
     // Integer times are in microseconds
     getIntegerParam(P_TimePerDivSelect, &microSecPerDiv);
