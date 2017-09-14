@@ -40,8 +40,10 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
   * with standard asyn interfaces and a parameter library. */
 class epicsShareClass asynPortDriver {
 public:
-    asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+    asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
+    asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
+                   int asynFlags, int autoConnect, int priority, int stackSize) __attribute__((deprecated("Please remove 3rd argument (paramTableSize). It's not required anymore.")));
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
@@ -118,6 +120,8 @@ public:
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(          int index, const char **name);
     virtual asynStatus getParamName(int list, int index, const char **name);
+    virtual asynStatus getParamType(          int index, asynParamType *type);
+    virtual asynStatus getParamType(int list, int index, asynParamType *type);
     virtual asynStatus setParamStatus(          int index, asynStatus status);
     virtual asynStatus setParamStatus(int list, int index, asynStatus status);
     virtual asynStatus getParamStatus(          int index, asynStatus *status);
@@ -176,6 +180,8 @@ public:
     void callbackTask();
 
 protected:
+    void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
+                    int autoConnect, int priority, int stackSize);
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
     asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 

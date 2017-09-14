@@ -32,20 +32,14 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_Int32Value;
-    #define FIRST_COMMAND P_Int32Value
     int P_BinaryInt32Value;
     int P_MultibitInt32Value;
     int P_Float64Value;
     int P_UInt32DigitalValue;
     int P_BinaryUInt32DigitalValue;
     int P_MultibitUInt32DigitalValue;
-    #define LAST_COMMAND P_MultibitUInt32DigitalValue
  
 private:
     /* Our data */
     asynStatus initialReadStatus_;
 };
-
-
-#define NUM_PARAMS (int)(&LAST_COMMAND - &FIRST_COMMAND + 1)
-

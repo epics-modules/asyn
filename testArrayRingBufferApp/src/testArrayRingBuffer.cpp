@@ -48,7 +48,6 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_RunStop;
-    #define FIRST_COMMAND P_RunStop
     int P_MaxArrayLength;
     int P_ArrayLength;
     int P_LoopDelay;
@@ -56,15 +55,12 @@ protected:
     int P_BurstDelay;
     int P_ScalarData;
     int P_ArrayData;
-    #define LAST_COMMAND P_ArrayData
  
 private:
     /* Our data */
     epicsEventId eventId_;
     epicsInt32 *pData_;
 };
-
-#define NUM_PARAMS (&LAST_COMMAND - &FIRST_COMMAND + 1)
 
 void arrayGenTaskC(void *drvPvt)
 {
@@ -79,7 +75,6 @@ void arrayGenTaskC(void *drvPvt)
 testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLength) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    (int)NUM_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask,                   /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */

@@ -25,7 +25,6 @@
 testOutputReadback::testOutputReadback(const char *portName, int initialReadStatus) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    (int)NUM_PARAMS,
                      /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynDrvUserMask,
                     /* Interrupt mask */

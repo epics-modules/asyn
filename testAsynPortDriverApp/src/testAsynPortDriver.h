@@ -61,7 +61,6 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_Run;
-    #define FIRST_SCOPE_COMMAND P_Run
     int P_MaxPoints;
     int P_TimePerDiv;
     int P_TimePerDivSelect;
@@ -78,7 +77,6 @@ protected:
     int P_MinValue;
     int P_MaxValue;
     int P_MeanValue;
-    #define LAST_SCOPE_COMMAND P_MeanValue
  
 private:
     /* Our data */
@@ -93,7 +91,3 @@ private:
     void setVoltsPerDiv();
     void setTimePerDiv();
 };
-
-
-#define NUM_SCOPE_PARAMS (&LAST_SCOPE_COMMAND - &FIRST_SCOPE_COMMAND + 1)
-
