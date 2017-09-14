@@ -934,6 +934,24 @@ asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
     return this->params[list]->getName(index, name);
 }
 
+/** Returns the asynParamType of a parameter in the parameter library*
+  * \param[in] index Parameter number
+  * \param[out] type Parameter type */
+asynStatus asynPortDriver::getParamType(          int index, asynParamType *type)
+{
+  return this->getParamType(0, index, type);
+}
+
+/** Returns the asynParamType of a parameter in the parameter library
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index Parameter number
+  * \param[out] type Parameter type */
+asynStatus asynPortDriver::getParamType(int list, int index, asynParamType *type)
+{
+  *type = this->params[list]->getParameter(index)->type;
+  return asynSuccess;
+}
+
 /** Reports errors when setting parameters.  
   * \param[in] status The error status.
   * \param[in] index The parameter number
