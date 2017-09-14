@@ -1,5 +1,6 @@
 Release checklist for asyn
 
+- Check for Issues and Pull Requests on Github.
 - Do "git pull" to make sure everything is up to date and checked in
 - Do "git diff --name-status RX-Y" against the previous release (RX-Y) to make sure everything is in the release notes
 - Make sure to add the date and release number to asynDriver.html, RELEASE_NOTES.html and Doxyfile
