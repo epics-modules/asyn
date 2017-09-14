@@ -32,7 +32,6 @@ private:
 static const char *driverName="testConnect";
 
 #define POLLER_PERIOD 1
-#define NUM_PARAMS 0
 #define MAX_RESPONSE_LEN 256
 
 static void pollerTask(void *drvPvt);
@@ -40,7 +39,6 @@ static void pollerTask(void *drvPvt);
 testConnect::testConnect(const char *portName, const char *IPPortName, const char *outputString) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    NUM_PARAMS,
                      /* Interface mask */
                     asynOctetMask,
                     /* Interrupt mask */

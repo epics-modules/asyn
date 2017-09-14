@@ -50,7 +50,7 @@ asynPortDriver *portA;
 
 void testA()
 {
-    portA = new asynPortDriver("portA", 0, 5,
+    portA = new asynPortDriver("portA", 0,
                                asynDrvUserMask|asynInt32Mask,
                                asynInt32Mask, 0, 0, 0,
                                epicsThreadGetStackSize(epicsThreadStackSmall));

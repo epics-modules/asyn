@@ -62,7 +62,6 @@ static void callbackTask(void *drvPvt);
 testErrors::testErrors(const char *portName) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    (int)NUM_PARAMS,
                      /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynOctetMask | 
                       asynInt8ArrayMask | asynInt16ArrayMask | asynInt32ArrayMask    | asynFloat32ArrayMask | asynFloat64ArrayMask |
