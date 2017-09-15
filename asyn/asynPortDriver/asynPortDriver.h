@@ -43,7 +43,7 @@ public:
     asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
-                   int asynFlags, int autoConnect, int priority, int stackSize) __attribute__((deprecated("Please remove 3rd argument (paramTableSize). It's not required anymore.")));
+                   int asynFlags, int autoConnect, int priority, int stackSize) EPICS_DEPRECATED;
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
