@@ -12,7 +12,7 @@
     <h1>
       C++ Base Class for Asyn Port Drivers</h1>
     <h2>
-      May 6, 2014</h2>
+      September 15, 2017</h2>
     <h2>
       Mark Rivers</h2>
     <h2>
@@ -196,6 +196,8 @@ public:
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
     virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements, size_t *nIn);
+    virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
+                                size_t nElements, size_t *nIn);
 
     /* These are the methods that are new to this class */
     void simTask(void);
@@ -203,10 +205,13 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int P_Run;
-    #define FIRST_SCOPE_COMMAND P_Run
     int P_MaxPoints;
-    int P_TimePerDivision;
-    int P_VoltsPerDivision;
+    int P_TimePerDiv;
+    int P_TimePerDivSelect;
+    int P_VertGain;
+    int P_VertGainSelect;
+    int P_VoltsPerDiv;
+    int P_VoltsPerDivSelect;
     int P_VoltOffset;
     int P_TriggerDelay;
     int P_NoiseAmplitude;
@@ -216,16 +221,20 @@ protected:
     int P_MinValue;
     int P_MaxValue;
     int P_MeanValue;
-    #define LAST_SCOPE_COMMAND P_MeanValue
 
 private:
     /* Our data */
-    epicsEventId eventId;
-    epicsFloat64 *pData;
-    epicsFloat64 *pTimeBase;
+    epicsEventId eventId_;
+    epicsFloat64 *pData_;
+    epicsFloat64 *pTimeBase_;
+    // Actual volts per division are these values divided by vertical gain
+    char *voltsPerDivStrings_[NUM_VERT_SELECTIONS];
+    int voltsPerDivValues_[NUM_VERT_SELECTIONS];
+    int voltsPerDivSeverities_[NUM_VERT_SELECTIONS];
+    void setVertGain();
+    void setVoltsPerDiv();
+    void setTimePerDiv();
 };
-
-#define NUM_SCOPE_PARAMS (&LAST_SCOPE_COMMAND - &FIRST_SCOPE_COMMAND + 1)
 </pre>
   <p>
     testAsynPortDriver is derived from asynPortDriver. It overrides the methods writeInt32,
@@ -258,9 +267,8 @@ private:
   <pre>testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
    : asynPortDriver(portName,
                     1, /* maxAddr */
-                    NUM_SCOPE_PARAMS,
-                    asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynDrvUserMask, /* Interface mask */
-                    asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask,  /* Interrupt mask */
+                    asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
+                    asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
@@ -273,8 +281,6 @@ private:
     <li>The portName, which is the name of the asyn port to be created. In the st.cmd
       file above this is "testAPD".</li>
     <li>The maximum number of asyn addresses that this driver supports, which is 1.</li>
-    <li>The number of parameters that this driver supports. This is NUM_SCOPE_PARAMS,
-      which was computed above from the addresses of the parameter indices.</li>
     <li>A mask which defines which asyn interfaces this driver supports, in this case
       asynInt32, asynFloat64, asynFloat64Array, and asynDrvUser. All drivers must support
       asynCommon, so that bit is added in the base class.</li>
@@ -302,7 +308,7 @@ private:
 {
     int function = pasynUser->reason;
     asynStatus status = asynSuccess;
-    int run;
+    epicsInt32 run;
     const char *paramName;
     const char* functionName = "writeFloat64";
 
@@ -314,13 +320,16 @@ private:
 
     if (function == P_UpdateTime) {
         /* Make sure the update time is valid. If not change it and put back in parameter library */
-        if (value < MIN_UPDATE_TIME) {
+        if (value &lt; MIN_UPDATE_TIME) {
+            asynPrint(pasynUser, ASYN_TRACE_WARNING,
+                "%s:%s: warning, update time too small, changed from %f to %f\n",
+                driverName, functionName, value, MIN_UPDATE_TIME);
             value = MIN_UPDATE_TIME;
             setDoubleParam(P_UpdateTime, value);
         }
         /* If the update time has changed and we are running then wake up the simulation task */
         getIntegerParam(P_Run, &amp;run);
-        if (run) epicsEventSignal(this-&gt;eventId);
+        if (run) epicsEventSignal(eventId_);
     } else {
         /* All other parameters just get set in parameter list, no need to
          * act on them here */
@@ -376,51 +385,57 @@ private:
 {
     /* This thread computes the waveform and does callbacks with it */
 
-    double timePerDivision, voltsPerDivision, voltOffset, triggerDelay, noiseAmplitude;
+    double timePerDiv, voltsPerDiv, voltOffset, triggerDelay, noiseAmplitude;
     double updateTime, minValue, maxValue, meanValue;
     double time, timeStep;
     double noise, yScale;
-    int run, i, maxPoints;
+    epicsInt32 run, i, maxPoints;
     double pi=4.0*atan(1.0);
-    
-    /* Loop forever */    
+
+    lock();
+    /* Loop forever */
     while (1) {
         getDoubleParam(P_UpdateTime, &amp;updateTime);
         getIntegerParam(P_Run, &amp;run);
-        if (run) epicsEventWaitWithTimeout(this->eventId, updateTime);
-        else     epicsEventWait(this->eventId);
+        // Release the lock while we wait for a command to start or wait for updateTime
+        unlock();
+        if (run) epicsEventWaitWithTimeout(eventId_, updateTime);
+        else     (void) epicsEventWait(eventId_);
+        // Take the lock again
+        lock();
         /* run could have changed while we were waiting */
         getIntegerParam(P_Run, &amp;run);
         if (!run) continue;
         getIntegerParam(P_MaxPoints,        &amp;maxPoints);
-        getDoubleParam (P_TimePerDivision,  &amp;timePerDivision);
-        getDoubleParam (P_VoltsPerDivision, &amp;voltsPerDivision);
+        getDoubleParam (P_TimePerDiv,       &amp;timePerDiv);
+        getDoubleParam (P_VoltsPerDiv,      &amp;voltsPerDiv);
         getDoubleParam (P_VoltOffset,       &amp;voltOffset);
         getDoubleParam (P_TriggerDelay,     &amp;triggerDelay);
         getDoubleParam (P_NoiseAmplitude,   &amp;noiseAmplitude);
         time = triggerDelay;
-        timeStep = timePerDivision * NUM_DIVISIONS / maxPoints;
+        timeStep = timePerDiv * NUM_DIVISIONS / maxPoints;
         minValue = 1e6;
         maxValue = -1e6;
         meanValue = 0.;
-    
-        yScale = 1.0 / voltsPerDivision;
+
+        yScale = 1.0 / voltsPerDiv;
         for (i=0; i&lt;maxPoints; i++) {
             noise = noiseAmplitude * (rand()/(double)RAND_MAX - 0.5);
-            pData[i] = AMPLITUDE * (sin(time*FREQUENCY*2*pi)) + noise;
+            pData_[i] = AMPLITUDE * (sin(time*FREQUENCY*2*pi)) + noise;
             /* Compute statistics before doing the yOffset and yScale */
-            if (pData[i] &lt; minValue) minValue = pData[i];
-            if (pData[i] &gt; maxValue) maxValue = pData[i];
-            meanValue += pData[i];
-            pData[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData[i]);
+            if (pData_[i] &lt; minValue) minValue = pData_[i];
+            if (pData_[i] &gt; maxValue) maxValue = pData_[i];
+            meanValue += pData_[i];
+            pData_[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData_[i]);
             time += timeStep;
         }
+        updateTimeStamp();
         meanValue = meanValue/maxPoints;
         setDoubleParam(P_MinValue, minValue);
         setDoubleParam(P_MaxValue, maxValue);
         setDoubleParam(P_MeanValue, meanValue);
         callParamCallbacks();
-        doCallbacksFloat64Array(pData, maxPoints, P_Waveform, 0);
+        doCallbacksFloat64Array(pData_, maxPoints, P_Waveform, 0);
     }
 }
 </pre>
