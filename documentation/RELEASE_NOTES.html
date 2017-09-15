@@ -14,7 +14,7 @@
     <h2>
       Release 4-32</h2>
     <h2>
-      September 14, 2017</h2>
+      September 15, 2017</h2>
   </div>
   <h3>
     asynManager.c</h3>
@@ -47,6 +47,18 @@
     </li>
     <li>In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
       a newline, otherwise output is garbled</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Replaced "int" with "epicsInt32" in many places for consistency and to avoid compiler
+      warnings on some architectures. Thanks to Scott Baily for this.</li>
+    <li>Added new asynPortDriver::getParamType() methods. Thanks to Mark Davis for this.</li>
+    <li>Added a new asynPortDriver constructor that removes the paramTableSize argument.
+      Marked the previous constructor as EPICS_DEPRECATED. Added a new initialize() method
+      that both constructors call to do the actual work. Changed all of the asynPortDriver
+      example programs and unit test programs to use the new constructor. Thanks to Martin
+      Konrad for this.</li>
   </ul>
   <h3>
     Test application *Main.cpp files</h3>
