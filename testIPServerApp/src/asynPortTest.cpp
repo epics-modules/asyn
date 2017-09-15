@@ -41,10 +41,8 @@ public:
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
     int Int32Data;
-    #define FIRST_COMMAND Int32Data
     int Float64Data;
     int OctetData;
-    #define LAST_COMMAND OctetData
  
 private:
     /* Our data */
@@ -53,7 +51,6 @@ private:
     char readBuffer[MAX_MESSAGE_SIZE];
 };
 
-#define NUM_PARAMS (&LAST_COMMAND - &FIRST_COMMAND + 1)
 
 static const char *driverName="asynPortTest";
 
@@ -183,7 +180,6 @@ asynStatus asynPortTest::writeOctet(asynUser *pasynUser, const char *value,
 asynPortTest::asynPortTest(const char *portName, const char *echoPortName) 
    : asynPortDriver(portName, 
                     1, /* maxAddr */ 
-                    (int)NUM_PARAMS,
                     asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynOctetMask,  /* Interrupt mask */
                     ASYN_CANBLOCK, /* asynFlags.  This driver blocks and it is not multi-device*/
