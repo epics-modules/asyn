@@ -124,7 +124,7 @@ asynStatus paramList::setFlag(int index)
   */
 asynStatus paramList::createParam(const char *name, asynParamType type, int *index)
 {
-    static const char *functionName = "createParam";
+    //static const char *functionName = "createParam";
 
     if (this->findParam(name, index) == asynSuccess) return asynParamAlreadyExists;
 
