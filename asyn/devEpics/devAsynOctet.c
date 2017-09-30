@@ -620,6 +620,7 @@ static long processCommon(dbCommon *precord)
     devPvt *pPvt = (devPvt *)precord->dpvt;
     waveformRecord *pwf = (waveformRecord *)precord;
     int gotCallbackData;
+    asynStatus status;
     
     if (pPvt->ringSize == 0) {
         gotCallbackData = pPvt->gotValue;
@@ -629,11 +630,10 @@ static long processCommon(dbCommon *precord)
 
     if (!gotCallbackData && precord->pact == 0) {
         if(pPvt->canBlock) precord->pact = 1;
-        pPvt->result.status = pasynManager->queueRequest(
-           pPvt->pasynUser, asynQueuePriorityMedium, 0.0);
-        if((pPvt->result.status==asynSuccess) && pPvt->canBlock) return 0;
+        status = pasynManager->queueRequest(pPvt->pasynUser, asynQueuePriorityMedium, 0.0);
+        if((status == asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) precord->pact = 0;
-        reportQueueRequestStatus(pPvt, pPvt->result.status);
+        reportQueueRequestStatus(pPvt, status);
     }
     if (gotCallbackData) {
         int len;
@@ -670,7 +670,7 @@ static long processCommon(dbCommon *precord)
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
                                             pPvt->isOutput ? WRITE_ALARM : READ_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
-    recGblSetSevr(precord, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    (void)recGblSetSevr(precord, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if (pPvt->result.status == asynSuccess) {
         pPvt->precord->udf = 0;
         return 0;
