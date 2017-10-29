@@ -96,7 +96,9 @@ typedef struct devInt32Pvt{
     int               bipolar;
     epicsInt32        mask;
     epicsInt32        signBit;
-    CALLBACK          callback;
+    CALLBACK          processCallback;
+    CALLBACK          outputCallback;
+    int               newOutputCallbackValue;
     IOSCANPVT         ioScanPvt;
     char              *portName;
     char              *userParam;
@@ -116,6 +118,7 @@ static long convertAi(aiRecord *pai, int pass);
 static long convertAo(aoRecord *pao, int pass);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
+static void outputCallbackCallback(CALLBACK *pcb);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
                 epicsInt32 value);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
@@ -330,10 +333,14 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
             status = pPvt->pint32->registerInterruptUser(
                pPvt->int32Pvt,pPvt->pasynUser,
                pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
-            if(status!=asynSuccess) {
+            if (status!=asynSuccess) {
                 printf("%s devAsynInt32::initRecord error calling registerInterruptUser %s\n",
                        pr->name,pPvt->pasynUser->errorMessage);
             }
+            /* Initialize the interrupt callback */
+            callbackSetCallback(outputCallbackCallback, &pPvt->outputCallback);
+            callbackSetPriority(pr->prio, &pPvt->outputCallback);
+            callbackSetUser(pPvt, &pPvt->outputCallback);
         }
     }
     return INIT_OK;
@@ -478,7 +485,7 @@ static void processCallbackInput(asynUser *pasynUser)
               "%s devAsynInt32 process read error %s\n",
               pr->name, pasynUser->errorMessage);
     }
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
 static void processCallbackOutput(asynUser *pasynUser)
@@ -498,7 +505,7 @@ static void processCallbackOutput(asynUser *pasynUser)
            "%s devAsynInt32 process error %s\n",
            pr->name, pasynUser->errorMessage);
     }
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
@@ -578,9 +585,23 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         pPvt->ringBufferOverflows++;
     } else {
-        scanOnce(pr);
+        callbackRequest(&pPvt->outputCallback);
     }
     epicsMutexUnlock(pPvt->ringBufferLock);
+}
+
+static void outputCallbackCallback(CALLBACK *pcb)
+{
+    devInt32Pvt *pPvt;
+    callbackGetUser(pPvt, pcb);
+    dbCommon *pr = pPvt->pr;
+    struct rset *prset = (struct rset *)pr->rset;
+
+    dbScanLock(pr);
+    pPvt->newOutputCallbackValue = 1;
+    (prset->process)(pr);
+    pPvt->newOutputCallbackValue = 0;
+    dbScanUnlock(pr);
 }
 
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
@@ -660,7 +681,6 @@ static void interruptCallbackEnumBo(void *drvPvt, asynUser *pasynUser,
     db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
-
 
 static int getCallbackValue(devInt32Pvt *pPvt)
 {
@@ -848,7 +868,7 @@ static long processAo(aoRecord *pr)
     asynStatus status;
     double     value;
     
-    if (getCallbackValue(pPvt)) {
+    if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
@@ -960,7 +980,7 @@ static long processLo(longoutRecord *pr)
     devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
     int status;
 
-    if (getCallbackValue(pPvt)) {
+    if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->val = pPvt->result.value; 
@@ -1052,7 +1072,7 @@ static long processBo(boRecord *pr)
     devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
     int status;
 
-    if(getCallbackValue(pPvt)) {
+    if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
@@ -1078,6 +1098,7 @@ static long processBo(boRecord *pr)
         return -1;
     }
 }
+
 
 static long initMbbi(mbbiRecord *pr)
 {
@@ -1147,7 +1168,7 @@ static long processMbbo(mbboRecord *pr)
     devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
     int status;
 
-    if(getCallbackValue(pPvt)) {
+    if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             unsigned long rval = pPvt->result.value & pr->mask;
