@@ -72,7 +72,7 @@ typedef struct ringBufferElement {
     epicsAlarmSeverity  alarmSeverity;
 } ringBufferElement;
 
-typedef struct devInt32Pvt{
+typedef struct devPvt{
     dbCommon          *pr;
     asynUser          *pasynUser;
     asynUser          *pasynUserSync;
@@ -107,7 +107,7 @@ typedef struct devInt32Pvt{
     int               enumValues[MAX_ENUM_STATES];
     int               enumSeverities[MAX_ENUM_STATES];
     asynStatus        previousQueueRequestStatus;
-}devInt32Pvt;
+}devPvt;
 
 static void setEnums(char *outStrings, int *outVals, epicsEnum16 *outSeverities, 
                      char *inStrings[], int *inVals, int *inSeverities, 
@@ -188,7 +188,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     userCallback processCallback,interruptCallbackInt32 interruptCallback, interruptCallbackEnum callbackEnum,
     int maxEnums, char *pFirstString, int *pFirstValue, epicsEnum16 *pFirstSeverity)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
@@ -352,7 +352,7 @@ bad:
 
 static long createRingBuffer(dbCommon *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
     const char *sizeString;
     
@@ -375,7 +375,7 @@ static long createRingBuffer(dbCommon *pr)
 
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
 
     /* If initCommon failed then pPvt->pint32 is NULL, return error */
@@ -428,7 +428,7 @@ static void setEnums(char *outStrings, int *outVals, epicsEnum16 *outSeverities,
 
 static long convertAi(aiRecord *precord, int pass)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)precord->dpvt;
+    devPvt *pPvt = (devPvt *)precord->dpvt;
     double eguf,egul,deviceHigh,deviceLow;
 
     if (pass==0) return 0;
@@ -447,7 +447,7 @@ static long convertAi(aiRecord *precord, int pass)
 
 static long convertAo(aoRecord *precord, int pass)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)precord->dpvt;
+    devPvt *pPvt = (devPvt *)precord->dpvt;
     double eguf,egul,deviceHigh,deviceLow;
 
     if (pass==0) return 0;
@@ -466,7 +466,7 @@ static long convertAo(aoRecord *precord, int pass)
 
 static void processCallbackInput(asynUser *pasynUser)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pasynUser->userPvt;
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = (dbCommon *)pPvt->pr;
 
     pPvt->result.status = pPvt->pint32->read(pPvt->int32Pvt, pPvt->pasynUser, &pPvt->result.value);
@@ -490,7 +490,7 @@ static void processCallbackInput(asynUser *pasynUser)
 
 static void processCallbackOutput(asynUser *pasynUser)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pasynUser->userPvt;
+    devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = pPvt->pr;
 
     pPvt->result.status = pPvt->pint32->write(pPvt->int32Pvt, pPvt->pasynUser,pPvt->result.value);
@@ -511,7 +511,7 @@ static void processCallbackOutput(asynUser *pasynUser)
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser, 
                 epicsInt32 value)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
     ringBufferElement *rp;
 
@@ -561,7 +561,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
                 epicsInt32 value)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
     ringBufferElement *rp;
 
@@ -592,22 +592,23 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 
 static void outputCallbackCallback(CALLBACK *pcb)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt; 
     callbackGetUser(pPvt, pcb);
-    dbCommon *pr = pPvt->pr;
-    struct rset *prset = (struct rset *)pr->rset;
-
-    dbScanLock(pr);
-    pPvt->newOutputCallbackValue = 1;
-    (prset->process)(pr);
-    pPvt->newOutputCallbackValue = 0;
-    dbScanUnlock(pr);
+    {
+        dbCommon *pr = pPvt->pr;
+        struct rset *prset = (struct rset *)pr->rset;
+        dbScanLock(pr);
+        pPvt->newOutputCallbackValue = 1;
+        (prset->process)(pr);
+        pPvt->newOutputCallbackValue = 0;
+        dbScanUnlock(pr);
+    }
 }
 
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
                 epicsInt32 value)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     aiRecord *pai = (aiRecord *)pPvt->pr;
 
     if (pPvt->mask) {
@@ -629,7 +630,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
 static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
                 char *strings[], int values[], int severities[],size_t nElements)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     mbbiRecord *pr = (mbbiRecord *)pPvt->pr;
 
     if (!interruptAccept) return;
@@ -643,7 +644,7 @@ static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
 static void interruptCallbackEnumMbbo(void *drvPvt, asynUser *pasynUser,
                 char *strings[], int values[], int severities[], size_t nElements)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     mbboRecord *pr = (mbboRecord *)pPvt->pr;
 
     if (!interruptAccept) return;
@@ -657,7 +658,7 @@ static void interruptCallbackEnumMbbo(void *drvPvt, asynUser *pasynUser,
 static void interruptCallbackEnumBi(void *drvPvt, asynUser *pasynUser,
                 char *strings[], int values[], int severities[], size_t nElements)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     biRecord *pr = (biRecord *)pPvt->pr;
 
     if (!interruptAccept) return;
@@ -671,7 +672,7 @@ static void interruptCallbackEnumBi(void *drvPvt, asynUser *pasynUser,
 static void interruptCallbackEnumBo(void *drvPvt, asynUser *pasynUser,
                 char *strings[], int values[], int severities[], size_t nElements)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)drvPvt;
+    devPvt *pPvt = (devPvt *)drvPvt;
     boRecord *pr = (boRecord *)pPvt->pr;
 
     if (!interruptAccept) return;
@@ -682,7 +683,7 @@ static void interruptCallbackEnumBo(void *drvPvt, asynUser *pasynUser,
     dbScanUnlock((dbCommon*)pr);
 }
 
-static int getCallbackValue(devInt32Pvt *pPvt)
+static int getCallbackValue(devPvt *pPvt)
 {
     int ret = 0;
     epicsMutexLock(pPvt->ringBufferLock);
@@ -704,7 +705,7 @@ static int getCallbackValue(devInt32Pvt *pPvt)
     return ret;
 }
 
-static void reportQueueRequestStatus(devInt32Pvt *pPvt, asynStatus status)
+static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
 {
     if (status != asynSuccess) pPvt->result.status = status;
     if (pPvt->previousQueueRequestStatus != status) {
@@ -724,7 +725,7 @@ static void reportQueueRequestStatus(devInt32Pvt *pPvt, asynStatus status)
 
 static long initAi(aiRecord *pr)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
 
     status = initCommon((dbCommon *)pr,&pr->inp,
@@ -743,7 +744,7 @@ static long initAi(aiRecord *pr)
 }
 static long processAi(aiRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(!getCallbackValue(pPvt) && !pr->pact) {
@@ -770,7 +771,7 @@ static long processAi(aiRecord *pr)
 
 static long initAiAverage(aiRecord *pr)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
 
     status = initCommon((dbCommon *)pr, &pr->inp,
@@ -797,7 +798,7 @@ static long initAiAverage(aiRecord *pr)
 
 static long processAiAverage(aiRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     double rval;
 
     epicsMutexLock(pPvt->ringBufferLock);
@@ -832,7 +833,7 @@ static long processAiAverage(aiRecord *pr)
 
 static long initAo(aoRecord *pao)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
     epicsInt32 value;
 
@@ -864,7 +865,7 @@ static long initAo(aoRecord *pao)
 
 static long processAo(aoRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
     double     value;
     
@@ -928,7 +929,7 @@ static long initLi(longinRecord *pr)
 
 static long processLi(longinRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(!getCallbackValue(pPvt) && !pr->pact) {
@@ -956,7 +957,7 @@ static long processLi(longinRecord *pr)
 
 static long initLo(longoutRecord *pr)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
     epicsInt32 value;
 
@@ -977,7 +978,7 @@ static long initLo(longoutRecord *pr)
 
 static long processLo(longoutRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
@@ -1020,7 +1021,7 @@ static long initBi(biRecord *pr)
 
 static long processBi(biRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(!getCallbackValue(pPvt) && !pr->pact) {
@@ -1048,7 +1049,7 @@ static long processBi(biRecord *pr)
 
 static long initBo(boRecord *pr)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
     epicsInt32 value;
 
@@ -1069,7 +1070,7 @@ static long initBo(boRecord *pr)
 
 static long processBo(boRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
@@ -1115,7 +1116,7 @@ static long initMbbi(mbbiRecord *pr)
 
 static long processMbbi(mbbiRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(!getCallbackValue(pPvt) && !pr->pact) {
@@ -1143,7 +1144,7 @@ static long processMbbi(mbbiRecord *pr)
 
 static long initMbbo(mbboRecord *pr)
 {
-    devInt32Pvt *pPvt;
+    devPvt *pPvt;
     int status;
     epicsInt32 value;
 
@@ -1165,7 +1166,7 @@ static long initMbbo(mbboRecord *pr)
 }
 static long processMbbo(mbboRecord *pr)
 {
-    devInt32Pvt *pPvt = (devInt32Pvt *)pr->dpvt;
+    devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
     if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
