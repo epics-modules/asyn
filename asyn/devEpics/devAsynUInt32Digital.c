@@ -506,16 +506,17 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 
 static void outputCallbackCallback(CALLBACK *pcb)
 {
-    devPvt *pPvt;
+    devPvt *pPvt; 
     callbackGetUser(pPvt, pcb);
-    dbCommon *pr = pPvt->pr;
-    struct rset *prset = (struct rset *)pr->rset;
-
-    dbScanLock(pr);
-    pPvt->newOutputCallbackValue = 1;
-    (prset->process)(pr);
-    pPvt->newOutputCallbackValue = 0;
-    dbScanUnlock(pr);
+    {
+        dbCommon *pr = pPvt->pr;
+        struct rset *prset = (struct rset *)pr->rset;
+        dbScanLock(pr);
+        pPvt->newOutputCallbackValue = 1;
+        (prset->process)(pr);
+        pPvt->newOutputCallbackValue = 0;
+        dbScanUnlock(pr);
+    }
 }
 
 static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
