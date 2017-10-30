@@ -491,18 +491,18 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 
 static void outputCallbackCallback(CALLBACK *pcb)
 {
-    devPvt *pPvt;
+    devPvt *pPvt; 
     callbackGetUser(pPvt, pcb);
-    dbCommon *pr = pPvt->precord;
-    struct rset *prset = (struct rset *)pr->rset;
-
-    dbScanLock(pr);
-    pPvt->newOutputCallbackValue = 1;
-    (prset->process)(pr);
-    pPvt->newOutputCallbackValue = 0;
-    dbScanUnlock(pr);
+    {
+        dbCommon *pr = pPvt->precord;
+        struct rset *prset = (struct rset *)pr->rset;
+        dbScanLock(pr);
+        pPvt->newOutputCallbackValue = 1;
+        (prset->process)(pr);
+        pPvt->newOutputCallbackValue = 0;
+        dbScanUnlock(pr);
+    }
 }
-
 
 static int initDrvUser(devPvt *pPvt)
 {
