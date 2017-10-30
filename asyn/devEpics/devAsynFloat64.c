@@ -74,7 +74,9 @@ typedef struct devPvt{
     epicsFloat64      sum;
     interruptCallbackFloat64 interruptCallback;
     int               numAverage;
-    CALLBACK          callback;
+    CALLBACK          processCallback;
+    CALLBACK          outputCallback;
+    int               newOutputCallbackValue;
     IOSCANPVT         ioScanPvt;
     char              *portName;
     char              *userParam;
@@ -88,6 +90,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static long createRingBuffer(dbCommon *pr);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
+static void outputCallbackCallback(CALLBACK *pcb);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
                 epicsFloat64 value);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
@@ -222,6 +225,10 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                 printf("%s devAsynFloat64::initRecord error calling registerInterruptUser %s\n",
                        pr->name,pPvt->pasynUser->errorMessage);
             }
+            /* Initialize the interrupt callback */
+            callbackSetCallback(outputCallbackCallback, &pPvt->outputCallback);
+            callbackSetPriority(pr->prio, &pPvt->outputCallback);
+            callbackSetUser(pPvt, &pPvt->outputCallback);
         }
     }
     return INIT_OK;
@@ -308,7 +315,7 @@ static void processCallbackInput(asynUser *pasynUser)
               "%s devAsynFloat64 process read error %s\n",
               pr->name, pasynUser->errorMessage);
     }
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
 static void processCallbackOutput(asynUser *pasynUser)
@@ -328,7 +335,7 @@ static void processCallbackOutput(asynUser *pasynUser)
            "%s devAsynFloat64 pPvt->result.status=%d, process error %s\n",
            pr->name, pPvt->result.status, pasynUser->errorMessage);
     }
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
@@ -400,9 +407,23 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         pPvt->ringBufferOverflows++;
     } else {
-        scanOnce(pr);
+        callbackRequest(&pPvt->outputCallback);
     }
     epicsMutexUnlock(pPvt->ringBufferLock);
+}
+
+static void outputCallbackCallback(CALLBACK *pcb)
+{
+    devPvt *pPvt;
+    callbackGetUser(pPvt, pcb);
+    dbCommon *pr = pPvt->pr;
+    struct rset *prset = (struct rset *)pr->rset;
+
+    dbScanLock(pr);
+    pPvt->newOutputCallbackValue = 1;
+    (prset->process)(pr);
+    pPvt->newOutputCallbackValue = 0;
+    dbScanUnlock(pr);
 }
 
 static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
@@ -526,7 +547,7 @@ static long processAo(aoRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
 
-    if (getCallbackValue(pPvt)) {
+    if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         if (pPvt->result.status == asynSuccess) {
             pr->val = pPvt->result.value;
             pr->udf = 0;
