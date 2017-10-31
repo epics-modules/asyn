@@ -430,7 +430,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         (char *)value, len*sizeof(char),
-        "%s %s::interruptCallbackInput ringSize=%d, len=%d, callback data:",
+        "%s %s::interruptCallback ringSize=%d, len=%d, callback data:",
         pr->name, driverName, pPvt->ringSize, (int)len);
     if (len >= pPvt->valSize) len = pPvt->valSize-1;
     if (pPvt->ringSize == 0) {
@@ -448,10 +448,11 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         dbScanUnlock(pPvt->precord);
-        if (pPvt->isOutput) 
+        if (pPvt->isOutput) {
             callbackRequest(&pPvt->outputCallback);
-        else
+        } else {
             scanIoRequest(pPvt->ioScanPvt);
+        }
     } else {
         /* Using a ring buffer */
         ringBufferElement *rp;
