@@ -60,6 +60,9 @@
 #define INIT_ERROR -1
 
 #define DEFAULT_RING_BUFFER_SIZE 10
+/* We should be getting these from db_access.h, but get errors including that file? */
+#define MAX_ENUM_STATES 16
+#define MAX_ENUM_STRING_SIZE 26
 
 typedef struct ringBufferElement {
     epicsInt32          value;
@@ -100,9 +103,9 @@ typedef struct devPvt{
     char              *portName;
     char              *userParam;
     int               addr;
-    char              *enumStrings[DB_MAX_CHOICES];
-    int               enumValues[DB_MAX_CHOICES];
-    int               enumSeverities[DB_MAX_CHOICES];
+    char              *enumStrings[MAX_ENUM_STATES];
+    int               enumValues[MAX_ENUM_STATES];
+    int               enumSeverities[MAX_ENUM_STATES];
     asynStatus        previousQueueRequestStatus;
 }devPvt;
 
@@ -412,12 +415,12 @@ static void setEnums(char *outStrings, int *outVals, epicsEnum16 *outSeverities,
     size_t i;
     
     for (i=0; i<numOut; i++) {
-        if (outStrings) outStrings[i*MAX_STRING_SIZE] = '\0';
+        if (outStrings) outStrings[i*MAX_ENUM_STRING_SIZE] = '\0';
         if (outVals) outVals[i] = 0;
         if (outSeverities) outSeverities[i] = 0;
     }
     for (i=0; (i<numIn && i<numOut); i++) {
-        if (outStrings) strncpy(&outStrings[i*MAX_STRING_SIZE], inStrings[i], MAX_STRING_SIZE);
+        if (outStrings) strncpy(&outStrings[i*MAX_ENUM_STRING_SIZE], inStrings[i], MAX_ENUM_STRING_SIZE);
         if (outVals) outVals[i] = inVals[i];
         if (outSeverities) outSeverities[i] = inSeverities[i];
     }
@@ -633,7 +636,7 @@ static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
     if (!interruptAccept) return;
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv, 
-             strings, values, severities, nElements, DB_MAX_CHOICES);
+             strings, values, severities, nElements, MAX_ENUM_STATES);
     db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
@@ -647,7 +650,7 @@ static void interruptCallbackEnumMbbo(void *drvPvt, asynUser *pasynUser,
     if (!interruptAccept) return;
     dbScanLock((dbCommon*)pr);
     setEnums((char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv, 
-             strings, values, severities, nElements, DB_MAX_CHOICES);
+             strings, values, severities, nElements, MAX_ENUM_STATES);
     db_post_events(pr, &pr->val, DBE_PROPERTY);
     dbScanUnlock((dbCommon*)pr);
 }
@@ -1104,7 +1107,7 @@ static long initMbbi(mbbiRecord *pr)
 
     status = initCommon((dbCommon *)pr,&pr->inp,
         processCallbackInput,interruptCallbackInput, interruptCallbackEnumMbbi,
-        DB_MAX_CHOICES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
+        MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
     if (status != INIT_OK) return status;
     if(pr->nobt == 0) pr->mask = 0xffffffff;
     pr->mask <<= pr->shft;
@@ -1147,7 +1150,7 @@ static long initMbbo(mbboRecord *pr)
 
     status = initCommon((dbCommon *)pr,&pr->out,
         processCallbackOutput,interruptCallbackOutput, interruptCallbackEnumMbbo,
-        DB_MAX_CHOICES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
+        MAX_ENUM_STATES, (char*)&pr->zrst, (int*)&pr->zrvl, &pr->zrsv);
     if (status != INIT_OK) return status;
     pPvt = pr->dpvt;
     if(pr->nobt == 0) pr->mask = 0xffffffff;
