@@ -119,6 +119,7 @@ static long convertAo(aoRecord *pao, int pass);
 static void processCallbackInput(asynUser *pasynUser);
 static void processCallbackOutput(asynUser *pasynUser);
 static void outputCallbackCallback(CALLBACK *pcb);
+static int  getCallbackValue(devPvt *pPvt);
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
                 epicsInt32 value);
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
@@ -596,11 +597,14 @@ static void outputCallbackCallback(CALLBACK *pcb)
     callbackGetUser(pPvt, pcb);
     {
         dbCommon *pr = pPvt->pr;
-        struct rset *prset = (struct rset *)pr->rset;
         dbScanLock(pr);
         pPvt->newOutputCallbackValue = 1;
-        (prset->process)(pr);
-        pPvt->newOutputCallbackValue = 0;
+        dbProcess(pr);
+        if (pPvt->newOutputCallbackValue != 0) {
+            /* We called dbProcess but the record did not process, perhaps because PACT was 1 
+             * Need to remove ring buffer element */
+            getCallbackValue(pPvt);
+        }
         dbScanUnlock(pr);
     }
 }
@@ -701,6 +705,7 @@ static int getCallbackValue(devPvt *pPvt)
                                             pPvt->pr->name,pPvt->result.value);
         ret = 1;
     }
+    pPvt->newOutputCallbackValue = 0;
     epicsMutexUnlock(pPvt->ringBufferLock);
     return ret;
 }
