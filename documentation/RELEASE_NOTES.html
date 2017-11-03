@@ -14,13 +14,22 @@
     <h2>
       Release 4-33</h2>
     <h2>
-      October XXX, 2017</h2>
+      November XXX, 2017</h2>
   </div>
+  <h3>
+    devAsynInt32.c, devAsynUInt32Digital.c, devAsynFloat64.c, devAsynOctet.c</h3>
+  <ul>
+    <li>Fixed a problem with output records that have the asyn:READBACK info tag, i.e.
+      output records that update on callbacks from the driver. Previously it did not correctly
+      distinguish between record processing due to a driver callback (in which case it
+      should not call the driver) and normal record processing (in which case the driver
+      should be called).</li>
+  </ul>
   <h3>
     devAsynOctet.c</h3>
   <ul>
-    <li>Fixed bug where the record alarm status was not set correctly if a write or read failed
-        with a synchronous driver.</li> 
+    <li>Fixed bug where the record alarm status was not set correctly if a write or read
+      failed with a synchronous driver.</li>
   </ul>
   <div style="text-align: center">
     <hr />

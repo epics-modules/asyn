@@ -104,7 +104,9 @@ typedef struct devPvt {
     /* Following for writeRead */
     DBADDR              dbAddr;
     /* Following are for I/O Intr*/
-    CALLBACK            callback;
+    CALLBACK            processCallback;
+    CALLBACK            outputCallback;
+    int                 newOutputCallbackValue;
     IOSCANPVT           ioScanPvt;
     void                *registrarPvt;
     int                 gotValue;
@@ -116,6 +118,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 int isOutput, int isWaveform, int useDrvUser, char *pValue, size_t valSize);
 static long createRingBuffer(dbCommon *pr);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
+static void outputCallbackCallback(CALLBACK *pcb);
 static void interruptCallback(void *drvPvt, asynUser *pasynUser,
                 char *value, size_t len, int eomReason);
 static int initDrvUser(devPvt *pPvt);
@@ -290,6 +293,10 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
                        precord->name, pPvt->pasynUser->errorMessage);
             }
+            /* Initialize the interrupt callback */
+            callbackSetCallback(outputCallbackCallback, &pPvt->outputCallback);
+            callbackSetPriority(precord->prio, &pPvt->outputCallback);
+            callbackSetUser(pPvt, &pPvt->outputCallback);
         }
 
         initialReadbackString = dbGetInfo(pdbentry, "asyn:INITIAL_READBACK");
@@ -423,7 +430,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         (char *)value, len*sizeof(char),
-        "%s %s::interruptCallbackInput ringSize=%d, len=%d, callback data:",
+        "%s %s::interruptCallback ringSize=%d, len=%d, callback data:",
         pr->name, driverName, pPvt->ringSize, (int)len);
     if (len >= pPvt->valSize) len = pPvt->valSize-1;
     if (pPvt->ringSize == 0) {
@@ -441,10 +448,11 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         dbScanUnlock(pPvt->precord);
-        if (pPvt->isOutput) 
-            scanOnce(pPvt->precord);
-        else
+        if (pPvt->isOutput) {
+            callbackRequest(&pPvt->outputCallback);
+        } else {
             scanIoRequest(pPvt->ioScanPvt);
+        }
     } else {
         /* Using a ring buffer */
         ringBufferElement *rp;
@@ -474,7 +482,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
             /* We only need to request the record to process if we added a new
              * element to the ring buffer, not if we just replaced an element. */
             if (pPvt->isOutput) 
-                scanOnce(pPvt->precord);
+                callbackRequest(&pPvt->outputCallback);
             else
                 scanIoRequest(pPvt->ioScanPvt);
         }
@@ -482,6 +490,26 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     }
 }
 
+static void outputCallbackCallback(CALLBACK *pcb)
+{
+    devPvt *pPvt; 
+    callbackGetUser(pPvt, pcb);
+    {
+        dbCommon *pr = pPvt->precord;
+        dbScanLock(pr);
+        pPvt->newOutputCallbackValue = 1;
+        dbProcess(pr);
+        if (pPvt->newOutputCallbackValue != 0) {
+            /* We called dbProcess but the record did not process, perhaps because PACT was 1 
+             * Need to remove ring buffer element */
+            if (pPvt->ringSize > 0) {
+                getRingBufferValue(pPvt);
+            }
+            pPvt->newOutputCallbackValue = 0;
+        }
+        dbScanUnlock(pr);
+    }
+}
 
 static int initDrvUser(devPvt *pPvt)
 {
@@ -622,10 +650,18 @@ static long processCommon(dbCommon *precord)
     int gotCallbackData;
     asynStatus status;
     
-    if (pPvt->ringSize == 0) {
-        gotCallbackData = pPvt->gotValue;
+    if (pPvt->isOutput) {
+        if (pPvt->ringSize == 0) {
+            gotCallbackData = pPvt->newOutputCallbackValue;
+        } else {
+            gotCallbackData = pPvt->newOutputCallbackValue && getRingBufferValue(pPvt);
+        }
     } else {
-        gotCallbackData = getRingBufferValue(pPvt);
+        if (pPvt->ringSize == 0) {
+            gotCallbackData = pPvt->gotValue;
+        } else {
+            gotCallbackData = getRingBufferValue(pPvt);
+        }
     }
 
     if (!gotCallbackData && precord->pact == 0) {
@@ -660,6 +696,7 @@ static long processCommon(dbCommon *precord)
             precord->time = rp->time;
             epicsMutexUnlock(pPvt->ringBufferLock);
         }
+        pPvt->newOutputCallbackValue = 0;
         len = strlen(pPvt->pValue);
         asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             pPvt->pValue, len,
@@ -684,7 +721,7 @@ static void finish(dbCommon *pr)
 {
     devPvt     *pPvt = (devPvt *)pr->dpvt;
 
-    if(pr->pact) callbackRequestProcessCallback(&pPvt->callback,pr->prio,pr);
+    if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
 static long initSiCmdResponse(stringinRecord *psi)
