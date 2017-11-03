@@ -496,11 +496,17 @@ static void outputCallbackCallback(CALLBACK *pcb)
     callbackGetUser(pPvt, pcb);
     {
         dbCommon *pr = pPvt->precord;
-        struct rset *prset = (struct rset *)pr->rset;
         dbScanLock(pr);
         pPvt->newOutputCallbackValue = 1;
-        (prset->process)(pr);
-        pPvt->newOutputCallbackValue = 0;
+        dbProcess(pr);
+        if (pPvt->newOutputCallbackValue != 0) {
+            /* We called dbProcess but the record did not process, perhaps because PACT was 1 
+             * Need to remove ring buffer element */
+            if (pPvt->ringSize > 0) {
+                getRingBufferValue(pPvt);
+            }
+            pPvt->newOutputCallbackValue = 0;
+        }
         dbScanUnlock(pr);
     }
 }
@@ -690,6 +696,7 @@ static long processCommon(dbCommon *precord)
             precord->time = rp->time;
             epicsMutexUnlock(pPvt->ringBufferLock);
         }
+        pPvt->newOutputCallbackValue = 0;
         len = strlen(pPvt->pValue);
         asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             pPvt->pValue, len,
