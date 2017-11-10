@@ -70,7 +70,7 @@ record(stringout, "$(P)Stringout")
    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(VAL,  "test")
    info(asyn:READBACK,"1")
-#   info(asyn:FIFO, "10")
+   info(asyn:FIFO, "10")
 }
 
 record(stringin, "$(P)Stringin")
