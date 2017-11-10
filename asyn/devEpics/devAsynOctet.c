@@ -481,10 +481,11 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         } else {
             /* We only need to request the record to process if we added a new
              * element to the ring buffer, not if we just replaced an element. */
-            if (pPvt->isOutput) 
+            if (pPvt->isOutput) {
                 callbackRequest(&pPvt->outputCallback);
-            else
+            } else {
                 scanIoRequest(pPvt->ioScanPvt);
+            }
         }
         epicsMutexUnlock(pPvt->ringBufferLock);
     }
@@ -502,6 +503,9 @@ static void outputCallbackCallback(CALLBACK *pcb)
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1 
              * Need to remove ring buffer element */
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING, 
+                "%s %s::outputCallbackCallback warning dbProcess did not process record, PACT=%d\n", 
+                pr->name, driverName, pr->pact);
             if (pPvt->ringSize > 0) {
                 getRingBufferValue(pPvt);
             }
