@@ -200,6 +200,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     asynOctet     *poctet;
     char          *buffer;
     waveformRecord *pwf = (waveformRecord *)precord;
+    static const char *functionName="initCommon";
 
     pPvt = callocMustSucceed(1,sizeof(*pPvt),"devAsynOctet::initCommon");
     precord->dpvt = pPvt;
@@ -216,22 +217,22 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
     status = pasynEpicsUtils->parseLink(pasynUser, plink, 
                 &pPvt->portName, &pPvt->addr,&pPvt->userParam);
     if (status != asynSuccess) {
-        printf("%s %s::initCommon error in link %s\n",
-                     precord->name, driverName, pasynUser->errorMessage);
+        printf("%s %s::%s error in link %s\n",
+                     precord->name, driverName, functionName, pasynUser->errorMessage);
         goto bad;
     }
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser,
         pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        printf("%s %s::initCommon connectDevice failed %s\n",
-                     precord->name, driverName, pasynUser->errorMessage);
+        printf("%s %s::%s connectDevice failed %s\n",
+                     precord->name, driverName, functionName, pasynUser->errorMessage);
         goto bad;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if(!pasynInterface) {
-        printf("%s %s::initCommon interface %s not found\n",
-            precord->name, driverName, asynOctetType);
+        printf("%s %s::%s interface %s not found\n",
+            precord->name, driverName, functionName, asynOctetType);
         goto bad;
     }
     pPvt->poctet = poctet = pasynInterface->pinterface;
@@ -277,8 +278,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         status = dbFindRecord(pdbentry, precord->name);
         if (status) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynOctet::initCommon error finding record\n",
-                precord->name);
+                "%s %s::%s error finding record\n",
+                precord->name, driverName, functionName);
             goto bad;
         }
         readbackString = dbGetInfo(pdbentry, "asyn:READBACK");
@@ -290,8 +291,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                pPvt->octetPvt, pPvt->pasynUser,
                pPvt->interruptCallback, pPvt, &pPvt->registrarPvt);
             if(status != asynSuccess) {
-                printf("%s devAsynOctet::initCommon error calling registerInterruptUser %s\n",
-                       precord->name, pPvt->pasynUser->errorMessage);
+                printf("%s %s::%s error calling registerInterruptUser %s\n",
+                       precord->name, driverName, functionName, pPvt->pasynUser->errorMessage);
             }
             /* Initialize the interrupt callback */
             callbackSetCallback(outputCallbackCallback, &pPvt->outputCallback);
@@ -306,8 +307,8 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
             status = pasynOctetSyncIO->connect(pPvt->portName, pPvt->addr, 
                          &pasynUserSync, pPvt->userParam);
             if (status != asynSuccess) {
-                printf("%s devAsynOctet::initCommon octetSyncIO->connect failed %s\n",
-                       precord->name, pasynUserSync->errorMessage);
+                printf("%s %s::%s octetSyncIO->connect failed %s\n",
+                       precord->name, driverName, functionName, pasynUserSync->errorMessage);
                 goto bad;
             }
             buffer = malloc(valSize);
@@ -340,14 +341,15 @@ static long createRingBuffer(dbCommon *pr)
     asynStatus status;
     int i;
     const char *sizeString;
+    static const char *functionName="createRingBuffer";
     
     if (!pPvt->ringBuffer) {
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
         status = dbFindRecord(pdbentry, pr->name);
         if (status) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s::createRingBufffer error finding record\n",
-                pr->name, driverName);
+                "%s %s::%s error finding record\n",
+                pr->name, driverName, functionName);
             return -1;
         }
         pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
@@ -371,6 +373,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
+    static const char *functionName="getIoIntInfo";
 
     /* If initCommon failed then pPvt->poctet is NULL, return error */
     if (!pPvt->poctet) return -1;
@@ -378,25 +381,25 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
     if (cmd == 0) {
         /* Add to scan list.  Register interrupts */
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s %s::getIoIntInfo registering interrupt\n",
-            pr->name, driverName);
+            "%s %s::%s registering interrupt\n",
+            pr->name, driverName, functionName);
         createRingBuffer(pr);
         status = pPvt->poctet->registerInterruptUser(
            pPvt->octetPvt,pPvt->pasynUser,
            pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
         if(status!=asynSuccess) {
-            printf("%s %s::getIoIntInfo error calling registerInterruptUser %s\n",
-                   pr->name, driverName, pPvt->pasynUser->errorMessage);
+            printf("%s %s::%s error calling registerInterruptUser %s\n",
+                   pr->name, driverName, functionName, pPvt->pasynUser->errorMessage);
         }
     } else {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s %s::getIoIntInfo cancelling interrupt\n",
-             pr->name, driverName);
+            "%s %s::%s cancelling interrupt\n",
+             pr->name, driverName, functionName);
         status = pPvt->poctet->cancelInterruptUser(pPvt->octetPvt,
              pPvt->pasynUser,pPvt->registrarPvt);
         if(status!=asynSuccess) {
-            printf("%s %s::getIoIntInfo error calling cancelInterruptUser %s\n",
-                   pr->name, driverName, pPvt->pasynUser->errorMessage);
+            printf("%s %s::%s error calling cancelInterruptUser %s\n",
+                   pr->name, driverName, functionName, pPvt->pasynUser->errorMessage);
         }
     }
     *iopvt = pPvt->ioScanPvt;
@@ -406,12 +409,14 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 static int getRingBufferValue(devPvt *pPvt)
 {
     int ret = 0;
+    static const char *functionName="getRingBufferValue";
+
     epicsMutexLock(pPvt->ringBufferLock);
     if (pPvt->ringTail != pPvt->ringHead) {
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
-                "%s %s::getRingBufferValue error, %d ring buffer overflows\n",
-                pPvt->precord->name, driverName, pPvt->ringBufferOverflows);
+                "%s %s::%s error, %d ring buffer overflows\n",
+                pPvt->precord->name, driverName, functionName, pPvt->ringBufferOverflows);
             pPvt->ringBufferOverflows = 0;
         }
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail]; 
@@ -427,11 +432,12 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->precord;
+    static const char *functionName="interruptCallback";
 
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         (char *)value, len*sizeof(char),
-        "%s %s::interruptCallback ringSize=%d, len=%d, callback data:",
-        pr->name, driverName, pPvt->ringSize, (int)len);
+        "%s %s::%s ringSize=%d, len=%d, callback data:",
+        pr->name, driverName, functionName, pPvt->ringSize, (int)len);
     if (len >= pPvt->valSize) len = pPvt->valSize-1;
     if (pPvt->ringSize == 0) {
         /* Not using a ring buffer */ 
@@ -494,6 +500,8 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
 static void outputCallbackCallback(CALLBACK *pcb)
 {
     devPvt *pPvt; 
+    static const char *functionName="outputCallbackCallback";
+
     callbackGetUser(pPvt, pcb);
     {
         dbCommon *pr = pPvt->precord;
@@ -504,8 +512,8 @@ static void outputCallbackCallback(CALLBACK *pcb)
             /* We called dbProcess but the record did not process, perhaps because PACT was 1 
              * Need to remove ring buffer element */
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING, 
-                "%s %s::outputCallbackCallback warning dbProcess did not process record, PACT=%d\n", 
-                pr->name, driverName, pr->pact);
+                "%s %s::%s warning dbProcess did not process record, PACT=%d\n", 
+                pr->name, driverName, functionName, pr->pact);
             if (pPvt->ringSize > 0) {
                 getRingBufferValue(pPvt);
             }
@@ -521,6 +529,7 @@ static int initDrvUser(devPvt *pPvt)
     asynStatus    status;
     asynInterface *pasynInterface;
     dbCommon      *precord = pPvt->precord;
+    static const char *functionName="initDrvUser";
 
     /*call drvUserCreate*/
     pasynInterface = pasynManager->findInterface(pasynUser,asynDrvUserType,1);
@@ -533,8 +542,8 @@ static int initDrvUser(devPvt *pPvt)
         status = pasynDrvUser->create(drvPvt,pasynUser,pPvt->userParam,0,0);
         if(status!=asynSuccess) {
             precord->pact=1;
-            printf("%s %s::initDrvUser drvUserCreate failed %s\n",
-                     precord->name, driverName, pasynUser->errorMessage);
+            printf("%s %s::%s drvUserCreate failed %s\n",
+                     precord->name, driverName, functionName, pasynUser->errorMessage);
             recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM);
             return INIT_ERROR;
         }
@@ -546,15 +555,16 @@ static int initCmdBuffer(devPvt *pPvt)
 {
     size_t   len;
     dbCommon *precord = pPvt->precord;
+    static const char *functionName="initCmdBuffer";
 
     len = strlen(pPvt->userParam);
     if(len<=0) {
-        printf("%s  no userParam\n",precord->name);
+        printf("%s  %s::%s no userParam\n",precord->name, driverName, functionName);
         precord->pact = 1;
         recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM);
         return INIT_ERROR;
     }
-    pPvt->buffer = callocMustSucceed(len,sizeof(char),"devAsynOctet");
+    pPvt->buffer = callocMustSucceed(len,sizeof(char),"devAsynOctet::initCmdBuffer");
     dbTranslateEscape(pPvt->buffer,pPvt->userParam);
     pPvt->bufSize = len;
     pPvt->bufLen = strlen(pPvt->buffer);
@@ -565,11 +575,12 @@ static int initDbAddr(devPvt *pPvt)
 {
     char      *userParam;
     dbCommon *precord = pPvt->precord;
+    static const char *functionName="initDbAddr";
 
     userParam = pPvt->userParam;
     if(dbNameToAddr(userParam,&pPvt->dbAddr)) {
-        printf("%s %s::initDbAddr record %s not present\n",
-            precord->name, driverName, userParam);
+        printf("%s %s::%s record %s not present\n",
+            precord->name, driverName, functionName, userParam);
         precord->pact = 1;
         recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM);
         return INIT_ERROR;
@@ -584,6 +595,7 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     asynOctet  *poctet = pPvt->poctet;
     void       *octetPvt = pPvt->octetPvt;
     size_t     nbytesTransfered;
+    static const char *functionName="writeIt";
 
     pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
     pPvt->result.time = pPvt->pasynUser->timestamp;
@@ -591,19 +603,19 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s %s::writeIt failed %s\n",
-            precord->name, driverName, pasynUser->errorMessage);
+            "%s %s::%s failed %s\n",
+            precord->name, driverName, functionName, pasynUser->errorMessage);
         return pPvt->result.status;
     }
     if(nbytes != nbytesTransfered) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s %s::writeIt requested %lu but sent %lu bytes\n",
-            precord->name, driverName, (unsigned long)nbytes, (unsigned long)nbytesTransfered);
+            "%s %s::%s requested %lu but sent %lu bytes\n",
+            precord->name, driverName, functionName, (unsigned long)nbytes, (unsigned long)nbytesTransfered);
         recGblSetSevr(precord, WRITE_ALARM, MINOR_ALARM);
         return asynError;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,nbytes,
-       "%s %s::writeIt\n",precord->name, driverName);
+       "%s %s::%s\n",precord->name, driverName, functionName);
     return pPvt->result.status;
 }
 
@@ -615,6 +627,7 @@ static asynStatus readIt(asynUser *pasynUser,char *message,
     asynOctet  *poctet = pPvt->poctet;
     void       *octetPvt = pPvt->octetPvt;
     int        eomReason;
+    static const char *functionName="readIt";
 
     pPvt->result.status = poctet->read(octetPvt,pasynUser,message,maxBytes,
         nBytesRead,&eomReason);
@@ -623,27 +636,29 @@ static asynStatus readIt(asynUser *pasynUser,char *message,
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s %s::readIt failed %s\n",
-            precord->name, driverName, pasynUser->errorMessage);
+            "%s %s::%s failed %s\n",
+            precord->name, driverName, functionName, pasynUser->errorMessage);
         return pPvt->result.status;
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,message,*nBytesRead,
-       "%s %s::readIt eomReason %d\n",precord->name, driverName, eomReason);
+       "%s %s::%s eomReason %d\n",precord->name, driverName, functionName, eomReason);
     return pPvt->result.status;
 }
 
 static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
 {
+    static const char *functionName="reportQueueRequestStatus";
+
     if (pPvt->previousQueueRequestStatus != status) {
         pPvt->previousQueueRequestStatus = status;
         if (status == asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynOctet queueRequest status returned to normal\n", 
-                pPvt->precord->name);
+                "%s %s::%s queueRequest status returned to normal\n", 
+                pPvt->precord->name, driverName, functionName);
         } else {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynOctet queueRequest %s\n", 
-                pPvt->precord->name,pPvt->pasynUser->errorMessage);
+                "%s %s::%s queueRequest error %s\n", 
+                pPvt->precord->name, driverName, functionName,pPvt->pasynUser->errorMessage);
         }
     }
 }
@@ -653,7 +668,8 @@ static long processCommon(dbCommon *precord)
     waveformRecord *pwf = (waveformRecord *)precord;
     int gotCallbackData;
     asynStatus status;
-    
+    static const char *functionName="processCommon";
+   
     if (pPvt->isOutput) {
         if (pPvt->ringSize == 0) {
             gotCallbackData = pPvt->newOutputCallbackValue;
@@ -683,9 +699,8 @@ static long processCommon(dbCommon *precord)
             if (pPvt->isWaveform && (pPvt->result.status == asynSuccess)) pwf->nord = pPvt->nord;
             if (pPvt->gotValue) {
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
-                    "%s %s::processCommon, "
-                    "warning: multiple interrupt callbacks between processing\n",
-                     precord->name, driverName);
+                    "%s %s::%s warning: multiple interrupt callbacks between processing\n",
+                     precord->name, driverName, functionName);
             }
         } else {
             /* Copy data from ring buffer */
@@ -704,8 +719,8 @@ static long processCommon(dbCommon *precord)
         len = strlen(pPvt->pValue);
         asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             pPvt->pValue, len,
-            "%s %s::processCommon len=%d,  data:",
-            precord->name, driverName, len);
+            "%s %s::%s len=%d,  data:",
+            precord->name, driverName, functionName, len);
     }
 
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -907,12 +922,13 @@ static void callbackWfWriteRead(asynUser *pasynUser)
     char           raw[MAX_STRING_SIZE+1];
     char           translate[MAX_STRING_SIZE+1];
     char           *pbuf = (char *)pwf->bptr;
+    static const char *functionName="callbackWfWriteRead";
 
     dbStatus = dbGet(&pPvt->dbAddr, DBR_STRING, raw, 0, 0, 0);
     raw[MAX_STRING_SIZE] = 0;
     if(dbStatus) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s dbGet failed\n",pwf->name);
+            "%s %s::%s dbGet failed\n",pwf->name, driverName, functionName);
         recGblSetSevr(pwf,READ_ALARM,INVALID_ALARM);
         finish((dbCommon *)pwf);
         return;

@@ -48,6 +48,8 @@
 
 #define DEFAULT_RING_BUFFER_SIZE 10
 
+static const char *driverName = "devAsynFloat64";
+
 typedef struct ringBufferElement {
     epicsFloat64        value;
     epicsTimeStamp      time;
@@ -134,8 +136,9 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     asynStatus status;
     asynUser *pasynUser;
     asynInterface *pasynInterface;
+    static const char *functionName="initCommon";
 
-    pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynFloat64::initCommon");
+    pPvt = callocMustSucceed(1, sizeof(*pPvt), "%s::%s");
     pr->dpvt = pPvt;
     pPvt->pr = pr;
     /* Create asynUser */
@@ -147,21 +150,21 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     status = pasynEpicsUtils->parseLink(pasynUser, plink,
                 &pPvt->portName, &pPvt->addr,&pPvt->userParam);
     if (status != asynSuccess) {
-        printf("%s devAsynFloat64::initCommon %s\n",
-                     pr->name, pasynUser->errorMessage);
+        printf("%s %s::%s %s\n",
+                     pr->name, driverName, functionName,pasynUser->errorMessage);
         goto bad;
     }
     /* Connect to device */
     status = pasynManager->connectDevice(pasynUser, pPvt->portName, pPvt->addr);
     if (status != asynSuccess) {
-        printf("%s devAsynFloat64::initCommon connectDevice failed %s\n",
-                     pr->name, pasynUser->errorMessage);
+        printf("%s %s::%s connectDevice failed %s\n",
+                     pr->name, driverName, functionName,pasynUser->errorMessage);
         goto bad;
     }
     status = pasynManager->canBlock(pPvt->pasynUser, &pPvt->canBlock);
     if (status != asynSuccess) {
-        printf("%s devAsynFloat64::initCommon canBlock failed %s\n",
-                     pr->name, pasynUser->errorMessage);
+        printf("%s %s::%s canBlock failed %s\n",
+                     pr->name, driverName, functionName,pasynUser->errorMessage);
         goto bad;
     }
     /*call drvUserCreate*/
@@ -174,16 +177,16 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
         drvPvt = pasynInterface->drvPvt;
         status = pasynDrvUser->create(drvPvt,pasynUser,pPvt->userParam,0,0);
         if(status!=asynSuccess) {
-            printf("%s devAsynFloat64::initCommon drvUserCreate %s\n",
-                     pr->name, pasynUser->errorMessage);
+            printf("%s %s::%s drvUserCreate %s\n",
+                     pr->name, driverName, functionName,pasynUser->errorMessage);
             goto bad;
         }
     }
     /* Get interface asynFloat64 */
     pasynInterface = pasynManager->findInterface(pasynUser, asynFloat64Type, 1);
     if (!pasynInterface) {
-        printf("%s devAsynFloat64::initCommon findInterface asynFloat64Type %s\n",
-                     pr->name,pasynUser->errorMessage);
+        printf("%s %s::%s findInterface asynFloat64Type %s\n",
+                     pr->name, driverName, functionName,pasynUser->errorMessage);
         goto bad;
     }
     pPvt->pfloat64 = pasynInterface->pinterface;
@@ -193,8 +196,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     status = pasynFloat64SyncIO->connect(pPvt->portName, pPvt->addr,
                  &pPvt->pasynUserSync, pPvt->userParam);
     if (status != asynSuccess) {
-        printf("%s devAsynFloat64::initCommon Float64SyncIO->connect failed %s\n",
-               pr->name, pPvt->pasynUserSync->errorMessage);
+        printf("%s %s::%s Float64SyncIO->connect failed %s\n",
+               pr->name, driverName, functionName,pPvt->pasynUserSync->errorMessage);
         goto bad;
     }
 
@@ -210,8 +213,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
         status = dbFindRecord(pdbentry, pr->name);
         if (status) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64::initCommon error finding record\n",
-                pr->name);
+                "%s %s::%s error finding record\n",
+                pr->name, driverName, functionName);
             goto bad;
         }
         callbackString = dbGetInfo(pdbentry, "asyn:READBACK");
@@ -223,8 +226,8 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
                pPvt->float64Pvt,pPvt->pasynUser,
                pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
             if(status!=asynSuccess) {
-                printf("%s devAsynFloat64::initRecord error calling registerInterruptUser %s\n",
-                       pr->name,pPvt->pasynUser->errorMessage);
+                printf("%s %s::initRecord error calling registerInterruptUser %s\n",
+                       pr->name, driverName,pPvt->pasynUser->errorMessage);
             }
             /* Initialize the interrupt callback */
             callbackSetCallback(outputCallbackCallback, &pPvt->outputCallback);
@@ -244,6 +247,7 @@ static long createRingBuffer(dbCommon *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
     const char *sizeString;
+    static const char *functionName="createRingBuffer";
     
     if (!pPvt->ringBuffer) {
         DBENTRY *pdbentry = dbAllocEntry(pdbbase);
@@ -251,13 +255,13 @@ static long createRingBuffer(dbCommon *pr)
         status = dbFindRecord(pdbentry, pr->name);
         if (status) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64::createRingBufffer error finding record\n",
-                pr->name);
+                "%s %s::%s error finding record\n",
+                pr->name, driverName, functionName);
             return -1;
         }
         sizeString = dbGetInfo(pdbentry, "asyn:FIFO");
         if (sizeString) pPvt->ringSize = atoi(sizeString);
-        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "devAsynFloat64::createRingBuffer");
+        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "%s::createRingBuffer");
     }
     return asynSuccess;
 }
@@ -267,6 +271,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
+    static const char *functionName="getIoIntInfo";
 
     /* If initCommon failed then pPvt->pfloat64 is NULL, return error */
     if (!pPvt->pfloat64) return -1;
@@ -274,25 +279,25 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
     if (cmd == 0) {
         /* Add to scan list.  Register interrupts, create ring buffer */
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s devAsynFloat64::getIoIntInfo registering interrupt\n",
-            pr->name);
+            "%s %s::%s registering interrupt\n",
+            pr->name, driverName, functionName);
         createRingBuffer(pr);
         status = pPvt->pfloat64->registerInterruptUser(
            pPvt->float64Pvt,pPvt->pasynUser,
            pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
         if(status!=asynSuccess) {
-            printf("%s devAsynFloat64 registerInterruptUser %s\n",
-                   pr->name,pPvt->pasynUser->errorMessage);
+            printf("%s %s::%s registerInterruptUser %s\n",
+                   pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
         }
     } else {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s devAsynFloat64::getIoIntInfo cancelling interrupt\n",
-             pr->name);
+            "%s %s::%s cancelling interrupt\n",
+             pr->name, driverName, functionName);
         status = pPvt->pfloat64->cancelInterruptUser(pPvt->float64Pvt,
              pPvt->pasynUser,pPvt->registrarPvt);
         if(status!=asynSuccess) {
-            printf("%s devAsynFloat64 cancelInterruptUser %s\n",
-                   pr->name,pPvt->pasynUser->errorMessage);
+            printf("%s %s::%s cancelInterruptUser %s\n",
+                   pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
         }
     }
     *iopvt = pPvt->ioScanPvt;
@@ -303,6 +308,7 @@ static void processCallbackInput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = (dbCommon *)pPvt->pr;
+    static const char *functionName="processCallbackInput";
 
     pPvt->result.status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pPvt->result.value);
     pPvt->result.time = pPvt->pasynUser->timestamp;
@@ -310,11 +316,11 @@ static void processCallbackInput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64 process value=%f\n",pr->name,pPvt->result.value);
+            "%s %s::%s process value=%f\n",pr->name, driverName, functionName,pPvt->result.value);
     } else {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s devAsynFloat64 process read error %s\n",
-              pr->name, pasynUser->errorMessage);
+              "%s %s::%s process read error %s\n",
+              pr->name, driverName, functionName,pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
@@ -323,6 +329,7 @@ static void processCallbackOutput(asynUser *pasynUser)
 {
     devPvt *pPvt = (devPvt *)pasynUser->userPvt;
     dbCommon *pr = pPvt->pr;
+    static const char *functionName="processCallbackOutput";
 
     pPvt->result.status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser,pPvt->result.value);
     pPvt->result.time = pPvt->pasynUser->timestamp;
@@ -330,11 +337,11 @@ static void processCallbackOutput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64 process val %f\n",pr->name,pPvt->result.value);
+            "%s %s::%s process val %f\n",pr->name, driverName, functionName,pPvt->result.value);
     } else {
        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s devAsynFloat64 pPvt->result.status=%d, process error %s\n",
-           pr->name, pPvt->result.status, pasynUser->errorMessage);
+           "%s %s::%s pPvt->result.status=%d, process error %s\n",
+           pr->name, driverName, functionName,pPvt->result.status, pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
@@ -345,10 +352,11 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
     ringBufferElement *rp;
+    static const char *functionName="interruptCallbackInput";
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynFloat64::interruptCallbackInput new value=%f\n",
-        pr->name, value);
+        "%s %s::%s new value=%f\n",
+        pr->name, driverName, functionName,value);
     /* There is a problem.  A driver could be calling us with a value after
      * this record has registered for callbacks but before EPICS has set interruptAccept,
      * which means that scanIoRequest will return immediately.
@@ -391,10 +399,11 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
     ringBufferElement *rp;
+    static const char *functionName="interruptCallbackOutput";
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynFloat64::interruptCallbackOutput new value=%f\n",
-        pr->name, value);
+        "%s %s::%s new value=%f\n",
+        pr->name, driverName, functionName,value);
     if (!interruptAccept) return;
     epicsMutexLock(pPvt->ringBufferLock);
     rp = &pPvt->ringBuffer[pPvt->ringHead];
@@ -416,6 +425,8 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 static void outputCallbackCallback(CALLBACK *pcb)
 {
     devPvt *pPvt; 
+    static const char *functionName="outputCallbackCallback";
+
     callbackGetUser(pPvt, pcb);
     {
         dbCommon *pr = pPvt->pr;
@@ -425,6 +436,9 @@ static void outputCallbackCallback(CALLBACK *pcb)
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1 
              * Need to remove ring buffer element */
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING, 
+                "%s %s::%s warning dbProcess did not process record, PACT=%d\n", 
+                pr->name, driverName, functionName,pr->pact);
             getCallbackValue(pPvt);
         }
         dbScanUnlock(pr);
@@ -436,10 +450,11 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
+    static const char *functionName="interruptCallbackAverage";
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-        "%s devAsynFloat64::interruptCallbackAverage new value=%f\n",
-        pr->name, value);
+        "%s %s::%s new value=%f\n",
+        pr->name, driverName, functionName,value);
     epicsMutexLock(pPvt->ringBufferLock);
     pPvt->numAverage++;
     pPvt->sum += value;
@@ -452,19 +467,21 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
 static int getCallbackValue(devPvt *pPvt)
 {
     int ret = 0;
+    static const char *functionName="getCallbackValue";
+
     epicsMutexLock(pPvt->ringBufferLock);
     if (pPvt->ringTail != pPvt->ringHead) {
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
-                "%s devAsynFloat64 getCallbackValue error, %d ring buffer overflows\n",
-                                    pPvt->pr->name, pPvt->ringBufferOverflows);
+                "%s %s::%s error, %d ring buffer overflows\n",
+                                    pPvt->pr->name, driverName, functionName,pPvt->ringBufferOverflows);
             pPvt->ringBufferOverflows = 0;
         }
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s devAsynFloat64::getCallbackValue from ringBuffer value=%f\n",
-                                            pPvt->pr->name,pPvt->result.value);
+            "%s %s::%s from ringBuffer value=%f\n",
+                                            pPvt->pr->name, driverName, functionName, pPvt->result.value);
         ret = 1;
     }
     pPvt->newOutputCallbackValue = 0;
@@ -474,17 +491,19 @@ static int getCallbackValue(devPvt *pPvt)
 
 static void reportQueueRequestStatus(devPvt *pPvt, asynStatus status)
 {
+    static const char *functionName="reportQueueRequestStatus";
+
     if (status != asynSuccess) pPvt->result.status = status;
     if (pPvt->previousQueueRequestStatus != status) {
         pPvt->previousQueueRequestStatus = status;
         if (status == asynSuccess) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64 queueRequest status returned to normal\n", 
-                pPvt->pr->name);
+                "%s %s::%s queueRequest status returned to normal\n", 
+                pPvt->pr->name, driverName, functionName);
         } else {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s devAsynFloat64 queueRequest %s\n", 
-                pPvt->pr->name,pPvt->pasynUser->errorMessage);
+                "%s %s::%s queueRequest error %s\n", 
+                pPvt->pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
         }
     }
 }
@@ -583,6 +602,7 @@ static long initAiAverage(aiRecord *pai)
 {
     int status;
     devPvt *pPvt;
+    static const char *functionName="initAiAverage";
 
     status = initCommon((dbCommon *)pai,&pai->inp,
         0,interruptCallbackAverage);
@@ -592,8 +612,8 @@ static long initAiAverage(aiRecord *pai)
                  pPvt->float64Pvt,pPvt->pasynUser,
                  pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
     if(status!=asynSuccess) {
-        printf("%s devAsynFloat64 registerInterruptUser %s\n",
-               pai->name,pPvt->pasynUser->errorMessage);
+        printf("%s %s::%s registerInterruptUser %s\n",
+               pai->name,driverName, functionName,pPvt->pasynUser->errorMessage);
     }
     return INIT_OK;
 }
@@ -602,6 +622,7 @@ static long processAiAverage(aiRecord *pai)
 {
     devPvt *pPvt = (devPvt *)pai->dpvt;
     double dval;
+    static const char *functionName="processAiAverage";
 
     epicsMutexLock(pPvt->ringBufferLock);
     if (pPvt->numAverage == 0) {
@@ -622,8 +643,8 @@ static long processAiAverage(aiRecord *pai)
         pai->val = dval;
         pai->udf = 0;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
-                  "%s devAsynFloat64::callbackAiAverage val=%f\n",
-                  pai->name, pai->val);
+                  "%s %s::%s val=%f\n",
+                  pai->name, driverName, functionName,pai->val);
         return 2;
     }
     else {
