@@ -107,6 +107,7 @@ typedef struct devPvt {
     CALLBACK            processCallback;
     CALLBACK            outputCallback;
     int                 newOutputCallbackValue;
+    int                 numDeferredOutputCallbacks;
     IOSCANPVT           ioScanPvt;
     void                *registrarPvt;
     int                 gotValue;
@@ -434,6 +435,7 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     dbCommon *pr = pPvt->precord;
     static const char *functionName="interruptCallback";
 
+    dbScanLock(pr);
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         (char *)value, len*sizeof(char),
         "%s %s::%s ringSize=%d, len=%d, callback data:",
@@ -455,7 +457,13 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         dbScanUnlock(pPvt->precord);
         if (pPvt->isOutput) {
-            callbackRequest(&pPvt->outputCallback);
+            /* If PACT is true then this callback was received during asynchronous record processing
+             * Must defer calling callbackRequest until end of record processing */
+            if (pr->pact) {
+                pPvt->numDeferredOutputCallbacks++;
+            } else { 
+                callbackRequest(&pPvt->outputCallback);
+            }
         } else {
             scanIoRequest(pPvt->ioScanPvt);
         }
@@ -488,13 +496,20 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
             /* We only need to request the record to process if we added a new
              * element to the ring buffer, not if we just replaced an element. */
             if (pPvt->isOutput) {
-                callbackRequest(&pPvt->outputCallback);
+                /* If PACT is true then this callback was received during asynchronous record processing
+                 * Must defer calling callbackRequest until end of record processing */
+                if (pr->pact) {
+                    pPvt->numDeferredOutputCallbacks++;
+                } else { 
+                    callbackRequest(&pPvt->outputCallback);
+                }
             } else {
                 scanIoRequest(pPvt->ioScanPvt);
             }
         }
         epicsMutexUnlock(pPvt->ringBufferLock);
     }
+    dbScanUnlock(pr);
 }
 
 static void outputCallbackCallback(CALLBACK *pcb)
@@ -715,7 +730,6 @@ static long processCommon(dbCommon *precord)
             precord->time = rp->time;
             epicsMutexUnlock(pPvt->ringBufferLock);
         }
-        pPvt->newOutputCallbackValue = 0;
         len = strlen(pPvt->pValue);
         asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             pPvt->pValue, len,
@@ -727,6 +741,11 @@ static long processCommon(dbCommon *precord)
                                             pPvt->isOutput ? WRITE_ALARM : READ_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(precord, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->numDeferredOutputCallbacks > 0) {
+        callbackRequest(&pPvt->outputCallback);
+        pPvt->numDeferredOutputCallbacks--;
+    }
+    pPvt->newOutputCallbackValue = 0;
     if (pPvt->result.status == asynSuccess) {
         pPvt->precord->udf = 0;
         return 0;
