@@ -3,7 +3,8 @@ testOutputCallback_registerRecordDeviceDriver(pdbbase)
 
 # Arguments: Portname, canBlock, numCallbacks
 testOutputCallbackConfigure("PORT1", 1, 1)
-#asynSetTraceMask("PORT1",0,0xff)
+# Enable ASYN_TRACE_WARNING
+asynSetTraceMask("PORT1",0,0x21)
 asynSetTraceIOMask("PORT1",0,0x2)
 
 ### Use PINI=NO on output records and SCAN=I/O Intr on input records
