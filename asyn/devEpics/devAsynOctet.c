@@ -526,7 +526,7 @@ static void outputCallbackCallback(CALLBACK *pcb)
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1 
              * Need to remove ring buffer element */
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING, 
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, 
                 "%s %s::%s warning dbProcess did not process record, PACT=%d\n", 
                 pr->name, driverName, functionName, pr->pact);
             if (pPvt->ringSize > 0) {
