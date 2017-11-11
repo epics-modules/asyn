@@ -97,7 +97,7 @@ text {
 	"basic attribute" {
 		clr=14
 	}
-	textix="asyn Output Readback Tests"
+	textix="asyn Output Callback Tests"
 	align="horiz. centered"
 }
 composite {
@@ -411,87 +411,76 @@ composite {
 		}
 	}
 }
-composite {
+text {
 	object {
 		x=90
 		y=155
-		width=421
+		width=90
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=90
-				y=155
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=54
-			}
-			textix="asynOctet"
-			align="horiz. centered"
-		}
-		text {
-			object {
-				x=185
-				y=155
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="stringout"
-			align="horiz. right"
-		}
-		"text entry" {
-			object {
-				x=280
-				y=155
-				width=80
-				height=20
-			}
-			control {
-				chan="$(P)Stringout"
-				clr=14
-				bclr=2
-			}
-			format="hexadecimal"
-			limits {
-			}
-		}
-		text {
-			object {
-				x=365
-				y=155
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="stringin"
-			align="horiz. right"
-		}
-		"text update" {
-			object {
-				x=450
-				y=156
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)Stringin"
-				clr=54
-				bclr=2
-			}
-			align="horiz. centered"
-			format="hexadecimal"
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynOctet"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=185
+		y=155
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringout"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=280
+		y=155
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)Stringout"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+text {
+	object {
+		x=365
+		y=155
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringin"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=450
+		y=156
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Stringin"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
 	}
 }
 composite {
