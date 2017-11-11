@@ -78,6 +78,7 @@ record(stringin, "$(P)Stringin")
    field(DTYP, "asynOctetRead")
    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
    field(SCAN, "I/O Intr")
+   info(asyn:FIFO, "10")
 }
 
 record(longout, "$(P)NumCallbacks")
