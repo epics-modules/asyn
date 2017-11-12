@@ -443,7 +443,6 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     if (len >= pPvt->valSize) len = pPvt->valSize-1;
     if (pPvt->ringSize == 0) {
         /* Not using a ring buffer */ 
-        dbScanLock(pr);
         pr->time = pasynUser->timestamp;
         if (pasynUser->auxStatus == asynSuccess) {
             memcpy(pPvt->pValue, value, len);
@@ -455,7 +454,6 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.time = pasynUser->timestamp;
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
-        dbScanUnlock(pPvt->precord);
         if (pPvt->isOutput) {
             /* If PACT is true then this callback was received during asynchronous record processing
              * Must defer calling callbackRequest until end of record processing */

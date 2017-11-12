@@ -399,7 +399,6 @@ static void processCallbackInput(asynUser *pasynUser)
     dbCommon *pr = (dbCommon *)pPvt->pr;
     static const char *functionName="processCallbackInput";
 
-    dbScanLock(pr);
     pPvt->result.status = pPvt->puint32->read(pPvt->uint32Pvt, pPvt->pasynUser,
         &pPvt->result.value,pPvt->mask);
     pPvt->result.time = pPvt->pasynUser->timestamp;
@@ -415,7 +414,6 @@ static void processCallbackInput(asynUser *pasynUser)
             pr->name, driverName, functionName, pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
-    dbScanUnlock(pr);
 }
 
 static void processCallbackOutput(asynUser *pasynUser)
@@ -424,7 +422,6 @@ static void processCallbackOutput(asynUser *pasynUser)
     dbCommon *pr = pPvt->pr;
     static const char *functionName="processCallbackOutput";
 
-    dbScanLock(pr);
     pPvt->result.status = pPvt->puint32->write(pPvt->uint32Pvt, pPvt->pasynUser,
         pPvt->result.value,pPvt->mask);
     pPvt->result.time = pPvt->pasynUser->timestamp;
@@ -439,7 +436,6 @@ static void processCallbackOutput(asynUser *pasynUser)
            pr->name, driverName, functionName, pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
-    dbScanUnlock(pr);
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,

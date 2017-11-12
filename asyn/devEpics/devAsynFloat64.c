@@ -311,7 +311,6 @@ static void processCallbackInput(asynUser *pasynUser)
     dbCommon *pr = (dbCommon *)pPvt->pr;
     static const char *functionName="processCallbackInput";
 
-    dbScanLock(pr);
     pPvt->result.status = pPvt->pfloat64->read(pPvt->float64Pvt, pPvt->pasynUser, &pPvt->result.value);
     pPvt->result.time = pPvt->pasynUser->timestamp;
     pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
@@ -325,7 +324,6 @@ static void processCallbackInput(asynUser *pasynUser)
               pr->name, driverName, functionName,pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
-    dbScanUnlock(pr);
 }
 
 static void processCallbackOutput(asynUser *pasynUser)
@@ -334,7 +332,6 @@ static void processCallbackOutput(asynUser *pasynUser)
     dbCommon *pr = pPvt->pr;
     static const char *functionName="processCallbackOutput";
 
-    dbScanLock(pr);
     pPvt->result.status = pPvt->pfloat64->write(pPvt->float64Pvt, pPvt->pasynUser,pPvt->result.value);
     pPvt->result.time = pPvt->pasynUser->timestamp;
     pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
@@ -348,7 +345,6 @@ static void processCallbackOutput(asynUser *pasynUser)
            pr->name, driverName, functionName,pPvt->result.status, pasynUser->errorMessage);
     }
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
-    dbScanUnlock(pr);
 }
 
 static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
