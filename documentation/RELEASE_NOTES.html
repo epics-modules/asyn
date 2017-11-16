@@ -23,7 +23,28 @@
       output records that update on callbacks from the driver. Previously it did not correctly
       distinguish between record processing due to a driver callback (in which case it
       should not call the driver) and normal record processing (in which case the driver
-      should be called).</li>
+      should be called). A new test application, testOutputCallbackApp, was added to test
+      this. It allows testing all combinations of the following 6 settings for all 4 of
+      these device support files:
+      <ol>
+        <li>Synchronous driver, i.e. ASYN_CANBLOCK not set.</li>
+        <li>Asynchronous driver, i.e. ASYN_CANBLOCK is set.</li>
+        <li>Driver callback is done in the write() operation.</li>
+        <li>Driver callback is done in a separate thread. The callbacks are triggered with
+          the TriggerCallbacks record.</li>
+        <li>Single callback is done in each operation.</li>
+        <li>Multiple callbacks are done in each operation. The NumCallbacks record selects
+          the number of callbacks.</li>
+      </ol>
+      The callback values are the following. For the longout records (asynInt32 and asynUInt32Digital)
+      and the ao record (asynFloat64) the callback value is N+1 where N the current record
+      value. Thus if one writes 10 to the longout record and NumCallbacks is 5 it will
+      immediately do callbacks with the values 11, 12, 13, 14, 15. For the bo record the
+      value toggles between 0 and 1 for each callback. For the stringout record the value
+      is a string with the format "Value=N". N increments by 1 on each callback as for
+      the longout records. For each output record there is a corresponding input record
+      with SCAN=I/O Intr. If the test is working correctly the output records should always
+      have the same values as the input records. </li>
   </ul>
   <h3>
     devAsynOctet.c</h3>
