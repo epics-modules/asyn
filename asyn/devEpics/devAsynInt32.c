@@ -101,6 +101,7 @@ typedef struct devPvt{
     CALLBACK          processCallback;
     CALLBACK          outputCallback;
     int               newOutputCallbackValue;
+    int               numDeferredOutputCallbacks;
     IOSCANPVT         ioScanPvt;
     char              *portName;
     char              *userParam;
@@ -583,6 +584,9 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         "%s %s::%s new value=%d\n",
         pr->name, driverName, functionName, value);
     if (!interruptAccept) return;
+    /* We need the scan lock because we look at PACT and pPvt->numDeferredOutputCallbacks
+     * Must take scan lock before ring buffer lock */
+    dbScanLock(pr);
     epicsMutexLock(pPvt->ringBufferLock);
     rp = &pPvt->ringBuffer[pPvt->ringHead];
     rp->value = value;
@@ -595,9 +599,16 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         pPvt->ringBufferOverflows++;
     } else {
-        callbackRequest(&pPvt->outputCallback);
+        /* If PACT is true then this callback was received during asynchronous record processing
+         * Must defer calling callbackRequest until end of record processing */
+        if (pr->pact) {
+            pPvt->numDeferredOutputCallbacks++;
+        } else { 
+            callbackRequest(&pPvt->outputCallback);
+        }
     }
     epicsMutexUnlock(pPvt->ringBufferLock);
+    dbScanUnlock(pr);
 }
 
 static void outputCallbackCallback(CALLBACK *pcb)
@@ -614,10 +625,11 @@ static void outputCallbackCallback(CALLBACK *pcb)
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1 
              * Need to remove ring buffer element */
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING, 
+            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR, 
                 "%s %s::%s warning dbProcess did not process record, PACT=%d\n", 
                 pr->name, driverName, functionName,pr->pact);
             getCallbackValue(pPvt);
+            pPvt->newOutputCallbackValue = 0;
         }
         dbScanUnlock(pr);
     }
@@ -722,7 +734,6 @@ static int getCallbackValue(devPvt *pPvt)
                                             pPvt->pr->name, driverName, functionName,pPvt->result.value);
         ret = 1;
     }
-    pPvt->newOutputCallbackValue = 0;
     epicsMutexUnlock(pPvt->ringBufferLock);
     return ret;
 }
@@ -934,6 +945,11 @@ static long processAo(aoRecord *pr)
                                             WRITE_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->numDeferredOutputCallbacks > 0) {
+        callbackRequest(&pPvt->outputCallback);
+        pPvt->numDeferredOutputCallbacks--;
+    }
+    pPvt->newOutputCallbackValue = 0;
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
@@ -1026,6 +1042,11 @@ static long processLo(longoutRecord *pr)
                                             WRITE_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->numDeferredOutputCallbacks > 0) {
+        callbackRequest(&pPvt->outputCallback);
+        pPvt->numDeferredOutputCallbacks--;
+    }
+    pPvt->newOutputCallbackValue = 0;
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
@@ -1119,6 +1140,11 @@ static long processBo(boRecord *pr)
                                             WRITE_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->numDeferredOutputCallbacks > 0) {
+        callbackRequest(&pPvt->outputCallback);
+        pPvt->numDeferredOutputCallbacks--;
+    }
+    pPvt->newOutputCallbackValue = 0;
     if(pPvt->result.status == asynSuccess) {
         return 0;
     } else {
@@ -1233,6 +1259,11 @@ static long processMbbo(mbboRecord *pr)
                                             WRITE_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
+    if (pPvt->numDeferredOutputCallbacks > 0) {
+        callbackRequest(&pPvt->outputCallback);
+        pPvt->numDeferredOutputCallbacks--;
+    }
+    pPvt->newOutputCallbackValue = 0;
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
