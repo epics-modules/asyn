@@ -184,7 +184,7 @@ void testOutputCallback::callbackThread()
     lock();
     while (1) {
         unlock();
-        epicsEventWait(callbackEvent_);
+        (void)epicsEventWait(callbackEvent_);
         lock();
         doInt32Callbacks();
         doInt32BinaryCallbacks();
