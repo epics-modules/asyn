@@ -471,7 +471,7 @@ static int vxiWriteCmd(vxiPort * pvxiPort,asynUser *pasynUser,
 
 /******************************************************************************
  * Check the bus status. Parameter <request> can be a number from 1 to 8 to
- * indicate the information requested (see VXI_BSTAT_XXXX in drvLanGpib.h)
+ * indicate the information requested (see VXI_BSTAT_XXXX in vxi11.h)
  * or it can be 0 meaning all (exept the bus address) which will then be
  * combined into a bitfield according to the bit numbers+1 (1 corresponds to
  * bit 0, etc.).
