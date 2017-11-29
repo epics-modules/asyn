@@ -1,7 +1,8 @@
 dbLoadDatabase("../../dbd/testErrors.dbd")
 testErrors_registerRecordDeviceDriver(pdbbase)
 
-testErrorsConfigure("PORT1",)
+# The second argument is ASYN_CANBLOCK.  0 for a synchronous driver, 1 for asynchronous
+testErrorsConfigure("PORT1",1)
 #asynSetTraceMask("PORT1",0,0xff)
 asynSetTraceIOMask("PORT1",0,0x2)
 
