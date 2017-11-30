@@ -141,8 +141,6 @@
       </ul>
     </li>
     <li><a href="#asynRecord">asynRecord: Generic Record Support</a></li>
-    <li><a href="#Example">Example</a> </li>
-    <li><a href="#Test">Test Example</a> </li>
     <li><a href="#asynGpib">asynGpib</a>
       <ul>
         <li><a href="#asynGpibDriverH">asynGpibDriver.h</a> </li>
@@ -168,6 +166,26 @@
     <li><a href="#DiagnosticAids">Diagnostic Aids</a>
       <ul>
         <li><a href="#iocshCommands">iocsh Commands</a> </li>
+      </ul>
+    </li>
+    <li><a href="#ExampleClient">Example Client</a> </li>
+    <li><a href="#TestApplications">Test Applications</a>
+      <ul>
+        <li><a href="#testApp">testApp</a> </li>
+        <li><a href="#testArrayRingBufferApp">testArrayRingBufferApp</a> </li>
+        <li><a href="#testAsynPortClientApp">testAsynPortClientApp</a> </li>
+        <li><a href="#testAsynPortDriverApp">testAsynPortDriverApp</a> </li>
+        <li><a href="#testBroadcastApp">testBroadcastApp</a> </li>
+        <li><a href="#testConnectApp">testConnectApp</a> </li>
+        <li><a href="#testEpicsApp">testEpicsApp</a> </li>
+        <li><a href="#testErrorsApp">testErrorsApp</a> </li>
+        <li><a href="#testGpibApp">testGpibApp</a> </li>
+        <li><a href="#testGpibSerialApp">testGpibSerialApp</a> </li>
+        <li><a href="#testIPServerApp">testIPServerApp</a> </li>
+        <li><a href="#testManagerApp">testManagerApp</a> </li>
+        <li><a href="#testOutputCallbackApp">testOutputCallbackApp</a> </li>
+        <li><a href="#testOutputReadbackApp">testOutputReadbackApp</a> </li>
+        <li><a href="#testUsbtmcApp">testUsbtmcApp</a> </li>
       </ul>
     </li>
     <li><a href="#InstallBuild">Install and Build</a>
@@ -4965,245 +4983,6 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
       <img alt="asynRecord.png" src="./asynRecord.png" /></p>
   </div>
   <hr />
-  <h2 id="Example">
-    Example</h2>
-  <p>
-    The following reads from a device via octet messages:</p>
-  <pre>#include &lt;asynDriver.h&gt;
-...
-#define BUFFER_SIZE 80
-typedef struct myData {
-    epicsEventId done;
-    asynOctet    *pasynOctet;
-    void         *drvPvt;
-    char         buffer[BUFFER_SIZE];
-}myData;
-
-static void queueCallback(asynUser *pasynUser) {
-    myData     *pmydata = (myData *)pasynUser-&gt;userPvt;
-    asynOctet  *pasynOctet = pmydata-&gt;pasynOctet;
-    void       *drvPvt = pmydata-&gt;drvPvt;
-    asynStatus status;
-    int        writeBytes,readBytes;
-    int        eomReason;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
-    status = pasynOctet-&gt;write(drvPvt,pasynUser,pmydata-&gt;buffer,
-              strlen(pmydata-&gt;buffer),&amp;writeBytes);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueCallback write failed %s\n",pasynUser-&gt;errorMessage);
-    } else {
-        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-            pmydata-&gt;buffer,strlen(pmydata-&gt;buffer),
-            "queueCallback write sent %d bytes\n",writeBytes);
-    }
-    status = pasynOctet-&gt;read(drvPvt,pasynUser,pmydata-&gt;buffer,
-         BUFFER_SIZE,&amp;readBytes,&amp;eomReason);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
-    } else {
-        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-            pmydata-&gt;buffer,BUFFER_SIZE,
-            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
-            readBytes,eomReason,pmydata-&gt;buffer);
-    }
-    epicsEventSignal(pmydata-&gt;done);
-}
-
-static void asynExample(const char *port,int addr,const char *message)
-{
-    myData        *pmyData;
-    asynUser      *pasynUser;
-    asynStatus    status;
-    asynInterface *pasynInterface;
-
-    pmyData = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
-    memset(pmyData,0,sizeof(myData));
-    strcpy(pmyData-&gt;buffer,message);
-    pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
-    pasynUser-&gt;userPvt = pmyData;
-    status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
-    if(status!=asynSuccess) {
-        printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
-        exit(1);
-    }
-    pasynInterface = pasynManager-&gt;findInterface(
-        pasynUser,asynOctetType,1);
-    if(!pasynInterface) {
-        printf("%s driver not supported\n",asynOctetType);
-        exit(-1);
-    }
-    pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
-    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
-    pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
-    status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
-    if(status) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
-    }
-    epicsEventWait(pmyData-&gt;done);
-    status = pasynManager-&gt;freeAsynUser(pasynUser);
-    if(status) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
-    }
-    epicsEventDestroy(pmyData-&gt;done);
-    pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
-}</pre>
-  <p>
-    The flow of control is as follows:</p>
-  <ol>
-    <li>A port driver calls registerPort. This step is not shown in the above example.</li>
-    <li>asynExample allocates myData and an asynUser.</li>
-    <li>asynExample connects to a device and to the asynOctet interface for the port driver.</li>
-    <li>When it is ready to communicate with the driver it calls queueRequest.</li>
-    <li>queueCallback is called. It calls the port driver's write and read methods.</li>
-  </ol>
-  <hr />
-  <h2 id="Test">
-    Test Application</h2>
-  <p>
-    The asynDriver distribution includes code to test asynDriver. It is also an example
-    of how to interface to asynManager. The example resides in &lt;top&gt;/testApp and
-    contains the following components:</p>
-  <pre>Db/
-   test.db
-   testBlock.db
-adl/
-   test.adl
-src/
-   devTestBlock.dbd
-   echoDriver.c
-   addrChangeDriver.c
-   devTestBlock.c
-   interposeInterface.c</pre>
-  <p>
-    echoDriver is a port driver that echos messages it receives. It implements asynCommon
-    and asynOctet. When asynOctet:write is called it saves the message. When asynOctet:read
-    is called, the saved message is returned and the message is flushed. echoDriverInit
-    has an argument that determines if it acts like a multiDevice or a single device
-    port driver.</p>
-  <p>
-    An instance of echoDriver is started via the iocsh command:</p>
-  <pre>echoDriverInit(portName,delay,noAutoConnect,multiDevice)</pre>
-  <p>
-    where</p>
-  <ul>
-    <li>portName - the port name for this instance.</li>
-    <li>delay - The time to delay after a read or write. If delay is 0 then echoDriver
-      registers as a synchronous port driver, i.e. bit ASYN_CANBLOCK of attributes is
-      not set. If delay&gt;0 then ASYN_CANBLOCK is set.</li>
-    <li>noAutoConnect - Determines initial setting for port.</li>
-    <li>multiDevice - If true then it supports two devices with addresses 0 and 1. If
-      false it does not set ASYN_MULTIDEVICE, i.e. it only supports a single device.</li>
-  </ul>
-  <p>
-    addrChangeDriver is a multidevice driver that is an asynUser of another port driver.
-    In the example application it connects to echoDriver. An example where this technique
-    might be used is a port driver for mult-drop serial that connects to a standard
-    serial port.</p>
-  <p>
-    An instance of addrChangeDriver is started via the iocsh commandL:</p>
-  <pre>addrChangeDriverInit(portName,lowerPort,addr)</pre>
-  <p>
-    where</p>
-  <ul>
-    <li>portName - the port name for this instance.</li>
-    <li>lowerPort - the port to which addrChangeDriver connects</li>
-    <li>addr - The address to which addrChangeDriver connects</li>
-  </ul>
-  <p>
-    devTestBlock is device support that tests blockProcessCallback. It has device support
-    for stringin records. The INP field has the syntax:</p>
-  <pre>    field(INP,"@asyn(port,addr,timeout) pvname)</pre>
-  <p>
-    where:</p>
-  <ul>
-    <li>asyn(port,addr,timeout) is same as for devEpics support.</li>
-    <li>pvname - The name of a record in the same ioc.</li>
-  </ul>
-  <p>
-    When the stringin record is processed the following occurs.</p>
-  <ul>
-    <li>When process is called and PACT is :
-      <ul>
-        <li>TRUE - then it just returns to record support.</li>
-        <li>FALSE - It does what follows.</li>
-      </ul>
-    </li>
-    <li>When processing starts the state is stateIdle.</li>
-    <li>blockProcessCallback is called.</li>
-    <li>callbackRequestDelayed is called (.1 second delay). The callback calls queueRequest.</li>
-    <li>When processCallback is called it does the following:
-      <ul>
-        <li>calls unblockProcessCallback</li>
-        <li>If state is stateIdle
-          <ul>
-            <li>Calls dbGet to get a string value from pvname</li>
-            <li>calls pasynOctet-&gt;write to send the string</li>
-            <li>sets state to stateWrite</li>
-            <li>Calls blockProcessCallback</li>
-            <li>callbackRequestDelayed is called The callback calls queueRequest.</li>
-            <li>completes. processCallback will be called again</li>
-          </ul>
-        </li>
-        <li>If state is stateWrite
-          <ul>
-            <li>calls pasynOctet-&gt;read and puts the value in VAL.</li>
-            <li>Sets state = stateIdle</li>
-            <li>requests the the record be processed. This time PACT will be TRUE</li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-  </ul>
-  <p>
-    test.db is a template containing three records: a calc record, which forward links
-    to a stringout record which forward links to a stringin record. The stringOut record
-    attaches to the device support supplied by asynOctetWriteRead.c. When the calcRecord
-    is processed the following happens:</p>
-  <ul>
-    <li>The calcRecord acts as a counter that overflows when the count reaches 10. After
-      counting to forward links ti the stringIn record.</li>
-    <li>The string in record gets the current value of the counter converted to s character
-      string and forward links to the stringOut record.</li>
-    <li>The stringOut record gets the value from the stringIn record an calls queueRequest.
-      The record is left with PACT true.</li>
-    <li>The processCallback calls pasynOctet-&gt;write passing the value obtained from
-      the stringIn record. The then does does a pasynOctet-&gt;read. When this completes
-      it asks for the record to complete processing.</li>
-    <li>The stringOut record completes processing.
-      <p>
-      </p>
-    </li>
-  </ul>
-  <p>
-    testBlock.db is a template similar to test.db except that it attached to device
-    support testBlock instead of asynOctetWriteRead.</p>
-  <p>
-    Executing "medm -x test.adl" produces the display:</p>
-  <div style="text-align: center">
-    <p>
-      <img alt="asynTest.png" src="asynTest.png" /></p>
-  </div>
-  <p>
-    It assumes that an ioc has been started via:</p>
-  <pre>cd &lt;top&gt;/iocBoot/ioctest
-../../bin/solaris-sparc/test st.cmd</pre>
-  <p>
-    This starts two versions of echoDriver as port "A" and "B". port A acts as single
-    device port. port B acts as a multiDevice port that has two devices. For each of
-    the three possible devices, the st.cmd file starts up two sets of records from test.db
-    The st.cmd file also loads a set of records from asynTest.db for port A and for
-    port B and for each of the two devices attached to port B. It also loads a set of
-    records from asynRecord.db. It starts one version of addrChangeDriver which connects
-    to port A.</p>
-  <p>
-    It loads six versions of test.db and four versions of testBlock.db The test.adl
-    file attaches to these database records.</p>
-  <hr />
   <h2 id="asynGpib">
     asynGpib</h2>
   <p>
@@ -6145,15 +5924,18 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
   <p>
     <code>asynSetTraceMask</code> calls <code>asynTrace:setTraceMask</code> for the
     specified port and address. If portName is zero length then the global trace mask
-    is set.</p>
+    is set. The mask bit definitions are documented in the <a href="#TraceInterface">traceMask
+      definitions</a>.</p>
   <p>
     <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code> for
     the specified port and address. If portName is zero length then the global traceIO
-    mask is set.</p>
+    mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
+      traceIO mask definitions</a>.</p>
   <p>
     <code>asynSetTraceInfoMask</code> calls <code>asynTrace:setTraceInfoMask</code>
     for the specified port and address. If portName is zero length then the global traceInfo
-    mask is set.</p>
+    mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
+      traceInfo mask definitions</a>.</p>
   <p>
     <code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>. The filename
     is handled as follows:</p>
@@ -6218,6 +6000,410 @@ asynOctetDisconnect("myid")</pre>
     for the specified port. This reverts to the default timestamp source function in
     asynManager.</p>
   <hr />
+  <h2 id="ExampleClient">
+    Example Client</h2>
+  <p>
+    The following is an example of an asyn client that reads from an asyn driver via
+    octet messages:</p>
+  <pre>#include &lt;asynDriver.h&gt;
+...
+#define BUFFER_SIZE 80
+typedef struct myData {
+    epicsEventId done;
+    asynOctet    *pasynOctet;
+    void         *drvPvt;
+    char         buffer[BUFFER_SIZE];
+}myData;
+
+static void queueCallback(asynUser *pasynUser) {
+    myData     *pmydata = (myData *)pasynUser-&gt;userPvt;
+    asynOctet  *pasynOctet = pmydata-&gt;pasynOctet;
+    void       *drvPvt = pmydata-&gt;drvPvt;
+    asynStatus status;
+    int        writeBytes,readBytes;
+    int        eomReason;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
+    status = pasynOctet-&gt;write(drvPvt,pasynUser,pmydata-&gt;buffer,
+              strlen(pmydata-&gt;buffer),&amp;writeBytes);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback write failed %s\n",pasynUser-&gt;errorMessage);
+    } else {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,strlen(pmydata-&gt;buffer),
+            "queueCallback write sent %d bytes\n",writeBytes);
+    }
+    status = pasynOctet-&gt;read(drvPvt,pasynUser,pmydata-&gt;buffer,
+         BUFFER_SIZE,&amp;readBytes,&amp;eomReason);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
+    } else {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,BUFFER_SIZE,
+            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
+            readBytes,eomReason,pmydata-&gt;buffer);
+    }
+    epicsEventSignal(pmydata-&gt;done);
+}
+
+static void asynExample(const char *port,int addr,const char *message)
+{
+    myData        *pmyData;
+    asynUser      *pasynUser;
+    asynStatus    status;
+    asynInterface *pasynInterface;
+
+    pmyData = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
+    memset(pmyData,0,sizeof(myData));
+    strcpy(pmyData-&gt;buffer,message);
+    pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
+    pasynUser-&gt;userPvt = pmyData;
+    status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
+    if(status!=asynSuccess) {
+        printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
+        exit(1);
+    }
+    pasynInterface = pasynManager-&gt;findInterface(
+        pasynUser,asynOctetType,1);
+    if(!pasynInterface) {
+        printf("%s driver not supported\n",asynOctetType);
+        exit(-1);
+    }
+    pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
+    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
+    pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
+    status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
+    }
+    epicsEventWait(pmyData-&gt;done);
+    status = pasynManager-&gt;freeAsynUser(pasynUser);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
+    }
+    epicsEventDestroy(pmyData-&gt;done);
+    pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
+}</pre>
+  <p>
+    The flow of control is as follows:</p>
+  <ol>
+    <li>A port driver calls registerPort. This step is not shown in the above example.</li>
+    <li>asynExample allocates myData and an asynUser.</li>
+    <li>asynExample connects to a device and to the asynOctet interface for the port driver.</li>
+    <li>When it is ready to communicate with the driver it calls queueRequest.</li>
+    <li>queueCallback is called. It calls the port driver's write and read methods.</li>
+  </ol>
+  <hr />
+  <h2 id="TestApplications">
+    Test Applications</h2>
+  <p>
+    The asynDriver distribution includes several test applications to test asynDriver
+    and device support.</p>
+  <h3 id="testApp">
+    testApp</h3>
+  <p>
+    This is an example of how to interface to asynManager. The example resides in &lt;top&gt;/testApp
+    and contains the following components:</p>
+  <pre>Db/
+   test.db
+   testBlock.db
+adl/
+   test.adl
+src/
+   devTestBlock.dbd
+   echoDriver.c
+   addrChangeDriver.c
+   devTestBlock.c
+   interposeInterface.c</pre>
+  <p>
+    echoDriver is a port driver that echos messages it receives. It implements asynCommon
+    and asynOctet. When asynOctet:write is called it saves the message. When asynOctet:read
+    is called, the saved message is returned and the message is flushed. echoDriverInit
+    has an argument that determines if it acts like a multiDevice or a single device
+    port driver.</p>
+  <p>
+    An instance of echoDriver is started via the iocsh command:</p>
+  <pre>echoDriverInit(portName,delay,noAutoConnect,multiDevice)</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>portName - the port name for this instance.</li>
+    <li>delay - The time to delay after a read or write. If delay is 0 then echoDriver
+      registers as a synchronous port driver, i.e. bit ASYN_CANBLOCK of attributes is
+      not set. If delay&gt;0 then ASYN_CANBLOCK is set.</li>
+    <li>noAutoConnect - Determines initial setting for port.</li>
+    <li>multiDevice - If true then it supports two devices with addresses 0 and 1. If
+      false it does not set ASYN_MULTIDEVICE, i.e. it only supports a single device.</li>
+  </ul>
+  <p>
+    addrChangeDriver is a multidevice driver that is an asynUser of another port driver.
+    In the example application it connects to echoDriver. An example where this technique
+    might be used is a port driver for mult-drop serial that connects to a standard
+    serial port.</p>
+  <p>
+    An instance of addrChangeDriver is started via the iocsh commandL:</p>
+  <pre>addrChangeDriverInit(portName,lowerPort,addr)</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>portName - the port name for this instance.</li>
+    <li>lowerPort - the port to which addrChangeDriver connects</li>
+    <li>addr - The address to which addrChangeDriver connects</li>
+  </ul>
+  <p>
+    devTestBlock is device support that tests blockProcessCallback. It has device support
+    for stringin records. The INP field has the syntax:</p>
+  <pre>    field(INP,"@asyn(port,addr,timeout) pvname)</pre>
+  <p>
+    where:</p>
+  <ul>
+    <li>asyn(port,addr,timeout) is same as for devEpics support.</li>
+    <li>pvname - The name of a record in the same ioc.</li>
+  </ul>
+  <p>
+    When the stringin record is processed the following occurs.</p>
+  <ul>
+    <li>When process is called and PACT is :
+      <ul>
+        <li>TRUE - then it just returns to record support.</li>
+        <li>FALSE - It does what follows.</li>
+      </ul>
+    </li>
+    <li>When processing starts the state is stateIdle.</li>
+    <li>blockProcessCallback is called.</li>
+    <li>callbackRequestDelayed is called (.1 second delay). The callback calls queueRequest.</li>
+    <li>When processCallback is called it does the following:
+      <ul>
+        <li>calls unblockProcessCallback</li>
+        <li>If state is stateIdle
+          <ul>
+            <li>Calls dbGet to get a string value from pvname</li>
+            <li>calls pasynOctet-&gt;write to send the string</li>
+            <li>sets state to stateWrite</li>
+            <li>Calls blockProcessCallback</li>
+            <li>callbackRequestDelayed is called The callback calls queueRequest.</li>
+            <li>completes. processCallback will be called again</li>
+          </ul>
+        </li>
+        <li>If state is stateWrite
+          <ul>
+            <li>calls pasynOctet-&gt;read and puts the value in VAL.</li>
+            <li>Sets state = stateIdle</li>
+            <li>requests the the record be processed. This time PACT will be TRUE</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+  <p>
+    test.db is a template containing three records: a calc record, which forward links
+    to a stringout record which forward links to a stringin record. The stringOut record
+    attaches to the device support supplied by asynOctetWriteRead.c. When the calcRecord
+    is processed the following happens:</p>
+  <ul>
+    <li>The calcRecord acts as a counter that overflows when the count reaches 10. After
+      counting to forward links ti the stringIn record.</li>
+    <li>The string in record gets the current value of the counter converted to s character
+      string and forward links to the stringOut record.</li>
+    <li>The stringOut record gets the value from the stringIn record an calls queueRequest.
+      The record is left with PACT true.</li>
+    <li>The processCallback calls pasynOctet-&gt;write passing the value obtained from
+      the stringIn record. The then does does a pasynOctet-&gt;read. When this completes
+      it asks for the record to complete processing.</li>
+    <li>The stringOut record completes processing.
+      <p>
+      </p>
+    </li>
+  </ul>
+  <p>
+    testBlock.db is a template similar to test.db except that it attached to device
+    support testBlock instead of asynOctetWriteRead.</p>
+  <p>
+    Executing "medm -x test.adl" produces the display:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="asynTest.png" src="asynTest.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctest
+../../bin/linux-x86_64/test st.cmd</pre>
+  <p>
+    This starts two versions of echoDriver as port "A" and "B". port A acts as single
+    device port. port B acts as a multiDevice port that has two devices. For each of
+    the three possible devices, the st.cmd file starts up two sets of records from test.db
+    The st.cmd file also loads a set of records from asynTest.db for port A and for
+    port B and for each of the two devices attached to port B. It also loads a set of
+    records from asynRecord.db. It starts one version of addrChangeDriver which connects
+    to port A.</p>
+  <p>
+    It loads six versions of test.db and four versions of testBlock.db The test.adl
+    file attaches to these database records.</p>
+  <h3 id="testArrayRingBufferApp">
+    testArrayRingBufferApp</h3>
+  <p>
+    This tests ring buffers for callbacks with arrays. The example resides in &lt;top&gt;/testArrayRingBufferApp.
+  </p>
+  <p>
+    Executing "medm -x testArrayRingBufferTop.adl" produces a top-level display from
+    which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="asynTestArrayRingBuffer.png" src="asynTestArrayRingBuffer.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestArrayRingBuffer
+../../bin/linux-x86_64/testArrayRingBuffer st.cmd</pre>
+  <h3 id="testAsynPortClientApp">
+    testAsynPortClientApp</h3>
+  <p>
+    This is a test program that demonstrates how to write C++ program that instantiates
+    both an asyn port driver and an asynPortClient object. It uses the asynPortClient
+    object to communicate with the asyn port driver directly over the asyn interfaces
+    without running an EPICS IOC. It creates an asynIPPort driver and an asynPortClient,
+    and uses the command line arguments to set the hostInfo string, a single command
+    string to send to the server, and optionally the input and output EOS. It then prints
+    out the response from the server. There are 3 example shell scipts provided that
+    show how to use testAsynIPPortClient to communicate with a Web server, a Newport
+    XPS motor controller, and a telnet host respectively.</p>
+  <p>
+    Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]</p>
+  <p>
+    Example: testAsynIPPortClient cars.uchicago.edu:80 "GET / HTTP/1.0" "\n\n"</p>
+  <p>
+    The example resides in &lt;top&gt;/testAsynPortClientApp.</p>
+  <h3 id="testAsynPortDriverApp">
+    testAsynPortDriverApp</h3>
+  <p>
+    This test demonstrates how to write a driver using the asynPortDriver C++ class.
+    It consists of a simple digital oscilloscope simulator. When the vertical gain changes
+    the driver does callbacks on the enum choices for the vertical volts/division. This
+    requires closing and re-opening the display in medm, because Channel Access does
+    not do monitors on enum value changes.</p>
+  <p>
+    The example resides in &lt;top&gt;/testAsynPortDriverApp.
+  </p>
+  <p>
+    Executing "medm -x testAsynPortDriverTop.adl" produces a top-level display from
+    which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testAsynPortDriver.png" src="testAsynPortDriver.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestAsynPortDriver
+../../bin/linux-x86_64/testAsynPortDriver st.cmd</pre>
+  <h3 id="testBroadcastApp">
+    testBroadcastApp</h3>
+  <p>
+    This application contains 3 test programs that use UDP IP broadcast messages.</p>
+  <p>
+    testBroadcastAsyn.c<br />
+    This program uses drvAsynIPPort to send UDP broadcast messages on port 37747. The
+    message is "i\n". It then listens for any responses. If there are NSLS electrometers
+    on the network they should respond.</p>
+  <p>
+    testBroadcastNoAsyn.c<br />
+    This program does the same as testBroadcastAsyn.c but uses native socket calls rather
+    than drvAsynIPort.</p>
+  <p>
+    testBroadcastBurst.c<br />
+    This program is used to test the behavior of devices in the presence of large amounts
+    of broadcast traffic. It should be used with caution, since it can send a large
+    number of broadcast messages very quickly. It sends numBroadcast messages with no
+    delay. The messages is "test\r". It does this in a loop of numLoops with a delay
+    of delayTime seconds at the end of each loop. delayTime is floating point value,
+    so can be less than 1 second.<br />
+    Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops delayTime</p>
+  <p>
+    The code resides in &lt;top&gt;/testBroadcastApp.</p>
+  <h3 id="testConnectApp">
+    testConnectApp</h3>
+  <p>
+    This application can be used to test connection management. It connects to a device
+    with drvAsynIPPort and periodically writes to it in a background thread. Depending
+    on whether the device is connected error messages will be printed. The device can
+    be connected and disconnected by power-cycling or removing the network cable to
+    test the behavior.</p>
+  <p>
+    The example resides in &lt;top&gt;/testConnectApp.
+  </p>
+  <p>
+    The test ioc can be started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestConnect
+../../bin/linux-x86_64/testConnect st.cmd</pre>
+  <p>
+    The st.cmd file can be edited to select devices which will or will not ever connect.
+    There is no medm screen for this test.</p>
+  <h3 id="testEpicsApp">
+    testEpicsApp</h3>
+  <p>
+    This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
+    interfaces. Both drivers also implement the asynFloat64 interface for controlling
+    the update rate. The testEpicsApp application also uses the asynOctet echoDriver
+    from <a href="#testApp">testApp</a>.
+  </p>
+  <p>
+    The example resides in &lt;top&gt;/testEpicsApp.
+  </p>
+  <p>
+    Executing "medm -x *.adl" from the &lt;top&gt;/testEpicsApp/adl directory opens
+    the followings displays.</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testInt32.png" src="testInt32.png" /></p>
+    <p>
+      <img alt="testDigital.png" src="testDigital.png" /></p>
+    <p>
+      <img alt="testOctet.png" src="testOctet.png" /></p>
+  </div>
+  <p>
+    From the testInt32.adl screen the following time-series screen can be opened.</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="asynTimeSeries.png" src="asynTimeSeries.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestEpics
+../../bin/linux-x86_64/testEpics st.cmd</pre>
+  <h3 id="testErrorsApp">
+    testErrorsApp</h3>
+  <p>
+    This tests error handling in standard asyn device support. The user can control
+    the status and severity for write operations, read operations, and interrupt callbacks.
+    It tests all of the interfaces (asynInt32, asynUInt32Digital, asynFloat64, asynOctet,
+    asynEnum, asynXXXArray (XXX=Int8, Int16, Int32, Float32, Float64). It tests output
+    records both with an without the info tag asyn:READBACK. By editing options in the
+    st.cmd file it also tests:</p>
+  <ul>
+    <li>Synchronous and asynchronous driver operation (ASYN_CANBLOCK unset or set)</li>
+    <li>String and waveform records with or without ring buffer support(asyn:FIFO=0 or
+      5)</li>
+    <li>Record .TSE field 0 (default timestamp support) or -2 (records get their timestamps
+      from the driver)</li>
+    <li>Periodic or I/O Intr scanning of input records.</li>
+  </ul>
+  <p>
+    The example resides in &lt;top&gt;/testEpicsApp.
+  </p>
+  <p>
+    Executing "medm -x testErrorsTop.adl" from the &lt;top&gt;/testEerrorsApp/adl directory
+    produces a top-level display from which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testErrors.png" src="testErrors.png" width="1024" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestErrors
+../../bin/linux-x86_64/testErrors st.cmd</pre>
   <h2 id="InstallBuild">
     Install and Build</h2>
   <h3 id="InstallBuildDriver">
