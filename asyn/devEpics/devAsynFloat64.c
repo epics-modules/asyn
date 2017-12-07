@@ -545,8 +545,16 @@ static long processAi(aiRecord *pr)
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
-        pr->val = pPvt->result.value; 
-        pr->udf=0;
+        epicsFloat64 val64 = pPvt->result.value;
+        /* ASLO/AOFF conversion */
+        if (pr->aslo != 0.0) val64 *= pr->aslo;
+        val64 += pr->aoff;
+        /* Smoothing */
+        if (pr->smoo == 0.0 || pr->udf || !finite(pr->val))
+            pr->val = val64;
+        else
+            pr->val = pr->val * pr->smoo + val64 * (1.0 - pr->smoo);
+        pr->udf = 0;
         return 2;
     }
     else {
@@ -569,6 +577,10 @@ static long initAo(aoRecord *pao)
     status = pasynFloat64SyncIO->read(pPvt->pasynUserSync,
                       &value,pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
+        epicsFloat64 val64 = value;
+        /* ASLO/AOFF conversion */
+        if (pao->aslo != 0.0) val64 *= pao->aslo;
+        val64 += pao->aoff;
         pao->val = value;
         pao->udf = 0;
     }
@@ -587,7 +599,10 @@ static long processAo(aoRecord *pr)
             pr->udf = 0;
         }
     } else if(pr->pact == 0) {
-        pPvt->result.value = pr->oval;
+        /* ASLO/AOFF conversion */
+        epicsFloat64 val64 = pr->oval - pr->aoff;
+        if (pr->aslo != 0.0) val64 /= pr->aslo;
+        pPvt->result.value = val64;
         if(pPvt->canBlock) pr->pact = 1;
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
@@ -654,7 +669,14 @@ static long processAiAverage(aiRecord *pai)
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     recGblSetSevr(pai, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if (pPvt->result.status == asynSuccess) {
-        pai->val = dval;
+        /* ASLO/AOFF conversion */
+        if (pai->aslo != 0.0) dval *= pai->aslo;
+        dval += pai->aoff;
+        /* Smoothing */
+        if (pai->smoo == 0.0 || pai->udf || !finite(pai->val))
+            pai->val = dval;
+        else
+            pai->val = pai->val * pai->smoo + dval * (1.0 - pai->smoo);
         pai->udf = 0;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
                   "%s %s::%s val=%f\n",
