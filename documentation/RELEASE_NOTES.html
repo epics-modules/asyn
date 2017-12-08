@@ -17,6 +17,14 @@
       November XXX, 2017</h2>
   </div>
   <h3>
+    devAsynFloat64.c</h3>
+  <ul>
+    <li>Added support for ASLO/AOFF scaling and SMOO value smoothing to the flota64
+      device support for ai and ao records, which directly uses the record's VAL/OVAL
+      fields, so that the record support conversion routines (that use RVAL/VAL)
+      don't work.</li>
+  </ul>
+  <h3>
     devAsynInt32.c, devAsynUInt32Digital.c, devAsynFloat64.c, devAsynOctet.c</h3>
   <ul>
     <li>Fixed a problem with output records that have the asyn:READBACK info tag, i.e.
