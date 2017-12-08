@@ -581,7 +581,7 @@ static long initAo(aoRecord *pao)
         /* ASLO/AOFF conversion */
         if (pao->aslo != 0.0) val64 *= pao->aslo;
         val64 += pao->aoff;
-        pao->val = value;
+        pao->val = val64;
         pao->udf = 0;
     }
     pasynFloat64SyncIO->disconnect(pPvt->pasynUserSync);
@@ -595,7 +595,11 @@ static long processAo(aoRecord *pr)
 
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         if (pPvt->result.status == asynSuccess) {
-            pr->val = pPvt->result.value;
+            epicsFloat64 val64 = pPvt->result.value;
+            /* ASLO/AOFF conversion */
+            if (pr->aslo != 0.0) val64 *= pr->aslo;
+            val64 += pr->aoff;
+            pr->val = val64;
             pr->udf = 0;
         }
     } else if(pr->pact == 0) {
