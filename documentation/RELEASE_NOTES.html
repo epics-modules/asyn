@@ -14,15 +14,15 @@
     <h2>
       Release 4-33</h2>
     <h2>
-      November XXX, 2017</h2>
+      December XXX, 2017</h2>
   </div>
   <h3>
     devAsynFloat64.c</h3>
   <ul>
-    <li>Added support for ASLO/AOFF scaling and SMOO value smoothing to the flota64
-      device support for ai and ao records, which directly uses the record's VAL/OVAL
-      fields, so that the record support conversion routines (that use RVAL/VAL)
-      don't work.</li>
+    <li>Added support for ASLO/AOFF scaling and SMOO value smoothing to the float64 device
+      support for ai and ao records. SMOO only applies to ai records. devAsynFloat64 directly
+      writes to the record's VAL/OVAL fields, so the conversion routines in the record
+      that use RVAL/VAL don't work.</li>
   </ul>
   <h3>
     devAsynInt32.c, devAsynUInt32Digital.c, devAsynFloat64.c, devAsynOctet.c</h3>
@@ -59,6 +59,22 @@
   <ul>
     <li>Fixed bug where the record alarm status was not set correctly if a write or read
       failed with a synchronous driver.</li>
+  </ul>
+  <h3>
+    testErrorsApp</h3>
+  <ul>
+    <li>Previously the user-defined alarm status and severity were only set on callbacks,
+      i.e. input records with SCAN=I/O Intr and output records with info tag asyn:READBACK=1.
+      Now all calls to the read() and write() methods in each interface also return the
+      user-defined alarm status and severity in pasynUser.</li>
+  </ul>
+  <h3>
+    Documentation</h3>
+  <ul>
+    <li>asynDriver.html has been improved. All level 3 headings are now links in the Contents
+      at the start of the file. This makes it much easier to find a particular topic and
+      jump to it quickly. Many of the test applications are now documented, including
+      medm screen shots to show how they work.</li>
   </ul>
   <div style="text-align: center">
     <hr />
