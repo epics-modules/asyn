@@ -27,6 +27,7 @@
 #include <epicsPrint.h>
 #include <epicsMutex.h>
 #include <epicsThread.h>
+#include <epicsMath.h>
 #include <cantProceed.h>
 #include <dbCommon.h>
 #include <dbScan.h>
