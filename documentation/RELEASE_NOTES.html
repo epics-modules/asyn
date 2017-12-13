@@ -61,6 +61,19 @@
       failed with a synchronous driver.</li>
   </ul>
   <h3>
+    asynManager.c</h3>
+  <ul>
+    <li>Improved error messages from autoconnect attempts. Messages are now printed only
+    when the autoconnect status changes, rather than each time there is a failure. Thanks to
+    Ben Franksen for this.</li>
+  </ul>
+  <h3>
+    drvVXI11.c.c</h3>
+  <ul>
+    <li>Improved error messages from connection attempts. Messages are now printed only
+    when the connection status changes, rather than each time there is a connection failure. 
+    Thanks to Ben Franksen for this.</li>
+  </ul>  <h3>
     testErrorsApp</h3>
   <ul>
     <li>Previously the user-defined alarm status and severity were only set on callbacks,
