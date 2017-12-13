@@ -186,6 +186,13 @@ struct device {
     int       addr;
 };
 
+typedef enum portConnectStatus {
+    portConnectSuccess,
+    portConnectDevice,
+    portConnectFindInterface,
+    portConnectDriver
+} portConnectStatus;
+
 struct port {
     ELLNODE       node;  /*For asynBase.asynPortList*/
     char          *portName;
@@ -197,6 +204,8 @@ struct port {
     int           attributes;
     /* The following are for autoConnect*/
     asynUser      *pasynUser;
+    double        secondsBetweenPortConnect;
+    portConnectStatus previousConnectStatus;
     /* The following are for asynLockPortNotify */
     asynLockPortNotify *pasynLockPortNotify;
     void          *lockPortNotifyPvt;
@@ -216,8 +225,7 @@ struct port {
     epicsTimeStamp timeStamp;
     timeStampCallback timeStampSource;
     void          *timeStampPvt;
-    double        secondsBetweenPortConnect;
- };
+};
 
 typedef struct queueLockPortPvt {
     epicsEventId  queueLockPortEvent;
@@ -450,6 +458,18 @@ static void tracePvtFree(tracePvt *ptracePvt)
 {
     assert(ptracePvt->fp==0);
     free(ptracePvt->traceBuffer);
+}
+
+static void reportConnectStatus(port *pport, portConnectStatus status, const char *fmt, ...)
+{
+    va_list args;
+
+    if (pport->previousConnectStatus != status) {
+        pport->previousConnectStatus = status;
+        va_start(args, fmt);
+        pasynTrace->vprint(pport->pasynUser, ASYN_TRACE_ERROR, fmt, args);
+        va_end(args);
+    }
 }
 
 static void asynInit(void)
@@ -716,14 +736,14 @@ static void connectAttempt(dpCommon *pdpCommon)
     addr = (pdevice ? pdevice->addr : -1);
     status = pasynManager->connectDevice(pasynUser,pport->portName,addr);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        reportConnectStatus(pport, portConnectDevice,
             "%s %d autoConnect connectDevice failed.\n",
             pport->portName,addr);
         return;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynCommonType,TRUE);
     if(!pasynInterface) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        reportConnectStatus(pport, portConnectFindInterface,
             "%s %d autoConnect findInterface for asynCommon failed.\n",
             pport->portName,addr);
             goto disconnect;
@@ -738,16 +758,19 @@ static void connectAttempt(dpCommon *pdpCommon)
         epicsMutexMustLock(pport->synchronousLock);
         status = pasynCommon->connect(drvPvt,pasynUser);
         epicsMutexUnlock(pport->synchronousLock);
-    }
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s %s %d autoConnect could not connect\n",
-            pasynUser->errorMessage,pport->portName,addr);
+        if (status != asynSuccess) {
+            reportConnectStatus(pport, portConnectDriver,
+                "%s %d autoConnect could not connect\n", pport->portName, addr);
+        } else {
+            reportConnectStatus(pport, portConnectSuccess,
+                "%s %d port is now connected\n",
+                pport->portName, addr);
+        }
     }
 disconnect:
     status = pasynManager->disconnect(pasynUser);
     if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s %d autoConnect disconnect failed.\n",
             pport->portName,addr);
     }
@@ -1954,6 +1977,7 @@ static asynStatus registerPort(const char *portName,
     pport->timeStampSource = defaultTimeStampSource;
     dpCommonInit(pport,0,autoConnect);
     pport->pasynUser = createAsynUser(0,0);
+    pport->previousConnectStatus = portConnectSuccess;
     pport->queueLockPortTimeout = DEFAULT_QUEUE_LOCK_PORT_TIMEOUT;
     ellInit(&pport->deviceList);
     ellInit(&pport->interfaceList);

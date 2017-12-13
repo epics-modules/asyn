@@ -20,6 +20,7 @@
 #include <errno.h>
 #include <ctype.h>
 #include <limits.h>
+#include <stdarg.h>
 
 /* epics includes */
 #include <dbDefs.h>
@@ -67,6 +68,18 @@ typedef struct linkPrimary {
     devLink primary;
     devLink secondary[NUM_GPIB_ADDRESSES];
 }linkPrimary;
+typedef enum vxiConnectStatus {
+    vxiConnectSuccess,
+    vxiConnectDevice,
+    vxiConnectAlreadyConnected,
+    vxiConnectInitRpc,
+    vxiConnectResolveName,
+    vxiConnectClientCreate,
+    vxiConnectReadBusAddress,
+    vxiConnectReadSystemController,
+    vxiConnectReadControllerInCharge,
+    vxiConnectNotController
+} vxiConnectStatus;
 /******************************************************************************
  * This structure is used to hold the hardware-specific information for a
  * single GPIB link. There is one for each gateway.
@@ -100,6 +113,7 @@ typedef struct vxiPort {
     char          *srqThreadName;
     epicsInterruptibleSyscallContext *srqInterrupt;
     int           srqEnabled;
+    vxiConnectStatus previousConnectStatus;
 }vxiPort;
 
 /* Local routines */
@@ -457,7 +471,7 @@ static int vxiWriteCmd(vxiPort * pvxiPort,asynUser *pasynUser,
 
 /******************************************************************************
  * Check the bus status. Parameter <request> can be a number from 1 to 8 to
- * indicate the information requested (see VXI_BSTAT_XXXX in drvLanGpib.h)
+ * indicate the information requested (see VXI_BSTAT_XXXX in vxi11.h)
  * or it can be 0 meaning all (exept the bus address) which will then be
  * combined into a bitfield according to the bit numbers+1 (1 corresponds to
  * bit 0, etc.).
@@ -848,6 +862,18 @@ static void vxiSrqThread(void *arg)
     epicsEventSignal(pvxiPort->srqThreadDone);
 }
 
+static void reportConnectStatus(vxiPort *pvxiPort, vxiConnectStatus status, const char* fmt, ...)
+{
+    va_list args;
+
+    if (pvxiPort->previousConnectStatus != status) {
+        pvxiPort->previousConnectStatus = status;
+        va_start(args, fmt);
+        pasynTrace->vprint(pvxiPort->pasynUser, ASYN_TRACE_ERROR, fmt, args);
+        va_end(args);
+    }
+}
+
 static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
 {
     int         isController;
@@ -864,21 +890,20 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
         pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
         status = pasynManager->connectDevice(
-            pvxiPort->pasynUser,pvxiPort->portName,-1);
-        if (status!=asynSuccess) 
-            asynPrint(pasynUser, ASYN_TRACE_ERROR,
-            "vxiConnectPort: connectDevice failed %s\n",pvxiPort->pasynUser->errorMessage);
+            pvxiPort->pasynUser, pvxiPort->portName,-1);
+        reportConnectStatus(pvxiPort, vxiConnectDevice,
+            "vxiConnectPort: connectDevice failed %s\n", pvxiPort->pasynUser->errorMessage);
     }
     if(pvxiPort->server.connected) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s vxiConnectPort but already connected\n",pvxiPort->portName);
+        reportConnectStatus(pvxiPort, vxiConnectAlreadyConnected,
+            "%s vxiConnectPort but already connected\n", pvxiPort->portName);
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s vxiConnectPort\n",pvxiPort->portName);
     if(!pvxiPort->rpcTaskInitCalled) {
         if(rpcTaskInit() == -1) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            reportConnectStatus(pvxiPort, vxiConnectInitRpc,
                 "%s Can't init RPC\n",pvxiPort->portName);
             return asynError;
         }
@@ -894,14 +919,16 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     vxiServer.sin_family = AF_INET;
     vxiServer.sin_port = htons(0);
     if (hostToIPAddr(pvxiPort->hostName, &vxiServer.sin_addr) < 0) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't get IP address of %s\n",
-                                    pvxiPort->portName, pvxiPort->hostName);
+        reportConnectStatus(pvxiPort, vxiConnectResolveName,
+            "%s can't get IP address of %s\n",
+            pvxiPort->portName, pvxiPort->hostName);
         return asynError;
     }
     pvxiPort->rpcClient = clnttcp_create(&vxiServer, 
                                 DEVICE_CORE, DEVICE_CORE_VERSION, &sock, 0, 0);
     if(!pvxiPort->rpcClient) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s vxiConnectPort error %s\n",
+        reportConnectStatus(pvxiPort, vxiConnectClientCreate,
+            "%s vxiConnectPort error %s\n",
             pvxiPort->portName, clnt_spcreateerror(pvxiPort->hostName));
         return asynError;
     }
@@ -916,8 +943,8 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         status = vxiBusStatus(pvxiPort,
             VXI_BSTAT_BUS_ADDRESS,pvxiPort->defTimeout,&pvxiPort->ctrlAddr);
         if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
-           	    "%s vxiConnectPort cannot read bus status initialization aborted\n",
+            reportConnectStatus(pvxiPort, vxiConnectReadBusAddress,
+                "%s vxiConnectPort cannot read bus status initialization aborted\n",
                 pvxiPort->portName);
             if (pvxiPort->server.connected)
                 vxiDisconnectPort(pvxiPort);
@@ -930,7 +957,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         status = vxiBusStatus(pvxiPort, VXI_BSTAT_SYSTEM_CONTROLLER,
             pvxiPort->defTimeout,&isController);
         if(status!=asynSuccess) {
-            asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            reportConnectStatus(pvxiPort, vxiConnectReadSystemController,
                 "%s vxiConnectPort vxiBusStatus error initialization aborted\n",
                 pvxiPort->portName);
             if (pvxiPort->server.connected)
@@ -941,7 +968,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
             status = vxiBusStatus(pvxiPort, VXI_BSTAT_CONTROLLER_IN_CHARGE,
                 pvxiPort->defTimeout,&isController);
             if(status!=asynSuccess) {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                reportConnectStatus(pvxiPort, vxiConnectReadControllerInCharge,
                     "%s vxiConnectPort vxiBusStatus error initialization aborted\n",
                     pvxiPort->portName);
                 if (pvxiPort->server.connected)
@@ -949,7 +976,7 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
                 return asynError;
             }
             if(isController == 0) {
-                asynPrint(pasynUser,ASYN_TRACE_ERROR,
+                reportConnectStatus(pvxiPort, vxiConnectNotController,
                     "%s vxiConnectPort neither system controller nor "
                     "controller in charge -- initialization aborted\n",
                     pvxiPort->portName);
@@ -961,6 +988,8 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     }
     if (pvxiPort->hasSRQ) vxiCreateIrqChannel(pvxiPort,pasynUser);
     pasynManager->exceptionConnect(pvxiPort->pasynUser);
+    reportConnectStatus(pvxiPort, vxiConnectSuccess,
+        "%s is now connected\n", pvxiPort->portName);
     return asynSuccess;
 }
 
@@ -1728,6 +1757,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
         printf("registerPort failed\n");
         return 0;
     }
+    pvxiPort->previousConnectStatus = vxiConnectSuccess;
     /* pvxiPort->pasynUser may have been created already by a connection callback to vxiConnectPort */
     if (!pvxiPort->pasynUser) {
         pvxiPort->pasynUser = pasynManager->createAsynUser(0,0);
