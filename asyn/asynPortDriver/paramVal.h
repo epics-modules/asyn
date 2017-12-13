@@ -20,6 +20,8 @@ public:
     bool hasValueChanged();
     void setValueChanged();
     void resetValueChanged();
+    bool isValueNew();
+    void resetValueNew();
     void setStatus(asynStatus status);
     asynStatus getStatus();
     void setAlarmStatus(int status);
@@ -50,6 +52,7 @@ protected:
     int alarmSeverity_;
     bool valueDefined;
     bool valueChanged;
+    bool valueNew;
     char *name;         /**< Parameter name */
     std::string sval;
     /** Union for parameter value */

@@ -73,6 +73,9 @@ public:
     asynStatus getAlarmStatus(int index, int *alarmStatus);
     asynStatus setAlarmSeverity(int index, int alarmSeverity);
     asynStatus getAlarmSeverity(int index, int *alarmSeverity);
+    asynStatus getValueNew(int index, bool *status);
+    asynStatus resetValueNew(int index);
+
     void report(FILE *fp, int details);
 
 private:
@@ -366,6 +369,28 @@ asynStatus paramList::setStatus(int index, asynStatus status)
     if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
     this->vals[index]->setStatus(status);
     registerParameterChange(getParameter(index), index);
+    return asynSuccess;
+}
+
+/** Gets the new value status for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[out] status Address of status to get
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::getValueNew(int index, bool *status)
+{
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
+    *status = this->vals[index]->isValueNew();
+    return asynSuccess;
+}
+
+/** Resets the new value status for a parameter in the parameter library.
+  * \param[in] index The parameter number
+  * \param[in] status Status to set
+  * \return Returns asynParamBadIndex if the index is not valid */
+asynStatus paramList::resetValueNew(int index)
+{
+    if (index < 0 || (size_t)index >= this->vals.size()) return asynParamBadIndex;
+    this->vals[index]->resetValueNew();
     return asynSuccess;
 }
 
@@ -1015,6 +1040,52 @@ asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *param
     static const char *functionName = "getParamStatus";
 
     status = this->params[list]->getStatus(index, paramStatus);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Clear the new value status for a parameter in the parameter library.
+  * Calls clearParamValueNew(0, index) i.e. for parameter list 0.
+  * \param[in] index The parameter number. */
+asynStatus asynPortDriver::clearParamValueNew(int index)
+{
+    return this->clearParamValueNew(0, index);
+}
+
+/** Clear the new value status for a parameter in the parameter library.
+  * Calls paramList::clearParamValueNew(index) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number. */
+asynStatus asynPortDriver::clearParamValueNew(int list, int index)
+{
+    asynStatus status;
+    static const char *functionName = "clearParamValueNew";
+
+    status = this->params[list]->resetValueNew(index);
+    if (status) reportSetParamErrors(status, index, list, functionName);
+    return(status);
+}
+
+/** Gets the new value status for a parameter in the parameter library.
+  * Calls isParamValueNew(0, index, changed) for the parameter list indexed by list.
+  * \param[in] index The parameter number 
+  * \param[out] changed Value changed status. */
+asynStatus asynPortDriver::isParamValueNew(int index, bool *changed)
+{
+    return this->isParamValueNew(0, index, changed);
+}
+
+/** Gets the new value status for a parameter in the parameter library.
+  * Calls paramList::getValueNew(index, changed) for the parameter list indexed by list.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[in] index The parameter number
+  * \param[out] changed Value changed status. */
+asynStatus asynPortDriver::isParamValueNew(int list, int index, bool *changed)
+{
+    asynStatus status;
+    static const char *functionName = "isParamValueNew";
+
+    status = this->params[list]->getValueNew(index, changed);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return(status);
 }

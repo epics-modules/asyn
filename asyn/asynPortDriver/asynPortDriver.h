@@ -171,6 +171,10 @@ public:
     virtual asynStatus updateTimeStamp(epicsTimeStamp *pTimeStamp);
     virtual asynStatus getTimeStamp(epicsTimeStamp *pTimeStamp);
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
+    virtual asynStatus clearParamValueNew(          int index);
+    virtual asynStatus clearParamValueNew(int list, int index);
+    virtual asynStatus isParamValueNew(          int index, bool *changed);
+    virtual asynStatus isParamValueNew(int list, int index, bool *changed);
     asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
 
