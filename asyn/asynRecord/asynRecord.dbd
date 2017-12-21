@@ -520,6 +520,13 @@ recordtype(asyn) {
         interest(1)
         menu(asynTRACE)
     }
+    field(TB6,DBF_MENU) {
+        prompt("Trace state")
+        promptgroup(GUI_DISPLAY)
+        special(SPC_MOD)
+        interest(1)
+        menu(asynTRACE)
+    }
     field(TIOM,DBF_LONG) {
         prompt("Trace I/O mask")
         promptgroup(GUI_DISPLAY)

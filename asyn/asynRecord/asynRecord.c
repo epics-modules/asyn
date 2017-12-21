@@ -188,6 +188,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 tb3;        /* Trace IO driver */
     epicsEnum16 tb4;        /* Trace flow */
     epicsEnum16 tb5;        /* Trace warning */
+    epicsEnum16 tb6;        /* Trace state */
     epicsInt32 tiom;        /* Trace I/O mask */
     epicsEnum16 tib0;       /* Trace IO ASCII */
     epicsEnum16 tib1;       /* Trace IO escape */
@@ -412,12 +413,14 @@ static long special(struct dbAddr * paddr, int after)
     case asynRecordTB3:
     case asynRecordTB4:
     case asynRecordTB5:
+    case asynRecordTB6:
         traceMask = (pasynRec->tb0 ? ASYN_TRACE_ERROR : 0) |
                     (pasynRec->tb1 ? ASYN_TRACEIO_DEVICE : 0) |
                     (pasynRec->tb2 ? ASYN_TRACEIO_FILTER : 0) |
                     (pasynRec->tb3 ? ASYN_TRACEIO_DRIVER : 0) |
                     (pasynRec->tb4 ? ASYN_TRACE_FLOW : 0) |
-                    (pasynRec->tb5 ? ASYN_TRACE_WARNING : 0);
+                    (pasynRec->tb5 ? ASYN_TRACE_WARNING : 0) |
+                    (pasynRec->tb6 ? ASYN_TRACE_STATE : 0);
         pasynTrace->setTraceMask(pasynUser, traceMask);
         return 0;
     case asynRecordTIOM:
@@ -1044,6 +1047,7 @@ static void monitorStatus(asynRecord * pasynRec)
     REMEMBER_STATE(tb3);
     REMEMBER_STATE(tb4);
     REMEMBER_STATE(tb5);
+    REMEMBER_STATE(tb6);
     REMEMBER_STATE(tiom);
     REMEMBER_STATE(tib0);
     REMEMBER_STATE(tib1);
@@ -1066,6 +1070,7 @@ static void monitorStatus(asynRecord * pasynRec)
     pasynRec->tb3 = (traceMask & ASYN_TRACEIO_DRIVER) ? 1 : 0;
     pasynRec->tb4 = (traceMask & ASYN_TRACE_FLOW) ? 1 : 0;
     pasynRec->tb5 = (traceMask & ASYN_TRACE_WARNING) ? 1 : 0;
+    pasynRec->tb6 = (traceMask & ASYN_TRACE_STATE) ? 1 : 0;
     traceMask = pasynTrace->getTraceIOMask(pasynUser);
     pasynRec->tiom = traceMask;
     pasynRec->tib0 = (traceMask & ASYN_TRACEIO_ASCII) ? 1 : 0;
@@ -1101,6 +1106,7 @@ static void monitorStatus(asynRecord * pasynRec)
     POST_IF_NEW(tb3);
     POST_IF_NEW(tb4);
     POST_IF_NEW(tb5);
+    POST_IF_NEW(tb6);
     POST_IF_NEW(tiom);
     POST_IF_NEW(tib0);
     POST_IF_NEW(tib1);
