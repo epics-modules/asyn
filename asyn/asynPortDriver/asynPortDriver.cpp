@@ -89,7 +89,6 @@ private:
 };
 
 /** Constructor for paramList class.
-  * \param[in] nValues Number of parameters in the list.
   * \param[in] pPort Pointer to asynPortDriver port for this paramList. */
 paramList::paramList(asynPortDriver *pPort)
     : pasynPortDriver(pPort)
@@ -3231,8 +3230,6 @@ static asynDrvUser ifaceDrvUser = {
                Often it is 1 (which is the minimum), but some drivers, for example a 
                16-channel D/A or A/D would support values &gt; 1. 
                This controls the number of parameter tables that are created.
-  * \param[in] paramTableSize The number of parameters that this driver supports.
-               This controls the size of the parameter tables.
   * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
                 The bit mask values are defined in asynPortDriver.h, e.g. asynInt32Mask.
   * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks).
