@@ -81,6 +81,11 @@
       Now all calls to the read() and write() methods in each interface also return the
       user-defined alarm status and severity in pasynUser.</li>
   </ul>
+    asynPortClient</h3>
+  <ul>
+    <li>Fixed typo in constructor for asynUInt32DigitalClient, it was calling asynInt32SyncIO-&gt;connect rather
+        than asynUInt32DigitalClient-&gt;connect.</li>
+ </ul>
   <h3>
     Documentation</h3>
   <ul>
