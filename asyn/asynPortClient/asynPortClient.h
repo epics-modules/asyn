@@ -121,7 +121,7 @@ public:
     asynUInt32DigitalClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynPortClient(portName, addr, asynUInt32DigitalType, drvInfo, timeout) {
         pInterface_ = (asynUInt32Digital *)pasynInterface_->pinterface;
-        if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
+        if (pasynUInt32DigitalSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32SyncIO->connect failed"));
     };
     /** Destructor for asynInt32Client class.  Disconnects from port, frees resources. */
