@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 0
-x 514
-y 515
+x 457
+y 494
 w 442
 h 350
 font "helvetica-medium-r-18.0"
@@ -47,20 +47,6 @@ useHexPrefix
 objType "controls"
 newPos
 endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 43
-w 424
-h 20
-
-beginGroup
-
 
 # (Static Text)
 object activeXTextClass
@@ -106,20 +92,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 225
-y 43
-w 205
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -139,39 +111,15 @@ value {
 }
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 109
-y 5
-w 241
-h 29
-
-beginGroup
-
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 109
+x 0
 y 5
-w 240
+w 441
 h 28
 lineColor index 2
 fill
@@ -185,9 +133,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 113
+x 0
 y 9
-w 236
+w 442
 h 21
 font "helvetica-medium-r-8.0"
 fontAlign "center"
@@ -197,11 +145,6 @@ value {
  "$(P)$(R)"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Text Control)
 object activeXTextDspClass
@@ -221,7 +164,7 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
@@ -334,7 +277,7 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
@@ -454,7 +397,7 @@ minor 0
 release 0
 x 10
 y 297
-w 70
+w 110
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -472,7 +415,7 @@ minor 0
 release 0
 x 217
 y 297
-w 90
+w 130
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -500,7 +443,7 @@ fgColor index 14
 fgAlarm
 bgColor index 2
 autoHeight
-format decimal
+format "string"
 nullColor index 32
 useHexPrefix
 objType "controls"
@@ -525,7 +468,7 @@ fgColor index 14
 fgAlarm
 bgColor index 2
 autoHeight
-format decimal
+format "string"
 nullColor index 32
 useHexPrefix
 objType "controls"
@@ -547,20 +490,6 @@ fillColor index 14
 lineWidth 0
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 323
-w 250
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -579,11 +508,6 @@ value {
  "Scan:"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -621,7 +545,7 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
@@ -982,32 +906,6 @@ value {
  "More..."
 }
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 43
-w 424
-h 20
-
-beginGroup
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 225
-y 43
-w 205
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1029,34 +927,6 @@ indicatorPv "$(P)$(R).TMOD"
 font "helvetica-medium-r-10.0"
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 109
-y 5
-w 241
-h 29
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
@@ -1076,19 +946,6 @@ controlPv "$(P)$(R).OFMT"
 indicatorPv "$(P)$(R).OFMT"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 323
-w 250
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1134,11 +991,6 @@ offLabel "Process"
 useEnumNumeric
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Menu Button)
 object activeMenuButtonClass

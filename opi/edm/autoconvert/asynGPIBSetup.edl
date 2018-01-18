@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 0
-x 288
-y 334
+x 456
+y 239
 w 375
 h 185
 font "helvetica-medium-r-18.0"
@@ -24,29 +24,15 @@ gridSize 5
 endScreenProperties
 
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 86
-y 8
-w 203
-h 29
-
-beginGroup
-
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 86
+x 0
 y 8
-w 202
+w 374
 h 28
 lineColor index 2
 fill
@@ -60,10 +46,10 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 89
+x 0
 y 12
-w 199
-h 21
+w 375
+h 25
 font "helvetica-medium-r-8.0"
 fontAlign "center"
 fgColor index 14
@@ -72,25 +58,6 @@ value {
  "$(P)$(R)"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 68
-w 210
-h 20
-
-beginGroup
-
 
 # (Static Text)
 object activeXTextClass
@@ -136,11 +103,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -183,20 +145,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 126
-w 355
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -215,25 +163,6 @@ value {
 }
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 151
-w 355
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -251,11 +180,6 @@ value {
  "Addressed Command"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -308,7 +232,7 @@ minor 0
 release 0
 x 4
 y 42
-w 200
+w 190
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -317,55 +241,6 @@ value {
  "asynGpib interface:"
 }
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 86
-y 8
-w 203
-h 29
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 68
-w 210
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 126
-w 355
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -387,24 +262,6 @@ indicatorPv "$(P)$(R).UCMD"
 font "helvetica-medium-r-10.0"
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 4
-y 151
-w 355
-h 20
-
-beginGroup
-
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
@@ -424,9 +281,4 @@ controlPv "$(P)$(R).ACMD"
 indicatorPv "$(P)$(R).ACMD"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 

@@ -1,7 +1,7 @@
 
 file {
-	name="/home/epics/devel/asyn/opi/medm/asynRecord.adl"
-	version=030107
+	name="/home/epics/devel/asyn-4-33/opi/medm/asynRecord.adl"
+	version=030109
 }
 display {
 	object {
@@ -87,40 +87,29 @@ display {
 		1a7309,
 	}
 }
-composite {
+rectangle {
 	object {
-		x=100
+		x=0
 		y=8
-		width=241
+		width=440
 		height=29
 	}
-	"composite name"=""
-	children {
-		rectangle {
-			object {
-				x=100
-				y=8
-				width=241
-				height=29
-			}
-			"basic attribute" {
-				clr=2
-			}
-		}
-		text {
-			object {
-				x=104
-				y=12
-				width=236
-				height=21
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="$(P)$(R)"
-			align="horiz. centered"
-		}
+	"basic attribute" {
+		clr=2
 	}
+}
+text {
+	object {
+		x=0
+		y=12
+		width=440
+		height=21
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="$(P)$(R)"
+	align="horiz. centered"
 }
 "text update" {
 	object {
@@ -142,7 +131,7 @@ text {
 	object {
 		x=10
 		y=181
-		width=70
+		width=60
 		height=20
 	}
 	"basic attribute" {
@@ -272,7 +261,7 @@ text {
 	object {
 		x=68
 		y=316
-		width=96
+		width=80
 		height=18
 	}
 	"basic attribute" {
@@ -284,7 +273,7 @@ text {
 	object {
 		x=68
 		y=385
-		width=96
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -296,7 +285,7 @@ text {
 	object {
 		x=68
 		y=362
-		width=96
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -308,7 +297,7 @@ text {
 	object {
 		x=68
 		y=339
-		width=96
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -320,7 +309,7 @@ text {
 	object {
 		x=9
 		y=269
-		width=100
+		width=90
 		height=20
 	}
 	"basic attribute" {
@@ -332,7 +321,7 @@ text {
 	object {
 		x=242
 		y=362
-		width=100
+		width=80
 		height=18
 	}
 	"basic attribute" {
@@ -465,80 +454,59 @@ rectangle {
 	limits {
 	}
 }
-composite {
+text {
 	object {
 		x=6
 		y=97
-		width=232
+		width=80
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=6
-				y=97
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="drvInfo:"
-		}
-		"text entry" {
-			object {
-				x=88
-				y=97
-				width=150
-				height=20
-			}
-			control {
-				chan="$(P)$(R).DRVINFO"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="drvInfo:"
+}
+"text entry" {
+	object {
+		x=88
+		y=97
+		width=150
+		height=20
+	}
+	control {
+		chan="$(P)$(R).DRVINFO"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
 	}
 }
-composite {
+menu {
+	object {
+		x=111
+		y=122
+		width=130
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IFACE"
+		clr=14
+		bclr=51
+	}
+}
+text {
 	object {
 		x=6
 		y=122
-		width=235
+		width=100
 		height=20
 	}
-	"composite name"=""
-	children {
-		menu {
-			object {
-				x=111
-				y=122
-				width=130
-				height=20
-			}
-			control {
-				chan="$(P)$(R).IFACE"
-				clr=14
-				bclr=51
-			}
-		}
-		text {
-			object {
-				x=6
-				y=122
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-				fill="outline"
-			}
-			textix="Interface:"
-		}
+	"basic attribute" {
+		clr=14
+		fill="outline"
 	}
+	textix="Interface:"
 }
 "message button" {
 	object {
@@ -582,197 +550,154 @@ text {
 	limits {
 	}
 }
-composite {
+text {
+	object {
+		x=25
+		y=212
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).CNCT"
+	}
+	textix="Connected"
+	align="horiz. right"
+}
+text {
 	object {
 		x=10
 		y=212
 		width=120
-		height=42
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=25
-				y=212
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=62
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).CNCT"
-			}
-			textix="Connected"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=10
-				y=212
-				width=120
-				height=20
-			}
-			"basic attribute" {
-				clr=20
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).CNCT"
-			}
-			textix="Disconnected"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=10
-				y=234
-				width=120
-				height=20
-			}
-			control {
-				chan="$(P)$(R).CNCT"
-				clr=14
-				bclr=51
-			}
-		}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).CNCT"
+	}
+	textix="Disconnected"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=10
+		y=234
+		width=120
+		height=20
+	}
+	control {
+		chan="$(P)$(R).CNCT"
+		clr=14
+		bclr=51
 	}
 }
-composite {
+text {
 	object {
 		x=6
 		y=47
-		width=422
+		width=50
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=6
-				y=47
-				width=50
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Port:"
-		}
-		"text entry" {
-			object {
-				x=61
-				y=47
-				width=150
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PORT"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		text {
-			object {
-				x=228
-				y=47
-				width=80
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Address:"
-		}
-		"text entry" {
-			object {
-				x=318
-				y=47
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ADDR"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Port:"
+}
+"text entry" {
+	object {
+		x=61
+		y=47
+		width=150
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PORT"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
 	}
 }
-composite {
+text {
+	object {
+		x=228
+		y=47
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Address:"
+}
+"text entry" {
+	object {
+		x=318
+		y=47
+		width=110
+		height=20
+	}
+	control {
+		chan="$(P)$(R).ADDR"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+menu {
 	object {
 		x=61
 		y=72
-		width=287
+		width=120
 		height=20
 	}
-	"composite name"=""
-	children {
-		menu {
-			object {
-				x=61
-				y=72
-				width=120
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PCNCT"
-				clr=14
-				bclr=51
-			}
-		}
-		composite {
-			object {
-				x=228
-				y=72
-				width=120
-				height=20
-			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=243
-						y=72
-						width=90
-						height=20
-					}
-					"basic attribute" {
-						clr=62
-					}
-					"dynamic attribute" {
-						vis="if not zero"
-						chan="$(P)$(R).PCNCT"
-					}
-					textix="Connected"
-					align="horiz. right"
-				}
-				text {
-					object {
-						x=228
-						y=72
-						width=120
-						height=20
-					}
-					"basic attribute" {
-						clr=20
-					}
-					"dynamic attribute" {
-						vis="if zero"
-						chan="$(P)$(R).PCNCT"
-					}
-					textix="Disconnected"
-					align="horiz. right"
-				}
-			}
-		}
+	control {
+		chan="$(P)$(R).PCNCT"
+		clr=14
+		bclr=51
 	}
+}
+text {
+	object {
+		x=243
+		y=72
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=62
+	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).PCNCT"
+	}
+	textix="Connected"
+	align="horiz. right"
+}
+text {
+	object {
+		x=228
+		y=72
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=20
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).PCNCT"
+	}
+	textix="Disconnected"
+	align="horiz. right"
 }
 text {
 	object {
@@ -826,7 +751,7 @@ text {
 	object {
 		x=183
 		y=269
-		width=100
+		width=110
 		height=20
 	}
 	"basic attribute" {
@@ -838,7 +763,7 @@ text {
 	object {
 		x=242
 		y=316
-		width=100
+		width=96
 		height=18
 	}
 	"basic attribute" {
@@ -850,7 +775,7 @@ text {
 	object {
 		x=242
 		y=339
-		width=100
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -906,7 +831,7 @@ text {
 	object {
 		x=183
 		y=415
-		width=100
+		width=130
 		height=20
 	}
 	"basic attribute" {
@@ -930,42 +855,32 @@ text {
 	limits {
 	}
 }
-composite {
+text {
 	object {
 		x=9
+		y=557
+		width=88
+		height=18
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Trace file:"
+}
+"text entry" {
+	object {
+		x=99
 		y=555
-		width=420
+		width=330
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=9
-				y=557
-				width=80
-				height=18
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Trace file:"
-		}
-		"text entry" {
-			object {
-				x=99
-				y=555
-				width=330
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TFIL"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
+	control {
+		chan="$(P)$(R).TFIL"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
 	}
 }
 "choice button" {
@@ -986,7 +901,7 @@ text {
 	object {
 		x=68
 		y=408
-		width=96
+		width=72
 		height=18
 	}
 	"basic attribute" {
@@ -1024,7 +939,7 @@ text {
 	object {
 		x=242
 		y=485
-		width=100
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -1050,7 +965,7 @@ text {
 	object {
 		x=242
 		y=508
-		width=100
+		width=120
 		height=18
 	}
 	"basic attribute" {
@@ -1076,7 +991,7 @@ text {
 	object {
 		x=242
 		y=462
-		width=100
+		width=104
 		height=18
 	}
 	"basic attribute" {
@@ -1116,7 +1031,7 @@ text {
 	object {
 		x=242
 		y=531
-		width=100
+		width=120
 		height=18
 	}
 	"basic attribute" {

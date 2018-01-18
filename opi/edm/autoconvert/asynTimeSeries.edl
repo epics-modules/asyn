@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 0
-x 469
-y 198
+x 326
+y 179
 w 500
 h 360
 font "helvetica-medium-r-18.0"
@@ -30,9 +30,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 25
+x 0
 y 5
-w 449
+w 499
 h 24
 lineColor index 54
 fill
@@ -46,9 +46,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 205
+x 0
 y 5
-w 96
+w 500
 h 25
 font "helvetica-medium-r-8.0"
 fontAlign "center"
@@ -58,20 +58,6 @@ value {
  "$(P)$(R)"
 }
 endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 42
-y 40
-w 160
-h 20
-
-beginGroup
-
 
 # (Static Text)
 object activeXTextClass
@@ -136,25 +122,6 @@ value {
 }
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 224
-y 40
-w 235
-h 20
-
-beginGroup
-
-
 # (Text Control)
 object activeXTextDspClass
 beginObjectProperties
@@ -197,11 +164,6 @@ value {
  "Current point"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (X-Y Graph)
 object xyGraphClass
@@ -268,42 +230,6 @@ value {
  "Read rate"
 }
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 42
-y 40
-w 160
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 224
-y 40
-w 235
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Message Button)
 object activeMessageButtonClass

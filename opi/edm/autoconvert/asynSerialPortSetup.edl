@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 0
-x 154
-y 74
+x 228
+y 79
 w 260
 h 300
 font "helvetica-medium-r-18.0"
@@ -30,9 +30,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 29
+x 0
 y 2
-w 202
+w 259
 h 15
 lineColor index 2
 fill
@@ -46,9 +46,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 35
+x 0
 y 2
-w 190
+w 260
 h 16
 font "helvetica-medium-r-8.0"
 fontAlign "center"
@@ -126,9 +126,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 43
 y 51
-w 135
+w 100
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -145,9 +145,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 43
 y 76
-w 135
+w 100
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -158,29 +158,15 @@ value {
 }
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 101
-w 244
-h 195
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 43
 y 101
-w 135
+w 100
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -197,9 +183,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 43
 y 126
-w 135
+w 100
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -216,9 +202,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 3
 y 176
-w 135
+w 140
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -235,9 +221,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 73
 y 151
-w 135
+w 70
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -254,9 +240,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 13
 y 201
-w 135
+w 130
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -273,9 +259,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 23
 y 226
-w 135
+w 120
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -292,9 +278,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 33
 y 251
-w 135
+w 110
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -311,9 +297,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 8
+x 63
 y 276
-w 135
+w 80
 h 20
 font "helvetica-medium-r-8.0"
 fontAlign "right"
@@ -323,11 +309,6 @@ value {
  "XON=any:"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Text Control)
 object activeXTextDspClass
@@ -374,19 +355,6 @@ controlPv "$(P)$(R).BAUD"
 indicatorPv "$(P)$(R).BAUD"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 8
-y 101
-w 244
-h 195
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -547,9 +515,4 @@ controlPv "$(P)$(R).IXANY"
 indicatorPv "$(P)$(R).IXANY"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 

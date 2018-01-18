@@ -3,8 +3,8 @@ beginScreenProperties
 major 4
 minor 0
 release 0
-x 570
-y 110
+x 344
+y 142
 w 510
 h 345
 font "helvetica-medium-r-18.0"
@@ -22,20 +22,6 @@ botShadowColor index 44
 snapToGrid
 gridSize 5
 endScreenProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 43
-w 424
-h 20
-
-beginGroup
 
 
 # (Static Text)
@@ -82,20 +68,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 225
-y 43
-w 205
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -114,16 +86,6 @@ value {
  "Transfer:"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -179,7 +141,7 @@ fgColor index 14
 fgAlarm
 bgColor index 2
 autoHeight
-format decimal
+format "string"
 nullColor index 32
 useHexPrefix
 objType "controls"
@@ -204,7 +166,7 @@ fgColor index 14
 fgAlarm
 bgColor index 2
 autoHeight
-format decimal
+format "string"
 nullColor index 32
 useHexPrefix
 objType "controls"
@@ -226,20 +188,6 @@ fillColor index 14
 lineWidth 0
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 310
-w 250
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -259,34 +207,15 @@ value {
 }
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 135
-y 5
-w 241
-h 29
-
-beginGroup
-
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 135
+x 0
 y 5
-w 240
+w 509
 h 28
 lineColor index 2
 fill
@@ -300,9 +229,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 139
+x 0
 y 9
-w 236
+w 510
 h 21
 font "helvetica-medium-r-8.0"
 fontAlign "center"
@@ -312,11 +241,6 @@ value {
  "$(P)$(R)"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -1034,32 +958,6 @@ value {
  "More..."
 }
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 43
-w 424
-h 20
-
-beginGroup
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 225
-y 43
-w 205
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1080,29 +978,6 @@ controlPv "$(P)$(R).TMOD"
 indicatorPv "$(P)$(R).TMOD"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 310
-w 250
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1148,29 +1023,6 @@ offLabel "Process"
 useEnumNumeric
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 135
-y 5
-w 241
-h 29
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Menu Button)
 object activeMenuButtonClass

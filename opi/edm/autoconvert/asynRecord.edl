@@ -24,29 +24,15 @@ gridSize 5
 endScreenProperties
 
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 100
-y 8
-w 241
-h 29
-
-beginGroup
-
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
 major 4
 minor 0
 release 0
-x 100
+x 0
 y 8
-w 240
+w 439
 h 28
 lineColor index 2
 fill
@@ -60,9 +46,9 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 104
+x 0
 y 12
-w 236
+w 440
 h 21
 font "helvetica-medium-r-8.0"
 fontAlign "center"
@@ -72,11 +58,6 @@ value {
  "$(P)$(R)"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Text Control)
 object activeXTextDspClass
@@ -110,7 +91,7 @@ minor 0
 release 0
 x 10
 y 181
-w 70
+w 60
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -248,7 +229,7 @@ minor 0
 release 0
 x 68
 y 316
-w 96
+w 80
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -266,7 +247,7 @@ minor 0
 release 0
 x 68
 y 385
-w 96
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -284,7 +265,7 @@ minor 0
 release 0
 x 68
 y 362
-w 96
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -302,7 +283,7 @@ minor 0
 release 0
 x 68
 y 339
-w 96
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -320,7 +301,7 @@ minor 0
 release 0
 x 9
 y 269
-w 100
+w 90
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -338,7 +319,7 @@ minor 0
 release 0
 x 242
 y 362
-w 100
+w 80
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -433,20 +414,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 97
-w 232
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -483,32 +450,13 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
 objType "controls"
 newPos
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 122
-w 235
-h 20
-
-beginGroup
-
 
 # (Static Text)
 object activeXTextClass
@@ -527,11 +475,6 @@ value {
  "Interface:"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -576,20 +519,6 @@ useHexPrefix
 objType "controls"
 newPos
 endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 10
-y 212
-w 120
-h 42
-
-beginGroup
-
 
 # (Static Text)
 object activeXTextClass
@@ -636,25 +565,6 @@ visMin 0
 visMax 1
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 47
-w 422
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -691,7 +601,7 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
@@ -743,39 +653,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 61
-y 72
-w 287
-h 20
-
-beginGroup
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 228
-y 72
-w 120
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -821,16 +698,6 @@ visMin 0
 visMax 1
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -857,7 +724,7 @@ minor 0
 release 0
 x 183
 y 269
-w 100
+w 110
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -875,7 +742,7 @@ minor 0
 release 0
 x 242
 y 316
-w 100
+w 96
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -893,7 +760,7 @@ minor 0
 release 0
 x 242
 y 339
-w 100
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -937,7 +804,7 @@ minor 0
 release 0
 x 183
 y 415
-w 100
+w 130
 h 20
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -973,20 +840,6 @@ objType "controls"
 newPos
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 555
-w 420
-h 20
-
-beginGroup
-
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -995,7 +848,7 @@ minor 0
 release 0
 x 9
 y 557
-w 80
+w 88
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1023,18 +876,13 @@ fgColor index 14
 bgColor index 51
 editable
 autoHeight
-format decimal
+format "string"
 motifWidget
 nullColor index 32
 useHexPrefix
 objType "controls"
 newPos
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Static Text)
 object activeXTextClass
@@ -1044,7 +892,7 @@ minor 0
 release 0
 x 68
 y 408
-w 96
+w 72
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1080,7 +928,7 @@ minor 0
 release 0
 x 242
 y 485
-w 100
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1098,7 +946,7 @@ minor 0
 release 0
 x 242
 y 508
-w 100
+w 120
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1116,7 +964,7 @@ minor 0
 release 0
 x 242
 y 462
-w 100
+w 104
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1134,7 +982,7 @@ minor 0
 release 0
 x 242
 y 531
-w 100
+w 120
 h 18
 font "helvetica-medium-r-8.0"
 fgColor index 14
@@ -1143,24 +991,6 @@ value {
  "traceInfoThread"
 }
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 100
-y 8
-w 241
-h 29
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1306,37 +1136,6 @@ controlPv "$(P)$(R).TIB2"
 font "helvetica-medium-r-10.0"
 orientation "horizontal"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 97
-w 232
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 122
-w 235
-h 20
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1357,11 +1156,6 @@ controlPv "$(P)$(R).IFACE"
 indicatorPv "$(P)$(R).IFACE"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 # (Message Button)
 object activeMessageButtonClass
@@ -1387,19 +1181,6 @@ offLabel "Cancel queueRequest"
 useEnumNumeric
 font "helvetica-medium-r-10.0"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 10
-y 212
-w 120
-h 42
-
-beginGroup
-
 
 # (Menu Button)
 object activeMenuButtonClass
@@ -1421,42 +1202,6 @@ indicatorPv "$(P)$(R).CNCT"
 font "helvetica-medium-r-10.0"
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 6
-y 47
-w 422
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 61
-y 72
-w 287
-h 20
-
-beginGroup
-
-
 # (Menu Button)
 object activeMenuButtonClass
 beginObjectProperties
@@ -1476,29 +1221,6 @@ controlPv "$(P)$(R).PCNCT"
 indicatorPv "$(P)$(R).PCNCT"
 font "helvetica-medium-r-10.0"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 228
-y 72
-w 120
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Related Display)
 object relatedDisplayClass
@@ -1565,24 +1287,6 @@ controlPv "$(P)$(R).TIB1"
 font "helvetica-medium-r-10.0"
 orientation "horizontal"
 endObjectProperties
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 9
-y 555
-w 420
-h 20
-
-beginGroup
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Choice Button)
 object activeChoiceButtonClass

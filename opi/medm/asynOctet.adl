@@ -1,12 +1,12 @@
 
 file {
-	name="/home/epics/devel/asyn/medm/asynOctet.adl"
-	version=030102
+	name="/home/epics/devel/asyn-4-33/opi/medm/asynOctet.adl"
+	version=030109
 }
 display {
 	object {
-		x=514
-		y=515
+		x=457
+		y=494
 		width=442
 		height=350
 	}
@@ -103,115 +103,82 @@ display {
 	limits {
 	}
 }
-composite {
+text {
 	object {
 		x=6
 		y=43
-		width=424
+		width=140
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=6
-				y=43
-				width=140
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Timeout (sec):"
-		}
-		"text entry" {
-			object {
-				x=151
-				y=43
-				width=50
-				height=20
-			}
-			control {
-				chan="$(P)$(R).TMOT"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		composite {
-			object {
-				x=225
-				y=43
-				width=205
-				height=20
-			}
-			"composite name"=""
-			children {
-				menu {
-					object {
-						x=320
-						y=43
-						width=110
-						height=20
-					}
-					control {
-						chan="$(P)$(R).TMOD"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=225
-						y=43
-						width=90
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Transfer:"
-					align="horiz. right"
-				}
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Timeout (sec):"
+}
+"text entry" {
+	object {
+		x=151
+		y=43
+		width=50
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TMOT"
+		clr=14
+		bclr=51
+	}
+	limits {
 	}
 }
-composite {
+menu {
 	object {
-		x=109
+		x=320
+		y=43
+		width=110
+		height=20
+	}
+	control {
+		chan="$(P)$(R).TMOD"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=225
+		y=43
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Transfer:"
+	align="horiz. right"
+}
+rectangle {
+	object {
+		x=0
 		y=5
-		width=241
+		width=442
 		height=29
 	}
-	"composite name"=""
-	children {
-		rectangle {
-			object {
-				x=109
-				y=5
-				width=241
-				height=29
-			}
-			"basic attribute" {
-				clr=2
-			}
-		}
-		text {
-			object {
-				x=113
-				y=9
-				width=236
-				height=21
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="$(P)$(R)"
-			align="horiz. centered"
-		}
+	"basic attribute" {
+		clr=2
 	}
+}
+text {
+	object {
+		x=0
+		y=9
+		width=442
+		height=21
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="$(P)$(R)"
+	align="horiz. centered"
 }
 "text entry" {
 	object {
@@ -225,6 +192,7 @@ composite {
 		clr=14
 		bclr=51
 	}
+	format="string"
 	limits {
 	}
 }
@@ -313,6 +281,7 @@ text {
 		clr=14
 		bclr=51
 	}
+	format="string"
 	limits {
 	}
 }
@@ -386,7 +355,7 @@ text {
 	object {
 		x=10
 		y=297
-		width=70
+		width=110
 		height=20
 	}
 	"basic attribute" {
@@ -398,7 +367,7 @@ text {
 	object {
 		x=217
 		y=297
-		width=90
+		width=130
 		height=20
 	}
 	"basic attribute" {
@@ -419,6 +388,7 @@ text {
 		bclr=2
 	}
 	clrmod="alarm"
+	format="string"
 	limits {
 	}
 }
@@ -435,6 +405,7 @@ text {
 		bclr=2
 	}
 	clrmod="alarm"
+	format="string"
 	limits {
 	}
 }
@@ -450,57 +421,46 @@ rectangle {
 		fill="outline"
 	}
 }
-composite {
+text {
 	object {
 		x=9
 		y=323
-		width=250
+		width=50
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=9
-				y=323
-				width=50
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Scan:"
-			align="horiz. right"
-		}
-		menu {
-			object {
-				x=64
-				y=323
-				width=110
-				height=20
-			}
-			control {
-				chan="$(P)$(R).SCAN"
-				clr=14
-				bclr=51
-			}
-		}
-		"message button" {
-			object {
-				x=179
-				y=323
-				width=80
-				height=20
-			}
-			control {
-				chan="$(P)$(R).PROC"
-				clr=14
-				bclr=51
-			}
-			label="Process"
-			press_msg="1"
-		}
+	"basic attribute" {
+		clr=14
 	}
+	textix="Scan:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=64
+		y=323
+		width=110
+		height=20
+	}
+	control {
+		chan="$(P)$(R).SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"message button" {
+	object {
+		x=179
+		y=323
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PROC"
+		clr=14
+		bclr=51
+	}
+	label="Process"
+	press_msg="1"
 }
 text {
 	object {
@@ -526,6 +486,7 @@ text {
 		clr=14
 		bclr=51
 	}
+	format="string"
 	limits {
 	}
 }
