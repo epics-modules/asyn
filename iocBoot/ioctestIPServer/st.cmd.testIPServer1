@@ -1,0 +1,29 @@
+< envPaths
+
+dbLoadDatabase("../../dbd/testIPServer.dbd")
+testIPServer_registerRecordDeviceDriver(pdbbase)
+
+# This is the local TCP port that for clients to connect to
+epicsEnvSet LOCAL_IP_PORT 5001
+
+# This is the name of the asyn port driver that listens for connections
+epicsEnvSet ASYN_LISTEN_PORT P5001
+
+# This is the name of the first drvAsynIPPort TCP driver that will be created
+epicsEnvSet ASYN_TCP_PORT P5001:0
+
+# The following command starts a server on port 5001
+drvAsynIPServerPortConfigure("$(ASYN_LISTEN_PORT)","localhost:$(LOCAL_IP_PORT)",1,0,0,0)
+
+#asynSetTraceFile("$(ASYN_LISTEN_PORT)", -1, "")
+asynSetTraceIOMask("$(ASYN_LISTEN_PORT)", -1, 0x2)
+#asynSetTraceMask("$(ASYN_LISTEN_PORT)", -1, 0xff)
+#asynSetTraceMask("$(ASYN_TCP_PORT)", -1, 0xff)
+
+asynOctetSetInputEos("$(ASYN_TCP_PORT)", 0, "\r\n")
+asynOctetSetOutputEos("$(ASYN_TCP_PORT)", 0, "\r\n")
+
+dbLoadRecords("../../db/testIPServer1.db", "P=testIPServer:,PORT=$(ASYN_TCP_PORT)")
+
+iocInit()
+
