@@ -19,7 +19,7 @@
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">January 9, 2018</span></p>
+      <span style="font-weight: bold; font-size: 14pt">January 26, 2018</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -4837,7 +4837,9 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
   <ul>
     <li>aiRecord
       <p>
-        A value is given to val.</p>
+        A value is given to val. Beginning with R4-33 scaling via the ASLO/AOFF record fields,
+        and smoothing via the SMOO field are supported.
+      </p>
       <ul>
         <li>asynFloat64 - SCAN "I/O Intr" is supported. If the record is "I/O Intr" scanned
           then when the registerInterruptUser callback is called, it saves the value and calls
@@ -4851,7 +4853,8 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
     </li>
     <li>aoRecord
       <p>
-        val is written.</p>
+        val is written. Beginning with R4-33 scaling via the ASLO/AOFF record fields is
+        supported.</p>
     </li>
   </ul>
   <h3 id="devAsynFloatXXXArray">
@@ -5509,10 +5512,9 @@ asynOctetSetOutputEos("A1",0,"\r")
     TCP/IP Server</h3>
   <p>
     The drvAsynIPServerPort driver supports asyn socket servers by listening for TCP/IP
-    or UDP connections from remote clients. The listener thread then creates a new drvAsynIPPort
-    port by calling drvAsynIPPortConfigure (or re-uses a disconnected port it previously
-    created), and calls back any registered asyn clients with the name of the new port.
-    These asyn clients will typically be socket servers.</p>
+    or UDP connections from remote clients. The creates maxClients drvAsynIPPort port
+    drivers by calling drvAsynIPPortConfigure at initialization. These ports are named
+    portName:0, portName:1, etc. where portName is the name passed to drvAsynIPServerPortConfigure.</p>
   <p>
     IP server listeners are configured with the <tt>drvAsynIPServerPortConfigure</tt>
     command:</p>
@@ -5532,28 +5534,24 @@ asynOctetSetOutputEos("A1",0,"\r")
       connect. Non-zero if explicit connect command must be issued. Note that all asyn
       I/O ports that the listener thread creates will be created with noAutoConnect=1,
       but this is transparent to socket server applications, because the listener thread
-      does the explicit connect for them.</li>
+      does the explicit connection for them.</li>
     <li>noProcessEos is passed to drvAsynIPPortConfigure when new asyn I/O ports are created.
       If 0 then asynInterposeEosConfig is called specifying both processEosIn and processEosOut.</li>
   </ul>
   <p>
-    This driver implements the asynOctet interface. The only methods it supports are
-    registerInterruptUser and cancelInterruptUser. Calling the other asynOctet methods
-    will result in an error. The following happens when a new connection is received
-    on the port specified in drvAsynIPServerPortConfigure:</p>
+    This driver implements the asynOctet interface. For TCP connections the only methods
+    it supports are registerInterruptUser and cancelInterruptUser. Calling the other
+    asynOctet methods will result in an error. For UDP it implements asynOctet->read().
+    The following happens when a new connection is received on the port specified in
+    drvAsynIPServerPortConfigure:</p>
   <ul>
-    <li>If there are no registered asyn clients (who have called registerInterruptUser
-      on the asynOctet interface of the listener port) then the incoming connection is
-      immediately closed, since there are no IP servers available to service it. If there
-      is at least one registered client, then the following steps are executed.</li>
     <li>The list of drvAsynIPPort ports that this listener thread has created is searched
-      to see if there is an existing port that is currently disconnected because the remote
-      IP client disconnected.</li>
-    <li>If there is an existing disconnected port, then it is reconnected with the file
-      descriptor from the new IP connection.</li>
-    <li>If there is no available existing port, then a new one is created by calling drvAsynIPPortConfigure.
-      The name of the new port is of the form portName:1, portName:2, etc., where portName
-      is the name of the listener port.</li>
+      to see if there is a drvAsynIPPort that is currently disconnected because there
+      is no remote IP client connected.</li>
+    <li>If there is a disconnected port, then it is connected with the file descriptor
+      from the new IP connection.</li>
+    <li>If there are no disconnected ports then the incoming connection will be immediately
+      closed.</li>
     <li>The asynTraceMask and asynTraceIOMask of the newly connected port are set to the
       current values of the listener thread port. This makes it possible to trace the
       early stages of execution of the callbacks to the registered clients, before one
@@ -5561,8 +5559,6 @@ asynOctetSetOutputEos("A1",0,"\r")
     <li>All registered asyn clients (who have called registerInterruptUser on the asynOctet
       interface of the listener port) are called back with the name of the newly connected
       port.</li>
-    <li>The clients then will connect to this new asyn port and perform I/O using the
-      asynOctet methods.</li>
   </ul>
   <h3 id="vxi11">
     VXI-11</h3>
