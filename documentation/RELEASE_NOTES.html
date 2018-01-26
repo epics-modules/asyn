@@ -124,6 +124,19 @@
       rather than asynUInt32DigitalClient-&gt;connect.</li>
   </ul>
   <h3>
+    OPI screens</h3>
+  <ul>
+    <li>Added new opi/Makefile. This automatically converts all opi/medm/*.adl files into
+      corresponding files in edm/autoconvert, caqtdm/autoconvert, and boy/autoconvert.
+      It uses new RULES_OPI and CONFIG_SITE.linux-x86_64 files in synApps/support/configure
+      directory. The upper-level edm, caqtdm, and boy directories should be used only
+      for manually tweaked files.</li>
+    <li>The medm adl files were improved to make the autoconverted files work better.
+      The size of text graphics, text updates widgets were set to the actual text size,
+      and text update widgets were set to the correct datatype, e.g. string type for enum
+      PVs. </li>
+  </ul>
+  <h3>
     Documentation</h3>
   <ul>
     <li>asynDriver.html has been improved. All level 3 headings are now links in the Contents
