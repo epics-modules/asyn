@@ -14,7 +14,7 @@
     <h2>
       Release 4-33</h2>
     <h2>
-      December XXX, 2017</h2>
+      January XXX, 2018</h2>
   </div>
   <h3>
     devAsynFloat64.c</h3>
@@ -64,16 +64,52 @@
     asynManager.c</h3>
   <ul>
     <li>Improved error messages from autoconnect attempts. Messages are now printed only
-    when the autoconnect status changes, rather than each time there is a failure. Thanks to
-    Ben Franksen for this.</li>
+      when the autoconnect status changes, rather than each time there is a failure. Thanks
+      to Ben Franksen for this.</li>
   </ul>
   <h3>
-    drvVXI11.c.c</h3>
+    drvAsynIPServerPort.c</h3>
+  <ul>
+    <li>Changed the logic so it creates maxClients drvAsynIPPort drivers at initialization
+      rather than on-demand when clients connect. This makes it possible to use these
+      ports before iocInit, which is much more useful. They can be used in input and output
+      links in EPICS records, for example. This change should be backwards compatible,
+      since it was transparent when the ports were created.</li>
+    <li>The first drvAsynIPPort created is now named PORT_NAME:0 rather than PORT_NAME:1,
+      where PORT_NAME is the name of the drvAsynIPServer port created by this driver.
+      This might break backwards compatibility, but clients were normally getting the
+      name from a callback, so probably not.</li>
+    <li>Set the socket option SO_REUSEADDR when creating the listening socket. Previously
+      if a client was connected and the IOC exited it could not be restarted again immediately.
+      One needed to wait for the operating system to time out the connection. This change
+      allows the IOC to be run again with the same listening port immediately, without
+      waiting for the operating system timeout.</li>
+    <li>Added an exit handler to close the listen socket and delete the private structure.
+    </li>
+    <li>Improved the report() function so it shows all the drvAsynIPPort drivers that
+      were created.</li>
+  </ul>
+  <h3>
+    testIPServerApp</h3>
+  <ul>
+    <li>Added a new datbase testIPServer1.db for testing the enhancements to drvAsynIPServerPort.
+      It contains a stringin record and a stringout record that use the drvAsynIPPort
+      created by drvAsynIPServerPort.</li>
+    <li>Added a new startup script, iocBoot/ioctestIPServer/st.cmd.testIPServer1 which
+      creates a drvAsynIPServerPort called P5001 on localhost:5001. It loads the testIPServer1.db
+      database connected to the drvAsynIPPort created by P5001, called P5001:0. One can
+      telnet to port 5001 on the IOC computer. All text typed in the telnet session will
+      go into the stringin record. Text written to the stringout record will appear in
+      the telnet session.</li>
+  </ul>
+  <h3>
+    drvVXI11.c</h3>
   <ul>
     <li>Improved error messages from connection attempts. Messages are now printed only
-    when the connection status changes, rather than each time there is a connection failure. 
-    Thanks to Ben Franksen for this.</li>
-  </ul>  <h3>
+      when the connection status changes, rather than each time there is a connection
+      failure. Thanks to Ben Franksen for this.</li>
+  </ul>
+  <h3>
     testErrorsApp</h3>
   <ul>
     <li>Previously the user-defined alarm status and severity were only set on callbacks,
@@ -81,11 +117,12 @@
       Now all calls to the read() and write() methods in each interface also return the
       user-defined alarm status and severity in pasynUser.</li>
   </ul>
+  <h3>
     asynPortClient</h3>
   <ul>
-    <li>Fixed typo in constructor for asynUInt32DigitalClient, it was calling asynInt32SyncIO-&gt;connect rather
-        than asynUInt32DigitalClient-&gt;connect.</li>
- </ul>
+    <li>Fixed typo in constructor for asynUInt32DigitalClient, it was calling asynInt32SyncIO-&gt;connect
+      rather than asynUInt32DigitalClient-&gt;connect.</li>
+  </ul>
   <h3>
     Documentation</h3>
   <ul>
