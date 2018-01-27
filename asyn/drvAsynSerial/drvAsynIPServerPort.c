@@ -381,7 +381,7 @@ static void connectionListener(void *drvPvt)
 int createServerSocket(ttyController_t *tty) {
     int i;
     struct sockaddr_in serverAddr;
-    int true=1;
+    int oneVal=1;
     assert(tty);
     /*
      * Create the socket
@@ -400,7 +400,7 @@ int createServerSocket(ttyController_t *tty) {
             /* For Port reuse, multiple IOCs */
             epicsSocketEnableAddressUseForDatagramFanout(tty->fd);
         }
-        if (setsockopt(tty->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&true, sizeof(int))) {
+        if (setsockopt(tty->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&oneVal, sizeof(int))) {
             printf("Error calling setsockopt %s: %s\n", tty->serverInfo, strerror(errno));
             epicsSocketDestroy(tty->fd);
             tty->fd = INVALID_SOCKET;
