@@ -257,6 +257,9 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
 static void report(void *drvPvt, FILE *fp, int details)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
+    portList_t *pl;
+    int connected;
+    int i;
 
     assert(tty);
     fprintf(fp, "Port %s: %sonnected\n",
@@ -265,9 +268,6 @@ static void report(void *drvPvt, FILE *fp, int details)
     if (details >= 1) {
         fprintf(fp, "            fd: %d\n", tty->fd);
         fprintf(fp, "  Max. clients: %d\n", tty->maxClients);
-        portList_t *pl;
-        int connected;
-        int i;
         for (i=0; i<tty->maxClients; i++) {
             pl = &tty->portList[i];
             pasynManager->isConnected(pl->pasynUser, &connected);
@@ -400,7 +400,7 @@ int createServerSocket(ttyController_t *tty) {
             /* For Port reuse, multiple IOCs */
             epicsSocketEnableAddressUseForDatagramFanout(tty->fd);
         }
-        if (setsockopt(tty->fd, SOL_SOCKET, SO_REUSEADDR, &true, sizeof(int))) {
+        if (setsockopt(tty->fd, SOL_SOCKET, SO_REUSEADDR, (const void *)&true, sizeof(int))) {
             printf("Error calling setsockopt %s: %s\n", tty->serverInfo, strerror(errno));
             epicsSocketDestroy(tty->fd);
             tty->fd = INVALID_SOCKET;
