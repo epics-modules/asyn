@@ -48,3 +48,5 @@ LINUX_GPIB=NO
 # If you want to build asyn so the only dependency on EPICS base is libCom then set the following flag
 #EPICS_LIBCOM_ONLY=YES
 
+-include $(SUPPORT)/configure/CONFIG_SITE
+
