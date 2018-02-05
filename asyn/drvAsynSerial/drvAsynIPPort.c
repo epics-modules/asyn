@@ -560,11 +560,15 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     if (tty->fd == INVALID_SOCKET) {
         if (tty->flags & FLAG_CONNECT_PER_TRANSACTION) {
             if ((status = connectIt(drvPvt, pasynUser)) != asynSuccess)
+            {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s connect failed", tty->IPDeviceName);
                 return status;
+            }
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s disconnected:", tty->IPDeviceName);
+                          "%s disconnected", tty->IPDeviceName);
             return asynError;
         }
     }
@@ -589,18 +593,24 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     haveStartTime = 0;
     for (;;) {
 #ifdef USE_POLL
+        int pollstatus;
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
         epicsTimeGetCurrent(&startTime);
-        while (poll(&pollfd, 1, writePollmsec) < 0) {
+        while ((pollstatus = poll(&pollfd, 1, writePollmsec)) < 0) {
             if (errno != EINTR) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                          "Poll() failed: %s", strerror(errno));
+                                          "%s poll() failed: %s", tty->IPDeviceName, strerror(errno));
                 return asynError;
             }
             epicsTimeGetCurrent(&endTime);
             if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000 > writePollmsec) break; 
+        }
+        if (pollstatus == 0) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s poll() timed out", tty->IPDeviceName);
+            return asynTimeout;
         }
 #endif
         for (;;) {
@@ -637,6 +647,8 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         }
         else if (thisWrite == 0) {
             status = asynTimeout;
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s send() returned 0", tty->IPDeviceName);
             break;
         }
         else {
