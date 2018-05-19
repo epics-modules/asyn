@@ -523,7 +523,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
     ringBufferElement *rp;
-    static const char *functionName="interruptCallbackOutput";
+    static const char *functionName="interruptCallbackInput";
 
     if (pPvt->mask) {
         value &= pPvt->mask;
