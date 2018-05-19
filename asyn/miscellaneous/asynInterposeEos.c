@@ -232,13 +232,16 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
              pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,&eom);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,peosPvt->inBuf,thisRead,
-                "%s read\n",peosPvt->portName);
+                "%s read %d bytes eom=%d\n",peosPvt->portName, thisRead, eom);
             /*
              * Read could have returned with ASYN_EOM_CNT set in eom because
              * the number of octets available exceeded inBufSize.  This is not
              * a reason for us to stop reading.
              */
             eom &= ~ASYN_EOM_CNT;
+        } else {
+           asynPrint(pasynUser, ASYN_TRACE_WARNING, "%s read from low-level driver returned %d\n",
+               peosPvt->portName, status);
         }
         if(status!=asynSuccess || thisRead==0) break;
         peosPvt->inBufTail = 0;
