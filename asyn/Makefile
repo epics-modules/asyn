@@ -13,6 +13,8 @@ include $(TOP)/configure/CONFIG
 ASYN = $(TOP)/asyn
 #USR_CFLAGS += -DDEBUG
 USR_INCLUDES_cygwin32 += -I/usr/include/tirpc
+USR_INCLUDES_Linux += -I/usr/include/tirpc
+asyn_SYS_LIBS_Linux += tirpc
 
 # The following gets rid of the -fno-implicit-templates flag on vxWorks, 
 # so we get automatic template instantiation.
