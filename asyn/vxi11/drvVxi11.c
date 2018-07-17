@@ -1740,7 +1740,7 @@ int vxi11Configure(char *dn, char *hostName, int flags,
         defTimeout : (double)DEFAULT_RPC_TIMEOUT ;
     if(flags & FLAG_RECOVER_WITH_IFC) pvxiPort->recoverWithIFC = TRUE;
     if(flags & FLAG_LOCK_DEVICES) pvxiPort->lockDevices = TRUE;
-    if(!flags & FLAG_NO_SRQ) pvxiPort->hasSRQ = TRUE;
+    if(!(flags & FLAG_NO_SRQ)) pvxiPort->hasSRQ = TRUE;
     pvxiPort->inAddr = inAddr;
     pvxiPort->hostName = (char *)callocMustSucceed(1,strlen(hostName)+1,
         "vxi11Configure");
