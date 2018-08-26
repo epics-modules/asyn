@@ -277,7 +277,7 @@ getEos(asynUser *pasynUser)
     epicsEventSignal(peosargs->done);
 }
 
-epicsShareFunc int
+static int
 asynShowEos(const char *portName, int addr, enum eosType type)
 {
     asynInterface *pasynInterface;
