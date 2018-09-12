@@ -12,6 +12,66 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-34</h2>
+    <h2>
+      September XXX, 2018</h2>
+  </div>
+  <h3>
+    devAsynFloat64.c, devAsynInt32.c</h3>
+  <ul>
+    <li>Added support for SCAN=I/O Intr with asynFloat64Average and asynInt32Average device
+      support. Previously only periodic scanning or manual processing was supported. The
+      I/O Intr support computes the average and processes the record once NumAverage callback
+      readings have been received. The SVAL field in the ai record is used to set NumAverage.
+      This is rather a kluge, but there is not another good way to communicate this value
+      to the device support, while allowing it to be changed at run-time.</li>
+  </ul>
+  <h3>
+    drvAsynIPPort.c</h3>
+  <ul>
+    <li>Improved error reporting. Thanks to Dirk Zimoch for this.</li>
+  </ul>
+  <h3>
+    asynInterposeEos.c</h3>
+  <ul>
+    <li>Improved asynTrace output to print bytes read and eom, and print warning if low-level
+      driver returns error.</li>
+  </ul>
+  <h3>
+    asynInterposeCom.c</h3>
+  <ul>
+    <li>Added support for the asynOption ixon (XON/XOFF) for ports communicating via the
+      RFC 2217 Telnet protocol. In this case, as noted in the standard, ixon implies both
+      outbound and inbound flow control.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Fixed uninitialized value in paramVal.</li>
+  </ul>
+  <h3>
+    asynShellCommands.h</h3>
+  <ul>
+    <li>Add asynOctetDisconnect and asynWaitConnect.</li>
+  </ul>
+  <h3>
+    drvVxi11.c</h3>
+  <ul>
+    <li>Fixed logic for FLAG_NO_SRQ. Error was introduced in R4-31.</li>
+  </ul>
+  <h3>
+    CONFIG_SITE</h3>
+  <ul>
+    <li>Optionally include $(SUPPORT)/configure/CONFIG_SITE.</li>
+  </ul>
+  <h3>
+    .travis.yml</h3>
+  <ul>
+    <li>Fixed to fetch Debian files from nsls2 with https not http.</li>
+  </ul>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-33</h2>
     <h2>
       January 27, 2018</h2>
