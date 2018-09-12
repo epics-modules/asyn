@@ -493,6 +493,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
      * pai->sval is a double so it may not be completely safe to read without the lock? */
     if ((pPvt->isIOIntrScan)) {
         numToAverage = (int)(pai->sval + 0.5);
+        if (numToAverage < 1) numToAverage = 1; 
         if (pPvt->numAverage >= numToAverage) {
             rp = &pPvt->ringBuffer[pPvt->ringHead];
             rp->value = pPvt->sum/pPvt->numAverage;
@@ -514,10 +515,10 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
             else {
                 /* We only need to request the record to process if we added a new
                  * element to the ring buffer, not if we just replaced an element. */
-            scanIoRequest(pPvt->ioScanPvt);
+                scanIoRequest(pPvt->ioScanPvt);
             }  
-        } /* End numAverage==SVAL, so time to compute average */
-    } /* End SCAN=I/O Intr and SVAL>0 */
+        } /* End numAverage=SVAL, so time to compute average */
+    } /* End SCAN=I/O Intr */
     else { 
         pPvt->result.status |= pasynUser->auxStatus;
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
