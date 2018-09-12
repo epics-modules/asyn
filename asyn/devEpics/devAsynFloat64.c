@@ -77,6 +77,8 @@ typedef struct devPvt{
     epicsFloat64      sum;
     interruptCallbackFloat64 interruptCallback;
     int               numAverage;
+    int               isAiAverage;
+    int               isIOIntrScan;
     CALLBACK          processCallback;
     CALLBACK          outputCallback;
     int               newOutputCallbackValue;
@@ -284,22 +286,32 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
             "%s %s::%s registering interrupt\n",
             pr->name, driverName, functionName);
         createRingBuffer(pr);
-        status = pPvt->pfloat64->registerInterruptUser(
-           pPvt->float64Pvt,pPvt->pasynUser,
-           pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
-        if(status!=asynSuccess) {
-            printf("%s %s::%s registerInterruptUser %s\n",
-                   pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
+        /* Set a flag indicating that we are in I/O Intr scan mode. Used in aiAverage mode. */
+         pPvt->isIOIntrScan = 1;
+        /* For aiAverage we don't enable callbacks here, because they are always enabled in any scan mode. */
+        if (!pPvt->isAiAverage) {
+            status = pPvt->pfloat64->registerInterruptUser(
+               pPvt->float64Pvt,pPvt->pasynUser,
+               pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
+            if(status!=asynSuccess) {
+                printf("%s %s::%s registerInterruptUser %s\n",
+                       pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
+            }
         }
     } else {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s %s::%s cancelling interrupt\n",
              pr->name, driverName, functionName);
-        status = pPvt->pfloat64->cancelInterruptUser(pPvt->float64Pvt,
-             pPvt->pasynUser,pPvt->registrarPvt);
-        if(status!=asynSuccess) {
-            printf("%s %s::%s cancelInterruptUser %s\n",
-                   pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
+        /* Set a flag indicating that we are not in I/O Intr scan mode. Used in aiAverage mode. */
+        pPvt->isIOIntrScan = 0;
+        /* For aiAverage we don't disable callbacks here, because they are always enabled in any scan mode. */
+        if (!pPvt->isAiAverage) {
+            status = pPvt->pfloat64->cancelInterruptUser(pPvt->float64Pvt,
+                 pPvt->pasynUser,pPvt->registrarPvt);
+            if(status!=asynSuccess) {
+                printf("%s %s::%s cancelInterruptUser %s\n",
+                       pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
+            }
         }
     }
     *iopvt = pPvt->ioScanPvt;
@@ -461,17 +473,57 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
 {
     devPvt *pPvt = (devPvt *)drvPvt;
     dbCommon *pr = pPvt->pr;
+    aiRecord *pai = (aiRecord *)pr;
+    ringBufferElement *rp;
+    int numToAverage;
     static const char *functionName="interruptCallbackAverage";
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s %s::%s new value=%f\n",
         pr->name, driverName, functionName,value);
+    if (!interruptAccept) return;
     epicsMutexLock(pPvt->ringBufferLock);
     pPvt->numAverage++;
     pPvt->sum += value;
-    pPvt->result.status |= pasynUser->auxStatus;
-    pPvt->result.alarmStatus = pasynUser->alarmStatus;
-    pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
+    /* We use the SVAL field to hold the number of values to average when SCAN=I/O Intr
+     * We should be calling dbScanLock when accessing pPvt->isIOIntrScan and pai->sval but that leads to deadlocks
+     * because we have the asynPortDriver lock in the driver, and we would be taking the scan lock
+     * after the asynPortDriver lock, which is the opposite of normal record processing.
+     * pPvt->isIOIntrScan is an int, so should be OK to read because write to it is atomic?
+     * pai->sval is a double so it may not be completely safe to read without the lock? */
+    if ((pPvt->isIOIntrScan)) {
+        numToAverage = (int)(pai->sval + 0.5);
+        if (numToAverage < 1) numToAverage = 1; 
+        if (pPvt->numAverage >= numToAverage) {
+            rp = &pPvt->ringBuffer[pPvt->ringHead];
+            rp->value = pPvt->sum/pPvt->numAverage;
+            pPvt->numAverage = 0;
+            pPvt->sum = 0.;
+            rp->time = pasynUser->timestamp;
+            rp->status = pasynUser->auxStatus;
+            rp->alarmStatus = pasynUser->alarmStatus;
+            rp->alarmSeverity = pasynUser->alarmSeverity;
+            pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
+            if (pPvt->ringHead == pPvt->ringTail) {
+                /* There was no room in the ring buffer.  In the past we just threw away
+                 * the new value.  However, it is better to remove the oldest value from the
+                 * ring buffer and add the new one.  That way the final value the record receives
+                 * is guaranteed to be the most recent value */
+                pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
+                pPvt->ringBufferOverflows++;
+            } /* End ring buffer full */
+            else {
+                /* We only need to request the record to process if we added a new
+                 * element to the ring buffer, not if we just replaced an element. */
+                scanIoRequest(pPvt->ioScanPvt);
+            }  
+        } /* End numAverage=SVAL, so time to compute average */
+    } /* End SCAN=I/O Intr */
+    else { 
+        pPvt->result.status |= pasynUser->auxStatus;
+        pPvt->result.alarmStatus = pasynUser->alarmStatus;
+        pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
+    } 
     epicsMutexUnlock(pPvt->ringBufferLock);
 }
 
@@ -642,6 +694,7 @@ static long initAiAverage(aiRecord *pai)
         0,interruptCallbackAverage);
     if (status != INIT_OK) return status;
     pPvt = pai->dpvt;
+    pPvt->isAiAverage = 1;
     status = pPvt->pfloat64->registerInterruptUser(
                  pPvt->float64Pvt,pPvt->pasynUser,
                  pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
@@ -659,15 +712,22 @@ static long processAiAverage(aiRecord *pai)
     static const char *functionName="processAiAverage";
 
     epicsMutexLock(pPvt->ringBufferLock);
-    if (pPvt->numAverage == 0) {
-        recGblSetSevr(pai, UDF_ALARM, INVALID_ALARM);
-        pai->udf = 1;
-        epicsMutexUnlock(pPvt->ringBufferLock);
-        return -2;
+
+    if (getCallbackValue(pPvt)) {
+        /* Record is I/O Intr scanned and the average has been put in the ring buffer */
+        dval = pPvt->result.value;
+        pai->time = pPvt->result.time; 
+    } else {        
+        if (pPvt->numAverage == 0) {
+            recGblSetSevr(pai, UDF_ALARM, INVALID_ALARM);
+            pai->udf = 1;
+            epicsMutexUnlock(pPvt->ringBufferLock);
+            return -2;
+        }
+        dval = pPvt->sum/pPvt->numAverage;
+        pPvt->numAverage = 0;
+        pPvt->sum = 0.;
     }
-    dval = pPvt->sum/pPvt->numAverage;
-    pPvt->numAverage = 0;
-    pPvt->sum = 0.;
     epicsMutexUnlock(pPvt->ringBufferLock);
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
                                             READ_ALARM, &pPvt->result.alarmStatus,
