@@ -63,6 +63,9 @@
     CONFIG_SITE</h3>
   <ul>
     <li>Optionally include $(SUPPORT)/configure/CONFIG_SITE.</li>
+    <li>Older Linux and Cygwin distributions have packages (e.g. glibc-headers) that put
+      the rpc include files in /usr/include/rpc. Newer Linux and Cygwin distributions
+      use the tirpc package instead. For such systems define TIRPC=YES.</li>
   </ul>
   <h3>
     .travis.yml</h3>
