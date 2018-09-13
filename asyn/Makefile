@@ -31,6 +31,13 @@ endif
 asyn_SYS_LIBS_WIN32 = ws2_32 winmm
 asyn_SYS_LIBS_cygwin32 = $(CYGWIN_RPC_LIB)
 
+# Some linux systems moved RPC related symbols to libtirpc
+# Define TIRPC in configure/CONFIG_SITE in this case
+ifeq ($(TIRPC),YES)
+  USR_INCLUDES_Linux += -I/usr/include/tirpc
+  asyn_SYS_LIBS_Linux += tirpc
+endif
+
 SRC_DIRS += $(ASYN)/asynDriver
 INC += asynDriver.h
 INC += epicsInterruptibleSyscall.h
