@@ -4864,10 +4864,20 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     </li>
     <li>Input records that are averaged, i.e. asynInt32Average or asynFloat64Average.
       <p>
-        These records are normally scanned periodically. The registerInterruptUser callback
-        is used to calculate an average value between record processes. If the record is
-        processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
-        UDF is set to TRUE, and the value is left unchanged.</p>
+        These records can be scanned either periodically or with SCAN=I/O Intr. The registerInterruptUser
+        callback is used to add the current value to the sum of values between record processing.</p>
+      <p>
+        If the record is periodically processed, then the average is computed each time
+        the record processes. If the record is processed before new data have arrived (numAverage==0)
+        the record is set to UDF/INVALID, UDF is set to TRUE, and the value is left unchanged.</p>
+      <p>
+        If the record has SCAN=I/O Intr then the average is computed and the record is processed
+        each time NumAverage callback readings have been received. The SVAL field in the
+        ai record is used to set NumAverage. This is rather a kluge, but there is not another
+        good way to communicate this value to the device support, while allowing it to be
+        changed at run-time. This means that simulation mode cannot be used with asynInt32Average
+        or asynFloat64Average device support if SCAN=I/O Intr. This is probably not a significant
+        limitation. Support for SCAN=I/O Intr was added in R4-34.</p>
     </li>
     <li>Input records that are waveform time series, i.e. asynInt32TimeSeries or asynFloat64TimeSeries.
       <p>
