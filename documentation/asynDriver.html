@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-33</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-34</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">January 27, 2018</span></p>
+      <span style="font-weight: bold; font-size: 14pt">September 13, 2018</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -5021,7 +5021,12 @@ nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(n
           value is read via a call to pasynInt32-&gt;read.</li>
         <li>asynInt32Average - The registerInterruptUser callback adds the new value to a
           sum and also increments the number of samples. When the record is processed the
-          average is computed and the sum and number of samples is set to zero.</li>
+          average is computed and the sum and number of samples is set to zero. If the record
+          is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
+          UDF is set to TRUE, and the value is left unchanged. The record can be scanned either
+          periodically or with SCAN=I/O Intr. If the record has SCAN=I/O Intr then the average
+          is computed and the record is processed each time NumAverage callback readings have
+          been received. The SVAL field in the ai record is used to set NumAverage. </li>
       </ul>
     </li>
     <li>aoRecord
@@ -5316,7 +5321,12 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
           value is read via a call to pasynFloat64-&gt;read.</li>
         <li>asynFloat64Average - The registerInterruptUser callback adds the new value to
           a sum and also increments the number of samples. When the record is processed the
-          average is computed and the sum and number of samples is set to zero.</li>
+          average is computed and the sum and number of samples is set to zero. If the record
+          is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
+          UDF is set to TRUE, and the value is left unchanged. The record can be scanned either
+          periodically or with SCAN=I/O Intr. If the record has SCAN=I/O Intr then the average
+          is computed and the record is processed each time NumAverage callback readings have
+          been received. The SVAL field in the ai record is used to set NumAverage.</li>
       </ul>
     </li>
     <li>aoRecord
