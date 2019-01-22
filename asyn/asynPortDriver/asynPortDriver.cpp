@@ -50,6 +50,7 @@ public:
     ~paramList();
     paramVal* getParameter(int index);
     asynStatus createParam(const char *name, asynParamType type, int *index);
+    asynStatus getNumParams(int *numParams);
     asynStatus findParam(const char *name, int *index);
     asynStatus getName(int index, const char **name);
     asynStatus setInteger(int index, int value);
@@ -135,6 +136,15 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
     *index = vals.size()-1;
     return asynSuccess;
 }
+
+/** Returns the number of parameters in the library.
+  * \param[out] numParams Number of parameters */
+asynStatus paramList::getNumParams(int *numParams)
+{
+    *numParams = this->vals.size();
+    return asynSuccess;
+}
+
 
 /** Finds a parameter in the parameter library.
   * \param[in] name The name of this parameter
@@ -893,6 +903,22 @@ asynStatus asynPortDriver::createParam(int list, const char *name, asynParamType
         return(asynError);
     }
     return asynSuccess;
+}
+
+/** Returns the number of parameters in the parameter library.
+  * Calls getNumParams(numParams), i.e. for parameter list 0.
+  * \param[out] numParams  Number of parameters*/
+asynStatus asynPortDriver::getNumParams(int *numParams)
+{
+    return this->getNumParams(0, numParams);
+}
+
+/** Returns the number of parameters in the parameter library.
+  * \param[in] list The parameter list number.  Must be < maxAddr passed to asynPortDriver::asynPortDriver.
+  * \param[out] numParams Number of parameters */
+asynStatus asynPortDriver::getNumParams(int list, int *numParams)
+{
+    return this->params[list]->getNumParams(numParams);
 }
 
 /** Finds a parameter in the parameter library.

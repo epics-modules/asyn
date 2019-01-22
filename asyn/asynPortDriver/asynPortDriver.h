@@ -116,6 +116,8 @@ public:
    
     virtual asynStatus createParam(          const char *name, asynParamType type, int *index);
     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
+    virtual asynStatus getNumParams(          int *numParams);
+    virtual asynStatus getNumParams(int list, int *numParams);
     virtual asynStatus findParam(          const char *name, int *index);
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(          int index, const char **name);
