@@ -114,7 +114,8 @@ public:
         return pasynInt32SyncIO->getBounds(pasynUserSyncIO_, low, high); 
     };
     /** Registers an interruptCallbackInt32 function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackInt32 pCallback, void *userPvt=0) { 
         if(interruptPvt_!=NULL) return asynError;
         if (!userPvt) userPvt=this;
@@ -182,7 +183,8 @@ public:
     };
     /** Registers an interruptCallbackUInt32Digital function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
-      * \param[in] mask       The mask to use when determining whether to do the callback */
+      * \param[in] mask       The mask to use when determining whether to do the callback
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackUInt32Digital pCallback, epicsUInt32 mask, void* userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -229,7 +231,8 @@ public:
         return pasynFloat64SyncIO->write(pasynUserSyncIO_, value, timeout_); 
     };
     /** Registers an interruptCallbackFloat64 function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackFloat64 pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -331,7 +334,8 @@ public:
         return pasynOctetSyncIO->getOutputEos(pasynUserSyncIO_, eos, eosSize, eosLen); 
     };
     /** Registers an interruptCallbackOctet function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackOctet pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -381,7 +385,8 @@ public:
         return pasynInt8ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
     };
     /** Registers an interruptCallbackInt8Array function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackInt8Array pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -431,7 +436,8 @@ public:
         return pasynInt16ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
     };
     /** Registers an interruptCallbackInt16Array function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackInt16Array pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -481,7 +487,8 @@ public:
         return pasynInt32ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
     };
     /** Registers an interruptCallbackInt32Array function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackInt32Array pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -531,7 +538,8 @@ public:
         return pasynFloat32ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
     };
     /** Registers an interruptCallbackFloat32Array function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackFloat32Array pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -581,7 +589,8 @@ public:
         return pasynFloat64ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
     };
     /** Registers an interruptCallbackFloat64Array function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackFloat64Array pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
@@ -628,7 +637,8 @@ public:
         return pasynGenericPointerSyncIO->write(pasynUserSyncIO_, pointer, timeout_);
     };
     /** Registers an interruptCallbackGenericPointer function that the driver will call when there is a new value
-      * \param[in] pCallback  The address of the callback function */
+      * \param[in] pCallback  The address of the callback function
+      * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
     virtual asynStatus registerInterruptUser(interruptCallbackGenericPointer pCallback, void *userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
