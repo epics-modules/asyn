@@ -18,6 +18,20 @@
   </div>
   <div>
     <h3>
+      asynShellCommands</h3>
+    <ul>
+      <li>Enhancement to allow using strings for the mask arguments of asynSetTraceMask,
+        asynSetTraceIOMask, and asynSetTraceInfoMask shell functions. The mask can be specified
+        as an integer (previous behavior) or as symbolic names connected with + or |. Spaces
+        are allowed but require quotes. The symbolic names are like the macro names in asyn.h,
+        but not case sensitive and the prefixes ASYN_, TRACE_, TRACEIO_, and TRACEINFO_
+        are optional. Thanks to Dirk Zimoch for this. Examples:</li></ul>
+    <pre>
+         asynSetTraceMask port,0,ASYN_TRACE_ERROR 
+        asynSetTraceIOMask port,0,ascii+escape 
+        asynSetTraceInfoMask port,0,1+port+TRACEINFO_SOURCE|ASYN_TRACEINFO_THREAD
+</pre>
+    <h3>
       asynPortClient.h, asynPortClient.cpp</h3>
     <ul>
       <li>Renamed asynPortClient base class to asynParamClient. This is the class from which
