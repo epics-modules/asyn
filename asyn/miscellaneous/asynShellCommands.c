@@ -14,6 +14,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <ctype.h>
 
 #include <epicsExit.h>
 #include <epicsThread.h>
@@ -618,7 +619,7 @@ static void asynShowOptionCall(const iocshArgBuf * args) {
 
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
-static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
 static const iocshFuncDef asynSetTraceMaskDef =
@@ -645,16 +646,50 @@ epicsShareFunc int
     if (pasynUser) pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
+
+#define STARTSWITH(str, pattern) (epicsStrnCaseCmp(str, #pattern, sizeof(#pattern)-1) == 0 && (str+=sizeof(#pattern)-1))
+
+static int asynTraceMaskStringToInt(const char* maskStr) {
+    int mask = 0;
+
+    if (!maskStr) return mask;
+    do {
+        char *end;
+        int m = strtol(maskStr, &end, 0);
+        if (end != maskStr) {
+            mask |= m;
+            maskStr = end;
+        } else {
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+            (void) STARTSWITH(maskStr, ASYN_);
+            (void) (STARTSWITH(maskStr, TRACE_) || STARTSWITH(maskStr, TRACEIO_));
+            if (STARTSWITH(maskStr, ERROR)) mask |= ASYN_TRACE_ERROR;
+            else if (STARTSWITH(maskStr, DEVICE)) mask |= ASYN_TRACEIO_DEVICE;
+            else if (STARTSWITH(maskStr, FILTER)) mask |= ASYN_TRACEIO_FILTER;
+            else if (STARTSWITH(maskStr, DRIVER)) mask |= ASYN_TRACEIO_DRIVER;
+            else if (STARTSWITH(maskStr, FLOW)) mask |= ASYN_TRACE_FLOW;
+            else if (STARTSWITH(maskStr, WARNING)) mask |= ASYN_TRACE_WARNING;
+            else break;
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+        }
+    } while ((*maskStr == '|' || *maskStr == '+') && maskStr++);
+    if (*maskStr)
+    {
+        printf("Mask string invalid at \"%s\"\n", maskStr);
+    }
+    return mask;
+}
+
 static void asynSetTraceMaskCall(const iocshArgBuf * args) {
     const char *portName = args[0].sval;
     int addr = args[1].ival;
-    int mask = args[2].ival;
+    int mask = asynTraceMaskStringToInt(args[2].sval);
     asynSetTraceMask(portName,addr,mask);
 }
 
 static const iocshArg asynSetTraceIOMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceIOMaskArg1 = {"addr", iocshArgInt};
-static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
 static const iocshFuncDef asynSetTraceIOMaskDef =
@@ -681,16 +716,46 @@ epicsShareFunc int
     if (pasynUser) pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
+
+static int asynTraceIOMaskStringToInt(const char* maskStr) {
+    int mask = 0;
+
+    if (!maskStr) return mask;
+    do {
+        char *end;
+        int m = strtol(maskStr, &end, 0);
+        if (end != maskStr) {
+            mask |= m;
+            maskStr = end;
+        } else {
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+            (void) STARTSWITH(maskStr, ASYN_);
+            (void) STARTSWITH(maskStr, TRACEIO_);
+            if (STARTSWITH(maskStr, NODATA)) mask |= ASYN_TRACEIO_NODATA;
+            else if (STARTSWITH(maskStr, ASCII)) mask |= ASYN_TRACEIO_ASCII;
+            else if (STARTSWITH(maskStr, ESCAPE)) mask |= ASYN_TRACEIO_ESCAPE;
+            else if (STARTSWITH(maskStr, HEX)) mask |= ASYN_TRACEIO_HEX;
+            else break;
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+        }
+    } while ((*maskStr == '|' || *maskStr == '+') && maskStr++);
+    if (*maskStr)
+    {
+        printf("Mask string invalid at \"%s\"\n", maskStr);
+    }
+    return mask;
+}
+
 static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     const char *portName = args[0].sval;
     int addr = args[1].ival;
-    int mask = args[2].ival;
+    int mask = asynTraceIOMaskStringToInt(args[2].sval);
     asynSetTraceIOMask(portName,addr,mask);
 }
 
 static const iocshArg asynSetTraceInfoMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceInfoMaskArg1 = {"addr", iocshArgInt};
-static const iocshArg asynSetTraceInfoMaskArg2 = {"mask", iocshArgInt};
+static const iocshArg asynSetTraceInfoMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceInfoMaskArgs[] = {
     &asynSetTraceInfoMaskArg0,&asynSetTraceInfoMaskArg1,&asynSetTraceInfoMaskArg2};
 static const iocshFuncDef asynSetTraceInfoMaskDef =
@@ -717,10 +782,40 @@ epicsShareFunc int
     if (pasynUser) pasynManager->freeAsynUser(pasynUser);
     return 0;
 }
+
+static int asynTraceInfoMaskStringToInt(const char* maskStr) {
+    int mask = 0;
+
+    if (!maskStr) return mask;
+    do {
+        char *end;
+        int m = strtol(maskStr, &end, 0);
+        if (end != maskStr) {
+            mask |= m;
+            maskStr = end;
+        } else {
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+            (void) STARTSWITH(maskStr, ASYN_);
+            (void) STARTSWITH(maskStr, TRACEINFO_);
+            if (STARTSWITH(maskStr, TIME)) mask |= ASYN_TRACEINFO_TIME;
+            else if (STARTSWITH(maskStr, PORT)) mask |= ASYN_TRACEINFO_PORT;
+            else if (STARTSWITH(maskStr, SOURCE)) mask |= ASYN_TRACEINFO_SOURCE;
+            else if (STARTSWITH(maskStr, THREAD)) mask |= ASYN_TRACEINFO_THREAD;
+            else break;
+            while (isspace((unsigned char)*maskStr)) maskStr++;
+        }
+    } while ((*maskStr == '|' || *maskStr == '+') && maskStr++);
+    if (*maskStr)
+    {
+        printf("Mask string invalid at \"%s\"\n", maskStr);
+    }
+    return mask;
+}
+
 static void asynSetTraceInfoMaskCall(const iocshArgBuf * args) {
     const char *portName = args[0].sval;
     int addr = args[1].ival;
-    int mask = args[2].ival;
+    int mask = asynTraceInfoMaskStringToInt(args[2].sval);
     asynSetTraceInfoMask(portName,addr,mask);
 }
 
