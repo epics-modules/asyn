@@ -12,6 +12,36 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-35</h2>
+    <h2>
+      January XXX, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      asynPortClient.h, asynPortClient.cpp</h3>
+    <ul>
+      <li>Renamed asynPortClient base class to asynParamClient. This is the class from which
+        asynInt32Client, asynFloat64Client, etc. are derived.</li>
+      <li>The new asynPortClient class connects to a specific asynPortDriver object. It
+        creates an asynParamClient derived class object for each of the parameters in that
+        driver. It uses the std::map class to map between the parameter name key and the
+        asynParamClient object for that parameter. It also defines overloaded write() and
+        read() methods that take a paramName argument and the value to be written or pointer
+        to read into. The data type of the value or pointer must match the parameter type
+        or a run-time exception will be thrown. This new class is more convenient to use
+        because it is no longer necessary to create the asynInt32Client, asynFloat64Client,
+        etc. objects for each parameter to be accessed.</li>
+    </ul>
+    <h3>
+      asynPortDriver</h3>
+    <ul>
+      <li>Added asynPortDriver::getNumParams() method to get the number of parameters currently
+        defined.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-34</h2>
     <h2>
       September 13, 2018</h2>
