@@ -417,7 +417,7 @@ static int getRingBufferValue(devPvt *pPvt)
     if (pPvt->ringTail != pPvt->ringHead) {
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
-                "%s %s::%s error, %d ring buffer overflows\n",
+                "%s %s::%s warning, %d ring buffer overflows\n",
                 pPvt->precord->name, driverName, functionName, pPvt->ringBufferOverflows);
             pPvt->ringBufferOverflows = 0;
         }
@@ -436,12 +436,6 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     dbCommon *pr = pPvt->precord;
     static const char *functionName="interruptCallback";
 
-    /* Note: calling dbScanLock here may to lead to deadlocks when asyn:READBACK is set for output records
-     * and the driver is non-blocking.
-     * This has been fixed in the asynInt32, asynFloat64, and asynUInt32Digital device support.
-     * It cannot be fixed here because when not using ring buffers we need to lock the record to directly copy to it
-     * Maybe we should require at least 1 ring buffer. */
-    dbScanLock(pr);
     epicsMutexLock(pPvt->devPvtLock);
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         (char *)value, len*sizeof(char),
@@ -451,7 +445,16 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     if (pPvt->ringSize == 0) {
         /* Not using a ring buffer */ 
         if (pasynUser->auxStatus == asynSuccess) {
+            /* Note: calling dbScanLock here may to lead to deadlocks when asyn:READBACK is set for output records
+             * and the driver is non-blocking.
+             * This has been fixed in the asynInt32, asynFloat64, and asynUInt32Digital device support.
+             * It cannot be fixed here because when not using ring buffers we need to lock the record to directly copy to it
+             * Maybe we should require at least 1 ring buffer. */
+            epicsMutexUnlock(pPvt->devPvtLock);
+            dbScanLock(pr);
             memcpy(pPvt->pValue, value, len);
+            dbScanUnlock(pr);
+            epicsMutexLock(pPvt->devPvtLock);
             pPvt->pValue[len] = 0;
         }
         pPvt->nord = (epicsUInt32)len;
@@ -514,7 +517,6 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         }
     }
     epicsMutexUnlock(pPvt->devPvtLock);
-    dbScanUnlock(pr);
 }
 
 static void outputCallbackCallback(CALLBACK *pcb)
@@ -712,15 +714,11 @@ static long processCommon(dbCommon *precord)
             precord->pact = 1;
             pPvt->asyncProcessingActive = 1;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, asynQueuePriorityMedium, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-            epicsMutexUnlock(pPvt->devPvtLock);
-            return 0;
-        }
-        if(pPvt->canBlock) {
-            precord->pact = 0;
-            pPvt->asyncProcessingActive = 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) precord->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
 
     }

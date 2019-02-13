@@ -741,15 +741,11 @@ static long processBo(boRecord *pr)
             pr->pact = 1;
             pPvt->asyncProcessingActive = 1;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-            epicsMutexUnlock(pPvt->devPvtLock);
-            return 0;
-        }
-        if(pPvt->canBlock) {
-            pr->pact = 0;
-            pPvt->asyncProcessingActive = 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -850,15 +846,11 @@ static long processLo(longoutRecord *pr)
             pr->pact = 1;
             pPvt->asyncProcessingActive = 1;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-            epicsMutexUnlock(pPvt->devPvtLock);
-            return 0;
-        }
-        if(pPvt->canBlock) {
-            pr->pact = 0;
-            pPvt->asyncProcessingActive = 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -982,15 +974,11 @@ static long processMbbo(mbboRecord *pr)
             pr->pact = 1;
             pPvt->asyncProcessingActive = 1;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-            epicsMutexUnlock(pPvt->devPvtLock);
-            return 0;
-        }
-        if(pPvt->canBlock) {
-            pr->pact = 0;
-            pPvt->asyncProcessingActive = 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -1118,15 +1106,11 @@ static long processMbboDirect(mbboDirectRecord *pr)
             pr->pact = 1;
             pPvt->asyncProcessingActive = 1;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
-        if((status==asynSuccess) && pPvt->canBlock) {
-            epicsMutexUnlock(pPvt->devPvtLock);
-            return 0;
-        }
-        if(pPvt->canBlock) {
-            pr->pact = 0;
-            pPvt->asyncProcessingActive = 0;
-        }
+        if((status==asynSuccess) && pPvt->canBlock) return 0;
+        if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
