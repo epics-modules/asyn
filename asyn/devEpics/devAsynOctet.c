@@ -436,11 +436,11 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
     dbCommon *pr = pPvt->precord;
     static const char *functionName="interruptCallback";
 
-    // Note: calling dbScanLock here may to lead to deadlocks when asyn:READBACK is set for output records
-    // and the driver is non-blocking.
-    // This has been fixed in the asynInt32, asynFloat64, and asynUInt32Digital device support.
-    // It cannot be fixed here because when not using ring buffers we need to lock the record to directly copy to it
-    // Maybe we should require at least 1 ring buffer.
+    /* Note: calling dbScanLock here may to lead to deadlocks when asyn:READBACK is set for output records
+     * and the driver is non-blocking.
+     * This has been fixed in the asynInt32, asynFloat64, and asynUInt32Digital device support.
+     * It cannot be fixed here because when not using ring buffers we need to lock the record to directly copy to it
+     * Maybe we should require at least 1 ring buffer. */
     dbScanLock(pr);
     epicsMutexLock(pPvt->devPvtLock);
     asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
@@ -461,7 +461,9 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         if (pPvt->isOutput) {
-            if (pPvt->asynProcessingActive) {
+            /* If this callback was received during asynchronous record processing
+             * we must defer calling callbackRequest until end of record processing */
+            if (pPvt->asyncProcessingActive) {
                 pPvt->numDeferredOutputCallbacks++;
             } else { 
                 callbackRequest(&pPvt->outputCallback);
