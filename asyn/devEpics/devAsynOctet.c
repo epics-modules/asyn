@@ -118,7 +118,7 @@ typedef struct devPvt {
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback, 
                 int isOutput, int isWaveform, int useDrvUser, char *pValue, size_t valSize);
-static long createRingBuffer(dbCommon *pr);
+static long createRingBuffer(dbCommon *pr, int minRingSize);
 static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
 static void outputCallbackCallback(CALLBACK *pcb);
 static void interruptCallback(void *drvPvt, asynUser *pasynUser,
@@ -287,7 +287,9 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
         readbackString = dbGetInfo(pdbentry, "asyn:READBACK");
         if (readbackString) enableReadbacks = atoi(readbackString);
         if (enableReadbacks) {
-            status = createRingBuffer(precord);
+            /* If enableReabacks is set we will get a deadlock if not using ring buffer.
+               Force ring buffer size to be at least 1. asyn:FIFO can be used to make it larger. */
+            status = createRingBuffer(precord, 1);
             if (status != asynSuccess) goto bad;
             status = pPvt->poctet->registerInterruptUser(
                pPvt->octetPvt, pPvt->pasynUser,
@@ -337,7 +339,7 @@ bad:
 }
 
 
-static long createRingBuffer(dbCommon *pr)
+static long createRingBuffer(dbCommon *pr, int minRingSize)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     asynStatus status;
@@ -354,7 +356,7 @@ static long createRingBuffer(dbCommon *pr)
                 pr->name, driverName, functionName);
             return -1;
         }
-        pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
+        pPvt->ringSize = minRingSize;
         sizeString = dbGetInfo(pdbentry, "asyn:FIFO");
         if (sizeString) pPvt->ringSize = atoi(sizeString);
         if (pPvt->ringSize > 0) {
@@ -385,7 +387,7 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
             "%s %s::%s registering interrupt\n",
             pr->name, driverName, functionName);
-        createRingBuffer(pr);
+        createRingBuffer(pr, DEFAULT_RING_BUFFER_SIZE);
         status = pPvt->poctet->registerInterruptUser(
            pPvt->octetPvt,pPvt->pasynUser,
            pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
