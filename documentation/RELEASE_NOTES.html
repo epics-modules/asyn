@@ -14,7 +14,17 @@
     <h2>
       Release 4-35</h2>
     <h2>
-      January XXX, 2019</h2>
+      February XXX, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      devAsynInt32, devAsynFloat64, devAsynUInt32Digital, devAsynOctet</h3>
+    <ul>
+      <li>Fixed a deadlock problem when asyn:READBACK was used on output records. In devAsynOctet
+        there is still an isssue if asyn:READBACK is used without asyn:FIFO, i.e. when ring
+        buffers are not enabled. Users who want to use asyn:READBACK with asynOctet device
+        support must also set those output records to have asyn:FIFO &gt; 0. </li>
+    </ul>
   </div>
   <div>
     <h3>
