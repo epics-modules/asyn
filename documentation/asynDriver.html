@@ -4539,7 +4539,11 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     In this example the buffer size was set to 20. Ring buffer support was added in
     asyn R4-10 for all records except stringin, stringout, and waveform. Waveform record
     support for numeric arrays was added in asyn R4-25. asynOctet support for stringin,
-    stringout, and waveform records was added in asyn R4-26.
+    stringout, and waveform records was added in asyn R4-26. In R4-35 a deadlock issue
+    with asyn:READBACK was found. To fix this with asynOctet output records a ring buffer
+    is required. Thus, a minimum ring buffer size of 1 is enforced in the driver for
+    these records if asyn:REABACK=1 even if asyn:FIFO is not specified. asyn:FIFO can
+    still be used to select a larger ring buffer size.
   </p>
   <h3 id="DeviceTimeStamps">
     Time stamps
