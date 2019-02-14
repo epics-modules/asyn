@@ -85,7 +85,7 @@ typedef struct devPvt{
     int               canBlock;
     epicsInt32        deviceLow;
     epicsInt32        deviceHigh;
-    epicsMutexId      ringBufferLock;
+    epicsMutexId      devPvtLock;
     ringBufferElement *ringBuffer;
     int               ringHead;
     int               ringTail;
@@ -97,6 +97,7 @@ typedef struct devPvt{
     int               numAverage;
     int               isAiAverage;
     int               isIOIntrScan;
+    int               asyncProcessingActive;
     int               bipolar;
     epicsInt32        mask;
     epicsInt32        signBit;
@@ -209,7 +210,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     pasynUser = pasynManager->createAsynUser(processCallback, 0);
     pasynUser->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
-    pPvt->ringBufferLock = epicsMutexCreate();
+    pPvt->devPvtLock = epicsMutexCreate();
  
     /* Parse the link to get addr and port */
     /* We accept 2 different link syntax (@asyn(...) and @asynMask(...)
@@ -557,7 +558,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
      * Instead we just return.  There will then be nothing in the ring buffer, so the first
      * read will do a read from the driver, which should be OK. */
     if (!interruptAccept) return;
-    epicsMutexLock(pPvt->ringBufferLock);
+    epicsMutexLock(pPvt->devPvtLock);
     rp = &pPvt->ringBuffer[pPvt->ringHead];
     rp->value = value;
     rp->time = pasynUser->timestamp;
@@ -577,7 +578,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
          * element to the ring buffer, not if we just replaced an element. */
         scanIoRequest(pPvt->ioScanPvt);
     }
-    epicsMutexUnlock(pPvt->ringBufferLock);
+    epicsMutexUnlock(pPvt->devPvtLock);
 }
 
 static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
@@ -596,10 +597,7 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         "%s %s::%s new value=%d\n",
         pr->name, driverName, functionName, value);
     if (!interruptAccept) return;
-    /* We need the scan lock because we look at PACT and pPvt->numDeferredOutputCallbacks
-     * Must take scan lock before ring buffer lock */
-    dbScanLock(pr);
-    epicsMutexLock(pPvt->ringBufferLock);
+    epicsMutexLock(pPvt->devPvtLock);
     rp = &pPvt->ringBuffer[pPvt->ringHead];
     rp->value = value;
     rp->time = pasynUser->timestamp;
@@ -611,16 +609,15 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         pPvt->ringBufferOverflows++;
     } else {
-        /* If PACT is true then this callback was received during asynchronous record processing
-         * Must defer calling callbackRequest until end of record processing */
-        if (pr->pact) {
+        /* If this callback was received during asynchronous record processing
+         * we must defer calling callbackRequest until end of record processing */
+        if (pPvt->asyncProcessingActive) {
             pPvt->numDeferredOutputCallbacks++;
         } else { 
             callbackRequest(&pPvt->outputCallback);
         }
     }
-    epicsMutexUnlock(pPvt->ringBufferLock);
-    dbScanUnlock(pr);
+    epicsMutexUnlock(pPvt->devPvtLock);
 }
 
 static void outputCallbackCallback(CALLBACK *pcb)
@@ -632,6 +629,7 @@ static void outputCallbackCallback(CALLBACK *pcb)
     {
         dbCommon *pr = pPvt->pr;
         dbScanLock(pr);
+        epicsMutexLock(pPvt->devPvtLock);
         pPvt->newOutputCallbackValue = 1;
         dbProcess(pr);
         if (pPvt->newOutputCallbackValue != 0) {
@@ -643,6 +641,7 @@ static void outputCallbackCallback(CALLBACK *pcb)
             getCallbackValue(pPvt);
             pPvt->newOutputCallbackValue = 0;
         }
+        epicsMutexUnlock(pPvt->devPvtLock);
         dbScanUnlock(pr);
     }
 }
@@ -664,7 +663,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
         "%s %s::%s new value=%d\n",
          pai->name, driverName, functionName, value);
     if (!interruptAccept) return;
-    epicsMutexLock(pPvt->ringBufferLock);
+    epicsMutexLock(pPvt->devPvtLock);
     pPvt->numAverage++; 
     pPvt->sum += (double)value;
     /* We use the SVAL field to hold the number of values to average when SCAN=I/O Intr
@@ -709,7 +708,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
     }
-    epicsMutexUnlock(pPvt->ringBufferLock);
+    epicsMutexUnlock(pPvt->devPvtLock);
 }
 
 static void interruptCallbackEnumMbbi(void *drvPvt, asynUser *pasynUser,
@@ -773,22 +772,22 @@ static int getCallbackValue(devPvt *pPvt)
     int ret = 0;
     static const char *functionName="getCallbackValue";
 
-    epicsMutexLock(pPvt->ringBufferLock);
+    epicsMutexLock(pPvt->devPvtLock);
     if (pPvt->ringTail != pPvt->ringHead) {
         if (pPvt->ringBufferOverflows > 0) {
             asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
                 "%s %s::%s warning, %d ring buffer overflows\n",
-                                    pPvt->pr->name, driverName, functionName, pPvt->ringBufferOverflows);
+                pPvt->pr->name, driverName, functionName, pPvt->ringBufferOverflows);
             pPvt->ringBufferOverflows = 0;
         }
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             "%s %s::%s from ringBuffer value=%d\n",
-                                            pPvt->pr->name, driverName, functionName,pPvt->result.value);
+            pPvt->pr->name, driverName, functionName,pPvt->result.value);
         ret = 1;
     }
-    epicsMutexUnlock(pPvt->ringBufferLock);
+    epicsMutexUnlock(pPvt->devPvtLock);
     return ret;
 }
 
@@ -826,7 +825,7 @@ static long initAi(aiRecord *pr)
      * parseLinkMask */
     if ((pPvt->deviceLow == 0) && (pPvt->deviceHigh == 0)) {
         pasynInt32SyncIO->getBounds(pPvt->pasynUserSync,
-                                &pPvt->deviceLow, &pPvt->deviceHigh);
+                                    &pPvt->deviceLow, &pPvt->deviceHigh);
     }
     convertAi(pr, 1);
     return INIT_OK;
@@ -893,7 +892,7 @@ static long processAiAverage(aiRecord *pr)
     double rval;
     static const char *functionName="processAiAverage";
 
-    epicsMutexLock(pPvt->ringBufferLock);
+    epicsMutexLock(pPvt->devPvtLock);
 
     if (getCallbackValue(pPvt)) {
         /* Record is I/O Intr scanned and the average has been put in the ring buffer */
@@ -903,7 +902,7 @@ static long processAiAverage(aiRecord *pr)
         if (pPvt->numAverage == 0) {
             (void)recGblSetSevr(pr, UDF_ALARM, INVALID_ALARM);
             pr->udf = 1;
-            epicsMutexUnlock(pPvt->ringBufferLock);
+            epicsMutexUnlock(pPvt->devPvtLock);
             return -2;
         }
         rval = pPvt->sum/pPvt->numAverage;
@@ -912,7 +911,7 @@ static long processAiAverage(aiRecord *pr)
         pPvt->numAverage = 0;
         pPvt->sum = 0.;
     }
-    epicsMutexUnlock(pPvt->ringBufferLock);
+    epicsMutexUnlock(pPvt->devPvtLock);
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s %s::%s rval=%d, status=%d\n",pr->name, driverName, functionName, pr->rval, pPvt->result.status);
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -969,6 +968,7 @@ static long processAo(aoRecord *pr)
     double     value;
     static const char *functionName="processAo";
     
+    epicsMutexLock(pPvt->devPvtLock);
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
@@ -989,6 +989,7 @@ static long processAo(aoRecord *pr)
                         "%s %s::%s cvtRawToEngBpt failed\n",
                         pr->name, driverName, functionName);
                     (void)recGblSetSevr(pr, WRITE_ALARM, INVALID_ALARM);
+                     epicsMutexUnlock(pPvt->devPvtLock);
                     return -1;
                 }
             }
@@ -997,9 +998,14 @@ static long processAo(aoRecord *pr)
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;
-        if(pPvt->canBlock) pr->pact = 1;
+        if(pPvt->canBlock) {
+            pr->pact = 1;
+            pPvt->asyncProcessingActive = 1;
+        }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
+        epicsMutexLock(pPvt->devPvtLock);
         if(pPvt->canBlock) pr->pact = 0;
         reportQueueRequestStatus(pPvt, status);
     }
@@ -1012,6 +1018,8 @@ static long processAo(aoRecord *pr)
         pPvt->numDeferredOutputCallbacks--;
     }
     pPvt->newOutputCallbackValue = 0;
+    pPvt->asyncProcessingActive = 0;
+    epicsMutexUnlock(pPvt->devPvtLock);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
@@ -1086,6 +1094,7 @@ static long processLo(longoutRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    epicsMutexLock(pPvt->devPvtLock);
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
@@ -1094,10 +1103,15 @@ static long processLo(longoutRecord *pr)
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->val;
-        if(pPvt->canBlock) pr->pact = 1;
+        if(pPvt->canBlock) {
+            pr->pact = 1;
+            pPvt->asyncProcessingActive = 1;
+        }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -1109,6 +1123,8 @@ static long processLo(longoutRecord *pr)
         pPvt->numDeferredOutputCallbacks--;
     }
     pPvt->newOutputCallbackValue = 0;
+    pPvt->asyncProcessingActive = 0;
+    epicsMutexUnlock(pPvt->devPvtLock);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
@@ -1183,6 +1199,7 @@ static long processBo(boRecord *pr)
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    epicsMutexLock(pPvt->devPvtLock);
     if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
@@ -1192,10 +1209,15 @@ static long processBo(boRecord *pr)
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;
-        if(pPvt->canBlock) pr->pact = 1;
+        if(pPvt->canBlock) {
+            pr->pact = 1;
+            pPvt->asyncProcessingActive = 1;
+        }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -1207,6 +1229,8 @@ static long processBo(boRecord *pr)
         pPvt->numDeferredOutputCallbacks--;
     }
     pPvt->newOutputCallbackValue = 0;
+    pPvt->asyncProcessingActive = 0;
+    epicsMutexUnlock(pPvt->devPvtLock);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     } else {
@@ -1279,11 +1303,13 @@ static long initMbbo(mbboRecord *pr)
     }
     return INIT_DO_NOT_CONVERT;
 }
+
 static long processMbbo(mbboRecord *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     int status;
 
+    epicsMutexLock(pPvt->devPvtLock);
     if(pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
@@ -1311,10 +1337,15 @@ static long processMbbo(mbboRecord *pr)
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;
-        if(pPvt->canBlock) pr->pact = 1;
+        if(pPvt->canBlock) {
+            pr->pact = 1;
+            pPvt->asyncProcessingActive = 1;
+        }
+        epicsMutexUnlock(pPvt->devPvtLock);
         status = pasynManager->queueRequest(pPvt->pasynUser, 0, 0);
         if((status==asynSuccess) && pPvt->canBlock) return 0;
         if(pPvt->canBlock) pr->pact = 0;
+        epicsMutexLock(pPvt->devPvtLock);
         reportQueueRequestStatus(pPvt, status);
     }
     pasynEpicsUtils->asynStatusToEpicsAlarm(pPvt->result.status, 
@@ -1326,6 +1357,8 @@ static long processMbbo(mbboRecord *pr)
         pPvt->numDeferredOutputCallbacks--;
     }
     pPvt->newOutputCallbackValue = 0;
+    pPvt->asyncProcessingActive = 0;
+    epicsMutexUnlock(pPvt->devPvtLock);
     if(pPvt->result.status == asynSuccess) {
         return 0;
     }
