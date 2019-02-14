@@ -20,10 +20,11 @@
     <h3>
       devAsynInt32, devAsynFloat64, devAsynUInt32Digital, devAsynOctet</h3>
     <ul>
-      <li>Fixed a deadlock problem when asyn:READBACK was used on output records. In devAsynOctet
-        there is still an isssue if asyn:READBACK is used without asyn:FIFO, i.e. when ring
-        buffers are not enabled. Users who want to use asyn:READBACK with asynOctet device
-        support must also set those output records to have asyn:FIFO &gt; 0. </li>
+      <li>Fixed a deadlock problem when asyn:READBACK was used on output records.</li>
+      <li>In devAsynOctet there would still an isssue if asyn:READBACK=1 was used without
+        asyn:FIFO, i.e. when ring buffers were not enabled. The code now forces a minimum
+        ring buffer size of 1 if asyn:READBACK=1 to avoid the deadlock. asyn:FIFO can still
+        be used to select a larger ring buffer size. </li>
     </ul>
   </div>
   <div>
