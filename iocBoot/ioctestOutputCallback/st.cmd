@@ -2,7 +2,7 @@ dbLoadDatabase("../../dbd/testOutputCallback.dbd")
 testOutputCallback_registerRecordDeviceDriver(pdbbase)
 
 # Arguments: Portname, canBlock
-testOutputCallbackConfigure("PORT1", 1)
+testOutputCallbackConfigure("PORT1", 0)
 # Enable ASYN_TRACE_WARNING
 asynSetTraceMask("PORT1",0,0x21)
 asynSetTraceIOMask("PORT1",0,0x2)
