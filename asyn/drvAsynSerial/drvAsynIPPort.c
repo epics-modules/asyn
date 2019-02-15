@@ -758,8 +758,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
     if (thisRead < 0) {
-        int should_disconnect = (tty->disconnectOnReadTimeout) ||
-                           ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR));
+        int should_disconnect = (((tty->disconnectOnReadTimeout) && (pasynUser->timeout > 0)) ||
+                                 ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)));
         if (should_disconnect) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",
