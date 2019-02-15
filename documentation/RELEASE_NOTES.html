@@ -29,6 +29,16 @@
   </div>
   <div>
     <h3>
+      drvAsynIPPort</h3>
+    <ul>
+      <li>Fixed a problem with the disconnectOnReadTimeout option. Previously it would disconnect
+        even if pasynUser->timeout was 0. This is not logical, and meant this option could
+        not be used with StreamDevice, because StreamDevices flushes the input by reading
+        with a timeout of 0 to support I/O Intr scanned records.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>
       asynShellCommands</h3>
     <ul>
       <li>Enhancement to allow using strings for the mask arguments of asynSetTraceMask,
