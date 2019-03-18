@@ -82,6 +82,20 @@
       <li>Added asynPortDriver::getNumParams() method to get the number of parameters currently
         defined.</li>
     </ul>
+    </ul>
+    <h3>
+      asynInterposeDelay</h3>
+    <ul>
+      <li>New interpose driver that waits for a user-specified time after sending each character
+        before sending the next one. Some poorly designed devices require this. Thanks to
+        Dirk Zimoch.</li>
+    </ul>
+    <h3>
+      asynInterposeEcho</h3>
+    <ul>
+      <li>New interpose driver that waits for a device to echo each character before sending
+        the next one. Some poorly designed devices require this. Thanks to Dirk Zimoch.</li>
+    </ul>
   </div>
   <div style="text-align: center">
     <hr />
