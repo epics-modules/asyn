@@ -116,6 +116,9 @@
       <ul>
         <li><a href="#asynInterposeEos">asynInterposeEos</a> </li>
         <li><a href="#asynInterposeFlush">asynInterposeFlush</a> </li>
+        <li><a href="#asynInterposeCom">asynInterposeCom</a> </li>
+        <li><a href="#asynInterposeDelay">asynInterposeDelay</a> </li>
+        <li><a href="#asynInterposeEcho">asynInterposeEcho</a> </li>
       </ul>
     </li>
     <li><a href="#genericEpicsSupport">Generic Device Support for EPICS records</a>
@@ -4363,7 +4366,7 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>processEosOut (0,1) means (do not, do) implement eosOut commands.</li>
   </ul>
   <p>
-    This command should appear immediately after the command that initializes a port
+    This command should appear immediately after the command that initializes a port.
     Some drivers provide configuration options to call this automatically.</p>
   <h3 id="asynInterposeFlush">
     asynInterposeFlush</h3>
@@ -4380,7 +4383,52 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>timeout is the time to wait for more characters</li>
   </ul>
   <p>
-    this command should appear immediately after the command that initializes a port</p>
+    This command should appear immediately after the command that initializes a port.</p>
+  <h3 id="asynInterposeCom">
+    asynInterposeCom</h3>
+  <p>
+    This provides the ability to configure serial ports on terminal servers using the
+    RFC 2117 protocol. It is not configured from the iocsh directly, but is rather configured
+    automatically by the drvAsynIPPort driver if the COM protocol is specified. It supports
+    the same options as drvAsynSerialPort, i.e. "baud", "bits", "parity", "stop", "crtscts",
+    and "ixon".
+  </p>
+  <h3 id="asynInterposeDelay">
+    asynInterposeDelay</h3>
+  <p>
+    This can be used to wait for a specified delay after sending each character before
+    sending the next. Some poorly designed devices require this. It is started by the
+    shell command:</p>
+  <pre>    asynInterposeDelay port addr delay</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>port is the name of the port.</li>
+    <li>addr is the address</li>
+    <li>delay is the time to wait after sending each character</li>
+  </ul>
+  <p>
+    This command should appear immediately after the command that initializes a port.
+    At run-time the delay can be examined or changed using the asyn option interface
+    with the `delay` option which is added by this interpose layer.</p>
+  <pre>    asynShowOption port, address, "delay"
+   asynSetOption port, address, "delay", delay(sec)
+</pre>
+  <h3 id="asynInterposeEcho">
+    asynInterposeEcho</h3>
+  <p>
+    This can be used to wait for each character to be echoed by the device before sending
+    the next character. Some poorly designed devices require this. It is started by
+    the shell command:</p>
+  <pre>    asynInterposeEcho port addr</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>port is the name of the port.</li>
+    <li>addr is the address</li>
+  </ul>
+  <p>
+    This command should appear immediately after the command that initializes a port.</p>
   <hr />
   <h2 id="genericEpicsSupport">
     Generic Device Support for EPICS records</h2>
