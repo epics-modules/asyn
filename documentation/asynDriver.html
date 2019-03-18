@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-34</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-35</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">September 13, 2018</span></p>
+      <span style="font-weight: bold; font-size: 14pt">March 18, 2019</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -5502,8 +5502,9 @@ asynOctetSetOutputEos("A1",0,"\r")
       <ul>
         <li>TCP</li>
         <li>UDP</li>
-        <li>UDP* -- UDP broadcasts. The address portion of the argument must be the network
-          broadcast address (e.g. "192.168.1.255:1234 UDP*").</li>
+        <li>UDP* -- Send UDP broadcasts. The address portion of the argument must be the network
+          broadcast address (e.g. "192.168.1.255:1234 UDP*", or "255.255.255.255:1234 UDP*",
+          etc.).</li>
         <li>HTTP -- Like TCP but for servers which close the connection after each transaction.</li>
         <li>COM -- For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol. This
           allows port parameters (speed, parity, etc.) to be set with subsequent asynSetOption
@@ -5514,10 +5515,15 @@ asynOctetSetOutputEos("A1",0,"\r")
         unix://</span> the remainder of the argument is taken to be the name of a UNIX-domain
       stream socket.
       <br />
-      Note that the localPort should almost never be used because normally the local host
-      choses an unused random local port that it binds to and passes to the server. However,
-      there are some unusual servers that only accept a specific local port or range of
-      local ports, in which case localPort must be specified.</li>
+      To receive UDP broadcasts the localPort is the port to listen on, for example: drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+      UDP*",0,0,0). If the port is only to be used to receive broadcast messages then
+      the UDP protocol should be specified. If it is also to be used to send UDP broadcasts
+      then the UDP* protocol must be specified. In this case the broadcasts will be send
+      on port "port" and it will listen for broadcast messages on port "localPort".<br />
+      Note that the localPort should almost never be used for TCP ports because normally
+      the local host choses an unused random local port that it binds to and passes to
+      the server. However, there are some unusual servers that only accept a specific
+      local port or range of local ports, in which case localPort must be specified.</li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
