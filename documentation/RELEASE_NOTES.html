@@ -35,12 +35,15 @@
         even if pasynUser->timeout was 0. This is not logical, and meant this option could
         not be used with StreamDevice, because StreamDevices flushes the input by reading
         with a timeout of 0 to support I/O Intr scanned records.</li>
-      <li>Updated the documentation to say that the <code>localPort</code> parameter in
-        the hostInfo string in <code>drvAsynIPPortConfigure</code> must be specified and
-        be the same as <code>port</code> to receive UDP broadcasts. Example: <code>drvAsynIPPortConfigure("BD","255.255.255.255:3956:3956
-          UDP",0,0,0)</code>. If the port is only to be used to receive broadcast messages
-        then the UDP protocol should be specified. If it is also to be used to send UDP
-        broadcasts then the UDP* protocol must be specified.</li>
+      <li>Updated the documentation to say that in order to receive UDP broadcast messages
+        the <code>localPort</code> parameter in the hostInfo string in <code>drvAsynIPPortConfigure</code>
+        must be specified. Example: <code>drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+          UDP",0,0,0)</code> will listen for broadcast messages on port 3956. If the port
+        is only to be used to receive broadcast messages then the UDP protocol should be
+        specified. If the port is also to be used to send UDP broadcasts then the UDP* protocol
+        must be specified. Example: <code>drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+          UDP*",0,0,0)</code>. In this case it will send the broadcast messages on UDP port
+        1234 and listen for broadcast messages on UDP port 3956.</li>
     </ul>
   </div>
   <div>
