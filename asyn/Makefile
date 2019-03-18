@@ -105,6 +105,8 @@ endif
 asyn_SRCS += asynInterposeCom.c
 asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
+asyn_SRCS += asynInterposeDelay.c
+asyn_SRCS += asynInterposeEcho.c
 
 SRC_DIRS += $(ASYN)/asynPortDriver/exceptions
 INC += ParamListInvalidIndex.h
