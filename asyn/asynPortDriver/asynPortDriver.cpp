@@ -809,29 +809,36 @@ paramVal* paramList::getParameter(int index)
     return this->vals[index];
 }
 
+callbackThread::callbackThread(asynPortDriver *portDriver) :
+        thread(*this, "asynPortDriverCallback", epicsThreadGetStackSize(epicsThreadStackMedium), epicsThreadPriorityMedium),
+        pPortDriver(portDriver)
+{
+    thread.start();
+}
+
+callbackThread::~callbackThread()
+{
+    shutdown.signal();
+    thread.exitWait();
+}
 
 /* I thought this would be a temporary fix until EPICS supported PINI after interruptAccept, which would then be used
  * for input records that need callbacks after output records that also have PINI and that could affect them. But this
  * does not work with asyn device support because of the ring buffer.  Records with SCAN=I/O Intr must not processed
  * for any other reason, including PINI, or the ring buffer can get out of sync. */
-static void callbackTaskC(void *drvPvt)
-{
-    asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
-    
-    pPvt->callbackTask();
-}
-
-void asynPortDriver::callbackTask()
+void callbackThread::run()
 {
     int addr;
-    
-    while(!interruptAccept) epicsThreadSleep(0.1);
-    epicsMutexLock(this->mutexId);
-    for (addr=0; addr<this->maxAddr; addr++) {
-        callParamCallbacks(addr, addr);
+    while(!interruptAccept && !shutdown.tryWait())
+        epicsThreadSleep(0.001);
+    epicsMutexLock(pPortDriver->mutexId);
+    for (addr=0; addr<pPortDriver->maxAddr; addr++) {
+        if(shutdown.tryWait()) break;
+        pPortDriver->callParamCallbacks(addr, addr);
     }
-    epicsMutexUnlock(this->mutexId);
+    epicsMutexUnlock(pPortDriver->mutexId);
 }
+
 
 
 /** Locks the driver to prevent multiple threads from accessing memory at the same time.
@@ -3407,26 +3414,16 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
     }
 
     /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
-    status = (asynStatus)(epicsThreadCreate("asynPortDriverCallback",
-                                epicsThreadPriorityMedium,
-                                epicsThreadGetStackSize(epicsThreadStackMedium),
-                                (EPICSTHREADFUNC)callbackTaskC,
-                                this) == NULL);
-    if (status) {
-        std::string msg = std::string(driverName) + ":" + functionName +
-            " ERROR: epicsThreadCreate failure for callback task: " + portName;
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR, "%s\n", msg.c_str());
-        throw std::runtime_error(msg);
-    }
+    cbThread = new callbackThread(this);
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
 asynPortDriver::~asynPortDriver()
 {
-    int addr;
-
+    delete cbThread;
     epicsMutexDestroy(this->mutexId);
-    for (addr=0; addr<this->maxAddr; addr++) {
+
+    for (int addr=0; addr<this->maxAddr; addr++) {
         delete this->params[addr];
     }
 

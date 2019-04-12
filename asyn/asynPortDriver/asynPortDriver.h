@@ -6,6 +6,7 @@
 
 #include <epicsTypes.h>
 #include <epicsMutex.h>
+#include <epicsThread.h>
 
 #include <asynStandardInterfaces.h>
 #include <asynParamType.h>
@@ -34,7 +35,7 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
 #define asynGenericPointerMask  0x00001000
 #define asynEnumMask            0x00002000
 
-
+class callbackThread;
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
   * with standard asyn interfaces and a parameter library. */
@@ -194,11 +195,24 @@ private:
     int inputEosLenOctet;
     char *outputEosOctet;
     int outputEosLenOctet;
+    callbackThread *cbThread;
     template <typename epicsType, typename interruptType> 
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
 
     friend class paramList;
+    friend class callbackThread;
+};
+
+class callbackThread: public epicsThreadRunable {
+public:
+    callbackThread(asynPortDriver *portDriver);
+    ~callbackThread();
+    void run();
+private:
+    epicsThread thread;
+    asynPortDriver *pPortDriver;
+    epicsEvent shutdown;
 };
 
 #endif /* cplusplus */
