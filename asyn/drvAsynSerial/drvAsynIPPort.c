@@ -459,7 +459,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * This is a very unusual configuration
          */
         if (tty->localAddrSize > 0) {
-            if (bind(fd, &tty->localAddr.sa, tty->localAddrSize)) {
+            if (bind(fd, &tty->localAddr.sa, (int)tty->localAddrSize)) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                             "unable to bind to local port: %s", strerror(SOCKERRNO));
                 epicsSocketDestroy(fd);
