@@ -212,12 +212,14 @@ asynInterposeDelay(const char *portName, int addr, double delay)
 }
 
 /* register asynInterposeDelay*/
+static const iocshArg iocshArg0 = {"portName", iocshArgString};
+static const iocshArg iocshArg1 = {"addr", iocshArgInt};
+static const iocshArg iocshArg2 = {"delay(sec)", iocshArgDouble };
+static const iocshArg *iocshArgs[] =
+    {&iocshArg0, & iocshArg1, &iocshArg2};
+    
 static const iocshFuncDef asynInterposeDelayFuncDef =
-    {"asynInterposeDelay", 3, (const iocshArg *[]) {
-    &(iocshArg) { "portName", iocshArgString },
-    &(iocshArg) {  "addr", iocshArgInt },
-    &(iocshArg) {  "delay(sec)", iocshArgDouble },
-}};
+    {"asynInterposeDelay", 3, iocshArgs};
 
 static void asynInterposeDelayCallFunc(const iocshArgBuf *args)
 {
