@@ -186,11 +186,13 @@ asynInterposeEcho(const char *portName, int addr)
 }
 
 /* register asynInterposeEcho*/
+static const iocshArg iocshArg0 = {"portName", iocshArgString};
+static const iocshArg iocshArg1 = {"addr", iocshArgInt};
+static const iocshArg *iocshArgs[] =
+    {&iocshArg0, & iocshArg1};
+    
 static const iocshFuncDef asynInterposeEchoFuncDef =
-    {"asynInterposeEcho", 2, (const iocshArg *[]) {
-    &(iocshArg) { "portName", iocshArgString },
-    &(iocshArg) {  "addr", iocshArgInt },
-}};
+    {"asynInterposeEcho", 2, iocshArgs};
 
 static void asynInterposeEchoCallFunc(const iocshArgBuf *args)
 {
