@@ -1573,7 +1573,7 @@ static asynStatus queueRequest(asynUser *pasynUser,
     } else {
         puserPvt->timeout = timeout;
         asynPrint(pasynUser,ASYN_TRACE_FLOW,
-            "%s schedule queueRequest timeout\n",puserPvt->pport->portName);
+            "%s schedule queueRequest timeout in %f seconds\n",puserPvt->pport->portName,puserPvt->timeout);
         epicsTimerStartDelay(puserPvt->timer,puserPvt->timeout);
     }
     epicsMutexUnlock(pport->asynManagerLock);
