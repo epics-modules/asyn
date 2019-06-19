@@ -47,7 +47,8 @@ public:
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
-    virtual asynStatus getAddress(asynUser *pasynUser, int *address); 
+    virtual asynStatus getAddress(asynUser *pasynUser, int *address);
+    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName); 
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask);
