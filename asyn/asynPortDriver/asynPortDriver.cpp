@@ -1657,11 +1657,13 @@ asynStatus asynPortDriver::getAddress(asynUser *pasynUser, int *address)
     return asynSuccess;
 }
 
-/** Returns the asyn address associated with a pasynUser structure.
+/** Returns the asyn reason, address, and parameter name associated with a pasynUser structure.
   * Derived classes rarely need to reimplement this function.
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
-  * \param[out] address Returned address. 
-  * \return Returns asynError if the address is > maxAddr value passed to asynPortDriver::asynPortDriver. */
+  * \param[out] reason Returned reason (pasynUser->reason) 
+  * \param[out] address Returned address (this->getAddress())
+  * \param[out] paramName Returned parameter name (this->getParamName())
+  * \return Returns asynError if the address is < 0 or > maxAddr value passed to asynPortDriver::asynPortDriver. */
 asynStatus asynPortDriver::parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName) 
 {
     //static const char *functionName = "parseAsynUser";
