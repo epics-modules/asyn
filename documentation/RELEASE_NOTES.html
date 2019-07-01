@@ -12,6 +12,32 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-36</h2>
+    <h2>
+      July XXX, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      asynManager</h3>
+    <ul>
+      <li>Improved debugging output when scheduling queue request timeout.</li>
+    </ul>
+    <h3>
+      asynPortDriver</h3>
+    <ul>
+      <li>Added new parseAsynUser() method. Changed all readXXX and writeXXX methods to use this, rather than getAddress().</li>
+      <li>Use asynPortDriver::getAddress() in callback functions, rather than pasynManager::getAddress().
+        This allows the getAddress() to be overridden in derived classes.</li>
+    </ul>
+    <h3>
+      asynInterposeDelay, asynInteposeEcho</h3>
+    <ul>
+      <li>Fixes to compile on Visual Studio 2010.</li>
+    </ul>  
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-35</h2>
     <h2>
       March 18, 2019</h2>
