@@ -200,7 +200,7 @@ static void
 closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Close %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
+              "Closing %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
     if (tty->fd != INVALID_SOCKET) {
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -248,7 +248,7 @@ cleanup (void *arg)
         asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "%s: cleanup locking error\n", tty->portName);
 
     if (tty->fd != INVALID_SOCKET) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "%s: shutdown socket\n", tty->portName);
+        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "%s: shutting down socket\n", tty->portName);
         tty->flags |= FLAG_SHUTDOWN; /* prevent reconnect */
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -397,7 +397,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+              "Attempting to connect to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
                                                            pasynUser->reason,
                                                            tty->fd);
 
@@ -505,7 +505,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
 #endif
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                          "Opened connection to %s\n", tty->IPDeviceName);
+                          "Opened connection OK to %s\n", tty->IPDeviceName);
     tty->fd = fd;
     return asynSuccess;
 }
