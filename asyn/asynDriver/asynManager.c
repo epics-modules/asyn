@@ -760,7 +760,7 @@ static void connectAttempt(dpCommon *pdpCommon)
         epicsMutexUnlock(pport->synchronousLock);
         if (status != asynSuccess) {
             reportConnectStatus(pport, portConnectDriver,
-                "%s %d autoConnect could not connect\n", pport->portName, addr);
+                "%s %d autoConnect could not connect: %s\n", pport->portName, addr, pasynUser->errorMessage);
         } else {
             reportConnectStatus(pport, portConnectSuccess,
                 "%s %d port is now connected\n",
