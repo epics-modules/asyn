@@ -23,17 +23,25 @@
       <li>Improved debugging output when scheduling queue request timeout.</li>
     </ul>
     <h3>
+      drvAsynIPPort</h3>
+    <ul>
+      <li>Improved diagnostic messages.</li>
+    </ul>
+    <h3>
       asynPortDriver</h3>
     <ul>
-      <li>Added new parseAsynUser() method. Changed all readXXX and writeXXX methods to use this, rather than getAddress().</li>
+      <li>Added new parseAsynUser() method. Changed all readXXX and writeXXX methods to
+        use this, rather than getAddress().</li>
       <li>Use asynPortDriver::getAddress() in callback functions, rather than pasynManager::getAddress().
         This allows the getAddress() to be overridden in derived classes.</li>
+      <li>Fix to prevent a potentially locked mutex from being destroyed, as well as use-after-free
+        bugs on other members of asynPortDriver. Thanks to Martin Konrad for this.</li>
     </ul>
     <h3>
       asynInterposeDelay, asynInteposeEcho</h3>
     <ul>
       <li>Fixes to compile on Visual Studio 2010.</li>
-    </ul>  
+    </ul>
   </div>
   <div style="text-align: center">
     <hr />
@@ -107,7 +115,6 @@
     <ul>
       <li>Added asynPortDriver::getNumParams() method to get the number of parameters currently
         defined.</li>
-    </ul>
     </ul>
     <h3>
       asynInterposeDelay</h3>
