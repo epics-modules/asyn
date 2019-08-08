@@ -12,6 +12,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdexcept>
+#include <epicsThread.h>
 
 #define epicsExportSharedSymbols
 #include <shareLib.h>
