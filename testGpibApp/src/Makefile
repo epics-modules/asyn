@@ -40,7 +40,7 @@ testGpibVx_SRCS_vxWorks += testGpibVx_registerRecordDeviceDriver.cpp
 
 testGpib_LIBS += devTestGpib
 testGpib_LIBS += testSupport asyn
-ifeq ($(TIRPC,YES)
+ifeq ($(TIRPC),YES)
   USR_INCLUDES += -I/usr/include/tirpc
   testGpib_LIBS += tirpc
 endif
