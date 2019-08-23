@@ -42,7 +42,7 @@ testGpib_LIBS += devTestGpib
 testGpib_LIBS += testSupport asyn
 ifeq ($(TIRPC),YES)
   USR_INCLUDES += -I/usr/include/tirpc
-  testGpib_LIBS += tirpc
+  testGpib_SYS_LIBS += tirpc
 endif
 SYS_PROD_LIBS_cygwin32 += $(CYGWIN_RPC_LIB)
 testGpib_LIBS += $(EPICS_BASE_IOC_LIBS)
