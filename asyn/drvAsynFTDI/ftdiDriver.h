@@ -2,8 +2,13 @@
 #ifndef ftdiDriver_H
 #define ftdiDriver_H
 
+#ifdef HAVE_LIBFTDI1
+#include <libftdi1/ftdi.h>
+#else
 #include <ftdi.h>
-#include <libusb.h>
+#endif
+
+#include <usb.h>
 
 # ifdef HAVE_UNISTD_H
 #include <unistd.h>

@@ -16,6 +16,8 @@
 #ifdef _WIN32
 int gettimeofday(struct timeval *tv, struct timezone *tz);
 void usleep(__int64 usec);
+#else
+#include <sys/time.h>
 #endif
 #endif
 
@@ -125,15 +127,18 @@ FTDIDriverStatus FTDIDriver::setLatency(const int latency)
  */
 FTDIDriverStatus FTDIDriver::connectFTDI()
 {
-  struct ftdi_version_info version;
   int f;
   unsigned int chipid;
   static const char *functionName = "FTDIDriver::connect";
   debugPrint("%s : Method called\n", functionName);
 
-  version = ftdi_get_library_version();
+#ifdef HAVE_LIBFTDI1
+  struct ftdi_version_info version = ftdi_get_library_version();
   printf("Initialized libftdi %s (major: %d, minor: %d, micro: %d, snapshot ver: %s)\n",
     version.version_str, version.major, version.minor, version.micro, version.snapshot_str);
+#else
+  printf("Initialized libftdi\n");
+#endif
 
   // Allocate and initialize a new ftdi context
   if ((ftdi_ = ftdi_new()) == NULL)
@@ -281,8 +286,16 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
 
   // Set timeout value
   ftdi_->usb_write_timeout = timeout;
-  tc = ftdi_write_data_submit (ftdi_, (unsigned char *) buffer, (int) bufferSize);
+
+#ifdef HAS_LIBFTDI1
+  struct ftdi_transfer_control *tc = ftdi_write_data_submit (
+    ftdi_, (unsigned char *) buffer, (int) bufferSize
+  );
   rc = ftdi_transfer_data_done (tc);
+#else
+  rc = ftdi_write_data(ftdi_, (unsigned char *) buffer, (int) bufferSize);
+#endif
+
   gettimeofday(&ctime, NULL);
   tnow = ((ctime.tv_sec - stime.tv_sec) * 1000) + (ctime.tv_usec / 1000);
   debugPrint("%s : Time taken for write => %ld ms\n", functionName, (tnow-(mtimeout-timeout)));

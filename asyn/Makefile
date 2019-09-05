@@ -209,6 +209,19 @@ ifeq ($(DRV_USBTMC),YES)
   DBD += drvAsynUSBTMC.dbd
 endif
 
+ifeq ($(DRV_FTDI),YES)
+  SRC_DIRS += $(ASYN)/drvAsynFTDI
+  asyn_SRCS += ftdiDriver.cpp drvAsynFTDIPort.cpp
+  asyn_SYS_LIBS += usb-1.0
+  ifeq ($(DRV_FTDI_USE_LIBFTDI1),YES)
+    asyn_SYS_LIBS += ftdi1
+    USR_CXXFLAGS += -DHAVE_LIBFTDI1
+  else
+    asyn_SYS_LIBS += ftdi
+  endif
+  DBD += drvAsynFTDIPort.dbd
+endif
+
 SRC_DIRS += $(ASYN)/ni1014
 asyn_SRCS_vxWorks += drvNi1014.c
 asyn_SRCS_RTEMS += drvNi1014.c
