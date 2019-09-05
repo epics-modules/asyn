@@ -1,0 +1,3 @@
+registrar(drvAsynFTDIPortRegisterCommands)
+include "asyn.dbd"
+
