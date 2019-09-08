@@ -330,13 +330,13 @@ static const struct asynCommon drvAsynFTDIPortAsynCommon = {
  */
 epicsShareFunc int
 drvAsynFTDIPortConfigure(const char *portName,
-                              const int vendor,
-                              const int product,
-                              const int baudrate,
-                              const int latency,
-                              unsigned int priority,
-                              int noAutoConnect,
-                              int noProcessEos)
+                         int vendor,
+                         int product,
+                         int baudrate,
+                         int latency,
+                         unsigned int priority,
+                         int noAutoConnect,
+                         int noProcessEos)
 {
     ftdiController_t *ftdi;
     asynInterface *pasynInterface;
@@ -344,6 +344,12 @@ drvAsynFTDIPortConfigure(const char *portName,
     int nbytes;
     asynOctet *pasynOctet;
     int isCom = 0;
+
+    /* Latency must be between 1 and 255 */
+    if (latency < 1)
+        latency = 1;
+    else if (latency > 255)
+        latency= 255;
 
     /*
      * Check arguments
