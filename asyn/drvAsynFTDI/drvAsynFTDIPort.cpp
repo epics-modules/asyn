@@ -23,6 +23,7 @@
 #include <epicsExport.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
+#include "asynOption.h"
 #include "asynInterposeCom.h"
 #include "asynInterposeEos.h"
 #include "drvAsynFTDIPort.h"
@@ -45,13 +46,189 @@ typedef struct {
     int                haveAddress;
     osiSockAddr        farAddr;
     asynInterface      common;
+    asynInterface      option;
     asynInterface      octet;
 } ftdiController_t;
 
-#define FLAG_BROADCAST                  0x1
-#define FLAG_CONNECT_PER_TRANSACTION    0x2
-#define FLAG_SHUTDOWN                   0x4
+/*
+ * asynOption methods
+ */
+static asynStatus
+getOption(void *drvPvt, asynUser *pasynUser, const char *key, char *val, int valSize)
+{
+    ftdiController_t *ftdi = (ftdiController_t *)drvPvt;
+    int l;
 
+    if (epicsStrCaseCmp(key, "baud") == 0)
+        l = epicsSnprintf(val, valSize, "%d", ftdi->driver->getBaudRate());
+
+    else if (epicsStrCaseCmp(key, "bits") == 0) {
+        const char *v;
+        switch (ftdi->driver->getBits()) {
+            case BITS_7: v = "7"; break;
+            case BITS_8: v = "8"; break;
+            default:     v = "?";
+        }
+
+        l = epicsSnprintf(val, valSize, "%s", v);
+    }
+
+    else if (epicsStrCaseCmp(key, "parity") == 0) {
+        const char *v;
+        switch(ftdi->driver->getParity()) {
+            case NONE:  v = "none";  break;
+            case ODD:   v = "odd";   break;
+            case EVEN:  v = "even";  break;
+            case MARK:  v = "mark";  break;
+            case SPACE: v = "space"; break;
+            default:    v = "?";
+        }
+        l = epicsSnprintf(val, valSize, "%s", v);
+    }
+
+    else if (epicsStrCaseCmp(key, "stop") == 0) {
+        const char *v;
+        switch(ftdi->driver->getStopBits()) {
+            case STOP_BIT_1:  v = "1";   break;
+            case STOP_BIT_15: v = "1.5"; break;
+            case STOP_BIT_2:  v = "2";   break;
+            default:          v = "?";
+        }
+        l = epicsSnprintf(val, valSize, "%s", v);
+    }
+
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        const char *v;
+        switch(ftdi->driver->getBreak()) {
+            case BREAK_OFF:  v = "off"; break;
+            case BREAK_ON:   v = "on";  break;
+            default:         v = "?";
+        }
+        l = epicsSnprintf(val, valSize, "%s", v);
+    }
+
+    else if (epicsStrCaseCmp(key, "flow")) {
+        int flowctrl = ftdi->driver->getFlowControl();
+        if (flowctrl == SIO_DISABLE_FLOW_CTRL)
+            l = epicsSnprintf(val, valSize, "%s", "none");
+        else {
+            char v[256] = {};
+            int n = 0;
+            if (flowctrl & SIO_RTS_CTS_HS)  { strcat(v, "rts_cts"); ++n; }
+            if (n)                          { strcat(v, "|");            }
+            if (flowctrl & SIO_DTR_DSR_HS)  { strcat(v, "dtr_dsr"); ++n; }
+            if (n)                          { strcat(v, "|");            }
+            if (flowctrl & SIO_XON_XOFF_HS) { strcat(v, "xon_xoff");     }
+            l = epicsSnprintf(val, valSize, "%s", v);
+        }
+    }
+
+    else {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+
+    if (l >= valSize) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Value buffer for key '%s' is too small.", key);
+        return asynError;
+    }
+    return asynSuccess;
+}
+
+static asynStatus
+setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
+{
+    ftdiController_t *ftdi = (ftdiController_t *)drvPvt;
+    assert(ftdi);
+
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                    "%s setOption key %s val %s\n", ftdi->portName, key, val);
+
+    if (epicsStrCaseCmp(key, "baud") == 0) {
+        int baud;
+        if (sscanf(val, "%d", &baud) != 1) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "Bad number");
+            return asynError;
+        }
+        if (ftdi->driver->setBaudrate(baud)) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                "Unsupported data rate (%d baud)", baud);
+            return asynError;
+        }
+    } else if (epicsStrCaseCmp(key, "parity") == 0) {
+        enum ftdi_parity_type parity;
+        if      (epicsStrCaseCmp(val, "none")  == 0) parity = NONE;
+        else if (epicsStrCaseCmp(val, "even")  == 0) parity = EVEN;
+        else if (epicsStrCaseCmp(val, "odd")   == 0) parity = ODD;
+        else if (epicsStrCaseCmp(val, "mark")  == 0) parity = MARK;
+        else if (epicsStrCaseCmp(val, "space") == 0) parity = SPACE;
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "Invalid parity \"%s\".", val);
+            return asynError;
+        }
+        if (ftdi->driver->setParity(parity))
+            return asynError;
+    }
+    else if (epicsStrCaseCmp(key, "stop") == 0) {
+        enum ftdi_stopbits_type sbits;
+        if      (epicsStrCaseCmp(val, "1")   == 0) sbits = STOP_BIT_1;
+        else if (epicsStrCaseCmp(val, "1.5") == 0) sbits = STOP_BIT_15;
+        else if (epicsStrCaseCmp(val, "2")   == 0) sbits = STOP_BIT_2;
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "Invalid number of stop bits \"%s\".", val);
+            return asynError;
+        }
+        if (ftdi->driver->setStopBits(sbits))
+            return asynError;
+    }
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        enum ftdi_break_type brk;
+        if      (epicsStrCaseCmp(val, "on")  == 0) brk = BREAK_ON;
+        else if (epicsStrCaseCmp(val, "off") == 0) brk = BREAK_OFF;
+        else {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "Invalid break \"%s\".", val);
+            return asynError;
+        }
+        if (ftdi->driver->setBreak(brk))
+            return asynError;
+    }
+    else if (epicsStrCaseCmp(key, "flow") == 0) {
+        int flowctrl = SIO_DISABLE_FLOW_CTRL;
+        if (epicsStrCaseCmp(val, "none") != 0) {
+            char *str = epicsStrDup(val);
+            char *token;
+            char *rest = str;
+
+            while ((token = strtok_r(rest, "|", &rest))) {
+                if      (epicsStrCaseCmp(token, "rts_cts")  == 0) flowctrl |= SIO_RTS_CTS_HS;
+                else if (epicsStrCaseCmp(token, "dtr_dsr")  == 0) flowctrl |= SIO_DTR_DSR_HS;
+                else if (epicsStrCaseCmp(token, "xon_xoff") == 0) flowctrl |= SIO_XON_XOFF_HS;
+                else {
+                    epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                        "Invalid flow control \"%s\".", val);
+                    free(str);
+                    return asynError;
+                }
+            }
+            free(str);
+        }
+        if (ftdi->driver->setFlowControl(flowctrl))
+            return asynError;
+    }
+    else if (epicsStrCaseCmp(key, "") != 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "Unsupported key \"%s\"", key);
+        return asynError;
+    }
+
+    return asynSuccess;
+}
+static const struct asynOption asynOptionMethods = { setOption, getOption };
 
 /*
  * Close a connection
@@ -60,7 +237,7 @@ static void
 closeConnection(asynUser *pasynUser,ftdiController_t *ftdi,const char *why)
 {
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Close %d:%d connection (driver %d): %s\n", ftdi->FTDIvendor, ftdi->FTDIproduct, ftdi->driver, why);
+              "Close %d:%d connection (driver %p): %s\n", ftdi->FTDIvendor, ftdi->FTDIproduct, ftdi->driver, why);
     if (ftdi->driver){
         ftdi->driver->disconnectFTDI();
         delete(ftdi->driver);
@@ -135,7 +312,6 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         return asynError;
     }
 
-
     // Create the driver
     ftdi->driver = new FTDIDriver();
 
@@ -200,7 +376,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "%d:%d write.\n", ftdi->FTDIvendor, ftdi->FTDIproduct);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                "%d:%d write %d\n", ftdi->FTDIvendor, ftdi->FTDIproduct, numchars);
+                "%d:%d write %lu\n", ftdi->FTDIvendor, ftdi->FTDIproduct, numchars);
     *nbytesTransfered = 0;
 
     // Here we will simply issue the write to the driver
@@ -389,6 +565,9 @@ drvAsynFTDIPortConfigure(const char *portName,
     ftdi->common.interfaceType = asynCommonType;
     ftdi->common.pinterface  = (void *)&drvAsynFTDIPortAsynCommon;
     ftdi->common.drvPvt = ftdi;
+    ftdi->option.interfaceType = asynOptionType;
+    ftdi->option.pinterface = (void*)&asynOptionMethods;
+    ftdi->option.drvPvt = ftdi;
     if (pasynManager->registerPort(ftdi->portName,
                                    ASYN_CANBLOCK,
                                    !noAutoConnect,
@@ -401,6 +580,12 @@ drvAsynFTDIPortConfigure(const char *portName,
     status = pasynManager->registerInterface(ftdi->portName,&ftdi->common);
     if(status != asynSuccess) {
         printf("drvAsynFTDIPortConfigure: Can't register common.\n");
+        ftdiCleanup(ftdi);
+        return -1;
+    }
+    status = pasynManager->registerInterface(ftdi->portName,&ftdi->option);
+    if(status != asynSuccess) {
+        printf("drvAsynFTDIPortConfigure: Can't register option.\n");
         ftdiCleanup(ftdi);
         return -1;
     }
