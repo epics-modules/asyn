@@ -100,7 +100,8 @@ int main(int argc, char **argv)
     );
 
     ok = nwrite == nread;
-    for (size_t i = 0; ok && i < nwrite; ++i)
+    size_t i;
+    for (i = 0; ok && i < nwrite; ++i)
         ok &= wbuf[i] == rbuf[i];
 
     printf("Wrote (%lu) '", nwrite);
