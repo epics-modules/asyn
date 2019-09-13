@@ -429,7 +429,6 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
 
     if (gotEom) *gotEom = 0;
-
     driverStatus = ftdi->driver->read((unsigned char *)data, maxchars, &thisRead, (int)(pasynUser->timeout*1000.0));
     if (driverStatus != FTDIDriverSuccess){
       if (driverStatus == FTDIDriverError){
@@ -519,7 +518,6 @@ drvAsynFTDIPortConfigure(const char *portName,
     asynStatus status;
     int nbytes;
     asynOctet *pasynOctet;
-    int isCom = 0;
 
     /* Latency must be between 1 and 255 */
     if (latency < 1)
@@ -598,11 +596,6 @@ drvAsynFTDIPortConfigure(const char *portName,
     status = pasynOctetBase->initialize(ftdi->portName,&ftdi->octet, 0, 0, 1);
     if(status != asynSuccess) {
         printf("drvAsynFTDIPortConfigure: pasynOctetBase->initialize failed.\n");
-        ftdiCleanup(ftdi);
-        return -1;
-    }
-    if (isCom && (asynInterposeCOM(ftdi->portName) != 0)) {
-        printf("drvAsynFTDIPortConfigure: asynInterposeCOM failed.\n");
         ftdiCleanup(ftdi);
         return -1;
     }
