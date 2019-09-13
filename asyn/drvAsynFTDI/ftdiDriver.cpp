@@ -236,7 +236,7 @@ FTDIDriverStatus FTDIDriver::setLatency(const int latency)
  */
 int FTDIDriver::getBaudRate(void)
 {
-  return baudrate_;
+  return ftdi_->baudrate;
 }
 
 /**
@@ -487,7 +487,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
  * @param timeout - A timeout in ms for the read.
  * @return - Success or failure.
  */
-FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, int bufferSize, size_t *bytesRead, int timeout)
+FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size_t *bytesRead, int timeout)
 {
   static const char *functionName = "FTDIDriver::read";
   debugPrint("%s : Method called\n", functionName);
@@ -519,7 +519,9 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, int bufferSize, size_t 
     }
   }
 
-  buffer[*bytesRead] = '\0';
+  if (*bytesRead < bufferSize)
+    buffer[*bytesRead] = '\0';
+
   debugPrint("%s %d Bytes =>\n", functionName, (int)*bytesRead);
   for (int j = 0; j < (int)*bytesRead; j++){
     debugPrint("[%0X] ", buffer[j]);

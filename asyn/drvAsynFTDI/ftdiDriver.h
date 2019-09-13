@@ -62,7 +62,7 @@ class FTDIDriver {
     FTDIDriverStatus connectFTDI();
     FTDIDriverStatus flush();
     FTDIDriverStatus write(const unsigned char *buffer, int bufferSize, size_t *bytesWritten, int timeout);
-    FTDIDriverStatus read(unsigned char *buffer, int bufferSize, size_t *bytesRead, int timeout);
+    FTDIDriverStatus read(unsigned char *buffer, size_t bufferSize, size_t *bytesRead, int timeout);
     FTDIDriverStatus disconnectFTDI();
     virtual ~FTDIDriver();
 
