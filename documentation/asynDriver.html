@@ -162,6 +162,7 @@
         <li><a href="#gsIP488">Green Springs IP488</a></li>
         <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
         <li><a href="#usbtmc">USB TMC (Test and Measurement Class)</a></li>
+        <li><a href="#ftdi">FTDI</a></li>
         <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
       </ul>
     </li>
@@ -5968,6 +5969,58 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     @readtimeout { disconnect; }
     @replyTimeout { disconnect; }
 </pre>
+  <h3 id="ftdi">FTDI Port</h3>
+  <p>The drvAsynFTDIPort driver supports devices connected via FTDI adapters.</p>
+  <p>
+    FTDI ports are configured with the <tt>drvAsynFTDIPortConfigure</tt> and <tt>asynSetOption</tt>
+    commands:
+  </p>
+  <pre>
+    drvAsynFTDIPortConfigure("portName",vendor,product,baudrate,latency,priority,noAutoConnect,noProcessEos)
+    asynSetOption("portName",addr,"key","value")</pre>
+  <p>
+    where the arguments are:
+  </p>
+  <ul>
+    <li>portName - The portName that is registered with asyn.</li>
+    <li>vendor - The USB vendor number associated with the FTDI device.</li>
+    <li>product - The USB product number associated with the FTDI device.</li>
+    <li>baudrate - The baudrate to be used with the FTDI device.</li>
+    <li>latency - The latency timer after which non-full FTDI buffers are sent.</li>
+    <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
+      missing,then epicsThreadPriorityMedium is used.</li>
+    <li>noAutoConnect - Zero or missing indicates that portThread should automatically
+      connect. Non-zero if explicit connect command must be issued.</li>
+    <li>noProcessEos If 0 then asynInterposeEosConfig is called specifying both processEosIn
+      and processEosOut.</li>
+  </ul>
+  <p>
+    The setEos and getEos methods have no effect and return asynError. The read method
+    blocks until at least one character has been received or until a timeout occurs.
+    The read method transfers as many characters as possible, limited by the specified
+    count. asynInterposeEos can be used to support EOS.
+  </p>
+  <p>
+    The following table summarizes the drvAsynFTDIPort driver asynSetOption keys and
+    values. Reasonable defaults are used at first.
+  </p>
+  <table border="1">
+    <tbody>
+      <tr><th>Key </th><th>Value</th><th>Note</th></tr>
+      <tr>
+        <td>baud</td><td>50 75 110 134 150 200 300 600 1200 2400 9600 ... </td>
+        <td>Any numeric value. Check chip datasheet for actual supported baud rates.</td>
+      </tr>
+      <tr><td>bits</td><td>8 7</td><td></td></tr>
+      <tr><td>parity</td><td>none even odd mark space</td><td></td></tr>
+      <tr><td>stop</td><td>1 1.5 2</td><td></td></tr>
+      <tr><td>break</td><td>off on</td><td></td></tr>
+      <tr>
+        <td>flow</td><td>rts_cts dtr_dsr xon_xoff</td>
+        <td>Values can be OR'ed together, e.g., <tt>rts_cts|dtr_dsr</tt></td>
+      </tr>
+    </tbody>
+  </table>
   <h3 id="Additional_Drivers">
     Additional Drivers</h3>
   <p>
