@@ -36,6 +36,7 @@ testUSBTMC_SRCS_vxWorks += -nil-
 
 # Finally link to the EPICS Base libraries
 testUSBTMC_LIBS += $(EPICS_BASE_IOC_LIBS)
+testUSBTMC_SYS_LIBS += usb-1.0
 
 endif
 
