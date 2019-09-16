@@ -1,0 +1,9 @@
+record(stringin,"$(P)stringInput") {
+    field(DTYP, "asynOctetRead")
+    field(INP, "@asyn($(PORT),0,1)")
+}
+record(stringout,"$(P)stringOutput") {
+    field(DTYP, "asynOctetWrite")
+    field(OUT, "@asyn($(PORT),0,1)")
+}
+

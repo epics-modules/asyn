@@ -7,20 +7,326 @@
 <body xml:lang="en">
   <div style="text-align: center">
     <h1>
-      asynDriver: Asynchronous Driver Support - Release Notes</h1>
+      asynDriver: Release Notes</h1>
   </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
+      Release 4-36</h2>
+    <h2>
+      August 8, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      asynManager</h3>
+    <ul>
+      <li>Improved debugging output when scheduling queue request timeout.</li>
+    </ul>
+    <h3>
+      drvAsynIPPort</h3>
+    <ul>
+      <li>Improved diagnostic messages.</li>
+    </ul>
+    <h3>
+      asynPortDriver</h3>
+    <ul>
+      <li>Added new parseAsynUser() method. Changed all readXXX and writeXXX methods to
+        use this, rather than getAddress().</li>
+      <li>Use asynPortDriver::getAddress() in callback functions, rather than pasynManager::getAddress().
+        This allows the getAddress() to be overridden in derived classes.</li>
+      <li>Fix to prevent a potentially locked mutex from being destroyed, as well as use-after-free
+        bugs on other members of asynPortDriver. Thanks to Martin Konrad for this.</li>
+    </ul>
+    <h3>
+      asynInterposeDelay, asynInteposeEcho</h3>
+    <ul>
+      <li>Fixes to compile on Visual Studio 2010.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
+      Release 4-35</h2>
+    <h2>
+      March 18, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      devAsynInt32, devAsynFloat64, devAsynUInt32Digital, devAsynOctet</h3>
+    <ul>
+      <li>Fixed a deadlock problem when asyn:READBACK was used on output records.</li>
+      <li>In devAsynOctet there was still an isssue if asyn:READBACK=1 was used without
+        asyn:FIFO, i.e. when ring buffers were not enabled. The code now forces a minimum
+        ring buffer size of 1 if asyn:READBACK=1 to avoid the deadlock. asyn:FIFO can still
+        be used to select a larger ring buffer size. </li>
+    </ul>
+  </div>
+  <div>
+    <h3>
+      drvAsynIPPort</h3>
+    <ul>
+      <li>Fixed a problem with the disconnectOnReadTimeout option. Previously it would disconnect
+        even if pasynUser->timeout was 0. This is not logical, and meant this option could
+        not be used with StreamDevice, because StreamDevices flushes the input by reading
+        with a timeout of 0 to support I/O Intr scanned records.</li>
+      <li>Updated the documentation to say that in order to receive UDP broadcast messages
+        the <code>localPort</code> parameter in the hostInfo string in <code>drvAsynIPPortConfigure</code>
+        must be specified. Example: <code>drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+          UDP",0,0,0)</code> will listen for broadcast messages on port 3956. If the port
+        is only to be used to receive broadcast messages then the UDP protocol should be
+        specified. If the port is also to be used to send UDP broadcasts then the UDP* protocol
+        must be specified. Example: <code>drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+          UDP*",0,0,0)</code>. In this case it will send the broadcast messages on UDP port
+        1234 and listen for broadcast messages on UDP port 3956.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>
+      asynShellCommands</h3>
+    <ul>
+      <li>Enhancement to allow using strings for the mask arguments of asynSetTraceMask,
+        asynSetTraceIOMask, and asynSetTraceInfoMask shell functions. The mask can be specified
+        as an integer (previous behavior) or as symbolic names connected with + or |. Spaces
+        are allowed but require quotes. The symbolic names are like the macro names in asyn.h,
+        but not case sensitive and the prefixes ASYN_, TRACE_, TRACEIO_, and TRACEINFO_
+        are optional. Thanks to Dirk Zimoch for this. Examples:</li></ul>
+    <pre>
+         asynSetTraceMask port,0,ASYN_TRACE_ERROR 
+        asynSetTraceIOMask port,0,ascii+escape 
+        asynSetTraceInfoMask port,0,1+port+TRACEINFO_SOURCE|ASYN_TRACEINFO_THREAD
+</pre>
+    <h3>
+      asynPortClient.h, asynPortClient.cpp</h3>
+    <ul>
+      <li>Renamed asynPortClient base class to asynParamClient. This is the class from which
+        asynInt32Client, asynFloat64Client, etc. are derived.</li>
+      <li>The new asynPortClient class connects to a specific asynPortDriver object. It
+        creates an asynParamClient derived class object for each of the parameters in that
+        driver. It uses the std::map class to map between the parameter name key and the
+        asynParamClient object for that parameter. It also defines overloaded write() and
+        read() methods that take a paramName argument and the value to be written or pointer
+        to read into. The data type of the value or pointer must match the parameter type
+        or a run-time exception will be thrown. This new class is more convenient to use
+        because it is no longer necessary to create the asynInt32Client, asynFloat64Client,
+        etc. objects for each parameter to be accessed.</li>
+    </ul>
+    <h3>
+      asynPortDriver</h3>
+    <ul>
+      <li>Added asynPortDriver::getNumParams() method to get the number of parameters currently
+        defined.</li>
+    </ul>
+    <h3>
+      asynInterposeDelay</h3>
+    <ul>
+      <li>New interpose driver that waits for a user-specified time after sending each character
+        before sending the next one. Some poorly designed devices require this. Thanks to
+        Dirk Zimoch.</li>
+    </ul>
+    <h3>
+      asynInterposeEcho</h3>
+    <ul>
+      <li>New interpose driver that waits for a device to echo each character before sending
+        the next one. Some poorly designed devices require this. Thanks to Dirk Zimoch.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
+      Release 4-34</h2>
+    <h2>
+      September 13, 2018</h2>
+  </div>
+  <h3>
+    devAsynFloat64.c, devAsynInt32.c</h3>
+  <ul>
+    <li>Added support for SCAN=I/O Intr with asynFloat64Average and asynInt32Average device
+      support. Previously only periodic scanning or manual processing was supported. The
+      I/O Intr support computes the average and processes the record once NumAverage callback
+      readings have been received. The SVAL field in the ai record is used to set NumAverage.
+      This is rather a kluge, but there is not another good way to communicate this value
+      to the device support, while allowing it to be changed at run-time.</li>
+  </ul>
+  <h3>
+    drvAsynIPPort.c</h3>
+  <ul>
+    <li>Improved error reporting. Thanks to Dirk Zimoch for this.</li>
+  </ul>
+  <h3>
+    asynInterposeEos.c</h3>
+  <ul>
+    <li>Improved asynTrace output to print bytes read and eom, and print warning if low-level
+      driver returns error.</li>
+  </ul>
+  <h3>
+    asynInterposeCom.c</h3>
+  <ul>
+    <li>Added support for the asynOption ixon (XON/XOFF) for ports communicating via the
+      RFC 2217 Telnet protocol. In this case, as noted in the standard, ixon implies both
+      outbound and inbound flow control.</li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Fixed uninitialized value in paramVal.</li>
+  </ul>
+  <h3>
+    asynShellCommands.h</h3>
+  <ul>
+    <li>Add asynOctetDisconnect and asynWaitConnect.</li>
+  </ul>
+  <h3>
+    drvVxi11.c</h3>
+  <ul>
+    <li>Fixed logic for FLAG_NO_SRQ. Error was introduced in R4-31.</li>
+  </ul>
+  <h3>
+    CONFIG_SITE</h3>
+  <ul>
+    <li>Optionally include $(SUPPORT)/configure/CONFIG_SITE.</li>
+    <li>Older Linux and Cygwin distributions have packages (e.g. glibc-headers) that put
+      the rpc include files in /usr/include/rpc. Newer Linux and Cygwin distributions
+      use the tirpc package instead. For such systems define TIRPC=YES.</li>
+  </ul>
+  <h3>
+    .travis.yml</h3>
+  <ul>
+    <li>Fixed to fetch Debian files from nsls2 with https not http.</li>
+  </ul>
   <div style="text-align: center">
     <hr />
     <h2>
       Release 4-33</h2>
     <h2>
-      October XXX, 2017</h2>
+      January 27, 2018</h2>
   </div>
+  <h3>
+    devAsynFloat64.c</h3>
+  <ul>
+    <li>Added support for ASLO/AOFF scaling and SMOO value smoothing to the float64 device
+      support for ai and ao records. SMOO only applies to ai records. devAsynFloat64 directly
+      writes to the record's VAL/OVAL fields, so the conversion routines in the record
+      that use RVAL/VAL don't work.</li>
+  </ul>
+  <h3>
+    devAsynInt32.c, devAsynUInt32Digital.c, devAsynFloat64.c, devAsynOctet.c</h3>
+  <ul>
+    <li>Fixed a problem with output records that have the asyn:READBACK info tag, i.e.
+      output records that update on callbacks from the driver. Previously it did not correctly
+      distinguish between record processing due to a driver callback (in which case it
+      should not call the driver) and normal record processing (in which case the driver
+      should be called). A new test application, testOutputCallbackApp, was added to test
+      this. It allows testing all combinations of the following 6 settings for all 4 of
+      these device support files:
+      <ol>
+        <li>Synchronous driver, i.e. ASYN_CANBLOCK not set.</li>
+        <li>Asynchronous driver, i.e. ASYN_CANBLOCK is set.</li>
+        <li>Driver callback is done in the write() operation.</li>
+        <li>Driver callback is done in a separate thread. The callbacks are triggered with
+          the TriggerCallbacks record.</li>
+        <li>Single callback is done in each operation.</li>
+        <li>Multiple callbacks are done in each operation. The NumCallbacks record selects
+          the number of callbacks.</li>
+      </ol>
+      The callback values are the following. For the longout records (asynInt32 and asynUInt32Digital)
+      and the ao record (asynFloat64) the callback value is N+1 where N the current record
+      value. Thus if one writes 10 to the longout record and NumCallbacks is 5 it will
+      immediately do callbacks with the values 11, 12, 13, 14, 15. For the bo record the
+      value toggles between 0 and 1 for each callback. For the stringout record the value
+      is a string with the format "Value=N". N increments by 1 on each callback as for
+      the longout records. For each output record there is a corresponding input record
+      with SCAN=I/O Intr. If the test is working correctly the output records should always
+      have the same values as the input records. </li>
+  </ul>
   <h3>
     devAsynOctet.c</h3>
   <ul>
-    <li>Fixed bug where the record alarm status was not set correctly if a write or read failed
-        with a synchronous driver.</li> 
+    <li>Fixed bug where the record alarm status was not set correctly if a write or read
+      failed with a synchronous driver.</li>
+  </ul>
+  <h3>
+    asynManager.c</h3>
+  <ul>
+    <li>Improved error messages from autoconnect attempts. Messages are now printed only
+      when the autoconnect status changes, rather than each time there is a failure. Thanks
+      to Ben Franksen for this.</li>
+  </ul>
+  <h3>
+    drvAsynIPServerPort.c</h3>
+  <ul>
+    <li>Changed the logic so it creates maxClients drvAsynIPPort drivers at initialization
+      rather than on-demand when clients connect. This makes it possible to use these
+      ports before iocInit, which is much more useful. They can be used in input and output
+      links in EPICS records, for example. This change should be backwards compatible,
+      since it was transparent when the ports were created.</li>
+    <li>The first drvAsynIPPort created is now named PORT_NAME:0 rather than PORT_NAME:1,
+      where PORT_NAME is the name of the drvAsynIPServer port created by this driver.
+      This might break backwards compatibility, but clients were normally getting the
+      name from a callback, so probably not.</li>
+    <li>Set the socket option SO_REUSEADDR when creating the listening socket. Previously
+      if a client was connected and the IOC exited it could not be restarted again immediately.
+      One needed to wait for the operating system to time out the connection. This change
+      allows the IOC to be run again with the same listening port immediately, without
+      waiting for the operating system timeout.</li>
+    <li>Added an exit handler to close the listen socket and delete the private structure.
+    </li>
+    <li>Improved the report() function so it shows all the drvAsynIPPort drivers that
+      were created.</li>
+  </ul>
+  <h3>
+    testIPServerApp</h3>
+  <ul>
+    <li>Added a new datbase testIPServer1.db for testing the enhancements to drvAsynIPServerPort.
+      It contains a stringin record and a stringout record that use the drvAsynIPPort
+      created by drvAsynIPServerPort.</li>
+    <li>Added a new startup script, iocBoot/ioctestIPServer/st.cmd.testIPServer1 which
+      creates a drvAsynIPServerPort called P5001 on localhost:5001. It loads the testIPServer1.db
+      database connected to the drvAsynIPPort created by P5001, called P5001:0. One can
+      telnet to port 5001 on the IOC computer. All text typed in the telnet session will
+      go into the stringin record. Text written to the stringout record will appear in
+      the telnet session.</li>
+  </ul>
+  <h3>
+    drvVXI11.c</h3>
+  <ul>
+    <li>Improved error messages from connection attempts. Messages are now printed only
+      when the connection status changes, rather than each time there is a connection
+      failure. Thanks to Ben Franksen for this.</li>
+  </ul>
+  <h3>
+    testErrorsApp</h3>
+  <ul>
+    <li>Previously the user-defined alarm status and severity were only set on callbacks,
+      i.e. input records with SCAN=I/O Intr and output records with info tag asyn:READBACK=1.
+      Now all calls to the read() and write() methods in each interface also return the
+      user-defined alarm status and severity in pasynUser.</li>
+  </ul>
+  <h3>
+    asynPortClient</h3>
+  <ul>
+    <li>Fixed typo in constructor for asynUInt32DigitalClient, it was calling asynInt32SyncIO-&gt;connect
+      rather than asynUInt32DigitalClient-&gt;connect.</li>
+  </ul>
+  <h3>
+    OPI screens</h3>
+  <ul>
+    <li>Added new opi/Makefile. This automatically converts all opi/medm/*.adl files into
+      corresponding files in edm/autoconvert, caqtdm/autoconvert, and boy/autoconvert.
+      It uses new RULES_OPI and CONFIG_SITE.linux-x86_64 files in synApps/support/configure
+      directory. The upper-level edm, caqtdm, and boy directories should be used only
+      for manually tweaked files.</li>
+    <li>The medm adl files were improved to make the autoconverted files work better.
+      The size of text graphics and text update widgets were set to the actual text size,
+      and text update widgets were set to the correct datatype, e.g. string type for enum
+      PVs. </li>
+  </ul>
+  <h3>
+    Documentation</h3>
+  <ul>
+    <li>asynDriver.html has been improved. All level 3 headings are now links in the Contents
+      at the start of the file. This makes it much easier to find a particular topic and
+      jump to it quickly. Many of the test applications are now documented, including
+      medm screen shots to show how they work.</li>
   </ul>
   <div style="text-align: center">
     <hr />

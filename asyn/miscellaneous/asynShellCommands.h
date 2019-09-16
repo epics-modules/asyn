@@ -41,6 +41,10 @@ epicsShareFunc int
 epicsShareFunc int 
  asynOctetConnect(const char *entry, const char *port, int addr,
                   int timeout, int buffer_len,const char *drvInfo);
+epicsShareFunc int
+ asynOctetDisconnect(const char *entry);
+epicsShareFunc int
+ asynWaitConnect(const char *portName, double timeout);
 epicsShareFunc int 
  asynOctetRead(const char *entry, int nread);
 epicsShareFunc int 

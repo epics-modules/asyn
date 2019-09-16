@@ -40,6 +40,7 @@ paramVal::paramVal(const char *name, asynParamType type):
     type(type), status_(asynSuccess), alarmStatus_(0), alarmSeverity_(0),
     valueDefined(false), valueChanged(false){
     this->name = epicsStrDup(name);
+    memset(&this->data, 0, sizeof(this->data));
 }
 
 paramVal::~paramVal(){

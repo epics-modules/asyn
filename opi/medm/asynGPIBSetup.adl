@@ -1,12 +1,12 @@
 
 file {
-	name="C:\Program Files\EPICS\adls\asynGPIBSetup.adl"
-	version=020306
+	name="/home/epics/devel/asyn-4-33/opi/medm/asynGPIBSetup.adl"
+	version=030109
 }
 display {
 	object {
-		x=288
-		y=334
+		x=456
+		y=239
 		width=375
 		height=185
 	}
@@ -87,77 +87,55 @@ display {
 		1a7309,
 	}
 }
-composite {
+rectangle {
 	object {
-		x=86
+		x=0
 		y=8
-		width=203
+		width=375
 		height=29
 	}
-	"composite name"=""
-	children {
-		rectangle {
-			object {
-				x=86
-				y=8
-				width=203
-				height=29
-			}
-			"basic attribute" {
-				clr=2
-			}
-		}
-		text {
-			object {
-				x=89
-				y=12
-				width=199
-				height=21
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="$(P)$(R)"
-			align="horiz. centered"
-		}
+	"basic attribute" {
+		clr=2
 	}
 }
-composite {
+text {
+	object {
+		x=0
+		y=12
+		width=375
+		height=25
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="$(P)$(R)"
+	align="horiz. centered"
+}
+text {
 	object {
 		x=4
 		y=68
-		width=210
+		width=130
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=68
-				width=130
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="GPIB address:"
-		}
-		"text entry" {
-			object {
-				x=139
-				y=68
-				width=75
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ADDR"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="GPIB address:"
+}
+"text entry" {
+	object {
+		x=139
+		y=68
+		width=75
+		height=20
+	}
+	control {
+		chan="$(P)$(R).ADDR"
+		clr=14
+		bclr=51
+	}
+	limits {
 	}
 }
 text {
@@ -188,76 +166,54 @@ text {
 	limits {
 	}
 }
-composite {
+text {
 	object {
 		x=4
 		y=126
-		width=355
+		width=170
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=126
-				width=170
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Universal Command"
-		}
-		menu {
-			object {
-				x=179
-				y=126
-				width=180
-				height=20
-			}
-			control {
-				chan="$(P)$(R).UCMD"
-				clr=14
-				bclr=51
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Universal Command"
+}
+menu {
+	object {
+		x=179
+		y=126
+		width=180
+		height=20
+	}
+	control {
+		chan="$(P)$(R).UCMD"
+		clr=14
+		bclr=51
 	}
 }
-composite {
+text {
 	object {
 		x=4
 		y=151
-		width=355
+		width=170
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=4
-				y=151
-				width=170
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Addressed Command"
-		}
-		menu {
-			object {
-				x=179
-				y=151
-				width=180
-				height=20
-			}
-			control {
-				chan="$(P)$(R).ACMD"
-				clr=14
-				bclr=51
-			}
-		}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Addressed Command"
+}
+menu {
+	object {
+		x=179
+		y=151
+		width=180
+		height=20
+	}
+	control {
+		chan="$(P)$(R).ACMD"
+		clr=14
+		bclr=51
 	}
 }
 text {
@@ -296,7 +252,7 @@ text {
 	object {
 		x=4
 		y=42
-		width=200
+		width=190
 		height=20
 	}
 	"basic attribute" {

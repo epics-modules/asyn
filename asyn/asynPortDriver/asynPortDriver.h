@@ -6,6 +6,7 @@
 
 #include <epicsTypes.h>
 #include <epicsMutex.h>
+#include <epicsThread.h>
 
 #include <asynStandardInterfaces.h>
 #include <asynParamType.h>
@@ -34,7 +35,7 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
 #define asynGenericPointerMask  0x00001000
 #define asynEnumMask            0x00002000
 
-
+class callbackThread;
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
   * with standard asyn interfaces and a parameter library. */
@@ -47,7 +48,8 @@ public:
     virtual ~asynPortDriver();
     virtual asynStatus lock();
     virtual asynStatus unlock();
-    virtual asynStatus getAddress(asynUser *pasynUser, int *address); 
+    virtual asynStatus getAddress(asynUser *pasynUser, int *address);
+    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName); 
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask);
@@ -116,6 +118,8 @@ public:
    
     virtual asynStatus createParam(          const char *name, asynParamType type, int *index);
     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
+    virtual asynStatus getNumParams(          int *numParams);
+    virtual asynStatus getNumParams(int list, int *numParams);
     virtual asynStatus findParam(          const char *name, int *index);
     virtual asynStatus findParam(int list, const char *name, int *index);
     virtual asynStatus getParamName(          int index, const char **name);
@@ -192,11 +196,24 @@ private:
     int inputEosLenOctet;
     char *outputEosOctet;
     int outputEosLenOctet;
+    callbackThread *cbThread;
     template <typename epicsType, typename interruptType> 
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
 
     friend class paramList;
+    friend class callbackThread;
+};
+
+class callbackThread: public epicsThreadRunable {
+public:
+    callbackThread(asynPortDriver *portDriver);
+    ~callbackThread();
+    void run();
+private:
+    epicsThread thread;
+    asynPortDriver *pPortDriver;
+    epicsEvent shutdown;
 };
 
 #endif /* cplusplus */

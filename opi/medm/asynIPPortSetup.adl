@@ -1,12 +1,12 @@
 
 file {
-	name="/home/epics/devel/asyn-4-28/opi/medm/asynIPPortSetup.adl"
-	version=030107
+	name="/home/epics/devel/asyn-4-33/opi/medm/asynIPPortSetup.adl"
+	version=030109
 }
 display {
 	object {
-		x=500
-		y=77
+		x=405
+		y=149
 		width=260
 		height=410
 	}
@@ -89,9 +89,9 @@ display {
 }
 rectangle {
 	object {
-		x=29
+		x=0
 		y=2
-		width=203
+		width=260
 		height=16
 	}
 	"basic attribute" {
@@ -100,9 +100,9 @@ rectangle {
 }
 text {
 	object {
-		x=35
+		x=0
 		y=2
-		width=190
+		width=260
 		height=16
 	}
 	"basic attribute" {
@@ -157,9 +157,9 @@ text {
 }
 text {
 	object {
-		x=8
+		x=13
 		y=51
-		width=135
+		width=130
 		height=20
 	}
 	"basic attribute" {
@@ -170,9 +170,9 @@ text {
 }
 text {
 	object {
-		x=8
+		x=13
 		y=76
-		width=135
+		width=130
 		height=20
 	}
 	"basic attribute" {
@@ -183,9 +183,9 @@ text {
 }
 text {
 	object {
-		x=8
+		x=43
 		y=101
-		width=135
+		width=100
 		height=20
 	}
 	"basic attribute" {
@@ -194,326 +194,294 @@ text {
 	textix="Host info:"
 	align="horiz. right"
 }
-composite {
+"text entry" {
+	object {
+		x=150
+		y=101
+		width=102
+		height=18
+	}
+	control {
+		chan="$(P)$(R).HOSTINFO"
+		clr=14
+		bclr=51
+	}
+	format="string"
+	limits {
+	}
+}
+menu {
 	object {
 		x=150
 		y=76
 		width=102
-		height=43
+		height=20
 	}
-	"composite name"=""
-	children {
-		"text entry" {
-			object {
-				x=150
-				y=101
-				width=102
-				height=18
-			}
-			control {
-				chan="$(P)$(R).HOSTINFO"
-				clr=14
-				bclr=51
-			}
-			limits {
-			}
-		}
-		menu {
-			object {
-				x=150
-				y=76
-				width=102
-				height=20
-			}
-			control {
-				chan="$(P)$(R).DRTO"
-				clr=14
-				bclr=51
-			}
-		}
+	control {
+		chan="$(P)$(R).DRTO"
+		clr=14
+		bclr=51
 	}
 }
-composite {
+text {
+	object {
+		x=43
+		y=206
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Data bits:"
+	align="horiz. right"
+}
+text {
+	object {
+		x=43
+		y=231
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Stop bits:"
+	align="horiz. right"
+}
+text {
+	object {
+		x=3
+		y=281
+		width=140
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Modem control:"
+	align="horiz. right"
+}
+text {
+	object {
+		x=73
+		y=256
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Parity:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=206
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).DBIT"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=231
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).SBIT"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=256
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).PRTY"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=150
+		y=281
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).MCTL"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=13
+		y=306
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Flow control:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=306
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).FCTL"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=23
+		y=331
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XOFF output:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=331
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXON"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=33
+		y=356
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XOFF input:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=356
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXOFF"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=63
+		y=381
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="XON=any:"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=150
+		y=381
+		width=102
+		height=20
+	}
+	control {
+		chan="$(P)$(R).IXANY"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=43
+		y=181
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Baud rate:"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=150
+		y=181
+		width=102
+		height=18
+	}
+	control {
+		chan="$(P)$(R).LBAUD"
+		clr=14
+		bclr=51
+	}
+	limits {
+	}
+}
+text {
+	object {
+		x=15
+		y=151
+		width=230
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="COM (RFC 2217) protocol"
+	align="horiz. right"
+}
+text {
 	object {
 		x=5
 		y=130
 		width=250
-		height=271
+		height=20
 	}
-	"composite name"=""
-	children {
-		composite {
-			object {
-				x=8
-				y=181
-				width=244
-				height=220
-			}
-			"composite name"=""
-			children {
-				text {
-					object {
-						x=8
-						y=206
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Data bits:"
-					align="horiz. right"
-				}
-				text {
-					object {
-						x=8
-						y=231
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Stop bits:"
-					align="horiz. right"
-				}
-				text {
-					object {
-						x=8
-						y=281
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Modem control:"
-					align="horiz. right"
-				}
-				text {
-					object {
-						x=8
-						y=256
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Parity:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=150
-						y=206
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).DBIT"
-						clr=14
-						bclr=51
-					}
-				}
-				menu {
-					object {
-						x=150
-						y=231
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).SBIT"
-						clr=14
-						bclr=51
-					}
-				}
-				menu {
-					object {
-						x=150
-						y=256
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).PRTY"
-						clr=14
-						bclr=51
-					}
-				}
-				menu {
-					object {
-						x=150
-						y=281
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).MCTL"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=8
-						y=306
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Flow control:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=150
-						y=306
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).FCTL"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=8
-						y=331
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="XOFF output:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=150
-						y=331
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).IXON"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=8
-						y=356
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="XOFF input:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=150
-						y=356
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).IXOFF"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=8
-						y=381
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="XON=any:"
-					align="horiz. right"
-				}
-				menu {
-					object {
-						x=150
-						y=381
-						width=102
-						height=20
-					}
-					control {
-						chan="$(P)$(R).IXANY"
-						clr=14
-						bclr=51
-					}
-				}
-				text {
-					object {
-						x=8
-						y=181
-						width=135
-						height=20
-					}
-					"basic attribute" {
-						clr=14
-					}
-					textix="Baud rate:"
-					align="horiz. right"
-				}
-				"text entry" {
-					object {
-						x=150
-						y=181
-						width=102
-						height=18
-					}
-					control {
-						chan="$(P)$(R).LBAUD"
-						clr=14
-						bclr=51
-					}
-					limits {
-					}
-				}
-			}
-		}
-		text {
-			object {
-				x=15
-				y=151
-				width=230
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="COM (RFC 2217) protocol"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=5
-				y=130
-				width=250
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Parameters for ports with"
-			align="horiz. right"
-		}
+	"basic attribute" {
+		clr=14
 	}
+	textix="Parameters for ports with"
+	align="horiz. right"
 }

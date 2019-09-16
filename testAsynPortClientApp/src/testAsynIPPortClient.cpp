@@ -39,7 +39,7 @@ int main(int argc, char **argv)
   }
   
   drvAsynIPPortConfigure("IP", argv[1], 0, 0, 0);
-  asynOctetClient ip = asynOctetClient("IP", 0, 0);
+  asynOctetClient ip = asynOctetClient("IP", 0);
   
   if (argc > 3) {
       epicsStrnRawFromEscaped(outputEos, sizeof(outputEos), argv[3], strlen(argv[3]));

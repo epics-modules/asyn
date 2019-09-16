@@ -48,6 +48,9 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   DIRS += testOutputReadbackApp
   testOutputReadbackApp_DEPEND_DIRS = asyn
   iocBoot_DEPEND_DIRS += testOutputReadbackApp
+  DIRS += testOutputCallbackApp
+  testOutputCallbackApp_DEPEND_DIRS = asyn
+  iocBoot_DEPEND_DIRS += testOutputCallbackApp
   DIRS += testUsbtmcApp
   testUsbtmcApp_DEPEND_DIRS = asyn
   iocBoot_DEPEND_DIRS += testUsbtmcApp

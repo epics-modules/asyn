@@ -52,6 +52,7 @@
 #define CPO_SET_STOPSIZE         4   /* Comand port option set stop size */
 #define CPO_SET_CONTROL          5   /* Comand port option set control mode */
 # define CPO_CONTROL_NOFLOW        1   /* No flow control */
+# define CPO_CONTROL_IXON       2   /* XON/XOFF Flow control*/
 # define CPO_CONTROL_HWFLOW        3   /* Hardware flow control */
 #define CPO_SET_LINESTATE_MASK  10 /* Comand port option set linestate mask */
 #define CPO_SET_MODEMSTATE_MASK 11 /* Comand port option set modemstate mask */
@@ -564,7 +565,11 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
     }
     else if (epicsStrCaseCmp(key, "crtscts") == 0) {
         xBuf[0] = CPO_SET_CONTROL;
-        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = CPO_CONTROL_NOFLOW;
+        if (pinterposePvt->flow == CPO_CONTROL_IXON){
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                            "XON/XOFF already set. Now using RTS/CTS.");
+        }
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
         else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_HWFLOW;
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -573,6 +578,26 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
         }
         status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
         if (status == asynSuccess) pinterposePvt->flow = rBuf[0] & 0xFF;
+    }
+    else if (epicsStrCaseCmp(key, "ixon") == 0){
+        xBuf[0] = CPO_SET_CONTROL;
+        if (pinterposePvt->flow == CPO_CONTROL_HWFLOW){
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                             "RTS/CTS already set. Now using XON/XOFF.");
+        }
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
+        else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_IXON;
+        else {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                  "Bad option value");
+        }
+        status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
+        if (status == asynSuccess) {
+           pinterposePvt->flow = rBuf[0] & 0xFF;
+        }
+        else{
+           printf("XON/XOFF not set.\n");
+        }
     }
     else {
         if (pinterposePvt->pasynOptionDrv) {
@@ -614,8 +639,20 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
     }
     else if (epicsStrCaseCmp(key, "crtscts") == 0) {
         switch (pinterposePvt->flow) {
-        case CPO_CONTROL_NOFLOW: l = epicsSnprintf(val, valSize, "N");  break;
-        case CPO_CONTROL_HWFLOW: l = epicsSnprintf(val, valSize, "Y");  break;
+        case CPO_CONTROL_NOFLOW:  l = epicsSnprintf(val, valSize, "N");  break;
+        case CPO_CONTROL_IXON: l = epicsSnprintf(val, valSize, "N");  break;
+        case CPO_CONTROL_HWFLOW:  l = epicsSnprintf(val, valSize, "Y");  break;
+        default:
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                          "Unknown flow control code %#X", pinterposePvt->flow);
+            return asynError;
+        }
+    }
+    else if (epicsStrCaseCmp(key, "ixon") == 0) {
+        switch (pinterposePvt->flow) {
+        case CPO_CONTROL_NOFLOW:  l = epicsSnprintf(val, valSize, "N");  break;
+        case CPO_CONTROL_IXON: l = epicsSnprintf(val, valSize, "Y");  break;
+        case CPO_CONTROL_HWFLOW:  l = epicsSnprintf(val, valSize, "N");  break;
         default:
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                           "Unknown flow control code %#X", pinterposePvt->flow);
@@ -647,7 +684,7 @@ restoreSettings(interposePvt *pinterposePvt, asynUser *pasynUser)
 { 
     asynStatus s;
     int i;
-    const char *keys[] = { "baud", "bits", "parity", "stop", "crtscts" };
+    const char *keys[] = { "baud", "bits", "parity", "stop", "crtscts", "ixon" };
     char val[20];
     char xBuf[2], rBuf[1];
 

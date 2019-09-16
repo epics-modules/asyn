@@ -1,0 +1,106 @@
+record(longout, "$(P)LongoutInt32")
+{
+   field(PINI, "$(PINI)")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   info(asyn:READBACK,"1")
+}
+
+record(longin, "$(P)LonginInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_VALUE")
+   field(SCAN, "I/O Intr")
+}
+
+record(bo, "$(P)BoInt32")
+{
+   field(PINI, "$(PINI)")
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_BINARY_VALUE")
+   field(ZNAM, "Zero")
+   field(ONAM, "One")
+  info(asyn:READBACK,"1")
+}
+
+record(bi, "$(P)BiInt32")
+{
+   field(DTYP, "asynInt32")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_BINARY_VALUE")
+   field(ZNAM, "Zero")
+   field(ONAM, "One")
+   field(SCAN, "I/O Intr")
+}
+
+record(longout, "$(P)LongoutUInt32D")
+{
+   field(PINI, "$(PINI)")
+   field(DTYP, "asynUInt32Digital")
+   field(OUT,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF,$(TIMEOUT))UINT32D_VALUE")
+   info(asyn:READBACK,"1")
+}
+
+record(longin, "$(P)LonginUInt32D")
+{
+   field(DTYP, "asynUInt32Digital")
+   field(INP,  "@asynMask($(PORT),$(ADDR),0xFFFFFFFF,$(TIMEOUT))UINT32D_VALUE")
+   field(SCAN, "I/O Intr")
+}
+
+record(ao, "$(P)AoFloat64")
+{
+   field(PINI, "$(PINI)")
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(PREC, "1")
+   info(asyn:READBACK,"1")
+}
+
+record(ai, "$(P)AiFloat64")
+{
+   field(DTYP, "asynFloat64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_VALUE")
+   field(SCAN, "I/O Intr")
+}
+
+record(stringout, "$(P)Stringout")
+{
+   field(PINI, "$(PINI)")
+   field(DTYP, "asynOctetWrite")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(VAL,  "test")
+   info(asyn:READBACK,"1")
+   info(asyn:FIFO, "10")
+}
+
+record(stringin, "$(P)Stringin")
+{
+   field(DTYP, "asynOctetRead")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))OCTET_VALUE")
+   field(SCAN, "I/O Intr")
+   info(asyn:FIFO, "10")
+}
+
+record(longout, "$(P)NumCallbacks")
+{
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))NUM_CALLBACKS")
+   field(VAL,  "1")
+}
+
+record(ao, "$(P)SleepTime")
+{
+   field(DTYP, "asynFloat64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))SLEEP_TIME")
+   field(PREC, "3")
+   field(VAL,  "0.")
+}
+
+record(bo, "$(P)TriggerCallbacks")
+{
+   field(DTYP, "asynInt32")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))TRIGGER_CALLBACKS")
+   field(VAL,  "1")
+}
+
+

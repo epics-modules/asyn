@@ -1,0 +1,1225 @@
+<display typeId="org.csstudio.opibuilder.Display" version="1.0.0">
+  <actions hook="false" hook_all="false" />
+  <auto_scale_widgets>
+    <auto_scale_widgets>false</auto_scale_widgets>
+    <min_width>-1</min_width>
+    <min_height>-1</min_height>
+  </auto_scale_widgets>
+  <auto_zoom_to_fit_all>false</auto_zoom_to_fit_all>
+  <background_color>
+    <color red="187" green="187" blue="187" />
+  </background_color>
+  <boy_version>5.1.0.201801081728</boy_version>
+  <foreground_color>
+    <color red="0" green="0" blue="0" />
+  </foreground_color>
+  <grid_space>5</grid_space>
+  <height>360</height>
+  <macros>
+    <include_parent_macros>true</include_parent_macros>
+  </macros>
+  <name>asynTimeSeries</name>
+  <rules />
+  <scripts />
+  <show_close_button>true</show_close_button>
+  <show_edit_range>true</show_edit_range>
+  <show_grid>false</show_grid>
+  <show_ruler>true</show_ruler>
+  <snap_to_geometry>false</snap_to_geometry>
+  <widget_type>Display</widget_type>
+  <width>500</width>
+  <x>326</x>
+  <y>179</y>
+  <widget typeId="org.csstudio.opibuilder.widgets.Rectangle" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <alpha>255</alpha>
+    <anti_alias>true</anti_alias>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="30" green="144" blue="255" />
+    </background_color>
+    <bg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </bg_gradient_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <fg_gradient_color>
+      <color red="255" green="255" blue="255" />
+    </fg_gradient_color>
+    <fill_level>100.0</fill_level>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="10" green="0" blue="184" />
+    </foreground_color>
+    <gradient>false</gradient>
+    <height>25</height>
+    <horizontal_fill>true</horizontal_fill>
+    <line_color>
+      <color red="128" green="0" blue="255" />
+    </line_color>
+    <line_style>0</line_style>
+    <line_width>0</line_width>
+    <name>Rectangle</name>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <widget_type>Rectangle</widget_type>
+    <width>500</width>
+    <x>0</x>
+    <y>5</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="15" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="255" green="255" blue="255" />
+    </foreground_color>
+    <height>25</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>$(P)$(R)</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>500</width>
+    <wrap_words>false</wrap_words>
+    <x>0</x>
+    <y>5</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="45" green="127" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>Label</name>
+    <rules>
+      <rule name="Visibility" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0!=0">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="!(pv0!=0)">
+          <value>false</value>
+        </exp>
+        <pv trig="true">$(P)$(R).BUSY</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>Acquiring</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>90</width>
+    <wrap_words>false</wrap_words>
+    <x>42</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="222" green="19" blue="9" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>1</horizontal_alignment>
+    <name>Label</name>
+    <rules>
+      <rule name="Visibility" prop_id="visible" out_exp="false">
+        <exp bool_exp="pv0==0">
+          <value>true</value>
+        </exp>
+        <exp bool_exp="!(pv0==0)">
+          <value>false</value>
+        </exp>
+        <pv trig="true">$(P)$(R).BUSY</pv>
+      </rule>
+    </rules>
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>Done</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>40</width>
+    <wrap_words>false</wrap_words>
+    <x>95</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>Status</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>60</width>
+    <wrap_words>false</wrap_words>
+    <x>142</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.TextUpdate" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <auto_size>false</auto_size>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="187" green="187" blue="187" />
+    </background_color>
+    <border_alarm_sensitive>true</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="10" green="0" blue="184" />
+    </foreground_color>
+    <format_type>1</format_type>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Text Update</name>
+    <precision>0</precision>
+    <precision_from_pv>true</precision_from_pv>
+    <pv_name>$(P)$(R).NORD</pv_name>
+    <pv_value />
+    <rotation_angle>0.0</rotation_angle>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_units>false</show_units>
+    <text>######</text>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Text Update</widget_type>
+    <width>100</width>
+    <wrap_words>false</wrap_words>
+    <x>224</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>Current point</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>130</width>
+    <wrap_words>false</wrap_words>
+    <x>329</x>
+    <y>40</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.xyGraph" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <alarm_pulsing>false</alarm_pulsing>
+    <axis_0_auto_scale>true</axis_0_auto_scale>
+    <axis_0_auto_scale_threshold>0.0</axis_0_auto_scale_threshold>
+    <axis_0_axis_color>
+      <color red="0" green="0" blue="0" />
+    </axis_0_axis_color>
+    <axis_0_axis_title>Time point</axis_0_axis_title>
+    <axis_0_dash_grid_line>true</axis_0_dash_grid_line>
+    <axis_0_grid_color>
+      <color red="200" green="200" blue="200" />
+    </axis_0_grid_color>
+    <axis_0_log_scale>false</axis_0_log_scale>
+    <axis_0_maximum>100.0</axis_0_maximum>
+    <axis_0_minimum>0.0</axis_0_minimum>
+    <axis_0_scale_font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </axis_0_scale_font>
+    <axis_0_scale_format></axis_0_scale_format>
+    <axis_0_show_grid>true</axis_0_show_grid>
+    <axis_0_time_format>0</axis_0_time_format>
+    <axis_0_title_font>
+      <opifont.name fontName="Sans" height="10" style="1" pixels="false">Default Bold</opifont.name>
+    </axis_0_title_font>
+    <axis_0_visible>true</axis_0_visible>
+    <axis_1_auto_scale>true</axis_1_auto_scale>
+    <axis_1_auto_scale_threshold>0.0</axis_1_auto_scale_threshold>
+    <axis_1_axis_color>
+      <color red="0" green="0" blue="0" />
+    </axis_1_axis_color>
+    <axis_1_axis_title>Value</axis_1_axis_title>
+    <axis_1_dash_grid_line>true</axis_1_dash_grid_line>
+    <axis_1_grid_color>
+      <color red="200" green="200" blue="200" />
+    </axis_1_grid_color>
+    <axis_1_log_scale>false</axis_1_log_scale>
+    <axis_1_maximum>100.0</axis_1_maximum>
+    <axis_1_minimum>0.0</axis_1_minimum>
+    <axis_1_scale_font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </axis_1_scale_font>
+    <axis_1_scale_format></axis_1_scale_format>
+    <axis_1_show_grid>true</axis_1_show_grid>
+    <axis_1_time_format>0</axis_1_time_format>
+    <axis_1_title_font>
+      <opifont.name fontName="Sans" height="10" style="1" pixels="false">Default Bold</opifont.name>
+    </axis_1_title_font>
+    <axis_1_visible>true</axis_1_visible>
+    <axis_2_auto_scale>true</axis_2_auto_scale>
+    <axis_2_auto_scale_threshold>0.0</axis_2_auto_scale_threshold>
+    <axis_2_axis_color>
+      <color red="0" green="0" blue="0" />
+    </axis_2_axis_color>
+    <axis_2_axis_title>Secondary Axis (2)</axis_2_axis_title>
+    <axis_2_dash_grid_line>true</axis_2_dash_grid_line>
+    <axis_2_grid_color>
+      <color red="200" green="200" blue="200" />
+    </axis_2_grid_color>
+    <axis_2_left_bottom_side>true</axis_2_left_bottom_side>
+    <axis_2_log_scale>false</axis_2_log_scale>
+    <axis_2_maximum>100.0</axis_2_maximum>
+    <axis_2_minimum>0.0</axis_2_minimum>
+    <axis_2_scale_font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </axis_2_scale_font>
+    <axis_2_scale_format></axis_2_scale_format>
+    <axis_2_show_grid>true</axis_2_show_grid>
+    <axis_2_time_format>0</axis_2_time_format>
+    <axis_2_title_font>
+      <opifont.name fontName="Sans" height="10" style="1" pixels="false">Default Bold</opifont.name>
+    </axis_2_title_font>
+    <axis_2_visible>true</axis_2_visible>
+    <axis_2_y_axis>true</axis_2_y_axis>
+    <axis_3_auto_scale>true</axis_3_auto_scale>
+    <axis_3_auto_scale_threshold>0.0</axis_3_auto_scale_threshold>
+    <axis_3_axis_color>
+      <color red="0" green="0" blue="0" />
+    </axis_3_axis_color>
+    <axis_3_axis_title>Secondary Axis (3)</axis_3_axis_title>
+    <axis_3_dash_grid_line>true</axis_3_dash_grid_line>
+    <axis_3_grid_color>
+      <color red="200" green="200" blue="200" />
+    </axis_3_grid_color>
+    <axis_3_left_bottom_side>true</axis_3_left_bottom_side>
+    <axis_3_log_scale>false</axis_3_log_scale>
+    <axis_3_maximum>100.0</axis_3_maximum>
+    <axis_3_minimum>0.0</axis_3_minimum>
+    <axis_3_scale_font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </axis_3_scale_font>
+    <axis_3_scale_format></axis_3_scale_format>
+    <axis_3_show_grid>true</axis_3_show_grid>
+    <axis_3_time_format>0</axis_3_time_format>
+    <axis_3_title_font>
+      <opifont.name fontName="Sans" height="10" style="1" pixels="false">Default Bold</opifont.name>
+    </axis_3_title_font>
+    <axis_3_visible>true</axis_3_visible>
+    <axis_3_y_axis>true</axis_3_y_axis>
+    <axis_count>2</axis_count>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="240" green="240" blue="240" />
+    </background_color>
+    <border_alarm_sensitive>true</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="255" />
+    </foreground_color>
+    <height>230</height>
+    <name>XY Graph</name>
+    <plot_area_background_color>
+      <color red="255" green="255" blue="255" />
+    </plot_area_background_color>
+    <pv_name></pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_legend>true</show_legend>
+    <show_plot_area_border>false</show_plot_area_border>
+    <show_toolbar>true</show_toolbar>
+    <title>$(P)$(R)</title>
+    <title_font>
+      <opifont.name fontName="Sans" height="10" style="1" pixels="false">Default Bold</opifont.name>
+    </title_font>
+    <tooltip>$(trace_0_y_pv)
+$(trace_0_y_pv_value)</tooltip>
+    <trace_0_anti_alias>true</trace_0_anti_alias>
+    <trace_0_buffer_size>100</trace_0_buffer_size>
+    <trace_0_concatenate_data>true</trace_0_concatenate_data>
+    <trace_0_line_width>1</trace_0_line_width>
+    <trace_0_name>$(trace_0_y_pv)</trace_0_name>
+    <trace_0_plot_mode>0</trace_0_plot_mode>
+    <trace_0_point_size>4</trace_0_point_size>
+    <trace_0_point_style>0</trace_0_point_style>
+    <trace_0_trace_color>
+      <color red="21" green="21" blue="196" />
+    </trace_0_trace_color>
+    <trace_0_trace_type>0</trace_0_trace_type>
+    <trace_0_update_delay>100</trace_0_update_delay>
+    <trace_0_update_mode>0</trace_0_update_mode>
+    <trace_0_visible>true</trace_0_visible>
+    <trace_0_x_axis_index>0</trace_0_x_axis_index>
+    <trace_0_x_pv></trace_0_x_pv>
+    <trace_0_x_pv_value />
+    <trace_0_y_axis_index>1</trace_0_y_axis_index>
+    <trace_0_y_pv>$(pv_name)</trace_0_y_pv>
+    <trace_0_y_pv_value />
+    <trace_10_anti_alias>true</trace_10_anti_alias>
+    <trace_10_buffer_size>100</trace_10_buffer_size>
+    <trace_10_concatenate_data>true</trace_10_concatenate_data>
+    <trace_10_line_width>1</trace_10_line_width>
+    <trace_10_name>$(trace_10_y_pv)</trace_10_name>
+    <trace_10_plot_mode>0</trace_10_plot_mode>
+    <trace_10_point_size>4</trace_10_point_size>
+    <trace_10_point_style>0</trace_10_point_style>
+    <trace_10_trace_color>
+      <color red="114" green="40" blue="3" />
+    </trace_10_trace_color>
+    <trace_10_trace_type>0</trace_10_trace_type>
+    <trace_10_update_delay>100</trace_10_update_delay>
+    <trace_10_update_mode>0</trace_10_update_mode>
+    <trace_10_visible>true</trace_10_visible>
+    <trace_10_x_axis_index>0</trace_10_x_axis_index>
+    <trace_10_x_pv></trace_10_x_pv>
+    <trace_10_x_pv_value />
+    <trace_10_y_axis_index>1</trace_10_y_axis_index>
+    <trace_10_y_pv></trace_10_y_pv>
+    <trace_10_y_pv_value />
+    <trace_11_anti_alias>true</trace_11_anti_alias>
+    <trace_11_buffer_size>100</trace_11_buffer_size>
+    <trace_11_concatenate_data>true</trace_11_concatenate_data>
+    <trace_11_line_width>1</trace_11_line_width>
+    <trace_11_name>$(trace_11_y_pv)</trace_11_name>
+    <trace_11_plot_mode>0</trace_11_plot_mode>
+    <trace_11_point_size>4</trace_11_point_size>
+    <trace_11_point_style>0</trace_11_point_style>
+    <trace_11_trace_color>
+      <color red="219" green="128" blue="4" />
+    </trace_11_trace_color>
+    <trace_11_trace_type>0</trace_11_trace_type>
+    <trace_11_update_delay>100</trace_11_update_delay>
+    <trace_11_update_mode>0</trace_11_update_mode>
+    <trace_11_visible>true</trace_11_visible>
+    <trace_11_x_axis_index>0</trace_11_x_axis_index>
+    <trace_11_x_pv></trace_11_x_pv>
+    <trace_11_x_pv_value />
+    <trace_11_y_axis_index>1</trace_11_y_axis_index>
+    <trace_11_y_pv></trace_11_y_pv>
+    <trace_11_y_pv_value />
+    <trace_12_anti_alias>true</trace_12_anti_alias>
+    <trace_12_buffer_size>100</trace_12_buffer_size>
+    <trace_12_concatenate_data>true</trace_12_concatenate_data>
+    <trace_12_line_width>1</trace_12_line_width>
+    <trace_12_name>$(trace_12_y_pv)</trace_12_name>
+    <trace_12_plot_mode>0</trace_12_plot_mode>
+    <trace_12_point_size>4</trace_12_point_size>
+    <trace_12_point_style>0</trace_12_point_style>
+    <trace_12_trace_color>
+      <color red="21" green="21" blue="196" />
+    </trace_12_trace_color>
+    <trace_12_trace_type>0</trace_12_trace_type>
+    <trace_12_update_delay>100</trace_12_update_delay>
+    <trace_12_update_mode>0</trace_12_update_mode>
+    <trace_12_visible>true</trace_12_visible>
+    <trace_12_x_axis_index>0</trace_12_x_axis_index>
+    <trace_12_x_pv></trace_12_x_pv>
+    <trace_12_x_pv_value />
+    <trace_12_y_axis_index>1</trace_12_y_axis_index>
+    <trace_12_y_pv></trace_12_y_pv>
+    <trace_12_y_pv_value />
+    <trace_13_anti_alias>true</trace_13_anti_alias>
+    <trace_13_buffer_size>100</trace_13_buffer_size>
+    <trace_13_concatenate_data>true</trace_13_concatenate_data>
+    <trace_13_line_width>1</trace_13_line_width>
+    <trace_13_name>$(trace_13_y_pv)</trace_13_name>
+    <trace_13_plot_mode>0</trace_13_plot_mode>
+    <trace_13_point_size>4</trace_13_point_size>
+    <trace_13_point_style>0</trace_13_point_style>
+    <trace_13_trace_color>
+      <color red="242" green="26" blue="26" />
+    </trace_13_trace_color>
+    <trace_13_trace_type>0</trace_13_trace_type>
+    <trace_13_update_delay>100</trace_13_update_delay>
+    <trace_13_update_mode>0</trace_13_update_mode>
+    <trace_13_visible>true</trace_13_visible>
+    <trace_13_x_axis_index>0</trace_13_x_axis_index>
+    <trace_13_x_pv></trace_13_x_pv>
+    <trace_13_x_pv_value />
+    <trace_13_y_axis_index>1</trace_13_y_axis_index>
+    <trace_13_y_pv></trace_13_y_pv>
+    <trace_13_y_pv_value />
+    <trace_14_anti_alias>true</trace_14_anti_alias>
+    <trace_14_buffer_size>100</trace_14_buffer_size>
+    <trace_14_concatenate_data>true</trace_14_concatenate_data>
+    <trace_14_line_width>1</trace_14_line_width>
+    <trace_14_name>$(trace_14_y_pv)</trace_14_name>
+    <trace_14_plot_mode>0</trace_14_plot_mode>
+    <trace_14_point_size>4</trace_14_point_size>
+    <trace_14_point_style>0</trace_14_point_style>
+    <trace_14_trace_color>
+      <color red="33" green="179" blue="33" />
+    </trace_14_trace_color>
+    <trace_14_trace_type>0</trace_14_trace_type>
+    <trace_14_update_delay>100</trace_14_update_delay>
+    <trace_14_update_mode>0</trace_14_update_mode>
+    <trace_14_visible>true</trace_14_visible>
+    <trace_14_x_axis_index>0</trace_14_x_axis_index>
+    <trace_14_x_pv></trace_14_x_pv>
+    <trace_14_x_pv_value />
+    <trace_14_y_axis_index>1</trace_14_y_axis_index>
+    <trace_14_y_pv></trace_14_y_pv>
+    <trace_14_y_pv_value />
+    <trace_15_anti_alias>true</trace_15_anti_alias>
+    <trace_15_buffer_size>100</trace_15_buffer_size>
+    <trace_15_concatenate_data>true</trace_15_concatenate_data>
+    <trace_15_line_width>1</trace_15_line_width>
+    <trace_15_name>$(trace_15_y_pv)</trace_15_name>
+    <trace_15_plot_mode>0</trace_15_plot_mode>
+    <trace_15_point_size>4</trace_15_point_size>
+    <trace_15_point_style>0</trace_15_point_style>
+    <trace_15_trace_color>
+      <color red="0" green="0" blue="0" />
+    </trace_15_trace_color>
+    <trace_15_trace_type>0</trace_15_trace_type>
+    <trace_15_update_delay>100</trace_15_update_delay>
+    <trace_15_update_mode>0</trace_15_update_mode>
+    <trace_15_visible>true</trace_15_visible>
+    <trace_15_x_axis_index>0</trace_15_x_axis_index>
+    <trace_15_x_pv></trace_15_x_pv>
+    <trace_15_x_pv_value />
+    <trace_15_y_axis_index>1</trace_15_y_axis_index>
+    <trace_15_y_pv></trace_15_y_pv>
+    <trace_15_y_pv_value />
+    <trace_16_anti_alias>true</trace_16_anti_alias>
+    <trace_16_buffer_size>100</trace_16_buffer_size>
+    <trace_16_concatenate_data>true</trace_16_concatenate_data>
+    <trace_16_line_width>1</trace_16_line_width>
+    <trace_16_name>$(trace_16_y_pv)</trace_16_name>
+    <trace_16_plot_mode>0</trace_16_plot_mode>
+    <trace_16_point_size>4</trace_16_point_size>
+    <trace_16_point_style>0</trace_16_point_style>
+    <trace_16_trace_color>
+      <color red="128" green="0" blue="255" />
+    </trace_16_trace_color>
+    <trace_16_trace_type>0</trace_16_trace_type>
+    <trace_16_update_delay>100</trace_16_update_delay>
+    <trace_16_update_mode>0</trace_16_update_mode>
+    <trace_16_visible>true</trace_16_visible>
+    <trace_16_x_axis_index>0</trace_16_x_axis_index>
+    <trace_16_x_pv></trace_16_x_pv>
+    <trace_16_x_pv_value />
+    <trace_16_y_axis_index>1</trace_16_y_axis_index>
+    <trace_16_y_pv></trace_16_y_pv>
+    <trace_16_y_pv_value />
+    <trace_17_anti_alias>true</trace_17_anti_alias>
+    <trace_17_buffer_size>100</trace_17_buffer_size>
+    <trace_17_concatenate_data>true</trace_17_concatenate_data>
+    <trace_17_line_width>1</trace_17_line_width>
+    <trace_17_name>$(trace_17_y_pv)</trace_17_name>
+    <trace_17_plot_mode>0</trace_17_plot_mode>
+    <trace_17_point_size>4</trace_17_point_size>
+    <trace_17_point_style>0</trace_17_point_style>
+    <trace_17_trace_color>
+      <color red="255" green="170" blue="0" />
+    </trace_17_trace_color>
+    <trace_17_trace_type>0</trace_17_trace_type>
+    <trace_17_update_delay>100</trace_17_update_delay>
+    <trace_17_update_mode>0</trace_17_update_mode>
+    <trace_17_visible>true</trace_17_visible>
+    <trace_17_x_axis_index>0</trace_17_x_axis_index>
+    <trace_17_x_pv></trace_17_x_pv>
+    <trace_17_x_pv_value />
+    <trace_17_y_axis_index>1</trace_17_y_axis_index>
+    <trace_17_y_pv></trace_17_y_pv>
+    <trace_17_y_pv_value />
+    <trace_18_anti_alias>true</trace_18_anti_alias>
+    <trace_18_buffer_size>100</trace_18_buffer_size>
+    <trace_18_concatenate_data>true</trace_18_concatenate_data>
+    <trace_18_line_width>1</trace_18_line_width>
+    <trace_18_name>$(trace_18_y_pv)</trace_18_name>
+    <trace_18_plot_mode>0</trace_18_plot_mode>
+    <trace_18_point_size>4</trace_18_point_size>
+    <trace_18_point_style>0</trace_18_point_style>
+    <trace_18_trace_color>
+      <color red="255" green="0" blue="240" />
+    </trace_18_trace_color>
+    <trace_18_trace_type>0</trace_18_trace_type>
+    <trace_18_update_delay>100</trace_18_update_delay>
+    <trace_18_update_mode>0</trace_18_update_mode>
+    <trace_18_visible>true</trace_18_visible>
+    <trace_18_x_axis_index>0</trace_18_x_axis_index>
+    <trace_18_x_pv></trace_18_x_pv>
+    <trace_18_x_pv_value />
+    <trace_18_y_axis_index>1</trace_18_y_axis_index>
+    <trace_18_y_pv></trace_18_y_pv>
+    <trace_18_y_pv_value />
+    <trace_19_anti_alias>true</trace_19_anti_alias>
+    <trace_19_buffer_size>100</trace_19_buffer_size>
+    <trace_19_concatenate_data>true</trace_19_concatenate_data>
+    <trace_19_line_width>1</trace_19_line_width>
+    <trace_19_name>$(trace_19_y_pv)</trace_19_name>
+    <trace_19_plot_mode>0</trace_19_plot_mode>
+    <trace_19_point_size>4</trace_19_point_size>
+    <trace_19_point_style>0</trace_19_point_style>
+    <trace_19_trace_color>
+      <color red="243" green="132" blue="132" />
+    </trace_19_trace_color>
+    <trace_19_trace_type>0</trace_19_trace_type>
+    <trace_19_update_delay>100</trace_19_update_delay>
+    <trace_19_update_mode>0</trace_19_update_mode>
+    <trace_19_visible>true</trace_19_visible>
+    <trace_19_x_axis_index>0</trace_19_x_axis_index>
+    <trace_19_x_pv></trace_19_x_pv>
+    <trace_19_x_pv_value />
+    <trace_19_y_axis_index>1</trace_19_y_axis_index>
+    <trace_19_y_pv></trace_19_y_pv>
+    <trace_19_y_pv_value />
+    <trace_1_anti_alias>true</trace_1_anti_alias>
+    <trace_1_buffer_size>100</trace_1_buffer_size>
+    <trace_1_concatenate_data>true</trace_1_concatenate_data>
+    <trace_1_line_width>1</trace_1_line_width>
+    <trace_1_name>$(trace_1_y_pv)</trace_1_name>
+    <trace_1_plot_mode>0</trace_1_plot_mode>
+    <trace_1_point_size>4</trace_1_point_size>
+    <trace_1_point_style>0</trace_1_point_style>
+    <trace_1_trace_color>
+      <color red="242" green="26" blue="26" />
+    </trace_1_trace_color>
+    <trace_1_trace_type>0</trace_1_trace_type>
+    <trace_1_update_delay>100</trace_1_update_delay>
+    <trace_1_update_mode>0</trace_1_update_mode>
+    <trace_1_visible>true</trace_1_visible>
+    <trace_1_x_axis_index>0</trace_1_x_axis_index>
+    <trace_1_x_pv></trace_1_x_pv>
+    <trace_1_x_pv_value />
+    <trace_1_y_axis_index>1</trace_1_y_axis_index>
+    <trace_1_y_pv></trace_1_y_pv>
+    <trace_1_y_pv_value />
+    <trace_2_anti_alias>true</trace_2_anti_alias>
+    <trace_2_buffer_size>100</trace_2_buffer_size>
+    <trace_2_concatenate_data>true</trace_2_concatenate_data>
+    <trace_2_line_width>1</trace_2_line_width>
+    <trace_2_name>$(trace_2_y_pv)</trace_2_name>
+    <trace_2_plot_mode>0</trace_2_plot_mode>
+    <trace_2_point_size>4</trace_2_point_size>
+    <trace_2_point_style>0</trace_2_point_style>
+    <trace_2_trace_color>
+      <color red="33" green="179" blue="33" />
+    </trace_2_trace_color>
+    <trace_2_trace_type>0</trace_2_trace_type>
+    <trace_2_update_delay>100</trace_2_update_delay>
+    <trace_2_update_mode>0</trace_2_update_mode>
+    <trace_2_visible>true</trace_2_visible>
+    <trace_2_x_axis_index>0</trace_2_x_axis_index>
+    <trace_2_x_pv></trace_2_x_pv>
+    <trace_2_x_pv_value />
+    <trace_2_y_axis_index>1</trace_2_y_axis_index>
+    <trace_2_y_pv></trace_2_y_pv>
+    <trace_2_y_pv_value />
+    <trace_3_anti_alias>true</trace_3_anti_alias>
+    <trace_3_buffer_size>100</trace_3_buffer_size>
+    <trace_3_concatenate_data>true</trace_3_concatenate_data>
+    <trace_3_line_width>1</trace_3_line_width>
+    <trace_3_name>$(trace_3_y_pv)</trace_3_name>
+    <trace_3_plot_mode>0</trace_3_plot_mode>
+    <trace_3_point_size>4</trace_3_point_size>
+    <trace_3_point_style>0</trace_3_point_style>
+    <trace_3_trace_color>
+      <color red="0" green="0" blue="0" />
+    </trace_3_trace_color>
+    <trace_3_trace_type>0</trace_3_trace_type>
+    <trace_3_update_delay>100</trace_3_update_delay>
+    <trace_3_update_mode>0</trace_3_update_mode>
+    <trace_3_visible>true</trace_3_visible>
+    <trace_3_x_axis_index>0</trace_3_x_axis_index>
+    <trace_3_x_pv></trace_3_x_pv>
+    <trace_3_x_pv_value />
+    <trace_3_y_axis_index>1</trace_3_y_axis_index>
+    <trace_3_y_pv></trace_3_y_pv>
+    <trace_3_y_pv_value />
+    <trace_4_anti_alias>true</trace_4_anti_alias>
+    <trace_4_buffer_size>100</trace_4_buffer_size>
+    <trace_4_concatenate_data>true</trace_4_concatenate_data>
+    <trace_4_line_width>1</trace_4_line_width>
+    <trace_4_name>$(trace_4_y_pv)</trace_4_name>
+    <trace_4_plot_mode>0</trace_4_plot_mode>
+    <trace_4_point_size>4</trace_4_point_size>
+    <trace_4_point_style>0</trace_4_point_style>
+    <trace_4_trace_color>
+      <color red="128" green="0" blue="255" />
+    </trace_4_trace_color>
+    <trace_4_trace_type>0</trace_4_trace_type>
+    <trace_4_update_delay>100</trace_4_update_delay>
+    <trace_4_update_mode>0</trace_4_update_mode>
+    <trace_4_visible>true</trace_4_visible>
+    <trace_4_x_axis_index>0</trace_4_x_axis_index>
+    <trace_4_x_pv></trace_4_x_pv>
+    <trace_4_x_pv_value />
+    <trace_4_y_axis_index>1</trace_4_y_axis_index>
+    <trace_4_y_pv></trace_4_y_pv>
+    <trace_4_y_pv_value />
+    <trace_5_anti_alias>true</trace_5_anti_alias>
+    <trace_5_buffer_size>100</trace_5_buffer_size>
+    <trace_5_concatenate_data>true</trace_5_concatenate_data>
+    <trace_5_line_width>1</trace_5_line_width>
+    <trace_5_name>$(trace_5_y_pv)</trace_5_name>
+    <trace_5_plot_mode>0</trace_5_plot_mode>
+    <trace_5_point_size>4</trace_5_point_size>
+    <trace_5_point_style>0</trace_5_point_style>
+    <trace_5_trace_color>
+      <color red="255" green="170" blue="0" />
+    </trace_5_trace_color>
+    <trace_5_trace_type>0</trace_5_trace_type>
+    <trace_5_update_delay>100</trace_5_update_delay>
+    <trace_5_update_mode>0</trace_5_update_mode>
+    <trace_5_visible>true</trace_5_visible>
+    <trace_5_x_axis_index>0</trace_5_x_axis_index>
+    <trace_5_x_pv></trace_5_x_pv>
+    <trace_5_x_pv_value />
+    <trace_5_y_axis_index>1</trace_5_y_axis_index>
+    <trace_5_y_pv></trace_5_y_pv>
+    <trace_5_y_pv_value />
+    <trace_6_anti_alias>true</trace_6_anti_alias>
+    <trace_6_buffer_size>100</trace_6_buffer_size>
+    <trace_6_concatenate_data>true</trace_6_concatenate_data>
+    <trace_6_line_width>1</trace_6_line_width>
+    <trace_6_name>$(trace_6_y_pv)</trace_6_name>
+    <trace_6_plot_mode>0</trace_6_plot_mode>
+    <trace_6_point_size>4</trace_6_point_size>
+    <trace_6_point_style>0</trace_6_point_style>
+    <trace_6_trace_color>
+      <color red="255" green="0" blue="240" />
+    </trace_6_trace_color>
+    <trace_6_trace_type>0</trace_6_trace_type>
+    <trace_6_update_delay>100</trace_6_update_delay>
+    <trace_6_update_mode>0</trace_6_update_mode>
+    <trace_6_visible>true</trace_6_visible>
+    <trace_6_x_axis_index>0</trace_6_x_axis_index>
+    <trace_6_x_pv></trace_6_x_pv>
+    <trace_6_x_pv_value />
+    <trace_6_y_axis_index>1</trace_6_y_axis_index>
+    <trace_6_y_pv></trace_6_y_pv>
+    <trace_6_y_pv_value />
+    <trace_7_anti_alias>true</trace_7_anti_alias>
+    <trace_7_buffer_size>100</trace_7_buffer_size>
+    <trace_7_concatenate_data>true</trace_7_concatenate_data>
+    <trace_7_line_width>1</trace_7_line_width>
+    <trace_7_name>$(trace_7_y_pv)</trace_7_name>
+    <trace_7_plot_mode>0</trace_7_plot_mode>
+    <trace_7_point_size>4</trace_7_point_size>
+    <trace_7_point_style>0</trace_7_point_style>
+    <trace_7_trace_color>
+      <color red="243" green="132" blue="132" />
+    </trace_7_trace_color>
+    <trace_7_trace_type>0</trace_7_trace_type>
+    <trace_7_update_delay>100</trace_7_update_delay>
+    <trace_7_update_mode>0</trace_7_update_mode>
+    <trace_7_visible>true</trace_7_visible>
+    <trace_7_x_axis_index>0</trace_7_x_axis_index>
+    <trace_7_x_pv></trace_7_x_pv>
+    <trace_7_x_pv_value />
+    <trace_7_y_axis_index>1</trace_7_y_axis_index>
+    <trace_7_y_pv></trace_7_y_pv>
+    <trace_7_y_pv_value />
+    <trace_8_anti_alias>true</trace_8_anti_alias>
+    <trace_8_buffer_size>100</trace_8_buffer_size>
+    <trace_8_concatenate_data>true</trace_8_concatenate_data>
+    <trace_8_line_width>1</trace_8_line_width>
+    <trace_8_name>$(trace_8_y_pv)</trace_8_name>
+    <trace_8_plot_mode>0</trace_8_plot_mode>
+    <trace_8_point_size>4</trace_8_point_size>
+    <trace_8_point_style>0</trace_8_point_style>
+    <trace_8_trace_color>
+      <color red="0" green="255" blue="11" />
+    </trace_8_trace_color>
+    <trace_8_trace_type>0</trace_8_trace_type>
+    <trace_8_update_delay>100</trace_8_update_delay>
+    <trace_8_update_mode>0</trace_8_update_mode>
+    <trace_8_visible>true</trace_8_visible>
+    <trace_8_x_axis_index>0</trace_8_x_axis_index>
+    <trace_8_x_pv></trace_8_x_pv>
+    <trace_8_x_pv_value />
+    <trace_8_y_axis_index>1</trace_8_y_axis_index>
+    <trace_8_y_pv></trace_8_y_pv>
+    <trace_8_y_pv_value />
+    <trace_9_anti_alias>true</trace_9_anti_alias>
+    <trace_9_buffer_size>100</trace_9_buffer_size>
+    <trace_9_concatenate_data>true</trace_9_concatenate_data>
+    <trace_9_line_width>1</trace_9_line_width>
+    <trace_9_name>$(trace_9_y_pv)</trace_9_name>
+    <trace_9_plot_mode>0</trace_9_plot_mode>
+    <trace_9_point_size>4</trace_9_point_size>
+    <trace_9_point_style>0</trace_9_point_style>
+    <trace_9_trace_color>
+      <color red="0" green="214" blue="255" />
+    </trace_9_trace_color>
+    <trace_9_trace_type>0</trace_9_trace_type>
+    <trace_9_update_delay>100</trace_9_update_delay>
+    <trace_9_update_mode>0</trace_9_update_mode>
+    <trace_9_visible>true</trace_9_visible>
+    <trace_9_x_axis_index>0</trace_9_x_axis_index>
+    <trace_9_x_pv></trace_9_x_pv>
+    <trace_9_x_pv_value />
+    <trace_9_y_axis_index>1</trace_9_y_axis_index>
+    <trace_9_y_pv></trace_9_y_pv>
+    <trace_9_y_pv_value />
+    <trace_count>1</trace_count>
+    <transparent>false</transparent>
+    <trigger_pv></trigger_pv>
+    <trigger_pv_value />
+    <visible>true</visible>
+    <widget_type>XY Graph</widget_type>
+    <width>480</width>
+    <x>10</x>
+    <y>92</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="WRITE_PV">
+        <pv_name>$(P)$(R).RARM</pv_name>
+        <value>1</value>
+        <timeout>10</timeout>
+        <confirm_message></confirm_message>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <image></image>
+    <name>Action Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name>$(P)$(R).RARM</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>Erase/Start</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>90</width>
+    <x>15</x>
+    <y>65</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="WRITE_PV">
+        <pv_name>$(P)$(R).RARM</pv_name>
+        <value>3</value>
+        <timeout>10</timeout>
+        <confirm_message></confirm_message>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <image></image>
+    <name>Action Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name>$(P)$(R).RARM</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>Start</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>90</width>
+    <x>110</x>
+    <y>65</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="WRITE_PV">
+        <pv_name>$(P)$(R).RARM</pv_name>
+        <value>2</value>
+        <timeout>10</timeout>
+        <confirm_message></confirm_message>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <image></image>
+    <name>Action Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name>$(P)$(R).RARM</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>Stop</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>90</width>
+    <x>205</x>
+    <y>65</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.MenuButton" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <actions_from_pv>true</actions_from_pv>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>6</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <label></label>
+    <name>Menu Button</name>
+    <pv_name>$(P)$(R)Read.SCAN</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_down_arrow>false</show_down_arrow>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <transparent>false</transparent>
+    <visible>true</visible>
+    <widget_type>Menu Button</widget_type>
+    <width>100</width>
+    <x>10</x>
+    <y>329</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.Label" version="1.0.0">
+    <actions hook="false" hook_all="false" />
+    <auto_size>false</auto_size>
+    <background_color>
+      <color red="255" green="255" blue="255" />
+    </background_color>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <fontdata fontName="Sans" height="11" style="0" pixels="false" />
+    </font>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <horizontal_alignment>0</horizontal_alignment>
+    <name>Label</name>
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <show_scrollbar>false</show_scrollbar>
+    <text>Read rate</text>
+    <tooltip></tooltip>
+    <transparent>true</transparent>
+    <vertical_alignment>1</vertical_alignment>
+    <visible>true</visible>
+    <widget_type>Label</widget_type>
+    <width>90</width>
+    <wrap_words>false</wrap_words>
+    <x>117</x>
+    <y>329</y>
+  </widget>
+  <widget typeId="org.csstudio.opibuilder.widgets.ActionButton" version="2.0.0">
+    <actions hook="false" hook_all="false">
+      <action type="WRITE_PV">
+        <pv_name>$(P)$(R)Read.PROC</pv_name>
+        <value>1</value>
+        <timeout>10</timeout>
+        <confirm_message></confirm_message>
+        <description></description>
+      </action>
+    </actions>
+    <alarm_pulsing>false</alarm_pulsing>
+    <backcolor_alarm_sensitive>false</backcolor_alarm_sensitive>
+    <background_color>
+      <color red="115" green="223" blue="255" />
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+    <border_color>
+      <color red="0" green="128" blue="255" />
+    </border_color>
+    <border_style>0</border_style>
+    <border_width>1</border_width>
+    <enabled>true</enabled>
+    <font>
+      <opifont.name fontName="Sans" height="10" style="0" pixels="false">Default</opifont.name>
+    </font>
+    <forecolor_alarm_sensitive>false</forecolor_alarm_sensitive>
+    <foreground_color>
+      <color red="0" green="0" blue="0" />
+    </foreground_color>
+    <height>20</height>
+    <image></image>
+    <name>Action Button</name>
+    <push_action_index>0</push_action_index>
+    <pv_name>$(P)$(R)Read.PROC</pv_name>
+    <pv_value />
+    <rules />
+    <scale_options>
+      <width_scalable>true</width_scalable>
+      <height_scalable>true</height_scalable>
+      <keep_wh_ratio>false</keep_wh_ratio>
+    </scale_options>
+    <scripts />
+    <style>0</style>
+    <text>Read</text>
+    <toggle_button>false</toggle_button>
+    <tooltip>$(pv_name)
+$(pv_value)</tooltip>
+    <visible>true</visible>
+    <widget_type>Action Button</widget_type>
+    <width>50</width>
+    <x>217</x>
+    <y>329</y>
+  </widget>
+</display>

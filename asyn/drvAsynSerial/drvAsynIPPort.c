@@ -200,7 +200,7 @@ static void
 closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Close %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
+              "Closing %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
     if (tty->fd != INVALID_SOCKET) {
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -248,7 +248,7 @@ cleanup (void *arg)
         asynPrint(tty->pasynUser, ASYN_TRACE_ERROR, "%s: cleanup locking error\n", tty->portName);
 
     if (tty->fd != INVALID_SOCKET) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "%s: shutdown socket\n", tty->portName);
+        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "%s: shutting down socket\n", tty->portName);
         tty->flags |= FLAG_SHUTDOWN; /* prevent reconnect */
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -397,7 +397,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Open connection to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+              "Attempting to connect to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
                                                            pasynUser->reason,
                                                            tty->fd);
 
@@ -505,7 +505,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
 #endif
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                          "Opened connection to %s\n", tty->IPDeviceName);
+                          "Opened connection OK to %s\n", tty->IPDeviceName);
     tty->fd = fd;
     return asynSuccess;
 }
@@ -560,11 +560,15 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     if (tty->fd == INVALID_SOCKET) {
         if (tty->flags & FLAG_CONNECT_PER_TRANSACTION) {
             if ((status = connectIt(drvPvt, pasynUser)) != asynSuccess)
+            {
+                epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "%s connect failed", tty->IPDeviceName);
                 return status;
+            }
         }
         else {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s disconnected:", tty->IPDeviceName);
+                          "%s disconnected", tty->IPDeviceName);
             return asynError;
         }
     }
@@ -589,18 +593,24 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     haveStartTime = 0;
     for (;;) {
 #ifdef USE_POLL
+        int pollstatus;
         struct pollfd pollfd;
         pollfd.fd = tty->fd;
         pollfd.events = POLLOUT;
         epicsTimeGetCurrent(&startTime);
-        while (poll(&pollfd, 1, writePollmsec) < 0) {
+        while ((pollstatus = poll(&pollfd, 1, writePollmsec)) < 0) {
             if (errno != EINTR) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                          "Poll() failed: %s", strerror(errno));
+                                          "%s poll() failed: %s", tty->IPDeviceName, strerror(errno));
                 return asynError;
             }
             epicsTimeGetCurrent(&endTime);
             if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000 > writePollmsec) break; 
+        }
+        if (pollstatus == 0) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s poll() timed out", tty->IPDeviceName);
+            return asynTimeout;
         }
 #endif
         for (;;) {
@@ -637,6 +647,8 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         }
         else if (thisWrite == 0) {
             status = asynTimeout;
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                     "%s send() returned 0", tty->IPDeviceName);
             break;
         }
         else {
@@ -746,8 +758,8 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         }
     }
     if (thisRead < 0) {
-        int should_disconnect = (tty->disconnectOnReadTimeout) ||
-                           ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR));
+        int should_disconnect = (((tty->disconnectOnReadTimeout) && (pasynUser->timeout > 0)) ||
+                                 ((SOCKERRNO != SOCK_EWOULDBLOCK) && (SOCKERRNO != SOCK_EINTR)));
         if (should_disconnect) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "%s read error: %s",

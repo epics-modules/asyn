@@ -1,12 +1,12 @@
 
 file {
-	name="/home/epics/devel/asyn/opi/medm/asynTimeSeries.adl"
-	version=030105
+	name="/home/epics/devel/asyn-4-33/opi/medm/asynTimeSeries.adl"
+	version=030109
 }
 display {
 	object {
-		x=469
-		y=198
+		x=326
+		y=179
 		width=500
 		height=360
 	}
@@ -89,9 +89,9 @@ display {
 }
 rectangle {
 	object {
-		x=25
+		x=0
 		y=5
-		width=450
+		width=500
 		height=25
 	}
 	"basic attribute" {
@@ -100,9 +100,9 @@ rectangle {
 }
 text {
 	object {
-		x=205
+		x=0
 		y=5
-		width=96
+		width=500
 		height=25
 	}
 	"basic attribute" {
@@ -111,101 +111,79 @@ text {
 	textix="$(P)$(R)"
 	align="horiz. centered"
 }
-composite {
+text {
 	object {
 		x=42
 		y=40
-		width=160
+		width=90
 		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=42
-				y=40
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=18
-			}
-			"dynamic attribute" {
-				vis="if not zero"
-				chan="$(P)$(R).BUSY"
-			}
-			textix="Acquiring"
-			align="horiz. centered"
-		}
-		text {
-			object {
-				x=95
-				y=40
-				width=40
-				height=20
-			}
-			"basic attribute" {
-				clr=21
-			}
-			"dynamic attribute" {
-				vis="if zero"
-				chan="$(P)$(R).BUSY"
-			}
-			textix="Done"
-			align="horiz. centered"
-		}
-		text {
-			object {
-				x=142
-				y=40
-				width=60
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Status"
-		}
+	"basic attribute" {
+		clr=18
 	}
+	"dynamic attribute" {
+		vis="if not zero"
+		chan="$(P)$(R).BUSY"
+	}
+	textix="Acquiring"
+	align="horiz. centered"
 }
-composite {
+text {
+	object {
+		x=95
+		y=40
+		width=40
+		height=20
+	}
+	"basic attribute" {
+		clr=21
+	}
+	"dynamic attribute" {
+		vis="if zero"
+		chan="$(P)$(R).BUSY"
+	}
+	textix="Done"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=142
+		y=40
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Status"
+}
+"text update" {
 	object {
 		x=224
 		y=40
-		width=235
+		width=100
 		height=20
 	}
-	"composite name"=""
-	children {
-		"text update" {
-			object {
-				x=224
-				y=40
-				width=100
-				height=20
-			}
-			monitor {
-				chan="$(P)$(R).NORD"
-				clr=54
-				bclr=4
-			}
-			align="horiz. right"
-			limits {
-			}
-		}
-		text {
-			object {
-				x=329
-				y=40
-				width=130
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="Current point"
-		}
+	monitor {
+		chan="$(P)$(R).NORD"
+		clr=54
+		bclr=4
 	}
+	align="horiz. right"
+	limits {
+	}
+}
+text {
+	object {
+		x=329
+		y=40
+		width=130
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="Current point"
 }
 "cartesian plot" {
 	object {
@@ -226,6 +204,7 @@ composite {
 	trace[0] {
 		ydata="$(P)$(R).VAL"
 		data_clr=27
+		yaxis=0
 	}
 	x_axis {
 		rangeStyle="auto-scale"

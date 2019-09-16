@@ -1,0 +1,631 @@
+
+file {
+	name="/home/epics/devel/asyn/testOutputCallbackApp/adl/testOutputCallback.adl"
+	version=030109
+}
+display {
+	object {
+		x=140
+		y=123
+		width=530
+		height=300
+	}
+	clr=14
+	bclr=4
+	cmap=""
+	gridSpacing=5
+	gridOn=0
+	snapToGrid=0
+}
+"color map" {
+	ncolors=65
+	colors {
+		ffffff,
+		ececec,
+		dadada,
+		c8c8c8,
+		bbbbbb,
+		aeaeae,
+		9e9e9e,
+		919191,
+		858585,
+		787878,
+		696969,
+		5a5a5a,
+		464646,
+		2d2d2d,
+		000000,
+		00d800,
+		1ebb00,
+		339900,
+		2d7f00,
+		216c00,
+		fd0000,
+		de1309,
+		be190b,
+		a01207,
+		820400,
+		5893ff,
+		597ee1,
+		4b6ec7,
+		3a5eab,
+		27548d,
+		fbf34a,
+		f9da3c,
+		eeb62b,
+		e19015,
+		cd6100,
+		ffb0ff,
+		d67fe2,
+		ae4ebc,
+		8b1a96,
+		610a75,
+		a4aaff,
+		8793e2,
+		6a73c1,
+		4d52a4,
+		343386,
+		c7bb6d,
+		b79d5c,
+		a47e3c,
+		7d5627,
+		58340f,
+		99ffff,
+		73dfff,
+		4ea5f9,
+		2a63e4,
+		0a00b8,
+		ebf1b5,
+		d4db9d,
+		bbc187,
+		a6a462,
+		8b8239,
+		73ff6b,
+		52da3b,
+		3cb420,
+		289315,
+		1a7309,
+	}
+}
+text {
+	object {
+		x=109
+		y=5
+		width=312
+		height=25
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="asyn Output Callback Tests"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=90
+		y=55
+		width=421
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=90
+				y=55
+				width=90
+				height=20
+			}
+			"basic attribute" {
+				clr=54
+			}
+			textix="asynInt32"
+		}
+		text {
+			object {
+				x=205
+				y=55
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="longout"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=280
+				y=55
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)LongoutInt32"
+				clr=14
+				bclr=2
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=385
+				y=55
+				width=60
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="longin"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=450
+				y=56
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)LonginInt32"
+				clr=54
+				bclr=2
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=205
+		y=80
+		width=306
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=205
+				y=80
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="bo"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=280
+				y=80
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)BoInt32"
+				clr=14
+				bclr=2
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=425
+				y=80
+				width=20
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="bi"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=450
+				y=81
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)BiInt32"
+				clr=54
+				bclr=2
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=10
+		y=105
+		width=501
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=205
+				y=105
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="longout"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=280
+				y=105
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)LongoutUInt32D"
+				clr=14
+				bclr=2
+			}
+			format="hexadecimal"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=385
+				y=105
+				width=60
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="longin"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=450
+				y=106
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)LonginUInt32D"
+				clr=54
+				bclr=2
+			}
+			align="horiz. centered"
+			format="hexadecimal"
+			limits {
+			}
+		}
+		text {
+			object {
+				x=10
+				y=105
+				width=170
+				height=20
+			}
+			"basic attribute" {
+				clr=54
+			}
+			textix="asynUInt32Digital"
+			align="horiz. centered"
+		}
+	}
+}
+composite {
+	object {
+		x=70
+		y=130
+		width=441
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=70
+				y=130
+				width=110
+				height=20
+			}
+			"basic attribute" {
+				clr=54
+			}
+			textix="asynFloat64"
+		}
+		text {
+			object {
+				x=255
+				y=130
+				width=20
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="ao"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=280
+				y=130
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)AoFloat64"
+				clr=14
+				bclr=2
+			}
+			limits {
+			}
+		}
+		text {
+			object {
+				x=425
+				y=130
+				width=20
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="ai"
+			align="horiz. right"
+		}
+		"text update" {
+			object {
+				x=450
+				y=131
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)AiFloat64"
+				clr=54
+				bclr=2
+			}
+			align="horiz. centered"
+			limits {
+			}
+		}
+	}
+}
+text {
+	object {
+		x=90
+		y=155
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynOctet"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=185
+		y=155
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringout"
+	align="horiz. right"
+}
+"text entry" {
+	object {
+		x=280
+		y=155
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)Stringout"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+text {
+	object {
+		x=365
+		y=155
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringin"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=450
+		y=156
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Stringin"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
+	}
+}
+composite {
+	object {
+		x=46
+		y=247
+		width=313
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=46
+				y=247
+				width=170
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Trigger callbacks"
+			align="horiz. right"
+		}
+		"message button" {
+			object {
+				x=221
+				y=247
+				width=138
+				height=20
+			}
+			control {
+				chan="$(P)TriggerCallbacks"
+				clr=14
+				bclr=51
+			}
+			label="Trigger callbacks"
+			press_msg="1"
+		}
+	}
+}
+composite {
+	object {
+		x=174
+		y=222
+		width=185
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=174
+				y=222
+				width=100
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Sleep time"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=279
+				y=222
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)SleepTime"
+				clr=14
+				bclr=2
+			}
+			limits {
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=164
+		y=197
+		width=195
+		height=20
+	}
+	"composite name"=""
+	children {
+		text {
+			object {
+				x=164
+				y=197
+				width=110
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="# callbacks"
+			align="horiz. right"
+		}
+		"text entry" {
+			object {
+				x=279
+				y=197
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)NumCallbacks"
+				clr=14
+				bclr=2
+			}
+			limits {
+			}
+		}
+	}
+}
+"related display" {
+	object {
+		x=259
+		y=272
+		width=100
+		height=20
+	}
+	display[0] {
+		label="asyn record"
+		name="asynRecord.adl"
+		args="P=testOutputCallback:,R=asyn1"
+	}
+	clr=14
+	bclr=51
+	label="asyn record"
+}
+text {
+	object {
+		x=144
+		y=272
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="asyn record"
+	align="horiz. right"
+}

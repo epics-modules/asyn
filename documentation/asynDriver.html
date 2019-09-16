@@ -4,90 +4,206 @@
 <head>
   <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
   <title>asynDriver</title>
+  <style type="text/css">
+   h2 {text-align: center}
+   h3 {text-align: left}
+    </style>
 </head>
 <body>
   <div style="text-align: center">
     <h1>
-      asynDriver: Asynchronous Driver Support</h1>
+      asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-32</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-36</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">September 14, 2017</span></p>
-    <h3>
+      <span style="font-weight: bold; font-size: 14pt">August 8, 2019</span></p>
+    <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Gasper Jansa (cosyLab) - linuxGpib
         support.</span></p>
   </div>
   <hr />
-  <div style="text-align: center">
-    <h2>
-      License Agreement</h2>
-  </div>
+  <h2>
+    License Agreement</h2>
   <p>
     This product is available via the <a href="#LicenseAgreement">open source license</a>
     described at the end of this document.</p>
   <hr />
-  <div style="text-align: center">
-    <h2>
-      Contents</h2>
-  </div>
-  <div>
-    <a href="#Purpose">Purpose</a>
-    <br />
-    <a href="#Status">Status</a>
-    <br />
-    <a href="#Acknowledgments">Acknowledgments</a>
-    <br />
-    <a href="#Overview">Overview of asynDriver</a>
-    <br />
-    <a href="#theoryOfOperation">Theory of Operation</a>
-    <br />
-    <a href="#asynDriver">asynDriver Structures and Interfaces</a>
-    <br />
-    <a href="#standardMessageInterfaces">Standard Message Based Interfaces</a><br />
-    <a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a><br />
-    <a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a><br />
-    <a href="#interposeInterfaces">Standard Interpose Interfaces</a>
-    <br />
-    <a href="#genericEpicsSupport">Generic Device Support for EPICS records</a><br />
-    <a href="#asynRecord">asynRecord: Generic Record Support</a>
-    <br />
-    <a href="#Example">Example</a>
-    <br />
-    <a href="#Test">Test Example</a>
-    <br />
-    <a href="#asynGpib">asynGpib</a>
-    <br />
-    <a href="#PortDrivers">Port Drivers</a>
-    <ul>
-      <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
-      <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
-      <li><a href="#drvAsynIPServerPort">TCP/IP or UDP/IP Server</a></li>
-      <li><a href="#usbtmc">USB TMC (Test and Measurement Class)</a></li>
-      <li><a href="#vxi11">VXI-11</a></li>
-      <li><a href="#Linux-gpib">Linux-Gpib</a></li>
-      <li><a href="#gsIP488">Green Springs IP488</a></li>
-      <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
-      <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
-    </ul>
-    <a href="#asynPortDriver">asynPortDriver C++ base class</a>
-    <br />
-    <a href="#asynPortClient">asynPortClient C++ classes</a>
-    <br />
-    <a href="#DiagnosticAids">Diagnostic Aids</a>
-    <br />
-    <a href="#InstallBuild">Install and Build</a>
-    <br />
-  </div>
+  <h2>
+    Contents</h2>
+  <ul>
+    <li><a href="#Purpose">Purpose</a> </li>
+    <li><a href="#Status">Status</a> </li>
+    <li><a href="#Acknowledgments">Acknowledgments</a> </li>
+    <li><a href="#Overview">Overview of asynDriver</a>
+      <ul>
+        <li><a href="#Definitions">Definitions</a> </li>
+        <li><a href="#StandardInterfaces">Standard Interfaces</a> </li>
+        <li><a href="#GenericInterfaces">Generic Interfaces</a> </li>
+        <li><a href="#Overview_asynManager">asynManager</a> </li>
+        <li><a href="#MultipleDevice">Multiple Device vs Single Device Port Drivers</a>
+        </li>
+        <li><a href="#ConnectionManagement">Connection Management</a> </li>
+        <li><a href="#ProtectBlocking">Protecting a Thread from Blocking</a> </li>
+        <li><a href="#PortThread">portThread</a> </li>
+        <li><a href="#OverviewOfQueuing">Overview of Queuing</a> </li>
+      </ul>
+    </li>
+    <li><a href="#theoryOfOperation">Theory of Operation</a>
+      <ul>
+        <li><a href="#Initialization">Initialization</a> </li>
+        <li><a href="#RequestAccess">Requesting access to a port</a></li>
+        <li><a href="#queueRequest">queueRequest</a> </li>
+      </ul>
+    </li>
+    <li><a href="#asynDriver">asynDriver Structures and Interfaces</a>
+      <ul>
+        <li><a href="#asynStatus">asynStatus</a> </li>
+        <li><a href="#asynException">asynException</a></li>
+        <li><a href="#asynQueuePriority">asynQueuePriority</a> </li>
+        <li><a href="#asynUser">asynUser</a> </li>
+        <li><a href="#asynInterface">asynInterface</a> </li>
+        <li><a href="#asynDriver_asynManager">asynManager</a> </li>
+        <li><a href="#asynCommon">asynCommon</a> </li>
+        <li><a href="#asynCommonSyncIO">asynCommonSyncIO</a> </li>
+        <li><a href="#asynDrvUser">asynDrvUser</a> </li>
+        <li><a href="#asynLockPortNotify">asynLockPortNotify</a> </li>
+        <li><a href="#asynOption">asynOption</a> </li>
+        <li><a href="#TraceInterface">Trace Interface</a> </li>
+        <li><a href="#asynTrace">asynTrace</a> </li>
+      </ul>
+    </li>
+    <li><a href="#standardMessageInterfaces">Standard Message Based Interfaces</a>
+      <ul>
+        <li><a href="#asynOctet">asynOctet</a> </li>
+        <li><a href="#asynOctetSyncIO">asynOctetSyncIO</a> </li>
+        <li><a href="#EndOfString">End of String Support</a> </li>
+      </ul>
+    </li>
+    <li><a href="#standardRegisterInterfaces">Standard Register Based Interfaces</a>
+      <ul>
+        <li><a href="#RegisterIntroduction">Introduction</a> </li>
+        <li><a href="#RegisterAddr">addr - What does it mean for register based interfaces?</a>
+        </li>
+        <li><a href="#RegisterExamples">Example Drivers</a> </li>
+        <li><a href="#asynInt32">asynInt32</a> </li>
+        <li><a href="#asynInt32SyncIO">asynInt32SyncIO</a> </li>
+        <li><a href="#asynUInt32Digital">asynUInt32Digital</a> </li>
+        <li><a href="#asynUInt32DigitalSyncIO">asynUInt32DigitalSyncIO</a> </li>
+        <li><a href="#asynFloat64">asynFloat64</a> </li>
+        <li><a href="#asynFloat64SyncIO">asynFloat64SyncIO</a> </li>
+        <li><a href="#asynXXXArray">asynXXXArray (XXX=Int8, Int16, Int32, Float32 or Float64)</a></li>
+        <li><a href="#asynXXXArraySyncIO">asynXXXArraySyncIO</a> </li>
+        <li><a href="#asynEnum">asynEnum</a> </li>
+        <li><a href="#asynEnumSyncIO">asynEnumSyncIO</a> </li>
+        <li><a href="#asynGenericPointer">asynGenericPointer</a> </li>
+        <li><a href="#asynGenericPointerSyncIO">asynGenericPointerSyncIO</a> </li>
+      </ul>
+    </li>
+    <li><a href="#asynStandardInterfacesBase">asynStandardInterfacesBase</a>
+      <ul>
+        <li><a href="#StandardInterfacesStructure">asynStandardInterfaces Structure</a>
+        </li>
+        <li><a href="#StandardInterfacesInterface">asynStandardInterfacesBase Interface</a>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#interposeInterfaces">Standard Interpose Interfaces</a>
+      <ul>
+        <li><a href="#asynInterposeEos">asynInterposeEos</a> </li>
+        <li><a href="#asynInterposeFlush">asynInterposeFlush</a> </li>
+        <li><a href="#asynInterposeCom">asynInterposeCom</a> </li>
+        <li><a href="#asynInterposeDelay">asynInterposeDelay</a> </li>
+        <li><a href="#asynInterposeEcho">asynInterposeEcho</a> </li>
+      </ul>
+    </li>
+    <li><a href="#genericEpicsSupport">Generic Device Support for EPICS records</a>
+      <ul>
+        <li><a href="#DeviceInterrupts">asynManager interrupts and EPICS device support</a>
+        </li>
+        <li><a href="#DeviceInitialValues">Initial values of output records</a> </li>
+        <li><a href="#DeviceEnumValues">Enum values for bi, bo, mbbi, and mbbo records</a>
+        </li>
+        <li><a href="#DeviceOutputCallbacks">Callback updates for output records</a></li>
+        <li><a href="#DeviceCallbackBuffers">Buffering of driver callbacks</a> </li>
+        <li><a href="#DeviceTimeStamps">Time Stamps</a> </li>
+        <li><a href="#devAsynInt32">asynInt32 device support</a> </li>
+        <li><a href="#devAsynIntXXXArray">asynIntXXXArray device support (XXX=8, 16 or 32)</a>
+        </li>
+        <li><a href="#devAsynXXXTimeSeries">asynXXXTimeSeries device support (XXX=Int32 or
+          Float64)</a> </li>
+        <li><a href="#devAsynUInt32Digital">asynUInt32Digital device support</a> </li>
+        <li><a href="#devAsynFloat64">asynFloat64 device support</a> </li>
+        <li><a href="#devAsynFloatXXXArray">asynFloatXXXArray device support (XXX=32 or 64)</a>
+        </li>
+        <li><a href="#devAsynOctet">asynOctet device support</a> </li>
+        <li><a href="#RecordAlarms">Record alarms</a> </li>
+      </ul>
+    </li>
+    <li><a href="#asynRecord">asynRecord: Generic Record Support</a></li>
+    <li><a href="#asynGpib">asynGpib</a>
+      <ul>
+        <li><a href="#asynGpibDriverH">asynGpibDriver.h</a> </li>
+        <li><a href="#asynGpib2">asynGpib</a> </li>
+        <li><a href="#asynGpibPort">asynGpibPort</a> </li>
+      </ul>
+    </li>
+    <li><a href="#PortDrivers">Port Drivers</a>
+      <ul>
+        <li><a href="#drvAsynSerialPort">Local Serial Port</a></li>
+        <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
+        <li><a href="#drvAsynIPServerPort">TCP/IP or UDP/IP Server</a></li>
+        <li><a href="#vxi11">VXI-11</a></li>
+        <li><a href="#Linux-gpib">Linux-Gpib</a></li>
+        <li><a href="#gsIP488">Green Springs IP488</a></li>
+        <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
+        <li><a href="#usbtmc">USB TMC (Test and Measurement Class)</a></li>
+        <li><a href="#Additional_Drivers">Additonal Drivers</a></li>
+      </ul>
+    </li>
+    <li><a href="#asynPortDriver">asynPortDriver C++ base class</a> </li>
+    <li><a href="#asynPortClient">asynPortClient C++ classes</a> </li>
+    <li><a href="#DiagnosticAids">Diagnostic Aids</a>
+      <ul>
+        <li><a href="#iocshCommands">iocsh Commands</a> </li>
+      </ul>
+    </li>
+    <li><a href="#ExampleClient">Example Client</a> </li>
+    <li><a href="#TestApplications">Test Applications</a>
+      <ul>
+        <li><a href="#testApp">testApp</a> </li>
+        <li><a href="#testArrayRingBufferApp">testArrayRingBufferApp</a> </li>
+        <li><a href="#testAsynPortClientApp">testAsynPortClientApp</a> </li>
+        <li><a href="#testAsynPortDriverApp">testAsynPortDriverApp</a> </li>
+        <li><a href="#testBroadcastApp">testBroadcastApp</a> </li>
+        <li><a href="#testConnectApp">testConnectApp</a> </li>
+        <li><a href="#testEpicsApp">testEpicsApp</a> </li>
+        <li><a href="#testErrorsApp">testErrorsApp</a> </li>
+        <li><a href="#testGpibApp">testGpibApp</a> </li>
+        <li><a href="#testGpibSerialApp">testGpibSerialApp</a> </li>
+        <li><a href="#testIPServerApp">testIPServerApp</a> </li>
+        <li><a href="#testManagerApp">testManagerApp</a> </li>
+        <li><a href="#testOutputCallbackApp">testOutputCallbackApp</a> </li>
+        <li><a href="#testOutputReadbackApp">testOutputReadbackApp</a> </li>
+        <li><a href="#testUsbtmcApp">testUsbtmcApp</a> </li>
+      </ul>
+    </li>
+    <li><a href="#InstallBuild">Install and Build</a>
+      <ul>
+        <li><a href="#InstallBuildDriver">Install and Build asynDriver</a> </li>
+        <li><a href="#UsingAsynDriver">Using asynDriver Components with an EPICS iocCore Application</a>
+        </li>
+      </ul>
+    </li>
+    <li><a href="#LicenseAgreement">License Agreement</a> </li>
+  </ul>
   <hr />
-  <div style="text-align: center">
-    <h2 id="Purpose">
-      Purpose</h2>
-  </div>
+  <h2 id="Purpose">
+    Purpose</h2>
   <p>
     <b>asynDriver</b> is a general purpose facility for interfacing device specific
     code to low level drivers. asynDriver allows non-blocking device support that works
@@ -158,10 +274,8 @@
     </li>
   </ul>
   <hr />
-  <div style="text-align: center">
-    <h2 id="Status">
-      Status</h2>
-  </div>
+  <h2 id="Status">
+    Status</h2>
   <p>
     This version provides</p>
   <ul>
@@ -206,10 +320,8 @@
       original motivation for the development of asynPortDriver.</li>
   </ul>
   <hr />
-  <div style="text-align: center">
-    <h2 id="Acknowledgments">
-      Acknowledgments</h2>
-  </div>
+  <h2 id="Acknowledgments">
+    Acknowledgments</h2>
   <p>
     The idea of creating asynDriver resulted from many years of experience with writing
     device support for serial and GPIB devices. The following individuals have been
@@ -242,7 +354,7 @@
       developed by Dirk Zimoch.</dd>
     <dt>Dirk Zimoch</dt>
     <dd>
-      Dirk developed StreadDevice, which has a single device support model, but supports
+      Dirk developed StreamDevice, which has a single device support model, but supports
       arbitrary low level message based drivers, i.e. GPIB, serial, etc.</dd>
     <dt>Jun-ichi Odagare</dt>
     <dd>
@@ -263,11 +375,9 @@
       at difficult code!!!</dd>
   </dl>
   <hr />
-  <div style="text-align: center">
-    <h2 id="Overview">
-      Overview of asynDriver</h2>
-  </div>
-  <h3>
+  <h2 id="Overview">
+    Overview of asynDriver</h2>
+  <h3 id="Definitions">
     Definitions</h3>
   <p>
     asynDriver is a software layer between device specific code and drivers that communicate
@@ -380,7 +490,7 @@
     asynManager uses the Operating System Independent features of EPICS base. It is,
     however, independent of record/device support. Thus, it can be used by other code,
     e.g. a sequence program.</p>
-  <h3>
+  <h3 id="StandardInterfaces">
     Standard Interfaces</h3>
   <p>
     These are interfaces provided by asynManager or interfaces implemented by all or
@@ -410,7 +520,7 @@
     <span style="font-weight: bold">asynDrvUser</span> is an interface for communicating
     information from device support to a driver without the device support knowing any
     details about what is passed.</p>
-  <h3>
+  <h3 id="GenericInterfaces">
     Generic Interfaces</h3>
   <p>
     In addition to <span style="font-weight: bold">asynCommon</span> and optionally
@@ -453,7 +563,7 @@
   <p>
     <span style="font-weight: bold">asynOption</span> methods for device configuration
     using key/value pairs.</p>
-  <h3>
+  <h3 id="Overview_asynManager">
     asynManager</h3>
   <p>
     asynManager is an interface and associated code. It is the "heart" of asynDriver
@@ -663,7 +773,7 @@
         exist above a single port,addr.</p>
     </li>
   </ul>
-  <h3>
+  <h3 id="MultipleDevice">
     Multiple Device vs Single Device Port Drivers</h3>
   <p>
     When a low level driver calls registerPort, it declares if it handles multiple devices.
@@ -683,7 +793,7 @@
         access to the port prevents access to all addresses on the port.</p>
     </li>
   </ul>
-  <h3>
+  <h3 id="ConnectionManagement">
     Connection Management</h3>
   <p>
     asynManager keeps track of the following states:</p>
@@ -712,7 +822,7 @@
   <p>
     Low level drivers must call pasynManager:exceptionConnect whenever they connect
     to a port or port,addr and exceptionDisconnect whenever they disconnect.</p>
-  <h3>
+  <h3 id="ProtectBlocking">
     Protecting a Thread from Blocking</h3>
   <p>
     The methods asynManager:report and asynCommon:report can be called by any thread,
@@ -726,7 +836,7 @@
     Interface methods registerInterruptUser and cancelInterruptUser must never block.
     The registerInterruptUser callback must not block because it could be called by
     a non blocking driver.</p>
-  <h3>
+  <h3 id="PortThread">
     portThread</h3>
   <p>
     If a driver calls asynManager:registerPort with the ASYN_CANBLOCK attributes bit
@@ -767,12 +877,43 @@
   <p>
     The actual code is more complicated because it unlocks before it calls code outside
     asynManager. This means that the queues can be modified and exceptions may occur.</p>
+  <h3 id="OverviewOfQueuing">
+    Overview of Queuing</h3>
+  <p>
+    When discussing queuing it is useful to think of 3 components of asyn:</p>
+  <ol>
+    <li>asynManager. This is the core part of asyn. It knows nothing about EPICS records.
+      In fact it is completely independent of EPICS except that it uses libCom for OS-independent
+      things like mutexes, message queues, events, etc. The queuing it provides is for
+      callback requests to communicate with asynchronous drivers (ASYN_CANBLOCK) via pasynManager->queueRequest().</li>
+    <li>Standard asyn device support (devEpics directory). This is the only part of asyn
+      that knows about EPICS records and depends on EPICS components other than libCom.
+      It supports callbacks from the driver under 3 conditions:
+      <ol>
+        <li>Input records with SCAN=I/O Intr</li>
+        <li>Input records with periodic scanning (asynInt32Average and asynFloat64Average
+          only)</li>
+        <li>Output records with asyn:READBACK=1.</li>
+      </ol>
+      The callback values can be placed in a ring buffer so that values are not lost if
+      the callbacks happen faster than the record can process. The size of the ring buffer
+      can be controlled with the asyn:FIFO info tag. The default is 10 for scalar records.
+      The default is 0 for waveform records, and for stringout and stringin records. If
+      the ring buffer is in use then each driver callback results in pushing a new value
+      into the buffer and a request to process the record in a separate callback thread.
+      If the ring buffer is full then the oldest value in the queue is discarded and the
+      new value is added. This guarantees that the record will eventually have the value
+      of the most recent callback, but it may skip some before this. If ASYN_TRACE_WARNING
+      is set then a warning message is printed. The driver callbacks do not block waiting
+      for the record to process.</li>
+    <li>asynPortDriver. asynPortDriver does not support queueing. It does have a parameter
+      library that stores the most recent value of scalar parameters. It does not store
+      values for array parameters.</li>
+  </ol>
   <hr />
-  <div style="text-align: center">
-    <h2 id="theoryOfOperation">
-      Theory of Operation</h2>
-  </div>
-  <h3>
+  <h2 id="theoryOfOperation">
+    Theory of Operation</h2>
+  <h3 id="Initialization">
     Initialization</h3>
   <p>
     During initialization, port drivers register each communication port as well as
@@ -806,7 +947,7 @@
     calls findInterface to locate the interfaces with which it calls the driver. For
     example:</p>
   <pre>     pasynInterface = pasynManager-&gt;findInterface(pasynUser,asynOctetType,1);</pre>
-  <h3>
+  <h3 id="RequestAccess">
     Requesting access to a port</h3>
   <p>
     User code can request access to a port by two methods:</p>
@@ -822,7 +963,7 @@
         not block, e.g. synchronous device support for EPICS records.</p>
     </li>
   </ul>
-  <h3>
+  <h3 id="queueRequest">
     queueRequest - Flow of Control</h3>
   <p>
     User code requests access to a port by calling:</p>
@@ -890,10 +1031,8 @@
       device support, which returns to record support, which completes record processing.</li>
   </ol>
   <hr />
-  <div style="text-align: center">
-    <h2 id="asynDriver">
-      asynDriver Structures and Interfaces</h2>
-  </div>
+  <h2 id="asynDriver">
+    asynDriver Structures and Interfaces</h2>
   <p>
     asynDriver.h describes the following:</p>
   <ul>
@@ -914,7 +1053,7 @@
     <li>asynTrace - An interface plus associated functions and definitions that implement
       the trace facility.</li>
   </ul>
-  <h3>
+  <h3 id="asynStatus">
     asynStatus</h3>
   <p>
     Defines the status returned by most methods. If a method returns a status other
@@ -929,45 +1068,45 @@
     <tbody>
       <tr>
         <td>
-          asynSuccess</td>
+          asynSuccess </td>
         <td>
-          The request was successful.</td>
+          The request was successful. </td>
       </tr>
       <tr>
         <td>
-          asynTimeout</td>
+          asynTimeout </td>
         <td>
-          The request failed with a timeout.</td>
+          The request failed with a timeout. </td>
       </tr>
       <tr>
         <td>
-          asynOverflow</td>
+          asynOverflow </td>
         <td>
           The driver has lost input data. This can happen if an internal buffer or the user
           supplied buffer is too small. Whenever possible, low level drivers should be written
-          so that the user can read input in small pieces.</td>
+          so that the user can read input in small pieces. </td>
       </tr>
       <tr>
         <td>
-          asynError</td>
+          asynError </td>
         <td>
-          Some other error occured.</td>
+          Some other error occured. </td>
       </tr>
       <tr>
         <td>
-          asynDisconnected</td>
+          asynDisconnected </td>
         <td>
-          The request failed because the port is not connected.</td>
+          The request failed because the port is not connected. </td>
       </tr>
       <tr>
         <td>
-          asynDisabled</td>
+          asynDisabled </td>
         <td>
-          The request failed because the port or device is disabled.</td>
+          The request failed because the port or device is disabled. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynException">
     asynException</h3>
   <p>
     Defines the exceptions for method exceptionOccurred</p>
@@ -982,55 +1121,55 @@
     <tbody>
       <tr>
         <td>
-          asynExceptionConnect</td>
+          asynExceptionConnect </td>
         <td>
-          The connection state of the port or device has changed.</td>
+          The connection state of the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionEnable</td>
+          asynExceptionEnable </td>
         <td>
-          The enable state of the port or device has changed.</td>
+          The enable state of the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionAutoConnect</td>
+          asynExceptionAutoConnect </td>
         <td>
-          The autoConnect state of the port or device has changed.</td>
+          The autoConnect state of the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionTraceMask</td>
+          asynExceptionTraceMask </td>
         <td>
-          The traceMask for the port or device has changed.</td>
+          The traceMask for the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionTraceIOMask</td>
+          asynExceptionTraceIOMask </td>
         <td>
-          The traceIOMask for the port or device has changed.</td>
+          The traceIOMask for the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionTraceInfoMask</td>
+          asynExceptionTraceInfoMask </td>
         <td>
-          The traceInfoMask for the port or device has changed.</td>
+          The traceInfoMask for the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionTraceFile</td>
+          asynExceptionTraceFile </td>
         <td>
-          The trace file for the port or device has changed.</td>
+          The trace file for the port or device has changed. </td>
       </tr>
       <tr>
         <td>
-          asynExceptionTraceIOTruncateSize</td>
+          asynExceptionTraceIOTruncateSize </td>
         <td>
-          The traceIOTruncateSize for the port or device has changed.</td>
+          The traceIOTruncateSize for the port or device has changed. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynQueuePriority">
     asynQueuePriority</h3>
   <p>
     This defines the priority passed to queueRequest.</p>
@@ -1044,32 +1183,32 @@
     <tbody>
       <tr>
         <td>
-          asynQueuePriorityLow</td>
+          asynQueuePriorityLow </td>
         <td>
-          Lowest queue priority.</td>
+          Lowest queue priority. </td>
       </tr>
       <tr>
         <td>
-          asynQueuePriorityMedium</td>
+          asynQueuePriorityMedium </td>
         <td>
-          Medium queue priority.</td>
+          Medium queue priority. </td>
       </tr>
       <tr>
         <td>
-          asynQueuePriorityHigh</td>
+          asynQueuePriorityHigh </td>
         <td>
-          High queue priority.</td>
+          High queue priority. </td>
       </tr>
       <tr>
         <td>
-          asynQueuePriorityConnect</td>
+          asynQueuePriorityConnect </td>
         <td>
           Queue a connect or disconnect request. This priority must be used for and only for
-          connect/disconnect requests.</td>
+          connect/disconnect requests. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynUser">
     asynUser</h3>
   <p>
     Describes a structure that user code passes to most asynManager and driver methods.
@@ -1098,7 +1237,7 @@
     <tbody>
       <tr>
         <td>
-          errorMessage</td>
+          errorMessage </td>
         <td>
           When a method returns asynError it should put an error message into errorMessage
           via a call to:
@@ -1112,13 +1251,13 @@
       </tr>
       <tr>
         <td>
-          errorMessageSize</td>
+          errorMessageSize </td>
         <td>
-          The size of errorMessage. The user can not change this value.</td>
+          The size of errorMessage. The user can not change this value. </td>
       </tr>
       <tr>
         <td>
-          timeout</td>
+          timeout </td>
         <td>
           The number of seconds before timeout for I/O requests. This is set by the user and
           can be changed between calls to a driver. If a call to a low level driver results
@@ -1136,7 +1275,7 @@
       </tr>
       <tr>
         <td>
-          userPvt</td>
+          userPvt </td>
         <td>
           For use by the user. The user should set this immediately after the call to pasynManager-&gt;createAsynUser.
           <p>
@@ -1146,20 +1285,20 @@
       </tr>
       <tr>
         <td>
-          userData</td>
+          userData </td>
         <td>
-          Also for use by the user.</td>
+          Also for use by the user. </td>
       </tr>
       <tr>
         <td>
-          drvUser</td>
+          drvUser </td>
         <td>
           A driver can use this to hold asynUser specific data. The asynDrvUser interface
-          is used for communication between asynUser and the driver.</td>
+          is used for communication between asynUser and the driver. </td>
       </tr>
       <tr>
         <td>
-          reason</td>
+          reason </td>
         <td>
           Drivers and asynUsers can use this as a general purpose field. By convention it
           is used to determine what "command" is being sent over a particular interface. For
@@ -1170,42 +1309,42 @@
           the enum "reason". A driver that is calling an interrupt users often uses reason
           to decide if the users callback should be called. Values of reason less than 0 are
           reserved for standard meanings. For example ASYN_REASON_SIGNAL is used to mean "out
-          of band" request. The devGpib support uses this to report SRQs.</td>
+          of band" request. The devGpib support uses this to report SRQs. </td>
       </tr>
       <tr>
         <td>
-          timestamp</td>
+          timestamp </td>
         <td>
           Devices which provide their own time stamps use this field to provide the time value
-          for records whose TSE field is set to "-2".</td>
+          for records whose TSE field is set to "-2". </td>
       </tr>
       <tr>
         <td>
-          auxStatus</td>
+          auxStatus </td>
         <td>
           Any method can provide additional return information in auxStatus. The meaning is
           determined by the method. Callbacks can use auxStatus to set record alarm status
-          in device support callback functions.</td>
+          in device support callback functions. </td>
       </tr>
       <tr>
         <td>
-          alarmStatus</td>
+          alarmStatus </td>
         <td>
           Any method can provide additional return information in alarmStatus. The meaning
           is determined by the method. Callbacks can use alarmStatus to set record alarm status
-          in device support callback functions.</td>
+          in device support callback functions. </td>
       </tr>
       <tr>
         <td>
-          alarmSeverity</td>
+          alarmSeverity </td>
         <td>
           Any method can provide additional return information in alarmStatus. The meaning
           is determined by the method. Callbacks can use alarmSeverity to set record alarm
-          severity in device support callback functions.</td>
+          severity in device support callback functions. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynInterface">
     asynInterface</h3>
   <p>
     This defines an interface registered with asynPortManager:registerPort or asynManager:interposeInterface.</p>
@@ -1220,26 +1359,26 @@
     <tbody>
       <tr>
         <td>
-          interfaceType</td>
+          interfaceType </td>
         <td>
-          A character string describing the interface.</td>
+          A character string describing the interface. </td>
       </tr>
       <tr>
         <td>
-          pinterface</td>
+          pinterface </td>
         <td>
-          A pointer to the interface. The user must cast this to the correct type.</td>
+          A pointer to the interface. The user must cast this to the correct type. </td>
       </tr>
       <tr>
         <td>
-          drvPvt</td>
+          drvPvt </td>
         <td>
           For the exclusive use of the code that called registerPort or interposeInterface.
         </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynDriver_asynManager">
     asynManager</h3>
   <p>
     This is the main interface for communicating with asynDriver.</p>
@@ -1263,7 +1402,6 @@ typedef struct interruptNode{
     ELLNODE node;
     void    *drvPvt;
 }interruptNode;
-
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
     asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
@@ -1344,25 +1482,25 @@ epicsShareExtern asynManager *pasynManager;</pre>
     <tbody>
       <tr>
         <td>
-          report</td>
+          report </td>
         <td>
           Reports status about the asynPortManager. If portName is non-NULL it reports for
           a specific port. If portName is NULL then it reports for each registered port. It
-          also calls asynCommon:report for each port being reported.</td>
+          also calls asynCommon:report for each port being reported. </td>
       </tr>
       <tr>
         <td>
-          createAsynUser</td>
+          createAsynUser </td>
         <td>
           Creates an asynUser. The caller specifies two callbacks, process and timeout. These
           callback are only called as a result of a queueRequest. The timeout callback is
           optional. errorMessageSize characters are allocated for errorMessage. The amount
           of storage can not be changed. This method doesn't return if it is unable to allocate
-          the storage.</td>
+          the storage. </td>
       </tr>
       <tr>
         <td>
-          duplicateAsynUser</td>
+          duplicateAsynUser </td>
         <td>
           Creates an asynUser by calling createAsynUser. It then initializes the new asynUser
           as follows: The fields timeout, userPvt, userData, and drvUser are initialized with
@@ -1371,13 +1509,13 @@ epicsShareExtern asynManager *pasynManager;</pre>
       </tr>
       <tr>
         <td>
-          freeAsynUser</td>
+          freeAsynUser </td>
         <td>
           Free an asynUser. The user must free an asynUser only via this call. If the asynUser
           is connected to a port, asynManager:disconnect is called. If the disconnect fails,
           this call will also fail. The storage for the asynUser is saved on a free list and
           will be reused in later calls to createAsynUser or duplicateAsynUser. Thus continually
-          calling createAsynUser (or duplicateAsynUser) and freeAsynUser is efficient.</td>
+          calling createAsynUser (or duplicateAsynUser) and freeAsynUser is efficient. </td>
       </tr>
       <tr>
         <td>
@@ -1394,14 +1532,14 @@ epicsShareExtern asynManager *pasynManager;</pre>
       </tr>
       <tr>
         <td>
-          isMultiDevice</td>
+          isMultiDevice </td>
         <td>
           Answers the question "Does the port support multiple devices?" This method can be
-          called before calling connectDevice.</td>
+          called before calling connectDevice. </td>
       </tr>
       <tr>
         <td>
-          connectDevice</td>
+          connectDevice </td>
         <td>
           Connect the asynUser structure to a device specified by portName, addr. The port
           Name is the same as that specified in a call to registerPort. The call will fail
@@ -1416,7 +1554,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
           Disconnect the asynUser from the port,addr to which it is connected via a previous
           call to connectDevice. The call will fail if the asynUser is queued or locked, or
@@ -1425,7 +1563,7 @@ epicsShareExtern asynManager *pasynManager;</pre>
       </tr>
       <tr>
         <td>
-          exceptionCallbackAdd</td>
+          exceptionCallbackAdd </td>
         <td>
           Callback will be called whenever one of the exceptions defined by asynException
           occurs. The callback can call isConnected, isEnabled, or isAutoConnect to find the
@@ -1434,13 +1572,13 @@ epicsShareExtern asynManager *pasynManager;</pre>
       </tr>
       <tr>
         <td>
-          exceptionCallbackRemove</td>
+          exceptionCallbackRemove </td>
         <td>
-          Callback is removed. This must be called before disconnect.</td>
+          Callback is removed. This must be called before disconnect. </td>
       </tr>
       <tr>
         <td>
-          findInterface</td>
+          findInterface </td>
         <td>
           Find a driver interface. If interposeInterfaceOK is true, then findInterface returns
           the last interface registered or interposed. Otherwise, the interface registered
@@ -1465,7 +1603,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          queueRequest</td>
+          queueRequest </td>
         <td>
           <p>
             When registerPort is called, the caller must specify if it can block, i.e. attribute
@@ -1494,11 +1632,11 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          cancelRequest</td>
+          cancelRequest </td>
         <td>
           If a asynUser is queued, remove it from the queue. If either the process or timeout
           callback is active when cancelRequest is called than cancelRequest will not return
-          until the callback completes.</td>
+          until the callback completes. </td>
       </tr>
       <tr>
         <td>
@@ -1519,20 +1657,21 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
             <li>queueRequests that specify a priority of asynQueuePriorityConnect are not blocked.</li>
           </ul>
           It is permissible to simultaneously block allDevices and also the device to which
-          the asynUser is connected.</td>
+          the asynUser is connected. </td>
       </tr>
       <tr>
         <td>
-          lockPort/unlockPort</td>
+          lockPort/unlockPort </td>
         <td>
           Lock access to a port driver. This is used by code that is willing to block while
           making calls to a port driver. The code can call lockPort, make an arbitrary number
           of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
-          and/or lockPort will be delayed between the calls to lockPort and unlockPort.</td>
+          and/or lockPort will be delayed between the calls to lockPort and unlockPort.
+        </td>
       </tr>
       <tr>
         <td>
-          queueLockPort/queueUnlockPort</td>
+          queueLockPort/queueUnlockPort </td>
         <td>
           Lock access to a port driver. This is used by code that is willing to block while
           making calls to a port driver. The code can call queueLockPort, make an arbitrary
@@ -1543,27 +1682,27 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           that a thread that repeatedly calls queueLockPort without sleeping between calls
           will still allow other threads to access the port. This is not true with lockPort,
           which will take a mutex as soon as the port is free, and can prevent other threads
-          from accessing the port at all.</td>
+          from accessing the port at all. </td>
       </tr>
       <tr>
         <td>
-          setQueueLockPortTimeout</td>
+          setQueueLockPortTimeout </td>
         <td>
           Sets the timeout passed to queueRequest() in queueLockPort(). The default value
           of 2.0 seconds is set when the port is created. This function can be used to change
           that value. Note that if the pasynUser-&gt;timeout value passed to queueLockPort
-          is larger than the current value then this larger timeout value is used.</td>
+          is larger than the current value then this larger timeout value is used. </td>
       </tr>
       <tr>
         <td>
-          canBlock</td>
+          canBlock </td>
         <td>
           yesNo is set to (0,1), i.e. (false,true) if calls to the low level driver can block.
-          The value is determined by the attributes passed to registerPort.</td>
+          The value is determined by the attributes passed to registerPort. </td>
       </tr>
       <tr>
         <td>
-          getAddr</td>
+          getAddr </td>
         <td>
           *addr is set equal to the address which the user specified in the call to connectDevice
           or -1 if the port does not support multiple devices.
@@ -1574,14 +1713,14 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          getPortName</td>
+          getPortName </td>
         <td>
           *pportName is set equal to the name of the port to which the user is connected.
         </td>
       </tr>
       <tr>
         <td>
-          registerPort</td>
+          registerPort </td>
         <td>
           This method is called by drivers. A call is made for each port instance. Attributes
           is a set of bits. Currently two bits are defined: ASYN_MULTIDEVICE and ASYN_CANBLOCK.
@@ -1598,31 +1737,31 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          registerInterface</td>
+          registerInterface </td>
         <td>
           This is called by port drivers for each supported interface. This method <em>does
             not</em> make a copy of the asynInterface to which the pasynInterface argument
           points. Callers must store the asynInteface in a location which is retained for
           the lifetime of the port. This is commonly done by placing the asynInterface structure
-          in the 'driver private' structure.</td>
+          in the 'driver private' structure. </td>
       </tr>
       <tr>
         <td>
-          exceptionConnect</td>
+          exceptionConnect </td>
         <td>
           This method must be called by the driver when and only when it connects to a port
-          or device.</td>
+          or device. </td>
       </tr>
       <tr>
         <td>
-          exceptionDisconnect</td>
+          exceptionDisconnect </td>
         <td>
           This method must be called by the driver when and only when it disconnects from
-          a port or device.</td>
+          a port or device. </td>
       </tr>
       <tr>
         <td>
-          interposeInterface</td>
+          interposeInterface </td>
         <td>
           This is called by a software layer between client code and the port driver. For
           example, if a device echos writes then a software module that issues a read after
@@ -1641,56 +1780,56 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          enable</td>
+          enable </td>
         <td>
           If enable is set yes, then queueRequests are not dequeued unless their queue timeout
-          occurs.</td>
+          occurs. </td>
       </tr>
       <tr>
         <td>
-          autoConnect</td>
+          autoConnect </td>
         <td>
           If autoConnect is true and the port or device is not connected when a user callback
           is scheduled to be called, asynManager calls pasynCommon-&gt;connect. See the discussion
-          of Flow of Control below for details.</td>
+          of Flow of Control below for details. </td>
       </tr>
       <tr>
         <td>
-          isConnected</td>
+          isConnected </td>
         <td>
-          *yesNo is set to (0,1) if the port or device (is not, is) connected.</td>
+          *yesNo is set to (0,1) if the port or device (is not, is) connected. </td>
       </tr>
       <tr>
         <td>
-          isEnabled</td>
+          isEnabled </td>
         <td>
-          *yesNo is set to (0,1) if the port or device (is not, is) enabled.</td>
+          *yesNo is set to (0,1) if the port or device (is not, is) enabled. </td>
       </tr>
       <tr>
         <td>
-          isAutoConnect</td>
+          isAutoConnect </td>
         <td>
           *yesNo is set to (0,1) if the portThread (will not, will) autoConnect for the port
-          or device.</td>
+          or device. </td>
       </tr>
       <tr>
         <td>
-          setAutoConnectTimeout</td>
+          setAutoConnectTimeout </td>
         <td>
           Changes the timeout when waiting for the initial connection callback from port drivers.
           This callback occurs in response to asynManager queueing a connection request, which
           happens when the port driver registers its asynCommon interface. The default timeout
-          is 0.5 seconds.</td>
+          is 0.5 seconds. </td>
       </tr>
       <tr>
         <td>
-          waitConnect</td>
+          waitConnect </td>
         <td>
-          Wait for up to timeout seconds for the port/device to connect.</td>
+          Wait for up to timeout seconds for the port/device to connect. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptSource</td>
+          registerInterruptSource </td>
         <td>
           If a low level driver supports interrupts it must call this for each interface that
           supports interrupts. pasynPvt must be the address of a void * that will be given
@@ -1699,12 +1838,12 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          getInterruptPvt</td>
+          getInterruptPvt </td>
         <td>
           Any code that wants to call createInterruptNode but does not know the adresss of
           pasynPvt can find it via this method. The caller must be connected to a device,
           i.e. must have called connectDevice. If the caller is not connected, getInterruptPvt
-          returns asynError.</td>
+          returns asynError. </td>
       </tr>
       <tr>
         <td>
@@ -1716,7 +1855,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           These methods are the only way a user can allocate and free an interruptNode. pasynPvt
           is the value obtained from getInterruptPvt. createInterruptNode/freeInterruptNode
           are separate methods rather than being done automatically by addInterruptUser/removeInterruptUser
-          so that addInterruptUser/removeInterruptUser can be efficient.</td>
+          so that addInterruptUser/removeInterruptUser can be efficient. </td>
       </tr>
       <tr>
         <td>
@@ -1732,7 +1871,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
           interrupt is being processed, i.e. between calls to interruptStart/interruptEnd,
           the call will block until interruptEnd is called. The process callback for the asynUser
           specified in the call to addInterruptUser must not call removeInterruptUser or it
-          will block forever.</td>
+          will block forever. </td>
       </tr>
       <tr>
         <td>
@@ -1751,13 +1890,13 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          registerTimeStampSource</td>
+          registerTimeStampSource </td>
         <td>
-          Registers a user-defined time stamp callback function.</td>
+          Registers a user-defined time stamp callback function. </td>
       </tr>
       <tr>
         <td>
-          unregisterTimeStampSource</td>
+          unregisterTimeStampSource </td>
         <td>
           Unregisters any user-defined timestamp callback function and reverts to the default
           timestamp source function in asynManager, which simply calls epicsTimeGetCurrent().
@@ -1765,7 +1904,7 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          updateTimeStamp</td>
+          updateTimeStamp </td>
         <td>
           Set the current time stamp for this port by calling either the default timestamp
           source, or a user-defined timestamp source that was registered with registerTimeStampSource.
@@ -1773,27 +1912,27 @@ pasynOctet-&gt;read(pasynOctetPvt,pasynUser,...
       </tr>
       <tr>
         <td>
-          getTimeStamp</td>
+          getTimeStamp </td>
         <td>
           Get the current time stamp for this port that was returned by the most recent call
           to updateTimeStamp. </td>
       </tr>
       <tr>
         <td>
-          setTimeStamp</td>
+          setTimeStamp </td>
         <td>
           Set the current time stamp for this port directly from the timestamp value passed
           to this function. </td>
       </tr>
       <tr>
         <td>
-          strStatus</td>
+          strStatus </td>
         <td>
-          Returns a descriptive string corresponding to the asynStatus value.</td>
+          Returns a descriptive string corresponding to the asynStatus value. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynCommon">
     asynCommon</h3>
   <p>
     asynCommon describes the methods that must be implemented by drivers.</p>
@@ -1811,29 +1950,29 @@ typedef struct  asynCommon {
     <tbody>
       <tr>
         <td>
-          report</td>
+          report </td>
         <td>
           Generates a report about the hardware device. This is the only asynCommon method
           that does not have to be called by the queueRequest callback or between calls to
-          lockPort/unlockPort.</td>
+          lockPort/unlockPort. </td>
       </tr>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
           Connect to the hardware device or communication path. The queueRequest must specify
-          priority asynQueuePriorityConnect.</td>
+          priority asynQueuePriorityConnect. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
           Disconnect from the hardware device or communication path. The queueRequest must
-          specify priority asynQueuePriorityConnect.</td>
+          specify priority asynQueuePriorityConnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynCommonSyncIO">
     asynCommonSyncIO</h3>
   <p>
     asynCommonSyncIO provides a convenient interface for software that needs to perform
@@ -1854,7 +1993,7 @@ epicsShareExtern asynCommonSyncIO *pasynCommonSyncIO;</pre>
     names of this interface. For consistency with the other SyncIO interfaces, connect
     calls pasynManager-&gt;connectDevice, disconnect calls pasynManager-&gt;disconnect,
     connectDevice calls asynCommon-&gt;connect, and disconnectDevice calls asynCommon-&gt;disconnect.</p>
-  <h3>
+  <h3 id="asynDrvUser">
     asynDrvUser</h3>
   <p>
     asynDrvUser provides methods that allow an asynUser to communicate user specific
@@ -1874,7 +2013,7 @@ typedef struct  asynDrvUser {
     <tbody>
       <tr>
         <td>
-          create</td>
+          create </td>
         <td>
           The user, i.e. device support calls create. The driver can create any resources
           it needs. It can use pasynUser-&gt;drvUser to provide access to the resources. If
@@ -1882,24 +2021,24 @@ typedef struct  asynDrvUser {
           about the name for the resource and a size. If pptypeName is not null the driver
           can give a value to *pptypeName. If psize is not null the driver can give a value
           to *psize. Unless asynUser receives a typeName and size that it recognizes it must
-          not access asynUser.drvUser.</td>
+          not access asynUser.drvUser. </td>
       </tr>
       <tr>
         <td>
-          getType</td>
+          getType </td>
         <td>
           If other code, e.g. an interposeInterface wants to access asynUser.drvUser it must
-          call this and verify that typeName and size are what it expects.</td>
+          call this and verify that typeName and size are what it expects. </td>
       </tr>
       <tr>
         <td>
-          destroy</td>
+          destroy </td>
         <td>
-          Destroy the resources created by create and set asynUser.drvUser null.</td>
+          Destroy the resources created by create and set asynUser.drvUser null. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynLockPortNotify">
     asynLockPortNotify</h3>
   <p>
     This is provided for port drivers that are an asynUser of another port driver. For
@@ -1929,21 +2068,21 @@ typedef struct  asynLockPortNotify {
     <tbody>
       <tr>
         <td>
-          lock</td>
+          lock </td>
         <td>
           Called when asynManager.lockPort is called. The driver normally calls asynManager.lockPort
-          for the port to which it is connected.</td>
+          for the port to which it is connected. </td>
       </tr>
       <tr>
         <td>
-          unlock</td>
+          unlock </td>
         <td>
           Called when asynManager.unlockPort is called. The driver normally calls asynManager.unlockPort
-          for the port to which it is connected.</td>
+          for the port to which it is connected. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynOption">
     asynOption</h3>
   <p>
     asynOption provides a generic way of setting driver specific options. For example
@@ -1962,19 +2101,19 @@ typedef struct asynOption {
     <tbody>
       <tr>
         <td>
-          setOption</td>
+          setOption </td>
         <td>
-          Set value associated with key.</td>
+          Set value associated with key. </td>
       </tr>
       <tr>
         <td>
-          getOption</td>
+          getOption </td>
         <td>
-          Get value associated with key.</td>
+          Get value associated with key. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="TraceInterface">
     Trace Interface</h3>
   <pre>/*asynTrace is implemented by asynManager*/
 /*All asynTrace methods can be called from any thread*/
@@ -2049,7 +2188,7 @@ typedef struct asynTrace {
 }asynTrace;
 epicsShareExtern asynTrace *pasynTrace;
 </pre>
-  <h3>
+  <h3 id="asynTrace">
     asynTrace</h3>
   <p>
     asynDriver provides a trace facility with the following attributes:</p>
@@ -2130,7 +2269,7 @@ epicsShareExtern asynTrace *pasynTrace;
     <tbody>
       <tr>
         <td>
-          lock/unlock</td>
+          lock/unlock </td>
         <td>
           These are only needed for code that call asynTrace.print or asynTrace.printIO instead
           of asynPrint and asynPrintIO.
@@ -2143,97 +2282,97 @@ epicsShareExtern asynTrace *pasynTrace;
       </tr>
       <tr>
         <td>
-          setTraceMask</td>
+          setTraceMask </td>
         <td>
           Set the trace mask. Normally set by the user requesting it via a shell command or
           the devTrace device support. Setting the trace mask for a port also sets the trace
-          mask for all devices connected to that port</td>
+          mask for all devices connected to that port </td>
       </tr>
       <tr>
         <td>
-          getTraceMask</td>
+          getTraceMask </td>
         <td>
           Get the trace mask. Device support that wants to issue trace messages calls this
-          to see what trace options have been requested.</td>
+          to see what trace options have been requested. </td>
       </tr>
       <tr>
         <td>
-          setTraceIOMask</td>
+          setTraceIOMask </td>
         <td>
           Set the traceIO mask. Normally set by the user requesting it via a shell command
           or the devTrace device support. Setting the traceIO mask for a port also sets the
-          traceIO mask for all devices connected to that port</td>
+          traceIO mask for all devices connected to that port </td>
       </tr>
       <tr>
         <td>
-          getTraceIOMask</td>
+          getTraceIOMask </td>
         <td>
           Get the traceIO mask. Support that wants to issue its own IO messages instead of
           calling asynPrintIO should call this and honor the mask settings. Most code will
-          not need it.</td>
+          not need it. </td>
       </tr>
       <tr>
         <td>
-          setTraceInfoMask</td>
+          setTraceInfoMask </td>
         <td>
           Set the traceInfo mask. Normally set by the user requesting it via a shell command
           or the devTrace device support. Setting the traceInfo mask for a port also sets
-          the traceInfo mask for all devices connected to that port</td>
+          the traceInfo mask for all devices connected to that port </td>
       </tr>
       <tr>
         <td>
-          getTraceInfoMask</td>
+          getTraceInfoMask </td>
         <td>
           Get the traceInfo mask. Support that wants to issue its own IO messages instead
           of calling asynPrint should call this and honor the mask settings. Most code will
-          not need it.</td>
+          not need it. </td>
       </tr>
       <tr>
         <td>
-          setTraceFile</td>
+          setTraceFile </td>
         <td>
           Set the stream to use for output. A NULL argument means use errlog. Normally set
           by the user requesting it via a shell command or by the devTrace device support.
           If the current output stream is none of (NULL, stdout, stderr) then the current
-          output stream is closed before the new stream is used.</td>
+          output stream is closed before the new stream is used. </td>
       </tr>
       <tr>
         <td>
-          getTraceFile</td>
+          getTraceFile </td>
         <td>
           Get the file descriptor to use for output. Device support that wants to issue its
           own IO messages instead of calling asynPrintIO should call this and honor the mask
           settings. In this case, lock must have been called first. Most code will not need
-          it. If the return value is 0, then ouput should be directed to errlog.</td>
+          it. If the return value is 0, then ouput should be directed to errlog. </td>
       </tr>
       <tr>
         <td>
-          setTraceIOTruncateSize</td>
+          setTraceIOTruncateSize </td>
         <td>
           Determines how much data is printed by printIO. In all cases it determines how many
           bytes of the buffer are displayed. The actual number of characters printed depends
           on the traceIO mask. For example ASYN_TRACEIO_HEX results in 3 characters being
           printed for each byte. Normally set by the user requesting it via a shell command
-          or the devTrace device support.</td>
+          or the devTrace device support. </td>
       </tr>
       <tr>
         <td>
-          getTraceIOTruncateSize</td>
+          getTraceIOTruncateSize </td>
         <td>
           Get the current truncate size. Called by asynPrintIO. Code that does its own I/O
-          should also support the traceIO mask.</td>
+          should also support the traceIO mask. </td>
       </tr>
       <tr>
         <td>
-          print</td>
+          print </td>
         <td>
           If reason ORed with the current traceMask is not zero, then the message is printed.
           This method is provided for backwards compatibility. The asynPrint macro now calls
-          printSource().</td>
+          printSource(). </td>
       </tr>
       <tr>
         <td>
-          printSource</td>
+          printSource </td>
         <td>
           If reason ORed with the current traceMask is not zero, then the message is printed.
           Most code should call asynPrint instead of calling this method. This method is the
@@ -2242,28 +2381,28 @@ epicsShareExtern asynTrace *pasynTrace;
       </tr>
       <tr>
         <td>
-          vprint</td>
+          vprint </td>
         <td>
-          This is the same as print, but using a va_list as its final argument.</td>
+          This is the same as print, but using a va_list as its final argument. </td>
       </tr>
       <tr>
         <td>
-          vprintSource</td>
+          vprintSource </td>
         <td>
-          This is the same as printSource, but using a va_list as its final argument.</td>
+          This is the same as printSource, but using a va_list as its final argument. </td>
       </tr>
       <tr>
         <td>
-          printIO</td>
+          printIO </td>
         <td>
           If reason ORed with the current traceMask is not zero then the message is printed.
           If len is &gt;0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
           This method is provided for backwards compatibility. The asynPrintIO macro now calls
-          printIOSource().</td>
+          printIOSource(). </td>
       </tr>
       <tr>
         <td>
-          printIOSource</td>
+          printIOSource </td>
         <td>
           If reason ORed with the current traceMask is not zero then the message is printed.
           If len is &gt;0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
@@ -2273,23 +2412,22 @@ epicsShareExtern asynTrace *pasynTrace;
       </tr>
       <tr>
         <td>
-          vprintIO</td>
+          vprintIO </td>
         <td>
-          This is the same as printIO, but using a va_list as its final argument.</td>
+          This is the same as printIO, but using a va_list as its final argument. </td>
       </tr>
       <tr>
         <td>
-          vprintIOSource</td>
+          vprintIOSource </td>
         <td>
-          This is the same as printIOSource, but using a va_list as its final argument.</td>
+          This is the same as printIOSource, but using a va_list as its final argument.
+        </td>
       </tr>
     </tbody>
   </table>
   <hr />
-  <div style="text-align: center">
-    <h2 id="standardMessageInterfaces">
-      Standard Message Based Interfaces</h2>
-  </div>
+  <h2 id="standardMessageInterfaces">
+    Standard Message Based Interfaces</h2>
   <p>
     These are interfaces for communicating with message based devices, where message
     based means that the device communicates via octet strings, i.e. arrays of 8 bit
@@ -2298,7 +2436,7 @@ epicsShareExtern asynTrace *pasynTrace;
     by port drivers that implement asynOctet. It's primary purpose is to help with interrupt
     support. asynOctetSyncIO provides a synchronous inteface to asynOctet and can be
     used by code that is willing to block.</p>
-  <h3>
+  <h3 id="asynOctet">
     asynOctet</h3>
   <p>
     asynOctet describes the methods implemented by drivers that use octet strings for
@@ -2368,32 +2506,32 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Send a message to the device. *nbytesTransfered is the number of 8-bit bytes sent
           to the device. Interpose or driver code may add end of string terminators to the
-          message but the extra characters are not included in *nbytesTransfered.</td>
+          message but the extra characters are not included in *nbytesTransfered. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Read a message from the device. *nbytesTransfered is the number of 8-bit bytes read
           from the device. If read returns asynSuccess than eomReason ( some combination of
           ASYN_EOM_CNT, ASYN_EOM_EOS, and ASYN_EOM_END)tells why the read completed. Interpose
           or driver code may strip end of string terminators from the message. If it does
           the first eos character will be replaced by null and the eos characters will not
-          be included in nbytesTransfered.</td>
+          be included in nbytesTransfered. </td>
       </tr>
       <tr>
         <td>
-          flush</td>
+          flush </td>
         <td>
-          Flush the input buffer.</td>
+          Flush the input buffer. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Register a user that will be called whenever a new message is received. NOTE: The
           callback must not block and must not call registerInterruptUser or cancelInterruptUser.
@@ -2401,34 +2539,34 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancel a registered user.</td>
+          Cancel a registered user. </td>
       </tr>
       <tr>
         <td>
-          setInputEos</td>
+          setInputEos </td>
         <td>
           Set End Of String for input. For example "\n". Note that gpib drivers usually accept
-          at most a one character terminator.</td>
+          at most a one character terminator. </td>
       </tr>
       <tr>
         <td>
-          getInputEos</td>
+          getInputEos </td>
         <td>
-          Get the current End of String.</td>
+          Get the current End of String. </td>
       </tr>
       <tr>
         <td>
-          setOutputEos</td>
+          setOutputEos </td>
         <td>
-          Set End Of String for output.</td>
+          Set End Of String for output. </td>
       </tr>
       <tr>
         <td>
-          getOutputEos</td>
+          getOutputEos </td>
         <td>
-          Get the current End of String.</td>
+          Get the current End of String. </td>
       </tr>
     </tbody>
   </table>
@@ -2454,7 +2592,7 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynOctetBase-&gt;initialize(...</pre>
@@ -2464,17 +2602,17 @@ epicsShareExtern asynOctetBase *pasynOctetBase;</pre>
           is specified, then whenever read is called, asynBase calls all the registered interrupt
           users. asynOctetBase can not implement processEosIn, processEosOut, and interruptProcess
           if the port is a multi-device port. Since this method is called only during initialization
-          it can be called directly rather than via queueRequest.</td>
+          it can be called directly rather than via queueRequest. </td>
       </tr>
       <tr>
         <td>
-          callInterruptUsers</td>
+          callInterruptUsers </td>
         <td>
-          Calls the callbacks registered via registerInterruptUser.</td>
+          Calls the callbacks registered via registerInterruptUser. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynOctetSyncIO">
     asynOctetSyncIO</h3>
   <p>
     asynOctetSyncIO provides a convenient interface for software that needs to perform
@@ -2535,94 +2673,94 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
           Connects to an asyn port and address, returns a pointer to an asynUser structure.
         </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls asynOctet-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Calls asynOctet-&gt;read. Waits for the operation to complete or time out.</td>
+          Calls asynOctet-&gt;read. Waits for the operation to complete or time out. </td>
       </tr>
       <tr>
         <td>
-          writeRead</td>
+          writeRead </td>
         <td>
           Calls pasynOctet-&gt;flush, pasynOctet-&gt;write, and asynOctet-&gt;read. Waits
-          for the operations to complete or time out.</td>
+          for the operations to complete or time out. </td>
       </tr>
       <tr>
         <td>
-          flush</td>
+          flush </td>
         <td>
-          Calls pasynOctet-&gt;flush</td>
+          Calls pasynOctet-&gt;flush </td>
       </tr>
       <tr>
         <td>
-          setInputEos</td>
+          setInputEos </td>
         <td>
-          Calls pasynOctet-&gt;setInputEos</td>
+          Calls pasynOctet-&gt;setInputEos </td>
       </tr>
       <tr>
         <td>
-          getInputEos</td>
+          getInputEos </td>
         <td>
-          Calls pasynOctet-&gt;getInputEos</td>
+          Calls pasynOctet-&gt;getInputEos </td>
       </tr>
       <tr>
         <td>
-          setOutputEos</td>
+          setOutputEos </td>
         <td>
-          Calls pasynOctet-&gt;setOutputEos</td>
+          Calls pasynOctet-&gt;setOutputEos </td>
       </tr>
       <tr>
         <td>
-          getOutputEos</td>
+          getOutputEos </td>
         <td>
-          Calls pasynOctet-&gt;getOutputEos</td>
+          Calls pasynOctet-&gt;getOutputEos </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          writeReadOnce</td>
+          writeReadOnce </td>
         <td>
-          This does a connect, writeRead, and disconnect.</td>
+          This does a connect, writeRead, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="EndOfString">
     End of String Support</h3>
   <p>
     asynOctet provides methods for handling end of string (message) processing. It does
@@ -2631,11 +2769,9 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     will be followed for individual devices. The policy will be determined by the device,
     the device support, and the driver.</p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="standardRegisterInterfaces">
-      Standard Register Based Interfaces</h2>
-  </div>
-  <h3>
+  <h2 id="standardRegisterInterfaces">
+    Standard Register Based Interfaces</h2>
+  <h3 id="RegisterIntroduction">
     Introduction</h3>
   <p>
     This section descibes interfaces for register based devices. Support is provided
@@ -2684,7 +2820,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
       an example of how to provide support for interrupts.</li>
     <li>asynInt32SyncIO - A synchronous interface to asynInt32</li>
   </ul>
-  <h3>
+  <h3 id="RegisterAddr">
     addr - What does it mean for register based interfaces?</h3>
   <p>
     Low level register based drivers are normally multi-device. The meaning of addr
@@ -2703,7 +2839,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
       array element. For example a 128 bit digital I/O module appears as an array of four
       UInt32 registers.</li>
   </ul>
-  <h3>
+  <h3 id="RegisterExamples">
     Example Drivers</h3>
   <p>
     Two examples of drivers that might implement and use the interfaces are:</p>
@@ -2727,7 +2863,7 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         is a soft example of a driver that implements asynUInt32Digital.</p>
     </li>
   </ul>
-  <h3>
+  <h3 id="asynInt32">
     asynInt32</h3>
   <p>
     asynInt32 describes the methods implemented by drivers that use integers for communicating
@@ -2773,26 +2909,26 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Write an integer value to the device.</td>
+          Write an integer value to the device. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Read an integer value from the device.</td>
+          Read an integer value from the device. </td>
       </tr>
       <tr>
         <td>
-          getBounds</td>
+          getBounds </td>
         <td>
           Get the bounds. For example a 16 bit ADC might set low=-32768 and high = 32767.
         </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Registers a callback that will be called whenever new data is available. Since it
           can be called directly rather than via a queueRequest this method must not block.
@@ -2800,10 +2936,10 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
           Cancels the callback. Since it can be called directly rather than via a queueRequest
-          this method must not block.</td>
+          this method must not block. </td>
       </tr>
     </tbody>
   </table>
@@ -2820,7 +2956,7 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynInt32Base-&gt;initialize(...</pre>
@@ -2839,37 +2975,37 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          getBounds</td>
+          getBounds </td>
         <td>
-          Reports an error "getBounds is not supported" and returns asynError</td>
+          Reports an error "getBounds is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
-          registers an interrupt callback.</td>
+          registers an interrupt callback. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynInt32SyncIO">
     asynInt32SyncIO</h3>
   <p>
     asynInt32SyncIO describes a synchronous interface to asynInt32. The code that calls
@@ -2897,58 +3033,58 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser.</td>
+          Connects to a port and address, returns a pointer to an asynUser. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynInt32-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynInt32-&gt;read and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          getBounds</td>
+          getBounds </td>
         <td>
           Calls pasynInt32-&gt;getBounds and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          getBoundsOnce</td>
+          getBoundsOnce </td>
         <td>
-          This does a connect, getBounds, and disconnect.</td>
+          This does a connect, getBounds, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynUInt32Digital">
     asynUInt32Digital</h3>
   <p>
     asynUInt32Digital describes the methods for communicating via bits of an Int32 register.</p>
@@ -3004,49 +3140,49 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Modify the bits specified by mask with the corresponding bits in value.</td>
+          Modify the bits specified by mask with the corresponding bits in value. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Read the bits specified by mask into value. The other bits of value will be set
-          to 0.</td>
+          to 0. </td>
       </tr>
       <tr>
         <td>
-          setInterrupt</td>
+          setInterrupt </td>
         <td>
-          Set the bits specified by mask to interrupt for reason.</td>
+          Set the bits specified by mask to interrupt for reason. </td>
       </tr>
       <tr>
         <td>
-          clearInterrupt</td>
+          clearInterrupt </td>
         <td>
-          Clear the interrupt bits specified by mask.</td>
+          Clear the interrupt bits specified by mask. </td>
       </tr>
       <tr>
         <td>
-          getInterrupt</td>
+          getInterrupt </td>
         <td>
-          Set each bit of mask that is enabled for reason.</td>
+          Set each bit of mask that is enabled for reason. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Register a callback that will be called whenever the driver detects a change in
           any of the bits specified by mask. Since it can be called directly rather than via
-          a queueRequest this method must not block.</td>
+          a queueRequest this method must not block. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
           Cancels the registered callback. Since it can be called directly rather than via
-          a queueRequest this method must not block.</td>
+          a queueRequest this method must not block. </td>
       </tr>
     </tbody>
   </table>
@@ -3062,7 +3198,7 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynUInt32DigitalBase-&gt;initialize(...</pre>
@@ -3079,50 +3215,50 @@ epicsShareExtern asynUInt32DigitalBase *pasynUInt32DigitalBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          setInterrupt</td>
+          setInterrupt </td>
         <td>
-          Reports an error "setInterrupt is not supported" and returns asynError</td>
+          Reports an error "setInterrupt is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          clearInterrupt</td>
+          clearInterrupt </td>
         <td>
-          Reports an error "clearInterrupt is not supported" and returns asynError</td>
+          Reports an error "clearInterrupt is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          getInterrupt</td>
+          getInterrupt </td>
         <td>
-          Reports an error "getInterrupt is not supported" and returns asynError</td>
+          Reports an error "getInterrupt is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           registers the interrupt user. The low level driver must call the registered callbacks
-          via calls to asynManager:interruptStart and asynManager:interruptEnd.</td>
+          via calls to asynManager:interruptStart and asynManager:interruptEnd. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynUInt32DigitalSyncIO">
     asynUInt32DigitalSyncIO</h3>
   <p>
     asynUInt32DigitalSyncIO describes a synchronous interrace to asynUInt32Digital.
@@ -3164,60 +3300,60 @@ epicsShareExtern asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser structure.</td>
+          Connects to a port and address, returns a pointer to an asynUser structure. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynUInt32Digital-&gt;write and waits for the operation to complete or time
-          out.</td>
+          out. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynUInt32Digital-&gt;read and waits for the operation to complete or time
-          out.</td>
+          out. </td>
       </tr>
       <tr>
         <td>
-          setInterrupt</td>
+          setInterrupt </td>
         <td>
           Calls pasynUInt32Digital-&gt;setInterrupt and waits for the operation to complete
-          or time out.</td>
+          or time out. </td>
       </tr>
       <tr>
         <td>
-          clearInterrupt</td>
+          clearInterrupt </td>
         <td>
           Calls pasynUInt32Digital-&gt;clearInterrupt and waits for the operation to complete
-          or time out.</td>
+          or time out. </td>
       </tr>
       <tr>
         <td>
-          getInterrupt</td>
+          getInterrupt </td>
         <td>
           Calls pasynUInt32Digital-&gt;getInterrupt and waits for the operation to complete
-          or time out.</td>
+          or time out. </td>
       </tr>
       <tr>
         <td>
-          writeOnce,...,getInterruptOnce</td>
+          writeOnce,...,getInterruptOnce </td>
         <td>
-          Does a connect, (write,...,getInterrupt), and disconnect.</td>
+          Does a connect, (write,...,getInterrupt), and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynFloat64">
     asynFloat64</h3>
   <p>
     asynFloat64 describes the methods for communicating via IEEE double precision float
@@ -3260,29 +3396,30 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Write a value.</td>
+          Write a value. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Read a value.</td>
+          Read a value. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Register a callback that is called whenever new data is available. Since it can
-          be called directly rather than via a queueRequest this method must not block.</td>
+          be called directly rather than via a queueRequest this method must not block.
+        </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
           Cancel the callback. Since it can be called directly rather than via a queueRequest
-          this method must not block.</td>
+          this method must not block. </td>
       </tr>
     </tbody>
   </table>
@@ -3292,7 +3429,7 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynFloat64Base-&gt;initialize(...</pre>
@@ -3309,32 +3446,32 @@ epicsShareExtern asynFloat64Base *pasynFloat64Base;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           registers the interrupt user. The low level driver must call the registered callbacks
-          via calls to asynManager:interruptStart and asynManager:interruptEnd.</td>
+          via calls to asynManager:interruptStart and asynManager:interruptEnd. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynFloat64SyncIO">
     asynFloat64SyncIO</h3>
   <p>
     asynFloat64SyncIO describes a synchronous interrace to asynFloat64. The code that
@@ -3358,46 +3495,46 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser structure.</td>
+          Connects to a port and address, returns a pointer to an asynUser structure. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynFloat64-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynFloat64-&gt;read and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
-    asynXXXArray (where XXX is Int8, Int16, Int32, Float32 or Float64)</h3>
+  <h3 id="asynXXXArray">
+    asynXXXArray (XXX=Int8, Int16, Int32, Float32 or Float64)</h3>
   <p>
     asynXXXArray describes the methods for communicating via 8, 16, or 32-bit integers,
     or 32 or 64-bit IEEE float values.</p>
@@ -3443,27 +3580,27 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Write an array of values.</td>
+          Write an array of values. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Read an array of values.</td>
+          Read an array of values. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
-          Register a callback that is called whenever new data is available.</td>
+          Register a callback that is called whenever new data is available. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancel the callback</td>
+          Cancel the callback </td>
       </tr>
     </tbody>
   </table>
@@ -3475,7 +3612,7 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynXXXArrayBase-&gt;initialize(...</pre>
@@ -3495,31 +3632,31 @@ epicsShareExtern asynXXXArrayBase *pasynXXXArrayBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
-          Registers an interrupt callback.</td>
+          Registers an interrupt callback. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynXXXArraySyncIO">
     asynXXXArraySyncIO</h3>
   <p>
     asynXXXArraySyncIO describes a synchronous interface to asynXXXArray. The code that
@@ -3543,51 +3680,51 @@ epicsShareExtern asynXXXArraySyncIO *pasynXXXArraySyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser.</td>
+          Connects to a port and address, returns a pointer to an asynUser. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynXXXArray-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynXXXArray-&gt;read and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          getBoundsOnce</td>
+          getBoundsOnce </td>
         <td>
-          This does a connect, getBounds, and disconnect.</td>
+          This does a connect, getBounds, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynEnum">
     asynEnum</h3>
   <p>
     asynEnum describes the methods implemented by drivers to define the enum strings,
@@ -3660,19 +3797,19 @@ epicsShareExtern asynEnumBase *pasynEnumBase;
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Writes the enum strings, enum values and enum severities to the driver.</td>
+          Writes the enum strings, enum values and enum severities to the driver. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reads the enum strings, enum values and enum severities to the driver.</td>
+          Reads the enum strings, enum values and enum severities to the driver. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Registers a callback that will be called whenever there are new enum strings, values
           and severities. Since it can be called directly rather than via a queueRequest this
@@ -3680,10 +3817,10 @@ epicsShareExtern asynEnumBase *pasynEnumBase;
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
           Cancels the callback. Since it can be called directly rather than via a queueRequest
-          this method must not block.</td>
+          this method must not block. </td>
       </tr>
     </tbody>
   </table>
@@ -3700,7 +3837,7 @@ epicsShareExtern asynEnumBase *pasynEnumBase;
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynEnumBase-&gt;initialize(...</pre>
@@ -3719,31 +3856,31 @@ epicsShareExtern asynEnumBase *pasynEnumBase;
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
-          registers an interrupt callback.</td>
+          registers an interrupt callback. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynEnumSyncIO">
     asynEnumSyncIO</h3>
   <p>
     asynEnumSyncIO describes a synchronous interface to asynEnum. The code that calls
@@ -3770,51 +3907,51 @@ epicsShareExtern asynEnumSyncIO *pasynEnumSyncIO;
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser.</td>
+          Connects to a port and address, returns a pointer to an asynUser. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynEnum-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynEnum-&gt;read and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          getBoundsOnce</td>
+          getBoundsOnce </td>
         <td>
-          This does a connect, getBounds, and disconnect.</td>
+          This does a connect, getBounds, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynGenericPointer">
     asynGenericPointer</h3>
   <p>
     asynGenericPointer describes the methods for communicating via void* pointers. asyn
@@ -3858,29 +3995,30 @@ epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Write a value.</td>
+          Write a value. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Read a value.</td>
+          Read a value. </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           Register a callback that is called whenever new data is available. Since it can
-          be called directly rather than via a queueRequest this method must not block.</td>
+          be called directly rather than via a queueRequest this method must not block.
+        </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
           Cancel the callback. Since it can be called directly rather than via a queueRequest
-          this method must not block.</td>
+          this method must not block. </td>
       </tr>
     </tbody>
   </table>
@@ -3892,7 +4030,7 @@ epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;</pre>
     <tbody>
       <tr>
         <td>
-          initialize</td>
+          initialize </td>
         <td>
           After a driver calls registerPort it can call:
           <pre>pasynGenericPointerBase-&gt;initialize(...</pre>
@@ -3909,32 +4047,32 @@ epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;</pre>
     <tbody>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
-          Reports an error "write is not supported" and returns asynError</td>
+          Reports an error "write is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
-          Reports an error "read is not supported" and returns asynError</td>
+          Reports an error "read is not supported" and returns asynError </td>
       </tr>
       <tr>
         <td>
-          registerInterruptUser</td>
+          registerInterruptUser </td>
         <td>
           registers the interrupt user. The low level driver must call the registered callbacks
-          via calls to asynManager:interruptStart and asynManager:interruptEnd.</td>
+          via calls to asynManager:interruptStart and asynManager:interruptEnd. </td>
       </tr>
       <tr>
         <td>
-          cancelInterruptUser</td>
+          cancelInterruptUser </td>
         <td>
-          Cancels the callback</td>
+          Cancels the callback </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynGenericPointerSyncIO">
     asynGenericPointerSyncIO</h3>
   <p>
     asynGenericPointerSyncIO describes a synchronous interrace to asynGenericPointer.
@@ -3961,61 +4099,59 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     <tbody>
       <tr>
         <td>
-          connect</td>
+          connect </td>
         <td>
-          Connects to a port and address, returns a pointer to an asynUser structure.</td>
+          Connects to a port and address, returns a pointer to an asynUser structure. </td>
       </tr>
       <tr>
         <td>
-          disconnect</td>
+          disconnect </td>
         <td>
-          Disconnect. This frees all resources allocated by connect.</td>
+          Disconnect. This frees all resources allocated by connect. </td>
       </tr>
       <tr>
         <td>
-          write</td>
+          write </td>
         <td>
           Calls pasynGenericPointer-&gt;write and waits for the operation to complete or time
-          out.</td>
+          out. </td>
       </tr>
       <tr>
         <td>
-          read</td>
+          read </td>
         <td>
           Calls pasynGenericPointer-&gt;read and waits for the operation to complete or time
-          out.</td>
+          out. </td>
       </tr>
       <tr>
         <td>
-          writeRead</td>
+          writeRead </td>
         <td>
           Calls pasynGenericPointer-&gt;write, then pasynGenericPointer-&gt;read. Waits for
-          the operations to complete or time out.</td>
+          the operations to complete or time out. </td>
       </tr>
       <tr>
         <td>
-          writeOnce</td>
+          writeOnce </td>
         <td>
-          This does a connect, write, and disconnect.</td>
+          This does a connect, write, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          readOnce</td>
+          readOnce </td>
         <td>
-          This does a connect, read, and disconnect.</td>
+          This does a connect, read, and disconnect. </td>
       </tr>
       <tr>
         <td>
-          writeReadOnce</td>
+          writeReadOnce </td>
         <td>
-          This does a connect, writeRead, and disconnect.</td>
+          This does a connect, writeRead, and disconnect. </td>
       </tr>
     </tbody>
   </table>
-  <div style="text-align: center">
-    <h2 id="asynStandardInterfacesBase">
-      asynStandardInterfacesBase</h2>
-  </div>
+  <h2 id="asynStandardInterfacesBase">
+    asynStandardInterfacesBase</h2>
   <p>
     asynStandardInterfacesBase is an interface designed as a convenience to minimize
     the amount of code that must be written in the initialization routine of a port
@@ -4030,8 +4166,8 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     to register itself as an interrupt source on one or more of those interfaces. This
     can reduce the number of lines of code in the driver initialization routine by a
     factor of four or more.</p>
-  <h2>
-    asynStandardInterfaces structure</h2>
+  <h3 id="StandardInterfacesStructure">
+    asynStandardInterfaces structure</h3>
   <p>
     The following is the definition of the asynStandardInterfaces structure. Drivers
     will normally have a structure of this type contained in their drvPvt structure.
@@ -4094,8 +4230,8 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     void *enumInterruptPvt;
 
 } asynStandardInterfaces;</pre>
-  <h2>
-    asynStandardInterfacesBase interface</h2>
+  <h3 id="StandardInterfacesInterface">
+    asynStandardInterfacesBase interface</h3>
   <p>
     The following is the definition of the asynStandardInterfacesBase interface.</p>
   <pre>typedef struct asynStandardInterfacesBase {
@@ -4212,12 +4348,10 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     }
 ...
 }</pre>
-  <div style="text-align: center">
-    <h2 id="interposeInterfaces">
-      Standard Interpose Interfaces</h2>
-  </div>
-  <h2>
-    asynInterposeEos</h2>
+  <h2 id="interposeInterfaces">
+    Standard Interpose Interfaces</h2>
+  <h3 id="asynInterposeEos">
+    asynInterposeEos</h3>
   <p>
     This can be used to simulate EOS processing for asynOctet if the port driver doesn't
     provide EOS support. If an EOS is specified it looks for the eos on each read. It
@@ -4232,10 +4366,10 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>processEosOut (0,1) means (do not, do) implement eosOut commands.</li>
   </ul>
   <p>
-    This command should appear immediately after the command that initializes a port
+    This command should appear immediately after the command that initializes a port.
     Some drivers provide configuration options to call this automatically.</p>
-  <h2>
-    asynInterposeFlush</h2>
+  <h3 id="asynInterposeFlush">
+    asynInterposeFlush</h3>
   <p>
     This can be used to simulate flush processing for asynOctet if the port driver doesn't
     provide support for flush. It just reads and discards characters until no more characters
@@ -4249,12 +4383,55 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     <li>timeout is the time to wait for more characters</li>
   </ul>
   <p>
-    this command should appear immediately after the command that initializes a port</p>
+    This command should appear immediately after the command that initializes a port.</p>
+  <h3 id="asynInterposeCom">
+    asynInterposeCom</h3>
+  <p>
+    This provides the ability to configure serial ports on terminal servers using the
+    RFC 2117 protocol. It is not configured from the iocsh directly, but is rather configured
+    automatically by the drvAsynIPPort driver if the COM protocol is specified. It supports
+    the same options as drvAsynSerialPort, i.e. "baud", "bits", "parity", "stop", "crtscts",
+    and "ixon".
+  </p>
+  <h3 id="asynInterposeDelay">
+    asynInterposeDelay</h3>
+  <p>
+    This can be used to wait for a specified delay after sending each character before
+    sending the next. Some poorly designed devices require this. It is started by the
+    shell command:</p>
+  <pre>    asynInterposeDelay port addr delay</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>port is the name of the port.</li>
+    <li>addr is the address</li>
+    <li>delay is the time to wait after sending each character</li>
+  </ul>
+  <p>
+    This command should appear immediately after the command that initializes a port.
+    At run-time the delay can be examined or changed using the asyn option interface
+    with the `delay` option which is added by this interpose layer.</p>
+  <pre>    asynShowOption port, address, "delay"
+   asynSetOption port, address, "delay", delay(sec)
+</pre>
+  <h3 id="asynInterposeEcho">
+    asynInterposeEcho</h3>
+  <p>
+    This can be used to wait for each character to be echoed by the device before sending
+    the next character. Some poorly designed devices require this. It is started by
+    the shell command:</p>
+  <pre>    asynInterposeEcho port addr</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>port is the name of the port.</li>
+    <li>addr is the address</li>
+  </ul>
+  <p>
+    This command should appear immediately after the command that initializes a port.</p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="genericEpicsSupport">
-      Generic Device Support for EPICS records</h2>
-  </div>
+  <h2 id="genericEpicsSupport">
+    Generic Device Support for EPICS records</h2>
   <p>
     Generic device support is provided for standard EPICS records. This support should
     be usable for a large class of low level register based drivers. For complicated
@@ -4303,8 +4480,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     For example:</p>
   <pre>    field(DTYP,"asynInt32")
     field(INP,"@asyn(portA,0,.1)thisIsForDriver")</pre>
-  <h2>
-    asynManager interrupts and EPICS device support</h2>
+  <h3 id="DeviceInterrupts">
+    asynManager interrupts and EPICS device support</h3>
   <p>
     All of the device support files can call registerInterruptUser for input records.
     The callback is used in one of two ways:</p>
@@ -4315,10 +4492,20 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     </li>
     <li>Input records that are averaged, i.e. asynInt32Average or asynFloat64Average.
       <p>
-        These records are normally scanned periodically. The registerInterruptUser callback
-        is used to calculate an average value between record processes. If the record is
-        processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
-        UDF is set to TRUE, and the value is left unchanged.</p>
+        These records can be scanned either periodically or with SCAN=I/O Intr. The registerInterruptUser
+        callback is used to add the current value to the sum of values between record processing.</p>
+      <p>
+        If the record is periodically processed, then the average is computed each time
+        the record processes. If the record is processed before new data have arrived (numAverage==0)
+        the record is set to UDF/INVALID, UDF is set to TRUE, and the value is left unchanged.</p>
+      <p>
+        If the record has SCAN=I/O Intr then the average is computed and the record is processed
+        each time NumAverage callback readings have been received. The SVAL field in the
+        ai record is used to set NumAverage. This is rather a kluge, but there is not another
+        good way to communicate this value to the device support, while allowing it to be
+        changed at run-time. This means that simulation mode cannot be used with asynInt32Average
+        or asynFloat64Average device support if SCAN=I/O Intr. This is probably not a significant
+        limitation. Support for SCAN=I/O Intr was added in R4-34.</p>
     </li>
     <li>Input records that are waveform time series, i.e. asynInt32TimeSeries or asynFloat64TimeSeries.
       <p>
@@ -4326,8 +4513,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
         is used to append values to the time series.</p>
     </li>
   </ul>
-  <h2>
-    Initial values of output records</h2>
+  <h3 id="DeviceInitialValues">
+    Initial values of output records</h3>
   <p>
     The device support for output records on register based interfaces (bo, mbbo, ao,
     longout) does an initial read() of the value from the driver in init_record. If
@@ -4346,8 +4533,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     the record in the database contains the following line:<br />
     <code>info(asyn:INITIAL_READBACK, "1")</code><br />
     .</p>
-  <h2>
-    Enum values for bi, bo, mbbi, and mbbo records</h2>
+  <h3 id="DeviceEnumValues">
+    Enum values for bi, bo, mbbi, and mbbo records</h3>
   <p>
     Beginning in asyn R4-19 support was added for asyn port drivers to control the values
     of the enum strings, enum values and enum severities in bi, bo, mbbi, and mbbo records.
@@ -4367,8 +4554,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
       clients like medm and edm will not change the enum widgets until the window is closed
       and reopened, but newer clients like CSS should dynamically change the enum widgets.</li>
   </ul>
-  <h2>
-    Callback updates for output records</h2>
+  <h3 id="DeviceOutputCallbacks">
+    Callback updates for output records</h3>
   <p>
     Beginning in asyn R4-26 support was added for updating output records from driver
     interrupt callbacks. This feature allows output records to reflect changes in the
@@ -4384,8 +4571,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     If the value of the info tag is 0 or if the info tag is not present then updates
     of output records on interrupt callbacks are disabled.
   </p>
-  <h2>
-    Buffering of driver callbacks</h2>
+  <h3 id="DeviceCallbackBuffers">
+    Buffering of driver callbacks</h3>
   <p>
     It is possible for the time between driver callbacks to be less than the time for
     record processing. asyn device support provides a ring-buffer (FIFO) mechanism to
@@ -4400,11 +4587,15 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     In this example the buffer size was set to 20. Ring buffer support was added in
     asyn R4-10 for all records except stringin, stringout, and waveform. Waveform record
     support for numeric arrays was added in asyn R4-25. asynOctet support for stringin,
-    stringout, and waveform records was added in asyn R4-26.
+    stringout, and waveform records was added in asyn R4-26. In R4-35 a deadlock issue
+    with asyn:READBACK was found. To fix this with asynOctet output records a ring buffer
+    is required. Thus, a minimum ring buffer size of 1 is enforced in the driver for
+    these records if asyn:REABACK=1 even if asyn:FIFO is not specified. asyn:FIFO can
+    still be used to select a larger ring buffer size.
   </p>
-  <h2>
+  <h3 id="DeviceTimeStamps">
     Time stamps
-  </h2>
+  </h3>
   <p>
     Beginning in asyn R4-20 support was added for asyn port drivers to set the TIME
     field of input records. This is done by setting the TSE field of the record to "-2"
@@ -4417,8 +4608,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     was also added for user-supplied timestamp source functions. Timestamp support was
     also added to asynPortDriver for the base-class read functions and callback functions.
   </p>
-  <h2>
-    asynInt32 device support</h2>
+  <h3 id="devAsynInt32">
+    asynInt32 device support</h3>
   <p>
     The following support is available:</p>
   <pre>device(ai,INST_IO,asynAiInt32,"asynInt32")
@@ -4462,7 +4653,12 @@ nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(n
           value is read via a call to pasynInt32-&gt;read.</li>
         <li>asynInt32Average - The registerInterruptUser callback adds the new value to a
           sum and also increments the number of samples. When the record is processed the
-          average is computed and the sum and number of samples is set to zero.</li>
+          average is computed and the sum and number of samples is set to zero. If the record
+          is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
+          UDF is set to TRUE, and the value is left unchanged. The record can be scanned either
+          periodically or with SCAN=I/O Intr. If the record has SCAN=I/O Intr then the average
+          is computed and the record is processed each time NumAverage callback readings have
+          been received. The SVAL field in the ai record is used to set NumAverage. </li>
       </ul>
     </li>
     <li>aoRecord
@@ -4574,8 +4770,8 @@ nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(n
         field(TWST,"twoVal")
         field(THST,"threeVal")
    }</pre>
-  <h2>
-    asynIntXXXArray device support (XXX=8, 16 or 32)</h2>
+  <h3 id="devAsynIntXXXArray">
+    asynIntXXXArray device support (XXX=8, 16 or 32)</h3>
   <p>
     The following support is available:</p>
   <pre>device(waveform,INST_IO,asynIntXXXArrayWfIn,"asynIntXXXArrayIn")
@@ -4584,8 +4780,8 @@ device(waveform,INST_IO,asynIntXXXArrayWfOut,"asynIntXXXArrayOut")</pre>
     devAsynIntXXXArray.c provides EPICS device support for drivers that implement interface
     asynIntXXXArray. It has support for both reading and writing a waveform. SCAN "I/O
     Intr" is supported similar to the aiRecord in devAsynInt32 device support.</p>
-  <h2>
-    asynXXXTimeSeries device support (XXX=Int32 or Float64)</h2>
+  <h3 id="devAsynXXXTimeSeries">
+    asynXXXTimeSeries device support (XXX=Int32 or Float64)</h3>
   <p>
     The following support is available:</p>
   <pre>device(waveform,INST_IO,asynInt32TimeSeries,"asynInt32TimeSeries")
@@ -4603,8 +4799,8 @@ device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimSeries")</pre>
     <li>RARM=3 Start acquisition (set BUSY=1) without clearing the waveform or setting
       NORD=0.</li>
   </ul>
-  <h2>
-    devAsynUInt32Digital</h2>
+  <h3 id="devAsynUInt32Digital">
+    asynUInt32Digital device support</h3>
   <p>
     The following support is available:</p>
   <pre>device(bi,INST_IO,asynBiUInt32Digital,"asynUInt32Digital")
@@ -4733,8 +4929,8 @@ device(mbboDirect,INST_IO,asynMbboDirectUInt32Digital,"asynUInt32Digital")</pre>
     field(SXVL,"0x6")
     field(SVVL,"0x7")
 }</pre>
-  <h2>
-    devAsynFloat64 device support</h2>
+  <h3 id="devAsynFloat64">
+    asynFloat64 device support</h3>
   <p>
     The following support is available:</p>
   <pre>device(ai,INST_IO,asynAiFloat64,"asynFloat64")
@@ -4746,7 +4942,9 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
   <ul>
     <li>aiRecord
       <p>
-        A value is given to val.</p>
+        A value is given to val. Beginning with R4-33 scaling via the ASLO/AOFF record fields,
+        and smoothing via the SMOO field are supported.
+      </p>
       <ul>
         <li>asynFloat64 - SCAN "I/O Intr" is supported. If the record is "I/O Intr" scanned
           then when the registerInterruptUser callback is called, it saves the value and calls
@@ -4755,16 +4953,22 @@ device(ao,INST_IO,asynAoFloat64,"asynFloat64")</pre>
           value is read via a call to pasynFloat64-&gt;read.</li>
         <li>asynFloat64Average - The registerInterruptUser callback adds the new value to
           a sum and also increments the number of samples. When the record is processed the
-          average is computed and the sum and number of samples is set to zero.</li>
+          average is computed and the sum and number of samples is set to zero. If the record
+          is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
+          UDF is set to TRUE, and the value is left unchanged. The record can be scanned either
+          periodically or with SCAN=I/O Intr. If the record has SCAN=I/O Intr then the average
+          is computed and the record is processed each time NumAverage callback readings have
+          been received. The SVAL field in the ai record is used to set NumAverage.</li>
       </ul>
     </li>
     <li>aoRecord
       <p>
-        val is written.</p>
+        val is written. Beginning with R4-33 scaling via the ASLO/AOFF record fields is
+        supported.</p>
     </li>
   </ul>
-  <h2>
-    asynFloatXXXArray device support (where XXX=32 or 64)</h2>
+  <h3 id="devAsynFloatXXXArray">
+    asynFloatXXXArray device support (XXX=32 or 64)</h3>
   <p>
     The following support is available:</p>
   <pre>device(waveform,INST_IO,asynFloatXXXArrayWfIn,"asynFloatXXXArrayIn")
@@ -4773,8 +4977,8 @@ device(waveform,INST_IO,asynFloatXXXArrayWfOut,"asynFloatXXXArrayOut")</pre>
     devAsynFloatXXXArray.c provides EPICS device support for drivers that implement
     interface asynFloatXXXArray. It has support for both reading and writing a waveform.
     SCAN "I/O Intr" is supported similar to the aiRecord in devAsynInt32 device support.</p>
-  <h2>
-    octet device support</h2>
+  <h3 id="devAsynOctet">
+    asynOctet device support</h3>
   <p>
     The following support is available:</p>
   <pre>device(stringin,INST_IO,asynSiOctetCmdResponse,"asynOctetCmdResponse")
@@ -4827,8 +5031,8 @@ device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
       asynDrvUser. When the record is processed a read request is made. The result is
       read into the record.</li>
   </ul>
-  <h2>
-    Record alarms</h2>
+  <h3 id="RecordAlarms">
+    Record alarms</h3>
   <p>
     The generic EPICS device support sets the record alarm status and severity when
     errors occur. Beginning in R4-30 the alarmStatus and alarmSeverity fields were added
@@ -4864,10 +5068,8 @@ device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
     set the record STAT and SEVR fields, regardless of the value of asynUser.auxStatus.
   </p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="asynRecord">
-      asynRecord: Generic EPICS Record Support</h2>
-  </div>
+  <h2 id="asynRecord">
+    asynRecord: Generic EPICS Record Support</h2>
   <p>
     A special record type asynRecord is provided. Details are described in <a href="asynRecord.html">
       asynRecord</a>. This section provides a brief description of how to use it.</p>
@@ -4893,254 +5095,9 @@ medm -x -macro "P=asyn,R=Test" asynRecord.adl</pre>
     <p>
       <img alt="asynRecord.png" src="./asynRecord.png" /></p>
   </div>
-  <div style="text-align: center">
-    <hr />
-    <h2 id="Example">
-      Example</h2>
-  </div>
-  <p>
-    The following reads from a device via octet messages:</p>
-  <pre>#include &lt;asynDriver.h&gt;
-...
-#define BUFFER_SIZE 80
-typedef struct myData {
-    epicsEventId done;
-    asynOctet    *pasynOctet;
-    void         *drvPvt;
-    char         buffer[BUFFER_SIZE];
-}myData;
-
-static void queueCallback(asynUser *pasynUser) {
-    myData     *pmydata = (myData *)pasynUser-&gt;userPvt;
-    asynOctet  *pasynOctet = pmydata-&gt;pasynOctet;
-    void       *drvPvt = pmydata-&gt;drvPvt;
-    asynStatus status;
-    int        writeBytes,readBytes;
-    int        eomReason;
-
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
-    status = pasynOctet-&gt;write(drvPvt,pasynUser,pmydata-&gt;buffer,
-              strlen(pmydata-&gt;buffer),&amp;writeBytes);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueCallback write failed %s\n",pasynUser-&gt;errorMessage);
-    } else {
-        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-            pmydata-&gt;buffer,strlen(pmydata-&gt;buffer),
-            "queueCallback write sent %d bytes\n",writeBytes);
-    }
-    status = pasynOctet-&gt;read(drvPvt,pasynUser,pmydata-&gt;buffer,
-         BUFFER_SIZE,&amp;readBytes,&amp;eomReason);
-    if(status!=asynSuccess) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
-    } else {
-        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
-            pmydata-&gt;buffer,BUFFER_SIZE,
-            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
-            readBytes,eomReason,pmydata-&gt;buffer);
-    }
-    epicsEventSignal(pmydata-&gt;done);
-}
-
-static void asynExample(const char *port,int addr,const char *message)
-{
-    myData        *pmyData;
-    asynUser      *pasynUser;
-    asynStatus    status;
-    asynInterface *pasynInterface;
-
-    pmyData = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
-    memset(pmyData,0,sizeof(myData));
-    strcpy(pmyData-&gt;buffer,message);
-    pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
-    pasynUser-&gt;userPvt = pmyData;
-    status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
-    if(status!=asynSuccess) {
-        printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
-        exit(1);
-    }
-    pasynInterface = pasynManager-&gt;findInterface(
-        pasynUser,asynOctetType,1);
-    if(!pasynInterface) {
-        printf("%s driver not supported\n",asynOctetType);
-        exit(-1);
-    }
-    pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
-    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
-    pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
-    status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
-    if(status) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
-    }
-    epicsEventWait(pmyData-&gt;done);
-    status = pasynManager-&gt;freeAsynUser(pasynUser);
-    if(status) {
-        asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
-    }
-    epicsEventDestroy(pmyData-&gt;done);
-    pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
-}</pre>
-  <p>
-    The flow of control is as follows:</p>
-  <ol>
-    <li>A port driver calls registerPort. This step is not shown in the above example.</li>
-    <li>asynExample allocates myData and an asynUser.</li>
-    <li>asynExample connects to a device and to the asynOctet interface for the port driver.</li>
-    <li>When it is ready to communicate with the driver it calls queueRequest.</li>
-    <li>queueCallback is called. It calls the port driver's write and read methods.</li>
-  </ol>
   <hr />
-  <div style="text-align: center">
-    <h2 id="Test">
-      Test Application</h2>
-  </div>
-  <p>
-    The asynDriver distribution includes code to test asynDriver. It is also an example
-    of how to interface to asynManager. The example resides in &lt;top&gt;/testApp and
-    contains the following components:</p>
-  <pre>Db/
-   test.db
-   testBlock.db
-adl/
-   test.adl
-src/
-   devTestBlock.dbd
-   echoDriver.c
-   addrChangeDriver.c
-   devTestBlock.c
-   interposeInterface.c</pre>
-  <p>
-    echoDriver is a port driver that echos messages it receives. It implements asynCommon
-    and asynOctet. When asynOctet:write is called it saves the message. When asynOctet:read
-    is called, the saved message is returned and the message is flushed. echoDriverInit
-    has an argument that determines if it acts like a multiDevice or a single device
-    port driver.</p>
-  <p>
-    An instance of echoDriver is started via the iocsh command:</p>
-  <pre>echoDriverInit(portName,delay,noAutoConnect,multiDevice)</pre>
-  <p>
-    where</p>
-  <ul>
-    <li>portName - the port name for this instance.</li>
-    <li>delay - The time to delay after a read or write. If delay is 0 then echoDriver
-      registers as a synchronous port driver, i.e. bit ASYN_CANBLOCK of attributes is
-      not set. If delay&gt;0 then ASYN_CANBLOCK is set.</li>
-    <li>noAutoConnect - Determines initial setting for port.</li>
-    <li>multiDevice - If true then it supports two devices with addresses 0 and 1. If
-      false it does not set ASYN_MULTIDEVICE, i.e. it only supports a single device.</li>
-  </ul>
-  <p>
-    addrChangeDriver is a multidevice driver that is an asynUser of another port driver.
-    In the example application it connects to echoDriver. An example where this technique
-    might be used is a port driver for mult-drop serial that connects to a standard
-    serial port.</p>
-  <p>
-    An instance of addrChangeDriver is started via the iocsh commandL:</p>
-  <pre>addrChangeDriverInit(portName,lowerPort,addr)</pre>
-  <p>
-    where</p>
-  <ul>
-    <li>portName - the port name for this instance.</li>
-    <li>lowerPort - the port to which addrChangeDriver connects</li>
-    <li>addr - The address to which addrChangeDriver connects</li>
-  </ul>
-  <p>
-    devTestBlock is device support that tests blockProcessCallback. It has device support
-    for stringin records. The INP field has the syntax:</p>
-  <pre>    field(INP,"@asyn(port,addr,timeout) pvname)</pre>
-  <p>
-    where:</p>
-  <ul>
-    <li>asyn(port,addr,timeout) is same as for devEpics support.</li>
-    <li>pvname - The name of a record in the same ioc.</li>
-  </ul>
-  <p>
-    When the stringin record is processed the following occurs.</p>
-  <ul>
-    <li>When process is called and PACT is :
-      <ul>
-        <li>TRUE - then it just returns to record support.</li>
-        <li>FALSE - It does what follows.</li>
-      </ul>
-    </li>
-    <li>When processing starts the state is stateIdle.</li>
-    <li>blockProcessCallback is called.</li>
-    <li>callbackRequestDelayed is called (.1 second delay). The callback calls queueRequest.</li>
-    <li>When processCallback is called it does the following:
-      <ul>
-        <li>calls unblockProcessCallback</li>
-        <li>If state is stateIdle
-          <ul>
-            <li>Calls dbGet to get a string value from pvname</li>
-            <li>calls pasynOctet-&gt;write to send the string</li>
-            <li>sets state to stateWrite</li>
-            <li>Calls blockProcessCallback</li>
-            <li>callbackRequestDelayed is called The callback calls queueRequest.</li>
-            <li>completes. processCallback will be called again</li>
-          </ul>
-        </li>
-        <li>If state is stateWrite
-          <ul>
-            <li>calls pasynOctet-&gt;read and puts the value in VAL.</li>
-            <li>Sets state = stateIdle</li>
-            <li>requests the the record be processed. This time PACT will be TRUE</li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-  </ul>
-  <p>
-    test.db is a template containing three records: a calc record, which forward links
-    to a stringout record which forward links to a stringin record. The stringOut record
-    attaches to the device support supplied by asynOctetWriteRead.c. When the calcRecord
-    is processed the following happens:</p>
-  <ul>
-    <li>The calcRecord acts as a counter that overflows when the count reaches 10. After
-      counting to forward links ti the stringIn record.</li>
-    <li>The string in record gets the current value of the counter converted to s character
-      string and forward links to the stringOut record.</li>
-    <li>The stringOut record gets the value from the stringIn record an calls queueRequest.
-      The record is left with PACT true.</li>
-    <li>The processCallback calls pasynOctet-&gt;write passing the value obtained from
-      the stringIn record. The then does does a pasynOctet-&gt;read. When this completes
-      it asks for the record to complete processing.</li>
-    <li>The stringOut record completes processing.
-      <p>
-      </p>
-    </li>
-  </ul>
-  <p>
-    testBlock.db is a template similar to test.db except that it attached to device
-    support testBlock instead of asynOctetWriteRead.</p>
-  <p>
-    Executing "medm -x test.adl" produces the display:</p>
-  <div style="text-align: center">
-    <p>
-      <img alt="asynTest.png" src="asynTest.png" /></p>
-  </div>
-  <p>
-    It assumes that an ioc has been started via:</p>
-  <pre>cd &lt;top&gt;/iocBoot/ioctest
-../../bin/solaris-sparc/test st.cmd</pre>
-  <p>
-    This starts two versions of echoDriver as port "A" and "B". port A acts as single
-    device port. port B acts as a multiDevice port that has two devices. For each of
-    the three possible devices, the st.cmd file starts up two sets of records from test.db
-    The st.cmd file also loads a set of records from asynTest.db for port A and for
-    port B and for each of the two devices attached to port B. It also loads a set of
-    records from asynRecord.db. It starts one version of addrChangeDriver which connects
-    to port A.</p>
-  <p>
-    It loads six versions of test.db and four versions of testBlock.db The test.adl
-    file attaches to these database records.</p>
-  <hr />
-  <div style="text-align: center">
-    <h2 id="asynGpib">
-      asynGpib</h2>
-  </div>
+  <h2 id="asynGpib">
+    asynGpib</h2>
   <p>
     GPIB has additional features that are not supported by asynCommon and asynOctet.
     asynGpib defines two interfaces.</p>
@@ -5157,7 +5114,7 @@ src/
     </li>
     <li>asynGpibPort - A set of methods implemented by GPIB drivers</li>
   </ul>
-  <h3>
+  <h3 id="asynGpibDriverH">
     asynGpibDriver.h</h3>
   <p>
     asynGpibDriver.h contains the following definitions:</p>
@@ -5237,7 +5194,7 @@ struct asynGpibPort {
     asynStatus (*serialPoll) (void *drvPvt, int addr, double timeout,int *status);
     asynStatus (*serialPollEnd) (void *drvPvt);
 };</pre>
-  <h3>
+  <h3 id="asynGpib2">
     asynGpib</h3>
   <p>
     asynGpib describes the interface for device support code. It provides gpib specific
@@ -5259,51 +5216,51 @@ struct asynGpibPort {
     <tbody>
       <tr>
         <td>
-          addressedCmd</td>
+          addressedCmd </td>
         <td>
-          The request is passed to the low level driver.</td>
+          The request is passed to the low level driver. </td>
       </tr>
       <tr>
         <td>
-          universalCmd</td>
+          universalCmd </td>
         <td>
-          The request is passed to the low level driver.</td>
+          The request is passed to the low level driver. </td>
       </tr>
       <tr>
         <td>
-          ifc</td>
+          ifc </td>
         <td>
-          The request is passed to the low level driver.</td>
+          The request is passed to the low level driver. </td>
       </tr>
       <tr>
         <td>
-          ren</td>
+          ren </td>
         <td>
-          The request is passed to the low level driver.</td>
+          The request is passed to the low level driver. </td>
       </tr>
       <tr>
         <td>
-          pollAddr</td>
+          pollAddr </td>
         <td>
           Set SRQ polling on or off. onOff = (0,1) means (disable, enable) SRQ polling of
-          specified address.</td>
+          specified address. </td>
       </tr>
       <tr>
         <td>
-          registerPort</td>
+          registerPort </td>
         <td>
           Register a port. When asynGpib receives this request, it calls asynManager.registerPort.
         </td>
       </tr>
       <tr>
         <td>
-          srqHappened</td>
+          srqHappened </td>
         <td>
-          Called by low level driver when it detects that a GPIB device issues an SRQ.</td>
+          Called by low level driver when it detects that a GPIB device issues an SRQ. </td>
       </tr>
     </tbody>
   </table>
-  <h3>
+  <h3 id="asynGpibPort">
     asynGpibPort</h3>
   <p>
     asynGpibPort is the interface that is implemented by gpib drivers, e.g. the VXI-11.
@@ -5314,79 +5271,77 @@ struct asynGpibPort {
     <tbody>
       <tr>
         <td>
-          asynCommon methods</td>
+          asynCommon methods </td>
         <td>
-          All the methods of asynCommon</td>
+          All the methods of asynCommon </td>
       </tr>
       <tr>
         <td>
-          asynOctet methods</td>
+          asynOctet methods </td>
         <td>
-          All the methods of asynOctet</td>
+          All the methods of asynOctet </td>
       </tr>
       <tr>
         <td>
-          addressedCmd</td>
+          addressedCmd </td>
         <td>
-          Issue a GPIB addressed command.</td>
+          Issue a GPIB addressed command. </td>
       </tr>
       <tr>
         <td>
-          universalCmd</td>
+          universalCmd </td>
         <td>
-          Issue a GPIB universal command.</td>
+          Issue a GPIB universal command. </td>
       </tr>
       <tr>
         <td>
-          ifc</td>
+          ifc </td>
         <td>
-          Issue a GPIB Interface Clear command.</td>
+          Issue a GPIB Interface Clear command. </td>
       </tr>
       <tr>
         <td>
-          ren</td>
+          ren </td>
         <td>
-          Issue a GPIB Remote Enable command</td>
+          Issue a GPIB Remote Enable command </td>
       </tr>
       <tr>
         <td>
-          srqStatus</td>
+          srqStatus </td>
         <td>
           If return is asynSuccess then isSet is (0,1) if SRQ (is not, is) active. Normally
-          only called by asynGpib.</td>
+          only called by asynGpib. </td>
       </tr>
       <tr>
         <td>
-          srqEnable</td>
+          srqEnable </td>
         <td>
-          Enable or disable SRQs. Normally only called by asynGpib.</td>
+          Enable or disable SRQs. Normally only called by asynGpib. </td>
       </tr>
       <tr>
         <td>
-          serialPollBegin</td>
+          serialPollBegin </td>
         <td>
-          Start of serial poll. Normally only called by asynGpib.</td>
+          Start of serial poll. Normally only called by asynGpib. </td>
       </tr>
       <tr>
         <td>
-          serialPoll</td>
+          serialPoll </td>
         <td>
           Poll the specified address and set status to the response. Normally only called
-          by asynGpib.</td>
+          by asynGpib. </td>
       </tr>
       <tr>
         <td>
-          serialPollEnd</td>
+          serialPollEnd </td>
         <td>
-          End of serial poll. Normally only called by asynGpib.</td>
+          End of serial poll. Normally only called by asynGpib. </td>
       </tr>
     </tbody>
   </table>
   <hr />
-  <div style="text-align: center">
-    <h2 id="PortDrivers">
-      Port Drivers</h2>
-  </div>
+  <h2 id="PortDrivers">
+    Port Drivers</h2>
   <h3 id="drvAsynSerialPort">
     Local Serial Port</h3>
   <p>
@@ -5422,93 +5377,95 @@ struct asynGpibPort {
     <tbody>
       <tr>
         <th>
-          Key</th>
+          Key
+        </th>
         <th>
-          Value</th>
+          Value
+        </th>
       </tr>
       <tr>
         <td>
-          baud</td>
+          baud </td>
         <td>
-          50 75 110 134 150 200 300 600 1200 2400 9600 ...</td>
+          50 75 110 134 150 200 300 600 1200 2400 9600 ... </td>
       </tr>
       <tr>
         <td>
-          bits</td>
+          bits </td>
         <td>
-          8 7 6 5</td>
+          8 7 6 5 </td>
       </tr>
       <tr>
         <td>
-          parity</td>
+          parity </td>
         <td>
-          none even odd</td>
+          none even odd </td>
       </tr>
       <tr>
         <td>
-          stop</td>
+          stop </td>
         <td>
-          1 2</td>
+          1 2 </td>
       </tr>
       <tr>
         <td>
-          clocal</td>
+          clocal </td>
         <td>
-          Y N</td>
+          Y N </td>
       </tr>
       <tr>
         <td>
-          crtscts</td>
+          crtscts </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          ixon</td>
+          ixon </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          ixoff</td>
+          ixoff </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          ixany</td>
+          ixany </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          rs485_enable</td>
+          rs485_enable </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          rs485_rts_on_send</td>
+          rs485_rts_on_send </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          rs485_rts_after_send</td>
+          rs485_rts_after_send </td>
         <td>
-          N Y</td>
+          N Y </td>
       </tr>
       <tr>
         <td>
-          rs485_delay_rts_before_send</td>
+          rs485_delay_rts_before_send </td>
         <td>
-          msec_delay</td>
+          msec_delay </td>
       </tr>
       <tr>
         <td>
-          rs485_delay_rts_after_send</td>
+          rs485_delay_rts_after_send </td>
         <td>
-          msec_delay</td>
+          msec_delay </td>
       </tr>
     </tbody>
   </table>
@@ -5530,7 +5487,9 @@ struct asynGpibPort {
     crtscts=N and clocal=N implies crtscts=Y.</p>
   <p>
     ixon controls XON/OFF flow control on output. If the IOC receives an XOFF character,
-    it suspends output until an XON character is received.</p>
+    it suspends output until an XON character is received. This option is also supported
+    on ports communicating via the RFC 2217 Telnet protocol. In this case, as noted
+    in the standard, ixon implies both outbound and inbound flow control.</p>
   <p>
     ixoff controls XON/OFF flow control on input. The IOC sends XOFF and XON characters
     as necessary to prevent input from coming in faster than programs are reading it.
@@ -5591,8 +5550,9 @@ asynOctetSetOutputEos("A1",0,"\r")
       <ul>
         <li>TCP</li>
         <li>UDP</li>
-        <li>UDP* -- UDP broadcasts. The address portion of the argument must be the network
-          broadcast address (e.g. "192.168.1.255:1234 UDP*").</li>
+        <li>UDP* -- Send UDP broadcasts. The address portion of the argument must be the network
+          broadcast address (e.g. "192.168.1.255:1234 UDP*", or "255.255.255.255:1234 UDP*",
+          etc.).</li>
         <li>HTTP -- Like TCP but for servers which close the connection after each transaction.</li>
         <li>COM -- For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol. This
           allows port parameters (speed, parity, etc.) to be set with subsequent asynSetOption
@@ -5603,10 +5563,15 @@ asynOctetSetOutputEos("A1",0,"\r")
         unix://</span> the remainder of the argument is taken to be the name of a UNIX-domain
       stream socket.
       <br />
-      Note that the localPort should almost never be used because normally the local host
-      choses an unused random local port that it binds to and passes to the server. However,
-      there are some unusual servers that only accept a specific local port or range of
-      local ports, in which case localPort must be specified.</li>
+      To receive UDP broadcasts the localPort is the port to listen on, for example: drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
+      UDP*",0,0,0). If the port is only to be used to receive broadcast messages then
+      the UDP protocol should be specified. If it is also to be used to send UDP broadcasts
+      then the UDP* protocol must be specified. In this case the broadcasts will be send
+      on port "port" and it will listen for broadcast messages on port "localPort".<br />
+      Note that the localPort should almost never be used for TCP ports because normally
+      the local host choses an unused random local port that it binds to and passes to
+      the server. However, there are some unusual servers that only accept a specific
+      local port or range of local ports, in which case localPort must be specified.</li>
     <li>priority - Priority at which the asyn I/O thread will run. If this is zero or
       missing, then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
@@ -5626,26 +5591,29 @@ asynOctetSetOutputEos("A1",0,"\r")
     <tbody>
       <tr>
         <th>
-          Key</th>
+          Key
+        </th>
         <th>
-          Value</th>
+          Value
+        </th>
         <th>
-          Description</th>
+          Description
+        </th>
       </tr>
       <tr>
         <td>
-          disconnectOnReadTimeout</td>
+          disconnectOnReadTimeout </td>
         <td>
-          N Y</td>
+          N Y </td>
         <td>
           Default=N. If Y then if a read operation times out the driver automatically disconnect
-          the IP port.</td>
+          the IP port. </td>
       </tr>
       <tr>
         <td>
-          hostInfo</td>
+          hostInfo </td>
         <td>
-          &lt;host&gt;:&lt;port&gt;[:localPort] [protocol]</td>
+          &lt;host&gt;:&lt;port&gt;[:localPort] [protocol] </td>
         <td>
           The IP port hostInfo specification using the same syntax as drvAsynIPPortConfigure.
           This option allows changing at run time the Internet host and port to which this
@@ -5653,7 +5621,7 @@ asynOctetSetOutputEos("A1",0,"\r")
           RFC 2217) protocol cannot be changed from that specified with drvAsynIPPortConfigure.
           This is because if COM is specified in the drvAsynIPPortConfigure command then asynOctet
           and asynOption interpose interfaces are used, and asynManager does not support removing
-          interpose interfaces.</td>
+          interpose interfaces. </td>
       </tr>
     </tbody>
   </table>
@@ -5667,10 +5635,9 @@ asynOctetSetOutputEos("A1",0,"\r")
     TCP/IP Server</h3>
   <p>
     The drvAsynIPServerPort driver supports asyn socket servers by listening for TCP/IP
-    or UDP connections from remote clients. The listener thread then creates a new drvAsynIPPort
-    port by calling drvAsynIPPortConfigure (or re-uses a disconnected port it previously
-    created), and calls back any registered asyn clients with the name of the new port.
-    These asyn clients will typically be socket servers.</p>
+    or UDP connections from remote clients. The creates maxClients drvAsynIPPort port
+    drivers by calling drvAsynIPPortConfigure at initialization. These ports are named
+    portName:0, portName:1, etc. where portName is the name passed to drvAsynIPServerPortConfigure.</p>
   <p>
     IP server listeners are configured with the <tt>drvAsynIPServerPortConfigure</tt>
     command:</p>
@@ -5690,28 +5657,24 @@ asynOctetSetOutputEos("A1",0,"\r")
       connect. Non-zero if explicit connect command must be issued. Note that all asyn
       I/O ports that the listener thread creates will be created with noAutoConnect=1,
       but this is transparent to socket server applications, because the listener thread
-      does the explicit connect for them.</li>
+      does the explicit connection for them.</li>
     <li>noProcessEos is passed to drvAsynIPPortConfigure when new asyn I/O ports are created.
       If 0 then asynInterposeEosConfig is called specifying both processEosIn and processEosOut.</li>
   </ul>
   <p>
-    This driver implements the asynOctet interface. The only methods it supports are
-    registerInterruptUser and cancelInterruptUser. Calling the other asynOctet methods
-    will result in an error. The following happens when a new connection is received
-    on the port specified in drvAsynIPServerPortConfigure:</p>
+    This driver implements the asynOctet interface. For TCP connections the only methods
+    it supports are registerInterruptUser and cancelInterruptUser. Calling the other
+    asynOctet methods will result in an error. For UDP it implements asynOctet->read().
+    The following happens when a new connection is received on the port specified in
+    drvAsynIPServerPortConfigure:</p>
   <ul>
-    <li>If there are no registered asyn clients (who have called registerInterruptUser
-      on the asynOctet interface of the listener port) then the incoming connection is
-      immediately closed, since there are no IP servers available to service it. If there
-      is at least one registered client, then the following steps are executed.</li>
     <li>The list of drvAsynIPPort ports that this listener thread has created is searched
-      to see if there is an existing port that is currently disconnected because the remote
-      IP client disconnected.</li>
-    <li>If there is an existing disconnected port, then it is reconnected with the file
-      descriptor from the new IP connection.</li>
-    <li>If there is no available existing port, then a new one is created by calling drvAsynIPPortConfigure.
-      The name of the new port is of the form portName:1, portName:2, etc., where portName
-      is the name of the listener port.</li>
+      to see if there is a drvAsynIPPort that is currently disconnected because there
+      is no remote IP client connected.</li>
+    <li>If there is a disconnected port, then it is connected with the file descriptor
+      from the new IP connection.</li>
+    <li>If there are no disconnected ports then the incoming connection will be immediately
+      closed.</li>
     <li>The asynTraceMask and asynTraceIOMask of the newly connected port are set to the
       current values of the listener thread port. This makes it possible to trace the
       early stages of execution of the callbacks to the registered clients, before one
@@ -5719,8 +5682,6 @@ asynOctetSetOutputEos("A1",0,"\r")
     <li>All registered asyn clients (who have called registerInterruptUser on the asynOctet
       interface of the listener port) are called back with the name of the newly connected
       port.</li>
-    <li>The clients then will connect to this new asyn port and perform I/O using the
-      asynOctet methods.</li>
   </ul>
   <h3 id="vxi11">
     VXI-11</h3>
@@ -5810,7 +5771,7 @@ asynOctetSetOutputEos("A1",0,"\r")
   <h3 id="Linux-gpib">
     Linux-Gpib</h3>
   <p>
-    The linux-gpib port driver was written to support <a href="http://sourceforge.net/project/showfiles.php?group_id=42378&amp;package_id=34482">
+    The linux-gpib port driver was written to support <a href="https://sourceforge.net/projects/linux-gpib/">
       The Linux GPIB Package library</a>.</p>
   <p>
     In order to build this support the Linux GPIB Package must be installed. Also in
@@ -6018,10 +5979,8 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
       Driver for Prologix LAN/GPIB adapter</a></li>
   </ul>
   <hr />
-  <div style="text-align: center">
-    <h2 id="asynPortDriver">
-      asynPortDriver C++ base class</h2>
-  </div>
+  <h2 id="asynPortDriver">
+    asynPortDriver C++ base class</h2>
   <p>
     A C++ base class called asynPortDriver is available. This is a base class from which
     real asyn port drivers can be derived. It greatly simplifies the job of writing
@@ -6029,10 +5988,8 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     the port, registering the interfaces, and calling interrupt clients. It is documented
     separately in <a href="asynPortDriver.html">asynPortDriver.html</a>.</p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="asynPortClient">
-      asynPortClient C++ classes</h2>
-  </div>
+  <h2 id="asynPortClient">
+    asynPortClient C++ classes</h2>
   <p>
     asynPortClient is a set of C++ classes that are designed to simplify the task of
     writing a client that directly communicates with an asyn port driver, without running
@@ -6042,11 +5999,9 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     with pasynManager->queueRequest. It is documented separately in <a href="asynPortClient.html">
       asynPortClient.html</a>.</p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="DiagnosticAids">
-      Diagnostic Aids</h2>
-  </div>
-  <h3>
+  <h2 id="DiagnosticAids">
+    Diagnostic Aids</h2>
+  <h3 id="iocshCommands">
     iocsh Commands</h3>
   <pre>    asynReport(level,portName)
     asynInterposeFlushConfig(portName,addr,timeout)
@@ -6088,15 +6043,29 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
   <p>
     <code>asynSetTraceMask</code> calls <code>asynTrace:setTraceMask</code> for the
     specified port and address. If portName is zero length then the global trace mask
-    is set.</p>
+    is set. The mask bit definitions are documented in the <a href="#TraceInterface">traceMask
+      definitions</a>.</p>
   <p>
     <code>asynSetTraceIOMask</code> calls <code>asynTrace:setTraceIOMask</code> for
     the specified port and address. If portName is zero length then the global traceIO
-    mask is set.</p>
+    mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
+      traceIO mask definitions</a>.</p>
   <p>
     <code>asynSetTraceInfoMask</code> calls <code>asynTrace:setTraceInfoMask</code>
     for the specified port and address. If portName is zero length then the global traceInfo
-    mask is set.</p>
+    mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
+      traceInfo mask definitions</a>.</p>
+  <p>
+    Beginning with asyn R4-35 the mask argument of asynSetTraceMask, asynSetTraceIOMask,
+    and asynSetTraceInfoMask can be specified either as an integer (previous behavior)
+    or as symbolic names connected with + or |. Spaces are allowed but require quotes.
+    The symbolic names are like the macro names in asyn.h, but are not case sensitive
+    and the prefixes ASYN_, TRACE_, TRACEIO_, and TRACEINFO_ are optional. Examples:</p>
+  <pre>
+          asynSetTraceMask port,0,ASYN_TRACE_ERROR 
+         asynSetTraceIOMask port,0,ascii+escape
+         asynSetTraceInfoMask port,0,1+port+TRACEINFO_SOURCE|ASYN_TRACEINFO_THREAD
+  </pre>
   <p>
     <code>asynSetTraceFile</code> calls <code>asynTrace:setTraceFile</code>. The filename
     is handled as follows:</p>
@@ -6161,11 +6130,413 @@ asynOctetDisconnect("myid")</pre>
     for the specified port. This reverts to the default timestamp source function in
     asynManager.</p>
   <hr />
+  <h2 id="ExampleClient">
+    Example Client</h2>
+  <p>
+    The following is an example of an asyn client that reads from an asyn driver via
+    octet messages:</p>
+  <pre>#include &lt;asynDriver.h&gt;
+...
+#define BUFFER_SIZE 80
+typedef struct myData {
+    epicsEventId done;
+    asynOctet    *pasynOctet;
+    void         *drvPvt;
+    char         buffer[BUFFER_SIZE];
+}myData;
+
+static void queueCallback(asynUser *pasynUser) {
+    myData     *pmydata = (myData *)pasynUser-&gt;userPvt;
+    asynOctet  *pasynOctet = pmydata-&gt;pasynOctet;
+    void       *drvPvt = pmydata-&gt;drvPvt;
+    asynStatus status;
+    int        writeBytes,readBytes;
+    int        eomReason;
+
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
+    status = pasynOctet-&gt;write(drvPvt,pasynUser,pmydata-&gt;buffer,
+              strlen(pmydata-&gt;buffer),&amp;writeBytes);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback write failed %s\n",pasynUser-&gt;errorMessage);
+    } else {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,strlen(pmydata-&gt;buffer),
+            "queueCallback write sent %d bytes\n",writeBytes);
+    }
+    status = pasynOctet-&gt;read(drvPvt,pasynUser,pmydata-&gt;buffer,
+         BUFFER_SIZE,&amp;readBytes,&amp;eomReason);
+    if(status!=asynSuccess) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueCallback read failed %s\n",pasynUser-&gt;errorMessage);
+    } else {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,
+            pmydata-&gt;buffer,BUFFER_SIZE,
+            "queueCallback read returned: retlen %d eomReason 0x%x data %s\n",
+            readBytes,eomReason,pmydata-&gt;buffer);
+    }
+    epicsEventSignal(pmydata-&gt;done);
+}
+
+static void asynExample(const char *port,int addr,const char *message)
+{
+    myData        *pmyData;
+    asynUser      *pasynUser;
+    asynStatus    status;
+    asynInterface *pasynInterface;
+
+    pmyData = (myData *)pasynManager-&gt;memMalloc(sizeof(myData));
+    memset(pmyData,0,sizeof(myData));
+    strcpy(pmyData-&gt;buffer,message);
+    pasynUser = pasynManager-&gt;createAsynUser(queueCallback,0);
+    pasynUser-&gt;userPvt = pmyData;
+    status = pasynManager-&gt;connectDevice(pasynUser,port,addr);
+    if(status!=asynSuccess) {
+        printf("can't connect to serialPort1 %s\n",pasynUser-&gt;errorMessage);
+        exit(1);
+    }
+    pasynInterface = pasynManager-&gt;findInterface(
+        pasynUser,asynOctetType,1);
+    if(!pasynInterface) {
+        printf("%s driver not supported\n",asynOctetType);
+        exit(-1);
+    }
+    pmyData-&gt;pasynOctet = (asynOctet *)pasynInterface-&gt;pinterface;
+    pmyData-&gt;drvPvt = pasynInterface-&gt;drvPvt;
+    pmyData-&gt;done = epicsEventCreate(epicsEventEmpty);
+    status = pasynManager-&gt;queueRequest(pasynUser,asynQueuePriorityLow, 0.0);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "queueRequest failed %s\n",pasynUser-&gt;errorMessage);
+    }
+    epicsEventWait(pmyData-&gt;done);
+    status = pasynManager-&gt;freeAsynUser(pasynUser);
+    if(status) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "freeAsynUser failed %s\n",pasynUser-&gt;errorMessage);
+    }
+    epicsEventDestroy(pmyData-&gt;done);
+    pasynManager-&gt;memFree(pasynUser-&gt;userPvt,sizeof(myData));
+}</pre>
+  <p>
+    The flow of control is as follows:</p>
+  <ol>
+    <li>A port driver calls registerPort. This step is not shown in the above example.</li>
+    <li>asynExample allocates myData and an asynUser.</li>
+    <li>asynExample connects to a device and to the asynOctet interface for the port driver.</li>
+    <li>When it is ready to communicate with the driver it calls queueRequest.</li>
+    <li>queueCallback is called. It calls the port driver's write and read methods.</li>
+  </ol>
+  <hr />
+  <h2 id="TestApplications">
+    Test Applications</h2>
+  <p>
+    The asynDriver distribution includes several test applications to test asynDriver
+    and device support.</p>
+  <h3 id="testApp">
+    testApp</h3>
+  <p>
+    This is an example of how to interface to asynManager. The example resides in &lt;top&gt;/testApp
+    and contains the following components:</p>
+  <pre>Db/
+   test.db
+   testBlock.db
+adl/
+   test.adl
+src/
+   devTestBlock.dbd
+   echoDriver.c
+   addrChangeDriver.c
+   devTestBlock.c
+   interposeInterface.c</pre>
+  <p>
+    echoDriver is a port driver that echos messages it receives. It implements asynCommon
+    and asynOctet. When asynOctet:write is called it saves the message. When asynOctet:read
+    is called, the saved message is returned and the message is flushed. echoDriverInit
+    has an argument that determines if it acts like a multiDevice or a single device
+    port driver.</p>
+  <p>
+    An instance of echoDriver is started via the iocsh command:</p>
+  <pre>echoDriverInit(portName,delay,noAutoConnect,multiDevice)</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>portName - the port name for this instance.</li>
+    <li>delay - The time to delay after a read or write. If delay is 0 then echoDriver
+      registers as a synchronous port driver, i.e. bit ASYN_CANBLOCK of attributes is
+      not set. If delay&gt;0 then ASYN_CANBLOCK is set.</li>
+    <li>noAutoConnect - Determines initial setting for port.</li>
+    <li>multiDevice - If true then it supports two devices with addresses 0 and 1. If
+      false it does not set ASYN_MULTIDEVICE, i.e. it only supports a single device.</li>
+  </ul>
+  <p>
+    addrChangeDriver is a multidevice driver that is an asynUser of another port driver.
+    In the example application it connects to echoDriver. An example where this technique
+    might be used is a port driver for mult-drop serial that connects to a standard
+    serial port.</p>
+  <p>
+    An instance of addrChangeDriver is started via the iocsh commandL:</p>
+  <pre>addrChangeDriverInit(portName,lowerPort,addr)</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>portName - the port name for this instance.</li>
+    <li>lowerPort - the port to which addrChangeDriver connects</li>
+    <li>addr - The address to which addrChangeDriver connects</li>
+  </ul>
+  <p>
+    devTestBlock is device support that tests blockProcessCallback. It has device support
+    for stringin records. The INP field has the syntax:</p>
+  <pre>    field(INP,"@asyn(port,addr,timeout) pvname)</pre>
+  <p>
+    where:</p>
+  <ul>
+    <li>asyn(port,addr,timeout) is same as for devEpics support.</li>
+    <li>pvname - The name of a record in the same ioc.</li>
+  </ul>
+  <p>
+    When the stringin record is processed the following occurs.</p>
+  <ul>
+    <li>When process is called and PACT is :
+      <ul>
+        <li>TRUE - then it just returns to record support.</li>
+        <li>FALSE - It does what follows.</li>
+      </ul>
+    </li>
+    <li>When processing starts the state is stateIdle.</li>
+    <li>blockProcessCallback is called.</li>
+    <li>callbackRequestDelayed is called (.1 second delay). The callback calls queueRequest.</li>
+    <li>When processCallback is called it does the following:
+      <ul>
+        <li>calls unblockProcessCallback</li>
+        <li>If state is stateIdle
+          <ul>
+            <li>Calls dbGet to get a string value from pvname</li>
+            <li>calls pasynOctet-&gt;write to send the string</li>
+            <li>sets state to stateWrite</li>
+            <li>Calls blockProcessCallback</li>
+            <li>callbackRequestDelayed is called The callback calls queueRequest.</li>
+            <li>completes. processCallback will be called again</li>
+          </ul>
+        </li>
+        <li>If state is stateWrite
+          <ul>
+            <li>calls pasynOctet-&gt;read and puts the value in VAL.</li>
+            <li>Sets state = stateIdle</li>
+            <li>requests the the record be processed. This time PACT will be TRUE</li>
+          </ul>
+        </li>
+      </ul>
+    </li>
+  </ul>
+  <p>
+    test.db is a template containing three records: a calc record, which forward links
+    to a stringout record which forward links to a stringin record. The stringOut record
+    attaches to the device support supplied by asynOctetWriteRead.c. When the calcRecord
+    is processed the following happens:</p>
+  <ul>
+    <li>The calcRecord acts as a counter that overflows when the count reaches 10. After
+      counting to forward links ti the stringIn record.</li>
+    <li>The string in record gets the current value of the counter converted to s character
+      string and forward links to the stringOut record.</li>
+    <li>The stringOut record gets the value from the stringIn record an calls queueRequest.
+      The record is left with PACT true.</li>
+    <li>The processCallback calls pasynOctet-&gt;write passing the value obtained from
+      the stringIn record. The then does does a pasynOctet-&gt;read. When this completes
+      it asks for the record to complete processing.</li>
+    <li>The stringOut record completes processing.
+      <p>
+      </p>
+    </li>
+  </ul>
+  <p>
+    testBlock.db is a template similar to test.db except that it attached to device
+    support testBlock instead of asynOctetWriteRead.</p>
+  <p>
+    Executing "medm -x test.adl" produces the display:</p>
   <div style="text-align: center">
-    <h2 id="InstallBuild">
-      Install and Build</h2>
+    <p>
+      <img alt="asynTest.png" src="asynTest.png" /></p>
   </div>
-  <h3>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctest
+../../bin/linux-x86_64/test st.cmd</pre>
+  <p>
+    This starts two versions of echoDriver as port "A" and "B". port A acts as single
+    device port. port B acts as a multiDevice port that has two devices. For each of
+    the three possible devices, the st.cmd file starts up two sets of records from test.db
+    The st.cmd file also loads a set of records from asynTest.db for port A and for
+    port B and for each of the two devices attached to port B. It also loads a set of
+    records from asynRecord.db. It starts one version of addrChangeDriver which connects
+    to port A.</p>
+  <p>
+    It loads six versions of test.db and four versions of testBlock.db The test.adl
+    file attaches to these database records.</p>
+  <h3 id="testArrayRingBufferApp">
+    testArrayRingBufferApp</h3>
+  <p>
+    This tests ring buffers for callbacks with arrays. The example resides in &lt;top&gt;/testArrayRingBufferApp.
+  </p>
+  <p>
+    Executing "medm -x testArrayRingBufferTop.adl" produces a top-level display from
+    which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="asynTestArrayRingBuffer.png" src="asynTestArrayRingBuffer.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestArrayRingBuffer
+../../bin/linux-x86_64/testArrayRingBuffer st.cmd</pre>
+  <h3 id="testAsynPortClientApp">
+    testAsynPortClientApp</h3>
+  <p>
+    This is a test program that demonstrates how to write C++ program that instantiates
+    both an asyn port driver and an asynPortClient object. It uses the asynPortClient
+    object to communicate with the asyn port driver directly over the asyn interfaces
+    without running an EPICS IOC. It creates an asynIPPort driver and an asynPortClient,
+    and uses the command line arguments to set the hostInfo string, a single command
+    string to send to the server, and optionally the input and output EOS. It then prints
+    out the response from the server. There are 3 example shell scipts provided that
+    show how to use testAsynIPPortClient to communicate with a Web server, a Newport
+    XPS motor controller, and a telnet host respectively.</p>
+  <p>
+    Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]</p>
+  <p>
+    Example: testAsynIPPortClient cars.uchicago.edu:80 "GET / HTTP/1.0" "\n\n"</p>
+  <p>
+    The example resides in &lt;top&gt;/testAsynPortClientApp.</p>
+  <h3 id="testAsynPortDriverApp">
+    testAsynPortDriverApp</h3>
+  <p>
+    This test demonstrates how to write a driver using the asynPortDriver C++ class.
+    It consists of a simple digital oscilloscope simulator. When the vertical gain changes
+    the driver does callbacks on the enum choices for the vertical volts/division. This
+    requires closing and re-opening the display in medm, because Channel Access does
+    not do monitors on enum value changes.</p>
+  <p>
+    The example resides in &lt;top&gt;/testAsynPortDriverApp.
+  </p>
+  <p>
+    Executing "medm -x testAsynPortDriverTop.adl" produces a top-level display from
+    which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testAsynPortDriver.png" src="testAsynPortDriver.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestAsynPortDriver
+../../bin/linux-x86_64/testAsynPortDriver st.cmd</pre>
+  <h3 id="testBroadcastApp">
+    testBroadcastApp</h3>
+  <p>
+    This application contains 3 test programs that use UDP IP broadcast messages.</p>
+  <p>
+    testBroadcastAsyn.c<br />
+    This program uses drvAsynIPPort to send UDP broadcast messages on port 37747. The
+    message is "i\n". It then listens for any responses. If there are NSLS electrometers
+    on the network they should respond.</p>
+  <p>
+    testBroadcastNoAsyn.c<br />
+    This program does the same as testBroadcastAsyn.c but uses native socket calls rather
+    than drvAsynIPort.</p>
+  <p>
+    testBroadcastBurst.c<br />
+    This program is used to test the behavior of devices in the presence of large amounts
+    of broadcast traffic. It should be used with caution, since it can send a large
+    number of broadcast messages very quickly. It sends numBroadcast messages with no
+    delay. The messages is "test\r". It does this in a loop of numLoops with a delay
+    of delayTime seconds at the end of each loop. delayTime is floating point value,
+    so can be less than 1 second.<br />
+    Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops delayTime</p>
+  <p>
+    The code resides in &lt;top&gt;/testBroadcastApp.</p>
+  <h3 id="testConnectApp">
+    testConnectApp</h3>
+  <p>
+    This application can be used to test connection management. It connects to a device
+    with drvAsynIPPort and periodically writes to it in a background thread. Depending
+    on whether the device is connected error messages will be printed. The device can
+    be connected and disconnected by power-cycling or removing the network cable to
+    test the behavior.</p>
+  <p>
+    The example resides in &lt;top&gt;/testConnectApp.
+  </p>
+  <p>
+    The test ioc can be started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestConnect
+../../bin/linux-x86_64/testConnect st.cmd</pre>
+  <p>
+    The st.cmd file can be edited to select devices which will or will not ever connect.
+    There is no medm screen for this test.</p>
+  <h3 id="testEpicsApp">
+    testEpicsApp</h3>
+  <p>
+    This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
+    interfaces. Both drivers also implement the asynFloat64 interface for controlling
+    the update rate. The testEpicsApp application also uses the asynOctet echoDriver
+    from <a href="#testApp">testApp</a>.
+  </p>
+  <p>
+    The example resides in &lt;top&gt;/testEpicsApp.
+  </p>
+  <p>
+    Executing "medm -x *.adl" from the &lt;top&gt;/testEpicsApp/adl directory opens
+    the followings displays.</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testInt32.png" src="testInt32.png" /></p>
+    <p>
+      <img alt="testDigital.png" src="testDigital.png" /></p>
+    <p>
+      <img alt="testOctet.png" src="testOctet.png" /></p>
+  </div>
+  <p>
+    From the testInt32.adl screen the following time-series screen can be opened.</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="asynTimeSeries.png" src="asynTimeSeries.png" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestEpics
+../../bin/linux-x86_64/testEpics st.cmd</pre>
+  <h3 id="testErrorsApp">
+    testErrorsApp</h3>
+  <p>
+    This tests error handling in standard asyn device support. The user can control
+    the status and severity for write operations, read operations, and interrupt callbacks.
+    It tests all of the interfaces (asynInt32, asynUInt32Digital, asynFloat64, asynOctet,
+    asynEnum, asynXXXArray (XXX=Int8, Int16, Int32, Float32, Float64). It tests output
+    records both with an without the info tag asyn:READBACK. By editing options in the
+    st.cmd file it also tests:</p>
+  <ul>
+    <li>Synchronous and asynchronous driver operation (ASYN_CANBLOCK unset or set)</li>
+    <li>String and waveform records with or without ring buffer support(asyn:FIFO=0 or
+      5)</li>
+    <li>Record .TSE field 0 (default timestamp support) or -2 (records get their timestamps
+      from the driver)</li>
+    <li>Periodic or I/O Intr scanning of input records.</li>
+  </ul>
+  <p>
+    The example resides in &lt;top&gt;/testEpicsApp.
+  </p>
+  <p>
+    Executing "medm -x testErrorsTop.adl" from the &lt;top&gt;/testEerrorsApp/adl directory
+    produces a top-level display from which this display can be opened:</p>
+  <div style="text-align: center">
+    <p>
+      <img alt="testErrors.png" src="testErrors.png" width="1024" /></p>
+  </div>
+  <p>
+    It assumes that an ioc has been started via:</p>
+  <pre>cd &lt;top&gt;/iocBoot/ioctestErrors
+../../bin/linux-x86_64/testErrors st.cmd</pre>
+  <h2 id="InstallBuild">
+    Install and Build</h2>
+  <h3 id="InstallBuildDriver">
     Install and Build asynDriver</h3>
   <p>
     After obtaining a copy of the distribution, it must be installed and built for use
@@ -6189,7 +6560,7 @@ tar xvf &lt;file&gt;.tar</pre>
       EPICS_BASE and IPAC. IPAC is only needed if you are building for vxWorks.</li>
     <li>Run <tt>make</tt> in the top level directory and check for any compilation errors.</li>
   </ol>
-  <h3>
+  <h3 id="UsingAsynDriver">
     Using asynDriver Components with an EPICS iocCore Application</h3>
   <p>
     Since asynDriver does NOT provide support for specific devices an application must
@@ -6251,10 +6622,8 @@ tar xvf &lt;file&gt;.tar</pre>
     You must provide correct values for &lt;ioc&gt; and &lt;record&gt;. Once asynRecord
     is started, it can be connected to different devices.</p>
   <hr />
-  <div style="text-align: center">
-    <h2 id="LicenseAgreement">
-      License Agreement</h2>
-  </div>
+  <h2 id="LicenseAgreement">
+    License Agreement</h2>
   <pre>Copyright (c) 2002 University of Chicago All rights reserved.
 asynDriver is distributed subject to the following license conditions:
 
