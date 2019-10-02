@@ -268,7 +268,7 @@ void paramVal::report(int id, FILE *fp, int details)
             break;
         case asynParamFloat64:
             if (isDefined())
-                fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value=%f, status=%d\n", id, getName(), getDouble(), getStatus());
+                fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value=%g, status=%d\n", id, getName(), getDouble(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=asynFloat64, name=%s, value is undefined\n", id, getName());
             break;
