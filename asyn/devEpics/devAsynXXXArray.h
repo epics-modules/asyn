@@ -42,7 +42,7 @@ typedef struct devAsynWfPvt{                                                    
     int                 canBlock;                                                                  \
     CALLBACK            callback;                                                                  \
     IOSCANPVT           ioScanPvt;                                                                 \
-    asynStatus          status;                                                                    \
+    asynStatus          lastStatus;                                                                \
     int                 isOutput;                                                                  \
     epicsMutexId        ringBufferLock;                                                            \
     ringBufferElement   *ringBuffer;                                                               \
@@ -367,10 +367,13 @@ static void callbackWfOut(asynUser *pasynUser)                                  
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,                                                  \
             "%s %s::callbackWfOut OK\n", pwf->name, driverName);                                   \
     } else {                                                                                       \
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,                                                     \
-              "%s %s::callbackWfOut write error %s\n",                                             \
-              pwf->name, driverName, pasynUser->errorMessage);                                     \
+        if (pPvt->result.status != pPvt->lastStatus) {                                             \
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,                                                 \
+                "%s %s::callbackWfOut write error %s\n",                                           \
+                pwf->name, driverName, pasynUser->errorMessage);                                   \
+        }                                                                                          \
     }                                                                                              \
+    pPvt->lastStatus = pPvt->result.status;                                                        \
     if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf);                   \
 }                                                                                                  \
                                                                                                    \
@@ -387,14 +390,17 @@ static void callbackWfIn(asynUser *pasynUser)                                   
     pPvt->result.time = pPvt->pasynUser->timestamp;                                                \
     pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;                                       \
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;                                   \
-    if (pPvt->result.status == asynSuccess) {                                                                   \
+    if (pPvt->result.status == asynSuccess) {                                                      \
         pwf->udf=0;                                                                                \
         pwf->nord = (epicsUInt32)nread;                                                            \
     } else {                                                                                       \
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,                                                     \
-              "%s %s::callbackWfIn read error %s\n",                                               \
-              pwf->name, driverName, pasynUser->errorMessage);                                     \
+        if (pPvt->result.status != pPvt->lastStatus) {                                             \
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,                                                 \
+                "%s %s::callbackWfIn read error %s\n",                                             \
+                pwf->name, driverName, pasynUser->errorMessage);                                   \
+        }                                                                                          \
     }                                                                                              \
+    pPvt->lastStatus = pPvt->result.status;                                                        \
     if(pwf->pact) callbackRequestProcessCallback(&pPvt->callback,pwf->prio,pwf);                   \
 }                                                                                                  \
                                                                                                    \
