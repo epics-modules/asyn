@@ -74,6 +74,7 @@ typedef struct devPvt{
     int               ringSize;
     int               ringBufferOverflows;
     ringBufferElement result;
+    asynStatus        lastStatus;
     epicsFloat64      sum;
     interruptCallbackFloat64 interruptCallback;
     int               numAverage;
@@ -331,12 +332,16 @@ static void processCallbackInput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s %s::%s process value=%f\n",pr->name, driverName, functionName,pPvt->result.value);
+            "%s %s::%s process value=%f\n", pr->name, driverName, functionName,
+            pPvt->result.value);
     } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s %s::%s process read error %s\n",
-              pr->name, driverName, functionName,pasynUser->errorMessage);
+        if (pPvt->result.status != pPvt->lastStatus) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s %s::%s process read error %s\n",
+                pr->name, driverName, functionName, pasynUser->errorMessage);
+        }
     }
+    pPvt->lastStatus = pPvt->result.status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
@@ -352,12 +357,16 @@ static void processCallbackOutput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s %s::%s process val %f\n",pr->name, driverName, functionName,pPvt->result.value);
+            "%s %s::%s process value %f\n", pr->name, driverName, functionName, pPvt->result.value);
     } else {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s %s::%s pPvt->result.status=%d, process error %s\n",
-           pr->name, driverName, functionName,pPvt->result.status, pasynUser->errorMessage);
+        if (pPvt->result.status != pPvt->lastStatus) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s %s::%s process write error %s\n",
+                pr->name, driverName, functionName, pasynUser->errorMessage);
+        }
     }
+    pPvt->lastStatus = pPvt->result.status;
+    pPvt->lastStatus = pPvt->result.status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
