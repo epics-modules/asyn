@@ -1,0 +1,2 @@
+device(int64in,INST_IO,asynInt64In,"asynInt64")
+device(int64out,INST_IO,asynInt64Out,"asynInt64")
