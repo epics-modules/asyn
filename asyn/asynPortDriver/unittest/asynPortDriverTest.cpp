@@ -81,6 +81,7 @@ void testA()
 
     testOk1(portA->createParam(0, "int32", asynParamInt32, &idx2)==asynError);
 
+    testOk1(portA->createParam(0, "int64", asynParamInt64, &idx1)==asynSuccess);
     testOk1(portA->createParam(0, "float64", asynParamFloat64, &idx1)==asynSuccess);
     testOk1(portA->createParam(0, "uint32", asynParamUInt32Digital, &idx1)==asynSuccess);
     testOk1(portA->createParam(0, "y", asynParamInt32, &idx1)==asynSuccess);
@@ -160,7 +161,7 @@ void testA()
 
 MAIN(asynPortDriverTest)
 {
-    testPlan(53);
+    testPlan(54);
     interruptAccept=1;
     try {
         testA();
