@@ -16,6 +16,7 @@
 const char* paramVal::typeNames[] = {
     "asynParamTypeUndefined",
     "asynParamInt32",
+    "asynParamInt64",
     "asynParamUInt32Digital",
     "asynParamFloat64",
     "asynParamOctet",
@@ -151,6 +152,35 @@ epicsInt32 paramVal::getInteger()
     return data.ival;
 }
 
+/** Sets the value for a 64-bit integer.
+  * \param[in] value Value to set.
+  * \throws ParamValWrongType if type is not asynParamInt64
+  */
+void paramVal::setInteger64(epicsInt64 value)
+{
+    if (type != asynParamInt64)
+        throw ParamValWrongType("paramVal::setInteger64 can only handle asynParamInt64");
+    if (!isDefined() || (data.ival != value))
+    {
+        setDefined(true);
+        data.i64val = value;
+        setValueChanged();
+    }
+}
+
+/** Gets the value for a 64-bit integer in the parameter library.
+  * \throws ParamValWrongType if type is not asynParamInt64
+  * \throws paramValNotDefined if the value is not defined
+  */
+epicsInt64 paramVal::getInteger64()
+{
+    if (type != asynParamInt64)
+        throw ParamValWrongType("paramVal::getInteger64 can only handle asynParamInt64");
+    if (!isDefined())
+        throw ParamValNotDefined("paramVal::getInteger64 value not defined");
+    return data.i64val;
+}
+
 /** Sets the value for a UInt32 in the parameter library.
   * \param[in] value Value to set.
   * \param[in] valueMask Mask to use when setting the value.
@@ -257,6 +287,12 @@ void paramVal::report(int id, FILE *fp, int details)
                 fprintf(fp, "Parameter %d type=asynInt32, name=%s, value=%d, status=%d\n", id, getName(), getInteger(), getStatus());
             else
                 fprintf(fp, "Parameter %d type=asynInt32, name=%s, value is undefined\n", id, getName());
+            break;
+        case asynParamInt64:
+            if (isDefined())
+                fprintf(fp, "Parameter %d type=asynInt64, name=%s, value=%lld, status=%d\n", id, getName(), getInteger64(), getStatus());
+            else
+                fprintf(fp, "Parameter %d type=asynInt64, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamUInt32Digital:
             if (isDefined())

@@ -34,6 +34,8 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
 #define asynFloat64ArrayMask    0x00000800
 #define asynGenericPointerMask  0x00001000
 #define asynEnumMask            0x00002000
+#define asynInt64Mask           0x00004000
+#define asynInt64ArrayMask      0x00008000
 
 class callbackThread;
 
@@ -52,12 +54,15 @@ public:
     virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName); 
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+    virtual asynStatus readInt64(asynUser *pasynUser, epicsInt64 *value);
+    virtual asynStatus writeInt64(asynUser *pasynUser, epicsInt64 value);
     virtual asynStatus readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask);
     virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
     virtual asynStatus setInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask, interruptReason reason);
     virtual asynStatus clearInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 mask);
     virtual asynStatus getInterruptUInt32Digital(asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason);
     virtual asynStatus getBounds(asynUser *pasynUser, epicsInt32 *low, epicsInt32 *high);
+    virtual asynStatus getBounds64(asynUser *pasynUser, epicsInt64 *low, epicsInt64 *high);
     virtual asynStatus readFloat64(asynUser *pasynUser, epicsFloat64 *value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
     virtual asynStatus readOctet(asynUser *pasynUser, char *value, size_t maxChars,
@@ -86,6 +91,12 @@ public:
     virtual asynStatus writeInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                         size_t nElements);
     virtual asynStatus doCallbacksInt32Array(epicsInt32 *value,
+                                        size_t nElements, int reason, int addr);
+    virtual asynStatus readInt64Array(asynUser *pasynUser, epicsInt64 *value,
+                                        size_t nElements, size_t *nIn);
+    virtual asynStatus writeInt64Array(asynUser *pasynUser, epicsInt64 *value,
+                                        size_t nElements);
+    virtual asynStatus doCallbacksInt64Array(epicsInt64 *value,
                                         size_t nElements, int reason, int addr);
     virtual asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
                                         size_t nElements, size_t *nIn);
@@ -142,6 +153,8 @@ public:
     virtual void       reportGetParamErrors(asynStatus status, int index, int list, const char *functionName);
     virtual asynStatus setIntegerParam(          int index, int value);
     virtual asynStatus setIntegerParam(int list, int index, int value);
+    virtual asynStatus setInteger64Param(          int index, epicsInt64 value);
+    virtual asynStatus setInteger64Param(int list, int index, epicsInt64 value);
     virtual asynStatus setUIntDigitalParam(          int index, epicsUInt32 value, epicsUInt32 valueMask);
     virtual asynStatus setUIntDigitalParam(int list, int index, epicsUInt32 value, epicsUInt32 valueMask);
     virtual asynStatus setUIntDigitalParam(          int index, epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
@@ -160,6 +173,8 @@ public:
     virtual asynStatus setStringParam(int list, int index, const std::string& value);
     virtual asynStatus getIntegerParam(          int index, epicsInt32 * value);
     virtual asynStatus getIntegerParam(int list, int index, epicsInt32 * value);
+    virtual asynStatus getInteger64Param(          int index, epicsInt64 * value);
+    virtual asynStatus getInteger64Param(int list, int index, epicsInt64 * value);
     virtual asynStatus getUIntDigitalParam(          int index, epicsUInt32 *value, epicsUInt32 mask);
     virtual asynStatus getUIntDigitalParam(int list, int index, epicsUInt32 *value, epicsUInt32 mask);
     virtual asynStatus getDoubleParam(          int index, double * value);

@@ -30,6 +30,8 @@ public:
     bool nameEquals(const char* name);
     void setInteger(epicsInt32 value);
     epicsInt32 getInteger();
+    void setInteger64(epicsInt64 value);
+    epicsInt64 getInteger64();
     void setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask);
     epicsUInt32 getUInt32(epicsUInt32 valueMask);
     void setDouble(epicsFloat64 value);
@@ -56,6 +58,7 @@ protected:
     union
     {
         epicsInt32   ival;
+        epicsInt64   i64val;
         epicsUInt32  uival;
         epicsFloat64 dval;
         epicsInt8    *pi8;
