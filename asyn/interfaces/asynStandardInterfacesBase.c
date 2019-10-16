@@ -124,6 +124,26 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         }
     }
 
+    if (pInterfaces->int64.pinterface) {
+        pInterfaces->int64.interfaceType = asynInt64Type;
+        pInterfaces->int64.drvPvt = pPvt;
+        status = pasynInt64Base->initialize(portName, &pInterfaces->int64);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register int64");
+            return(asynError);
+        }
+        if (pInterfaces->int64CanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->int64,
+                                                           &pInterfaces->int64InterruptPvt);
+            if (status != asynSuccess) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "Can't register int64 interrupt");
+                return(asynError);
+            }
+        }
+    }
+
     if (pInterfaces->float64.pinterface) {
         pInterfaces->float64.interfaceType = asynFloat64Type;
         pInterfaces->float64.drvPvt = pPvt;
@@ -199,6 +219,26 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             if (status != asynSuccess) {
                 epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
                 "Can't register int32Array interrupt");
+                return(asynError);
+            }
+        }
+    }
+
+    if (pInterfaces->int64Array.pinterface) {
+        pInterfaces->int64Array.interfaceType = asynInt64ArrayType;
+        pInterfaces->int64Array.drvPvt = pPvt;
+        status = pasynInt64ArrayBase->initialize(portName, &pInterfaces->int64Array);
+        if (status != asynSuccess) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            "Can't register int64Array");
+            return(asynError);
+        }
+        if (pInterfaces->int64ArrayCanInterrupt) {
+            status = pasynManager->registerInterruptSource(portName, &pInterfaces->int64Array,
+                                                           &pInterfaces->int64ArrayInterruptPvt);
+            if (status != asynSuccess) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                "Can't register int64Array interrupt");
                 return(asynError);
             }
         }
