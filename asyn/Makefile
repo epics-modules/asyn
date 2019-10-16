@@ -145,19 +145,19 @@ INC += asynPortClient.h
 asyn_SRCS += asynPortClient.cpp
 
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
+  DBDCAT += devEpics.dbd
   SRC_DIRS += $(ASYN)/devEpics
-  DBD += devAsynOctet.dbd
-  DBD += devAsynInt32.dbd
-  DBD += devAsynInt8Array.dbd
-  DBD += devAsynInt16Array.dbd
-  DBD += devAsynInt32Array.dbd
-  DBD += devAsynInt32TimeSeries.dbd
-  DBD += devAsynUInt32Digital.dbd
-  DBD += devAsynFloat64.dbd
-  DBD += devAsynFloat32Array.dbd
-  DBD += devAsynFloat64Array.dbd
-  DBD += devAsynFloat64TimeSeries.dbd
-  DBD += devEpics.dbd
+  devEpics_DBD += devAsynOctet.dbd
+  devEpics_DBD += devAsynInt32.dbd
+  devEpics_DBD += devAsynInt8Array.dbd
+  devEpics_DBD += devAsynInt16Array.dbd
+  devEpics_DBD += devAsynInt32Array.dbd
+  devEpics_DBD += devAsynInt32TimeSeries.dbd
+  devEpics_DBD += devAsynUInt32Digital.dbd
+  devEpics_DBD += devAsynFloat64.dbd
+  devEpics_DBD += devAsynFloat32Array.dbd
+  devEpics_DBD += devAsynFloat64Array.dbd
+  devEpics_DBD += devAsynFloat64TimeSeries.dbd
   DB  += asynInt32TimeSeries.db
   DB  += asynFloat64TimeSeries.db
   INC += asynEpicsUtils.h
@@ -173,6 +173,25 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += devAsynFloat32Array.c
   asyn_SRCS += devAsynFloat64Array.c
   asyn_SRCS += devAsynFloat64TimeSeries.c
+
+  # These require 64-bit support
+  ifdef BASE_7_0
+    HAVE_DEVINT64=YES
+  endif
+  ifdef BASE_3_16
+    ifneq ($(EPICS_MODIFICATION),0)
+      HAVE_DEVINT64=YES
+    endif
+  endif
+  
+  ifdef HAVE_DEVINT64
+    devEpics_DBD += devAsynInt64.dbd
+    devEpics_DBD += devAsynInt64Array.dbd
+    devEpics_DBD += devAsynInt64TimeSeries.dbd
+    asyn_SRCS += devAsynInt64.c
+    asyn_SRCS += devAsynInt64Array.c
+    asyn_SRCS += devAsynInt64TimeSeries.c
+  endif
 
   SRC_DIRS += $(ASYN)/asynRecord
   DBDINC += asynRecord
