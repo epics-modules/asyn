@@ -33,11 +33,8 @@
 
 /* add support so that dbior generates asynDriver reports */
 static long drvAsynReport(int level);
-struct {
-        long     number;
-        DRVSUPFUN report;
-        DRVSUPFUN init;
-} drvAsyn={
+
+drvet drvAsyn={
         2,
         drvAsynReport,
         0

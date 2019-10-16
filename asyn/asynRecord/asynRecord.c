@@ -72,8 +72,8 @@ static char *drto_choices[NUM_DRTO_CHOICES] = {"Unknown", "N", "Y"};
 /* Create RSET - Record Support Entry Table*/
 #define report NULL
 #define initialize NULL
-static long init_record(asynRecord * pasynRec, int pass);
-static long process(asynRecord * pasynRec);
+static long init_record(dbCommon * pasynRec, int pass);
+static long process(dbCommon * pasynRec);
 static long special(struct dbAddr * paddr, int after);
 #define get_value NULL
 static long cvt_dbaddr(struct dbAddr * paddr);
@@ -81,7 +81,7 @@ static long get_array_info(struct dbAddr * paddr, long *no_elements,
                                long *offset);
 static long put_array_info(struct dbAddr * paddr, long nNew);
 #define get_units NULL
-static long get_precision(struct dbAddr * paddr, long *precision);
+static long get_precision(const struct dbAddr * paddr, long *precision);
 #define get_enum_str NULL
 #define get_enum_strs NULL
 #define put_enum_str NULL
@@ -122,7 +122,7 @@ static void getEos(asynUser * pasynUser);
 static void reportError(asynRecord * pasynRec, asynStatus status,
             const char *pformat,...);
 static void resetError(asynRecord * pasynRec);
-struct rset asynRSET = {
+rset asynRSET = {
     RSETNUMBER,
     report,
     initialize,
@@ -267,8 +267,9 @@ asynRecordDset asynRecordDevice = {
 epicsExportAddress(dset, asynRecordDevice);
 
 
-static long init_record(asynRecord * pasynRec, int pass)
+static long init_record(dbCommon *pRec, int pass)
 {
+    asynRecord *pasynRec = (asynRecord *)pRec;
     asynRecPvt *pasynRecPvt;
     asynUser *pasynUser;
     asynStatus status;
@@ -317,8 +318,9 @@ static long init_record(asynRecord * pasynRec, int pass)
     return (0);
 }
 
-static long process(asynRecord * pasynRec)
+static long process(dbCommon *pRec)
 {
+    asynRecord *pasynRec = (asynRecord *)pRec;
     asynRecPvt    *pasynRecPvt = pasynRec->dpvt;
     callbackState state = pasynRecPvt->state;
     asynStatus    status;
@@ -986,7 +988,7 @@ static long put_array_info(struct dbAddr * paddr, long nNew)
     }
     return (0);
 }
-static long get_precision(struct dbAddr * paddr, long *precision)
+static long get_precision(const struct dbAddr * paddr, long *precision)
 {
     int fieldIndex = dbGetFieldIndex(paddr);
     *precision = 0;
