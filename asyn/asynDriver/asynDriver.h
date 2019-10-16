@@ -26,6 +26,10 @@
 #define ASYN_REVISION     36
 #define ASYN_MODIFICATION  0
 
+#if __STDC_VERSION__ < 199901L
+typedef long long epicsInt64;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
