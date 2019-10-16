@@ -307,7 +307,7 @@ static BOOL vxiCreateDeviceLink(vxiPort * pvxiPort,
         } else if(pvxiPort->maxRecvSize!=crLinkR.maxRecvSize) {
             asynPrint(pasynUser,ASYN_TRACE_ERROR,
                 "%s vxiCreateDeviceLink maxRecvSize changed from %lu to %lu\n",
-                            devName,pvxiPort->maxRecvSize,crLinkR.maxRecvSize);
+                            devName,pvxiPort->maxRecvSize,(unsigned long)crLinkR.maxRecvSize);
         }
         if(pvxiPort->abortPort==0) {
             pvxiPort->abortPort = crLinkR.abortPort;
