@@ -232,7 +232,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
              pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,&eom);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,peosPvt->inBuf,thisRead,
-                "%s read %d bytes eom=%d\n",peosPvt->portName, thisRead, eom);
+                "%s read %d bytes eom=%d\n",peosPvt->portName, (int)thisRead, eom);
             /*
              * Read could have returned with ASYN_EOM_CNT set in eom because
              * the number of octets available exceeded inBufSize.  This is not
