@@ -20,9 +20,11 @@
 #include <asynDriver.h>
 #include <asynUInt32Digital.h>
 #include <asynInt32.h>
+#include <asynInt64.h>
 #include <asynInt8Array.h>
 #include <asynInt16Array.h>
 #include <asynInt32Array.h>
+#include <asynInt64Array.h>
 #include <asynFloat32Array.h>
 #include <asynFloat64.h>
 #include <asynFloat64Array.h>
@@ -58,6 +60,10 @@ typedef struct asynStandardInterfaces {
     int int32CanInterrupt;
     void *int32InterruptPvt;
 
+    asynInterface int64;
+    int int64CanInterrupt;
+    void *int64InterruptPvt;
+
     asynInterface float64;
     int float64CanInterrupt;
     void *float64InterruptPvt;
@@ -73,6 +79,10 @@ typedef struct asynStandardInterfaces {
     asynInterface int32Array;
     int int32ArrayCanInterrupt;
     void *int32ArrayInterruptPvt;
+
+    asynInterface int64Array;
+    int int64ArrayCanInterrupt;
+    void *int64ArrayInterruptPvt;
 
     asynInterface float32Array;
     int float32ArrayCanInterrupt;
