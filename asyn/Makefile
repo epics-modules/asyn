@@ -289,7 +289,16 @@ RPCGEN_FLAGS_solaris = -M
 
 endif
 
-
 # Parallel build sometimes fails.
 # Make dependences on new records explicit.
 asynRecord$(OBJ): $(COMMON_DIR)/asynRecord.h
+
+devEpics.dbd$(DEP): $(TOP)/asyn/Makefile
+	@$(RM) $@
+	@echo "$(COMMON_DIR)/devEpics.dbd:" > $@
+
+$(COMMON_DIR)/devEpics.dbd: $(TOP)/asyn/Makefile
+
+# This is a target-specific variable
+$(COMMON_DIR)/devEpics.dbd: DBDCAT_COMMAND = \
+    $(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(@F)
