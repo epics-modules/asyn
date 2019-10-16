@@ -9,6 +9,8 @@ ASYN = $(TOP)
 ASYN_LIB = $(TOP)/lib/$(T_A)
 ASYN_BIN = $(TOP)/bin/$(T_A)
 
+USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
+
 DBD += devTestBlock.dbd
 DBD += test.dbd
 
