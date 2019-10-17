@@ -145,7 +145,11 @@ INC += asynPortClient.h
 asyn_SRCS += asynPortClient.cpp
 
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
-  DBDCAT += devEpics.dbd
+  ifdef DBDCAT_COMMAND
+    DBDCAT += devEpics.dbd
+  else
+    INSTALL_DBDS += $(INSTALL_DBD)/devEpics.dbd
+  endif
   SRC_DIRS += $(ASYN)/devEpics
   DBD          += devAsynOctet.dbd
   devEpics_DBD += devAsynOctet.dbd
@@ -313,6 +317,17 @@ devEpics.dbd$(DEP): $(TOP)/asyn/Makefile
 
 $(COMMON_DIR)/devEpics.dbd: $(TOP)/asyn/Makefile
 
-# This is a target-specific variable
-$(COMMON_DIR)/devEpics.dbd: DBDCAT_COMMAND = \
-    $(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(@F)
+ifdef DBDCAT_COMMAND
+  # Override the default command when generating devEpics.dbd
+  $(COMMON_DIR)/devEpics.dbd: DBDCAT_COMMAND = \
+      $(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
+else
+  # 3.14 didn't have the DBDCAT rule:
+  build: $(COMMON_DIR)/devEpics.dbd
+  $(COMMON_DIR)/devEpics.dbd: $(devEpics_DBD)
+	$(ECHO) "Creating dbd file $(notdir $@)"
+	@$(RM) $(notdir $@)
+	$(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
+	@$(MV) $(notdir $@) $@
+endif
+
