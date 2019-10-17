@@ -27,7 +27,8 @@
 #define ASYN_MODIFICATION  0
 
 #if __STDC_VERSION__ < 199901L
-typedef long long epicsInt64;
+typedef long long          epicsInt64;
+typedef unsigned long long epicsUInt64;
 #endif
 
 #ifdef __cplusplus
