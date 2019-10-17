@@ -145,7 +145,7 @@ INC += asynPortClient.h
 asyn_SRCS += asynPortClient.cpp
 
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
-  ifdef DBDCAT_COMMAND
+  ifdef CAT 
     DBDCAT += devEpics.dbd
   else
     INSTALL_DBDS += $(INSTALL_DBD)/devEpics.dbd
