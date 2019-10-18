@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-36</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-37</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">August 8, 2019</span></p>
+      <span style="font-weight: bold; font-size: 14pt">October 18, 2019</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -90,13 +90,16 @@
         <li><a href="#RegisterAddr">addr - What does it mean for register based interfaces?</a>
         </li>
         <li><a href="#RegisterExamples">Example Drivers</a> </li>
-        <li><a href="#asynInt32">asynInt32</a> </li>
+        <li><a href="#asynIntXX">asynIntXX (XX=32 or 64)</a> </li>
         <li><a href="#asynInt32SyncIO">asynInt32SyncIO</a> </li>
+        <li><a href="#asynInt64">asynInt64</a> </li>
+        <li><a href="#asynInt64SyncIO">asynInt64SyncIO</a> </li>
         <li><a href="#asynUInt32Digital">asynUInt32Digital</a> </li>
         <li><a href="#asynUInt32DigitalSyncIO">asynUInt32DigitalSyncIO</a> </li>
         <li><a href="#asynFloat64">asynFloat64</a> </li>
         <li><a href="#asynFloat64SyncIO">asynFloat64SyncIO</a> </li>
-        <li><a href="#asynXXXArray">asynXXXArray (XXX=Int8, Int16, Int32, Float32 or Float64)</a></li>
+        <li><a href="#asynXXXArray">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or
+          Float64)</a></li>
         <li><a href="#asynXXXArraySyncIO">asynXXXArraySyncIO</a> </li>
         <li><a href="#asynEnum">asynEnum</a> </li>
         <li><a href="#asynEnumSyncIO">asynEnumSyncIO</a> </li>
@@ -132,10 +135,11 @@
         <li><a href="#DeviceCallbackBuffers">Buffering of driver callbacks</a> </li>
         <li><a href="#DeviceTimeStamps">Time Stamps</a> </li>
         <li><a href="#devAsynInt32">asynInt32 device support</a> </li>
-        <li><a href="#devAsynIntXXXArray">asynIntXXXArray device support (XXX=8, 16 or 32)</a>
-        </li>
-        <li><a href="#devAsynXXXTimeSeries">asynXXXTimeSeries device support (XXX=Int32 or
-          Float64)</a> </li>
+        <li><a href="#devAsynInt64">asynInt64 device support</a> </li>
+        <li><a href="#devAsynIntXXXArray">asynIntXXXArray device support (XXX=8, 16, 32, or
+          64)</a> </li>
+        <li><a href="#devAsynXXXTimeSeries">asynXXXTimeSeries device support (XXX=Int32, Int64,
+          or Float64)</a> </li>
         <li><a href="#devAsynUInt32Digital">asynUInt32Digital device support</a> </li>
         <li><a href="#devAsynFloat64">asynFloat64 device support</a> </li>
         <li><a href="#devAsynFloatXXXArray">asynFloatXXXArray device support (XXX=32 or 64)</a>
@@ -541,6 +545,9 @@
     <span style="font-weight: bold">asynInt32</span> methods for devices that read/write
     integer values. Many analog I/O drivers can use this interface.</p>
   <p>
+    <span style="font-weight: bold">asynInt64</span> methods for devices that read/write
+    64-bit integer values.</p>
+  <p>
     <span style="font-weight: bold">asynInt8Array</span> methods for devices that read/write
     arrays of 8-bit integer values</p>
   <p>
@@ -549,6 +556,9 @@
   <p>
     <span style="font-weight: bold">asynInt32Array</span> methods for devices that read/write
     arrays of 32-bit integer values</p>
+  <p>
+    <span style="font-weight: bold">asynInt64Array</span> methods for devices that read/write
+    arrays of 64-bit integer values</p>
   <p>
     <span style="font-weight: bold">asynUInt32Digital</span> methods for devices that
     read/write arrays of digital values. This interface provides a mask to address individual
@@ -2778,12 +2788,14 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
     for:</p>
   <ul>
     <li>Int32 - registers appear as 32 integers</li>
+    <li>Int64 - registers appear as 64 integers</li>
     <li>UInt32Digital - registers appear a 32 bit unsigned integers and masks can be used
       to address specific bits.</li>
     <li>Float64 - registers appear as double precision floats.</li>
     <li>Int8Array - Arrays of 8 bit integers.</li>
     <li>Int16Array - Arrays of 16 bit integers.</li>
     <li>Int32Array - Arrays of 32 bit integers.</li>
+    <li>Int64Array - Arrays of 64 bit integers.</li>
     <li>Float32Array - Arrays of single precision floats.</li>
     <li>Float64Array - Arrays of double precision floats.</li>
     <li>Enum - Arrays of strings, integer values and integer severities.</li>
@@ -2828,9 +2840,11 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
   <ul>
     <li>Int32 - The driver supports an array of Int32 values. addr selects an array element.
       For example a 16 channel ADC would support addr 0 through 15.</li>
+    <li>Int64 - The driver supports an array of Int64 values. addr selects an array element.</li>
     <li>Int8Array - Each addr is an array of Int8 values.</li>
     <li>Int16Array - Each addr is an array of Int16 values.</li>
     <li>Int32Array - Each addr is an array of Int32 values.</li>
+    <li>Int64Array - Each addr is an array of Int64 values.</li>
     <li>Float64 - The driver supports an array of Float64 values. addr selects an array
       element.</li>
     <li>Float32Array - Each addr is an array of Float32 values.</li>
@@ -2863,49 +2877,49 @@ epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;</pre>
         is a soft example of a driver that implements asynUInt32Digital.</p>
     </li>
   </ul>
-  <h3 id="asynInt32">
-    asynInt32</h3>
+  <h3 id="asynIntXX">
+    asynIntXX (XX=32 or 64)</h3>
   <p>
-    asynInt32 describes the methods implemented by drivers that use integers for communicating
+    asynIntXX describes the methods implemented by drivers that use integers for communicating
     with a device.</p>
-  <pre>typedef void (*interruptCallbackInt32)(void *userPvt, asynUser *pasynUser, 
-                                       epicsInt32 data);
-typedef struct asynInt32Interrupt {
+  <pre>typedef void (*interruptCallbackIntXX)(void *userPvt, asynUser *pasynUser, 
+                                       epicsIntXX data);
+typedef struct asynIntXXInterrupt {
     int addr;
     asynUser *pasynUser;
-    interruptCallbackInt32 callback;
+    interruptCallbackIntXX callback;
     void *userPvt;
-} asynInt32Interrupt;
-#define asynInt32Type "asynInt32"
-typedef struct asynInt32 {
-    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsInt32 value);
-    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsInt32 *value);
+} asynIntXXInterrupt;
+#define asynIntXXType "asynIntXX"
+typedef struct asynIntXX {
+    asynStatus (*write)(void *drvPvt, asynUser *pasynUser, epicsIntXX value);
+    asynStatus (*read)(void *drvPvt, asynUser *pasynUser, epicsIntXX *value);
     asynStatus (*getBounds)(void *drvPvt, asynUser *pasynUser,
-                           epicsInt32 *low, epicsInt32 *high);
+                           epicsIntXX *low, epicsIntXX *high);
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
-                           interruptCallbackInt32 callback, void *userPvt,
+                           interruptCallbackIntXX callback, void *userPvt,
                            void **registrarPvt);
     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                     void *registrarPvt);
-} asynInt32;
+} asynIntXX;
 
-/* asynInt32Base does the following:
-   calls  registerInterface for asynInt32.
+/* asynIntXXBase does the following:
+   calls  registerInterface for asynIntXX.
    Implements registerInterruptUser and cancelInterruptUser
    Provides default implementations of all methods.
    registerInterruptUser and cancelInterruptUser can be called
    directly rather than via queueRequest.
 */
 
-#define asynInt32BaseType "asynInt32Base"
-typedef struct asynInt32Base {
+#define asynIntXXBaseType "asynIntXXBase"
+typedef struct asynIntXXBase {
     asynStatus (*initialize)(const char *portName,
-                            asynInterface *pint32Interface);
-} asynInt32Base;
-epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
+                            asynInterface *pintXXInterface);
+} asynIntXXBase;
+epicsShareExtern asynIntXXBase *pasynIntXXBase;</pre>
   <table border="1">
     <caption>
-      asynInt32</caption>
+      asynIntXX</caption>
     <tbody>
       <tr>
         <td>
@@ -2946,20 +2960,20 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
   <p>
   </p>
   <p>
-    asynInt32Base is an interface and associated code that is used by drivers that implement
-    interface asynInt32. asynInt32Base provides code to handle registerInterruptUser/cancelInterruptUser.
+    asynIntXXBase is an interface and associated code that is used by drivers that implement
+    interface asynIntXX. asynIntXXBase provides code to handle registerInterruptUser/cancelInterruptUser.
     The driver must itself call the callbacks via calls to asynManager:interruptStart
     and asynManager:interruptEnd.</p>
   <table border="1">
     <caption>
-      asynInt32Base</caption>
+      asynIntXXBase</caption>
     <tbody>
       <tr>
         <td>
           initialize </td>
         <td>
           After a driver calls registerPort it can call:
-          <pre>pasynInt32Base-&gt;initialize(...</pre>
+          <pre>pasynIntXXBase-&gt;initialize(...</pre>
           Any null methods in the asynInterface are replaced by default implementations.
         </td>
       </tr>
@@ -2971,7 +2985,7 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
     The default implementation of each method does the following:</p>
   <table border="1">
     <caption>
-      asynInt32</caption>
+      asynIntXX</caption>
     <tbody>
       <tr>
         <td>
@@ -3005,31 +3019,31 @@ epicsShareExtern asynInt32Base *pasynInt32Base;</pre>
       </tr>
     </tbody>
   </table>
-  <h3 id="asynInt32SyncIO">
-    asynInt32SyncIO</h3>
+  <h3 id="asynIntXXSyncIO">
+    asynIntXXSyncIO (XX=32 or 64)</h3>
   <p>
-    asynInt32SyncIO describes a synchronous interface to asynInt32. The code that calls
+    asynIntXXSyncIO describes a synchronous interface to asynIntXX. The code that calls
     it must be willing to block.</p>
-  <pre>#define asynInt32SyncIOType "asynInt32SyncIO"
-typedef struct asynInt32SyncIO {
+  <pre>#define asynIntXXSyncIOType "asynIntXXSyncIO"
+typedef struct asynIntXXSyncIO {
     asynStatus (*connect)(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
-    asynStatus (*write)(asynUser *pasynUser, epicsInt32 value,double timeout);
-    asynStatus (*read)(asynUser *pasynUser, epicsInt32 *pvalue,double timeout);
+    asynStatus (*write)(asynUser *pasynUser, epicsIntXX value,double timeout);
+    asynStatus (*read)(asynUser *pasynUser, epicsIntXX *pvalue,double timeout);
     asynStatus (*getBounds)(asynUser *pasynUser,
-                    epicsInt32 *plow, epicsInt32 *phigh);
+                    epicsIntXX *plow, epicsIntXX *phigh);
     asynStatus (*writeOnce)(const char *port, int addr,
-                    epicsInt32 value,double timeout, const char *drvInfo);
+                    epicsIntXX value,double timeout, const char *drvInfo);
     asynStatus (*readOnce)(const char *port, int addr,
-                    epicsInt32 *pvalue,double timeout, const char *drvInfo);
+                    epicsIntXX *pvalue,double timeout, const char *drvInfo);
     asynStatus (*getBoundsOnce)(const char *port, int addr,
-                    epicsInt32 *plow, epicsInt32 *phigh,const char *drvInfo);
-} asynInt32SyncIO;
-epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
+                    epicsIntXX *plow, epicsIntXX *phigh,const char *drvInfo);
+} asynIntXXSyncIO;
+epicsShareExtern asynIntXXSyncIO *pasynIntXXSyncIO;</pre>
   <table border="1">
     <caption>
-      asynInt32SyncIO</caption>
+      asynIntXXSyncIO</caption>
     <tbody>
       <tr>
         <td>
@@ -3047,21 +3061,21 @@ epicsShareExtern asynInt32SyncIO *pasynInt32SyncIO;</pre>
         <td>
           write </td>
         <td>
-          Calls pasynInt32-&gt;write and waits for the operation to complete or time out.
+          Calls pasynIntXX-&gt;write and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
           read </td>
         <td>
-          Calls pasynInt32-&gt;read and waits for the operation to complete or time out.
+          Calls pasynIntXX-&gt;read and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
         <td>
           getBounds </td>
         <td>
-          Calls pasynInt32-&gt;getBounds and waits for the operation to complete or time out.
+          Calls pasynIntXX-&gt;getBounds and waits for the operation to complete or time out.
         </td>
       </tr>
       <tr>
@@ -3534,9 +3548,9 @@ epicsShareExtern asynFloat64SyncIO *pasynFloat64SyncIO;</pre>
     </tbody>
   </table>
   <h3 id="asynXXXArray">
-    asynXXXArray (XXX=Int8, Int16, Int32, Float32 or Float64)</h3>
+    asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</h3>
   <p>
-    asynXXXArray describes the methods for communicating via 8, 16, or 32-bit integers,
+    asynXXXArray describes the methods for communicating via 8, 16, 32, or 64-bit integers,
     or 32 or 64-bit IEEE float values.</p>
   <pre>typedef void (*interruptCallbackXXXArray)(
               void *userPvt, asynUser *pasynUser,
@@ -4197,6 +4211,10 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     int int32CanInterrupt;
     void *int32InterruptPvt;
 
+    asynInterface int64;
+    int int64CanInterrupt;
+    void *int64InterruptPvt;
+
     asynInterface float64;
     int float64CanInterrupt;
     void *float64InterruptPvt;
@@ -4212,6 +4230,10 @@ epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;</pre>
     asynInterface int32Array;
     int int32ArrayCanInterrupt;
     void *int32ArrayInterruptPvt;
+
+    asynInterface int64Array;
+    int int64ArrayCanInterrupt;
+    void *int64ArrayInterruptPvt;
 
     asynInterface float32Array;
     int float32ArrayCanInterrupt;
@@ -4276,6 +4298,12 @@ static asynInt32 ifaceInt32 = {
     getBounds
 };
 
+static asynInt64 ifaceInt64 = {
+    writeInt64,
+    readInt64,
+    getBounds
+};
+
 static asynFloat64 ifaceFloat64 = {
     writeFloat64,
     readFloat64
@@ -4330,12 +4358,14 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     pInterfaces-&gt;drvUser.pinterface        = (void *)&amp;ifaceDrvUser;
     pInterfaces-&gt;octet.pinterface          = (void *)&amp;ifaceOctet;
     pInterfaces-&gt;int32.pinterface          = (void *)&amp;ifaceInt32;
+    pInterfaces-&gt;int64.pinterface          = (void *)&amp;ifaceInt64;
     pInterfaces-&gt;float64.pinterface        = (void *)&amp;ifaceFloat64;
     pInterfaces-&gt;genericPointer.pinterface = (void *)&amp;ifaceGenericPointer;
 
     /* Define which interfaces can generate interrupts */
     pInterfaces-&gt;octetCanInterrupt          = 1;
     pInterfaces-&gt;int32CanInterrupt          = 1;
+    pInterfaces-&gt;int64CanInterrupt          = 1;
     pInterfaces-&gt;float64CanInterrupt        = 1;
     pInterfaces-&gt;genericPointerCanInterrupt = 1;
 
@@ -4438,11 +4468,15 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     devices other support is required. This release provides the following:</p>
   <ul>
     <li>devAsynInt32 - support for drivers that implement interface asynInt32</li>
+    <li>devAsynInt64 - support for drivers that implement interface asynInt64</li>
     <li>devAsynInt32TimeSeries - waveform record support for drivers that implement callbacks
       on interface asynInt32</li>
+    <li>devAsynInt64TimeSeries - waveform record support for drivers that implement callbacks
+      on interface asynInt64</li>
     <li>devAsynInt8Array - support for drivers that implement interface asynInt8Array</li>
     <li>devAsynInt16Array - support for drivers that implement interface asynInt16Array</li>
     <li>devAsynInt32Array - support for drivers that implement interface asynInt32Array</li>
+    <li>devAsynInt64Array - support for drivers that implement interface asynInt64Array</li>
     <li>devAsynUInt32Digital - support for drivers that implement interface asynUInt32Digital</li>
     <li>devAsynFloat64 - support for drivers that implement interface asynFloat64</li>
     <li>devAsynFloat64TimeSeries - waveform record support for drivers that implement
@@ -4507,7 +4541,8 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
         or asynFloat64Average device support if SCAN=I/O Intr. This is probably not a significant
         limitation. Support for SCAN=I/O Intr was added in R4-34.</p>
     </li>
-    <li>Input records that are waveform time series, i.e. asynInt32TimeSeries or asynFloat64TimeSeries.
+    <li>Input records that are waveform time series, i.e. asynInt32TimeSeries, asynInt64TimeSeries
+      or asynFloat64TimeSeries.
       <p>
         These records are normally scanned periodically. The registerInterruptUser callback
         is used to append values to the time series.</p>
@@ -4770,8 +4805,43 @@ nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(n
         field(TWST,"twoVal")
         field(THST,"threeVal")
    }</pre>
+  <h3 id="devAsynInt64">
+    asynInt64 device support</h3>
+  <p>
+    asynInt64 device support is only available in EPICS base 3.16.1 and later. That
+    is when the int64in and int64out records were introduced, and when the waveform
+    record added support for FTVL=Int64. The following support is available:</p>
+  <pre>
+device(int64in,INST_IO,Int64Out,"asynInt64")
+device(int64out,INST_IO,Int64Out,"asynInt64")</pre>
+  <p>
+    devAsynInt64.c provides EPICS device support for drivers that implement interface
+    asynInt64.</p>
+  <li>int64inRecord
+    <p>
+      A value is given to val. Each time the record is processed a new value is read.
+      SCAN "I/O Intr" is supported similar to aiRecord.</p>
+  </li>
+  <li>int64outRecord
+    <p>
+      val is written.</p>
+  </li>
+  </ul>
+  <p>
+    Int64 Input Example Records</p>
+  <pre>   record(int64in,"Int64In") {
+        field(SCAN,"I/O Intr")
+        field(DTYP,"asynInt64")
+        field(INP,"@asyn($(port),$(addr))")
+   }</pre>
+  <p>
+    Int64 Output Example Record</p>
+  <pre>   record(int64out,"Int64Out") {
+        field(DTYP,"asynInt64")
+        field(OUT,"@asyn($(port),$(addr))")
+   }</pre>
   <h3 id="devAsynIntXXXArray">
-    asynIntXXXArray device support (XXX=8, 16 or 32)</h3>
+    asynIntXXXArray device support (XXX=8, 16, 32, or 64)</h3>
   <p>
     The following support is available:</p>
   <pre>device(waveform,INST_IO,asynIntXXXArrayWfIn,"asynIntXXXArrayIn")
@@ -4781,17 +4851,19 @@ device(waveform,INST_IO,asynIntXXXArrayWfOut,"asynIntXXXArrayOut")</pre>
     asynIntXXXArray. It has support for both reading and writing a waveform. SCAN "I/O
     Intr" is supported similar to the aiRecord in devAsynInt32 device support.</p>
   <h3 id="devAsynXXXTimeSeries">
-    asynXXXTimeSeries device support (XXX=Int32 or Float64)</h3>
+    asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</h3>
   <p>
     The following support is available:</p>
   <pre>device(waveform,INST_IO,asynInt32TimeSeries,"asynInt32TimeSeries")
-device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimSeries")</pre>
+device(waveform,INST_IO,asynInt64TimeSeries,"asynInt64TimeSeries")
+device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimeSeries")</pre>
   <p>
     devAsynXXXTimeSeries.c provides EPICS device support to collect a time series of
     values into a waveform record. It works with drivers that implement callbacks on
-    the asynInt32 or asynFloat64 interfaces. This permits more rapid and efficient acquisition
-    of values from a driver than can be obtained using record support and database operations.
-    The waveform record RARM field is used to control acquisition as follows:</p>
+    the asynInt32, asynInt64, or asynFloat64 interfaces. This permits more rapid and
+    efficient acquisition of values from a driver than can be obtained using record
+    support and database operations. The waveform record RARM field is used to control
+    acquisition as follows:</p>
   <ul>
     <li>RARM=1 Erase and start acquisition, i.e. clear the waveform record to 0, set NORD=0,
       BUSY=1 and enable callbacks.</li>
@@ -6508,10 +6580,10 @@ src/
   <p>
     This tests error handling in standard asyn device support. The user can control
     the status and severity for write operations, read operations, and interrupt callbacks.
-    It tests all of the interfaces (asynInt32, asynUInt32Digital, asynFloat64, asynOctet,
-    asynEnum, asynXXXArray (XXX=Int8, Int16, Int32, Float32, Float64). It tests output
-    records both with an without the info tag asyn:READBACK. By editing options in the
-    st.cmd file it also tests:</p>
+    It tests all of the interfaces (asynInt32, asynInt64, asynUInt32Digital, asynFloat64,
+    asynOctet, asynEnum, asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32, Float64).
+    It tests output records both with an without the info tag asyn:READBACK. By editing
+    options in the st.cmd file it also tests:</p>
   <ul>
     <li>Synchronous and asynchronous driver operation (ASYN_CANBLOCK unset or set)</li>
     <li>String and waveform records with or without ring buffer support(asyn:FIFO=0 or
