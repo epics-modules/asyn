@@ -4818,15 +4818,16 @@ device(int64out,INST_IO,Int64Out,"asynInt64")</pre>
   <p>
     devAsynInt64.c provides EPICS device support for drivers that implement interface
     asynInt64.</p>
-  <li>int64inRecord
-    <p>
-      A value is given to val. Each time the record is processed a new value is read.
-      SCAN "I/O Intr" is supported similar to aiRecord.</p>
-  </li>
-  <li>int64outRecord
-    <p>
-      val is written.</p>
-  </li>
+  <ul>
+    <li>int64inRecord
+      <p>
+        A value is given to val. Each time the record is processed a new value is read.
+        SCAN "I/O Intr" is supported similar to aiRecord.</p>
+    </li>
+    <li>int64outRecord
+      <p>
+        val is written.</p>
+    </li>
   </ul>
   <p>
     Int64 Input Example Records</p>
@@ -6041,8 +6042,10 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     @readtimeout { disconnect; }
     @replyTimeout { disconnect; }
 </pre>
-  <h3 id="ftdi">FTDI Port</h3>
-  <p>The drvAsynFTDIPort driver supports devices connected via FTDI adapters.</p>
+  <h3 id="ftdi">
+    FTDI Port</h3>
+  <p>
+    The drvAsynFTDIPort driver supports devices connected via FTDI adapters.</p>
   <p>
     FTDI ports are configured with the <tt>drvAsynFTDIPortConfigure</tt> and <tt>asynSetOption</tt>
     commands:
@@ -6078,18 +6081,64 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
   </p>
   <table border="1">
     <tbody>
-      <tr><th>Key </th><th>Value</th><th>Note</th></tr>
       <tr>
-        <td>baud</td><td>50 75 110 134 150 200 300 600 1200 2400 9600 ... </td>
-        <td>Any numeric value. Check chip datasheet for actual supported baud rates.</td>
+        <th>
+          Key
+        </th>
+        <th>
+          Value
+        </th>
+        <th>
+          Note
+        </th>
       </tr>
-      <tr><td>bits</td><td>8 7</td><td></td></tr>
-      <tr><td>parity</td><td>none even odd mark space</td><td></td></tr>
-      <tr><td>stop</td><td>1 1.5 2</td><td></td></tr>
-      <tr><td>break</td><td>off on</td><td></td></tr>
       <tr>
-        <td>flow</td><td>rts_cts dtr_dsr xon_xoff</td>
-        <td>Values can be OR'ed together, e.g., <tt>rts_cts|dtr_dsr</tt></td>
+        <td>
+          baud</td>
+        <td>
+          50 75 110 134 150 200 300 600 1200 2400 9600 ... </td>
+        <td>
+          Any numeric value. Check chip datasheet for actual supported baud rates.</td>
+      </tr>
+      <tr>
+        <td>
+          bits</td>
+        <td>
+          8 7</td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          parity</td>
+        <td>
+          none even odd mark space</td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          stop</td>
+        <td>
+          1 1.5 2</td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          break</td>
+        <td>
+          off on</td>
+        <td>
+        </td>
+      </tr>
+      <tr>
+        <td>
+          flow</td>
+        <td>
+          rts_cts dtr_dsr xon_xoff</td>
+        <td>
+          Values can be OR'ed together, e.g., <tt>rts_cts|dtr_dsr</tt></td>
       </tr>
     </tbody>
   </table>
