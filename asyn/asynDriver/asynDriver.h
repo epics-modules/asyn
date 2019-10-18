@@ -23,7 +23,7 @@
 /* Version number names similar to those provide by base
  * These macros are always numeric */
 #define ASYN_VERSION       4
-#define ASYN_REVISION     36
+#define ASYN_REVISION     37
 #define ASYN_MODIFICATION  0
 
 #if __STDC_VERSION__ < 199901L
