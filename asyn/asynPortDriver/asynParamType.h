@@ -19,6 +19,7 @@ typedef enum {
     asynParamInt8Array,
     asynParamInt16Array,
     asynParamInt32Array,
+    asynParamInt64Array,
     asynParamFloat32Array,
     asynParamFloat64Array,
     asynParamGenericPointer
