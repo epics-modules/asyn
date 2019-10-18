@@ -55,6 +55,10 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   testUsbtmcApp_DEPEND_DIRS = asyn
   iocBoot_DEPEND_DIRS += testUsbtmcApp
   DIRS += iocBoot
+  ifeq ($(DRV_FTDI),YES)
+    DIRS += testFtdiApp
+    testFtdiApp_DEPEND_DIRS = asyn
+  endif
 endif
 
 DIRS += testAsynPortClientApp

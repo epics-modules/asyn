@@ -45,6 +45,12 @@ LINUX_GPIB=NO
 #  DRV_USBTMC=YES
 #endif
 
+# If you have libusb-1.0 and libftdi, and want FTDI support, set DRV_FTDI=YES
+DRV_FTDI=NO
+
+# If your system has libftdi1, set the following to YES. If it has libftdi, set it to NO
+DRV_FTDI_USE_LIBFTDI1=NO
+
 # If you want to build asyn so the only dependency on EPICS base is libCom then set the following flag
 #EPICS_LIBCOM_ONLY=YES
 
