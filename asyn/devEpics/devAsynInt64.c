@@ -77,6 +77,7 @@ typedef struct devPvt{
     int               ringSize;
     int               ringBufferOverflows;
     ringBufferElement result;
+    asynStatus        lastStatus;
     interruptCallbackInt64 interruptCallback;
     int               asyncProcessingActive;
     CALLBACK          processCallback;
@@ -311,10 +312,13 @@ static void processCallbackInput(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s %s::%s process value=%lld\n",pr->name, driverName, functionName,pPvt->result.value);
     } else {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR,
-              "%s %s::%s process read error %s\n",
-              pr->name, driverName, functionName, pasynUser->errorMessage);
+        if (pPvt->result.status != pPvt->lastStatus) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                 "%s %s::%s process read error %s\n",
+                 pr->name, driverName, functionName, pasynUser->errorMessage);
+        }
     }
+    pPvt->lastStatus = pPvt->result.status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
@@ -332,10 +336,13 @@ static void processCallbackOutput(asynUser *pasynUser)
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
             "%s %s::%s process value %lld\n",pr->name, driverName, functionName,pPvt->result.value);
     } else {
-       asynPrint(pasynUser, ASYN_TRACE_ERROR,
-           "%s %s::%s process error %s\n",
-           pr->name, driverName, functionName, pasynUser->errorMessage);
+        if (pPvt->result.status != pPvt->lastStatus) {
+            asynPrint(pasynUser, ASYN_TRACE_ERROR,
+                "%s %s::%s process error %s\n",
+                pr->name, driverName, functionName, pasynUser->errorMessage);
+        }
     }
+    pPvt->lastStatus = pPvt->result.status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
