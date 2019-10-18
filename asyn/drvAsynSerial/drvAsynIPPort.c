@@ -852,6 +852,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int l;
 
+    val[0] = '\0';
     assert(tty);
     if (epicsStrCaseCmp(key, "disconnectOnReadTimeout") == 0) {
         l = epicsSnprintf(val, valSize, "%c", tty->disconnectOnReadTimeout ? 'Y' : 'N');
