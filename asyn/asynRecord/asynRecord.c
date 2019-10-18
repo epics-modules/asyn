@@ -562,6 +562,11 @@ static long special(struct dbAddr * paddr, int after)
     } else {
         priority = asynQueuePriorityLow;
     }
+    if (fieldIndex == asynRecordHOSTINFO) {
+        /* Enable changing host:port when not connected */
+        priority = asynQueuePriorityConnect;
+        pasynUserSpecial->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
+    }
     status = pasynManager->queueRequest(pasynUserSpecial,
                                         priority,QUEUE_TIMEOUT);
     if(status!=asynSuccess) {
