@@ -64,6 +64,7 @@ protected:
         epicsInt8    *pi8;
         epicsInt16   *pi16;
         epicsInt32   *pi32;
+        epicsInt64   *pi64;
         epicsFloat32 *pf32;
         epicsFloat64 *pf64;
         void         *pgp;
