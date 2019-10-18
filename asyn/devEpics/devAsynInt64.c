@@ -78,7 +78,6 @@ typedef struct devPvt{
     int               ringBufferOverflows;
     ringBufferElement result;
     interruptCallbackInt64 interruptCallback;
-    int               isIOIntrScan;
     int               asyncProcessingActive;
     CALLBACK          processCallback;
     CALLBACK          outputCallback;
@@ -276,15 +275,17 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
             "%s %s::%s registering interrupt\n",
             pr->name, driverName, functionName);
         status = createRingBuffer(pr);
-        /* Set a flag indicating that we are in I/O Intr scan mode. Used in aiAverage mode. */
-         pPvt->isIOIntrScan = 1;
+        status = pPvt->pint64->registerInterruptUser(
+           pPvt->int64Pvt,pPvt->pasynUser,
+           pPvt->interruptCallback,pPvt,&pPvt->registrarPvt);
+        if(status!=asynSuccess) {
+            printf("%s %s::%s registerInterruptUser %s\n",
+                   pr->name, driverName, functionName,pPvt->pasynUser->errorMessage);
+        }
     } else {
         asynPrint(pPvt->pasynUser, ASYN_TRACE_FLOW,
-            "%s %s::%s cancelling interrupt\n",
+            "%s %s::%s canceling interrupt\n",
              pr->name, driverName, functionName);
-        /* Set a flag indicating that we are not in I/O Intr scan mode. Used in aiAverage mode. */
-        pPvt->isIOIntrScan = 0;
-        /* For aiAverage we don't disable callbacks here, because they are always enabled in any scan mode. */
         status = pPvt->pint64->cancelInterruptUser(pPvt->int64Pvt,
              pPvt->pasynUser,pPvt->registrarPvt);
         if(status!=asynSuccess) {
