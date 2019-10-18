@@ -12,6 +12,58 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-37</h2>
+    <h2>
+      October 18, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      Added new 64-bit integer support</h3>
+    <ul>
+      <li>asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.</li>
+      <li>asynDriver.h now does the typedef of epicsInt64 and epicsUInt64 when __STDC_VERSION__
+        &lt 199901L on EPICS 3.14. This allows the Int64 interfaces to be built as long
+        as the compiler supports the <code>long long</code> and <code>unsigned long long</code>
+        data types.</li>
+      <li>devEpics.dbd is now constructed at build time rather than being a static file.
+        This enables Int64 device support to only be included on EPICS 3.16.1 and later.</li>
+      <li>asynPortDriver adds support for 64-bit integers:
+        <ul>
+          <li>New parameter types asynParamInt64 and asynParamInt64Array.</li>
+          <li>New methods setInteger64Param(), getInteger64Param(), readInt64(), writeInt64(),
+            getBounds64(), readInt64Array(), writeInt64Array(), doCallbacksInt64Array().</li>
+          <li>New masks for constructor asynInt64Mask, asynInt64ArrayMask.</li>
+        </ul>
+      </li>
+    </ul>
+    <h3>
+      testErrors test application</h3>
+    <ul>
+      <li>Changes to driver, database and medm screens to test the Int64 interfaces. This
+        uses the 64-bit device support which must be commented of out st.cmd if running
+        on EPICS versions prior to 3.16.1.</li>
+    </ul>
+    <h3>
+      devEpics</h3>
+    <ul>
+      <li>Fixes to only print an error message when the status of a write or read operation
+        changes, not each time there is an error. Thanks to Ben Franksen for this.</li>
+    </ul>
+    <h3>
+      asynRecord</h3>
+    <ul>
+      <li>Fixes to allow changing the HOSTINFO for the asynIPPort driver when the port is
+        not connected. Thanks to Krisztián Löki for this.</li>
+    </ul>
+    <h3>
+      Many files</h3>
+    <ul>
+      <li>Changes to avoid compiler warnings.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-36</h2>
     <h2>
       August 8, 2019</h2>
