@@ -850,6 +850,9 @@ asynStatus paramList::callCallbacks(int addr)
                 case asynParamInt32:
                     status = int32Callback(index, addr);
                     break;
+                case asynParamInt64:
+                    status = int64Callback(index, addr);
+                    break;
                 case asynParamUInt32Digital:
                     status = uint32Callback(index, addr, this->vals[index]->uInt32CallbackMask);
                     this->vals[index]->uInt32CallbackMask = 0;
