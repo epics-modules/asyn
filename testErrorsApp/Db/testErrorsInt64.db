@@ -1,0 +1,60 @@
+###################################################################
+#  Records that use devAsynInt64                                  #
+###################################################################
+
+record(int64out, "$(P)Int64Out")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_VALUE")
+   field(VAL, "0")
+}
+
+record(int64out, "$(P)Int64OutRB")
+{
+   field(PINI, "1")
+   field(DTYP, "asynInt64")
+   field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_VALUE")
+   field(VAL, "0")
+   info(asyn:READBACK,"1")
+}
+
+record(int64in, "$(P)Int64In")
+{
+   field(DTYP, "asynInt64")
+   field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_VALUE")
+   field(TSE,  "$(TSE)")
+   field(SCAN, "$(SCAN)")
+}
+
+record(waveform, "$(P)WfInt64In")
+{
+    field(DTYP, "asynInt64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(waveform, "$(P)WfInt64Out")
+{
+    field(DTYP, "asynInt64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(waveform, "$(P)WfInt64OutRB")
+{
+    field(DTYP, "asynInt64ArrayOut")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
