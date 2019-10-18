@@ -1,14 +1,14 @@
 
 file {
-	name="/home/epics/devel/asyn-4-29/testErrorsApp/adl/testErrors.adl"
-	version=030107
+	name="/home/epics/devel/asyn/testErrorsApp/adl/testErrors.adl"
+	version=030109
 }
 display {
 	object {
-		x=168
-		y=51
+		x=10
+		y=10
 		width=1360
-		height=1000
+		height=1055
 	}
 	clr=14
 	bclr=4
@@ -99,654 +99,6 @@ text {
 	}
 	textix="asyn Error Tests (P=$(P))"
 	align="horiz. centered"
-}
-"text update" {
-	object {
-		x=689
-		y=439
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)SiOctet"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=753
-		y=439
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)SiOctet.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=818
-		y=439
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)SiOctet.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=604
-		y=438
-		width=80
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="stringin"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=885
-		y=438
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)SiOctet.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-"text update" {
-	object {
-		x=689
-		y=464
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)WfInOctet"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	format="string"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=753
-		y=464
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)WfInOctet.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=818
-		y=464
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)WfInOctet.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=574
-		y=463
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="waveform in"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=885
-		y=463
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)WfInOctet.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=590
-		y=409
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=54
-	}
-	textix="asynOctet"
-}
-text {
-	object {
-		x=580
-		y=325
-		width=110
-		height=20
-	}
-	"basic attribute" {
-		clr=54
-	}
-	textix="asynFloat64"
-}
-"text update" {
-	object {
-		x=690
-		y=380
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64Average"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=380
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64Average.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=380
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64Average.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=595
-		y=379
-		width=90
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="aiAverage"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=379
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)AiFloat64Average.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-"text update" {
-	object {
-		x=690
-		y=355
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=355
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=355
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AiFloat64.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=665
-		y=354
-		width=20
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="ai"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=354
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)AiFloat64.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-text {
-	object {
-		x=550
-		y=194
-		width=170
-		height=20
-	}
-	"basic attribute" {
-		clr=54
-	}
-	textix="asynUInt32Digital"
-	align="horiz. centered"
-}
-"text update" {
-	object {
-		x=690
-		y=271
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiUInt32D"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=271
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiUInt32D.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=271
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiUInt32D.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=645
-		y=270
-		width=40
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="mbbi"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=270
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)MbbiUInt32D.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-"text update" {
-	object {
-		x=690
-		y=246
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)BiUInt32D"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=246
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)BiUInt32D.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=246
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)BiUInt32D.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=665
-		y=245
-		width=20
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="bi"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=245
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)BiUInt32D.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-"text update" {
-	object {
-		x=690
-		y=221
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)LonginUInt32D"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	format="hexadecimal"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=221
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)LonginUInt32D.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=221
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)LonginUInt32D.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=625
-		y=220
-		width=60
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="longin"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=220
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)LonginUInt32D.SCAN"
-		clr=14
-		bclr=51
-	}
-}
-"text update" {
-	object {
-		x=690
-		y=296
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiDUInt32D"
-		clr=54
-		bclr=2
-	}
-	align="horiz. centered"
-	format="hexadecimal"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=754
-		y=296
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiDUInt32D.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=819
-		y=296
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbbiDUInt32D.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-text {
-	object {
-		x=585
-		y=295
-		width=100
-		height=20
-	}
-	"basic attribute" {
-		clr=14
-	}
-	textix="mbbiDirect"
-	align="horiz. right"
-}
-menu {
-	object {
-		x=886
-		y=295
-		width=100
-		height=20
-	}
-	control {
-		chan="$(P)MbbiDUInt32D.SCAN"
-		clr=14
-		bclr=51
-	}
 }
 text {
 	object {
@@ -1152,110 +504,6 @@ text {
 	}
 	textix="Without asyn:READBACK"
 }
-"text entry" {
-	object {
-		x=131
-		y=438
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)SoOctet"
-		clr=14
-		bclr=2
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=131
-		y=463
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)WfOutOctet"
-		clr=14
-		bclr=2
-	}
-	format="string"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=131
-		y=354
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)AoFloat64"
-		clr=14
-		bclr=2
-	}
-	limits {
-	}
-}
-menu {
-	object {
-		x=131
-		y=270
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)MbboUInt32D"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=131
-		y=245
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)BoUInt32D"
-		clr=14
-		bclr=51
-	}
-}
-"text entry" {
-	object {
-		x=131
-		y=220
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)LongoutUInt32D"
-		clr=14
-		bclr=2
-	}
-	format="hexadecimal"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=131
-		y=295
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)MbboDUInt32D"
-		clr=14
-		bclr=2
-	}
-	format="hexadecimal"
-	limits {
-	}
-}
 menu {
 	object {
 		x=131
@@ -1312,389 +560,140 @@ menu {
 	limits {
 	}
 }
-composite {
+"text update" {
 	object {
-		x=216
-		y=64
-		width=127
-		height=417
+		x=217
+		y=164
+		width=61
+		height=18
 	}
-	"composite name"=""
-	children {
-		"text update" {
-			object {
-				x=216
-				y=438
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)SoOctet.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=281
-				y=438
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)SoOctet.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=216
-				y=463
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)WfOutOctet.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=281
-				y=463
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)WfOutOctet.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=354
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)AoFloat64.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=354
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)AoFloat64.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=270
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboUInt32D.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=270
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboUInt32D.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=245
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)BoUInt32D.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=245
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)BoUInt32D.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=220
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)LongoutUInt32D.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=220
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)LongoutUInt32D.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=295
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboDUInt32D.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=295
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboDUInt32D.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=164
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboInt32.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=164
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)MbboInt32.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=139
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)BoInt32.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=139
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)BoInt32.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=114
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)LongoutInt32.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=114
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)LongoutInt32.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=217
-				y=64
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)AoInt32.STAT"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
-		"text update" {
-			object {
-				x=282
-				y=64
-				width=61
-				height=18
-			}
-			monitor {
-				chan="$(P)AoInt32.SEVR"
-				clr=54
-				bclr=2
-			}
-			clrmod="alarm"
-			align="horiz. centered"
-			limits {
-			}
-		}
+	monitor {
+		chan="$(P)MbboInt32.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=164
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboInt32.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=139
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoInt32.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=139
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoInt32.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=114
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutInt32.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=114
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutInt32.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=64
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoInt32.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=64
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoInt32.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
 	}
 }
 text {
@@ -1708,110 +707,6 @@ text {
 		clr=14
 	}
 	textix="With asyn:READBACK"
-}
-"text entry" {
-	object {
-		x=348
-		y=438
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)SoOctetRB"
-		clr=14
-		bclr=2
-	}
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=348
-		y=463
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)WfOutOctetRB"
-		clr=14
-		bclr=2
-	}
-	format="string"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=348
-		y=354
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)AoFloat64RB"
-		clr=14
-		bclr=2
-	}
-	limits {
-	}
-}
-menu {
-	object {
-		x=348
-		y=270
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)MbboUInt32DRB"
-		clr=14
-		bclr=51
-	}
-}
-menu {
-	object {
-		x=348
-		y=245
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)BoUInt32DRB"
-		clr=14
-		bclr=51
-	}
-}
-"text entry" {
-	object {
-		x=348
-		y=220
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)LongoutUInt32DRB"
-		clr=14
-		bclr=2
-	}
-	format="hexadecimal"
-	limits {
-	}
-}
-"text entry" {
-	object {
-		x=348
-		y=295
-		width=80
-		height=20
-	}
-	control {
-		chan="$(P)MbboDUInt32DRB"
-		clr=14
-		bclr=2
-	}
-	format="hexadecimal"
-	limits {
-	}
 }
 menu {
 	object {
@@ -1866,244 +761,6 @@ menu {
 		clr=14
 		bclr=2
 	}
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=433
-		y=439
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)SoOctetRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=498
-		y=439
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)SoOctetRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=433
-		y=464
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)WfOutOctetRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=498
-		y=464
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)WfOutOctetRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=434
-		y=355
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AoFloat64RB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=499
-		y=355
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)AoFloat64RB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=434
-		y=271
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbboUInt32DRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=499
-		y=271
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbboUInt32DRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=434
-		y=246
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)BoUInt32DRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=499
-		y=246
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)BoUInt32DRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=434
-		y=221
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)LongoutUInt32DRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=499
-		y=221
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)LongoutUInt32DRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=434
-		y=296
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbboDUInt32DRB.STAT"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
-	limits {
-	}
-}
-"text update" {
-	object {
-		x=499
-		y=296
-		width=61
-		height=18
-	}
-	monitor {
-		chan="$(P)MbboDUInt32DRB.SEVR"
-		clr=54
-		bclr=2
-	}
-	clrmod="alarm"
-	align="horiz. centered"
 	limits {
 	}
 }
@@ -2243,1584 +900,57 @@ menu {
 	limits {
 	}
 }
-composite {
+text {
 	object {
-		x=5
+		x=86
+		y=164
+		width=40
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="mbbo"
+	align="horiz. right"
+}
+text {
+	object {
+		x=106
+		y=139
+		width=20
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="bo"
+	align="horiz. right"
+}
+text {
+	object {
+		x=56
+		y=114
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="longout"
+	align="horiz. right"
+}
+text {
+	object {
+		x=106
 		y=64
-		width=121
-		height=419
+		width=20
+		height=20
 	}
-	"composite name"=""
-	children {
-		text {
-			object {
-				x=35
-				y=438
-				width=90
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="stringout"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=5
-				y=463
-				width=120
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="waveform out"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=106
-				y=354
-				width=20
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="ao"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=26
-				y=295
-				width=100
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="mbboDirect"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=86
-				y=270
-				width=40
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="mbbo"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=106
-				y=245
-				width=20
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="bo"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=56
-				y=220
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="longout"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=86
-				y=164
-				width=40
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="mbbo"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=106
-				y=139
-				width=20
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="bo"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=56
-				y=114
-				width=70
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="longout"
-			align="horiz. right"
-		}
-		text {
-			object {
-				x=106
-				y=64
-				width=20
-				height=20
-			}
-			"basic attribute" {
-				clr=14
-			}
-			textix="ao"
-			align="horiz. right"
-		}
+	"basic attribute" {
+		clr=14
 	}
-}
-composite {
-	object {
-		x=16
-		y=507
-		width=429
-		height=480
-	}
-	"composite name"=""
-	children {
-		composite {
-			object {
-				x=16
-				y=527
-				width=429
-				height=460
-			}
-			"composite name"=""
-			children {
-				composite {
-					object {
-						x=16
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=22
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt8In"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=102
-								y=527
-								width=40
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int8"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=16
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8In.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=82
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8In.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=148
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt8In.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=233
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=239
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat32In"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=304
-								y=527
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float32"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=233
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32In.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=299
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32In.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=365
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat32In.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=16
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=22
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt16In"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=97
-								y=682
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int16"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=16
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16In.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=82
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16In.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=148
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt16In.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=233
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=239
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat64In"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=304
-								y=682
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float64"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=233
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64In.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=299
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64In.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=365
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat64In.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=16
-						y=837
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"text update" {
-							object {
-								x=16
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32In.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=82
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32In.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=148
-								y=967
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt32In.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-						"cartesian plot" {
-							object {
-								x=22
-								y=862
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt32In"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=97
-								y=837
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int32"
-							align="horiz. centered"
-						}
-					}
-				}
-			}
-		}
-		text {
-			object {
-				x=130
-				y=507
-				width=200
-				height=20
-			}
-			"basic attribute" {
-				clr=54
-			}
-			textix="asynXXXArray (input)"
-			align="horiz. centered"
-		}
-	}
-}
-composite {
-	object {
-		x=460
-		y=507
-		width=430
-		height=480
-	}
-	"composite name"=""
-	children {
-		composite {
-			object {
-				x=461
-				y=527
-				width=429
-				height=460
-			}
-			"composite name"=""
-			children {
-				composite {
-					object {
-						x=461
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=467
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt8Out"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=547
-								y=527
-								width=40
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int8"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=461
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8Out.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=527
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8Out.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=593
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt8Out.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=678
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=684
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat32Out"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=749
-								y=527
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float32"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=678
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32Out.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=744
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32Out.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=810
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat32Out.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=461
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=467
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt16Out"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=542
-								y=682
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int16"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=461
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16Out.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=527
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16Out.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=593
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt16Out.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=678
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=684
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat64Out"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=749
-								y=682
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float64"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=678
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64Out.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=744
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64Out.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=810
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat64Out.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=461
-						y=837
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"text update" {
-							object {
-								x=461
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32Out.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=527
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32Out.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=593
-								y=967
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt32Out.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-						"cartesian plot" {
-							object {
-								x=467
-								y=862
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt32Out"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=542
-								y=837
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int32"
-							align="horiz. centered"
-						}
-					}
-				}
-			}
-		}
-		text {
-			object {
-				x=460
-				y=507
-				width=430
-				height=20
-			}
-			"basic attribute" {
-				clr=54
-			}
-			textix="asynXXXArray (output without asyn:READBACK)"
-			align="horiz. centered"
-		}
-	}
-}
-composite {
-	object {
-		x=906
-		y=507
-		width=429
-		height=480
-	}
-	"composite name"=""
-	children {
-		composite {
-			object {
-				x=906
-				y=527
-				width=429
-				height=460
-			}
-			"composite name"=""
-			children {
-				composite {
-					object {
-						x=906
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=912
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt8OutRB"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=992
-								y=527
-								width=40
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int8"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=906
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8OutRB.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=972
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt8OutRB.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=1038
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt8OutRB.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=1123
-						y=527
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=1129
-								y=552
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat32OutRB"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=1194
-								y=527
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float32"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=1123
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32OutRB.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=1189
-								y=658
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat32OutRB.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=1255
-								y=657
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat32OutRB.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=906
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=912
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt16OutRB"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=987
-								y=682
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int16"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=906
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16OutRB.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=972
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt16OutRB.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=1038
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt16OutRB.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=1123
-						y=682
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"cartesian plot" {
-							object {
-								x=1129
-								y=707
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfFloat64OutRB"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=1194
-								y=682
-								width=70
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Float64"
-							align="horiz. centered"
-						}
-						"text update" {
-							object {
-								x=1123
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64OutRB.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=1189
-								y=813
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfFloat64OutRB.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=1255
-								y=812
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfFloat64OutRB.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-					}
-				}
-				composite {
-					object {
-						x=906
-						y=837
-						width=212
-						height=150
-					}
-					"composite name"=""
-					children {
-						"text update" {
-							object {
-								x=906
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32OutRB.STAT"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						"text update" {
-							object {
-								x=972
-								y=968
-								width=61
-								height=18
-							}
-							monitor {
-								chan="$(P)WfInt32OutRB.SEVR"
-								clr=54
-								bclr=2
-							}
-							clrmod="alarm"
-							align="horiz. centered"
-							limits {
-							}
-						}
-						menu {
-							object {
-								x=1038
-								y=967
-								width=80
-								height=20
-							}
-							control {
-								chan="$(P)WfInt32OutRB.SCAN"
-								clr=14
-								bclr=51
-							}
-						}
-						"cartesian plot" {
-							object {
-								x=912
-								y=862
-								width=200
-								height=100
-							}
-							plotcom {
-								clr=14
-								bclr=4
-							}
-							trace[0] {
-								ydata="$(P)WfInt32OutRB"
-								data_clr=53
-								yaxis=0
-							}
-						}
-						text {
-							object {
-								x=987
-								y=837
-								width=50
-								height=20
-							}
-							"basic attribute" {
-								clr=14
-							}
-							textix="Int32"
-							align="horiz. centered"
-						}
-					}
-				}
-			}
-		}
-		text {
-			object {
-				x=920
-				y=507
-				width=400
-				height=20
-			}
-			"basic attribute" {
-				clr=54
-			}
-			textix="asynXXXArray (output with asyn:READBACK)"
-			align="horiz. centered"
-		}
-	}
+	textix="ao"
+	align="horiz. right"
 }
 text {
 	object {
@@ -4005,5 +1135,3251 @@ menu {
 		chan="$(P)AlarmSeverity"
 		clr=14
 		bclr=51
+	}
+}
+text {
+	object {
+		x=46
+		y=220
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="int64out"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=217
+		y=220
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64Out.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=220
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64Out.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=221
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64In"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=221
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64In.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=221
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64In.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=615
+		y=220
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="int64in"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=220
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)Int64In.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=220
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)Int64Out"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=220
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)Int64OutRB"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=221
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64OutRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=221
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)Int64OutRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=590
+		y=194
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynInt64"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=35
+		y=494
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringout"
+	align="horiz. right"
+}
+text {
+	object {
+		x=5
+		y=519
+		width=120
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="waveform out"
+	align="horiz. right"
+}
+text {
+	object {
+		x=106
+		y=410
+		width=20
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="ao"
+	align="horiz. right"
+}
+text {
+	object {
+		x=26
+		y=351
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="mbboDirect"
+	align="horiz. right"
+}
+text {
+	object {
+		x=86
+		y=326
+		width=40
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="mbbo"
+	align="horiz. right"
+}
+text {
+	object {
+		x=106
+		y=301
+		width=20
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="bo"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=689
+		y=495
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SiOctet"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=753
+		y=495
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SiOctet.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=818
+		y=495
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SiOctet.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=604
+		y=494
+		width=80
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="stringin"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=885
+		y=494
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)SiOctet.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=689
+		y=520
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfInOctet"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	format="string"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=753
+		y=520
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfInOctet.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=818
+		y=520
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfInOctet.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=574
+		y=519
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="waveform in"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=885
+		y=519
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)WfInOctet.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+text {
+	object {
+		x=590
+		y=465
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynOctet"
+}
+text {
+	object {
+		x=580
+		y=381
+		width=110
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynFloat64"
+}
+"text update" {
+	object {
+		x=690
+		y=436
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64Average"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=436
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64Average.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=436
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64Average.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=595
+		y=435
+		width=90
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="aiAverage"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=435
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)AiFloat64Average.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=411
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=411
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=411
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AiFloat64.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=665
+		y=410
+		width=20
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="ai"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=410
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)AiFloat64.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=327
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiUInt32D"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=327
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=327
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=645
+		y=326
+		width=40
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="mbbi"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=326
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)MbbiUInt32D.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=302
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BiUInt32D"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=302
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BiUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=302
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BiUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=665
+		y=301
+		width=20
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="bi"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=301
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)BiUInt32D.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=352
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiDUInt32D"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=352
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiDUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=352
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbbiDUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=585
+		y=351
+		width=100
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="mbbiDirect"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=351
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)MbbiDUInt32D.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=494
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)SoOctet"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=519
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)WfOutOctet"
+		clr=14
+		bclr=2
+	}
+	format="string"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=410
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)AoFloat64"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+menu {
+	object {
+		x=131
+		y=326
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)MbboUInt32D"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=131
+		y=301
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)BoUInt32D"
+		clr=14
+		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=351
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)MbboDUInt32D"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=216
+		y=494
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SoOctet.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=281
+		y=494
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SoOctet.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=216
+		y=519
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfOutOctet.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=281
+		y=519
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfOutOctet.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=410
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoFloat64.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=410
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoFloat64.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=326
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=326
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=301
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=301
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=217
+		y=351
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboDUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=351
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboDUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=494
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)SoOctetRB"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=519
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)WfOutOctetRB"
+		clr=14
+		bclr=2
+	}
+	format="string"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=410
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)AoFloat64RB"
+		clr=14
+		bclr=2
+	}
+	limits {
+	}
+}
+menu {
+	object {
+		x=348
+		y=326
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)MbboUInt32DRB"
+		clr=14
+		bclr=51
+	}
+}
+menu {
+	object {
+		x=348
+		y=301
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)BoUInt32DRB"
+		clr=14
+		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=351
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)MbboDUInt32DRB"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=433
+		y=495
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SoOctetRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=498
+		y=495
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)SoOctetRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=433
+		y=520
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfOutOctetRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=498
+		y=520
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)WfOutOctetRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=411
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoFloat64RB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=411
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)AoFloat64RB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=327
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboUInt32DRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=327
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboUInt32DRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=302
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoUInt32DRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=302
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)BoUInt32DRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=352
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboDUInt32DRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=352
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)MbboDUInt32DRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+composite {
+	object {
+		x=16
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=22
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt8In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=102
+				y=583
+				width=40
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int8"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=16
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=82
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=148
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt8In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=233
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=239
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat32In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=304
+				y=583
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float32"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=233
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=299
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=365
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat32In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=16
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=22
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt16In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=97
+				y=738
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int16"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=16
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=82
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=148
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt16In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=233
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=239
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat64In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=304
+				y=738
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float64"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=233
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=299
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=365
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat64In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=16
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=16
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=82
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=148
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt32In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=22
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt32In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=97
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int32"
+			align="horiz. centered"
+		}
+	}
+}
+text {
+	object {
+		x=130
+		y=563
+		width=200
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynXXXArray (input)"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=461
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=467
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt8Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=547
+				y=583
+				width=40
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int8"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=461
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=527
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=593
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt8Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=678
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=684
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat32Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=749
+				y=583
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float32"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=678
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=744
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=810
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat32Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=461
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=467
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt16Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=542
+				y=738
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int16"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=461
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=527
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=593
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt16Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=678
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=684
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat64Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=749
+				y=738
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float64"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=678
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=744
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=810
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat64Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=461
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=461
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=527
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=593
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt32Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=467
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt32Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=542
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int32"
+			align="horiz. centered"
+		}
+	}
+}
+text {
+	object {
+		x=460
+		y=563
+		width=430
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynXXXArray (output without asyn:READBACK)"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=906
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=912
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt8OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=992
+				y=583
+				width=40
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int8"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=906
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=972
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt8OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1038
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt8OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=1123
+		y=583
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=1129
+				y=608
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat32OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=1194
+				y=583
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float32"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=1123
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=1189
+				y=714
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat32OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1255
+				y=713
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat32OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=906
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=912
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt16OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=987
+				y=738
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int16"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=906
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=972
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt16OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1038
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt16OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=1123
+		y=738
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"cartesian plot" {
+			object {
+				x=1129
+				y=763
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfFloat64OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=1194
+				y=738
+				width=70
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Float64"
+			align="horiz. centered"
+		}
+		"text update" {
+			object {
+				x=1123
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=1189
+				y=869
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfFloat64OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1255
+				y=868
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfFloat64OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+	}
+}
+composite {
+	object {
+		x=906
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=906
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=972
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt32OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1038
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt32OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=912
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt32OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=987
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int32"
+			align="horiz. centered"
+		}
+	}
+}
+text {
+	object {
+		x=920
+		y=563
+		width=400
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynXXXArray (output with asyn:READBACK)"
+	align="horiz. centered"
+}
+text {
+	object {
+		x=56
+		y=276
+		width=70
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="longout"
+	align="horiz. right"
+}
+"text update" {
+	object {
+		x=217
+		y=276
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=282
+		y=276
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=690
+		y=277
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LonginUInt32D"
+		clr=54
+		bclr=2
+	}
+	align="horiz. centered"
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=754
+		y=277
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LonginUInt32D.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=819
+		y=277
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LonginUInt32D.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=625
+		y=276
+		width=60
+		height=20
+	}
+	"basic attribute" {
+		clr=14
+	}
+	textix="longin"
+	align="horiz. right"
+}
+menu {
+	object {
+		x=886
+		y=276
+		width=100
+		height=20
+	}
+	control {
+		chan="$(P)LonginUInt32D.SCAN"
+		clr=14
+		bclr=51
+	}
+}
+"text entry" {
+	object {
+		x=131
+		y=276
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)LongoutUInt32D"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text entry" {
+	object {
+		x=348
+		y=276
+		width=80
+		height=20
+	}
+	control {
+		chan="$(P)LongoutUInt32DRB"
+		clr=14
+		bclr=2
+	}
+	format="hexadecimal"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=434
+		y=277
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutUInt32DRB.STAT"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+"text update" {
+	object {
+		x=499
+		y=277
+		width=61
+		height=18
+	}
+	monitor {
+		chan="$(P)LongoutUInt32DRB.SEVR"
+		clr=54
+		bclr=2
+	}
+	clrmod="alarm"
+	align="horiz. centered"
+	limits {
+	}
+}
+text {
+	object {
+		x=550
+		y=250
+		width=170
+		height=20
+	}
+	"basic attribute" {
+		clr=54
+	}
+	textix="asynUInt32Digital"
+	align="horiz. centered"
+}
+composite {
+	object {
+		x=1123
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=1123
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64OutRB.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=1189
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64OutRB.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=1255
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt64OutRB.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=1129
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt64OutRB"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=1204
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int64"
+			align="horiz. centered"
+		}
+	}
+}
+composite {
+	object {
+		x=233
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=233
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64In.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=299
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64In.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=365
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt64In.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=239
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt64In"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=314
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int64"
+			align="horiz. centered"
+		}
+	}
+}
+composite {
+	object {
+		x=678
+		y=893
+		width=212
+		height=150
+	}
+	"composite name"=""
+	children {
+		"text update" {
+			object {
+				x=678
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64Out.STAT"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		"text update" {
+			object {
+				x=744
+				y=1024
+				width=61
+				height=18
+			}
+			monitor {
+				chan="$(P)WfInt64Out.SEVR"
+				clr=54
+				bclr=2
+			}
+			clrmod="alarm"
+			align="horiz. centered"
+			limits {
+			}
+		}
+		menu {
+			object {
+				x=810
+				y=1023
+				width=80
+				height=20
+			}
+			control {
+				chan="$(P)WfInt64Out.SCAN"
+				clr=14
+				bclr=51
+			}
+		}
+		"cartesian plot" {
+			object {
+				x=684
+				y=918
+				width=200
+				height=100
+			}
+			plotcom {
+				clr=14
+				bclr=4
+			}
+			trace[0] {
+				ydata="$(P)WfInt64Out"
+				data_clr=53
+				yaxis=0
+			}
+		}
+		text {
+			object {
+				x=759
+				y=893
+				width=50
+				height=20
+			}
+			"basic attribute" {
+				clr=14
+			}
+			textix="Int64"
+			align="horiz. centered"
+		}
 	}
 }
