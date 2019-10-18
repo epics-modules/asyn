@@ -1276,10 +1276,11 @@ static asynStatus connectDevice(asynRecord * pasynRec)
         pasynUserConnect = pasynManager->duplicateAsynUser(pasynUser,
             asynCallbackSpecial, queueTimeoutCallbackSpecial);
         pasynUserConnect->userData = pasynManager->memMalloc(sizeof(*pmsg));
+        pasynUserConnect->reason = ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED;
         pmsg = (callbackMessage *)pasynUserConnect->userData;
         pmsg->callbackType = callbackGetOption;
         status = pasynManager->queueRequest(pasynUserConnect,
-                                        asynQueuePriorityLow,QUEUE_TIMEOUT);
+                                        asynQueuePriorityConnect,QUEUE_TIMEOUT);
         if(status!=asynSuccess) {
             reportError(pasynRec, asynError, 
                 "queueRequest failed\n");
