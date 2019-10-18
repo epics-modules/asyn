@@ -162,6 +162,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   devEpics_DBD += devAsynFloat32Array.dbd
   devEpics_DBD += devAsynFloat64Array.dbd
   devEpics_DBD += devAsynFloat64TimeSeries.dbd
+  devEpics_DBD += devAsynRecord.dbd
   DB  += asynInt32TimeSeries.db
   DB  += asynFloat64TimeSeries.db
   INC += asynEpicsUtils.h
