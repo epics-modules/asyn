@@ -27,6 +27,7 @@
 #define P_EnumOrderString                   "ENUM_ORDER"              /* asynInt32,         r/w */
 #define P_DoUpdateString                    "DO_UPDATE"               /* asynInt32,         r/w */
 #define P_Int32ValueString                  "INT32_VALUE"             /* asynInt32,         r/w */
+#define P_Int64ValueString                  "INT64_VALUE"             /* asynInt64,         r/w */
 #define P_BinaryInt32ValueString            "BINARY_INT32_VALUE"      /* asynInt32,         r/w */
 #define P_MultibitInt32ValueString          "MULTIBIT_INT32_VALUE"    /* asynInt32,         r/w */
 #define P_Float64ValueString                "FLOAT64_VALUE"           /* asynFloat64,       r/w */
@@ -37,6 +38,7 @@
 #define P_Int8ArrayValueString              "INT8_ARRAY_VALUE"        /* asynInt8Array,     r/w */
 #define P_Int16ArrayValueString             "INT16_ARRAY_VALUE"       /* asynInt16Array,    r/w */
 #define P_Int32ArrayValueString             "INT32_ARRAY_VALUE"       /* asynInt32Array,    r/w */
+#define P_Int64ArrayValueString             "INT64_ARRAY_VALUE"       /* asynInt64Array,    r/w */
 #define P_Float32ArrayValueString           "FLOAT32_ARRAY_VALUE"     /* asynFloat32Array,  r/w */
 #define P_Float64ArrayValueString           "FLOAT64_ARRAY_VALUE"     /* asynFloat64Array,  r/w */
 
@@ -48,6 +50,7 @@ public:
                  
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+    virtual asynStatus writeInt64(asynUser *pasynUser, epicsInt64 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
     virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
     virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, 
@@ -57,6 +60,8 @@ public:
     virtual asynStatus readInt16Array  (asynUser *pasynUser, epicsInt16 *value,
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readInt32Array  (asynUser *pasynUser, epicsInt32 *value,
+                                        size_t nElements, size_t *nIn);
+    virtual asynStatus readInt64Array  (asynUser *pasynUser, epicsInt64 *value,
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
                                         size_t nElements, size_t *nIn);
@@ -78,6 +83,7 @@ protected:
     int P_EnumOrder;
     int P_DoUpdate;
     int P_Int32Value;
+    int P_Int64Value;
     int P_BinaryInt32Value;
     int P_MultibitInt32Value;
     int P_Float64Value;
@@ -88,6 +94,7 @@ protected:
     int P_Int8ArrayValue;
     int P_Int16ArrayValue;
     int P_Int32ArrayValue;
+    int P_Int64ArrayValue;
     int P_Float32ArrayValue;
     int P_Float64ArrayValue;
  
@@ -105,6 +112,7 @@ private:
     epicsInt8     int8ArrayValue_   [MAX_ARRAY_POINTS];
     epicsInt16    int16ArrayValue_  [MAX_ARRAY_POINTS];
     epicsInt32    int32ArrayValue_  [MAX_ARRAY_POINTS];
+    epicsInt64    int64ArrayValue_  [MAX_ARRAY_POINTS];
     epicsFloat32  float32ArrayValue_[MAX_ARRAY_POINTS];
     epicsFloat64  float64ArrayValue_[MAX_ARRAY_POINTS];
     template <typename epicsType> 
