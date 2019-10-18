@@ -23,6 +23,7 @@ const char* paramVal::typeNames[] = {
     "asynParamInt8Array",
     "asynParamInt16Array",
     "asynParamInt32Array",
+    "asynParamInt64Array",
     "asynParamFloat32Array",
     "asynParamFloat64Array",
     "asynParamGenericPointer"
@@ -331,6 +332,12 @@ void paramVal::report(int id, FILE *fp, int details)
                 fprintf(fp, "Parameter %d type=asynInt32Array, name=%s, value=%p, status=%d\n", id, getName(), data.pi32, getStatus() );
             else
                 fprintf(fp, "Parameter %d type=asynInt32Array, name=%s, value is undefined\n", id, getName());
+            break;
+        case asynParamInt64Array:
+            if (isDefined())
+                fprintf(fp, "Parameter %d type=asynInt64Array, name=%s, value=%p, status=%d\n", id, getName(), data.pi64, getStatus() );
+            else
+                fprintf(fp, "Parameter %d type=asynInt64Array, name=%s, value is undefined\n", id, getName());
             break;
         case asynParamFloat32Array:
             if (isDefined())
