@@ -91,6 +91,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     DWORD error;
     int l;
     
+    val[0] = '\0';
     assert(tty);
     if (tty->commHandle == INVALID_HANDLE_VALUE) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,

@@ -139,6 +139,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int l;
 
+    val[0] = '\0';
     if (epicsStrCaseCmp(key, "baud") == 0) {
         l = epicsSnprintf(val, valSize, "%d", tty->baud);
     }
