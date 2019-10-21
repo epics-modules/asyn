@@ -26,9 +26,11 @@
 #define ASYN_REVISION     37
 #define ASYN_MODIFICATION  0
 
-#if __STDC_VERSION__ < 199901L
-typedef long long          epicsInt64;
-typedef unsigned long long epicsUInt64;
+#if (EPICS_VERSION == 3) && (EPICS_REVISION == 14)
+  #if __STDC_VERSION__ < 199901L
+    typedef long long          epicsInt64;
+    typedef unsigned long long epicsUInt64;
+  #endif
 #endif
 
 #ifdef __cplusplus
