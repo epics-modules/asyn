@@ -631,9 +631,9 @@ static const iocshArg *drvAsynFTDIPortConfigureArgs[] = {
     &drvAsynFTDIPortConfigureArg0, &drvAsynFTDIPortConfigureArg1,
     &drvAsynFTDIPortConfigureArg2, &drvAsynFTDIPortConfigureArg3,
     &drvAsynFTDIPortConfigureArg4, &drvAsynFTDIPortConfigureArg5,
-    &drvAsynFTDIPortConfigureArg6};
+    &drvAsynFTDIPortConfigureArg6, &drvAsynFTDIPortConfigureArg7};
 static const iocshFuncDef drvAsynFTDIPortConfigureFuncDef =
-                      {"drvAsynFTDIPortConfigure",7,drvAsynFTDIPortConfigureArgs};
+                      {"drvAsynFTDIPortConfigure",8,drvAsynFTDIPortConfigureArgs};
 static void drvAsynFTDIPortConfigureCallFunc(const iocshArgBuf *args)
 {
     drvAsynFTDIPortConfigure(args[0].sval, args[1].ival, args[2].ival, args[3].ival, args[4].ival, args[5].ival, args[6].ival, args[7].ival);
