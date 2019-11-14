@@ -891,8 +891,11 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
         pvxiPort->pasynUser->timeout = pvxiPort->defTimeout;
         status = pasynManager->connectDevice(
             pvxiPort->pasynUser, pvxiPort->portName,-1);
-        reportConnectStatus(pvxiPort, vxiConnectDevice,
-            "vxiConnectPort: connectDevice failed %s\n", pvxiPort->pasynUser->errorMessage);
+        if (status != asynSuccess) {
+            reportConnectStatus(pvxiPort, vxiConnectDevice,
+                "vxiConnectPort: connectDevice failed %s\n", pvxiPort->pasynUser->errorMessage);
+            return status;
+        }
     }
     if(pvxiPort->server.connected) {
         reportConnectStatus(pvxiPort, vxiConnectAlreadyConnected,
