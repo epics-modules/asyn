@@ -33,8 +33,10 @@
 #include <dbCommon.h>
 #include <dbScan.h>
 #include <callback.h>
+#ifdef HAVE_DEVINT64
 #include <int64inRecord.h>
 #include <int64outRecord.h>
+#endif
 #include <longinRecord.h>
 #include <longoutRecord.h>
 #include <aiRecord.h>
