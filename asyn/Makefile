@@ -190,13 +190,16 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   endif
   
   ifdef HAVE_DEVINT64
+    USR_CFLAGS += -DHAVE_DEVINT64
+    USR_CXXFLAGS += -DHAVE_DEVINT64
     devEpics_DBD += devAsynInt64.dbd
     devEpics_DBD += devAsynInt64Array.dbd
     devEpics_DBD += devAsynInt64TimeSeries.dbd
-    asyn_SRCS += devAsynInt64.c
     asyn_SRCS += devAsynInt64Array.c
     asyn_SRCS += devAsynInt64TimeSeries.c
   endif
+  devEpics_DBD += devAsynMiscInt64.dbd
+  asyn_SRCS += devAsynInt64.c
 
   DBD += $(devEpics_DBD)
 
