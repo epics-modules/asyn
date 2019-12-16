@@ -1,0 +1,2 @@
+device(longin,INST_IO,asynInt64In,"asynInt64")
+device(longout,INST_IO,asynInt64Out,"asynInt64")
