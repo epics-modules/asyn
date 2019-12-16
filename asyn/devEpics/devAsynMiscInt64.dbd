@@ -1,2 +1,4 @@
-device(longin,INST_IO,asynInt64In,"asynInt64")
-device(longout,INST_IO,asynInt64Out,"asynInt64")
+device(longin,INST_IO,asynLiInt64,"asynInt64")
+device(longout,INST_IO,asynLoInt64,"asynInt64")
+device(ai,INST_IO,asynAiInt64,"asynInt64")
+device(ao,INST_IO,asynAoInt64,"asynInt64")
