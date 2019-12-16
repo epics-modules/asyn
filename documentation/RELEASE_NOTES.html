@@ -12,6 +12,34 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-38</h2>
+    <h2>
+      December XXX, 2019</h2>
+  </div>
+  <div>
+    <h3>
+      devEpics</h3>
+    <ul>
+      <li>Added asynInt64 support for longout, longin, ao, and ai records. This allows these
+        records to be used to communicate with drivers on the asynInt64 interface. This
+        can be useful when running versions of base prior to 3.16.1 where the int64out and
+        int64in records are not available. The ao and ai records can exactly represent up
+        to 52-bit integers, while the longin and longout are limited to 32-bit integers.</li>
+    </ul>
+    <h3>
+      FTDI driver</h3>
+    <ul>
+      <li>Fixed missing argument to the iocsh drvAsynFTDIPortConfigure() command.</li>
+    </ul>
+    <h3>
+      drvVxi11</h3>
+    <ul>
+      <li>Fixed spurious connection error message.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-37</h2>
     <h2>
       October 18, 2019</h2>
