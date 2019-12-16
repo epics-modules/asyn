@@ -198,7 +198,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
     asyn_SRCS += devAsynInt64Array.c
     asyn_SRCS += devAsynInt64TimeSeries.c
   endif
-  devEpics_DBD += devAsynMiscInt64.dbd
+  devEpics_DBD += devAsynInt64Misc.dbd
   asyn_SRCS += devAsynInt64.c
 
   DBD += $(devEpics_DBD)
