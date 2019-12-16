@@ -4809,9 +4809,18 @@ nbits &lt; 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(n
   <h3 id="devAsynInt64">
     asynInt64 device support</h3>
   <p>
-    asynInt64 device support is only available in EPICS base 3.16.1 and later. That
-    is when the int64in and int64out records were introduced, and when the waveform
-    record added support for FTVL=Int64. The following support is available:</p>
+    asynInt64 device support is available for the ao, ai, longout, and longin records
+    on all versions of EPICS base. The following support is available in devAsynInt64Misc.dbd.</p>
+  <pre>
+device(longin,INST_IO,asynLiInt64,"asynInt64")
+device(longout,INST_IO,asynLoInt64,"asynInt64")
+device(ai,INST_IO,asynAiInt64,"asynInt64")
+device(ao,INST_IO,asynAoInt64,"asynInt64")</pre>
+  <p>
+    Support for the int64in, int64out, and waveform records is available in EPICS base
+    3.16.1 and later. That is when the int64in, int64out records were added, and when
+    the waveform record added support for FTVL=Int64. The following support is available
+    in devAsynInt64.dbd:</p>
   <pre>
 device(int64in,INST_IO,Int64Out,"asynInt64")
 device(int64out,INST_IO,Int64Out,"asynInt64")</pre>
@@ -4819,25 +4828,51 @@ device(int64out,INST_IO,Int64Out,"asynInt64")</pre>
     devAsynInt64.c provides EPICS device support for drivers that implement interface
     asynInt64.</p>
   <ul>
+    <li>aiRecord
+      <p>
+        A 64-bit integer is read from the driver and converted to a 64-bit float. The 64-bit
+        float can exactly represent integers up to 52 bits. The value is read into the .VAL
+        field, not the .RVAL field. Linear conversion is limited to .EOFF and .ESLO. Each
+        time the record is processed a new value is read. SCAN "I/O Intr" is supported.</p>
+    </li>
+    <li>aoRecord
+      <p>
+        The 64-bit float .VAL is converted to a 64-bit integer and written to the driver.
+        The 64-bit float can exactly represent integers up to 52 bits. The value is read
+        from the .VAL field, not from the .RVAL field. Linear conversion is limited to .EOFF
+        and .ESLO.
+      </p>
+    </li>
+    <li>longinRecord
+      <p>
+        A 64-bit integer is read from the driver and truncated to a 32-bit integer. Each
+        time the record is processed a new value is read. SCAN "I/O Intr" is supported.</p>
+    </li>
+    <li>longoutRecord
+      <p>
+        A 32-bit integer is written to the driver from the .VAL field.</p>
+    </li>
     <li>int64inRecord
       <p>
-        A value is given to val. Each time the record is processed a new value is read.
+        A value is given to .VAL. Each time the record is processed a new value is read.
         SCAN "I/O Intr" is supported similar to aiRecord.</p>
     </li>
     <li>int64outRecord
       <p>
-        val is written.</p>
+        .VAL is written.</p>
     </li>
   </ul>
   <p>
-    Int64 Input Example Records</p>
+    Int64 Input Example Records. The longin and ai records are the same except for the
+    record type.</p>
   <pre>   record(int64in,"Int64In") {
         field(SCAN,"I/O Intr")
         field(DTYP,"asynInt64")
         field(INP,"@asyn($(port),$(addr))")
    }</pre>
   <p>
-    Int64 Output Example Record</p>
+    Int64 Output Example Record. The longout and ao records are the same except for
+    the record type</p>
   <pre>   record(int64out,"Int64Out") {
         field(DTYP,"asynInt64")
         field(OUT,"@asyn($(port),$(addr))")
