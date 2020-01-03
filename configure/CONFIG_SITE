@@ -60,3 +60,9 @@ DRV_FTDI_USE_LIBFTDI1=NO
 
 -include $(SUPPORT)/configure/CONFIG_SITE
 
+# These allow developers to override the CONFIG_SITE variable
+# settings without having to modify the configure/CONFIG_SITE
+# file itself.
+-include $(TOP)/../CONFIG_SITE.local
+-include $(TOP)/configure/CONFIG_SITE.local
+
