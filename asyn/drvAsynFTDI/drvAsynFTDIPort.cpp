@@ -39,6 +39,7 @@ typedef struct {
     int               FTDIproduct;
     int               FTDIbaudrate;
     int               FTDIlatency;
+    int		      FTDImode;          /* UART = 0; SPI = 1 */
     char              *portName;
     FTDIDriver         *driver;
     unsigned long      nRead;
@@ -313,7 +314,12 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
 
     // Create the driver
-    ftdi->driver = new FTDIDriver();
+
+    printf("connectIt: ftdi->FTDImode=%d - ", ftdi->FTDImode);
+    if( ftdi->FTDImode & 0x01 ) printf( "SPI\n");
+    else                        printf("UART\n");
+
+    ftdi->driver = new FTDIDriver(ftdi->FTDImode);
 
     // Set the vendor & product IDs
     ftdi->driver->setVPID(ftdi->FTDIvendor, ftdi->FTDIproduct);
@@ -511,8 +517,17 @@ drvAsynFTDIPortConfigure(const char *portName,
                          int latency,
                          unsigned int priority,
                          int noAutoConnect,
-                         int noProcessEos)
+                         int flags)
 {
+
+    int noProcessEos = ((flags & NO_PROC_EOS_BIT)==NO_PROC_EOS_BIT)?1:0;
+    int SPI = ((flags & UART_SPI_BIT)==UART_SPI_BIT)?1:0;
+
+    printf("drvAsynFTDIPortConfigure: latency=%d\n", latency);
+    printf("drvAsynFTDIPortConfigure: priorioy=%d\n", priority);
+    printf("drvAsynFTDIPortConfigure: noAutoconnect=%d\n", noAutoConnect);
+    printf("drvAsynFTDIPortConfigure: flags=%d\n", flags);
+
     ftdiController_t *ftdi;
     asynInterface *pasynInterface;
     asynStatus status;
@@ -546,14 +561,18 @@ drvAsynFTDIPortConfigure(const char *portName,
      * Create a driver
      */
     nbytes = sizeof(*ftdi) + sizeof(asynOctet);
+
     ftdi = (ftdiController_t *)callocMustSucceed(1, nbytes,
           "drvAsynFTDIPortConfigure()");
+
     pasynOctet = (asynOctet *)(ftdi+1);
     ftdi->driver = NULL;
+
     ftdi->FTDIvendor = vendor;
     ftdi->FTDIproduct = product;
     ftdi->FTDIbaudrate = baudrate;
     ftdi->FTDIlatency = latency;
+    ftdi->FTDImode = SPI;
     ftdi->portName = epicsStrDup(portName);
 
     /*
@@ -566,6 +585,7 @@ drvAsynFTDIPortConfigure(const char *portName,
     ftdi->option.interfaceType = asynOptionType;
     ftdi->option.pinterface = (void*)&asynOptionMethods;
     ftdi->option.drvPvt = ftdi;
+
     if (pasynManager->registerPort(ftdi->portName,
                                    ASYN_CANBLOCK,
                                    !noAutoConnect,
@@ -575,18 +595,21 @@ drvAsynFTDIPortConfigure(const char *portName,
         ftdiCleanup(ftdi);
         return -1;
     }
+
     status = pasynManager->registerInterface(ftdi->portName,&ftdi->common);
     if(status != asynSuccess) {
         printf("drvAsynFTDIPortConfigure: Can't register common.\n");
         ftdiCleanup(ftdi);
         return -1;
     }
+
     status = pasynManager->registerInterface(ftdi->portName,&ftdi->option);
     if(status != asynSuccess) {
         printf("drvAsynFTDIPortConfigure: Can't register option.\n");
         ftdiCleanup(ftdi);
         return -1;
     }
+
     pasynOctet->read = readIt;
     pasynOctet->write = writeIt;
     pasynOctet->flush = flushIt;
@@ -608,7 +631,6 @@ drvAsynFTDIPortConfigure(const char *portName,
         ftdiCleanup(ftdi);
         return -1;
     }
-
     /*
      * Register for socket cleanup
      */
