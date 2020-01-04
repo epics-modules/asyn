@@ -10,4 +10,4 @@ A primary target for asynDriver is EPICS IOC device support but, other than usin
 libCom, most of it is independent of EPICS.
 
 Documentation, release notes, and links to releases can be found here:
-* [Documentation](https://epics-modules.github.io/master/asyn)
+* [Home page](https://epics-modules.github.io/master/asyn)
