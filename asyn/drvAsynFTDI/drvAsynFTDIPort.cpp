@@ -39,7 +39,7 @@ typedef struct {
     int               FTDIproduct;
     int               FTDIbaudrate;
     int               FTDIlatency;
-    int		      FTDImode;          /* UART = 0; SPI = 1 */
+    int               FTDImode;          /* UART = 0; SPI = 1 */
     char              *portName;
     FTDIDriver         *driver;
     unsigned long      nRead;

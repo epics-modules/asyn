@@ -85,11 +85,10 @@ class FTDIDriver {
   private:
     struct ftdi_context *ftdi_;
 
-    int  spi;
-    int  spiInit;
-    int  buf[0x10000];
-unsigned
-    char *pbuf;
+    int        spi;
+    int        spiInit;
+    int        buf[0x10000];
+unsigned char *pbuf;
 
     int connected_;
     int vendor_;
