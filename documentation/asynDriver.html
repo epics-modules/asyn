@@ -6086,7 +6086,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     commands:
   </p>
   <pre>
-    drvAsynFTDIPortConfigure("portName",vendor,product,baudrate,latency,priority,noAutoConnect,flags)
+    drvAsynFTDIPortConfigure("portName",vendor,product,baudrate,latency,priority,noAutoConnect,noProcessEos,mode)
     asynSetOption("portName",addr,"key","value")</pre>
   <p>
     where the arguments are:
@@ -6101,10 +6101,9 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
       missing,then epicsThreadPriorityMedium is used.</li>
     <li>noAutoConnect - Zero or missing indicates that portThread should automatically
       connect. Non-zero if explicit connect command must be issued.</li>
-    <li>flags If 0: (noProcessEos=0) then asynInterposeEosConfig is called specifying both processEosIn
+    <li>noProcessEos If 0 then asynInterposeEosConfig is called specifying both processEosIn
       and processEosOut.</li>
-    <li>flags If 1: noProcessEos = 1</li>
-    <li>flags If 2: FTDI initialized for binary SPI mode.</li>
+    <li>mode: 0 = UART; 1 = FTDI initialized in binary SPI mode.</li>
   </ul>
   <p>
     The setEos and getEos methods have no effect and return asynError. The read method

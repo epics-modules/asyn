@@ -71,8 +71,8 @@ FTDIDriver::FTDIDriver(int mode):spi(mode)
 }
 
 FTDIDriverStatus FTDIDriver::initSPI() {
-unsigned int       i = 0;
-unsigned int       n = 0;
+  unsigned int i = 0;
+  unsigned int n = 0;
 
   FTDIDriverStatus rc = FTDIDriverError;
 
@@ -529,11 +529,10 @@ FTDIDriverStatus FTDIDriver::flush()
 FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, size_t *bytesWritten, int timeout)
 {
   int    i = 0;
-  size_t rc[8];
+  size_t rc[16];
   int    err =0;
 
-unsigned
-  short  sz = (unsigned short)bufferSize - 1;
+  unsigned short sz = (unsigned short)bufferSize - 1;
 
   static const char *functionName = "FTDIDriver::write";
   debugPrint("%s : Method called\n", functionName);

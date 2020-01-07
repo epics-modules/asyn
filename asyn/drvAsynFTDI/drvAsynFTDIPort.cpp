@@ -316,8 +316,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     // Create the driver
 
     printf("connectIt: ftdi->FTDImode=%d - ", ftdi->FTDImode);
-    if( ftdi->FTDImode & 0x01 ) printf( "SPI\n");
-    else                        printf("UART\n");
+    if( (ftdi->FTDImode & FTDImode::SPI) == FTDImode::SPI ) printf( "SPI\n");
+    else                                                    printf("UART\n");
 
     ftdi->driver = new FTDIDriver(ftdi->FTDImode);
 
@@ -517,16 +517,16 @@ drvAsynFTDIPortConfigure(const char *portName,
                          int latency,
                          unsigned int priority,
                          int noAutoConnect,
-                         int flags)
+                         int noProcessEos,
+                         int mode)
 {
-
-    int noProcessEos = ((flags & NO_PROC_EOS_BIT)==NO_PROC_EOS_BIT)?1:0;
-    int SPI = ((flags & UART_SPI_BIT)==UART_SPI_BIT)?1:0;
+    int SPI = ((mode & UART_SPI_BIT)==UART_SPI_BIT)? 1:0;
 
     printf("drvAsynFTDIPortConfigure: latency=%d\n", latency);
-    printf("drvAsynFTDIPortConfigure: priorioy=%d\n", priority);
+    printf("drvAsynFTDIPortConfigure: priority=%d\n", priority);
     printf("drvAsynFTDIPortConfigure: noAutoconnect=%d\n", noAutoConnect);
-    printf("drvAsynFTDIPortConfigure: flags=%d\n", flags);
+    printf("drvAsynFTDIPortConfigure: noProcessEos=%d\n", noProcessEos);
+    printf("drvAsynFTDIPortConfigure: mode="); SPI ? printf("SPI\n") : printf("UART\n");
 
     ftdiController_t *ftdi;
     asynInterface *pasynInterface;
@@ -649,16 +649,18 @@ static const iocshArg drvAsynFTDIPortConfigureArg4 = { "latency",iocshArgInt};
 static const iocshArg drvAsynFTDIPortConfigureArg5 = { "priority",iocshArgInt};
 static const iocshArg drvAsynFTDIPortConfigureArg6 = { "disable auto-connect",iocshArgInt};
 static const iocshArg drvAsynFTDIPortConfigureArg7 = { "noProcessEos",iocshArgInt};
+static const iocshArg drvAsynFTDIPortConfigureArg8 = { "mode",iocshArgInt};
 static const iocshArg *drvAsynFTDIPortConfigureArgs[] = {
     &drvAsynFTDIPortConfigureArg0, &drvAsynFTDIPortConfigureArg1,
     &drvAsynFTDIPortConfigureArg2, &drvAsynFTDIPortConfigureArg3,
     &drvAsynFTDIPortConfigureArg4, &drvAsynFTDIPortConfigureArg5,
-    &drvAsynFTDIPortConfigureArg6, &drvAsynFTDIPortConfigureArg7};
+    &drvAsynFTDIPortConfigureArg6, &drvAsynFTDIPortConfigureArg7,
+    &drvAsynFTDIPortConfigureArg8};
 static const iocshFuncDef drvAsynFTDIPortConfigureFuncDef =
-                      {"drvAsynFTDIPortConfigure",8,drvAsynFTDIPortConfigureArgs};
+                      {"drvAsynFTDIPortConfigure",9,drvAsynFTDIPortConfigureArgs};
 static void drvAsynFTDIPortConfigureCallFunc(const iocshArgBuf *args)
 {
-    drvAsynFTDIPortConfigure(args[0].sval, args[1].ival, args[2].ival, args[3].ival, args[4].ival, args[5].ival, args[6].ival, args[7].ival);
+    drvAsynFTDIPortConfigure(args[0].sval, args[1].ival, args[2].ival, args[3].ival, args[4].ival, args[5].ival, args[6].ival, args[7].ival, args[8].ival);
 }
 
 /*

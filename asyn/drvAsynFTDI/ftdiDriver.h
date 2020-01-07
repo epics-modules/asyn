@@ -23,8 +23,7 @@
 #include <stdio.h>
 #include <ctype.h>
 
-#define NO_PROC_EOS_BIT 0x01
-#define UART_SPI_BIT    0x02 // 0 = UART; 1 = SPI
+#define UART_SPI_BIT    0x01 // 0 = UART; 1 = SPI
 
 namespace Pin {
   enum bus_t {
@@ -35,6 +34,13 @@ namespace Pin {
   IO_UPDATE= 0x10,
   SYNCIO   = 0x20,
   RESET    = 0x40
+  };
+}
+
+namespace FTDImode {
+  enum mode {
+  UART     = 0x00,
+  SPI      = 0x01
   };
 }
 
@@ -85,10 +91,10 @@ class FTDIDriver {
   private:
     struct ftdi_context *ftdi_;
 
-    int        spi;
-    int        spiInit;
-    int        buf[0x10000];
-unsigned char *pbuf;
+    int            spi;
+    int            spiInit;
+    int            buf[0x10000];
+    unsigned char *pbuf;
 
     int connected_;
     int vendor_;
