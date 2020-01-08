@@ -528,8 +528,6 @@ FTDIDriverStatus FTDIDriver::flush()
  */
 FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, size_t *bytesWritten, int timeout)
 {
-  int    i = 0;
-
   /*********************************************************************************/
   /* Array for collecting Return Codes from various stages of (SPI) write          */
   /* (for compilation of a single debugPrint message at the end). Good to have     */
@@ -539,7 +537,9 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   /* to AD9915 can fail at different stages if CS, SYNCIO, I/O_UPDATE are not      */
   /* pulled in timely manner. Currently these lines (pinState) are controlled by   */
   /* (hard coded) binary bytes embedded into the 'stream' protocol.                */
+  /*********************************************************************************/
   size_t rc[16];
+  size_t i = 0;
   int    err =0;
 
   unsigned short sz = (unsigned short)bufferSize - 1;
@@ -580,7 +580,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
     i+= bufferSize;
 
     debugPrint("Preamble+buffer:");
-    for (int j = 0; j < i; j++) debugPrint("=[%02X] ", *(pbuf+j));
+    for (size_t j = 0; j < i; j++) debugPrint("=[%02X] ", *(pbuf+j));
     debugPrint("\n");
 
     flush();
