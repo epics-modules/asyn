@@ -23,6 +23,27 @@
 #include <stdio.h>
 #include <ctype.h>
 
+#define UART_SPI_BIT    0x01 // 0 = UART; 1 = SPI
+
+namespace Pin {
+  enum bus_t {
+  SK       = 0x01, //SPI clock
+  DO       = 0x02, //MOSI
+  DI       = 0x04, //MISO
+  CS       = 0x08,
+  IO_UPDATE= 0x10,
+  SYNCIO   = 0x20,
+  RESET    = 0x40
+  };
+}
+
+namespace FTDImode {
+  enum mode {
+  UART     = 0x00,
+  SPI      = 0x01
+  };
+}
+
 typedef enum e_FTDIDriverStatus
 {
   FTDIDriverSuccess,
@@ -41,7 +62,8 @@ typedef enum e_FTDIDriverStatus
 class FTDIDriver {
 
   public:
-    FTDIDriver();
+    FTDIDriver(int spi = 0); // SPI = 0 => UART; SPI = 1 = SPI;
+    FTDIDriverStatus initSPI();
     FTDIDriverStatus setVPID(const int vendor, const int product);
     FTDIDriverStatus setBaudrate(const int baudrate);
     FTDIDriverStatus setBits(enum ftdi_bits_type bits);
@@ -68,10 +90,18 @@ class FTDIDriver {
 
   private:
     struct ftdi_context *ftdi_;
+
+    int            spi;
+    int            spiInit;
+    int            buf[0x10000];
+    unsigned char *pbuf;
+
     int connected_;
     int vendor_;
     int product_;
     int baudrate_;
+    int pinState;
+    int pinDirection;
     enum ftdi_bits_type bits_;
     enum ftdi_stopbits_type sbits_;
     enum ftdi_parity_type parity_;

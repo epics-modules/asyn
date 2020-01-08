@@ -33,7 +33,7 @@ int main(int argc, char **argv)
     asynStatus status;
 
     status = (asynStatus) drvAsynFTDIPortConfigure(
-        PORT_NAME, VENDOR, PRODUCT, BAUDRATE, LATENCY, 0, 0, 1
+        PORT_NAME, VENDOR, PRODUCT, BAUDRATE, LATENCY, 0, 0, 1, 0
     );
 
     printf("drvAsynFTDIPortConfigure(port='%s', vendor=0x%04X, product=0x%04X, baudrate=%d, latency=%d) -> %d\n",
