@@ -86,10 +86,7 @@ static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
         if(*p) {
             p = skipWhite(p,0);
             if(*p) {
-                len = strlen(p);
-                *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
-                strncpy(*userParam,p,len);
-                (*userParam)[len] = 0;
+                *userParam = epicsStrDup(p);
             }
         }
         break;
@@ -139,10 +136,7 @@ userParams:
         if(*p) {
             p = skipWhite(p,0);
             if(userParam&& *p) {
-                len = strlen(p);
-                *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
-                strncpy(*userParam,p,len);
-                (*userParam)[len] = 0;
+                *userParam = epicsStrDup(p);
             }
         }
         break;
@@ -221,10 +215,7 @@ userParams:
     if(*p) {
         p = skipWhite(p,0);
         if(userParam&& *p) {
-            len = strlen(p);
-            *userParam = mallocMustSucceed(len+1,"asynEpicsUtils:parseLink");
-            strncpy(*userParam,p,len);
-            (*userParam)[len] = 0;
+          *userParam = epicsStrDup(p);
         }
     }
     return(asynSuccess);
