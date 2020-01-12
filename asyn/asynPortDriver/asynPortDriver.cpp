@@ -916,7 +916,6 @@ callbackThread::callbackThread(asynPortDriver *portDriver) :
 callbackThread::~callbackThread()
 {
     shutdown.signal();
-    thread.exitWait();
 }
 
 /* I thought this would be a temporary fix until EPICS supported PINI after interruptAccept, which would then be used
@@ -934,6 +933,7 @@ void callbackThread::run()
         pPortDriver->callParamCallbacks(addr, addr);
     }
     epicsMutexUnlock(pPortDriver->mutexId);
+    thread.exitWait();
 }
 
 
