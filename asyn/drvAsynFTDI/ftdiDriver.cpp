@@ -9,7 +9,8 @@
  *   8 Jul 2013
  * 
  ********************************************/
-
+#include <string.h>
+#include <stdio.h>
 #include "ftdiDriver.h"
 #include "epicsThread.h"
 #ifndef _MINGW
@@ -44,10 +45,12 @@ void debugPrint(...){}
  * @param vendor - Vendor ID
  * @param product - Product ID
  */
-FTDIDriver::FTDIDriver()
+FTDIDriver::FTDIDriver(int mode):spi(mode)
 {
   static const char *functionName = "FTDIDriver::FTDIDriver";
-  debugPrint("%s : Method called\n", functionName);
+  debugPrint("%s : Method called - ", functionName);
+  if( spi ) debugPrint("SPI\n");
+  else      debugPrint("UART\n");
 
   // Initialize internal FTDI parameters
   connected_ = 0;
@@ -63,6 +66,96 @@ FTDIDriver::FTDIDriver()
   parity_ = NONE;
   break_ = BREAK_OFF;
   flowctrl_ = SIO_DISABLE_FLOW_CTRL;
+  spiInit = 0; // Status whether init done
+  memset(buf, 0, sizeof(buf));
+}
+
+FTDIDriverStatus FTDIDriver::initSPI() {
+  unsigned int i = 0;
+  unsigned int n = 0;
+
+  FTDIDriverStatus rc = FTDIDriverError;
+
+  static const char *functionName = "FTDIDriver::initSPI";
+  debugPrint("%s : Method called, spi=%d\n", functionName, spi);
+
+  ftdi_set_bitmode(ftdi_, 0, 0); // reset
+  ftdi_set_bitmode(ftdi_, 0, BITMODE_MPSSE); // enable mpsse on all bits
+  ftdi_usb_purge_buffers(ftdi_);
+  epicsThreadSleep(0.060);
+
+  i = 0;
+  // MASTER RESET
+  pinState = Pin::CS|Pin::SYNCIO|Pin::RESET;
+  pinDirection = Pin::SK|Pin::DO|Pin::CS|Pin::SYNCIO|Pin::RESET;
+  pbuf = (unsigned char *)&buf[0];
+  *(pbuf + i++) = TCK_DIVISOR;     // opcode: set clk divisor
+  *(pbuf + i++) = 0x05;            // argument: low bit. 60 MHz / (5+1) = 1 MHz
+  *(pbuf + i++) = 0x00;            // argument: high bit.
+  *(pbuf + i++) = DIS_ADAPTIVE;    // opcode: disable adaptive clocking
+  *(pbuf + i++) = DIS_3_PHASE;     // opcode: disable 3-phase clocking
+  *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
+  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinDirection;    // argument: pin direction
+  n  = ftdi_write_data(ftdi_, pbuf, i);
+  rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
+  if( rc== FTDIDriverSuccess ) {
+       spiInit = 1;
+       debugPrint("%s : Method called: MASTER RESET, pinState=0x%02x\n",
+                                                functionName, pinState);
+       }
+  else debugPrint("%s : Method call FAILED!\n", functionName);
+  flush();
+  epicsThreadSleep(0.1);
+
+  i = 0; // CLEAR MASTER RESET
+  *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
+  pinState&=~Pin::RESET;
+  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinDirection;    // argument: pin direction
+  n  = ftdi_write_data(ftdi_, pbuf, i);
+  rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
+  if( rc== FTDIDriverSuccess ) {
+       spiInit = 2;
+       debugPrint("%s : Method called: CLEAR RESET, pinState=0x%02x\n",
+                                                functionName, pinState);
+       }
+  else debugPrint("%s : Method call FAILED!\n", functionName);
+  flush();
+  // Wait 1 ms
+  epicsThreadSleep(0.001);
+
+  // CLEAR SYNCIO
+  i = 0;
+  *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
+  pinState&=~Pin::SYNCIO;
+  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinDirection;    // argument: pin direction
+  n  = ftdi_write_data(ftdi_, pbuf, i);
+  rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
+  if( rc== FTDIDriverSuccess ) {
+       spiInit = 3;
+       debugPrint("%s : Method called: CLEAR SYNCIO, pinState=0x%02x\n",
+                                               functionName, pinState);
+       }
+  else debugPrint("%s : Method callFAILED!\n", functionName);
+
+  // PULL CS LOW
+  i = 0;
+  *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
+  pinState&=~Pin::CS;
+  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinDirection;    // argument: pin direction
+  n  = ftdi_write_data(ftdi_, pbuf, i);
+  rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
+  if( rc== FTDIDriverSuccess ) {
+       spiInit = 4;
+       debugPrint("%s : Method called: PULL CS LOW, pinState=0x%02x\n",
+                                                functionName, pinState);
+       }
+  else debugPrint("%s : Method call FAILED!\n", functionName);
+
+  return rc;
 }
 
 /**
@@ -75,7 +168,7 @@ FTDIDriver::FTDIDriver()
 FTDIDriverStatus FTDIDriver::setVPID(const int vendor, const int product)
 {
   static const char *functionName = "FTDIDriver::setVPID";
-  debugPrint("%s : Method called\n", functionName);
+  debugPrint("%s : Method called: SPI=%d\n", functionName, spi);
 
   // Store the Vendor ID
   vendor_ = vendor;
@@ -390,6 +483,11 @@ FTDIDriverStatus FTDIDriver::connectFTDI()
   debugPrint("%s : FTDI Connection ready...\n", functionName);
   connected_ = 1;
 
+  if( spi ) {
+    debugPrint("INIT SPI-\n");
+    FTDIDriver::initSPI();
+    }
+
   return FTDIDriverSuccess;
 }
 
@@ -430,7 +528,22 @@ FTDIDriverStatus FTDIDriver::flush()
  */
 FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, size_t *bytesWritten, int timeout)
 {
-  size_t rc;
+  /*********************************************************************************/
+  /* Array for collecting Return Codes from various stages of (SPI) write          */
+  /* (for compilation of a single debugPrint message at the end). Good to have     */
+  /* while debugging MSSP protocol and monitoring pinState with a scope.           */
+  /* AD9915 read back data is clocked "back" synchronously while writing under     */
+  /* condition that bit[7] of the instruction byte was 1: 'ftdi_transfer_data_done'*/
+  /* to AD9915 can fail at different stages if CS, SYNCIO, I/O_UPDATE are not      */
+  /* pulled in timely manner. Currently these lines (pinState) are controlled by   */
+  /* (hard coded) binary bytes embedded into the 'stream' protocol.                */
+  /*********************************************************************************/
+  size_t rc[16];
+  size_t i = 0;
+  int    err =0;
+
+  unsigned short sz = (unsigned short)bufferSize - 1;
+
   static const char *functionName = "FTDIDriver::write";
   debugPrint("%s : Method called\n", functionName);
   *bytesWritten = 0;
@@ -438,10 +551,11 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   if (connected_ == 0){
     debugPrint("%s : FTDI not connected\n", functionName);
     return FTDIDriverError;
-  }
+    }
 
-  debugPrint("%s : Writing\n", functionName);
-
+  debugPrint("%s : Writing: bufferSize=%d", functionName, bufferSize);
+  if(  spi ) debugPrint("\n"); // SPI data binary, no ASCII = don't print
+  else       debugPrint(" buffer=%s\n", buffer);
   timeval stime;
   timeval ctime;
   gettimeofday(&stime, NULL);
@@ -455,23 +569,48 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   struct ftdi_transfer_control *tc = ftdi_write_data_submit (
     ftdi_, (unsigned char *) buffer, (int) bufferSize
   );
-  rc = ftdi_transfer_data_done (tc);
+  rc[8] = ftdi_transfer_data_done (tc);
 #else
-  rc = ftdi_write_data(ftdi_, (unsigned char *) buffer, (int) bufferSize);
+  if( spi ) {
+    if( !spiInit ) initSPI();
+    i = 0;
+    pbuf = (unsigned char *)&buf[0];
+
+    memcpy((pbuf+i), buffer, bufferSize);
+    i+= bufferSize;
+
+    debugPrint("Preamble+buffer:");
+    for (size_t j = 0; j < i; j++) debugPrint("=[%02X] ", *(pbuf+j));
+    debugPrint("\n");
+
+    flush();
+    rc[3] = ftdi_write_data(ftdi_, pbuf, i);
+    if( rc[3] != i ) err = FTDIDriverError;
+
+    } // if SPI -
+  else {
+    rc[7] = ftdi_write_data(ftdi_, (unsigned char *) buffer, (int) bufferSize);
+    if( rc[7] != i ) err = FTDIDriverError;
+    debugPrint("%s : 7. pinState=0x%02x\n",
+ 		functionName, pinState);
+    }
 #endif
 
   gettimeofday(&ctime, NULL);
   tnow = ((ctime.tv_sec - stime.tv_sec) * 1000) + (ctime.tv_usec / 1000);
   debugPrint("%s : Time taken for write => %ld ms\n", functionName, (tnow-(mtimeout-timeout)));
-  if (rc > 0){
-    debugPrint("%s : %d bytes written\n", functionName, rc);
-    *bytesWritten = (size_t)rc;
+  if (rc[3] > 0){
+    // Since we write also the address byte byteswritten = sz+1
+    *bytesWritten = (size_t)(sz+1);
+    debugPrint("%s : %d bytes written err=%d: ", functionName, *bytesWritten, err);
+    if( err == FTDIDriverError ) debugPrint("FTDIDriverError\n");
+    else                         debugPrint("FTDIDriverSUCCESS\n");
   } else {
     debugPrint("FTDI write error: %d (%s)\n", rc, ftdi_get_error_string(ftdi_));
     *bytesWritten = 0;
     return FTDIDriverError;
   }
-  
+
   return FTDIDriverSuccess;
 }
 
@@ -497,7 +636,7 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
     return FTDIDriverError;
   }
 
-  debugPrint("%s : Reading\n", functionName);
+  debugPrint("%s : Reading: bufferSize=%d, timeout=%d\n", functionName, bufferSize, timeout);
 
   timeval stime;
   timeval ctime;
@@ -507,24 +646,26 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
   int rc = 0;
   
   *bytesRead = 0;
-  while ((*bytesRead == 0) && (tnow < mtimeout)){
+
+  if( spi ) ftdi_usb_purge_tx_buffer(ftdi_);
+  while ((*bytesRead == 0) && (tnow < mtimeout)) {
     rc = ftdi_read_data (ftdi_, &buffer[*bytesRead], (bufferSize-*bytesRead));
-    if (rc > 0){
-      *bytesRead+=rc;
-    }
-    if (*bytesRead == 0){
+    debugPrint("%s rc=%d\n", functionName, rc);
+    if (rc > 0) *bytesRead+=rc;
+    if (*bytesRead == 0) {
+      if( spi ) return FTDIDriverTimeout;
       usleep(50);
       gettimeofday(&ctime, NULL);
       tnow = ((ctime.tv_sec - stime.tv_sec) * 1000) + (ctime.tv_usec / 1000);
+      }
     }
-  }
 
   if (*bytesRead < bufferSize)
     buffer[*bytesRead] = '\0';
 
   debugPrint("%s %d Bytes =>\n", functionName, (int)*bytesRead);
   for (int j = 0; j < (int)*bytesRead; j++){
-    debugPrint("[%0X] ", buffer[j]);
+    debugPrint("[%02X] ", buffer[j]);
   }
   debugPrint("\n");
 
@@ -533,9 +674,10 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
   debugPrint("%s : Time taken for read => %ld ms\n", functionName, (tnow-(mtimeout-timeout)));
 
   if ((timeout > 0) && (tnow >= mtimeout)){
+    debugPrint("%s : TIMEOUT-\n", functionName);
     return FTDIDriverTimeout;
   }
-
+  debugPrint("%s : SUCCESS!\n", functionName);
   return FTDIDriverSuccess;
 }
 

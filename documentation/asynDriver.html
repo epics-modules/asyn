@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-37</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-38</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">October 18, 2019</span></p>
+      <span style="font-weight: bold; font-size: 14pt">January 3, 2020</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -6086,7 +6086,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
     commands:
   </p>
   <pre>
-    drvAsynFTDIPortConfigure("portName",vendor,product,baudrate,latency,priority,noAutoConnect,noProcessEos)
+    drvAsynFTDIPortConfigure("portName",vendor,product,baudrate,latency,priority,noAutoConnect,noProcessEos,mode)
     asynSetOption("portName",addr,"key","value")</pre>
   <p>
     where the arguments are:
@@ -6103,6 +6103,7 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
       connect. Non-zero if explicit connect command must be issued.</li>
     <li>noProcessEos If 0 then asynInterposeEosConfig is called specifying both processEosIn
       and processEosOut.</li>
+    <li>mode: 0 = UART; 1 = FTDI initialized in binary SPI mode.</li>
   </ul>
   <p>
     The setEos and getEos methods have no effect and return asynError. The read method
@@ -6177,6 +6178,111 @@ SUBSYSTEM=="usb", ATTRS{idVendor}=="1BFA", ATTRS{idProduct}=="0498", MODE="0666"
       </tr>
     </tbody>
   </table>
+  <p>
+    The FTDI SPI interface was developed for control of evaluation board, EVAL-AD9915,
+    via Adafruit FT232H. During initial SPI learning it is sufficient to short circuit,
+    (loop-back), FTDI D1(MOSI) - D2(MISO) pins and read back written values. (Note the
+    SPI is synchronous interface, not asynchronous.)
+  </p>
+  <p>
+    AD9915 provides basic control for RF amplitude and phase. In order to use the Adafruit
+    as USB - SPI converter for EVAL-AD9915 the following pins need to be connected:
+  </p>
+  <table border="1">
+    <caption>
+      Adafruit FT232H EVAL-AD9915 connections</caption>
+    <tbody>
+      <tr>
+        <th>
+          Adafruit FT232H
+        </th>
+        <th>
+          EVAL-AD9915
+        </th>
+      </tr>
+      <tr>
+        <td>
+          D0 (SPI Clock, SK) </td>
+        <td>
+          SCLK-BUF </td>
+      </tr>
+      <tr>
+        <td>
+          D1 (Data Out, MOSI) </td>
+        <td>
+          SDIO </td>
+      </tr>
+      <tr>
+        <td>
+          D2 (Data In, MISO) </td>
+        <td>
+          SDO </td>
+      </tr>
+      <tr>
+        <td>
+          D3 (Chip Select, CS) </td>
+        <td>
+          CSB </td>
+      </tr>
+      <tr>
+        <td>
+          D4 </td>
+        <td>
+          IOUPDATE-BUF </td>
+      </tr>
+      <tr>
+        <td>
+          D5 </td>
+        <td>
+          SYNC_IO </td>
+      </tr>
+      <tr>
+        <td>
+          D6 </td>
+        <td>
+          RESET </td>
+      </tr>
+    </tbody>
+  </table>
+  <p>
+    On EVAL-AD9915 board: 1) The on-board USB-SPI converter, (lacking open source driver),
+    should be disabled by jumpers P203-P205. 2) The following jumpers need to be configured:
+    EXTPDCTL=GND; PS0-BUF=GND; PS1-BUF=GND; PS2-BUF=GND; IOCFG=+5V; IOCFG1...3=GND.
+    The FTDI SPI driver supports raw 32-bit integer reads/writes. MPSSE instruction
+    codes, pin controls, data lengths are currently hard coded in the stream protocol:
+    (WRite Digital Output, WRite PIN, ReaD Digital Input):
+  </p>
+  <pre>  WRDO {
+    # MPSSE_DO_WRITE | MPSSE_WRITE_NEG | MPSSE_DO_READ = 0x31
+    # Length = 0x04 bytes after the instruction code and 2 length bytes:
+    out 0x31 0x04 0x00 $1 "%.4r";
+    }
+
+  WRPIN {
+    # SK = 0x01
+    # DO = 0x02
+    # DI = 0x04
+    # CS = 0x08
+    # IO_UPD = 0x10
+    # SYNCIO = 0x20
+    # RESET  = 0x40
+    # PINDIR = 0x7B
+    # SET_BITS_LOW = 0x80
+    out 0x80 "%r" 0x7B;
+    }
+
+  RDDI {
+    # MPSSE_DO_WRITE | MPSSE_WRITE_NEG | MPSSE_DO_READ = 0x31
+    # Length = 0x04 bytes after the instruction code and 2 length bytes:
+    # Input is clocked in while the 0 bytes are clocked out:
+    out 0x31 0x04 0x00 $1 0x00 0x00 0x00 0x00;
+    in "%5r";
+    }
+  </pre>
+  <p>
+    The sequences are controlled by EPICS database. For further details refer to the
+    respective technical manuals.
+  </p>
   <h3 id="Additional_Drivers">
     Additional Drivers</h3>
   <p>
