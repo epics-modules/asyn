@@ -100,9 +100,9 @@ jobs:
 
 # Cross-compilation to RTEMS
 
-  - env: BASE=7.0 RTEMS=4.10 TEST=NO
+  - env: BASE=7.0 RTEMS=4.10 TEST=NO MODULES="sncseq ipac"
 
-  - env: BASE=7.0 RTEMS=4.9 TEST=NO
+  - env: BASE=7.0 RTEMS=4.9 TEST=NO MODULES="sncseq ipac"
 
 # Older Base releases
 
