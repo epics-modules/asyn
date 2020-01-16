@@ -45,7 +45,6 @@ install:
 script:
   - ./.ci/travis/build.sh
   - ls -R bin lib include
-#  - [ TEST = NO ] || ./asyn/asynPortDriver/unittest/O.linux-x86_64/asynPortDriverTest
 
 # If you need to do more during install and build,
 # add a local directory to your module and do e.g.
@@ -100,9 +99,9 @@ jobs:
 
 # Cross-compilation to RTEMS
 
-  - env: BASE=7.0 RTEMS=4.10 TEST=NO MODULES="sncseq ipac"
+  - env: BASE=7.0 RTEMS=4.10 MODULES="sncseq ipac"
 
-  - env: BASE=7.0 RTEMS=4.9 TEST=NO MODULES="sncseq ipac"
+  - env: BASE=7.0 RTEMS=4.9 MODULES="sncseq ipac"
 
 # Older Base releases
 
