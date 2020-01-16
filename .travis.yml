@@ -43,6 +43,7 @@ install:
   - ./.ci/travis/prepare.sh
 
 script:
+  - ./.ci-local/cfg_libcom-only.sh
   - ./.ci/travis/build.sh
   - ls -R bin lib include
 
@@ -69,7 +70,7 @@ script:
 jobs:
   include:
 
-# Different configurations of default gcc and clang
+# Default gcc and clang, static build
 
   - env: BASE=7.0
 
@@ -119,6 +120,12 @@ jobs:
   - env: BASE=R3.14.12.8
 
   - env: BASE=R3.14.12.8 STATIC=YES
+
+# "Libcom only" builds
+
+  - env: BASE=7.0 LIBCOM_ONLY=YES
+
+  - env: BASE=7.0 LIBCOM_ONLY=YES STATIC=YES
 
 # Other gcc versions (added as an extra package)
 
