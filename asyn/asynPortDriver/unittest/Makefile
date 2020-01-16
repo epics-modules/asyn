@@ -44,5 +44,9 @@ TESTSPEC_RTEMS = asynPortDriverTestHarness.boot; asynRunPortDriverTests
 
 
 TESTSCRIPTS_HOST += $(TESTS:%=%.t)
+ifneq ($(filter $(T_A),$(CROSS_COMPILER_RUNTEST_ARCHS)),)
+TESTPROD = $(TESTPROD_HOST)
+TESTSCRIPTS += $(TESTS:%=%.t)
+endif
 
 include $(TOP)/configure/RULES
