@@ -26,7 +26,22 @@ PROD_LIBS += Com
 #tests for asynPortDriver
 TESTPROD_HOST += asynPortDriverTest
 asynPortDriverTest_SRCS += asynPortDriverTest.cpp
+testHarness_SRCS += asynPortDriverTest.cpp
 TESTS += asynPortDriverTest
+
+
+# The testHarness runs all the test programs in a known working order.
+testHarness_SRCS += asynRunPortDriverTests.c
+
+asynPortDriverTestHarness_SRCS += $(testHarness_SRCS)
+asynPortDriverTestHarness_SRCS_RTEMS += rtemsTestHarness.c
+
+PROD_vxWorks = asynPortDriverTestHarness
+PROD_RTEMS += asynPortDriverTestHarness
+
+TESTSPEC_vxWorks = asynPortDriverTestHarness.munch; asynRunPortDriverTests
+TESTSPEC_RTEMS = asynPortDriverTestHarness.boot; asynRunPortDriverTests
+
 
 TESTSCRIPTS_HOST += $(TESTS:%=%.t)
 
