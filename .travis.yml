@@ -1,29 +1,139 @@
+# .travis.yml for use with EPICS Base ci-scripts
+# (see: https://github.com/epics-base/ci-scripts)
+
+# This is YAML - indentation levels are crucial
+
 language: cpp
 compiler: gcc
+dist: xenial
+
+cache:
+  directories:
+  - $HOME/.cache
 
 env:
-  - EPICS_BASE=/usr/lib/epics EPICS_HOST_ARCH=linux-x86_64
-  
-before_install:
-  # Enabling the NSLS-II EPICS debian package repositories
-  - curl https://epics.nsls2.bnl.gov/debian/repo-key.pub | sudo apt-key add -
-  - echo "deb https://epics.nsls2.bnl.gov/debian/ wheezy main contrib" | sudo tee -a /etc/apt/sources.list
-  - echo "deb-src https://epics.nsls2.bnl.gov/debian/ wheezy main contrib" | sudo tee -a /etc/apt/sources.list
-  
-  # Installing EPICS base
-  - sudo apt-get update -qq
-  - sudo apt-get install epics-dev epics-synapps-dev
-  
-  # Setup configure/RELEASE for the environment
-  - echo "EPICS_BASE=/usr/lib/epics" > configure/RELEASE
-  - echo "SNCSEQ=/usr/lib/epics" >> configure/RELEASE
+  global:
+    - SETUP_PATH=.ci-local:.ci
+    - MODULES=sncseq
+    - SNCSEQ=R2-2-8
 
-install: 
-  # Build the module
-  - make
+addons:
+  apt:
+    packages:
+    # for all EPICS builds
+    - libreadline6-dev
+    - libncurses5-dev
+    - perl
+    # for clang compiler
+    - clang
+    # for mingw builds (32bit and 64bit)
+    - g++-mingw-w64-i686
+    - g++-mingw-w64-x86-64
+    # for RTEMS cross builds
+    - qemu-system-x86
+  homebrew:
+    packages:
+    # for all EPICS builds
+    - bash
+    # for the sequencer
+    - re2c
+    update: true
+
+install:
+  - ./.ci/travis/prepare.sh
 
 script:
-  - ls bin/linux-x86_64
-  - ls lib/linux-x86_64
-  - ls include
-  - ./asyn/asynPortDriver/unittest/O.linux-x86_64/asynPortDriverTest
+  - ./.ci-local/cfg_libcom-only.sh
+  - ./.ci/travis/build.sh
+  - ls -R bin lib include
+
+# If you need to do more during install and build,
+# add a local directory to your module and do e.g.
+#  - ./.ci-local/travis/install-extras.sh
+
+# Define build jobs
+
+# Well-known variables to use
+# SET      source setup file
+# EXTRA    content will be added to make command line
+# STATIC   set to YES for static build (default: NO)
+# TEST     set to NO to skip running the tests (default: YES)
+# VV       set to make build scripts verbose (default: unset)
+
+# Usually from setup files, but may be specified or overridden
+#  on a job line
+# MODULES  list of dependency modules
+# BASE     branch or release tag name of the EPICS Base to use
+# <MODULE> branch or release tag for a specific module
+# ...      see README for setup file syntax description
+
+jobs:
+  include:
+
+# Default gcc and clang, static build
+
+  - env: BASE=7.0
+
+  - env: BASE=7.0
+    compiler: clang
+
+  - env: BASE=7.0 STATIC=YES
+
+# Trusty: compiler versions very close to RHEL 7
+
+  - env: BASE=7.0
+    dist: trusty
+
+# Cross-compilations to Windows using MinGW and WINE
+    
+  - env: BASE=7.0 WINE=32 TEST=NO STATIC=YES
+    compiler: mingw
+
+  - env: BASE=7.0 WINE=64 TEST=NO STATIC=NO
+    compiler: mingw
+
+# MacOS build
+
+  - env: BASE=7.0
+    os: osx
+    compiler: clang
+
+# Cross-compilation to RTEMS
+
+  - env: BASE=7.0 RTEMS=4.10 MODULES="sncseq ipac"
+
+  - env: BASE=7.0 RTEMS=4.9 MODULES="sncseq ipac"
+
+# Older Base releases
+
+  - env: BASE=R3.15.7
+
+  - env: BASE=R3.15.7 STATIC=YES
+
+# 3.14.12.2 build fails on newer distributions and doesn't know tapfiles target
+  - env: BASE=R3.14.12.2 TEST=NO
+    dist: trusty
+
+  - env: BASE=R3.14.12.2 STATIC=YES TEST=NO
+    dist: trusty
+
+  - env: BASE=R3.14.12.8
+
+  - env: BASE=R3.14.12.8 STATIC=YES
+
+# "Libcom only" builds
+
+  - env: BASE=7.0 LIBCOM_ONLY=YES
+
+  - env: BASE=7.0 LIBCOM_ONLY=YES STATIC=YES
+
+# Other gcc versions (added as an extra package)
+
+  - env: BASE=7.0
+    compiler: gcc-6
+    addons: { apt: { packages: ["g++-6"], sources: ["ubuntu-toolchain-r-test"] } }
+
+  - env: BASE=7.0
+    compiler: gcc-7
+    addons: { apt: { packages: ["g++-7"], sources: ["ubuntu-toolchain-r-test"] } }
+

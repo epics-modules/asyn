@@ -20,6 +20,11 @@
 extern "C" int interruptAccept;
 int interruptAccept=1;
 
+#ifdef __rtems__
+// no test data needed (when running individual CI tests)
+const void* epicsRtemsFSImage = 0;
+#endif
+
 namespace {
 
 typedef epicsGuard<asynPortDriver> Guard;
