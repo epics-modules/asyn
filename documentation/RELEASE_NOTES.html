@@ -18,11 +18,25 @@
   </div>
   <div>
     <h3>
+      Travis CI</h3>
+    <ul>
+      <li>Added ci-scripts module to provide much more complete testing. Thanks to Ralph Lange for this.
+        <ul>
+          <li>Against EPICS 7.0 / 3.15.7 / 3.14.12.8 / 3.14.12.2</li>
+          <li>Using g++ and clang</li>
+          <li>Static and dynamic builds</li>
+          <li>Cross-compilation to Windows using MinGW</li>
+          <li>Cross-compilation to RTEMS 4.9 and 4.10 (including running the tests under qemu)</li>
+          <li>On MacOS</li>
+          <li>EPICS_LIBCOM_ONLY builds</li>
+        </ul>
+      </li>
+    </ul>
+    <h3>
       FTDI driver</h3>
     <ul>
       <li>Added minimal SPI support for AD9915.</li>
-    </ul>
-  </div>
+    </ul>  </div>
   <div style="text-align: center">
     <hr />
     <h2>
