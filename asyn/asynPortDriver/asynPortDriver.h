@@ -229,6 +229,7 @@ private:
     epicsThread *pThread;
     asynPortDriver *pPortDriver;
     epicsEvent shutdown;
+    epicsEvent doneEvent;
 };
 
 #endif /* cplusplus */
