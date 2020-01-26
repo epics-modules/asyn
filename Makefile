@@ -3,6 +3,7 @@ TOP = .
 include $(TOP)/configure/CONFIG
 DIRS += configure
 DIRS += makeSupport
+DIRS += opi
 
 DIRS += asyn
 asyn_DEPEND_DIRS = configure
