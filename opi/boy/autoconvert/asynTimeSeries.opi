@@ -9,7 +9,7 @@
   <background_color>
     <color red="187" green="187" blue="187" />
   </background_color>
-  <boy_version>5.1.0.201801081728</boy_version>
+  <boy_version>5.1.0</boy_version>
   <foreground_color>
     <color red="0" green="0" blue="0" />
   </foreground_color>
@@ -291,7 +291,7 @@ $(pv_value)</tooltip>
     </foreground_color>
     <format_type>1</format_type>
     <height>20</height>
-    <horizontal_alignment>0</horizontal_alignment>
+    <horizontal_alignment>2</horizontal_alignment>
     <name>Text Update</name>
     <precision>0</precision>
     <precision_from_pv>true</precision_from_pv>
@@ -497,15 +497,15 @@ $(pv_value)</tooltip>
     <tooltip>$(trace_0_y_pv)
 $(trace_0_y_pv_value)</tooltip>
     <trace_0_anti_alias>true</trace_0_anti_alias>
-    <trace_0_buffer_size>100</trace_0_buffer_size>
-    <trace_0_concatenate_data>true</trace_0_concatenate_data>
+    <trace_0_buffer_size>0</trace_0_buffer_size>
+    <trace_0_concatenate_data>false</trace_0_concatenate_data>
     <trace_0_line_width>1</trace_0_line_width>
     <trace_0_name>$(trace_0_y_pv)</trace_0_name>
     <trace_0_plot_mode>0</trace_0_plot_mode>
     <trace_0_point_size>4</trace_0_point_size>
     <trace_0_point_style>0</trace_0_point_style>
     <trace_0_trace_color>
-      <color red="21" green="21" blue="196" />
+      <color red="75" green="110" blue="199" />
     </trace_0_trace_color>
     <trace_0_trace_type>0</trace_0_trace_type>
     <trace_0_update_delay>100</trace_0_update_delay>
@@ -515,7 +515,7 @@ $(trace_0_y_pv_value)</tooltip>
     <trace_0_x_pv></trace_0_x_pv>
     <trace_0_x_pv_value />
     <trace_0_y_axis_index>1</trace_0_y_axis_index>
-    <trace_0_y_pv>$(pv_name)</trace_0_y_pv>
+    <trace_0_y_pv>$(P)$(R).VAL</trace_0_y_pv>
     <trace_0_y_pv_value />
     <trace_10_anti_alias>true</trace_10_anti_alias>
     <trace_10_buffer_size>100</trace_10_buffer_size>
