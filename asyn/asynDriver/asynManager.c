@@ -472,6 +472,17 @@ static void reportConnectStatus(port *pport, portConnectStatus status, const cha
     }
 }
 
+static const char *asynStripPath(const char *file)
+{
+  const char *ret = strrchr(file, '/');
+  if (ret) return ret + 1;
+#if (defined(CYGWIN32) || defined(_WIN32))
+  ret = strrchr(file, '\\');
+  if (ret) return ret + 1;
+#endif
+  return file;
+}
+
 static void asynInit(void)
 {
     int i;
@@ -2827,6 +2838,7 @@ static size_t printPort(FILE *fp, asynUser *pasynUser)
 static size_t printSource(FILE *fp, const char *file, int line)
 {
     int      nout = 0;
+    file = asynStripPath(file);
 
     if(fp) {
         nout = fprintf(fp,"[%s:%d] ", file, line);
@@ -2870,6 +2882,7 @@ static int traceVprintSource(asynUser *pasynUser,int reason, const char *file, i
     int      nout = 0;
     FILE     *fp;
 
+    file = asynStripPath(file);
     if(!(reason & ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
     fp = getTraceFile(pasynUser);
