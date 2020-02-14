@@ -188,7 +188,13 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
       HAVE_DEVINT64=YES
     endif
   endif
-  
+
+  # 3.15 and above support lsi, lso and printf records
+  ifdef BASE_3_15
+    USR_CFLAGS += -DHAVE_LSREC
+    devEpics_DBD += devAsynOctetLs.dbd
+  endif
+
   ifdef HAVE_DEVINT64
     USR_CFLAGS += -DHAVE_DEVINT64
     USR_CXXFLAGS += -DHAVE_DEVINT64

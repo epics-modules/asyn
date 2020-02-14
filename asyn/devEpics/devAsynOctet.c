@@ -48,9 +48,11 @@
 #include <stringinRecord.h>
 #include <stringoutRecord.h>
 #include <waveformRecord.h>
+#ifdef HAVE_LSREC
 #include <lsiRecord.h>
 #include <lsoRecord.h>
 #include <printfRecord.h>
+#endif /* HAVE_LSREC */
 #include <menuFtype.h>
 #include <recSup.h>
 #include <devSup.h>
@@ -89,7 +91,7 @@ typedef struct devPvt {
     char                *userParam;
     int                 isOutput;
     int                 isWaveform;
-    epicsUInt32*        pLen; /* pointer to string length field to update, nord for waveform, len for lsi/lso/printf */
+    epicsUInt32         *pLen; /* pointer to string length field to update, nord for waveform, len for lsi/lso/printf */
     /* Following are for CmdResponse */
     char                *buffer;
     size_t              bufSize;
@@ -158,6 +160,7 @@ static void callbackWfWrite(asynUser *pasynUser);
 static long initWfWriteBinary(waveformRecord *pwf);
 static void callbackWfWriteBinary(asynUser *pasynUser);
 
+#ifdef HAVE_LSREC
 static long initLsiCmdResponse(lsiRecord *plsi);
 static void callbackLsiCmdResponse(asynUser *pasynUser);
 static long initLsiWriteRead(lsiRecord *plsi);
@@ -169,6 +172,7 @@ static void callbackLsoWrite(asynUser *pasynUser);
 
 static long initPfWrite(printfRecord *ppf);
 static void callbackPfWrite(asynUser *pasynUser);
+#endif /* HAVE_LSREC */
 
 typedef struct commonDset {
     long          number;
@@ -197,6 +201,7 @@ commonDset asynWfOctetWrite       = {
     5, 0, 0, initWfWrite,       0,            processCommon};
 commonDset asynWfOctetWriteBinary = {
     5, 0, 0, initWfWriteBinary, 0,            processCommon};
+#ifdef HAVE_LSREC
 commonDset asynLsiOctetCmdResponse = {
     5, 0, 0, initLsiCmdResponse, 0,            processCommon};
 commonDset asynLsiOctetWriteRead   = {
@@ -207,6 +212,7 @@ commonDset asynLsoOctetWrite       = {
     5, 0, 0, initLsoWrite,       0,            processCommon};
 commonDset asynPfOctetWrite       = {
     5, 0, 0, initPfWrite,       0,            processCommon};
+#endif /* HAVE_LSREC */
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);
 epicsExportAddress(dset, asynSiOctetWriteRead);
@@ -217,15 +223,17 @@ epicsExportAddress(dset, asynWfOctetWriteRead);
 epicsExportAddress(dset, asynWfOctetRead);
 epicsExportAddress(dset, asynWfOctetWrite);
 epicsExportAddress(dset, asynWfOctetWriteBinary);
+#ifdef HAVE_LSREC
 epicsExportAddress(dset, asynLsiOctetCmdResponse);
 epicsExportAddress(dset, asynLsiOctetWriteRead);
 epicsExportAddress(dset, asynLsiOctetRead);
 epicsExportAddress(dset, asynLsoOctetWrite);
 epicsExportAddress(dset, asynPfOctetWrite);
+#endif /* HAVE_LSREC */
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                        int isOutput, int isWaveform, int useDrvUser, char *pValue,
-                       epicsUInt32* pLen, size_t valSize)
+                       epicsUInt32 *pLen, size_t valSize)
 {
     devPvt        *pPvt;
     asynStatus    status;
@@ -1071,6 +1079,7 @@ static void callbackWfWriteBinary(asynUser *pasynUser)
     finish((dbCommon *)pwf);
 }
 
+#ifdef HAVE_LSREC
 
 static long initLsiCmdResponse(lsiRecord *plsi)
 {
@@ -1205,3 +1214,5 @@ static void callbackPfWrite(asynUser *pasynUser)
     writeIt(pasynUser, ppf->val, my_strnlen(ppf->val, ppf->len));
     finish((dbCommon *)ppf);
 }
+
+#endif /* HAVE_LSREC */

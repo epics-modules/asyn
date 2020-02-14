@@ -1,0 +1,5 @@
+device(lsi,INST_IO,asynLsiOctetCmdResponse,"asynOctetCmdResponse")
+device(lsi,INST_IO,asynLsiOctetWriteRead,"asynOctetWriteRead")
+device(lsi,INST_IO,asynLsiOctetRead,"asynOctetRead")
+device(lso,INST_IO,asynLsoOctetWrite,"asynOctetWrite")
+device(printf,INST_IO,asynPfOctetWrite,"asynOctetWrite")
