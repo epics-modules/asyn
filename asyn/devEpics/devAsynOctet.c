@@ -11,7 +11,7 @@
     Author:  Marty Kraimer
     02SEP2004
 
-    This file provides device support for stringin, stringout, lsi, lso, printf, and waveform.
+    This file provides device support for stringin, stringout, lsi, lso, printf, scalcout and waveform.
     NOTE: waveform must be a array of chars
     asynSiOctetCmdResponse,asynWfOctetCmdResponse:
         INP has a command string.
@@ -53,6 +53,9 @@
 #include <lsoRecord.h>
 #include <printfRecord.h>
 #endif /* HAVE_LSREC */
+#ifdef HAVE_CALCMOD
+#include "sCalcoutRecord.h"
+#endif /* HAVE_CALCMOD */
 #include <menuFtype.h>
 #include <recSup.h>
 #include <devSup.h>
@@ -174,6 +177,11 @@ static long initPfWrite(printfRecord *ppf);
 static void callbackPfWrite(asynUser *pasynUser);
 #endif /* HAVE_LSREC */
 
+#ifdef HAVE_CALCMOD
+static long initScalcoutWrite(scalcoutRecord *pscalcout);
+static void callbackScalcoutWrite(asynUser *pasynUser);
+#endif /* HAVE_CALCMOD */
+
 typedef struct commonDset {
     long          number;
     DEVSUPFUN     dev_report;
@@ -213,6 +221,10 @@ commonDset asynLsoOctetWrite       = {
 commonDset asynPfOctetWrite       = {
     5, 0, 0, initPfWrite,       0,            processCommon};
 #endif /* HAVE_LSREC */
+#ifdef HAVE_CALCMOD
+commonDset asynScalcoutOctetWrite       = {
+    5, 0, 0, initScalcoutWrite,       0,            processCommon};
+#endif /* HAVE_CALCMOD */
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);
 epicsExportAddress(dset, asynSiOctetWriteRead);
@@ -230,6 +242,9 @@ epicsExportAddress(dset, asynLsiOctetRead);
 epicsExportAddress(dset, asynLsoOctetWrite);
 epicsExportAddress(dset, asynPfOctetWrite);
 #endif /* HAVE_LSREC */
+#ifdef HAVE_CALCMOD
+epicsExportAddress(dset, asynScalcoutOctetWrite);
+#endif /* HAVE_CALCMOD */
 
 static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                        int isOutput, int isWaveform, int useDrvUser, char *pValue,
@@ -1231,3 +1246,29 @@ static void callbackPfWrite(asynUser *pasynUser)
 }
 
 #endif /* HAVE_LSREC */
+
+#ifdef HAVE_CALCMOD
+static long initScalcoutWrite(scalcoutRecord *pscalcout)
+{
+    long ret;
+    pscalcout->osv[0] = 0;
+    ret = initCommon((dbCommon *)pscalcout, &pscalcout->out, callbackScalcoutWrite,
+                      1, 0, 1, pscalcout->osv, NULL, sizeof(pscalcout->osv));
+    /* update sval and val if an inital readback from the device */
+    if (ret == INIT_OK && my_strnlen(pscalcout->osv, sizeof(pscalcout->osv)) > 0) {
+        strncpy(pscalcout->sval, pscalcout->osv, sizeof(pscalcout->sval));
+        pscalcout->sval[sizeof(pscalcout->sval) - 1] = 0;
+        pscalcout->val = atof(pscalcout->sval);
+    }
+    return ret;
+}
+
+static void callbackScalcoutWrite(asynUser *pasynUser)
+{
+    devPvt          *pPvt = (devPvt *)pasynUser->userPvt;
+    scalcoutRecord *pscalcout = (scalcoutRecord *)pPvt->precord;
+
+    writeIt(pasynUser, pscalcout->osv, my_strnlen(pscalcout->osv, sizeof(pscalcout->osv)));
+    finish((dbCommon *)pscalcout);
+}
+#endif /* HAVE_CALCMOD */
