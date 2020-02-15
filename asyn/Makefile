@@ -26,11 +26,7 @@ endif
 USR_CXXFLAGS_solaris-sparc=-instances=global
 
 LIBRARY_IOC += asyn
-ifeq ($(EPICS_LIBCOM_ONLY),YES)
-  asyn_LIBS += Com
-else
-  asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
-endif
+
 asyn_SYS_LIBS_WIN32 = ws2_32 winmm
 asyn_SYS_LIBS_cygwin32 = $(CYGWIN_RPC_LIB)
 
@@ -195,6 +191,15 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
     devEpics_DBD += devAsynOctetLs.dbd
   endif
 
+  # do we have EPICS calc module (scalcout etc.)
+  # applications should include asynCalc.dbd as well as asyn.dbd if support is needed
+  ifdef CALC
+  ifdef SSCAN
+    USR_CFLAGS += -DHAVE_CALCMOD
+    ASYN_LIBS += calc sscan
+  endif
+  endif
+
   ifdef HAVE_DEVINT64
     USR_CFLAGS += -DHAVE_DEVINT64
     USR_CXXFLAGS += -DHAVE_DEVINT64
@@ -207,7 +212,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   devEpics_DBD += devAsynInt64Misc.dbd
   asyn_SRCS += devAsynInt64.c
 
-  DBD += $(devEpics_DBD)
+  DBD += $(devEpics_DBD) asynCalc.dbd
 
   SRC_DIRS += $(ASYN)/asynRecord
   DBDINC += asynRecord
@@ -287,6 +292,12 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += devSupportGpib.c
 endif
 asyn_SRCS += boSRQonOff.c
+
+ifeq ($(EPICS_LIBCOM_ONLY),YES)
+  asyn_LIBS += Com
+else
+  asyn_LIBS += $(EPICS_BASE_IOC_LIBS)
+endif
 
 include $(TOP)/configure/RULES
 

@@ -1,0 +1,2 @@
+# support for EPICS calc module
+device(scalcout,INST_IO,asynScalcoutOctetWrite,"asynOctetWrite")
