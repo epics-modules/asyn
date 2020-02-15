@@ -365,7 +365,10 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
                 if (nBytesRead == valSize) nBytesRead--;
                 buffer[nBytesRead] = 0;
                 strcpy(pValue, buffer);
-                if (pPvt->pLen != NULL) *(pPvt->pLen) = nBytesRead;
+                if (pPvt->pLen != NULL)
+                {
+                    *(pPvt->pLen) = (pPvt->isWaveform ? nBytesRead : nBytesRead + 1); /* lsi, lso and printf count \0 in length */
+                }
             }
             free(buffer);
             pasynOctetSyncIO->disconnect(pasynUserSync);
@@ -770,7 +773,9 @@ static long processCommon(dbCommon *precord)
         if (pPvt->ringSize == 0) {
             /* Data has already been copied to the record in interruptCallback */
             pPvt->gotValue--;
-            if ((pPvt->pLen != NULL) && (pPvt->result.status == asynSuccess)) pPvt->pLen = pPvt->nord;
+            if ((pPvt->pLen != NULL) && (pPvt->result.status == asynSuccess)) {
+                pPvt->pLen = (pPvt->isWaveform ? pPvt->nord : pPvt->nord + 1); /* lsi, lso and printf count \0 in length */
+            }
             if (pPvt->gotValue) {
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
                     "%s %s::%s warning: multiple interrupt callbacks between processing\n",
@@ -784,7 +789,9 @@ static long processCommon(dbCommon *precord)
             epicsMutexLock(pPvt->devPvtLock);
             if (rp->status == asynSuccess) {
                 memcpy(pPvt->pValue, rp->pValue, rp->len);
-                if (pPvt->pLen != NULL) pPvt->pLen = rp->len;
+                if (pPvt->pLen != NULL) {
+                    pPvt->pLen = (pPvt->isWaveform ? rp->len : rp->len + 1); /* lsi, lso and printf count \0 in length */
+                }
             }
             precord->time = rp->time;
             epicsMutexUnlock(pPvt->devPvtLock);
@@ -975,8 +982,10 @@ static void callbackWfCmdResponse(asynUser *pasynUser)
         status = readIt(pasynUser,pwf->bptr,(size_t)pwf->nelm,&nBytesRead);
         pwf->time = pasynUser->timestamp;
         if(status==asynSuccess) {
+            if (nBytesRead == pwf->nelm) nBytesRead--;
+            pbuf[nBytesRead] = 0;
+            pwf->udf = 0;
             pwf->nord = (epicsUInt32)nBytesRead;
-            if (nBytesRead < pwf->nelm) pbuf[nBytesRead] = 0;
         }
     }
     finish((dbCommon *)pwf);
@@ -1019,8 +1028,10 @@ static void callbackWfWriteRead(asynUser *pasynUser)
         status = readIt(pasynUser,pwf->bptr, (size_t)pwf->nelm, &nBytesRead);
         pwf->time = pasynUser->timestamp;
         if(status==asynSuccess) {
+            if (nBytesRead == pwf->nelm) nBytesRead--;
+            pbuf[nBytesRead] = 0;
+            pwf->udf = 0;
             pwf->nord = (epicsUInt32)nBytesRead;
-            if (nBytesRead < pwf->nelm) pbuf[nBytesRead] = 0;
         }
     }
     finish((dbCommon *)pwf);
@@ -1043,8 +1054,10 @@ static void callbackWfRead(asynUser *pasynUser)
     status = readIt(pasynUser, pwf->bptr, pwf->nelm, &nBytesRead);
     pwf->time = pasynUser->timestamp;
     if(status==asynSuccess) {
+        if (nBytesRead == pwf->nelm) nBytesRead--;
+        pbuf[nBytesRead] = 0;
+        pwf->udf = 0;
         pwf->nord = (epicsUInt32)nBytesRead;
-        if (nBytesRead < pwf->nelm) pbuf[nBytesRead] = 0;
     }
     finish((dbCommon *)pwf);
 }
@@ -1107,9 +1120,9 @@ static void callbackLsiCmdResponse(asynUser *pasynUser)
         plsi->time = pasynUser->timestamp;
         if(status==asynSuccess) {
             plsi->udf = 0;
-            plsi->len = nBytesRead;
             if(nBytesRead==len) nBytesRead--;
             plsi->val[nBytesRead] = 0;
+            plsi->len = nBytesRead + 1;
         }
     }
     finish((dbCommon *)plsi);
@@ -1156,6 +1169,7 @@ static void callbackLsiWriteRead(asynUser *pasynUser)
             plsi->udf = 0;
             if(nBytesRead==len) nBytesRead--;
             plsi->val[nBytesRead] = 0;
+            plsi->len = nBytesRead + 1;
         }
     }
     finish((dbCommon *)plsi);
@@ -1181,6 +1195,7 @@ static void callbackLsiRead(asynUser *pasynUser)
         plsi->udf = 0;
         if (nBytesRead==len) nBytesRead--;
         plsi->val[nBytesRead] = 0;
+        plsi->len = nBytesRead + 1;
     }
     finish((dbCommon *)plsi);
 }
