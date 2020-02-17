@@ -197,6 +197,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   ifdef SSCAN
     USR_CFLAGS += -DHAVE_CALCMOD
     ASYN_LIBS += calc sscan
+    DBD += asynCalc.dbd
   endif
   endif
 
@@ -212,7 +213,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   devEpics_DBD += devAsynInt64Misc.dbd
   asyn_SRCS += devAsynInt64.c
 
-  DBD += $(devEpics_DBD) asynCalc.dbd
+  DBD += $(devEpics_DBD)
 
   SRC_DIRS += $(ASYN)/asynRecord
   DBDINC += asynRecord
