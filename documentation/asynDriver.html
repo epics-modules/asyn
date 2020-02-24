@@ -909,14 +909,14 @@
       The callback values can be placed in a ring buffer so that values are not lost if
       the callbacks happen faster than the record can process. The size of the ring buffer
       can be controlled with the asyn:FIFO info tag. The default is 10 for scalar records.
-      The default is 0 for waveform records, and for stringout and stringin records. If
-      the ring buffer is in use then each driver callback results in pushing a new value
-      into the buffer and a request to process the record in a separate callback thread.
-      If the ring buffer is full then the oldest value in the queue is discarded and the
-      new value is added. This guarantees that the record will eventually have the value
-      of the most recent callback, but it may skip some before this. If ASYN_TRACE_WARNING
-      is set then a warning message is printed. The driver callbacks do not block waiting
-      for the record to process.</li>
+      The default is 0 for devAsynOctet, waveform, stringin, stringout, lsi, lso, printf
+      and scalcout records. If the ring buffer is in use then each driver callback results
+      in pushing a new value into the buffer and a request to process the record in a
+      separate callback thread. If the ring buffer is full then the oldest value in the
+      queue is discarded and the new value is added. This guarantees that the record will
+      eventually have the value of the most recent callback, but it may skip some before
+      this. If ASYN_TRACE_WARNING is set then a warning message is printed. The driver
+      callbacks do not block waiting for the record to process.</li>
     <li>asynPortDriver. asynPortDriver does not support queueing. It does have a parameter
       library that stores the most recent value of scalar parameters. It does not store
       values for array parameters.</li>
@@ -4613,11 +4613,11 @@ int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int data
     It is possible for the time between driver callbacks to be less than the time for
     record processing. asyn device support provides a ring-buffer (FIFO) mechanism to
     buffer values so that the record will process all callback values from a short burst
-    of callbacks. For all records except stringin, stringout, and waveform records the
-    default buffer size is 10 values. For stringin, stringout, and waveform records
-    the default buffer size is 0, i.e. there is no buffering. For all record types the
-    size of the buffer can be controlled by the following info tag for a record in the
-    database file:
+    of callbacks. For all records except devAsynOctet (stringin, stringout, lsi, lso,
+    printf, sCalcout and waveform) records the default buffer size is 10 values. For
+    stringin, stringout, and waveform records the default buffer size is 0, i.e. there
+    is no buffering. For all record types the size of the buffer can be controlled by
+    the following info tag for a record in the database file:
     <br />
     <code>info(asyn:FIFO, "20")</code><br />
     In this example the buffer size was set to 20. Ring buffer support was added in
@@ -5098,10 +5098,19 @@ device(waveform,INST_IO,asynWfOctetCmdResponse,"asynOctetCmdResponse")
 device(waveform,INST_IO,asynWfOctetWriteRead,"asynOctetWriteRead")
 device(waveform,INST_IO,asynWfOctetRead,"asynOctetRead")
 device(waveform,INST_IO,asynWfOctetWrite,"asynOctetWrite")
-device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")</pre>
+device(waveform,INST_IO,asynWfOctetWriteBinary,"asynOctetWriteBinary")
+device(lsi,INST_IO,asynLsiOctetCmdResponse,"asynOctetCmdResponse")
+device(lsi,INST_IO,asynLsiOctetWriteRead,"asynOctetWriteRead")
+device(lsi,INST_IO,asynLsiOctetRead,"asynOctetRead")
+device(lso,INST_IO,asynLsoOctetWrite,"asynOctetWrite")
+device(printf,INST_IO,asynPfOctetWrite,"asynOctetWrite")
+device(scalcout,INST_IO,asynScalcoutOctetWrite,"asynOctetWrite")
+</pre>
   <p>
     Support for drivers that implement interface asynOctet. The support is for stringin/stringout
-    and waveform records. The waveform support is similar to the string support. The
+    lsi/lso, printf, sCalcout, and waveform records. lsi, lso, and printf are only supported
+    on EPICS base 3.15 and higher. sCalcout is only supported if CALC module is defined
+    in configure/RELEASE. The waveform support is similar to the string support. The
     waveform records must define FTVL to be CHAR or UCHAR, i.e. it must be an array
     of octets. The waveform provides the following features not provided by the string
     support:</p>
