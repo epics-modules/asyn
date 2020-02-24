@@ -222,7 +222,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
                 }
             }
             if (nRead >= maxchars)  {
-                eom |= ASYN_EOM_CNT;
+                eom = ASYN_EOM_CNT;
                 break;
             }
             continue;
