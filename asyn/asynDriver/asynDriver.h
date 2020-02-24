@@ -24,7 +24,7 @@
 /* Version number names similar to those provide by base
  * These macros are always numeric */
 #define ASYN_VERSION       4
-#define ASYN_REVISION     38
+#define ASYN_REVISION     39
 #define ASYN_MODIFICATION  0
 
 #ifndef EPICS_VERSION_INT
