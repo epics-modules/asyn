@@ -789,7 +789,7 @@ static long processCommon(dbCommon *precord)
             /* Data has already been copied to the record in interruptCallback */
             pPvt->gotValue--;
             if ((pPvt->pLen != NULL) && (pPvt->result.status == asynSuccess)) {
-                pPvt->pLen = (pPvt->isWaveform ? pPvt->nord : pPvt->nord + 1); /* lsi, lso and printf count \0 in length */
+                (*pPvt->pLen) = (pPvt->isWaveform ? pPvt->nord : pPvt->nord + 1); /* lsi, lso and printf count \0 in length */
             }
             if (pPvt->gotValue) {
                 asynPrint(pPvt->pasynUser, ASYN_TRACE_WARNING,
@@ -805,7 +805,7 @@ static long processCommon(dbCommon *precord)
             if (rp->status == asynSuccess) {
                 memcpy(pPvt->pValue, rp->pValue, rp->len);
                 if (pPvt->pLen != NULL) {
-                    pPvt->pLen = (pPvt->isWaveform ? rp->len : rp->len + 1); /* lsi, lso and printf count \0 in length */
+                    (*pPvt->pLen) = (pPvt->isWaveform ? rp->len : rp->len + 1); /* lsi, lso and printf count \0 in length */
                 }
             }
             precord->time = rp->time;
