@@ -1,0 +1,14 @@
+record(stringin,"devScalcoutData")
+{
+    field(VAL, "devScalcoutAsynWrite test")
+}
+
+record(scalcout,"devScalcoutAsynWrite")
+{
+    field(INAA, "devScalcoutData")
+    field(CALC, "AA")
+    field(OOPT, "Every Time")
+    field(DOPT, "Use CALC")
+    field(DTYP, "asynOctetWrite")
+    field(OUT, "@asyn($(PORT),$(ADDR))")
+}
