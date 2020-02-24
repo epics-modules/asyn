@@ -1,0 +1,47 @@
+record(lsi,"devLsiAsynCmdResponse")
+{
+    field(DTYP,"asynOctetCmdResponse")
+    field(INP,"@asyn($(PORT),$(ADDR)) cmdForCmdResponse")
+    field(SIZV,"40")
+}
+record(stringin,"devLsiAsynCmdForWriteRead")
+{
+    field(VAL,"devLsiAsynWriteRead test")
+    field(FLNK,"devLsiAsynWriteRead")
+}
+record(lsi,"devLsiAsynWriteRead")
+{
+    field(DTYP,"asynOctetWriteRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) devLsiAsynCmdForWriteRead")
+    field(SIZV,"40")
+}
+record(lsi,"devLsiAsynRead")
+{
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+    field(SIZV,"40")
+}
+record(lso,"devLsoAsynWrite")
+{
+    field(DTYP,"asynOctetWrite")
+    field(OUT,"@asyn($(PORT),$(ADDR))")
+    field(SIZV,"40")
+}
+record(lsi,"devLsiAsynReadIntr")
+{
+    field(DTYP,"asynOctetRead")
+    field(INP,"@asyn($(PORT),$(ADDR)) ")
+    field(SCAN,"I/O Intr")
+}
+record(stringin, "devPfData")
+{
+    field(VAL, "dataForDevPfAsynWrite")
+}
+record(printf,"devPfAsynWrite")
+{
+    field(DTYP,"asynOctetWrite")
+    field(OUT,"@asyn($(PORT),$(ADDR))")
+    field(SIZV,"40")
+    field(FMT, "%s")
+    field(INP0, "devPfData")
+}
