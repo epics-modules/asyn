@@ -20,7 +20,8 @@
     <h3>
       Travis CI</h3>
     <ul>
-      <li>Added ci-scripts module to provide much more complete testing. Thanks to Ralph Lange for this.
+      <li>Added ci-scripts module to provide much more complete testing. Thanks to Ralph
+        Lange for this.
         <ul>
           <li>Against EPICS 7.0 / 3.15.7 / 3.14.12.8 / 3.14.12.2</li>
           <li>Using g++ and clang</li>
@@ -36,16 +37,35 @@
       FTDI driver</h3>
     <ul>
       <li>Added minimal SPI support for AD9915. Thanks to Juri Tagger for this.</li>
-    </ul>  
+    </ul>
     <h3>
       asynPortDriver</h3>
     <ul>
       <li>Fixes to callbackThread for problems when calling the asynPortDriver destructor.</li>
     </ul>
     <h3>
+      devEpics</h3>
+    <ul>
+      <li>Added asynOctet support for lso, lsi, printf, and sCalcout records. Thanks to
+        Freddie Akeroyd for this.</li>
+    </ul>
+    <h3>
+      asynInterposeEos</h3>
+    <ul>
+      <li>asynInterposeEos checks each byte for EOS. If it cannot find it and nRead &ge;
+        maxchars, then previously it set the eom to ASYN_EOM_CNT using a bitwise OR. In
+        this way, multiple flags can be propagated to the requester of the read. Since ASYN_EOM_CNT
+        is not an end flag, but other two (ASYN_EOM_EOS and ASYN_EOM_END) are, it does not
+        make sense to propagate a combination of end and non-end flag. Thus if the nRead
+        &ge; maxchars is true, now set eom = ASYN_EOM_CNT, i.e. without bitwise OR. This
+        fixes a problem with StreamDevice on some VXI-11 devices. Thanks to Jernej Varlec
+        for this.</li>
+    </ul>
+    <h3>
       OPI files</h3>
     <ul>
-      <li>Added .bob files for CS-Studio (Phoebus). These are autoconverted from medm .adl files</li>
+      <li>Added .bob files for CS-Studio (Phoebus). These are autoconverted from medm .adl
+        files</li>
     </ul>
   </div>
   <div style="text-align: center">
