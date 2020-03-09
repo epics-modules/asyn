@@ -23,6 +23,9 @@ testEpicsSupport_LIBS += asyn
 ifdef CALC
 testEpicsSupport_LIBS += calc sscan
 endif
+ifdef SNCSEQ
+testEpicsSupport_LIBS += seq pv
+endif
 testEpicsSupport_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 PROD_IOC += testEpics
@@ -36,6 +39,9 @@ testEpics_LIBS += testSupport
 testEpics_LIBS += asyn
 ifdef CALC
 testEpics_LIBS += calc sscan
+endif
+ifdef SNCSEQ
+testEpics_LIBS += seq pv
 endif
 testEpics_LIBS += $(EPICS_BASE_IOC_LIBS)
 
