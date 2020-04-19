@@ -127,6 +127,7 @@ typedef struct {
 #define FLAG_BROADCAST                  0x1
 #define FLAG_CONNECT_PER_TRANSACTION    0x2
 #define FLAG_SHUTDOWN                   0x4
+#define FLAG_SO_REUSEPORT               0x8
 #define FLAG_NEED_LOOKUP                0x100
 #define FLAG_DONE_LOOKUP                0x200
 
@@ -226,7 +227,7 @@ asynCommonReport(void *drvPvt, FILE *fp, int details)
                                                 tty->fd != INVALID_SOCKET ? "C" : "Disc");
     }
     if (details >= 2) {
-        fprintf(fp, "                    fd: %d\n", tty->fd);
+        fprintf(fp, "                    fd: %d\n", (int)tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }
@@ -351,6 +352,10 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
          || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
             tty->socketType = SOCK_STREAM;
         }
+        else if (epicsStrCaseCmp(protocol, "tcp&") == 0) {
+            tty->socketType = SOCK_STREAM;
+            tty->flags |= FLAG_SO_REUSEPORT;
+        }
         else if (epicsStrCaseCmp(protocol, "com") == 0) {
             isCom = 1;
             tty->socketType = SOCK_STREAM;
@@ -362,9 +367,18 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
         else if (epicsStrCaseCmp(protocol, "udp") == 0) {
             tty->socketType = SOCK_DGRAM;
         }
+        else if (epicsStrCaseCmp(protocol, "udp&") == 0) {
+            tty->socketType = SOCK_DGRAM;
+            tty->flags |= FLAG_SO_REUSEPORT;
+        }
         else if (epicsStrCaseCmp(protocol, "udp*") == 0) {
             tty->socketType = SOCK_DGRAM;
             tty->flags |= FLAG_BROADCAST;
+        }
+        else if (epicsStrCaseCmp(protocol, "udp*&") == 0) {
+            tty->socketType = SOCK_DGRAM;
+            tty->flags |= FLAG_BROADCAST;
+            tty->flags |= FLAG_SO_REUSEPORT;
         }
         else {
             printf("%s: Unknown protocol \"%s\".\n", functionName, protocol);
@@ -391,6 +405,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     ttyController_t *tty = (ttyController_t *)drvPvt;
     SOCKET fd;
     int i;
+    int sockOpt;
 
     /*
      * Sanity check
@@ -433,6 +448,24 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          && (setsockopt(fd, SOL_SOCKET, SO_BROADCAST, (void *)&i, sizeof i) < 0)) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                           "Can't set %s socket BROADCAST option: %s",
+                          tty->IPDeviceName, strerror(SOCKERRNO));
+            epicsSocketDestroy(fd);
+            return asynError;
+        }
+
+        /*
+         * Enable SO_REUSEPORT if so requested
+         */
+        i = 1;
+        #ifdef _WIN32
+          sockOpt = SO_REUSEADDR;
+        #else
+          sockOpt = SO_REUSEPORT;
+        #endif
+        if ((tty->flags & FLAG_SO_REUSEPORT)
+         && (setsockopt(fd, SOL_SOCKET, sockOpt, (void *)&i, sizeof i) < 0)) {
+            epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                          "Can't set %s socket SO_REUSEPORT option: %s",
                           tty->IPDeviceName, strerror(SOCKERRNO));
             epicsSocketDestroy(fd);
             return asynError;
