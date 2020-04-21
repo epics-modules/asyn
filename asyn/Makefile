@@ -132,6 +132,7 @@ ifeq ($(EPICS_LIBCOM_ONLY),YES)
 endif
 INC += asynParamType.h
 INC += paramErrors.h
+INC += asynParamSet.h
 INC += asynPortDriver.h
 asyn_SRCS += paramVal.cpp
 asyn_SRCS += asynPortDriver.cpp
