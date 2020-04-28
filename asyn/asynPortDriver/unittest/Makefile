@@ -12,6 +12,10 @@ include $(TOP)/configure/CONFIG
 
 PROD_LIBS += asyn
 PROD_LIBS += Com
+PROD_LIBS += dbRecStd
+PROD_LIBS += dbCore
+PROD_LIBS += ca
+
 
 #Tests for the parameters
 #TESTPROD_HOST += ParamValTest
