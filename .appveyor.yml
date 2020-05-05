@@ -83,9 +83,6 @@ environment:
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - CMP: vs2015
   - CMP: vs2013
-  - CMP: vs2012
-  - CMP: vs2010
-  - CMP: vs2008
 
 # Platform: processor architecture
 platform:
@@ -95,13 +92,6 @@ platform:
 # Matrix configuration: exclude sets of jobs
 matrix:
   exclude:
-  # VS2012 and older installs don't have the 64 bit compiler
-  - platform: x64
-    CMP: vs2012
-  - platform: x64
-    CMP: vs2010
-  - platform: x64
-    CMP: vs2008
   # Exclude more jobs to reduce build time
   # E.g., skip 32-bit for newer compilers
   #- platform: x86
