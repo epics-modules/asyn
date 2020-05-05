@@ -67,7 +67,7 @@ environment:
 
   matrix:
   - CMP: vs2019
-    SET: test00
+    SET: base7
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: mingw
   - CMP: vs2019
