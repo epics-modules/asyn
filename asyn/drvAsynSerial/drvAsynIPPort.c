@@ -85,6 +85,10 @@
 # endif
 #endif
 
+/* On most systems we use SO_REUSEPORT but RTEMS and Windows don't have SO_REUSEPORT, use SO_REUSEADDR instead */ 
+#if defined(__rtems__) || defined(_WIN32)
+# define USE_SO_REUSEADDR
+#endif
 
 /* This delay is needed in cleanup() else sockets are not always really closed cleanly */
 #define CLOSE_SOCKET_DELAY 0.02
@@ -457,7 +461,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
          * Enable SO_REUSEPORT if so requested
          */
         i = 1;
-        #ifdef _WIN32
+        #ifdef USE_SO_REUSEADDR
           sockOpt = SO_REUSEADDR;
         #else
           sockOpt = SO_REUSEPORT;
