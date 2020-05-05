@@ -104,6 +104,9 @@ matrix:
 
 install:
   - cmd: git submodule update --init --recursive
+  - cmd: cd .ci
+  - cmd: git checkout v2.3.4
+  - cmd: ..
   - cmd: python .ci/appveyor/do.py prepare
   - cinst re2c
 
