@@ -93,8 +93,8 @@ matrix:
   exclude:
   # Exclude more jobs to reduce build time
   # E.g., skip 32-bit for newer compilers
-  - platform: x86
-    CMP: vs2019
+  #- platform: x86
+  #  CMP: vs2019
   #- platform: x86
   #  CMP: vs2017
 
@@ -104,9 +104,6 @@ matrix:
 
 install:
   - cmd: git submodule update --init --recursive
-  - cmd: cd .ci
-  - cmd: git checkout v2.3.4
-  - cmd: cd ..
   - cmd: python .ci/appveyor/do.py prepare
   - cinst re2c
 
