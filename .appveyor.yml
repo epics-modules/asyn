@@ -16,8 +16,12 @@ cache:
 #       additional packages       #
 #---------------------------------#
 
-#install:
+install:
 # for the sequencer
+  - cmd: git submodule update --init --recursive
+  - cmd: python .ci/appveyor/do.py prepare
+  - cinst re2c
+
 
 #---------------------------------#
 #       repository cloning        #
@@ -102,10 +106,10 @@ matrix:
 #     building & testing          #
 #---------------------------------#
 
-install:
-  - cmd: git submodule update --init --recursive
-  - cmd: python .ci/appveyor/do.py prepare
-  - cinst re2c
+#install:
+#  - cmd: git submodule update --init --recursive
+#  - cmd: python .ci/appveyor/do.py prepare
+#  - cinst re2c
 
 build_script:
   - cmd: python .ci/appveyor/do.py build
