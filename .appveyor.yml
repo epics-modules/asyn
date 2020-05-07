@@ -17,9 +17,9 @@ cache:
 #---------------------------------#
 
 install:
-# for the sequencer
+# fetch submodules (like ci-scripts)
   - cmd: git submodule update --init --recursive
-  - cmd: python .ci/appveyor/do.py prepare
+# for the sequencer
   - cinst re2c
 
 
@@ -74,18 +74,20 @@ environment:
     SET: base7
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: mingw
-  - CMP: vs2019
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  - CMP: vs2019
-    BASE: 3.15
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  - CMP: vs2019
-    BASE: 3.14
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    SET: base7
+  #- CMP: vs2019
+  #  BASE: 3.15
+  #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+  #- CMP: vs2019
+  #  BASE: 3.14
+  #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: vs2017
+    SET: base7
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - CMP: vs2015
+    SET: base7
   - CMP: vs2013
+    SET: base7
 
 # Platform: processor architecture
 platform:
@@ -106,12 +108,8 @@ matrix:
 #     building & testing          #
 #---------------------------------#
 
-#install:
-#  - cmd: git submodule update --init --recursive
-#  - cmd: python .ci/appveyor/do.py prepare
-#  - cinst re2c
-
 build_script:
+  - cmd: python .ci/appveyor/do.py prepare
   - cmd: python .ci/appveyor/do.py build
 
 test_script:
