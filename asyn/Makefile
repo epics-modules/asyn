@@ -257,6 +257,16 @@ ifeq ($(DRV_USBTMC),YES)
   DBD += drvAsynUSBTMC.dbd
 endif
 
+
+DRV_HISLIP = YES
+
+ifeq ($(DRV_HISLIP),YES)
+  SRC_DIRS += $(ASYN)/drvAsynHiSLIP
+  asyn_SRCS += drvAsynHiSLIP.c
+  DBD += drvAsynHiSLIP.dbd
+  INC += drvAsynHiSLIP.h
+endif
+
 ifeq ($(DRV_FTDI),YES)
   SRC_DIRS += $(ASYN)/drvAsynFTDI
   asyn_SRCS += ftdiDriver.cpp drvAsynFTDIPort.cpp
