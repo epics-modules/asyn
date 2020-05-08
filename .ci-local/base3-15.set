@@ -1,0 +1,4 @@
+MODULES="sncseq"
+
+BASE=3.15
+SNCSEQ=R2-2-8
