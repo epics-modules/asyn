@@ -11,7 +11,11 @@ TOP=../../..
 include $(TOP)/configure/CONFIG
 
 PROD_LIBS += asyn
-PROD_LIBS += Com
+ifeq ($(EPICS_LIBCOM_ONLY),YES)
+  PROD_LIBS += Com
+else
+  PROD_LIBS += $(EPICS_BASE_IOC_LIBS)
+endif
 
 #Tests for the parameters
 #TESTPROD_HOST += ParamValTest
