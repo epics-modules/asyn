@@ -695,11 +695,11 @@ static BOOL autoConnectDevice(port *pport,device *pdevice)
         epicsTimeGetCurrent(&now);
         if(epicsTimeDiffInSeconds(
              &now,&pport->dpc.lastConnectDisconnect) < 2.0) return FALSE;
-        epicsTimeGetCurrent(&pport->dpc.lastConnectDisconnect);
         pport->dpc.autoConnectActive = TRUE;
         epicsMutexUnlock(pport->asynManagerLock);
         connectAttempt(&pport->dpc);
         epicsMutexMustLock(pport->asynManagerLock);
+        epicsTimeGetCurrent(&pport->dpc.lastConnectDisconnect);
         pport->dpc.autoConnectActive = FALSE;
     }
     if(!pport->dpc.connected) return FALSE;
@@ -712,11 +712,11 @@ static BOOL autoConnectDevice(port *pport,device *pdevice)
         epicsTimeGetCurrent(&now);
         if(epicsTimeDiffInSeconds(
             &now,&pdevice->dpc.lastConnectDisconnect) < 2.0) return FALSE;
-        epicsTimeGetCurrent(&pdevice->dpc.lastConnectDisconnect);
         pdevice->dpc.autoConnectActive = TRUE;
         epicsMutexUnlock(pport->asynManagerLock);
         connectAttempt(&pdevice->dpc);
         epicsMutexMustLock(pport->asynManagerLock);
+        epicsTimeGetCurrent(&pdevice->dpc.lastConnectDisconnect);
         pdevice->dpc.autoConnectActive = FALSE;
     }
     return pdevice->dpc.connected;
