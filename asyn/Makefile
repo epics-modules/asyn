@@ -258,11 +258,10 @@ ifeq ($(DRV_USBTMC),YES)
 endif
 
 
-DRV_HISLIP = YES
-
 ifeq ($(DRV_HISLIP),YES)
+  USR_CXXFLAGS += -fpermissive
   SRC_DIRS += $(ASYN)/drvAsynHiSLIP
-  asyn_SRCS += drvAsynHiSLIP.c
+  asyn_SRCS += drvAsynHiSLIP.cpp
   DBD += drvAsynHiSLIP.dbd
   INC += drvAsynHiSLIP.h
 endif
