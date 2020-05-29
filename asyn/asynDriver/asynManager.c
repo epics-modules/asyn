@@ -2774,10 +2774,10 @@ static size_t printThread(FILE *fp)
     unsigned int threadPriority = epicsThreadGetPrioritySelf();
     epicsThreadId threadId = epicsThreadGetIdSelf();
     if(fp) {
-        nout = fprintf(fp,"[%s,%p,%d] ",epicsThreadGetNameSelf(),
+        nout = fprintf(fp,"[%s,%p,%u] ",epicsThreadGetNameSelf(),
                        (void*)threadId,threadPriority);
     } else {
-        nout = errlogPrintf("[%s,%p,%d] ",epicsThreadGetNameSelf(),
+        nout = errlogPrintf("[%s,%p,%u] ",epicsThreadGetNameSelf(),
                             (void*)threadId,threadPriority);
     }
     return nout;
