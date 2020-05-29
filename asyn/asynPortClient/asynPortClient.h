@@ -188,7 +188,7 @@ public:
     virtual asynStatus registerInterruptUser(interruptCallbackUInt32Digital pCallback, epicsUInt32 mask, void* userPvt=0) { 
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, this, mask, &interruptPvt_); 
+                                                  pCallback, userPvt, mask, &interruptPvt_);
     };
 private:
     asynUInt32Digital *pInterface_;
