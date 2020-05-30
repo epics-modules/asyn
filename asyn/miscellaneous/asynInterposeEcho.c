@@ -176,7 +176,7 @@ asynInterposeEcho(const char *portName, int addr)
     status = pasynManager->interposeInterface(portName, addr,
         &pvt->octet, &poctetasynInterface);
     if ((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface failed.\n", portName);
+        printf("%s interposeInterface failed.\n", portName);
         free(pvt);
         return -1;
     }

@@ -187,7 +187,7 @@ asynInterposeDelay(const char *portName, int addr, double delay)
     status = pasynManager->interposeInterface(portName, addr,
         &pvt->octet, &poctetasynInterface);
     if ((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface asynOctetType failed.\n", portName);
+        printf("%s interposeInterface asynOctetType failed.\n", portName);
         free(pvt);
         return -1;
     }
