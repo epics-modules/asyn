@@ -3734,7 +3734,7 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
         "    interfaceMask=0x%X, interruptMask=0x%X\n"
         "    asynFlags=0x%X, autoConnect=%d, priority=%d, stackSize=%d\n",
         driverName, functionName, this->portName, this->maxAddr, interfaceMask,
-	interruptMask, asynFlags, autoConnect, priority, stackSize);
+        interruptMask, asynFlags, autoConnect, priority, stackSize);
 
      /* Set addresses of asyn interfaces */
     if (interfaceMask & asynCommonMask)         pInterfaces->common.pinterface        = (void *)&ifaceCommon;

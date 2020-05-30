@@ -8,6 +8,6 @@
 #include "ParamListParamNotFound.h"
 
 ParamListParamNotFound::ParamListParamNotFound(const std::string& description):
-	logic_error(description){
+    logic_error(description){
 }
 
