@@ -1779,12 +1779,12 @@ static asynStatus queueLockPort(asynUser *pasynUser)
     asynStatus status = asynSuccess;
     double timeout;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort locking port\n", pport->portName);
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::queueLockPort not connected");
         return asynError;
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort locking port\n", pport->portName);
     if (pport->attributes & ASYN_CANBLOCK) {   /* Asynchronous driver */
         plockPortPvt = epicsThreadPrivateGet(pport->queueLockPortId);
         if (!plockPortPvt) {
@@ -1864,12 +1864,12 @@ static asynStatus queueUnlockPort(asynUser *pasynUser)
     queueLockPortPvt *plockPortPvt;
     asynStatus status = asynSuccess;
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s queueUnlockPort\n", pport->portName);
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                 "asynManager::queueUnlockPort not connected");
         return asynError;
     }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s queueUnlockPort\n", pport->portName);
     if(pport->pasynLockPortNotify) {
         status = pport->pasynLockPortNotify->unlock(
            pport->lockPortNotifyPvt,pasynUser);
@@ -2774,10 +2774,10 @@ static size_t printThread(FILE *fp)
     unsigned int threadPriority = epicsThreadGetPrioritySelf();
     epicsThreadId threadId = epicsThreadGetIdSelf();
     if(fp) {
-        nout = fprintf(fp,"[%s,%p,%d] ",epicsThreadGetNameSelf(),
+        nout = fprintf(fp,"[%s,%p,%u] ",epicsThreadGetNameSelf(),
                        (void*)threadId,threadPriority);
     } else {
-        nout = errlogPrintf("[%s,%p,%d] ",epicsThreadGetNameSelf(),
+        nout = errlogPrintf("[%s,%p,%u] ",epicsThreadGetNameSelf(),
                             (void*)threadId,threadPriority);
     }
     return nout;

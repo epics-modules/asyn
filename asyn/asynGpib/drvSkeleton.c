@@ -67,7 +67,7 @@ static int gpibRead(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int ma
 }
 
 static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
-                    int addr,const char *data,int numchars
+                    int addr,const char *data,int numchars)
 {
 }
 
@@ -80,7 +80,7 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 }
 
 static asynStatus addressedCmd (void *pdrvPvt,asynUser *pasynUser,
-    int addr, char *data, int length
+    int addr, char *data, int length)
 {
 }
 
