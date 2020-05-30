@@ -592,7 +592,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
     rc[7] = ftdi_write_data(ftdi_, (unsigned char *) buffer, (int) bufferSize);
     if( rc[7] != i ) err = FTDIDriverError;
     debugPrint("%s : 7. pinState=0x%02x\n",
- 		functionName, pinState);
+               functionName, pinState);
     }
 #endif
 
