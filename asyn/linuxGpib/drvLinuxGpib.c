@@ -325,7 +325,7 @@ const char *key, const char *val)
 		return asynError;
 	}
 	
-	parseStatus = sscanf(key,"%x",&option);
+	parseStatus = sscanf(key,"%x",(unsigned int *)&option);
 	
 	if(parseStatus != 1){
 		asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -394,7 +394,7 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 		return asynError;
 	}
 	
-	parseStatus=sscanf(key,"%x",&option);	
+	parseStatus=sscanf(key,"%x",(unsigned int *)&option);
 	
 	if(parseStatus != 1){
 		asynPrint(pasynUser,ASYN_TRACE_ERROR,
