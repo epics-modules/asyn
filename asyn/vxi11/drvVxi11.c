@@ -1614,7 +1614,7 @@ static asynStatus vxiSerialPoll(void *drvPvt, int addr,
             return asynError;
         }
         pdevLink->lid = lid;
-    	pdevLink->connected = TRUE;
+        pdevLink->connected = TRUE;
     }
     devGenP.lid = pdevLink->lid;
     devGenP.flags = 0; /* no timeout on a locked gateway */

@@ -8,9 +8,9 @@
 bool_t
 xdr_Device_SrqParms (XDR *xdrs, Device_SrqParms *objp)
 {
-	register int32_t *buf;
+    register int32_t *buf;
 
-	 if (!xdr_bytes (xdrs, (char **)&objp->handle.handle_val, (u_int *) &objp->handle.handle_len, ~0))
-		 return FALSE;
-	return TRUE;
+     if (!xdr_bytes (xdrs, (char **)&objp->handle.handle_val, (u_int *) &objp->handle.handle_len, ~0))
+         return FALSE;
+    return TRUE;
 }

@@ -17,8 +17,8 @@ extern "C" {
 typedef long Device_Link;
 
 enum Device_AddrFamily {
-	DEVICE_TCP = 0,
-	DEVICE_UDP = 1,
+    DEVICE_TCP = 0,
+    DEVICE_UDP = 1,
 };
 typedef enum Device_AddrFamily Device_AddrFamily;
 
@@ -27,125 +27,125 @@ typedef long Device_Flags;
 typedef long Device_ErrorCode;
 
 struct Device_Error {
-	Device_ErrorCode error;
+    Device_ErrorCode error;
 };
 typedef struct Device_Error Device_Error;
 
 struct Create_LinkParms {
-	long clientId;
-	bool_t lockDevice;
-	u_long lock_timeout;
-	char *device;
+    long clientId;
+    bool_t lockDevice;
+    u_long lock_timeout;
+    char *device;
 };
 typedef struct Create_LinkParms Create_LinkParms;
 
 struct Create_LinkResp {
-	Device_ErrorCode error;
-	Device_Link lid;
-	u_short abortPort;
-	u_long maxRecvSize;
+    Device_ErrorCode error;
+    Device_Link lid;
+    u_short abortPort;
+    u_long maxRecvSize;
 };
 typedef struct Create_LinkResp Create_LinkResp;
 
 struct Device_WriteParms {
-	Device_Link lid;
-	u_long io_timeout;
-	u_long lock_timeout;
-	Device_Flags flags;
-	struct {
-		u_int data_len;
-		char *data_val;
-	} data;
+    Device_Link lid;
+    u_long io_timeout;
+    u_long lock_timeout;
+    Device_Flags flags;
+    struct {
+        u_int data_len;
+        char *data_val;
+    } data;
 };
 typedef struct Device_WriteParms Device_WriteParms;
 
 struct Device_WriteResp {
-	Device_ErrorCode error;
-	u_long size;
+    Device_ErrorCode error;
+    u_long size;
 };
 typedef struct Device_WriteResp Device_WriteResp;
 
 struct Device_ReadParms {
-	Device_Link lid;
-	u_long requestSize;
-	u_long io_timeout;
-	u_long lock_timeout;
-	Device_Flags flags;
-	char termChar;
+    Device_Link lid;
+    u_long requestSize;
+    u_long io_timeout;
+    u_long lock_timeout;
+    Device_Flags flags;
+    char termChar;
 };
 typedef struct Device_ReadParms Device_ReadParms;
 
 struct Device_ReadResp {
-	Device_ErrorCode error;
-	long reason;
-	struct {
-		u_int data_len;
-		char *data_val;
-	} data;
+    Device_ErrorCode error;
+    long reason;
+    struct {
+        u_int data_len;
+        char *data_val;
+    } data;
 };
 typedef struct Device_ReadResp Device_ReadResp;
 
 struct Device_ReadStbResp {
-	Device_ErrorCode error;
-	u_char stb;
+    Device_ErrorCode error;
+    u_char stb;
 };
 typedef struct Device_ReadStbResp Device_ReadStbResp;
 
 struct Device_GenericParms {
-	Device_Link lid;
-	Device_Flags flags;
-	u_long lock_timeout;
-	u_long io_timeout;
+    Device_Link lid;
+    Device_Flags flags;
+    u_long lock_timeout;
+    u_long io_timeout;
 };
 typedef struct Device_GenericParms Device_GenericParms;
 
 struct Device_RemoteFunc {
-	u_long hostAddr;
-	u_long hostPort;
-	u_long progNum;
-	u_long progVers;
-	Device_AddrFamily progFamily;
+    u_long hostAddr;
+    u_long hostPort;
+    u_long progNum;
+    u_long progVers;
+    Device_AddrFamily progFamily;
 };
 typedef struct Device_RemoteFunc Device_RemoteFunc;
 
 struct Device_EnableSrqParms {
-	Device_Link lid;
-	bool_t enable;
-	struct {
-		u_int handle_len;
-		char *handle_val;
-	} handle;
+    Device_Link lid;
+    bool_t enable;
+    struct {
+        u_int handle_len;
+        char *handle_val;
+    } handle;
 };
 typedef struct Device_EnableSrqParms Device_EnableSrqParms;
 
 struct Device_LockParms {
-	Device_Link lid;
-	Device_Flags flags;
-	u_long lock_timeout;
+    Device_Link lid;
+    Device_Flags flags;
+    u_long lock_timeout;
 };
 typedef struct Device_LockParms Device_LockParms;
 
 struct Device_DocmdParms {
-	Device_Link lid;
-	Device_Flags flags;
-	u_long io_timeout;
-	u_long lock_timeout;
-	long cmd;
-	bool_t network_order;
-	long datasize;
-	struct {
-		u_int data_in_len;
-		char *data_in_val;
-	} data_in;
+    Device_Link lid;
+    Device_Flags flags;
+    u_long io_timeout;
+    u_long lock_timeout;
+    long cmd;
+    bool_t network_order;
+    long datasize;
+    struct {
+        u_int data_in_len;
+        char *data_in_val;
+    } data_in;
 };
 typedef struct Device_DocmdParms Device_DocmdParms;
 
 struct Device_DocmdResp {
-	Device_ErrorCode error;
-	struct {
-		u_int data_out_len;
-		char *data_out_val;
-	} data_out;
+    Device_ErrorCode error;
+    struct {
+        u_int data_out_len;
+        char *data_out_val;
+    } data_out;
 };
 typedef struct Device_DocmdResp Device_DocmdResp;
 
