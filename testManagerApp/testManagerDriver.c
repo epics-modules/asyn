@@ -30,7 +30,7 @@
 #define NUM_DEVICES 2
 
 typedef struct testManagerPvt {
-    int	          deviceConnected[NUM_DEVICES];
+    int           deviceConnected[NUM_DEVICES];
     const char    *portName;
     int           connected;
     int           multiDevice;
