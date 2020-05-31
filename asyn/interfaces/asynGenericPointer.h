@@ -25,7 +25,7 @@ extern "C" {
 
 typedef void (*interruptCallbackGenericPointer)(void *userPvt, asynUser *pasynUser,
               void *pointer);
-              
+
 typedef struct asynGenericPointerInterrupt {
     asynUser *pasynUser;
     int addr;

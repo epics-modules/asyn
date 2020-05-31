@@ -28,7 +28,7 @@ static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
                               epicsInt32 value);
 static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
                               epicsInt32 *value);
-static asynStatus getBounds(void *drvPvt, asynUser *pasynUser, 
+static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
                             epicsInt32 *low, epicsInt32 *high);
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32 callback, void *userPvt,
@@ -36,7 +36,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
                                void *registrarPvt);
 
-
+
 asynStatus initialize(const char *portName, asynInterface *pdriver)
 {
     asynInt32 *pasynInt32 = (asynInt32 *)pdriver->pinterface;
@@ -57,7 +57,7 @@ static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -75,7 +75,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -87,13 +87,13 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
     return asynError;
 }
 
-static asynStatus getBounds(void *drvPvt, asynUser *pasynUser, 
+static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
                             epicsInt32 *low, epicsInt32 *high)
 {
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -103,7 +103,7 @@ static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
         "%s %d getBounds setting low=high=0\n",portName,addr);
     return asynSuccess;
 }
-
+
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
                                interruptCallbackInt32 callback, void *userPvt,
                                void **registrarPvt)
@@ -114,18 +114,18 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     interruptNode *pinterruptNode;
     void          *pinterruptPvt;
     asynInt32Interrupt *pasynInt32Interrupt;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
-    status = pasynManager->getInterruptPvt(pasynUser, asynInt32Type, 
+    status = pasynManager->getInterruptPvt(pasynUser, asynInt32Type,
                                            &pinterruptPvt);
     if(status!=asynSuccess) return status;
     pasynInt32Interrupt = pasynManager->memMalloc(sizeof(asynInt32Interrupt));
     pinterruptNode = pasynManager->createInterruptNode(pinterruptPvt);
     pinterruptNode->drvPvt = pasynInt32Interrupt;
-    pasynInt32Interrupt->pasynUser = 
+    pasynInt32Interrupt->pasynUser =
                        pasynManager->duplicateAsynUser(pasynUser, NULL, NULL);
     pasynInt32Interrupt->addr = addr;
     pasynInt32Interrupt->callback = callback;
@@ -140,12 +140,12 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     void *registrarPvt)
 {
     interruptNode      *pinterruptNode = (interruptNode *)registrarPvt;
-    asynInt32Interrupt *pasynInt32Interrupt = 
+    asynInt32Interrupt *pasynInt32Interrupt =
                              (asynInt32Interrupt *)pinterruptNode->drvPvt;
     asynStatus status;
     const char *portName;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);

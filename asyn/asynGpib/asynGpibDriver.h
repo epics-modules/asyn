@@ -62,7 +62,7 @@ struct asynGpib{
     void (*srqHappened)(void *asynGpibPvt);
 };
 epicsShareExtern asynGpib *pasynGpib;
-
+
 struct asynGpibPort {
     /*asynCommon methods */
     void (*report)(void *drvPvt,FILE *fd,int details);

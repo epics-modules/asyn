@@ -24,7 +24,7 @@ extern "C" {
 
 #define asynFloat64SyncIOType "asynFloat64SyncIO"
 typedef struct asynFloat64SyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                        asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,epicsFloat64 value,double timeout);

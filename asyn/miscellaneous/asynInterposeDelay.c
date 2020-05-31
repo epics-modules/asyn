@@ -3,7 +3,7 @@
 
 /* Interpose for devices where each written char needs a delay
  * before sending the next char.
- * 
+ *
  * Author: Dirk Zimoch
  */
 
@@ -28,7 +28,7 @@ typedef struct interposePvt {
     void          *optionPvt;
     double        delay;
 }interposePvt;
-
+
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
     const char *data, size_t numchars, size_t *nbytesTransfered)
@@ -37,7 +37,7 @@ static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
     size_t n;
     size_t transfered = 0;
     asynStatus status = asynSuccess;
-    
+
     while (transfered < numchars) {
         /* write one char at a time */
         status = pvt->pasynOctetDrv->write(pvt->octetPvt,
@@ -128,7 +128,7 @@ static asynOctet octet = {
     registerInterruptUser, cancelInterruptUser,
     setInputEos, getInputEos, setOutputEos, getOutputEos
 };
-
+
 /* asynOption methods */
 
 static asynStatus
@@ -170,9 +170,9 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
 static asynOption option = {
     setOption, getOption
 };
-
 
-epicsShareFunc int 
+
+epicsShareFunc int
 asynInterposeDelay(const char *portName, int addr, double delay)
 {
     interposePvt *pvt;
@@ -217,7 +217,7 @@ static const iocshArg iocshArg1 = {"addr", iocshArgInt};
 static const iocshArg iocshArg2 = {"delay(sec)", iocshArgDouble };
 static const iocshArg *iocshArgs[] =
     {&iocshArg0, & iocshArg1, &iocshArg2};
-    
+
 static const iocshFuncDef asynInterposeDelayFuncDef =
     {"asynInterposeDelay", 3, iocshArgs};
 

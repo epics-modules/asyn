@@ -65,14 +65,14 @@ typedef enum {
     asynQueuePriorityLow,asynQueuePriorityMedium,asynQueuePriorityHigh,
     asynQueuePriorityConnect
 }asynQueuePriority;
-
+
 typedef struct asynUser {
     char          *errorMessage;
     int            errorMessageSize;
     /* timeout must be set by the user */
     double         timeout;  /* Timeout for I/O operations*/
-    void          *userPvt; 
-    void          *userData; 
+    void          *userPvt;
+    void          *userData;
     /* The following is for use by driver */
     void          *drvUser;
     /* The following is normally set by driver via asynDrvUser->create() */
@@ -110,7 +110,7 @@ typedef struct interruptNode{
     ELLNODE node;
     void    *drvPvt;
 }interruptNode;
-
+
 typedef struct asynManager {
     void      (*report)(FILE *fp,int details,const char*portName);
     asynUser  *(*createAsynUser)(userCallback process,userCallback timeout);
@@ -185,7 +185,7 @@ typedef struct asynManager {
     const char *(*strStatus)(asynStatus status);
 }asynManager;
 epicsShareExtern asynManager *pasynManager;
-
+
 /* Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
 typedef struct  asynCommon {
@@ -201,7 +201,7 @@ typedef struct  asynLockPortNotify {
     asynStatus (*lock)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*unlock)(void *drvPvt,asynUser *pasynUser);
 }asynLockPortNotify;
-
+
 /*asynTrace is implemented by asynManager*/
 /*All asynTrace methods can be called from any thread*/
 /* traceMask definitions*/
@@ -225,9 +225,9 @@ typedef struct  asynLockPortNotify {
 #define ASYN_TRACEINFO_THREAD 0x0008
 
 /* asynPrint and asynPrintIO are macros that act like
-   int asynPrint(asynUser *pasynUser,int reason, const char *format, ... ); 
+   int asynPrint(asynUser *pasynUser,int reason, const char *format, ... );
    int asynPrintIO(asynUser *pasynUser,int reason,
-        const char *buffer, size_t len, const char *format, ... ); 
+        const char *buffer, size_t len, const char *format, ... );
 */
 typedef struct asynTrace {
     /* lock/unlock are only necessary if caller performs I/O other than */

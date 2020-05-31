@@ -50,7 +50,7 @@
 #include <devCommonGpib.h>
 #include <devSupportGpib.h>
 #include <devGpib.h>
-
+
 #define TIMEOUT 1.0
 #define TIMEWINDOW  2.0
 
@@ -64,7 +64,7 @@ static int writeCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3);
  * easier changes when testing the driver.
  */
 
-static struct gpibCmd gpibCmds[] = 
+static struct gpibCmd gpibCmds[] =
 {
   /* Param 0 */
   {&DSET_SI,GPIBREAD,IB_Q_LOW,"*IDN?", 0,0,200,0,0,0,0,0,0},
@@ -83,7 +83,7 @@ static struct gpibCmd gpibCmds[] =
 
 /* The following is the number of elements in the command array above.  */
 #define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)
-
+
 /******************************************************************************
  *
  * Initialization for device support
@@ -179,13 +179,13 @@ static int writeString(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
         return -1;
     }
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,format,precord->val);
-    if(nchars>pgpibCmd->msgLen) { 
-        asynPrint(pasynUser,ASYN_TRACE_ERROR, 
-            "%s msg buffer too small. msgLen %d message length %d\n", 
-            precord->name,pgpibCmd->msgLen,nchars); 
-        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); 
-        return -1; 
-    } 
+    if(nchars>pgpibCmd->msgLen) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            "%s msg buffer too small. msgLen %d message length %d\n",
+            precord->name,pgpibCmd->msgLen,nchars);
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+        return -1;
+    }
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgString\n",precord->name);
     return nchars;
 }

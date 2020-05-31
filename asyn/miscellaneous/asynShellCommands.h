@@ -17,53 +17,53 @@
 extern "C" {
 #endif /*__cplusplus*/
 
-epicsShareFunc int 
+epicsShareFunc int
  asynSetOption(const char *portName, int addr, const char *key, const char *val);
-epicsShareFunc int 
+epicsShareFunc int
  asynShowOption(const char *portName, int addr,const char *key);
-epicsShareFunc int 
+epicsShareFunc int
  asynReport(int level, const char *portName);
-epicsShareFunc int 
+epicsShareFunc int
  asynSetTraceMask(const char *portName,int addr,int mask);
-epicsShareFunc int 
+epicsShareFunc int
  asynSetTraceIOMask(const char *portName,int addr,int mask);
-epicsShareFunc int 
+epicsShareFunc int
  asynSetTraceInfoMask(const char *portName,int addr,int mask);
-epicsShareFunc int 
+epicsShareFunc int
  asynSetTraceFile(const char *portName,int addr,const char *filename);
-epicsShareFunc int 
+epicsShareFunc int
  asynSetTraceIOTruncateSize(const char *portName,int addr,int size);
-epicsShareFunc int 
+epicsShareFunc int
  asynAutoConnect(const char *portName,int addr,int yesNo);
-epicsShareFunc int 
+epicsShareFunc int
  asynEnable(const char *portName,int addr,int yesNo);
 
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetConnect(const char *entry, const char *port, int addr,
                   int timeout, int buffer_len,const char *drvInfo);
 epicsShareFunc int
  asynOctetDisconnect(const char *entry);
 epicsShareFunc int
  asynWaitConnect(const char *portName, double timeout);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetRead(const char *entry, int nread);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetWrite(const char *entry, const char *output);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetWriteRead(const char *entry, const char *output, int nread);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetFlush(const char *entry);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetSetInputEos(const char *port, int addr,const char *eos);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetGetInputEos(const char *port, int addr);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetSetOutputEos(const char *port, int addr,const char *eos);
-epicsShareFunc int 
+epicsShareFunc int
  asynOctetGetOutputEos(const char *port, int addr);
-epicsShareFunc int 
+epicsShareFunc int
  asynRegisterTimeStampSource(const char *portName, const char *functionName);
-epicsShareFunc int 
+epicsShareFunc int
  asynUnregisterTimeStampSource(const char *portName);
 epicsShareFunc int
  asynSetMinTimerPeriod(double period);

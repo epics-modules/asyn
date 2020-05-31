@@ -51,7 +51,7 @@ public:
     virtual asynStatus lock();
     virtual asynStatus unlock();
     virtual asynStatus getAddress(asynUser *pasynUser, int *address);
-    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName); 
+    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName);
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus readInt64(asynUser *pasynUser, epicsInt64 *value);
@@ -74,7 +74,7 @@ public:
     virtual asynStatus getInputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
     virtual asynStatus setOutputEosOctet(asynUser *pasynUser, const char *eos, int eosLen);
     virtual asynStatus getOutputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
-    virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
+    virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements, size_t *nIn);
     virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements);
@@ -118,7 +118,7 @@ public:
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
     virtual asynStatus writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements);
     virtual asynStatus doCallbacksEnum(char *strings[], int values[], int severities[], size_t nElements, int reason, int addr);
-    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
+    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo,
                                      const char **pptypeName, size_t *psize);
     virtual asynStatus drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize);
@@ -126,7 +126,7 @@ public:
     virtual void report(FILE *fp, int details);
     virtual asynStatus connect(asynUser *pasynUser);
     virtual asynStatus disconnect(asynUser *pasynUser);
-   
+
     virtual asynStatus createParam(          const char *name, asynParamType type, int *index);
     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
     virtual asynStatus getNumParams(          int *numParams);
@@ -212,7 +212,7 @@ private:
     char *outputEosOctet;
     int outputEosLenOctet;
     callbackThread *cbThread;
-    template <typename epicsType, typename interruptType> 
+    template <typename epicsType, typename interruptType>
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
 
@@ -233,5 +233,5 @@ private:
 };
 
 #endif /* cplusplus */
-    
+
 #endif

@@ -48,7 +48,7 @@ static asynStatus srqEnable (void *pdrvPvt, int onOff);
 static asynStatus serialPollBegin (void *pdrvPvt);
 static int serialPoll (void *pdrvPvt, int addr, double timeout);
 static asynStatus serialPollEnd (void *pdrvPvt);
-
+
 static void report(void *pdrvPvt,FILE *fd,int details)
 {
 }
@@ -115,7 +115,7 @@ static int serialPoll (void *pdrvPvt, int addr, double timeout)
 static asynStatus serialPollEnd (void *pdrvPvt)
 {
 }
-
+
 static asynGpib skeletonDriver = {
     report,
     connect,

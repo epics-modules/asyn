@@ -24,7 +24,7 @@ extern "C" {
 
 #define asynOptionSyncIOType "asynOptionSyncIO"
 typedef struct asynOptionSyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*setOption)(asynUser *pasynUser, const char *key, const char *val, double timeout);

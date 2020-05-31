@@ -8,7 +8,7 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
-/* 
+/*
  * End-of-string processing for asyn
  *
  * Author: Eric Norum

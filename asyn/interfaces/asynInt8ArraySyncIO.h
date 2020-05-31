@@ -24,7 +24,7 @@ extern "C" {
 
 #define asynInt8ArraySyncIOType "asynInt8ArraySyncIO"
 typedef struct asynInt8ArraySyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                        asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,epicsInt8 *pvalue,size_t nelem,double timeout);

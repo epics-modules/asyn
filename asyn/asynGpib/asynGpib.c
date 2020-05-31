@@ -38,7 +38,7 @@
 #endif
 #define SRQTIMEOUT .01
 #define MAX_POLL 5
-
+
 typedef struct gpibBase {
     ELLLIST gpibPvtList;
     epicsTimerQueueId timerQueue;
@@ -78,7 +78,7 @@ typedef struct gpibPvt {
     char          eos;
     void          *pasynPvt;   /*For registerInterruptSource*/
 }gpibPvt;
-
+
 #define GETgpibPvtasynGpibPort \
     gpibPvt *pgpibPvt = (gpibPvt *)drvPvt; \
     asynGpibPort *pasynGpibPort; \
@@ -140,7 +140,7 @@ static asynGpib gpib = {
 static asynInt32 int32 = {0,0,0,0,0};
 
 epicsShareDef asynGpib *pasynGpib = &gpib;
-
+
 /*internal methods */
 static void gpibInit(void)
 {
@@ -212,7 +212,7 @@ static void exceptionHandler(asynUser *pasynUser,asynException exception)
             pgpibPvt->portName,pasynUser->errorMessage);
     }
 }
-
+
 /* NOTE FOR SINGLE ADDRESS CONTROLLER
 * The asynUser must specify addr = 0 or SRQs will not work.
 */
@@ -222,7 +222,7 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
     asynStatus status;
     int statusByte = 0;
     int isConnected=0, isEnabled=0, isAutoConnect = 0;
-    
+
     status = pasynManager->isEnabled(ppollNode->pasynUser,&isEnabled);
     if(status==asynSuccess)
         status = pasynManager->isConnected(ppollNode->pasynUser,&isConnected);
@@ -299,7 +299,7 @@ static void pollOne(asynUser *pasynUser,gpibPvt *pgpibPvt,
         pasynManager->interruptEnd(pgpibPvt->asynInt32Pvt);
     }
 }
-
+
 static void srqPoll(asynUser *pasynUser)
 {
     void       *drvPvt = pasynUser->userPvt;
@@ -309,7 +309,7 @@ static void srqPoll(asynUser *pasynUser)
     GETgpibPvtasynGpibPort
 
     epicsMutexMustLock(pgpibPvt->lock);
-    if(!pgpibPvt->pollRequestIsQueued) 
+    if(!pgpibPvt->pollRequestIsQueued)
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "%s asynGpib:srqPoll but !pollRequestIsQueued. Why?\n",
             pgpibPvt->portName);
@@ -354,7 +354,7 @@ static void srqPoll(asynUser *pasynUser)
             pgpibPvt->portName,srqStatus,ntrys);
     }
 }
-
+
 /*asynCommon methods */
 static void report(void *drvPvt,FILE *fd,int details)
 {
@@ -386,7 +386,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->disconnect(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
-
+
 /*asynOctet methods */
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
@@ -431,13 +431,13 @@ static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->flush(pgpibPvt->asynGpibPortPvt,pasynUser));
 }
-
+
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen)
 {
     asynStatus status;
     GETgpibPvtasynGpibPort
-    
+
     if(eoslen>1) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s asynGpib:setInputEos eoslen %d too long. only 1 is allowed",
@@ -467,7 +467,7 @@ static asynStatus getInputEos(void *drvPvt,asynUser *pasynUser,
     return asynSuccess;
 }
 
-
+
 /*asynGpib methods */
 static asynStatus addressedCmd(void *drvPvt,asynUser *pasynUser,
     const char *data, int length)
@@ -494,7 +494,7 @@ static asynStatus ren (void *drvPvt,asynUser *pasynUser, int onOff)
     GETgpibPvtasynGpibPort
     return(pasynGpibPort->ren(pgpibPvt->asynGpibPortPvt,pasynUser,onOff));
 }
-
+
 static asynStatus pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
 {
     int addr,primary,secondary;
@@ -557,7 +557,7 @@ static asynStatus pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
     }
     return asynSuccess;
 }
-
+
 /* The following are called by low level gpib drivers */
 static void *registerPort(
         const char *portName,
@@ -629,7 +629,7 @@ static void *registerPort(
     }
     return (void *)pgpibPvt;
 }
-
+
 static void srqHappened(void *drvPvt)
 {
     asynStatus status;
@@ -653,4 +653,4 @@ static void srqHappened(void *drvPvt)
             "%s asynGpib:srqHappened queueRequest failed %s\n",
             pgpibPvt->portName,pasynUser->errorMessage);
     }
-} 
+}

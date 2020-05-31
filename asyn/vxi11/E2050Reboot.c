@@ -23,7 +23,7 @@
 
 #include <osiSock.h>
 #include <epicsThread.h>
-
+
 int E2050Reboot(char * inetAddr)
 {
     struct sockaddr_in serverAddr;
@@ -43,7 +43,7 @@ int E2050Reboot(char * inetAddr)
     status = aToIPAddr(inetAddr,23,&serverAddr);
     if(status) {
         printf("aToIPAddr failed\n");
-        return(-1); 
+        return(-1);
     }
     errno = 0;
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));

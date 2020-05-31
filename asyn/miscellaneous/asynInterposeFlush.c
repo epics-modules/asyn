@@ -9,7 +9,7 @@
 ***********************************************************************/
 
 /*test process module for asyn support*/
-/* 
+/*
  * Author: Marty Kraimer
  */
 
@@ -37,7 +37,7 @@ typedef struct interposePvt {
     void          *drvPvt;
     double        timeout;
 }interposePvt;
-    
+
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);
@@ -61,8 +61,8 @@ static asynOctet octet = {
     registerInterruptUser,cancelInterruptUser,
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
-
-epicsShareFunc int 
+
+epicsShareFunc int
 asynInterposeFlushConfig(const char *portName,int addr,int timeout)
 {
     interposePvt *pinterposePvt;
@@ -89,7 +89,7 @@ asynInterposeFlushConfig(const char *portName,int addr,int timeout)
     pinterposePvt->drvPvt = poctetasynInterface->drvPvt;
     return(0);
 }
-
+
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
@@ -186,7 +186,7 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
     return pinterposePvt->pasynOctetDrv->getOutputEos(pinterposePvt->drvPvt,
         pasynUser,eos,eossize,eoslen);
 }
-
+
 /* register asynInterposeFlushConfig*/
 static const iocshArg asynInterposeFlushConfigArg0 =
     { "portName", iocshArgString };
@@ -194,7 +194,7 @@ static const iocshArg asynInterposeFlushConfigArg1 =
     { "addr", iocshArgInt };
 static const iocshArg asynInterposeFlushConfigArg2 =
     { "timeout", iocshArgDouble };
-static const iocshArg *asynInterposeFlushConfigArgs[] = 
+static const iocshArg *asynInterposeFlushConfigArgs[] =
     {&asynInterposeFlushConfigArg0,&asynInterposeFlushConfigArg1,
     &asynInterposeFlushConfigArg2};
 static const iocshFuncDef asynInterposeFlushConfigFuncDef =
