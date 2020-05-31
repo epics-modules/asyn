@@ -1,6 +1,6 @@
 /*
  * testBroadcastBurst.c
- * 
+ *
  * Program to test sending a burst of broadcast messages in a loop.
  * Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops delayTime
  *
@@ -23,7 +23,7 @@
 #include <time.h>
 #include <sys/time.h>
 
-int main(int argc, char *argv[]) 
+int main(int argc, char *argv[])
 {
     size_t nwrite=0;
     char buffer[256];
@@ -72,10 +72,10 @@ int main(int argc, char *argv[])
           nwrite = sendto(usock, buffer, strlen(buffer), 0, (struct sockaddr *) &rem, sizeof(rem));
         }
         gettimeofday(&tv, NULL);
-        printf("[%10.10ld.%6.6ld] loop %d, sent %d broadcasts to %s:%d, nwrite on last=%d\n", 
+        printf("[%10.10ld.%6.6ld] loop %d, sent %d broadcasts to %s:%d, nwrite on last=%d\n",
                (long)tv.tv_sec, (long)tv.tv_usec, i, j, broadcastAddress, port, (int)nwrite);
         nanosleep(&ts, &tsrem);
     }
     return 0;
 }
-    
+

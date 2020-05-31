@@ -1,6 +1,6 @@
 /*
  * testErrors.h
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to test error handling in both normally scanned
  * and I/O Intr scanned records
  *
@@ -47,13 +47,13 @@
 class testErrors : public asynPortDriver {
 public:
     testErrors(const char *portName, int canBlock);
-                 
+
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus writeInt64(asynUser *pasynUser, epicsInt64 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
     virtual asynStatus writeUInt32Digital(asynUser *pasynUser, epicsUInt32 value, epicsUInt32 mask);
-    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, 
+    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value,
                                   size_t nChars, size_t *nActual);
     virtual asynStatus readInt8Array   (asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements, size_t *nIn);
@@ -97,7 +97,7 @@ protected:
     int P_Int64ArrayValue;
     int P_Float32ArrayValue;
     int P_Float64ArrayValue;
- 
+
 private:
     /* Our data */
     char *int32EnumStrings_  [MAX_INT32_ENUMS];
@@ -115,7 +115,7 @@ private:
     epicsInt64    int64ArrayValue_  [MAX_ARRAY_POINTS];
     epicsFloat32  float32ArrayValue_[MAX_ARRAY_POINTS];
     epicsFloat64  float64ArrayValue_[MAX_ARRAY_POINTS];
-    template <typename epicsType> 
-        asynStatus doReadArray(asynUser *pasynUser, epicsType *value, 
+    template <typename epicsType>
+        asynStatus doReadArray(asynUser *pasynUser, epicsType *value,
                            size_t nElements, size_t *nIn, int paramIndex, epicsType *pValue);
 };

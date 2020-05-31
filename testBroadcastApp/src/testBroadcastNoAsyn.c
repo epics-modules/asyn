@@ -1,6 +1,6 @@
 /*
  * testBroadcastNoAsyn.c
- * 
+ *
  * Program to test sending a broadcast message and reading the responses.
  * This version uses native socket calls, not asyn.
  * This program requires an NSLS electrometer to be present.
@@ -50,9 +50,9 @@ int main(int argc, char *argv[]) {
     epicsThreadSleep(0.1);
     nread = recvfrom(usock, buffer, sizeof(buffer), 0, (struct sockaddr *)&rem, (uint32_t*)&rem_len);
     printf("Read from UDP port, nread=%d, buffer=\n%s\n", (int)nread, buffer);
-    
+
     system("netstat -a | grep 164.54.160.255 | grep -v ca-2");
-    
+
     return 0;
 }
-    
+

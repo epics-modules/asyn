@@ -1,6 +1,6 @@
 /*
  * testArrayRingBuffer.h
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to test using ring buffers with devAsynXXXArray.
  *
  * Author: Mark Rivers
@@ -36,7 +36,7 @@ static const char *driverName="testArrayRingBuffer";
 class testArrayRingBuffer : public asynPortDriver {
 public:
     testArrayRingBuffer(const char *portName, int maxArrayLength);
-                 
+
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus readInt32Array(asynUser *pasynUser, epicsInt32 *value,
@@ -55,7 +55,7 @@ protected:
     int P_BurstDelay;
     int P_ScalarData;
     int P_ArrayData;
- 
+
 private:
     /* Our data */
     epicsEventId eventId_;
@@ -72,25 +72,25 @@ void arrayGenTaskC(void *drvPvt)
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxArrayLength The maximum  number of points in the volt and time arrays */
-testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLength) 
-   : asynPortDriver(portName, 
-                    1, /* maxAddr */ 
+testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLength)
+   : asynPortDriver(portName,
+                    1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask,                   /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
-                    0) /* Default stack size*/    
+                    0) /* Default stack size*/
 {
     asynStatus status;
     const char *functionName = "testArrayRingBuffer";
 
     /* Make sure maxArrayLength is positive */
     if (maxArrayLength < 1) maxArrayLength = 10;
-    
+
     /* Allocate the waveform array */
     pData_ = (epicsInt32 *)calloc(maxArrayLength, sizeof(epicsInt32));
-    
+
     eventId_ = epicsEventCreate(epicsEventEmpty);
     createParam(P_RunStopString,            asynParamInt32,         &P_RunStop);
     createParam(P_MaxArrayLengthString,     asynParamInt32,         &P_MaxArrayLength);
@@ -100,11 +100,11 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
     createParam(P_BurstDelayString,         asynParamFloat64,       &P_BurstDelay);
     createParam(P_ScalarDataString,         asynParamInt32,         &P_ScalarData);
     createParam(P_ArrayDataString,          asynParamInt32Array,    &P_ArrayData);
-    
+
     /* Set the initial values of some parameters */
     setIntegerParam(P_MaxArrayLength,    maxArrayLength);
     setIntegerParam(P_ArrayLength,       maxArrayLength);
-    
+
     /* Create the thread that does the array callbacks in the background */
     status = (asynStatus)(epicsThreadCreate("testArrayRingBufferTask",
                           epicsThreadPriorityMedium,
@@ -118,22 +118,22 @@ testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLengt
 }
 
 
-
+
 /** Array generation ask that runs as a separate thread.  When the P_RunStop parameter is set to 1
   * it periodically generates a burst of arrays. */
 void testArrayRingBuffer::arrayGenTask(void)
 {
     double loopDelay;
-    epicsInt32 runStop; 
+    epicsInt32 runStop;
     int i, j;
     epicsInt32 burstLength;
     double burstDelay;
     epicsInt32 maxArrayLength;
     epicsInt32 arrayLength;
-    
+
     lock();
-    /* Loop forever */ 
-    getIntegerParam(P_MaxArrayLength, &maxArrayLength);   
+    /* Loop forever */
+    getIntegerParam(P_MaxArrayLength, &maxArrayLength);
     while (1) {
         getDoubleParam(P_LoopDelay, &loopDelay);
         getDoubleParam(P_BurstDelay, &burstDelay);
@@ -143,7 +143,7 @@ void testArrayRingBuffer::arrayGenTask(void)
         if (runStop) epicsEventWaitWithTimeout(eventId_, loopDelay);
         else         (void)epicsEventWait(eventId_);
         // Take the lock again
-        lock(); 
+        lock();
         /* runStop could have changed while we were waiting */
         getIntegerParam(P_RunStop, &runStop);
         if (!runStop) continue;
@@ -160,7 +160,7 @@ void testArrayRingBuffer::arrayGenTask(void)
             setIntegerParam(P_ScalarData, i);
             callParamCallbacks();
             doCallbacksInt32Array(pData_, arrayLength, P_ArrayData, 0);
-            if (burstDelay > 0.0) 
+            if (burstDelay > 0.0)
                 epicsThreadSleep(burstDelay);
         }
     }
@@ -180,40 +180,40 @@ asynStatus testArrayRingBuffer::writeInt32(asynUser *pasynUser, epicsInt32 value
 
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setIntegerParam(function, value);
-    
+
     /* Fetch the parameter string name for possible use in debugging */
     getParamName(function, &paramName);
 
     if (function == P_RunStop) {
         if (value) epicsEventSignal(eventId_);
-    } 
+    }
     else {
         /* All other parameters just get set in parameter list, no need to
          * act on them here */
     }
-    
+
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks();
-    
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d",
                   driverName, functionName, status, function, paramName, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, name=%s, value=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, name=%s, value=%d\n",
               driverName, functionName, function, paramName, value);
     return status;
 }
 
-
+
 /** Called when asyn clients call pasynInt32Array->read().
-  * Returns the value of the P_ArrayData array.  
+  * Returns the value of the P_ArrayData array.
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
   * \param[in] value Pointer to the array to read.
   * \param[in] nElements Number of elements to read.
   * \param[out] nIn Number of elements actually read. */
-asynStatus testArrayRingBuffer::readInt32Array(asynUser *pasynUser, epicsInt32 *value, 
+asynStatus testArrayRingBuffer::readInt32Array(asynUser *pasynUser, epicsInt32 *value,
                                                size_t nElements, size_t *nIn)
 {
     int function = pasynUser->reason;
@@ -227,17 +227,17 @@ asynStatus testArrayRingBuffer::readInt32Array(asynUser *pasynUser, epicsInt32 *
         memcpy(value, pData_, nCopy*sizeof(epicsInt32));
         *nIn = nCopy;
     }
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d", 
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d",
                   driverName, functionName, status, function);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d\n",
               driverName, functionName, function);
     return status;
 }
-    
+
 /* Configuration routine.  Called directly, or from the iocsh function below */
 
 extern "C" {

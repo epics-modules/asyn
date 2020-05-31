@@ -1,6 +1,6 @@
 /*
  * testAsynPortDriver.h
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to demonstrate its use.
  * It simulates a digital scope looking at a 1kHz 1000-point noisy sine wave.  Controls are
  * provided for time/division, volts/division, volt offset, trigger delay, noise amplitude, update time,
@@ -40,13 +40,13 @@
 /** Class that demonstrates the use of the asynPortDriver base class to greatly simplify the task
   * of writing an asyn port driver.
   * This class does a simple simulation of a digital oscilloscope.  It computes a waveform, computes
-  * statistics on the waveform, and does callbacks with the statistics and the waveform data itself. 
+  * statistics on the waveform, and does callbacks with the statistics and the waveform data itself.
   * I have made the methods of this class public in order to generate doxygen documentation for them,
   * but they should really all be private. */
 class testAsynPortDriver : public asynPortDriver {
 public:
     testAsynPortDriver(const char *portName, int maxArraySize);
-                 
+
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
@@ -77,7 +77,7 @@ protected:
     int P_MinValue;
     int P_MaxValue;
     int P_MeanValue;
- 
+
 private:
     /* Our data */
     epicsEventId eventId_;

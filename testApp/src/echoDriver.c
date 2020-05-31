@@ -9,7 +9,7 @@
 ***********************************************************************/
 
 /*test driver for asyn support*/
-/* 
+/*
  * Author: Marty Kraimer
  */
 
@@ -53,7 +53,7 @@ typedef struct echoPvt {
     int           eoslen;
     void          *pasynPvt;   /*For registerInterruptSource*/
 }echoPvt;
-    
+
 /* init routine */
 static int echoDriverInit(const char *dn, double delay,
     int noAutoConnect,int multiDevice);
@@ -74,7 +74,7 @@ static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
 static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     char *eos, int eossize, int *eoslen);
-
+
 static int echoDriverInit(const char *dn, double delay,
     int noAutoConnect,int multiDevice)
 {
@@ -152,7 +152,7 @@ static void report(void *drvPvt,FILE *fp,int details)
             (int)pechoPvt->device[i].buffer.nchars);
     }
 }
-
+
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
     echoPvt    *pechoPvt = (echoPvt *)drvPvt;
@@ -209,7 +209,7 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionConnect(pasynUser);
     return(asynSuccess);
 }
-
+
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
     echoPvt    *pechoPvt = (echoPvt *)drvPvt;
@@ -260,7 +260,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
 }
-
+
 /* asynOctet methods */
 static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t nchars,size_t *nbytesTransfered)
@@ -309,7 +309,7 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
     *nbytesTransfered = nchars;
     return status;
 }
-
+
 static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
@@ -393,7 +393,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
         "echoRead nbytesTransfered %lu\n",(unsigned long)*nbytesTransfered);
     return status;
 }
-
+
 static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser)
 {
     echoPvt *pechoPvt = (echoPvt *)drvPvt;
@@ -454,7 +454,7 @@ static asynStatus getEos(void *drvPvt,asynUser *pasynUser,
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s setEos\n",pechoPvt->portName);
     return(asynSuccess);
 }
-
+
 /* register echoDriverInit*/
 static const iocshArg echoDriverInitArg0 = { "portName", iocshArgString };
 static const iocshArg echoDriverInitArg1 = { "delay", iocshArgDouble };

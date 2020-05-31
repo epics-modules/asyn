@@ -9,7 +9,7 @@
 ***********************************************************************/
 
 /*test process module for asyn support*/
-/* 
+/*
  * Author: Marty Kraimer
  */
 
@@ -36,7 +36,7 @@ typedef struct interposePvt {
     asynOctet *pasynOctet;
     void *asynOctetPvt;
 }interposePvt;
-    
+
 static int interposeInterfaceInit(const char *interposeInterfaceName,
     const char *portName,int addr);
 
@@ -64,7 +64,7 @@ static asynOctet octet = {
     registerInterruptUser,cancelInterruptUser,
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
-
+
 static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
 {
     interposePvt *pinterposePvt;
@@ -99,7 +99,7 @@ static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
     pinterposePvt->asynOctetPvt = poctetasynInterface->drvPvt;
     return(0);
 }
-
+
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
@@ -198,7 +198,7 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
     return pinterposePvt->pasynOctet->getOutputEos(pinterposePvt->asynOctetPvt,
         pasynUser,eos,eossize,eoslen);
 }
-
+
 /* register interposeInterfaceInit*/
 static const iocshArg interposeInterfaceInitArg0 =
     {"interposeInterfaceName", iocshArgString };
@@ -206,7 +206,7 @@ static const iocshArg interposeInterfaceInitArg1 =
     { "portName", iocshArgString };
 static const iocshArg interposeInterfaceInitArg2 =
     { "addr", iocshArgInt };
-static const iocshArg *interposeInterfaceInitArgs[] = 
+static const iocshArg *interposeInterfaceInitArgs[] =
     {&interposeInterfaceInitArg0,&interposeInterfaceInitArg1,
     &interposeInterfaceInitArg2};
 static const iocshFuncDef interposeInterfaceInitFuncDef =
