@@ -1,7 +1,9 @@
-# .travis.yml for use with EPICS Base ci-scripts
+# .travis.yml for testing EPICS Base ci-scripts
 # (see: https://github.com/epics-base/ci-scripts)
 
-# This is YAML - indentation levels are crucial
+# Note:
+# Paths to scripts are different in this test configuration
+# (your module has one more directory level: .ci)
 
 language: cpp
 compiler: gcc
@@ -16,6 +18,9 @@ env:
     - SETUP_PATH=.ci-local:.ci
     - MODULES=sncseq
     - SNCSEQ=R2-2-8
+    - VV=1
+    - CHOCO=re2c
+    - BASE_RECURSIVE=NO
 
 addons:
   apt:
@@ -33,19 +38,17 @@ addons:
     - qemu-system-x86
   homebrew:
     packages:
-    # for all EPICS builds
-    - bash
     # for the sequencer
     - re2c
     update: true
 
 install:
-  - ./.ci/travis/prepare.sh
+  - python cue.py prepare
 
 script:
-  - ./.ci-local/cfg_libcom-only.sh
-  - ./.ci/travis/build.sh
-  - ls -R bin lib include
+  - python cue.py build
+  - python cue.py test
+  - python cue.py test-results
 
 # If you need to do more during install and build,
 # add a local directory to your module and do e.g.
@@ -54,86 +57,94 @@ script:
 # Define build jobs
 
 # Well-known variables to use
-# SET      source setup file
-# EXTRA    content will be added to make command line
-# STATIC   set to YES for static build (default: NO)
-# TEST     set to NO to skip running the tests (default: YES)
-# VV       set to make build scripts verbose (default: unset)
+# SET         source setup file
+# ADD_MODULES extra modules (for a specific job)
+# EXTRA       content will be added to make command line
+# BCFG        build configuration (static/debug/static-debug;
+#             default: shared-optimized)
+# TEST        set to NO to skip running the tests (default: YES)
+# VV          set to make build scripts verbose (default: unset)
 
 # Usually from setup files, but may be specified or overridden
 #  on a job line
-# MODULES  list of dependency modules
-# BASE     branch or release tag name of the EPICS Base to use
-# <MODULE> branch or release tag for a specific module
-# ...      see README for setup file syntax description
+# MODULES     list of dependency modules
+# BASE        branch or release tag name of the EPICS Base to use
+# <MODULE>    branch or release tag for a specific module
+# ...         see README for setup file syntax description
 
 jobs:
   include:
 
-# Default gcc and clang, static build
-
-  - env: BASE=7.0
-
-  - env: BASE=7.0
-    compiler: clang
-
-  - env: BASE=7.0 STATIC=YES
-
 # Trusty: compiler versions very close to RHEL 7
 
-  - env: BASE=7.0
+  - env: set=base7.set
     dist: trusty
 
 # Cross-compilations to Windows using MinGW and WINE
     
-  - env: BASE=7.0 WINE=32 TEST=NO STATIC=YES
+  - env: SET=base7.set WINE=32 TEST=NO BCFG=static
     compiler: mingw
 
-  - env: BASE=7.0 WINE=64 TEST=NO STATIC=NO
+  - env: SET=base7.set WINE=64 TEST=NO
     compiler: mingw
 
 # MacOS build
 
-  - env: BASE=7.0
+  - env: set=base7.set
     os: osx
     compiler: clang
 
 # Cross-compilation to RTEMS
 
-  - env: BASE=7.0 RTEMS=4.10 MODULES="sncseq ipac"
+  - env: SET=base7.set RTEMS=4.10
 
-  - env: BASE=7.0 RTEMS=4.9 MODULES="sncseq ipac"
+  - env: SET=base7.set RTEMS=4.9
+
+# Native Windows builds
+  - env: SET=base7.set
+    os: windows
+  - env: SET=base7.set BCFG=static
+    os: windows
+  - env: SET=base7.set BCFG=debug
+    os: windows
+  - env: SET=base7.set BCFG=static-debug
+    os: windows
+
+  - env: SET=test01
+    compiler: vs2017
+    os: windows
+  - env: SET=base7.set BCFG=static
+    compiler: vs2017
+    os: windows
+  - env: SET=base7.set BCFG=debug
+    compiler: vs2017
+    os: windows
+  - env: SET=base7.set BCFG=static-debug
+    compiler: vs2017
+    os: windows
 
 # Older Base releases
+  - env: SET=base3-15.set
 
-  - env: BASE=R3.15.7
-
-  - env: BASE=R3.15.7 STATIC=YES
+  - env: SET=base3-15.set BCFG=static
 
 # 3.14.12.2 build fails on newer distributions and doesn't know tapfiles target
-  - env: BASE=R3.14.12.2 TEST=NO
-    dist: trusty
+  - env: SET=base3-14.set
 
-  - env: BASE=R3.14.12.2 STATIC=YES TEST=NO
-    dist: trusty
-
-  - env: BASE=R3.14.12.8
-
-  - env: BASE=R3.14.12.8 STATIC=YES
+  - env: SET=base3-14.set STATIC=YES
 
 # "Libcom only" builds
 
-  - env: BASE=7.0 LIBCOM_ONLY=YES
+  - env: SET=base7.set LIBCOM_ONLY=YES
 
-  - env: BASE=7.0 LIBCOM_ONLY=YES STATIC=YES
+  - env: SET=base7.set LIBCOM_ONLY=YES BCFG=statuc
 
 # Other gcc versions (added as an extra package)
 
-  - env: BASE=7.0
+  - env: SET=base7.set
     compiler: gcc-6
     addons: { apt: { packages: ["g++-6"], sources: ["ubuntu-toolchain-r-test"] } }
 
-  - env: BASE=7.0
+  - env: SET=base7.set
     compiler: gcc-7
     addons: { apt: { packages: ["g++-7"], sources: ["ubuntu-toolchain-r-test"] } }
-
