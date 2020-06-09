@@ -1,9 +1,7 @@
-# .travis.yml for testing EPICS Base ci-scripts
+# .travis.yml for use with EPICS Base ci-scripts
 # (see: https://github.com/epics-base/ci-scripts)
 
-# Note:
-# Paths to scripts are different in this test configuration
-# (your module has one more directory level: .ci)
+# This is YAML - indentation levels are crucial
 
 language: cpp
 compiler: gcc
@@ -16,11 +14,8 @@ cache:
 env:
   global:
     - SETUP_PATH=.ci-local:.ci
-    - MODULES=sncseq
-    - SNCSEQ=R2-2-8
-    - VV=1
+    # for the sequencer on Windows
     - CHOCO=re2c
-    - BASE_RECURSIVE=NO
 
 addons:
   apt:
@@ -43,12 +38,12 @@ addons:
     update: true
 
 install:
-  - python cue.py prepare
+  - python .ci/cue.py prepare
 
 script:
-  - python cue.py build
-  - python cue.py test
-  - python cue.py test-results
+  - python .ci/cue.py build
+  - python .ci/cue.py test
+  - python .ci/cue.py test-results
 
 # If you need to do more during install and build,
 # add a local directory to your module and do e.g.
@@ -59,11 +54,13 @@ script:
 # Well-known variables to use
 # SET         source setup file
 # ADD_MODULES extra modules (for a specific job)
-# EXTRA       content will be added to make command line
 # BCFG        build configuration (static/debug/static-debug;
 #             default: shared-optimized)
 # TEST        set to NO to skip running the tests (default: YES)
 # VV          set to make build scripts verbose (default: unset)
+# EXTRA       content will be added to make command line
+# EXTRA1..5   more additional arguments for the make command
+#             (one argument per variable)
 
 # Usually from setup files, but may be specified or overridden
 #  on a job line
@@ -75,9 +72,13 @@ script:
 jobs:
   include:
 
+# Different configurations of default gcc and clang
+
+  - env: SET=base7.set
+
 # Trusty: compiler versions very close to RHEL 7
 
-  - env: set=base7.set
+  - env: SET=base7.set
     dist: trusty
 
 # Cross-compilations to Windows using MinGW and WINE
