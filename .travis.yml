@@ -97,9 +97,9 @@ jobs:
 
 # Cross-compilation to RTEMS
 
-  - env: SET=base7 RTEMS=4.10 MODULES=ipac
+  - env: SET=base7 RTEMS=4.10 MODULES="sncseq ipac"
 
-  - env: SET=base7 RTEMS=4.9 MODULES=ipac
+  - env: SET=base7 RTEMS=4.9 MODULES="sncseq ipac"
 
 # Native Windows builds
   - env: SET=base7
