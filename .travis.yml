@@ -74,78 +74,78 @@ jobs:
 
 # Different configurations of default gcc and clang
 
-  - env: SET=base7.set
+  - env: SET=base7
 
 # Trusty: compiler versions very close to RHEL 7
 
-  - env: SET=base7.set
+  - env: SET=base7
     dist: trusty
 
 # Cross-compilations to Windows using MinGW and WINE
     
-  - env: SET=base7.set WINE=32 TEST=NO BCFG=static
+  - env: SET=base7 WINE=32 TEST=NO BCFG=static
     compiler: mingw
 
-  - env: SET=base7.set WINE=64 TEST=NO
+  - env: SET=base7 WINE=64 TEST=NO
     compiler: mingw
 
 # MacOS build
 
-  - env: set=base7.set
+  - env: SET=base7
     os: osx
     compiler: clang
 
 # Cross-compilation to RTEMS
 
-  - env: SET=base7.set RTEMS=4.10
+  - env: SET=base7 RTEMS=4.10
 
-  - env: SET=base7.set RTEMS=4.9
+  - env: SET=base7 RTEMS=4.9
 
 # Native Windows builds
-  - env: SET=base7.set
+  - env: SET=base7
     os: windows
-  - env: SET=base7.set BCFG=static
+  - env: SET=base7 BCFG=static
     os: windows
-  - env: SET=base7.set BCFG=debug
+  - env: SET=base7 BCFG=debug
     os: windows
-  - env: SET=base7.set BCFG=static-debug
+  - env: SET=base7 BCFG=static-debug
     os: windows
 
-  - env: SET=test01
+  - env: SET=base7
     compiler: vs2017
     os: windows
-  - env: SET=base7.set BCFG=static
+  - env: SET=base7 BCFG=static
     compiler: vs2017
     os: windows
-  - env: SET=base7.set BCFG=debug
+  - env: SET=base7 BCFG=debug
     compiler: vs2017
     os: windows
-  - env: SET=base7.set BCFG=static-debug
+  - env: SET=base7 BCFG=static-debug
     compiler: vs2017
     os: windows
 
 # Older Base releases
-  - env: SET=base3-15.set
+  - env: SET=base3-15
 
-  - env: SET=base3-15.set BCFG=static
+  - env: SET=base3-15 BCFG=static
 
 # 3.14.12.2 build fails on newer distributions and doesn't know tapfiles target
-  - env: SET=base3-14.set
+  - env: SET=base3-14
 
-  - env: SET=base3-14.set STATIC=YES
+  - env: SET=base3-14 STATIC=YES
 
 # "Libcom only" builds
 
-  - env: SET=base7.set LIBCOM_ONLY=YES
+  - env: SET=base7 LIBCOM_ONLY=YES
 
-  - env: SET=base7.set LIBCOM_ONLY=YES BCFG=statuc
+  - env: SET=base7 LIBCOM_ONLY=YES BCFG=statuc
 
 # Other gcc versions (added as an extra package)
 
-  - env: SET=base7.set
+  - env: SET=base7
     compiler: gcc-6
     addons: { apt: { packages: ["g++-6"], sources: ["ubuntu-toolchain-r-test"] } }
 
-  - env: SET=base7.set
+  - env: SET=base7
     compiler: gcc-7
     addons: { apt: { packages: ["g++-7"], sources: ["ubuntu-toolchain-r-test"] } }
