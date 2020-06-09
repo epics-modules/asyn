@@ -97,9 +97,9 @@ jobs:
 
 # Cross-compilation to RTEMS
 
-  - env: SET=base7 RTEMS=4.10
+  - env: SET=base7 RTEMS=4.10 MODULES=ipac
 
-  - env: SET=base7 RTEMS=4.9
+  - env: SET=base7 RTEMS=4.9 MODULES=ipac
 
 # Native Windows builds
   - env: SET=base7
