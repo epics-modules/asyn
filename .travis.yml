@@ -130,13 +130,13 @@ jobs:
 # 3.14.12.2 build fails on newer distributions and doesn't know tapfiles target
   - env: SET=base3-14
 
-  - env: SET=base3-14 STATIC=YES
+  - env: SET=base3-14 BCFG=static
 
 # "Libcom only" builds
 
   - env: SET=base7 LIBCOM_ONLY=YES
 
-  - env: SET=base7 LIBCOM_ONLY=YES BCFG=statuc
+  - env: SET=base7 LIBCOM_ONLY=YES BCFG=static
 
 # Other gcc versions (added as an extra package)
 
