@@ -84,10 +84,8 @@ jobs:
 # Cross-compilations to Windows using MinGW and WINE
     
   - env: SET=base7 WINE=32 TEST=NO BCFG=static
-    compiler: mingw
 
   - env: SET=base7 WINE=64 TEST=NO
-    compiler: mingw
 
 # MacOS build
 
@@ -97,9 +95,9 @@ jobs:
 
 # Cross-compilation to RTEMS
 
-  - env: SET=base7 RTEMS=4.10 MODULES="sncseq ipac"
+  - env: SET=base7 RTEMS=4.10 ADD_MODULES=ipac
 
-  - env: SET=base7 RTEMS=4.9 MODULES="sncseq ipac"
+  - env: SET=base7 RTEMS=4.9 ADD_MODULES=ipac
 
 # Native Windows builds
   - env: SET=base7
