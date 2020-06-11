@@ -875,6 +875,7 @@ ttyCleanup(ttyController_t *tty)
             epicsSocketDestroy(tty->fd);
         free(tty->portName);
         free(tty->IPDeviceName);
+        free(tty->IPHostName);
         free(tty);
     }
 }
