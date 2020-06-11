@@ -99,16 +99,7 @@ jobs:
 
   - env: SET=base7 RTEMS=4.9 ADD_MODULES=ipac
 
-# Native Windows builds
-  - env: SET=base7
-    os: windows
-  - env: SET=base7 BCFG=static
-    os: windows
-  - env: SET=base7 BCFG=debug
-    os: windows
-  - env: SET=base7 BCFG=static-debug
-    os: windows
-
+# Native Windows builds with Visual Studio
   - env: SET=base7
     compiler: vs2017
     os: windows
@@ -118,9 +109,10 @@ jobs:
   - env: SET=base7 BCFG=debug
     compiler: vs2017
     os: windows
-  - env: SET=base7 BCFG=static-debug
-    compiler: vs2017
-    os: windows
+# static-debug is not yet working
+#  - env: SET=base7 BCFG=static-debug
+#    compiler: vs2017
+#    os: windows
 
 # Older Base releases
   - env: SET=base3-15
