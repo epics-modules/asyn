@@ -2037,7 +2037,7 @@ asynStatus asynPortDriver::writeInt64(asynUser *pasynUser, epicsInt64 value)
     if (status != asynSuccess) return status;
 
     /* Set the parameter in the parameter library. */
-    status = (asynStatus) setIntegerParam(addr, function, value);
+    status = (asynStatus) setInteger64Param(addr, function, value);
 
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks(addr, addr);
