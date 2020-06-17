@@ -9,6 +9,7 @@
 #include <epicsThread.h>
 
 #include <asynStandardInterfaces.h>
+#include <asynParamSet.h>
 #include <asynParamType.h>
 #include <paramErrors.h>
 
@@ -43,6 +44,9 @@ class callbackThread;
   * with standard asyn interfaces and a parameter library. */
 class epicsShareClass asynPortDriver {
 public:
+    asynPortDriver(asynParamSet* paramSet,
+                   const char *portName, int maxAddr, int interfaceMask, int interruptMask,
+                   int asynFlags, int autoConnect, int priority, int stackSize);
     asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
@@ -129,6 +133,7 @@ public:
 
     virtual asynStatus createParam(          const char *name, asynParamType type, int *index);
     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
+    virtual asynStatus createParams();
     virtual asynStatus getNumParams(          int *numParams);
     virtual asynStatus getNumParams(int list, int *numParams);
     virtual asynStatus findParam(          const char *name, int *index);
@@ -199,6 +204,7 @@ public:
     void callbackTask();
 
 protected:
+    asynParamSet* paramSet;
     void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
                     int autoConnect, int priority, int stackSize);
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
@@ -231,6 +237,18 @@ private:
     epicsEvent shutdown;
     epicsEvent doneEvent;
 };
+
+/** Utility function that returns a pointer to an asynPortDriver derived class object from its name */
+template <class T> T* findDerivedAsynPortDriver(const char* portName)
+{
+  // findAsynPortDriver returns a void pointer that was cast from an asynPortDriver pointer
+  asynPortDriver* apd = (asynPortDriver*) findAsynPortDriver(portName);
+  if (!apd) return NULL;
+
+  // Downcast asynPortDriver pointer to T pointer - this requires pointer offsetting
+  T* pC = dynamic_cast<T*>(apd);
+  return pC;
+}
 
 #endif /* cplusplus */
 

@@ -3626,6 +3626,15 @@ static asynDrvUser ifaceDrvUser = {
     drvUserDestroy
 };
 
+asynPortDriver::asynPortDriver(asynParamSet* paramSet,
+                               const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask,
+                               int asynFlags, int autoConnect, int priority, int stackSize):
+    paramSet(paramSet)
+{
+    initialize(portNameIn, maxAddrIn, interfaceMask, interruptMask, asynFlags,
+               autoConnect, priority, stackSize);
+    createParams();
+}
 
 
 /** Constructor for the asynPortDriver class.
@@ -3790,6 +3799,19 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
 
     /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
     cbThread = new callbackThread(this);
+}
+
+/** Create any parameters defined in the asynParamSet, if there are any */
+asynStatus asynPortDriver::createParams()
+{
+    asynStatus status;
+    std::vector<asynParam> paramDefinitions = paramSet->getParamDefinitions();
+    for (std::vector<asynParam>::iterator it = paramDefinitions.begin(); it != paramDefinitions.end(); ++it) {
+        status = createParam(it->name, it->type, it->index);
+        if (status) return asynError;
+    }
+
+    return asynSuccess;
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
