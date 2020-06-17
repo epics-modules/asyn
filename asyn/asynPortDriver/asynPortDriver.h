@@ -238,6 +238,18 @@ private:
     epicsEvent doneEvent;
 };
 
+/** Utility function that returns a pointer to an asynPortDriver derived class object from its name */
+template <class T> T* findDerivedAsynPortDriver(const char* portName)
+{
+  // findAsynPortDriver returns a void pointer that was cast from an asynPortDriver pointer
+  asynPortDriver* apd = (asynPortDriver*) findAsynPortDriver(portName);
+  if (!apd) return NULL;
+
+  // Downcast asynPortDriver pointer to T pointer - this requires pointer offsetting
+  T* pC = dynamic_cast<T*>(apd);
+  return pC;
+}
+
 #endif /* cplusplus */
 
 #endif
