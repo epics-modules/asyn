@@ -194,11 +194,12 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   # do we have EPICS calc module (scalcout etc.)
   # applications should include asynCalc.dbd as well as asyn.dbd if support is needed
   ifdef CALC
-  ifdef SSCAN
     USR_CFLAGS += -DHAVE_CALCMOD
-    ASYN_LIBS += calc sscan
+    ASYN_LIBS += calc
     DBD += asynCalc.dbd
   endif
+  ifdef SSCAN
+    ASYN_LIBS += sscan
   endif
 
   ifdef HAVE_DEVINT64
