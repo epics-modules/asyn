@@ -21,7 +21,10 @@ testEpicsSupport_SRCS += int32Driver.c
 testEpicsSupport_SRCS += uint32DigitalDriver.c
 testEpicsSupport_LIBS += asyn
 ifdef CALC
-testEpicsSupport_LIBS += calc sscan
+testEpicsSupport_LIBS += calc
+endif
+ifdef SSCAN
+testEpicsSupport_LIBS += sscan
 endif
 ifdef SNCSEQ
 testEpicsSupport_LIBS += seq pv
@@ -38,7 +41,11 @@ testEpics_LIBS += testEpicsSupport
 testEpics_LIBS += testSupport
 testEpics_LIBS += asyn
 ifdef CALC
-testEpics_LIBS += calc sscan
+testEpics_LIBS += calc
+endif
+# SSCAN is needed if calc was built with SSCAN support.
+ifdef SSCAN
+testEpics_LIBS += sscan
 endif
 ifdef SNCSEQ
 testEpics_LIBS += seq pv
