@@ -261,9 +261,12 @@ endif
 ifeq ($(DRV_HISLIP),YES)
   USR_CXXFLAGS += -fpermissive
   SRC_DIRS += $(ASYN)/drvAsynHiSLIP
+  SRC_DIRS += $(ASYN)/drvAsynHiSLIP/cPyHiSLIP
   asyn_SRCS += drvAsynHiSLIP.cpp
+  asyn_SRCS += HiSLIPMessage.cpp
   DBD += drvAsynHiSLIP.dbd
   INC += drvAsynHiSLIP.h
+  INC += HiSLIPMessage.h
 endif
 
 ifeq ($(DRV_FTDI),YES)
