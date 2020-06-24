@@ -25,414 +25,6 @@ using nsHiSLIP::Message_t;
 #define ASYN_REASON_STB 4346
 #define ASYN_REASON_REN 4347
 
-// HiSLIP methods
-namespace nsHiSLIP{
-  void HiSLIP::connect(const char *hostname,
-		       const char *dev_name,
-		       const int port //,
-		       //const char vendor_id[2]
-		       ){
-    osiSockAddr addr;
-    //Message_t *msg;
-    int status;
-    //const char vendor_id[]=Default_vendor_id;
-  
-    errlogPrintf("connecting to host \"%s\"\n", hostname);
-  
-    if(hostToIPAddr(hostname, &addr.ia.sin_addr) < 0) {
-      errlogPrintf("Unknown host \"%s\"", hostname);
-    }
-  
-    addr.ia.sin_port=htons(port);
-    addr.ia.sin_family=AF_INET;
-  
-    errlogPrintf("address : %x %x %x\n",addr.ia.sin_addr.s_addr,addr.ia.sin_port,
-		 addr.ia.sin_family);
-
-    //this->sync_channel= ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    //this->async_channel=::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    this->sync_channel= ::socket(AF_INET, SOCK_STREAM , 0);
-    this->async_channel=::socket(AF_INET, SOCK_STREAM , 0);
-
-    errlogPrintf("socceks created %d %d\n",this->sync_channel, this->async_channel);
-  
-    errlogPrintf("address : %x %x %x\n",addr.ia.sin_addr.s_addr,addr.ia.sin_port,
-		 addr.ia.sin_family);
-
-    status = ::connect(this->sync_channel, &(addr.sa), sizeof(addr));
-  
-    errlogPrintf("connected to sync channel %d\n",this->sync_channel);
-  
-    if (status!=0){
-      // Error handling
-      perror(__FUNCTION__);
-      errlogPrintf("Error !! %d\n",status);
-    }
-
-    {
-      Message msg(nsHiSLIP::Initialize,
-		  0,
-		  message_parameter((epicsUInt16) nsHiSLIP::PROTOCOL_VERSION_MAX,
-				    (char *) Default_vendor_id),
-		  (epicsUInt64) 0, (epicsUInt8 *) NULL);
-      errlogPrintf("sending message %d \n", msg.message_type);
-      msg.send(this->sync_channel);
-    }
-  
-    errlogPrintf("Sent a initialize message\n");
-
-    { Message resp(AnyMessages);
-
-      errlogPrintf("Receive message created\n");
-    
-      resp.recv(this->sync_channel, nsHiSLIP::InitializeResponse);
-    
-      this->overlap_mode=resp.control_code;
-      this->session_id=resp.message_parameter.getSessionId();
-      this->server_protocol_version=resp.message_parameter.getServerProtocolVersion();
-    }
-    errlogPrintf("Receive a initialized message %d 0x%x %d \n",
-		 this->overlap_mode,this->session_id, this->server_protocol_version
-		 );
-  
-    errlogPrintf("Sending Async initialize message %x\n",this->session_id);
-  
-    status = ::connect(this->async_channel, &addr.sa, sizeof(addr));
-    if (status!=0){
-      // Error handling
-      perror(__FUNCTION__);
-      errlogPrintf("Error !!:%d\n",status);
-    }
-    errlogPrintf("connected to async channel %d\n",this->async_channel);
-  
-    {
-      Message msg(nsHiSLIP::AsyncInitialize);
-      msg.message_parameter.word=this->session_id;
-      msg.send(this->async_channel);
-    }
-    errlogPrintf("reading Async initialize response\n");
-  
-    {
-      Message resp(AnyMessages);
-      resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
-      this->overlap_mode=resp.control_code;
-      this->server_vendorID=resp.message_parameter.word;
-    }
-    errlogPrintf("reading Async initialize done\n");
-  
-    //now setup poll object
-    this->reset_message_id();
-  
-    this->sync_poll.fd=this->sync_channel;
-    this->sync_poll.events=POLLIN;
-    this->sync_poll.revents=0;
-
-    this->async_poll.fd=this->async_channel;
-    this->async_poll.events=POLLIN;
-    this->async_poll.revents=0;
-
-    errlogPrintf("Receive a Async initialized message\n");    
-  };
-
-  long HiSLIP::set_max_size(long message_size){
-    Message resp(AnyMessages);
-    epicsUInt64 msg_size=htobe64(message_size);
-
-    Message msg=Message(nsHiSLIP::AsyncMaximumMessageSize,
-			0,
-			message_parameter(0),
-			sizeof(msg_size), (epicsUInt8 *) &msg_size);
-    msg.send(this->async_channel);
-  
-    int ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
-    if ( ready == 0){
-      return -1;
-    }
-  
-    resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
-  
-    this->maximum_message_size=*((epicsUInt64 *)(resp.payload));
-    this->maximum_payload_size = this->maximum_message_size - HEADER_SIZE;
-    return this->maximum_message_size;
-  };
-
-  int HiSLIP::device_clear(){
-    Message resp(AnyMessages);
-    epicsUInt8 feature_preference;
-    int ready;
-  
-    Message *msg=new Message(nsHiSLIP::AsyncDeviceClear,
-			     0,
-			     0,
-			     0,NULL);
-
-    msg->send(this->async_channel);
-
-    ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
-    if ( ready == 0){
-      return -1;
-    }
-  
-    resp.recv(this->async_channel,nsHiSLIP::AsyncDeviceClearAcknowledge);
-    feature_preference=resp.control_code;
-
-    msg=new Message(nsHiSLIP::DeviceClearComplete,
-		    feature_preference,
-		    0,
-		    0, NULL);
-
-    msg->send(this->sync_channel);
-  
-    ready=poll(&this->sync_poll,  1, this->socket_timeout*1000);
-    if ( ready == 0){
-      return asynTimeout;
-    }
-    resp.recv(this->sync_channel,nsHiSLIP::DeviceClearAcknowledge);
-  
-    this->overlap_mode=resp.control_code;
-    this->reset_message_id();
-    this->rmt_delivered = false;
-  
-    return 0;
-  
-  };
-
-  epicsUInt8 HiSLIP::status_query(){
-    epicsUInt8 status;
-    int ready;
-  
-    Message resp(AnyMessages);
-  
-    Message msg((epicsUInt8) nsHiSLIP::AsyncStatusQuery,
-		(epicsUInt8) this->rmt_delivered,
-		message_parameter((epicsUInt32) this->most_recent_message_id),
-		0, NULL);
-    msg.send(this->async_channel);
-
-    ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
-    if ( ready == 0){
-      return -1;
-    }
-    resp.recv(this->async_channel,nsHiSLIP::AsyncStatusResponse);
-  
-    status= resp.control_code &0xff;
-  
-    return status;
-  }
-
-
-  // long HiSLIP::write(epicsUInt8 *data_str, long timeout){
-  //   return this->write(data_str, this->maximum_message_size,timeout);
-  // };
-
-  long HiSLIP::write(epicsUInt8 const* data_str, size_t const dsize, long timeout){
-  
-    size_t max_payload_size = this->maximum_message_size - nsHiSLIP::HEADER_SIZE;
-    size_t bytestosend=dsize;
-    const epicsUInt8 *buffer=data_str;
-    size_t delivered=0;
-    size_t count;
-
-    errlogPrintf("HiSLIP::write sending data %s\n", data_str);
-  
-    while(bytestosend){
-      if (bytestosend < max_payload_size){
-	Message msg(nsHiSLIP::DataEnd,
-		    this->rmt_delivered,
-		    nsHiSLIP::message_parameter(this->message_id),
-		    bytestosend, (epicsUInt8 *) buffer);
-	buffer += bytestosend;
-	errlogPrintf("sending message %s\n",(char *) msg.payload);
-	count=msg.send(this->sync_channel);
-	count -=HEADER_SIZE;
-	bytestosend = 0;
-	delivered += count ;
-      }
-      else{
-	Message msg(nsHiSLIP::Data,
-		    this->rmt_delivered,
-		    nsHiSLIP::message_parameter(this->message_id),
-		    max_payload_size, (epicsUInt8 *) buffer);
-	count=msg.send(this->sync_channel);
-	count -= HEADER_SIZE;
-	bytestosend -=count;
-	delivered += count;
-	buffer += max_payload_size;
-      }
-      errlogPrintf("data sent= %lu\n",count);
-      this->increment_message_id();
-    }
-    return delivered;
-  };
-  
-  int HiSLIP::read(size_t *received, epicsUInt8 **buffer, long timeout){
-    bool eom=false;
-    size_t rsize=0;
-    
-    errlogPrintf("entered to HiSLIP::read(**buffer:%p, timeout:%ld)\n",
-		 buffer, timeout);
-
-    *received=0;
-    this->rmt_delivered = false;
-
-    while(!eom) {
-      int ready;
-      Message resp(AnyMessages);
-      
-      ready=poll(&this->sync_poll,  1, this->socket_timeout*1000);
-      if ( ready == 0){
-	return -1;
-      }
-      rsize=resp.recv(this->sync_channel);
-      errlogPrintf("HiSLIP read rsize %ld\n",rsize);
-      if (rsize < resp.payload_length){
-	//Error!!
-	return -1;
-      };
-      
-      // may not be a good idea.
-      {	epicsUInt8 *newbuf;
-	
-	newbuf=(epicsUInt8 *) reallocarray(*buffer, 1,
-				   *received+resp.payload_length);
-	if (newbuf == NULL){
-	  errlogPrintf("Cannot extend memory area\n");
-	  return -1;
-	}
-	else{
-	  *buffer=newbuf;
-	}
-      }
-      ::memcpy((*buffer + *received), resp.payload, resp.payload_length);
-      *received +=resp.payload_length;
-      if ( resp.message_type == nsHiSLIP::Data){
-	continue;
-      } else if ( resp.message_type == nsHiSLIP::DataEnd){
-	eom=true;
-	this->rmt_delivered=true;
-	return 0;
-      } else{
-	// error unexpected message type.
-	return -1;
-      }
-    }
-    return -1;
-  };
-  
-  int HiSLIP::read(size_t *received,
-		   epicsUInt8 *buffer, size_t bsize, long timeout){
-    bool eom=false;
-    size_t rsize=0;
-
-    errlogPrintf("entered to HiSLIP::read(buffer %p, bsize:%ld, timeout:%ld\n",
-		 buffer, bsize, timeout);
-    *received=0;
-    this->rmt_delivered = false;
-    
-    if (buffer==NULL || bsize <= 0){
-      errlogPrintf("exit HiSLIP::read improper input buffer:%p bsize:%lu, timeout:%ld\n",
-		   buffer, bsize, timeout);
-      return -1;
-    }
-    if (bsize < this->maximum_payload_size){
-      errlogPrintf("exit HiSLIP::buffer size:%ld should be larger than maximum playload size:%ld \n",
-		   bsize, this->maximum_payload_size);
-    }
-    while(!eom) {
-      int ready;
-      Message resp(AnyMessages);
-
-      ready=::poll(&this->sync_poll, 1, timeout);
-      
-      if (ready == 0){
-	errlogPrintf("HiSLIP::read read timeout %d %ld \n", ready, lock_timeout);
-	return -1;
-      }
-      
-      rsize=resp.recv(this->sync_channel);
-
-      if (rsize < resp.payload_length){
-	errlogPrintf("read data too short %ld %qd \n", rsize, resp.payload_length);
-	return -1;
-      };
-      if (( (*received) + resp.payload_length) > bsize){
-	errlogPrintf("not enough space to store received:%ld resp.payload:%qd bsize:%ld\n",
-		     *received, resp.payload_length, bsize);
-	
-	::memcpy( (buffer + *received), resp.payload, (bsize - *received));
-	*received = bsize;
-	return 0;
-      }
-      else{
-	errlogPrintf("received message size %ld %ld  data:%s mt:%d\n",
-		     rsize, *received, (char *) resp.payload, resp.message_type);
-	::memcpy( (buffer + *received), resp.payload, resp.payload_length);
-      
-	*received +=resp.payload_length;
-      }
-      
-      if ( resp.message_type == nsHiSLIP::Data){
-	continue;
-      } else if (resp.message_type == nsHiSLIP::DataEnd){
-	eom=true;
-	this->rmt_delivered=true;
-	errlogPrintf("received message: %s %s ,eom:%d rmt:%d\n",
-		     buffer, (char *) resp.payload, eom,this->rmt_delivered);
-	return 0;
-      } else{
-	errlogPrintf("Unexpected message type:%d\n",
-		     resp.message_type);
-	resp.printf();
-	// error unexpected message type.
-	return -1;
-      }
-    }
-    return -1;
-  };
-
-  size_t HiSLIP::ask(epicsUInt8  *const data_str, size_t const dsize,
-		     epicsUInt8 **rbuffer,
-		     long wait_time){
-    size_t rsize=-1;
-    epicsUInt8 *buffer=NULL;
-    int status;
-    
-    errlogPrintf("sending a command %s %lu",data_str, dsize);
-  
-    this->write(data_str, dsize);
-    if(this->wait_for_answer(wait_time) == 0){
-      // error
-      return -1;
-    };
-    status=this->read(&rsize, &buffer);
-    if (status !=0){
-      rsize=-1;
-    }
-    *rbuffer=buffer;
-    return rsize;
-  };
- 
-  long HiSLIP::trigger_message(void){
-    return 0;
-  };
-  long HiSLIP::remote_local(bool request){
-    return 0;
-  };
-  long HiSLIP::request_lock(const char* lock_string){
-    return 0;
-  };
-  long HiSLIP::release_lock(void){
-    return 0;
-  };
-  long HiSLIP::request_srq_lock(void){
-    return 0;
-  };
-  long HiSLIP::release_srq_lock(void){
-    return 0;
-  };
-
-} // end of namespace HiSLIP
-//
 // EPICS Async Support 
 typedef struct drvPvt {
   /*
@@ -460,6 +52,7 @@ typedef struct drvPvt {
   /*
    * Interrupt through async_channel  handling
    */
+  bool                   enableInterruptSRQ;
   char                  *interruptThreadName;
   epicsThreadId          interruptTid;
   epicsMutexId           interruptTidMutex;
@@ -501,59 +94,71 @@ interruptThread(void *arg)
     drvPvt *pdpvt = (drvPvt *)arg;
     int s;
     
-    for (;;) {
+    while(true) {
       s =  pdpvt->device->wait_for_SRQ(65000); 
-      
+
+      if (s == 0){
+	errlogPrintf("timeout poll for async channel.\n");
+	continue;
+      }
       if (epicsEventTryWait(pdpvt->pleaseTerminate) == epicsEventWaitOK)
 	break;
-
-      Message_t *srqmsg=pdpvt->device->get_Service_Request();
-      
-      epicsUInt8 st =srqmsg->control_code;
       
       if (s != 0 ){
-	if (st != 0){
+	assert(pdpvt);
+	if (pdpvt == NULL){
+	  errlogPrintf(" NULL drvPvt as an argument.\n");
+	}
+	Message_t *srqmsg=pdpvt->device->get_Service_Request();
+	assert(srqmsg);
+	u_int8_t stb =srqmsg->control_code;// Ststus Byte
+	srqmsg->printf();
+	
+	errlogPrintf("Get SRQ with STB: 0x%2x\n", stb);
+	if ((srqmsg->message_type == nsHiSLIP::AsyncServiceRequest) 
+	    && (stb != 0)){ // may need mask here.
 	  ELLLIST *pclientList;
 	  interruptNode *pnode;
 
-	  pdpvt->interruptCount++;
+	  pdpvt->interruptCount +=1;
 	  pasynManager->interruptStart(pdpvt->asynOctetInterruptPvt,
 				       &pclientList);
 	  {
 	    pnode = (interruptNode *)ellFirst(pclientList);
 	    // see asynDriver/asynDriver.h
 	    while (pnode) {
-	      int eomReason=0; // 0:None, ASYN_EOM_CNT:0x0001,ASYN_EOM_EOS:0x0002 End of StrIng detected ASYN_EOM_END: 0x0004 End indicator detected
-
-	      size_t numchars=1;
+	      //int eomReason=0;
+	      // 0:None, ASYN_EOM_CNT:0x0001,
+	      //ASYN_EOM_EOS:0x0002 End of StrIng detected
+	      //ASYN_EOM_END: 0x0004 End indicator detected
+	      //size_t numchars=1;
 	      asynOctetInterrupt *octetInterrupt =
 		(asynOctetInterrupt *) pnode->drvPvt;
-	      pnode = (interruptNode *)ellNext(&pnode->node);
+	      errlogPrintf("scan pnode in InterruptThread "
+			   "pnode:%p reason:0x%x\n",
+			   pnode, octetInterrupt->pasynUser->reason
+			   );
 	      if (octetInterrupt->pasynUser->reason == ASYN_REASON_SRQ) {
 		octetInterrupt->callback(octetInterrupt->userPvt,
 					 octetInterrupt->pasynUser,
-					 (char *) &st,
-					 numchars,
-					 eomReason);
+					 (char *) &stb,
+					 sizeof(stb),
+					 ASYN_REASON_SRQ);
 	      }
+	      pnode = (interruptNode *)ellNext(&pnode->node);
+
 	    }
 	    pasynManager->interruptEnd(pdpvt->asynOctetInterruptPvt);
+	    errlogPrintf("Finish SRQ process 0x%2x\n", stb);
 	  }
 	}
-	else{
+	else if (srqmsg->message_type == nsHiSLIP::AsyncStatusResponse){
 	  if (epicsMessageQueueTrySend(pdpvt->statusByteMessageQueue,
-				       &st, 1) != 0) {
+				       &stb, 1) != 0) {
 	    errlogPrintf("----- WARNING ----- "
 			 "Can't send status byte to worker thread!\n");
 	  }
 	}
-      }
-      else if (NULL){
-	errlogPrintf("----- WARNING ----- "
-		     "libusb_interrupt_transfer failed (%s).  "
-		     "Interrupt thread for ASYN port \"%s\" terminating.\n",
-		     nsHiSLIP::Error_Messages[s], pdpvt->portName);
-	break;
       }
     }
     epicsMutexLock(pdpvt->interruptTidMutex);
@@ -572,7 +177,8 @@ startInterruptThread(drvPvt *pdpvt)
         pdpvt->interruptTid = epicsThreadCreate(pdpvt->interruptThreadName,
                                 epicsThreadGetPrioritySelf(),
                                 epicsThreadGetStackSize(epicsThreadStackSmall),
-                                interruptThread, pdpvt);
+                                interruptThread,
+				pdpvt);
         if (pdpvt->interruptTid == 0)
             errlogPrintf("----- WARNING ----- "
 			 "Can't start interrupt handler thread %s.\n",
@@ -764,7 +370,7 @@ asynOctetWrite(void *pvt, asynUser *pasynUser,
     while (numchars) {
       size_t nSent;
 
-      nSent = pdpvt->device->write((epicsUInt8 *) data, numchars, timeout);
+      nSent = pdpvt->device->write((u_int8_t *) data, numchars, timeout);
 	
         if (nSent < 0) {
             disconnectIfGone(pdpvt, pasynUser, 0);
@@ -795,29 +401,31 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
     size_t ioCount, nCopy;
     int status;
     int eom=0;
+    size_t nout=0;
     int timeout = pasynUser->timeout * 1000;
     if (timeout == 0) timeout = 1;
     
     assert(pdpvt->device);
     assert(nbytesTransfered);
     
-    *nbytesTransfered = 0;
-    if(eomReason) *eomReason=0;
-    
-    errlogPrintf("asynOctetRead timeout:%g host:%s maxchars:%ld bufCount:%ld\n",
-		 pasynUser->timeout,
-		 pdpvt->hostname,
-		 maxchars, pdpvt->bufCount);
-    /*
-     * Special case for stream device which requires an asynTimeout return.
-     */
+    if(eomReason) {*eomReason=eom=0;}
+    if(nbytesTransfered) {*nbytesTransfered = nout = 0;}
+
+    // errlogPrintf("asynOctetRead timeout:%g host:%s maxchars:%ld bufCount:%ld reason:%x\n",
+    // 		 pasynUser->timeout,
+    // 		 pdpvt->hostname,
+    // 		 maxchars, pdpvt->bufCount,
+    // 		 pasynUser->reason);
+    // /*
+    //  * Special case for stream device which requires an asynTimeout return.
+    //  */
     while(eom==0){
       if ((pasynUser->timeout == 0) && (pdpvt->bufCount == 0))
 	return asynTimeout;
       if (pdpvt->bufCount ==0) {
 	// read adittional data from device
 	status = pdpvt->device->read( &ioCount,
-				    (epicsUInt8 *) pdpvt->buf,
+				    (u_int8_t *) pdpvt->buf,
 				    pdpvt->bufSize,
 				    timeout);
 	if (status != 0){
@@ -832,8 +440,9 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
 	pdpvt->bufp=pdpvt->buf;
 	pdpvt->bufCount = ioCount;
 	pdpvt->bytesReceivedCount += ioCount;
-	errlogPrintf("asynOctetRead data:%s, maxchars:%ld,nbytesTransfered:%ld, eomReason:%d\n",
-		     data, maxchars, *nbytesTransfered, eom);
+	errlogPrintf("asynOctetRead data:%s, "
+		     "maxchars:%ld,nbytesTransfered:%ld, eomReason:%d\n",
+		     data, maxchars, nout, eom);
       }
       if (pdpvt->bufCount) {
 	if (maxchars > pdpvt->bufCount){
@@ -855,7 +464,7 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
 	  pdpvt->bufp += nCopy;
 	}
 	maxchars -= nCopy;
-	*nbytesTransfered += nCopy;
+	nout += nCopy;
 	pdpvt->bytesReceivedCount += nCopy;
 	data += nCopy;
 	if (maxchars == 0){
@@ -869,6 +478,8 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
       }
     }
     if(eomReason) *eomReason = eom;
+    if(nbytesTransfered) {*nbytesTransfered = nout;}
+    
     return asynSuccess;
 }
 
@@ -943,12 +554,12 @@ asynDrvUserCreate(void *pvt, asynUser *pasynUser,
 {
     drvPvt *pdpvt = (drvPvt *)pvt;
 
-    errlogPrintf("DrvUserCreate  drvinfo:%s typeName:%s size:%ld\n",
-		 drvInfo, *pptypeName, *psize
-		 );
+    errlogPrintf("DrvUserCreate  drvinfo:%s\n",
+		 drvInfo);
   
     if (epicsStrCaseCmp(drvInfo, "SRQ") == 0) {
         pasynUser->reason = ASYN_REASON_SRQ;
+	pdpvt->enableInterruptSRQ = true;
         if (pdpvt->isConnected)
             startInterruptThread(pdpvt);
     }
@@ -1010,19 +621,8 @@ HiSLIPConfigure(const char *portName,
 					      "HiSLIPConfigure");
     strcpy(pdpvt->hostname, hostInfo);
     
-    // errlogPrintf("creating HiSLIP object %s", hostInfo);
-    // pdpvt->device=new HiSLIP_t();
-    // errlogPrintf("connecting  HiSLIP object to host:%s\n", hostInfo);
-    // pdpvt->device->connect(hostInfo);
-    // pdpvt->isConnected = true;
-    // errlogPrintf("HiSLIP object connected to host:%s\n", hostInfo);
-    // if (pdpvt->device == 0) {
-    //   errlogPrintf("Failed to create HiSLIP device for %s(%s)\n",
-    //  hostInfo, nsHiSLIP::Error_Messages[2]);
-    //     return;
-    // }
     
-    pdpvt->termChar = -1;
+    pdpvt->termChar = 0;
     pdpvt->interruptTidMutex = epicsMutexMustCreate();
     pdpvt->pleaseTerminate = epicsEventMustCreate(epicsEventEmpty);
     pdpvt->didTerminate = epicsEventMustCreate(epicsEventEmpty);
