@@ -47,16 +47,26 @@ namespace nsHiSLIP{
     
     {
       char *service=NULL;
-      asprintf(&service, "%d",port);// "4880" for example.
-      status=getaddrinfo(hostname, service, &hints, &res);
-      free(service);
+      if (asprintf(&service, "%d",port)// "4880" for example.
+	  > 0){
+	status=getaddrinfo(hostname, service, &hints, &res);
+	free(service);
+      }
+      else{
+	status=getaddrinfo(hostname, "hislip", &hints, &res);
+	perror("asprintf failes");
+      }
     }
     
     if ((status !=0) || res == NULL){
       char *msg;
-      asprintf(&msg, "getaddrinfo error status:%d res %p",status,res);
-      perror(msg);
-      free(msg);
+      if (asprintf(&msg, "getaddrinfo error status:%d res %p",status,res) >0){
+	perror(msg);
+	free(msg);
+      }
+      else{
+	perror("getaddrinfo");
+      }
       exit (9999);
     }
 
@@ -156,14 +166,14 @@ namespace nsHiSLIP{
 			sizeof(msg_size), (u_int8_t *) &msg_size);
     msg.send(this->async_channel);
   
-    int ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
+    int ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
     }
   
     resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
-  
-    this->maximum_message_size=*((u_int64_t *)(resp.payload));
+    //The 8-byte buffer size is sent in network order as a 64-bit integer.
+    this->maximum_message_size=be64toh(*((u_int64_t *)(resp.payload)));
     this->maximum_payload_size = this->maximum_message_size - HEADER_SIZE;
     return this->maximum_message_size;
   };
@@ -180,7 +190,7 @@ namespace nsHiSLIP{
 
     msg->send(this->async_channel);
 
-    ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
+    ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
     }
@@ -195,7 +205,7 @@ namespace nsHiSLIP{
 
     msg->send(this->sync_channel);
   
-    ready=poll(&this->sync_poll,  1, this->socket_timeout*1000);
+    ready=poll(&this->sync_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
     }
@@ -221,7 +231,7 @@ namespace nsHiSLIP{
 		0, NULL);
     msg.send(this->async_channel);
 
-    ready=poll(&this->async_poll,  1, this->socket_timeout*1000);
+    ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
     }
@@ -291,7 +301,7 @@ namespace nsHiSLIP{
       int ready;
       Message resp(AnyMessages);
       
-      ready=poll(&this->sync_poll,  1, this->socket_timeout*1000);
+      ready=poll(&this->sync_poll,  1, this->socket_timeout);
       if ( ready == 0){
 	return -1;
       }
@@ -299,7 +309,7 @@ namespace nsHiSLIP{
       // errlogPrintf("HiSLIP read rsize %ld\n",rsize);
       if (rsize < resp.payload_length){
 	//Error!!
-	return -1;
+	return -2;
       };
       
       // may not be a good idea.
@@ -309,7 +319,7 @@ namespace nsHiSLIP{
 				   *received+resp.payload_length);
 	if (newbuf == NULL){
 	  // errlogPrintf("Cannot extend memory area\n");
-	  return -1;
+	  return -3;
 	}
 	else{
 	  *buffer=newbuf;
@@ -325,10 +335,10 @@ namespace nsHiSLIP{
 	return 0;
       } else{
 	// error unexpected message type.
-	return -1;
+	return -999;
       }
     }
-    return -1;
+    return -999;
   };
   
   int HiSLIP::read(size_t *received,
@@ -425,18 +435,38 @@ namespace nsHiSLIP{
   };
  
   long HiSLIP::trigger_message(void){
+    Message msg(nsHiSLIP::Trigger,
+		(u_int8_t) this->rmt_delivered,
+		message_parameter((u_int32_t) this->most_recent_message_id),
+		0, NULL);
+    msg.send(this->sync_channel);
+    this->increment_message_id();
     return 0;
   };
-  long HiSLIP::remote_local(bool request){
+  
+  long HiSLIP::remote_local(u_int8_t request){
+    Message msg(nsHiSLIP::AsyncRemoteLocalControl,
+		request,
+		message_parameter((u_int32_t) this->most_recent_message_id),
+		0, NULL), resp(AnyMessages);
+    msg.send(this->async_channel);
+    resp.recv(this->async_channel, nsHiSLIP::AsyncRemoteLocalResponse);
     return 0;
   };
+  
   long HiSLIP::request_lock(const char* lock_string){
-    {
-      // errlogPrintf("request_lock not implemented yet\n");
-      return -1;
-    };
-    return 0;
+    Message msg(nsHiSLIP::AsyncLock,
+		1, // request
+		this->lock_timeout,
+		strnlen(lock_string,256), (u_int8_t *) lock_string), resp(AnyMessages);;
+    
+    msg.send(this->async_channel);
+    
+    resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+      
+    return resp.control_code;
   };
+  
   long HiSLIP::release_lock(void){
     {
       // errlogPrintf("release_lock not implemented yet\n");

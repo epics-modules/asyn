@@ -16,20 +16,18 @@
 
 #include <assert.h>
 #include <errno.h>
-
 //#define _GNU_SOURCE         /* See feature_test_macros(7) */
 #include <stdio.h>
-
 #include <stdlib.h>
-#include <string.h>
-#include <errlog.h>
-#include <poll.h>
-#include <endian.h> // network endian is "be".
 #include <sys/types.h>
-#include <sys/socket.h>
-#include <netdb.h>
+#include <string.h> //memcpy, etc
 #include <sys/param.h> /* for MAXHOSTNAMELEN */
 #include <unistd.h> /* close() and others */
+
+#include <poll.h>
+#include <endian.h> // network endian is "be".
+#include <sys/socket.h>
+#include <netdb.h>
 
 //#include <sys/time.h>
 //#include <arpa/inet.h>
@@ -77,7 +75,7 @@ namespace nsHiSLIP{
   static const long  MAXIMUM_MESSAGE_SIZE_VISA = 272;//Following VISA 256 bytes + header length 16 bytes
   static const long  MAXIMUM_MESSAGE_SIZE= 4096;//R&S accept 
   static const long  HEADER_SIZE=16;
-  static const long  SOCKET_TIMEOUT = 1; //# Socket timeout
+  static const long  SOCKET_TIMEOUT = 1000; //# Socket timeout in msec
   static const long  LOCK_TIMEOUT = 3000;//# Lock timeout
   static const long  Default_Port = 4880;
   static const char  Default_device_name[]="hslip0";
@@ -417,8 +415,7 @@ namespace nsHiSLIP{
       return this->lock_timeout;
     };
 
-    HiSLIP(){
-    };
+    HiSLIP(){};
     void connect(char const* hostname){
       this->connect(hostname,
 		    Default_device_name,
@@ -429,7 +426,7 @@ namespace nsHiSLIP{
 		 int  port);
     long set_max_size(long message_size);
     int  device_clear(void);
-    u_int8_t status_query();
+    u_int8_t status_query(void);
     //long write(u_int8_t *data_str, long timeout=LOCK_TIMEOUT);
     long write(const u_int8_t *data_str, const size_t size, long timeout=LOCK_TIMEOUT);
     size_t ask(u_int8_t *data_str, size_t size,
@@ -438,7 +435,7 @@ namespace nsHiSLIP{
     int  read(size_t *received, u_int8_t **buffer, long timeout=LOCK_TIMEOUT);
     int  read(size_t *received, u_int8_t *buffer,  size_t bsize, long timeout=LOCK_TIMEOUT);
     long trigger_message(void);
-    long remote_local(bool request);
+    long remote_local(u_int8_t request);
     long request_lock(const char* lock_string=NULL);
     long release_lock(void);
     long request_srq_lock(void);
@@ -464,7 +461,14 @@ namespace nsHiSLIP{
     int wait_for_SRQ(int wait_time){
       return ::poll(&this->async_poll,  1,   wait_time);
     }
-    void disconnect(){};
+    void disconnect(){
+      if (this->sync_channel){
+	close(this->sync_channel);
+      };
+      if (this->async_channel){
+	close(this->async_channel);
+      };
+    };
     
   private:
     int wait_for_answer(int wait_time){
