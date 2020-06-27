@@ -160,18 +160,43 @@ cdef class HiSLIP:
       """
       Not implemented in .cpp yet.
       """
-      cdef long rc=0
+      cdef long rc=-1
+      rc=self.thisobj.request_srq_lock()
       return rc
   
-  def release_srq_loc(self):
+  def release_srq_lock(self):
       """
       Not implemented in .cpp yet.
       """
-      cdef long rc=0
+      cdef long rc=-1
+      rc=self.thisobj.release_srq_lock()
+      return rc
+
+  def check_srq_lock(self):
+      """
+      1: released
+      0: locked
+      """
+      cdef int rc=-1
+      rc=self.thisobj.check_srq_lock()
+      return rc
+
+  def check_and_lock_srq_lock(self):
+      """
+      1: released
+      0: locked
+      """
+      cdef int rc
+      rc=self.thisobj.check_and_lock_srq_lock()
       return rc
   
+  def get_Service_Request(self):
+      cdef u_int8_t rc=0
+      rc=self.thisobj.get_Service_Request()
+      return rc
+      
   def wait_for_SRQ(self, wait_time):
-      cdef int rc
+      cdef int rc=-1
       rc=self.thisobj.wait_for_SRQ(wait_time)
       return rc
                    

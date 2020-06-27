@@ -28,6 +28,7 @@
 #include <endian.h> // network endian is "be".
 #include <sys/socket.h>
 #include <netdb.h>
+#include <semaphore.h>
 
 //#include <sys/time.h>
 //#include <arpa/inet.h>
@@ -35,8 +36,6 @@
 //#include <netinet/in.h>
 //#include <netinet/tcp.h>
 //#include <net/if.h>
-
-
 
 template<class T> struct Property {
   T& r;
@@ -371,6 +370,20 @@ namespace nsHiSLIP{
     bool rmt_delivered=false;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
+    sem_t srq_lock;
+    HiSLIP(){
+      if (sem_init(&(this->srq_lock), 0, 1) !=0){
+	perror(" HiSLIP srq_lock");
+      }
+    };
+    void connect(char const* hostname){
+      this->connect(hostname,
+		    Default_device_name,
+		    Default_Port);
+    };
+    void connect(char const* hostname,
+		 char const* dev_name,
+		 int  port);
 
     void set_timeout( long timeout){
       this->socket_timeout=timeout;
@@ -386,16 +399,6 @@ namespace nsHiSLIP{
       return this->lock_timeout;
     };
 
-    HiSLIP(){
-    };
-    void connect(char const* hostname){
-      this->connect(hostname,
-		    Default_device_name,
-		    Default_Port);
-    };
-    void connect(char const* hostname,
-		 char const* dev_name,
-		 int  port);
     long set_max_size(long message_size);
     int  device_clear(void);
     u_int8_t status_query(void);
@@ -412,24 +415,28 @@ namespace nsHiSLIP{
     long release_lock(void);
     long request_srq_lock(void);
     long release_srq_lock(void);
-    Message *get_Service_Request(void){
+    int  check_srq_lock(void);
+    int  check_and_lock_srq_lock(void);
+    u_int8_t get_Service_Request(void){
       Message *msg=new Message(AnyMessages);
       long status;
-      this->request_srq_lock();
+      //this->request_srq_lock();
       
       //status= msg->recv(this->async_channel, AsyncServiceRequest);
-      status= msg->recv(this->async_channel);
+      status= msg->recv(this->async_channel,nsHiSLIP::AsyncServiceRequest);
       
       if (status != 0){
 	// should handle Error/Fatal Error/Async Interrupted messages.
 	perror(__FUNCTION__);
       }
       this->release_srq_lock();
-      return msg;
+      return msg->control_code;
     };
+    
     int wait_for_SRQ(int wait_time){
       return ::poll(&this->async_poll,  1,   wait_time);
     }
+    
     void disconnect(){
       if (this->sync_channel){
 	close(this->sync_channel);

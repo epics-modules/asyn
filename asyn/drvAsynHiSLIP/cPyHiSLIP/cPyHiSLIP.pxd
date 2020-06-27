@@ -58,7 +58,10 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     long request_lock(char *)
     long release_lock()
     long request_srq_lock()
-    long release_srq_loc()
+    long release_srq_lock()
+    int check_srq_lock()
+    int check_and_lock_srq_lock()
+    u_int8_t get_Service_Request()
     int  wait_for_SRQ(int)
     void disconnect()
     

@@ -465,20 +465,50 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::request_srq_lock(void){
-    {
-      // errlogPrintf("request_srq_lock not implemented yet\n");
+    if (sem_wait(&(this->srq_lock)) == 0){
+      return 0;
+    }
+    else{
+      perror("request_srq_lock");
       return -1;
-    };
-    return 0;
+    }
   };
   
   long HiSLIP::release_srq_lock(void){
-    {
-      // errlogPrintf("release_srq_lock not implemented yet\n");
+    int sval=this->check_srq_lock();
+    if (sval != 0){
+      return sval;
+    }
+    if (sem_post(&(this->srq_lock)) == 0){
+      return 0;
+    }
+    else{
+      perror("release_srq_lock");
       return -1;
-    };
-    return 0;
+    }
   };
-
+  int HiSLIP::check_srq_lock(void){
+    int sval;
+    if (sem_getvalue(&(this->srq_lock),&sval) == 0){
+      return sval;
+    }
+    else {
+      perror("check_srq_lock");
+      return -1;
+    }
+  }
+  
+  int HiSLIP::check_and_lock_srq_lock(void){
+    int rc=sem_trywait(&(this->srq_lock));
+    switch (rc){
+    case 0:
+      break;
+    case EAGAIN:
+      break;
+    default:
+      perror("check_and_lock_srq_lock");
+    }
+    return rc;
+  }
 } // end of namespace HiSLIP
 
