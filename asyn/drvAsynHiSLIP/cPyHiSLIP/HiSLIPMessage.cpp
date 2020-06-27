@@ -123,7 +123,8 @@ namespace nsHiSLIP{
   
     //now setup poll object
     this->reset_message_id();
-  
+    this->rmt_delivered = false;
+      
     this->sync_poll.fd=this->sync_channel;
     this->sync_poll.events=POLLIN;
     this->sync_poll.revents=0;

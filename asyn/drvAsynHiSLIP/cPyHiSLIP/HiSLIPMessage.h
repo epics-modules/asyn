@@ -270,7 +270,8 @@ namespace nsHiSLIP{
       memcpy( buffer, this->prologue, 2);
       *((char *) buffer + 2) = this->message_type;
       *((char *) buffer + 3) = this->control_code;
-      *((u_int32_t *)((char *) buffer+4))=htobe32(this->message_parameter.word);
+      //*((u_int32_t *)((char *) buffer+4))=htobe32(this->message_parameter.word);
+      *((u_int32_t *)((char *) buffer+4))=htonl(this->message_parameter.word);
       *((u_int64_t *)((char *) buffer+8))=htobe64(this->payload_length);
       return 0;
     }
@@ -367,7 +368,7 @@ namespace nsHiSLIP{
     int server_protocol_version;
     unsigned int server_vendorID;
 
-    bool rmt_delivered;
+    bool rmt_delivered=false;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
 
@@ -385,7 +386,8 @@ namespace nsHiSLIP{
       return this->lock_timeout;
     };
 
-    HiSLIP(){};
+    HiSLIP(){
+    };
     void connect(char const* hostname){
       this->connect(hostname,
 		    Default_device_name,
