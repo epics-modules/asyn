@@ -160,26 +160,15 @@ namespace nsHiSLIP{
     message_parameter(u_int16_t proto, char vers[2]){
       this->word= ((int32_t)proto << 16) +
 	(vers[1]  << 8) + (vers[0]<<0);
-      // errlogPrintf("messagParameter:%#010x, protocol:%#06x, version:[%c%c]\n",
-      // 		   this->word,
-      // 		   proto, vers[0], vers[1]);
     };
     message_parameter(u_int16_t proto, u_int16_t sid){
       this->word = (proto << 16) + sid;
-      // errlogPrintf("messagParameter:%#010x, protocol:%#06x, session id:%#06x\n",
-      // 		   this->word,
-      // 		   proto, sid);
+
     };
     u_int16_t getServerProtocolVersion(){
-      // errlogPrintf("getServerProtocolVersion messagParameter:%#010x, ServerProtocolVersion %d\n",
-      // 		   this->word,
-      // 		   (u_int16_t) (((this->word) & 0xffff0000)>>16));
       return (u_int16_t) (((this->word) & 0xffff0000)>>16);
     }
     u_int16_t getSessionId(){
-      // errlogPrintf("getSessionId messagParameter %#010x, sessionID:%d\n",
-      // 		   this->word,
-      // 		   (u_int16_t) ((this->word) & 0xffff));
       return ((u_int16_t) ((this->word) & 0xffff));
     }
   } message_parameter_t;
@@ -211,6 +200,10 @@ namespace nsHiSLIP{
       this->payload_length=length;
     }
     void printf(void){
+      ::printf("message type:%d\n",this->message_type);
+      ::printf("control_code:%d\n",this->control_code);
+      ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
+      ::printf("payload length: %ld\n",this->payload_length);
       // errlogPrintf("message type:%d\n",this->message_type);
       // errlogPrintf("control_code:%d\n",this->control_code);
       // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
@@ -222,60 +215,44 @@ namespace nsHiSLIP{
       ssize_t ssize;
       
       this->toRawData(hbuf);
-      // errlogPrintf("sending header dump: %#016qx,%#016qx\n",
-      // 		   *((u_int64_t*)hbuf),*(((u_int64_t*)hbuf) +1));      
       ssize=::send(socket, hbuf, sizeof(hbuf), 0);
       
       return ssize;
     }
     
     size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages){
-      
-
       char buffer[HEADER_SIZE];
       ssize_t rsize;
-      
-      
-      // errlogPrintf("recv header\n");
-      
       rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
-      
-      // errlogPrintf("read header dump: %#016qx, %#016qx\n",
-      // 		   *((u_int64_t*)buffer),
-      // 		   *(((u_int64_t*)buffer) +1) );
       
       if (rsize < HEADER_SIZE){
 	//raise exception?
-	// errlogPrintf("too short header %ld\n",rsize);
 	return -1;
       }
       else if (memcmp(this->prologue, buffer,2) != 0){
-	//error
-	// errlogPrintf("incorrect prologue %2s %2s\n",buffer,this->prologue);
 	return -1;
       }
 
-      //errlogPrintf("Recieved message %2s %2s\n",buffer,this->prologue);
-      
       this->message_type=*((u_int8_t *) ((char *) buffer+2));
       this->control_code=*((u_int8_t *) ((char *) buffer+3));
-      this->message_parameter.word = be32toh(*(u_int32_t *) ((char *) buffer+4));
+      this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
       this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
 
-      this->printf();
+      //this->printf();
 
-      if((expected_message_type != AnyMessages) &&
-	 (expected_message_type != this->message_type)){
-	//error!
-	// in overlapped mode, should we keep it?
-	// errlogPrintf("Error message types does not match %d vs %d\n",expected_message_type,
-	// 	     this->message_type);
-	return -1;
+      if((expected_message_type == AnyMessages) ||
+	 (expected_message_type == this->message_type)){
+	return rsize;
       }
-      
-      // errlogPrintf("successfull recieved message header %ld \n",rsize);
-      
-      return rsize;
+      //error!
+      // in overlapped mode, should we keep it?
+      else if(this->message_type  == nsHiSLIP::Error){
+	return -(this->control_code+1);
+      }
+      else if(this->message_type  == nsHiSLIP::FatalError){
+	return -(this->control_code+1);
+      }
+      return -1;
     }
     
     int fromRawData(void *buffer){ //DeSerialize
@@ -336,16 +313,10 @@ namespace nsHiSLIP{
       size_t rsize;
       size_t status;
       
-      /* setsockopt(sock, SOL_SOCKET, */
-      /* 		 SO_RCVTIMEO, &(msg->socket_timeout), sizeof(int)); */
-
-      // read header part and update header.
-      
       rsize=this->Header::recv(socket, expected_message_type);
 
       if (rsize < 0){
 	// Error!
-	// errlogPrintf("failed to read header.%ld \n",rsize);
 	return rsize;
       }
 
@@ -363,11 +334,11 @@ namespace nsHiSLIP{
 	size_t bytestoread=this->payload_length;
 	
 	while (bytestoread){
-	  status = ::recv(socket, ((u_int8_t *)this->payload+rsize), bytestoread, 0);
+	  status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
+			  bytestoread, 0);
 	
 	  if (status <= 0){
 	    perror("payload read error:");
-	    // errlogPrintf("recive error\n");
 	    return -1;
 	  }
 	  rsize +=status;
@@ -377,7 +348,6 @@ namespace nsHiSLIP{
 	  bytestoread -=status;
 	}	  
       } 
-      // errlogPrintf("successfull recieved message %ld \n",rsize);
       return (rsize);
     }
   } Message_t;
@@ -443,19 +413,16 @@ namespace nsHiSLIP{
     Message *get_Service_Request(void){
       Message *msg=new Message(AnyMessages);
       long status;
-      // errlogPrintf("In get_service_Request\n");
       this->request_srq_lock();
       
       //status= msg->recv(this->async_channel, AsyncServiceRequest);
       status= msg->recv(this->async_channel);
       
       if (status != 0){
-	// errlogPrintf("get_service_Request: failed to read error.\n");
 	// should handle Error/Fatal Error/Async Interrupted messages.
 	perror(__FUNCTION__);
       }
       this->release_srq_lock();
-      // errlogPrintf("Exit from get_service_Request\n");
       return msg;
     };
     int wait_for_SRQ(int wait_time){

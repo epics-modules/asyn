@@ -28,8 +28,6 @@ namespace nsHiSLIP{
 		       const int port //,
 		       //const char vendor_id[2]
 		       ){
-    //osiSockAddr addr;
-    //Message_t *msg;
     int status;
     //const char vendor_id[]=Default_vendor_id;
 
@@ -82,19 +80,15 @@ namespace nsHiSLIP{
       exit (999);
     };
     status = ::connect(this->sync_channel, res->ai_addr, res->ai_addrlen);
-  
     if (status!=0){
       // Error handling
       perror(__FUNCTION__);
     }
-    
     status = ::connect(this->async_channel, res->ai_addr,res->ai_addrlen);
     if (status!=0){
       // Error handling
       perror(__FUNCTION__);
     }
-    // errlogPrintf("connected to async channel %d\n",this->async_channel);
-
     freeaddrinfo(res);
 
     {
@@ -107,40 +101,25 @@ namespace nsHiSLIP{
       msg.send(this->sync_channel);
     }
   
-    // errlogPrintf("Sent a initialize message\n");
-
     { Message resp(AnyMessages);
 
-      // errlogPrintf("Receive message created\n");
-    
       resp.recv(this->sync_channel, nsHiSLIP::InitializeResponse);
     
       this->overlap_mode=resp.control_code;
       this->session_id=resp.message_parameter.getSessionId();
       this->server_protocol_version=resp.message_parameter.getServerProtocolVersion();
     }
-    // errlogPrintf("Receive a initialized message %d 0x%x %d \n",
-    // 		 this->overlap_mode,this->session_id, this->server_protocol_version
-    // 		 );
-  
-    // errlogPrintf("Sending Async initialize message %x\n",this->session_id);
-  
-    
-  
     {
       Message msg(nsHiSLIP::AsyncInitialize);
       msg.message_parameter.word=this->session_id;
       msg.send(this->async_channel);
     }
-    // errlogPrintf("reading Async initialize response\n");
-  
     {
       Message resp(AnyMessages);
       resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
       this->overlap_mode=resp.control_code;
       this->server_vendorID=resp.message_parameter.word;
     }
-    // errlogPrintf("reading Async initialize done\n");
   
     //now setup poll object
     this->reset_message_id();
@@ -152,8 +131,6 @@ namespace nsHiSLIP{
     this->async_poll.fd=this->async_channel;
     this->async_poll.events=POLLIN;
     this->async_poll.revents=0;
-
-    // errlogPrintf("Receive a Async initialized message\n");    
   };
 
   long HiSLIP::set_max_size(long message_size){
@@ -238,7 +215,6 @@ namespace nsHiSLIP{
     resp.recv(this->async_channel,nsHiSLIP::AsyncStatusResponse);
   
     status= resp.control_code &0xff;
-  
     return status;
   }
 
@@ -441,6 +417,7 @@ namespace nsHiSLIP{
 		0, NULL);
     msg.send(this->sync_channel);
     this->increment_message_id();
+    this->rmt_delivered=false;
     return 0;
   };
   
@@ -458,7 +435,8 @@ namespace nsHiSLIP{
     Message msg(nsHiSLIP::AsyncLock,
 		1, // request
 		this->lock_timeout,
-		strnlen(lock_string,256), (u_int8_t *) lock_string), resp(AnyMessages);;
+		strnlen(lock_string,256), (u_int8_t *) lock_string),
+      resp(AnyMessages);
     
     msg.send(this->async_channel);
     
@@ -468,12 +446,23 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::release_lock(void){
-    {
-      // errlogPrintf("release_lock not implemented yet\n");
-      return -1;
-    };
-    return 0;
+    long message_id =this->most_recent_message_id;
+    if ( message_id == nsHiSLIP::INITIAL_MESSAGE_ID){
+      message_id=0;
+    }
+    Message msg(nsHiSLIP::AsyncLock,
+		0, // release
+		message_id,
+		0, NULL),
+      resp(AnyMessages);
+    
+    msg.send(this->async_channel);
+    
+    resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+      
+    return resp.control_code;
   };
+  
   long HiSLIP::request_srq_lock(void){
     {
       // errlogPrintf("request_srq_lock not implemented yet\n");
@@ -481,6 +470,7 @@ namespace nsHiSLIP{
     };
     return 0;
   };
+  
   long HiSLIP::release_srq_lock(void){
     {
       // errlogPrintf("release_srq_lock not implemented yet\n");

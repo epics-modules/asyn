@@ -54,11 +54,11 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     int read(size_t *, u_int8_t **, long)
     size_t ask(u_int8_t *, size_t, u_int8_t **,long)
     long trigger_message()
-    long remote_local(bool)
+    long remote_local(u_int8_t)
     long request_lock(char *)
     long release_lock()
     long request_srq_lock()
     long release_srq_loc()
-    int wait_for_SRQ(int)
+    int  wait_for_SRQ(int)
     void disconnect()
     

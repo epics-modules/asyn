@@ -15,9 +15,10 @@ from logging import info,debug,warn,log,fatal
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
 
-  def __cinit__(self,host):
+  def __cinit__(self,host=None):
       self.thisobj=new cHiSLIP()
-      self.thisobj.connect(host, Default_device_name, HiSLIPPort)
+      if host:
+          self.thisobj.connect(host, Default_device_name, HiSLIPPort)
 
   def __dealloc__(self):
       del self.thisobj
@@ -107,12 +108,72 @@ cdef class HiSLIP:
       rc=self.thisobj.status_query()
       return rc
   
+  def trigger_message(self):
+      cdef long rc
+      rc=self.thisobj.trigger_message()
+      return rc
+
+  def remote_local(self, request):
+      """
+      Table 18: Remote Local Control Transactions
+      0 - Disable remote
+      1 - Enable remote
+      2 - Disable remote and go to LOCAL
+      3 - Enable remote and go to REMOTE
+      4 - Enable remote and Lock Out LOCAL
+      5 - Enable remote, go to REMOTE, and set local LOCKOUT
+      6 - go to local without changing state of remote enable.
+      """
+      cdef long rc
+      cdef u_int8_t _request=request
+      
+      rc=self.thisobj.remote_local(_request)
+
+      return rc
+
+  def request_lock(self, lock_string):
+      """
+      response to request:
+      0 - Failure
+      1 - Success
+      3 - Error
+      """
+      cdef long rc
+      cdef char *_lock_string=lock_string
+      
+      rc=self.thisobj.request_lock(_lock_string)
+      
+      return rc
+
+  def release_lock(self):
+      """
+      response to release:
+      1 - Success exclusive
+      2 - Success shared
+      3 - Error
+      """
+      cdef long rc
+      rc=self.thisobj.release_lock()
+      return rc
+  
+  def request_srq_lock(self):
+      """
+      Not implemented in .cpp yet.
+      """
+      cdef long rc=0
+      return rc
+  
+  def release_srq_loc(self):
+      """
+      Not implemented in .cpp yet.
+      """
+      cdef long rc=0
+      return rc
+  
   def wait_for_SRQ(self, wait_time):
       cdef int rc
       rc=self.thisobj.wait_for_SRQ(wait_time)
       return rc
-
-  
                    
 cdef class enumType:
    @classmethod
