@@ -19,16 +19,30 @@
 //#define _GNU_SOURCE         /* See feature_test_macros(7) */
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
+#include <stdarg.h>
 #include <string.h> //memcpy, etc
+#include <sys/types.h>
 #include <sys/param.h> /* for MAXHOSTNAMELEN */
 #include <unistd.h> /* close() and others */
 
 #include <poll.h>
-#include <endian.h> // network endian is "be".
 #include <sys/socket.h>
 #include <netdb.h>
-#include <semaphore.h>
+#include <pthread.h>  // for MacOS
+
+//#include <semaphore.h>
+
+#ifdef __linux__
+#   include <endian.h> // network endian is "be".
+#else
+inline u_int64_t htobe64(u_int64_t q) {
+  return (htonl(q>>32) +((u_int64_t)htonl(q & 0x00000000ffffffff)<<32)) ;
+};
+
+inline u_int64_t be64toh(u_int64_t q) {
+  return (ntohl(q>>32) +((u_int64_t)ntohl(q & 0x00000000ffffffff)<<32)) ;
+};
+#endif
 
 //#include <sys/time.h>
 //#include <arpa/inet.h>
@@ -187,7 +201,7 @@ namespace nsHiSLIP{
       assert(memcmp(this->prologue, buffer,2) == 0);
       this->message_type=*((u_int8_t *) ((char *) buffer+2));
       this->control_code=*((u_int8_t *) ((char *) buffer+3));
-      this->message_parameter.word = be32toh(*(u_int32_t *) ((char *) buffer+4));
+      this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
       this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
     }
     Header(const u_int8_t  type,
@@ -202,7 +216,7 @@ namespace nsHiSLIP{
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
-      ::printf("payload length: %ld\n",this->payload_length);
+      ::printf("payload length: %llu\n",this->payload_length);
       // errlogPrintf("message type:%d\n",this->message_type);
       // errlogPrintf("control_code:%d\n",this->control_code);
       // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
@@ -261,7 +275,7 @@ namespace nsHiSLIP{
       }
       this->message_type=*((u_int8_t *) ((char *) buffer+2));
       this->control_code=*((u_int8_t *) ((char *) buffer+3));
-      this->message_parameter.word = be32toh(*(u_int32_t *) ((char *) buffer+4));
+      this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
       this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
       return 0;
     }
@@ -278,11 +292,13 @@ namespace nsHiSLIP{
   
   typedef class Message:public Header{
   public:
-    void   *payload=NULL;
+    void   *payload;
 
     Message(Message_Types_t message_type):Header(message_type){
+      this->payload=NULL;
     };
     Message(void *raw_header):Header(raw_header){
+      this->payload=NULL;
       //this->fromRawData(raw_header);
     };
     Message(void *raw_header, void *payload):Message(raw_header){
@@ -370,11 +386,12 @@ namespace nsHiSLIP{
     bool rmt_delivered=false;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
-    sem_t srq_lock;
+    //sem_t srq_lock;
+    pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
     HiSLIP(){
-      if (sem_init(&(this->srq_lock), 0, 1) !=0){
-	perror(" HiSLIP srq_lock");
-      }
+      // if (sem_init(&(this->srq_lock), 0, 1) !=0){
+      // 	perror(" HiSLIP srq_lock");
+      // }
     };
     void connect(char const* hostname){
       this->connect(hostname,

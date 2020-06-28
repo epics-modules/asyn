@@ -176,6 +176,7 @@ cdef class HiSLIP:
       """
       1: released
       0: locked
+      -1: 
       """
       cdef int rc=-1
       rc=self.thisobj.check_srq_lock()
@@ -183,8 +184,8 @@ cdef class HiSLIP:
 
   def check_and_lock_srq_lock(self):
       """
-      1: released
-      0: locked
+      1: released and now locked.
+      0: already locked
       """
       cdef int rc
       rc=self.thisobj.check_and_lock_srq_lock()
