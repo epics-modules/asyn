@@ -19,7 +19,8 @@ using nsHiSLIP::HiSLIP;
 using nsHiSLIP::Message_t;
 
 #define MAX_PAYLOAD_CAPACITY 4096
-#define IDSTRING_CAPACITY        100
+#define IDSTRING_CAPACITY    100
+#define MAX_ERRMSG_CAPACITY 1024
 
 // HiSLIP methods
 namespace nsHiSLIP{
@@ -44,8 +45,8 @@ namespace nsHiSLIP{
     hints.ai_next=NULL;
     
     {
-      char service[256]={'\x0'};
-      if (snprintf(service,256, "%d",port) // "4880" for example.
+      char service[IDSTRING_CAPACITY]={'\x0'};
+      if (snprintf(service, IDSTRING_CAPACITY, "%d",port) // "4880" for example.
 	  > 0){
 	status=getaddrinfo(hostname, service, &hints, &res);
       }
@@ -56,8 +57,8 @@ namespace nsHiSLIP{
     }
     
     if ((status !=0) || res == NULL){
-      char msg[1024]={'\x0'};
-      if (snprintf(msg, 1024, "getaddrinfo error status:%d res %p",status,res) >0){
+      char msg[MAX_ERRMSG_CAPACITY]={'\x0'};
+      if (snprintf(msg, MAX_ERRMSG_CAPACITY, "getaddrinfo error status:%d res %p",status,res) >0){
 	perror(msg);
       }
       else{
@@ -99,9 +100,12 @@ namespace nsHiSLIP{
       msg.send(this->sync_channel);
     }
   
-    { Message resp(AnyMessages);
+    { Message resp(AnyMessages); 
 
-      resp.recv(this->sync_channel, nsHiSLIP::InitializeResponse);
+      int rc=resp.recv(this->sync_channel, nsHiSLIP::InitializeResponse);
+      if (rc !=0){
+	//Error!
+      }
     
       this->overlap_mode=resp.control_code;
       this->session_id=resp.message_parameter.getSessionId();
@@ -114,7 +118,10 @@ namespace nsHiSLIP{
     }
     {
       Message resp(AnyMessages);
-      resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
+      int rc=resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
+      if (rc !=0){
+	//
+      }
       this->overlap_mode=resp.control_code;
       this->server_vendorID=resp.message_parameter.word;
     }
@@ -147,7 +154,10 @@ namespace nsHiSLIP{
       return -1;
     }
   
-    resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
+    int rc=resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
+    if (rc!=0){
+      //
+    }
     //The 8-byte buffer size is sent in network order as a 64-bit integer.
     this->maximum_message_size=be64toh(*((u_int64_t *)(resp.payload)));
     this->maximum_payload_size = this->maximum_message_size - HEADER_SIZE;
@@ -157,7 +167,7 @@ namespace nsHiSLIP{
   int HiSLIP::device_clear(){
     Message resp(AnyMessages);
     u_int8_t feature_preference;
-    int ready;
+    int ready,rc;
   
     Message *msg=new Message(nsHiSLIP::AsyncDeviceClear,
 			     0,
@@ -171,7 +181,10 @@ namespace nsHiSLIP{
       return -1;
     }
   
-    resp.recv(this->async_channel,nsHiSLIP::AsyncDeviceClearAcknowledge);
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncDeviceClearAcknowledge);
+    if (rc !=0){
+      // Error!
+    }
     feature_preference=resp.control_code;
 
     msg=new Message(nsHiSLIP::DeviceClearComplete,
@@ -185,8 +198,10 @@ namespace nsHiSLIP{
     if ( ready == 0){
       return -1;
     }
-    resp.recv(this->sync_channel,nsHiSLIP::DeviceClearAcknowledge);
-  
+    rc=resp.recv(this->sync_channel,nsHiSLIP::DeviceClearAcknowledge);
+    if (rc !=0){
+      // Error!
+    }
     this->overlap_mode=resp.control_code;
     this->reset_message_id();
     this->rmt_delivered = false;
@@ -197,23 +212,31 @@ namespace nsHiSLIP{
 
   u_int8_t HiSLIP::status_query(){
     u_int8_t status;
-    int ready;
+    int ready,rc;
   
     Message resp(AnyMessages);
-  
     Message msg((u_int8_t) nsHiSLIP::AsyncStatusQuery,
 		(u_int8_t) this->rmt_delivered,
 		message_parameter((u_int32_t) this->most_recent_message_id),
 		0, NULL);
+    if (this->message_id == 0xffffff00){
+      msg.message_parameter=message_parameter((u_int32_t) 0xfffffefe);
+    }
     msg.send(this->async_channel);
-
+    this->rmt_delivered=false;
+    
     ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
     }
-    resp.recv(this->async_channel,nsHiSLIP::AsyncStatusResponse);
-  
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncStatusResponse);
+    if (rc !=0){
+      //Error!
+    }
+    resp.print();
+    
     status= resp.control_code &0xff;
+    
     return status;
   }
 
@@ -241,6 +264,7 @@ namespace nsHiSLIP{
 	buffer += bytestosend;
 	// errlogPrintf("sending message %s\n",(char *) msg.payload);
 	count=msg.send(this->sync_channel);
+	this->rmt_delivered=false;
 	count -=HEADER_SIZE;
 	bytestosend = 0;
 	delivered += count ;
@@ -251,6 +275,7 @@ namespace nsHiSLIP{
 		    nsHiSLIP::message_parameter(this->message_id),
 		    max_payload_size, (u_int8_t *) buffer);
 	count=msg.send(this->sync_channel);
+	this->rmt_delivered=false;
 	count -= HEADER_SIZE;
 	bytestosend -=count;
 	delivered += count;
@@ -262,7 +287,7 @@ namespace nsHiSLIP{
     return delivered;
   };
   
-  int HiSLIP::read(size_t *received, u_int8_t **buffer, long timeout){
+  long HiSLIP::read(size_t *received, u_int8_t **buffer, long timeout){
     bool eom=false;
     size_t rsize=0;
     
@@ -271,7 +296,13 @@ namespace nsHiSLIP{
 
     *received=0;
     this->rmt_delivered = false;
-
+    if (*buffer == NULL){
+      *buffer=(u_int8_t *) calloc(1,this->maximum_message_size);
+    }
+    if (*buffer == NULL){
+      perror("buffer allocation error");
+      return -1;
+    }
     while(!eom) {
       int ready;
       Message resp(AnyMessages);
@@ -282,7 +313,7 @@ namespace nsHiSLIP{
       }
       rsize=resp.recv(this->sync_channel);
       // errlogPrintf("HiSLIP read rsize %ld\n",rsize);
-      if (rsize < resp.payload_length){
+      if (rsize < 0){
 	//Error!!
 	return -2;
       };
@@ -292,9 +323,11 @@ namespace nsHiSLIP{
 	
 	// newbuf=(u_int8_t *) reallocarray(*buffer, 1,
 	// 			   *received+resp.payload_length);
-	newbuf = (u_int8_t *) realloc( *buffer, *received+resp.payload_length);
+	newbuf = (u_int8_t *) realloc( *buffer,
+				       *received + resp.payload_length);
 	if (newbuf == NULL){
 	  // errlogPrintf("Cannot extend memory area\n");
+	  *buffer=NULL;
 	  return -3;
 	}
 	else{
@@ -317,11 +350,11 @@ namespace nsHiSLIP{
     return -999;
   };
   
-  int HiSLIP::read(size_t *received,
+  long HiSLIP::read(size_t *received,
 		   u_int8_t *buffer, size_t bsize, long timeout){
     bool eom=false;
     size_t rsize=0;
-
+    
     // errlogPrintf("entered to HiSLIP::read(buffer %p, bsize:%ld, timeout:%ld\n",
     // 		 buffer, bsize, timeout);
     *received=0;
@@ -333,7 +366,8 @@ namespace nsHiSLIP{
       return -1;
     }
     if (bsize < this->maximum_payload_size){
-      // errlogPrintf("exit HiSLIP::buffer size:%ld should be larger than maximum playload size:%ld \n",
+      // errlogPrintf("exit HiSLIP::buffer size:%ld should be "
+      //              "larger than maximum playload size:%ld \n",
       // 		   bsize, this->maximum_payload_size);
     }
     while(!eom) {
@@ -349,7 +383,7 @@ namespace nsHiSLIP{
       
       rsize=resp.recv(this->sync_channel);
 
-      if (rsize < resp.payload_length){
+      if (rsize < 0){
 	// errlogPrintf("read data too short %ld %qd \n", rsize, resp.payload_length);
 	return -1;
       };
@@ -380,7 +414,7 @@ namespace nsHiSLIP{
       } else{
 	// errlogPrintf("Unexpected message type:%d\n",
 	// 	     resp.message_type);
-	resp.printf();
+	resp.print();
 	// error unexpected message type.
 	return -1;
       }
@@ -388,7 +422,7 @@ namespace nsHiSLIP{
     return -1;
   };
 
-  size_t HiSLIP::ask(u_int8_t  *const data_str, size_t const dsize,
+  long  HiSLIP::ask(u_int8_t  *const data_str, size_t const dsize,
 		     u_int8_t **rbuffer,
 		     long wait_time){
     size_t rsize=-1;
@@ -400,13 +434,19 @@ namespace nsHiSLIP{
     this->write(data_str, dsize);
     if(this->wait_for_answer(wait_time) == 0){
       // error
+      buffer=NULL;
       return -1;
     };
-    status=this->read(&rsize, &buffer);
+    status=this->read(&rsize, &buffer, wait_time);
     if (status !=0){
       rsize=-1;
     }
-    *rbuffer=buffer;
+    if (rsize > 0){
+      *rbuffer=buffer;
+    }
+    else {
+      buffer=NULL;
+    }
     return rsize;
   };
  
@@ -422,16 +462,21 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::remote_local(u_int8_t request){
+    int rc;
     Message msg(nsHiSLIP::AsyncRemoteLocalControl,
 		request,
 		message_parameter((u_int32_t) this->most_recent_message_id),
 		0, NULL), resp(AnyMessages);
     msg.send(this->async_channel);
-    resp.recv(this->async_channel, nsHiSLIP::AsyncRemoteLocalResponse);
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncRemoteLocalResponse);
+    if (rc !=0){
+      return -1;
+    }
     return 0;
   };
   
   long HiSLIP::request_lock(const char* lock_string){
+    int rc;
     Message msg(nsHiSLIP::AsyncLock,
 		1, // request
 		this->lock_timeout,
@@ -440,12 +485,15 @@ namespace nsHiSLIP{
     
     msg.send(this->async_channel);
     
-    resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
-      
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    if (rc !=0){
+      //error!
+    }
     return resp.control_code;
   };
   
   long HiSLIP::release_lock(void){
+    int rc=-1;
     long message_id =this->most_recent_message_id;
     if ( message_id == nsHiSLIP::INITIAL_MESSAGE_ID){
       message_id=0;
@@ -458,8 +506,11 @@ namespace nsHiSLIP{
     
     msg.send(this->async_channel);
     
-    resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
-      
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    if(rc != 0){
+      //Error
+      return -1;
+    }
     return resp.control_code;
   };
   

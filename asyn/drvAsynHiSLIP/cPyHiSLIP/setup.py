@@ -83,7 +83,7 @@ ext_modules.append(Extension("cPyHiSLIP",
                              ,cython_cplus=True
                              ,undef_macros=[]   #["CFLAGS"]
                              ,define_macros=[]
-                             ,extra_compile_args=["-std=gnu++11","-stdlib=libc++"],
+                             ,extra_compile_args=["-std=gnu++11"],
 ))
 
 
