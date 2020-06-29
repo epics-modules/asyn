@@ -24,12 +24,12 @@ extern "C" {
 
 #define asynInt64SyncIOType "asynInt64SyncIO"
 typedef struct asynInt64SyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser, epicsInt64 value,double timeout);
     asynStatus (*read)(asynUser *pasynUser, epicsInt64 *pvalue,double timeout);
-    asynStatus (*getBounds)(asynUser *pasynUser, 
+    asynStatus (*getBounds)(asynUser *pasynUser,
                     epicsInt64 *plow, epicsInt64 *phigh);
     asynStatus (*writeOnce)(const char *port, int addr,
                     epicsInt64 value,double timeout, const char *drvInfo);

@@ -9,7 +9,7 @@
 ***********************************************************************/
 
 /*test driver for multi-device driver using single-device driver*/
-/* 
+/*
  * Author: Marty Kraimer
  */
 
@@ -67,7 +67,7 @@ typedef struct addrChangePvt {
     eosSave       *peosSave;
     void          *pasynPvt;   /*For registerInterruptSource*/
 }addrChangePvt;
-    
+
 /* private routines */
 static asynStatus lowerPortInit(addrChangePvt *paddrChangePvt);
 static int addrChangeDriverInit(const char *portName, const char *lowerPort,
@@ -92,7 +92,7 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
 
-
+
 static asynStatus lowerPortInit(addrChangePvt *paddrChangePvt)
 {
     lowerPort     *plowerPort = paddrChangePvt->plowerPort;
@@ -134,7 +134,7 @@ freeAsynUser:
     free(paddrChangePvt);
     return asynError;
 }
-
+
 static int addrChangeDriverInit(const char *portName, const char *lowerPortName,
     int addr)
 {
@@ -148,9 +148,9 @@ static int addrChangeDriverInit(const char *portName, const char *lowerPortName,
     asynOctet     *pasynOctet;
 
     nbytes = sizeof(addrChangePvt) + sizeof(lowerPort) + sizeof(eosSave)
-             + sizeof(asynOctet) 
+             + sizeof(asynOctet)
              + strlen(portName) + 1 + strlen(lowerPortName) + 1;
-   
+
     paddrChangePvt = callocMustSucceed(nbytes,sizeof(char),
         "addrChangeDriverInit");
     paddrChangePvt->plowerPort = plowerPort = (lowerPort *)(paddrChangePvt + 1);
@@ -216,7 +216,7 @@ static int addrChangeDriverInit(const char *portName, const char *lowerPortName,
     pasynManager->exceptionCallbackAdd(plowerPort->pasynUser, exceptCallback);
     return(0);
 }
-
+
 static void exceptCallback(asynUser * pasynUser, asynException exception)
 {
     addrChangePvt *paddrChangePvt = pasynUser->userPvt;
@@ -237,7 +237,7 @@ static void exceptCallback(asynUser * pasynUser, asynException exception)
     paddrChangePvt->isConnected = 0;
     pasynManager->exceptionDisconnect(paddrChangePvt->pasynUser);
 }
-
+
 static asynStatus lockPort(void *drvPvt,asynUser *pasynUser)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
@@ -264,7 +264,7 @@ static asynStatus unlockPort(void *pvt,asynUser *pasynUser)
     addrChangePvt *paddrChangePvt = (addrChangePvt *)pvt;
     lowerPort *plowerPort = paddrChangePvt->plowerPort;
     asynUser *pasynUserLower = plowerPort->pasynUser;
-    
+
 
     if((pasynManager->unlockPort(pasynUserLower))!=asynSuccess ) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -273,7 +273,7 @@ static asynStatus unlockPort(void *pvt,asynUser *pasynUser)
     }
     return asynSuccess;
 }
-
+
 /* asynCommon methods */
 static void report(void *drvPvt,FILE *fp,int details)
 {
@@ -283,7 +283,7 @@ static void report(void *drvPvt,FILE *fp,int details)
     fprintf(fp,"    %s connected to %s\n",
          paddrChangePvt->portName,plowerPort->portName);
 }
-
+
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
     addrChangePvt    *paddrChangePvt = (addrChangePvt *)drvPvt;
@@ -321,7 +321,7 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
-
+
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
@@ -362,7 +362,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
 }
-
+
 /* asynOctet methods*/
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
@@ -382,7 +382,7 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     }
     return status;
 }
-
+
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
@@ -405,7 +405,7 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
         "addrChangeDriver\n");
     return status;
 }
-
+
 /* register addrChangeDriverInit*/
 static const iocshArg addrChangeDriverInitArg0 = { "portName", iocshArgString };
 static const iocshArg addrChangeDriverInitArg1 = { "lowerPort", iocshArgString};

@@ -22,18 +22,18 @@
 #include "asynDriver.h"
 #include "asynStandardInterfaces.h"
 
-static asynStatus initialize(const char *portName, asynStandardInterfaces *pInterfaces, 
+static asynStatus initialize(const char *portName, asynStandardInterfaces *pInterfaces,
                              asynUser *pasynUser, void *pPvt)
 
 {
     asynStatus status;
-    
+
     if (pInterfaces->common.pinterface) {
         pInterfaces->common.interfaceType = asynCommonType;
         pInterfaces->common.drvPvt = pPvt;
         status = pasynManager->registerInterface(portName, &pInterfaces->common);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register common");
             return(asynError);
         }
@@ -44,7 +44,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->drvUser.drvPvt = pPvt;
         status = pasynManager->registerInterface(portName, &pInterfaces->drvUser);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register drvUser");
             return(asynError);
         }
@@ -55,7 +55,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->option.drvPvt = pPvt;
         status = pasynManager->registerInterface(portName, &pInterfaces->option);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register option");
             return(asynError);
         }
@@ -64,12 +64,12 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
     if (pInterfaces->octet.pinterface) {
         pInterfaces->octet.interfaceType = asynOctetType;
         pInterfaces->octet.drvPvt = pPvt;
-        status = pasynOctetBase->initialize(portName, &pInterfaces->octet, 
-                                            pInterfaces->octetProcessEosIn, 
+        status = pasynOctetBase->initialize(portName, &pInterfaces->octet,
+                                            pInterfaces->octetProcessEosIn,
                                             pInterfaces->octetProcessEosIn,
                                             pInterfaces->octetInterruptProcess);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register octet");
             return(asynError);
         }
@@ -77,7 +77,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->octet,
                                                            &pInterfaces->octetInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register octet interrupt");
                 return(asynError);
             }
@@ -89,7 +89,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->uInt32Digital.drvPvt = pPvt;
         status = pasynUInt32DigitalBase->initialize(portName, &pInterfaces->uInt32Digital);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register uInt32Digital");
             return(asynError);
         }
@@ -97,7 +97,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->uInt32Digital,
                                                            &pInterfaces->uInt32DigitalInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register uInt32Digital interrupt");
                 return(asynError);
             }
@@ -109,7 +109,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int32.drvPvt = pPvt;
         status = pasynInt32Base->initialize(portName, &pInterfaces->int32);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int32");
             return(asynError);
         }
@@ -117,7 +117,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int32,
                                                            &pInterfaces->int32InterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int32 interrupt");
                 return(asynError);
             }
@@ -129,7 +129,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int64.drvPvt = pPvt;
         status = pasynInt64Base->initialize(portName, &pInterfaces->int64);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int64");
             return(asynError);
         }
@@ -137,7 +137,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int64,
                                                            &pInterfaces->int64InterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int64 interrupt");
                 return(asynError);
             }
@@ -149,7 +149,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->float64.drvPvt = pPvt;
         status = pasynFloat64Base->initialize(portName, &pInterfaces->float64);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register float64");
             return(asynError);
         }
@@ -157,7 +157,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->float64,
                                                            &pInterfaces->float64InterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register float64 interrupt");
                 return(asynError);
             }
@@ -169,7 +169,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int8Array.drvPvt = pPvt;
         status = pasynInt8ArrayBase->initialize(portName, &pInterfaces->int8Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int8Array");
             return(asynError);
         }
@@ -177,7 +177,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int8Array,
                                                            &pInterfaces->int8ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int8Array interrupt");
                 return(asynError);
             }
@@ -189,7 +189,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int16Array.drvPvt = pPvt;
         status = pasynInt16ArrayBase->initialize(portName, &pInterfaces->int16Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int16Array");
             return(asynError);
         }
@@ -197,7 +197,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int16Array,
                                                            &pInterfaces->int16ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int16Array interrupt");
                 return(asynError);
             }
@@ -209,7 +209,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int32Array.drvPvt = pPvt;
         status = pasynInt32ArrayBase->initialize(portName, &pInterfaces->int32Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int32Array");
             return(asynError);
         }
@@ -217,7 +217,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int32Array,
                                                            &pInterfaces->int32ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int32Array interrupt");
                 return(asynError);
             }
@@ -229,7 +229,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->int64Array.drvPvt = pPvt;
         status = pasynInt64ArrayBase->initialize(portName, &pInterfaces->int64Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register int64Array");
             return(asynError);
         }
@@ -237,7 +237,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->int64Array,
                                                            &pInterfaces->int64ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register int64Array interrupt");
                 return(asynError);
             }
@@ -249,7 +249,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->float32Array.drvPvt = pPvt;
         status = pasynFloat32ArrayBase->initialize(portName, &pInterfaces->float32Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register float32Array");
             return(asynError);
         }
@@ -257,7 +257,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->float32Array,
                                                            &pInterfaces->float32ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register float32Array interrupt");
                 return(asynError);
             }
@@ -269,7 +269,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->float64Array.drvPvt = pPvt;
         status = pasynFloat64ArrayBase->initialize(portName, &pInterfaces->float64Array);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register float64Array");
             return(asynError);
         }
@@ -277,7 +277,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->float64Array,
                                                            &pInterfaces->float64ArrayInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register float64Array interrupt");
                 return(asynError);
             }
@@ -289,7 +289,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->genericPointer.drvPvt = pPvt;
         status = pasynGenericPointerBase->initialize(portName, &pInterfaces->genericPointer);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register genericPointer");
             return(asynError);
         }
@@ -297,7 +297,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->genericPointer,
                                                            &pInterfaces->genericPointerInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register genericPointer interrupt");
                 return(asynError);
             }
@@ -309,7 +309,7 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
         pInterfaces->Enum.drvPvt = pPvt;
         status = pasynEnumBase->initialize(portName, &pInterfaces->Enum);
         if (status != asynSuccess) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "Can't register enum");
             return(asynError);
         }
@@ -317,13 +317,13 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
             status = pasynManager->registerInterruptSource(portName, &pInterfaces->Enum,
                                                            &pInterfaces->enumInterruptPvt);
             if (status != asynSuccess) {
-                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "Can't register enum interrupt");
                 return(asynError);
             }
         }
     }
-     
+
     return(asynSuccess);
 }
 

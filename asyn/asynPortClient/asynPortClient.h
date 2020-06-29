@@ -52,7 +52,7 @@ public:
     char *getPortName() {
        return portName_;
     }
-    char *getAsynInterfaceType() 
+    char *getAsynInterfaceType()
     {
         return asynInterfaceType_;
     }
@@ -77,50 +77,50 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynInt32Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt32Type, drvInfo, timeout) {
         pInterface_ = (asynInt32 *)pasynInterface_->pinterface;
-        if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32SyncIO->connect failed"));
     };
     asynInt32Client(const char *portName, const char *drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt32Type, drvInfo, timeout) {
         pInterface_ = (asynInt32 *)pasynInterface_->pinterface;
-        if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt32SyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32SyncIO->connect failed"));
     };
     /** Destructor for asynInt32Client class.  Disconnects from port, frees resources. */
-    virtual ~asynInt32Client() { 
+    virtual ~asynInt32Client() {
         if (pInterface_ && interruptPvt_)
             pInterface_->cancelInterruptUser(pasynInterface_->drvPvt, pasynUser_, interruptPvt_);
-        pasynInt32SyncIO->disconnect(pasynUserSyncIO_); 
-    }; 
+        pasynInt32SyncIO->disconnect(pasynUserSyncIO_);
+    };
     /** Reads an epicsInt32 value from the port driver
       * \param[out] value  The value read from the port driver */
-    virtual asynStatus read(epicsInt32 *value) { 
+    virtual asynStatus read(epicsInt32 *value) {
         return pasynInt32SyncIO->read(pasynUserSyncIO_, value, timeout_);
     };
     /** Writes an epicsInt32 value to the port driver
       * \param[in] value  The value to write to the port driver */
-    virtual asynStatus write(epicsInt32 value) { 
-        return pasynInt32SyncIO->write(pasynUserSyncIO_, value, timeout_); 
+    virtual asynStatus write(epicsInt32 value) {
+        return pasynInt32SyncIO->write(pasynUserSyncIO_, value, timeout_);
     };
     /** Returns the lower and upper limits of the range of values from the port driver
       * \param[out] low   The low limit
       * \param[out] high  The high limit */
-    virtual asynStatus getBounds(epicsInt32 *low, epicsInt32 *high) { 
-        return pasynInt32SyncIO->getBounds(pasynUserSyncIO_, low, high); 
+    virtual asynStatus getBounds(epicsInt32 *low, epicsInt32 *high) {
+        return pasynInt32SyncIO->getBounds(pasynUserSyncIO_, low, high);
     };
     /** Registers an interruptCallbackInt32 function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackInt32 pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackInt32 pCallback, void *userPvt=0) {
         if(interruptPvt_!=NULL) return asynError;
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynInt32 *pInterface_;
@@ -134,7 +134,7 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynUInt32DigitalClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynUInt32DigitalType, drvInfo, timeout) {
@@ -150,45 +150,45 @@ public:
     };
     /** Destructor for asynInt32Client class.  Disconnects from port, frees resources. */
     virtual ~asynUInt32DigitalClient() {
-        pasynUInt32DigitalSyncIO->disconnect(pasynUserSyncIO_); 
-    }; 
+        pasynUInt32DigitalSyncIO->disconnect(pasynUserSyncIO_);
+    };
     /** Reads an epicsUInt32 value from the port driver
-      * \param[out] value  The value read from the port driver 
+      * \param[out] value  The value read from the port driver
       * \param[in]  mask   The mask to use when reading the value */
-    virtual asynStatus read(epicsUInt32 *value, epicsUInt32 mask) { 
-        return pasynUInt32DigitalSyncIO->read(pasynUserSyncIO_, value, mask, timeout_); 
+    virtual asynStatus read(epicsUInt32 *value, epicsUInt32 mask) {
+        return pasynUInt32DigitalSyncIO->read(pasynUserSyncIO_, value, mask, timeout_);
     };
     /** Writes an epicsUInt32 value to the port driver
       * \param[in] value  The value to write to the port driver
       * \param[in] mask   The mask to use when writing the value */
-    virtual asynStatus write(epicsUInt32 value, epicsUInt32 mask){ 
-        return pasynUInt32DigitalSyncIO->write(pasynUserSyncIO_, value, mask, timeout_); 
+    virtual asynStatus write(epicsUInt32 value, epicsUInt32 mask){
+        return pasynUInt32DigitalSyncIO->write(pasynUserSyncIO_, value, mask, timeout_);
     };
     /** Sets the interrupt mask for the specified interrupt reason in the driver
       * \param[in] mask   The interrupt mask
       * \param[in] reason The interrupt reason */
-    virtual asynStatus setInterrupt(epicsUInt32 mask, interruptReason reason) { 
-        return pasynUInt32DigitalSyncIO->setInterrupt(pasynUserSyncIO_, mask, reason, timeout_); 
+    virtual asynStatus setInterrupt(epicsUInt32 mask, interruptReason reason) {
+        return pasynUInt32DigitalSyncIO->setInterrupt(pasynUserSyncIO_, mask, reason, timeout_);
     };
     /** Clears the interrupt mask in the driver
       * \param[in] mask  The interrupt mask */
-    virtual asynStatus clearInterrupt(epicsUInt32 mask) { 
-        return pasynUInt32DigitalSyncIO->clearInterrupt(pasynUserSyncIO_, mask, timeout_); 
+    virtual asynStatus clearInterrupt(epicsUInt32 mask) {
+        return pasynUInt32DigitalSyncIO->clearInterrupt(pasynUserSyncIO_, mask, timeout_);
     };
     /** Gets the current interrupt mask for the specified reason from the driver
       * \param[out] mask   The interrupt mask
       * \param[in]  reason The interrupt reason */
-    virtual asynStatus getInterrupt(epicsUInt32 *mask, interruptReason reason) { 
-        return pasynUInt32DigitalSyncIO->getInterrupt(pasynUserSyncIO_, mask, reason, timeout_); 
+    virtual asynStatus getInterrupt(epicsUInt32 *mask, interruptReason reason) {
+        return pasynUInt32DigitalSyncIO->getInterrupt(pasynUserSyncIO_, mask, reason, timeout_);
     };
     /** Registers an interruptCallbackUInt32Digital function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] mask       The mask to use when determining whether to do the callback
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackUInt32Digital pCallback, epicsUInt32 mask, void* userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackUInt32Digital pCallback, epicsUInt32 mask, void* userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, this, mask, &interruptPvt_); 
+                                                  pCallback, userPvt, mask, &interruptPvt_);
     };
 private:
     asynUInt32Digital *pInterface_;
@@ -202,7 +202,7 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynFloat64Client(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynFloat64Type, drvInfo, timeout) {
@@ -217,26 +217,26 @@ public:
             throw std::runtime_error(std::string("pasynFloat64SyncIO->connect failed"));
     };
     /** Destructor for asynFloat64Client class.  Disconnects from port, frees resources. */
-    virtual ~asynFloat64Client() { 
-        pasynFloat64SyncIO->disconnect(pasynUserSyncIO_); 
-    }; 
+    virtual ~asynFloat64Client() {
+        pasynFloat64SyncIO->disconnect(pasynUserSyncIO_);
+    };
     /** Reads an epicsFloat64 value from the port driver
       * \param[out] value  The value read from the port driver */
     virtual asynStatus read(epicsFloat64 *value) {
-        return pasynFloat64SyncIO->read(pasynUserSyncIO_, value, timeout_); 
+        return pasynFloat64SyncIO->read(pasynUserSyncIO_, value, timeout_);
     };
     /** Writes an epicsFloat64 value to the port driver
       * \param[in] value  The value to write to the port driver */
-    virtual asynStatus write(epicsFloat64 value) { 
-        return pasynFloat64SyncIO->write(pasynUserSyncIO_, value, timeout_); 
+    virtual asynStatus write(epicsFloat64 value) {
+        return pasynFloat64SyncIO->write(pasynUserSyncIO_, value, timeout_);
     };
     /** Registers an interruptCallbackFloat64 function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackFloat64 pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackFloat64 pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynFloat64 *pInterface_;
@@ -250,37 +250,37 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynOctetClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynOctetType, drvInfo, timeout) {
         pInterface_ = (asynOctet *)pasynInterface_->pinterface;
-        if (pasynOctetSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynOctetSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynOctetSyncIO->connect failed"));
     };
     asynOctetClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynOctetType, drvInfo, timeout) {
         pInterface_ = (asynOctet *)pasynInterface_->pinterface;
-        if (pasynOctetSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynOctetSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynOctetSyncIO->connect failed"));
     };
     /** Destructor for asynOctetClient class.  Disconnects from port, frees resources. */
-    virtual ~asynOctetClient() { 
-        pasynOctetSyncIO->disconnect(pasynUserSyncIO_); 
-    }; 
+    virtual ~asynOctetClient() {
+        pasynOctetSyncIO->disconnect(pasynUserSyncIO_);
+    };
     /** Writes a char buffer to the port driver
       * \param[in]  buffer     The characters to write to the port driver
       * \param[in]  bufferLen  The size of the buffer
       * \param[out] nActual    The number of characters actually written */
-    virtual asynStatus write(const char *buffer, size_t bufferLen, size_t *nActual) { 
-        return pasynOctetSyncIO->write(pasynUserSyncIO_, buffer, bufferLen, timeout_, nActual); 
+    virtual asynStatus write(const char *buffer, size_t bufferLen, size_t *nActual) {
+        return pasynOctetSyncIO->write(pasynUserSyncIO_, buffer, bufferLen, timeout_, nActual);
     };
     /** Writes a char buffer to the port driver
       * \param[in]  buffer     The characters to write to the port driver */
     virtual asynStatus write(const char *buffer) {
         size_t bufferLen = strlen(buffer);
-        size_t nActual; 
-        return pasynOctetSyncIO->write(pasynUserSyncIO_, buffer, bufferLen, timeout_, &nActual); 
+        size_t nActual;
+        return pasynOctetSyncIO->write(pasynUserSyncIO_, buffer, bufferLen, timeout_, &nActual);
     };
     /** Reads a char buffer from the port driver
       * \param[out] buffer     The characters read from the port driver
@@ -288,7 +288,7 @@ public:
       * \param[out] nActual    The number of characters actually read
       * \param[out] eomReason  The end of message reason, i.e. why the read terminated */
     virtual asynStatus read(char *buffer, size_t bufferLen, size_t *nActual, int *eomReason) {
-        return pasynOctetSyncIO->read(pasynUserSyncIO_, buffer, bufferLen, timeout_, nActual, eomReason); 
+        return pasynOctetSyncIO->read(pasynUserSyncIO_, buffer, bufferLen, timeout_, nActual, eomReason);
     };
     /** Writes a char buffer to the port driver and reads the response as an atomic operation
       * \param[in]  writeBuffer     The characters to write to the port driver
@@ -298,53 +298,53 @@ public:
       * \param[out] nBytesOut       The number of characters actually written
       * \param[out] nBytesIn        The number of characters actually read
       * \param[out] eomReason       The end of message reason, i.e. why the read terminated */
-    virtual asynStatus writeRead(const char *writeBuffer, size_t writeBufferLen, char *readBuffer, size_t readBufferLen, 
-                                 size_t *nBytesOut, size_t *nBytesIn, int *eomReason) { 
+    virtual asynStatus writeRead(const char *writeBuffer, size_t writeBufferLen, char *readBuffer, size_t readBufferLen,
+                                 size_t *nBytesOut, size_t *nBytesIn, int *eomReason) {
         return pasynOctetSyncIO->writeRead(pasynUserSyncIO_, writeBuffer, writeBufferLen, readBuffer, readBufferLen,
-                                           timeout_, nBytesOut, nBytesIn, eomReason); 
+                                           timeout_, nBytesOut, nBytesIn, eomReason);
     };
     /** Flushes the input buffer in the port driver */
-    virtual asynStatus flush() { 
-        return pasynOctetSyncIO->flush(pasynUserSyncIO_); 
+    virtual asynStatus flush() {
+        return pasynOctetSyncIO->flush(pasynUserSyncIO_);
     };
     /** Sets the input end-of-string terminator in the driver
       * \param[in]  eos     The input EOS string
       * \param[in]  eosLen  The size of the EOS string */
-    virtual asynStatus setInputEos(const char *eos, int eosLen) { 
-        return pasynOctetSyncIO->setInputEos(pasynUserSyncIO_, eos, eosLen); 
+    virtual asynStatus setInputEos(const char *eos, int eosLen) {
+        return pasynOctetSyncIO->setInputEos(pasynUserSyncIO_, eos, eosLen);
     };
     /** Gets the input end-of-string terminator from the driver
       * \param[out]  eos     The input EOS string
       * \param[out]  eosSize The maximum size of the EOS string
       * \param[out]  eosLen  The actual size of the EOS string */
-    virtual asynStatus getInputEos(char *eos, int eosSize, int *eosLen) { 
-        return pasynOctetSyncIO->getInputEos(pasynUserSyncIO_, eos, eosSize, eosLen); 
+    virtual asynStatus getInputEos(char *eos, int eosSize, int *eosLen) {
+        return pasynOctetSyncIO->getInputEos(pasynUserSyncIO_, eos, eosSize, eosLen);
     };
     /** Sets the output end-of-string terminator in the driver
       * \param[in]  eos     The output EOS string
       * \param[in]  eosLen  The size of the EOS string */
-    virtual asynStatus setOutputEos(const char *eos, int eosLen) { 
-        return pasynOctetSyncIO->setOutputEos(pasynUserSyncIO_, eos, eosLen); 
+    virtual asynStatus setOutputEos(const char *eos, int eosLen) {
+        return pasynOctetSyncIO->setOutputEos(pasynUserSyncIO_, eos, eosLen);
     };
     /** Gets the output end-of-string terminator from the driver
       * \param[out]  eos     The output EOS string
       * \param[out]  eosSize The maximum size of the EOS string
       * \param[out]  eosLen  The actual size of the EOS string */
-    virtual asynStatus getOutputEos(char *eos, int eosSize, int *eosLen) { 
-        return pasynOctetSyncIO->getOutputEos(pasynUserSyncIO_, eos, eosSize, eosLen); 
+    virtual asynStatus getOutputEos(char *eos, int eosSize, int *eosLen) {
+        return pasynOctetSyncIO->getOutputEos(pasynUserSyncIO_, eos, eosSize, eosLen);
     };
     /** Registers an interruptCallbackOctet function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackOctet pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackOctet pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynOctet *pInterface_;
 };
-  
+
 
 /** Class for asyn port clients to communicate on the asynInt8Array interface */
 class epicsShareClass asynInt8ArrayClient : public asynParamClient {
@@ -353,18 +353,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynInt8ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt8Array *)pasynInterface_->pinterface;
-        if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt8ArraySyncIO->connect failed"));
     };
     asynInt8ArrayClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt8ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt8Array *)pasynInterface_->pinterface;
-        if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt8ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt8ArraySyncIO->connect failed"));
     };
     /** Destructor for asynInt8Array class.  Disconnects from port, frees resources. */
@@ -372,14 +372,14 @@ public:
         pasynInt8ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
     /** Reads an epicsInt8 array from the port driver
-      * \param[out] value     The array to read from the port driver 
-      * \param[in]  nElements The number of elements in the array 
+      * \param[out] value     The array to read from the port driver
+      * \param[in]  nElements The number of elements in the array
       * \param[out] nIn       The number of array elements actual read */
     virtual asynStatus read(epicsInt8 *value, size_t nElements, size_t *nIn) {
         return pasynInt8ArraySyncIO->read(pasynUserSyncIO_, value, nElements, nIn, timeout_);
     };
     /** Writes an epicsInt8 array to the port driver
-      * \param[in] value      The array to write to the port driver 
+      * \param[in] value      The array to write to the port driver
       * \param[in] nElements  The number of elements in the array */
     virtual asynStatus write(epicsInt8 *value, size_t nElements) {
         return pasynInt8ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
@@ -387,10 +387,10 @@ public:
     /** Registers an interruptCallbackInt8Array function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackInt8Array pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackInt8Array pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                      pCallback, userPvt, &interruptPvt_); 
+                                                      pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynInt8Array *pInterface_;
@@ -404,18 +404,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynInt16ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt16Array *)pasynInterface_->pinterface;
-        if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt16ArraySyncIO->connect failed"));
     };
     asynInt16ArrayClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt16ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt16Array *)pasynInterface_->pinterface;
-        if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt16ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt16ArraySyncIO->connect failed"));
     };
     /** Destructor for asynInt16Array class.  Disconnects from port, frees resources. */
@@ -423,14 +423,14 @@ public:
         pasynInt16ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
     /** Reads an epicsInt16 array from the port driver
-      * \param[out] value     The array to read from the port driver 
-      * \param[in]  nElements The number of elements in the array 
+      * \param[out] value     The array to read from the port driver
+      * \param[in]  nElements The number of elements in the array
       * \param[out] nIn       The number of array elements actual read */
     virtual asynStatus read(epicsInt16 *value, size_t nElements, size_t *nIn) {
         return pasynInt16ArraySyncIO->read(pasynUserSyncIO_, value, nElements, nIn, timeout_);
     };
     /** Writes an epicsInt16 array to the port driver
-      * \param[in] value      The array to write to the port driver 
+      * \param[in] value      The array to write to the port driver
       * \param[in] nElements  The number of elements in the array */
     virtual asynStatus write(epicsInt16 *value, size_t nElements) {
         return pasynInt16ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
@@ -438,10 +438,10 @@ public:
     /** Registers an interruptCallbackInt16Array function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackInt16Array pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackInt16Array pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                       pCallback, userPvt, &interruptPvt_); 
+                                                       pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynInt16Array *pInterface_;
@@ -455,18 +455,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynInt32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt32Array *)pasynInterface_->pinterface;
-        if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32ArraySyncIO->connect failed"));
     };
     asynInt32ArrayClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynInt32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynInt32Array *)pasynInterface_->pinterface;
-        if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynInt32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynInt32ArraySyncIO->connect failed"));
     };
     /** Destructor for asynInt32Array class.  Disconnects from port, frees resources. */
@@ -474,14 +474,14 @@ public:
         pasynInt32ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
     /** Reads an epicsInt32 array from the port driver
-      * \param[out] value     The array to read from the port driver 
-      * \param[in]  nElements The number of elements in the array 
+      * \param[out] value     The array to read from the port driver
+      * \param[in]  nElements The number of elements in the array
       * \param[out] nIn       The number of array elements actual read */
     virtual asynStatus read(epicsInt32 *value, size_t nElements, size_t *nIn) {
         return pasynInt32ArraySyncIO->read(pasynUserSyncIO_, value, nElements, nIn, timeout_);
     };
     /** Writes an epicsInt32 array to the port driver
-      * \param[in] value      The array to write to the port driver 
+      * \param[in] value      The array to write to the port driver
       * \param[in] nElements  The number of elements in the array */
     virtual asynStatus write(epicsInt32 *value, size_t nElements) {
         return pasynInt32ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
@@ -489,10 +489,10 @@ public:
     /** Registers an interruptCallbackInt32Array function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackInt32Array pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackInt32Array pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynInt32Array *pInterface_;
@@ -506,18 +506,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynFloat32ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat32Array *)pasynInterface_->pinterface;
-        if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
     };
     asynFloat32ArrayClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynFloat32ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat32Array *)pasynInterface_->pinterface;
-        if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynFloat32ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
     };
     /** Destructor for asynFloat32Array class.  Disconnects from port, frees resources. */
@@ -525,14 +525,14 @@ public:
         pasynFloat32ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
     /** Reads an epicsFloat32 array from the port driver
-      * \param[out] value     The array to read from the port driver 
-      * \param[in]  nElements The number of elements in the array 
+      * \param[out] value     The array to read from the port driver
+      * \param[in]  nElements The number of elements in the array
       * \param[out] nIn       The number of array elements actual read */
     virtual asynStatus read(epicsFloat32 *value, size_t nElements, size_t *nIn) {
         return pasynFloat32ArraySyncIO->read(pasynUserSyncIO_, value, nElements, nIn, timeout_);
     };
     /** Writes an epicsFloat32 array to the port driver
-      * \param[in] value      The array to write to the port driver 
+      * \param[in] value      The array to write to the port driver
       * \param[in] nElements  The number of elements in the array */
     virtual asynStatus write(epicsFloat32 *value, size_t nElements) {
         return pasynFloat32ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
@@ -540,10 +540,10 @@ public:
     /** Registers an interruptCallbackFloat32Array function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackFloat32Array pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackFloat32Array pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynFloat32Array *pInterface_;
@@ -557,18 +557,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynFloat64ArrayClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat64Array *)pasynInterface_->pinterface;
-        if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
     };
     asynFloat64ArrayClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynFloat64ArrayType, drvInfo, timeout) {
         pInterface_ = (asynFloat64Array *)pasynInterface_->pinterface;
-        if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynFloat64ArraySyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynFloat64ArraySyncIO->connect failed"));
     };
     /** Destructor for asynFloat64Array class.  Disconnects from port, frees resources. */
@@ -576,14 +576,14 @@ public:
         pasynFloat64ArraySyncIO->disconnect(pasynUserSyncIO_);
     };
     /** Reads an epicsFloat64 array from the port driver
-      * \param[out] value     The array to read from the port driver 
-      * \param[in]  nElements The number of elements in the array 
+      * \param[out] value     The array to read from the port driver
+      * \param[in]  nElements The number of elements in the array
       * \param[out] nIn       The number of array elements actual read */
     virtual asynStatus read(epicsFloat64 *value, size_t nElements, size_t *nIn) {
         return pasynFloat64ArraySyncIO->read(pasynUserSyncIO_, value, nElements, nIn, timeout_);
     };
     /** Writes an epicsFloat64 array to the port driver
-      * \param[in] value      The array to write to the port driver 
+      * \param[in] value      The array to write to the port driver
       * \param[in] nElements  The number of elements in the array */
     virtual asynStatus write(epicsFloat64 *value, size_t nElements) {
         return pasynFloat64ArraySyncIO->write(pasynUserSyncIO_, value, nElements, timeout_);
@@ -591,10 +591,10 @@ public:
     /** Registers an interruptCallbackFloat64Array function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackFloat64Array pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackFloat64Array pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynFloat64Array *pInterface_;
@@ -608,18 +608,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynGenericPointerClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
         pInterface_ = (asynGenericPointer *)pasynInterface_->pinterface;
-        if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynGenericPointerSyncIO->connect failed"));
     };
     asynGenericPointerClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynGenericPointerType, drvInfo, timeout) {
         pInterface_ = (asynGenericPointer *)pasynInterface_->pinterface;
-        if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynGenericPointerSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynGenericPointerSyncIO->connect failed"));
     };
     /** Destructor for asynGenericPointer class.  Disconnects from port, frees resources. */
@@ -639,10 +639,10 @@ public:
     /** Registers an interruptCallbackGenericPointer function that the driver will call when there is a new value
       * \param[in] pCallback  The address of the callback function
       * \param[in] userPvt    The user-defined pointer to be passed to the callback function */
-    virtual asynStatus registerInterruptUser(interruptCallbackGenericPointer pCallback, void *userPvt=0) { 
+    virtual asynStatus registerInterruptUser(interruptCallbackGenericPointer pCallback, void *userPvt=0) {
         if (!userPvt) userPvt=this;
         return pInterface_->registerInterruptUser(pasynInterface_->drvPvt, pasynUser_,
-                                                  pCallback, userPvt, &interruptPvt_); 
+                                                  pCallback, userPvt, &interruptPvt_);
     };
 private:
     asynGenericPointer *pInterface_;
@@ -656,18 +656,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynOptionClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynOptionType, drvInfo, timeout) {
         pInterface_ = (asynOption *)pasynInterface_->pinterface;
-        if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynOptionSyncIO->connect failed"));
     };
     asynOptionClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynOptionType, drvInfo, timeout) {
         pInterface_ = (asynOption *)pasynInterface_->pinterface;
-        if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynOptionSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynOptionSyncIO->connect failed"));
     };
     /** Destructor for asynOption class.  Disconnects from port, frees resources. */
@@ -699,18 +699,18 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynEnumClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynEnumType, drvInfo, timeout) {
         pInterface_ = (asynEnum *)pasynInterface_->pinterface;
-        if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynEnumSyncIO->connect failed"));
     };
     asynEnumClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynEnumType, drvInfo, timeout) {
         pInterface_ = (asynEnum *)pasynInterface_->pinterface;
-        if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynEnumSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynEnumSyncIO->connect failed"));
     };
     /** Destructor for asynEnum class.  Disconnects from port, frees resources. */
@@ -746,25 +746,25 @@ public:
       * \param[in] portName  The name of the asyn port to connect to
       * \param[in] addr      The address on the asyn port to connect to
       * \param[in] drvInfo   The drvInfo string to identify which property of the port is being connected to
-      * \param[in] timeout   The default timeout for all communications between the client and the port driver 
+      * \param[in] timeout   The default timeout for all communications between the client and the port driver
     */
     asynCommonClient(const char *portName, int addr, const char *drvInfo, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynCommonType, drvInfo, timeout) {
         pInterface_ = (asynCommon *)pasynInterface_->pinterface;
-        if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynCommonSyncIO->connect failed"));
     };
     asynCommonClient(const char *portName, const char* drvInfo, int addr=0, double timeout=DEFAULT_TIMEOUT)
     : asynParamClient(portName, addr, asynCommonType, drvInfo, timeout) {
         pInterface_ = (asynCommon *)pasynInterface_->pinterface;
-        if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo)) 
+        if (pasynCommonSyncIO->connect(portName, addr, &pasynUserSyncIO_, drvInfo))
             throw std::runtime_error(std::string("pasynCommonSyncIO->connect failed"));
     };
     /** Destructor for asynCommon class.  Disconnects from port, frees resources. */
     virtual ~asynCommonClient() {
         pasynCommonSyncIO->disconnect(pasynUserSyncIO_);
     };
-    /** Calls the report method in the driver 
+    /** Calls the report method in the driver
       * \param[in] fp       The file pointer to write the report to
       * \param[in] details  The level of detail for the report */
     virtual void report(FILE *fp, int details) {
@@ -780,7 +780,7 @@ public:
     };
 private:
     asynCommon *pInterface_;
-};  
+};
 
 typedef std::map<std::string, asynParamClient*> paramMap_t;
 
@@ -795,7 +795,7 @@ public:
     asynStatus read(std::string paramName, epicsFloat64 *value, int addr=0);
     asynStatus write(std::string paramName, const char *value, int addr=0);
     asynStatus read(std::string paramName, char *value, size_t bufferLen, int addr=0);
-    
+
     asynParamClient* getParamClient(std::string paramName, int addr=0);
 
 private:

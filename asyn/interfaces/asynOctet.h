@@ -54,7 +54,7 @@ typedef struct asynOctet{
     asynStatus (*getOutputEos)(void *drvPvt,asynUser *pasynUser,
                     char *eos, int eossize, int *eoslen);
 }asynOctet;
-
+
 /* asynOctetBase does the following:
    calls  registerInterface for asynOctet.
    Implements registerInterruptUser and cancelInterruptUser

@@ -4,7 +4,7 @@
 #ifndef DRVASYNFTDIPORT_H
 #define DRVASYNFTDIPORT_H
 
-#include <shareLib.h>  
+#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {

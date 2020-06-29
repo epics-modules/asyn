@@ -1,6 +1,6 @@
 /*
  * testBroadcastAsyn.c
- * 
+ *
  * Program to test sending a broadcast message and reading the responses.
  * This version uses asyn.
  * This program requires an NSLS electrometer to be present.
@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     int eomReason;
     int i;
     asynUser *pasynUser;
-    
+
     status = (asynStatus)drvAsynIPPortConfigure(PORT_NAME, "164.54.160.255:37747 UDP*", 0, 0, 0);
     printf("Called drvAsynIPPortConfigure for UDP port, status=%d\n", status);
 
@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
     printf("Called asynSetTraceIOMask for UDP port, status=%d\n", status);
     status = (asynStatus)asynSetTraceMask(PORT_NAME, 0, 9);
     printf("Called asynSetTraceMask for UDP port, status=%d\n", status);
-    
+
     /* Connect to the broadcast port */
     status = pasynOctetSyncIO->connect(PORT_NAME, 0, &pasynUser, NULL);
     printf("Connected to UDP port, status=%d\n", status);
@@ -60,4 +60,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-    
+

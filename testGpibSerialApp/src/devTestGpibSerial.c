@@ -51,7 +51,7 @@
 #include <devCommonGpib.h>
 #include <devGpib.h>
 #include <epicsExport.h>
-
+
 #define TIMEOUT 1.0
 #define TIMEWINDOW  2.0
 
@@ -63,7 +63,7 @@ static int readString(gpibDpvt *pdpvt,int P1, int P2, char **P3);
  */
 #define EOSNL "\n"
 
-static struct gpibCmd gpibCmds[] = 
+static struct gpibCmd gpibCmds[] =
 {
   /* Param 0, */
   {&DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -110,7 +110,7 @@ static struct gpibCmd gpibCmds[] =
 
 /* The following is the number of elements in the command array above.  */
 #define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)
-
+
 /******************************************************************************
  *
  * Initialization for device support

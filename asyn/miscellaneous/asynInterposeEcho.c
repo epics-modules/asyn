@@ -3,7 +3,7 @@
 
 /* Interpose for devices where each written char needs to read back
  * before sending the next char.
- * 
+ *
  * Author: Dirk Zimoch
  */
 
@@ -22,7 +22,7 @@
 #elif defined(_WIN32)
 #define Z "I"
 #else
-#define Z 
+#define Z
 #endif
 
 /* compatibility with older EPICS 3.14 versions */
@@ -46,7 +46,7 @@ static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
     char echo[4];
     asynStatus status = asynSuccess;
     int eomReason;
-    
+
     while (transfered < numchars) {
         /* write one char at a time */
         status = pvt->pasynOctetDrv->write(pvt->drvPvt,
@@ -162,7 +162,7 @@ static asynOctet octet = {
 };
 
 /* asynOctet methods */
-epicsShareFunc int 
+epicsShareFunc int
 asynInterposeEcho(const char *portName, int addr)
 {
     interposePvt *pvt;
@@ -176,7 +176,7 @@ asynInterposeEcho(const char *portName, int addr)
     status = pasynManager->interposeInterface(portName, addr,
         &pvt->octet, &poctetasynInterface);
     if ((status!=asynSuccess) || !poctetasynInterface) {
-	printf("%s interposeInterface failed.\n", portName);
+        printf("%s interposeInterface failed.\n", portName);
         free(pvt);
         return -1;
     }
@@ -190,7 +190,7 @@ static const iocshArg iocshArg0 = {"portName", iocshArgString};
 static const iocshArg iocshArg1 = {"addr", iocshArgInt};
 static const iocshArg *iocshArgs[] =
     {&iocshArg0, & iocshArg1};
-    
+
 static const iocshFuncDef asynInterposeEchoFuncDef =
     {"asynInterposeEcho", 2, iocshArgs};
 

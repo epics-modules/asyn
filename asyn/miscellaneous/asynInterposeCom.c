@@ -1,6 +1,6 @@
-/* 
+/*
  * RFC 2117 support for remote serial ports
- * 
+ *
  * Author: W. Eric Norum
  * "$Date: 2011/01/12 00:13:59 $ (UTC)"
  */
@@ -44,7 +44,7 @@
 #define CPO_SET_BAUDRATE         1   /* Comand port option set baud rate */
 #define CPO_SET_DATASIZE         2   /* Comand port option set data size */
 #define CPO_SET_PARITY           3   /* Comand port option set parity */
-# define CPO_PARITY_NONE           1 
+# define CPO_PARITY_NONE           1
 # define CPO_PARITY_ODD            2
 # define CPO_PARITY_EVEN           3
 # define CPO_PARITY_MARK           4
@@ -78,13 +78,13 @@ typedef struct interposePvt {
     int            stop;
     int            flow;
 
-    char          *xBuf;          /* Buffer for transmit IAC stuffing */ 
+    char          *xBuf;          /* Buffer for transmit IAC stuffing */
     size_t         xBufCapacity;
 } interposePvt;
 
 /*
  * Fetch next character from device
- * Inefficient, but 
+ * Inefficient, but
  *    a) this is likely only happening during IOC startup
  *    b) the replies from the device are fairly short
  */
@@ -202,7 +202,7 @@ readIt(void *ppvt, asynUser *pasynUser,
     char *base = data;
     int unstuffed = 0;
     asynStatus status;
-    
+
     status = pinterposePvt->pasynOctetDrv->read(pinterposePvt->drvOctetPvt,
                                     pasynUser, data, maxchars, &nRead, &eom);
     if (status != asynSuccess)
@@ -345,7 +345,7 @@ willdo(interposePvt *pinterposePvt, asynUser *pasynUser, int command, int code)
         case EOF:   return asynError;
         case C_IAC: break;
         case C_SE:  break;
- 
+
         case C_DO:
         case C_DONT:
             wd = c;
@@ -677,11 +677,11 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
     return status;
 }
 
-static asynOption optionMethods = { setOption, getOption }; 
+static asynOption optionMethods = { setOption, getOption };
 
 static asynStatus
 restoreSettings(interposePvt *pinterposePvt, asynUser *pasynUser)
-{ 
+{
     asynStatus s;
     int i;
     const char *keys[] = { "baud", "bits", "parity", "stop", "crtscts", "ixon" };
@@ -726,7 +726,7 @@ exceptionHandler(asynUser *pasynUser, asynException exception)
     }
 }
 
-epicsShareFunc int 
+epicsShareFunc int
 asynInterposeCOM(const char *portName)
 {
     interposePvt *pinterposePvt;

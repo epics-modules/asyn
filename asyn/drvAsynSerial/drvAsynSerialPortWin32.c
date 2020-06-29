@@ -3,7 +3,7 @@
 *
 * Mark Rivers
 * July 26, 2011
-**********************************************************************/       
+**********************************************************************/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -90,7 +90,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     BOOL ret;
     DWORD error;
     int l;
-    
+
     val[0] = '\0';
     assert(tty);
     if (tty->commHandle == INVALID_HANDLE_VALUE) {
@@ -279,7 +279,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     else if (epicsStrCaseCmp(key, "ixany") == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                     "Option ixany not supported on Windows");
-        return asynError;       
+        return asynError;
     }
     else if (epicsStrCaseCmp(key, "ixoff") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
@@ -399,7 +399,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
 
     /* setOption(tty, tty->pasynUser, "baud", "9600"); */
-   
+
     /*
      * Turn off non-blocking mode
      */
@@ -532,19 +532,19 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if (tty->readTimeout != pasynUser->timeout) {
         if (pasynUser->timeout >= 0) {
             if (pasynUser->timeout == 0) {
-                ctimeout.ReadIntervalTimeout          = MAXDWORD; 
-                ctimeout.ReadTotalTimeoutMultiplier   = 0; 
-                ctimeout.ReadTotalTimeoutConstant     = 0; 
-                ctimeout.WriteTotalTimeoutMultiplier  = 0; 
+                ctimeout.ReadIntervalTimeout          = MAXDWORD;
+                ctimeout.ReadTotalTimeoutMultiplier   = 0;
+                ctimeout.ReadTotalTimeoutConstant     = 0;
+                ctimeout.WriteTotalTimeoutMultiplier  = 0;
                 ctimeout.WriteTotalTimeoutConstant    = 0;
             }
             else {
-                ctimeout.ReadIntervalTimeout          = (int)(pasynUser->timeout*1000.); 
-                ctimeout.ReadTotalTimeoutMultiplier   = 1; 
-                ctimeout.ReadTotalTimeoutConstant     = (int)(pasynUser->timeout*1000.); 
-                ctimeout.WriteTotalTimeoutMultiplier  = 1; 
+                ctimeout.ReadIntervalTimeout          = (int)(pasynUser->timeout*1000.);
+                ctimeout.ReadTotalTimeoutMultiplier   = 1;
+                ctimeout.ReadTotalTimeoutConstant     = (int)(pasynUser->timeout*1000.);
+                ctimeout.WriteTotalTimeoutMultiplier  = 1;
                 ctimeout.WriteTotalTimeoutConstant    = (int)(pasynUser->timeout*1000.);
-            } 
+            }
 
             ret = SetCommTimeouts(tty->commHandle, &ctimeout);
             if (ret == 0) {
@@ -707,14 +707,14 @@ drvAsynSerialPortConfigure(char *portName,
     }
     tty->commHandle = INVALID_HANDLE_VALUE;
     if ( (epicsStrnCaseCmp(ttyName, "\\\\.\\", 4) != 0)) {
-        /* 
+        /*
          * The user did not pass a Windows device name, so prepend \\.\
          */
         epicsSnprintf(winTtyName, sizeof(winTtyName), "\\\\.\\%s", ttyName);
-    } 
+    }
     else {
         strncpy(winTtyName, ttyName, sizeof(winTtyName));
-    }   
+    }
     tty->serialDeviceName = epicsStrDup(winTtyName);
     tty->portName = epicsStrDup(portName);
 

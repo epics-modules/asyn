@@ -25,7 +25,7 @@ extern "C" {
 
 #define asynCommonSyncIOType "asynCommonSyncIO"
 typedef struct asynCommonSyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*connectDevice)(asynUser *pasynUser);

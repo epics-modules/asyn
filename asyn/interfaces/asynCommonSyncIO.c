@@ -36,7 +36,7 @@ typedef struct ioPvt{
    epicsEventId connectEvent;
    int          connect;
    asynStatus   connectStatus;
-   
+
 }ioPvt;
 
 /*asynCommonSyncIO methods*/
@@ -57,7 +57,7 @@ epicsShareDef asynCommonSyncIO *pasynCommonSyncIO = &interface;
 
 /* Private methods */
 static void connectDeviceCallback(asynUser *pasynUser);
-
+
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)
 {
@@ -71,7 +71,7 @@ static asynStatus connect(const char *port, int addr,
     pasynUser = pasynManager->createAsynUser(connectDeviceCallback,0);
     pasynUser->userPvt = pioPvt;
     *ppasynUser = pasynUser;
-    status = pasynManager->connectDevice(pasynUser, port, addr);    
+    status = pasynManager->connectDevice(pasynUser, port, addr);
     if (status != asynSuccess) {
         return status;
     }
@@ -102,7 +102,7 @@ static asynStatus connect(const char *port, int addr,
     }
     return asynSuccess ;
 }
-
+
 static asynStatus disconnect(asynUser *pasynUser)
 {
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
@@ -122,7 +122,7 @@ static asynStatus disconnect(asynUser *pasynUser)
     free(pioPvt);
     return asynSuccess;
 }
- 
+
 
 static void connectDeviceCallback(asynUser *pasynUser)
 {

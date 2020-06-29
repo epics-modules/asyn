@@ -18,7 +18,7 @@
  * Once epicsInterruptibleSyscallWasInterrupted() returns TRUE it will
  * continue to do so until epicsInterruptibleSyscallArm() has been called
  * to rearm the mechanism.
- * 
+ *
  * Some systems close the file descriptor as a side effect of unblocking
  * the slow system call.  The epicsInterruptibleSyscallWasClosed() function
  * is provided to detect this condition.
@@ -41,7 +41,7 @@
  *                 close(pdev->fd);
  *            return -1;
  *        }
- *         
+ *
  * 4) In the device support timer handler:
  *        epicsInterruptibleSyscallInterrupt(pdev->intrContext);
  *        epicsTimerStartDelay(pdev->timer, 10.0);
@@ -49,7 +49,7 @@
  *        (a) the timer first times out before the read is entered and
  *        (b) that the read operation times out.
  */
- 
+
 struct epicsInterruptibleSyscallContext;
 typedef struct epicsInterruptibleSyscallContext epicsInterruptibleSyscallContext;
 

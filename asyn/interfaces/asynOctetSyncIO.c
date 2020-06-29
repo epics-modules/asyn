@@ -8,11 +8,11 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 /*
- * This package provide a simple, synchronous interface to the "asyn" package. 
- * It will work with any device that asyn supports, e.g. serial, GPIB, and 
- * TCP/IP sockets.  It hides the details of asyn.  It is intended for use 
- * by applications which do simple synchronous reads, writes and write/reads.  
- * It does not support port-specific control, e.g. baud rates, 
+ * This package provide a simple, synchronous interface to the "asyn" package.
+ * It will work with any device that asyn supports, e.g. serial, GPIB, and
+ * TCP/IP sockets.  It hides the details of asyn.  It is intended for use
+ * by applications which do simple synchronous reads, writes and write/reads.
+ * It does not support port-specific control, e.g. baud rates,
  * GPIB Universal Commands, etc.
  *
  * Author:  Mark Rivers
@@ -47,9 +47,9 @@ static asynStatus connect(const char *port, int addr,
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeIt(asynUser *pasynUser,
     char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered);
-static asynStatus readIt(asynUser *pasynUser, char *buffer, size_t buffer_len, 
+static asynStatus readIt(asynUser *pasynUser, char *buffer, size_t buffer_len,
                    double timeout, size_t *nbytesTransfered,int *eomReason);
-static asynStatus writeRead(asynUser *pasynUser, 
+static asynStatus writeRead(asynUser *pasynUser,
                         const char *write_buffer, size_t write_buffer_len,
                         char *read_buffer, size_t read_buffer_len,
                         double timeout,
@@ -67,7 +67,7 @@ static asynStatus writeOnce(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
                     size_t *nbytesTransfered, const char *drvInfo);
 static asynStatus readOnce(const char *port, int addr,
-                   char *buffer, size_t buffer_len, 
+                   char *buffer, size_t buffer_len,
                    double timeout,
                    size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
 static asynStatus writeReadOnce(const char *port, int addr,
@@ -107,7 +107,7 @@ static asynOctetSyncIO asynOctetSyncIOManager = {
     getOutputEosOnce
 };
 epicsShareDef asynOctetSyncIO *pasynOctetSyncIO = &asynOctetSyncIOManager;
-
+
 static asynStatus connect(const char *port, int addr,
            asynUser **ppasynUser,const char *drvInfo)
 {
@@ -159,7 +159,7 @@ static asynStatus connect(const char *port, int addr,
     }
     return asynSuccess ;
 }
-
+
 static asynStatus disconnect(asynUser *pasynUser)
 {
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
@@ -179,7 +179,7 @@ static asynStatus disconnect(asynUser *pasynUser)
     return asynSuccess;
 }
 
-
+
 static asynStatus writeIt(asynUser *pasynUser,
     char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered)
 {
@@ -197,7 +197,7 @@ static asynStatus writeIt(asynUser *pasynUser,
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,buffer_len,"asynOctetSyncIO wrote:\n");
     }
-    unlockStatus = pasynManager->queueUnlockPort(pasynUser); 
+    unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;
     }
@@ -205,7 +205,7 @@ static asynStatus writeIt(asynUser *pasynUser,
 }
 
 static asynStatus readIt(asynUser *pasynUser,
-                   char *buffer, size_t buffer_len, 
+                   char *buffer, size_t buffer_len,
                    double timeout,
                    size_t *nbytesTransfered,int *eomReason)
 {
@@ -230,7 +230,7 @@ static asynStatus readIt(asynUser *pasynUser,
     return status;
 }
 
-static asynStatus writeRead(asynUser *pasynUser, 
+static asynStatus writeRead(asynUser *pasynUser,
                         const char *write_buffer, size_t write_buffer_len,
                         char *read_buffer, size_t read_buffer_len,
                         double timeout,
@@ -238,7 +238,7 @@ static asynStatus writeRead(asynUser *pasynUser,
 {
     asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
-    
+
     /* Set outputs to 0 in case we get an error */
     *nbytesOut = 0;
     *nbytesIn = 0;
@@ -298,7 +298,7 @@ static asynStatus
     }
     return status;
 }
-
+
 static asynStatus setInputEos(asynUser *pasynUser,
                      const char *eos,int eoslen)
 {
@@ -390,7 +390,7 @@ static asynStatus getOutputEos(asynUser *pasynUser,
     }
     return status;
 }
-
+
 static asynStatus writeOnce(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
                     size_t *nbytesTransfered,const char *drvInfo)
@@ -415,7 +415,7 @@ static asynStatus writeOnce(const char *port, int addr,
 }
 
 static asynStatus readOnce(const char *port, int addr,
-                   char *buffer, size_t buffer_len, 
+                   char *buffer, size_t buffer_len,
                    double timeout,
                    size_t *nbytesTransfered,int *eomReason,const char *drvInfo)
 {

@@ -1,6 +1,6 @@
 /**********************************************************************
 * Asyn device support using TCP stream or UDP datagram port           *
-**********************************************************************/       
+**********************************************************************/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -29,7 +29,7 @@
  * Item 2) was not implemented, because asyn has no mechanism to issue a cancel
  * request to a driver which is blocked on an I/O operation.
  *
- * Since neither of these mechanisms was working as designed, the driver has been 
+ * Since neither of these mechanisms was working as designed, the driver has been
  * re-written to simplify it.  If one or both of these are to be implemented in the future
  * the code as of version 1.29 should be used as the starting point.
  */
@@ -85,7 +85,7 @@
 # endif
 #endif
 
-/* On most systems we use SO_REUSEPORT but RTEMS and Windows don't have SO_REUSEPORT, use SO_REUSEADDR instead */ 
+/* On most systems we use SO_REUSEPORT but RTEMS and Windows don't have SO_REUSEPORT, use SO_REUSEADDR instead */
 #if defined(__rtems__) || defined(_WIN32)
 # define USE_SO_REUSEADDR
 #endif
@@ -161,7 +161,7 @@ static int poll(struct pollfd fds[], int nfds, int timeout)
     } else {
         ptv = NULL;
     }
-    return select(fds[0].fd + 1, 
+    return select(fds[0].fd + 1,
         (fds[0].events & POLLIN) ? &fdset : NULL,
         (fds[0].events & POLLOUT) ? &fdset : NULL,
         NULL,
@@ -392,7 +392,7 @@ static int parseHostInfo(ttyController_t *tty, const char* hostInfo)
     if (tty->isCom == ISCOM_UNKNOWN) {
         tty->isCom = isCom;
     } else if (isCom != tty->isCom) {
-        printf("%s: Ignoring attempt to change COM flag to %d from %d\n", 
+        printf("%s: Ignoring attempt to change COM flag to %d from %d\n",
                                                functionName, isCom, tty->isCom);
     }
     /* Successfully parsed socket information, turn off FLAG_SHUTDOWN */
@@ -490,7 +490,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             tty->flags &= ~FLAG_NEED_LOOKUP;
             tty->flags |=  FLAG_DONE_LOOKUP;
         }
-        
+
         /*
          * Bind to the local IP address if it was specified.
          * This is a very unusual configuration
@@ -642,7 +642,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
                 return asynError;
             }
             epicsTimeGetCurrent(&endTime);
-            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000 > writePollmsec) break; 
+            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000 > writePollmsec) break;
         }
         if (pollstatus == 0) {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -767,7 +767,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
                 return asynError;
             }
             epicsTimeGetCurrent(&endTime);
-            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000. > readPollmsec) break; 
+            if (epicsTimeDiffInSeconds(&endTime, &startTime)*1000. > readPollmsec) break;
         }
     }
 #endif
@@ -781,7 +781,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
                 char inetBuff[32];
                 ipAddrToDottedIP(&oa.ia, inetBuff, sizeof(inetBuff));
                 asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                          "%s (from %s) read %d\n", 
+                          "%s (from %s) read %d\n",
                           tty->IPDeviceName, inetBuff, thisRead);
             }
             tty->nRead += (unsigned long)thisRead;
@@ -875,6 +875,7 @@ ttyCleanup(ttyController_t *tty)
             epicsSocketDestroy(tty->fd);
         free(tty->portName);
         free(tty->IPDeviceName);
+        free(tty->IPHostName);
         free(tty);
     }
 }
@@ -918,7 +919,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "%s setOption key %s val %s\n", tty->portName, key, val);
-    
+
     if (epicsStrCaseCmp(key, "disconnectOnReadTimeout") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
             tty->disconnectOnReadTimeout = 1;

@@ -23,7 +23,7 @@
 
 #include <osiSock.h>
 #include <epicsThread.h>
-
+
 char *defaultPassword = "E5810";
 int E5810Reboot(char * inetAddr,char *password)
 {
@@ -45,7 +45,7 @@ int E5810Reboot(char * inetAddr,char *password)
     status = aToIPAddr(inetAddr,23,&serverAddr);
     if(status) {
         printf("aToIPAddr failed\n");
-        return(-1); 
+        return(-1);
     }
     errno = 0;
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));
@@ -58,7 +58,7 @@ int E5810Reboot(char * inetAddr,char *password)
     if(nbytes!=7) printf("nbytes %d expected 7\n",nbytes);
     epicsThreadSleep(1.0);
     nbytes = send(fd,password,(int)strlen(password),0);
-    if(nbytes!=strlen(password)) 
+    if(nbytes!=strlen(password))
         printf("nbytes %d expected %d\n",nbytes,(int)strlen(password));
     epicsThreadSleep(1.0);
     nbytes = send(fd,"\ny\n",3,0);

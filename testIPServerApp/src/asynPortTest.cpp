@@ -1,8 +1,8 @@
 /*
  * asynPortTest.cpp
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to demonstrate its use.
- * It communicates with the echoServer driver.  
+ * It communicates with the echoServer driver.
  * It sends and receives int32, float64 and octet values.
  *
  * Author: Mark Rivers
@@ -31,11 +31,11 @@
 class asynPortTest : public asynPortDriver {
 public:
     asynPortTest(const char *portName, const char *echoPortName);
-                 
+
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
-    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value, 
+    virtual asynStatus writeOctet(asynUser *pasynUser, const char *value,
                                   size_t nChars, size_t *nActual);
 
 protected:
@@ -43,7 +43,7 @@ protected:
     int Int32Data;
     int Float64Data;
     int OctetData;
- 
+
 private:
     /* Our data */
     asynUser *pasynUserEcho;
@@ -57,7 +57,7 @@ static const char *driverName="asynPortTest";
 /** Called when asyn clients call pasynInt32->write().
   * This function converts the integer to a string and sends it to the echoServer.
   * It reads back the string response, converts it to a number, divides by 2 and calls
-  * the callbacks with the new value. 
+  * the callbacks with the new value.
   * For all parameters it sets the value in the parameter library and calls any registered callbacks..
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
   * \param[in] value Value to write. */
@@ -72,26 +72,26 @@ asynStatus asynPortTest::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setIntegerParam(function, value);
-    
+
     if (function == Int32Data) {
         sprintf(writeBuffer, "%d", value);
-        status = pasynOctetSyncIO->writeRead(pasynUserEcho, writeBuffer, strlen(writeBuffer), readBuffer, 
+        status = pasynOctetSyncIO->writeRead(pasynUserEcho, writeBuffer, strlen(writeBuffer), readBuffer,
                                          sizeof(readBuffer), TIMEOUT, &nActual, &nRead, &eomReason);
         sscanf(readBuffer, "%d", &readValue);
         readValue /= 2;
-        setIntegerParam(Int32Data, readValue);        
-    } 
-    
+        setIntegerParam(Int32Data, readValue);
+    }
+
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks();
-    
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%d", 
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, value=%d",
                   driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%d\n",
               driverName, functionName, function, value);
     return status;
 }
@@ -114,23 +114,23 @@ asynStatus asynPortTest::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
 
     if (function == Float64Data) {
         sprintf(writeBuffer, "%f", value);
-        status = pasynOctetSyncIO->writeRead(pasynUserEcho, writeBuffer, strlen(writeBuffer), readBuffer, 
+        status = pasynOctetSyncIO->writeRead(pasynUserEcho, writeBuffer, strlen(writeBuffer), readBuffer,
                                          sizeof(readBuffer), TIMEOUT, &nActual, &nRead, &eomReason);
         sscanf(readBuffer, "%lf", &readValue);
         readValue /= 3;
-        setDoubleParam(Float64Data, readValue);        
+        setDoubleParam(Float64Data, readValue);
     }
-        
+
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks();
-    
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%f", 
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, value=%f",
                   driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%f\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%f\n",
               driverName, functionName, function, value);
     return status;
 }
@@ -140,7 +140,7 @@ asynStatus asynPortTest::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
   * \param[in] value Address of the string to write.
   * \param[in] nChars Number of characters to write.
   * \param[out] nActual Number of characters actually written. */
-asynStatus asynPortTest::writeOctet(asynUser *pasynUser, const char *value, 
+asynStatus asynPortTest::writeOctet(asynUser *pasynUser, const char *value,
                                     size_t nChars, size_t *nActual)
 {
     int function = pasynUser->reason;
@@ -151,51 +151,51 @@ asynStatus asynPortTest::writeOctet(asynUser *pasynUser, const char *value,
     const char *functionName = "writeOctet";
 
     if (function == OctetData) {
-        status = pasynOctetSyncIO->writeRead(pasynUserEcho, value, nChars, readBuffer, 
+        status = pasynOctetSyncIO->writeRead(pasynUserEcho, value, nChars, readBuffer,
                                              sizeof(readBuffer), TIMEOUT, nActual, &nRead, &eomReason);
         /* Convert to upper case */
         for (i=0; i<(int)nRead; i++) readBuffer[i] = toupper(readBuffer[i]);
-        status = (asynStatus)setStringParam(OctetData, readBuffer); 
+        status = (asynStatus)setStringParam(OctetData, readBuffer);
     }
 
      /* Do callbacks so higher layers see any changes */
     status = (asynStatus)callParamCallbacks();
 
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, value=%s", 
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, value=%s",
                   driverName, functionName, status, function, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, value=%s\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, value=%s\n",
               driverName, functionName, function, value);
     return status;
 }
 
-
+
 /** Constructor for the asynPortTest class.
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxPoints The maximum  number of points in the volt and time arrays */
-asynPortTest::asynPortTest(const char *portName, const char *echoPortName) 
-   : asynPortDriver(portName, 
-                    1, /* maxAddr */ 
+asynPortTest::asynPortTest(const char *portName, const char *echoPortName)
+   : asynPortDriver(portName,
+                    1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynOctetMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynOctetMask,  /* Interrupt mask */
                     ASYN_CANBLOCK, /* asynFlags.  This driver blocks and it is not multi-device*/
                     1, /* Autoconnect */
                     0, /* Default priority */
-                    0) /* Default stack size*/    
+                    0) /* Default stack size*/
 {
     //const char *functionName = "asynPortTest";
 
     pasynOctetSyncIO->connect(echoPortName, 0, &pasynUserEcho, NULL);
     createParam(Int32DataString,     asynParamInt32,        &Int32Data);
     createParam(Float64DataString,   asynParamFloat64,      &Float64Data);
-    createParam(OctetDataString,     asynParamOctet,        &OctetData);    
+    createParam(OctetDataString,     asynParamOctet,        &OctetData);
 }
 
-
+
 /* Configuration routine.  Called directly, or from the iocsh function below */
 
 extern "C" {

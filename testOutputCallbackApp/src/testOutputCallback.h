@@ -1,6 +1,6 @@
 /*
  * testOutputCallback.h
- * 
+ *
 * Asyn driver that inherits from the asynPortDriver class to test output records using callbacks
 
  *
@@ -8,7 +8,7 @@
  *
  * Created November 9, 2017
  */
- 
+
 #include <epicsEvent.h>
 #include <asynPortDriver.h>
 

@@ -16,9 +16,12 @@
 #include <asynPortDriver.h>
 #include <asynPortClient.h>
 
-// fake out asynPortDriver callback dispatching
-extern "C" int interruptAccept;
-int interruptAccept=1;
+// Need interrupt accept from dbAccess.h unless asyn is built with EPICS_LIBCOM_ONLY
+#ifdef EPICS_LIBCOM_ONLY
+    static int interruptAccept;
+#else
+    #include <dbAccess.h>
+#endif
 
 #ifdef __rtems__
 // no test data needed (when running individual CI tests)

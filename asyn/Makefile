@@ -132,6 +132,7 @@ ifeq ($(EPICS_LIBCOM_ONLY),YES)
 endif
 INC += asynParamType.h
 INC += paramErrors.h
+INC += asynParamSet.h
 INC += asynPortDriver.h
 asyn_SRCS += paramVal.cpp
 asyn_SRCS += asynPortDriver.cpp
@@ -194,11 +195,9 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   # do we have EPICS calc module (scalcout etc.)
   # applications should include asynCalc.dbd as well as asyn.dbd if support is needed
   ifdef CALC
-  ifdef SSCAN
     USR_CFLAGS += -DHAVE_CALCMOD
-    ASYN_LIBS += calc sscan
+    ASYN_LIBS += calc
     DBD += asynCalc.dbd
-  endif
   endif
 
   ifdef HAVE_DEVINT64

@@ -8,7 +8,7 @@
 /******************************************************************************
  *
  * The following define statements are used to declare the names to be used
- * for the dset tables.   
+ * for the dset tables.
  *
  * A DSET_AI entry must be declared here and referenced in an application
  * database description file even if the device provides no AI records.

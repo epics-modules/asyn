@@ -103,7 +103,7 @@ typedef struct asynStandardInterfaces {
 } asynStandardInterfaces;
 
 typedef struct asynStandardInterfacesBase {
-    asynStatus (*initialize)(const char *portName, asynStandardInterfaces *pInterfaces, 
+    asynStatus (*initialize)(const char *portName, asynStandardInterfaces *pInterfaces,
                              asynUser *pasynUser, void *pPvt);
 } asynStandardInterfacesBase;
 

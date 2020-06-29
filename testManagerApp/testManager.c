@@ -61,7 +61,7 @@ int checkStatus(asynStatus status,threadInfo *pthreadInfo,const char *message)
         pthreadInfo->threadName,message,pcmdInfo->pasynUser->errorMessage);
     return 1;
 }
-
+
 static void connectCallback(asynUser *pasynUser)
 {
     cmdInfo    *pcmdInfo = (cmdInfo *)pasynUser->userPvt;
@@ -123,7 +123,7 @@ static void blockTest(asynUser *pasynUser)
     status = pasynManager->unblockProcessCallback(pasynUser,0);
     if(checkStatus(status,pthreadInfo,"testBlock")) return;
 }
-
+
 static void busyCallback(asynUser *pasynUser)
 {
     asynStatus status;
@@ -211,7 +211,7 @@ static void cancelTest(asynUser *pasynUser)
         pthreadInfo->threadName,pcmdInfo->message,wasQueued);
     if(!wasQueued) epicsEventMustWait(pcmdInfo->callbackDone);
 }
-
+
 static void timeoutCallback(asynUser *pasynUser)
 {
     cmdInfo    *pcmdInfo = (cmdInfo *)pasynUser->userPvt;
@@ -261,7 +261,7 @@ static void workThread(threadInfo *pthreadInfo)
     }
     epicsEventSignal(pthreadInfo->done);
 }
-
+
 static const char *thread = "thread";
 static int testInit(const char *port,int addr,
     cmdInfo **ppcmdInfo, threadInfo **ppthreadInfo,int ind,FILE *file)
@@ -318,7 +318,7 @@ static int testInit(const char *port,int addr,
     pthreadInfo->pcmdInfo = pcmdInfo;
     return 0;
 }
-
+
 static void testManager(const char *port,int addr,FILE *file)
 {
     cmdInfo    *pacmdInfo[2],*pcmdInfo;
@@ -384,14 +384,14 @@ static void testManager(const char *port,int addr,FILE *file)
             return;
         }
         pcmdInfo->pasynUser = pasynUserSave;
-        
+
     }
     status = pasynManager->freeAsynUser(pasynUser);
     if(status) {
         printf("freeAsynUser failed %s\n",pasynUser->errorMessage);
         return;
     }
-
+
     pasynUser = pacmdInfo[0]->pasynUser;
     pasynManager->canBlock(pasynUser,&yesNo);
     if(!yesNo) {
@@ -454,7 +454,7 @@ static void testManager(const char *port,int addr,FILE *file)
         pasynManager->memFree(pcmdInfo,sizeof(cmdInfo));
     }
 }
-
+
 static const iocshArg testManagerArg0 = {"port", iocshArgString};
 static const iocshArg testManagerArg1 = {"addr", iocshArgInt};
 static const iocshArg testManagerArg2 = {"reportFile", iocshArgString};
@@ -495,7 +495,7 @@ static void testManagerAllPortsCall(const iocshArgBuf * args)
             printf("could not open %s %s\n",filename,strerror(errno));
             return;
         }
-    } 
+    }
     testManager("cantBlockSingle",0,file);
     testManager("cantBlockMulti",0,file);
     testManager("canBlockSingle",0,file);

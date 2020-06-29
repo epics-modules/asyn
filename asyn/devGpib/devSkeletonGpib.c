@@ -23,7 +23,7 @@
 /******************************************************************************
  *
  * The following define statements are used to declare the names to be used
- * for the dset tables.   
+ * for the dset tables.
  *
  * A DSET_AI entry must be declared here and referenced in an application
  * database description file even if the device provides no AI records.
@@ -43,7 +43,7 @@
 
 #include <devGpib.h> /* must be included after DSET defines */
 
-
+
 #define TIMEOUT     1.0
 #define TIMEWINDOW  2.0
 
@@ -107,7 +107,7 @@ static struct devGpibNames intExtSsBmStop = {
  ******************************************************************************/
 
 static char *userOffOn[] = {"USER OFF;","USER ON;",0};
-
+
 /******************************************************************************
  * Array of structures that define all GPIB messages
  * supported for this type of instrument.

@@ -13,7 +13,7 @@
 using std::logic_error;
 class ParamListInvalidIndex: public logic_error {
 public:
-	ParamListInvalidIndex(const std::string& description);
+    ParamListInvalidIndex(const std::string& description);
 };
 
 #endif /* PARAMLISTINVALIDINDEX_H_ */

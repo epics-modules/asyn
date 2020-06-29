@@ -54,7 +54,7 @@ typedef struct gsport {
     int         carrier;   /* Which IP carrier board*/
     int         module;    /* module number on carrier*/
     CALLBACK    callback;
-    epicsUInt8  isr0; 
+    epicsUInt8  isr0;
     epicsUInt8  isr1;
     int         srqEnabled;
     transferState_t transferState;
@@ -72,7 +72,7 @@ typedef struct gsport {
     epicsEventId waitForInterrupt;
     char errorMessage[ERROR_MESSAGE_BUFFER_SIZE];
 }gsport;
-
+
 static epicsUInt8 readRegister(gsport *pgsport, int offset);
 static void writeRegister(gsport *pgsport,int offset, epicsUInt8 value);
 static void printStatus(gsport *pgsport,const char *source);
@@ -134,7 +134,7 @@ static asynGpibPort gpibPort = {
     gpibPortSerialPoll,
     gpibPortSerialPollEnd
 };
-
+
 /* Register definitions */
 #define ISR0    0x01 /*Interrupt Status Register 0*/
 #define IMR0    0x01 /*Interrupt   Mask Register 0*/
@@ -184,7 +184,7 @@ static asynGpibPort gpibPort = {
 
 /*Definitions for BSR*/
 #define BSRSRQ  0x04 /*SRQ request*/
-
+
 /*
  * Must wait 5 ti9914 clock cycles between AUXMR commands
  * Documentation is confusing but experiments indicate that 6 microsecod wait
@@ -244,13 +244,13 @@ static void auxCmd(gsport *pgsport,epicsUInt8 value)
     writeRegister(pgsport,AUXMR,value);
     microSecondDelay(nmicro);
 }
-
+
 static epicsUInt8 readRegister(gsport *pgsport, int offset)
 {
     volatile epicsUInt8 *pregister = (epicsUInt8 *)
                              (((char *)pgsport->registers)+offset);
     epicsUInt8 value;
-    
+
     value = *pregister;
     if(gsip488Debug) {
         char message[100];
@@ -300,7 +300,7 @@ static void printStatus(gsport *pgsport, const char *source)
         source, pgsport->isr0,pgsport->isr1,
         readRegister(pgsport,ADSR),readRegister(pgsport,BSR));
 }
-
+
 static void waitTimeout(gsport *pgsport,double seconds)
 {
     epicsEventWaitStatus status;
@@ -342,7 +342,7 @@ static void srqCallback(CALLBACK *pcallback)
     if(!pgsport->srqEnabled) return;
     pasynGpib->srqHappened(pgsport->asynGpibPvt);
 }
-
+
 void gsip488(int parameter)
 {
     gsport          *pgsport = (gsport *)parameter;
@@ -417,7 +417,7 @@ void gsip488(int parameter)
         }
         auxCmd(pgsport,RHDF);
         break;
-    case transferStateIdle: 
+    case transferStateIdle:
         if(readRegister(pgsport,ADSR&ATN))
             goto exit;
         if(!isr0&BI)
@@ -432,7 +432,7 @@ exit:
     /* Force synchronization of VMEbus writes on PPC CPU boards. */
     octet = readRegister(pgsport,ADSR);
 }
-
+
 static asynStatus writeCmd(gsport *pgsport,const char *buf, int cnt,
     double timeout,transferState_t nextState)
 {
@@ -480,7 +480,7 @@ static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
     }
     return writeCmd(pgsport,cmdbuf,lenCmd,timeout,nextState);
 }
-
+
 static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
     int *actual, int addr, double timeout)
 {
@@ -519,7 +519,7 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
-
+
 static void gpibPortReport(void *pdrvPvt,FILE *fd,int details)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
@@ -587,7 +587,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
@@ -641,7 +641,7 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     *nbytesTransfered = actual;
     return status;
 }
-
+
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser)
 {
     /*Nothing to do */
@@ -695,7 +695,7 @@ static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
             "%s gpibPortGetEos eoslen %d\n",pgsport->portName,*eoslen);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
@@ -759,7 +759,7 @@ static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser)
     auxCmd(pgsport,IFCC);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
@@ -827,7 +827,7 @@ static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
     status = writeCmd(pgsport,cmd,2,timeout,transferStateIdle);
     return status;
 }
-
+
 int gsIP488Configure(char *portName,int carrier, int module, int vector,
     unsigned int priority, int noAutoConnect)
 {
@@ -877,7 +877,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int vector,
         !noAutoConnect, &gpibPort,pgsport,priority,0);
     return 0;
 }
-
+
 /* IOC shell command registration */
 #include <iocsh.h>
 static const iocshArg gsIP488ConfigureArg0 = { "portName",iocshArgString};
