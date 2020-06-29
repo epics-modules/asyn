@@ -38,6 +38,15 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
   cdef cppclass cHiSLIP "nsHiSLIP::HiSLIP":
     unsigned long maximum_message_size
     unsigned long maximum_payload_size
+    int overlap_mode;
+    int session_id;
+    int server_protocol_version;
+    unsigned int server_vendorID;
+
+    int rmt_delivered;
+    u_int32_t message_id;
+    u_int32_t most_recent_message_id;
+
     cHiSLIP() except+
     void connect(char * hostname,
                  char * dev_name,

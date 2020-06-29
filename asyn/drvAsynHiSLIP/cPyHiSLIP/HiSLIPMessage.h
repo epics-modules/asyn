@@ -216,7 +216,7 @@ namespace nsHiSLIP{
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
-      ::printf("payload length: %llu\n",this->payload_length);
+      ::printf("payload length: %lu\n",this->payload_length);
       // errlogPrintf("message type:%d\n",this->message_type);
       // errlogPrintf("control_code:%d\n",this->control_code);
       // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
@@ -397,6 +397,7 @@ namespace nsHiSLIP{
     //sem_t srq_lock;
     pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
     HiSLIP(){
+      this->overlap_mode=false;
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;

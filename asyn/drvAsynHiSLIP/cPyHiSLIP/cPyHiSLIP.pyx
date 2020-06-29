@@ -2,6 +2,7 @@
 #-*- coding:utf-8 -*-
 
 # distutils: sources = HiSLIPMessage.cpp
+# distutils: language=c++
 
 from cython.operator cimport dereference as deref, preincrement as inc, address as addressof
 
@@ -10,7 +11,7 @@ from cPyHiSLIP cimport cHiSLIP
 #from cPyHiSLIP cimport Default_device_name
 import logging
 from logging import info,debug,warn,log,fatal
-#logging.root.setLevel(logging.DEBUG)
+logging.root.setLevel(logging.DEBUG)
 
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
@@ -55,7 +56,13 @@ cdef class HiSLIP:
 
   def ask(self, msg, wait_time=3000):
       rsize, result=self._ask(msg, wait_time)
-      return result[:rsize]
+      debug("ask res size: {}".format(rsize))
+      if result == None:
+          return None
+      elif (rsize > 0):
+          return result[:rsize]
+      else:
+          return None
   
   cdef _ask(self, u_int8_t *msg, wait_time):
       cdef unsigned char *buffer=NULL
@@ -64,7 +71,11 @@ cdef class HiSLIP:
       recieved=self.thisobj.ask(msg, len(msg),
                                 addressof(buffer),
                                 wait_time)
-      return (recieved, buffer)
+      debug("_ask recieved: {}".format(recieved))
+      if (recieved > 0 and (buffer != NULL)):
+          return (recieved, buffer)
+      else:
+          return (recieved, None)
           
   def set_timeout(self,timeout):
       self.thisobj.set_timeout(timeout)
@@ -104,6 +115,17 @@ cdef class HiSLIP:
       return rc
 
   def status_query(self):
+      """
+      bit/weight/name
+      0	1 Reserved
+      1	2 Reserved
+      2	4 Error/Event Queue
+      3	8 Questionable Status Register (QUES)
+      4	16 Message Available (MAV)
+      5	32 Standard Event Status Bit Summary (ESB)
+      6	64 Request Service (RQS)/Master Status Summary (MSS)
+      7	128 Operation Status Register (OPER)
+      """
       cdef u_int8_t rc
       rc=self.thisobj.status_query()
       return rc
@@ -191,6 +213,11 @@ cdef class HiSLIP:
       rc=self.thisobj.check_and_lock_srq_lock()
       return rc
   
+  def get_overlap_mode(self):
+      cdef int ovm=self.thisobj.overlap_mode
+      return ovm
+  
+  
   def get_Service_Request(self):
       cdef u_int8_t rc=0
       rc=self.thisobj.get_Service_Request()
@@ -215,7 +242,7 @@ cdef class enumType:
    
 cdef class HiSLIPMessageType(enumType):
          Initialize=0
-         InitializeResPonce=1
+         InitializeResPonse=1
          FatalError=2
          Error=3
          AsynLock=4
