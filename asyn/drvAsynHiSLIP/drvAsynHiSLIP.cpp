@@ -109,14 +109,9 @@ interruptThread(void *arg)
 	if (pdpvt == NULL){
 	  errlogPrintf(" NULL drvPvt as an argument.\n");
 	}
-	Message_t *srqmsg=pdpvt->device->get_Service_Request();
-	assert(srqmsg);
-	u_int8_t stb =srqmsg->control_code;// Ststus Byte
-	srqmsg->printf();
-	
+	u_int8_t stb = pdpvt->device->get_Service_Request();
 	errlogPrintf("Get SRQ with STB: 0x%2x\n", stb);
-	if ((srqmsg->message_type == nsHiSLIP::AsyncServiceRequest) 
-	    && (stb != 0)){ // may need mask here.
+	if (stb != 0){ // may need mask here.
 	  ELLLIST *pclientList;
 	  interruptNode *pnode;
 
@@ -150,13 +145,6 @@ interruptThread(void *arg)
 	    }
 	    pasynManager->interruptEnd(pdpvt->asynOctetInterruptPvt);
 	    errlogPrintf("Finish SRQ process 0x%2x\n", stb);
-	  }
-	}
-	else if (srqmsg->message_type == nsHiSLIP::AsyncStatusResponse){
-	  if (epicsMessageQueueTrySend(pdpvt->statusByteMessageQueue,
-				       &stb, 1) != 0) {
-	    errlogPrintf("----- WARNING ----- "
-			 "Can't send status byte to worker thread!\n");
 	  }
 	}
       }
