@@ -44,23 +44,21 @@ namespace nsHiSLIP{
     hints.ai_next=NULL;
     
     {
-      char *service=NULL;
-      if (asprintf(&service, "%d",port)// "4880" for example.
+      char service[256]={'\x0'};
+      if (snprintf(service,256, "%d",port) // "4880" for example.
 	  > 0){
 	status=getaddrinfo(hostname, service, &hints, &res);
-	free(service);
       }
       else{
 	status=getaddrinfo(hostname, "hislip", &hints, &res);
-	perror("asprintf failes");
+	perror("snprintf failes");
       }
     }
     
     if ((status !=0) || res == NULL){
-      char *msg;
-      if (asprintf(&msg, "getaddrinfo error status:%d res %p",status,res) >0){
+      char msg[1024]={'\x0'};
+      if (snprintf(msg, 1024, "getaddrinfo error status:%d res %p",status,res) >0){
 	perror(msg);
-	free(msg);
       }
       else{
 	perror("getaddrinfo");
@@ -173,7 +171,7 @@ namespace nsHiSLIP{
       return -1;
     }
   
-    resp.recv(this->async_channel,nsHiSLIP::AsyncDeviceClearAcknowledge);
+    resp.recv(this->async_channel, nsHiSLIP::AsyncDeviceClearAcknowledge);
     feature_preference=resp.control_code;
 
     msg=new Message(nsHiSLIP::DeviceClearComplete,
@@ -208,7 +206,8 @@ namespace nsHiSLIP{
 		message_parameter((u_int32_t) this->most_recent_message_id),
 		0, NULL);
     msg.send(this->async_channel);
-
+    this->rmt_delivered = false;
+    
     ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
@@ -292,8 +291,9 @@ namespace nsHiSLIP{
       // may not be a good idea.
       {	u_int8_t *newbuf;
 	
-	newbuf=(u_int8_t *) reallocarray(*buffer, 1,
-				   *received+resp.payload_length);
+	// newbuf=(u_int8_t *) reallocarray(*buffer, 1,
+	// 			   *received+resp.payload_length);
+	newbuf = (u_int8_t *) realloc( *buffer, *received+resp.payload_length);
 	if (newbuf == NULL){
 	  // errlogPrintf("Cannot extend memory area\n");
 	  return -3;
@@ -436,7 +436,7 @@ namespace nsHiSLIP{
     Message msg(nsHiSLIP::AsyncLock,
 		1, // request
 		this->lock_timeout,
-		strnlen(lock_string,256), (u_int8_t *) lock_string),
+		strnlen(lock_string, 256), (u_int8_t *) lock_string),
       resp(AnyMessages);
     
     msg.send(this->async_channel);
@@ -465,7 +465,14 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::request_srq_lock(void){
-    if (sem_wait(&(this->srq_lock)) == 0){
+    // if (sem_wait(&(this->srq_lock)) == 0){
+    //   return 0;
+    // }
+    // else{
+    //   perror("request_srq_lock");
+    //   return -1;
+    // }
+    if (pthread_mutex_lock(&(this->srq_lock)) == 0){
       return 0;
     }
     else{
@@ -475,11 +482,18 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::release_srq_lock(void){
-    int sval=this->check_srq_lock();
-    if (sval != 0){
-      return sval;
-    }
-    if (sem_post(&(this->srq_lock)) == 0){
+    // int sval=this->check_srq_lock();
+    // if (sval != 0){
+    //   return sval;
+    // }
+    // if (sem_post(&(this->srq_lock)) == 0){
+    //   return 0;
+    // }
+    // else{
+    //   perror("release_srq_lock");
+    //   return -1;
+    // }
+    if (pthread_mutex_unlock(&(this->srq_lock)) == 0){
       return 0;
     }
     else{
@@ -488,27 +502,48 @@ namespace nsHiSLIP{
     }
   };
   int HiSLIP::check_srq_lock(void){
-    int sval;
-    if (sem_getvalue(&(this->srq_lock),&sval) == 0){
-      return sval;
+    // int sval;
+    // if (sem_getvalue(&(this->srq_lock),&sval) == 0){
+    //   return sval;
+    // }
+    // else {
+    //   perror("check_srq_lock");
+    //   return -1;
+    // }
+    int rc=pthread_mutex_trylock(&(this->srq_lock));
+    if (rc == 0){
+      pthread_mutex_unlock(&(this->srq_lock));
+      return 1;
     }
-    else {
-      perror("check_srq_lock");
-      return -1;
+    else if (rc == EBUSY){
+      return 0;
     }
+    perror("check_srq_lock");
+    return -1;
   }
   
   int HiSLIP::check_and_lock_srq_lock(void){
-    int rc=sem_trywait(&(this->srq_lock));
+    // int rc=sem_trywait(&(this->srq_lock));
+    // switch (rc){
+    // case 0:
+    //   break;
+    // case EAGAIN:
+    //   break;
+    // default:
+    //   perror("check_and_lock_srq_lock");
+    // }
+    // return rc;
+
+    int rc=pthread_mutex_trylock(&(this->srq_lock));
     switch (rc){
     case 0:
-      break;
-    case EAGAIN:
-      break;
+      return 1;
+    case EBUSY:
+      return 0;
     default:
       perror("check_and_lock_srq_lock");
+      return -1;
     }
-    return rc;
   }
 } // end of namespace HiSLIP
 

@@ -81,8 +81,9 @@ ext_modules.append(Extension("cPyHiSLIP",
                              ,depends=["cPyHiSLIP.pxd"] # Cython interface file
                              ,language="c++"
                              ,cython_cplus=True
-                             ,undef_macros=["CFLAGS"]
-                             ,extra_compile_args=[],
+                             ,undef_macros=[]   #["CFLAGS"]
+                             ,define_macros=[]
+                             ,extra_compile_args=["-std=gnu++11",],
 ))
 
 
