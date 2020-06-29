@@ -8,7 +8,7 @@
 * found in file LICENSE that is included with this distribution.
 ***********************************************************************/
 
-/* 
+/*
  * End-of-string processing for asyn
  *
  * Author: Eric Norum
@@ -53,7 +53,7 @@ typedef struct eosPvt {
     char          eosOut[2];
     int           eosOutLen;
 }eosPvt;
-    
+
 /* Connect/disconnect handling */
 static void eosInExceptionHandler(asynUser *pasynUser,asynException exception);
 
@@ -80,7 +80,7 @@ static asynOctet octet = {
     registerInterruptUser, cancelInterruptUser,
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
-
+
 epicsShareFunc int asynInterposeEosConfig(const char *portName,int addr,
     int processEosIn,int processEosOut)
 {
@@ -138,7 +138,7 @@ epicsShareFunc int asynInterposeEosConfig(const char *portName,int addr,
     }
     return(0);
 }
-
+
 static void eosInExceptionHandler(asynUser *pasynUser,asynException exception)
 {
     eosPvt *peosPvt = (eosPvt *)pasynUser->userPvt;
@@ -149,7 +149,7 @@ static void eosInExceptionHandler(asynUser *pasynUser,asynException exception)
         peosPvt->eosInMatch = 0;
     }
 }
-
+
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered)
@@ -274,7 +274,7 @@ static asynStatus registerInterruptUser(void *ppvt,asynUser *pasynUser,
 
     return peosPvt->poctet->registerInterruptUser(peosPvt->octetPvt,
         pasynUser,callback,userPvt,registrarPvt);
-} 
+}
 
 static asynStatus cancelInterruptUser(void *drvPvt,asynUser *pasynUser,
      void *registrarPvt)
@@ -283,7 +283,7 @@ static asynStatus cancelInterruptUser(void *drvPvt,asynUser *pasynUser,
 
     return peosPvt->poctet->cancelInterruptUser(peosPvt->octetPvt,
         pasynUser,registrarPvt);
-} 
+}
 
 static asynStatus setInputEos(void *ppvt,asynUser *pasynUser,
     const char *eos,int eoslen)
@@ -388,7 +388,7 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
             "%s get Eos %d\n", peosPvt->portName, *eoslen);
     return asynSuccess;
 }
-
+
 /* register asynInterposeEosConfig*/
 static const iocshArg asynInterposeEosConfigArg0 =
     { "portName", iocshArgString };
@@ -398,7 +398,7 @@ static const iocshArg asynInterposeEosConfigArg2 =
     { "processIn (0,1) => (no,yes)", iocshArgInt };
 static const iocshArg asynInterposeEosConfigArg3 =
     { "processOut (0,1) => (no,yes)", iocshArgInt };
-static const iocshArg *asynInterposeEosConfigArgs[] = 
+static const iocshArg *asynInterposeEosConfigArgs[] =
     {&asynInterposeEosConfigArg0,&asynInterposeEosConfigArg1,
      &asynInterposeEosConfigArg2,&asynInterposeEosConfigArg3};
 static const iocshFuncDef asynInterposeEosConfigFuncDef =

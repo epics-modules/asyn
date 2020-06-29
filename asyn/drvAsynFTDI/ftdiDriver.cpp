@@ -1,13 +1,13 @@
 /********************************************
  *  ftdiDriver.cpp
- * 
+ *
  *  Wrapper class for the libftdi1 library
  *  This class provides standard read/write
  *  and flush methods for an FTDI chip USB connection.
- * 
+ *
  *  Philip Taylor
  *   8 Jul 2013
- * 
+ *
  ********************************************/
 #include <string.h>
 #include <stdio.h>
@@ -416,7 +416,7 @@ FTDIDriverStatus FTDIDriver::connectFTDI()
      debugPrint("ftdi_set_interface failed: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
      return FTDIDriverError;
   }
-  
+
   // Open the FTDI USB device
   if ((f = ftdi_usb_open(ftdi_, vendor_, product_)) != 0)
   {
@@ -428,7 +428,7 @@ FTDIDriverStatus FTDIDriver::connectFTDI()
   debugPrint("ftdi->type = %d. ", ftdi_->type);
   ftdi_read_chipid(ftdi_, &chipid);
   printf("FTDI chipid: %X\n", chipid);
-  
+
   // Set baudrate
   if (setBaudrate(baudrate_))
     return FTDIDriverError;
@@ -451,23 +451,23 @@ FTDIDriverStatus FTDIDriver::connectFTDI()
      debugPrint("Failed to reset FTDI: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
      return FTDIDriverError;
   }
-  
+
   // Purge the send and receive buffers
   if ((f = ftdi_usb_purge_tx_buffer (ftdi_)) != 0)
   {
      debugPrint("Failed to purge FTDI tx buffer: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
      return FTDIDriverError;
   }
-  
+
   if ((f = ftdi_usb_purge_rx_buffer (ftdi_)) != 0)
   {
      debugPrint("Failed to purge FTDI rx buffer: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
      return FTDIDriverError;
   }
-   
+
   // Wait 60 ms. for purge to complete
      epicsThreadSleep(0.060);
-   
+
   if ((f = ftdi_read_data_set_chunksize(ftdi_, 8192)) != 0)
   {
      debugPrint("Failed to set FTDI read chunk size: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
@@ -479,7 +479,7 @@ FTDIDriverStatus FTDIDriver::connectFTDI()
      debugPrint("Failed to set FTDI write chunk size: %d (%s)\n", f, ftdi_get_error_string(ftdi_));
      return FTDIDriverError;
   }
-  
+
   debugPrint("%s : FTDI Connection ready...\n", functionName);
   connected_ = 1;
 
@@ -592,7 +592,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
     rc[7] = ftdi_write_data(ftdi_, (unsigned char *) buffer, (int) bufferSize);
     if( rc[7] != i ) err = FTDIDriverError;
     debugPrint("%s : 7. pinState=0x%02x\n",
- 		functionName, pinState);
+               functionName, pinState);
     }
 #endif
 
@@ -630,7 +630,7 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
 {
   static const char *functionName = "FTDIDriver::read";
   debugPrint("%s : Method called\n", functionName);
-  
+
   if (connected_ == 0){
     debugPrint("%s : Not connected\n", functionName);
     return FTDIDriverError;
@@ -644,7 +644,7 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
   long mtimeout = (stime.tv_usec / 1000) + timeout;
   long tnow = 0;
   int rc = 0;
-  
+
   *bytesRead = 0;
 
   if( spi ) ftdi_usb_purge_tx_buffer(ftdi_);
@@ -724,7 +724,7 @@ FTDIDriver::~FTDIDriver()
   #define DELTA_EPOCH_IN_MICROSECS  11644473600000000ULL
 #endif
 
-struct timezone 
+struct timezone
 {
   int  tz_minuteswest; /* minutes W of Greenwich */
   int  tz_dsttime;     /* type of dst correction */
@@ -746,7 +746,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
     tmpres /= 10;  /*convert into microseconds*/
     /*converting file time to unix epoch*/
-    tmpres -= DELTA_EPOCH_IN_MICROSECS; 
+    tmpres -= DELTA_EPOCH_IN_MICROSECS;
     tv->tv_sec = (long)(tmpres / 1000000UL);
     tv->tv_usec = (long)(tmpres % 1000000UL);
   }
@@ -765,17 +765,17 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
   return 0;
 }
 
-void usleep(__int64 usec) 
-{ 
-    HANDLE timer; 
-    LARGE_INTEGER ft; 
+void usleep(__int64 usec)
+{
+    HANDLE timer;
+    LARGE_INTEGER ft;
 
     ft.QuadPart = -(10*usec); // Convert to 100 nanosecond interval, negative value indicates relative time
 
-    timer = CreateWaitableTimer(NULL, TRUE, NULL); 
-    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0); 
-    WaitForSingleObject(timer, INFINITE); 
-    CloseHandle(timer); 
+    timer = CreateWaitableTimer(NULL, TRUE, NULL);
+    SetWaitableTimer(timer, &ft, 0, NULL, NULL, 0);
+    WaitForSingleObject(timer, INFINITE);
+    CloseHandle(timer);
 }
 #endif
 #endif

@@ -54,7 +54,7 @@ static asynInt64ArraySyncIO interface = {
     readOpOnce
 };
 epicsShareDef asynInt64ArraySyncIO *pasynInt64ArraySyncIO = &interface;
-
+
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)
 {
@@ -67,7 +67,7 @@ static asynStatus connect(const char *port, int addr,
     pasynUser = pasynManager->createAsynUser(0,0);
     pasynUser->userPvt = pioPvt;
     *ppasynUser = pasynUser;
-    status = pasynManager->connectDevice(pasynUser, port, addr);    
+    status = pasynManager->connectDevice(pasynUser, port, addr);
     if (status != asynSuccess) {
         return status;
     }
@@ -106,7 +106,7 @@ static asynStatus connect(const char *port, int addr,
     }
     return asynSuccess ;
 }
-
+
 static asynStatus disconnect(asynUser *pasynUser)
 {
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
@@ -125,7 +125,7 @@ static asynStatus disconnect(asynUser *pasynUser)
     free(pioPvt);
     return asynSuccess;
 }
-
+
 static asynStatus writeOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,double timeout)
 {
     asynStatus status, unlockStatus;
@@ -138,7 +138,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,do
     }
     status = pPvt->pasynInt64Array->write(pPvt->int64ArrayPvt, pasynUser,pvalue,nelem);
     if (status==asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "asynInt64ArraySyncIO wrote: %lld\n",
                   *pvalue);
     }
@@ -161,7 +161,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,siz
     }
     status = pPvt->pasynInt64Array->read(pPvt->int64ArrayPvt, pasynUser, pvalue, nelem, nIn);
     if (status==asynSuccess) {
-        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE, 
+        asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "asynInt64ArraySyncIO read: %lld\n", *pvalue);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
@@ -170,7 +170,7 @@ static asynStatus readOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,siz
     }
     return status;
 }
-
+
 static asynStatus writeOpOnce(const char *port, int addr,
     epicsInt64 *pvalue,size_t nelem,double timeout,const char *drvInfo)
 {

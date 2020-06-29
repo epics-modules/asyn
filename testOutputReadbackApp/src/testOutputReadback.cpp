@@ -1,6 +1,6 @@
 /*
  * testOutputReadback.cpp
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to test error handling in both normally scanned
  * and I/O Intr scanned records
  *
@@ -22,9 +22,9 @@
 /** Constructor for the testOutputReadback class.
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created. */
-testOutputReadback::testOutputReadback(const char *portName, int initialReadStatus) 
-   : asynPortDriver(portName, 
-                    1, /* maxAddr */ 
+testOutputReadback::testOutputReadback(const char *portName, int initialReadStatus)
+   : asynPortDriver(portName,
+                    1, /* maxAddr */
                      /* Interface mask */
                     asynInt32Mask       | asynFloat64Mask    | asynUInt32DigitalMask | asynDrvUserMask,
                     /* Interrupt mask */
@@ -33,7 +33,7 @@ testOutputReadback::testOutputReadback(const char *portName, int initialReadStat
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/,
-     initialReadStatus_((asynStatus)initialReadStatus)   
+     initialReadStatus_((asynStatus)initialReadStatus)
 {
     createParam(P_Int32ValueString,                 asynParamInt32,         &P_Int32Value);
     createParam(P_BinaryInt32ValueString,           asynParamInt32,         &P_BinaryInt32Value);
@@ -42,7 +42,7 @@ testOutputReadback::testOutputReadback(const char *portName, int initialReadStat
     createParam(P_UInt32DigitalValueString,         asynParamUInt32Digital, &P_UInt32DigitalValue);
     createParam(P_BinaryUInt32DigitalValueString,   asynParamUInt32Digital, &P_BinaryUInt32DigitalValue);
     createParam(P_MultibitUInt32DigitalValueString, asynParamUInt32Digital, &P_MultibitUInt32DigitalValue);
-    
+
     setIntegerParam    (P_Int32Value,                 7);
     setParamStatus     (P_Int32Value,                 asynSuccess);
     setIntegerParam    (P_BinaryInt32Value,           1);
@@ -57,12 +57,12 @@ testOutputReadback::testOutputReadback(const char *portName, int initialReadStat
     setParamStatus     (P_BinaryUInt32DigitalValue,   asynSuccess);
     setUIntDigitalParam(P_MultibitUInt32DigitalValue, (epicsUInt32)0x2, 0xFFFFFFFF, 0xFFFFFFFF);
     setParamStatus     (P_BinaryUInt32DigitalValue,   asynSuccess);
-    
+
 }
 
 asynStatus testOutputReadback::readInt32(asynUser *pasynUser, epicsInt32 *value)
 {
-    if (initialReadStatus_) 
+    if (initialReadStatus_)
         return initialReadStatus_;
     else
         return asynPortDriver::readInt32(pasynUser, value);
@@ -70,7 +70,7 @@ asynStatus testOutputReadback::readInt32(asynUser *pasynUser, epicsInt32 *value)
 
 asynStatus testOutputReadback::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
 {
-    if (initialReadStatus_) 
+    if (initialReadStatus_)
         return initialReadStatus_;
     else
         return asynPortDriver::readFloat64(pasynUser, value);
@@ -78,7 +78,7 @@ asynStatus testOutputReadback::readFloat64(asynUser *pasynUser, epicsFloat64 *va
 
 asynStatus testOutputReadback::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask)
 {
-    if (initialReadStatus_) 
+    if (initialReadStatus_)
         return initialReadStatus_;
     else
         return asynPortDriver::readUInt32Digital(pasynUser, value, mask);

@@ -48,7 +48,7 @@ static asynStatus srqEnable (void *pdrvPvt, int onOff);
 static asynStatus serialPollBegin (void *pdrvPvt);
 static int serialPoll (void *pdrvPvt, int addr, double timeout);
 static asynStatus serialPollEnd (void *pdrvPvt);
-
+
 static void report(void *pdrvPvt,FILE *fd,int details)
 {
 }
@@ -67,7 +67,7 @@ static int gpibRead(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int ma
 }
 
 static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
-                    int addr,const char *data,int numchars
+                    int addr,const char *data,int numchars)
 {
 }
 
@@ -80,7 +80,7 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
 }
 
 static asynStatus addressedCmd (void *pdrvPvt,asynUser *pasynUser,
-    int addr, char *data, int length
+    int addr, char *data, int length)
 {
 }
 
@@ -115,7 +115,7 @@ static int serialPoll (void *pdrvPvt, int addr, double timeout)
 static asynStatus serialPollEnd (void *pdrvPvt)
 {
 }
-
+
 static asynGpib skeletonDriver = {
     report,
     connect,

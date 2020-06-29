@@ -74,7 +74,7 @@ typedef struct devPvt{
     processState state;
     DBADDR      dbAddr;
 }devPvt;
-
+
 static asynStatus queueIt(devPvt *pdevPvt);
 static void queueItDelayed(CALLBACK * pvt);
 static asynStatus writeIt(asynUser *pasynUser,
@@ -99,7 +99,7 @@ commonDset devTestBlockInp   = {
     5,0,0,initSiWriteRead,  0            ,processCommon};
 
 epicsExportAddress(dset, devTestBlockInp);
-
+
 static long initSiWriteRead(stringinRecord *precord)
 {
     DBLINK        *plink = &precord->inp;
@@ -117,7 +117,7 @@ static long initSiWriteRead(stringinRecord *precord)
     pasynUser = pasynManager->createAsynUser(callbackSiWriteRead, 0);
     pasynUser->userPvt = pdevPvt;
     pdevPvt->pasynUser = pasynUser;
-    status = pasynEpicsUtils->parseLink(pasynUser, plink, 
+    status = pasynEpicsUtils->parseLink(pasynUser, plink,
                 &pdevPvt->portName, &pdevPvt->addr,&userParam);
     if (status != asynSuccess) {
         printf("%s devTestBlock::initCommon error in link %s\n",
@@ -168,10 +168,10 @@ static long processCommon(dbCommon *precord)
         status = queueIt(pdevPvt);
         if(status==asynSuccess) return 0;
         precord->pact = 0;
-    } 
+    }
     return(0);
 }
-
+
 static asynStatus queueIt(devPvt *pdevPvt)
 {
     asynStatus status;
@@ -216,7 +216,7 @@ static void queueItDelayed(CALLBACK * pvt)
             &pdevPvt->processCallback,precord->prio,precord);
     }
 }
-
+
 static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
 {
     devPvt     *pdevPvt = (devPvt *)pasynUser->userPvt;
@@ -269,7 +269,7 @@ static asynStatus readIt(asynUser *pasynUser,char *message,
        "%s devTestBlock: readIt eomReason %d\n",precord->name,eomReason);
     return status;
 }
-
+
 static void callbackSiWriteRead(asynUser *pasynUser)
 {
     devPvt         *pdevPvt = (devPvt *)pasynUser->userPvt;

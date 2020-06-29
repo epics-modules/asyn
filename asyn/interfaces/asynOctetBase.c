@@ -41,7 +41,7 @@ typedef struct octetPvt {
     void          *pasynPvt;   /*For registerInterruptSource*/
     int           interruptProcess;
 }octetPvt;
-
+
 static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet);
 
 static asynStatus initialize(const char *portName,
@@ -95,7 +95,7 @@ static asynStatus setOutputEosFail(void *drvPvt,asynUser *pasynUser,
                         const char *eos,int eoslen);
 static asynStatus getOutputEosFail(void *drvPvt,asynUser *pasynUser,
                        char *eos, int eossize, int *eoslen);
-
+
 static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
 {
     int        override = 0;
@@ -120,7 +120,7 @@ static void initOverride(octetPvt *poctetPvt, asynOctet *pasynOctet)
     if(!pasynOctet->getOutputEos) pasynOctet->getOutputEos = getOutputEosFail;
     poctetPvt->override = override;
 }
-
+
 static asynStatus initialize(const char *portName,
     asynInterface *pdriver,
     int processEosIn,int processEosOut,
@@ -174,7 +174,7 @@ static asynStatus initialize(const char *portName,
     }
     return asynSuccess;
 }
-
+
 static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
     char *data,size_t *nbytesTransfered,int *eomReason)
 {
@@ -188,7 +188,7 @@ static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status==asynSuccess)
         status = pasynManager->getPortName(pasynUser,&portName);
-    if(status==asynSuccess) 
+    if(status==asynSuccess)
         status = pasynManager->interruptStart(pasynPvt,&plist);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -222,7 +222,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     return pasynOctet->write(poctetPvt->drvPvt,pasynUser,
                       data,numchars,nbytesTransfered);
 }
-
+
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
 {
@@ -244,7 +244,7 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
     octetPvt   *poctetPvt = (octetPvt *)drvPvt;
     asynOctet  *pasynOctet = poctetPvt->pasynOctet;
     double     savetimeout = pasynUser->timeout;
-    char       buffer[100]; 
+    char       buffer[100];
     size_t     nbytesTransfered;
 
 
@@ -263,7 +263,7 @@ static asynStatus flushIt(void *drvPvt,asynUser *pasynUser)
     pasynUser->timeout = savetimeout;
     return asynSuccess;
 }
-
+
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
       interruptCallbackOctet callback, void *userPvt, void **registrarPvt)
 {
@@ -275,7 +275,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     interruptNode      *pinterruptNode;
     asynOctetInterrupt *pasynOctetInterrupt;
     void               *pinterruptPvt;
-    
+
     if(!(poctetPvt->override&overrideRegisterInterruptUser)) {
         return pasynOctet->registerInterruptUser(poctetPvt->drvPvt,pasynUser,
                                  callback,userPvt,registrarPvt);
@@ -312,7 +312,7 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     asynStatus         status;
     const char         *portName;
     int                addr;
-    
+
     if(!(poctetPvt->override&overrideCancelInterruptUser)) {
         return pasynOctet->cancelInterruptUser(poctetPvt->drvPvt,pasynUser,
                                  registrarPvt);
@@ -330,7 +330,7 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     pasynManager->memFree(pinterrupt,sizeof(asynOctetInterrupt));
     return status;
 }
-
+
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
                         const char *eos,int eoslen)
 {
@@ -368,12 +368,12 @@ static asynStatus getOutputEos(void *drvPvt,asynUser *pasynUser,
     return pasynOctet->getOutputEos(poctetPvt->drvPvt,pasynUser,
                  eos,eossize,eoslen);
 }
-
+
 static asynStatus showFailure(asynUser *pasynUser,const char *method)
 {
     const char *portName;
     asynStatus status;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,

@@ -43,7 +43,7 @@
 #include <epicsExport.h>
 /* forward declaration: */
 static devGpibParmBlock devSupParms;
-
+
 /* init_ai MUST be implemented by device specific support*/
 static long init_ai(int pass);
 static gDset DSET_AI = {
@@ -108,7 +108,7 @@ static gDset DSET_EV = {
 };
 epicsExportAddress(dset,DSET_EV);
 #endif
-
+
 #ifdef DSET_LI
 static gDset DSET_LI = {
     6,
@@ -162,7 +162,7 @@ static gDset DSET_MBBOD = {
 };
 epicsExportAddress(dset,DSET_MBBOD);
 #endif
-
+
 #ifdef DSET_SI
 static gDset DSET_SI = {
     6,

@@ -28,7 +28,7 @@
 #include <iocsh.h>
 #include <registryFunction.h>
 #include <epicsExport.h>
-
+
 #define MESSAGE_SIZE 80
 #define READ_TIMEOUT -1.0
 #define WRITE_TIMEOUT 2.0
@@ -53,33 +53,33 @@ static void echoListener(myData *pPvt)
     status = pasynOctetSyncIO->connect(pPvt->portName, 0, &pasynUser, NULL);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoListener: unable to connect to port %s\n", 
+                  "echoListener: unable to connect to port %s\n",
                   pPvt->portName);
         return;
     }
     status = pasynOctetSyncIO->setInputEos(pasynUser, "\r\n", 2);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoListener: unable to set input EOS on %s: %s\n", 
+                  "echoListener: unable to set input EOS on %s: %s\n",
                   pPvt->portName, pasynUser->errorMessage);
         return;
     }
     status = pasynOctetSyncIO->setOutputEos(pasynUser, "\r\n", 2);
     if (status) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                  "echoListener: unable to set output EOS on %s: %s\n", 
+                  "echoListener: unable to set output EOS on %s: %s\n",
                   pPvt->portName, pasynUser->errorMessage);
         return;
     }
     while(1) {
         /* Erase buffer */
         buffer[0] = 0;
-        status = pasynOctetSyncIO->read(pasynUser, buffer, MESSAGE_SIZE, 
+        status = pasynOctetSyncIO->read(pasynUser, buffer, MESSAGE_SIZE,
                                         pPvt->readTimeout, &nread, &eomReason);
         switch (status) {
         case asynSuccess:
             asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                      "echoListener: %s read %lu: %s\n", 
+                      "echoListener: %s read %lu: %s\n",
                       pPvt->portName, (unsigned long)nread, buffer);
             status = pasynOctetSyncIO->write(pasynUser, buffer, strlen(buffer),
                                              WRITE_TIMEOUT, &nwrite);
@@ -96,13 +96,13 @@ static void echoListener(myData *pPvt)
 
         case asynTimeout:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoListener: timeout on: %s read %lu: %s\n", 
+                      "echoListener: timeout on: %s read %lu: %s\n",
                       pPvt->portName, (unsigned long)nread, buffer);
             break;
 
         default:
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                      "echoListener: read error on: %s: status=%d error=%s\n", 
+                      "echoListener: read error on: %s: status=%d error=%s\n",
                       pPvt->portName, status, pasynUser->errorMessage);
             goto done;
         }
@@ -118,14 +118,14 @@ static void echoListener(myData *pPvt)
     free(pPvt);
 }
 
-                         
-static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName, 
+
+static void connectionCallback(void *drvPvt, asynUser *pasynUser, char *portName,
                                size_t len, int eomReason)
 {
     myData     *pPvt = (myData *)drvPvt;
     myData     *newPvt = calloc(1, sizeof(myData));
 
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
               "ipEchoServer: connectionCallback, portName=%s\n", portName);
     epicsMutexLock(pPvt->mutexId);
     /* Make a copy of myData, with new portName */
@@ -163,9 +163,9 @@ static void ipEchoServer(const char *portName, int readTimeout)
         printf("%s driver not supported\n",asynOctetType);
         return;
     }
-    if (readTimeout == 0) 
+    if (readTimeout == 0)
         pPvt->readTimeout = READ_TIMEOUT;
-    else 
+    else
         pPvt->readTimeout = readTimeout/1000.;
     pPvt->pasynOctet = (asynOctet *)pasynInterface->pinterface;
     pPvt->octetPvt = pasynInterface->drvPvt;
@@ -184,8 +184,8 @@ static const iocshArg *const ipEchoServerArgs[] = {
     &ipEchoServerArg0,
     &ipEchoServerArg1};
 static const iocshFuncDef ipEchoServerDef = {"ipEchoServer", 2, ipEchoServerArgs};
-static void ipEchoServerCall(const iocshArgBuf * args) 
-{ 
+static void ipEchoServerCall(const iocshArgBuf * args)
+{
     ipEchoServer(args[0].sval, args[1].ival);
 }
 

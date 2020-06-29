@@ -81,7 +81,7 @@ static asynStatus uint32Read(void *drvPvt,asynUser *pasynUser,
 /* asynFloat64 methods */
 static asynStatus float64Write(void *drvPvt,asynUser *pasynUser, epicsFloat64 value);
 static asynStatus float64Read(void *drvPvt,asynUser *pasynUser, epicsFloat64 *value);
-
+
 static int uint32DigitalDriverInit(const char *dn)
 {
     drvPvt    *pdrvPvt;
@@ -159,11 +159,11 @@ static int uint32DigitalDriverInit(const char *dn)
         (EPICSTHREADFUNC)interruptThread,pdrvPvt);
     return(0);
 }
-
+
 static asynStatus getAddr(drvPvt *pdrvPvt,asynUser *pasynUser,
     int *paddr,int portOK)
 {
-    asynStatus status;  
+    asynStatus status;
 
     status = pasynManager->getAddr(pasynUser,paddr);
     if(status!=asynSuccess) return status;
@@ -185,7 +185,7 @@ static void interruptThread(drvPvt *pdrvPvt)
             ELLLIST *pclientList;
             interruptNode *pnode;
             asynUInt32DigitalInterrupt *pinterrupt;
-    
+
             if(pdrvPvt->interruptDelay <= .0001) break;
             for(addr=0; addr<NCHANNELS; addr++) {
                 chanPvt *pchannel = &pdrvPvt->channel[addr];
@@ -217,7 +217,7 @@ static void interruptThread(drvPvt *pdrvPvt)
     }
 }
 
-
+
 /* asynCommon methods */
 static void report(void *pvt,FILE *fp,int details)
 {
@@ -232,7 +232,7 @@ static asynStatus connect(void *pvt,asynUser *pasynUser)
 {
     drvPvt   *pdrvPvt = (drvPvt *)pvt;
     int        addr;
-    asynStatus status;  
+    asynStatus status;
 
     status = getAddr(pdrvPvt,pasynUser,&addr,1);
     if(status!=asynSuccess) return status;
@@ -257,7 +257,7 @@ static asynStatus disconnect(void *pvt,asynUser *pasynUser)
 {
     drvPvt    *pdrvPvt = (drvPvt *)pvt;
     int        addr;
-    asynStatus status;  
+    asynStatus status;
 
     status = getAddr(pdrvPvt,pasynUser,&addr,1);
     if(status!=asynSuccess) return status;
@@ -277,13 +277,13 @@ static asynStatus disconnect(void *pvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
-
+
 static asynStatus uint32Write(void *pvt,asynUser *pasynUser,
                             epicsUInt32 value,epicsUInt32 mask)
 {
     drvPvt   *pdrvPvt = (drvPvt *)pvt;
     int        addr;
-    asynStatus status;  
+    asynStatus status;
     epicsUInt32 newvalue;
     ELLLIST *pclientList;
     interruptNode *pnode;
@@ -327,7 +327,7 @@ static asynStatus uint32Read(void *pvt,asynUser *pasynUser,
 {
     drvPvt *pdrvPvt = (drvPvt *)pvt;
     int        addr;
-    asynStatus status;  
+    asynStatus status;
 
     status = getAddr(pdrvPvt,pasynUser,&addr,0);
     if(status!=asynSuccess) return status;
@@ -347,7 +347,7 @@ static asynStatus uint32Read(void *pvt,asynUser *pasynUser,
         "%s read %d\n",pdrvPvt->portName,*value);
     return asynSuccess;
 }
-
+
 static asynStatus float64Write(void *pvt,asynUser *pasynUser,
                               epicsFloat64 value)
 {
@@ -405,7 +405,7 @@ static asynStatus float64Read(void *pvt,asynUser *pasynUser,
         "%s read %f\n",pdrvPvt->portName,*value);
     return asynSuccess;
 }
-
+
 static const char *testDriverReason = "testDriverReason";
 static const char *skipWhite(const char *pstart)
 {
@@ -466,7 +466,7 @@ static asynStatus getType(void *drvPvt,asynUser *pasynUser,
 static asynStatus destroy(void *drvPvt,asynUser *pasynUser)
 { return asynSuccess;}
 
-
+
 /* register uint32DigitalDriverInit*/
 static const iocshArg uint32DigitalDriverInitArg0 = { "portName", iocshArgString };
 static const iocshArg *uint32DigitalDriverInitArgs[] = {

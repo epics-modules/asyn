@@ -1,6 +1,6 @@
 /*
  * testOutputCallback.cpp
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to test output records using callbacks
  * The output records must have the info tag asyn:READBACK
  * It tests the following:
@@ -39,9 +39,9 @@ static void callbackThreadC(void *pPvt)
 /** Constructor for the testOutputCallback class.
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created. */
-testOutputCallback::testOutputCallback(const char *portName, int canBlock) 
-   : asynPortDriver(portName, 
-                    1, /* maxAddr */ 
+testOutputCallback::testOutputCallback(const char *portName, int canBlock)
+   : asynPortDriver(portName,
+                    1, /* maxAddr */
                      /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynUInt32DigitalMask | asynOctetMask | asynDrvUserMask,
                     /* Interrupt mask */
@@ -50,7 +50,7 @@ testOutputCallback::testOutputCallback(const char *portName, int canBlock)
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/,
-     numCallbacks_(1), sleepTime_(0.)  
+     numCallbacks_(1), sleepTime_(0.)
 {
     createParam(P_Int32ValueString,                 asynParamInt32,         &P_Int32Value);
     createParam(P_Int32BinaryValueString,           asynParamInt32,         &P_Int32BinaryValue);
@@ -60,10 +60,10 @@ testOutputCallback::testOutputCallback(const char *portName, int canBlock)
     createParam(P_NumCallbacksString,               asynParamInt32,         &P_NumCallbacks);
     createParam(P_SleepTimeString,                  asynParamFloat64,       &P_SleepTime);
     createParam(P_TriggerCallbacksString,           asynParamInt32,         &P_TriggerCallbacks);
-    
+
     setIntegerParam(P_NumCallbacks, numCallbacks_);
     setDoubleParam(P_SleepTime, sleepTime_);
-    
+
     callbackEvent_ = epicsEventCreate(epicsEventEmpty);
     epicsThreadCreate("callbackThread",
         epicsThreadPriorityMedium,
@@ -106,7 +106,7 @@ asynStatus testOutputCallback::writeFloat64(asynUser *pasynUser, epicsFloat64 va
     setDoubleParam(function, value);
     if (function == P_Float64Value) {
         doFloat64Callbacks();
-    } 
+    }
     else if (function == P_SleepTime) {
         sleepTime_ = value;
     }

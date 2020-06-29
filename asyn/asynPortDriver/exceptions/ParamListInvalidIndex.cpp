@@ -8,7 +8,7 @@
 #include "ParamListInvalidIndex.h"
 
 ParamListInvalidIndex::ParamListInvalidIndex(const std::string& description):
-	logic_error(description){
+    logic_error(description){
 
 }
 

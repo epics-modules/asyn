@@ -53,7 +53,7 @@ struct niport {
     int         vector;
     int         level;
     CALLBACK    callback;
-    epicsUInt8  isr1; 
+    epicsUInt8  isr1;
     epicsUInt8  isr2;
     int         srqEnabled;
     transferState_t transferState;
@@ -71,7 +71,7 @@ struct niport {
     epicsEventId waitForInterrupt;
     char errorMessage[ERROR_MESSAGE_BUFFER_SIZE];
 };
-
+
 static epicsUInt8 readRegister(niport *pniport, int offset);
 static void writeRegister(niport *pniport,int offset, epicsUInt8 value);
 static void printStatus(niport *pniport,const char *source);
@@ -134,7 +134,7 @@ static asynGpibPort gpibPort = {
     gpibPortSerialPoll,
     gpibPortSerialPollEnd
 };
-
+
 /* Register definitions */
 /* All registers will be addressed as 16 bit integers */
 #define PORT_REGISTER_SIZE 0x200
@@ -275,7 +275,7 @@ static epicsUInt8 readRegister(niport *pniport, int offset)
     volatile epicsUInt8 *pregister = (epicsUInt8 *)
                              (((char *)pniport->registers)+offset);
     epicsUInt8 value;
-    
+
     value = *pregister;
     if(ni1014Debug) {
         char message[100];
@@ -324,7 +324,7 @@ static void printStatus(niport *pniport, const char *source)
         "isr1 %2.2x isr2 %2.2x ADSR %2.2x\n",
         source, pniport->isr1,pniport->isr2,readRegister(pniport,ADSR));
 }
-
+
 static void waitTimeout(niport *pniport,double seconds)
 {
     epicsEventWaitStatus status;
@@ -375,7 +375,7 @@ static void srqCallback(CALLBACK *pcallback)
     if(!pniport->srqEnabled) return;
     pasynGpib->srqHappened(pniport->asynGpibPvt);
 }
-
+
 void ni1014(void *pvt)
 {
     niport          *pniport = (niport *)pvt;
@@ -505,7 +505,7 @@ static asynStatus writeAddr(niport *pniport,int talk, int listen,
     }
     return writeCmd(pniport,cmdbuf,lenCmd,timeout,nextState);
 }
-
+
 static asynStatus writeGpib(niport *pniport,const char *buf, int cnt,
     int *actual, int addr, double timeout)
 {
@@ -558,7 +558,7 @@ static void gpibPortReport(void *pdrvPvt,FILE *fd,int details)
     fprintf(fd,"    gpibPort port %s vector %d base %x registers %p\n",
         pniport->portName,pniport->vector,pniport->base,pniport->registers);
 }
-
+
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
 {
     niport *pniport = (niport *)pdrvPvt;
@@ -615,7 +615,7 @@ static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionConnect(pasynUser);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 {
     niport *pniport = (niport *)pdrvPvt;
@@ -635,7 +635,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     char *data,int maxchars,int *nbytesTransfered,int *eomReason)
 {
@@ -689,7 +689,7 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     *nbytesTransfered = actual;
     return status;
 }
-
+
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser)
 {
     /*Nothing to do */
@@ -742,7 +742,7 @@ static asynStatus gpibPortGetEos(void *pdrvPvt,asynUser *pasynUser,
         "%s addr %d gpibPortGetEos eoslen %p\n",pniport->portName,addr,eoslen);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     const char *data, int length)
 {
@@ -807,7 +807,7 @@ static asynStatus gpibPortIfc(void *pdrvPvt, asynUser *pasynUser)
     writeRegister(pniport,AUXMR,AUXCIFC);
     return asynSuccess;
 }
-
+
 static asynStatus gpibPortRen(void *pdrvPvt,asynUser *pasynUser, int onOff)
 {
     niport *pniport = (niport *)pdrvPvt;
@@ -874,7 +874,7 @@ static asynStatus gpibPortSerialPollEnd(void *pdrvPvt)
     status = writeCmd(pniport,cmd,2,timeout,transferStateIdle);
     return status;
 }
-
+
 int ni1014Config(char *portNameA,char *portNameB,
     int base, int vector, int level, int priority, int noAutoConnect)
 {
@@ -937,7 +937,7 @@ int ni1014Config(char *portNameA,char *portNameB,
     }
     return 0;
 }
-
+
 static const iocshArg ni1014ConfigArg0 = { "portNameA",iocshArgString};
 static const iocshArg ni1014ConfigArg1 = { "portNameB",iocshArgString};
 static const iocshArg ni1014ConfigArg2 = { "base",iocshArgInt};

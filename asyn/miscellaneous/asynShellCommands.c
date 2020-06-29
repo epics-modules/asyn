@@ -99,7 +99,7 @@ static void setOption(asynUser *pasynUser)
 
     status = poptionargs->pasynOption->setOption(poptionargs->drvPvt,
                                 pasynUser, poptionargs->key, poptionargs->val);
-    if(status!=asynSuccess) 
+    if(status!=asynSuccess)
         printf("setOption failed %s\n", pasynUser->errorMessage);
     epicsEventSignal(poptionargs->done);
 }
@@ -137,7 +137,7 @@ epicsShareFunc int
     pasynManager->freeAsynUser(pasynUser);
     return asynSuccess;
 }
-
+
 static void showOption(asynUser *pasynUser)
 {
     showOptionArgs *poptionargs = (showOptionArgs *)pasynUser->userPvt;
@@ -184,7 +184,7 @@ epicsShareFunc int
     pasynManager->freeAsynUser(pasynUser);
     return asynSuccess;
 }
-
+
 enum eosType { eosIn, eosOut };
 typedef struct eosArgs {
     enum eosType    type;
@@ -309,7 +309,7 @@ asynShowEos(const char *portName, int addr, enum eosType type)
     }
     return eosargs.status;
 }
-
+
 /* Default timeout for reading */
 #define READ_TIMEOUT 1.0
 /* Default buffer size  */
@@ -351,7 +351,7 @@ epicsShareFunc int
         return(-1);
     }
     hashEntry = gphAdd(asynHash, epicsStrDup(entry), NULL);
-    pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt)); 
+    pPvt = (asynIOPvt *)calloc(1, sizeof(asynIOPvt));
     hashEntry->userPvt = pPvt;
     pPvt->pasynUser = pasynUser;
     pPvt->timeout = timeout ? (double)timeout : READ_TIMEOUT;
@@ -523,7 +523,7 @@ epicsShareFunc int
     }
     return(0);
 }
-
+
 epicsShareFunc int
     asynOctetSetInputEos(const char *portName, int addr, const char *eosin)
 {
@@ -554,28 +554,28 @@ epicsShareFunc int
     asynUser      *pasynUser=NULL;
     int           isConnected=0;
     asynStatus    status;
- 
+
     pasynUser = pasynManager->createAsynUser(0,0);
     if (!pasynUser) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
-            "waitConnect: port=%s error calling createAsynUser\n", 
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
+            "waitConnect: port=%s error calling createAsynUser\n",
             portName);
         return asynError;
     }
     status = pasynManager->connectDevice(pasynUser, portName, -1);
     if (status) {
-        asynPrint(pasynUser, ASYN_TRACE_ERROR, 
+        asynPrint(pasynUser, ASYN_TRACE_ERROR,
             "waitConnect: port=%s error calling connectDevice\n",
             portName);
         return asynError;
     }
     status = pasynManager->waitConnect(pasynUser, timeout);
     if (status == asynSuccess) isConnected = 1;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, 
-        "waitConnect: port=%s exit, isConnected=%d\n", 
+    asynPrint(pasynUser, ASYN_TRACE_FLOW,
+        "waitConnect: port=%s exit, isConnected=%d\n",
         portName, isConnected);
     pasynManager->freeAsynUser(pasynUser);
-    if (isConnected) return asynSuccess; 
+    if (isConnected) return asynSuccess;
     return asynError;
 }
 
@@ -616,7 +616,7 @@ static const iocshFuncDef asynShowOptionDef = {"asynShowOption", 3, asynShowOpti
 static void asynShowOptionCall(const iocshArgBuf * args) {
     asynShowOption(args[0].sval,args[1].ival,args[2].sval);
 }
-
+
 static const iocshArg asynSetTraceMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgString};
@@ -752,7 +752,7 @@ static void asynSetTraceIOMaskCall(const iocshArgBuf * args) {
     int mask = asynTraceIOMaskStringToInt(args[2].sval);
     asynSetTraceIOMask(portName,addr,mask);
 }
-
+
 static const iocshArg asynSetTraceInfoMaskArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceInfoMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceInfoMaskArg2 = {"mask", iocshArgString};
@@ -818,7 +818,7 @@ static void asynSetTraceInfoMaskCall(const iocshArgBuf * args) {
     int mask = asynTraceInfoMaskStringToInt(args[2].sval);
     asynSetTraceInfoMask(portName,addr,mask);
 }
-
+
 epicsShareFunc int
  asynSetTraceFile(const char *portName,int addr,const char *filename)
 {
@@ -868,7 +868,7 @@ static void asynSetTraceFileCall(const iocshArgBuf * args) {
     const char *filename = args[2].sval;
     asynSetTraceFile(portName,addr,filename);
 }
-
+
 static const iocshArg asynSetTraceIOTruncateSizeArg0 = {"portName", iocshArgString};
 static const iocshArg asynSetTraceIOTruncateSizeArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceIOTruncateSizeArg2 = {"size", iocshArgInt};
@@ -902,7 +902,7 @@ static void asynSetTraceIOTruncateSizeCall(const iocshArgBuf * args) {
     int size = args[2].ival;
     asynSetTraceIOTruncateSize(portName,addr,size);
 }
-
+
 static const iocshArg asynEnableArg0 = {"portName", iocshArgString};
 static const iocshArg asynEnableArg1 = {"addr", iocshArgInt};
 static const iocshArg asynEnableArg2 = {"yesNo", iocshArgInt};
@@ -1128,9 +1128,9 @@ static const iocshArg asynRegisterTimeStampSourceArg0 = { "portName",iocshArgStr
 static const iocshArg asynRegisterTimeStampSourceArg1 = { "functionName",iocshArgString};
 static const iocshArg * const asynRegisterTimeStampSourceArgs[] = {
     &asynRegisterTimeStampSourceArg0, &asynRegisterTimeStampSourceArg1};
-static const iocshFuncDef asynRegisterTimeStampSourceDef = 
+static const iocshFuncDef asynRegisterTimeStampSourceDef =
     {"asynRegisterTimeStampSource",2,asynRegisterTimeStampSourceArgs};
-static const iocshFuncDef asynUnregisterTimeStampSourceDef = 
+static const iocshFuncDef asynUnregisterTimeStampSourceDef =
     {"asynUnregisterTimeStampSource",1,asynRegisterTimeStampSourceArgs};
 
 static void asynRegisterTimeStampSourceCall(const iocshArgBuf *args)
@@ -1147,7 +1147,7 @@ epicsShareFunc int asynRegisterTimeStampSource(const char *portName, const char 
     asynUser *pasynUser;
     asynStatus status;
     timeStampCallback pFunction;
-    
+
     if (!portName || !functionName || (strlen(portName) == 0) || (strlen(functionName) == 0)) {
         printf("Usage: registerUserTimeStampSource portName functionName\n");
         return -1;
@@ -1171,7 +1171,7 @@ epicsShareFunc int asynUnregisterTimeStampSource(const char *portName)
 {
     asynUser *pasynUser;
     asynStatus status;
-    
+
     if (!portName || (strlen(portName) == 0)) {
         printf("Usage: asynUnregisterTimeStampSource portName\n");
         return -1;
@@ -1199,23 +1199,23 @@ epicsShareFunc int asynSetMinTimerPeriod(double minPeriod)
 {
     TIMECAPS timeCaps;
     MMRESULT status;
-   
+
     if (minPeriodMs == 0) { /* First time */
         epicsAtExit(resetTimer, 0);
     } else {
         resetTimer(0);
     }
-    
+
     timeGetDevCaps(&timeCaps, sizeof(timeCaps));
-    /* printf("Minimum time=%d, maximum time=%d, sleepQuantum=%f\n", 
+    /* printf("Minimum time=%d, maximum time=%d, sleepQuantum=%f\n",
       timeCaps.wPeriodMin, timeCaps.wPeriodMax, epicsThreadSleepQuantum()); */
     minPeriodMs = (int)(minPeriod*1000. + 0.5);
     if (minPeriodMs < timeCaps.wPeriodMin) minPeriodMs = timeCaps.wPeriodMin;
     if (minPeriodMs > timeCaps.wPeriodMax) minPeriodMs = timeCaps.wPeriodMax;
     status = timeBeginPeriod(minPeriodMs);
-    /* printf("Called timePeriodBegin(%d), status=%d, sleepQuantum=%f\n", 
+    /* printf("Called timePeriodBegin(%d), status=%d, sleepQuantum=%f\n",
       minPeriodMs, status, epicsThreadSleepQuantum()); */
-    return (int)status; 
+    return (int)status;
 }
 
 #else /* _WIN32 */
@@ -1229,7 +1229,7 @@ epicsShareFunc int asynSetMinTimerPeriod(double minPeriod)
 #endif /* _WIN32 */
 
 static const iocshArg asynSetMinTimerPeriodArg0 = { "minimum period", iocshArgDouble };
-static const iocshArg *asynSetMinTimerPeriodArgs[] = 
+static const iocshArg *asynSetMinTimerPeriodArgs[] =
     {&asynSetMinTimerPeriodArg0};
 static const iocshFuncDef asynSetMinTimerPeriodDef =
     {"asynSetMinTimerPeriod", 1, asynSetMinTimerPeriodArgs};

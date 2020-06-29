@@ -9,7 +9,7 @@
 ***********************************************************************/
 
 /*test driver for asyn support*/
-/* 
+/*
  * Author: Marty Kraimer
  */
 
@@ -30,13 +30,13 @@
 #define NUM_DEVICES 2
 
 typedef struct testManagerPvt {
-    int	          deviceConnected[NUM_DEVICES];
+    int           deviceConnected[NUM_DEVICES];
     const char    *portName;
     int           connected;
     int           multiDevice;
     asynInterface common;
 }testManagerPvt;
-    
+
 /* init routine */
 static int testManagerDriverInit(const char *dn, int canBlock,
     int noAutoConnect,int multiDevice);
@@ -46,7 +46,7 @@ static void report(void *drvPvt,FILE *fp,int details);
 static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 static asynCommon asyn = { report, connect, disconnect };
-
+
 static int testManagerDriverInit(const char *dn, int canBlock,
     int noAutoConnect,int multiDevice)
 {
@@ -98,7 +98,7 @@ static void report(void *drvPvt,FILE *fp,int details)
             (ptestManagerPvt->deviceConnected[i] ? "Yes" : "No"));
     }
 }
-
+
 static asynStatus connect(void *drvPvt,asynUser *pasynUser)
 {
     testManagerPvt    *ptestManagerPvt = (testManagerPvt *)drvPvt;
@@ -147,7 +147,7 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionConnect(pasynUser);
     return(asynSuccess);
 }
-
+
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 {
     testManagerPvt    *ptestManagerPvt = (testManagerPvt *)drvPvt;
@@ -196,7 +196,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
     pasynManager->exceptionDisconnect(pasynUser);
     return(asynSuccess);
 }
-
+
 /* register testManagerDriverInit*/
 static const iocshArg testManagerDriverInitArg0 = { "portName", iocshArgString };
 static const iocshArg testManagerDriverInitArg1 = { "canBlock", iocshArgInt };

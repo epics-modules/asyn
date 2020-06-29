@@ -1,6 +1,6 @@
 /*
  * asynPortClient.cpp
- * 
+ *
  * Classes for asyn clients to communicate with asyn drivers
  *
  * Author: Mark Rivers
@@ -26,9 +26,9 @@
   * \param[in] addr The address on the asyn port to connect to
   * \param[in] asynInterfaceType The name of the asynInterface to connect to (e.g.asynInt32, asynOctet, etc.)
   * \param[in] drvInfo  The drvInfo string to identify which property of the port is being connected to
-  * \param[in] timeout The default timeout for all communications between the client and the port driver 
+  * \param[in] timeout The default timeout for all communications between the client and the port driver
 */
-asynParamClient::asynParamClient(const char *portName, int addr, const char *asynInterfaceType, const char *drvInfo, 
+asynParamClient::asynParamClient(const char *portName, int addr, const char *asynInterfaceType, const char *drvInfo,
                        double timeout)
     : pasynUser_(NULL), pasynUserSyncIO_(NULL), timeout_(timeout), portName_(epicsStrDup(portName)),
       addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL)
@@ -59,7 +59,7 @@ asynParamClient::asynParamClient(const char *portName, int addr, const char *asy
 }
 
 /** Destructor for asynParamClient class
-  * Frees all allocated resources 
+  * Frees all allocated resources
 */
 asynParamClient::~asynParamClient()
 {
@@ -88,9 +88,9 @@ asynPortClient::asynPortClient(const char *portName, double timeout)
     if (!pPort_) {
         throw std::runtime_error(std::string("findAsynPortDriver cannot find port driver: ").append(portName));
     }
-  
+
     paramMaps_ = (paramMap_t**)calloc(pPort_->maxAddr, sizeof(paramMap_t*));
-   
+
     for (int list=0; list<pPort_->maxAddr; list++) {
         int numParams;
         pPort_->getNumParams(list, &numParams);
@@ -146,7 +146,7 @@ asynPortClient::asynPortClient(const char *portName, double timeout)
 asynPortClient::~asynPortClient()
 {
 }
-    
+
 void asynPortClient::report(FILE *fp, int details)
 {
     for (int list=0; list<pPort_->maxAddr; list++) {

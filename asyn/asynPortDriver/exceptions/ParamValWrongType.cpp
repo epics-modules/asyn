@@ -8,7 +8,7 @@
 #include "ParamValWrongType.h"
 
 ParamValWrongType::ParamValWrongType(const std::string& description):
-	logic_error(description){
+    logic_error(description){
 
 }
 

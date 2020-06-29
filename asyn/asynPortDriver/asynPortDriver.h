@@ -9,6 +9,7 @@
 #include <epicsThread.h>
 
 #include <asynStandardInterfaces.h>
+#include <asynParamSet.h>
 #include <asynParamType.h>
 #include <paramErrors.h>
 
@@ -43,6 +44,9 @@ class callbackThread;
   * with standard asyn interfaces and a parameter library. */
 class epicsShareClass asynPortDriver {
 public:
+    asynPortDriver(asynParamSet* paramSet,
+                   const char *portName, int maxAddr, int interfaceMask, int interruptMask,
+                   int asynFlags, int autoConnect, int priority, int stackSize);
     asynPortDriver(const char *portName, int maxAddr, int interfaceMask, int interruptMask,
                    int asynFlags, int autoConnect, int priority, int stackSize);
     asynPortDriver(const char *portName, int maxAddr, int paramTableSize, int interfaceMask, int interruptMask,
@@ -51,7 +55,7 @@ public:
     virtual asynStatus lock();
     virtual asynStatus unlock();
     virtual asynStatus getAddress(asynUser *pasynUser, int *address);
-    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName); 
+    virtual asynStatus parseAsynUser(asynUser *pasynUser, int *reason, int *address, const char **paramName);
     virtual asynStatus readInt32(asynUser *pasynUser, epicsInt32 *value);
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
     virtual asynStatus readInt64(asynUser *pasynUser, epicsInt64 *value);
@@ -74,7 +78,7 @@ public:
     virtual asynStatus getInputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
     virtual asynStatus setOutputEosOctet(asynUser *pasynUser, const char *eos, int eosLen);
     virtual asynStatus getOutputEosOctet(asynUser *pasynUser, char *eos, int eosSize, int *eosLen);
-    virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value, 
+    virtual asynStatus readInt8Array(asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements, size_t *nIn);
     virtual asynStatus writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
                                         size_t nElements);
@@ -118,7 +122,7 @@ public:
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn);
     virtual asynStatus writeEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements);
     virtual asynStatus doCallbacksEnum(char *strings[], int values[], int severities[], size_t nElements, int reason, int addr);
-    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo, 
+    virtual asynStatus drvUserCreate(asynUser *pasynUser, const char *drvInfo,
                                      const char **pptypeName, size_t *psize);
     virtual asynStatus drvUserGetType(asynUser *pasynUser,
                                         const char **pptypeName, size_t *psize);
@@ -126,9 +130,10 @@ public:
     virtual void report(FILE *fp, int details);
     virtual asynStatus connect(asynUser *pasynUser);
     virtual asynStatus disconnect(asynUser *pasynUser);
-   
+
     virtual asynStatus createParam(          const char *name, asynParamType type, int *index);
     virtual asynStatus createParam(int list, const char *name, asynParamType type, int *index);
+    virtual asynStatus createParams();
     virtual asynStatus getNumParams(          int *numParams);
     virtual asynStatus getNumParams(int list, int *numParams);
     virtual asynStatus findParam(          const char *name, int *index);
@@ -199,6 +204,7 @@ public:
     void callbackTask();
 
 protected:
+    asynParamSet* paramSet;
     void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
                     int autoConnect, int priority, int stackSize);
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
@@ -212,7 +218,7 @@ private:
     char *outputEosOctet;
     int outputEosLenOctet;
     callbackThread *cbThread;
-    template <typename epicsType, typename interruptType> 
+    template <typename epicsType, typename interruptType>
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
 
@@ -232,6 +238,18 @@ private:
     epicsEvent doneEvent;
 };
 
+/** Utility function that returns a pointer to an asynPortDriver derived class object from its name */
+template <class T> T* findDerivedAsynPortDriver(const char* portName)
+{
+  // findAsynPortDriver returns a void pointer that was cast from an asynPortDriver pointer
+  asynPortDriver* apd = (asynPortDriver*) findAsynPortDriver(portName);
+  if (!apd) return NULL;
+
+  // Downcast asynPortDriver pointer to T pointer - this requires pointer offsetting
+  T* pC = dynamic_cast<T*>(apd);
+  return pC;
+}
+
 #endif /* cplusplus */
-    
+
 #endif

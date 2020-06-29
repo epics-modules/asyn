@@ -24,7 +24,7 @@
 #include <iocsh.h>
 #include <registryFunction.h>
 #include <epicsExport.h>
-
+
 #define BUFFER_SIZE 80
 typedef struct myData {
     epicsEventId done;

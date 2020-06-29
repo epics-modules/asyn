@@ -1,6 +1,6 @@
 /**********************************************************************
 * Asyn device support using local serial interface                    *
-**********************************************************************/       
+**********************************************************************/
 /***********************************************************************
 * Copyright (c) 2002 The University of Chicago, as Operator of Argonne
 * National Laboratory, and the Regents of the University of
@@ -117,7 +117,7 @@ applyOptions(asynUser *pasynUser, ttyController_t *tty)
         return asynError;
     }
 #else
-    
+
     tty->termios.c_cflag |= CREAD;
     if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -244,8 +244,8 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "%s setOption key %s val %s\n", tty->portName, key, val);
-    
-    /* Make a copy of tty->termios and tty->baud so we can restore them in case of errors */                
+
+    /* Make a copy of tty->termios and tty->baud so we can restore them in case of errors */
     termiosPrev = tty->termios;
     baudPrev = tty->baud;
 #ifdef ASYN_RS485_SUPPORTED
@@ -259,10 +259,10 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
                                                                 "Bad number");
             return asynError;
         }
-#ifndef vxWorks         
+#ifndef vxWorks
         {
         speed_t baudCode;
-/* On this system is the baud code the actual baud rate?  
+/* On this system is the baud code the actual baud rate?
  * If so use it directly, else compare against known baud codes */
 #if (defined(B300) && (B300 == 300) && defined(B9600) && (B9600 == 9600))
         baudCode = baud;
@@ -463,7 +463,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
 #ifdef vxWorks
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                     "Option ixany not supported on vxWorks");
-            return asynError;       
+            return asynError;
 #else
         if (epicsStrCaseCmp(val, "Y") == 0) {
             tty->termios.c_iflag |= IXANY;
@@ -482,7 +482,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
 #ifdef vxWorks
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                     "Option ixoff not supported on vxWorks");
-            return asynError;       
+            return asynError;
 #else
         if (epicsStrCaseCmp(val, "Y") == 0) {
             tty->termios.c_iflag |= IXOFF;
@@ -691,7 +691,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
 #endif
     applyOptions(pasynUser, tty);
-   
+
     /*
      * Turn off non-blocking mode
      */
@@ -877,7 +877,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
             tty->termios.c_cc[VMIN] = 1;
             tty->termios.c_cc[VTIME] = 0;
         }
-            
+
         if (tcsetattr(tty->fd, TCSANOW, &tty->termios) < 0) {
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't set \"%s\" c_cc[VTIME]: %s",

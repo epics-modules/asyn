@@ -24,7 +24,7 @@ extern "C" {
 
 #define asynUInt32DigitalSyncIOType "asynUInt32DigitalSyncIO"
 typedef struct asynUInt32DigitalSyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                        asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
     asynStatus (*write)(asynUser *pasynUser,

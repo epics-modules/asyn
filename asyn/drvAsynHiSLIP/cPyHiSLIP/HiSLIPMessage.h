@@ -212,7 +212,7 @@ namespace nsHiSLIP{
       this->control_code=cce;
       this->payload_length=length;
     }
-    void printf(void){
+    void print(void){
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
@@ -233,7 +233,7 @@ namespace nsHiSLIP{
       return ssize;
     }
     
-    size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages){
+    size_t recv(int socket){
       char buffer[HEADER_SIZE];
       ssize_t rsize;
       rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
@@ -251,21 +251,7 @@ namespace nsHiSLIP{
       this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
       this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
 
-      //this->printf();
-
-      if((expected_message_type == AnyMessages) ||
-	 (expected_message_type == this->message_type)){
-	return rsize;
-      }
-      //error!
-      // in overlapped mode, should we keep it?
-      else if(this->message_type  == nsHiSLIP::Error){
-	return -(this->control_code+1);
-      }
-      else if(this->message_type  == nsHiSLIP::FatalError){
-	return -(this->control_code+1);
-      }
-      return -1;
+      return 0;
     }
     
     int fromRawData(void *buffer){ //DeSerialize
@@ -329,15 +315,14 @@ namespace nsHiSLIP{
       size_t rsize;
       size_t status;
       
-      rsize=this->Header::recv(socket, expected_message_type);
-
-      if (rsize < 0){
+      status=this->Header::recv(socket);
+      if (status < 0){
 	// Error!
-	return rsize;
+	return status;
       }
 
       // now prepare for a pyload.
-      if (this->payload==NULL && this->payload_length > 0){
+      if (this->payload == NULL && this->payload_length > 0){
 	this->payload = (void *) calloc(this->payload_length,1);
 	if (this->payload == NULL){
 	  perror("faile to allocate memory for payload.");
@@ -345,7 +330,7 @@ namespace nsHiSLIP{
 	}
       }
       
-      rsize=0; //returns size of recieved payload.
+      rsize=0; //returns size of recieved payload. should be same as payload_length
       if (this->payload_length > 0){
 	size_t bytestoread=this->payload_length;
 	
@@ -363,8 +348,31 @@ namespace nsHiSLIP{
 	  }
 	  bytestoread -=status;
 	}	  
-      } 
-      return (rsize);
+      }
+      // check if expected type or not
+      if((expected_message_type == AnyMessages) ||
+	 (expected_message_type == this->message_type)){
+	return 0;
+      }
+      this->print();
+      
+      if(this->message_type  == nsHiSLIP::Error){
+	::printf("Fatal Error: %d %s\n",
+		 this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
+	if (this->payload_length >0){
+	  ::printf("Error msg: %s\n", (char *) this->payload);
+	}
+	return -(this->control_code+1);
+      }
+      else if(this->message_type  == nsHiSLIP::FatalError){
+	::printf("Error: %d %s\n",
+		 this->control_code, nsHiSLIP::Error_Messages[this->control_code]);
+	if (this->payload_length >0){
+	  ::printf("Error msg: %s\n", (char *) this->payload);
+	}
+	return -(this->control_code+1);
+      }
+      return -1;
     }
   } Message_t;
     
@@ -383,12 +391,15 @@ namespace nsHiSLIP{
     int server_protocol_version;
     unsigned int server_vendorID;
 
-    bool rmt_delivered=false;
+    bool rmt_delivered;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
     //sem_t srq_lock;
     pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
     HiSLIP(){
+      this->rmt_delivered=false;
+      this->sync_channel=0;
+      this->async_channel=0;
       // if (sem_init(&(this->srq_lock), 0, 1) !=0){
       // 	perror(" HiSLIP srq_lock");
       // }
@@ -420,12 +431,15 @@ namespace nsHiSLIP{
     int  device_clear(void);
     u_int8_t status_query(void);
     //long write(u_int8_t *data_str, long timeout=LOCK_TIMEOUT);
-    long write(const u_int8_t *data_str, const size_t size, long timeout=LOCK_TIMEOUT);
-    size_t ask(u_int8_t *data_str, size_t size,
-	       u_int8_t **rbuffer, long wait_time=LOCK_TIMEOUT);
-    int  read(size_t *received, long timeout=LOCK_TIMEOUT );
-    int  read(size_t *received, u_int8_t **buffer, long timeout=LOCK_TIMEOUT);
-    int  read(size_t *received, u_int8_t *buffer,  size_t bsize, long timeout=LOCK_TIMEOUT);
+    long write(const u_int8_t *data_str, const size_t size,
+	       long timeout=LOCK_TIMEOUT);
+    long ask(u_int8_t *data_str, size_t size, u_int8_t **rbuffer,
+	     long wait_time=LOCK_TIMEOUT);
+    long read(size_t *received, long timeout=LOCK_TIMEOUT );
+    long read(size_t *received, u_int8_t **buffer,
+	      long timeout=LOCK_TIMEOUT);
+    long read(size_t *received, u_int8_t *buffer, size_t bsize,
+	      long timeout=LOCK_TIMEOUT);
     long trigger_message(void);
     long remote_local(u_int8_t request);
     long request_lock(const char* lock_string=NULL);
@@ -439,8 +453,7 @@ namespace nsHiSLIP{
       long status;
       //this->request_srq_lock();
       
-      //status= msg->recv(this->async_channel, AsyncServiceRequest);
-      status= msg->recv(this->async_channel,nsHiSLIP::AsyncServiceRequest);
+      status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
       
       if (status != 0){
 	// should handle Error/Fatal Error/Async Interrupted messages.

@@ -1,6 +1,6 @@
 /*
  * testAsynPortDriver.cpp
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to demonstrate its use.
  * It simulates a digital scope looking at a 1kHz 1000-point noisy sine wave.  Controls are
  * provided for time/division, volts/division, volt offset, trigger delay, noise amplitude, update time,
@@ -41,20 +41,20 @@ static int allVoltsPerDivSelections[NUM_VERT_SELECTIONS]={1,2,5,10};
 static const char *driverName="testAsynPortDriver";
 void simTask(void *drvPvt);
 
-
+
 /** Constructor for the testAsynPortDriver class.
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxPoints The maximum  number of points in the volt and time arrays */
-testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints) 
-   : asynPortDriver(portName, 
-                    1, /* maxAddr */ 
+testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
+   : asynPortDriver(portName,
+                    1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
                     0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
-                    0) /* Default stack size*/    
+                    0) /* Default stack size*/
 {
     asynStatus status;
     int i;
@@ -62,7 +62,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 
     /* Make sure maxPoints is positive */
     if (maxPoints < 1) maxPoints = 100;
-    
+
     /* Allocate the waveform array */
     pData_ = (epicsFloat64 *)calloc(maxPoints, sizeof(epicsFloat64));
 
@@ -70,7 +70,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     pTimeBase_ = (epicsFloat64 *)calloc(maxPoints, sizeof(epicsFloat64));
     /* Set the time base array */
     for (i=0; i<maxPoints; i++) pTimeBase_[i] = (double)i / (maxPoints-1) * NUM_DIVISIONS;
-    
+
     eventId_ = epicsEventCreate(epicsEventEmpty);
     createParam(P_RunString,                asynParamInt32,         &P_Run);
     createParam(P_MaxPointsString,          asynParamInt32,         &P_MaxPoints);
@@ -89,13 +89,13 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     createParam(P_MinValueString,           asynParamFloat64,       &P_MinValue);
     createParam(P_MaxValueString,           asynParamFloat64,       &P_MaxValue);
     createParam(P_MeanValueString,          asynParamFloat64,       &P_MeanValue);
-    
+
     for (i=0; i<NUM_VERT_SELECTIONS; i++) {
         // Compute vertical volts per division in mV
         voltsPerDivValues_[i] = 0;
         voltsPerDivStrings_[i] = (char *)calloc(MAX_ENUM_STRING_SIZE, sizeof(char));
         voltsPerDivSeverities_[i] = 0;
-    } 
+    }
 
     /* Set the initial values of some parameters */
     setIntegerParam(P_MaxPoints,         maxPoints);
@@ -111,8 +111,8 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     setDoubleParam (P_MinValue,          0.0);
     setDoubleParam (P_MaxValue,          0.0);
     setDoubleParam (P_MeanValue,         0.0);
-    
-    
+
+
     /* Create the thread that computes the waveforms in the background */
     status = (asynStatus)(epicsThreadCreate("testAsynPortDriverTask",
                           epicsThreadPriorityMedium,
@@ -126,11 +126,11 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 }
 
 
-
+
 void simTask(void *drvPvt)
 {
     testAsynPortDriver *pPvt = (testAsynPortDriver *)drvPvt;
-    
+
     pPvt->simTask();
 }
 
@@ -149,9 +149,9 @@ void testAsynPortDriver::simTask(void)
     double noise, yScale;
     epicsInt32 run, i, maxPoints;
     double pi=4.0*atan(1.0);
-    
+
     lock();
-    /* Loop forever */    
+    /* Loop forever */
     while (1) {
         getDoubleParam(P_UpdateTime, &updateTime);
         getIntegerParam(P_Run, &run);
@@ -160,7 +160,7 @@ void testAsynPortDriver::simTask(void)
         if (run) epicsEventWaitWithTimeout(eventId_, updateTime);
         else     (void) epicsEventWait(eventId_);
         // Take the lock again
-        lock(); 
+        lock();
         /* run could have changed while we were waiting */
         getIntegerParam(P_Run, &run);
         if (!run) continue;
@@ -175,7 +175,7 @@ void testAsynPortDriver::simTask(void)
         minValue = 1e6;
         maxValue = -1e6;
         meanValue = 0.;
-    
+
         yScale = 1.0 / voltsPerDiv;
         for (i=0; i<maxPoints; i++) {
             noise = noiseAmplitude * (rand()/(double)RAND_MAX - 0.5);
@@ -211,14 +211,14 @@ asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 
     /* Set the parameter in the parameter library. */
     status = (asynStatus) setIntegerParam(function, value);
-    
+
     /* Fetch the parameter string name for possible use in debugging */
     getParamName(function, &paramName);
 
     if (function == P_Run) {
         /* If run was set then wake up the simulation task */
         if (value) epicsEventSignal(eventId_);
-    } 
+    }
     else if (function == P_VertGainSelect) {
         setVertGain();
     }
@@ -232,17 +232,17 @@ asynStatus testAsynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
         /* All other parameters just get set in parameter list, no need to
          * act on them here */
     }
-    
+
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks();
-    
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, name=%s, value=%d", 
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, name=%s, value=%d",
                   driverName, functionName, status, function, paramName, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, name=%s, value=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, name=%s, value=%d\n",
               driverName, functionName, function, paramName, value);
     return status;
 }
@@ -270,7 +270,7 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
         /* Make sure the update time is valid. If not change it and put back in parameter library */
         if (value < MIN_UPDATE_TIME) {
             asynPrint(pasynUser, ASYN_TRACE_WARNING,
-                "%s:%s: warning, update time too small, changed from %f to %f\n", 
+                "%s:%s: warning, update time too small, changed from %f to %f\n",
                 driverName, functionName, value, MIN_UPDATE_TIME);
             value = MIN_UPDATE_TIME;
             setDoubleParam(P_UpdateTime, value);
@@ -282,29 +282,29 @@ asynStatus testAsynPortDriver::writeFloat64(asynUser *pasynUser, epicsFloat64 va
         /* All other parameters just get set in parameter list, no need to
          * act on them here */
     }
-    
+
     /* Do callbacks so higher layers see any changes */
     status = (asynStatus) callParamCallbacks();
-    
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d, name=%s, value=%f", 
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d, name=%s, value=%f",
                   driverName, functionName, status, function, paramName, value);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d, name=%s, value=%f\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d, name=%s, value=%f\n",
               driverName, functionName, function, paramName, value);
     return status;
 }
 
-
+
 /** Called when asyn clients call pasynFloat64Array->read().
-  * Returns the value of the P_Waveform or P_TimeBase arrays.  
+  * Returns the value of the P_Waveform or P_TimeBase arrays.
   * \param[in] pasynUser pasynUser structure that encodes the reason and address.
   * \param[in] value Pointer to the array to read.
   * \param[in] nElements Number of elements to read.
   * \param[out] nIn Number of elements actually read. */
-asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat64 *value, 
+asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                          size_t nElements, size_t *nIn)
 {
     int function = pasynUser->reason;
@@ -326,17 +326,17 @@ asynStatus testAsynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat6
         memcpy(value, pTimeBase_, ncopy*sizeof(epicsFloat64));
         *nIn = ncopy;
     }
-    if (status) 
-        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, 
-                  "%s:%s: status=%d, function=%d", 
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d",
                   driverName, functionName, status, function);
-    else        
-        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER, 
-              "%s:%s: function=%d\n", 
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d\n",
               driverName, functionName, function);
     return status;
 }
-    
+
 asynStatus testAsynPortDriver::readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements, size_t *nIn)
 {
     int function = pasynUser->reason;
@@ -355,14 +355,14 @@ asynStatus testAsynPortDriver::readEnum(asynUser *pasynUser, char *strings[], in
         return asynError;
     }
     *nIn = i;
-    return asynSuccess;   
+    return asynSuccess;
 }
 
 void testAsynPortDriver::setVertGain()
 {
     epicsInt32 igain, i;
     double gain;
-    
+
     getIntegerParam(P_VertGainSelect, &igain);
     gain = igain;
     setDoubleParam(P_VertGain, gain);
@@ -377,7 +377,7 @@ void testAsynPortDriver::setVertGain()
 void testAsynPortDriver::setVoltsPerDiv()
 {
     epicsInt32 mVPerDiv;
-    
+
     // Integer volts are in mV
     getIntegerParam(P_VoltsPerDivSelect, &mVPerDiv);
     setDoubleParam(P_VoltsPerDiv, mVPerDiv / 1000.);
@@ -386,13 +386,13 @@ void testAsynPortDriver::setVoltsPerDiv()
 void testAsynPortDriver::setTimePerDiv()
 {
     epicsInt32 microSecPerDiv;
-    
+
     // Integer times are in microseconds
     getIntegerParam(P_TimePerDivSelect, &microSecPerDiv);
     setDoubleParam(P_TimePerDiv, microSecPerDiv / 1000000.);
 }
 
-
+
 /* Configuration routine.  Called directly, or from the iocsh function below */
 
 extern "C" {

@@ -24,16 +24,16 @@ extern "C" {
 
 #define asynEnumSyncIOType "asynEnumSyncIO"
 typedef struct asynEnumSyncIO {
-    asynStatus (*connect)(const char *port, int addr, 
+    asynStatus (*connect)(const char *port, int addr,
                           asynUser **ppasynUser, const char *drvInfo);
     asynStatus (*disconnect)(asynUser *pasynUser);
-    asynStatus (*write)(asynUser *pasynUser, char *strings[], int values[], int severities[], 
+    asynStatus (*write)(asynUser *pasynUser, char *strings[], int values[], int severities[],
                        size_t nElements, double timeout);
-    asynStatus (*read)(asynUser *pasynUser, char *string[], int values[],  int severities[], 
+    asynStatus (*read)(asynUser *pasynUser, char *string[], int values[],  int severities[],
                        size_t nElements, size_t *nIn, double timeout);
-    asynStatus (*writeOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+    asynStatus (*writeOnce)(const char *port, int addr, char *strings[], int values[],  int severities[],
                            size_t nElements, double timeout, const char *drvInfo);
-    asynStatus (*readOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+    asynStatus (*readOnce)(const char *port, int addr, char *strings[], int values[],  int severities[],
                            size_t nElements, size_t *nIn, double timeout, const char *drvInfo);
 } asynEnumSyncIO;
 epicsShareExtern asynEnumSyncIO *pasynEnumSyncIO;

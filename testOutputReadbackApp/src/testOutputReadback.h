@@ -1,6 +1,6 @@
 /*
  * testOutputReadback.h
- * 
+ *
  * Asyn driver that inherits from the asynPortDriver class to test error handling in both normally scanned
  * and I/O Intr scanned records
  *
@@ -38,7 +38,7 @@ protected:
     int P_UInt32DigitalValue;
     int P_BinaryUInt32DigitalValue;
     int P_MultibitUInt32DigitalValue;
- 
+
 private:
     /* Our data */
     asynStatus initialReadStatus_;

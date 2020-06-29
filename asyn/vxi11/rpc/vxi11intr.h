@@ -15,10 +15,10 @@ extern "C" {
 
 
 struct Device_SrqParms {
-	struct {
-		u_int handle_len;
-		char *handle_val;
-	} handle;
+    struct {
+        u_int handle_len;
+        char *handle_val;
+    } handle;
 };
 typedef struct Device_SrqParms Device_SrqParms;
 

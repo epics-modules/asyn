@@ -20,7 +20,7 @@
 
 #include <osiSock.h>
 #include <epicsThread.h>
-
+
 int TDS3000Reboot(char * inetAddr)
 {
     struct sockaddr_in serverAddr;
@@ -44,7 +44,7 @@ int TDS3000Reboot(char * inetAddr)
     status = aToIPAddr(inetAddr,80,&serverAddr);
     if(status) {
         printf("aToIPAddr failed\n");
-        return(-1); 
+        return(-1);
     }
     errno = 0;
     status = connect(fd,(struct sockaddr*)&serverAddr, sizeof(serverAddr));

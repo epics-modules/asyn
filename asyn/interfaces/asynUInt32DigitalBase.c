@@ -39,7 +39,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
 static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
        void *registrarPvt);
 
-
+
 static asynStatus initialize(const char *portName,asynInterface *pdriver)
 {
     asynUInt32Digital *pasynUInt32Digital =
@@ -66,7 +66,7 @@ static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -84,7 +84,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -95,14 +95,14 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser,
         "%s %d read is not supported\n",portName,addr);
     return asynError;
 }
-
+
 static asynStatus setInterrupt(void *drvPvt, asynUser *pasynUser,
                                epicsUInt32 mask, interruptReason reason)
 {
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -120,7 +120,7 @@ static asynStatus clearInterrupt(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -138,7 +138,7 @@ static asynStatus getInterrupt(void *drvPvt, asynUser *pasynUser,
     const char *portName;
     asynStatus status;
     int        addr;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -149,7 +149,7 @@ static asynStatus getInterrupt(void *drvPvt, asynUser *pasynUser,
         "%s %d getInterrupt is not supported\n",portName,addr);
     return asynError;
 }
-
+
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
       interruptCallbackUInt32Digital callback, void *userPvt,epicsUInt32 mask,
       void **registrarPvt)
@@ -160,7 +160,7 @@ static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     interruptNode *pinterruptNode;
     void          *pinterruptPvt;
     asynUInt32DigitalInterrupt *pasynUInt32DigitalInterrupt;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -194,7 +194,7 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     int           addr;
     asynUInt32DigitalInterrupt *pasynUInt32DigitalInterrupt =
            (asynUInt32DigitalInterrupt *)pinterruptNode->drvPvt;
-    
+
     status = pasynManager->getPortName(pasynUser,&portName);
     if(status!=asynSuccess) return status;
     status = pasynManager->getAddr(pasynUser,&addr);
@@ -205,7 +205,7 @@ static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser,
     if(status==asynSuccess)
         pasynManager->freeInterruptNode(pasynUser,pinterruptNode);
     pasynManager->freeAsynUser(pasynUInt32DigitalInterrupt->pasynUser);
-    pasynManager->memFree(pasynUInt32DigitalInterrupt, 
+    pasynManager->memFree(pasynUInt32DigitalInterrupt,
                           sizeof(asynUInt32DigitalInterrupt));
     return status;
 }

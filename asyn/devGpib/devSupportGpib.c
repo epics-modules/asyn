@@ -46,7 +46,7 @@
 
 #define DEFAULT_QUEUE_TIMEOUT 60.0
 #define DEFAULT_SRQ_WAIT_TIMEOUT 5.0
-
+
 typedef struct commonGpibPvt {
     ELLLIST portInstanceList;
     epicsTimerQueueId timerQueue;
@@ -69,7 +69,7 @@ typedef struct srqPvt {
 
 typedef struct deviceInstance {
     ELLNODE node; /*For portInstance.deviceInstanceList*/
-    portInstance *pportInstance; 
+    portInstance *pportInstance;
     int gpibAddr;
     unsigned long errorCount;   /* total number of errors since boot time */
     double queueTimeout;
@@ -85,7 +85,7 @@ typedef struct deviceInstance {
 struct portInstance {
     ELLNODE node;   /*For commonGpibPvt.portInstanceList*/
     ELLLIST deviceInstanceList;
-    epicsMutexId lock; 
+    epicsMutexId lock;
     int link;
     char *portName;
     asynCommon *pasynCommon;
@@ -112,7 +112,7 @@ struct devGpibPvt {
     gpibStart start;
     gpibFinish finish;
 };
-
+
 static long initRecord(dbCommon* precord, struct link * plink);
 static void processGPIBSOFT(gpibDpvt *pgpibDpvt);
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish);
@@ -186,7 +186,7 @@ static void devGpibSrqWaitTimeoutSet(
     const char *portName, int gpibAddr, double timeout);
 static long init(int pass);
 static long report(int interest);
-
+
 static long initRecord(dbCommon *precord, struct link *plink)
 {
     gDset *pgDset = (gDset *)precord->dset;
@@ -256,7 +256,7 @@ static long initRecord(dbCommon *precord, struct link *plink)
     }
     return 0;
 }
-
+
 static void processGPIBSOFT(gpibDpvt *pgpibDpvt)
 {
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -280,7 +280,7 @@ static void processGPIBSOFT(gpibDpvt *pgpibDpvt)
     }
     return;
 }
-
+
 static void queueReadRequest(gpibDpvt *pgpibDpvt,gpibStart start,gpibFinish finish)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
@@ -320,7 +320,7 @@ static int queueRequest(gpibDpvt *pgpibDpvt, gpibWork work)
     pdevGpibPvt->finish = 0;
     return queueIt(pgpibDpvt);
 }
-
+
 static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     interruptCallbackInt32 handler,void *unsollicitedHandlerPvt)
 {
@@ -332,7 +332,7 @@ static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     srqPvt         *psrqPvt = &pdeviceInstance->srq;
     portInstance *pportInstance = pdevGpibPvt->pportInstance;
     int failure=0;
-    
+
     epicsMutexMustLock(pportInstance->lock);
     if(!pasynGpib) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
@@ -359,7 +359,7 @@ static void registerSrqHandler(gpibDpvt *pgpibDpvt,
     }
     epicsMutexUnlock(pportInstance->lock);
 }
-
+
 #define writeMsgProlog \
     asynUser *pasynUser = pgpibDpvt->pasynUser; \
     int nchars; \
@@ -417,24 +417,24 @@ static int writeMsgDouble(gpibDpvt *pgpibDpvt,double val)
 
 static int writeMsgString(gpibDpvt *pgpibDpvt,const char *str)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
-    int nchars; 
-    dbCommon *precord = (dbCommon *)pgpibDpvt->precord; 
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
+    int nchars;
+    dbCommon *precord = (dbCommon *)pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
 
     if(!pgpibDpvt->msg) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s no msg buffer. Must define gpibCmd.msgLen > 0.\n", 
+            "%s no msg buffer. Must define gpibCmd.msgLen > 0.\n",
             precord->name);
-        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM); 
-        return -1; 
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+        return -1;
     }
     nchars = epicsSnprintf(pgpibDpvt->msg,pgpibCmd->msgLen,format,str);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgString\n",precord->name);
     writeMsgPostLog
 }
-
+
 /*
  * Read IEEE-488.2 Arbitrary Block Program Data.
  * Allows arbitrary data to be read from serial line.
@@ -584,11 +584,11 @@ static int readArbitraryBlockProgramData(gpibDpvt *pgpibDpvt)
         "%s readArbitraryBlockProgramData\n",pgpibDpvt->precord->name);
     return pgpibDpvt->msgInputLen;
 }
-
+
 static int setEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
 {
     deviceInstance *pdeviceInstance = pgpibDpvt->pdevGpibPvt->pdeviceInstance;
-    asynUser    *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser    *pasynUser = pgpibDpvt->pasynUser;
     dbCommon    *precord = pgpibDpvt->precord;
     asynOctet   *pasynOctet = pgpibDpvt->pasynOctet;
     void        *drvPvt = pgpibDpvt->asynOctetPvt;
@@ -620,7 +620,7 @@ static int setEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
 static int restoreEos(gpibDpvt *pgpibDpvt, gpibCmd *pgpibCmd)
 {
     deviceInstance *pdeviceInstance = pgpibDpvt->pdevGpibPvt->pdeviceInstance;
-    asynUser    *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser    *pasynUser = pgpibDpvt->pasynUser;
     dbCommon    *precord = pgpibDpvt->precord;
     asynOctet   *pasynOctet = pgpibDpvt->pasynOctet;
     void        *drvPvt = pgpibDpvt->asynOctetPvt;
@@ -658,8 +658,8 @@ static void completeProcess(gpibDpvt *pgpibDpvt)
         precord->pact = FALSE;
     }
 }
-
-static void commonGpibPvtInit(void) 
+
+static void commonGpibPvtInit(void)
 {
     if(pcommonGpibPvt) return;
     pcommonGpibPvt = (commonGpibPvt *)callocMustSucceed(1,sizeof(commonGpibPvt),
@@ -710,7 +710,7 @@ static void setMsgRsp(gpibDpvt *pgpibDpvt)
     if(pportInstance->rspLenMax<rspLenMax) pportInstance->rspLenMax = rspLenMax;
     if(pportInstance->msgLenMax<msgLenMax) pportInstance->msgLenMax = msgLenMax;
 }
-
+
 static portInstance *createPortInstance(
     int link,asynUser *pasynUser,const char *portName)
 {
@@ -737,26 +737,26 @@ static portInstance *createPortInstance(
     pportInstance->asynCommonPvt = pasynInterface->drvPvt;
     pasynInterface = pasynManager->findInterface(pasynUser,asynOctetType,1);
     if(pasynInterface) {
-        pportInstance->pasynOctet = 
+        pportInstance->pasynOctet =
             (asynOctet *)pasynInterface->pinterface;
         pportInstance->asynOctetPvt = pasynInterface->drvPvt;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynInt32Type,1);
     if(pasynInterface) {
-        pportInstance->pasynInt32 = 
+        pportInstance->pasynInt32 =
             (asynInt32 *)pasynInterface->pinterface;
         pportInstance->asynInt32Pvt = pasynInterface->drvPvt;
     }
     pasynInterface = pasynManager->findInterface(pasynUser,asynGpibType,1);
     if(pasynInterface) {
-        pportInstance->pasynGpib = 
+        pportInstance->pasynGpib =
             (asynGpib *)pasynInterface->pinterface;
         pportInstance->asynGpibPvt = pasynInterface->drvPvt;
     }
     ellAdd(&pcommonGpibPvt->portInstanceList,&pportInstance->node);
     return pportInstance;
 }
-
+
 static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
@@ -765,7 +765,7 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
     portInstance *pportInstance;
     deviceInstance *pdeviceInstance;
     asynStatus status;
-   
+
     if(!pcommonGpibPvt) commonGpibPvtInit();
     sprintf(portName,"L%d",link);
     status = pasynManager->connectDevice(pasynUser,portName,gpibAddr);
@@ -818,10 +818,10 @@ static int getDeviceInstance(gpibDpvt *pgpibDpvt,int link,int gpibAddr)
     pdevGpibPvt->pdeviceInstance = pdeviceInstance;
     return 0;
 }
-
+
 static int queueIt(gpibDpvt *pgpibDpvt)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     dbCommon *precord = pgpibDpvt->precord;
     devGpibParmBlock *pdevGpibParmBlock = pgpibDpvt->pdevGpibParmBlock;
     gpibCmd *pgpibCmd = &pdevGpibParmBlock->gpibCmds[pgpibDpvt->parm];
@@ -857,10 +857,10 @@ static int queueIt(gpibDpvt *pgpibDpvt)
     epicsMutexUnlock(pportInstance->lock);
     return 1;
 }
-
+
 static void prepareToRead(gpibDpvt *pgpibDpvt,int failure)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = pgpibCmd->type;
@@ -924,7 +924,7 @@ done:
     if(failure) recGblSetSevr(precord,READ_ALARM, INVALID_ALARM);
     gpibRead(pgpibDpvt,failure);
 }
-
+
 static void readAfterWait(gpibDpvt *pgpibDpvt,int failure)
 {
     asynUser       *pasynUser = pgpibDpvt->pasynUser;
@@ -954,10 +954,10 @@ static void readAfterWait(gpibDpvt *pgpibDpvt,int failure)
     }
     gpibRead(pgpibDpvt,failure);
 }
-
+
 static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     dbCommon *precord = pgpibDpvt->precord;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
     int cmdType = pgpibCmd->type;
@@ -991,13 +991,13 @@ static void gpibRead(gpibDpvt *pgpibDpvt,int failure)
     }
     pgpibDpvt->msgInputLen = (int)nchars;
     if((int)nchars<pgpibCmd->msgLen) pgpibDpvt->msg[nchars] = 0;
-    if(cmdType&(GPIBEFASTI|GPIBEFASTIW)) 
+    if(cmdType&(GPIBEFASTI|GPIBEFASTIW))
         pgpibDpvt->efastVal = checkEnums(pgpibDpvt->msg, pgpibCmd->P3);
 done:
     restoreEos(pgpibDpvt,pgpibCmd);
     if(pdevGpibPvt->finish) pdevGpibPvt->finish(pgpibDpvt,failure);
 }
-
+
 static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
 {
     dbCommon *precord = pgpibDpvt->precord;
@@ -1115,7 +1115,7 @@ done:
     if(failure) recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
     if(pdevGpibPvt->finish) pdevGpibPvt->finish(pgpibDpvt,failure);
 }
-
+
 static void queueCallback(asynUser *pasynUser)
 {
     gpibDpvt *pgpibDpvt = (gpibDpvt *)pasynUser->userPvt;
@@ -1166,7 +1166,7 @@ static void queueCallback(asynUser *pasynUser)
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,failure);
 }
-
+
 static void queueTimeoutCallback(asynUser *pasynUser)
 {
     gpibDpvt *pgpibDpvt = (gpibDpvt *)pasynUser->userPvt;
@@ -1192,7 +1192,7 @@ static void queueTimeoutCallback(asynUser *pasynUser)
     epicsMutexUnlock(pportInstance->lock);
     work(pgpibDpvt,-1);
 }
-
+
 static void srqPvtInit(asynUser *pasynUser, deviceInstance *pdeviceInstance)
 {
     srqPvt *psrqPvt = &pdeviceInstance->srq;
@@ -1233,7 +1233,7 @@ static asynStatus srqReadWait(gpibDpvt *pgpibDpvt)
     epicsMutexUnlock(pportInstance->lock);
     return status;
 }
-
+
 static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByte)
 {
     deviceInstance *pdeviceInstance = (deviceInstance *)parm;
@@ -1248,7 +1248,7 @@ static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByt
         epicsTimerCancel(psrqPvt->waitTimer);
         queueIt(psrqPvt->pgpibDpvt);
         return;
-    case srqWaitDone: 
+    case srqWaitDone:
         epicsMutexUnlock(pportInstance->lock);
         printf( "portName %s link %d gpibAddr %d "
            "Extra SRQ before readAfterWait\n",
@@ -1297,12 +1297,12 @@ static void waitTimeoutCallback(void *parm)
     epicsMutexUnlock(pportInstance->lock);
     queueIt(psrqPvt->pgpibDpvt);
 }
-
+
 static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt)
 {
-    asynUser *pasynUser = pgpibDpvt->pasynUser; 
+    asynUser *pasynUser = pgpibDpvt->pasynUser;
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
-    dbCommon *precord = pgpibDpvt->precord; 
+    dbCommon *precord = pgpibDpvt->precord;
 
     /* If gpib spscific command make sure that pasynGpib is available*/
     if(!pgpibDpvt->pasynGpib) {
@@ -1369,7 +1369,7 @@ static int checkEnums(char *msg, char **enums)
     }
     return -1;
 }
-
+
 static int writeIt(gpibDpvt *pgpibDpvt,char *message,size_t len)
 {
     gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
@@ -1422,7 +1422,7 @@ static void gpibErrorHappened(gpibDpvt *pgpibDpvt)
     asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR, "%s error.\n",
                                                     pgpibDpvt->precord->name);
 }
-
+
 static int isTimeWindowActive(gpibDpvt *pgpibDpvt)
 {
     devGpibPvt *pdevGpibPvt = pgpibDpvt->pdevGpibPvt;
@@ -1485,7 +1485,7 @@ static void devGpibSrqWaitTimeoutSet(
 
     pdeviceInstance->srq.waitTimeout = timeout;
 }
-
+
 static const iocshArg devGpibQueueTimeoutArg0 = {"portName",iocshArgString};
 static const iocshArg devGpibQueueTimeoutArg1 = {"gpibAddr",iocshArgInt};
 static const iocshArg devGpibQueueTimeoutArg2 = {"timeout",iocshArgDouble};
