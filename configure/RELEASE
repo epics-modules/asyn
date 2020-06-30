@@ -1,22 +1,24 @@
 #RELEASE Location of external products
+SNCSEQ=/opt/epics/R7/modules/seq-2.2.7
+ASYN=  /opt/epics/R7/modules/asyn-git
+#STREAM=/opt/epics/R7/modules/StreamDevice-git
 
-SUPPORT=/corvette/home/epics/devel
+#SUPPORT=/corvette/home/epics/devel
 
 #  IPAC is only necessary if support for Greensprings IP488 is required
 #  IPAC release V2-7 or later is required.
-IPAC=$(SUPPORT)/ipac-2-15
+#IPAC=$(SUPPORT)/ipac-2-15
 
 # SEQ is required for testIPServer
-SNCSEQ=$(SUPPORT)/seq-2-2-5
+#SNCSEQ=$(SUPPORT)/seq-2-2-5
+$SNCSEQ=/opt/epics/modules/soft/seq/seq-2.2.7
 
-## For sCalcout support in asynOctet - applications include asynCalc.dbd
-#CALC=$(SUPPORT)/calc-3-7-3
-
-# If CALC was built with SSCAN support then SSCAN must be defined for testEpicsApp
+## for sCalcout support in asynOctet - applications include asynCalc.dbd
+#CALC=$(SUPPORT)/calc-3-7-7
 #SSCAN=$(SUPPORT)/sscan-2-11-3
 
 #  EPICS_BASE 3.14.6 or later is required
-EPICS_BASE=/corvette/usr/local/epics-devel/base-7.0.4
+EPICS_BASE=/opt/epics/R7/base
 
 -include $(TOP)/../RELEASE.local
 -include $(TOP)/../RELEASE.$(EPICS_HOST_ARCH).local
