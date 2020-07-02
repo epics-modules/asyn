@@ -122,8 +122,25 @@ namespace nsHiSLIP{
 			     AsyncDeviceClearAcknowledge = 23,
 			     AsyncLockInfo = 24,
 			     AsyncLockInfoResponse = 25,
-			     // 26-127 are reserved for future use.
-			     // I don't watn to use negative value to represent ANY message. So I picked 127 from reserved values for this purpose.
+			     // for HiSLIP ver2
+			     GetDescriptors =26,
+			     GetDescriptorsResponse =27,
+			     StartTLS = 28,
+			     AsyncStartTLS = 29,
+			     AsyncStartTLSResponse = 30,
+			     EndTLS = 31,
+			     AsyncEndTLS = 32,
+			     AsyncEndTLSResponse = 33,
+			     GetSaslMechanismList = 34,
+			     GetSaslMechanismListResponse = 35,
+			     AuthenticationStart = 36,
+			     AuthenticationExchange = 37,
+			     AuthenticationResult = 38,
+			     // 39-127 are reserved for future use.
+			     // I don't watn to use negative value to
+			     // represent ANY message.
+			     // So I picked 127 from reserved values
+			     // for this purpose.
 			     AnyMessages=127 // 128-255 are reserved for vendor use.
   } Message_Types_t;
 
@@ -216,7 +233,7 @@ namespace nsHiSLIP{
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
-      ::printf("payload length: %lu\n",this->payload_length);
+      ::printf("payload length: %llu\n",this->payload_length);
       // errlogPrintf("message type:%d\n",this->message_type);
       // errlogPrintf("control_code:%d\n",this->control_code);
       // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
