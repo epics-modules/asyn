@@ -423,7 +423,7 @@ static long createRingBuffer(dbCommon *pr, int minRingSize)
             pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer,
                                                 "devAsynOctet::createRingBuffer");
             /* Allocate array for each ring buffer element */
-            for (i=0; i<pPvt->ringSize; i++) {
+            for (i=0; i<pPvt->ringSize+1; i++) {
                 pPvt->ringBuffer[i].pValue = callocMustSucceed(pPvt->valSize, 1,
                         "devAsynOctet::createRingBuffer creating ring element array");
             }
@@ -484,7 +484,7 @@ static int getRingBufferValue(devPvt *pPvt)
             pPvt->ringBufferOverflows = 0;
         }
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];
-        pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;
+        pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         ret = 1;
     }
     epicsMutexUnlock(pPvt->devPvtLock);
@@ -555,12 +555,12 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         rp->status = pasynUser->auxStatus;
         rp->alarmStatus = pasynUser->alarmStatus;
         rp->alarmSeverity = pasynUser->alarmSeverity;
-        pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize-1) ? 0 : pPvt->ringHead+1;
+        pPvt->ringHead = (pPvt->ringHead==pPvt->ringSize) ? 0 : pPvt->ringHead+1;
         if (pPvt->ringHead == pPvt->ringTail) {
             /* There was no room in the ring buffer.  Remove the oldest value from the
              * ring buffer and add the new one so the final value the record receives
              * is guaranteed to be the most recent value */
-            pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize-1) ? 0 : pPvt->ringTail+1;
+            pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
             pPvt->ringBufferOverflows++;
         } else {
             /* We only need to request the record to process if we added a new
