@@ -4,6 +4,21 @@
 Based on:
   1) IVI-6.1: IVI High-Speed LAN Instument Protocol
 
+Brief Description
+==================
+This module provides EPICS asyn Octet driver for HiSLIP protocol.
+It should also work with Stream Device library as same as USBTMC and VXI11.
+SRQ is supported also throu asyn octet driver.
+
+HiSLIP protocol is implemented in cPyHiSLIP/HiSLIPMessage.{cpp,h} files.
+These files does not have direct dependency on EPICS, and can be used with any other
+programs. As an example, cPyHiSLIP/cPyHiSLIP.{pxd,pyx} and setup.py are provided to
+build python modules for HiSLIP device. 
+
+How to use
+============
+1) For EPICS
+Build asyn with the variable DRV_HISLIP. 
 
 Build Issues
 ============
