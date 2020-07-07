@@ -872,8 +872,6 @@ static void asynCallbackSpecial(asynUser * pasynUser)
 
                         break;
                     }
-                } else {
-                    monitorStatus(pasynRec);
                 }
             } else {
                 if(isConnected) {
@@ -886,8 +884,6 @@ static void asynCallbackSpecial(asynUser * pasynUser)
 
                         break;
                     }
-                } else {
-                    monitorStatus(pasynRec);
                 }
             }
         }
@@ -897,6 +893,7 @@ static void asynCallbackSpecial(asynUser * pasynUser)
             "asynCallbackSpecial illegal type %d\n", callbackType);
         status = asynError;
     }
+    monitorStatus(pasynRec);
     pasynManager->memFree(pmsg, sizeof(*pmsg));
     pasynManager->freeAsynUser(pasynUser);
     if (status == asynSuccess) pasynRecPvt->state = stateIdle;
