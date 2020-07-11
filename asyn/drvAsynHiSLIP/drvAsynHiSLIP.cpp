@@ -93,25 +93,22 @@ interruptThread(void *arg)
 {
     drvPvt *pdpvt = (drvPvt *)arg;
     int s;
+    assert(pdpvt);
+    if (pdpvt == NULL){
+      errlogPrintf(" NULL drvPvt as an argument.\n");
+    }
     
     while(true) {
-      s =  pdpvt->device->wait_for_SRQ(65000); 
+      s =  pdpvt->device->wait_for_SRQ(60000); // wait for async-channel.
 
       if (s == 0){
 	errlogPrintf("timeout poll for async channel.\n");
 	continue;
       }
-      if (epicsEventTryWait(pdpvt->pleaseTerminate) == epicsEventWaitOK)
-	break;
-      
-      if (s != 0 ){
-	assert(pdpvt);
-	if (pdpvt == NULL){
-	  errlogPrintf(" NULL drvPvt as an argument.\n");
-	}
+      if (s > 0 ){
 	u_int8_t stb = pdpvt->device->get_Service_Request();
 	errlogPrintf("Get SRQ with STB: 0x%2x\n", stb);
-	if (stb != 0){ // may need mask here.
+	if ((stb & 0x40) != 0){ // may need mask here. Just SRQ
 	  ELLLIST *pclientList;
 	  interruptNode *pnode;
 
@@ -141,14 +138,22 @@ interruptThread(void *arg)
 					 ASYN_REASON_SRQ);
 	      }
 	      pnode = (interruptNode *)ellNext(&pnode->node);
-
 	    }
 	    pasynManager->interruptEnd(pdpvt->asynOctetInterruptPvt);
+	    stb = pdpvt->device->status_query();
 	    errlogPrintf("Finish SRQ process 0x%2x\n", stb);
 	  }
 	}
+	continue;
       }
-    }
+      else{
+	errlogPrintf("srq poll return value:%d.\n",s);
+      }
+      if (epicsEventTryWait(pdpvt->pleaseTerminate) == epicsEventWaitOK){
+	errlogPrintf("Terminate Interrupt Thread.\n");
+	break;
+      }
+    }// while
     epicsMutexLock(pdpvt->interruptTidMutex);
     pdpvt->interruptTid = 0;
     epicsEventSignal(pdpvt->didTerminate);
@@ -159,7 +164,7 @@ static void
 startInterruptThread(drvPvt *pdpvt)
 {
     epicsMutexLock(pdpvt->interruptTidMutex);
-    if ((pdpvt->interruptTid == 0)) {
+    if (pdpvt->interruptTid == 0) {
         epicsEventTryWait(pdpvt->pleaseTerminate);
         epicsEventTryWait(pdpvt->didTerminate);
         pdpvt->interruptTid = epicsThreadCreate(pdpvt->interruptThreadName,

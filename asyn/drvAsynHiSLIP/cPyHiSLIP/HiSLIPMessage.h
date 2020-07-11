@@ -1,15 +1,3 @@
-/*
- * ASYN support for HiSLIP
- *
-
- ***************************************************************************
- * Copyright (c) 2020 N. Yamamoto <noboru.yamamoto@kek.jp>
- * based on AsynUSBTMC supoort by
- * Copyright (c) 2013 W. Eric Norum <wenorum@lbl.gov>                      *
- * This file is distributed subject to a Software License Agreement found  *
- * in the file LICENSE that is included with this distribution.            *
- ***************************************************************************
- */
 //-*- coding:utf-8 -*-
 #define NDEBUG 1
 #define DEBUG 1
@@ -333,7 +321,7 @@ namespace nsHiSLIP{
       return (ssize + ::send(socket, this->payload, this->payload_length,0));
     }
     
-    ssize_t recv(int socket, Message_Types_t expected_message_type=AnyMessages){
+    size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages){
       size_t rsize;
       size_t status;
       
@@ -368,7 +356,7 @@ namespace nsHiSLIP{
 	    perror("payload read error:");
 	    return -1;
 	  }
-	  rsize +=status;
+	  rsize += status;
 	  if (status >= bytestoread){
 		break;
 	  }
@@ -381,11 +369,11 @@ namespace nsHiSLIP{
 	return 0;
       }
       // for debug
-      // this->print();
+      //this->print();
       
       if(this->message_type  == nsHiSLIP::Error){
 	::printf("Fatal Error: %d %s\n",
-		 this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
+		 this->control_code, nsHiSLIP::Error_Messages[this->control_code]);
 	if (this->payload_length >0){
 	  ::printf("Error msg: %s\n", (char *) this->payload);
 	}
@@ -393,9 +381,9 @@ namespace nsHiSLIP{
       }
       else if(this->message_type  == nsHiSLIP::FatalError){
 	::printf("Error: %d %s\n",
-		 this->control_code, nsHiSLIP::Error_Messages[this->control_code]);
+		 this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
 	if (this->payload_length >0){
-	  ::printf("Error msg: %s\n", (char *) this->payload);
+	  ::printf("Fatal Error msg: %s\n", (char *) this->payload);
 	}
 	return -(this->control_code+1);
       }
@@ -484,13 +472,15 @@ namespace nsHiSLIP{
     int  check_srq_lock(void);
     int  check_and_lock_srq_lock(void);
     u_int8_t get_Service_Request(void){
-      Message *msg=new Message(AnyMessages);
+      Message *msg=new Message(nsHiSLIP::AnyMessages);
       long status;
-      //this->request_srq_lock();
       
       status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
+
+      // for debug
+      msg->print();
       
-      if (status != 0){
+      if ((status & 0x80000000) != 0){
 	// should handle Error/Fatal Error/Async Interrupted messages.
 	perror(__FUNCTION__);
       }
@@ -499,6 +489,7 @@ namespace nsHiSLIP{
     };
     
     int wait_for_SRQ(int wait_time){
+      this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);
     }
     

@@ -1,15 +1,3 @@
-/*
- * ASYN support for HiSLIP
- *
-
- ***************************************************************************
- * Copyright (c) 2020 N. Yamamoto <noboru.yamamoto@kek.jp>
- * based on AsynUSBTMC supoort by
- * Copyright (c) 2013 W. Eric Norum <wenorum@lbl.gov>                      *
- * This file is distributed subject to a Software License Agreement found  *
- * in the file LICENSE that is included with this distribution.            *
- ***************************************************************************
- */
 #include "HiSLIPMessage.h"
 
 using nsHiSLIP::CC_request_t;
@@ -149,6 +137,7 @@ namespace nsHiSLIP{
 			sizeof(msg_size), (u_int8_t *) &msg_size);
     msg.send(this->async_channel);
   
+    this->async_poll.revents=0;
     int ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
@@ -164,7 +153,7 @@ namespace nsHiSLIP{
     return this->maximum_message_size;
   };
 
-  int HiSLIP::device_clear(){
+  int HiSLIP::device_clear(u_int8_t feature_request){
     Message resp(AnyMessages);
     u_int8_t feature_preference;
     int ready,rc;
@@ -176,6 +165,7 @@ namespace nsHiSLIP{
 
     msg->send(this->async_channel);
 
+    this->async_poll.revents=0;
     ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
@@ -186,6 +176,7 @@ namespace nsHiSLIP{
       // Error!
     }
     feature_preference=resp.control_code;
+    feature_preference &= feature_request;
 
     msg=new Message(nsHiSLIP::DeviceClearComplete,
 		    feature_preference,
@@ -224,7 +215,8 @@ namespace nsHiSLIP{
     }
     msg.send(this->async_channel);
     this->rmt_delivered = false;
-    
+
+    this->async_poll.revents=0;
     ready=poll(&this->async_poll,  1, this->socket_timeout);
     if ( ready == 0){
       return -1;
