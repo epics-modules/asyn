@@ -84,7 +84,6 @@ namespace nsHiSLIP{
 		  message_parameter((u_int16_t) nsHiSLIP::PROTOCOL_VERSION_MAX,
 				    (char *) Default_vendor_id),
 		  (u_int64_t) 0, (u_int8_t *) NULL);
-      // errlogPrintf("sending message %d \n", msg.message_type);
       msg.send(this->sync_channel);
     }
   
@@ -225,7 +224,7 @@ namespace nsHiSLIP{
     if (rc !=0){
       //Error!
     }
-    resp.print();
+    //resp.print();
     
     status= resp.control_code &0xff;
     
@@ -245,8 +244,6 @@ namespace nsHiSLIP{
     size_t delivered=0;
     size_t count;
 
-    // errlogPrintf("HiSLIP::write sending data %s\n", data_str);
-  
     while(bytestosend){
       if (bytestosend < max_payload_size){
 	Message msg(nsHiSLIP::DataEnd,
@@ -254,7 +251,6 @@ namespace nsHiSLIP{
 		    nsHiSLIP::message_parameter(this->message_id),
 		    bytestosend, (u_int8_t *) buffer);
 	buffer += bytestosend;
-	// errlogPrintf("sending message %s\n",(char *) msg.payload);
 	count=msg.send(this->sync_channel);
 	this->rmt_delivered=false;
 	count -=HEADER_SIZE;
@@ -273,7 +269,6 @@ namespace nsHiSLIP{
 	delivered += count;
 	buffer += max_payload_size;
       }
-      // errlogPrintf("data sent= %lu\n",count);
       this->increment_message_id();
     }
     return delivered;
@@ -283,8 +278,6 @@ namespace nsHiSLIP{
     bool eom=false;
     size_t rsize=0;
     
-    // errlogPrintf("entered to HiSLIP::read(**buffer:%p, timeout:%ld)\n",
-    // 		 buffer, timeout);
 
     *received=0;
     this->rmt_delivered = false;
@@ -304,7 +297,6 @@ namespace nsHiSLIP{
 	return -1;
       }
       rsize=resp.recv(this->sync_channel);
-      // errlogPrintf("HiSLIP read rsize %ld\n",rsize);
       if (rsize < 0){
 	//Error!!
 	return -2;
@@ -322,7 +314,6 @@ namespace nsHiSLIP{
 				       *received + resp.payload_length);
 
 	if (newbuf == NULL){
-	  // errlogPrintf("Cannot extend memory area\n");
 	  *buffer=NULL;
 	  return -3;
 	}
@@ -351,20 +342,13 @@ namespace nsHiSLIP{
     bool eom=false;
     size_t rsize=0;
     
-    // errlogPrintf("entered to HiSLIP::read(buffer %p, bsize:%ld, timeout:%ld\n",
-    // 		 buffer, bsize, timeout);
     *received=0;
     this->rmt_delivered = false;
     
     if (buffer==NULL || bsize <= 0){
-      // errlogPrintf("exit HiSLIP::read improper input buffer:%p bsize:%lu, timeout:%ld\n",
-      // 		   buffer, bsize, timeout);
       return -1;
     }
     if (bsize < this->maximum_payload_size){
-      // errlogPrintf("exit HiSLIP::buffer size:%ld should be "
-      //              "larger than maximum playload size:%ld \n",
-      // 		   bsize, this->maximum_payload_size);
     }
     while(!eom) {
       int ready;
@@ -373,27 +357,20 @@ namespace nsHiSLIP{
       ready=::poll(&this->sync_poll, 1, timeout);
       
       if (ready == 0){
-	// errlogPrintf("HiSLIP::read read timeout %d %ld \n", ready, lock_timeout);
 	return -1;
       }
       
       rsize=resp.recv(this->sync_channel);
 
       if (rsize < 0){
-	// errlogPrintf("read data too short %ld %qd \n", rsize, resp.payload_length);
 	return -1;
       };
       if (( (*received) + resp.payload_length) > bsize){
-	// errlogPrintf("not enough space to store received:%ld resp.payload:%qd bsize:%ld\n",
-	// 	     *received, resp.payload_length, bsize);
-	
 	::memcpy( (buffer + *received), resp.payload, (bsize - *received));
 	*received = bsize;
 	return 0;
       }
       else{
-	// errlogPrintf("received message size %ld %ld  data:%s mt:%d\n",
-	// 	     rsize, *received, (char *) resp.payload, resp.message_type);
 	::memcpy( (buffer + *received), resp.payload, resp.payload_length);
       
 	*received +=resp.payload_length;
@@ -404,13 +381,9 @@ namespace nsHiSLIP{
       } else if (resp.message_type == nsHiSLIP::DataEnd){
 	eom=true;
 	this->rmt_delivered=true;
-	// errlogPrintf("received message: %s %s ,eom:%d rmt:%d\n",
-	// 	     buffer, (char *) resp.payload, eom,this->rmt_delivered);
 	return 0;
       } else{
-	// errlogPrintf("Unexpected message type:%d\n",
-	// 	     resp.message_type);
-	resp.print();
+	// resp.print();
 	// error unexpected message type.
 	return -1;
       }
@@ -425,7 +398,6 @@ namespace nsHiSLIP{
     u_int8_t *buffer=NULL;
     int status;
     
-    // errlogPrintf("sending a command %s %lu",data_str, dsize);
   
     this->write(data_str, dsize);
     if(this->wait_for_answer(wait_time) == 0){

@@ -225,10 +225,6 @@ namespace nsHiSLIP{
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
       ::printf("payload length: %llu\n",this->payload_length);
-      // errlogPrintf("message type:%d\n",this->message_type);
-      // errlogPrintf("control_code:%d\n",this->control_code);
-      // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
-      // errlogPrintf("payload length: %qd\n",this->payload_length);
     }
     
     size_t send(int socket){
@@ -478,7 +474,7 @@ namespace nsHiSLIP{
       status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
 
       // for debug
-      msg->print();
+      //msg->print();
       
       if ((status & 0x80000000) != 0){
 	// should handle Error/Fatal Error/Async Interrupted messages.
