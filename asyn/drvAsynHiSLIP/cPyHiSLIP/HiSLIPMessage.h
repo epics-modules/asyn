@@ -82,11 +82,14 @@ namespace nsHiSLIP{
 			       error=3 // Invalide
   } CC_LockResponse_t;
 
-  static const long  PROTOCOL_VERSION_MAX = 257 ; // # <major><minor> = <1><1> that is 257
+  static const long  PROTOCOL_VERSION_MAX = 0x7f7f ; // # <major><minor> = <1><1> that is 257
   static const long  INITIAL_MESSAGE_ID = 0xffffff00 ;
-  static const long  UNKNOWN_MESSAGE_ID  = 0xffffffff ;
-  static const long  MAXIMUM_MESSAGE_SIZE_VISA = 272;//Following VISA 256 bytes + header length 16 bytes
-  static const long  MAXIMUM_MESSAGE_SIZE= 4096;//R&S accept 
+  static const long  INITIAL_LAST_MESSAGE_ID = 0xfffffefe; //i.e. 0xffffff00-2
+  static const long  UNKNOWN_MESSAGE_ID  = 0xffffffff;
+  
+  //Following VISA 256 bytes + header length 16 bytes
+  static const long  MAXIMUM_MESSAGE_SIZE_VISA = 272;
+  static const long  MAXIMUM_MESSAGE_SIZE= 4096;//R&S accept more than this
   static const long  HEADER_SIZE=16;
   static const long  SOCKET_TIMEOUT = 1000; //# Socket timeout in msec
   static const long  LOCK_TIMEOUT = 3000;//# Lock timeout
@@ -253,7 +256,9 @@ namespace nsHiSLIP{
     size_t recv(int socket){
       char buffer[HEADER_SIZE];
       ssize_t rsize;
-      rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
+      //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
+      rsize= ::recvfrom(socket, buffer, HEADER_SIZE, 0, NULL, NULL);
+      // rsize= ::read(socket, buffer, HEADER_SIZE);
       
       if (rsize < HEADER_SIZE){
 	//raise exception?
@@ -352,9 +357,13 @@ namespace nsHiSLIP{
 	size_t bytestoread=this->payload_length;
 	
 	while (bytestoread){
-	  status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
-			  bytestoread, 0);
-	
+	  // status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
+	  // 		  bytestoread, 0);
+	  status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
+	                            bytestoread, 0, NULL, NULL);
+	  // status = ::read(socket, ((u_int8_t *)this->payload+rsize),
+	  // 		  bytestoread);
+	  
 	  if (status <= 0){
 	    perror("payload read error:");
 	    return -1;
@@ -371,7 +380,8 @@ namespace nsHiSLIP{
 	 (expected_message_type == this->message_type)){
 	return 0;
       }
-      this->print();
+      // for debug
+      // this->print();
       
       if(this->message_type  == nsHiSLIP::Error){
 	::printf("Fatal Error: %d %s\n",
@@ -404,6 +414,7 @@ namespace nsHiSLIP{
     struct pollfd sync_poll;
     struct pollfd async_poll;
     int overlap_mode;
+    u_int8_t feature_setting;
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
@@ -419,6 +430,7 @@ namespace nsHiSLIP{
       this->socket_timeout=SOCKET_TIMEOUT;
       this->lock_timeout=LOCK_TIMEOUT;
       this->overlap_mode=false;
+      this->feature_setting=0;
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;
@@ -451,7 +463,7 @@ namespace nsHiSLIP{
     };
 
     long set_max_size(long message_size);
-    int  device_clear(void);
+    int  device_clear(u_int8_t);
     u_int8_t status_query(void);
     //long write(u_int8_t *data_str, long timeout=LOCK_TIMEOUT);
     long write(const u_int8_t *data_str, const size_t size,
@@ -504,8 +516,8 @@ namespace nsHiSLIP{
       return ::poll(&this->sync_poll,  1,   wait_time);
     }
     void reset_message_id(void){
-      this->most_recent_message_id=0;
-      this->message_id = 0xffffff00;
+      this->most_recent_message_id=INITIAL_LAST_MESSAGE_ID;
+      this->message_id = INITIAL_MESSAGE_ID;
     }
     u_int32_t increment_message_id(void){
       this->most_recent_message_id=this->message_id;

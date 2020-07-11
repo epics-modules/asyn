@@ -19,7 +19,9 @@
 #include <string.h>
 #include <errlog.h>
 #include <poll.h>
-#include <endian.h> // network endian is "be".
+#ifdef __linux__
+#  include <endian.h> // network endian is "be".
+#endif
 #include <sys/types.h>
 //#include <bits/stdint-intn.h>
 

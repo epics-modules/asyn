@@ -39,6 +39,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     unsigned long maximum_message_size
     unsigned long maximum_payload_size
     int overlap_mode;
+    u_int8_t feature_setting
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
@@ -50,27 +51,27 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     cHiSLIP() except+
     void connect(char * hostname,
                  char * dev_name,
-                 int    port)
-    void set_timeout(long)
-    long get_timeout()
-    void  set_lock_timeout(long)
-    long get_lock_timeout()
+                 int    port) nogil
+    void set_timeout(long) nogil
+    long get_timeout() nogil
+    void  set_lock_timeout(long) nogil
+    long get_lock_timeout() nogil
     
-    long set_max_size(long)
-    int device_clear()
-    u_int8_t status_query()
-    long write(u_int8_t *,  size_t, long)
-    long read(size_t *, u_int8_t **, long)
-    long ask(u_int8_t *, size_t, u_int8_t **, long)
-    long trigger_message()
-    long remote_local(u_int8_t)
-    long request_lock(char *)
-    long release_lock()
-    long request_srq_lock()
-    long release_srq_lock()
-    int check_srq_lock()
-    int check_and_lock_srq_lock()
-    u_int8_t get_Service_Request()
-    int  wait_for_SRQ(int)
-    void disconnect()
+    long set_max_size(long) nogil 
+    int device_clear(u_int8_t) nogil
+    u_int8_t status_query() nogil 
+    long write(u_int8_t *,  size_t, long) nogil
+    long read(size_t *, u_int8_t **, long) nogil
+    long ask(u_int8_t *, size_t, u_int8_t **, long) nogil
+    long trigger_message() nogil
+    long remote_local(u_int8_t) nogil
+    long request_lock(char *) nogil
+    long release_lock() nogil
+    long request_srq_lock() nogil
+    long release_srq_lock() nogil
+    int check_srq_lock() nogil
+    int check_and_lock_srq_lock() nogil
+    u_int8_t get_Service_Request() nogil
+    int  wait_for_SRQ(int) nogil
+    void disconnect() nogil
     

@@ -1,7 +1,8 @@
 #RELEASE Location of external products
-SNCSEQ=/opt/epics/R7/modules/seq-2.2.7
-ASYN=  /opt/epics/R7/modules/asyn-git
-#STREAM=/opt/epics/R7/modules/StreamDevice-git
+MODULES=/opt/epics/R7/modules
+SNCSEQ=$(realpath $(MODULES)/seq)
+ASYN  =$(realpath $(MODULES)/asyn)
+STREAM=$(realpath $(MODULES)/StreamDevice/stream)
 
 #SUPPORT=/corvette/home/epics/devel
 

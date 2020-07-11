@@ -11,7 +11,7 @@ from cPyHiSLIP cimport cHiSLIP
 #from cPyHiSLIP cimport Default_device_name
 import logging
 from logging import info,debug,warn,log,fatal
-logging.root.setLevel(logging.DEBUG)
+#logging.root.setLevel(logging.DEBUG)
 
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
@@ -29,34 +29,36 @@ cdef class HiSLIP:
       debug("connect to {} {} {}".format(host,device, port))
       self.thisobj.connect(host,device,port)
 
-  def write(self, msg, timeout=3000):
+  def write(self, msg, long timeout=3000):
       self.thisobj.write(msg, len(msg), timeout)
 
-  cdef _cread(self,timeout=3000):
+  cdef _cread(self,long timeout=3000):
        cdef unsigned char *buffer=NULL
-       cdef size_t recieved=0
+       cdef unsigned char **pbuffer=&buffer
+       cdef size_t recieved=0,
+       cdef size_t *precieved=&recieved
        cdef int rt
-       debug("calling read in c++")
-       rt=self.thisobj.read(addressof(recieved), addressof(buffer), timeout)
+       # debug("calling read in c++")
+       rt=self.thisobj.read(precieved, pbuffer, timeout)
        if rt == -1:
            raise RuntimeError("Timeout")
        elif rt < 0:
            raise RuntimeError
-       elif (buffer == NULL):
-           raise RuntimeError("NULL pointer")
        if recieved == 0:
            return (recieved, None)
        else:
+           if (buffer == NULL):
+               raise RuntimeError("NULL pointer")
            return (recieved, buffer)
    
-  def read(self,timeout=3000):
+  def read(self, long timeout=3000):
       recieved, buffer=self._cread(timeout)
-      debug("cread result {} {}".format(recieved,len(buffer)))
+      # debug("cread result {} {}".format(recieved,len(buffer)))
       return (recieved, buffer[:recieved])
 
-  def ask(self, msg, wait_time=3000):
+  def ask(self, msg, long wait_time=3000):
       rsize, result=self._ask(msg, wait_time)
-      debug("ask res size: {}".format(rsize))
+      # debug("ask res size: {}".format(rsize))
       if result == None:
           return None
       elif (rsize > 0):
@@ -64,20 +66,25 @@ cdef class HiSLIP:
       else:
           return None
   
-  cdef _ask(self, u_int8_t *msg, wait_time):
+  cdef _ask(self, u_int8_t *msg, long wait_time):
       cdef unsigned char *buffer=NULL
+      cdef unsigned char **pbuffer=&buffer;
       cdef size_t recieved=0
       cdef int rt
+      cdef size_t lmsg
+      #lmsg=len(msg)
       recieved=self.thisobj.ask(msg, len(msg),
-                                addressof(buffer),
+                                pbuffer,
                                 wait_time)
-      debug("_ask recieved: {}".format(recieved))
-      if (recieved > 0 and (buffer != NULL)):
+      debug("_ask recieved: {}".format(hex(recieved)))
+      if (recieved & 0x8000000000000000L):
+          return (-1,None)
+      elif (recieved > 0 and (buffer != NULL)):
           return (recieved, buffer)
       else:
           return (recieved, None)
           
-  def set_timeout(self,timeout):
+  def set_timeout(self,long timeout):
       self.thisobj.set_timeout(timeout)
       return
   
@@ -86,21 +93,22 @@ cdef class HiSLIP:
       to=self.thisobj.get_timeout()
       return to
 
-  def set_lock_timeout(self, to):
-      to=self.thisobj.set_lock_timeout(to)
-
+  def set_lock_timeout(self, long to):
+      self.thisobj.set_lock_timeout(to)
+      return
+  
   def get_lock_timeout(self):
       cdef long to
       to=self.thisobj.get_lock_timeout()
       return to
 
-  def set_max_message_size(self, message_size):
+  def set_max_message_size(self, size_t message_size):
       cdef long ms
       ms=self.thisobj.set_max_size(message_size)
       return ms
   
   def get_max_message_size(self):
-      cdef long ms
+      cdef size_t ms
       ms=self.thisobj.maximum_message_size
       return ms
 
@@ -109,9 +117,9 @@ cdef class HiSLIP:
       ms=self.thisobj.maximum_payload_size
       return ms
 
-  def device_clear(self):
+  def device_clear(self,int request=0):
       cdef long rc
-      rc=self.thisobj.device_clear()
+      rc=self.thisobj.device_clear(request)
       return rc
 
   def status_query(self):
@@ -135,7 +143,7 @@ cdef class HiSLIP:
       rc=self.thisobj.trigger_message()
       return rc
 
-  def remote_local(self, request):
+  def remote_local(self, u_int8_t request):
       """
       Table 18: Remote Local Control Transactions
       0 - Disable remote
@@ -147,13 +155,13 @@ cdef class HiSLIP:
       6 - go to local without changing state of remote enable.
       """
       cdef long rc
-      cdef u_int8_t _request=request
+      #cdef u_int8_t _request=request
       
-      rc=self.thisobj.remote_local(_request)
+      rc=self.thisobj.remote_local(request)
 
       return rc
 
-  def request_lock(self, lock_string):
+  def request_lock(self, char * lock_string):
       """
       response to request:
       0 - Failure
@@ -161,9 +169,9 @@ cdef class HiSLIP:
       3 - Error
       """
       cdef long rc
-      cdef char *_lock_string=lock_string
+      #cdef char *_lock_string=lock_string
       
-      rc=self.thisobj.request_lock(_lock_string)
+      rc=self.thisobj.request_lock(lock_string)
       
       return rc
 
@@ -217,13 +225,22 @@ cdef class HiSLIP:
       cdef int ovm=self.thisobj.overlap_mode
       return ovm
   
+  def get_feature_setting(self):
+      cdef int ovm=self.thisobj.feature_setting
+      return ovm
+  
+  def get_protocol_version(self):
+      cdef int spv=self.thisobj.server_protocol_version
+      major=(spv&0xff00)>>8
+      minor=(spv & 0x00ff)
+      return (major,minor)
   
   def get_Service_Request(self):
       cdef u_int8_t rc=0
       rc=self.thisobj.get_Service_Request()
       return rc
       
-  def wait_for_SRQ(self, wait_time):
+  def wait_for_SRQ(self, long wait_time):
       cdef int rc=-1
       rc=self.thisobj.wait_for_SRQ(wait_time)
       return rc
