@@ -318,7 +318,10 @@ namespace nsHiSLIP{
 	return -2;
       };
       
-      // may not be a good idea.
+      // may not be a good idea to reallocate memory evertime.
+      // 'message_parameter' should be checkd
+      // aginst most_recent_message_id and overlap_mode
+      //
       {	u_int8_t *newbuf;
 	
 	// newbuf=(u_int8_t *) reallocarray(*buffer, 1,

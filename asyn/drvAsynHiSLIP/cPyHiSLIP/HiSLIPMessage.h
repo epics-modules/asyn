@@ -122,8 +122,25 @@ namespace nsHiSLIP{
 			     AsyncDeviceClearAcknowledge = 23,
 			     AsyncLockInfo = 24,
 			     AsyncLockInfoResponse = 25,
-			     // 26-127 are reserved for future use.
-			     // I don't watn to use negative value to represent ANY message. So I picked 127 from reserved values for this purpose.
+			     // for HiSLIP ver2
+			     GetDescriptors =26,
+			     GetDescriptorsResponse =27,
+			     StartTLS = 28,
+			     AsyncStartTLS = 29,
+			     AsyncStartTLSResponse = 30,
+			     EndTLS = 31,
+			     AsyncEndTLS = 32,
+			     AsyncEndTLSResponse = 33,
+			     GetSaslMechanismList = 34,
+			     GetSaslMechanismListResponse = 35,
+			     AuthenticationStart = 36,
+			     AuthenticationExchange = 37,
+			     AuthenticationResult = 38,
+			     // 39-127 are reserved for future use.
+			     // I don't watn to use negative value to
+			     // represent ANY message.
+			     // So I picked 127 from reserved values
+			     // for this purpose.
 			     AnyMessages=127 // 128-255 are reserved for vendor use.
   } Message_Types_t;
 
@@ -216,7 +233,7 @@ namespace nsHiSLIP{
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
-      ::printf("payload length: %lu\n",this->payload_length);
+      ::printf("payload length: %llu\n",this->payload_length);
       // errlogPrintf("message type:%d\n",this->message_type);
       // errlogPrintf("control_code:%d\n",this->control_code);
       // errlogPrintf("message_parameter: 0x%0x\n",this->message_parameter.word);
@@ -378,10 +395,10 @@ namespace nsHiSLIP{
     
   typedef class HiSLIP {
   public:
-    unsigned long maximum_message_size=MAXIMUM_MESSAGE_SIZE;
-    unsigned long maximum_payload_size=MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
-    long socket_timeout=SOCKET_TIMEOUT;
-    long lock_timeout=LOCK_TIMEOUT;
+    unsigned long maximum_message_size;
+    unsigned long maximum_payload_size;
+    long socket_timeout;
+    long lock_timeout;
     int sync_channel;
     int async_channel;
     struct pollfd sync_poll;
@@ -395,12 +412,17 @@ namespace nsHiSLIP{
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
     //sem_t srq_lock;
-    pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
+    pthread_mutex_t srq_lock;
     HiSLIP(){
+      this->maximum_message_size=MAXIMUM_MESSAGE_SIZE;
+      this->maximum_payload_size=MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
+      this->socket_timeout=SOCKET_TIMEOUT;
+      this->lock_timeout=LOCK_TIMEOUT;
       this->overlap_mode=false;
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;
+      this->srq_lock=PTHREAD_MUTEX_INITIALIZER;
       // if (sem_init(&(this->srq_lock), 0, 1) !=0){
       // 	perror(" HiSLIP srq_lock");
       // }
