@@ -32,13 +32,13 @@ typedef struct drvPvt {
    * HiSLIP private
   */
   
-  HiSLIP_t *device;
+  HiSLIP_t  *device;
   char      *hostname;
   long      port;
   bool      isConnected;
   int       termChar;
 
-  char                   deviceVendorID[IDSTRING_CAPACITY];
+  char      deviceVendorID[IDSTRING_CAPACITY];
 
   /*
    * Asyn interfaces we provide
@@ -492,14 +492,20 @@ asynOctetSetInputEos(void *pvt, asynUser *pasynUser, const char *eos, int eoslen
 {
     drvPvt *pdpvt = (drvPvt *)pvt;
 
-    if (eoslen ==0) {
+    if (eoslen == 0) {
       pdpvt->termChar = -1;
+      return asynSuccess;
+    }
+    else if (eoslen == 1) {
+      pdpvt->termChar = *eos & 0xff;
       return asynSuccess;
     }
     else{
       pdpvt->termChar = -1;
       epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                    "Device does not support multiple terminating characters");
+                    "Device does not support multiple terminating characters %s %d",
+		    eos, eoslen
+		    );
       return asynError;
     }
 }
@@ -689,7 +695,7 @@ HiSLIPConfigure(const char *portName,
  */
 static const iocshArg HiSLIPConfigureArg0 = {"port name",
 					     iocshArgString};
-static const iocshArg HiSLIPConfigureArg1 = {"HiSLIP host addressr",
+static const iocshArg HiSLIPConfigureArg1 = {"HiSLIP host address",
 					     iocshArgString};
 static const iocshArg HiSLIPConfigureArg2 = {"priority",
 					     iocshArgInt};
