@@ -1,0 +1,17 @@
+include MANIFEST.in
+include setup.py
+include Makefile
+include README.rst
+include HiSLIPMessage.h
+include HiSLIPMessage.cpp
+include cPyHiSLIP.pyx
+include cPyHiSLIP.pxd
+exclude cPyHiSLIP_*.*
+include *.py
+include *.txt
+prune docs
+prune build
+prune dist
+prune */build
+prune ._*
+exclude build/*

@@ -2,9 +2,7 @@
 """
 Author:Noboru Yamamoto, KEK, Japan (c) 2020
 
-contact info: http://gofer.kek.jp/
-or https://plus.google.com/i/xW1BWwWsj3s:2rbmfOGOM4c
-
+contact info: https://souran.kek.jp/kss/top/
 
 Revision Info:
 $Author: $
@@ -97,7 +95,7 @@ setup(name="cPyHiSLIP",
       version=rev,
       author="Noboru Yamamoto, KEK, JAPAN",
       author_email = "Noboru.YAMAMOTO@kek.jp",
-      description='A Cython based Python module to control devices over HiSKIP protocol.',
+      description='A Cython based Python module to control devices over HiSLIP protocol.',
       url="http://www-cont.j-parc.jp/",
       classifiers=['Programming Language :: Python',
                    'Programming Language :: Cython',
