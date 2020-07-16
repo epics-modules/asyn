@@ -352,7 +352,7 @@ report(void *drvPvt, FILE *fp, int details)
         tty->serialDeviceName,
         tty->commHandle != INVALID_HANDLE_VALUE ? "C" : "Disc");
     if (details >= 1) {
-        fprintf(fp, "            commHandle: %d\n",  tty->commHandle);
+        fprintf(fp, "            commHandle: %p\n",  tty->commHandle);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }

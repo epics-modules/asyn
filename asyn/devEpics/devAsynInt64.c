@@ -791,7 +791,7 @@ static long processAi(aiRecord *pr)
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if (pPvt->result.status == asynSuccess) {
-        pr->val = pPvt->result.value;
+        pr->val = (epicsFloat64)pPvt->result.value;
         pr->udf = 0;
         return 2;
     }
@@ -838,7 +838,7 @@ static long processAiAverage(aiRecord *pr)
 
     if (getCallbackValue(pPvt)) {
         /* Record is I/O Intr scanned and the average has been put in the ring buffer */
-        val = pPvt->result.value;
+        val = (double)pPvt->result.value;
         pr->time = pPvt->result.time;
     } else {
         if (pPvt->numAverage == 0) {
@@ -894,7 +894,7 @@ static long initAo(aoRecord *pao)
         if (pPvt->bipolar && (value & pPvt->signBit)) value |= ~pPvt->mask;
     }
     if (status == asynSuccess) {
-        pao->val = value;
+        pao->val = (epicsFloat64)value;
         return INIT_DO_NOT_CONVERT;
     }
     return INIT_DO_NOT_CONVERT; /* Do not convert */
@@ -911,7 +911,7 @@ static long processAo(aoRecord *pr)
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
-            value = pPvt->result.value;
+            value = (double)pPvt->result.value;
             pr->udf = 0;
             if (pr->linr == menuConvertNO_CONVERSION){
                 ; /*do nothing*/
@@ -923,7 +923,7 @@ static long processAo(aoRecord *pr)
             pr->udf = isnan(value);
         }
     } else if(pr->pact == 0) {
-        pPvt->result.value = pr->val;
+        pPvt->result.value = (epicsInt64)pr->val;
         if(pPvt->canBlock) {
             pr->pact = 1;
             pPvt->asyncProcessingActive = 1;
@@ -983,7 +983,7 @@ static long processLi(longinRecord *pr)
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(pr, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
     if(pPvt->result.status==asynSuccess) {
-        pr->val = pPvt->result.value;
+        pr->val = (epicsInt32)pPvt->result.value;
         pr->udf=0;
         return 0;
     }
@@ -1007,7 +1007,7 @@ static long initLo(longoutRecord *pr)
     status = pasynInt64SyncIO->read(pPvt->pasynUserSync,
                       &value, pPvt->pasynUser->timeout);
     if (status == asynSuccess) {
-        pr->val = value;
+        pr->val = (epicsInt32)value;
         pr->udf = 0;
     }
     return INIT_OK;
@@ -1022,7 +1022,7 @@ static long processLo(longoutRecord *pr)
     if (pPvt->newOutputCallbackValue && getCallbackValue(pPvt)) {
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
-            pr->val = pPvt->result.value;
+            pr->val = (epicsInt32)pPvt->result.value;
             pr->udf = 0;
         }
     } else if(pr->pact == 0) {
