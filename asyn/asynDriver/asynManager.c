@@ -1829,7 +1829,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
                 pasynUserCopy->errorMessage);
             epicsMutexUnlock(plockPortPvt->queueLockPortMutex);
             pasynManager->freeAsynUser(pasynUserCopy);
-            return asynError;
+            return status;
         }
         /* Wait for event from the port thread in the queueLockPortCallback function */
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort waiting for event\n", pport->portName);
@@ -1840,7 +1840,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
                 "asynManager::queueLockPort queueRequest timed out");
             epicsMutexUnlock(plockPortPvt->queueLockPortMutex);
             pasynManager->freeAsynUser(pasynUserCopy);
-            return asynError;
+            return asynTimeout;
         }
         pasynManager->freeAsynUser(pasynUserCopy);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort got event from callback\n", pport->portName);
