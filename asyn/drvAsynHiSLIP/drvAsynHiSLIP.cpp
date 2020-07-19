@@ -225,17 +225,19 @@ report(void *pvt, FILE *fp, int details)
         showCount(fp, "Receive", pdpvt->bytesReceivedCount);
 	//
 	fprintf(fp, "HiSLIP device Info:\n");
-	fprintf(fp, "%s: %x\n", "Terminator", pdpvt->termChar);
-	fprintf(fp, "HiSLIP device address:%s\n",
+	fprintf(fp, "\t" "%s: %lu\n", "maximum_message_size", pdpvt->device->maximum_message_size);
+	fprintf(fp, "\t" "%s: %lu\n", "maximum_payload_size", pdpvt->device->maximum_payload_size);
+	fprintf(fp, "\t" "%s: %x\n", "Terminator", pdpvt->termChar);
+	fprintf(fp, "\t" "HiSLIP device address:%s\n",
 		pdpvt->hostname);
-	fprintf(fp, "overlap/sync. mode:%s\n",
+	fprintf(fp, "\t" "overlap/sync. mode:%s\n",
 		pdpvt->device->overlap_mode?"ovelap":"synchronized");
-	fprintf(fp, "Session ID:%d\n",
+	fprintf(fp, "\t" "Session ID:%d\n",
 		pdpvt->device->session_id);
-	fprintf(fp, "server_protocol_version/server_vendorID : %#x %#x\n",
+	fprintf(fp, "\t" "server_protocol_version/server_vendorID : %#x %#x\n",
 		pdpvt->device->server_protocol_version,
 		pdpvt->device->server_vendorID);
-	fprintf(fp, "sync/async socket number %d/%d\n",
+	fprintf(fp, "\t" "sync/async socket number %d/%d\n",
 		pdpvt->device->sync_channel,
 		pdpvt->device->async_channel);
 	fprintf(fp, "socket/locktime  %ld/%ld\n",
@@ -261,6 +263,7 @@ disconnectIfGone(drvPvt *pdpvt, asynUser *pasynUser, int s)
 static asynStatus
 connect(void *pvt, asynUser *pasynUser)
 {
+  long rstatus;
   drvPvt *pdpvt = (drvPvt *)pvt;
 
   if (!pdpvt->isConnected || (pdpvt->device == NULL)) {
@@ -273,6 +276,12 @@ connect(void *pvt, asynUser *pasynUser)
   pdpvt->connectionCount +=1;
   
   // setup private buffer for read.
+  if (pdpvt->bufSize > 0){
+    rstatus=pdpvt->device->set_max_size(pdpvt->bufSize);
+  }
+  else{
+    rstatus=pdpvt->device->set_max_size(nsHiSLIP::MAXIMUM_MESSAGE_SIZE);
+  }
   pdpvt->bufSize=pdpvt->device->maximum_payload_size;
   
   if (pdpvt->bufSize <=0){
@@ -280,7 +289,8 @@ connect(void *pvt, asynUser *pasynUser)
     return asynError;
   }
   
-  pdpvt->buf=(unsigned char *)callocMustSucceed(1,
+  pdpvt->buf=(unsigned char *)callocMustSucceed(
+						1,
 						pdpvt->bufSize+1,
 						pdpvt->portName);
   //ensure buffer ends with a null character.
@@ -401,7 +411,7 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
     assert(pdpvt->device);
     assert(nbytesTransfered);
     
-    if(eomReason) {*eomReason=eom=0;}
+    if(eomReason) {*eomReason=eom;}
     if(nbytesTransfered) {*nbytesTransfered = nout = 0;}
 
     // errlogPrintf("asynOctetRead timeout:%g host:%s maxchars:%ld bufCount:%ld reason:%x\n",
@@ -421,7 +431,13 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
 				    (u_int8_t *) pdpvt->buf,
 				    pdpvt->bufSize,
 				    timeout);
-	if (status != 0){
+	epicsSnprintf(pasynUser->errorMessage,
+			pasynUser->errorMessageSize,
+		      "HiSLIP-asynOctetRead"
+		      " ioCount: %ld, buffer: %p, bffersize:%lu, timeout:%d status:%d\n",
+		      ioCount, pdpvt->buf, pdpvt->bufSize, timeout, status);
+	
+	if (status != 0) {
 	  disconnectIfGone(pdpvt, pasynUser, 0);
 	  epicsSnprintf(pasynUser->errorMessage,
 			pasynUser->errorMessageSize,
@@ -433,9 +449,11 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
 	pdpvt->bufp=pdpvt->buf;
 	pdpvt->bufCount = ioCount;
 	pdpvt->bytesReceivedCount += ioCount;
-	errlogPrintf("asynOctetRead data:%s, "
-		     "maxchars:%ld,nbytesTransfered:%ld, eomReason:%d\n",
-		     data, maxchars, nout, eom);
+	epicsSnprintf(pasynUser->errorMessage,
+		      pasynUser->errorMessageSize,
+		      "HiSLIP-asynOctetRead data:%s, "
+		      "maxchars:%ld, nbytesTransfered:%ld, eomReason:%d\n",
+		      data, maxchars, nout, eom);
       }
       if (pdpvt->bufCount) {
 	if (maxchars > pdpvt->bufCount){
@@ -596,6 +614,7 @@ static asynDrvUser drvUserMethods = {
 void
 HiSLIPConfigure(const char *portName,
                 const char *hostInfo,
+		const int messagesize,
                 int priority)
 {
     drvPvt *pdpvt;
@@ -619,7 +638,8 @@ HiSLIPConfigure(const char *portName,
 					      strlen(hostInfo)+1,
 					      "HiSLIPConfigure");
     strcpy(pdpvt->hostname, hostInfo);
-    
+
+    pdpvt->bufSize=messagesize;
     
     pdpvt->termChar = 0;
     pdpvt->interruptTidMutex = epicsMutexMustCreate();
@@ -702,21 +722,26 @@ static const iocshArg HiSLIPConfigureArg0 = {"port name",
 					     iocshArgString};
 static const iocshArg HiSLIPConfigureArg1 = {"HiSLIP host address",
 					     iocshArgString};
-static const iocshArg HiSLIPConfigureArg2 = {"priority",
+static const iocshArg HiSLIPConfigureArg2 = {"MessageSize",
+					     iocshArgInt};
+static const iocshArg HiSLIPConfigureArg3 = {"priority",
 					     iocshArgInt};
 static const iocshArg *HiSLIPConfigureArgs[] = {
 						&HiSLIPConfigureArg0
                                                 , &HiSLIPConfigureArg1
                                                 , &HiSLIPConfigureArg2
+						, &HiSLIPConfigureArg3
 };
  
 static const iocshFuncDef HiSLIPConfigureFuncDef =
-  {"HiSLIPConfigure", 3, HiSLIPConfigureArgs};
+  {"HiSLIPConfigure", 4, HiSLIPConfigureArgs};
 
 static void HiSLIPConfigureCallFunc(const iocshArgBuf *args)
 {
     HiSLIPConfigure (args[0].sval,
-                     args[1].sval, args[2].ival);
+                     args[1].sval,
+		     args[2].ival,		     
+		     args[3].ival);
 }
 
 /*
