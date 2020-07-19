@@ -15,6 +15,7 @@
 
 #include <poll.h>
 #include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <netdb.h>
 #include <pthread.h>  // for MacOS
 
@@ -415,8 +416,8 @@ namespace nsHiSLIP{
     //sem_t srq_lock;
     pthread_mutex_t srq_lock;
     HiSLIP(){
-      this->maximum_message_size=MAXIMUM_MESSAGE_SIZE;
-      this->maximum_payload_size=MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
+      this->maximum_message_size=this->current_message_size= MAXIMUM_MESSAGE_SIZE;
+      this->maximum_payload_size=this->current_payload_size= MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
       this->socket_timeout=SOCKET_TIMEOUT;
       this->lock_timeout=LOCK_TIMEOUT;
       this->overlap_mode=false;
@@ -452,7 +453,7 @@ namespace nsHiSLIP{
       return this->lock_timeout;
     };
 
-    long set_max_size(long message_size);
+    long set_max_size(unsigned long message_size);
     int  device_clear(u_int8_t);
     u_int8_t status_query(void);
     //long write(u_int8_t *data_str, long timeout=LOCK_TIMEOUT);

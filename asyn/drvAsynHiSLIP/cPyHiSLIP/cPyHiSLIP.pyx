@@ -73,8 +73,7 @@ cdef class HiSLIP:
       cdef unsigned char **pbuffer=&buffer;
       cdef size_t recieved=0
       cdef int rt
-      cdef size_t lmsg
-      #lmsg=len(msg)
+
       recieved=self.thisobj.ask(msg, len(msg),
                                 pbuffer,
                                 wait_time)

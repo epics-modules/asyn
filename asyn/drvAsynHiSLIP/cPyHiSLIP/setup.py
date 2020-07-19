@@ -48,7 +48,7 @@ HGcheckedin="$checked in by:$"
 release=HGTag
 #rev=HGTag[HGTag.index(":")+1:HGTag.index("-")].strip()
 #rev=HGTagShort.strip()
-rev="0.1.1"
+rev="0.1.4"
 #
 
 sysname=platform.system()

@@ -60,7 +60,14 @@ namespace nsHiSLIP{
     
     this->sync_channel= ::socket(AF_INET, SOCK_STREAM , 0);
     this->async_channel=::socket(AF_INET, SOCK_STREAM , 0);
-
+    {
+      int flag=1, reta, rets;
+      rets = setsockopt( this->sync_channel, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
+      reta = setsockopt( this->sync_channel, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
+      if ((rets == -1) || (reta == -1)){
+	perror("Couldn't set  sockopt(TCP_DELAY).\n");
+      }
+    }
     if (res-> ai_addr == NULL || res->ai_addrlen == 0){
       perror("empty addinfo");
       freeaddrinfo(res);
@@ -129,7 +136,7 @@ namespace nsHiSLIP{
     
   };
 
-  long HiSLIP::set_max_size(long message_size){
+  long HiSLIP::set_max_size(unsigned long message_size){
     Message resp(AnyMessages);
     u_int64_t msg_size=htobe64(message_size);
 
@@ -152,7 +159,7 @@ namespace nsHiSLIP{
     //The 8-byte buffer size is sent in network order as a 64-bit integer.
     this->maximum_message_size=be64toh(*((u_int64_t *)(resp.payload)));
     this->maximum_payload_size = this->maximum_message_size - HEADER_SIZE;
-    if (message_size < maximum_message_size){
+    if (message_size < this->maximum_message_size){
       this->current_message_size=message_size;
       this->current_payload_size=message_size - HEADER_SIZE;
     }
@@ -292,7 +299,7 @@ namespace nsHiSLIP{
     *received=0;
     this->rmt_delivered = false;
     if (*buffer == NULL){
-      *buffer=(u_int8_t *) calloc(1,this->maximum_message_size);
+      *buffer=(u_int8_t *) calloc(1,this->current_message_size);
     }
     if (*buffer == NULL){
       perror("buffer allocation error");

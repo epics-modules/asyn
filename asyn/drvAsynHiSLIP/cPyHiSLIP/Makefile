@@ -12,4 +12,4 @@
 markdown: README.md README.txt
 
 upload: 
-	python3 -m twine upload  dist/PyVXI11-$(shell hg parents --template '{latesttag}.{latesttagdistance}').tar.gz
+	python3 -m twine upload  dist/cPyHiSLIP-0.1.3.tar.gz 
