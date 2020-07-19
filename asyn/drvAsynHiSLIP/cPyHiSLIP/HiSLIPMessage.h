@@ -77,7 +77,7 @@ namespace nsHiSLIP{
   
   //Following VISA 256 bytes + header length 16 bytes
   static const long  MAXIMUM_MESSAGE_SIZE_VISA = 272;
-  static const long  MAXIMUM_MESSAGE_SIZE= 4096;//R&S accept more than this
+  static const long  MAXIMUM_MESSAGE_SIZE= 8192;//R&S accept more than this
   static const long  HEADER_SIZE=16;
   static const long  SOCKET_TIMEOUT = 1000; //# Socket timeout in msec
   static const long  LOCK_TIMEOUT = 3000;//# Lock timeout
@@ -238,20 +238,24 @@ namespace nsHiSLIP{
     }
     
     size_t recv(int socket){
-      char buffer[HEADER_SIZE];
+      unsigned char buffer[HEADER_SIZE];
+      return this->recv(socket,buffer);
+    }
+    
+    size_t recv(int socket, void *buffer){
       ssize_t rsize;
       //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
-      rsize= ::recvfrom(socket, buffer, HEADER_SIZE, 0, NULL, NULL);
+      rsize = ::recvfrom(socket, buffer, HEADER_SIZE, 0, NULL, NULL);
       // rsize= ::read(socket, buffer, HEADER_SIZE);
-      
+
       if (rsize < HEADER_SIZE){
 	//raise exception?
 	return -1;
       }
-      else if (memcmp(this->prologue, buffer,2) != 0){
+      
+      if (memcmp(this->prologue, buffer, 2) != 0){
 	return -1;
       }
-
       this->message_type=*((u_int8_t *) ((char *) buffer+2));
       this->control_code=*((u_int8_t *) ((char *) buffer+3));
       this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
@@ -261,7 +265,7 @@ namespace nsHiSLIP{
     }
     
     int fromRawData(void *buffer){ //DeSerialize
-      if (memcmp(this->prologue, buffer,2) != 0){
+      if (memcmp(this->prologue, buffer, 2) != 0){
 	//error
 	return -1;
       }
@@ -389,8 +393,10 @@ namespace nsHiSLIP{
     
   typedef class HiSLIP {
   public:
-    unsigned long maximum_message_size;
+    unsigned long maximum_message_size; // max message size server accept
     unsigned long maximum_payload_size;
+    unsigned long current_message_size; // current max message size setting
+    unsigned long current_payload_size; 
     long socket_timeout;
     long lock_timeout;
     int sync_channel;

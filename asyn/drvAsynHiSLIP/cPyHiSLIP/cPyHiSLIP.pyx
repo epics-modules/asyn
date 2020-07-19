@@ -20,6 +20,7 @@ cdef class HiSLIP:
       self.thisobj=new cHiSLIP()
       if host:
           self.thisobj.connect(host, Default_device_name, HiSLIPPort)
+          self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
 
   def __dealloc__(self):
       del self.thisobj
@@ -28,7 +29,8 @@ cdef class HiSLIP:
   def connect(self, host, device=Default_device_name, port=HiSLIPPort):
       debug("connect to {} {} {}".format(host,device, port))
       self.thisobj.connect(host,device,port)
-
+      self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+      
   def write(self, msg, long timeout=3000):
       self.thisobj.write(msg, len(msg), timeout)
 
@@ -49,11 +51,11 @@ cdef class HiSLIP:
        else:
            if (buffer == NULL):
                raise RuntimeError("NULL pointer")
-           return (recieved, buffer)
+           return (recieved, <bytes> buffer[:recieved]) # to avoid truncated string by \x00 in rawdata
    
   def read(self, long timeout=3000):
       recieved, buffer=self._cread(timeout)
-      # debug("cread result {} {}".format(recieved,len(buffer)))
+      debug("cread result {} {}".format(recieved,len(buffer)))
       return (recieved, buffer[:recieved])
 
   def ask(self, msg, long wait_time=3000):
@@ -80,7 +82,7 @@ cdef class HiSLIP:
       if (recieved & 0x8000000000000000L):
           return (-1,None)
       elif (recieved > 0 and (buffer != NULL)):
-          return (recieved, buffer)
+          return (recieved, buffer[:recieved])
       else:
           return (recieved, None)
           
@@ -115,6 +117,16 @@ cdef class HiSLIP:
   def get_max_payload_size(self):
       cdef long ms
       ms=self.thisobj.maximum_payload_size
+      return ms
+
+  def get_message_size(self):
+      cdef size_t ms
+      ms=self.thisobj.current_message_size
+      return ms
+
+  def get_payload_size(self):
+      cdef long ms
+      ms=self.thisobj.current_payload_size
       return ms
 
   def device_clear(self,int request=0):

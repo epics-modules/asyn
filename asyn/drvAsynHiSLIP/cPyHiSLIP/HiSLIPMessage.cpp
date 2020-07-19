@@ -124,6 +124,9 @@ namespace nsHiSLIP{
     this->async_poll.fd=this->async_channel;
     this->async_poll.events=POLLIN;
     this->async_poll.revents=0;
+
+    this->set_max_size(this->maximum_message_size);
+    
   };
 
   long HiSLIP::set_max_size(long message_size){
@@ -149,6 +152,14 @@ namespace nsHiSLIP{
     //The 8-byte buffer size is sent in network order as a 64-bit integer.
     this->maximum_message_size=be64toh(*((u_int64_t *)(resp.payload)));
     this->maximum_payload_size = this->maximum_message_size - HEADER_SIZE;
+    if (message_size < maximum_message_size){
+      this->current_message_size=message_size;
+      this->current_payload_size=message_size - HEADER_SIZE;
+    }
+    else{
+      this->current_message_size = this->maximum_message_size;
+      this->current_payload_size = this->maximum_payload_size;
+    }
     return this->maximum_message_size;
   };
 
@@ -276,9 +287,8 @@ namespace nsHiSLIP{
   
   long HiSLIP::read(size_t *received, u_int8_t **buffer, long timeout){
     bool eom=false;
-    size_t rsize=0;
+    long rstatus=0;
     
-
     *received=0;
     this->rmt_delivered = false;
     if (*buffer == NULL){
@@ -296,11 +306,15 @@ namespace nsHiSLIP{
       if ( ready == 0){
 	return -1;
       }
-      rsize=resp.recv(this->sync_channel);
-      if (rsize < 0){
+      
+      rstatus=resp.recv(this->sync_channel);
+      if (rstatus < 0){
 	//Error!!
 	return -2;
       };
+      
+      // ::printf("HiSLIP read() received status:%ld pay_load Size:%llu \n",
+      // 	       rstatus, resp.payload_length);
       
       // may not be a good idea to reallocate memory evertime.
       // 'message_parameter' should be checkd
@@ -338,9 +352,10 @@ namespace nsHiSLIP{
   };
   
   long HiSLIP::read(size_t *received,
-		   u_int8_t *buffer, size_t bsize, long timeout){
+		    u_int8_t *buffer, size_t bsize,
+		    long timeout){
     bool eom=false;
-    size_t rsize=0;
+    long rstatus;
     
     *received=0;
     this->rmt_delivered = false;
@@ -349,6 +364,7 @@ namespace nsHiSLIP{
       return -1;
     }
     if (bsize < this->maximum_payload_size){
+      ::printf("HiSLIP buffersize:%ld is smallerthan maximum_payload_size:%ld \n ",bsize,this->maximum_payload_size);
     }
     while(!eom) {
       int ready;
@@ -360,9 +376,12 @@ namespace nsHiSLIP{
 	return -1;
       }
       
-      rsize=resp.recv(this->sync_channel);
-
-      if (rsize < 0){
+      rstatus=resp.recv(this->sync_channel);
+      
+      // ::printf("HiSLIP read() received status:%ld pay_load Size:%llu buffer size: %ld \n",
+      // 	       rstatus, resp.payload_length, bsize);
+      
+      if (rstatus < 0){
 	return -1;
       };
       if (( (*received) + resp.payload_length) > bsize){

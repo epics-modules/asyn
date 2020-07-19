@@ -28,6 +28,7 @@ cdef extern from "HiSLIPMessage.h":
 
 
 cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
+  cdef const long  MAXIMUM_MESSAGE_SIZE "nsHiSLIP::MAXIMUM_MESSAGE_SIZE"
   cdef char *   Default_device_name "nsHiSLIP::Default_device_name"
   cdef int HiSLIPPort "nsHiSLIP::Default_Port"       # not in /etc/services
 
@@ -38,6 +39,9 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
   cdef cppclass cHiSLIP "nsHiSLIP::HiSLIP":
     unsigned long maximum_message_size
     unsigned long maximum_payload_size
+    unsigned long current_message_size
+    unsigned long current_payload_size
+    
     int overlap_mode;
     u_int8_t feature_setting
     int session_id;
