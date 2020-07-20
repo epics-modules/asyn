@@ -315,11 +315,17 @@ namespace nsHiSLIP{
     }
     size_t send(int socket){
       size_t ssize;
-      ssize=this->Header::send(socket);
-      if (ssize < HEADER_SIZE){
-	return -1;
-      }
-      return (ssize + ::send(socket, this->payload, this->payload_length,0));
+      // ssize=this->Header::send(socket);
+      // if (ssize < HEADER_SIZE){
+      // 	return -1;
+      // }
+      // return (ssize + ::send(socket, this->payload, this->payload_length,0));
+      u_int8_t *buffer = (u_int8_t *) calloc(sizeof(Header)+this->payload_length, 1);
+      this->toRawData(buffer);
+      memcpy(buffer+sizeof(Header),this->payload, this->payload_length);
+      ssize= ::send(socket, buffer, sizeof(Header)+this->payload_length,0);
+      free(buffer);
+      return ssize;
     }
     
     size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages){

@@ -55,19 +55,22 @@ namespace nsHiSLIP{
       exit (9999);
     }
 
-    //this->sync_channel= ::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    //this->async_channel=::socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
-    
     this->sync_channel= ::socket(AF_INET, SOCK_STREAM , 0);
     this->async_channel=::socket(AF_INET, SOCK_STREAM , 0);
+    // now Message::send put both header portion and pyload portion as single transaction. So we dont need to use this
+    // portion of codes(?).
+#   ifdef USE_TCP_NODELAY
     {
+      // disable the Nagle algorithm on socket to improve responce with small packet size
+      // this may increase number of small packets. So may degrade overall network performance.
       int flag=1, reta, rets;
       rets = setsockopt( this->sync_channel, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
       reta = setsockopt( this->sync_channel, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(flag) );
       if ((rets == -1) || (reta == -1)){
-	perror("Couldn't set  sockopt(TCP_DELAY).\n");
+    	perror("Couldn't set  sockopt(TCP_DELAY).\n");
       }
     }
+#   endif    
     if (res-> ai_addr == NULL || res->ai_addrlen == 0){
       perror("empty addinfo");
       freeaddrinfo(res);
