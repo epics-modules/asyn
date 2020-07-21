@@ -85,8 +85,9 @@
 # endif
 #endif
 
-/* On most systems we use SO_REUSEPORT but RTEMS and Windows don't have SO_REUSEPORT, use SO_REUSEADDR instead */
-#if defined(__rtems__) || defined(_WIN32)
+/* If SO_REUSEPORT is not defined then use SO_REUSEADDR instead.  
+   It is not defined on RTEMS, Windows and older Linux versions. */
+#ifndef SO_REUSEPORT
 # define USE_SO_REUSEADDR
 #endif
 
