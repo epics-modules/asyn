@@ -79,7 +79,7 @@ ext_modules.append(Extension("cPyHiSLIP",
                              ,depends=["cPyHiSLIP.pxd"] # Cython interface file
                              ,language="c++"
                              ,cython_cplus=True
-                             ,undef_macros=[]   # ["CFLAGS"]
+                             ,undef_macros =[]   # ["CFLAGS"]
                              ,define_macros=[]  # [("USE_TCP_NODELAY",1)]
                              ,extra_compile_args=["-std=gnu++11", "-O3"],
 ))
