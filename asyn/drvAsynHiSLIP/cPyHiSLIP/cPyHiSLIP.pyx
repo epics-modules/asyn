@@ -16,8 +16,10 @@ from logging import info,debug,warn,log,fatal
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
 
-  def __cinit__(self,host=None):
+  def __cinit__(self):
       self.thisobj=new cHiSLIP()
+      
+  def __init__(self, host=None):
       if host:
           self.thisobj.connect(host, Default_device_name, HiSLIPPort)
           self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
@@ -30,7 +32,14 @@ cdef class HiSLIP:
       debug("connect to {} {} {}".format(host,device, port))
       self.thisobj.connect(host,device,port)
       self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
-      
+
+  @property
+  def session_id(self):
+      """
+      a getter function for the property session_id.
+      """
+      return self.thisobj.session_id
+
   def write(self, msg, long timeout=3000):
       self.thisobj.write(msg, len(msg), timeout)
 
@@ -100,12 +109,14 @@ cdef class HiSLIP:
   
   def get_lock_timeout(self):
       cdef long to
-      to=self.thisobj.get_lock_timeout()
+      with nogil:
+          to=self.thisobj.get_lock_timeout()
       return to
 
   def set_max_message_size(self, size_t message_size):
       cdef long ms
-      ms=self.thisobj.set_max_size(message_size)
+      with nogil:
+          ms=self.thisobj.set_max_size(message_size)
       return ms
   
   def get_max_message_size(self):
@@ -130,7 +141,8 @@ cdef class HiSLIP:
 
   def device_clear(self,int request=0):
       cdef long rc
-      rc=self.thisobj.device_clear(request)
+      with nogil:
+          rc=self.thisobj.device_clear(request)
       return rc
 
   def status_query(self):
@@ -146,12 +158,14 @@ cdef class HiSLIP:
       7	128 Operation Status Register (OPER)
       """
       cdef u_int8_t rc
-      rc=self.thisobj.status_query()
+      with nogil:
+          rc=self.thisobj.status_query()
       return rc
   
   def trigger_message(self):
       cdef long rc
-      rc=self.thisobj.trigger_message()
+      with nogil:
+          rc=self.thisobj.trigger_message()
       return rc
 
   def remote_local(self, u_int8_t request):
@@ -167,9 +181,8 @@ cdef class HiSLIP:
       """
       cdef long rc
       #cdef u_int8_t _request=request
-      
-      rc=self.thisobj.remote_local(request)
-
+      with nogil:
+          rc=self.thisobj.remote_local(request)
       return rc
 
   def request_lock(self, char * lock_string):
@@ -181,8 +194,8 @@ cdef class HiSLIP:
       """
       cdef long rc
       #cdef char *_lock_string=lock_string
-      
-      rc=self.thisobj.request_lock(lock_string)
+      with nogil:
+          rc=self.thisobj.request_lock(lock_string)
       
       return rc
 
@@ -194,23 +207,30 @@ cdef class HiSLIP:
       3 - Error
       """
       cdef long rc
-      rc=self.thisobj.release_lock()
+      with nogil:
+          rc=self.thisobj.release_lock()
       return rc
   
   def request_srq_lock(self):
       """
-      Not implemented in .cpp yet.
+      implemented in HiSLIPMessage.cpp.
+      rc :0  success
+         :others error
       """
       cdef long rc=-1
-      rc=self.thisobj.request_srq_lock()
+      with nogil:
+          rc=self.thisobj.request_srq_lock()
       return rc
   
   def release_srq_lock(self):
       """
       Not implemented in .cpp yet.
+      0: success
+      other: error
       """
       cdef long rc=-1
-      rc=self.thisobj.release_srq_lock()
+      with nogil:
+          rc=self.thisobj.release_srq_lock()
       return rc
 
   def check_srq_lock(self):
@@ -220,7 +240,8 @@ cdef class HiSLIP:
       -1: 
       """
       cdef int rc=-1
-      rc=self.thisobj.check_srq_lock()
+      with nogil:
+          rc=self.thisobj.check_srq_lock()
       return rc
 
   def check_and_lock_srq_lock(self):
@@ -229,7 +250,8 @@ cdef class HiSLIP:
       0: already locked
       """
       cdef int rc
-      rc=self.thisobj.check_and_lock_srq_lock()
+      with nogil:
+          rc=self.thisobj.check_and_lock_srq_lock()
       return rc
   
   def get_overlap_mode(self):
@@ -248,12 +270,14 @@ cdef class HiSLIP:
   
   def get_Service_Request(self):
       cdef u_int8_t rc=0
-      rc=self.thisobj.get_Service_Request()
+      with nogil:
+          rc=self.thisobj.get_Service_Request()
       return rc
       
   def wait_for_SRQ(self, long wait_time):
       cdef int rc=-1
-      rc=self.thisobj.wait_for_SRQ(wait_time)
+      with nogil:
+          rc=self.thisobj.wait_for_SRQ(wait_time)
       return rc
                    
 cdef class enumType:

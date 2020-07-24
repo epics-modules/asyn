@@ -548,15 +548,8 @@ namespace nsHiSLIP{
       return -1;
     }
   };
+
   int HiSLIP::check_srq_lock(void){
-    // int sval;
-    // if (sem_getvalue(&(this->srq_lock),&sval) == 0){
-    //   return sval;
-    // }
-    // else {
-    //   perror("check_srq_lock");
-    //   return -1;
-    // }
     int rc=pthread_mutex_trylock(&(this->srq_lock));
     if (rc == 0){
       pthread_mutex_unlock(&(this->srq_lock));
@@ -570,17 +563,6 @@ namespace nsHiSLIP{
   }
   
   int HiSLIP::check_and_lock_srq_lock(void){
-    // int rc=sem_trywait(&(this->srq_lock));
-    // switch (rc){
-    // case 0:
-    //   break;
-    // case EAGAIN:
-    //   break;
-    // default:
-    //   perror("check_and_lock_srq_lock");
-    // }
-    // return rc;
-
     int rc=pthread_mutex_trylock(&(this->srq_lock));
     switch (rc){
     case 0:
