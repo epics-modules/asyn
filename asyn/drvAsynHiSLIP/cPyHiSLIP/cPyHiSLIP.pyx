@@ -20,18 +20,24 @@ cdef class HiSLIP:
       self.thisobj=new cHiSLIP()
       
   def __init__(self, host=None):
+      cdef char *chost=host
       if host:
-          self.thisobj.connect(host, Default_device_name, HiSLIPPort)
-          self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+          with nogil:
+              self.thisobj.connect(chost, Default_device_name, HiSLIPPort)
+              self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
 
   def __dealloc__(self):
       del self.thisobj
       pass
   
   def connect(self, host, device=Default_device_name, port=HiSLIPPort):
+      cdef char *chost=host
+      cdef char *cdevice =device
+      cdef int cport =port
       debug("connect to {} {} {}".format(host,device, port))
-      self.thisobj.connect(host,device,port)
-      self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+      with nogil:
+          self.thisobj.connect(chost,cdevice,cport)
+          self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
 
   @property
   def session_id(self):
@@ -41,7 +47,10 @@ cdef class HiSLIP:
       return self.thisobj.session_id
 
   def write(self, msg, long timeout=3000):
-      self.thisobj.write(msg, len(msg), timeout)
+      cdef u_int8_t *cmsg=msg
+      cdef size_t ssize=len(msg)
+      with nogil:
+          self.thisobj.write(cmsg, ssize, timeout)
 
   cdef _cread(self,long timeout=3000):
        cdef unsigned char *buffer=NULL
@@ -50,7 +59,8 @@ cdef class HiSLIP:
        cdef size_t *precieved=&recieved
        cdef int rt
        # debug("calling read in c++")
-       rt=self.thisobj.read(precieved, pbuffer, timeout)
+       with nogil:
+           rt=self.thisobj.read(precieved, pbuffer, timeout)
        if rt == -1:
            if (buffer != NULL):
                free(buffer)
@@ -94,10 +104,12 @@ cdef class HiSLIP:
       cdef unsigned char **pbuffer=&buffer;
       cdef size_t recieved=0
       cdef int rt
-
-      recieved=self.thisobj.ask(msg, len(msg),
-                                pbuffer,
-                                wait_time)
+      cdef size_t msgsz=len(msg)
+      
+      with nogil:
+          recieved=self.thisobj.ask(msg,  msgsz,
+                                    pbuffer,
+                                    wait_time)
       debug("_ask recieved: {}".format(hex(recieved)))
       if (recieved & 0x8000000000000000L):
           if (buffer != NULL):
@@ -113,16 +125,19 @@ cdef class HiSLIP:
           return (recieved, None)
           
   def set_timeout(self,long timeout):
-      self.thisobj.set_timeout(timeout)
+      with nogil:
+          self.thisobj.set_timeout(timeout)
       return
   
   def get_timeout(self):
       cdef long to
-      to=self.thisobj.get_timeout()
+      with nogil:
+          to=self.thisobj.get_timeout()
       return to
 
   def set_lock_timeout(self, long to):
-      self.thisobj.set_lock_timeout(to)
+      with nogil:
+          self.thisobj.set_lock_timeout(to)
       return
   
   def get_lock_timeout(self):
