@@ -5,6 +5,8 @@
 cdef int SCPIRawSocketPort=5025 # both udp/tcp
 cdef int SCPITelnetPort=5024    # both udp/tcp
 
+cdef extern from "stdlib.h":
+   cdef void free (void *)
 
 cdef extern from "HiSLIPMessage.h":
   # you don’t need to match the type exactly,

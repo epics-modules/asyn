@@ -290,16 +290,28 @@ namespace nsHiSLIP{
   typedef class Message:public Header{
   public:
     void   *payload;
-
+    int    clean_on_exit;
+    
+    ~Message(){
+      if ((this->payload != NULL) && (this->clean_on_exit==1)){
+	::free(this->payload);
+	this->payload=NULL;
+	this->clean_on_exit=0;
+      }
+    };
+    
     Message(Message_Types_t message_type):Header(message_type){
       this->payload=NULL;
+      this->clean_on_exit=0;
     };
     Message(void *raw_header):Header(raw_header){
       this->payload=NULL;
+      this->clean_on_exit=0;
       //this->fromRawData(raw_header);
     };
     Message(void *raw_header, void *payload):Message(raw_header){
       this->payload =  calloc(this->payload_length, 1);
+      this->clean_on_exit=1;
       if (this->payload != NULL){
 	memcpy(this->payload, payload, this->payload_length);
       };
@@ -309,6 +321,7 @@ namespace nsHiSLIP{
 	    message_parameter_t param,
 	    u_int64_t length,
 	    u_int8_t *payload):Header(type,cce,param,length),payload(payload) {
+      this->clean_on_exit=0;
       //this->payload= (void *) callocMustSucceed(1, length, "HiSLIP pyload buffer");
       //memcpy(this->payload, payload, length);
       //this->payload = payload;
@@ -345,6 +358,7 @@ namespace nsHiSLIP{
 	  perror("faile to allocate memory for payload.");
 	  return -1;
 	}
+	this->clean_on_exit=1;
       }
       
       rsize=0; //returns size of recieved payload. should be same as payload_length
@@ -396,6 +410,7 @@ namespace nsHiSLIP{
       }
       return -1;
     }
+    
   } Message_t;
     
   typedef class HiSLIP {

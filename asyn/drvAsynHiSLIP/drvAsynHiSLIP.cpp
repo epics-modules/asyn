@@ -315,7 +315,6 @@ static asynStatus disconnect(void *pvt, asynUser *pasynUser)
         int pass = 0;
         epicsThreadId tid;
         for (;;) {
-
             epicsMutexLock(pdpvt->interruptTidMutex);
             tid = pdpvt->interruptTid;
             epicsMutexUnlock(pdpvt->interruptTidMutex);

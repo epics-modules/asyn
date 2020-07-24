@@ -52,15 +52,27 @@ cdef class HiSLIP:
        # debug("calling read in c++")
        rt=self.thisobj.read(precieved, pbuffer, timeout)
        if rt == -1:
+           if (buffer != NULL):
+               free(buffer)
+               buffer=NULL
            raise RuntimeError("Timeout")
        elif rt < 0:
+           if (buffer != NULL):
+               free(buffer)
+               buffer=NULL
            raise RuntimeError
        if recieved == 0:
+           if (buffer != NULL):
+               free(buffer)
+               buffer=NULL
            return (recieved, None)
        else:
            if (buffer == NULL):
                raise RuntimeError("NULL pointer")
-           return (recieved, <bytes> buffer[:recieved]) # to avoid truncated string by \x00 in rawdata
+           rval=(recieved, <bytes> buffer[:recieved]) # to avoid truncated string by \x00 in rawdata
+           free(buffer)
+           buffer=NULL
+           return rval
    
   def read(self, long timeout=3000):
       recieved, buffer=self._cread(timeout)
@@ -88,9 +100,15 @@ cdef class HiSLIP:
                                 wait_time)
       debug("_ask recieved: {}".format(hex(recieved)))
       if (recieved & 0x8000000000000000L):
+          if (buffer != NULL):
+              free(buffer)
+              buffer=NULL
           return (-1,None)
       elif (recieved > 0 and (buffer != NULL)):
-          return (recieved, buffer[:recieved])
+          rval=(recieved, buffer[:recieved])
+          free(buffer)
+          buffer=NULL
+          return rval
       else:
           return (recieved, None)
           

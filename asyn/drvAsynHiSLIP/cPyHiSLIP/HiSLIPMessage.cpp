@@ -311,7 +311,7 @@ namespace nsHiSLIP{
     while(!eom) {
       int ready;
       Message resp(AnyMessages);
-      
+	
       ready=poll(&this->sync_poll,  1, this->socket_timeout);
       if ( ready == 0){
 	return -1;
@@ -434,7 +434,7 @@ namespace nsHiSLIP{
       buffer=NULL;
       return -1;
     };
-    status=this->read(&rsize, &buffer, wait_time);
+    status=this->read(&rsize, &buffer, wait_time); // read will allocate memory area pointed by buffer.
     if (status !=0){
       rsize=-1;
     }
@@ -442,6 +442,7 @@ namespace nsHiSLIP{
       *rbuffer=buffer;
     }
     else {
+      if (buffer != NULL) free(buffer);
       buffer=NULL;
     }
     return rsize;
