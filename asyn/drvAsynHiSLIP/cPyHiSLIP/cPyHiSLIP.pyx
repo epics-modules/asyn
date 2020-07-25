@@ -10,7 +10,7 @@ from cPyHiSLIP cimport cHiSLIP
 #from cPyHiSLIP cimport HiSLIPPort
 #from cPyHiSLIP cimport Default_device_name
 import logging
-from logging import info,debug,warn,log,fatal
+from logging import info,debug,warn,log,fatal,warning
 #logging.root.setLevel(logging.DEBUG)
 
 cdef class HiSLIP:
@@ -307,12 +307,25 @@ cdef class HiSLIP:
           rc=self.thisobj.get_Service_Request()
       return rc
       
-  def wait_for_SRQ(self, long wait_time):
+  def wait_for_Async(self, long wait_time):
       cdef int rc=-1
       with nogil:
-          rc=self.thisobj.wait_for_SRQ(wait_time)
+          rc=self.thisobj.wait_for_Async(wait_time)
       return rc
-                   
+
+  def run_svc(self,wait=1000):
+      cdef int rc=-1
+      cdef u_int8_t st
+      cdef int cwait=wait
+      with nogil:
+          while 1:
+              rc=self.thisobj.wait_for_Async(cwait) # msec , wait_for_SRQ does not release GIL so we use shorter time
+              if rc:
+                  st=self.thisobj.get_Service_Request() # will release lock
+              if not self.thisobj.session_id:
+                  break
+      return
+
 cdef class enumType:
    @classmethod
    def getKey(cls, v):

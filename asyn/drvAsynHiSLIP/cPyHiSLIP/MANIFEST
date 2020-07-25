@@ -7,4 +7,5 @@ README.rst
 README.txt
 cPyHiSLIP.pxd
 cPyHiSLIP.pyx
+memleak_test.py
 setup.py

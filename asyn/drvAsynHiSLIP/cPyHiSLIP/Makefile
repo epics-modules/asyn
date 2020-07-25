@@ -12,4 +12,4 @@
 markdown: README.md README.txt
 
 upload: 
-	python3 -m twine upload  dist/cPyHiSLIP-0.1.3.tar.gz 
+	python3 -m twine upload  dist/cPyHiSLIP-0.1.4.tar.gz 

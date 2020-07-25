@@ -68,7 +68,7 @@ namespace nsHiSLIP{
 			       fail=0,         //Lock was requested but not granted
 			       success=1,      //release of exclusive lock
 			       success_shared=2, //release of shared lock
-			       error=3 // Invalide
+			       error=3 // Invalid
   } CC_LockResponse_t;
 
   static const long  PROTOCOL_VERSION_MAX = 0x7f7f ; // # <major><minor> = <1><1> that is 257
@@ -222,7 +222,7 @@ namespace nsHiSLIP{
       this->payload_length=length;
     }
     void print(void){
-      ::printf("message type:%d\n",this->message_type);
+      ::printf("message type:%d\n",this->message_type,);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
       ::printf("payload length: %llu\n",this->payload_length);
@@ -423,6 +423,7 @@ namespace nsHiSLIP{
     long lock_timeout;
     int sync_channel;
     int async_channel;
+    pthread_mutex_t async_lock;
     struct pollfd sync_poll;
     struct pollfd async_poll;
     int overlap_mode;
@@ -446,6 +447,8 @@ namespace nsHiSLIP{
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;
+      this->async_lock=PTHREAD_MUTEX_INITIALIZER;
+      //
       this->srq_lock=PTHREAD_MUTEX_INITIALIZER;
       // if (sem_init(&(this->srq_lock), 0, 1) !=0){
       // 	perror(" HiSLIP srq_lock");
@@ -456,6 +459,7 @@ namespace nsHiSLIP{
 		    Default_device_name,
 		    Default_Port);
     };
+    
     void connect(char const* hostname,
 		 char const* dev_name,
 		 int  port);
@@ -463,9 +467,11 @@ namespace nsHiSLIP{
     void set_timeout( long timeout){
       this->socket_timeout=timeout;
     };
+    
     long get_timeout(void){
       return this->socket_timeout;
     };
+    
     void set_lock_timeout( long timeout){
       this->lock_timeout=timeout;
     }
@@ -495,6 +501,7 @@ namespace nsHiSLIP{
     long release_srq_lock(void);
     int  check_srq_lock(void);
     int  check_and_lock_srq_lock(void);
+    //
     u_int8_t get_Service_Request(void){
       Message *msg=new Message(nsHiSLIP::AnyMessages);
       long status;
@@ -502,17 +509,21 @@ namespace nsHiSLIP{
       status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
 
       // for debug
-      //msg->print();
+      // msg->print();
       
       if ((status & 0x80000000) != 0){
 	// should handle Error/Fatal Error/Async Interrupted messages.
 	perror(__FUNCTION__);
+	msg->print();
+	return 0;
       }
-      this->release_srq_lock();
-      return msg->control_code;
+      else{
+	this->release_srq_lock();
+	return msg->control_code;
+      }
     };
     
-    int wait_for_SRQ(int wait_time){
+    int wait_for_Async(int wait_time){
       this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);
     }
@@ -525,6 +536,9 @@ namespace nsHiSLIP{
 	close(this->async_channel);
       };
     };
+
+    void Fatal_Error_handler(Message *msg);
+    void Error_handler(Message *msg);
     
   private:
     int wait_for_answer(int wait_time){
