@@ -539,15 +539,20 @@ namespace nsHiSLIP{
       long status;
       
       this->async_poll.revents=0;
-      while (::poll(&this->async_poll,  1,   wait_time > 0)){
+      while (::poll(&this->async_poll,  1,   wait_time ) > 0){
 	steady_clock::time_point clk_now = steady_clock::now();
       // Note that implicit conversion is allowed here
 	auto time_spent = FpMilliseconds(clk_now - clk_begin);
-	status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
+	//status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
+	status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
 	// for debug
-	// msg->print();
+	//msg->print();
 	
-	if ((status & 0x80000000) != 0){
+	if (msg->message_type == nsHiSLIP::AsyncServiceRequest) {
+	  this->release_srq_lock();
+	  return msg->control_code;
+	}
+	else if ((status & 0x80000000) != 0){
 	  // should handle Error/Fatal Error/Async Interrupted messages.
 	  perror(__FUNCTION__);
 	  msg->print();
@@ -556,10 +561,6 @@ namespace nsHiSLIP{
 	    return 0xff;
 	  }
 	  continue;
-	}
-	else{
-	  this->release_srq_lock();
-	  return msg->control_code;
 	};
       };
       return 0xfe;
