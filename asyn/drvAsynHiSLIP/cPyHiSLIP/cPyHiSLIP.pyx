@@ -191,8 +191,10 @@ cdef class HiSLIP:
       7	128 Operation Status Register (OPER)
       """
       cdef u_int8_t rc
+
       with nogil:
           rc=self.thisobj.status_query()
+
       return rc
   
   def trigger_message(self):
@@ -305,6 +307,14 @@ cdef class HiSLIP:
       cdef u_int8_t rc=0
       with nogil:
           rc=self.thisobj.get_Service_Request()
+      return rc
+  
+  def wait_Service_Request(self, int wait_time):
+      cdef u_int8_t rc=0
+      
+      with nogil:
+          rc=self.thisobj.wait_Service_Request(wait_time)
+      
       return rc
       
   def wait_for_Async(self, long wait_time):

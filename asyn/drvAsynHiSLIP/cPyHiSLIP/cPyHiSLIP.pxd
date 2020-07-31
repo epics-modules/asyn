@@ -78,6 +78,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     int check_srq_lock() nogil
     int check_and_lock_srq_lock() nogil
     u_int8_t get_Service_Request() nogil
+    u_int8_t wait_Service_Request(int wait_time) nogil
     int  wait_for_Async(int) nogil
     void disconnect() nogil
     

@@ -19,6 +19,9 @@
 #include <netdb.h>
 #include <pthread.h>  // for MacOS
 
+#include <chrono>
+using namespace std::chrono;
+
 //#include <semaphore.h>
 
 #ifdef __linux__
@@ -222,7 +225,7 @@ namespace nsHiSLIP{
       this->payload_length=length;
     }
     void print(void){
-      ::printf("message type:%d\n",this->message_type,);
+      ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
       ::printf("payload length: %llu\n",this->payload_length);
@@ -523,6 +526,45 @@ namespace nsHiSLIP{
       }
     };
     
+    u_int8_t wait_Service_Request(int wait_time){
+      using FpMilliseconds = 
+        std::chrono::duration<float, std::chrono::milliseconds::period>;
+ 
+      static_assert(std::chrono::treat_as_floating_point<FpMilliseconds::rep>::value, 
+		    "Rep required to be floating point");
+ 
+      steady_clock::time_point clk_begin = steady_clock::now();
+      
+      Message *msg=new Message(nsHiSLIP::AnyMessages);
+      long status;
+      
+      this->async_poll.revents=0;
+      while (::poll(&this->async_poll,  1,   wait_time > 0)){
+	steady_clock::time_point clk_now = steady_clock::now();
+      // Note that implicit conversion is allowed here
+	auto time_spent = FpMilliseconds(clk_now - clk_begin);
+	status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
+	// for debug
+	// msg->print();
+	
+	if ((status & 0x80000000) != 0){
+	  // should handle Error/Fatal Error/Async Interrupted messages.
+	  perror(__FUNCTION__);
+	  msg->print();
+	  wait_time -= (time_spent.count());
+	  if (wait_time <= 0){
+	    return 0xff;
+	  }
+	  continue;
+	}
+	else{
+	  this->release_srq_lock();
+	  return msg->control_code;
+	};
+      };
+      return 0xfe;
+    };	
+
     int wait_for_Async(int wait_time){
       this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);

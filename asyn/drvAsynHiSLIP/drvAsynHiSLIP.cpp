@@ -99,7 +99,7 @@ interruptThread(void *arg)
     }
     
     while(true) {
-      s =  pdpvt->device->wait_for_SRQ(60000); // wait for async-channel.
+      s =  pdpvt->device->wait_for_Async(60000); // wait for async-channel.
 
       if (s == 0){
 	errlogPrintf("timeout poll for async channel.\n");
