@@ -12,6 +12,76 @@ using nsHiSLIP::Message_t;
 
 // HiSLIP methods
 namespace nsHiSLIP{
+  size_t Message::recv(int socket, Message_Types_t expected_message_type){
+    size_t rsize;
+    size_t status;
+    
+    status=this->Header::recv(socket);
+    if (status < 0){
+      // Error!
+      return status;
+    }
+    
+    // now prepare for a pyload.
+    if (this->payload == NULL && this->payload_length > 0){
+      this->payload = (void *) calloc(this->payload_length,1);
+      if (this->payload == NULL){
+	perror("faile to allocate memory for payload.");
+	return -1;
+      }
+      this->clean_on_exit=1;
+    }
+    
+    rsize=0; //returns size of recieved payload. should be same as payload_length
+    if (this->payload_length > 0){
+      size_t bytestoread=this->payload_length;
+      
+      while (bytestoread){
+	// status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
+	// 		  bytestoread, 0);
+	status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
+			    bytestoread, 0, NULL, NULL);
+	// status = ::read(socket, ((u_int8_t *)this->payload+rsize),
+	// 		  bytestoread);
+	
+	if (status <= 0){
+	  perror("payload read error:");
+	  return -1;
+	}
+	rsize += status;
+	if (status >= bytestoread){
+	  break;
+	}
+	bytestoread -=status;
+      }	  
+    }
+    // check if expected type or not
+    if((expected_message_type == AnyMessages) ||
+       (expected_message_type == this->message_type)){
+      return 0;
+    }
+    // for debug
+    //this->print();
+    
+    if(this->message_type  == nsHiSLIP::Error){
+      ::printf("Fatal Error: %d %s\n",
+	       this->control_code, nsHiSLIP::Error_Messages[this->control_code]);
+      if (this->payload_length >0){
+	::printf("Error msg: %s\n", (char *) this->payload);
+      }
+      return -(this->control_code+1);
+    }
+    else if(this->message_type  == nsHiSLIP::FatalError){
+      ::printf("Error: %d %s\n",
+	       this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
+      if (this->payload_length >0){
+	::printf("Fatal Error msg: %s\n", (char *) this->payload);
+      }
+      return -(this->control_code+1);
+    }
+    return -1;
+  }
+
   void HiSLIP::connect(const char *hostname,
 		       const char *dev_name,
 		       const int port //,
@@ -575,5 +645,87 @@ namespace nsHiSLIP{
       return -1;
     }
   }
+  u_int8_t HiSLIP::get_Service_Request(void){
+    Message *msg=new Message(nsHiSLIP::AnyMessages);
+    long status;
+    
+    status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
+    
+    // for debug
+    // msg->print();
+    
+    if ((status & 0x80000000) != 0){
+      // should handle Error/Fatal Error/Async Interrupted messages.
+      perror(__FUNCTION__);
+      msg->print();
+      return 0;
+    }
+    else{
+      this->release_srq_lock();
+      return msg->control_code;
+    }
+  };
+  u_int8_t HiSLIP::wait_Service_Request(int wait_time){
+    using FpMilliseconds = 
+      std::chrono::duration<float, std::chrono::milliseconds::period>;
+    
+    static_assert(std::chrono::treat_as_floating_point<FpMilliseconds::rep>::value, 
+		  "Rep required to be floating point");
+    
+    steady_clock::time_point clk_begin = steady_clock::now();
+    
+    Message *msg=new Message(nsHiSLIP::AnyMessages);
+    long status;
+    
+    this->async_poll.revents=0;
+    while (::poll(&this->async_poll,  1,   wait_time ) ){
+      steady_clock::time_point clk_now = steady_clock::now();
+      // Note that implicit conversion is allowed here
+      auto time_spent = FpMilliseconds(clk_now - clk_begin);
+      status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
+      //msg->print();	// for debug
+      
+      switch (msg->message_type ){
+      case nsHiSLIP::AsyncServiceRequest:
+	this->release_srq_lock();
+	return msg->control_code;
+      case nsHiSLIP::FatalError:
+      case nsHiSLIP::Error:
+	perror(__FUNCTION__);
+	msg->print(); 	// for debug
+      case nsHiSLIP::AsyncLockResponse:
+      case nsHiSLIP::AsyncRemoteLocalResponse:
+      case nsHiSLIP::AsyncStatusResponse:
+      case nsHiSLIP::AsyncMaximumMessageSizeResponse:
+      case nsHiSLIP::AsyncDeviceClearAcknowledge:
+      case nsHiSLIP::AsyncLockInfoResponse:
+      case nsHiSLIP::AsyncStartTLSResponse:
+      case nsHiSLIP::AsyncEndTLSResponse:
+	
+      default:
+	wait_time -= (time_spent.count());
+	if (wait_time <= 0){
+	  return 0xff;
+	}
+	break;
+      }
+      continue; // wile-loop.
+      // if (msg->message_type == nsHiSLIP::AsyncServiceRequest) {
+      //   this->release_srq_lock();
+      //   return msg->control_code;
+      // }
+      // else if ((status & 0x80000000) != 0){
+      //   // should handle Error/Fatal Error/Async Interrupted messages.
+      //   perror(__FUNCTION__);
+      //   msg->print();
+      //   wait_time -= (time_spent.count());
+      //   if (wait_time <= 0){
+      //     return 0xff;
+      //   }
+      //   continue;
+      // };
+    };
+    return 0xfe;
+  };	
 } // end of namespace HiSLIP
 

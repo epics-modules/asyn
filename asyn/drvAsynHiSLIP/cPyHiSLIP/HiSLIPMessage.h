@@ -26,7 +26,7 @@ using namespace std::chrono;
 
 #ifdef __linux__
 #   include <endian.h> // network endian is "be".
-#else
+#else // i.e. macOSX
 inline u_int64_t htobe64(u_int64_t q) {
   return (htonl(q>>32) +((u_int64_t)htonl(q & 0x00000000ffffffff)<<32)) ;
 };
@@ -205,10 +205,11 @@ namespace nsHiSLIP{
     u_int8_t  control_code;
     message_parameter_t message_parameter;
     u_int64_t payload_length;
-    
+    //
     Header(Message_Types_t message_type):control_code(0),message_parameter(0),payload_length(0){
       this->message_type=message_type;
     }
+    //
     Header(const void *buffer):message_parameter(0){
       assert(memcmp(this->prologue, buffer,2) == 0);
       this->message_type=*((u_int8_t *) ((char *) buffer+2));
@@ -216,6 +217,7 @@ namespace nsHiSLIP{
       this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
       this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
     }
+    //
     Header(const u_int8_t  type,
 	   const u_int8_t  cce,
 	   const message_parameter_t param,
@@ -224,13 +226,14 @@ namespace nsHiSLIP{
       this->control_code=cce;
       this->payload_length=length;
     }
+    //
     void print(void){
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
       ::printf("payload length: %llu\n",this->payload_length);
     }
-    
+    //
     size_t send(int socket){
       char hbuf[HEADER_SIZE];
       ssize_t ssize;
@@ -240,12 +243,12 @@ namespace nsHiSLIP{
       
       return ssize;
     }
-    
+    //
     size_t recv(int socket){
       unsigned char buffer[HEADER_SIZE];
       return this->recv(socket,buffer);
     }
-    
+    //
     size_t recv(int socket, void *buffer){
       ssize_t rsize;
       //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
@@ -329,6 +332,7 @@ namespace nsHiSLIP{
       //memcpy(this->payload, payload, length);
       //this->payload = payload;
     }
+    //
     size_t send(int socket){
       size_t ssize;
       // ssize=this->Header::send(socket);
@@ -344,75 +348,7 @@ namespace nsHiSLIP{
       return ssize;
     }
     
-    size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages){
-      size_t rsize;
-      size_t status;
-      
-      status=this->Header::recv(socket);
-      if (status < 0){
-	// Error!
-	return status;
-      }
-
-      // now prepare for a pyload.
-      if (this->payload == NULL && this->payload_length > 0){
-	this->payload = (void *) calloc(this->payload_length,1);
-	if (this->payload == NULL){
-	  perror("faile to allocate memory for payload.");
-	  return -1;
-	}
-	this->clean_on_exit=1;
-      }
-      
-      rsize=0; //returns size of recieved payload. should be same as payload_length
-      if (this->payload_length > 0){
-	size_t bytestoread=this->payload_length;
-	
-	while (bytestoread){
-	  // status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
-	  // 		  bytestoread, 0);
-	  status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
-	                            bytestoread, 0, NULL, NULL);
-	  // status = ::read(socket, ((u_int8_t *)this->payload+rsize),
-	  // 		  bytestoread);
-	  
-	  if (status <= 0){
-	    perror("payload read error:");
-	    return -1;
-	  }
-	  rsize += status;
-	  if (status >= bytestoread){
-		break;
-	  }
-	  bytestoread -=status;
-	}	  
-      }
-      // check if expected type or not
-      if((expected_message_type == AnyMessages) ||
-	 (expected_message_type == this->message_type)){
-	return 0;
-      }
-      // for debug
-      //this->print();
-      
-      if(this->message_type  == nsHiSLIP::Error){
-	::printf("Fatal Error: %d %s\n",
-		 this->control_code, nsHiSLIP::Error_Messages[this->control_code]);
-	if (this->payload_length >0){
-	  ::printf("Error msg: %s\n", (char *) this->payload);
-	}
-	return -(this->control_code+1);
-      }
-      else if(this->message_type  == nsHiSLIP::FatalError){
-	::printf("Error: %d %s\n",
-		 this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
-	if (this->payload_length >0){
-	  ::printf("Fatal Error msg: %s\n", (char *) this->payload);
-	}
-	return -(this->control_code+1);
-      }
-      return -1;
-    }
+    size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages);
     
   } Message_t;
     
@@ -465,7 +401,7 @@ namespace nsHiSLIP{
     
     void connect(char const* hostname,
 		 char const* dev_name,
-		 int  port);
+		 int  port); 
 
     void set_timeout( long timeout){
       this->socket_timeout=timeout;
@@ -500,72 +436,16 @@ namespace nsHiSLIP{
     long remote_local(u_int8_t request);
     long request_lock(const char* lock_string=NULL);
     long release_lock(void);
+    long handle_error_msg(void);
+    //
     long request_srq_lock(void);
     long release_srq_lock(void);
     int  check_srq_lock(void);
     int  check_and_lock_srq_lock(void);
     //
-    u_int8_t get_Service_Request(void){
-      Message *msg=new Message(nsHiSLIP::AnyMessages);
-      long status;
-      
-      status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
-
-      // for debug
-      // msg->print();
-      
-      if ((status & 0x80000000) != 0){
-	// should handle Error/Fatal Error/Async Interrupted messages.
-	perror(__FUNCTION__);
-	msg->print();
-	return 0;
-      }
-      else{
-	this->release_srq_lock();
-	return msg->control_code;
-      }
-    };
+    u_int8_t get_Service_Request(void);
+    u_int8_t wait_Service_Request(int wait_time);
     
-    u_int8_t wait_Service_Request(int wait_time){
-      using FpMilliseconds = 
-        std::chrono::duration<float, std::chrono::milliseconds::period>;
- 
-      static_assert(std::chrono::treat_as_floating_point<FpMilliseconds::rep>::value, 
-		    "Rep required to be floating point");
- 
-      steady_clock::time_point clk_begin = steady_clock::now();
-      
-      Message *msg=new Message(nsHiSLIP::AnyMessages);
-      long status;
-      
-      this->async_poll.revents=0;
-      while (::poll(&this->async_poll,  1,   wait_time ) > 0){
-	steady_clock::time_point clk_now = steady_clock::now();
-      // Note that implicit conversion is allowed here
-	auto time_spent = FpMilliseconds(clk_now - clk_begin);
-	//status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
-	status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
-	// for debug
-	//msg->print();
-	
-	if (msg->message_type == nsHiSLIP::AsyncServiceRequest) {
-	  this->release_srq_lock();
-	  return msg->control_code;
-	}
-	else if ((status & 0x80000000) != 0){
-	  // should handle Error/Fatal Error/Async Interrupted messages.
-	  perror(__FUNCTION__);
-	  msg->print();
-	  wait_time -= (time_spent.count());
-	  if (wait_time <= 0){
-	    return 0xff;
-	  }
-	  continue;
-	};
-      };
-      return 0xfe;
-    };	
-
     int wait_for_Async(int wait_time){
       this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);
@@ -587,10 +467,12 @@ namespace nsHiSLIP{
     int wait_for_answer(int wait_time){
       return ::poll(&this->sync_poll,  1,   wait_time);
     }
+
     void reset_message_id(void){
       this->most_recent_message_id=INITIAL_LAST_MESSAGE_ID;
       this->message_id = INITIAL_MESSAGE_ID;
     }
+
     u_int32_t increment_message_id(void){
       this->most_recent_message_id=this->message_id;
       this->message_id = (this->message_id +2) & 0xffffffff;
