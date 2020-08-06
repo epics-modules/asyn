@@ -1,6 +1,5 @@
 #!cython
 #-*- coding:utf-8 -*-
-
 # distutils: sources = HiSLIPMessage.cpp
 # distutils: language=c++
 
@@ -16,10 +15,10 @@ from logging import info,debug,warn,log,fatal,warning
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
 
-  def __cinit__(self):
+  def __cinit__(self, char *host=NULL):
       self.thisobj=new cHiSLIP()
       
-  def __init__(self, host=None):
+  def __init__(self, char *host=NULL):
       cdef char *chost=host
       if host:
           with nogil:
@@ -34,7 +33,7 @@ cdef class HiSLIP:
       cdef char *chost=host
       cdef char *cdevice =device
       cdef int cport =port
-      debug("connect to {} {} {}".format(host,device, port))
+      debug("connect to {} {} {}".format(host, device, port))
       with nogil:
           self.thisobj.connect(chost,cdevice,cport)
           self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
@@ -220,7 +219,7 @@ cdef class HiSLIP:
           rc=self.thisobj.remote_local(request)
       return rc
 
-  def request_lock(self, char * lock_string):
+  def request_lock(self, lock_string=None):
       """
       response to request:
       0 - Failure
@@ -228,10 +227,14 @@ cdef class HiSLIP:
       3 - Error
       """
       cdef long rc
-      #cdef char *_lock_string=lock_string
-      with nogil:
-          rc=self.thisobj.request_lock(lock_string)
-      
+      cdef char *c_lock_string
+      if lock_string != None:
+          c_lock_string=lock_string
+          with nogil:
+              rc=self.thisobj.request_lock(c_lock_string)
+      else:
+          with nogil:
+              rc=self.thisobj.request_lock(b"")
       return rc
 
   def release_lock(self):
@@ -245,6 +248,27 @@ cdef class HiSLIP:
       with nogil:
           rc=self.thisobj.release_lock()
       return rc
+  
+  def lock_info(self):
+      """
+      return (lock_exclusiv, lock_shared) pair.
+      where:
+      lock_exclusive: 1 if exclusively locked
+      lock_shared: number of clients has sahred lock.
+      """
+      cdef long rc=0
+      cdef long lock_shared=0
+      cdef u_int8_t lock_exclusive=0
+      
+      with nogil:
+          rc=self.thisobj.lock_info()
+      #debug ("rc: {}".format(rc))
+      if rc >= 0:
+          lock_exclusive= rc & 0xff
+          lock_shared = (rc >> 8) & 0xffffffff
+          #debug ("rc: {} {}".format(lock_exclusive, lock_shared))
+      return (lock_exclusive, lock_shared)
+  
   
   def request_srq_lock(self):
       """

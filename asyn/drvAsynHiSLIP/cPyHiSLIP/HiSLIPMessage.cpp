@@ -556,6 +556,7 @@ namespace nsHiSLIP{
     rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
     if (rc !=0){
       //error!
+      return -1;
     }
     return resp.control_code;
   };
@@ -582,6 +583,35 @@ namespace nsHiSLIP{
     return resp.control_code;
   };
   
+  long HiSLIP::lock_info(void){
+    u_int8_t lock_exclusive=0;
+    long lock_shared=0;
+    int ready=0, rc=0;
+  
+    Message resp(AnyMessages);
+    Message msg((u_int8_t) nsHiSLIP::AsyncLockInfo,
+		0,
+		0,
+		0, NULL);
+    msg.send(this->async_channel);
+    this->rmt_delivered = false;
+
+    this->async_poll.revents=0;
+    ready=poll(&this->async_poll,  1, this->socket_timeout);
+    if ( ready == 0){
+      return -1;
+    }
+    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockInfoResponse);
+    if (rc !=0){
+      return -1;       //Error!
+    }
+    //resp.print();
+    
+    lock_exclusive = resp.control_code & 0xff;
+    lock_shared = resp.message_parameter.word;
+    return   ((lock_shared << 8) & 0xffffffff00 )+ lock_exclusive;
+  }
+
   long HiSLIP::request_srq_lock(void){
     // if (sem_wait(&(this->srq_lock)) == 0){
     //   return 0;

@@ -67,12 +67,17 @@ namespace nsHiSLIP{
 		       request =1
   } CC_Lock_t;
 
-  typedef enum CC_LockResponse{
+  typedef enum CC_LockRequestResponse{
 			       fail=0,         //Lock was requested but not granted
 			       success=1,      //release of exclusive lock
+			       locK_error=3 // Invalid
+  } CC_LockRequestResponse_t;
+  
+  typedef enum CC_LockReleaseResponse{
+			       success_exclusive=1,      //release of exclusive lock
 			       success_shared=2, //release of shared lock
-			       error=3 // Invalid
-  } CC_LockResponse_t;
+			       release_error=3 // Invalid
+  } CC_LockReleaseResponse_t;
 
   static const long  PROTOCOL_VERSION_MAX = 0x7f7f ; // # <major><minor> = <1><1> that is 257
   static const long  INITIAL_MESSAGE_ID = 0xffffff00 ;
@@ -328,9 +333,6 @@ namespace nsHiSLIP{
 	    u_int64_t length,
 	    u_int8_t *payload):Header(type,cce,param,length),payload(payload) {
       this->clean_on_exit=0;
-      //this->payload= (void *) callocMustSucceed(1, length, "HiSLIP pyload buffer");
-      //memcpy(this->payload, payload, length);
-      //this->payload = payload;
     }
     //
     size_t send(int socket){
@@ -434,8 +436,9 @@ namespace nsHiSLIP{
 	      long timeout=LOCK_TIMEOUT);
     long trigger_message(void);
     long remote_local(u_int8_t request);
-    long request_lock(const char* lock_string=NULL);
+    long request_lock(const char* lock_string = NULL);
     long release_lock(void);
+    long lock_info(void);
     long handle_error_msg(void);
     //
     long request_srq_lock(void);

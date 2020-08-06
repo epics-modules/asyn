@@ -75,6 +75,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     long release_lock() nogil
     long request_srq_lock() nogil
     long release_srq_lock() nogil
+    long lock_info() nogil
     int check_srq_lock() nogil
     int check_and_lock_srq_lock() nogil
     u_int8_t get_Service_Request() nogil
