@@ -478,7 +478,7 @@ static asynStatus writeAddr(gsport *pgsport,int talk, int listen,
         cmdbuf[lenCmd++] = primary + LADBASE;
         cmdbuf[lenCmd++] = secondary + SADBASE;
     }
-    return writeCmd(pgsport,cmdbuf,lenCmd,timeout,nextState);
+    return writeCmd(pgsport,(char *)cmdbuf,lenCmd,timeout,nextState);
 }
 
 static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
@@ -496,7 +496,7 @@ static asynStatus writeGpib(gsport *pgsport,const char *buf, int cnt,
     *actual = cnt - pgsport->bytesRemainingWrite;
     status = pgsport->status;
     if(status!=asynSuccess) return status;
-    writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
+    writeCmd(pgsport,(char *)cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
@@ -508,7 +508,7 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
 
     *actual=0; *buf=0;
     pgsport->bytesRemainingRead = cnt;
-    pgsport->nextByteRead = buf;
+    pgsport->nextByteRead = (epicsUInt8 *)buf;
     pgsport->eomReason = 0;
     auxCmd(pgsport,RHDF);
     pgsport->status = asynSuccess;
@@ -516,7 +516,7 @@ static asynStatus readGpib(gsport *pgsport,char *buf, int cnt, int *actual,
     if(status!=asynSuccess) return status;
     *actual = cnt - pgsport->bytesRemainingRead;
     if(eomReason) *eomReason = pgsport->eomReason;
-    writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
+    writeCmd(pgsport,(char *)cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
@@ -723,7 +723,7 @@ static asynStatus gpibPortAddressedCmd(void *pdrvPvt,asynUser *pasynUser,
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s gpibPortAddressedCmd\n",pgsport->portName);
     if(status!=asynSuccess) return status;
-    writeCmd(pgsport,cmdbuf,2,timeout,transferStateIdle);
+    writeCmd(pgsport,(char *)cmdbuf,2,timeout,transferStateIdle);
     return status;
 }
 
@@ -842,7 +842,7 @@ int gsIP488Configure(char *portName,int carrier, int module, int vector,
         printf("gsIP488Configure Unable to validate IP module");
         return 0;
     }
-    registers = (char *)ipmBaseAddr(carrier, module, ipac_addrIO);
+    registers = (epicsUInt8 *)ipmBaseAddr(carrier, module, ipac_addrIO);
     if(!registers) {
         printf("gsIP488Configure no memory allocated "
             "for carrier %d module %d\n", carrier,module);

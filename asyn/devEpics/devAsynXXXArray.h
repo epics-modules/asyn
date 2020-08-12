@@ -329,7 +329,7 @@ static long processCommon(dbCommon *pr)                                         
                 epicsMutexLock(pPvt->ringBufferLock);                                              \
                 for (i=0; i<(int)rp->len; i++) pData[i] = rp->pValue[i];                           \
                 epicsMutexUnlock(pPvt->ringBufferLock);                                            \
-                pwf->nord = rp->len;                                                               \
+                pwf->nord = (epicsUInt32)rp->len;                                                               \
                 asynPrintIO(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,                                  \
                     (char *)pwf->bptr, pwf->nord*sizeof(EPICS_TYPE),                               \
                     "%s %s::processCommon nord=%d, pwf->bptr data:",                               \

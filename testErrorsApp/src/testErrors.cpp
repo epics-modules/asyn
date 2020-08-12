@@ -520,7 +520,7 @@ asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values
         for (i=0; ((i<ALARM_NSTATUS) && (i<nElements)); i++) {
             if (strings[i]) free(strings[i]);
             strings[i] = epicsStrDup(epicsAlarmConditionStrings[i]);
-            values[i] = i;
+            values[i] = (int)i;
             severities[i] = NO_ALARM;
         }
     }
@@ -528,7 +528,7 @@ asynStatus testErrors::readEnum(asynUser *pasynUser, char *strings[], int values
         for (i=0; ((i<ALARM_NSEV) && (i<nElements)); i++) {
             if (strings[i]) free(strings[i]);
             strings[i] = epicsStrDup(epicsAlarmSeverityStrings[i]);
-            values[i] = i;
+            values[i] = (int)i;
             severities[i] = NO_ALARM;
         }
     }

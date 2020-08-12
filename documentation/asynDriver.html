@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-39</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-40</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">February 24, 2020</span></p>
+      <span style="font-weight: bold; font-size: 14pt">July 17, 2020</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -5667,10 +5667,13 @@ asynOctetSetOutputEos("A1",0,"\r")
       Possible protocols are
       <ul>
         <li>TCP</li>
+        <li>TCP&amp; -- Like TCP but use the SO_REUSEPORT socket option.</li>
         <li>UDP</li>
+        <li>UDP&amp; -- Like UDP but use the SO_REUSEPORT socket option.</li>
         <li>UDP* -- Send UDP broadcasts. The address portion of the argument must be the network
           broadcast address (e.g. "192.168.1.255:1234 UDP*", or "255.255.255.255:1234 UDP*",
           etc.).</li>
+        <li>UDP*&amp; -- Like UDP* but use the SO_REUSEPORT socket option.</li>
         <li>HTTP -- Like TCP but for servers which close the connection after each transaction.</li>
         <li>COM -- For Ethernet/Serial adapters which use the TELNET RFC 2217 protocol. This
           allows port parameters (speed, parity, etc.) to be set with subsequent asynSetOption
@@ -5680,6 +5683,12 @@ asynOctetSetOutputEos("A1",0,"\r")
       If the hostInfo argument begins wih the characters <span style="font-weight: bold">
         unix://</span> the remainder of the argument is taken to be the name of a UNIX-domain
       stream socket.
+      <br />
+      <a href="https://lwn.net/Articles/542629/">This article</a> explains the use of
+      the SO_REUSEPORT option for both TCP and UDP. The particular use case that motivated
+      the addition of the SO_REUSEPORT to this driver is discussed in <a href="https://github.com/epics-modules/asyn/issues/108">
+        this Github issue</a>. On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT,
+      but it should have the same effect.
       <br />
       To receive UDP broadcasts the localPort is the port to listen on, for example: drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956
       UDP*",0,0,0). If the port is only to be used to receive broadcast messages then

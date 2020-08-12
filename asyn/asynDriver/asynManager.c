@@ -472,6 +472,17 @@ static void reportConnectStatus(port *pport, portConnectStatus status, const cha
     }
 }
 
+static const char *asynStripPath(const char *file)
+{
+  const char *ret = strrchr(file, '/');
+  if (ret) return ret + 1;
+#if (defined(CYGWIN32) || defined(_WIN32))
+  ret = strrchr(file, '\\');
+  if (ret) return ret + 1;
+#endif
+  return file;
+}
+
 static void asynInit(void)
 {
     int i;
@@ -1829,7 +1840,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
                 pasynUserCopy->errorMessage);
             epicsMutexUnlock(plockPortPvt->queueLockPortMutex);
             pasynManager->freeAsynUser(pasynUserCopy);
-            return asynError;
+            return status;
         }
         /* Wait for event from the port thread in the queueLockPortCallback function */
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort waiting for event\n", pport->portName);
@@ -1840,7 +1851,7 @@ static asynStatus queueLockPort(asynUser *pasynUser)
                 "asynManager::queueLockPort queueRequest timed out");
             epicsMutexUnlock(plockPortPvt->queueLockPortMutex);
             pasynManager->freeAsynUser(pasynUserCopy);
-            return asynError;
+            return asynTimeout;
         }
         pasynManager->freeAsynUser(pasynUserCopy);
         asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort got event from callback\n", pport->portName);
@@ -2827,6 +2838,7 @@ static size_t printPort(FILE *fp, asynUser *pasynUser)
 static size_t printSource(FILE *fp, const char *file, int line)
 {
     int      nout = 0;
+    file = asynStripPath(file);
 
     if(fp) {
         nout = fprintf(fp,"[%s:%d] ", file, line);
@@ -2870,6 +2882,7 @@ static int traceVprintSource(asynUser *pasynUser,int reason, const char *file, i
     int      nout = 0;
     FILE     *fp;
 
+    file = asynStripPath(file);
     if(!(reason & ptracePvt->traceMask)) return 0;
     epicsMutexMustLock(pasynBase->lockTrace);
     fp = getTraceFile(pasynUser);

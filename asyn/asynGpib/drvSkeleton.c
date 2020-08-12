@@ -34,12 +34,12 @@ static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser);
 /*asynOctet methods */
 static int gpibRead(void *pdrvPvt,asynUser *pasynUser,int addr,char *data,int maxchars);
 static int gpibWrite(void *pdrvPvt,asynUser *pasynUser,
-                    int addr,const char *data,int numchars;
+                    int addr,const char *data,int numchars);
 static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser,int addr);
 static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
 /*asynGpib methods*/
 static asynStatus addressedCmd (void *pdrvPvt,asynUser *pasynUser,
-    int addr, char *data, int length;
+    int addr, char *data, int length);
 static asynStatus universalCmd (void *pdrvPvt, asynUser *pasynUser, int cmd);
 static asynStatus ifc (void *pdrvPvt,asynUser *pasynUser);
 static asynStatus ren (void *pdrvPvt,asynUser *pasynUser, int onOff);

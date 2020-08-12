@@ -12,6 +12,105 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-40</h2>
+    <h2>
+      July 17, 2020</h2>
+  </div>
+  <div>
+    <h3>
+      ci-scripts</h3>
+    <ul>
+      <li>Updated to v3.0.1 of ci-scripts.</li>
+      <li>Added native Windows builds (VS2017) on Travis.</li>
+      <li>Added AppVeyor builds for testing on many Windows configuations.</li>
+    </ul>
+    <h3>
+      asynPortDriver</h3>
+    <ul>
+      <li>Fixed error in writeInt64 method.</li>
+      <li>Added asynParamSet class.</li>
+      <li>Added new constuctor that uses asynParamSet.</li>
+      <li>Added new utility template function findDerivedAsynPortDriver() that returns a
+        pointer to an asynPortDriver derived class object from its name.</li>
+    </ul>
+    <h3>
+      Build system</h3>
+    <ul>
+      <li>Fixed logic for when CALC and SSCAN modules are needed.</li>
+    </ul>
+    <h3>
+      asynManager</h3>
+    <ul>
+      <li>Take connect timestamp <i>after</i> connection attempt. autoConnectDevice() has
+        a built-in protection that forces at least 2 seconds between connection attempts.
+        However, previously the timestamp was read <i>before</i> starting the connection,
+        so if the connection attempt takes about 2 seconds (or more) to timeout then that
+        2 second do-not-connect window was already expired (or about to expire) by the time
+        connectAttempt() returns. Now we read the timestamp <i>after</i> connectAttempt()
+        returns. </li>
+      <li>Made 2 changes to queueLockPort.
+        <ol>
+          <li>If the queue request times out then return asynTimeout rather than asynError.</li>
+          <li>If the call to pasynManager->queueRequest fails then return the actual failure
+            status rather than asynError.</li>
+        </ol>
+        These changes improve the alarm handling when a device becomes unavailable. Previously
+        it would toggle between TIMEOUT alarm when an actual read request timed out and
+        READ alarm when a queue request timed out. This caused too many alarms. Previously
+        if the port was Disconnected then it was returning asynError which sets READ alarm.
+        In this case it should be returning asynDisconnected which sets COM alarm. </li>
+    </ul>
+    <h3>
+      asynTrace</h3>
+    <ul>
+      <li>Changed the output with ASYN_TRACEINFO_SOURCE. Previously the file name included
+        the complete path to the file, which could be very long. The path is now removed.</li>
+    </ul>
+    <h3>
+      asynPortClient</h3>
+    <ul>
+      <li>Fix bug in asynUInt32DigitalClient::registerInterruptUser().</li>
+    </ul>
+    <h3>
+      asynRecord</h3>
+    <ul>
+      <li>Fixed problem updating the CNCT field. Previously if an attempt to connect with
+        CNCT failed CNCT stayed in the Connected state, rather than going back to Disconnected
+        immediately.</li>
+    </ul>
+    <h3>
+      drvAsynIPPort</h3>
+    <ul>
+      <li>Added new tcp&, udp& and udp*& protocols that specify that the SO_RESUSEPORT flag
+        should be used. <a href="https://lwn.net/Articles/542629/">This article</a> explains
+        the use of the SO_REUSEPORT option for both TCP and UDP. The particular use case
+        that motivated the addition of the SO_REUSEPORT to this driver is discussed in <a
+          href="https://github.com/epics-modules/asyn/issues/108">this Github issue</a>.
+        On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT, but it should
+        have the same effect.</li>
+    </ul>
+    <h3>
+      unittest/Makefile</h3>
+    <ul>
+      <li>Fixed to link with EPICS_BASE_IOC_LIBS unless EPICS_LIBCOM_ONLY=YES.</li>
+    </ul>
+    <h3>
+      devEpics</h3>
+    <ul>
+      <li>Fixed bug in devAsynOctet when using output records with info tag asynREADBACK=1
+        and asynFIFO not specified. It was supposed to be creating a ring buffer with one
+        element, but was not, so the readback did not work.</li>
+    </ul>
+    <h3>
+      Many files</h3>
+    <ul>
+      <li>Removed tabs and trailing white space.</li>
+      <li>Minor changes to avoid compiler warnings.</li>
+    </ul>
+  </div>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-39</h2>
     <h2>
       February 24, 2020</h2>

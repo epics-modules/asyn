@@ -43,11 +43,11 @@ int main(int argc, char **argv)
 
   if (argc > 3) {
       epicsStrnRawFromEscaped(outputEos, sizeof(outputEos), argv[3], strlen(argv[3]));
-      ip.setOutputEos(outputEos, strlen(outputEos));
+      ip.setOutputEos(outputEos, (int)strlen(outputEos));
   }
   if (argc > 4) {
       epicsStrnRawFromEscaped(inputEos, sizeof(inputEos), argv[4], strlen(argv[4]));
-      ip.setInputEos(inputEos, strlen(inputEos));
+      ip.setInputEos(inputEos, (int)strlen(inputEos));
   }
   ip.write(argv[2], strlen(argv[2]), &nOut);
   ip.read(input, sizeof(input), &nIn, &eomReason);

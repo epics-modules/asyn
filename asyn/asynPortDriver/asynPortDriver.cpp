@@ -136,7 +136,7 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
     vals.push_back(param.get());
     flags.reserve(vals.size());
     param.release();
-    *index = vals.size()-1;
+    *index = (int)vals.size()-1;
     return asynSuccess;
 }
 
@@ -144,7 +144,7 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
   * \param[out] numParams Number of parameters */
 asynStatus paramList::getNumParams(int *numParams)
 {
-    *numParams = this->vals.size();
+    *numParams = (int)this->vals.size();
     return asynSuccess;
 }
 
@@ -155,7 +155,7 @@ asynStatus paramList::getNumParams(int *numParams)
   * \return Returns asynParamNotFound if name is not found in the parameter list. */
 asynStatus paramList::findParam(const char *name, int *index)
 {
-    for (size_t i=0; i<this->vals.size(); i++) {
+    for (int i=0; i<(int)this->vals.size(); i++) {
         if (this->vals[i]->nameEquals(name)) {
             *index = i;
             return asynSuccess;
@@ -888,7 +888,7 @@ asynStatus paramList::callCallbacks()
 void paramList::report(FILE *fp, int details)
 {
     fprintf(fp, "Number of parameters is: %u\n", (unsigned)this->vals.size() );
-    for (size_t i=0; i<this->vals.size(); i++)
+    for (int i=0; i<(int)this->vals.size(); i++)
     {
         this->vals[i]->report(i, fp, details);
     }
