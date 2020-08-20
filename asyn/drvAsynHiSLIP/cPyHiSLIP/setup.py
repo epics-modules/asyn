@@ -36,19 +36,8 @@ except ImportError:
 
 from distutils.core import setup
 #from distutils.extension import Extension
-
-# macros managedd by mercurial keyword extension
 #
-HGTag="$HGTag:  $"
-HGdate="$HGdate:  $" #(rfc822date)
-HGlastlog="$lastlog: $"
-HGchangelog="$changelog$"
-
-HGcheckedin="$checked in by:$"
-release=HGTag
-#rev=HGTag[HGTag.index(":")+1:HGTag.index("-")].strip()
-#rev=HGTagShort.strip()
-rev="0.1.4"
+rev="0.1.5"
 #
 
 sysname=platform.system()

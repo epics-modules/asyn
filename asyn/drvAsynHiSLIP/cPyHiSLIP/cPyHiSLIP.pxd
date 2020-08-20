@@ -46,6 +46,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     
     int overlap_mode;
     u_int8_t feature_setting
+    u_int8_t feature_preference
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
@@ -53,6 +54,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     int rmt_delivered;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
+    u_int32_t most_recent_received_message_id;
 
     cHiSLIP() except+
     void connect(char * hostname,
@@ -78,8 +80,8 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     long lock_info() nogil
     int check_srq_lock() nogil
     int check_and_lock_srq_lock() nogil
-    u_int8_t get_Service_Request() nogil
-    u_int8_t wait_Service_Request(int wait_time) nogil
+    int get_Service_Request() nogil
+    int wait_Service_Request(int wait_time) nogil
     int  wait_for_Async(int) nogil
     void disconnect() nogil
     

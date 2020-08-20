@@ -45,6 +45,30 @@ cdef class HiSLIP:
       """
       return self.thisobj.session_id
 
+  @property
+  def message_id(self):
+      """
+      """
+      return self.thisobj.message_id
+
+  @property
+  def most_recent_message_id(self):
+      """
+      """
+      return self.thisobj.most_recent_message_id
+
+  @property
+  def most_recent_received_message_id(self):
+      """
+      """
+      return self.thisobj.most_recent_received_message_id
+
+  @property
+  def overlap_mode(self):
+      """
+      """
+      return self.thisobj.overlap_mode
+
   def write(self, msg, long timeout=3000):
       cdef u_int8_t *cmsg=msg
       cdef size_t ssize=len(msg)
@@ -171,7 +195,7 @@ cdef class HiSLIP:
       ms=self.thisobj.current_payload_size
       return ms
 
-  def device_clear(self,int request=0):
+  def device_clear(self, u_int8_t request=0):
       cdef long rc
       with nogil:
           rc=self.thisobj.device_clear(request)
@@ -188,12 +212,21 @@ cdef class HiSLIP:
       5	32 Standard Event Status Bit Summary (ESB)
       6	64 Request Service (RQS)/Master Status Summary (MSS)
       7	128 Operation Status Register (OPER)
+      
+      SCPI/IEEE4882/Tektronix:
+        -/RQS(64)/ESB(32)/MAV(16)/----
+      STB for Agilent/Keysight: 
+        OPER(128)/RQS(64)/ESB(32)/MAV(16)/-/MSG(4)/USR(2)/TRG(1)
+      STB for Kikusui PWR01
+        OPER(128)/RQS(64)/ESB(32)/MAV(16)/QUES(8)/ERR(4)/-/-
       """
+      
       cdef u_int8_t rc
 
+      # if self.thisobj.wait_for_Async(1):
+      #     self.thisobj.get_Service_Request()
       with nogil:
           rc=self.thisobj.status_query()
-
       return rc
   
   def trigger_message(self):
@@ -219,7 +252,7 @@ cdef class HiSLIP:
           rc=self.thisobj.remote_local(request)
       return rc
 
-  def request_lock(self, lock_string=None):
+  def request_lock(self, char *lock_string=b""):
       """
       response to request:
       0 - Failure
@@ -228,13 +261,13 @@ cdef class HiSLIP:
       """
       cdef long rc
       cdef char *c_lock_string
-      if lock_string != None:
+      if lock_string != b"":
           c_lock_string=lock_string
           with nogil:
               rc=self.thisobj.request_lock(c_lock_string)
       else:
           with nogil:
-              rc=self.thisobj.request_lock(b"")
+              rc=self.thisobj.request_lock(lock_string)
       return rc
 
   def release_lock(self):
@@ -318,36 +351,51 @@ cdef class HiSLIP:
       return ovm
   
   def get_feature_setting(self):
-      cdef int ovm=self.thisobj.feature_setting
-      return ovm
+      cdef int fs=self.thisobj.feature_setting
+      return fs
+  
+  def get_feature_preference(self):
+      cdef int fp=self.thisobj.feature_preference
+      return fp
   
   def get_protocol_version(self):
       cdef int spv=self.thisobj.server_protocol_version
       major=(spv&0xff00)>>8
       minor=(spv & 0x00ff)
-      return (major,minor)
+      return (major, minor)
   
   def get_Service_Request(self):
       cdef u_int8_t rc=0
       with nogil:
           rc=self.thisobj.get_Service_Request()
       return rc
+
+  def check_SRQ(self):
+      cdef u_int8_t rc=0
+      with nogil:
+          rc=self.thisobj.wait_for_Async(0)
+          if rc:
+              rc=self.thisobj.get_Service_Request()
+      return rc
   
   def wait_Service_Request(self, int wait_time):
-      cdef u_int8_t rc=0
+      cdef int8_t rc=0
       
       with nogil:
           rc=self.thisobj.wait_Service_Request(wait_time)
       
       return rc
       
-  def wait_for_Async(self, long wait_time):
+  def wait_for_Async(self, long wait_time=1000):
+      """ 
+      return 1 if async port is ready to read
+      """
       cdef int rc=-1
       with nogil:
           rc=self.thisobj.wait_for_Async(wait_time)
       return rc
 
-  def run_svc(self,wait=1000):
+  def run_svc(self,int wait=1000):
       cdef int rc=-1
       cdef u_int8_t st
       cdef int cwait=wait
@@ -385,7 +433,7 @@ cdef class HiSLIPMessageType(enumType):
          DeviceCLearAcknowledge=9
          AsyncRemoteLocalContro=10 
          AsyncRemoteLocalResponcse=11
-         Trigger=12 
+         Trigger=12
          Interrupted=13
          AsyncInterrupted=14 
          AsyncMaximumMessageSize=15 

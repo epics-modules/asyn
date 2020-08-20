@@ -232,14 +232,17 @@ namespace nsHiSLIP{
       this->payload_length=length;
     }
     //
-    void print(void){
+    void print(const char *msg=NULL){
+      if (msg != NULL){
+	::printf("Header dump for: %s\n", msg);
+      }
       ::printf("message type:%d\n",this->message_type);
       ::printf("control_code:%d\n",this->control_code);
       ::printf("message_parameter: 0x%0x\n",this->message_parameter.word);
       ::printf("payload length: %llu\n",this->payload_length);
     }
     //
-    size_t send(int socket){
+    ssize_t send(int socket){
       char hbuf[HEADER_SIZE];
       ssize_t ssize;
       
@@ -249,33 +252,13 @@ namespace nsHiSLIP{
       return ssize;
     }
     //
-    size_t recv(int socket){
+    ssize_t recv(int socket){
       unsigned char buffer[HEADER_SIZE];
-      return this->recv(socket,buffer);
+      return this->recv(socket, buffer);
     }
     //
-    size_t recv(int socket, void *buffer){
-      ssize_t rsize;
-      //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
-      rsize = ::recvfrom(socket, buffer, HEADER_SIZE, 0, NULL, NULL);
-      // rsize= ::read(socket, buffer, HEADER_SIZE);
+    ssize_t recv(int socket, void *buffer);
 
-      if (rsize < HEADER_SIZE){
-	//raise exception?
-	return -1;
-      }
-      
-      if (memcmp(this->prologue, buffer, 2) != 0){
-	return -1;
-      }
-      this->message_type=*((u_int8_t *) ((char *) buffer+2));
-      this->control_code=*((u_int8_t *) ((char *) buffer+3));
-      this->message_parameter.word = ntohl(*(u_int32_t *) ((char *) buffer+4));
-      this->payload_length = be64toh(*(u_int64_t *) ((char *) buffer+8));
-
-      return 0;
-    }
-    
     int fromRawData(void *buffer){ //DeSerialize
       if (memcmp(this->prologue, buffer, 2) != 0){
 	//error
@@ -350,7 +333,7 @@ namespace nsHiSLIP{
       return ssize;
     }
     
-    size_t recv(int socket, Message_Types_t expected_message_type = AnyMessages);
+    ssize_t recv(int socket, Message_Types_t expected_message_type = AnyMessages);
     
   } Message_t;
     
@@ -369,6 +352,7 @@ namespace nsHiSLIP{
     struct pollfd async_poll;
     int overlap_mode;
     u_int8_t feature_setting;
+    u_int8_t feature_preference;
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
@@ -376,6 +360,7 @@ namespace nsHiSLIP{
     bool rmt_delivered;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
+    u_int32_t most_recent_received_message_id;
     //sem_t srq_lock;
     pthread_mutex_t srq_lock;
     HiSLIP(){
@@ -383,8 +368,9 @@ namespace nsHiSLIP{
       this->maximum_payload_size=this->current_payload_size= MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
       this->socket_timeout=SOCKET_TIMEOUT;
       this->lock_timeout=LOCK_TIMEOUT;
-      this->overlap_mode=false;
+      this->feature_preference=0;
       this->feature_setting=0;
+      this->overlap_mode=false; //can be delived from feature_setting.
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;
@@ -423,7 +409,7 @@ namespace nsHiSLIP{
 
     long set_max_size(unsigned long message_size);
     int  device_clear(u_int8_t);
-    u_int8_t status_query(void);
+    int  status_query(void);
     //long write(u_int8_t *data_str, long timeout=LOCK_TIMEOUT);
     long write(const u_int8_t *data_str, const size_t size,
 	       long timeout=LOCK_TIMEOUT);
@@ -446,8 +432,8 @@ namespace nsHiSLIP{
     int  check_srq_lock(void);
     int  check_and_lock_srq_lock(void);
     //
-    u_int8_t get_Service_Request(void);
-    u_int8_t wait_Service_Request(int wait_time);
+    int  get_Service_Request(void);
+    int  wait_Service_Request(int wait_time);
     
     int wait_for_Async(int wait_time){
       this->async_poll.revents=0;
@@ -473,6 +459,7 @@ namespace nsHiSLIP{
 
     void reset_message_id(void){
       this->most_recent_message_id=INITIAL_LAST_MESSAGE_ID;
+      this->most_recent_received_message_id=INITIAL_MESSAGE_ID;
       this->message_id = INITIAL_MESSAGE_ID;
     }
 

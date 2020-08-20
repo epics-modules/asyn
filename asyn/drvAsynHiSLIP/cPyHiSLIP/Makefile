@@ -1,4 +1,7 @@
 #!make
+#HGVERSION:= $(shell hg parents --template 'HGTagShort = \\\"{latesttag}.{latesttagdistance}\\\"')
+VERSIONGIT:= $(shell git describe --tags)
+VERSION:= $(shell python3 setup.py --version)
 
 .phony: markdown
 .SUFFIXES : .rst .md .txt
@@ -11,5 +14,5 @@
 
 markdown: README.md README.txt
 
-upload: 
-	python3 -m twine upload  dist/cPyHiSLIP-0.1.4.tar.gz 
+upload:
+	python3 -m twine upload  dist/cPyHiSLIP-$(VERSION).tar.gz 

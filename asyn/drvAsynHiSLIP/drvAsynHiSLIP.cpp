@@ -106,8 +106,8 @@ interruptThread(void *arg)
 	continue;
       }
       if (s > 0 ){
-	u_int8_t stb = pdpvt->device->get_Service_Request();
-	errlogPrintf("Get SRQ with STB: 0x%2x\n", stb);
+	int  stb = pdpvt->device->get_Service_Request();
+	errlogPrintf("Get SRQ with STB: 0x%2x\n", stb );
 	if ((stb & 0x40) != 0){ // may need mask here. Just SRQ
 	  ELLLIST *pclientList;
 	  interruptNode *pnode;
@@ -141,7 +141,7 @@ interruptThread(void *arg)
 	    }
 	    pasynManager->interruptEnd(pdpvt->asynOctetInterruptPvt);
 	    stb = pdpvt->device->status_query();
-	    errlogPrintf("Finish SRQ process 0x%2x\n", stb);
+	    errlogPrintf("Finish SRQ process 0x%2x\n", stb & 0xff);
 	  }
 	}
 	continue;
