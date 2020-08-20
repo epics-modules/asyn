@@ -25,10 +25,35 @@ How to use
 ### For EPICS
 
 It is assumed that this module will be used togather with the Stream
-Deivce. To add this drvAsynHiSLIP support into StreamApp. You must add
-the following line to the Makefile in the StreamApp directory:
+Deivce. To add this drvAsynHiSLIP support into StreamApp. After building
+a libasyn library with drvAsynHiSLIP, you must add the following line to
+the Makefile in the StreamApp directory:
 
 > streamApp\_DBD += drvAsynHiSLIP.dbd
+
+In the iocsh start up command, you neeed to configure asyn port for
+HiSLIP device. The \"HiSLIPConfigure\" command, like \"vxi11Configure\"
+for VXI-11 devices is provided.:
+
+> \# HiSLIPConfigure \"port name\", \"host address\",
+> max\_message\_size, \"priority\" HiSLIPConfigure
+> \"L0\",\"172.28.68.228\", 1048560, 0 \# Keysight DSOX1204A
+
+A port name can be any ID string if you just uses Stream driver.
+However, if you may want to use SRQ with this suppor, you better to
+stick with devGPIB/asyn port name convention, i.e. \"L\<n\>\".
+
+### As Python module
+
+At first, you need to build and install Python module based on this
+library. To do so, go to the cPyHiSLIP directory under
+asyn/drvAsynHiSLIP directory, then issue:
+
+> python3 -m pip build clean install
+
+You must have pip module and Cython tool installed. You might need to
+give appropriate priviledge to install the module in the proper
+location.
 
 Build Issues
 ------------
@@ -48,4 +73,13 @@ And also PyHiSLIP modules by Levshinovskiy
 Mikhail(<https://github.com/llemish/PyHiSLIP>) is used as a reference
 for the implementation.
 
-[^1]: IVI-6.1 Rev.2.0 was publised in Feb.23, 2020.
+LXI Ports, Protocols, and Services
+
+<https://www.lxistandard.org/About/LXI-Protocols.aspx>
+
+LXI\_HiSLIP\_Extended\_Function\_Test\_Procedures\_v1\_01.pdf
+
+[^1]: The latest version IVI-6.1 Rev.2.0 was publised in Feb.23, 2020.
+    New features, \"Encrypted connections\" and \"Client and server
+    authentication\" are not supported by this version of drAsynHiSLIP
+    library.
