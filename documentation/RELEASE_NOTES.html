@@ -16,14 +16,15 @@
     <h2>
       August 24, 2020</h2>
   </div>
-    <h3>
-      drvAsynIPPort</h3>
-    <ul>
-      <li>Fixed the logic for using SO_REUSEPORT or SO_RESUSEADDR.  In R4-40 RTEMS and Windows
-      used SO_REUSEADDR and all others used SO_REUSEPORT.  
-      This does not work because Linux kernels before 3.9 also do not support SO_REUSEPORT.  Now
-      if SO_REUSEPORT is not defined then SO_REUSEADDR is used instead.</li>
-    </ul>  <div style="text-align: center">
+  <h3>
+    drvAsynIPPort</h3>
+  <ul>
+    <li>Fixed the logic for using SO_REUSEPORT or SO_RESUSEADDR. In R4-40 RTEMS and Windows
+      used SO_REUSEADDR and all others used SO_REUSEPORT. This does not work because Linux
+      kernels before 3.9 also do not support SO_REUSEPORT. Now if SO_REUSEPORT is not
+      defined then SO_REUSEADDR is used instead.</li>
+  </ul>
+  <div style="text-align: center">
     <hr />
     <h2>
       Release 4-40</h2>
