@@ -19,7 +19,6 @@
 #ifndef INCasynOctetSyncIOh
 #define INCasynOctetSyncIOh 1
 
-#include <shareLib.h>
 #include "asynDriver.h"
 
 #ifdef __cplusplus
@@ -70,7 +69,7 @@ typedef struct asynOctetSyncIO {
    asynStatus (*getOutputEosOnce)(const char *port, int addr,
                   char *eos, int eossize, int *eoslen,const char *drvInfo);
 } asynOctetSyncIO;
-epicsShareExtern asynOctetSyncIO *pasynOctetSyncIO;
+ASYN_API extern asynOctetSyncIO *pasynOctetSyncIO;
 
 #ifdef __cplusplus
 }

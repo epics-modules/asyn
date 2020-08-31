@@ -172,7 +172,7 @@ static asynOption option = {
 };
 
 
-epicsShareFunc int
+ASYN_API int
 asynInterposeDelay(const char *portName, int addr, double delay)
 {
     interposePvt *pvt;

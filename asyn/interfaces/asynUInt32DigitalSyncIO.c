@@ -19,8 +19,6 @@
 
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynUInt32Digital.h"
 #include "asynDrvUser.h"
@@ -77,7 +75,7 @@ static asynUInt32DigitalSyncIO interface = {
     clearInterruptOnce,
     getInterruptOnce
 };
-epicsShareDef asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO = &interface;
+asynUInt32DigitalSyncIO *pasynUInt32DigitalSyncIO = &interface;
 
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)

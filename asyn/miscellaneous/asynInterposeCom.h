@@ -8,13 +8,11 @@
 #ifndef asynInterposeCom_H
 #define asynInterposeCom_H
 
-#include <shareLib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
-epicsShareFunc int asynInterposeCOM(const char *portName);
+ASYN_API int asynInterposeCOM(const char *portName);
 
 #ifdef __cplusplus
 }

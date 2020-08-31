@@ -15,7 +15,7 @@
 
 class paramList;
 
-epicsShareFunc void* findAsynPortDriver(const char *portName);
+ASYN_API void* findAsynPortDriver(const char *portName);
 typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp);
 
 #ifdef __cplusplus
@@ -42,7 +42,7 @@ class callbackThread;
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
   * with standard asyn interfaces and a parameter library. */
-class epicsShareClass asynPortDriver {
+class ASYN_API asynPortDriver {
 public:
     asynPortDriver(asynParamSet* paramSet,
                    const char *portName, int maxAddr, int interfaceMask, int interruptMask,

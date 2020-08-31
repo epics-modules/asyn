@@ -16,7 +16,6 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +33,7 @@ typedef struct asynOptionSyncIO {
     asynStatus (*getOptionOnce)(const char *port, int addr,
                     const char *key, char *val, int sizeval, double timeout, const char *drvInfo);
 } asynOptionSyncIO;
-epicsShareExtern asynOptionSyncIO *pasynOptionSyncIO;
+ASYN_API extern asynOptionSyncIO *pasynOptionSyncIO;
 
 #ifdef __cplusplus
 }

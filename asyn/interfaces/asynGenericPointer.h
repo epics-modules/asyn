@@ -17,7 +17,6 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -57,7 +56,7 @@ typedef struct asynGenericPointerBase {
                             asynInterface *pasynGenericPointerInterface);
 } asynGenericPointerBase;
 
-epicsShareExtern asynGenericPointerBase *pasynGenericPointerBase;
+ASYN_API extern asynGenericPointerBase *pasynGenericPointerBase;
 
 
 #ifdef __cplusplus

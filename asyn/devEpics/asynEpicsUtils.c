@@ -22,8 +22,6 @@
 #include <epicsString.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynEpicsUtils.h"
 
 static asynStatus parseLink(asynUser *pasynUser, DBLINK *plink,
@@ -40,7 +38,7 @@ static asynEpicsUtils utils = {
     parseLink,parseLinkMask,parseLinkFree,asynStatusToEpicsAlarm
 };
 
-epicsShareDef asynEpicsUtils *pasynEpicsUtils = &utils;
+asynEpicsUtils *pasynEpicsUtils = &utils;
 
 /* parseLink syntax is:
    VME_IO "C<ignore> S<addr> @<portName> userParams

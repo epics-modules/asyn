@@ -13,7 +13,6 @@
 #define asynEpicsUtilsH
 
 #include <link.h>
-#include <shareLib.h>
 #include <epicsTypes.h>
 #include <alarm.h>
 #include "asynDriver.h"
@@ -33,7 +32,7 @@ typedef struct asynEpicsUtils {
                 epicsAlarmCondition defaultStat, epicsAlarmCondition *pStat,
                 epicsAlarmSeverity defaultSevr, epicsAlarmSeverity *pSevr);
 } asynEpicsUtils;
-epicsShareExtern asynEpicsUtils *pasynEpicsUtils;
+ASYN_API extern asynEpicsUtils *pasynEpicsUtils;
 
 #ifdef __cplusplus
 }

@@ -16,8 +16,6 @@
 #include <epicsStdio.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include <asynDriver.h>
 
 #include "asynGenericPointer.h"
@@ -25,7 +23,7 @@
 static asynStatus initialize(const char *portName, asynInterface *pGenericPointerInterface);
 
 static asynGenericPointerBase GenericPointerBase = {initialize};
-epicsShareDef asynGenericPointerBase *pasynGenericPointerBase = &GenericPointerBase;
+asynGenericPointerBase *pasynGenericPointerBase = &GenericPointerBase;
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser, void *pointer);
 static asynStatus readDefault(void *drvPvt, asynUser *pasynUser, void *pointer);

@@ -20,8 +20,6 @@
 #include <cantProceed.h>
 #include <epicsEvent.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynDrvUser.h"
 #include "asynCommonSyncIO.h"
@@ -53,7 +51,7 @@ static asynCommonSyncIO interface = {
     disconnectDevice,
     report
 };
-epicsShareDef asynCommonSyncIO *pasynCommonSyncIO = &interface;
+asynCommonSyncIO *pasynCommonSyncIO = &interface;
 
 /* Private methods */
 static void connectDeviceCallback(asynUser *pasynUser);

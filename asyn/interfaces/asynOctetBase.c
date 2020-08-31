@@ -21,8 +21,6 @@
 #include <epicsString.h>
 #include <epicsTypes.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynInterposeEos.h"
 #include "asynOctet.h"
@@ -52,7 +50,7 @@ static void callInterruptUsers(asynUser *pasynUser,void *pasynPvt,
     char *data,size_t *nbytesTransfered,int *eomReason);
 
 static asynOctetBase octetBase = {initialize,callInterruptUsers};
-epicsShareDef asynOctetBase *pasynOctetBase = &octetBase;
+asynOctetBase *pasynOctetBase = &octetBase;
 
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     const char *data,size_t numchars,size_t *nbytesTransfered);

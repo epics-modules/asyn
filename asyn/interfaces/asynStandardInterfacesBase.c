@@ -17,8 +17,6 @@
 #include <epicsTypes.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynStandardInterfaces.h"
 
@@ -329,5 +327,5 @@ static asynStatus initialize(const char *portName, asynStandardInterfaces *pInte
 
 
 static asynStandardInterfacesBase standardInterfacesBase = {initialize};
-epicsShareDef asynStandardInterfacesBase *pasynStandardInterfacesBase = &standardInterfacesBase;
+asynStandardInterfacesBase *pasynStandardInterfacesBase = &standardInterfacesBase;
 

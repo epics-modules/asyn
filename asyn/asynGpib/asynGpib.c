@@ -139,7 +139,7 @@ static asynGpib gpib = {
 /*asynInt32Base implements all asynInt32 methods*/
 static asynInt32 int32 = {0,0,0,0,0};
 
-epicsShareDef asynGpib *pasynGpib = &gpib;
+asynGpib *pasynGpib = &gpib;
 
 /*internal methods */
 static void gpibInit(void)

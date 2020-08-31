@@ -15,15 +15,13 @@
 #include <epicsStdio.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynFloat64.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pfloat64Interface);
 
 static asynFloat64Base float64Base = {initialize};
-epicsShareDef asynFloat64Base *pasynFloat64Base = &float64Base;
+asynFloat64Base *pasynFloat64Base = &float64Base;
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
                                epicsFloat64 value);

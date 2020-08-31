@@ -27,8 +27,6 @@
     #include <dbAccess.h>
 #endif
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "paramVal.h"
 #include "paramErrors.h"
 #include "asynParamType.h"

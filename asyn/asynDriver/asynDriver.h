@@ -18,8 +18,8 @@
 #include <epicsStdio.h>
 #include <epicsTime.h>
 #include <ellLib.h>
-#include <shareLib.h>
 #include <epicsVersion.h>
+#include <asynAPI.h>
 
 /* Version number names similar to those provide by base
  * These macros are always numeric */
@@ -184,7 +184,7 @@ typedef struct asynManager {
 
     const char *(*strStatus)(asynStatus status);
 }asynManager;
-epicsShareExtern asynManager *pasynManager;
+ASYN_API extern asynManager *pasynManager;
 
 /* Interface supported by ALL asyn drivers*/
 #define asynCommonType "asynCommon"
@@ -273,7 +273,7 @@ typedef struct asynTrace {
                     const char *buffer, size_t len,const char *file, int line, const char *pformat, va_list pvar) EPICS_PRINTF_STYLE(7,0);
 #endif
 }asynTrace;
-epicsShareExtern asynTrace *pasynTrace;
+ASYN_API extern asynTrace *pasynTrace;
 
 #if (defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L) || defined(_WIN32)
 #define asynPrint(pasynUser,reason, ...) \

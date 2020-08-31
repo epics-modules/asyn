@@ -162,7 +162,7 @@ static asynOctet octet = {
 };
 
 /* asynOctet methods */
-epicsShareFunc int
+ASYN_API int
 asynInterposeEcho(const char *portName, int addr)
 {
     interposePvt *pvt;
