@@ -355,9 +355,4 @@ else
 	@$(MV) $(notdir $@) $@
 endif
 
-$(LIB_PREFIX)asyn$(LIB_SUFFIX): USR_CPPFLAGS += -DBUILDING_asyn_API
-ifeq ($(SHARED_LIBRARIES),YES)
-  $(SHRLIB_PREFIX)asyn$(SHRLIB_SUFFIX): USR_CPPFLAGS += -DBUILDING_asyn_API
-endif
-
-
+USR_CPPFLAGS += -DBUILDING_asyn_API
