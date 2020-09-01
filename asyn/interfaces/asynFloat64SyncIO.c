@@ -19,8 +19,6 @@
 
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynFloat64.h"
 #include "asynDrvUser.h"
@@ -53,7 +51,7 @@ static asynFloat64SyncIO interface = {
     writeOpOnce,
     readOpOnce
 };
-epicsShareDef asynFloat64SyncIO *pasynFloat64SyncIO = &interface;
+asynFloat64SyncIO *pasynFloat64SyncIO = &interface;
 
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)

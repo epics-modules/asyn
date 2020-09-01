@@ -113,6 +113,15 @@ jobs:
 #  - env: SET=base7 BCFG=static-debug
 #    compiler: vs2017
 #    os: windows
+  - env: SET=base3-14
+    compiler: vs2017
+    os: windows
+  - env: SET=base3-14 BCFG=static
+    compiler: vs2017
+    os: windows
+  - env: SET=base3-14 BCFG=debug
+    compiler: vs2017
+    os: windows
 
 # Older Base releases
   - env: SET=base3-15

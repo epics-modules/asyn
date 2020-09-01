@@ -20,8 +20,6 @@
 #include <epicsString.h>
 #include <epicsTypes.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynOption.h"
@@ -726,7 +724,7 @@ exceptionHandler(asynUser *pasynUser, asynException exception)
     }
 }
 
-epicsShareFunc int
+ASYN_API int
 asynInterposeCOM(const char *portName)
 {
     interposePvt *pinterposePvt;

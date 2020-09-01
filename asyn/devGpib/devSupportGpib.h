@@ -20,7 +20,6 @@
 #include <callback.h>
 #include <dbScan.h>
 #include <devSup.h>
-#include <shareLib.h>
 
 /* supported record types */
 #include <dbCommon.h>
@@ -176,7 +175,7 @@ struct devSupportGpib {
     int (*restoreEos)(gpibDpvt *pgpibDpvt,gpibCmd *pgpibCmd);
     void (*completeProcess)(gpibDpvt *pgpibDpvt);
 };
-epicsShareExtern devSupportGpib *pdevSupportGpib;
+ASYN_API extern devSupportGpib *pdevSupportGpib;
 
 /* macros for accessing some commonly used fields*/
 #define gpibDpvtGet(precord) ((gpibDpvt *)(precord)->dpvt)

@@ -107,7 +107,7 @@ typedef struct asynStandardInterfacesBase {
                              asynUser *pasynUser, void *pPvt);
 } asynStandardInterfacesBase;
 
-epicsShareExtern asynStandardInterfacesBase *pasynStandardInterfacesBase;
+ASYN_API extern asynStandardInterfacesBase *pasynStandardInterfacesBase;
 
 #ifdef __cplusplus
 }

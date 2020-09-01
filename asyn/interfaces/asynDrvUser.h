@@ -17,7 +17,6 @@
 #define asynDrvUserH
 
 #include <epicsStdio.h>
-#include "shareLib.h"
 
 #ifdef __cplusplus
 extern "C" {

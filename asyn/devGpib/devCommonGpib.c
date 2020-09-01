@@ -33,8 +33,6 @@
 #include <errlog.h>
 #include <menuFtype.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynGpibDriver.h"
 #include "devSupportGpib.h"

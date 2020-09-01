@@ -38,6 +38,7 @@ ifeq ($(TIRPC),YES)
 endif
 
 SRC_DIRS += $(ASYN)/asynDriver
+INC += asynAPI.h
 INC += asynDriver.h
 INC += epicsInterruptibleSyscall.h
 asyn_SRCS += asynManager.c
@@ -354,3 +355,4 @@ else
 	@$(MV) $(notdir $@) $@
 endif
 
+USR_CPPFLAGS += -DBUILDING_asyn_API

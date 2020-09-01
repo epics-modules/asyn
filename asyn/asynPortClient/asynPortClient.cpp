@@ -14,8 +14,6 @@
 #include <stdexcept>
 #include <epicsThread.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynPortDriver.h"
 #include "asynPortClient.h"
 

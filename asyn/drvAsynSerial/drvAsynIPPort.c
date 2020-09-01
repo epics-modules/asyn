@@ -959,7 +959,7 @@ static const struct asynCommon drvAsynIPPortAsynCommon = {
 /*
  * Configure and register the drvAsynIPPort driver
 */
-epicsShareFunc int
+ASYN_API int
 drvAsynIPPortConfigure(const char *portName,
                        const char *hostInfo,
                        unsigned int priority,

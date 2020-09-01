@@ -509,7 +509,7 @@ static const struct asynCommon drvAsynFTDIPortAsynCommon = {
 /*
  * Configure and register a USB port from a hostInfo string
  */
-epicsShareFunc int
+ASYN_API int
 drvAsynFTDIPortConfigure(const char *portName,
                          int vendor,
                          int product,

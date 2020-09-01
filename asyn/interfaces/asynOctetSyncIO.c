@@ -25,8 +25,6 @@
 
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynOctet.h"
 #include "asynDrvUser.h"
@@ -106,7 +104,7 @@ static asynOctetSyncIO asynOctetSyncIOManager = {
     setOutputEosOnce,
     getOutputEosOnce
 };
-epicsShareDef asynOctetSyncIO *pasynOctetSyncIO = &asynOctetSyncIOManager;
+asynOctetSyncIO *pasynOctetSyncIO = &asynOctetSyncIOManager;
 
 static asynStatus connect(const char *port, int addr,
            asynUser **ppasynUser,const char *drvInfo)
