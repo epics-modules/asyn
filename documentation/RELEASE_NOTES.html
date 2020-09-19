@@ -12,6 +12,30 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-41</h2>
+    <h2>
+      September 19, 2020</h2>
+  </div>
+  <h3>
+    Many files</h3>
+  <ul>
+    <li>Changed the code and the Makefile to avoid using shareLib.h from EPICS base. Added
+      a new header file asynAPI.h that is used to control whether functions, classes,
+      and variables are definined internally to the asyn library or externally. This is
+      the mechanism now used in EPICS base 7. It makes it much easier to avoid mistakes
+      in the order of include files that cause external functions to be accidentally exported
+      in the asyn DLL or shareable library. This should work on all versions of base,
+      and have no impact on user code.</li>
+  </ul>
+  <h3>
+    devAsynInt32.c, devAsynUInt32Digital.c</h3>
+  <ul>
+    <li>Replaced strncpy()) with memcpy() to avoid compiler warnings on newer versions
+      of gcc (e.g. 8.3.1).</li>
+  </ul>
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-40-1</h2>
     <h2>
       August 24, 2020</h2>
