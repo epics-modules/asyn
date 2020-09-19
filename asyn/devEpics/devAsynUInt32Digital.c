@@ -389,7 +389,12 @@ static void setEnums(char *outStrings, int *outVals, epicsEnum16 *outSeverities,
         if (outSeverities) outSeverities[i] = 0;
     }
     for (i=0; (i<numIn && i<numOut); i++) {
-        if (outStrings) strncpy(&outStrings[i*MAX_ENUM_STRING_SIZE], inStrings[i], MAX_ENUM_STRING_SIZE);
+        if (outStrings) {
+            size_t len = strlen(inStrings[i]);
+            if (len > MAX_ENUM_STRING_SIZE-1) len = MAX_ENUM_STRING_SIZE-1;
+            memcpy(&outStrings[i*MAX_ENUM_STRING_SIZE], inStrings[i], len);
+            outStrings[i*MAX_ENUM_STRING_SIZE + len] = '\0';
+        }
         if (outVals) outVals[i] = inVals[i];
         if (outSeverities) outSeverities[i] = inSeverities[i];
     }
