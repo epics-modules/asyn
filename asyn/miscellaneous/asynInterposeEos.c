@@ -158,7 +158,7 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     asynStatus status;
     size_t     nbytesActual = 0;
 
-    if(!peosPvt->processEosOut) {
+    if((!peosPvt->processEosOut) || (peosPvt->eosOutLen <= 0)) {
         return peosPvt->poctet->write(peosPvt->octetPvt,
             pasynUser,data,numchars,nbytesTransfered);
     }
