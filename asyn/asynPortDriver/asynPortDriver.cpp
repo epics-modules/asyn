@@ -129,10 +129,11 @@ asynStatus paramList::createParam(const char *name, asynParamType type, int *ind
 
     if (this->findParam(name, index) == asynSuccess) return asynParamAlreadyExists;
 
-    paramVal *param = new paramVal(name, type);
+    std::auto_ptr<paramVal> param(new paramVal(name, type));
 
-    vals.push_back(param);
+    vals.push_back(param.get());
     flags.reserve(vals.size());
+    param.release();
     *index = (int)vals.size()-1;
     return asynSuccess;
 }
