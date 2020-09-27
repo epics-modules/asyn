@@ -25,6 +25,8 @@ ifeq (vxWorks,$(findstring vxWorks, $(T_A)))
 endif
 USR_CXXFLAGS_solaris-sparc=-instances=global
 
+USR_CXXFLAGS+=-std=c++03
+
 LIBRARY_IOC += asyn
 
 asyn_SYS_LIBS_WIN32 = ws2_32 winmm
