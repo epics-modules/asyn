@@ -24,7 +24,10 @@ ifeq (vxWorks,$(findstring vxWorks, $(T_A)))
   CODE_CXXFLAGS=
 endif
 USR_CXXFLAGS_solaris-sparc=-instances=global
-USR_CXXFLAGS_Linux += -std=c++11
+
+ifeq ($(GNU),YES)
+  USR_CXXFLAGS += -std=c++11
+endif
 
 LIBRARY_IOC += asyn
 
