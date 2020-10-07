@@ -25,7 +25,11 @@ ifeq (vxWorks,$(findstring vxWorks, $(T_A)))
 endif
 USR_CXXFLAGS_solaris-sparc=-instances=global
 
-USR_CXXFLAGS+=-std=c++03
+ifneq (vxWorks,$(findstring vxWorks, $(T_A)))
+ifneq (RTEMS,$(findstring RTEMS, $(T_A)))
+  USR_CXXFLAGS+=-std=c++03
+endif
+endif
 
 LIBRARY_IOC += asyn
 
