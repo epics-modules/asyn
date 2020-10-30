@@ -70,7 +70,7 @@ ext_modules.append(Extension("cPyHiSLIP",
                              ,cython_cplus=True
                              ,undef_macros =[]   # ["CFLAGS"]
                              ,define_macros=[]  # [("USE_TCP_NODELAY",1)]
-                             ,extra_compile_args=["-std=gnu++11", "-O3"],
+                             ,extra_compile_args=["-std=c++11", "-O3"],
 ))
 
 

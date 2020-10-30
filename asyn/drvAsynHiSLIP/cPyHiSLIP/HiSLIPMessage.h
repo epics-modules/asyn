@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
-#include <string.h> //memcpy, etc
+#include <string.h> //memcpy, strlen, etc
 #include <sys/types.h>
 #include <sys/param.h> /* for MAXHOSTNAMELEN */
 #include <unistd.h> /* close() and others */
@@ -18,6 +18,7 @@
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <pthread.h>  // for MacOS
+#include <stdexcept>  //for std::exception
 
 #include <chrono>
 using namespace std::chrono;
@@ -50,6 +51,37 @@ template<class T> struct Property {
 };
    
 namespace nsHiSLIP{
+  typedef class HiSLIP_FatalError:std::exception {
+    char *msg;
+  public:
+    HiSLIP_FatalError(char * const msg){
+      this->msg=msg;
+    }
+  } FatalError_t;
+  
+  typedef class HiSLIP_Error:std::exception {
+    const char *msg;
+  public:
+    HiSLIP_Error(const char * const msg){
+      this->msg=msg;
+    }
+  } Error_t;
+  
+  typedef class HiSLIP_Interrupted:std::exception {
+    const char *msg;
+  public:
+    HiSLIP_Interrupted(const char * const msg){
+      this->msg=msg;
+    }
+  } Interrupted_t;
+  
+  typedef class HiSLIP_SRQ:std::exception {
+    const char *msg;
+  public:
+    HiSLIP_SRQ(const char * const msg){
+      this->msg=msg;
+    }
+  } SRQ_t;
   
   //constants
   typedef enum CC_reuqest{
@@ -434,7 +466,7 @@ namespace nsHiSLIP{
     //
     int  get_Service_Request(void);
     int  wait_Service_Request(int wait_time);
-    
+    //
     int wait_for_Async(int wait_time){
       this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);
@@ -451,6 +483,9 @@ namespace nsHiSLIP{
 
     void Fatal_Error_handler(Message *msg);
     void Error_handler(Message *msg);
+    void report_Fatal_Error(const u_int8_t erc, const char *errmsg);
+    void report_Error(const u_int8_t erc, const char *errmsg);
+    //
     
   private:
     int wait_for_answer(int wait_time){

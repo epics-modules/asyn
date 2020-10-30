@@ -25,8 +25,13 @@ How to use
 ### For EPICS
 
 It is assumed that this module will be used togather with the Stream
-Deivce. To add this drvAsynHiSLIP support into StreamApp. After building
-a libasyn library with drvAsynHiSLIP, you must add the following line to
+Deivce. You may need to adjust configure/RELEASE adn
+configure/CONFIG\_SITE files for your environment. In some Linux
+systems, you need to turn on TIRPC switch to true in
+configure/CONFIG\_SITE.
+
+To add this drvAsynHiSLIP support into StreamApp. After building a
+libasyn library with drvAsynHiSLIP, you must add the following line to
 the Makefile in the StreamApp directory:
 
 > streamApp\_DBD += drvAsynHiSLIP.dbd

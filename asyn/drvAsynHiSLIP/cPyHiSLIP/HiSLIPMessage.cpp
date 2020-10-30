@@ -22,7 +22,7 @@ namespace nsHiSLIP{
     
     if (rsize < HEADER_SIZE){
       //raise exception?
-      return -1;
+      throw Error_t("Too Short Header in HiSLIP Message");
     }
     
     if (memcmp(this->prologue, buffer, 2) != 0){
@@ -79,14 +79,19 @@ namespace nsHiSLIP{
 	bytestoread -=status;
       }	  
     }
-    // handle error 
+    
+    // handle error / or urgent messages: Error/FatalError /interrupted/AsyncInterrupted/AsyncServiceRequest
+    // 
+    // for debug
+    // this->print();
     if(this->message_type  == nsHiSLIP::FatalError){
       ::printf("Error: %d %s\n",
 	       this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
       if (this->payload_length >0){
 	::printf("Fatal Error msg: %s\n", (char *) this->payload);
       }
-      return -(this->control_code+1);
+      //return -(this->control_code+1);
+      throw FatalError_t((char *) this->payload);
     }
     else if(this->message_type  == nsHiSLIP::Error){
       ::printf("Fatal Error: %d %s\n",
@@ -94,14 +99,20 @@ namespace nsHiSLIP{
       if (this->payload_length >0){
 	::printf("Error msg: %s\n", (char *) this->payload);
       }
-      return -(this->control_code+2);
+      //return -(this->control_code+2);
+      throw HiSLIP_Error((char *) this->payload);
     }
     else if( (this->message_type  == nsHiSLIP::Interrupted) ||
 	     (this->message_type  == nsHiSLIP::AsyncInterrupted))
       {
 	::printf("Interrupted  %d %s\n",
 		 this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
-	return -1;
+      throw HiSLIP_Interrupted((char *) this->payload);
+    }
+    else if(this->message_type  == nsHiSLIP::AsyncServiceRequest){
+      ::printf("SRQ received : %d\n",    this->control_code);
+      throw SRQ_t("Service Request");
+      //return -(this->control_code);
     }
     // check if expected type or not
     if((expected_message_type == AnyMessages) ||
@@ -109,7 +120,7 @@ namespace nsHiSLIP{
       return 0;
     }
     // for debug
-    // this->print();
+    this->print();
     return -1;
   }
 
@@ -216,7 +227,14 @@ namespace nsHiSLIP{
     }
     {
       Message resp(AnyMessages);
-      int rc=resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
+      int rc=-1;
+      try{
+	rc=resp.recv(this->async_channel, nsHiSLIP::AsyncInitializeResponse);
+      }
+      catch (...){
+	::printf("uncaught exception\n");
+      }
+  
       if (rc !=0){
 	//
       }
@@ -256,7 +274,13 @@ namespace nsHiSLIP{
       return -1;
     }
   
-    int rc=resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
+    int rc=-1;
+    try{
+      rc=resp.recv(this->async_channel,nsHiSLIP::AsyncMaximumMessageSizeResponse);
+    }
+    catch (...){
+      ::printf("uncaught exception");
+    }
     if (rc!=0){
       //
     }
@@ -292,7 +316,12 @@ namespace nsHiSLIP{
       return -1;
     }
   
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncDeviceClearAcknowledge);
+    try{
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncDeviceClearAcknowledge);
+    }
+    catch (...){
+      ::printf("Uncaught exception");
+    }
     if (rc !=0){
       // Error!
     }
@@ -354,7 +383,31 @@ namespace nsHiSLIP{
     if ( ready == 0){
       return -1;
     }
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncStatusResponse);
+    
+    try{
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncStatusResponse);
+    }
+    catch(SRQ_t &e){
+    	this->release_srq_lock();
+    	return resp.control_code;
+    }
+    catch (FatalError_t &e){
+    	this->Fatal_Error_handler(&resp);
+    	return -1;
+    }
+    catch (Error_t &e){
+      this->Error_handler(&resp);
+      return -1;
+    }
+    catch (Interrupted_t &e){
+      this->Error_handler(&resp);
+      return -1;
+    }
+    catch(...){
+      ::printf("uncahugt exception");
+      return -1;
+    }
+    
     //resp.print();
     if (rc !=0){
       switch (resp.message_type ){
@@ -363,9 +416,15 @@ namespace nsHiSLIP{
 	return resp.control_code;
 	break;
       case nsHiSLIP::FatalError:
+	this->Fatal_Error_handler(&resp);
+	return -1;
+	break;
       case nsHiSLIP::Error:
-	perror(__FUNCTION__);
-	resp.print("Error/Fatal Error"); 	// for debug
+	this->Error_handler(&resp);
+	return -1;
+	break;
+      case nsHiSLIP::AsyncInterrupted:
+	this->Error_handler(&resp);
 	return -1;
 	break;
       case nsHiSLIP::AsyncLockResponse:
@@ -651,7 +710,14 @@ namespace nsHiSLIP{
 		message_parameter((u_int32_t) this->most_recent_message_id),
 		0, NULL), resp(AnyMessages);
     msg.send(this->async_channel);
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncRemoteLocalResponse);
+
+    try{
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncRemoteLocalResponse);
+    }
+    catch(...){
+      return -1;
+    }
+    
     if (rc !=0){
       return -1;
     }
@@ -668,7 +734,12 @@ namespace nsHiSLIP{
     
     msg.send(this->async_channel);
     
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    try{
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    }
+    catch (...){
+      return -1;
+    }
     if (rc !=0){
       //error!
       return -1;
@@ -690,7 +761,12 @@ namespace nsHiSLIP{
     
     msg.send(this->async_channel);
     
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    try {
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockResponse);
+    }
+    catch (...){
+      return -1;
+    }
     if(rc != 0){
       //Error
       return -1;
@@ -716,7 +792,12 @@ namespace nsHiSLIP{
     if ( ready == 0){
       return -1;
     }
-    rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockInfoResponse);
+    try{
+      rc=resp.recv(this->async_channel, nsHiSLIP::AsyncLockInfoResponse);
+    }
+    catch (...){
+      return -1;       //Error!
+    }
     if (rc !=0){
       return -1;       //Error!
     }
@@ -793,22 +874,29 @@ namespace nsHiSLIP{
   int HiSLIP::get_Service_Request(void){
     Message *msg=new Message(nsHiSLIP::AnyMessages);
     long status;
-    
-    status= msg->recv(this->async_channel, nsHiSLIP::AsyncServiceRequest);
-    
-    // for debug
-    // msg->print();
-    
-    //if ((status & 0x80000000) != 0){
-    if (status <0){
-      // should handle Error/Fatal Error/Async Interrupted messages.
-      perror(__FUNCTION__);
-      msg->print("SRQ handler:");
-      return 0;
+
+    try{
+      status= msg->recv(this->async_channel, nsHiSLIP::AnyMessages);// Service Request cause SRQ_t exception.
+      msg->print(); // other async response should be handled separately.
+      return status;
     }
-    else{
-      this->release_srq_lock();
-      return msg->control_code;
+    catch(SRQ_t &e){ // Recieved SRT
+      // for debug
+      msg->print();
+      //if ((status & 0x80000000) != 0){
+      if (status < 0){
+	// should handle Error/Fatal Error/Async Interrupted messages.
+	perror(__FUNCTION__);
+	msg->print("SRQ handler:");
+	return 0;
+      }
+      else{
+	this->release_srq_lock();
+	return msg->control_code;
+      }
+    }
+    catch(...){
+      return -1;
     }
   };
   
@@ -829,20 +917,32 @@ namespace nsHiSLIP{
       steady_clock::time_point clk_now = steady_clock::now();
       // Note that implicit conversion is allowed here
       auto time_spent = FpMilliseconds(clk_now - clk_begin);
-      status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
+      try{
+	status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
+      }
+      catch(SRQ_t &e){
+    	this->release_srq_lock();
+    	return msg->control_code;
+      }
+      catch (FatalError_t &e){
+    	this->Fatal_Error_handler(msg);
+    	return -1;
+      }
+      catch (Error_t &e){
+	this->Error_handler(msg);
+	return -1;
+      }
+      catch (Interrupted_t &e){
+	this->Error_handler(msg);
+	return -1;
+      }
+      catch(...){
+	::printf("uncahugt exception");
+	return -1;
+      }
       //msg->print();	// for debug
       
       switch (msg->message_type ){
-      case nsHiSLIP::AsyncServiceRequest:
-	this->release_srq_lock();
-	return msg->control_code;
-	break;
-      case nsHiSLIP::FatalError:
-      case nsHiSLIP::Error:
-	perror(__FUNCTION__);
-	msg->print("Error/Fatal Error"); 	// for debug
-	return -1;
-	break;
       case nsHiSLIP::AsyncLockResponse:
       case nsHiSLIP::AsyncRemoteLocalResponse:
       case nsHiSLIP::AsyncStatusResponse:
@@ -862,6 +962,25 @@ namespace nsHiSLIP{
       continue;
     };
     return -2;
-  };	
+  };
+  //
+  void HiSLIP::Fatal_Error_handler(Message *msg){
+    msg->print("Fatal Error"); 	// for debug
+  };
+  void HiSLIP::Error_handler(Message *msg){
+    msg->print("Error"); 	// for debug
+  };
+  
+  void HiSLIP::report_Fatal_Error(const u_int8_t erc, const char *errmsg){
+    Message
+      msg(nsHiSLIP::FatalError,  erc, 0, strnlen(errmsg,256), (u_int8_t *) errmsg);
+    msg.send(this->async_channel);
+  };
+  
+  void HiSLIP::report_Error(const u_int8_t erc, const char *errmsg){
+    Message
+      msg(nsHiSLIP::Error, erc, 0, strnlen(errmsg,256), (u_int8_t *) errmsg);
+    msg.send(this->async_channel);
+  };
 } // end of namespace HiSLIP
 

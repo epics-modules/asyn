@@ -229,7 +229,7 @@ cdef class HiSLIP:
           rc=self.thisobj.status_query()
       return rc
   
-  def trigger_message(self):
+  def trigger_device(self):
       cdef long rc
       with nogil:
           rc=self.thisobj.trigger_message()
@@ -408,6 +408,12 @@ cdef class HiSLIP:
                   break
       return
 
+  def report_FatalError(self, u_int8_t erc, char * errmsg):
+      self.thisobj.report_Fatal_Error(erc, errmsg)
+
+  def report_Error(self, u_int8_t erc, char * errmsg):
+      self.thisobj.report_Error(erc, errmsg)
+      
 cdef class enumType:
    @classmethod
    def getKey(cls, v):

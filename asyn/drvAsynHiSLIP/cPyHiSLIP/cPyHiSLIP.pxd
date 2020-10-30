@@ -62,7 +62,7 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
                  int    port) nogil
     void set_timeout(long) nogil
     long get_timeout() nogil
-    void  set_lock_timeout(long) nogil
+    void set_lock_timeout(long) nogil
     long get_lock_timeout() nogil
     
     long set_max_size(long) nogil 
@@ -82,6 +82,8 @@ cdef extern from "HiSLIPMessage.h" namespace "nsHiSLIP":
     int check_and_lock_srq_lock() nogil
     int get_Service_Request() nogil
     int wait_Service_Request(int wait_time) nogil
-    int  wait_for_Async(int) nogil
+    int wait_for_Async(int) nogil
     void disconnect() nogil
-    
+    void report_Fatal_Error(const u_int8_t erc, const char *errmsg) nogil
+    void report_Error(const u_int8_t erc, const char *errmsg)  nogil
+

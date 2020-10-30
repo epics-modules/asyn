@@ -28,16 +28,19 @@ class HiSLIPFunctionTestMethods(unittest.TestCase):
     
     @classmethod
     def setUpClass(cls):
-        cls.hostname=b"172.28.68.228"    # Keysight
+        #cls.hostname=b"172.28.68.228"    # Keysight
+        cls.hostname=b"169.254.29.115"    # Keysight
         # cls.hostname=b"169.254.100.192"  # Kikusui
         
     def test_connection(self):
+        print("test_connection")
         dev=HiSLIP()
         dev.connect(self.hostname)
         dev.write(self.Query1)
         self.assertTrue(dev.read() != None)
         del dev
         time.sleep(1)
+        print("end of test_connection")
         return 0
     
     def test_SRQ_status_byte(self):
@@ -47,9 +50,9 @@ class HiSLIPFunctionTestMethods(unittest.TestCase):
         dev.write(self.EnableSRQ)
         dev.write(self.Query2)
         dev.wait_Service_Request(10000)
-        #dev.check_SRQ()
+        dev.check_SRQ()
         st=dev.status_query()
-        print (hex(st))
+        print ("Status Query:",hex(st),hex(st&0x70))
         self.assertEqual(st & 0x70, 80) # SRQ(64)+ MAV(16)
         dev.read()
         st=dev.status_query()
