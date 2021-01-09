@@ -496,10 +496,6 @@ namespace nsHiSLIP{
     return delivered;
   };
 
-  long HiSLIP::aread(size_t *received, u_int8_t **buffer, long timeout){
-    return this->read(received, buffer, timeout);
-  };
-  
   long HiSLIP::read(size_t *received, u_int8_t **buffer, long timeout){
     bool eom=false;
     long rstatus=0;
@@ -692,15 +688,8 @@ namespace nsHiSLIP{
       return -1;
     };
     
-    // long status=this->read(&rsize, &buffer,  wait_time);
-    //
-    auto fut=std::async(std::launch::async,
-			&nsHiSLIP::HiSLIP::aread,
-			this,
-			&rsize, &buffer,
-			wait_time);
-    long status=fut.get();
-    
+    long status=this->read(&rsize, &buffer, wait_time);
+
     // read will allocate memory area pointed by buffer.
     if (status !=0){
       rsize=-1;
