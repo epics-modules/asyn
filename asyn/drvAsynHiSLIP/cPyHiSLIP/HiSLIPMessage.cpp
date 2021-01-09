@@ -17,8 +17,14 @@ namespace nsHiSLIP{
     ssize_t rsize;
     
     //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
-    rsize = ::recvfrom(socket, buffer, HEADER_SIZE, 0, NULL, NULL);
     // rsize= ::read(socket, buffer, HEADER_SIZE);
+    //rsize = ::recvfrom(socket, buffer, HEADER_SIZE, 0, nullptr, nullptr);
+    auto f=std::async(std::launch::async,
+		      ::recvfrom ,
+		      socket, buffer,
+		      HEADER_SIZE, 0,
+		      nullptr, nullptr);
+    rsize=f.get();
     
     if (rsize < HEADER_SIZE){
       //raise exception?
@@ -484,6 +490,10 @@ namespace nsHiSLIP{
     }
     return delivered;
   };
+
+  long HiSLIP::aread(size_t *received, u_int8_t **buffer, long timeout){
+    return this->read(received, buffer, timeout);
+  };
   
   long HiSLIP::read(size_t *received, u_int8_t **buffer, long timeout){
     bool eom=false;
@@ -664,13 +674,11 @@ namespace nsHiSLIP{
     return -1;
   };
 
-  long  HiSLIP::ask(u_int8_t  *const data_str, size_t const dsize,
-		     u_int8_t **rbuffer,
-		     long wait_time){
+  long HiSLIP::ask(u_int8_t  *const data_str, size_t const dsize,
+		   u_int8_t **rbuffer,
+		   long wait_time){
     size_t rsize=-1;
     u_int8_t *buffer=NULL;
-    int status;
-    
   
     this->write(data_str, dsize);
     if(this->wait_for_answer(wait_time) == 0){
@@ -678,7 +686,17 @@ namespace nsHiSLIP{
       buffer=NULL;
       return -1;
     };
-    status=this->read(&rsize, &buffer, wait_time); // read will allocate memory area pointed by buffer.
+    
+    // long status=this->read(&rsize, &buffer,  wait_time);
+    //
+    auto fut=std::async(std::launch::async,
+			&nsHiSLIP::HiSLIP::aread,
+			this,
+			&rsize, &buffer,
+			wait_time);
+    long status=fut.get();
+    
+    // read will allocate memory area pointed by buffer.
     if (status !=0){
       rsize=-1;
     }

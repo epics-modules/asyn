@@ -19,9 +19,13 @@
 #include <netdb.h>
 #include <pthread.h>  // for MacOS
 #include <stdexcept>  //for std::exception
+#include <mutex>
 
 #include <chrono>
 using namespace std::chrono;
+
+// for async
+#include <future>
 
 //#include <semaphore.h>
 
@@ -379,22 +383,24 @@ namespace nsHiSLIP{
     long lock_timeout;
     int sync_channel;
     int async_channel;
-    pthread_mutex_t async_lock;
+    pthread_mutex_t async_lock=PTHREAD_MUTEX_INITIALIZER;;
     struct pollfd sync_poll;
     struct pollfd async_poll;
-    int overlap_mode;
     u_int8_t feature_setting;
     u_int8_t feature_preference;
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
 
+    bool overlap_mode; // false for synchronized mode, true for overlapped mode
+    bool interrupted;
+    bool async_interrupted;
     bool rmt_delivered;
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
     u_int32_t most_recent_received_message_id;
     //sem_t srq_lock;
-    pthread_mutex_t srq_lock;
+    pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
     HiSLIP(){
       this->maximum_message_size=this->current_message_size= MAXIMUM_MESSAGE_SIZE;
       this->maximum_payload_size=this->current_payload_size= MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
@@ -402,13 +408,15 @@ namespace nsHiSLIP{
       this->lock_timeout=LOCK_TIMEOUT;
       this->feature_preference=0;
       this->feature_setting=0;
-      this->overlap_mode=false; //can be delived from feature_setting.
+      this->overlap_mode=false; //i.e. synchronized mode. can be delived from feature_setting.
+      this->interrupted=false;
+      this->async_interrupted=false;
       this->rmt_delivered=false;
       this->sync_channel=0;
       this->async_channel=0;
-      this->async_lock=PTHREAD_MUTEX_INITIALIZER;
+      //this->async_lock=PTHREAD_MUTEX_INITIALIZER;
       //
-      this->srq_lock=PTHREAD_MUTEX_INITIALIZER;
+      //this->srq_lock=PTHREAD_MUTEX_INITIALIZER;
       // if (sem_init(&(this->srq_lock), 0, 1) !=0){
       // 	perror(" HiSLIP srq_lock");
       // }
@@ -433,8 +441,8 @@ namespace nsHiSLIP{
     
     void set_lock_timeout( long timeout){
       this->lock_timeout=timeout;
-    }
-      ;
+    };
+    
     long get_lock_timeout(void){
       return this->lock_timeout;
     };
@@ -452,6 +460,13 @@ namespace nsHiSLIP{
 	      long timeout=LOCK_TIMEOUT);
     long read(size_t *received, u_int8_t *buffer, size_t bsize,
 	      long timeout=LOCK_TIMEOUT);
+    
+    long aread(size_t *received, u_int8_t **buffer, long timeout=LOCK_TIMEOUT);
+    
+    long async_ask(u_int8_t *data_str, size_t size, long wait_time=LOCK_TIMEOUT);
+    long async_read( size_t *received, u_int8_t *buffer, size_t bsize,
+		     long timeout=LOCK_TIMEOUT);
+    
     long trigger_message(void);
     long remote_local(u_int8_t request);
     long request_lock(const char* lock_string = NULL);

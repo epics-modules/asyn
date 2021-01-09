@@ -32,3 +32,34 @@ or
 To build and install the module, run:
 
 > python setup.py install
+
+Async designe memo
+------------------
+
+async channelを送受信されるメッセージ
+
+c\<s AsyncInterrupted c\<s AsyncServiceRequest
+
+\<-\> Error \<-\> FatalError
+
+c\>s AsyncLock c\<s AsyncLockResoponse
+
+c\>s AsynLockInfo c\<s AsynLockInfoResponse
+
+c\>s AsyncRemoteLocalControl c\<s AsyncRemoteLocalRespon
+
+c\>s AsyncDeviceClear c\<s AsyncDeviceClearAcknowledge
+
+c\>s AsyncMaximumMessageSize c\<s AsyncMaximumMessageSizeResponse
+
+c\>s GetDescriptors c\<s GetDescriptorsResponse
+
+c\>s AsyncInitialize c\<s AsyncInitializeResponse
+
+c\>s AsyncStatusQuery c\<s AsyncStatusResponse
+
+c\>s AsyncStartTLS c\<s AsyncStartTLSResponse
+
+c\>s AsyncEndTLS c\<s AsyncEndTLSResponse
+
+c\<-\>s VendorSpecific
