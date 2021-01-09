@@ -283,8 +283,14 @@ namespace nsHiSLIP{
       ssize_t ssize;
       
       this->toRawData(hbuf);
-      ssize=::send(socket, hbuf, sizeof(hbuf), 0);
       
+      //ssize=::send(socket, hbuf, sizeof(hbuf), 0);
+      {
+	auto fut=std::async(std::launch::async,
+			    ::send,
+			    socket,hbuf,sizeof(hbuf),0);
+	ssize= fut.get();
+      }
       return ssize;
     }
     //

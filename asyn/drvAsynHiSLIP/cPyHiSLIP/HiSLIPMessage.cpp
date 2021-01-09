@@ -17,15 +17,16 @@ namespace nsHiSLIP{
     ssize_t rsize;
     
     //rsize= ::recv(socket, buffer, HEADER_SIZE, 0);
-    // rsize= ::read(socket, buffer, HEADER_SIZE);
+    //rsize= ::read(socket, buffer, HEADER_SIZE);
     //rsize = ::recvfrom(socket, buffer, HEADER_SIZE, 0, nullptr, nullptr);
-    auto f=std::async(std::launch::async,
+    {
+      auto f=std::async(std::launch::async,
 		      ::recvfrom ,
 		      socket, buffer,
 		      HEADER_SIZE, 0,
 		      nullptr, nullptr);
-    rsize=f.get();
-    
+      rsize=f.get();
+    }
     if (rsize < HEADER_SIZE){
       //raise exception?
       throw Error_t("Too Short Header in HiSLIP Message");
@@ -67,12 +68,16 @@ namespace nsHiSLIP{
       size_t bytestoread=this->payload_length;
       
       while (bytestoread){
-	// status = ::recv(socket, ((u_int8_t *)this->payload+rsize),
-	// 		  bytestoread, 0);
-	status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
-			    bytestoread, 0, NULL, NULL);
-	// status = ::read(socket, ((u_int8_t *)this->payload+rsize),
-	// 		  bytestoread);
+	// status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
+	// 		    bytestoread, 0, nullptr,  nullptr);
+	{
+	  auto f=std::async(std::launch::async,
+			    ::recvfrom ,
+			    socket,
+			    ((u_int8_t *)this->payload+rsize),
+			    bytestoread, 0, nullptr,  nullptr);
+	  status=f.get();
+	};
 	
 	if (status <= 0){
 	  perror("payload read error:");
