@@ -467,8 +467,6 @@ namespace nsHiSLIP{
     long read(size_t *received, u_int8_t *buffer, size_t bsize,
 	      long timeout=LOCK_TIMEOUT);
     
-    long aread(size_t *received, u_int8_t **buffer, long timeout=LOCK_TIMEOUT);
-    
     long async_ask(u_int8_t *data_str, size_t size, long wait_time=LOCK_TIMEOUT);
     long async_read( size_t *received, u_int8_t *buffer, size_t bsize,
 		     long timeout=LOCK_TIMEOUT);
