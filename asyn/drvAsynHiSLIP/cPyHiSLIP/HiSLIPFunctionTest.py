@@ -29,8 +29,8 @@ class HiSLIPFunctionTestMethods(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         #cls.hostname=b"172.28.68.228"    # Keysight
-        cls.hostname=b"169.254.29.115"    # Keysight
-        # cls.hostname=b"169.254.100.192"  # Kikusui
+        #cls.hostname=b"169.254.29.115"    # Keysight
+        cls.hostname=b"169.254.100.192"  # Kikusui
         
     def test_connection(self):
         print("test_connection")

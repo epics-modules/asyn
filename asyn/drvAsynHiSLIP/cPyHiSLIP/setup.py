@@ -37,7 +37,7 @@ except ImportError:
 from distutils.core import setup
 #from distutils.extension import Extension
 #
-rev="0.1.5"
+rev="0.2.1"
 #
 
 sysname=platform.system()
@@ -70,9 +70,10 @@ ext_modules.append(Extension("cPyHiSLIP",
                              ,cython_cplus=True
                              ,undef_macros =[]   # ["CFLAGS"]
                              ,define_macros=[]  # [("USE_TCP_NODELAY",1)]
-                             ,extra_compile_args=["-std=c++11", "-O3"],
+                             ,extra_compile_args=["-std=c++14", "-O3"],
+                             # c++98/c++11/c++14/c++17/c++2a
+                             # py2 : c++14,py3:c++2a
 ))
-
 
 
 ext_modules=cythonize( # generate .c files.

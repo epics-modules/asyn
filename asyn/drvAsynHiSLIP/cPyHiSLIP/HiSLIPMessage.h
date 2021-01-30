@@ -381,48 +381,36 @@ namespace nsHiSLIP{
     
   typedef class HiSLIP {
   public:
-    unsigned long maximum_message_size; // max message size server accept
-    unsigned long maximum_payload_size;
-    unsigned long current_message_size; // current max message size setting
-    unsigned long current_payload_size; 
-    long socket_timeout;
-    long lock_timeout;
-    int sync_channel;
-    int async_channel;
+    unsigned long maximum_message_size = MAXIMUM_MESSAGE_SIZE; // max message size server accept
+    unsigned long maximum_payload_size = MAXIMUM_MESSAGE_SIZE;
+    unsigned long current_message_size = MAXIMUM_MESSAGE_SIZE - HEADER_SIZE; // current max message size setting
+    unsigned long current_payload_size = MAXIMUM_MESSAGE_SIZE - HEADER_SIZE; 
+    long socket_timeout = SOCKET_TIMEOUT;
+    long lock_timeout = LOCK_TIMEOUT;
+    int sync_channel = 0 ;
+    int async_channel = 0 ;
     pthread_mutex_t async_lock=PTHREAD_MUTEX_INITIALIZER;;
     struct pollfd sync_poll;
     struct pollfd async_poll;
-    u_int8_t feature_setting;
-    u_int8_t feature_preference;
+    //
+    u_int8_t feature_setting = 0;
+    u_int8_t feature_preference = 0 ;
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
-
-    bool overlap_mode; // false for synchronized mode, true for overlapped mode
-    bool interrupted;
-    bool async_interrupted;
-    bool rmt_delivered;
+    // 
+    bool overlap_mode = false; // false for synchronized mode, true for overlapped mode
+    bool interrupted = false;
+    bool async_interrupted = false;
+    bool rmt_delivered = false;
+    //
     u_int32_t message_id;
     u_int32_t most_recent_message_id;
     u_int32_t most_recent_received_message_id;
     //sem_t srq_lock;
     pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
-    HiSLIP(){
-      this->maximum_message_size=this->current_message_size= MAXIMUM_MESSAGE_SIZE;
-      this->maximum_payload_size=this->current_payload_size= MAXIMUM_MESSAGE_SIZE - HEADER_SIZE;
-      this->socket_timeout=SOCKET_TIMEOUT;
-      this->lock_timeout=LOCK_TIMEOUT;
-      this->feature_preference=0;
-      this->feature_setting=0;
-      this->overlap_mode=false; //i.e. synchronized mode. can be delived from feature_setting.
-      this->interrupted=false;
-      this->async_interrupted=false;
-      this->rmt_delivered=false;
-      this->sync_channel=0;
-      this->async_channel=0;
-      //this->async_lock=PTHREAD_MUTEX_INITIALIZER;
-      //
-      //this->srq_lock=PTHREAD_MUTEX_INITIALIZER;
+    //
+    HiSLIP()    {
       // if (sem_init(&(this->srq_lock), 0, 1) !=0){
       // 	perror(" HiSLIP srq_lock");
       // }

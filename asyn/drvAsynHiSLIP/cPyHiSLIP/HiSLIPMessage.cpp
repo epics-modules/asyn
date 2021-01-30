@@ -53,7 +53,7 @@ namespace nsHiSLIP{
       return status;
     }
     
-    // now prepare for a pyload.
+    // now prepare for a payload.
     if (this->payload == NULL && this->payload_length > 0){
       this->payload = (void *) calloc(this->payload_length,1);
       if (this->payload == NULL){
@@ -90,7 +90,8 @@ namespace nsHiSLIP{
 	bytestoread -=status;
       }	  
     }
-    
+
+    // should be handled in HiSLIP class not in Message class
     // handle error / or urgent messages: Error/FatalError /interrupted/AsyncInterrupted/AsyncServiceRequest
     // 
     // for debug
