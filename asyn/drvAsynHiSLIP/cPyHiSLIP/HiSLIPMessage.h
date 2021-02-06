@@ -451,7 +451,7 @@ namespace nsHiSLIP{
     std::thread *async_receiver_thread=NULL;
     //
     ~HiSLIP(){
-      ::printf("destructor for HiSLIP\n");
+      //::printf("destructor for HiSLIP\n");
       this->stop_async_receiver_thread();
       if (this->check_srq_lock()){
 	this->release_srq_lock();

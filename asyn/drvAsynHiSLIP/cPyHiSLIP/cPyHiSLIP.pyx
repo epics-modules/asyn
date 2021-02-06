@@ -13,7 +13,7 @@ from cPyHiSLIP cimport cHiSLIP
 #from cPyHiSLIP cimport Default_device_name
 import logging
 from logging import info,debug,warn,log,fatal,warning
-logging.root.setLevel(logging.DEBUG)
+#logging.root.setLevel(logging.DEBUG)
 
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
@@ -98,7 +98,7 @@ cdef class HiSLIP:
                rt=self.thisobj.read(precieved, pbuffer, timeout)
        except RuntimeError as e:
            debug("catch c++ exception error: {}".format(sys.exc_info()))
-           print (e)
+           #print (e)
            raise 
        except:
            debug("Unexpected error: {}".format(sys.exc_info()[0]))

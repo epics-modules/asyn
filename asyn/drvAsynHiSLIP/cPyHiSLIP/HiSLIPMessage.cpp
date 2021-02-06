@@ -66,7 +66,7 @@ namespace nsHiSLIP{
     if (this->payload_length > 0){
       size_t bytestoread=this->payload_length;
 
-      ::printf("reading data payload 0x%p, length:%zu recvd:%zu\n", this->payload, bytestoread, rsize);
+      //::printf("reading data payload 0x%p, length:%zu recvd:%zu\n", this->payload, bytestoread, rsize);
       while (bytestoread){
 	 status = ::recvfrom(socket, ((u_int8_t *)this->payload+rsize),
 	 		    bytestoread, 0, nullptr,  nullptr);
@@ -81,13 +81,13 @@ namespace nsHiSLIP{
 	 }
 	 bytestoread -=status;
       }
-      ::printf("reading data payload 0x%p, length:%zu\n",this->payload, bytestoread);    
+      //::printf("reading data payload 0x%p, length:%zu\n",this->payload, bytestoread);    
     }
     // should be handled in HiSLIP class not in Message class
     // handle error / or urgent messages: Error/FatalError /interrupted/AsyncInterrupted/AsyncServiceRequest
     // 
     this->print("msg::recv:");    // for debug
-    ::printf("reading data payload 0x%p...\n",this->payload);     // for debug
+    //::printf("reading data payload 0x%p...\n",this->payload);     // for debug
     if(this->message_type  == nsHiSLIP::FatalError){
       ::printf("Error: %d %s\n",
 	       this->control_code, nsHiSLIP::Fatal_Error_Messages[this->control_code]);
@@ -114,7 +114,7 @@ namespace nsHiSLIP{
       throw HiSLIP_Interrupted((char *) this->payload);
     }
     else if(this->message_type  == nsHiSLIP::AsyncServiceRequest){
-      ::printf("SRQ received : %d\n",    this->control_code);
+      //::printf("SRQ received : %d\n",    this->control_code);
       throw SRQ_t("Service Request");
       //return -(this->control_code);
     }
@@ -124,7 +124,7 @@ namespace nsHiSLIP{
       return 0;
     }
     // for debug
-    this->print("msg:recv failed");
+    //this->print("msg:recv failed");
     throw std::runtime_error("msg:recv failed");
     return -1;
   }
@@ -198,14 +198,14 @@ namespace nsHiSLIP{
     status = ::connect(this->sync_channel, res->ai_addr, res->ai_addrlen);
     if (status!=0){
       // Error handling
-      ::printf("connection to sync_channel failed\n");
+      //::printf("connection to sync_channel failed\n");
       perror(__FUNCTION__);
       throw std::runtime_error("cannot connect to sync_channel");
     }
     status = ::connect(this->async_channel, res->ai_addr,res->ai_addrlen);
     if (status!=0){
       // Error handling
-      ::printf("connection to async_channel failed\n");
+      //::printf("connection to async_channel failed\n");
       perror(__FUNCTION__);
       throw std::runtime_error("cannot connect to async_channel");
     }
@@ -277,7 +277,7 @@ namespace nsHiSLIP{
   long HiSLIP::set_max_size(unsigned long message_size){
     //this routine may be called before starting async_server .
     //Message resp(AnyMessages);
-    int rc=-1;
+    //int rc=-1;
     u_int64_t msg_size=htobe64(message_size);
 
     Message msg=Message(nsHiSLIP::AsyncMaximumMessageSize,
@@ -292,7 +292,7 @@ namespace nsHiSLIP{
       // ::printf("got response\n");
       // resp.print("response from future");
       // ::printf("get payload@%p v:%llu\n",resp.payload, be64toh(*((u_int64_t *)(resp.payload))));
-      rc=0;
+      // rc=0;
       // ::printf("get payload@%p v:%llu\n",resp.payload, be64toh(*((u_int64_t *)(resp.payload))));
       //The 8-byte buffer size is sent in network order as a 64-bit integer.
       this->maximum_message_size=be64toh(*((u_int64_t *)(resp.payload)));
@@ -1016,13 +1016,13 @@ namespace nsHiSLIP{
 	  continue;
 	}
 	else if (rc < 0){ // Error EBADF/EFAULT/EINTR/EINVAL/ENOMEM
-	  ::printf("return code : %d\n",rc);
+	  //::printf("return code : %d\n",rc);
 	  ::perror(__FUNCTION__);
 	  //continue;
 	  throw std::runtime_error(__FUNCTION__);
 	}
       };
-      ::printf("receiver got data\n"); //for debug
+      //::printf("receiver got data\n"); //for debug
       try{
 	status = msg->recv(this->async_channel, nsHiSLIP::AnyMessages);
       }
@@ -1060,7 +1060,7 @@ namespace nsHiSLIP{
       case nsHiSLIP::AsyncStatusResponse:
       case nsHiSLIP::AsyncStartTLSResponse:
       case nsHiSLIP::AsyncEndTLSResponse:
-	msg->print("Asycn Responce"); 	// for debug
+	//msg->print("Asycn Responce"); 	// for debug
 	if (this->promise_map.count(msg->message_type) ==0){
 	  msg->print("No promise"); 	// for debug
 	}
@@ -1080,7 +1080,7 @@ namespace nsHiSLIP{
 	//throw std::runtime_error("asyn_recv loop exception");
 	break;
       default:
-	msg->print("Asycn Other/Vendor Specific(?)"); 	// for debug
+	//msg->print("Asycn Other/Vendor Specific(?)"); 	// for debug
 	if (this->promise_map.count(msg->message_type) == 0){
 	  msg->print("No promise"); 	// for debug
 	}
