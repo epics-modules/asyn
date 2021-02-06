@@ -54,7 +54,7 @@ To build and install the module, run:
 Async designe memo
 ----------------------
 
-async channelを送受信されるメッセージ
+async channelで送受信されるメッセージ
 
 c<s AsyncInterrupted
 c<s AsyncServiceRequest

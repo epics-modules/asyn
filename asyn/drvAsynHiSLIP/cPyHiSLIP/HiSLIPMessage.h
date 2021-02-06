@@ -4,28 +4,40 @@
 
 #include <assert.h>
 #include <errno.h>
+
 //#define _GNU_SOURCE         /* See feature_test_macros(7) */
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdarg.h>
 #include <string.h> //memcpy, strlen, etc
 #include <sys/types.h>
-#include <sys/param.h> /* for MAXHOSTNAMELEN */
-#include <unistd.h> /* close() and others */
+#include <sys/param.h> //* for MAXHOSTNAMELEN */
+#include <unistd.h>    //* close() and others */
 
 #include <poll.h>
 #include <sys/socket.h>
 #include <netinet/tcp.h>
 #include <netdb.h>
 #include <pthread.h>  // for MacOS
-#include <stdexcept>  //for std::exception
-#include <mutex>
 
+
+#include <numeric>
+#include <string>
+#include <mutex>
 #include <chrono>
 using namespace std::chrono;
+namespace chrono = std::chrono;
+
+#include <cassert>
+#include <stdexcept>  //for std::exception
+#include <map>
+#include <stack>
 
 // for async
 #include <future>
+
+//#include <unordered_map>
+// #include <iterator>
 
 //#include <semaphore.h>
 
@@ -55,11 +67,10 @@ template<class T> struct Property {
 };
    
 namespace nsHiSLIP{
-  typedef class HiSLIP_FatalError:std::exception {
-    char *msg;
+  typedef class HiSLIP_FatalError:std::runtime_error {
   public:
-    HiSLIP_FatalError(char * const msg){
-      this->msg=msg;
+    HiSLIP_FatalError(const std::string& msg):std::runtime_error(msg){};
+    HiSLIP_FatalError(const char * msg):std::runtime_error(msg){
     }
   } FatalError_t;
   
@@ -87,32 +98,44 @@ namespace nsHiSLIP{
     }
   } SRQ_t;
   
+  typedef class HiSLIP_TimeoutError:std::runtime_error{
+  public:
+    HiSLIP_TimeoutError(const std::string& msg):std::runtime_error(msg){};
+    HiSLIP_TimeoutError(const char * msg):std::runtime_error(msg){}
+  } TimeoutError_t;
+  
+  typedef class HiSLIP_RuntimeError:std::runtime_error{
+  public:
+    HiSLIP_RuntimeError(const std::string& msg):std::runtime_error(msg){};
+    HiSLIP_RuntimeError(const char * msg):std::runtime_error(msg){}
+  } RuntimeoutError_t;
+  
   //constants
   typedef enum CC_reuqest{
-			  RemoteDisable=0,
-			  RemoteEnable=1,
-			  RemoteDisableGTL=2, // disable remote  and goto local
-			  RemoteEnableGTR=3, // Enable remote and goto remote
-			  RemoteEnableLLO=4, // Enable remote and lock out local
-			  RemoteEnableGTRLLO=5, //
-			  RTL=6
+    RemoteDisable=0,
+    RemoteEnable=1,
+    RemoteDisableGTL=2, // disable remote  and goto local
+    RemoteEnableGTR=3, // Enable remote and goto remote
+    RemoteEnableLLO=4, // Enable remote and lock out local
+    RemoteEnableGTRLLO=5, //
+    RTL=6
   } CC_request_t;
   
   typedef enum CC_Lock{
-		       release =0,
-		       request =1
+    release =0,
+    request =1
   } CC_Lock_t;
 
   typedef enum CC_LockRequestResponse{
-			       fail=0,         //Lock was requested but not granted
-			       success=1,      //release of exclusive lock
-			       locK_error=3 // Invalid
+    fail=0,         //Lock was requested but not granted
+    success=1,      //release of exclusive lock
+    locK_error=3 // Invalid
   } CC_LockRequestResponse_t;
   
   typedef enum CC_LockReleaseResponse{
-			       success_exclusive=1,      //release of exclusive lock
-			       success_shared=2, //release of shared lock
-			       release_error=3 // Invalid
+    success_exclusive=1,      //release of exclusive lock
+    success_shared=2, //release of shared lock
+    release_error=3 // Invalid
   } CC_LockReleaseResponse_t;
 
   static const long  PROTOCOL_VERSION_MAX = 0x7f7f ; // # <major><minor> = <1><1> that is 257
@@ -132,60 +155,62 @@ namespace nsHiSLIP{
   static const char  Prologue[]={'H','S'};
   //
   typedef enum Message_Types{
-			     Initialize = 0,
-			     InitializeResponse = 1,
-			     FatalError = 2,
-			     Error = 3,
-			     AsyncLock = 4,
-			     AsyncLockResponse = 5,
-			     Data = 6,
-			     DataEnd = 7,
-			     DeviceClearComplete = 8,
-			     DeviceClearAcknowledge = 9,
-			     AsyncRemoteLocalControl = 10,
-			     AsyncRemoteLocalResponse = 11,
-			     Trigger = 12,
-			     Interrupted = 13,
-			     AsyncInterrupted = 14,
-			     AsyncMaximumMessageSize = 15,
-			     AsyncMaximumMessageSizeResponse = 16,
-			     AsyncInitialize = 17,
-			     AsyncInitializeResponse = 18,
-			     AsyncDeviceClear = 19,
-			     AsyncServiceRequest = 20,
-			     AsyncStatusQuery = 21,
-			     AsyncStatusResponse = 22,
-			     AsyncDeviceClearAcknowledge = 23,
-			     AsyncLockInfo = 24,
-			     AsyncLockInfoResponse = 25,
-			     // for HiSLIP ver2
-			     GetDescriptors =26,
-			     GetDescriptorsResponse =27,
-			     StartTLS = 28,
-			     AsyncStartTLS = 29,
-			     AsyncStartTLSResponse = 30,
-			     EndTLS = 31,
-			     AsyncEndTLS = 32,
-			     AsyncEndTLSResponse = 33,
-			     GetSaslMechanismList = 34,
-			     GetSaslMechanismListResponse = 35,
-			     AuthenticationStart = 36,
-			     AuthenticationExchange = 37,
-			     AuthenticationResult = 38,
-			     // 39-127 are reserved for future use.
-			     // I don't watn to use negative value to
-			     // represent ANY message.
-			     // So I picked 127 from reserved values
-			     // for this purpose.
-			     AnyMessages=127 // 128-255 are reserved for vendor use.
-  } Message_Types_t;
-
+    Initialize = 0, //  SC
+    InitializeResponse = 1, //SR
+    FatalError = 2, // E
+    Error = 3, // E
+    AsyncLock = 4,// AC
+    AsyncLockResponse = 5,   //AR
+    Data = 6,
+    DataEnd = 7,
+    DeviceClearComplete = 8,  
+    DeviceClearAcknowledge = 9,
+    AsyncRemoteLocalControl = 10, //AC
+    AsyncRemoteLocalResponse = 11, //AR
+    Trigger = 12,
+    Interrupted = 13,
+    AsyncInterrupted = 14,
+    AsyncMaximumMessageSize = 15,  //AC
+    AsyncMaximumMessageSizeResponse = 16, //AR
+    AsyncInitialize = 17, //AC
+    AsyncInitializeResponse = 18, //AR
+    AsyncDeviceClear = 19, //AC
+    AsyncServiceRequest = 20, 
+    AsyncStatusQuery = 21, //AC
+    AsyncStatusResponse = 22, //AR
+    AsyncDeviceClearAcknowledge = 23, 
+    AsyncLockInfo = 24, //AC
+    AsyncLockInfoResponse = 25, //AR
+    // for HiSLIP ver2
+    GetDescriptors =26,
+    GetDescriptorsResponse =27,
+    StartTLS = 28,
+    AsyncStartTLS = 29,
+    AsyncStartTLSResponse = 30,
+    EndTLS = 31,
+    AsyncEndTLS = 32,
+    AsyncEndTLSResponse = 33,
+    GetSaslMechanismList = 34,
+    GetSaslMechanismListResponse = 35,
+    AuthenticationStart = 36,
+    AuthenticationExchange = 37,
+    AuthenticationResult = 38,
+    // 39-127 are reserved for future use.
+    // I don't watn to use negative value to
+    // represent ANY message.
+    // So I picked 127 from reserved values
+    // for this purpose.
+    AnyMessages=127 // 128-255 are reserved for vendor use.
+  } _Message_Types_t;
+  
+  typedef u_int8_t Message_Types_t;
+  
   typedef enum Error_code{
-			 UnidentifiedError,
-			 UnrecognizedMessageType,
-			 UnrecognizedControlCode,
-			 UnrecognizedVendorDefinedMessage,
-			 MessageTooLarge
+    UnidentifiedError,
+    UnrecognizedMessageType,
+    UnrecognizedControlCode,
+    UnrecognizedVendorDefinedMessage,
+    MessageTooLarge
   } Error_code_t;
   static const char *Error_Messages[] =
     {
@@ -196,11 +221,11 @@ namespace nsHiSLIP{
      "Message too large"
     };
   typedef enum Fatal_Error_code {
-				 UnidentifiedFatalError,
-				 PoorlyFormedMmessageHeader,
-				 AttemptToUseConnectionWithoutBothChannels,
-				 InvalidInitializationSequence,
-				 ServerRefusedConnection
+    UnidentifiedFatalError,
+    PoorlyFormedMmessageHeader,
+    AttemptToUseConnectionWithoutBothChannels,
+    InvalidInitializationSequence,
+    ServerRefusedConnection
   } Fatal_Erro_code_t;
   static const char *Fatal_Error_Messages[] =
     {
@@ -229,7 +254,6 @@ namespace nsHiSLIP{
     };
     message_parameter(u_int16_t proto, u_int16_t sid){
       this->word = (proto << 16) + sid;
-
     };
     u_int16_t getServerProtocolVersion(){
       return (u_int16_t) (((this->word) & 0xffff0000)>>16);
@@ -325,8 +349,8 @@ namespace nsHiSLIP{
   
   typedef class Message:public Header{
   public:
-    void   *payload;
-    int    clean_on_exit;
+    void   *payload=NULL;
+    int    clean_on_exit=0;
     
     ~Message(){
       if ((this->payload != NULL) && (this->clean_on_exit==1)){
@@ -356,7 +380,11 @@ namespace nsHiSLIP{
 	    u_int8_t  cce,
 	    message_parameter_t param,
 	    u_int64_t length,
-	    u_int8_t *payload):Header(type,cce,param,length),payload(payload) {
+	    u_int8_t *payload):Header(type,
+				      cce,
+				      param,
+				      length),
+			       payload(payload) {
       this->clean_on_exit=0;
     }
     //
@@ -385,11 +413,11 @@ namespace nsHiSLIP{
     unsigned long maximum_payload_size = MAXIMUM_MESSAGE_SIZE;
     unsigned long current_message_size = MAXIMUM_MESSAGE_SIZE - HEADER_SIZE; // current max message size setting
     unsigned long current_payload_size = MAXIMUM_MESSAGE_SIZE - HEADER_SIZE; 
+    //
     long socket_timeout = SOCKET_TIMEOUT;
     long lock_timeout = LOCK_TIMEOUT;
     int sync_channel = 0 ;
     int async_channel = 0 ;
-    pthread_mutex_t async_lock=PTHREAD_MUTEX_INITIALIZER;;
     struct pollfd sync_poll;
     struct pollfd async_poll;
     //
@@ -398,7 +426,7 @@ namespace nsHiSLIP{
     int session_id;
     int server_protocol_version;
     unsigned int server_vendorID;
-    // 
+    //mode variables for HiSLIP protocols.
     bool overlap_mode = false; // false for synchronized mode, true for overlapped mode
     bool interrupted = false;
     bool async_interrupted = false;
@@ -410,11 +438,26 @@ namespace nsHiSLIP{
     //sem_t srq_lock;
     pthread_mutex_t srq_lock=PTHREAD_MUTEX_INITIALIZER;
     //
-    HiSLIP()    {
-      // if (sem_init(&(this->srq_lock), 0, 1) !=0){
-      // 	perror(" HiSLIP srq_lock");
-      // }
-    };
+    std::mutex srq_promise_mutex;
+    std::stack<std::promise<Message>> srq_promise_stack;
+    //
+    std::mutex srq_msg_mutex;
+    std::stack<Message> srq_msg_stack;
+    //
+    std::mutex promise_map_mutex;
+    std::map<Message_Types_t, std::promise<Message>> promise_map;
+    //
+    bool async_recceiver_active;
+    std::thread *async_receiver_thread=NULL;
+    //
+    ~HiSLIP(){
+      ::printf("destructor for HiSLIP\n");
+      this->stop_async_receiver_thread();
+      if (this->check_srq_lock()){
+	this->release_srq_lock();
+      }
+    }
+    //
     void connect(char const* hostname){
       this->connect(hostname,
 		    Default_device_name,
@@ -424,7 +467,34 @@ namespace nsHiSLIP{
     void connect(char const* hostname,
 		 char const* dev_name,
 		 int  port); 
-
+    //
+    void start_async_receiver_thread(void);
+    void stop_async_receiver_thread(void){
+      this->async_recceiver_active=false;
+      if (this->async_receiver_thread !=NULL){
+	      this->async_receiver_thread->join();
+      };
+    };
+    void restart_async_receiver_thread(void){
+      this->stop_async_receiver_thread();
+      this->start_async_receiver_thread();
+    };
+    void async_receiver_loop(void);
+    std::future<Message> async_send_msg(Message msg,
+					Message_Types_t responseType=AnyMessages);
+    void register_async_promise(Message_Types_t responseType,
+				std::promise<Message> p);
+    void remove_async_promise(Message_Types_t responseType);
+    //
+    void push_srq_promise(std::promise<Message> p);
+    std::promise<Message> pop_srq_promise(void);
+    void clear_srq_promise(void);
+    //
+    void push_srq_msg(Message msg);
+    Message pop_srq_msg(void);
+    void clear_srq_msg(void);
+    void clear_srq_stacks(void);
+    //
     void set_timeout( long timeout){
       this->socket_timeout=timeout;
     };
@@ -475,16 +545,22 @@ namespace nsHiSLIP{
     int  wait_Service_Request(int wait_time);
     //
     int wait_for_Async(int wait_time){
+      // just used in EPICS device support.
+      // shoudl use  promise-future.
+      // create promise and retister it to async-promise list.
+      // then wait future.
       this->async_poll.revents=0;
       return ::poll(&this->async_poll,  1,   wait_time);
     }
     
     void disconnect(){
-      if (this->sync_channel){
+      if (this->sync_channel != 0){
 	close(this->sync_channel);
+	this->sync_channel=0;
       };
-      if (this->async_channel){
+      if (this->async_channel != 0){
 	close(this->async_channel);
+	this->async_channel=0;
       };
     };
 
@@ -495,10 +571,6 @@ namespace nsHiSLIP{
     //
     
   private:
-    int wait_for_answer(int wait_time){
-      return ::poll(&this->sync_poll,  1,   wait_time);
-    }
-
     void reset_message_id(void){
       this->most_recent_message_id=INITIAL_LAST_MESSAGE_ID;
       this->most_recent_received_message_id=INITIAL_MESSAGE_ID;

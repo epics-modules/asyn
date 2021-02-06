@@ -2,6 +2,7 @@
 HiSLIPFunctionTest.py
 HiSLIPMessage.cpp
 HiSLIPMessage.h
+Kikusui_PWR401MH_test_for_cPyHiSLIP.py
 MANIFEST.in
 Makefile
 README.rst

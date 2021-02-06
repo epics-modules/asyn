@@ -5,12 +5,15 @@
 
 from cython.operator cimport dereference as deref, preincrement as inc, address as addressof
 
+#
+import sys
+
 from cPyHiSLIP cimport cHiSLIP
 #from cPyHiSLIP cimport HiSLIPPort
 #from cPyHiSLIP cimport Default_device_name
 import logging
 from logging import info,debug,warn,log,fatal,warning
-#logging.root.setLevel(logging.DEBUG)
+logging.root.setLevel(logging.DEBUG)
 
 cdef class HiSLIP:
   cdef cHiSLIP *thisobj
@@ -21,12 +24,11 @@ cdef class HiSLIP:
   def __init__(self, char *host=NULL):
       cdef char *chost=host
       if host:
-          with nogil:
-              self.thisobj.connect(chost, Default_device_name, HiSLIPPort)
-              self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+          self.connect(host)
 
   def __dealloc__(self):
       del self.thisobj
+      debug("dealloced cHiSLIP object")
       pass
   
   def connect(self, host, device=Default_device_name, port=HiSLIPPort):
@@ -34,10 +36,19 @@ cdef class HiSLIP:
       cdef char *cdevice =device
       cdef int cport =port
       debug("connect to {} {} {}".format(host, device, port))
+
       with nogil:
           self.thisobj.connect(chost,cdevice,cport)
-          self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+          
+      # debug("start async_receiver  to {} {} {}".format(host, device, port))
+      # with nogil:          
+      #     self.thisobj.start_async_receiver_thread()
 
+      # debug("setmaxsize to {} {} {}".format(host, device, port))
+      # with nogil:          
+      #     self.thisobj.set_max_size(MAXIMUM_MESSAGE_SIZE)
+          
+          
   @property
   def session_id(self):
       """
@@ -75,15 +86,24 @@ cdef class HiSLIP:
       with nogil:
           self.thisobj.write(cmsg, ssize, timeout)
 
-  cdef _cread(self,long timeout=3000):
+  cdef _cread(self,long timeout=3000) except+:
        cdef unsigned char *buffer=NULL
        cdef unsigned char **pbuffer=&buffer
        cdef size_t recieved=0,
        cdef size_t *precieved=&recieved
        cdef int rt
        # debug("calling read in c++")
-       with nogil:
-           rt=self.thisobj.read(precieved, pbuffer, timeout)
+       try:
+           with nogil:
+               rt=self.thisobj.read(precieved, pbuffer, timeout)
+       except RuntimeError as e:
+           debug("catch c++ exception error: {}".format(sys.exc_info()))
+           print (e)
+           raise 
+       except:
+           debug("Unexpected error: {}".format(sys.exc_info()[0]))
+           raise
+       
        if rt == -1:
            if (buffer != NULL):
                free(buffer)
@@ -109,7 +129,10 @@ cdef class HiSLIP:
    
   def read(self, long timeout=3000):
       recieved, buffer=self._cread(timeout)
-      debug("cread result {} {}".format(recieved,len(buffer)))
+      debug("cread result {} {} {}".format(recieved,len(buffer),
+                                           buffer[:recieved]
+                                           )
+            )
       return (recieved, buffer[:recieved])
 
   def ask(self, msg, long wait_time=3000):
@@ -370,43 +393,46 @@ cdef class HiSLIP:
           rc=self.thisobj.get_Service_Request()
       return rc
 
-  def check_SRQ(self):
-      cdef u_int8_t rc=0
-      with nogil:
-          rc=self.thisobj.wait_for_Async(0)
-          if rc:
-              rc=self.thisobj.get_Service_Request()
-      return rc
+  # def check_SRQ(self):
+  #     cdef u_int8_t rc=0
+  #     with nogil:
+  #         rc=self.thisobj.wait_for_Async(0)
+  #         if rc:
+  #             rc=self.thisobj.get_Service_Request()
+  #     return rc
   
   def wait_Service_Request(self, int wait_time):
       cdef int8_t rc=0
       
       with nogil:
           rc=self.thisobj.wait_Service_Request(wait_time)
-      
-      return rc
-      
-  def wait_for_Async(self, long wait_time=1000):
-      """ 
-      return 1 if async port is ready to read
-      """
-      cdef int rc=-1
-      with nogil:
-          rc=self.thisobj.wait_for_Async(wait_time)
       return rc
 
-  def run_svc(self,int wait=1000):
-      cdef int rc=-1
-      cdef u_int8_t st
-      cdef int cwait=wait
+  def clear_srq_stacks(self):
       with nogil:
-          while 1:
-              rc=self.thisobj.wait_for_Async(cwait) # msec , wait_for_SRQ does not release GIL so we use shorter time
-              if rc:
-                  st=self.thisobj.get_Service_Request() # will release lock
-              if not self.thisobj.session_id:
-                  break
-      return
+          self.thisobj.clear_srq_stacks()
+  
+  # def wait_for_Async(self, long wait_time=1000):
+  #     """ 
+  #     return 1 if async port is ready to read
+  #     """
+  #     cdef int rc=-1
+  #     with nogil:
+  #         rc=self.thisobj.wait_for_Async(wait_time)
+  #     return rc
+
+  # def run_svc(self,int wait=1000):
+  #     cdef int rc=-1
+  #     cdef u_int8_t st
+  #     cdef int cwait=wait
+  #     with nogil:
+  #         while 1:
+  #             rc=self.thisobj.wait_for_Async(cwait) # msec , wait_for_SRQ does not release GIL so we use shorter time
+  #             if rc:
+  #                 st=self.thisobj.get_Service_Request() # will release lock
+  #             if not self.thisobj.session_id:
+  #                 break
+  #     return
 
   def report_FatalError(self, u_int8_t erc, char * errmsg):
       self.thisobj.report_Fatal_Error(erc, errmsg)
