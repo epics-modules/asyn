@@ -971,10 +971,11 @@ namespace nsHiSLIP{
     std::promise<Message> p;
     std::future<Message> f = p.get_future();
 
-    ::printf("sending async message\n");
+    //::printf("sending async message\n");
     
     msg.send(this->async_channel);
-    ::printf("message sent\n");
+    //::printf("message sent\n");
+    
     if (responseType != AnyMessages) {
       this->register_async_promise(responseType, std::move(p)); 
       this->rmt_delivered = false;
