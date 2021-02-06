@@ -367,7 +367,7 @@ namespace nsHiSLIP{
       
       rc=resp.recv(this->sync_channel, nsHiSLIP::DeviceClearAcknowledge);
 
-      resp.print("Device Clear Acknowledge");
+      //resp.print("Device Clear Acknowledge");
       
       if (rc !=0){
 	// Error!
@@ -403,7 +403,7 @@ namespace nsHiSLIP{
 
     Message resp=fut_resp.get();
     
-    resp.print();
+    //resp.print();
     status= resp.control_code & 0xff;
     return status;
   }
@@ -508,7 +508,7 @@ namespace nsHiSLIP{
       *received +=resp.payload_length;
       u_int32_t messageid = resp.message_parameter.word;
       
-      resp.print();
+      //resp.print();
       
       if ( resp.message_type == nsHiSLIP::Data){
 	if ( this->overlap_mode ||
@@ -593,7 +593,7 @@ namespace nsHiSLIP{
 	*received +=resp.payload_length;
       }
       u_int32_t messageid = resp.message_parameter.word;
-      resp.print();
+      //resp.print();
       if ( resp.message_type == nsHiSLIP::Data){
 	if ( this->overlap_mode ||
 	     ( ( messageid == UNKNOWN_MESSAGE_ID) || (messageid == this->most_recent_message_id))){
@@ -690,7 +690,7 @@ namespace nsHiSLIP{
     catch(...){
       return -1;
     }
-    resp.print();
+    //resp.print();
     
     return 0;
     
@@ -720,7 +720,7 @@ namespace nsHiSLIP{
 
     try{
       Message resp=fut_resp.get();
-      resp.print("reuqest_lock");
+      //resp.print("reuqest_lock");
       return resp.control_code;
     }
     catch(...){
@@ -757,7 +757,7 @@ namespace nsHiSLIP{
 
     try{
       Message resp=fut_resp.get();
-      resp.print();
+      //resp.print();
       return resp.control_code;
     }
     catch(...){
@@ -794,7 +794,7 @@ namespace nsHiSLIP{
 
     try{
       Message resp=fut_resp.get();
-      resp.print("lock_info");
+      //resp.print("lock_info");
       lock_exclusive = resp.control_code & 0xff;
       lock_shared = resp.message_parameter.word;
       return   ((lock_shared << 8) & 0xffffffff00 )+ lock_exclusive;
