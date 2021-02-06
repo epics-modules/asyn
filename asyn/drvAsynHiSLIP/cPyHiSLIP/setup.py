@@ -37,7 +37,7 @@ except ImportError:
 from distutils.core import setup
 #from distutils.extension import Extension
 #
-rev="0.2.2.3"
+rev="0.2.2.4"
 #
 
 sysname=platform.system()

@@ -326,7 +326,7 @@ namespace nsHiSLIP{
     auto fut_resp = this->async_send_msg(*msg, nsHiSLIP::AsyncDeviceClearAcknowledge);
     {
       Message resp=fut_resp.get();
-      resp.print("received message");
+      //resp.print("received message");
       this->feature_preference=resp.control_code;
     }
     
@@ -562,7 +562,7 @@ namespace nsHiSLIP{
       return -1;
     }
     if (bsize < this->maximum_payload_size){
-      ::printf("HiSLIP buffersize:%ld is smallerthan maximum_payload_size:%ld \n ",bsize,this->maximum_payload_size);
+      ::printf("HiSLIP buffersize:%ld is smaller than maximum_payload_size:%ld \n ",bsize,this->maximum_payload_size);
     }
     while(!eom) {
       int ready;
@@ -985,7 +985,7 @@ namespace nsHiSLIP{
       p.set_value(std::move(msg));
       //p.set_value(msg);
     }
-    ::printf("return future\n");
+    //::printf("return future\n");
     return f;
   };
 
