@@ -86,7 +86,7 @@ namespace nsHiSLIP{
     // should be handled in HiSLIP class not in Message class
     // handle error / or urgent messages: Error/FatalError /interrupted/AsyncInterrupted/AsyncServiceRequest
     // 
-    this->print("msg::recv:");    // for debug
+    //this->print("msg::recv:");    // for debug
     //::printf("reading data payload 0x%p...\n",this->payload);     // for debug
     if(this->message_type  == nsHiSLIP::FatalError){
       ::printf("Error: %d %s\n",
@@ -1082,7 +1082,7 @@ namespace nsHiSLIP{
       default:
 	//msg->print("Asycn Other/Vendor Specific(?)"); 	// for debug
 	if (this->promise_map.count(msg->message_type) == 0){
-	  msg->print("No promise"); 	// for debug
+	  //msg->print("No promise"); 	// for debug
 	}
 	else{
 	  this->promise_map[msg->message_type].set_value(std::move(*msg));
