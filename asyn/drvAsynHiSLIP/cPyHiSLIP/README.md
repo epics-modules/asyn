@@ -25,18 +25,44 @@ cPyHiSLIP.pxd. If you dont have installed cython, try:
 
 > pip install cython
 
-or
+or (I personally recomend this way):
 
 > python -m pip install cython
 
 To build and install the module, run:
 
-> python setup.py install
+> python setup.py build install
+
+You may need a privilege for installation.
+
+How to Use
+----------
+
+A very Simple example:
+
+> import cPyHiSLIP device=cPyHiSLIP.HiSLIP(b\"xxx.yyy.zzz.ttt\") print
+> (dev.ask(b\"\*IDN?\")
+
+Note that arguments to the method are given as bytes, but not strings. A
+return value from the method is also anbyte array, not strings.
+
+Methods , .write(), .read() and .ask() , are provided for the
+communication through sync channe.
+
+For the communication throug async channel, specfied methods are
+privided, such as, device\_clear, status\_query, trigger\_device,
+remote-local, request\_lock, release\_lock, lock\_info.
+
+An interrupt mode can be actiavated by:
+
+> dev.device\_clear(1)
+
+### SRQ support
 
 Async designe memo
 ------------------
 
-async channelを送受信されるメッセージ
+async channelで送受信されるメッセージ
 
 c\<s AsyncInterrupted c\<s AsyncServiceRequest
 

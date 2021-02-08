@@ -37,20 +37,47 @@ If you dont have installed cython, try:
 
   pip install cython
 
-or
+or (I personally recomend this way):
 
   python -m pip install cython
 
 
 To build and install the module, run:
 
- python setup.py install
+ python setup.py build install
+
+You may need a privilege for installation.
+
+
+How to Use
+--------------
+A very Simple example:
+
+ import cPyHiSLIP
+ device=cPyHiSLIP.HiSLIP(b"xxx.yyy.zzz.ttt")
+ print (dev.ask(b"*IDN?")
+
+Note that arguments to the method  are given as bytes, but not strings.
+A return value from the method is also anbyte array, not strings.
+
+Methods , .write(), .read() and .ask() , are provided for the communication
+through sync channe.
+
+For the communication throug async channel, specfied methods are privided,
+such as, device_clear, status_query, trigger_device, remote-local, request_lock,
+release_lock, lock_info.
+
+An interrupt mode can be actiavated by:
+
+  dev.device_clear(1)
+
+SRQ support
+++++++++++++++++
+
+
 
 
  
-
-
-
 Async designe memo
 ----------------------
 
