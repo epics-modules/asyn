@@ -3,3 +3,15 @@
 
 # If your system has libftdi1, set the following to YES. If it has libftdi, set it to NO
 #DRV_FTDI_USE_LIBFTDI1=YES
+
+
+# asyn/asyn/drvHiSLIP support
+# ifeq (linux-x86_64, $(T_A)) 
+#   DRV_HISLIP=YES
+# else
+#   ifeq (darwin-x86, $(T_A)) 
+#     DRV_HISLIP=YES
+#   endif
+# endif
+
+
