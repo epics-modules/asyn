@@ -1,0 +1,14 @@
+# If you have libusb-1.0 and libftdi, and want FTDI support, set DRV_FTDI=YES
+#DRV_FTDI=YES
+
+# If your system has libftdi1, set the following to YES. If it has libftdi, set it to NO
+#DRV_FTDI_USE_LIBFTDI1=YES
+
+
+ifeq (linux-x86_64, $(T_A)) 
+  DRV_HISLIP=YES
+else
+  ifeq (darwin-x86, $(T_A)) 
+    DRV_HISLIP=YES
+  endif
+endif
