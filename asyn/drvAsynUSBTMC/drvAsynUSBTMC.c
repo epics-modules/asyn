@@ -41,7 +41,7 @@
 #define ASYN_REASON_REN 4347
 
 #if (!defined(LIBUSBX_API_VERSION) || (LIBUSBX_API_VERSION < 0x01000102))
-# error "You need to get a newer version of libsb-1.0 (16 at the very least)"
+# error "You need to get a newer version of libusb-1.0 (16 at the very least)"
 #endif
 
 typedef struct drvPvt {

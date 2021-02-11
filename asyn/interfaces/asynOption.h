@@ -10,7 +10,6 @@
 
 #ifndef asynOptionH
 #define asynOptionH
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {

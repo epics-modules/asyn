@@ -19,8 +19,6 @@
 
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynInt8Array.h"
 #include "asynDrvUser.h"
@@ -53,7 +51,7 @@ static asynInt8ArraySyncIO interface = {
     writeOpOnce,
     readOpOnce
 };
-epicsShareDef asynInt8ArraySyncIO *pasynInt8ArraySyncIO = &interface;
+asynInt8ArraySyncIO *pasynInt8ArraySyncIO = &interface;
 
 static asynStatus connect(const char *port, int addr,
    asynUser **ppasynUser, const char *drvInfo)

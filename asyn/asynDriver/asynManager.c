@@ -386,7 +386,7 @@ static asynManager manager = {
     setTimeStamp,
     strStatus
 };
-epicsShareDef asynManager *pasynManager = &manager;
+asynManager *pasynManager = &manager;
 
 /* asynTrace methods */
 static asynStatus traceLock(asynUser *pasynUser);
@@ -439,7 +439,7 @@ static asynTrace asynTraceManager = {
     traceVprintIO,
     traceVprintIOSource
 };
-epicsShareDef asynTrace *pasynTrace = &asynTraceManager;
+asynTrace *pasynTrace = &asynTraceManager;
 
 /*internal methods */
 static void tracePvtInit(tracePvt *ptracePvt)

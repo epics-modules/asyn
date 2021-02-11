@@ -33,8 +33,6 @@
 #include <errlog.h>
 #include <menuFtype.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynGpibDriver.h"
 #include "devSupportGpib.h"
@@ -206,10 +204,14 @@ long  devGpib_initBi(biRecord * pbi)
     }
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if(pdevGpibNames) {
-        if (pbi->znam[0] == 0)
+        if (pbi->znam[0] == 0) {
             strncpy(pbi->znam, pdevGpibNames->item[0], sizeof(pbi->znam));
-        if (pbi->onam[0] == 0)
+            pbi->znam[sizeof(pbi->znam)-1] = '\0';
+        }
+        if (pbi->onam[0] == 0) {
             strncpy(pbi->onam, pdevGpibNames->item[1], sizeof(pbi->onam));
+            pbi->onam[sizeof(pbi->onam)-1] = '\0';
+        }
     }
     return  0;
 }
@@ -310,10 +312,14 @@ long  devGpib_initBo(boRecord * pbo)
                 "%s devGpib_initBo logic error\n",pbo->name);
         }
         if (papname) {
-            if (pbo->znam[0] == 0)
+            if (pbo->znam[0] == 0) {
                 strncpy(pbo->znam, papname[0], sizeof(pbo->znam));
-            if (pbo->onam[0] == 0)
+                pbo->znam[sizeof(pbo->znam)-1] = '\0';
+            }
+            if (pbo->onam[0] == 0) {
                 strncpy(pbo->onam, papname[1], sizeof(pbo->onam));
+                pbo->onam[sizeof(pbo->onam)-1] = '\0';
+            }
         }
     } else if(!(cmdType&(GPIBWRITE|GPIBCMD|GPIBACMD|GPIBEFASTO|GPIBSOFT|GPIBCVTIO))) {
         asynPrint(pgpibDpvt->pasynUser,ASYN_TRACE_ERROR,
@@ -324,10 +330,14 @@ long  devGpib_initBo(boRecord * pbo)
     }
     pdevGpibNames = devGpibNamesGet(pgpibDpvt);
     if(pdevGpibNames) {
-        if (pbo->znam[0] == 0)
+        if (pbo->znam[0] == 0) {
             strncpy(pbo->znam, pdevGpibNames->item[0], sizeof(pbo->znam));
-        if (pbo->onam[0] == 0)
+            pbo->znam[sizeof(pbo->znam)-1] = '\0';
+        }
+        if (pbo->onam[0] == 0) {
             strncpy(pbo->onam, pdevGpibNames->item[1], sizeof(pbo->onam));
+            pbo->onam[sizeof(pbo->onam)-1] = '\0';
+        }
     }
     return 2;
 }

@@ -999,7 +999,7 @@ static const struct asynCommon asynCommonMethods = {
 /*
  * Configure and register a generic serial device
  */
-epicsShareFunc int
+ASYN_API int
 drvAsynSerialPortConfigure(char *portName,
                      char *ttyName,
                      unsigned int priority,

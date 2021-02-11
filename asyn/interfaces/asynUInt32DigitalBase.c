@@ -14,14 +14,12 @@
 #include <epicsTypes.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynUInt32Digital.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pasynUInt32DigitalInterface);
 static asynUInt32DigitalBase uint32Base = {initialize};
-epicsShareDef asynUInt32DigitalBase *pasynUInt32DigitalBase = &uint32Base;
+asynUInt32DigitalBase *pasynUInt32DigitalBase = &uint32Base;
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
                                epicsUInt32 value, epicsUInt32 mask);

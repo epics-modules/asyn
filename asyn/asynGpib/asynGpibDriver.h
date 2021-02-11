@@ -10,7 +10,6 @@
 
 #ifndef INCasynGpibh
 #define INCasynGpibh
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -61,7 +60,7 @@ struct asynGpib{
         unsigned int priority, unsigned int stackSize);
     void (*srqHappened)(void *asynGpibPvt);
 };
-epicsShareExtern asynGpib *pasynGpib;
+ASYN_API extern asynGpib *pasynGpib;
 
 struct asynGpibPort {
     /*asynCommon methods */

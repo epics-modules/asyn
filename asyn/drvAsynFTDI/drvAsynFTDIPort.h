@@ -4,15 +4,13 @@
 #ifndef DRVASYNFTDIPORT_H
 #define DRVASYNFTDIPORT_H
 
-#include <shareLib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
 #define UART_SPI_BIT    0x01 // 0 = UART; 1 = SPI
 
-epicsShareFunc int drvAsynFTDIPortConfigure(const char *portname,
+ASYN_API int drvAsynFTDIPortConfigure(const char *portname,
                                            const int vendor,
                                            const int product,
                                            const int baudrate,

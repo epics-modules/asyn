@@ -67,6 +67,7 @@ static char *drto_choices[NUM_DRTO_CHOICES] = {"Unknown", "N", "Y"};
 #define OPT_SIZE 80    /* Size of buffer for setting and getting port options */
 #define EOS_SIZE 10    /* Size of buffer for EOS */
 #define ERR_SIZE 100    /* Size of buffer for error message */
+#define HOST_SIZE MAX_STRING_SIZE
 #define QUEUE_TIMEOUT 10.0    /* Timeout for queueRequest */
 
 /* Create RSET - Record Support Entry Table*/
@@ -203,7 +204,7 @@ typedef struct oldValues {  /* Used in monitor() and monitorStatus() */
     epicsEnum16 auct;       /* Autoconnect */
     epicsEnum16 cnct;       /* Connect/Disconnect */
     epicsEnum16 enbl;       /* Enable/Disable */
-    char errs[ERR_SIZE + 1];/* Error string */
+    char errs[ERR_SIZE];/* Error string */
 }   oldValues;
 #define REMEMBER_STATE(FIELD) pasynRecPvt->old.FIELD = pasynRec->FIELD
 #define POST_IF_NEW(FIELD) \
@@ -298,7 +299,7 @@ static long init_record(dbCommon *pRec, int pass)
     pasynRecPvt->outbuff = (char *) callocMustSucceed(
                                  pasynRec->omax, sizeof(char), "asynRecord");
     pasynRec->errs = (char *) callocMustSucceed(
-                                   ERR_SIZE + 1, sizeof(char), "asynRecord");
+                                   ERR_SIZE, sizeof(char), "asynRecord");
     pasynRec->udf = 0;
     recGblResetAlarms(pasynRec);    /* let initial state be no alarm */
     strcpy(pasynRec->tfil, "Unknown");
@@ -1835,6 +1836,7 @@ static void getOptions(asynUser * pasynUser)
     asynRecPvt *pasynRecPvt = (asynRecPvt *) pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     char optbuff[OPT_SIZE];
+    char hostbuff[HOST_SIZE];
     int i;
     unsigned short monitor_mask = DBE_VALUE | DBE_LOG;
 
@@ -1857,7 +1859,7 @@ static void getOptions(asynUser * pasynUser)
     REMEMBER_STATE(ixoff);
     REMEMBER_STATE(ixany);
     REMEMBER_STATE(drto);
-    strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRec->hostinfo));
+    strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRecPvt->old.hostinfo));
     /* Get port options */
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
                                         "baud", optbuff, OPT_SIZE);
@@ -1921,8 +1923,8 @@ static void getOptions(asynUser * pasynUser)
         if(strcmp(optbuff, drto_choices[i]) == 0)
             pasynRec->drto = i;
     pasynRecPvt->pasynOption->getOption(pasynRecPvt->asynOptionPvt, pasynUser,
-                                        "hostinfo", optbuff, OPT_SIZE);
-    strncpy(pasynRec->hostinfo, optbuff, sizeof(pasynRec->hostinfo));
+                                        "hostinfo", hostbuff, HOST_SIZE);
+    strncpy(pasynRec->hostinfo, hostbuff, sizeof(pasynRec->hostinfo));
     POST_IF_NEW(baud);
     POST_IF_NEW(lbaud);
     POST_IF_NEW(prty);
@@ -1937,7 +1939,7 @@ static void getOptions(asynUser * pasynUser)
     if (strncmp(pasynRec->hostinfo, pasynRecPvt->old.hostinfo, sizeof(pasynRec->hostinfo)) != 0) {
         if(interruptAccept)
            db_post_events(pasynRec, &pasynRec->hostinfo, monitor_mask);
-        strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRec->hostinfo));
+        strncpy(pasynRecPvt->old.hostinfo, pasynRec->hostinfo, sizeof(pasynRecPvt->old.hostinfo));
     }
 }
 
@@ -2029,7 +2031,7 @@ static void reportError(asynRecord * pasynRec, asynStatus status,
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
     asynUser *pasynUser = pasynRecPvt->pasynUser;
     unsigned short monitor_mask;
-    char buffer[ERR_SIZE + 1];
+    char buffer[ERR_SIZE];
     va_list pvar;
     va_start(pvar, pformat);
     epicsVsnprintf(buffer, ERR_SIZE, pformat, pvar);

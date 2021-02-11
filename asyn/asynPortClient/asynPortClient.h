@@ -42,7 +42,7 @@
 
 /** Base class for asyn port clients; handles most of the bookkeeping for writing an asyn port client
   * with standard asyn interfaces. */
-class epicsShareClass asynParamClient {
+class ASYN_API asynParamClient {
 public:
     asynParamClient(const char *portName, int addr, const char* asynInterfaceType, const char *drvInfo, double timeout);
     virtual ~asynParamClient();
@@ -71,7 +71,7 @@ protected:
 
 
 /** Class for asyn port clients to communicate on the asynInt32 interface */
-class epicsShareClass asynInt32Client : public asynParamClient {
+class ASYN_API asynInt32Client : public asynParamClient {
 public:
     /** Constructor for asynInt32Client class
       * \param[in] portName  The name of the asyn port to connect to
@@ -128,7 +128,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynUInt32Digital interface */
-class epicsShareClass asynUInt32DigitalClient : public asynParamClient {
+class ASYN_API asynUInt32DigitalClient : public asynParamClient {
 public:
     /** Constructor for asynUInt32DigitalClient class
       * \param[in] portName  The name of the asyn port to connect to
@@ -196,7 +196,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynFloat64 interface */
-class epicsShareClass asynFloat64Client : public asynParamClient {
+class ASYN_API asynFloat64Client : public asynParamClient {
 public:
     /** Constructor for asynFloat64Client class
       * \param[in] portName  The name of the asyn port to connect to
@@ -244,7 +244,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynOctet interface */
-class epicsShareClass asynOctetClient : public asynParamClient {
+class ASYN_API asynOctetClient : public asynParamClient {
 public:
     /** Constructor for asynOctetClient class
       * \param[in] portName  The name of the asyn port to connect to
@@ -347,7 +347,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynInt8Array interface */
-class epicsShareClass asynInt8ArrayClient : public asynParamClient {
+class ASYN_API asynInt8ArrayClient : public asynParamClient {
 public:
     /** Constructor for asynInt8Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -398,7 +398,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynInt16Array interface */
-class epicsShareClass asynInt16ArrayClient : public asynParamClient {
+class ASYN_API asynInt16ArrayClient : public asynParamClient {
 public:
     /** Constructor for asynInt16Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -449,7 +449,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynInt32Array interface */
-class epicsShareClass asynInt32ArrayClient : public asynParamClient {
+class ASYN_API asynInt32ArrayClient : public asynParamClient {
 public:
     /** Constructor for asynInt32Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -500,7 +500,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynFloat32Array interface */
-class epicsShareClass asynFloat32ArrayClient : public asynParamClient {
+class ASYN_API asynFloat32ArrayClient : public asynParamClient {
 public:
     /** Constructor for asynFloat32Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -551,7 +551,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynFloat64Array interface */
-class epicsShareClass asynFloat64ArrayClient : public asynParamClient {
+class ASYN_API asynFloat64ArrayClient : public asynParamClient {
 public:
     /** Constructor for asynFloat64Array class
       * \param[in] portName  The name of the asyn port to connect to
@@ -602,7 +602,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynGenericPointer interface */
-class epicsShareClass asynGenericPointerClient : public asynParamClient {
+class ASYN_API asynGenericPointerClient : public asynParamClient {
 public:
     /** Constructor for asynGenericPointer class
       * \param[in] portName  The name of the asyn port to connect to
@@ -650,7 +650,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynOption interface */
-class epicsShareClass asynOptionClient : public asynParamClient {
+class ASYN_API asynOptionClient : public asynParamClient {
 public:
     /** Constructor for asynOption class
       * \param[in] portName  The name of the asyn port to connect to
@@ -693,7 +693,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynEnum interface */
-class epicsShareClass asynEnumClient : public asynParamClient {
+class ASYN_API asynEnumClient : public asynParamClient {
 public:
     /** Constructor for asynEnum class
       * \param[in] portName  The name of the asyn port to connect to
@@ -740,7 +740,7 @@ private:
 
 
 /** Class for asyn port clients to communicate on the asynCommon interface */
-class epicsShareClass asynCommonClient : public asynParamClient {
+class ASYN_API asynCommonClient : public asynParamClient {
 public:
     /** Constructor for asynCommon class
       * \param[in] portName  The name of the asyn port to connect to
@@ -784,7 +784,7 @@ private:
 
 typedef std::map<std::string, asynParamClient*> paramMap_t;
 
-class epicsShareClass asynPortClient {
+class ASYN_API asynPortClient {
 public:
     asynPortClient(const char *portName, double timeout=1.0);
     virtual ~asynPortClient();

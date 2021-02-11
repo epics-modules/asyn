@@ -17,7 +17,6 @@
 
 #include <asynDriver.h>
 #include <epicsTypes.h>
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -50,7 +49,7 @@ typedef struct asynEnumBase {
     asynStatus (*initialize)(const char *portName,
                             asynInterface *pEnumInterface);
 } asynEnumBase;
-epicsShareExtern asynEnumBase *pasynEnumBase;
+ASYN_API extern asynEnumBase *pasynEnumBase;
 
 #ifdef __cplusplus
 }

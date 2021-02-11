@@ -35,7 +35,6 @@
 #include <epicsTime.h>
 #include <cantProceed.h>
 #include <epicsStdio.h>
-#include <shareLib.h>
 #include <iocsh.h>
 
 #include <epicsExport.h>
@@ -145,7 +144,7 @@ static devSupportGpib gpibSupport = {
     restoreEos,
     completeProcess
 };
-epicsShareDef devSupportGpib *pdevSupportGpib = &gpibSupport;
+devSupportGpib *pdevSupportGpib = &gpibSupport;
 
 /*Initialization routines*/
 static void commonGpibPvtInit(void);

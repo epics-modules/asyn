@@ -17,7 +17,7 @@
 static asynStatus initialize(const char *portName, asynInterface *pInterface); \
  \
 static INTERFACE_BASE arrayBase = {initialize}; \
-epicsShareDef INTERFACE_BASE *PINTERFACE_BASE = &arrayBase; \
+INTERFACE_BASE *PINTERFACE_BASE = &arrayBase; \
  \
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser, \
                                EPICS_TYPE *value, size_t nelem); \

@@ -62,7 +62,7 @@ static asynOctet octet = {
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
 
-epicsShareFunc int
+ASYN_API int
 asynInterposeFlushConfig(const char *portName,int addr,int timeout)
 {
     interposePvt *pinterposePvt;

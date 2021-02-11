@@ -81,7 +81,7 @@ static asynOctet octet = {
     setInputEos,getInputEos,setOutputEos,getOutputEos
 };
 
-epicsShareFunc int asynInterposeEosConfig(const char *portName,int addr,
+ASYN_API int asynInterposeEosConfig(const char *portName,int addr,
     int processEosIn,int processEosOut)
 {
     eosPvt        *peosPvt;
@@ -158,7 +158,7 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     asynStatus status;
     size_t     nbytesActual = 0;
 
-    if(!peosPvt->processEosOut) {
+    if((!peosPvt->processEosOut) || (peosPvt->eosOutLen <= 0)) {
         return peosPvt->poctet->write(peosPvt->octetPvt,
             pasynUser,data,numchars,nbytesTransfered);
     }

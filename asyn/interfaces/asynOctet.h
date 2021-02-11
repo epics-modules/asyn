@@ -11,7 +11,6 @@
 
 #ifndef asynOctetH
 #define asynOctetH
-#include <shareLib.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -71,7 +70,7 @@ typedef struct asynOctetBase {
     void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
         char *data,size_t *nbytesTransfered,int *eomReason);
 } asynOctetBase;
-epicsShareExtern asynOctetBase *pasynOctetBase;
+ASYN_API extern asynOctetBase *pasynOctetBase;
 
 #ifdef __cplusplus
 }

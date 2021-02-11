@@ -17,13 +17,11 @@
 #ifndef asynInterposeEos_H
 #define asynInterposeEos_H
 
-#include <shareLib.h>
-
 #ifdef __cplusplus
 extern "C" {
 #endif  /* __cplusplus */
 
-epicsShareFunc int asynInterposeEosConfig(const char *portName,int addr,
+ASYN_API int asynInterposeEosConfig(const char *portName,int addr,
                                          int processEosIn,int processEosOut);
 
 #ifdef __cplusplus

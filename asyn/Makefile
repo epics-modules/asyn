@@ -39,6 +39,7 @@ ifeq ($(TIRPC),YES)
 endif
 
 SRC_DIRS += $(ASYN)/asynDriver
+INC += asynAPI.h
 INC += asynDriver.h
 INC += epicsInterruptibleSyscall.h
 asyn_SRCS += asynManager.c
@@ -235,6 +236,10 @@ asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
 
+SRC_DIRS += $(ASYN)/drvPrologixGPIB
+asyn_SRCS += drvPrologixGPIB.c
+DBD += drvPrologixGPIB.dbd
+
 ifdef IPAC
   SRC_DIRS += $(ASYN)/gsIP488
   asyn_SRCS_vxWorks += drvGsIP488.c
@@ -367,3 +372,4 @@ else
 	@$(MV) $(notdir $@) $@
 endif
 
+USR_CPPFLAGS += -DBUILDING_asyn_API

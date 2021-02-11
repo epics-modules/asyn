@@ -14,15 +14,13 @@
 #include <epicsTypes.h>
 #include <cantProceed.h>
 
-#define epicsExportSharedSymbols
-#include <shareLib.h>
 #include "asynDriver.h"
 #include "asynEnum.h"
 
 static asynStatus initialize(const char *portName, asynInterface *pEnumInterface);
 
 static asynEnumBase enumBase = {initialize};
-epicsShareDef asynEnumBase *pasynEnumBase = &enumBase;
+asynEnumBase *pasynEnumBase = &enumBase;
 
 static asynStatus writeDefault(void *drvPvt, asynUser *pasynUser,
                               char *strings[], int values[], int severities[], size_t nElements);
