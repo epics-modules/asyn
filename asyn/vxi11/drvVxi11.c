@@ -583,7 +583,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
     if(stat!=RPC_SUCCESS) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxi11 clientIoCall errno %s clnt_stat %d\n",
-            pvxiPort->portName,strerror(errno),stat);
+            pvxiPort->portName,strerror(errno), stat);
         if(stat!=RPC_TIMEDOUT) vxiDisconnectPort(pvxiPort);
     }
     return stat;
@@ -726,6 +726,9 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
     } else {
         vxiSrqEnable(pvxiPort,1);
+        asynPrint(pasynUser, ASYN_TRACE_FLOW,
+            "%s vxiCreateIrqChannel %s (create_intr_chan) created\n",
+            pvxiPort->portName, vxiError(devErr.error));
         xdr_free((const xdrproc_t) xdr_Device_Error, (char *) &devErr);
         return;
     }
@@ -1051,7 +1054,12 @@ static void vxiReport(void *drvPvt,FILE *fd,int details)
             fprintf(fd,"    ip address:%s\n", nameBuf);
         fprintf(fd,"    vxi name:%s", pvxiPort->vxiName);
         fprintf(fd," ctrlAddr:%d",pvxiPort->ctrlAddr);
-        fprintf(fd," maxRecvSize:%lu", pvxiPort->maxRecvSize);
+        fprintf(fd," maxRecvSize:%lu\n", pvxiPort->maxRecvSize);
+        fprintf(fd,"    isSingleLink:%s isGpibLink:%s hasSRQ:%s\n",
+		((pvxiPort->isSingleLink) ? "yes" : "no"),
+		((pvxiPort->isGpibLink) ? "yes" : "no"),
+		((pvxiPort->hasSRQ) ? "yes" : "no")
+		);
         fprintf(fd," isSingleLink:%s isGpibLink:%s\n",
             ((pvxiPort->isSingleLink) ? "yes" : "no"),
             ((pvxiPort->isGpibLink) ? "yes" : "no"));

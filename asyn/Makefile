@@ -12,8 +12,9 @@ include $(TOP)/configure/CONFIG
 
 ASYN = $(TOP)/asyn
 #USR_CFLAGS += -DDEBUG
-USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
+USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET 
 USR_CPPFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
+USR_CXXFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET --std=c++11 
 
 USR_INCLUDES_cygwin32 += -I/usr/include/tirpc
 
@@ -149,18 +150,18 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
     INSTALL_DBDS += $(INSTALL_DBD)/devEpics.dbd
   endif
   SRC_DIRS += $(ASYN)/devEpics
-  devEpics_DBD += devAsynOctet.dbd
-  devEpics_DBD += devAsynInt32.dbd
-  devEpics_DBD += devAsynInt8Array.dbd
-  devEpics_DBD += devAsynInt16Array.dbd
-  devEpics_DBD += devAsynInt32Array.dbd
-  devEpics_DBD += devAsynInt32TimeSeries.dbd
-  devEpics_DBD += devAsynUInt32Digital.dbd
-  devEpics_DBD += devAsynFloat64.dbd
-  devEpics_DBD += devAsynFloat32Array.dbd
-  devEpics_DBD += devAsynFloat64Array.dbd
-  devEpics_DBD += devAsynFloat64TimeSeries.dbd
-  devEpics_DBD += devAsynRecord.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynOctet.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt32.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt8Array.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt16Array.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt32Array.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt32TimeSeries.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynUInt32Digital.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynFloat64.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynFloat32Array.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynFloat64Array.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynFloat64TimeSeries.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynRecord.dbd
   DB  += asynInt32TimeSeries.db
   DB  += asynFloat64TimeSeries.db
   INC += asynEpicsUtils.h
@@ -190,7 +191,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   # 3.15 and above support lsi, lso and printf records
   ifdef BASE_3_15
     USR_CFLAGS += -DHAVE_LSREC
-    devEpics_DBD += devAsynOctetLs.dbd
+    devEpics_DBD += $(INSTALL_DBD)/devAsynOctetLs.dbd
   endif
 
   # do we have EPICS calc module (scalcout etc.)
@@ -204,20 +205,20 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   ifdef HAVE_DEVINT64
     USR_CFLAGS += -DHAVE_DEVINT64
     USR_CXXFLAGS += -DHAVE_DEVINT64
-    devEpics_DBD += devAsynInt64.dbd
-    devEpics_DBD += devAsynInt64Array.dbd
-    devEpics_DBD += devAsynInt64TimeSeries.dbd
+    devEpics_DBD += $(INSTALL_DBD)/devAsynInt64.dbd
+    devEpics_DBD += $(INSTALL_DBD)/devAsynInt64Array.dbd
+    devEpics_DBD += $(INSTALL_DBD)/devAsynInt64TimeSeries.dbd
     asyn_SRCS += devAsynInt64Array.c
     asyn_SRCS += devAsynInt64TimeSeries.c
   endif
-  devEpics_DBD += devAsynInt64Misc.dbd
+  devEpics_DBD += $(INSTALL_DBD)/devAsynInt64Misc.dbd
   asyn_SRCS += devAsynInt64.c
 
   DBD += $(devEpics_DBD)
 
   SRC_DIRS += $(ASYN)/asynRecord
   DBDINC += asynRecord
-  DBD += devAsynRecord.dbd
+  DBD += $(INSTALL_DBD)/devAsynRecord.dbd
   asyn_SRCS += asynRecord.c
   asyn_SRCS += drvAsyn.c
   DB += asynRecord.db
@@ -259,6 +260,18 @@ ifeq ($(DRV_USBTMC),YES)
   asyn_SRCS += drvAsynUSBTMC.c
   asyn_SYS_LIBS += usb-1.0
   DBD += drvAsynUSBTMC.dbd
+endif
+
+
+ifeq ($(DRV_HISLIP),YES)
+  USR_CXXFLAGS += -fpermissive
+  SRC_DIRS += $(ASYN)/drvAsynHiSLIP
+  SRC_DIRS += $(ASYN)/drvAsynHiSLIP/cPyHiSLIP
+  asyn_SRCS += drvAsynHiSLIP.cpp
+  asyn_SRCS += HiSLIPMessage.cpp
+  DBD += drvAsynHiSLIP.dbd
+  INC += drvAsynHiSLIP.h
+  INC += HiSLIPMessage.h
 endif
 
 ifeq ($(DRV_FTDI),YES)
