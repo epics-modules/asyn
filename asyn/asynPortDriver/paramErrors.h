@@ -16,6 +16,7 @@
 #define asynParamWrongType     (asynStatus)(asynDisabled + 3)
 #define asynParamBadIndex      (asynStatus)(asynDisabled + 4)
 #define asynParamUndefined     (asynStatus)(asynDisabled + 5)
+#define asynParamInvalidList   (asynStatus)(asynDisabled + 6)
 
 
 #endif /* ASYNPORTDRIVERERRORSTATES_H_ */
