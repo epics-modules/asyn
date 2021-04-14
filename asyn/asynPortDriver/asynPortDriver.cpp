@@ -993,7 +993,9 @@ asynStatus asynPortDriver::createParam(int list, const char *name, asynParamType
     asynStatus status;
     static const char *functionName = "createParam";
 
-    status = this->params[list]->createParam(name, type, index);
+    paramList *pList=getParamList(list);
+    if (!pList) return asynParamInvalidList;
+    status = pList->createParam(name, type, index);
     if (status == asynParamAlreadyExists) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error adding parameter %s to list %d, parameter already exists.\n",
@@ -1022,7 +1024,9 @@ asynStatus asynPortDriver::getNumParams(int *numParams)
   * \param[out] numParams Number of parameters */
 asynStatus asynPortDriver::getNumParams(int list, int *numParams)
 {
-    return this->params[list]->getNumParams(numParams);
+    paramList *pList=getParamList(list);
+    if (!pList) return asynParamInvalidList;
+    return pList->getNumParams(numParams);
 }
 
 /** Finds a parameter in the parameter library.
@@ -1041,7 +1045,9 @@ asynStatus asynPortDriver::findParam(const char *name, int *index)
   * \param[out] index Parameter number */
 asynStatus asynPortDriver::findParam(int list, const char *name, int *index)
 {
-    return this->params[list]->findParam(name, index);
+    paramList *pList=getParamList(list);
+    if (!pList) return asynParamInvalidList;
+    return pList->findParam(name, index);
 }
 
 /** Returns the name of a parameter in the parameter library.
@@ -1060,7 +1066,9 @@ asynStatus asynPortDriver::getParamName(int index, const char **name)
   * \param[out] name Parameter name */
 asynStatus asynPortDriver::getParamName(int list, int index, const char **name)
 {
-    return this->params[list]->getName(index, name);
+    paramList *pList=getParamList(list);
+    if (!pList) return asynParamInvalidList;
+    return pList->getName(index, name);
 }
 
 /** Returns the asynParamType of a parameter in the parameter library*
@@ -1077,8 +1085,10 @@ asynStatus asynPortDriver::getParamType(          int index, asynParamType *type
   * \param[out] type Parameter type */
 asynStatus asynPortDriver::getParamType(int list, int index, asynParamType *type)
 {
-  *type = this->params[list]->getParameter(index)->type;
-  return asynSuccess;
+    paramList *pList=getParamList(list);
+    if (!pList) return asynParamInvalidList;
+    *type = pList->getParameter(index)->type;
+    return asynSuccess;
 }
 
 /** Reports errors when setting parameters.
@@ -1093,9 +1103,14 @@ void asynPortDriver::reportSetParamErrors(asynStatus status, int index, int list
             "%s:%s: port=%s error setting parameter %d in list %d, bad index\n",
             driverName, functionName, portName, index, list);
     }
-    if (status == asynParamWrongType) {
+    else if (status == asynParamWrongType) {
         asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
             "%s:%s: port=%s error setting parameter %d in list %d, wrong type\n",
+            driverName, functionName, portName, index, list);
+    }
+    else if (status == asynParamInvalidList) {
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+            "%s:%s: port=%s error setting parameter %d in list %d, invalid list\n",
             driverName, functionName, portName, index, list);
     }
 }
@@ -1119,7 +1134,11 @@ asynStatus asynPortDriver::setParamStatus(int list, int index, asynStatus paramS
     asynStatus status;
     static const char *functionName = "setParamStatus";
 
-    status = this->params[list]->setStatus(index, paramStatus);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setStatus(index, paramStatus);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1143,7 +1162,11 @@ asynStatus asynPortDriver::getParamStatus(int list, int index, asynStatus *param
     asynStatus status;
     static const char *functionName = "getParamStatus";
 
-    status = this->params[list]->getStatus(index, paramStatus);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getStatus(index, paramStatus);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1167,7 +1190,11 @@ asynStatus asynPortDriver::setParamAlarmStatus(int list, int index, int alarmSta
     asynStatus status;
     static const char *functionName = "setParamAlarmStatus";
 
-    status = this->params[list]->setAlarmStatus(index, alarmStatus);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setAlarmStatus(index, alarmStatus);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1191,7 +1218,11 @@ asynStatus asynPortDriver::getParamAlarmStatus(int list, int index, int *alarmSt
     asynStatus status;
     static const char *functionName = "getParamAlarmStatus";
 
-    status = this->params[list]->getAlarmStatus(index, alarmStatus);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getAlarmStatus(index, alarmStatus);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1215,7 +1246,11 @@ asynStatus asynPortDriver::setParamAlarmSeverity(int list, int index, int alarmS
     asynStatus status;
     static const char *functionName = "setParamAlarmSeverity";
 
-    status = this->params[list]->setAlarmSeverity(index, alarmSeverity);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setAlarmSeverity(index, alarmSeverity);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1239,7 +1274,11 @@ asynStatus asynPortDriver::getParamAlarmSeverity(int list, int index, int *alarm
     asynStatus status;
     static const char *functionName = "getParamAlarmSeverity";
 
-    status = this->params[list]->getAlarmSeverity(index, alarmSeverity);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getAlarmSeverity(index, alarmSeverity);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1263,7 +1302,11 @@ asynStatus asynPortDriver::setIntegerParam(int list, int index, int value)
     asynStatus status;
     static const char *functionName = "setIntegerParam";
 
-    status = this->params[list]->setInteger(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setInteger(index, value);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1287,7 +1330,11 @@ asynStatus asynPortDriver::setInteger64Param(int list, int index, epicsInt64 val
     asynStatus status;
     static const char *functionName = "setInteger64Param";
 
-    status = this->params[list]->setInteger64(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setInteger64(index, value);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1336,7 +1383,11 @@ asynStatus asynPortDriver::setUIntDigitalParam(int list, int index, epicsUInt32 
     asynStatus status;
     static const char *functionName = "setUIntDigitalParam";
 
-    status = this->params[list]->setUInt32(index, value, valueMask, interruptMask);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setUInt32(index, value, valueMask, interruptMask);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1362,7 +1413,11 @@ asynStatus asynPortDriver::setUInt32DigitalInterrupt(int list, int index, epicsU
     asynStatus status;
     static const char *functionName = "setUIntDigitalInterrupt";
 
-    status = this->params[list]->setUInt32Interrupt(index, mask, reason);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setUInt32Interrupt(index, mask, reason);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1386,7 +1441,11 @@ asynStatus asynPortDriver::clearUInt32DigitalInterrupt(int list, int index, epic
     asynStatus status;
     static const char *functionName = "clearUIntDigitalInterrupt";
 
-    status = this->params[list]->clearUInt32Interrupt(index, mask);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->clearUInt32Interrupt(index, mask);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1412,7 +1471,11 @@ asynStatus asynPortDriver::getUInt32DigitalInterrupt(int list, int index, epicsU
     asynStatus status;
     static const char *functionName = "getUIntDigitalInterrupt";
 
-    status = this->params[list]->getUInt32Interrupt(index, mask, reason);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getUInt32Interrupt(index, mask, reason);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1436,7 +1499,11 @@ asynStatus asynPortDriver::setDoubleParam(int list, int index, double value)
     asynStatus status;
     static const char *functionName = "setDoubleParam";
 
-    status = this->params[list]->setDouble(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setDouble(index, value);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1460,7 +1527,11 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const char *value
     asynStatus status;
     static const char *functionName = "setStringParam";
 
-    status = this->params[list]->setString(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setString(index, value);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1484,7 +1555,11 @@ asynStatus asynPortDriver::setStringParam(int list, int index, const std::string
     asynStatus status;
     static const char *functionName = "setStringParam";
 
-    status = this->params[list]->setString(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->setString(index, value);
     if (status) reportSetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1539,7 +1614,11 @@ asynStatus asynPortDriver::getIntegerParam(int list, int index, epicsInt32 *valu
     asynStatus status;
     static const char *functionName = "getIntegerParam";
 
-    status = this->params[list]->getInteger(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getInteger(index, value);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1563,7 +1642,11 @@ asynStatus asynPortDriver::getInteger64Param(int list, int index, epicsInt64 *va
     asynStatus status;
     static const char *functionName = "getInteger64Param";
 
-    status = this->params[list]->getInteger64(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getInteger64(index, value);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1589,7 +1672,11 @@ asynStatus asynPortDriver::getUIntDigitalParam(int list, int index, epicsUInt32 
     asynStatus status;
     static const char *functionName = "getUIntDigitalParam";
 
-    status = this->params[list]->getUInt32(index, value, mask);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getUInt32(index, value, mask);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1613,7 +1700,11 @@ asynStatus asynPortDriver::getDoubleParam(int list, int index, double *value)
     asynStatus status;
     static const char *functionName = "getDoubleParam";
 
-    status = this->params[list]->getDouble(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getDouble(index, value);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1639,7 +1730,11 @@ asynStatus asynPortDriver::getStringParam(int list, int index, int maxChars, cha
     asynStatus status;
     static const char *functionName = "getStringParam";
 
-    status = this->params[list]->getString(index, maxChars, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getString(index, maxChars, value);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1663,7 +1758,11 @@ asynStatus asynPortDriver::getStringParam(int list, int index, std::string& valu
     asynStatus status;
     static const char *functionName = "getStringParam";
 
-    status = this->params[list]->getString(index, value);
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->getString(index, value);
     if (status) reportGetParamErrors(status, index, list, functionName);
     return status;
 }
@@ -1685,7 +1784,13 @@ asynStatus asynPortDriver::callParamCallbacks(int addr)
   * \param[in] addr The asyn address to be used in the callback.  Typically the same value as list. */
 asynStatus asynPortDriver::callParamCallbacks(int list, int addr)
 {
-    return this->params[list]->callCallbacks(addr);
+    asynStatus status;
+    paramList *pList=getParamList(list);
+    if (!pList)
+        status = asynParamInvalidList;
+    else
+        status = pList->callCallbacks(addr);
+    return status;
 }
 
 /** Calls paramList::report(fp, details) for each parameter list that the driver supports.
@@ -1828,6 +1933,11 @@ asynStatus asynPortDriver::parseAsynUser(asynUser *pasynUser, int *reason, int *
     return status;
 }
 
+paramList* asynPortDriver::getParamList(int list)
+{
+    if ((list < 0) || (list >= this->maxAddr)) return NULL;
+    return this->params[list];
+}
 
 /* asynInt32 interface methods */
 extern "C" {static asynStatus readInt32(void *drvPvt, asynUser *pasynUser,
