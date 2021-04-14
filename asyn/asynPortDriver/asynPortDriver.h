@@ -212,6 +212,7 @@ protected:
 
 private:
     std::vector<paramList*> params;
+    paramList *getParamList(int list);
     epicsMutexId mutexId;
     char *inputEosOctet;
     int inputEosLenOctet;
