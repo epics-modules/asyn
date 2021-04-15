@@ -12,6 +12,43 @@
   <div style="text-align: center">
     <hr />
     <h2>
+      Release 4-42</h2>
+    <h2>
+      April XXX, 2021</h2>
+  </div>
+  <h3>
+    drvProligixGPIB
+  </h3>
+  <ul>
+    <li>New driver for the Proligix GPIB-Ethernet controller. Thanks to Eric Norum for this.
+      This $200 device makes GPIB devices available over Ethernet.  It uses a proprietary protocol, not VXI-11.
+    </li>
+  </ul>
+  <h3>
+    asynPortDriver</h3>
+  <ul>
+    <li>Added checks for invalid list (<0 or >=maxAddr).</li>
+    <li>Added new error code asynParamInvalidList that is returned if the list passed is not valid.</li>
+  </ul>
+  <h3>
+    devCommonGPIB.c</h3>
+  <ul>
+    <li>Added 0 termination after strncpy().</li>
+  </ul>
+  <h3>
+    asynInterposeEos</h3>
+  <ul>
+    <li>Improve efficiency when eosOutLen is 0.</li>
+  </ul>
+  <h3>
+    asynRecord</h3>
+  <ul>
+    <li>Minor changes to avoid compiler warnings.</li>
+  </ul>
+
+  <div style="text-align: center">
+    <hr />
+    <h2>
       Release 4-41</h2>
     <h2>
       September 19, 2020</h2>
