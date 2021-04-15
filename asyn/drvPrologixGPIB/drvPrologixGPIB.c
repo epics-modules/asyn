@@ -462,14 +462,14 @@ static asynStatus
 prologixAddressedCmd(void *drvPvt, asynUser *pasynUser,
                      const char *data, int length)
 {
-    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixAddressedCmd Unimplemented");
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixAddressedCmd unimplemented");
     return asynError;
 }
 
 static asynStatus
 prologixUniversalCmd(void *drvPvt, asynUser *pasynUser, int cmd)
 {
-    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixAddressedCmd Unimplemented");
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixUniversalCmd unimplemented");
     return asynError;
 }
 
@@ -486,7 +486,7 @@ prologixIfc(void *drvPvt, asynUser *pasynUser)
 static asynStatus
 prologixRen(void *drvPvt, asynUser *pasynUser, int onOff)
 {
-    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixRen Unimplemented");
+    epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize, "prologixRen unimplemented");
     return asynError;
 }
 
@@ -506,21 +506,21 @@ prologixSrqEnable(void *drvPvt, int onOff)
 static asynStatus
 prologixSerialPollBegin(void *drvPvt)
 {
-    printf ("=== prologixSerialPollBegin Unimplemented\n");
+    printf ("=== prologixSerialPollBegin unimplemented\n");
     return asynError;
 }
 
 static asynStatus
 prologixSerialPoll(void *drvPvt, int addr, double timeout, int *statusByte)
 {
-    printf ("=== prologixSerialPoll Unimplemented\n");
+    printf ("=== prologixSerialPoll unimplemented\n");
     return asynError;
 }
 
 static asynStatus
 prologixSerialPollEnd(void *drvPvt)
 {
-    printf ("=== prologixSerialPollEnd Unimplemented\n");
+    printf ("=== prologixSerialPollEnd unimplemented\n");
     return asynError;
 }
 
