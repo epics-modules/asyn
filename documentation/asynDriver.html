@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-41</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-42</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">September 19, 2020</span></p>
+      <span style="font-weight: bold; font-size: 14pt">April XXX, 2021</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -162,6 +162,7 @@
         <li><a href="#drvAsynIPPort">TCP/IP or UDP/IP Port</a></li>
         <li><a href="#drvAsynIPServerPort">TCP/IP or UDP/IP Server</a></li>
         <li><a href="#vxi11">VXI-11</a></li>
+        <li><a href="#prologixGPIB">Prologix GPIB-Ethernet</a></li>
         <li><a href="#Linux-gpib">Linux-Gpib</a></li>
         <li><a href="#gsIP488">Green Springs IP488</a></li>
         <li><a href="#ni1014">National Instruments GPIB-1014D</a></li>
@@ -304,6 +305,8 @@
     <li>drvAsynIPServerPort: Support for asyn socket servers that are accessed from remote
       clients. TCP/IP sockets and UDP are supported.</li>
     <li>VXI-11: A replacement for the VXI-11 support of the Franksen gpibCore support.</li>
+    <li>drvPrologixGPIB: Support for GPIB devices over Ethernet using the Prologix GPIB-Ethernet
+      controller.</li>
     <li>Linux-gpib: Support for the Linux GPIB Package library.</li>
     <li>gsIP488: A low level driver for the Greensprings IP488 Industry Pack module.</li>
     <li>ni1014: A low level driver for the National Instruments VME 1014D.</li>
@@ -5895,6 +5898,39 @@ asynOctetSetOutputEos("A1",0,"\r")
   <pre>asynSetOption L0 -1 rpctimeout .1</pre>
   <p>
     Will change the rpcTimeout for port L0 to .1 seconds.</p>
+  <h3 id="prologixGPIB">
+    drvPrologixGPIB</h3>
+  <p>
+    The drvPrologixGPIB port driver was written to support <a href="https://prologix.biz/gpib-ethernet-controller.html">
+      the Prologix GPIB-Ethernet controller</a>.</p>
+  <p>
+    Configuration command is:</p>
+  <pre>    prologixGPIBConfigure(portName,host,priority,noAutoConnect)</pre>
+  <p>
+    where</p>
+  <ul>
+    <li>portName - An ascii string specifying the port name that will be registered with
+      asynDriver.</li>
+    <li>host - The IP address or IP name and port number of the Prologix GPIB-Ethernet
+      controller. The port number is factory assigned to 1234.</li>
+    <li>priority - An integer specifying the priority of the port thread. A value of 0
+      will result in a default value being assigned.</li>
+    <li>noAutoConnect - Non-zero indicates that portThread should automatically connect.
+      Zero means explicit connect command must be issued.</li>
+  </ul>
+  <p>
+    An example is:</p>
+  <pre>prologixGPIBConfigure("L0","gse-prologix:1234",0,0)</pre>
+  <p>
+    NOTES: The Prologix GPIB-Ethernet is a simple device that does not support many
+    GPIB functions.</p>
+  <ul>
+    <li>SRQ is not supported.</li>
+    <li>SerialPoll is not supported.</li>
+    <li>AddressedCMD is not supported.</li>
+    <li>UniversalCMD is not supported.</li>
+    <li>REN (remote enable) is not supported.</li>
+  </ul>
   <h3 id="Linux-gpib">
     Linux-Gpib</h3>
   <p>
