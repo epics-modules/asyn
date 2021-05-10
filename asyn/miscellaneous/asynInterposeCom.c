@@ -167,7 +167,7 @@ writeIt(void *ppvt, asynUser *pasynUser,
             memcpy(dst, data, nCopy);
             dst += nCopy;
             if (iac != NULL) {
-                *dst++ = C_IAC;
+                *dst++ = (char)C_IAC;
                 nIAC++;
             }
             nLeft -= nCopy;
@@ -328,7 +328,7 @@ willdo(interposePvt *pinterposePvt, asynUser *pasynUser, int command, int code)
     int           wd;
     size_t        nbytes;
 
-    cbuf[0] = C_IAC;
+    cbuf[0] = (char)C_IAC;
     cbuf[1] = command;
     cbuf[2] = code;
     status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
@@ -416,12 +416,12 @@ sbComPortOption(interposePvt *pinterposePvt, asynUser *pasynUser, const char *xB
     int           c;
     size_t        nbytes;
 
-    cbuf[0] = C_IAC;
-    cbuf[1] = C_SB;
+    cbuf[0] = (char)C_IAC;
+    cbuf[1] = (char)C_SB;
     cbuf[2] = SB_COM_PORT_OPTION;
     memcpy(cbuf+3, xBuf, xLen);
-    cbuf[3+xLen+0] = C_IAC;
-    cbuf[3+xLen+1] = C_SE;
+    cbuf[3+xLen+0] = (char)C_IAC;
+    cbuf[3+xLen+1] = (char)C_SE;
     status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
                                             pasynUser, cbuf, 5+xLen, &nbytes);
     if (status != asynSuccess)
