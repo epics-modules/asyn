@@ -8,7 +8,7 @@
 /templates/
 /configure/*.local
 *~
-O.*
+O.*/
 *.swp
 *_BAK.adl
 /QtC-*
