@@ -11,3 +11,8 @@ dbLoadRecords("../../db/asynRecord.db","P=testAPD:,R=asyn1,PORT=testAPD,ADDR=0,O
 #asynSetTraceMask("testAPD",0,0xff)
 asynSetTraceIOMask("testAPD",0,0x2)
 iocInit()
+
+dbpr testAPD:scope1:Clutch 2
+epicsThreadSleep(5)
+dbpr testAPD:scope1:Clutch 2
+
