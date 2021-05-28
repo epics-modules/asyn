@@ -51,7 +51,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
                     1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
-                    0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                    ASYN_CANBLOCK, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/
@@ -72,6 +72,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     for (i=0; i<maxPoints; i++) pTimeBase_[i] = (double)i / (maxPoints-1) * NUM_DIVISIONS;
 
     eventId_ = epicsEventCreate(epicsEventEmpty);
+    createParam(P_ClutchString,             asynParamInt32,         &P_Clutch);
     createParam(P_RunString,                asynParamInt32,         &P_Run);
     createParam(P_MaxPointsString,          asynParamInt32,         &P_MaxPoints);
     createParam(P_TimePerDivString,         asynParamFloat64,       &P_TimePerDiv);
@@ -150,7 +151,10 @@ void testAsynPortDriver::simTask(void)
     epicsInt32 run, i, maxPoints;
     double pi=4.0*atan(1.0);
 
+    epicsThreadSleep(2.0);
     lock();
+    setIntegerParam(P_Clutch, 1);
+    callParamCallbacks();
     /* Loop forever */
     while (1) {
         getDoubleParam(P_UpdateTime, &updateTime);

@@ -19,6 +19,7 @@
 
 /* These are the drvInfo strings that are used to identify the parameters.
  * They are used by asyn clients, including standard asyn device support */
+#define P_ClutchString             "CLUTCH"                     /* asynInt32,    r/w */
 #define P_RunString                "SCOPE_RUN"                  /* asynInt32,    r/w */
 #define P_MaxPointsString          "SCOPE_MAX_POINTS"           /* asynInt32,    r/o */
 #define P_TimePerDivString         "SCOPE_TIME_PER_DIV"         /* asynFloat64,  r/w */
@@ -60,6 +61,7 @@ public:
 
 protected:
     /** Values used for pasynUser->reason, and indexes into the parameter library. */
+    int P_Clutch;
     int P_Run;
     int P_MaxPoints;
     int P_TimePerDiv;
