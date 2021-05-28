@@ -1,6 +1,16 @@
+record(bo, "$(P)$(R)Clutch")
+{
+    field(DTYP, "asynInt32")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))CLUTCH")
+    field(ZNAM, "Off")
+    field(ONAM, "On")
+    info(asyn:READBACK, "1")
+}
+
 ###################################################################
 #  These records control run/stop                                 # 
 ###################################################################
+
 record(bo, "$(P)$(R)Run")
 {
     field(PINI,  "1")
