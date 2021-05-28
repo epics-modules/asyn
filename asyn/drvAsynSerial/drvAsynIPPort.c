@@ -85,7 +85,7 @@
 # endif
 #endif
 
-/* If SO_REUSEPORT is not defined then use SO_REUSEADDR instead.  
+/* If SO_REUSEPORT is not defined then use SO_REUSEADDR instead.
    It is not defined on RTEMS, Windows and older Linux versions. */
 #ifndef SO_REUSEPORT
 # define USE_SO_REUSEADDR
