@@ -4,6 +4,7 @@ record(bo, "$(P)$(R)Clutch")
     field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))CLUTCH")
     field(ZNAM, "Off")
     field(ONAM, "On")
+    field(TPRO, "1")
     info(asyn:READBACK, "1")
 }
 
