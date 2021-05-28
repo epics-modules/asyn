@@ -155,6 +155,11 @@ void testAsynPortDriver::simTask(void)
     lock();
     setIntegerParam(P_Clutch, 1);
     callParamCallbacks();
+    unlock();
+    epicsThreadSleep(2.0);
+    lock();
+    setIntegerParam(P_Clutch, 0);
+    callParamCallbacks();
     /* Loop forever */
     while (1) {
         getDoubleParam(P_UpdateTime, &updateTime);
