@@ -987,7 +987,10 @@ static long processAo(aoRecord *pr)
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
             value = (double)pr->rval + (double)pr->roff;
             if(pr->aslo!=0.0) value *= pr->aslo;
             value += pr->aoff;
@@ -1113,7 +1116,10 @@ static long processLo(longoutRecord *pr)
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->val = pPvt->result.value;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->val;
@@ -1219,7 +1225,10 @@ static long processBo(boRecord *pr)
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
             pr->val = (pr->rval) ? 1 : 0;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;
@@ -1347,7 +1356,10 @@ static long processMbbo(mbboRecord *pr)
                 /* the raw  is the desired val */
                 pr->val =  (unsigned short)rval;
             }
-            pr->udf = FALSE;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;

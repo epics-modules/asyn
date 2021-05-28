@@ -746,7 +746,10 @@ static long processBo(boRecord *pr)
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value & pr->mask;
             pr->val = (pr->rval) ? 1 : 0;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;;
@@ -851,7 +854,11 @@ static long processLo(longoutRecord *pr)
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->val = pPvt->result.value & pPvt->mask;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                pr->nsta = 0;
+                pr->nsev = 0;
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->val & pPvt->mask;
@@ -979,7 +986,11 @@ static long processMbbo(mbboRecord *pr)
                 /* the raw  is the desired val */
                 pr->val =  (unsigned short)rval;
             }
-            pr->udf = FALSE;
+            if (pr->udf) {
+                pr->udf = 0;
+                pr->nsta = 0;
+                pr->nsev = 0;
+            }
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;
@@ -1081,7 +1092,11 @@ static long initMbboDirect(mbboDirectRecord *pr)
         value &= pr->mask;
         if (pr->shft > 0) value >>= pr->shft;
         pr->val =  (unsigned short) value;
-        pr->udf = FALSE;
+        if (pr->udf) {
+            pr->udf = 0;
+            pr->nsta = 0;
+            pr->nsev = 0;
+        }
         for (i = 0; i < 16; i++) {
             *pBn++ = !! (value & 1);
             value >>= 1;

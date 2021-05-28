@@ -664,7 +664,10 @@ static long processAo(aoRecord *pr)
             if (pr->aslo != 0.0) val64 *= pr->aslo;
             val64 += pr->aoff;
             pr->val = val64;
-            pr->udf = 0;
+            if (pr->udf) {
+                pr->udf = 0;
+                recGblResetAlarms(pr);
+            }
         }
     } else if(pr->pact == 0) {
         /* ASLO/AOFF conversion */
