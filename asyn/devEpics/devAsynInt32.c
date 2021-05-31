@@ -645,6 +645,8 @@ static void outputCallbackCallback(CALLBACK *pcb)
         dbScanLock(pr);
         epicsMutexLock(pPvt->devPvtLock);
         pPvt->newOutputCallbackValue = 1;
+        /* We need to set udf=0 here so that it is already cleared when dbProcess is called */
+        pr->udf = 0;
         dbProcess(pr);
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1
@@ -987,7 +989,6 @@ static long processAo(aoRecord *pr)
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
-            pr->udf = 0;
             value = (double)pr->rval + (double)pr->roff;
             if(pr->aslo!=0.0) value *= pr->aslo;
             value += pr->aoff;
@@ -1113,7 +1114,6 @@ static long processLo(longoutRecord *pr)
         /* We got a callback from the driver */
         if (pPvt->result.status == asynSuccess) {
             pr->val = pPvt->result.value;
-            pr->udf = 0;
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->val;
@@ -1219,7 +1219,6 @@ static long processBo(boRecord *pr)
         if (pPvt->result.status == asynSuccess) {
             pr->rval = pPvt->result.value;
             pr->val = (pr->rval) ? 1 : 0;
-            pr->udf = 0;
         }
     } else if(pr->pact == 0) {
         pPvt->result.value = pr->rval;

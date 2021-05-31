@@ -592,6 +592,8 @@ static void outputCallbackCallback(CALLBACK *pcb)
         dbScanLock(pr);
         epicsMutexLock(pPvt->devPvtLock);
         pPvt->newOutputCallbackValue = 1;
+        /* We need to set udf=0 here so that it is already cleared when dbProcess is called */
+        pr->udf = 0;
         dbProcess(pr);
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1
