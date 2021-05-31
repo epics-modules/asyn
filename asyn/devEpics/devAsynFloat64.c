@@ -463,6 +463,8 @@ static void outputCallbackCallback(CALLBACK *pcb)
         dbScanLock(pr);
         epicsMutexLock(pPvt->devPvtLock);
         pPvt->newOutputCallbackValue = 1;
+        /* We need to set udf=0 here so that it is already cleared when dbProcess is called */
+        pr->udf = 0;
         dbProcess(pr);
         if (pPvt->newOutputCallbackValue != 0) {
             /* We called dbProcess but the record did not process, perhaps because PACT was 1
@@ -664,7 +666,6 @@ static long processAo(aoRecord *pr)
             if (pr->aslo != 0.0) val64 *= pr->aslo;
             val64 += pr->aoff;
             pr->val = val64;
-            pr->udf = 0;
         }
     } else if(pr->pact == 0) {
         /* ASLO/AOFF conversion */
