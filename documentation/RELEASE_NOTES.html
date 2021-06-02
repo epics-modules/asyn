@@ -12,9 +12,38 @@
   <div style="text-align: center">
     <hr />
     <h2>
-      Release 4-42</h2>
+      Release 4-43</h2>
     <h2>
-      May 10, 2021</h2>
+      June XXX, 2021</h2>
+  </div>
+  <h3>
+    devEpics
+  </h3>
+  <ul>
+    <li>Change logic for output records with asyn:READBACK so they set udf=0 in the outputcallbackcallback()
+      function, and not in the processXX function. This is needed to correctly clear the
+      UDF status and severity.
+      <ul>
+        <li>This problem is happening because for EPICS output records the only way to clear
+          a UDF alarm is to put a value into the record, either from an external put from
+          a CA or DB link (in which case code in the dbAccess.c dbPut() routine clears UDF
+          and the record would get processed) or by reading a value through the DOL link during
+          record processing triggered by some other means.</li>
+        <li>In both cases UDF will have been cleared before the call to checkAlarms() in the
+          boRecord::process() routine, which is where the UDF field is checked.</li>
+        <li>Unfortunately for asyn all output records call the checkAlarms() routine before
+          the device support's write_bo() routine, so clearing UDF in processBo() is too late
+          for this process cycle, the UDF_ALARM has already been registered.</li>
+        <li>This also means that if the bo record is configured with non-zero alarms in ZSV
+          or OSV the initial read wouldn't trigger the appropriate STATE_ALARM either, since
+          they get set in that routine as well. </li>
+      </ul>
+    </li>
+  </ul>
+  <h2>
+    Release 4-42</h2>
+  <h2>
+    May 10, 2021</h2>
   </div>
   <h3>
     drvProligixGPIB
