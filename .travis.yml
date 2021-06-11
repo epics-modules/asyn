@@ -91,6 +91,7 @@ jobs:
 
   - env: SET=base7
     os: osx
+    osx_image: xcode12.5
     compiler: clang
 
 # Cross-compilation to RTEMS
