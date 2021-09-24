@@ -10,8 +10,7 @@
 
 #include <stdexcept>
 
-using std::logic_error;
-class ParamListParamNotFound: public logic_error {
+class ParamListParamNotFound: public std::logic_error {
 public:
     ParamListParamNotFound(const std::string& description);
 };

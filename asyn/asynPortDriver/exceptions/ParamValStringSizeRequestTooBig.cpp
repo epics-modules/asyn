@@ -8,6 +8,6 @@
 #include "ParamValStringSizeRequestTooBig.h"
 
 ParamValStringSizeRequestTooBig::ParamValStringSizeRequestTooBig(const std::string& description):
-    logic_error(description){
+    std::logic_error(description){
 }
 
