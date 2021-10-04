@@ -335,7 +335,7 @@ static long createRingBuffer(dbCommon *pr)
         }
         sizeString = dbGetInfo(pdbentry, "asyn:FIFO");
         if (sizeString) pPvt->ringSize = atoi(sizeString);
-        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "%s::createRingBuffer");
+        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "devAsynUInt32Digital::createRingBuffer");
     }
     return asynSuccess;
 }

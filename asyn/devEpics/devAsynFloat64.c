@@ -144,7 +144,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
     asynInterface *pasynInterface;
     static const char *functionName="initCommon";
 
-    pPvt = callocMustSucceed(1, sizeof(*pPvt), "%s::%s");
+    pPvt = callocMustSucceed(1, sizeof(*pPvt), "devAsynFloat64::initCommon");
     pr->dpvt = pPvt;
     pPvt->pr = pr;
     /* Create asynUser */
@@ -267,7 +267,7 @@ static long createRingBuffer(dbCommon *pr)
         }
         sizeString = dbGetInfo(pdbentry, "asyn:FIFO");
         if (sizeString) pPvt->ringSize = atoi(sizeString);
-        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "%s::createRingBuffer");
+        pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "devAsynFloat64::createRingBuffer");
     }
     return asynSuccess;
 }
