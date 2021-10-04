@@ -366,7 +366,6 @@ static void processCallbackOutput(asynUser *pasynUser)
         }
     }
     pPvt->lastStatus = pPvt->result.status;
-    pPvt->lastStatus = pPvt->result.status;
     if(pr->pact) callbackRequestProcessCallback(&pPvt->processCallback,pr->prio,pr);
 }
 
