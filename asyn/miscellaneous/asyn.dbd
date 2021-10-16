@@ -3,6 +3,7 @@ registrar(asynInterposeFlushRegister)
 registrar(asynInterposeEosRegister)
 registrar(asynInterposeDelayRegister)
 registrar(asynInterposeEchoRegister)
+registrar(asynInterposeDummyRegister)
 
 #
 # The following ties this to EPICS records.
