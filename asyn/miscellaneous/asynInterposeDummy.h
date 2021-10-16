@@ -30,14 +30,13 @@
 extern "C" {
 #endif /* __cplusplus */
 
-// Dummy private data
+// Interpose private data
 typedef struct interposePvt {
   char *portName;
   asynInterface dummyInterface; /* This asynOctet interface */
   asynOctet *poctet;            /* The methods we're overriding */
   void *octetPvt;               /* Private data of next lower interface */
   asynUser *pasynUser;          /* For connect/disconnect reporting */
-  epicsInt8 escape;             /* The escape char to deduplicate */
 } interposePvt;
 
 ASYN_API
@@ -55,7 +54,7 @@ static asynStatus flushIt(void *ppvt, asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *ppvt, asynUser *pasynUser,
                                         interruptCallbackOctet callback, void *userPvt,
                                         void **registrarPvt);
-static asynStatus cancelInterruptUser(void *drvPvt, asynUser *pasynUser, void *registrarPvt);
+static asynStatus cancelInterruptUser(void *ppvt, asynUser *pasynUser, void *registrarPvt);
 static asynStatus setInputEos(void *ppvt, asynUser *pasynUser, const char *eos, int eoslen);
 static asynStatus getInputEos(void *ppvt, asynUser *pasynUser, char *eos, int eossize, int *eoslen);
 static asynStatus setOutputEos(void *ppvt, asynUser *pasynUser, const char *eos, int eoslen);
@@ -69,4 +68,4 @@ static asynOctet octet = {
 }
 #endif /* __cplusplus */
 
-#endif /* asynInterposeEos_H */
+#endif /* asynInterposeDummy_H */

@@ -19,10 +19,9 @@ int asynInterposeDummyConfig(const char *portName) {
   asynStatus status;
   asynUser *pasynUser;
   int addr = 0;
-  /*
-   * Interpose ourselves
-   */
-  pvt = callocMustSucceed(1, sizeof(interposePvt), "asynInterposeEcho");
+  
+  // Populate private data
+  pvt = callocMustSucceed(1, sizeof(interposePvt), "asynInterposeDummy");
   pvt->portName = epicsStrDup(portName);
   pvt->dummyInterface.interfaceType = asynOctetType;
   pvt->dummyInterface.pinterface = &octet;
