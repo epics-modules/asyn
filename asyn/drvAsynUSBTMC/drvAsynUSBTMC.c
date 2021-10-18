@@ -325,7 +325,7 @@ report(void *pvt, FILE *fp, int details)
     if (details >= 100) {
         int l = details % 100;
         fprintf(fp, "==== Set libusb debug level %d ====\n", l);
-        libusb_set_debug(pdpvt->usb, l);
+        libusb_set_option(ctx, LIBUSB_OPTION_LOG_LEVEL, loglevel);
     }
 }
 
@@ -628,15 +628,19 @@ connect(void *pvt, asynUser *pasynUser)
             return asynError;
          }
          if (getCapabilities(pdpvt, pasynUser) != asynSuccess) {
+            char *msg = epicsStrDup(pasynUser->errorMessage);
             libusb_close(pdpvt->handle);
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                    "Can't get device capabilities: %s", pasynUser->errorMessage);
+                                      "Can't get device capabilities: %s", msg);
+            free(msg);
             return asynError;
         }
          if (clearBuffers(pdpvt, pasynUser) != asynSuccess) {
+            char *msg = epicsStrDup(pasynUser->errorMessage);
             libusb_close(pdpvt->handle);
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                            "Can't clear buffers: %s", pasynUser->errorMessage);
+                                                "Can't clear buffers: %s", msg);
+            free(msg);
             return asynError;
         }
         pdpvt->bulkInPacketFlags = 0;
