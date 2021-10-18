@@ -1,8 +1,8 @@
-/*asynInterposeDummy.c*/
+/*asynInterposeTemplate.c*/
 
 /*
  * Example of an asynInterpose implementation
- * The dummy implementation does *nothing*,
+ * The template implementation does *nothing*,
  * simply forwards requests to the lower port.
  *
  * Use this as as a base example to build your asynInterpose.
@@ -10,22 +10,22 @@
  * Author: davide.marcato@lnl.infn.it
  */
 
-#include "asynInterposeDummy.h"
+#include "asynInterposeTemplate.h"
 
 ASYN_API
-int asynInterposeDummyConfig(const char *portName) {
+int asynInterposeTemplateConfig(const char *portName) {
   interposePvt *pvt;
   asynInterface *plowerLevelInterface;
   asynStatus status;
   asynUser *pasynUser;
   int addr = 0;
-  
+
   // Populate private data
-  pvt = callocMustSucceed(1, sizeof(interposePvt), "asynInterposeDummy");
+  pvt = callocMustSucceed(1, sizeof(interposePvt), "asynInterposeTemplate");
   pvt->portName = epicsStrDup(portName);
-  pvt->dummyInterface.interfaceType = asynOctetType;
-  pvt->dummyInterface.pinterface = &octet;
-  pvt->dummyInterface.drvPvt = pvt;
+  pvt->templateInterface.interfaceType = asynOctetType;
+  pvt->templateInterface.pinterface = &octet;
+  pvt->templateInterface.drvPvt = pvt;
   pasynUser = pasynManager->createAsynUser(0, 0);
   pvt->pasynUser = pasynUser;
   pvt->pasynUser->userPvt = pvt;
@@ -49,8 +49,8 @@ int asynInterposeDummyConfig(const char *portName) {
   }
 
   // Interpose port
-  status =
-      pasynManager->interposeInterface(portName, addr, &pvt->dummyInterface, &plowerLevelInterface);
+  status = pasynManager->interposeInterface(portName, addr, &pvt->templateInterface,
+                                            &plowerLevelInterface);
   if (status != asynSuccess) {
     printf("%s interposeInterface failed\n", portName);
     pasynManager->exceptionCallbackRemove(pasynUser);
@@ -133,20 +133,20 @@ static asynStatus getOutputEos(void *ppvt, asynUser *pasynUser, char *eos, int e
   return pvt->poctet->getOutputEos(pvt->octetPvt, pasynUser, eos, eossize, eoslen);
 }
 
-/* register asynInterposeDummyConfig*/
-static const iocshArg asynInterposeDummyConfigArg0 = {"portName", iocshArgString};
-static const iocshArg *asynInterposeDummyConfigArgs[] = {&asynInterposeDummyConfigArg0};
-static const iocshFuncDef asynInterposeDummyConfigFuncDef = {"asynInterposeDummyConfig", 1,
-                                                             asynInterposeDummyConfigArgs};
-static void asynInterposeDummyConfigCallFunc(const iocshArgBuf *args) {
-  asynInterposeDummyConfig(args[0].sval);
+/* register asynInterposeTemplateConfig*/
+static const iocshArg asynInterposeTemplateConfigArg0 = {"portName", iocshArgString};
+static const iocshArg *asynInterposeTemplateConfigArgs[] = {&asynInterposeTemplateConfigArg0};
+static const iocshFuncDef asynInterposeTemplateConfigFuncDef = {"asynInterposeTemplateConfig", 1,
+                                                                asynInterposeTemplateConfigArgs};
+static void asynInterposeTemplateConfigCallFunc(const iocshArgBuf *args) {
+  asynInterposeTemplateConfig(args[0].sval);
 }
 
-static void asynInterposeDummyRegister(void) {
+static void asynInterposeTemplateRegister(void) {
   static int firstTime = 1;
   if (firstTime) {
     firstTime = 0;
-    iocshRegister(&asynInterposeDummyConfigFuncDef, asynInterposeDummyConfigCallFunc);
+    iocshRegister(&asynInterposeTemplateConfigFuncDef, asynInterposeTemplateConfigCallFunc);
   }
 }
-epicsExportRegistrar(asynInterposeDummyRegister);
+epicsExportRegistrar(asynInterposeTemplateRegister);

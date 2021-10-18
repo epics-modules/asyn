@@ -1,8 +1,8 @@
-/*asynInterposeDummy.h*/
+/*asynInterposeTemplate.h*/
 
 /*
  * Example of an asynInterpose implementation
- * The dummy implementation does *nothing*,
+ * The template implementation does *nothing*,
  * simply forwards requests to the lower port.
  *
  * Use this as as a base example to build your asynInterpose.
@@ -10,8 +10,8 @@
  * Author: davide.marcato@lnl.infn.it
  */
 
-#ifndef asynInterposeDummy_H
-#define asynInterposeDummy_H
+#ifndef asynInterposeTemplate_H
+#define asynInterposeTemplate_H
 
 #include <cantProceed.h>
 #include <epicsAssert.h>
@@ -33,14 +33,14 @@ extern "C" {
 // Interpose private data
 typedef struct interposePvt {
   char *portName;
-  asynInterface dummyInterface; /* This asynOctet interface */
-  asynOctet *poctet;            /* The methods we're overriding */
-  void *octetPvt;               /* Private data of next lower interface */
-  asynUser *pasynUser;          /* For connect/disconnect reporting */
+  asynInterface templateInterface; /* This asynOctet interface */
+  asynOctet *poctet;               /* The methods we're overriding */
+  void *octetPvt;                  /* Private data of next lower interface */
+  asynUser *pasynUser;             /* For connect/disconnect reporting */
 } interposePvt;
 
 ASYN_API
-int asynInterposeDummyConfig(const char *portName);
+int asynInterposeTemplateConfig(const char *portName);
 
 /* Connect/disconnect handling */
 static void ExceptionHandler(asynUser *pasynUser, asynException exception);
@@ -68,4 +68,4 @@ static asynOctet octet = {
 }
 #endif /* __cplusplus */
 
-#endif /* asynInterposeDummy_H */
+#endif /* asynInterposeTemplate_H */

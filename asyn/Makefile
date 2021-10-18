@@ -102,7 +102,7 @@ DBD += asyn.dbd
 INC += asynShellCommands.h
 INC += asynInterposeCom.h
 INC += asynInterposeEos.h
-INC += asynInterposeDummy.h
+INC += asynInterposeTemplate.h
 INC += asynInterposeFlush.h
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += asynShellCommands.c
@@ -112,7 +112,7 @@ asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 asyn_SRCS += asynInterposeDelay.c
 asyn_SRCS += asynInterposeEcho.c
-asyn_SRCS += asynInterposeDummy.c
+asyn_SRCS += asynInterposeTemplate.c
 
 SRC_DIRS += $(ASYN)/asynPortDriver/exceptions
 INC += ParamListInvalidIndex.h
