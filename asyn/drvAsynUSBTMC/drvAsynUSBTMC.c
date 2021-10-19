@@ -1171,7 +1171,7 @@ static asynDrvUser drvUserMethods = {
 void
 usbtmcConfigure(const char *portName,
                 int vendorId, int productId, const char *serialNumber,
-                int priority, int flags, int libusbDebug)
+                int priority, int flags)
 {
     drvPvt *pdpvt;
     int s;
@@ -1189,10 +1189,6 @@ usbtmcConfigure(const char *portName,
     if (s != 0) {
         printf("libusb_init() failed: %s\n", libusb_strerror(s));
         return;
-    }
-    if (libusbDebug != 0) {
-        printf("libusb version %#8.8X\n", LIBUSB_API_VERSION);
-        libusb_set_option(pdpvt->usb, LIBUSB_OPTION_LOG_LEVEL, libusbDebug);
     }
     if ((serialNumber == NULL) || (*serialNumber == '\0')) {
         if ((vendorId == 0) && (productId == 0))
@@ -1289,20 +1285,18 @@ static const iocshArg usbtmcConfigureArg2 = {"product ID number", iocshArgInt};
 static const iocshArg usbtmcConfigureArg3 = {"serial string", iocshArgString};
 static const iocshArg usbtmcConfigureArg4 = {"priority", iocshArgInt};
 static const iocshArg usbtmcConfigureArg5 = {"flags", iocshArgInt};
-static const iocshArg usbtmcConfigureArg6 = {"libusbDebug", iocshArgInt};
 static const iocshArg *usbtmcConfigureArgs[] = {&usbtmcConfigureArg0,
                                                 &usbtmcConfigureArg1,
                                                 &usbtmcConfigureArg2,
                                                 &usbtmcConfigureArg3,
                                                 &usbtmcConfigureArg4,
-                                                &usbtmcConfigureArg5,
-                                                &usbtmcConfigureArg6};
-static const iocshFuncDef usbtmcConfigureFuncDef = {"usbtmcConfigure",7,usbtmcConfigureArgs};
+                                                &usbtmcConfigureArg5};
+static const iocshFuncDef usbtmcConfigureFuncDef = {"usbtmcConfigure",6,usbtmcConfigureArgs};
 static void usbtmcConfigureCallFunc(const iocshArgBuf *args)
 {
     usbtmcConfigure (args[0].sval,
                      args[1].ival, args[2].ival, args[3].sval,
-                     args[4].ival, args[5].ival, args[6].ival);
+                     args[4].ival, args[5].ival);
 }
 
 /*
