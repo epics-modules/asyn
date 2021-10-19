@@ -6054,7 +6054,7 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     USB TMC (Test and Measurement Class) driver</h3>
   <p>
     Configure each instance of the driver in the application startup script:</p>
-  <pre>usbtmcConfigure("asynPort", vendorId, productId, "serialNumber", priority, flags, libusbDebug)</pre>
+  <pre>usbtmcConfigure("asynPort", vendorId, productId, "serialNumber", priority, flags)</pre>
   <p>
     The <tt>asynPort</tt> and <tt>serialNumber</tt> arguments are strings and the other
     arguments are integers. A missing or 0 <tt>vendorId</tt> or <tt>productId</tt> matches
@@ -6067,9 +6067,6 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
   <p>
     A missing flags argument is taken to be 0. As of now only one bit is used: Bit 0
     (0x1) Disable/enable (1/0) automatic port connection.</p>
- <p>
-    A non-zero libusbDebug value will cause the libusb version number to be printed
-    in addition to setting the LIBUSB_OPTION_LOG_LEVEL to the specified value.</p>
   <h4>
     Non-octet records</h4>
   <p>
