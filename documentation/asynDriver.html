@@ -6098,7 +6098,21 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     The device remote enable is written by a record with</p>
   <pre>OUT="@asyn(port, 0, 0) REN") </pre>
   <p>
-    Typically the record type will be bo.</p>
+    Typically the record type will be bo but writing any non-zero value enables remote operation.</p>
+  <h5>
+    Local Lockout (LLO)</h5>
+  <p>
+    The IEEE-488 local lockout command is sent by processing a record with</p>
+  <pre>OUT="@asyn(port, 0, 0) LLO") </pre>
+  <p>
+    Typically the record type will be bo.  The value written is ignored.</p>
+  <h5>
+    Go To Local (GTL)</h5>
+  <p>
+    The IEEE-488 go to local command is sent by processing a record with</p>
+  <pre>OUT="@asyn(port, 0, 0) GTL") </pre>
+  <p>
+    Typically the record type will be bo.  The value written is ignored.</p>
   <h4>
     Linux udev configuration</h4>
   <p>
