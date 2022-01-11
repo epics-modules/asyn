@@ -32,13 +32,16 @@
 #define MESSAGE_ID_REQUEST_DEV_DEP_MSG_IN  2
 #define MESSAGE_ID_DEV_DEP_MSG_IN          2
 
-#define BULK_IO_HEADER_SIZE      12
-#define BULK_IO_PAYLOAD_CAPACITY 4096
-#define IDSTRING_CAPACITY        100
+#define BULK_IO_HEADER_SIZE         12
+#define BULK_IO_PAYLOAD_CAPACITY    (1024*1024)
+#define BULK_IO_OUTPUT_EOS_CAPACITY 2
+#define IDSTRING_CAPACITY           100
 
 #define ASYN_REASON_SRQ 4345
 #define ASYN_REASON_STB 4346
 #define ASYN_REASON_REN 4347
+#define ASYN_REASON_GTL 4348
+#define ASYN_REASON_LLO 4349
 
 #if (!defined(LIBUSBX_API_VERSION) || (LIBUSBX_API_VERSION < 0x01000102))
 # error "You need to get a newer version of libusb-1.0 (16 at the very least)"
@@ -107,10 +110,18 @@ typedef struct drvPvt {
     /*
      * I/O buffer
      */
-    unsigned char          buf[BULK_IO_HEADER_SIZE+BULK_IO_PAYLOAD_CAPACITY];
+    unsigned char          buf[BULK_IO_HEADER_SIZE +
+                               BULK_IO_PAYLOAD_CAPACITY +
+                               BULK_IO_OUTPUT_EOS_CAPACITY];
     int                    bufCount;
     const unsigned char   *bufp;
     unsigned char          bulkInPacketFlags;
+
+    /*
+     * Output EOS
+     */
+    int           outputEOSlen;
+    unsigned char outputEOS[BULK_IO_OUTPUT_EOS_CAPACITY];
 
     /*
      * Statistics
@@ -282,7 +293,15 @@ report(void *pvt, FILE *fp, int details)
         default: fprintf(fp, "\n");                         break;
         }
         if (pdpvt->termChar >= 0)
-            fprintf(fp, "%28s: %x\n", "Terminator", pdpvt->termChar);
+            fprintf(fp, "%28s: %02X\n", "Input terminator", pdpvt->termChar);
+        if (pdpvt->outputEOSlen > 0) {
+            int i;
+            fprintf(fp, "%28s:", "Output terminator");
+            for (i = 0 ; i < pdpvt->outputEOSlen ; i++) {
+                fprintf(fp, " %02X", pdpvt->outputEOS[i]);
+            }
+            fprintf(fp, "\n");
+        }
         showHexval(fp, "TMC Interface Capabilities",
                                    pdpvt->tmcInterfaceCapabilities,
                                    0x4, "Accepts INDICATOR_PULSE",
@@ -292,7 +311,7 @@ report(void *pvt, FILE *fp, int details)
                                    0);
         showHexval(fp, "TMC Device Capabilities",
                                    pdpvt->tmcDeviceCapabilities,
-                                   0x1, "Supports termChar",
+                                   0x1, "Supports bulk-IN terminator",
                                    0);
         if (pdpvt->bInterfaceProtocol == 1) {
             showHexval(fp, "488 Interface Capabilities",
@@ -325,7 +344,7 @@ report(void *pvt, FILE *fp, int details)
     if (details >= 100) {
         int l = details % 100;
         fprintf(fp, "==== Set libusb debug level %d ====\n", l);
-        libusb_set_option(ctx, LIBUSB_OPTION_LOG_LEVEL, loglevel);
+        libusb_set_option(pdpvt->usb, LIBUSB_OPTION_LOG_LEVEL, l);
     }
 }
 
@@ -733,6 +752,11 @@ asynOctetWrite(void *pvt, asynUser *pasynUser,
         else {
             nSend = numchars;
             pdpvt->buf[8] = 1;
+            if (pdpvt->outputEOSlen) {
+                memcpy(&pdpvt->buf[BULK_IO_HEADER_SIZE + nSend],
+                                         pdpvt->outputEOS, pdpvt->outputEOSlen);
+                nSend += pdpvt->outputEOSlen;
+            }
         }
         pdpvt->buf[1] = pdpvt->bTag;
         pdpvt->buf[2] = ~pdpvt->bTag;
@@ -759,6 +783,9 @@ asynOctetWrite(void *pvt, asynUser *pasynUser,
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                         "Asked to send %d, actually sent %d", pkSend, pkSent);
             return asynError;
+        }
+        if (pdpvt->buf[8] & 0x1) {
+            nSend -= pdpvt->outputEOSlen;
         }
         data += nSend;
         numchars -= nSend;
@@ -940,14 +967,14 @@ asynOctetSetInputEos(void *pvt, asynUser *pasynUser, const char *eos, int eoslen
     case 1:
         if ((pdpvt->tmcDeviceCapabilities & 0x1) == 0) {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                            "Device does not support terminating characters");
+                       "Device does not support bulk-IN terminating character");
             return asynError;
         }
         pdpvt->termChar = *eos & 0xFF;
         break;
     default:
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                    "Device does not support multiple terminating characters");
+               "USBTMC does not support multiple input terminating characters");
         return asynError;
     }
     return asynSuccess;
@@ -972,13 +999,28 @@ asynOctetGetInputEos(void *pvt, asynUser *pasynUser, char *eos, int eossize, int
 static asynStatus
 asynOctetSetOutputEos(void *pvt, asynUser *pasynUser, const char *eos, int eoslen)
 {
-    return asynError;
+    drvPvt *pdpvt = (drvPvt *)pvt;
+    if (eoslen > BULK_IO_OUTPUT_EOS_CAPACITY) {
+        return asynError;
+    }
+    if (eoslen < 0) {
+        eoslen = 0;
+    }
+    memcpy(pdpvt->outputEOS, eos, eoslen);
+    pdpvt->outputEOSlen = eoslen;
+    return asynSuccess;
 }
 
 static asynStatus
 asynOctetGetOutputEos(void *pvt, asynUser *pasynUser, char *eos, int eossize, int *eoslen)
 {
-    return asynError;
+    drvPvt *pdpvt = (drvPvt *)pvt;
+    if (eossize < pdpvt->outputEOSlen) {
+        return asynError;
+    }
+    memcpy(eos, pdpvt->outputEOS, pdpvt->outputEOSlen);
+    *eoslen = pdpvt->outputEOSlen;
+    return asynSuccess;
 }
 
 static asynOctet octetMethods = {
@@ -999,35 +1041,33 @@ asynInt32Write(void *pvt, asynUser *pasynUser, epicsInt32 value)
 {
     drvPvt *pdpvt = (drvPvt *)pvt;
     int s;
-    asynStatus status;
     unsigned char cbuf[1];
+    int bRequest, wValue;
+    const char *msg = NULL;
 
     switch (pasynUser->reason) {
-    case ASYN_REASON_REN:
-        if ((pdpvt->usb488InterfaceCapabilities & 0x2) == 0) {
-            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                                "Device does not support REN operations.");
-            return asynError;
-        }
-        s = libusb_control_transfer(pdpvt->handle,
-                0xA1, // bmRequestType: Dir=IN, Type=CLASS, Recipient=INTERFACE
-                160,  // bRequest: USBTMC REN_CONTROL
-                (value != 0),            // wValue
-                pdpvt->bInterfaceNumber, // wIndex
-                cbuf,                    // data
-                1,                       // wLength
-                100);                    // timeout (ms)
-        status = checkControlTransfer("REN_CONTROL", pdpvt, pasynUser,
-                                      s, 1, cbuf[0]);
-        if (status != asynSuccess)
-            return status;
-        return asynSuccess;
-
+    case ASYN_REASON_REN: msg="REN"; bRequest=160; wValue=(value!=0); break;
+    case ASYN_REASON_GTL: msg="GTL"; bRequest=161; wValue=0;          break;
+    case ASYN_REASON_LLO: msg="LLO"; bRequest=162; wValue=0;          break;
     default:
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
             "asynInt32Write -- invalid drvUser (reason) %d", pasynUser->reason);
         return asynError;
     }
+    if ((pdpvt->usb488InterfaceCapabilities & 0x2) == 0) {
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                            "Device does not support REN operations.");
+        return asynError;
+    }
+    s = libusb_control_transfer(pdpvt->handle,
+            0xA1, // bmRequestType: Dir=IN, Type=CLASS, Recipient=INTERFACE
+            bRequest,
+            wValue,
+            pdpvt->bInterfaceNumber, // wIndex
+            cbuf,                    // data
+            1,                       // wLength
+            100);                    // timeout (ms)
+    return checkControlTransfer(msg, pdpvt, pasynUser, s, 1, cbuf[0]);
 }
 
 static asynStatus
@@ -1139,6 +1179,12 @@ asynDrvUserCreate(void *pvt, asynUser *pasynUser,
     }
     else if (epicsStrCaseCmp(drvInfo, "REN") == 0) {
         pasynUser->reason = ASYN_REASON_REN;
+    }
+    else if (epicsStrCaseCmp(drvInfo, "GTL") == 0) {
+        pasynUser->reason = ASYN_REASON_GTL;
+    }
+    else if (epicsStrCaseCmp(drvInfo, "LLO") == 0) {
+        pasynUser->reason = ASYN_REASON_LLO;
     }
     else if (epicsStrCaseCmp(drvInfo, "STB") == 0) {
         pasynUser->reason = ASYN_REASON_STB;
