@@ -5778,7 +5778,13 @@ asynOctetSetOutputEos("A1",0,"\r")
   <ul>
     <li>portName - The portName that is registered with asynManager.</li>
     <li>serverInfo - The Internet host name and port number to listen for connections
-      on (e.g. "localhost:4002" for TCP, "localhost:4002 UDP" for UDP).</li>
+      on (e.g. "localhost:4002" for TCP, "localhost:4002 UDP" for UDP). This allows to
+      specify a host name or ip address for multi-homed machines. If you want to specify
+      <b>*any*</b> interface, use the example &quot;localhost:port&quot;, an empty host
+      &quot;:port&quot; or the any address &quot;0.0.0.0:port&quot;. The address has
+      to be an existing interface on the host. If the name cannot be resolved, the call
+      will complain and fail. If you need the loopback interface, use &quot;127.0.0.1:port&quot;.
+      </li>
     <li>maxClients - the maximum number of IP clients that can be simultaneously connected
       on this port. Additional connect requests will fail.</li>
     <li>priority - Priority at which the listener thread and any asyn I/O ports it creates

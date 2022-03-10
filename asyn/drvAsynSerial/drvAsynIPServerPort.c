@@ -57,6 +57,7 @@ typedef struct {
     unsigned int       portNumber;
     char              *portName;
     char              *serverInfo;
+    char              *interfaceInfo;
     int                maxClients;
     int                socketType;
     int                priority;
@@ -382,6 +383,7 @@ int createServerSocket(ttyController_t *tty) {
     int i;
     struct sockaddr_in serverAddr;
     int oneVal=1;
+    char srvaddrtxt[256];
     assert(tty);
     /*
      * Create the socket
@@ -395,6 +397,25 @@ int createServerSocket(ttyController_t *tty) {
         serverAddr.sin_family = AF_INET;
         serverAddr.sin_addr.s_addr = INADDR_ANY;
         serverAddr.sin_port = htons(tty->portNumber);
+
+        /*
+         * Got host or interface name, resolve it unless we see "localhost":
+         * This may be used in existing start scripts and we don't want to
+         * break them. If you need the loopback, use "127.0.0.1".
+         */
+        if (tty->interfaceInfo != NULL && *tty->interfaceInfo &&
+            epicsStrCaseCmp(tty->interfaceInfo, "localhost")) {
+            if (hostToIPAddr(tty->interfaceInfo, &serverAddr.sin_addr) < 0) {
+                printf("using ANY interface, cannot lookup '%s': %s\n",
+                       tty->interfaceInfo, strerror(SOCKERRNO));
+                return -1;
+          }
+        }
+
+        if (ipAddrToDottedIP(&serverAddr, &srvaddrtxt[0], sizeof(srvaddrtxt)) > 0) {
+            srvaddrtxt[sizeof(srvaddrtxt) - 1] = '\0';
+            printf("serverAddr: %s\n", srvaddrtxt);
+        }
         printf("serverPort: %i\n", tty->portNumber);
         if (tty->socketType == SOCK_DGRAM) {
             /* For Port reuse, multiple IOCs */
@@ -479,6 +500,8 @@ static void ttyCleanup(void *pPvt)
         epicsSocketDestroy(tty->fd);
     }
     free(tty->portName);
+    free(tty->serverInfo);
+    free(tty->interfaceInfo);
     free(tty);
 }
 
@@ -551,6 +574,7 @@ int drvAsynIPServerPortConfigure(const char *portName,
         return -1;
     }
     *cp = '\0';
+    tty->interfaceInfo = epicsStrDup(serverInfo);
 
     if ((protocol[0] == '\0')
             || (epicsStrCaseCmp(protocol, "tcp") == 0)) {
