@@ -46,4 +46,8 @@
 #define rpcTaskInit() 0
 #endif
 
+#ifdef freebsd
+#define rpcTaskInit() 0
+#endif
+
 #endif /* _osiRpcH_ */
