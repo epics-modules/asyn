@@ -108,7 +108,7 @@ typedef struct vxiPort {
     unsigned char lockDevices;/*lock devices when creating link*/
     asynInterface option;
     epicsEventId  srqThreadDone;
-    int           srqBindSock; /*socket for bind*/
+    SOCKET        srqBindSock; /*socket for bind*/
     osiSockAddr   vxiServerAddr; /*addess of vxi11 server*/
     char          *srqThreadName;
     epicsInterruptibleSyscallContext *srqInterrupt;
@@ -609,7 +609,7 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
     Device_Error       devErr;
     Device_RemoteFunc  devRemF;
     osiSockAddr        tempAddr;
-    int                tempSock;
+    SOCKET             tempSock;
     osiSockAddr        srqBindAddr;
     osiSocklen_t       addrlen;
 
@@ -659,7 +659,7 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
         return;
     }
     pvxiPort->vxiServerAddr.ia.sin_addr.s_addr = tempAddr.ia.sin_addr.s_addr;
-    close(tempSock);
+    epicsSocketDestroy(tempSock);
 
     /* bind for receiving srq messages*/
     pvxiPort->srqBindSock = epicsSocketCreate (PF_INET, SOCK_STREAM, 0);
@@ -678,7 +678,7 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiCreateIrqChannel bind failed %s\n",
                pvxiPort->portName,strerror (errno));
-        close(pvxiPort->srqBindSock);
+        epicsSocketDestroy(pvxiPort->srqBindSock);
         return;
     }
     addrlen = sizeof tempAddr;
@@ -689,7 +689,7 @@ static void vxiCreateIrqChannel(vxiPort *pvxiPort,asynUser *pasynUser)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s vxiCreateIrqChannel listen failed %s\n",
                pvxiPort->srqThreadName,strerror (errno));
-        close(pvxiPort->srqBindSock);
+        epicsSocketDestroy(pvxiPort->srqBindSock);
         return;
     }
 
@@ -794,7 +794,7 @@ static void vxiSrqThread(void *arg)
     vxiPort *pvxiPort = arg;
     asynUser *pasynUser = pvxiPort->pasynUser;
     epicsThreadId myTid;
-    int srqSock;
+    SOCKET srqSock;
     char buf[512];
     int i;
 
@@ -810,7 +810,7 @@ static void vxiSrqThread(void *arg)
         srqSock = epicsSocketAccept(pvxiPort->srqBindSock,&farAddr.sa,&addrlen);
         if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt)) {
             if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
-                close(pvxiPort->srqBindSock);
+                epicsSocketDestroy(pvxiPort->srqBindSock);
             asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s vxiSrqThread terminating\n",
                 pvxiPort->portName);
             taskwdRemove(myTid);
@@ -823,9 +823,9 @@ static void vxiSrqThread(void *arg)
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
              "%s vxiSrqThread accept but not from vxiServer\n",
               pvxiPort->portName);
-        close(srqSock);
+        epicsSocketDestroy(srqSock);
     }
-    close(pvxiPort->srqBindSock);
+    epicsSocketDestroy(pvxiPort->srqBindSock);
     if(srqSock < 0) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,"%s can't accept connection: %s\n",
                 pvxiPort->srqThreadName,strerror(errno));
@@ -837,7 +837,7 @@ static void vxiSrqThread(void *arg)
     for(;;) {
         if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt))
             break;
-        i = read(srqSock, buf, sizeof buf);
+        i = recv(srqSock, buf, sizeof buf, 0);
         if(epicsInterruptibleSyscallWasInterrupted(pvxiPort->srqInterrupt))
             break;
         if(i < 0) {
@@ -855,7 +855,7 @@ static void vxiSrqThread(void *arg)
         pasynGpib->srqHappened(pvxiPort->asynGpibPvt);
     }
     if(!epicsInterruptibleSyscallWasClosed(pvxiPort->srqInterrupt))
-        close(srqSock);
+        epicsSocketDestroy(srqSock);
     asynPrint(pasynUser,ASYN_TRACE_FLOW,
         "%s vxiSrqThread terminating\n",pvxiPort->srqThreadName);
     taskwdRemove(myTid);
@@ -937,7 +937,11 @@ static asynStatus vxiConnectPort(vxiPort *pvxiPort,asynUser *pasynUser)
     }
     /* now establish a link to the gateway (for docmds etc.) */
     pvxiPort->abortPort = 0;
-    if(!vxiCreateDeviceLink(pvxiPort,pvxiPort->vxiName,&link)) return asynError;
+    if(!vxiCreateDeviceLink(pvxiPort,pvxiPort->vxiName,&link)) {
+        clnt_destroy(pvxiPort->rpcClient);
+        pvxiPort->rpcClient = NULL;
+        return asynError;
+    }
     pvxiPort->server.lid = link;
     pvxiPort->server.connected = TRUE;
     pvxiPort->ctrlAddr = -1;
@@ -1538,7 +1542,7 @@ static asynStatus vxiSrqEnable(void *drvPvt, int onOff)
     enum clnt_stat        clntStat;
     Device_EnableSrqParms devEnSrqP;
     Device_Error          devErr;
-    char                  handle[16];
+    char                  handle[17];  /* 16 for 64bit pointer value in hex + 1 for NULL terminator */
 
     if(!pdevLink) return asynError;
     if(!vxiIsPortConnected(pvxiPort,0)) return asynError;
