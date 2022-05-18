@@ -1,4 +1,7 @@
-MODULES="sncseq"
+MODULES="sncseq calc sscan ipac"
 
 BASE=7.0
 SNCSEQ=R2-2-8
+IPAC=2.15
+SSCAN=R2-11-3
+CALC=R3-7-3
