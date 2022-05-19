@@ -2,6 +2,6 @@ MODULES="sncseq sscan calc ipac"
 
 BASE=7.0
 SNCSEQ=R2-2-8
-SSCAN=R2-11-3
-CALC=R3-7-3
-IPAC=2.15
+SSCAN=R2-11-5
+CALC=R3-7-4
+IPAC=2.16
