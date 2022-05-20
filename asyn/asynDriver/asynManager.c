@@ -3018,12 +3018,15 @@ static int traceVprintIOSource(asynUser *pasynUser,int reason,
 static const char *strStatus(asynStatus status)
 {
     switch (status) {
-    case asynSuccess:   return "asynSuccess";
-    case asynTimeout:   return "asynTimeout";
-    case asynOverflow:  return "asynOverflow";
-    case asynError:     return "asynError";
-    default:            return "asyn????";
+    case asynSuccess:       return "asynSuccess";
+    case asynTimeout:       return "asynTimeout";
+    case asynOverflow:      return "asynOverflow";
+    case asynError:         return "asynError";
+    case asynDisconnected:  return "asynDisconnected";
+    case asynDisabled:      return "asynDisabled";
     }
+
+    return "asyn????";
 }
 
 /*
