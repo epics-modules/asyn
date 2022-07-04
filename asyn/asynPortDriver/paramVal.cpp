@@ -189,24 +189,38 @@ epicsInt64 paramVal::getInteger64()
   * \return Returns asynParamBadIndex if the index is not valid or asynParamWrongType if the parameter type is not asynParamUInt32Digital. */
 void paramVal::setUInt32(epicsUInt32 value, epicsUInt32 valueMask, epicsUInt32 interruptMask)
 {
-    epicsUInt32 oldValue;
+    epicsUInt32 newValue;
 
     if (type != asynParamUInt32Digital)
         throw ParamValWrongType("paramVal::setUInt32 can only handle asynParamUInt32Digital");
-    setDefined(true);
-    oldValue = data.uival;
-    /* Set any bits that are set in the value and the mask */
-    data.uival |= (value & valueMask);
-    /* Clear bits that are clear in the value and set in the mask */
-    data.uival &= (value | ~valueMask);
-    if (data.uival != oldValue) {
-      /* Set the bits in the callback mask that have changed */
-      uInt32CallbackMask |= (data.uival ^ oldValue);
-      setValueChanged();
+
+    if (!isDefined())
+    {
+        /* Start from a known value for uival */
+        data.uival = 0;
+        setDefined(true);
+        /* Value has always changed if it became defined */
+        setValueChanged();
     }
-    if (interruptMask) {
-      uInt32CallbackMask |= interruptMask;
-      setValueChanged();
+
+    newValue = data.uival;
+    /* Clear bits covered by mask */
+    newValue &= ~valueMask;
+    /* Insert bits from value */
+    newValue |= (value & valueMask);
+
+    if (data.uival != newValue)
+    {
+        /* Set the bits in the callback mask that have changed */
+        uInt32CallbackMask |= (data.uival ^ newValue);
+        /* Update uival content */
+        data.uival = newValue;
+        setValueChanged();
+    }
+    if (interruptMask)
+    {
+        uInt32CallbackMask |= interruptMask;
+        setValueChanged();
     }
 }
 
