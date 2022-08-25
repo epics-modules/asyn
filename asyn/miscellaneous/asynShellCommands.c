@@ -621,7 +621,32 @@ static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
 static const iocshFuncDef asynSetTraceMaskDef =
-    {"asynSetTraceMask", 3, asynSetTraceMaskArgs};
+    {"asynSetTraceMask", 3, asynSetTraceMaskArgs
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+     ,
+#else
+    };
+static const char asynSetTraceMaskUsage[] =
+#endif
+     "Set logging level bit mask, either as a number,"
+     "  or since asyn R4-35 a combination of names.\n"
+     "  mask bits\n"
+     "    0x01 - ERROR\n"
+     "    0x02 - DEVICE\n"
+     "    0x04 - FILTER\n"
+     "    0x08 - DRIVER\n"
+     "    0x10 - FLOW\n"
+     "    0x20 - WARNING\n"
+     "\n"
+     "  eg. the following are equivalent\n"
+     "    asynSetTraceMask MYPORT -1 0x21\n"
+     "    asynSetTraceMask MYPORT -1 \"WARNING+ERROR\"\n"
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+    };
+#define asynSetTraceMaskUsage asynSetTraceMaskDef.usage
+#else
+    ;
+#endif
 ASYN_API int
  asynSetTraceMask(const char *portName,int addr,int mask)
 {
@@ -673,7 +698,7 @@ static int asynTraceMaskStringToInt(const char* maskStr) {
     } while ((*maskStr == '|' || *maskStr == '+') && maskStr++);
     if (*maskStr)
     {
-        printf("Mask string invalid at \"%s\"\n", maskStr);
+        printf("%s\nError: Mask string invalid at \"%s\"\n", asynSetTraceMaskUsage, maskStr);
     }
     return mask;
 }
@@ -691,7 +716,29 @@ static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
 static const iocshFuncDef asynSetTraceIOMaskDef =
-    {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs};
+    {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+     ,
+#else
+    };
+static const char asynSetTraceIOMaskUsage[] =
+#endif
+    "Set logging I/O print formatting bit mask, either as a number,\n"
+    "  or since asyn R4-35 a combination of names.\n"
+    "  mask bits\n"
+    "    0x01 - ASCII\n"
+    "    0x02 - ESCAPE\n"
+    "    0x04 - HEX\n"
+    "\n"
+    "  eg. the following are equivalent\n"
+    "    asynSetTraceIOMask MYPORT -1 0x6\n"
+    "    asynSetTraceIOMask MYPORT -1 \"ESCAPE+HEX\"\n"
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+    };
+#define asynSetTraceIOMaskUsage asynSetTraceIOMaskDef.usage
+#else
+    ;
+#endif
 ASYN_API int
  asynSetTraceIOMask(const char *portName,int addr,int mask)
 {
@@ -739,7 +786,7 @@ static int asynTraceIOMaskStringToInt(const char* maskStr) {
     } while ((*maskStr == '|' || *maskStr == '+') && maskStr++);
     if (*maskStr)
     {
-        printf("Mask string invalid at \"%s\"\n", maskStr);
+        printf("%s\nError: Mask string invalid at \"%s\"\n", asynSetTraceIOMaskUsage, maskStr);
     }
     return mask;
 }
