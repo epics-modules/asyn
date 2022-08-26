@@ -24,7 +24,7 @@ init:
   #- ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 # Set clone depth (do not fetch complete history)
-clone_depth: 50
+clone_depth: 5
 
 # Skipping commits affecting only specific files
 skip_commits:
@@ -134,11 +134,11 @@ build_script:
   - cmd: python .ci/cue.py build
 
 test_script:
-  - cmd: python .ci/cue.py test
+  - cmd: python .ci/cue.py -T 20M test
 
 on_finish:
   - ps: Get-ChildItem *.tap -Recurse -Force | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
-  - cmd: python .ci/cue.py test-results
+  - cmd: python .ci/cue.py -T 5M test-results
 
 #---------------------------------#
 #         debugging               #
@@ -160,10 +160,4 @@ on_finish:
 #---------------------------------#
 
 notifications:
-
-  - provider: Email
-    to:
-      - me@example.com
-    on_build_success: false
-
   - provider: GitHubPullRequest

@@ -1,4 +1,6 @@
 MODULES="sncseq"
 
 BASE=3.15
+BASE_RECURSIVE=no
+
 SNCSEQ=R2-2-8
