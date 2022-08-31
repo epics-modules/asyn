@@ -14,7 +14,7 @@ dev_NAME__LIBS += $(EPICS_BASE_IOC_LIBS)
 
 # Install .dbd and .db files
 DBD += dev_NAME_.dbd
-DB_INSTALLS += dev_NAME_.db
+DB += dev_NAME_.db
 
 #=======================================
 include $(TOP)/configure/RULES
