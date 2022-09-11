@@ -8,6 +8,6 @@
 #include "ParamValValueNotChanged.h"
 
 ParamValValueNotChanged::ParamValValueNotChanged(const std::string& description):
-logic_error(description){
+std::logic_error(description){
 }
 

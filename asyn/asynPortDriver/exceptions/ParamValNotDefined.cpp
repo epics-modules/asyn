@@ -8,6 +8,6 @@
 #include "ParamValNotDefined.h"
 
 ParamValNotDefined::ParamValNotDefined(const std::string& description):
-    logic_error(description){
+    std::logic_error(description){
 }
 

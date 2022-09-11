@@ -10,8 +10,7 @@
 
 #include <stdexcept>
 
-using std::logic_error;
-class ParamValValueNotChanged: public logic_error {
+class ParamValValueNotChanged: public std::logic_error {
 public:
     ParamValValueNotChanged(const std::string& description);
 };
