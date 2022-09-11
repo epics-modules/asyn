@@ -570,7 +570,7 @@ prologixGPIBConfigure(const char *portName, const char *host, int priority, int 
     else
         sprintf(pdpvt->hostTCP, "%s:1234 TCP", host);
     drvAsynIPPortConfigure(pdpvt->portNameTCP, pdpvt->hostTCP,
-                                               priority, 
+                                               priority,
                                                1, /* No auto connect  */
                                                1  /* No process EOS */ );
     status = pasynCommonSyncIO->connect(pdpvt->portNameTCP, -1,
@@ -585,7 +585,7 @@ prologixGPIBConfigure(const char *portName, const char *host, int priority, int 
         printf("Can't find ASYN port \"%s\".\n", pdpvt->portNameTCP);
         return;
     }
-     
+
     /*
      * Register as a GPIB driver
      */
