@@ -1,4 +1,4 @@
-[![ASYN](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts.yml/badge.svg)](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts.yml)
+[![ASYN Github Actions](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts.yml/badge.svg)](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts.yml)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/epics-modules/asyn?branch=master&svg=true)](https://ci.appveyor.com/project/MarkRivers/asyn)
 
 asyn
