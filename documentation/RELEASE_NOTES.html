@@ -14,7 +14,7 @@
     <h2>
       Release 4-43</h2>
     <h2>
-      January XXX, 2022</h2>
+      September 12, 2022</h2>
   </div>
   <h3>
     devEpics
@@ -49,35 +49,63 @@
     <li>Add Remote Enable (REN), Local Lockout (LLO), and Go To Local (GTL) support.</li>
   </ul>
   <h3>
-    asynPortDriver/paramVal
+    asynPortDriver
   </h3>
   <ul>
-    <li>Fixed initialization problem for UInt32 parameters. Initially setting a parameter to 0 left the
-      corresponding PV undefined because the callback wasn't called. Thanks to Erico Nogueira for this fix.</li>
+    <li>Fixed initialization problem for UInt32 parameters. Initially setting a parameter
+      to 0 left the corresponding PV undefined because the callback wasn't called. Thanks
+      to Erico Nogueira for this fix.</li>
+    <li>Removed "using std::logic_error" from parameter header files. This is bad practice.
+      This change could potentially break downstream module that would now have to use
+      std::logic_error, rather than just logic_error. This is unlikely since the param
+      classes are essential private to asynPortDriver. Thanks to Luka Krmpotic for this
+      fix.</li>
   </ul>
   <h3>
     drvAsynIPServerPort
   </h3>
   <ul>
-    <li>Allow specifying an interface to bind the IP server port.  
-      The second argument to drvAsynIPServerPortConfigure allows specifying a hostname or IP address for multi-homed machines.
-      If you want to specify any interface, use "localhost:port", an empty host ":port" or the address "0.0.0.0:port". 
-      The address has to be an existing interface on the host. If the name cannot be resolved, the call will fail. 
-      If you need the loopback interface, use "127.0.0.1:port".
-      Thanks to Lutz Rossa for this.</li>
+    <li>Allow specifying an interface to bind the IP server port. The second argument
+      to drvAsynIPServerPortConfigure allows specifying a hostname or IP address for multi-homed
+      machines. If you want to specify any interface, use "localhost:port", an empty host
+      ":port" or the address "0.0.0.0:port". The address has to be an existing interface
+      on the host. If the name cannot be resolved, the call will fail. If you need the
+      loopback interface, use "127.0.0.1:port". Thanks to Lutz Rossa for this.</li>
   </ul>
   <h3>
     asynShellCommands
   </h3>
   <ul>
-    <li>Provide usage information for asynSetTraceMask and asynSetTraceIOMask.  This is helpful for remembering how
-      to specify the bit masks numerically or symbolically.  Thanks to Michael Davidsaver for this.</li>
+    <li>Provide usage information for asynSetTraceMask and asynSetTraceIOMask. This is
+      helpful for remembering how to specify the bit masks numerically or symbolically.
+      Thanks to Michael Davidsaver for this.</li>
+  </ul>
+  <h3>
+    asynManager
+  </h3>
+  <ul>
+    <li>Added asynDisconnected and asynDisabled in strStatus(). Thanks to Kristian Loki
+      for this.</li>
   </ul>
   <h3>
     configure/RELEASE
   </h3>
   <ul>
-    <li>All external modules are commented out.  Users will need to uncomment the ones to be used.</li>
+    <li>All external modules are commented out. Users will need to uncomment the ones
+      to be used.</li>
+  </ul>
+  <h3>
+    drvVxi11
+  </h3>
+  <ul>
+    <li>Fix potential VXI connection resource leak. Thanks to Freddie Akeroyd for this.</li>
+  </ul>
+  <h3>
+    .ci
+  </h3>
+  <ul>
+    <li>Change from Travis to Github Actions. Thanks to Michael Davidsaver for this.</li>
+    <li>Add support from sscan, calc, and ipac. Thanks to Freddie Akeroyd for this.</li>
   </ul>
   <h3>
     devGPIB and streamSCPI template files
@@ -85,10 +113,12 @@
   <ul>
     <li>Changed DB_INSTALLS+= to DB+= to work with recent versions of EPICS.</li>
   </ul>
-  <h2>
-    Release 4-42</h2>
-  <h2>
-    May 10, 2021</h2>
+  <div style="text-align: center">
+    <hr />
+    <h2>
+      Release 4-42</h2>
+    <h2>
+      May 10, 2021</h2>
   </div>
   <h3>
     drvProligixGPIB
