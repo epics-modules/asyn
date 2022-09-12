@@ -14,12 +14,12 @@
     <h1>
       asynDriver: EPICS Driver Support</h1>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">Release 4-42</span></p>
+      <span style="font-weight: bold; font-size: 14pt">Release 4-43</span></p>
     <p>
       <span style="font-weight: bold; font-size: 14pt">Mark Rivers, Eric Norum, and Marty
         Kraimer</span></p>
     <p>
-      <span style="font-weight: bold; font-size: 14pt">May 10, 2021</span></p>
+      <span style="font-weight: bold; font-size: 14pt">September 12, 2022</span></p>
     <h3 style="text-align: center">
       Other Contributers</h3>
     <p>
@@ -5781,10 +5781,10 @@ asynOctetSetOutputEos("A1",0,"\r")
       on (e.g. "localhost:4002" for TCP, "localhost:4002 UDP" for UDP). This allows to
       specify a host name or ip address for multi-homed machines. If you want to specify
       <b>*any*</b> interface, use the example &quot;localhost:port&quot;, an empty host
-      &quot;:port&quot; or the any address &quot;0.0.0.0:port&quot;. The address has
-      to be an existing interface on the host. If the name cannot be resolved, the call
-      will complain and fail. If you need the loopback interface, use &quot;127.0.0.1:port&quot;.
-      </li>
+      &quot;:port&quot; or the any address &quot;0.0.0.0:port&quot;. The address has to
+      be an existing interface on the host. If the name cannot be resolved, the call will
+      complain and fail. If you need the loopback interface, use &quot;127.0.0.1:port&quot;.
+    </li>
     <li>maxClients - the maximum number of IP clients that can be simultaneously connected
       on this port. Additional connect requests will fail.</li>
     <li>priority - Priority at which the listener thread and any asyn I/O ports it creates
@@ -6104,21 +6104,22 @@ gsIP488Configure("L0",0,0,0x61,0,0)</pre>
     The device remote enable is written by a record with</p>
   <pre>OUT="@asyn(port, 0, 0) REN") </pre>
   <p>
-    Typically the record type will be bo but writing any non-zero value enables remote operation.</p>
+    Typically the record type will be bo but writing any non-zero value enables remote
+    operation.</p>
   <h5>
     Local Lockout (LLO)</h5>
   <p>
     The IEEE-488 local lockout command is sent by processing a record with</p>
   <pre>OUT="@asyn(port, 0, 0) LLO") </pre>
   <p>
-    Typically the record type will be bo.  The value written is ignored.</p>
+    Typically the record type will be bo. The value written is ignored.</p>
   <h5>
     Go To Local (GTL)</h5>
   <p>
     The IEEE-488 go to local command is sent by processing a record with</p>
   <pre>OUT="@asyn(port, 0, 0) GTL") </pre>
   <p>
-    Typically the record type will be bo.  The value written is ignored.</p>
+    Typically the record type will be bo. The value written is ignored.</p>
   <h4>
     Linux udev configuration</h4>
   <p>
