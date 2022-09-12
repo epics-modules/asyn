@@ -1,4 +1,4 @@
-[![Travis Build Status](https://travis-ci.org/epics-modules/asyn.svg?branch=master)](https://travis-ci.org/epics-modules/asyn)
+[![ASYN](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts-build.yml/badge.svg)](https://github.com/epics-modules/asyn/actions/workflows/ci-scripts-build.yml)
 [![Appveyor Build Status](https://ci.appveyor.com/api/projects/status/github/epics-modules/asyn?branch=master&svg=true)](https://ci.appveyor.com/project/MarkRivers/asyn)
 
 asyn
