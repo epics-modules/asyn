@@ -169,12 +169,13 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += devAsynInt32.c
   asyn_SRCS += devAsynInt8Array.c
   asyn_SRCS += devAsynInt16Array.c
-  asyn_SRCS += devAsynInt32Array.c
+#  asyn_SRCS += devAsynInt32Array.c
   asyn_SRCS += devAsynInt32TimeSeries.c
   asyn_SRCS += devAsynUInt32Digital.c
   asyn_SRCS += devAsynFloat64.c
   asyn_SRCS += devAsynFloat32Array.c
   asyn_SRCS += devAsynFloat64Array.c
+  asyn_SRCS += devAsynXXXArray.cpp
   asyn_SRCS += devAsynFloat64TimeSeries.c
 
   # These require 64-bit support
