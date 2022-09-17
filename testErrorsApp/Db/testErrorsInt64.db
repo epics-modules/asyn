@@ -58,3 +58,34 @@ record(waveform, "$(P)WfInt64OutRB")
     info("asyn:FIFO", "$(FIFO)")
 }
 
+record(aai, "$(P)AaiInt64In")
+{
+    field(DTYP, "asynInt64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt64Out")
+{
+    field(DTYP, "asynInt64ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(aao, "$(P)AaoInt64OutRB")
+{
+    field(DTYP, "asynInt64ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT64_ARRAY_VALUE")
+    field(FTVL, "INT64")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
