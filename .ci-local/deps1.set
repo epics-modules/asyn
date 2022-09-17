@@ -1,6 +1,5 @@
 MODULES="sncseq sscan calc ipac"
 
-BASE=3.14
 BASE_RECURSIVE=no
 
 SNCSEQ=R2-2-8
