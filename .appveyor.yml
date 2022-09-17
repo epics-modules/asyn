@@ -92,23 +92,30 @@ environment:
 
   matrix:
   - CMP: vs2019
-    SET: base7
+    BASE: "7.0"
+    SET: "deps2"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: gcc
-    SET: base7
+    BASE: "7.0"
+    SET: "deps2"
   - CMP: vs2019
-    SET: base3-15
+    BASE: "3.15"
+    SET: "deps2"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: vs2019
-    SET: base3-14
+    BASE: "3.14"
+    SET: "deps1"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   #- CMP: vs2017
-  #  SET: base7
+  #  BASE: "7.0"
+  #  SET: "deps2"
   #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - CMP: vs2015
-    SET: base7
+    BASE: "7.0"
+    SET: "deps2"
   #- CMP: vs2013
-  #  SET: base7
+  #  BASE: "7.0"
+  #  SET: "deps2"
 
 # Platform: processor architecture
 platform:
