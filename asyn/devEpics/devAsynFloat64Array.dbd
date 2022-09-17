@@ -1,2 +1,0 @@
-device(waveform,INST_IO,asynFloat64ArrayWfIn,"asynFloat64ArrayIn")
-device(waveform,INST_IO,asynFloat64ArrayWfOut,"asynFloat64ArrayOut")
