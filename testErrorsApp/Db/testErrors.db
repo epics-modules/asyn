@@ -611,7 +611,7 @@ record(waveform, "$(P)WfFloat64OutRB")
 
 
 ###################################################################
-#  Waveform Records that use devAsynXXXArray                      #
+#  aao and aai Records that use devAsynXXXArray                   #
 ###################################################################
 record(aai, "$(P)AaiInt8In")
 {
