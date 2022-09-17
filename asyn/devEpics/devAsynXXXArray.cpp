@@ -166,6 +166,7 @@ public:
         scanIoInit(&ioScanPvt_);
         /* Determine if device can block */
         pasynManager->canBlock(pasynUser_, &canBlock_);
+        return;
     bad:
         recGblSetSevr(pRecord_, LINK_ALARM, INVALID_ALARM);
         pRecord_->pact=1;
