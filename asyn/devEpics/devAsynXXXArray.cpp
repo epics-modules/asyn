@@ -1,3 +1,17 @@
+/* devAsynXXXArray.cpp */
+/***********************************************************************
+* Copyright (c) 2002 The University of Chicago, as Operator of Argonne
+* National Laboratory, and the Regents of the University of
+* California, as Operator of Los Alamos National Laboratory, and
+* Berliner Elektronenspeicherring-Gesellschaft m.b.H. (BESSY).
+* asynDriver is distributed subject to a Software License Agreement
+* found in file LICENSE that is included with this distribution.
+***********************************************************************/
+/*
+    Authors:  Mark Rivers
+    30-Sept-2022
+*/
+
 #include <alarm.h>
 #include <callback.h>
 #include <devSup.h>
@@ -31,6 +45,10 @@
 #define INIT_ERROR -1
 
 static const char *driverName = "devAsynXXXArray";
+
+
+// We use an anonymous namespace to hide these definitions
+namespace {
 
 template <typename RECORD_TYPE, typename INTERFACE, typename INTERRUPT, typename EPICS_TYPE>
 class devAsynXXXArray
@@ -441,8 +459,7 @@ public:
     }
 };
 
-extern "C" {
-typedef struct analogDset { /* analog  dset */
+struct analogDset { /* analog  dset */
     long          number;
     DEVSUPFUN     dev_report;
     DEVSUPFUN     init;
@@ -450,7 +467,9 @@ typedef struct analogDset { /* analog  dset */
     long          (*get_ioint_info)(int cmd, dbCommon *pr, IOSCANPVT *iopvt);
     long          (*process)(dbCommon *pr);
     DEVSUPFUN     special_linconv;
-} analogDset;
+};
+
+} // End of namespace
 
 #define MAKE_DEVSUP(DSET, REC, LINK, INTERFACE, INTERFACE_NAME, INTERRUPT, EPICS_TYPE,     \
                     INIT_FUNC, GET_INFO_FUNC, PROC_FUNC, QRCB_FUNC, INTCB_FUNC,            \
@@ -481,9 +500,10 @@ static long INIT_FUNC(dbCommon *pr) {                                           
                         INTERFACE_NAME, QRCB_FUNC, INTCB_FUNC);                            \
     return 0;                                                                              \
 }                                                                                          \
-analogDset DSET = {6, 0, 0, INIT_FUNC, GET_INFO_FUNC, PROC_FUNC, 0};                       \
+static analogDset DSET = {6, 0, 0, INIT_FUNC, GET_INFO_FUNC, PROC_FUNC, 0};                       \
 epicsExportAddress(dset, DSET);
 
+extern "C" {
 // 8-bit integer arrays
 MAKE_DEVSUP(asynInt8ArrayWfIn, waveformRecord, inp, asynInt8Array, "asynInt8Array", interruptCallbackInt8Array, epicsInt8,
             initInt8WfIn, getInfoInt8WfIn, processInt8WfIn, qrCallbackInt8WfIn, intCallbackInt8WfIn,
