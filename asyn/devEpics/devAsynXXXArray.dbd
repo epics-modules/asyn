@@ -1,0 +1,24 @@
+device(waveform, INST_IO, asynInt8ArrayWfIn,    "asynInt8ArrayIn")
+device(waveform, INST_IO, asynInt8ArrayWfOut,   "asynInt8ArrayOut")
+device(aai,      INST_IO, asynInt8ArrayAai,     "asynInt8ArrayIn")
+device(aao,      INST_IO, asynInt8ArrayAao,     "asynInt8ArrayOut")
+
+device(waveform, INST_IO, asynInt16ArrayWfIn,    "asynInt16ArrayIn")
+device(waveform, INST_IO, asynInt16ArrayWfOut,   "asynInt16ArrayOut")
+device(aai,      INST_IO, asynInt16ArrayAai,     "asynInt16ArrayIn")
+device(aao,      INST_IO, asynInt16ArrayAao,     "asynInt16ArrayOut")
+
+device(waveform, INST_IO, asynInt32ArrayWfIn,    "asynInt32ArrayIn")
+device(waveform, INST_IO, asynInt32ArrayWfOut,   "asynInt32ArrayOut")
+device(aai,      INST_IO, asynInt32ArrayAai,     "asynInt32ArrayIn")
+device(aao,      INST_IO, asynInt32ArrayAao,     "asynInt32ArrayOut")
+
+device(waveform, INST_IO, asynFloat32ArrayWfIn,  "asynFloat32ArrayIn")
+device(waveform, INST_IO, asynFloat32ArrayWfOut, "asynFloat32ArrayOut")
+device(aai,      INST_IO, asynFloat32ArrayAai,   "asynFloat32ArrayIn")
+device(aao,      INST_IO, asynFloat32ArrayAao,   "asynFloat32ArrayOut")
+
+device(waveform, INST_IO, asynFloat64ArrayWfIn,  "asynFloat64ArrayIn")
+device(waveform, INST_IO, asynFloat64ArrayWfOut, "asynFloat64ArrayOut")
+device(aai,      INST_IO, asynFloat64ArrayAai,   "asynFloat64ArrayIn")
+device(aao,      INST_IO, asynFloat64ArrayAao,   "asynFloat64ArrayOut")

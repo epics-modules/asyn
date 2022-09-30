@@ -1,2 +1,4 @@
-device(waveform,INST_IO,asynInt64ArrayWfIn,"asynInt64ArrayIn")
-device(waveform,INST_IO,asynInt64ArrayWfOut,"asynInt64ArrayOut")
+device(waveform, INST_IO, asynInt64ArrayWfIn,  "asynInt64ArrayIn")
+device(waveform, INST_IO, asynInt64ArrayWfOut, "asynInt64ArrayOut")
+device(aai,      INST_IO, asynInt64ArrayAai,   "asynInt64ArrayIn")
+device(aao,      INST_IO, asynInt64ArrayAao,   "asynInt64ArrayOut")

@@ -448,9 +448,8 @@ record(waveform, "$(P)WfInOctet")
    info(asyn:FIFO, "$(FIFO)")
 }
 
-
 ###################################################################
-#  Records that use devAsynXXXArray                               #
+#  Waveform Records that use devAsynXXXArray                      #
 ###################################################################
 record(waveform, "$(P)WfInt8In")
 {
@@ -602,6 +601,168 @@ record(waveform, "$(P)WfFloat64OutRB")
 {
     field(DTYP, "asynFloat64ArrayOut")
     field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+
+
+###################################################################
+#  aao and aai Records that use devAsynXXXArray                   #
+###################################################################
+record(aai, "$(P)AaiInt8In")
+{
+    field(DTYP, "asynInt8ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt8Out")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt8OutRB")
+{
+    field(DTYP, "asynInt8ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT8_ARRAY_VALUE")
+    field(FTVL, "CHAR")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aai, "$(P)AaiInt16In")
+{
+    field(DTYP, "asynInt16ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt16Out")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt16OutRB")
+{
+    field(DTYP, "asynInt16ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT16_ARRAY_VALUE")
+    field(FTVL, "SHORT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+}
+
+record(aai, "$(P)AaiInt32In")
+{
+    field(DTYP, "asynInt32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoInt32Out")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(aao, "$(P)AaoInt32OutRB")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))INT32_ARRAY_VALUE")
+    field(FTVL, "LONG")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aai, "$(P)AaiFloat32In")
+{
+    field(DTYP, "asynFloat32ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoFloat32Out")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+}
+
+record(aao, "$(P)AaoFloat32OutRB")
+{
+    field(DTYP, "asynFloat32ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT32_ARRAY_VALUE")
+    field(FTVL, "FLOAT")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info(asyn:READBACK,"1")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aai, "$(P)AaiFloat64In")
+{
+    field(DTYP, "asynFloat64ArrayIn")
+    field(INP,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    field(SCAN, "$(SCAN)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoFloat64Out")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
+    field(FTVL, "DOUBLE")
+    field(NELM, "100")
+    field(TSE,  "$(TSE)")
+    info("asyn:FIFO", "$(FIFO)")
+}
+
+record(aao, "$(P)AaoFloat64OutRB")
+{
+    field(DTYP, "asynFloat64ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))FLOAT64_ARRAY_VALUE")
     field(FTVL, "DOUBLE")
     field(NELM, "100")
     field(TSE,  "$(TSE)")
