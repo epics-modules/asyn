@@ -2,15 +2,15 @@
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <title>asynDriver: Asynchronous Driver Support - Release Notes</title>
-  <meta content="text/html; charset=ISO-8859-1" http-equiv="Content-Type" />
+  <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
 </head>
-<body xml:lang="en">
+<body lang="en">
   <div style="text-align: center">
     <h1>
       asynDriver: Release Notes</h1>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-44</h2>
     <h2>
@@ -32,7 +32,7 @@
     <li>Add aai and aao records to databases in order to test new device support for these.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-43</h2>
     <h2>
@@ -136,7 +136,7 @@
     <li>Changed DB_INSTALLS+= to DB+= to work with recent versions of EPICS.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-42</h2>
     <h2>
@@ -153,7 +153,7 @@
   <h3>
     asynPortDriver</h3>
   <ul>
-    <li>Added checks for invalid list (<0 or >=maxAddr).</li>
+    <li>Added checks for invalid list (&lt;0 or &ge;maxAddr).</li>
     <li>Added new error code asynParamInvalidList that is returned if the list passed
       is not valid.</li>
   </ul>
@@ -173,7 +173,7 @@
     <li>Minor changes to avoid compiler warnings.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-41</h2>
     <h2>
@@ -197,7 +197,7 @@
       of gcc (e.g. 8.3.1).</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-40-1</h2>
     <h2>
@@ -212,7 +212,7 @@
       defined then SO_REUSEADDR is used instead.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-40</h2>
     <h2>
@@ -311,7 +311,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-39</h2>
     <h2>
@@ -370,7 +370,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-38</h2>
     <h2>
@@ -398,7 +398,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-37</h2>
     <h2>
@@ -410,7 +410,7 @@
     <ul>
       <li>asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.</li>
       <li>asynDriver.h now does the typedef of epicsInt64 and epicsUInt64 when __STDC_VERSION__
-        &lt 199901L on EPICS 3.14. This allows the Int64 interfaces to be built as long
+        &lt; 199901L on EPICS 3.14. This allows the Int64 interfaces to be built as long
         as the compiler supports the <code>long long</code> and <code>unsigned long long</code>
         data types.</li>
       <li>devEpics.dbd is now constructed at build time rather than being a static file.
@@ -456,7 +456,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-36</h2>
     <h2>
@@ -490,7 +490,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-35</h2>
     <h2>
@@ -577,7 +577,7 @@
     </ul>
   </div>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-34</h2>
     <h2>
@@ -640,7 +640,7 @@
     <li>Fixed to fetch Debian files from nsls2 with https not http.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-33</h2>
     <h2>
@@ -775,7 +775,7 @@
       medm screen shots to show how they work.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-32</h2>
     <h2>
@@ -842,7 +842,7 @@
       site-specific customization.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-31</h2>
     <h2>
@@ -884,7 +884,7 @@
     <li>Fixed bugs in Unix sockets.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-30</h2>
     <h2>
@@ -957,7 +957,7 @@
       the new alarm handling behavior.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-29</h2>
     <h2>
@@ -995,7 +995,7 @@
     <li>Improved debugging output with ASYN_TRACEIO_DRIVER. Previously there was no asynTrace
       output if recv() or recvfrom() returned &le;0. It is often useful to know if these
       functions returned 0, so the asynTrace output is now only suppressed if these functions
-      return &lt;0.<br />
+      return &lt;0.<br>
       There was previously no ASYN_TRACEIO_DRIVER output from the flushIt() function,
       which repeatedly calls recv() until the return value is &le;0. ASYN_TRACEIO_DRIVER
       will now print a message with the total number of bytes flushed in this function,
@@ -1051,7 +1051,7 @@
     <li>Replaced tab characters with spaces. Tabs in source files are bad practice.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-28</h2>
     <h2>
@@ -1078,7 +1078,7 @@
     The native OS call version only builds on Linux. This is used for testing the UDP
     broadcast problem fixed in this release.</p>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-27</h2>
     <h2>
@@ -1116,11 +1116,11 @@
     drvAsynIPPort</h3>
   <ul>
     <li>Added the option to automatically close the port when there is a read timeout.
-      This was done by changing the syntax of the drvAsynIPConfigure command from<br />
+      This was done by changing the syntax of the drvAsynIPConfigure command from<br>
       <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,noProcessEos)</code>
       to
-      <br />
-      <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,userFlags)</code><br />
+      <br>
+      <code>drvAsynIPPortConfigure("portName","hostInfo",priority,noAutoConnect,userFlags)</code><br>
       userFlags: bit-wise ORed:
       <ul>
         <li>Bit 0 is USERFLAG_NO_PROCESS_EOS. If 0 then asynInterposeEosConfig is called specifying
@@ -1180,7 +1180,7 @@
       Thanks to Ambroz Bizjak for finding this problem.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-26</h2>
     <h2>
@@ -1190,8 +1190,8 @@
     devEpics</h3>
   <ul>
     <li>Added capability for output records to update their values with a callback from
-      the driver. This is enabled by adding the following info tag to the output record:<br />
-      <code>info(asyn:READBACK, "1")</code><br />
+      the driver. This is enabled by adding the following info tag to the output record:<br>
+      <code>info(asyn:READBACK, "1")</code><br>
       The output record value will update any time the driver does a callback with a new
       value. The output record alarm status and severity will also update to reflect the
       value passed by the driver in pasynUser->auxStatus. The driver callbacks use the
@@ -1218,7 +1218,7 @@
       all modified parameters.</li>
   </ul>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-25</h2>
     <h2>
@@ -1295,7 +1295,7 @@
     the hostInfo string, a single command string to send to the server, and optionally
     the input and output EOS. It then prints out the response from the server. There
     are 3 example shell scipts that show how to use testAsynIPPortClient to communicate
-    with a Web server, XPS motor controller, and a telnet host respectively.<br />
+    with a Web server, XPS motor controller, and a telnet host respectively.<br>
   </p>
   <h3>
     drvAsynUSBTMC</h3>
@@ -1346,7 +1346,7 @@
     does not even warn about this error, but it produces a fatal error with the GCC
     compiler under Cygwin.</p>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-23</h2>
     <h2>
@@ -1439,7 +1439,7 @@
     other configuration values, such as LINUX_GPIB and DRV_USBTMC are now defined in
     configure/CONFIG_SITE, not in RELEASE.</p>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-22</h2>
     <h2>
@@ -1598,7 +1598,7 @@ asynUnregisterTimeStampSource(const char *portName);
     Added calls to lock() and unlock() in simTask. This was previously a serious omission
     in this example driver. Thanks to Kay Kasemir for spotting this.</p>
   <div style="text-align: center">
-    <hr />
+    <hr>
     <h2>
       Release 4-21</h2>
     <h2>
@@ -2536,7 +2536,7 @@ if (saveEosLen)
     drvGsIP488</h3>
   <p>
     Hold off SRQ callbacks until iocInit.</p>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Release 4-7</h2>
@@ -2588,7 +2588,7 @@ if (saveEosLen)
     Fix timeout settings on RTEMS.</p>
   <p>
     Add support for UDP broadcasts. Specify "UDP*" and the network broadcast address
-    in the port configuration command:<br />
+    in the port configuration command:<br>
     <code>drvAsynIPPortConfigure("L0", "192.168.1.255:1234 UDP*", 0, 0, 0)</code></p>
   <h3>
     drvAsynSerialPort</h3>
@@ -3136,7 +3136,7 @@ if (saveEosLen)
       </ul>
     </li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Release 2-1</h2>
@@ -3175,7 +3175,7 @@ if (saveEosLen)
       </ul>
     </li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Release 1-2</h2>
@@ -3188,7 +3188,7 @@ if (saveEosLen)
     <li>Use sscanf to convert GPIB stringin response.</li>
     <li>Fix race condition in GPIB finish routines.</li>
   </ul>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Release 1-1</h2>
@@ -3210,7 +3210,7 @@ if (saveEosLen)
     <li>Added dbior support.</li>
     <li>Changed devGPIB to no longer cache EOS.</li>
   </ol>
-  <hr />
+  <hr>
   <div style="text-align: center">
     <h2>
       Release 1-0alpha2</h2>
