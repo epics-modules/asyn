@@ -96,6 +96,7 @@ public:
     devAsynXXXArray(dbCommon *pRecord, DBLINK *plink, int signedType, int unsignedType, bool isOutput, const char *interfaceType,
                     userCallback qrCallback, INTERRUPT interruptCallback):
         pRecord_((RECORD_TYPE*) pRecord),
+        ringSize_(0),
         interruptCallback_(interruptCallback),
         interfaceType_(epicsStrDup(interfaceType)),
         signedType_(signedType),
