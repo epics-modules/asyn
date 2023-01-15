@@ -52,6 +52,7 @@
 #include "asynInt64.h"
 #include "asynInt64SyncIO.h"
 #include "asynEpicsUtils.h"
+#include "devEpicsPvt.h"
 
 #define INIT_OK 0
 #define INIT_DO_NOT_CONVERT 2
@@ -253,16 +254,7 @@ static long initCommon(dbCommon *pr, DBLINK *plink,
      * then register for callbacks on output records */
     if (interruptCallback) {
         int enableCallbacks=0;
-        const char *callbackString;
-        DBENTRY *pdbentry = dbAllocEntry(pdbbase);
-        status = dbFindRecord(pdbentry, pr->name);
-        if (status) {
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s::%s error finding record\n",
-                pr->name, driverName, functionName);
-            goto bad;
-        }
-        callbackString = dbGetInfo(pdbentry, "asyn:READBACK");
+        const char *callbackString = asynDbGetInfo(pr, "asyn:READBACK");
         if (callbackString) enableCallbacks = atoi(callbackString);
         if (enableCallbacks) {
             status = createRingBuffer(pr);
@@ -295,16 +287,8 @@ static long createRingBuffer(dbCommon *pr)
     static const char *functionName="createRingBuffer";
 
     if (!pPvt->ringBuffer) {
-        DBENTRY *pdbentry = dbAllocEntry(pdbbase);
         pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
-        status = dbFindRecord(pdbentry, pr->name);
-        if (status) {
-            asynPrint(pPvt->pasynUser, ASYN_TRACE_ERROR,
-                "%s %s::%s error finding record\n",
-                pr->name, driverName, functionName);
-            return -1;
-        }
-        sizeString = dbGetInfo(pdbentry, "asyn:FIFO");
+        sizeString = asynDbGetInfo(pr, "asyn:FIFO");
         if (sizeString) pPvt->ringSize = atoi(sizeString);
         pPvt->ringBuffer = callocMustSucceed(pPvt->ringSize+1, sizeof *pPvt->ringBuffer, "devAsynInt64::createRingBuffer");
     }
