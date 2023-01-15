@@ -101,12 +101,15 @@ jobs:
 #            deps: "no-deps"
 #            cross: "RTEMS-pc686-qemu@5"
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         submodules: true
 
     - name: Prepare and compile EPICS dependencies
       run: python .ci/cue.py prepare
+
+    - name: TIRPC
+      run: echo TIRPC=YES > configure/CONFIG_SITE.Common.linux-x86_64
 
     - name: Build main module
       run: python .ci/cue.py build
@@ -116,7 +119,7 @@ jobs:
 
     - name: Upload tapfiles Artifact
       if: ${{ always() }}
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         name: tapfiles ${{ matrix.name }}
         path: '**/O.*/*.tap'
