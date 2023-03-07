@@ -4,6 +4,8 @@
 /db/
 /dbd/
 /html/
+_build/
+_docs/
 /include/
 /templates/
 /configure/*.local
