@@ -1110,7 +1110,6 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
     set the strings, values, and severities for record enum fields. This can be done
     both at iocInit(), in init_record() with the pasynEnumSyncIO->read() function,
     and after iocInit via callbacks to device support.
-  
 - devEpics
   - Added support for the new asynEnum interface for bo, bi, mbbo, and mbbi records
     in the asynInt32 and asynUInt32Digital device support. These records now attempt
