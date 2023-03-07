@@ -181,8 +181,8 @@
     maxchars, then previously it set the eom to ASYN_EOM_CNT using a bitwise OR. In
     this way, multiple flags can be propagated to the requester of the read. Since ASYN_EOM_CNT
     is not an end flag, but other two (ASYN_EOM_EOS and ASYN_EOM_END) are, it does not
-    make sense to propagate a combination of end and non-end flag. Thus if the nRead
-    >= maxchars is true, now set eom = ASYN_EOM_CNT, i.e. without bitwise OR. This
+    make sense to propagate a combination of end and non-end flag. Thus if the nRead >= maxchars is true, 
+    now set eom = ASYN_EOM_CNT, i.e. without bitwise OR. This
     fixes a problem with StreamDevice on some VXI-11 devices. Thanks to Jernej Varlec
     for this.
 - OPI files
@@ -211,11 +211,11 @@
 - devEpics.dbd is now constructed at build time rather than being a static file.
   This enables Int64 device support to only be included on EPICS 3.16.1 and later.
 - asynPortDriver adds support for 64-bit integers:
-  
     - New parameter types asynParamInt64 and asynParamInt64Array.
     - New methods setInteger64Param(), getInteger64Param(), readInt64(), writeInt64(),
       getBounds64(), readInt64Array(), writeInt64Array(), doCallbacksInt64Array().
     - New masks for constructor asynInt64Mask, asynInt64ArrayMask.
+
 - testErrors test application
   - Changes to driver, database and medm screens to test the Int64 interfaces. This
     uses the 64-bit device support which must be commented of out st.cmd if running
@@ -1645,8 +1645,7 @@ if (saveEosLen)
 - asynGpib
   - Read method now sets return status and *eomReason properly.
 - drvAsynIPPort/drvAsynSerialPort
-  
-    *eomReason now set to ASYN_EOM_CNT when read count has been satisfied.
+  - *eomReason now set to ASYN_EOM_CNT when read count has been satisfied.
   - Fix timeout settings on RTEMS.
   - Add support for UDP broadcasts. Specify "UDP*" and the network broadcast address
     in the port configuration command:<br>
