@@ -203,7 +203,7 @@
 
 ## Release 4-37 (October 18, 2019)
 - Added new 64-bit integer support
-  - asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.
+- asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.
 - asynDriver.h now does the typedef of epicsInt64 and epicsUInt64 when __STDC_VERSION__
   < 199901L on EPICS 3.14. This allows the Int64 interfaces to be built as long
   as the compiler supports the `long long` and `unsigned long long`
@@ -276,7 +276,7 @@
     but not case sensitive and the prefixes ASYN_, TRACE_, TRACEIO_, and TRACEINFO_
     are optional. Thanks to Dirk Zimoch for this. Examples:
     ```
-     asynSetTraceMask port,0,ASYN_TRACE_ERROR 
+    asynSetTraceMask port,0,ASYN_TRACE_ERROR 
     asynSetTraceIOMask port,0,ascii+escape 
     asynSetTraceInfoMask port,0,1+port+TRACEINFO_SOURCE|ASYN_TRACEINFO_THREAD
     ```
@@ -907,6 +907,7 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
 #define ASYN_TRACEINFO_SOURCE 0x0004
 #define ASYN_TRACEINFO_THREAD 0x0008
 ```
+
     - ASYN_TRACEINFO_TIME prints what has been printed in previous versions of asyn,
       the date and time of the message.
     - ASYN_TRACEINFO_PORT prints [port,addr,reason], where port is the port name, addr
