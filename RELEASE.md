@@ -450,10 +450,8 @@
               ```
               asynSetQueueLockPortTimeout(portName, timeout)
               ```
-            
             - If the pasynUser->timeout that is passed for a particular I/O operation is larger
               than the port timeout value this larger value is used instead.
-       
     - In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
       a newline, otherwise output is garbled
 - asynPortDriver
