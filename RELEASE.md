@@ -1827,7 +1827,6 @@ if (saveEosLen)
     He also thought of the way to handle support that uses one addressing scheme but
     wants to use support that has a different addressing scheme. For example support
     for mult-drop serial that wants to use the standard serial support
-
 - asynInterposeEos
   - If read reads maxchars, it forced the last character to be 0 and returned asynOverflow
     if it wasn't. This is fixed.
