@@ -453,7 +453,7 @@
               than the port timeout value this larger value is used instead.
           
         
-    - In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize <= 0 output
+    - In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
       a newline, otherwise output is garbled
 - asynPortDriver
     - Replaced "int" with "epicsInt32" in many places for consistency and to avoid compiler
@@ -570,11 +570,11 @@
           in the drvAsynIPPortConfigure command then asynOctet and asynOption interpose interfaces
           are used, and asynManager does not support removing interpose interfaces.
     - Improved debugging output with ASYN_TRACEIO_DRIVER. Previously there was no asynTrace
-      output if recv() or recvfrom() returned <=0. It is often useful to know if these
+      output if recv() or recvfrom() returned &le;0. It is often useful to know if these
       functions returned 0, so the asynTrace output is now only suppressed if these functions
       return <0.<br>
       There was previously no ASYN_TRACEIO_DRIVER output from the flushIt() function,
-      which repeatedly calls recv() until the return value is <=0. ASYN_TRACEIO_DRIVER
+      which repeatedly calls recv() until the return value is &le;0. ASYN_TRACEIO_DRIVER
       will now print a message with the total number of bytes flushed in this function,
       if the number is greater than 0.
 - asynRecord
@@ -1595,11 +1595,12 @@ if (saveEosLen)
     This allows device support to work with drivers that cannot return meaningful values
     in pasynInt32->getBounds because they do not know the range of the device. This
     is true, for example of Modbus ADCs. The nbits parameter is defined as follows:
-  <pre>  nbits > 0  Device is unipolar with a range from 0 to 2^nbits-1
-  nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
-           Values returned on the asynInt32 interface will be sign extended
-           using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
-  </pre>
+    ```
+      nbits > 0  Device is unipolar with a range from 0 to 2^nbits-1
+      nbits < 0  Device is bipolar with a range from -2^(abs(nbits)-1) to 2^((abs(nbits)-1)-1
+      Values returned on the asynInt32 interface will be sign extended
+      using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
+    ```
 - devEpics/devAsynInt32Array, devAsynFloat64Array
   - Added support for callbacks from driver to device support. This allows waveform
     records to have I/O Intr scanning, as already supported for other records in devEpics.
