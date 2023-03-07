@@ -447,12 +447,13 @@
             - Each port now has a queueLockPortTimeout value. This is set to a default of 2.0
               seconds when the port is created.
             - This can be changed with a new iocsh command
-              <pre>asynSetQueueLockPortTimeout(portName, timeout)</pre>
+              ```
+              asynSetQueueLockPortTimeout(portName, timeout)
+              ```
             
             - If the pasynUser->timeout that is passed for a particular I/O operation is larger
               than the port timeout value this larger value is used instead.
-          
-        
+       
     - In traceVprintIOSource if the traceIOMask is 0 or traceTruncateSize &le; 0 output
       a newline, otherwise output is garbled
 - asynPortDriver
@@ -1261,12 +1262,13 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Changes to allow building on Cygwin 1.7.x or 1.5.x; replaced rpc with $(CYGWIN_RPC_LIB),
     which allows it to link with rpc on 1.5.x and tirpc on 1.7.x. You need to add one
     of the following 2 lines to `base/configure/os/CONFIG_SITE.cygwin-x86.cygwin-x86`
-  <pre>    For Cygwin 1.7.x:
+    ```
+    For Cygwin 1.7.x:
     CYGWIN_RPC_LIB = tirpc
 
     For Cygwin 1.5.x
     CYGWIN_RPC_LIB = rpc
-  </pre>
+    ```
 
 ## Release 4-14 (July 29, 2010)
 - asynDriver
@@ -1487,7 +1489,9 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
     be safe to simply change these calls to their non-Raw equivalent. If you're paranoid
     about someone interposing the end-of-string processing layer you could add something
     like the following to ensure that there is no end-of-string to match:
-  <pre>pasynOctet->setInputEos(asynOctetPvt,pasynUser,NULL,0);</pre>
+    ```
+    pasynOctet->setInputEos(asynOctetPvt,pasynUser,NULL,0);
+    ```
   - If you need to switch to 'raw' mode for a while and then back to 'eos mode', you
     can use code similar to that in devGpib.c:readArbitraryBlockProgramData:
 ```
@@ -1587,10 +1591,13 @@ if (saveEosLen)
 ## Release 4-8 (April 28, 2007)
 - devEpics/devAsynInt32
   - Added support for link specification of
-  <pre>@asynMask(portName,addr,nbits,timeout)drvParams</pre>
-  
+    ```
+    @asynMask(portName,addr,nbits,timeout)drvParams
+    ```
     in addition to the previous support for
-  <pre>@asyn(portName,addr,timeout)drvParams</pre>
+    ```
+    @asyn(portName,addr,timeout)drvParams
+    ```
   
     This allows device support to work with drivers that cannot return meaningful values
     in pasynInt32->getBounds because they do not know the range of the device. This
@@ -1781,11 +1788,13 @@ if (saveEosLen)
       - This is a new interface for driver's that call other drivers.
 - cancelInterruptUser
   - The cancelInterruptUser methods of all interfaces has been changed from
-  <pre>    asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);</pre>
-  
+    ```
+     asynStatus (*cancelInterruptUser)(void *registrarPvt, asynUser *pasynUser);
+    ``` 
     to
-  <pre>    asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
-                                      void *registrarPvt);</pre>
+    ```
+     asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser, void *registrarPvt);
+    ```
 - asynTrace
   - The length and size arguments now have type `size_t`.
 - devGpib
