@@ -1872,7 +1872,6 @@ if (saveEosLen)
           ```
           device(ai,INST_IO,asynAiInt32,"asynInt32")
           ```
-      
     - asynOctetSyncIO
         - All read and write methods now return asynStatus and have additional args to return
           the number of bytes sent/received.
