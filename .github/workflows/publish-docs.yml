@@ -1,0 +1,60 @@
+name: Publish Sphinx Docs to GitHub Pages
+on:
+  # Build the docs on pushes to main branch, PRs to main branch, and new tags.
+  # Publish only on demand.
+  push:
+    branches:
+      - master
+    tags:
+      - '*'  # all tags
+  workflow_dispatch:   # allow manual triggering
+    inputs:
+      deploy:
+        description: 'Deploy documentation'
+        type: boolean
+        required: true
+        default: false
+
+
+# see: https://sphinx-notes.github.io/pages/
+# see: https://github.com/marketplace/actions/sphinx-to-github-pages
+
+jobs:
+
+  build-docs:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Deploy Information
+      if: ${{ github.event.inputs.deploy }}
+      run: |
+        echo "The will be published from this workflow run."
+
+    - name: Checkout
+      uses: actions/checkout@master
+      with:
+        fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
+
+    - name: Install pip
+      run: |
+        sudo apt-get -y update
+        sudo apt-get -y install python3-pip
+        which pip3
+        which pip
+
+    - name: Install packages used by Sphinx
+      run: |
+        pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
+        pip list
+
+    - name: Build and Commit
+      uses: sphinx-notes/pages@v2
+      with:
+        # path to conf.py directory
+        documentation_path: docs/source
+
+    - name: Push changes
+      uses: ad-m/github-push-action@master
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        branch: gh-pages
