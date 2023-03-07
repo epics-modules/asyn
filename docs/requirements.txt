@@ -1,0 +1,7 @@
+sphinx
+sphinx-rtd-theme>=1.2.0
+m2r2
+sphinx-multibuild
+breathe
+Jinja2<3.1
+mistune<0.8.5
