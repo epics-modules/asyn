@@ -901,12 +901,12 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Added new asynTraceInfoMask. This mask controls the information printed at the beginning
     of each message by asynPrint and asynPrintIO. Thanks to Ulrik Pedersen for help
     with this. The mask is defined with the following bits:
-```
-#define ASYN_TRACEINFO_TIME 0x0001
-#define ASYN_TRACEINFO_PORT 0x0002
-#define ASYN_TRACEINFO_SOURCE 0x0004
-#define ASYN_TRACEINFO_THREAD 0x0008
-```
+    ```
+    #define ASYN_TRACEINFO_TIME 0x0001
+    #define ASYN_TRACEINFO_PORT 0x0002
+    #define ASYN_TRACEINFO_SOURCE 0x0004
+    #define ASYN_TRACEINFO_THREAD 0x0008
+    ```
 
     - ASYN_TRACEINFO_TIME prints what has been printed in previous versions of asyn,
       the date and time of the message.
