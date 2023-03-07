@@ -115,16 +115,16 @@
 - Build system
   - Fixed logic for when CALC and SSCAN modules are needed.
 - asynManager
-  - Take connect timestamp <i>after</i> connection attempt. autoConnectDevice() has
+  - Take connect timestamp *after* connection attempt. autoConnectDevice() has
     a built-in protection that forces at least 2 seconds between connection attempts.
-    However, previously the timestamp was read <i>before</i> starting the connection,
+    However, previously the timestamp was read *before* starting the connection,
     so if the connection attempt takes about 2 seconds (or more) to timeout then that
     2 second do-not-connect window was already expired (or about to expire) by the time
-    connectAttempt() returns. Now we read the timestamp <i>after</i> connectAttempt()
+    connectAttempt() returns. Now we read the timestamp *after* connectAttempt()
     returns. 
   - Made 2 changes to queueLockPort.
-      1. If the queue request times out then return asynTimeout rather than asynError.
-      2. If the call to pasynManager->queueRequest fails then return the actual failure
+      - If the queue request times out then return asynTimeout rather than asynError.
+      - If the call to pasynManager->queueRequest fails then return the actual failure
         status rather than asynError.
     These changes improve the alarm handling when a device becomes unavailable. Previously
     it would toggle between TIMEOUT alarm when an actual read request timed out and
@@ -203,7 +203,7 @@
 
 ## Release 4-37 (October 18, 2019)
 - Added new 64-bit integer support
-- asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.
+  - asynDriver adds new asynInt64, asynInt64SyncIO, and asynInt64Array interfaces.
 - asynDriver.h now does the typedef of epicsInt64 and epicsUInt64 when __STDC_VERSION__
   < 199901L on EPICS 3.14. This allows the Int64 interfaces to be built as long
   as the compiler supports the `long long` and `unsigned long long`
