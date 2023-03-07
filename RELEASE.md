@@ -2038,25 +2038,25 @@ if (saveEosLen)
         - setPortOption,getPortOption are setOption,getOption
 
 ## Release 1-2 (April 1, 2004)
-    - Promote VXI-11 RPC definition files to vxi11 directory. Use rpcgen to build RPC
-      support files for targets for which this is possible.
-    - Run rpcgen on Solaris with 'multi-thread' flag.
-    - Use separate GPIB message/response buffer for each port instance.
-    - Use sscanf to convert GPIB stringin response.
-    - Fix race condition in GPIB finish routines.
+- Promote VXI-11 RPC definition files to vxi11 directory. Use rpcgen to build RPC
+  support files for targets for which this is possible.
+- Run rpcgen on Solaris with 'multi-thread' flag.
+- Use separate GPIB message/response buffer for each port instance.
+- Use sscanf to convert GPIB stringin response.
+- Fix race condition in GPIB finish routines.
 
 ## Release 1-1 (February 5, 2004)
-  - This release includes support for the following:
-    - asynTrace - A trace facility is now implemented.
-    - gsIP488 - The Greensprings Industry Pack IP488 is now supported
-  - Modifications include:
-    - Added asynSetPortOption and asynGetPortOption to manipulate port options.
-    - Changed serial support to use asynSetPortOption/asynGetPortOption.
-    - Added devGPIB GPIBCVTIO commmand type to allow custom conversion routine to perform
-      all I/O operations.
-    - Changed rules for return value from devGPIB custom conversion routines.
-    - Added dbior support.
-    - Changed devGPIB to no longer cache EOS.
+- This release includes support for the following:
+  - asynTrace - A trace facility is now implemented.
+  - gsIP488 - The Greensprings Industry Pack IP488 is now supported
+- Modifications include:
+  - Added asynSetPortOption and asynGetPortOption to manipulate port options.
+  - Changed serial support to use asynSetPortOption/asynGetPortOption.
+  - Added devGPIB GPIBCVTIO commmand type to allow custom conversion routine to perform
+    all I/O operations.
+  - Changed rules for return value from devGPIB custom conversion routines.
+  - Added dbior support.
+  - Changed devGPIB to no longer cache EOS.
 
 ## Release 1-0alpha2 (November 17, 2003)
 - Support Provided in addition to asynDriver and asynGpib
