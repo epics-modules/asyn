@@ -1598,7 +1598,6 @@ if (saveEosLen)
     ```
     @asyn(portName,addr,timeout)drvParams
     ```
-  
     This allows device support to work with drivers that cannot return meaningful values
     in pasynInt32->getBounds because they do not know the range of the device. This
     is true, for example of Modbus ADCs. The nbits parameter is defined as follows:
