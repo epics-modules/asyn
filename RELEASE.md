@@ -1707,7 +1707,7 @@ if (saveEosLen)
     no documented method of specifying an "infinite" timeout to a driver, and the meaning
     of timeout=0.0 was not defined. The new definitions are:
   
-    > 0.0 Wait for up to timeout seconds for the I/O to complete
+    &gt; 0.0 Wait for up to timeout seconds for the I/O to complete
   
     = 0.0 Peform any I/O that can be done without blocking. Return timeout error if
     no I/O can be done without blocking.
