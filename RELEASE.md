@@ -884,18 +884,18 @@
     is support for registering a user-supplied function to provide the timestamp, which
     will override the default source that just calls epicsTimeGetCurrent().
   - Added the following new functions to pasynManager for timestamp support.
-```
-asynStatus (*registerTimeStampSource)(asynUser *pasynUser, void *userPvt, timeStampCallback callback);
-asynStatus (*unregisterTimeStampSource)(asynUser *pasynUser);
-asynStatus (*updateTimeStamp)(asynUser *pasynUser);
-asynStatus (*getTimeStamp)(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
-asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
-```
+    ```
+    asynStatus (*registerTimeStampSource)(asynUser *pasynUser, void *userPvt, timeStampCallback callback);
+    asynStatus (*unregisterTimeStampSource)(asynUser *pasynUser);
+    asynStatus (*updateTimeStamp)(asynUser *pasynUser);
+    asynStatus (*getTimeStamp)(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
+    asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
+    ```
   - Added the following shell commands for timestamp support.
-  ```
-  asynRegisterTimeStampSource(const char *portName, const char *functionName);
-  asynUnregisterTimeStampSource(const char *portName);
-  ```
+    ```
+    asynRegisterTimeStampSource(const char *portName, const char *functionName);
+    asynUnregisterTimeStampSource(const char *portName);
+    ```
   - Added a new bit to asynTraceMask, ASYN_TRACE_WARNING. This is intended to be used
     for messages that are less serious than ASYN_TRACE_ERROR, but more serious than
     ASYN_TRACE_FLOW.
@@ -917,7 +917,6 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
       where the asynPrint statement occurs.
     - ASYN_TRACEINFO_THREAD prints the thread name, thread ID and thread priority, i.e.
       [epicsThreadGetNameSelf(), epicsThreadGetIdSelf(), epicsThreadGetPrioritySelf()].
-  
   - Added a new shell command to control this mask.
     ```
     asynSetTraceInfoMask port,addr,mask
