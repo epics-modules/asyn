@@ -215,7 +215,6 @@
     - New methods setInteger64Param(), getInteger64Param(), readInt64(), writeInt64(),
       getBounds64(), readInt64Array(), writeInt64Array(), doCallbacksInt64Array().
     - New masks for constructor asynInt64Mask, asynInt64ArrayMask.
-
 - testErrors test application
   - Changes to driver, database and medm screens to test the Int64 interfaces. This
     uses the 64-bit device support which must be commented of out st.cmd if running
