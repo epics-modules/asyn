@@ -1,13 +1,18 @@
 # asynDriver: Release Notes
 
-## Release 4-44 (## March XXX, 2023)
+## Release 4-44 (March XXX, 2023)
 - devEpics
-    - Rewrite the device support for arrays.
-      Previously it used a large C macro to be able to support int8, int16, int32, float32, and float64
-      data types without a lot of repetitive code.  This was changed to use a C++ template file.
-    - Previously only the waveform record was supported for arrays.  Added support for aai and aoo records.
+  - Rewrite the device support for arrays.
+    Previously it used a large C macro to be able to support int8, int16, int32, float32, and float64
+    data types without a lot of repetitive code.  This was changed to use a C++ template file.
+  - Previously only the waveform record was supported for arrays.  Added support for aai and aoo records.
 - testErrorsApp
-    - Add aai and aao records to databases in order to test new device support for these.
+  - Add aai and aao records to databases in order to test new device support for these.
+- Documentation:
+  - Converted documentation/asynDriver.html and asynRecord.html to Sphinx .rst files
+    in docs/source.
+  - Added Github actions to publish the Sphinx generated documentation to Github Pages.
+  - Converted documentation/RELEASE_NOTES.html to RELEASE.md.
 
 ## Release 4-43 (September 12, 2022)
 - devEpics
