@@ -1078,11 +1078,9 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Fixed a bug that caused a deadlock if pasynManager->lockPort was called multiple
     times without calling pasynManager->unlockPort in between. Thanks to Sebastian
     Marsching from "aquenos GmbH" for this fix.
-  
 - devEpics
   - Added support for setting the record timestamp from the driver, using a new field,
     pasynUser->timeStamp. The driver can set this field in read and callback operations.
-  
   - Fixed a long-standing bug in devAsynXXXArray support for input waveform records
     with SCAN=I/O Intr. The data were being copied to the record without using dbScanLock.
     This meant that the data could change while the record was processing.
