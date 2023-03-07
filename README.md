@@ -12,5 +12,5 @@ libCom, most of it is independent of EPICS.
 
 Documentation, release notes, and links to releases can be found here:
 * [Home page](https://epics-modules.github.io/master/asyn)
-* [Documentation](https://htmlpreview.github.io/?https://github.com/epics-modules/asyn/blob/master/documentation/asynDriver.html)
-* [Release notes](https://htmlpreview.github.io/?https://github.com/epics-modules/asyn/blob/master/documentation/RELEASE_NOTES.html)
+* [Documentation](https://epics-modules.github.io/asyn)
+* [Release notes](RELEASE.md)
