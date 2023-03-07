@@ -1382,7 +1382,6 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Fix problem with NULL-pointer dereferences.
 - drvVxi11
   - Bug fix from Benjamin Franksen for devices that don't support IRQ.
-  
 - devEPICS
   - The ring buffer code in devAsynFloat64.c, devAsynInt32.c and devAsynUInt32Digital.c
     has been improved. Previously when ring buffer overflow occurred during a callback
@@ -1397,7 +1396,6 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Fixed bug which caused an error when writing or reading in binary format if the
     driver did not implement the get(Input/Output)Eos functions. This bug was introduced
     when readRaw and writeRaw were removed from asynOctet in release 4-10.
-  
 - Additional makeSupport.pl template
   - makeSupport.pl -t streamSCPI <name> creates skeleton stream protocol and database
     files for a SCPI (IEEE-488.2) device.
