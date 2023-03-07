@@ -805,8 +805,7 @@
   - Fixed all initialization routines so that if there is an error they do the following:
     - Call recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM)
     - Set precord->pact=1
-    - return(INIT_ERROR), where INIT_ERROR=-1
-    
+    - return(INIT_ERROR), where INIT_ERROR=-1  
     Thanks to Nick Rees for these fixes.
 - Many source files
     Fixed problem with location of #define epicsExportSharedSymbols and/or #include
