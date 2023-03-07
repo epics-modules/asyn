@@ -902,13 +902,12 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Added new asynTraceInfoMask. This mask controls the information printed at the beginning
     of each message by asynPrint and asynPrintIO. Thanks to Ulrik Pedersen for help
     with this. The mask is defined with the following bits:
-    ```
-    #define ASYN_TRACEINFO_TIME 0x0001
-    #define ASYN_TRACEINFO_PORT 0x0002
-    #define ASYN_TRACEINFO_SOURCE 0x0004
-    #define ASYN_TRACEINFO_THREAD 0x0008
-    ```
-
+      ```
+      #define ASYN_TRACEINFO_TIME 0x0001
+      #define ASYN_TRACEINFO_PORT 0x0002
+      #define ASYN_TRACEINFO_SOURCE 0x0004
+      #define ASYN_TRACEINFO_THREAD 0x0008
+      ```
     - ASYN_TRACEINFO_TIME prints what has been printed in previous versions of asyn,
       the date and time of the message.
     - ASYN_TRACEINFO_PORT prints [port,addr,reason], where port is the port name, addr
@@ -920,10 +919,9 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
       [epicsThreadGetNameSelf(), epicsThreadGetIdSelf(), epicsThreadGetPrioritySelf()].
   
   - Added a new shell command to control this mask.
-```
+    ```
     asynSetTraceInfoMask port,addr,mask
-```
-  
+    ```
   - Added asynTrace information to the output of asynReport if details &ge;1.
 - asynOctetSyncIO
   - Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort for
@@ -978,7 +976,6 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
     getTimeStamp().
   - Added new function getAsynStdInterfaces() to access the asynStdInterfaces structure,
     which is now private.
-  
   - Changed the functions that do callbacks when callParamCallbacks() is called to call
     pasynManager->getTimeStamp() and set the pasynUser->timestamp field to this
     value in the callbacks.
