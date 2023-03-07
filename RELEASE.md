@@ -71,7 +71,7 @@
       this. This $200 device makes GPIB devices available over Ethernet. It uses a proprietary
       protocol, not VXI-11. 
 - asynPortDriver
-    - Added checks for invalid list (<0 or >=maxAddr).
+    - Added checks for invalid list (<0 or &ge;maxAddr).
     - Added new error code asynParamInvalidList that is returned if the list passed
       is not valid.
 - devCommonGPIB.c
@@ -177,11 +177,11 @@
   - Added asynOctet support for lso, lsi, printf, and sCalcout records. Thanks to
     Freddie Akeroyd for this.
 - asynInterposeEos
-  - asynInterposeEos checks each byte for EOS. If it cannot find it and nRead >=
+  - asynInterposeEos checks each byte for EOS. If it cannot find it and nRead &ge;
     maxchars, then previously it set the eom to ASYN_EOM_CNT using a bitwise OR. In
     this way, multiple flags can be propagated to the requester of the read. Since ASYN_EOM_CNT
     is not an end flag, but other two (ASYN_EOM_EOS and ASYN_EOM_END) are, it does not
-    make sense to propagate a combination of end and non-end flag. Thus if the nRead >= maxchars is true, 
+    make sense to propagate a combination of end and non-end flag. Thus if the nRead &ge; maxchars is true, 
     now set eom = ASYN_EOM_CNT, i.e. without bitwise OR. This
     fixes a problem with StreamDevice on some VXI-11 devices. Thanks to Jernej Varlec
     for this.
@@ -923,7 +923,7 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
     asynSetTraceInfoMask port,addr,mask
 ```
   
-  - Added asynTrace information to the output of asynReport if details >=1.
+  - Added asynTrace information to the output of asynReport if details &ge;1.
 - asynOctetSyncIO
   - Use simple lock/unlock operations rather than queueLockPort/queueUnlockPort for
     end-of-string manipulations (setInputEos, getInputEos, setOutputEos, getOutputEos).
@@ -1058,9 +1058,9 @@ asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp
   - Changed the meaning of the "details" argument in the asynPortDriver::report() function.
     The new meaning is:
     - 0 = no details
-    - >=1: print details for parameter list (address) 0
-    - >=2: print details for all parameters lists (addresses)
-    - >=3: print interrupt callback information
+    - &ge;1: print details for parameter list (address) 0
+    - &ge;2: print details for all parameters lists (addresses)
+    - &ge;3: print interrupt callback information
   - Changed the connect() and disconnect() methods to return an error if the device
     address specified by the pasynUser is invalid (i.e. <-1 or >MAX_ADDR-1).
   - Fixed problem that was causing dynamic builds (e.g. SHARED_LIBRARIES=YES) to fail
