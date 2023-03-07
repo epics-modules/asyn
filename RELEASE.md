@@ -793,20 +793,20 @@
     Normally the local host choses a random local port that it binds to and passes to
     the server. There are a few servers that only accept a specific local port or range
     of local ports, for which this capability is required. The new syntax is:
-  
+    ```
     <host>:<port>[:localPort] [protocol]
-  
+    ```
     For example
-  
+    ```
     164.54.160.100:5000:10101 UDP
-  
+    ```
     where 10101 is the optional local port number.
 - devEpics
   - Fixed all initialization routines so that if there is an error they do the following:
     - Call recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM)
     - Set precord->pact=1
     - return(INIT_ERROR), where INIT_ERROR=-1
-  
+
     Thanks to Nick Rees for these fixes.
 - Many source files
     Fixed problem with location of #define epicsExportSharedSymbols and/or #include
