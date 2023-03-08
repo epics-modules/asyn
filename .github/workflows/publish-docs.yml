@@ -57,6 +57,7 @@ jobs:
       run: |
         ls -l
         ls -l *
+        ls -l _static/css
 
     - name: Build doxygen
       uses: mattnotmitt/doxygen-action@v1.9.5
