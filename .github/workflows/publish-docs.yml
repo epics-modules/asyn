@@ -61,8 +61,6 @@ jobs:
     - name: Examine output of Sphinx
       run: |
         ls -l
-        ls -l *
-        ls -l _static/css
 
     - name: Push changes
       uses: ad-m/github-push-action@master
