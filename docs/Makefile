@@ -8,8 +8,11 @@ DOCS = _docs
 #OPTS = -v -v -v
 OPTS =
 
+doxygen:
+	doxygen
+
 .PHONY: all
-all: sphinx
+all: sphinx doxygen
 
 
 .PHONY: all
