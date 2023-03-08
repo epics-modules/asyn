@@ -29,6 +29,7 @@
 #include <epicsTimer.h>
 #include <cantProceed.h>
 #include <epicsAssert.h>
+#include <epicsExit.h>
 
 #include <epicsExport.h>
 #include "asynDriver.h"
@@ -1975,6 +1976,20 @@ static asynStatus getPortName(asynUser *pasynUser,const char **pportName)
     return asynSuccess;
 }
 
+static void destroyPortDriver(void *portName) {
+    asynStatus status;
+    asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+    status = pasynManager->connectDevice(pasynUser, portName, 0);
+    if (status != asynSuccess) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:destroyPortDriver cannot connect to port");
+        return;
+    }
+    pasynManager->shutdown(pasynUser);
+    pasynManager->disconnect(pasynUser);
+    pasynManager->freeAsynUser(pasynUser);
+}
+
 static asynStatus registerPort(const char *portName,
     int attributes,int autoConnect,
     unsigned int priority,unsigned int stackSize)
@@ -2026,6 +2041,9 @@ static asynStatus registerPort(const char *portName,
     epicsMutexMustLock(pasynBase->lock);
     ellAdd(&pasynBase->asynPortList,&pport->node);
     epicsMutexUnlock(pasynBase->lock);
+    if (attributes & ASYN_DESTRUCTIBLE) {
+        epicsAtExit(destroyPortDriver, (void *)portName);
+    }
     return asynSuccess;
 }
 
