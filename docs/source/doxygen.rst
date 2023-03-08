@@ -1,2 +1,2 @@
-`Doxygen documentation <../../doxygenHTML/annotated.html>`__
+`Doxygen documentation <../../doxygenOutput/annotated.html>`__
 ================================================================
