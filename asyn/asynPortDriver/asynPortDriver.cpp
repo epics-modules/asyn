@@ -3754,7 +3754,7 @@ static asynDrvUser ifaceDrvUser = {
                 The bit mask values are defined in asynPortDriver.h, e.g. asynInt32Mask.
   * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks).
                The bit mask values are defined in asynPortDriver.h, e.g. asynInt8ArrayMask.
-  * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK and ASYN_MULTIDEVICE.
+  * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK, ASYN_MULTIDEVICE and ASYN_DESTRUCTIBLE.
   * \param[in] autoConnect The autoConnect flag for the asyn port driver.
                1 if the driver should autoconnect.
   * \param[in] priority The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags.
@@ -3785,6 +3785,25 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
                autoConnect, priority, stackSize);
 }
 
+void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException exception) {
+    asynPortDriver *pPvt = (asynPortDriver *)pasynUser->userPvt;
+    if (exception == asynExceptionShutdown) {
+        asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
+                  "%s: port=%s Port is shutting down.\n",
+                  driverName, pPvt->portName);
+        asynStatus status = pPvt->shutdown();
+        if (status != asynSuccess) {
+            asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_ERROR,
+                      "%s: port=%s Driver shutdown encountered an error.\n",
+                      driverName, pPvt->portName);
+        }
+        asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
+                  "%s: port=%s Shutdown complete, destroying the driver.\n",
+                  driverName, pPvt->portName);
+        delete pPvt;
+    }
+}
+
 /** The following function is required to initialize from two constructors. Once
  * we can rely on C++11 this code can be moved back into the primary
  * constructor. The secondary constructor can then be converted into
@@ -3797,6 +3816,8 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
     static const char *functionName = "asynPortDriver";
     asynStandardInterfaces *pInterfaces;
     int addr;
+
+    shutdownNeeded = asynFlags & ASYN_DESTRUCTIBLE;
 
     /* Initialize some members to 0 */
     pInterfaces = &this->asynStdInterfaces;
@@ -3843,6 +3864,7 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
 
     /* Create asynUser for debugging and for standardInterfacesBase */
     this->pasynUserSelf = pasynManager->createAsynUser(0, 0);
+    this->pasynUserSelf->userPvt = this;
 
     /* The following asynPrint will be governed by the global trace mask since asynUser is not yet connected to port */
     asynPrint(this->pasynUserSelf, ASYN_TRACE_FLOW,
@@ -3904,6 +3926,10 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
         throw std::runtime_error(msg);
     }
 
+    if (shutdownNeeded) {
+       pasynManager->exceptionCallbackAdd(pasynUserSelf, asynPortDriver::exceptionHandler);
+    }
+
     /* Create a thread that waits for interruptAccept and then does all the callbacks once. */
     cbThread = new callbackThread(this);
 }
@@ -3921,10 +3947,30 @@ asynStatus asynPortDriver::createParams()
     return asynSuccess;
 }
 
+asynStatus asynPortDriver::shutdown() {
+    shutdownNeeded = false;
+    delete cbThread;
+    cbThread = NULL;
+    return asynSuccess;
+}
+
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
 asynPortDriver::~asynPortDriver()
 {
-    delete cbThread;
+    if (shutdownNeeded) {
+        // If shutdownNeeded is still true, it means that the base
+        // implementation of asynPortDriver::shutdown() was not called. Which
+        // means that one of the derived classes does not call the base
+        // function, and needs fixing.
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                  "%s: port=%s Driver error: port supports shutdown, but it was "
+                  "incomplete. A derived class of asynPortDriver has a bug.\n",
+                  driverName, portName);
+    }
+
+    if (cbThread)
+        delete cbThread;
+
     epicsMutexDestroy(this->mutexId);
 
     for (int addr=0; addr<this->maxAddr; addr++) {

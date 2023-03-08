@@ -204,13 +204,17 @@ public:
     void callbackTask();
 
 protected:
-    asynParamSet* paramSet;
+    virtual asynStatus shutdown();
     void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
                     int autoConnect, int priority, int stackSize);
+
+    asynParamSet* paramSet;
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
     asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
+    static void exceptionHandler(asynUser *pasynUser, asynException exception);
+
     std::vector<paramList*> params;
     paramList *getParamList(int list);
     epicsMutexId mutexId;
@@ -219,6 +223,7 @@ private:
     char *outputEosOctet;
     int outputEosLenOctet;
     callbackThread *cbThread;
+    bool shutdownNeeded;
     template <typename epicsType, typename interruptType>
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
