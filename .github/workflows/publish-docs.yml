@@ -53,7 +53,12 @@ jobs:
         # path to conf.py directory
         documentation_path: docs/source
 
-    - name: Build doxygen
+    - name: Examine output of Sphinx
+      run: |
+        ls -l
+        ls -l *
+
+   - name: Build doxygen
       uses: mattnotmitt/doxygen-action@v1.9.5
       with:
           working-directory: docs
