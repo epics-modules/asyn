@@ -1,4 +1,5 @@
 # Doxyfile 1.8.15
+# Doxyfile 1.8.15
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -1130,7 +1131,7 @@ GENERATE_HTML          = YES
 # The default directory is: html.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-#HTML_OUTPUT            = asynDoxygenHTML
+#HTML_OUTPUT            = doxygenHTML
 
 # The HTML_FILE_EXTENSION tag can be used to specify the file extension for each
 # generated HTML page (for example: .htm, .php, .asp).
