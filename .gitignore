@@ -5,7 +5,9 @@
 /dbd/
 /html/
 _build/
-_docs/
+/docs/asynDoxygenHTML/
+/docs/source/_extra
+/docs/_docs/
 /include/
 /templates/
 /configure/*.local
