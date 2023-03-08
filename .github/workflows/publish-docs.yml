@@ -46,7 +46,6 @@ jobs:
       run: |
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
         pip list
-        ls -l doxygenOutput
 
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
