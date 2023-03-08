@@ -52,6 +52,10 @@ jobs:
       with:
           working-directory: docs
 
+    - name: Change Doxygen output permissions so Sphinx can delete
+      run: |
+        sudo chmod -R 777 docs/doxygenHTML
+
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
       with:
