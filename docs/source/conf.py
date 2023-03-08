@@ -33,6 +33,8 @@ pygments_style = 'sphinx'
 html_theme = 'sphinx_rtd_theme'
 
 html_static_path = ['_static']
+html_extra_path = ['../doxygenHTML']
+exclude_patterns = ['index.html']
 html_style = 'css/my_theme.css'
 html_last_updated_fmt = '%Y-%B-%d'
 html_show_sourcelink = True
