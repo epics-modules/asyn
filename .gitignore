@@ -5,7 +5,7 @@
 /dbd/
 /html/
 _build/
-/docs/asynDoxygenHTML/
+/docs/doxygenHTML/
 /docs/source/_extra
 /docs/_docs/
 /include/
