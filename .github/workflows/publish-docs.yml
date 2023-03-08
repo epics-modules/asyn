@@ -47,6 +47,11 @@ jobs:
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
         pip list
 
+    - name: Build doxygen
+      uses: mattnotmitt/doxygen-action@v1.9.5
+      with:
+          working-directory: docs
+
     - name: Build and Commit
       uses: sphinx-notes/pages@v2
       with:
@@ -58,11 +63,6 @@ jobs:
         ls -l
         ls -l *
         ls -l _static/css
-
-    - name: Build doxygen
-      uses: mattnotmitt/doxygen-action@v1.9.5
-      with:
-          working-directory: docs
 
     - name: Push changes
       uses: ad-m/github-push-action@master
