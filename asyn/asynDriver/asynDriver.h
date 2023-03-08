@@ -52,7 +52,8 @@ typedef enum {
 typedef enum {
     asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
     asynExceptionTraceMask,asynExceptionTraceIOMask,asynExceptionTraceInfoMask,
-    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
+    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize,
+    asynExceptionShutdown
 } asynException;
 
 #define ASYN_EXCEPTION_STRINGS                                                          \
@@ -93,6 +94,7 @@ typedef struct asynInterface{
 /*registerPort attributes*/
 #define ASYN_MULTIDEVICE  0x0001
 #define ASYN_CANBLOCK     0x0002
+#define ASYN_DESTRUCTIBLE 0x0004
 
 /*standard values for asynUser.reason*/
 #define ASYN_REASON_SIGNAL -1
@@ -156,6 +158,7 @@ typedef struct asynManager {
                               asynInterface *pasynInterface,
                               asynInterface **ppPrev);
     asynStatus (*enable)(asynUser *pasynUser,int yesNo);
+    asynStatus (*shutdown)(asynUser *pasynUser);
     asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
     asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);

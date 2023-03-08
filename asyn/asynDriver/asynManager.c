@@ -136,6 +136,7 @@ typedef struct interfaceNode {
 
 typedef struct dpCommon { /*device/port common fields*/
     BOOL           enabled;
+    BOOL           defunct;
     BOOL           connected;
     BOOL           autoConnect;
     BOOL           autoConnectActive;
@@ -308,6 +309,7 @@ static asynStatus exceptionDisconnect(asynUser *pasynUser);
 static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev);
 static asynStatus enable(asynUser *pasynUser,int yesNo);
+static asynStatus shutdown(asynUser *pasynUser);
 static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
 static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
@@ -365,6 +367,7 @@ static asynManager manager = {
     exceptionDisconnect,
     interposeInterface,
     enable,
+    shutdown,
     autoConnectAsyn,
     isConnected,
     isEnabled,
@@ -513,6 +516,7 @@ static void dpCommonInit(port *pport,device *pdevice,BOOL autoConnect)
         pdpCommon = &pport->dpc;
     }
     pdpCommon->enabled = TRUE;
+    pdpCommon->defunct = FALSE;
     pdpCommon->connected = FALSE;
     pdpCommon->autoConnect = autoConnect;
     ellInit(&pdpCommon->interposeInterfaceList);
@@ -1031,6 +1035,10 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++)
         nQueued += ellCount(&pport->queueList[i]);
     pdpc = &pport->dpc;
+    if (pdpc->defunct) {
+        fprintf(fp,"%s destroyed\n", pport->portName);
+        goto done;
+    }
     fprintf(fp,"%s multiDevice:%s canBlock:%s autoConnect:%s\n",
         pport->portName,
         ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
@@ -1112,6 +1120,8 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     if(pasynCommon) {
         pasynCommon->report(drvPvt,fp,details);
     }
+
+done:
 #ifdef CYGWIN32
     /* This is a (hopefully) temporary fix for a problem with POSIX threads on Cygwin.
      * If a thread is very short-lived, which this report thread will be if the amount of
@@ -2150,8 +2160,64 @@ static asynStatus enable(asynUser *pasynUser,int yesNo)
             "asynManager:enable not connected");
         return asynError;
     }
+
+    if (pdpCommon->defunct) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:enable: port has been shut down");
+        return asynDisabled;
+    }
+
     pdpCommon->enabled = (yesNo ? 1 : 0);
     exceptionOccurred(pasynUser,asynExceptionEnable);
+    return asynSuccess;
+}
+
+static asynStatus shutdown(asynUser *pasynUser)
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port       *pport = puserPvt->pport;
+    dpCommon   *pdpCommon = findDpCommon(puserPvt);
+    interfaceNode *pinterfaceNode;
+
+    if (!pport || !pdpCommon) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:shutdown: not connected");
+        return asynError;
+    }
+
+    if (pdpCommon->defunct) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:shutdown: port is already shut down");
+        return asynDisabled;
+    }
+
+    if (!(pport->attributes & ASYN_DESTRUCTIBLE)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:shutdown: port does not support shutting down");
+        return asynError;
+    }
+
+    // Disabling the port short-circuits queueRequest(), preventing usage of
+    // external asynUser instances that will shortly become dangling references.
+    // It is marked defunct so it cannot be re-enabled.
+    pdpCommon->enabled = FALSE;
+    pdpCommon->defunct = TRUE;
+
+    // Nullifying the private pointers to the driver enables trapping on
+    // erroneous accesses, making finding bugs easier.
+    pport->pasynLockPortNotify = NULL;
+    pport->lockPortNotifyPvt = NULL;
+    pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
+    while(pinterfaceNode) {
+        asynInterface *pif = pinterfaceNode->pasynInterface;
+        pif->drvPvt = NULL;
+        pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+    }
+
+    // Actual destruction of the driver is delegated to the driver itself, which
+    // shall implement an exception handler.
+    exceptionOccurred(pasynUser, asynExceptionShutdown);
+
     return asynSuccess;
 }
 

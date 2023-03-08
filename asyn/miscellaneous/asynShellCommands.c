@@ -1315,6 +1315,49 @@ static void asynSetQueueLockPortTimeoutCall(const iocshArgBuf * args) {
     asynSetQueueLockPortTimeout(portName,timeout);
 }
 
+static const iocshArg asynShutdownPortArg0 = {"portName", iocshArgString};
+static const iocshArg *const asynShutdownPortArgs[] = {&asynShutdownPortArg0};
+static const iocshFuncDef asynShutdownPortDef =
+    {"asynShutdownPort", 1, asynShutdownPortArgs
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+     ,
+#else
+    };
+static const char asynShutdownPortUsage[] =
+#endif
+    "Permanently disables the port and destroys the port driver,\n"
+    "releasing its resources.\n"
+#ifdef IOCSHFUNCDEF_HAS_USAGE
+    };
+#define asynShutdownPortUsage asynShutdownPortDef.usage
+#else
+    ;
+#endif
+ASYN_API int
+ asynShutdownPort(const char *portName)
+{
+    asynUser *pasynUser;
+    asynStatus status;
+
+    pasynUser = pasynManager->createAsynUser(0, 0);
+    status = pasynManager->connectDevice(pasynUser, portName, 0);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return -1;
+    }
+    status = pasynManager->shutdown(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
+    pasynManager->freeAsynUser(pasynUser);
+    return 0;
+}
+static void asynShutdownPortCall(const iocshArgBuf * args) {
+    const char *portName = args[0].sval;
+    asynShutdownPort(portName);
+}
+
 static void asynRegister(void)
 {
     static int firstTime = 1;
@@ -1346,5 +1389,6 @@ static void asynRegister(void)
     iocshRegister(&asynRegisterTimeStampSourceDef, asynRegisterTimeStampSourceCall);
     iocshRegister(&asynUnregisterTimeStampSourceDef, asynUnregisterTimeStampSourceCall);
     iocshRegister(&asynSetMinTimerPeriodDef, asynSetMinTimerPeriodCall);
+    iocshRegister(&asynShutdownPortDef, asynShutdownPortCall);
 }
 epicsExportRegistrar(asynRegister);
