@@ -42,16 +42,6 @@ jobs:
         which pip3
         which pip
 
-    - name: Install doxygen
-      run: |
-        sudo apt-get -y install doxygen
-        which doxygen
-        
-    - name: Build doxygen
-      uses: mattnotmitt/doxygen-action@v1.9.5
-      with:
-          working-directory: docs
-
     - name: Install packages used by Sphinx
       run: |
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
@@ -63,6 +53,11 @@ jobs:
       with:
         # path to conf.py directory
         documentation_path: docs/source
+
+    - name: Build doxygen
+      uses: mattnotmitt/doxygen-action@v1.9.5
+      with:
+          working-directory: docs
 
     - name: Push changes
       uses: ad-m/github-push-action@master
