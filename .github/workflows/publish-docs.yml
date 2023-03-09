@@ -36,7 +36,7 @@ jobs:
         fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
 
     - name: Install Doxygen
-      uses: sudo apt-get install doxygen graphviz -y
+      run: sudo apt-get install doxygen graphviz -y
       shell: bash
 
     - name: Generate Doxygen documentation
