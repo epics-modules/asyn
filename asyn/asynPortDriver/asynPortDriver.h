@@ -197,6 +197,7 @@ public:
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
     asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
+    virtual asynStatus shutdown();
 
     char *portName;         /**< The name of this asyn port */
 
@@ -204,7 +205,6 @@ public:
     void callbackTask();
 
 protected:
-    virtual asynStatus shutdown();
     void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
                     int autoConnect, int priority, int stackSize);
 

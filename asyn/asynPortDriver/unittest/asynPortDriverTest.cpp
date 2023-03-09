@@ -35,9 +35,9 @@ typedef epicsGuard<asynPortDriver> Guard;
 epicsInt32 lastint32;
 size_t cbcount;
 
-void int32cb(void *userPvt, asynUser *pasynUser,
-                                       epicsInt32 data)
+void int32cb(void *userPvt, asynUser *pasynUser, epicsInt32 data)
 {
+    (void)pasynUser;
     testDiag("int32cb() called with %d", (int)data);
     cbcount++;
     asynInt32Client *client = (asynInt32Client*)userPvt;
@@ -51,21 +51,23 @@ void int32cb(void *userPvt, asynUser *pasynUser,
     testDiag("int32cb() done");
 }
 
-/* since asyn ports are forever, store them in a global
- * pointer so that valgrind will consider them reachable
- */
-asynPortDriver *portA;
+static asynPortDriver *instantiateDriver(const char *portName, bool autoDestroy) {
+    return new asynPortDriver(portName, 0,
+                              asynDrvUserMask|asynInt32Mask,
+                              asynInt32Mask,
+                              autoDestroy ? ASYN_DESTRUCTIBLE : 0,
+                              0, 0,
+                              epicsThreadGetStackSize(epicsThreadStackSmall));
+}
 
-void testA()
+void testA(asynPortDriver *portA)
 {
-    portA = new asynPortDriver("portA", 0,
-                               asynDrvUserMask|asynInt32Mask,
-                               asynInt32Mask, 0, 0, 0,
-                               epicsThreadGetStackSize(epicsThreadStackSmall));
-
     int idx1=-1, idx2=-1, sevr, ival;
     const char *name;
     double dval;
+
+    lastint32 = 0;
+    cbcount = 0;
 
     testDiag("Basic parameter creation");
 
@@ -134,7 +136,7 @@ void testA()
     {
         testOk1(portA->findParam(0, "y", &idx1)==asynSuccess);
 
-        asynInt32Client client("portA", -1, "y");
+        asynInt32Client client(portA->portName, -1, "y");
         testOk1(client.registerInterruptUser(&int32cb)==asynSuccess);
 
         lastint32 = 1234;
@@ -169,10 +171,53 @@ void testA()
 
 MAIN(asynPortDriverTest)
 {
-    testPlan(54);
+    const int testsPerRun = 54;
+    const int testRuns = 4;
+    const int additionalTests = 4;
+    testPlan(testsPerRun * testRuns + additionalTests);
     interruptAccept=1;
     try {
-        testA();
+        {
+            testDiag("Testing a non-destructible port");
+            testA(instantiateDriver("portA", false));
+        }
+        {
+            testDiag("Testing a destructible port, late shutdown");
+            testA(instantiateDriver("portB", true));
+        }
+        {
+            testDiag("Testing a destructible port, partial early shutdown");
+            asynPortDriver *tempPort = instantiateDriver("portC", true);
+            testA(tempPort);
+            tempPort->shutdown();
+        }
+        {
+            testDiag("Testing a destructible port, complete early shutdown");
+            asynPortDriver *tempPort = instantiateDriver("portD", true);
+            testA(tempPort);
+            asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+            pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
+
+            pasynManager->lockPort(pasynUser);
+            pasynManager->shutdown(pasynUser);
+            pasynManager->unlockPort(pasynUser);
+
+            asynStatus status = pasynManager->queueRequest(pasynUser, asynQueuePriorityMedium, 0);
+            testOk1(status != asynSuccess);
+
+            int enabled = 1;
+            status = pasynManager->isEnabled(pasynUser, &enabled);
+            testOk1(status == asynSuccess && enabled == 0);
+
+            status = pasynManager->enable(pasynUser, 1);
+            testOk1(status != asynSuccess);
+
+            enabled = 1;
+            status = pasynManager->isEnabled(pasynUser, &enabled);
+            testOk1(status == asynSuccess && enabled == 0);
+
+            pasynManager->freeAsynUser(pasynUser);
+        }
     } catch(std::exception& e) {
         testAbort("Unhandled C++ exception: %s", e.what());
     }
