@@ -59,7 +59,7 @@ jobs:
       uses: peaceiris/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: docs_build/html
+        publish_dir: docs/_build/html
         keep_files: true
 
 #    - name: Publish Doxygen
