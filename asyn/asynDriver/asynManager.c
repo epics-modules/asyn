@@ -1980,14 +1980,29 @@ static void destroyPortDriver(void *portName) {
     asynStatus status;
     asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
     status = pasynManager->connectDevice(pasynUser, portName, 0);
-    if (status != asynSuccess) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:destroyPortDriver cannot connect to port");
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
         return;
     }
-    pasynManager->shutdown(pasynUser);
-    pasynManager->disconnect(pasynUser);
-    pasynManager->freeAsynUser(pasynUser);
+    status = pasynManager->lockPort(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return;
+    }
+    status = pasynManager->shutdown(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
+    status = pasynManager->unlockPort(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
+    status = pasynManager->freeAsynUser(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
 }
 
 static asynStatus registerPort(const char *portName,
@@ -2042,7 +2057,7 @@ static asynStatus registerPort(const char *portName,
     ellAdd(&pasynBase->asynPortList,&pport->node);
     epicsMutexUnlock(pasynBase->lock);
     if (attributes & ASYN_DESTRUCTIBLE) {
-        epicsAtExit(destroyPortDriver, (void *)portName);
+        epicsAtExit(destroyPortDriver, (void *)pport->portName);
     }
     return asynSuccess;
 }

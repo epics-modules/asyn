@@ -3787,16 +3787,30 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
 
 void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException exception) {
     asynPortDriver *pPvt = (asynPortDriver *)pasynUser->userPvt;
+    asynStatus status = asynSuccess;
+
     if (exception == asynExceptionShutdown) {
+        // This code is only excuted once: asynManager will not raise the
+        // exception if the port has been shut down before.
         asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
                   "%s: port=%s Port is shutting down.\n",
                   driverName, pPvt->portName);
-        asynStatus status = pPvt->shutdown();
+
+        if (pPvt->shutdownNeeded) {
+            status = pPvt->shutdown();
+        } else {
+            // Someone (e.g. test code) might have called shutdown() before.
+            asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_WARNING,
+                    "%s: port=%s Driver is already shut down!.\n",
+                    driverName, pPvt->portName);
+        }
+
         if (status != asynSuccess) {
             asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_ERROR,
                       "%s: port=%s Driver shutdown encountered an error.\n",
                       driverName, pPvt->portName);
         }
+
         asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
                   "%s: port=%s Shutdown complete, destroying the driver.\n",
                   driverName, pPvt->portName);
