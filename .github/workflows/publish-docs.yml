@@ -53,11 +53,11 @@ jobs:
     - name: Build Docs
       run: |
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
-        sphinx-multibuild docs -i source -s _docs -o _build/html
+        sphinx-build -ET docs build/html/
 
     - name: Publish Docs
       uses: peaceiris/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        publish_dir: _build/html
+        publish_dir: build/html
         keep_files: true
