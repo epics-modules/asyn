@@ -55,9 +55,17 @@ jobs:
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
         sphinx-build -ET docs/source build/html/
 
-    - name: Publish Docs
+    - name: Publish Sphinx
       uses: peaceiris/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: build/html
+        keep_files: true
+
+    - name: Publish Docs
+      uses: peaceiris/actions-gh-pages@v3.8.0
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: docs/doxygenHTML
+        destination_dir: doxygenHTML
         keep_files: true
