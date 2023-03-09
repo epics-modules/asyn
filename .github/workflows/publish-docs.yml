@@ -35,6 +35,16 @@ jobs:
       with:
         fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
 
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: "3.10"
+
+    - name: Build Docs
+      run: |
+        pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
+        sphinx-build -ET docs/source docs/_build/html/
+
     - name: Install Doxygen
       run: sudo apt-get install doxygen graphviz -y
       shell: bash
@@ -44,16 +54,6 @@ jobs:
         cd docs
         doxygen
         cd -
-
-    - name: Setup Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "3.10"
-
-    - name: Build Docs
-      run: |
-        pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
-        sphinx-build -ET docs/source build/html/
 
     - name: Publish Sphinx
       uses: peaceiris/actions-gh-pages@v3.8.0
