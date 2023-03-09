@@ -3787,33 +3787,15 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
 
 void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException exception) {
     asynPortDriver *pPvt = (asynPortDriver *)pasynUser->userPvt;
-    asynStatus status = asynSuccess;
 
-    if (exception == asynExceptionShutdown) {
+    if (exception == asynExceptionShutdown && pPvt->shutdownNeeded) {
         // This code is only excuted once: asynManager will not raise the
         // exception if the port has been shut down before.
         asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
                   "%s: port=%s Port is shutting down.\n",
                   driverName, pPvt->portName);
 
-        if (pPvt->shutdownNeeded) {
-            status = pPvt->shutdown();
-        } else {
-            // Someone (e.g. test code) might have called shutdown() before.
-            asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_WARNING,
-                    "%s: port=%s Driver is already shut down!.\n",
-                    driverName, pPvt->portName);
-        }
-
-        if (status != asynSuccess) {
-            asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_ERROR,
-                      "%s: port=%s Driver shutdown encountered an error.\n",
-                      driverName, pPvt->portName);
-        }
-
-        asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
-                  "%s: port=%s Shutdown complete, destroying the driver.\n",
-                  driverName, pPvt->portName);
+        pPvt->shutdown();
         delete pPvt;
     }
 }
@@ -3961,25 +3943,39 @@ asynStatus asynPortDriver::createParams()
     return asynSuccess;
 }
 
-asynStatus asynPortDriver::shutdown() {
-    shutdownNeeded = false;
-    return asynSuccess;
+bool asynPortDriver::needsShutdown() {
+    return shutdownNeeded;
+}
+
+void asynPortDriver::shutdown() {
+    // There is a possibility that the destructor is running because we are
+    // being directly deleted by user code, without going through asynManager.
+    // Which would leave a "working" port with dangling references. So let's
+    // disarm the exception callback (because we are already being destroyed)
+    // and shutdown the port.
+    if (shutdownNeeded) {
+        shutdownNeeded = false;
+        asynStatus status = pasynManager->lockPort(pasynUserSelf);
+        if(status != asynSuccess) {
+            printf("%s\n", pasynUserSelf->errorMessage);
+            pasynManager->freeAsynUser(pasynUserSelf);
+            return;
+        }
+        status = pasynManager->shutdown(pasynUserSelf);
+        if(status != asynSuccess) {
+            printf("%s\n", pasynUserSelf->errorMessage);
+        }
+        status = pasynManager->unlockPort(pasynUserSelf);
+        if(status != asynSuccess) {
+            printf("%s\n", pasynUserSelf->errorMessage);
+        }
+    }
 }
 
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
 asynPortDriver::~asynPortDriver()
 {
-    if (shutdownNeeded) {
-        // If shutdownNeeded is still true, it means that the base
-        // implementation of asynPortDriver::shutdown() was not called. Which
-        // means that one of the derived classes does not call the base
-        // function, and needs fixing.
-        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
-                  "%s: port=%s Driver error: port supports shutdown, but it was "
-                  "incomplete. A derived class of asynPortDriver has a bug.\n",
-                  driverName, portName);
-    }
-
+    shutdown();
     delete cbThread;
     epicsMutexDestroy(this->mutexId);
 

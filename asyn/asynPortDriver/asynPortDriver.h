@@ -197,7 +197,8 @@ public:
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
     asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
-    virtual asynStatus shutdown();
+    virtual void shutdown();
+    bool needsShutdown();
 
     char *portName;         /**< The name of this asyn port */
 

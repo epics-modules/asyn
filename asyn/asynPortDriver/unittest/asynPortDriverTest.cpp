@@ -169,11 +169,32 @@ void testA(asynPortDriver *portA)
 
 } // namespace
 
+static void checkShutdown(const char *portName) {
+    asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+    pasynManager->connectDevice(pasynUser, portName, 0);
+
+    asynStatus status = pasynManager->queueRequest(pasynUser, asynQueuePriorityMedium, 0);
+    testOk1(status != asynSuccess);
+
+    int enabled = 1;
+    status = pasynManager->isEnabled(pasynUser, &enabled);
+    testOk1(status == asynSuccess && enabled == 0);
+
+    status = pasynManager->enable(pasynUser, 1);
+    testOk1(status != asynSuccess);
+
+    enabled = 1;
+    status = pasynManager->isEnabled(pasynUser, &enabled);
+    testOk1(status == asynSuccess && enabled == 0);
+
+    pasynManager->freeAsynUser(pasynUser);
+}
+
 MAIN(asynPortDriverTest)
 {
     const int testsPerRun = 54;
     const int testRuns = 4;
-    const int additionalTests = 4;
+    const int additionalTests = 8;
     testPlan(testsPerRun * testRuns + additionalTests);
     interruptAccept=1;
     try {
@@ -186,37 +207,26 @@ MAIN(asynPortDriverTest)
             testA(instantiateDriver("portB", true));
         }
         {
-            testDiag("Testing a destructible port, partial early shutdown");
+            testDiag("Testing a destructible port, \"proper\" early shutdown");
             asynPortDriver *tempPort = instantiateDriver("portC", true);
             testA(tempPort);
-            tempPort->shutdown();
-        }
-        {
-            testDiag("Testing a destructible port, complete early shutdown");
-            asynPortDriver *tempPort = instantiateDriver("portD", true);
-            testA(tempPort);
+            std::string portName(tempPort->portName);
             asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
             pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
-
             pasynManager->lockPort(pasynUser);
             pasynManager->shutdown(pasynUser);
             pasynManager->unlockPort(pasynUser);
-
-            asynStatus status = pasynManager->queueRequest(pasynUser, asynQueuePriorityMedium, 0);
-            testOk1(status != asynSuccess);
-
-            int enabled = 1;
-            status = pasynManager->isEnabled(pasynUser, &enabled);
-            testOk1(status == asynSuccess && enabled == 0);
-
-            status = pasynManager->enable(pasynUser, 1);
-            testOk1(status != asynSuccess);
-
-            enabled = 1;
-            status = pasynManager->isEnabled(pasynUser, &enabled);
-            testOk1(status == asynSuccess && enabled == 0);
-
             pasynManager->freeAsynUser(pasynUser);
+
+            checkShutdown(portName.c_str());
+        }
+        {
+            testDiag("Testing a destructible port, early deletion");
+            asynPortDriver *tempPort = instantiateDriver("portD", true);
+            testA(tempPort);
+            std::string portName(tempPort->portName);
+            delete tempPort;
+            checkShutdown(portName.c_str());
         }
     } catch(std::exception& e) {
         testAbort("Unhandled C++ exception: %s", e.what());
