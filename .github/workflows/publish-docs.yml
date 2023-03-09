@@ -35,39 +35,29 @@ jobs:
       with:
         fetch-depth: 0 # otherwise, you will fail to push refs to dest repo
 
-    - name: Install pip
-      run: |
-        sudo apt-get -y update
-        sudo apt-get -y install python3-pip
-        which pip3
-        which pip
+    - name: Install Doxygen
+      uses: sudo apt-get install doxygen graphviz -y
+      shell: bash
 
-    - name: Install packages used by Sphinx
+    - name: Generate Doxygen documentation
+      run: |
+        cd docs
+        doxygen
+        cd -
+
+    - name: Setup Python
+      uses: actions/setup-python@v4
+      with:
+        python-verions: "3.10"
+
+    - name: Build Docs
       run: |
         pip install m2r2 "pygments >=2.7.0" "sphinx_rtd_theme >=1.2.0" sphinx-multibuild
-        pip list
+        sphinx-multibuild -ET docs build/html
 
-    - name: Build doxygen
-      uses: mattnotmitt/doxygen-action@v1.9.5
-      with:
-          working-directory: docs
-
-    - name: Change Doxygen output permissions so Sphinx can delete
-      run: |
-        sudo chmod -R 777 docs/doxygenHTML
-
-    - name: Build and Commit
-      uses: sphinx-notes/pages@v2
-      with:
-        # path to conf.py directory
-        documentation_path: docs/source
-
-    - name: Examine output of Sphinx
-      run: |
-        ls -l
-
-    - name: Push changes
-      uses: ad-m/github-push-action@master
+    - name: Publish Docs
+      uses: peaceiris/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: gh-pages
+        publish_dir:build/html
+        keep_files: true
