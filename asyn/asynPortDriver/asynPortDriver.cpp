@@ -3963,8 +3963,6 @@ asynStatus asynPortDriver::createParams()
 
 asynStatus asynPortDriver::shutdown() {
     shutdownNeeded = false;
-    delete cbThread;
-    cbThread = NULL;
     return asynSuccess;
 }
 
@@ -3982,9 +3980,7 @@ asynPortDriver::~asynPortDriver()
                   driverName, portName);
     }
 
-    if (cbThread)
-        delete cbThread;
-
+    delete cbThread;
     epicsMutexDestroy(this->mutexId);
 
     for (int addr=0; addr<this->maxAddr; addr++) {
