@@ -8,14 +8,11 @@ DOCS = _docs
 #OPTS = -v -v -v
 OPTS =
 
-doxygen:
+doxygen: sphinx
 	doxygen
 
-.PHONY: all
 all: sphinx doxygen
 
-
-.PHONY: all
 sphinx:
 	$(SPHINX_MULTIBUILD) -i $(SOURCE) -s $(DOCS) -o $(BUILD)/html $(OPTS) -b html
 
