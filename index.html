@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>asyn &mdash; asyn support</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="asynDriver: EPICS Driver Support" href="asynDriver.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="#" class="icon icon-home">
+            asyn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn - asyn Record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="#">asyn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="#" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">asyn</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/index.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="asyn">
+<h1>asyn<a class="headerlink" href="#asyn" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mark Rivers, University of Chicago</p>
+</dd>
+</dl>
+<section id="table-of-contents">
+<h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading"></a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#license-agreement">License Agreement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#purpose">Purpose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#status">Status</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#acknowledgments">Acknowledgments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#overview-of-asyndriver">Overview of asynDriver</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#definitions">Definitions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#standard-interfaces">Standard Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#generic-interfaces">Generic Interfaces</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynmanager">asynManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#multiple-device-vs-single-device-port-drivers">Multiple Device vs Single Device Port Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#connection-management">Connection Management</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#protecting-a-thread-from-blocking">Protecting a Thread from Blocking</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#portthread">portThread</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#overview-of-queuing">Overview of Queuing</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#theory-of-operation">Theory of Operation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#initialization">Initialization</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#requesting-access-to-a-port">Requesting access to a port</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#queuerequest-flow-of-control">queueRequest - Flow of Control</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asyndriver-structures-and-interfaces">asynDriver Structures and Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynstatus">asynStatus</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynexception">asynException</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynqueuepriority">asynQueuePriority</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynuser">asynUser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterface">asynInterface</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#id1">asynManager</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyncommon">asynCommon</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyncommonsyncio">asynCommonSyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyndrvuser">asynDrvUser</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynlockportnotify">asynLockPortNotify</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynoption">asynOption</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyntrace">asynTrace</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#standard-message-based-interfaces">Standard Message Based Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynoctet">asynOctet</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynoctetsyncio">asynOctetSyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#end-of-string-support">End of String Support</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#standard-register-based-interfaces">Standard Register Based Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#introduction">Introduction</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#example-drivers">Example Drivers</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynintxx-xx-32-or-64">asynIntXX (XX=32 or 64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynintxxsyncio-xx-32-or-64">asynIntXXSyncIO (XX=32 or 64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynuint32digital">asynUInt32Digital</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynuint32digitalsyncio">asynUInt32DigitalSyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynfloat64">asynFloat64</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynfloat64syncio">asynFloat64SyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynxxxarraysyncio">asynXXXArraySyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynenum">asynEnum</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynenumsyncio">asynEnumSyncIO</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyngenericpointer">asynGenericPointer</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyngenericpointersyncio">asynGenericPointerSyncIO</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asynstandardinterfacesbase">asynStandardInterfacesBase</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynstandardinterfaces-structure">asynStandardInterfaces structure</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynstandardinterfacesbase-interface">asynStandardInterfacesBase interface</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#standard-interpose-interfaces">Standard Interpose Interfaces</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterposeeos">asynInterposeEos</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterposeflush">asynInterposeFlush</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterposecom">asynInterposeCom</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterposedelay">asynInterposeDelay</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyninterposeecho">asynInterposeEcho</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#generic-device-support-for-epics-records">Generic Device Support for EPICS records</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynmanager-interrupts-and-epics-device-support">asynManager interrupts and EPICS device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#initial-values-of-output-records">Initial values of output records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#enum-values-for-bi-bo-mbbi-and-mbbo-records">Enum values for bi, bo, mbbi, and mbbo records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#callback-updates-for-output-records">Callback updates for output records</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#buffering-of-driver-callbacks">Buffering of driver callbacks</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#time-stamps">Time stamps</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynint32-device-support">asynInt32 device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynint64-device-support">asynInt64 device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynintxxxarray-device-support-xxx-8-16-32-or-64">asynIntXXXArray device support (XXX=8, 16, 32, or 64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynxxxtimeseries-device-support-xxx-int32-int64-or-float64">asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynuint32digital-device-support">asynUInt32Digital device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynfloat64-device-support">asynFloat64 device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynfloatxxxarray-device-support-xxx-32-or-64">asynFloatXXXArray device support (XXX=32 or 64)</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asynoctet-device-support">asynOctet device support</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#record-alarms">Record alarms</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asynrecord-generic-epics-record-support">asynRecord: Generic EPICS Record Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asyngpib">asynGpib</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyngpibdriver-h">asynGpibDriver.h</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#id2">asynGpib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#asyngpibport">asynGpibPort</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#port-drivers">Port Drivers</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#local-serial-port">Local Serial Port</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#tcp-ip-or-udp-ip-port">TCP/IP or UDP/IP Port</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#tcp-ip-server">TCP/IP Server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#vxi-11">VXI-11</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#drvprologixgpib">drvPrologixGPIB</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#linux-gpib">Linux-Gpib</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#green-springs-ip488">Green Springs IP488</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#national-instruments-gpib-1014d">National Instruments GPIB-1014D</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#usb-tmc-test-and-measurement-class-driver">USB TMC (Test and Measurement Class) driver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#ftdi-port">FTDI Port</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asynportdriver-c-base-class">asynPortDriver C++ base class</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#asynportclient-c-classes">asynPortClient C++ classes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#diagnostic-aids">Diagnostic Aids</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#iocsh-commands">iocsh Commands</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#example-client">Example Client</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#test-applications">Test Applications</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testapp">testApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testarrayringbufferapp">testArrayRingBufferApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testasynportclientapp">testAsynPortClientApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testbroadcastapp">testBroadcastApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testconnectapp">testConnectApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testepicsapp">testEpicsApp</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#testerrorsapp">testErrorsApp</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#install-and-build">Install and Build</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#install-and-build-asyndriver">Install and Build asynDriver</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynDriver.html#using-asyndriver-components-with-an-epics-ioccore-application">Using asynDriver Components with an EPICS iocCore Application</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynDriver.html#id3">License Agreement</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn - asyn Record</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#device-address-control-fields">Device Address Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#input-output-control-fields">Input/Output Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#output-control-fields-for-asynoctet">Output Control Fields for asynOctet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#input-control-fields-for-asynoctet">Input Control Fields for asynOctet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#input-output-control-fields-for-register-interfaces">Input/Output Control Fields for Register Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#serial-control-fields">Serial Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#ip-control-fields">IP Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#gpib-control-fields">GPIB Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#trace-control-fields">Trace Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#connection-management-fields">Connection Management Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#error-status-fields">Error Status Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#private-fields">Private Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#record-processing">Record Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#obsolete-serial-and-gpib-records">Obsolete serial and GPIB records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#medm-screens">medm screens</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#main-control-screen-asynrecord-adl">Main control screen, asynRecord.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#asynoctet-i-o-screen-asynoctet-adl">asynOctet I/O screen, asynOctet.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#asyn-register-device-i-o-screen-asynregister-adl">asyn register device I/O screen, asynRegister.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#serial-port-setup-screen-asynserialportsetup-adl">Serial port setup screen, asynSerialPortSetup.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#ip-port-setup-screen-asynipportsetup-adl">IP port setup screen, asynIPPortSetup.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynRecord.html#gpib-setup-screen-asyngpibsetup-adl">GPIB setup screen, asynGPIBSetup.adl</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#example-1">Example #1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecord.html#example-2">Example #2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="asynDriver.html" class="btn btn-neutral float-right" title="asynDriver: EPICS Driver Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mark Rivers.
+      <span class="lastupdated">Last updated on 2023-March-09.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

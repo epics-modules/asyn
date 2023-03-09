@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>asyn - asyn Record &mdash; asyn support</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Doxygen documentation" href="doxygen.html" />
+    <link rel="prev" title="asynDriver: EPICS Driver Support" href="asynDriver.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            asyn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">asyn - asyn Record</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#device-address-control-fields">Device Address Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-output-control-fields">Input/Output Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#output-control-fields-for-asynoctet">Output Control Fields for asynOctet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-control-fields-for-asynoctet">Input Control Fields for asynOctet</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#input-output-control-fields-for-register-interfaces">Input/Output Control Fields for Register Interfaces</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#serial-control-fields">Serial Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#ip-control-fields">IP Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpib-control-fields">GPIB Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#trace-control-fields">Trace Control Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#connection-management-fields">Connection Management Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#error-status-fields">Error Status Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#private-fields">Private Fields</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#record-processing">Record Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#obsolete-serial-and-gpib-records">Obsolete serial and GPIB records</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#medm-screens">medm screens</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#main-control-screen-asynrecord-adl">Main control screen, asynRecord.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#asynoctet-i-o-screen-asynoctet-adl">asynOctet I/O screen, asynOctet.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#asyn-register-device-i-o-screen-asynregister-adl">asyn register device I/O screen, asynRegister.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#serial-port-setup-screen-asynserialportsetup-adl">Serial port setup screen, asynSerialPortSetup.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#ip-port-setup-screen-asynipportsetup-adl">IP port setup screen, asynIPPortSetup.adl</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpib-setup-screen-asyngpibsetup-adl">GPIB setup screen, asynGPIBSetup.adl</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#example-1">Example #1</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-2">Example #2</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">asyn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">asyn - asyn Record</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/asynRecord.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="asyn-asyn-record">
+<h1><a class="toc-backref" href="#id21" role="doc-backlink">asyn - asyn Record</a><a class="headerlink" href="#asyn-asyn-record" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mark Rivers and Marty Kraimer</p>
+</dd>
+</dl>
+<nav class="contents" id="contents">
+<p class="topic-title">Contents</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#asyn-asyn-record" id="id21">asyn - asyn Record</a></p>
+<ul>
+<li><p><a class="reference internal" href="#overview" id="id22">Overview</a></p></li>
+<li><p><a class="reference internal" href="#device-address-control-fields" id="id23">Device Address Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#input-output-control-fields" id="id24">Input/Output Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#output-control-fields-for-asynoctet" id="id25">Output Control Fields for asynOctet</a></p></li>
+<li><p><a class="reference internal" href="#input-control-fields-for-asynoctet" id="id26">Input Control Fields for asynOctet</a></p></li>
+<li><p><a class="reference internal" href="#input-output-control-fields-for-register-interfaces" id="id27">Input/Output Control Fields for Register Interfaces</a></p></li>
+<li><p><a class="reference internal" href="#serial-control-fields" id="id28">Serial Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#ip-control-fields" id="id29">IP Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#gpib-control-fields" id="id30">GPIB Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#trace-control-fields" id="id31">Trace Control Fields</a></p></li>
+<li><p><a class="reference internal" href="#connection-management-fields" id="id32">Connection Management Fields</a></p></li>
+<li><p><a class="reference internal" href="#error-status-fields" id="id33">Error Status Fields</a></p></li>
+<li><p><a class="reference internal" href="#private-fields" id="id34">Private Fields</a></p></li>
+<li><p><a class="reference internal" href="#record-processing" id="id35">Record Processing</a></p></li>
+<li><p><a class="reference internal" href="#obsolete-serial-and-gpib-records" id="id36">Obsolete serial and GPIB records</a></p></li>
+<li><p><a class="reference internal" href="#medm-screens" id="id37">medm screens</a></p>
+<ul>
+<li><p><a class="reference internal" href="#main-control-screen-asynrecord-adl" id="id38">Main control screen, asynRecord.adl</a></p></li>
+<li><p><a class="reference internal" href="#asynoctet-i-o-screen-asynoctet-adl" id="id39">asynOctet I/O screen, asynOctet.adl</a></p></li>
+<li><p><a class="reference internal" href="#asyn-register-device-i-o-screen-asynregister-adl" id="id40">asyn register device I/O screen, asynRegister.adl</a></p></li>
+<li><p><a class="reference internal" href="#serial-port-setup-screen-asynserialportsetup-adl" id="id41">Serial port setup screen, asynSerialPortSetup.adl</a></p></li>
+<li><p><a class="reference internal" href="#ip-port-setup-screen-asynipportsetup-adl" id="id42">IP port setup screen, asynIPPortSetup.adl</a></p></li>
+<li><p><a class="reference internal" href="#gpib-setup-screen-asyngpibsetup-adl" id="id43">GPIB setup screen, asynGPIBSetup.adl</a></p></li>
+</ul>
+</li>
+<li><p><a class="reference internal" href="#example-1" id="id44">Example #1</a></p></li>
+<li><p><a class="reference internal" href="#example-2" id="id45">Example #2</a></p></li>
+</ul>
+</li>
+</ul>
+</nav>
+<section id="overview">
+<h2><a class="toc-backref" href="#id22" role="doc-backlink">Overview</a><a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>The asyn record is designed to provide access to nearly all of the features of the
+asyn facility. It includes the ability to:</p>
+<ul class="simple">
+<li><p>Perform I/O to any asyn device that supports the asynOctet, asynInt32, asynUInt32Digital,
+and/or asynFloat64 interfaces.</p></li>
+<li><p>Allow EPICS to communicate with a new device without rebooting the IOC, i.e. without
+writing any C code or changing the database. This allows Channel Access clients
+to communicate with devices for which no EPICS device support exists.</p></li>
+<li><p>In combination with the scalcout record to format output strings and to parse
+response strings, eliminate the need for C device support code in many applications.</p></li>
+<li><p>Dynamically change the asyn device “port” and “address”, so a single asyn record
+can be switched from talking to one device to another at run time.</p></li>
+<li><p>Dynamically change the asyn interface being used for I/O.</p></li>
+<li><p>Manage the connection state of a device, i.e. connect/disconnect, enable/disable,
+autoConnect/noAutoConnect..</p></li>
+<li><p>Provide access to asynTrace, controlling debugging output for any asyn device.</p></li>
+<li><p>Control the the baud rate, parity, etc. for serial ports whose drivers support
+the asynOption interface.</p></li>
+<li><p>Control the GPIB address and execute global and addressed commands for GPIB devices.</p></li>
+</ul>
+<p>For the asynOctet interface there are two output fields, AOUT (ASCII Output) and
+BOUT (Byte Output). The OFMT (Output Format) field is used to select one of these
+fields or the other as the output source to the device. Similarly, there are two
+input fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input Format)
+field is used to select one or the other as the destination of data sent from the
+device. The ASCII fields are type DBF_STRING, and are very convenient for typical
+communication with many devices. They permit, for example, <code class="docutils literal notranslate"><span class="pre">medm</span></code> screens
+where the user can type a string and observe the response from the instrument. The
+ASCII fields, however are limited to 40 characters in length, and cannot be used
+to read or write binary data. The byte input and output fields are DBF_CHAR arrays,
+and can be used to transfer large blocks of arbitrary data, either ASCII or binary.</p>
+<p>In the “Access” columns in the field description tables:</p>
+<table class="docutils align-default" id="id1">
+<caption><span class="caption-text">Access Codes</span><a class="headerlink" href="#id1" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>R</p></td>
+<td><p>Read only</p></td>
+</tr>
+<tr class="row-even"><td><p>R/W</p></td>
+<td><p>Read and write are allowed</p></td>
+</tr>
+<tr class="row-odd"><td><p>R/W*</p></td>
+<td><p>Read and write are allowed; write triggers record processing if the record’s SCAN
+field is set to “Passive”.</p></td>
+</tr>
+<tr class="row-even"><td><p>N</p></td>
+<td><p>No access allowed</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="device-address-control-fields">
+<h2><a class="toc-backref" href="#id23" role="doc-backlink">Device Address Control Fields</a><a class="headerlink" href="#device-address-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id2">
+<caption><span class="caption-text">Device Address Control Fields</span><a class="headerlink" href="#id2" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>PORT</p></td>
+<td><p>R/W</p></td>
+<td><p>“asyn port”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>The asyn “port” name. This field can be changed at any time to connect the record
+to another asyn device.</p></td>
+</tr>
+<tr class="row-odd"><td><p>ADDR</p></td>
+<td><p>R/W</p></td>
+<td><p>“asyn address”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The asyn address. This field can be changed at any time to connect the record to
+another asyn device.</p></td>
+</tr>
+<tr class="row-even"><td><p>PCNCT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Port Connect/Disconnect”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Disconnects or connects the port. Choices are “Disconnect” and “Connect”. The value
+read reflects whether there is currently a valid connection to a port.</p></td>
+</tr>
+<tr class="row-odd"><td><p>DRVINFO</p></td>
+<td><p>R/W</p></td>
+<td><p>“Driver information”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>A string that is passed to the driver with asynDrvUser-&gt;create(), assuming that
+the asynDrvUser interface exists. The driver will update pasynUser-&gt;reason and/or
+pasynUser-&gt;drvUser as a result. If pasynUser-&gt;reason is changed then the asynRecord
+REASON field will be updated.</p></td>
+</tr>
+<tr class="row-even"><td><p>REASON</p></td>
+<td><p>R/W</p></td>
+<td><p>“Reason or command”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>A integer “reason” or “command” that is typically used to tell the driver what item
+to read or write. This value is updated when connecting to the driver, using the
+DRVINFO field. It can be changed later without reconnecting to the driver. If REASON
+is changed then the DRVINFO field will be set to an empty string.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The asyn record does not have traditional INP or OUT fields for input and output
+links. Rather it provides the PORT and ADDR fields to allow dynamically changing
+what asyn device the record is connected to.</p>
+<p>Writing to the PORT, ADDR or DRVINFO fields causes the asyn record to disconnect
+from the current device and connect to the specified asyn port and address. This
+permits a single asyn record to be used to control any asyn device. Writing to these
+fields does not cause any I/O to be done.</p>
+<p>Note that since writing to the PORT, ADDR, or DRVINFO fields cause the record to
+automatically attempt to connect to the port, it is usually not necessary to write
+to the PCNCT field to connect to the port. The PCNCT field is useful for determining
+if the port is connected, and for forcing a disconnect if desired.</p>
+</section>
+<section id="input-output-control-fields">
+<h2><a class="toc-backref" href="#id24" role="doc-backlink">Input/Output Control Fields</a><a class="headerlink" href="#input-output-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">Input/Output Control Fields</span><a class="headerlink" href="#id3" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>VAL</p></td>
+<td><p>R/W</p></td>
+<td><p>“Value field (unused)”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>This field is unused. The functions normally assigned to the VAL field in many records
+are performed by the AOUT, BOUT, AINP, BINP, I32OUT, I32INP, UI32OUT, UI32INP, F64OUT,
+and F64INP fields in the asyn record.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TMOD</p></td>
+<td><p>R/W</p></td>
+<td><p>“Transaction mode”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The type of I/O transaction to perform when the record is processed. The choices are:</p>
+<ul class="simple">
+<li><p>“Write/Read” (default)</p></li>
+<li><p>“Write”</p></li>
+<li><p>“Read”</p></li>
+<li><p>“Flush”</p></li>
+<li><p>“NoI/O”</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p>IFACE</p></td>
+<td><p>R/W</p></td>
+<td><p>“Interface”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The interface to use for the I/O transfer when the record processes. The choices are:</p>
+<ul class="simple">
+<li><p>“asynOctet” (default)</p></li>
+<li><p>“asynInt32”</p></li>
+<li><p>“asynUInt32Digital”</p></li>
+<li><p>“asynFloat64”</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>OCTETIV</p></td>
+<td><p>R</p></td>
+<td><p>“Octet Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynOctet interface.</p></td>
+</tr>
+<tr class="row-even"><td><p>I32IV</p></td>
+<td><p>R</p></td>
+<td><p>“Int32 Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynInt32 interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p>UI32IV</p></td>
+<td><p>R</p></td>
+<td><p>“UInt32Digital Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynUInt32Digital
+interface.</p></td>
+</tr>
+<tr class="row-even"><td><p>F64IV</p></td>
+<td><p>R</p></td>
+<td><p>“Float64 Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynFloat64 interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p>OPTIONIV</p></td>
+<td><p>R</p></td>
+<td><p>“Option Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynOption interface.</p></td>
+</tr>
+<tr class="row-even"><td><p>GPIBIV</p></td>
+<td><p>R</p></td>
+<td><p>“GPIB Is Valid”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>This field is (1,0) if the driver (does,does not) support the asynGPIB interface.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TMOT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Timeout (sec)”</p></td>
+<td><p>DBF_DOUBLE</p></td>
+<td><p>The timeout value for read and write operations in seconds. If a response is not
+received from the device within this time then the record sets a major alarm. -1.0
+means wait forever, no timeout. Default=1.0</p></td>
+</tr>
+</tbody>
+</table>
+<p>The TMOD field controls what type of I/O is performed when the record processes.</p>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">Transfer Mode</span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>“Write/Read” (default)</p></td>
+<td><p>The output data is sent from the selected output field to the device. A response
+is then read back into the selected input field. The response must be received within
+the time specified by TMOT. For asynOctet the input buffer is flushed before the
+write operation, so that any characters received prior to the write operation are
+discarded. The Write/Read operation is “atomic”, meaning that it is guaranteed that
+no other asyn I/O to the device will occur between the write and read operations.</p></td>
+</tr>
+<tr class="row-even"><td><p>“Write”</p></td>
+<td><p>The output source is sent to the device. No response is read back.</p></td>
+</tr>
+<tr class="row-odd"><td><p>“Read”</p></td>
+<td><p>Data is read from the device into the input field. The response must be received
+within the time specified by TMOT. No output is sent to the device prior to the
+read operation.</p></td>
+</tr>
+<tr class="row-even"><td><p>“Flush”</p></td>
+<td><p>The input buffer is flushed. Nothing is sent to the device or read from the device.
+Applies only to asynOctet.</p></td>
+</tr>
+<tr class="row-odd"><td><p>“NoI/O”</p></td>
+<td><p>The record processes but no I/O is actually performed. This mode can be used as
+a safety feature when using an asyn record to just control the trace fields of asyn
+ports. If the record is in this mode and is accidentally processed, then no I/O
+will occur.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="output-control-fields-for-asynoctet">
+<h2><a class="toc-backref" href="#id25" role="doc-backlink">Output Control Fields for asynOctet</a><a class="headerlink" href="#output-control-fields-for-asynoctet" title="Permalink to this heading"></a></h2>
+<p>These fields control output I/O when using the asynOctet interface (i.e. when IFACE=”asynOctet”).</p>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">Output Control Fields for asynOctet</span><a class="headerlink" href="#id5" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AOUT</p></td>
+<td><p>R/W*</p></td>
+<td><p>“Output string”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>The output string which is sent to the device if OFMT=”ASCII”. The number of bytes
+sent to the device will be <code class="docutils literal notranslate"><span class="pre">strlen(AOUT)</span></code> plus <code class="docutils literal notranslate"><span class="pre">strlen(OEOS)</span></code>.</p></td>
+</tr>
+<tr class="row-odd"><td><p>BOUT</p></td>
+<td><p>R/W*</p></td>
+<td><p>“Output byte data”</p></td>
+<td><p>DBF_CHAR (array)</p></td>
+<td><p>The output data which is sent to the device if OFMT=”Binary” or “Hybrid”. The maximum
+length of this field is controlled by OMAX. The actual number of bytes to be sent
+to the device when OFMT=”Hybrid” will be <code class="docutils literal notranslate"><span class="pre">strlen(BOUT)</span></code> plus <code class="docutils literal notranslate"><span class="pre">strlen(OEOS)</span></code>.
+The actual number of bytes to be sent to the device when OFMP=”Binary” will be NOWT.</p></td>
+</tr>
+<tr class="row-even"><td><p>OEOS</p></td>
+<td><p>R/W</p></td>
+<td><p>“Output terminator”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>A character string that is appended to the output before transmission to the device.
+This field is ignored if OFMT=”Binary”. Set this field to “” to suppress transmission
+of a terminator. Commonly used values are “r” (the default), “n”, and “rn”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>OMAX</p></td>
+<td><p>R</p></td>
+<td><p>“Max. size of output array”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The allocated length of the BOUT array. This value cannot be changed after IOC initialization.
+Default=80.</p></td>
+</tr>
+<tr class="row-even"><td><p>NOWT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Number of bytes to write”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The number of bytes to send from the BOUT array to the device if OFMT=”Binary”.
+This value must be less than or equal to OMAX. Default=80.</p></td>
+</tr>
+<tr class="row-odd"><td><p>NAWT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Number of bytes actually written”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The actual number of bytes written in the last write operation. This field is valid
+for all OFMT modes. This number does not include the output terminator, if any.</p></td>
+</tr>
+<tr class="row-even"><td><p>OFMT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Output format”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The output format. The choices are:</p>
+<ul class="simple">
+<li><p>“ASCII “(default)</p></li>
+<li><p>The data sent to the device will be taken from the AOUT field.</p></li>
+<li><p>“Hybrid”</p></li>
+<li><p>The data sent to the device will be taken from the BOUT field.</p></li>
+<li><p>“Binary”</p></li>
+<li><p>The data sent to the device will be taken from the BOUT field.</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The OFMT
+(Output Format) field is used to select one of these fields or the other as the
+output source to the device.</p>
+<p>If OFMT=”ASCII” then the AOUT field is processed with dbTranslateEscape() to convert
+control characters (e.g. “r”, “021”) to bytes, the length of the output is determined
+with strlen(), and the string is sent to the device using asynOctet-&gt;write. This
+will append the output EOS if one has been set.</p>
+<p>If OFMT=”Hybrid” then the BOUT field is processed with dbTranslateEscape() to convert
+control characters (e.g. “r”, “021”) to bytes, the length of the output is determined
+with strlen(), and the string is sent to the device using asynOctet-&gt;write. This
+will append the output EOS if one has been set.</p>
+<p>If OFMT=”Binary” then NOWT bytes from the BOUT field are sent to the device using
+asynOctet-&gt;write. This will not append an output EOS.</p>
+<p>OEOS is set to the current value for the port when the record connects to the port.
+If OEOS is modified after the record connects to the port, then the output EOS will
+be changed using asynOctet-&gt;setOutputEos. IMPORTANT: The value of OEOS in the
+database file is never used, because it is modified when the record connects to
+the port.</p>
+</section>
+<section id="input-control-fields-for-asynoctet">
+<h2><a class="toc-backref" href="#id26" role="doc-backlink">Input Control Fields for asynOctet</a><a class="headerlink" href="#input-control-fields-for-asynoctet" title="Permalink to this heading"></a></h2>
+<p>These fields control input I/O when using the asynOctet interface (i.e. when IFACE=”asynOctet”).</p>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">Input Control Fields for asynOctet</span><a class="headerlink" href="#id6" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AINP</p></td>
+<td><p>R</p></td>
+<td><p>“Input string”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>The input string that is read from the device if IFMT=”ASCII”. The string will be
+null terminated. Note that due to the maximum size of a string in EPICS, the input
+string must be less than 40 characters. If longer strings are required then set
+IFMT=”Hybrid” and read into the BINP field.</p></td>
+</tr>
+<tr class="row-odd"><td><p>BINP</p></td>
+<td><p>R</p></td>
+<td><p>“Input byte data”</p></td>
+<td><p>DBF_CHAR (array)</p></td>
+<td><p>The input data that is read from the device if IFMT=”Hybrid” or IFMT=”Binary”. The
+maximum length of this field is controlled by IMAX. The actual number of bytes read
+from the device is given by NORD.</p></td>
+</tr>
+<tr class="row-even"><td><p>IEOS</p></td>
+<td><p>R/W</p></td>
+<td><p>“Input terminator”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>A string that indicates the end of a message on input. Set this field to “”” if
+no input terminator should be used. This field is ignored if IFMT=”Binary”. Commonly
+used values are “r” (the default), “n”, and “rn”. The input terminator is removed
+from the input buffer after the read.</p></td>
+</tr>
+<tr class="row-odd"><td><p>IMAX</p></td>
+<td><p>R</p></td>
+<td><p>“Max. size of input array”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The allocated length of the BINP array. This value cannot be changed after IOC initialization.
+Default=80.</p></td>
+</tr>
+<tr class="row-even"><td><p>NRRD</p></td>
+<td><p>R/W</p></td>
+<td><p>“Number of bytes to read”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The requested number of bytes to read. This field is valid for all IFMT modes. If
+this field is &lt;= 0, then the requested number of bytes to read will be the EPICS
+defined MAX_STRING_SIZE=40 (if IFMT=”ASCII”) or IMAX (if IFMT=”Hybrid” or “Binary”).
+Default=0.</p></td>
+</tr>
+<tr class="row-odd"><td><p>NORD</p></td>
+<td><p>R</p></td>
+<td><p>“Number of bytes read”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The actual number of bytes read in the last read operation. This field is valid
+for all IFMT modes. This number includes the input terminator, if any.</p></td>
+</tr>
+<tr class="row-even"><td><p>IFMT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Input format”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The input format. The choices are:</p>
+<ul class="simple">
+<li><p>“ASCII” (default)</p>
+<ul>
+<li><p>The data read from the device will be placed in the AINP field.</p></li>
+</ul>
+</li>
+<li><p>“Hybrid”</p></li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><p>The data read from the device will be placed in the BINP field.</p></li>
+</ul>
+</div></blockquote>
+<ul class="simple">
+<li><p>“Binary”</p>
+<ul>
+<li><p>The data read from the device will be placed in the BINP field.</p></li>
+</ul>
+</li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>TINP</p></td>
+<td><p>R</p></td>
+<td><p>“Translated input”</p></td>
+<td><p>DBF_CHAR (array)</p></td>
+<td><p>This field will contain up to the first 40 characters of the AINP or BINP fields
+(depending on IFMT), after translation with epicsStrSnPrintEscaped, to convert non-printable
+characters to a printable form (e.g. r, n, etc.)</p></td>
+</tr>
+</tbody>
+</table>
+<p>There are two input fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input
+Format) field is used to select one or the other as the destination of data sent
+from the device.</p>
+<p>A read operation terminates when any 1 of the following 4 conditions is met:</p>
+<ol class="arabic simple">
+<li><p>The input terminator (IEOS) is found (if IFMT=”ASCII” or “Hybrid”)</p></li>
+<li><p>EOI asserted (GPIB only)</p></li>
+<li><p>The desired number of input characters (NRRD) are received</p></li>
+<li><p>The timeout (TMOT) expires</p></li>
+</ol>
+<p>If IFMT=”ASCII” then input is read into the AINP field with asynOctet-&gt;read.
+This will remove the input EOS string, if any, and AINP will be NULL terminated
+if possible.</p>
+<p>If IFMT=”Hybrid” then the input is read into the BINP field with asynOctet-&gt;read.
+This will remove the input EOS string, if any, and BINP will be NULL terminated
+if possible.</p>
+<p>If IFMT=”Binary” then the input is read into the BINP field using asynOctet-&gt;read.
+This will ignore the input EOS. BINP will be null terminated.</p>
+<p>The TINP field is intended for operator display. It will contain up to the first
+40 characters of the input read into AINP (if IFMT=”ASCII”) or BINP (if IFMT=”Hybrid”
+or “Binary”). Non-printable characters are first converted to a printable form using
+epicsStrSnPrintEscaped. This field should not normally be using for parsing the
+response from the device. This is the field that is shown as the ASCII input field
+in the medm display asynRecord.adl. It is useful for displaying the device response,
+even in “Hybrid” and “Binary” input modes.</p>
+<p>The IEOS terminator field is 40 characters long. However, the serial drivers permit
+2 character end-of-message strings at most. The GPIB drivers only permit 1 character
+end-of-message strings.</p>
+<p>IEOS is set to the current value for the port when the record connects to the port.
+If IEOS is modified after the record connects to the port, then the input EOS will
+be changed using asynOctet-&gt;setInputEos. IMPORTANT: The value of IEOS in the
+database file is never used, because it is modified when the record connects to
+the port.</p>
+</section>
+<section id="input-output-control-fields-for-register-interfaces">
+<h2><a class="toc-backref" href="#id27" role="doc-backlink">Input/Output Control Fields for Register Interfaces</a><a class="headerlink" href="#input-output-control-fields-for-register-interfaces" title="Permalink to this heading"></a></h2>
+<p>These fields control I/O when using the register interfaces (i.e. when IFACE=”asynInt32”,
+“asynUInt32Digital”, or “asynFloat64”).</p>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">Input/Output Control Fields for Register Interfaces</span><a class="headerlink" href="#id7" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>I32INP</p></td>
+<td><p>R</p></td>
+<td><p>“asynInt32 input”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The input data that is read from the device if IFACE=”asynInt32” and TMOD=”Read”
+or “Write/Read”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>I32OUT</p></td>
+<td><p>R/W*</p></td>
+<td><p>“asynInt32 output”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The data that is sent to the device if IFACE=”asynInt32” and TMOD=”Write” or “Write/Read”.</p></td>
+</tr>
+<tr class="row-even"><td><p>UI32INP</p></td>
+<td><p>R</p></td>
+<td><p>“asynUInt32Digital input”</p></td>
+<td><p>DBF_ULONG</p></td>
+<td><p>The input data that is read from the device if IFACE=”asynUInt32Digital” and TMOD=”Read”
+or “Write/Read”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>UI32OUT</p></td>
+<td><p>R/W*</p></td>
+<td><p>“asynUInt32Digital output”</p></td>
+<td><p>DBF_ULONG</p></td>
+<td><p>The data that is sent to the device if IFACE=”asynUInt32Digital” and TMOD=”Write”
+or “Write/Read”.</p></td>
+</tr>
+<tr class="row-even"><td><p>UI32MASK</p></td>
+<td><p>R/W</p></td>
+<td><p>“asynUInt32Digital mask”</p></td>
+<td><p>DBF_ULONG</p></td>
+<td><p>The mask that is used if IFACE=”asynUInt32Digital”. The mask is used for both write
+and read operations. Only bits that are set in mask will be modified on writes,
+and any bits that are clear in mask will be zero on read.</p></td>
+</tr>
+<tr class="row-odd"><td><p>F64INP</p></td>
+<td><p>R</p></td>
+<td><p>“asynFloat64 input”</p></td>
+<td><p>DBF_DOUBLE</p></td>
+<td><p>The input data that is read from the device if IFACE=”asynFloat64” and TMOD=”Read”
+or “Write/Read”.</p></td>
+</tr>
+<tr class="row-even"><td><p>F64OUT</p></td>
+<td><p>R/W*</p></td>
+<td><p>“asynFloat64 output”</p></td>
+<td><p>DBF_DOUBLE</p></td>
+<td><p>The data that is sent to the device if IFACE=”asynFloat64” and TMOD=”Write” or “Write/Read”.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="serial-control-fields">
+<h2><a class="toc-backref" href="#id28" role="doc-backlink">Serial Control Fields</a><a class="headerlink" href="#serial-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id8">
+<caption><span class="caption-text">Input/Output Control Fields for Register Interfaces</span><a class="headerlink" href="#id8" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>BAUD</p></td>
+<td><p>R/W</p></td>
+<td><p>“Baud rate”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The baud rate for the port. Choices are “Unknown”, “300”, “600”, “1200”, “2400”,
+“4800”, “9600”, “19200”, “38400”, “57600”, “115200”, “230400”, 460800, 576000, 921600,
+and 1152000. Default=”Unknown”. Note that BAUD field is limited to 16 choices because
+it is of type DBF_MENU. The LBAUD field can be used to select baud rates that are
+not available in the BAUD menu.</p></td>
+</tr>
+<tr class="row-odd"><td><p>LBAUD</p></td>
+<td><p>R/W</p></td>
+<td><p>“Baud rate (long)”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The baud rate for the port as an integer. This field allows selecting any baud rate,
+including those not available in the BAUD menu field. Changing the BAUD field will
+change the LBAUD field accordingly. Changing the LBAUD field will change the BAUD
+field to the appropriate menu choice if possible, or to “Unknown” if that baud rate
+is not in the menu.</p></td>
+</tr>
+<tr class="row-even"><td><p>PRTY</p></td>
+<td><p>R/W</p></td>
+<td><p>“Parity”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The device parity. Choices are “Unknown”, “None”, “Even”, and “Odd”. Default=”Unknown”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>DBIT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Data bits”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The number of data bits. Choices are “Unknown”, “5”, “6”, “7”, and “8”. Default=”Unknown”.</p></td>
+</tr>
+<tr class="row-even"><td><p>SBIT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Stop bits”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The number of stop bits. Choices are “Unknown”, “1” and “2”. Default=”Unknown”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>MCTL</p></td>
+<td><p>R/W</p></td>
+<td><p>“Modem Control”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Modem control. Choices are “Unknown”, “CLOCAL” and “YES”. Default=”Unknown”.</p></td>
+</tr>
+<tr class="row-even"><td><p>FCTL</p></td>
+<td><p>R/W</p></td>
+<td><p>“Flow control (cts rts)”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Flow control. Choices are “Unknown”, “None” and “Hardware”. Default=”Unknown”. Hardware
+means to use the cts (clear to send) and rts (request to send) signals</p></td>
+</tr>
+<tr class="row-odd"><td><p>IXON</p></td>
+<td><p>R/W</p></td>
+<td><p>“Output XOFF/XON”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>XOFF/XON control on output. Choices are “Unknown”, “No” and “Yes”. Default=”Unknown”.
+If the IOC receives an XOFF character, it suspends output until an XON character
+is received.</p></td>
+</tr>
+<tr class="row-even"><td><p>IXOFF</p></td>
+<td><p>R/W</p></td>
+<td><p>“Input XOFF/XON”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>XOFF/XON control on input. Choices are “Unknown”, “No” and “Yes”. Default=”Unknown”.
+The IOC sends XOFF and XON characters as necessary to prevent input from coming
+in faster than programs are reading it. The external device sending the input data
+must respond to an XOFF character by suspending transmission, and to an XON character
+by resuming transmission.</p></td>
+</tr>
+<tr class="row-odd"><td><p>IXANY</p></td>
+<td><p>R/W</p></td>
+<td><p>“XON=any character”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Choices are “Unknown”, “No” and “Yes”. Default=”Unknown”. Allows any input character
+to restart output when output has been suspended with the XOFF character. Otherwise,
+only the XON character restarts output. This flag is not available on all systems,
+including WIN32.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The above fields are used to set the serial port parameters. A write to any of these
+fields causes the port parameters to be changed immediately, but does not cause
+any I/O to be performed. The port parameters can currently be set only for local
+serial ports, including IP-Octal on vxWorks. They cannot currently be set for Ethernet/serial
+adapters like the Moxa units.</p>
+<p>The “Unknown” choice for each option is used on readback if the driver does not
+support that option. “Unknown” should not be written into the field.</p>
+<p>The baud rates actually available are device dependent. For the SBS IP-Octal module
+the maximum baud rate is 38400.</p>
+<p>These record fields are set to the values currently in effect for the port when
+the connection to the port is made. IMPORTANT: The value of these fields in the
+database file is never used, because it is modified when the record connects to
+the port.</p>
+<p>vxWorks and MCTL,FCTL. The sioLib serial support for vxWorks uses CLOCAL for what
+POSIX calls CTSRTS (Clear to send and request to send). It does not appear that
+sioLib has any concept of modem control, which is what POSIX calls CLOCAL. For vxWorks
+the standard serial support for asynDriver supplied in drvAsynSerialPort.c, accepts
+both MCTL and FCTL. MCTL=(CLOCAL,YES) is the same as FCTL=(None,Hardware).</p>
+</section>
+<section id="ip-control-fields">
+<h2><a class="toc-backref" href="#id29" role="doc-backlink">IP Control Fields</a><a class="headerlink" href="#ip-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id9">
+<caption><span class="caption-text">IP Control Fields</span><a class="headerlink" href="#id9" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>DRTO</p></td>
+<td><p>R/W</p></td>
+<td><p>“Disconnect on Read Timeout”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Choices are “Unknown”, “No” and “Yes”. Default=”No”. If Yes then the IP port will
+be disconnected on a read timeout.</p></td>
+</tr>
+<tr class="row-odd"><td><p>HOSTINFO</p></td>
+<td><p>R/W</p></td>
+<td><p>“IP port hostInfo”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>The IP port hostInfo string with the same syntax as the drvAsynIPPortConfigure command
+i.e. host:port[:localport] [protocol].</p></td>
+</tr>
+</tbody>
+</table>
+<p>Writing to the HOSTINFO field will cause the drvAsynIPPort driver to disconnect
+from the current host (if any) and then attempt to connect to the new host.</p>
+<p>If the drvAsynIPPort was created with the COM (RFC 2217) protocol then the serial
+control fields listed above can be used to control those settings on ther Ethernet/serial
+adapter.</p>
+</section>
+<section id="gpib-control-fields">
+<h2><a class="toc-backref" href="#id30" role="doc-backlink">GPIB Control Fields</a><a class="headerlink" href="#gpib-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id10">
+<caption><span class="caption-text">GPIB Control Fields</span><a class="headerlink" href="#id10" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SPR</p></td>
+<td><p>R</p></td>
+<td><p>“Serial Poll Response”</p></td>
+<td><p>DBF_UCHAR</p></td>
+<td><p>The device status byte, which is read during a Serial Poll operation.</p></td>
+</tr>
+<tr class="row-odd"><td><p>UCMD</p></td>
+<td><p>R/W*</p></td>
+<td><p>“Universal command”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>A GPIB Universal Command to be executed. The choices are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>“None”</p></li>
+<li><p>“Device Clear (DCL)”</p></li>
+<li><p>“Local Lockout (LL0)”</p></li>
+<li><p>“Serial Poll Disable (SPD)”</p></li>
+<li><p>“Serial Poll Enable (SPE)”</p></li>
+<li><p>“Unlisten (UNL)”</p></li>
+<li><p>“Untalk (UNT)”</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td><p>ACMD</p></td>
+<td><p>R/W*</p></td>
+<td><p>“Addressed command”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>A GPIB Addressed Command to be executed. The choices are:</p>
+<ul class="simple">
+<li><p>“None”</p></li>
+<li><p>“Group Execute Trig. (GET)”</p></li>
+<li><p>“Go To Local (GTL)”</p></li>
+<li><p>“Selected Dev. Clear (SDC)”</p></li>
+<li><p>“Take Control (TCT)”</p></li>
+<li><p>“Serial Poll”</p></li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p>GPIB Universal Commands are commands which are directed to all devices on the GPIB
+bus, not just addressed devices. If the UCMD field is set to any value except “None”
+then the appropriate Universal Command is executed, and UCMD is set back to “None”.
+The record processing only performs the Universal Command, i.e. it does not also
+perform the GPIB operation indicated by TMOD.</p>
+<p>GPIB Addressed Commands are commands which are directed to only the addressed devices
+on the GPIB bus. If the ACMD field is set to any value except “None” then the appropriate
+Addressed Command is executed, and ACMD is set back to “None”. The record processing
+only performs the Addressed Command, i.e. it does not also perform the GPIB operation
+indicated by TMOD.</p>
+</section>
+<section id="trace-control-fields">
+<h2><a class="toc-backref" href="#id31" role="doc-backlink">Trace Control Fields</a><a class="headerlink" href="#trace-control-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id11">
+<caption><span class="caption-text">Trace Control Fields</span><a class="headerlink" href="#id11" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>TMSK</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace mask”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The asynTraceMask.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TB0</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace error”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACE_ERROR bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TB1</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO device”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_DEVICE bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TB2</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO filter”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_FILTER bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TB3</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO driver”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_DRIVER bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TB4</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace flow”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACE_FLOW bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TB5</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace warning”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACE_WARNING bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIOM</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace I/O mask”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The asynTraceIOMask.</p></td>
+</tr>
+<tr class="row-even"><td><p>TIB0</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO ASCII”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_ASCII bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TIB1</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO escape”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_ESCAPE bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TIB2</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO hex”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEIO_HEX bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TINM</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace Info mask”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The asynTraceInfoMask.</p></td>
+</tr>
+<tr class="row-even"><td><p>TINB0</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace Info Time”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEINFO_TIME bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TINB1</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace Info Port”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEINFO_PORT bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TINB2</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace Info Source”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEINFO_SOURCE bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TINB3</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace Info Thread”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>The ASYN_TRACEINFO_THREAD bit. Choices are “Off” and “On”.</p></td>
+</tr>
+<tr class="row-even"><td><p>TSIZ</p></td>
+<td><p>R/W</p></td>
+<td><p>“TraceIO truncate size”</p></td>
+<td><p>DBF_LONG</p></td>
+<td><p>The parameter passed to asynTraceSetTraceIOTruncateSize(). This value is used to
+limit the number of I/O bytes printed by traceIO.</p></td>
+</tr>
+<tr class="row-odd"><td><p>TFIL</p></td>
+<td><p>R/W</p></td>
+<td><p>“Trace IO file”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>The name of the file to which trace information is printed.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The above fields are used to control the asynTrace facility. They allow one to turn
+on and off debugging output printed at the shell or written to the trace file.</p>
+<p>The TMSK field allows one to read/write the entire asynTraceMask word. The TB0-TB5
+fields allow one to read/write the individual bits in asynTraceMask. The TIOM field
+allows one to read/write the entire asynTraceIOMask word, and the TIB0-TIB2 fields
+allow one to read/write the individual bits in asynTraceIOMask. The TINM field allows
+one to read/write the entire asynTraceInfoMask word, and the TINB0-TINB3 fields
+allow one to read/write the individual bits in asynTraceInfoMask.</p>
+<p>When the asyn record is connected to a new device with the PORT and ADDR fields
+the above trace fields are automatically updated to reflect the current asynTrace,
+asynTraceIO, and asynTraceInfo masks for that device.</p>
+<p>The TFIL field is used to set the name of the trace file. It is not possible for
+the asyn record to determine the current file name if the record did not set it.
+In this case the file name is displayed as “Unknown”. Set this field to a string
+file name (including possibly a valid path from the IOC’s current default directory)
+to have the output written to that file. The following values are handled as special
+cases:</p>
+<ul class="simple">
+<li><p>&lt;stdout&gt; - Write to standard out.</p></li>
+<li><p>&lt;stderr&gt; - Write to standard error.</p></li>
+<li><p>&lt;errlog&gt; - Use the errlog facility.</p></li>
+</ul>
+</section>
+<section id="connection-management-fields">
+<h2><a class="toc-backref" href="#id32" role="doc-backlink">Connection Management Fields</a><a class="headerlink" href="#connection-management-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id12">
+<caption><span class="caption-text">Connection Management Fields</span><a class="headerlink" href="#id12" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>AUCT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Autoconnect”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Sets the autoconnect option. Choices are “noAutoConnect” and “autoConnect”. The
+value read reflects current state of the autoconnect flag, i.e. the value returned
+from isAutoConnect().</p></td>
+</tr>
+<tr class="row-odd"><td><p>ENBL</p></td>
+<td><p>R/W</p></td>
+<td><p>“Disable/Enable”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Disables or enables the port. Choices are “Disable” and “Enable”. The value read
+reflects current state of the enabled flag, i.e. the value returned from isEnabled().</p></td>
+</tr>
+<tr class="row-even"><td><p>CNCT</p></td>
+<td><p>R/W</p></td>
+<td><p>“Connect/Disconnect”</p></td>
+<td><p>DBF_MENU</p></td>
+<td><p>Disconnects or connects the device. Choices are “Disconnect” and “Connect”. The
+value read reflects current state of the connected flag, i.e. the value returned
+from isConnected().</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="error-status-fields">
+<h2><a class="toc-backref" href="#id33" role="doc-backlink">Error Status Fields</a><a class="headerlink" href="#error-status-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id13">
+<caption><span class="caption-text">Error Status Fields</span><a class="headerlink" href="#id13" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>ERRS</p></td>
+<td><p>R</p></td>
+<td><p>“Error status”</p></td>
+<td><p>DBF_STRING</p></td>
+<td><p>Error status string for the most recent operation. This string is set to “” (null
+string) at the start of each connection and I/O operation.</p></td>
+</tr>
+<tr class="row-odd"><td><p>AQR</p></td>
+<td><p>W</p></td>
+<td><p>“About queueRequest”</p></td>
+<td><p>DBF_CHAR</p></td>
+<td><p>Abort queueRequest. If a process request has been queued but not delivered it is
+canceled, the record is put into alarm and record completion occurs.</p></td>
+</tr>
+</tbody>
+</table>
+<p>The ERRS field is set to “” (null string) at the start of every operation, including
+trace and connection management operations. It contains the first 100 characters
+of any error message the record writes with asynPrint(…ASYN_TRACE_ERROR…).</p>
+<p>The standard EPICS record fields STAT (status) and SEVR (severity) are used to report
+the I/O error status. For example status field may be set to NO_ALARM, WRITE, READ,
+or COMM, and the SEVR field may be set to NO_ALARM, MINOR, or MAJOR. These alarm
+fields are only used to report I/O errors or errors when connecting to a new PORT
+or ADDR. They are not affected by trace or connection management operations.</p>
+</section>
+<section id="private-fields">
+<h2><a class="toc-backref" href="#id34" role="doc-backlink">Private Fields</a><a class="headerlink" href="#private-fields" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default" id="id14">
+<caption><span class="caption-text">Error Status Fields</span><a class="headerlink" href="#id14" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 10%" />
+<col style="width: 60%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Name</p></th>
+<th class="head"><p>Access</p></th>
+<th class="head"><p>Prompt</p></th>
+<th class="head"><p>Data type</p></th>
+<th class="head"><p>Description</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>IPTR</p></td>
+<td><p>N</p></td>
+<td><p>“Input buffer pointer”</p></td>
+<td><p>DBF_NOACCESS</p></td>
+<td><p>The pointer to the buffer for the BINP field.</p></td>
+</tr>
+<tr class="row-odd"><td><p>OPTR</p></td>
+<td><p>N</p></td>
+<td><p>“Output buffer pointer”</p></td>
+<td><p>DBF_NOACCESS</p></td>
+<td><p>The pointer to the buffer for the BOUT field.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="record-processing">
+<h2><a class="toc-backref" href="#id35" role="doc-backlink">Record Processing</a><a class="headerlink" href="#record-processing" title="Permalink to this heading"></a></h2>
+<p>The asyn record processes, i.e. performs the I/O operation given by TMOD, according
+to the normal rules for EPICS records. The AOUT, BOUT, I32OUT, UI32OUT, and F64OUT
+fields are Process Passive, so the record will process if these fields are written
+to and the SCAN field of the record is Passive. The scan field of the record can
+be set to any of the periodic scan rates (e.g. “1 second”) for periodic processing,
+to “Event” for event processing, or to “I/O Intr” for I/O interrupt processing.</p>
+<p>“I/O Intr” scanning is fully supported for drivers that provide callbacks.</p>
+<p>If the SCAN field is “I/O Intr” it will be changed to “Passive” when any of the
+following fields are modified: PORT, ADDR, DRVINFO, REASON, IFACE, or UINT32MASK.
+This is necessary because changes to these fields require re-registering with the
+interrupt source.</p>
+</section>
+<section id="obsolete-serial-and-gpib-records">
+<h2><a class="toc-backref" href="#id36" role="doc-backlink">Obsolete serial and GPIB records</a><a class="headerlink" href="#obsolete-serial-and-gpib-records" title="Permalink to this heading"></a></h2>
+<p>The asyn record is designed to be a complete replacement for the older generic serial
+(“serial”) and generic GPIB (“gpib”) records. These records are no longer needed,
+and will not be supported in the future. The following is a list of the differences
+between the old serial and GPIB records and the new asyn record which may require
+changes to databases or applications.</p>
+<ol class="arabic simple">
+<li><p>The ODEL field has been replaced by OEOS. It has changed from a DBF_LONG to DBF_STRING
+in order to support multi-character terminators.</p></li>
+<li><p>The IDEL (serial) and EOS (gpib) fields have been replaced by IEOS. They have
+changed from a DBF_LONG to DBF_STRING in order to support multi-character terminators.</p></li>
+<li><p>The INP field has been replaced by the PORT and ADDR fields in order to support
+run-time connection to different devices.</p></li>
+<li><p>The AOUT and OEOS fields are processed by dbTranslateEscape before being sent
+to the device. In rare cases this may require changing the output strings if these
+contained the “&quot; character.</p></li>
+<li><p>The asyn record always posts monitors on the input field (AINP or BINP) when the
+record processes. The older records did not post monitors on the AINP field if the
+value was the same as the previous read. This caused problems for some SNL programs
+and data acquisition applications.</p></li>
+<li><p>The ODEL and IDEL fields were used even when OFMT or IFMT were in “Binary” mode.
+OEOS and IEOS are now ignored when OFMT or IFMT respectively are in “Binary” mode.</p></li>
+<li><p>The ODEL and IDEL fields were always used to set the input and output end of string.
+The IEOS and OEOS fields now are now initialized to the current EOS settings for
+the port when the record connects. IEOS and OEOS only change the EOS settings if
+these fields are modified after the record connects to the port. Thus, it is now
+important to initialize the EOS strings for the port correctly in the startup script.</p></li>
+<li><p>The TMOT field has changed from DBF_LONG to DBF_DOUBLE, and the units have changed
+from milliseconds to seconds. TMOT=-1.0 now means wait forever.</p></li>
+</ol>
+</section>
+<section id="medm-screens">
+<h2><a class="toc-backref" href="#id37" role="doc-backlink">medm screens</a><a class="headerlink" href="#medm-screens" title="Permalink to this heading"></a></h2>
+<p>The following are screen shots of the medm screens provided for the asyn record.</p>
+<section id="main-control-screen-asynrecord-adl">
+<h3><a class="toc-backref" href="#id38" role="doc-backlink">Main control screen, asynRecord.adl</a><a class="headerlink" href="#main-control-screen-asynrecord-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id15">
+<img alt="_images/asynRecord.png" src="_images/asynRecord.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynRecord.png</strong></span><a class="headerlink" href="#id15" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="asynoctet-i-o-screen-asynoctet-adl">
+<h3><a class="toc-backref" href="#id39" role="doc-backlink">asynOctet I/O screen, asynOctet.adl</a><a class="headerlink" href="#asynoctet-i-o-screen-asynoctet-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id16">
+<img alt="_images/asynOctet.png" src="_images/asynOctet.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynOctet.png.png</strong></span><a class="headerlink" href="#id16" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="asyn-register-device-i-o-screen-asynregister-adl">
+<h3><a class="toc-backref" href="#id40" role="doc-backlink">asyn register device I/O screen, asynRegister.adl</a><a class="headerlink" href="#asyn-register-device-i-o-screen-asynregister-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id17">
+<img alt="_images/asynRegister.png" src="_images/asynRegister.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynRegister.png</strong></span><a class="headerlink" href="#id17" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="serial-port-setup-screen-asynserialportsetup-adl">
+<h3><a class="toc-backref" href="#id41" role="doc-backlink">Serial port setup screen, asynSerialPortSetup.adl</a><a class="headerlink" href="#serial-port-setup-screen-asynserialportsetup-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id18">
+<img alt="_images/asynSerialPortSetup.png" src="_images/asynSerialPortSetup.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynSerialPortSetup.png</strong></span><a class="headerlink" href="#id18" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="ip-port-setup-screen-asynipportsetup-adl">
+<h3><a class="toc-backref" href="#id42" role="doc-backlink">IP port setup screen, asynIPPortSetup.adl</a><a class="headerlink" href="#ip-port-setup-screen-asynipportsetup-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id19">
+<img alt="_images/asynIPPortSetup.png" src="_images/asynIPPortSetup.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynIPPortSetup.png</strong></span><a class="headerlink" href="#id19" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+<section id="gpib-setup-screen-asyngpibsetup-adl">
+<h3><a class="toc-backref" href="#id43" role="doc-backlink">GPIB setup screen, asynGPIBSetup.adl</a><a class="headerlink" href="#gpib-setup-screen-asyngpibsetup-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id20">
+<img alt="_images/asynGPIBSetup.png" src="_images/asynGPIBSetup.png" />
+<figcaption>
+<p><span class="caption-text"><strong>asynGPIBSetup.png</strong></span><a class="headerlink" href="#id20" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+</section>
+</section>
+<section id="example-1">
+<h2><a class="toc-backref" href="#id44" role="doc-backlink">Example #1</a><a class="headerlink" href="#example-1" title="Permalink to this heading"></a></h2>
+<p>The following is an IDL program that demonstrates the use of the asyn record. It
+transfers data in both ASCII and binary formats. Hopefully the IDL syntax is clear
+enough to be understood by non-IDL users, and can be translated into your favorite
+scripting language.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>; This IDL program demonstrates the use of the EPICS asyn record.
+; The program uses 2 asyn records.  The ports corresponding to these
+; 2 records are connected with a null-modem cable
+; Record 1 sends a message to record 2 in ASCII.
+; Record 2 sends a message back to record 1 in binary.
+
+; Record names
+rec1 = &#39;13LAB:serial2&#39;
+rec2 = &#39;13LAB:serial3&#39;
+recs = [rec1, rec2] ; Array with both record names
+; Set up port parameters for both records:
+;   19,200 baud, 8 data bits, 1 stop bit, no parity, no flow control
+;   Timeout=1 second
+for i=0, 1 do begin
+    rec = recs[i]
+    t = caput(rec+&#39;.BAUD&#39;, &#39;19200&#39;)
+    t = caput(rec+&#39;.DBIT&#39;, &#39;8&#39;)
+    t = caput(rec+&#39;.SBIT&#39;, &#39;1&#39;)
+    t = caput(rec+&#39;.PRTY&#39;, &#39;None&#39;)
+    t = caput(rec+&#39;.FCTL&#39;, &#39;None&#39;)
+    t = caput(rec+&#39;.TMOT&#39;, 1.0)
+endfor
+
+; Put record 1 in ASCII output mode, &lt;CR&gt; output delimiter,
+;   binary input mode, no input delimiter
+t = caput(rec1+&#39;.OFMT&#39;, &#39;ASCII&#39;)
+t = caput(rec1+&#39;.OEOS&#39;, &#39;\r&#39;)
+t = caput(rec1+&#39;.IFMT&#39;, &#39;Binary&#39;)
+t = caput(rec1+&#39;.IEOS&#39;, &#39;&#39;)
+; Put a monitor on record 1 Binary input field
+t = casetmonitor(rec1+&#39;.BINP&#39;)
+; Clear the monitor by reading the value
+t = caget(rec1+&#39;.BINP&#39;, junk)
+
+; Put record 2 in Binary output mode, no output delimiter
+;   ASCII input mode, &lt;CR&gt; input delimiter
+t = caput(rec2+&#39;.OFMT&#39;, &#39;Binary&#39;)
+t = caput(rec2+&#39;.OEOS&#39;, &#39;&#39;)
+t = caput(rec2+&#39;.IFMT&#39;, &#39;ASCII&#39;)
+t = caput(rec2+&#39;.IEOS&#39;, &#39;\r&#39;)
+
+; Put record 2 in read transfer mode
+t = caput(rec2+&#39;.TMOD&#39;, &#39;Read&#39;)
+; Put a monitor on record2 ASCII input field
+t = casetmonitor(rec2+&#39;.AINP&#39;)
+; Clear the monitor by reading the value
+t = caget(rec2+&#39;.AINP&#39;, junk)
+
+; Process record 2; this will cause it to wait for data
+t = caput(rec2+&#39;.PROC&#39;, 1)
+; Put record 1 in Write transfer mode
+t = caput(rec1+&#39;.TMOD&#39;, &#39;Write&#39;)
+; Send a message to port 2
+message = &#39;Request data: &#39;+string(systime())
+print, &#39;Record 1 sent message: &#39; + message
+t = caput(rec1+&#39;.AOUT&#39;, message)
+
+; Wait for monitor on record2 ASCII input field
+while (not cacheckmonitor(rec2+&#39;.AINP&#39;)) do wait, .1
+; Read data from record 2
+t = caget(rec2+&#39;.AINP&#39;, input)
+print, &#39;Got a message from record 1: &#39;, input
+
+size=256
+; Put record 1 in read mode, expect &quot;size&quot; byte input
+t = caput(rec1+&#39;.TMOD&#39;, &#39;Read&#39;)
+t = caput(rec1+&#39;.NRRD&#39;, size)
+; Process record 1; this will cause it to wait for data
+t = caput(rec1+&#39;.PROC&#39;, &#39;1&#39;)
+
+; Put record 2 in write mode
+t = caput(rec2+&#39;.TMOD&#39;, &#39;Write&#39;)
+; Send an 8 bit binary sin wave, &quot;size&quot; points long from
+; port 2 to port 1
+send_data = byte(sin(findgen(size)/5)*126 + 127)
+t = caput(rec2+&#39;.NOWT&#39;, size)
+t = caput(rec2+&#39;.BOUT&#39;, send_data)
+
+; Wait for monitor on channel 1 binary input
+while (not cacheckmonitor(rec1+&#39;.BINP&#39;)) do wait, .1
+
+; Record 1 should have received &quot;size&quot; bytes. Make sure NORD=size
+t = caget(rec1+&#39;.NORD&#39;, nord)
+if (nord eq size) then $
+    print, &#39;Read array data OK&#39; $
+else $
+    print, &#39;Error reading array data!&#39;
+
+; Read data from record 1
+t = caget(rec1+&#39;.BINP&#39;, rec_data, max=nord)
+
+; Plot it
+plot, rec_data
+
+end
+</pre></div>
+</div>
+</section>
+<section id="example-2">
+<h2><a class="toc-backref" href="#id45" role="doc-backlink">Example #2</a><a class="headerlink" href="#example-2" title="Permalink to this heading"></a></h2>
+<p>The following is an IDL procedure that demonstrates the use of the asyn record to
+communicate with a Tektronix TDS200 Digital Oscilloscope. It transfers data in both
+ASCII and binary formats. It will work with either an RS-232 or GPIB connection
+to the scope. The record must be loaded with IMAX at least large enough to read
+the waveform. The entire waveform readout is 2500 channels on the TDS220. The buffer
+size required is 1 byte per channel + 7 bytes header/checksum. The start and stop
+parameters to the procedure can be used to read a subset of the waveform.</p>
+<p>Hopefully the IDL syntax is clear enough to be understood by non-IDL users, and
+can be translated into your favorite scripting language.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>pro read_tds200, record, data, start=start, stop=stop, chan=chan
+
+; This procedure reads waveforms from the Tektronix TDS200 series scopes
+; Mark Rivers
+; Modifications:
+;     March 7,  2001 Correctly put record in Write and Write/Read modes.
+;     Dec. 7,   2001 Set timeout to 2 seconds before read.
+;     March 30, 2004 Change IFMT from Binary to Hybrid, other fixes.
+
+if (n_elements(start) eq 0) then start=1
+if (n_elements(stop) eq 0) then stop=2500
+if (n_elements(chan) eq 0) then chan=1
+chan = &#39;CH&#39;+strtrim(chan,2)
+
+aout = record + &#39;.AOUT&#39;
+binp = record + &#39;.BINP&#39;
+tmod = record + &#39;.TMOD&#39;
+ifmt = record + &#39;.IFMT&#39;
+binp = record + &#39;.BINP&#39;
+nord = record + &#39;.NORD&#39;
+tmot = record + &#39;.TMOT&#39;
+oeos = record + &#39;.OEOS&#39;
+ieos = record + &#39;.IEOS&#39;
+
+; Set the terminators to newline (assumes scope is set up this way)
+t = caput(oeos, &#39;\n&#39;, /wait)
+t = caput(ieos, &#39;\n&#39;, /wait)
+
+; Set the transfer mode to write
+t = caput(tmod, &#39;Write&#39;, /wait)
+
+; Set the encoding to positive binary, start and stop readout channels
+; Set the readout range.  Can&#39;t do as one command, exceed 40 characters
+command = &#39;DATA:ENC RPB; DATA:START &#39; + strtrim(start,2)
+t = caput(aout, command, /wait)
+command = &#39;DATA:STOP &#39; + strtrim(stop,2)
+t = caput(aout, command, /wait)
+
+;Set DATa:WIDth to 2
+;command = &#39;DATA:WIDTH 2&#39;
+;t = caput(aout, command, /wait)
+
+;Set channel number
+command = &#39;DATA:SOURCE &#39;+ strtrim(chan,2)
+t = caput(aout, command, /wait)
+
+; Set the input mode to hybrid. Large buffer but line-feed terminator
+t = caput(ifmt, &#39;Hybrid&#39;, /wait)
+
+
+; Set the transfer mode to write/read
+t = caput(tmod, &#39;Write/Read&#39;, /wait)
+
+; Empirically the timeout needs to be about 5 seconds for
+; 1024 channels with RS-232
+t = caput(tmot, 5.0)
+
+; Read the scope
+t = caput(aout, &#39;Curve?&#39;, /wait)
+
+; Get the data
+t = caget(binp, data)
+
+; Check the number of bytes read.  See if it&#39;s what&#39;s expected
+n_data = stop-start+1
+n_header = 2 + strlen(strtrim(n_data, 2))
+n_checksum = 1
+n_expected = n_header + n_data + n_checksum
+t = caget(nord, n)
+if (n ne n_expected) then $
+   print, &#39;Scope returned:&#39;, n, $&#39; bytes, expected: &#39;, n_expected
+
+; The first n_header bytes are header, the last byte is checksum.
+; Data are offset by 127, convert to long
+data = data[n_header:n-2] - 127L
+
+return
+end
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="asynDriver.html" class="btn btn-neutral float-left" title="asynDriver: EPICS Driver Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doxygen.html" class="btn btn-neutral float-right" title="Doxygen documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mark Rivers.
+      <span class="lastupdated">Last updated on 2023-March-09.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
