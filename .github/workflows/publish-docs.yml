@@ -49,23 +49,17 @@ jobs:
       run: sudo apt-get install doxygen graphviz -y
       shell: bash
 
-    - name: Generate Doxygen documentation
+    - name: Generate Doxygen Documentation
+      # Doxygen output is put in _build/html/doxygenHTML by the Doxyfile
+      # So it will be published by Publish Jobs below
       run: |
         cd docs
         doxygen
         cd -
 
-    - name: Publish Sphinx
+    - name: Publish Docs
       uses: peaceiris/actions-gh-pages@v3.8.0
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: docs/_build/html
         keep_files: true
-
-#    - name: Publish Doxygen
-#      uses: peaceiris/actions-gh-pages@v3.8.0
-#      with:
-#        github_token: ${{ secrets.GITHUB_TOKEN }}
-#        publish_dir: docs/doxygenHTML
-#        destination_dir: doxygenHTML
-#        keep_files: true
