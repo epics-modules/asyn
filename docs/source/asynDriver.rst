@@ -7,7 +7,7 @@ asynDriver
 
 License Agreement
 -----------------
-This product is available via the <a href="#LicenseAgreement">open source license</a>
+This product is available via the open source license
 described at the end of this document.
 
 .. contents:: Contents
