@@ -14,4 +14,5 @@ Table of Contents
   asynPortDriver
   asynPortClient
   asynRecord
+  asynRecordControl
   doxygen
