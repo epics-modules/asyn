@@ -1,5 +1,5 @@
-asynDriver: EPICS Driver Support
-================================
+asynDriver
+==========
  
 :author: Mark Rivers, Eric Norum, and Marty Kraimer
 

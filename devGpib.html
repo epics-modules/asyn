@@ -1,0 +1,1676 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>devGpib &mdash; asyn support</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Doxygen documentation" href="doxygen.html" />
+    <link rel="prev" title="asyn Record Control" href="asynRecordControl.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            asyn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynPortDriver.html">asynPortDriver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn Record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record Control</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">devGpib</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#note-devgpib-is-obsolete-and-should-not-be-used-for-new-applications"><strong>NOTE: devGpib is obsolete and should not be used for new applications.</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#license-agreement">License Agreement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#acknowledgments">Acknowledgments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#install-and-build">Install and Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#using-instrument-support">Using Instrument Support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#reports-and-timeouts">Reports and Timeouts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#creating-instrument-device-support">Creating Instrument Device Support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#purpose">Purpose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#device-dbd-definition">Device DBD Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#instrument-device-support-module">Instrument Device Support Module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#dset-device-support-entry-tables">DSET - Device Support Entry Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpibcmd-definitions">gpibCmd Definitions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#definitions-for-pgpibcmd-type">Definitions for pgpibCmd-&gt;type</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#efast-enumerated-fast-i-o-tables">Efast (Enumerated Fast I/O) Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#devgpibnames-name-table">devGpibNames - Name Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#defining-the-devgpibparmblock">Defining the devGpibParmBlock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#srq-processing">SRQ Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#gpibcmd-convert-example">gpibCmd convert example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#devcommongpib">devCommonGpib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#devsupportgpib">devSupportGpib</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#gdset">gDset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#gpibdpvt">gpibDpvt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#id1">devSupportGpib</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#changes-to-previous-epics-gpib-support">Changes to Previous EPICS GPIB Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#general-gpib-problems">General GPIB Problems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#id2">License Agreement</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">asyn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">devGpib</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/devGpib.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="devgpib">
+<h1>devGpib<a class="headerlink" href="#devgpib" title="Permalink to this heading"></a></h1>
+<section id="note-devgpib-is-obsolete-and-should-not-be-used-for-new-applications">
+<h2><strong>NOTE: devGpib is obsolete and should not be used for new applications.</strong><a class="headerlink" href="#note-devgpib-is-obsolete-and-should-not-be-used-for-new-applications" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="http://epics.web.psi.ch/software/streamdevice">StreamDevice</a>
+should be used instead.</p>
+</section>
+<section id="license-agreement">
+<h2>License Agreement<a class="headerlink" href="#license-agreement" title="Permalink to this heading"></a></h2>
+<p>This product is available via the open source license described at the end of this
+document.</p>
+</section>
+<section id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>devGpib is the successor to the GPIB support that came with EPICS base 3.13. The
+3.13 code was unbundled by Benjamin Franksen, and ultimately became gpibCore which
+is the 3.14 version of Benjamin’s support. devGpib is the successor to the device
+support portion of gpibCore. The driver part of gpibCore is replaced by asynDriver
+and asynGpib.</p>
+<p>This manual assumes that the reader is familiar with EPICS IOC record and device
+support and also with asynDriver.</p>
+<p>devGpib is one method for implementing EPICS IOC device support for instruments.
+Other methods are available. If support for an instrument does not exist, consider
+using STREAMS instead of devGpib.</p>
+<p>The 3.13 GPIB support only worked with real GPIB instruments. Since devGpib uses
+low level asyn drivers, it can also work with other instruments, e.g. serial devices.
+Thus, this manual uses the terminology &lt;i&gt;instrument&lt;/i&gt; rather than &lt;i&gt;GPIB device&lt;/i&gt;.</p>
+<p>devGpib requires that a device support module be created for each supported instrument.
+Facilities are provided to make it relatively easy to write new support.</p>
+<p>The following features are provided:</p>
+<ul class="simple">
+<li><p>I/O is performed via database records.</p></li>
+<li><p>Instrument device support is written by calling devCommonGpib/devSupportGpib routines.</p></li>
+<li><p>devCommonGpib provides support for individual record types.</p></li>
+<li><p>devSupportGpib provides record independent support.</p></li>
+<li><p>devCommonGpib/devSupportGpib use asynCommon, asynOctet, and asynGpib. Thus, the
+support will work with any driver that implements these interfaces. If instrument
+support does not use GPIB specific features, then the support will work with any
+driver that implements asynCommon and asynOctet. In particular, communication via
+serial ports is possible.</p></li>
+<li><p>devCommonGpib should satisfy most requirements but it is also possible to provide
+custom support that uses devSupportGpib.</p></li>
+</ul>
+</section>
+<section id="acknowledgments">
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this heading"></a></h2>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>John Winans</p></td>
+<td><p>John provided the original EPICS GPIB support. Most databases using John’s support
+can be used without modification. With some modification, device support modules
+written for John’s support can be used.</p></td>
+</tr>
+<tr class="row-even"><td><p>Benjamin Franksen</p></td>
+<td><p>John’s support only worked on vxWorks. In addition, the driver support was implemented
+as a single source file. Benjamin defined an interface between drvCommon and low
+level controllers. The low level drivers became separate source modules that implemented
+the interface. He also created the original support for VXI-11.</p></td>
+</tr>
+<tr class="row-odd"><td><p>Eric Norum</p></td>
+<td><p>Eric started with Benjamin’s code and converted it to use the Operating System Independent
+features of EPICS 3.14.</p></td>
+</tr>
+<tr class="row-even"><td><p>Marty Kraimer</p></td>
+<td><p>Marty started with Eric’s version and made changes to support secondary addressing
+and to replace ioctl with code to support general bus management, universal commands,
+and addressed commands. He also made the conversion to using asyn drivers.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="install-and-build">
+<h2>Install and Build<a class="headerlink" href="#install-and-build" title="Permalink to this heading"></a></h2>
+<p>devGpib is bundled with the asynDriver. The code is in library asyn. Thus, once
+asyn is included as part of an application, devGpib will also be available. It is
+only necessary to include <cite>devGpib.dbd</cite> in your <cite>&lt;app&gt;Include.dbd</cite>
+file. In addition, device support for your specific instruments must be installed.</p>
+</section>
+<section id="using-instrument-support">
+<h2>Using Instrument Support<a class="headerlink" href="#using-instrument-support" title="Permalink to this heading"></a></h2>
+<p>devGpib does not provide support for specific GPIB devices but for implementing
+such support. Within the EPICS community, support exists for many GPIB devices.
+The EPICS supported hardware list shows some of the support. If your device is not
+listed and a message to tech-talk does not provide any help, then you will have
+to write your own device support. This section assumes that an instrument support
+is available.</p>
+<p>An EPICS record is connected to GPIB by the fields DTYP and INP or OUT.</p>
+<p>The DTYP field has the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span><span class="s2">&quot;&lt;device support name&gt;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where <cite>&lt;device support name&gt;</cite> is the name from a device database definition,
+i.e. a definition of the form:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="o">&lt;</span><span class="n">record</span> <span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="o">&lt;</span><span class="n">dsetName</span><span class="o">&gt;</span><span class="p">,</span><span class="s2">&quot;&lt;device support name&gt;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The INP or OUT field has the format:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">field</span><span class="p">(</span><span class="n">INP</span><span class="p">,</span><span class="s2">&quot;#L&lt;link&gt; A&lt;addr&gt; @&lt;number&gt;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>or</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span><span class="s2">&quot;#L&lt;link&gt; A&lt;addr&gt; @&lt;number&gt;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>&lt;link&gt;</cite></p></td>
+<td><p>Link number. Low level drivers use portName to provide access to a specific communication
+interface. In order to keep compatibility with link numbers, the portName MUST be
+Lxxx where xxx is the value that appears in the #Lxxx portion of the INP or OUT
+fields of record instances.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>&lt;addr&gt;</cite></p></td>
+<td><p>GPIB address of your device, which can be a primary address or an extended address.
+A primary address has a value &lt;=30. An extended address is of the form PSS, where
+P represents the primary address and SS is the secondary address. It is not possible
+to express an extended address if the primary address is 0. Some examples are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">A9</span>    <span class="n">primary</span> <span class="n">address</span> <span class="mi">9</span>
+<span class="n">A900</span>  <span class="n">extended</span> <span class="n">address</span><span class="p">:</span> <span class="n">primary</span> <span class="n">address</span> <span class="ow">is</span> <span class="mi">9</span><span class="p">,</span> <span class="n">secondary</span> <span class="n">address</span> <span class="ow">is</span> <span class="mi">0</span>
+<span class="n">A906</span>  <span class="n">extended</span> <span class="n">address</span><span class="p">:</span> <span class="n">primary</span> <span class="n">address</span> <span class="ow">is</span> <span class="mi">9</span><span class="p">,</span> <span class="n">secondary</span> <span class="n">address</span> <span class="ow">is</span> <span class="mf">6.</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p><cite>&lt;number&gt;</cite></p></td>
+<td><p>An integer that identifies a gpibCmd definition in a GPIB device support module.
+If the implementer is nice, documentation like the following is provided:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">recordType</span>  <span class="o">@&lt;</span><span class="n">number</span><span class="o">&gt;</span>   <span class="n">Description</span>
+</pre></div>
+</div>
+<p>If such documentation is not available, look at the device support itself for statements like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Param</span> <span class="mi">12</span> <span class="o">*/</span>
+<span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_LI</span><span class="p">,</span> <span class="n">GPIBREAD</span><span class="p">,</span> <span class="n">IB_Q_LOW</span><span class="p">,</span> <span class="s2">&quot;*ESR?&quot;</span><span class="p">,</span>  <span class="s2">&quot;</span><span class="si">%ld</span><span class="s2">&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span>
+  <span class="n">The</span> <span class="n">above</span> <span class="n">states</span> <span class="n">that</span> <span class="o">@</span><span class="mi">12</span> <span class="ow">is</span> <span class="n">a</span> <span class="n">GPIB</span> <span class="n">read</span> <span class="n">command</span> <span class="n">via</span> <span class="n">a</span> <span class="n">longin</span> <span class="n">record</span><span class="o">.</span> <span class="n">Thus</span> <span class="n">the</span> <span class="n">record</span>
+  <span class="n">definition</span> <span class="n">would</span> <span class="n">be</span><span class="p">:</span>
+  <span class="p">::</span>
+<span class="n">record</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="s2">&quot;&lt;name&gt;&quot;</span><span class="p">)</span> <span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span><span class="s2">&quot;&lt;device support name&gt;&quot;</span><span class="p">)</span>
+    <span class="o">...</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span><span class="s2">&quot;#L&lt;link&gt; A&lt;addr&gt; @12&quot;</span><span class="p">)</span>
+    <span class="o">...</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<section id="reports-and-timeouts">
+<h3>Reports and Timeouts<a class="headerlink" href="#reports-and-timeouts" title="Permalink to this heading"></a></h3>
+<p>In order to have these commands available, <cite>devGpib.dbd</cite> must be included
+as part of the applications` xxxInclude.dbd` file.</p>
+<p>A report of all devGpib devices can be generated via the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dbior</span><span class="p">(</span><span class="s2">&quot;devGpib&quot;</span><span class="p">,</span><span class="n">level</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Three timeouts are defined:</p>
+<ul>
+<li><p><cite>timeout</cite> - This is the timeout for individual I/O operations. It is
+determined by the instrument support.</p></li>
+<li><p><cite>queueTimeout</cite> - Maximum time to wait in a the queue for access to
+a device instance. The default is 60 seconds and can be changed with the <cite>iocsh</cite>
+command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">devGpibQueueTimeout</span><span class="p">(</span><span class="n">interfaceName</span><span class="p">,</span><span class="n">gpibAddr</span><span class="p">,</span><span class="n">timeout</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+<li><p><cite>srqWaitTimeout</cite> - Maximum time to wait for an SRQ after a GPIBREADW
+or GPIBEFASTIW has sent a command to the device. The default is 5 seconds and can
+be changed with the <cite>iocsh</cite> command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">devGpibSrqWaitTimeout</span><span class="p">(</span><span class="n">interfaceName</span><span class="p">,</span><span class="n">gpibAddr</span><span class="p">,</span><span class="n">timeout</span><span class="p">)</span>
+</pre></div>
+</div>
+</li>
+</ul>
+</section>
+</section>
+<section id="creating-instrument-device-support">
+<h2>Creating Instrument Device Support<a class="headerlink" href="#creating-instrument-device-support" title="Permalink to this heading"></a></h2>
+<p>This section describes how to write device support for an instrument. It is assumed
+that the reader is already familiar with the dialogue required to operate the instrument
+and EPICS record and device support.</p>
+<section id="purpose">
+<h3>Purpose<a class="headerlink" href="#purpose" title="Permalink to this heading"></a></h3>
+<p>An instrument support module provides access to the operating parameters of the
+instrument.</p>
+</section>
+<section id="overview">
+<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h3>
+<p>Instruments typically have many operating parameters, each of which may be thought
+of in terms of an EPICS database record type. It is the job of the instrument support
+designer to map operating parameters to record types. Once this mapping is complete,
+an instrument support module can be written. For each operating parameter, a gpibCmd
+must be created.</p>
+</section>
+<section id="device-dbd-definition">
+<h3>Device DBD Definition<a class="headerlink" href="#device-dbd-definition" title="Permalink to this heading"></a></h3>
+<p>For each instrument support module, device definitions must be defined:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="o">&lt;</span><span class="n">record</span> <span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">link</span> <span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">DSET</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">,</span><span class="s2">&quot;&lt;DTYP name&gt;&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>&lt;record type&gt;</cite></p></td>
+<td><p>The record type, e.g. ai, ao, …</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>&lt;link type&gt;</cite></p></td>
+<td><p>Link type. Must be GPIB_IO.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>&lt;DSET name&gt;</cite></p></td>
+<td><p>Device Support Entry Table name. This is the external name defined in the device
+support code.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>&lt;DTYP name&gt;</cite></p></td>
+<td><p>Device Type name. This is what appears in the DTYP field of record instances.</p></td>
+</tr>
+</tbody>
+</table>
+<p>For example, the definitions for the test supplied with devGpib are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devAiTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devAoTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">bi</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devBiTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">bo</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devBoTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devLiTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">longout</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devLoTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">mbbi</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devMbbiTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">mbbo</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devMbboTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">stringin</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devSiTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+<span class="n">device</span><span class="p">(</span><span class="n">stringout</span><span class="p">,</span><span class="n">GPIB_IO</span><span class="p">,</span><span class="n">devSoTestGpib</span><span class="p">,</span><span class="s2">&quot;GPIB Test&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For more information about device support, and also how to define INP or OUT links
+of records, see the EPICS Application Developers Guide.</p>
+</section>
+<section id="instrument-device-support-module">
+<h3>Instrument Device Support Module<a class="headerlink" href="#instrument-device-support-module" title="Permalink to this heading"></a></h3>
+<p>If you are writing a new instrument support module just:</p>
+<ul>
+<li><p>Create a source directory and ‘cd’ to it.</p></li>
+<li><p>Create a set of instrument support files by running the makeSupport.pl script:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">&lt;</span><span class="n">asynTop</span><span class="o">&gt;/</span><span class="nb">bin</span><span class="o">/&lt;</span><span class="n">EpicsHostArch</span><span class="o">&gt;/</span><span class="n">makeSupport</span><span class="o">.</span><span class="n">pl</span> <span class="o">-</span><span class="n">t</span> <span class="n">devGpib</span> <span class="o">&lt;</span><span class="n">InstName</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</li>
+<li><p>Modify the src/<em>&lt;InstName&gt;</em>.c, src/<em>&lt;InstName&gt;</em>.dbd
+and src/<em>&lt;InstName&gt;</em>.db files to provide the functionality needed by
+your device.</p></li>
+</ul>
+<p>An instrument device support module consists of DSET entries, an array of gpibCmds,
+efast tables (optional), name tables (optional), a devGpibParmBlock, a debugging
+flag, an init_ai routine, and custom conversion functions (optional.).</p>
+<p>A simplified version of the skeleton file is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">devSkeletonGpib</span><span class="o">.</span><span class="n">c</span> <span class="o">*/</span>
+<span class="o">...</span>
+<span class="c1">#include &lt;devCommonGpib.h&gt;</span>
+<span class="o">...</span>
+<span class="o">/*</span> <span class="n">define</span> <span class="nb">all</span> <span class="n">desired</span> <span class="n">DSETs</span> <span class="o">*/</span>
+<span class="o">...</span>
+<span class="c1">#define DSET_BO    devBiSkeletonGpib</span>
+<span class="o">...</span>
+<span class="c1">#include &lt;devGpib.h&gt;    /* must be included after DSET defines */</span>
+<span class="c1">#define TIMEOUT     1.0</span>
+<span class="c1">#define TIMEWINDOW  2.0</span>
+<span class="o">...</span>
+<span class="o">/*</span> <span class="n">Strings</span> <span class="n">used</span> <span class="n">by</span> <span class="n">the</span> <span class="n">init</span> <span class="n">routines</span> <span class="n">to</span> <span class="n">fill</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">znam</span><span class="p">,</span><span class="n">onam</span><span class="p">,</span><span class="o">...</span> <span class="ow">in</span> <span class="n">BI</span> <span class="ow">and</span> <span class="n">BO</span><span class="o">*/</span>
+<span class="n">static</span>  <span class="n">char</span>    <span class="o">*</span><span class="n">offOnList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;Off&quot;</span><span class="p">,</span> <span class="s2">&quot;On&quot;</span> <span class="p">};</span>
+<span class="n">static</span>  <span class="n">struct</span>  <span class="n">devGpibNames</span>   <span class="n">offOn</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">2</span><span class="p">,</span> <span class="n">offOnList</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span> <span class="p">};</span>
+
+<span class="n">static</span> <span class="n">char</span>  <span class="o">*</span><span class="n">initNamesList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span> <span class="s2">&quot;Init&quot;</span><span class="p">,</span><span class="s2">&quot;Init&quot;</span> <span class="p">};</span>
+<span class="n">static</span> <span class="n">struct</span> <span class="n">devGpibNames</span> <span class="n">initNames</span> <span class="o">=</span> <span class="p">{</span> <span class="mi">2</span><span class="p">,</span><span class="n">initNamesList</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span> <span class="p">};</span>
+<span class="o">/*</span> <span class="n">example</span> <span class="n">EFAST</span> <span class="n">table</span> <span class="o">*/</span>
+<span class="n">static</span> <span class="n">char</span> <span class="o">*</span><span class="n">userOffOn</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;USER OFF;&quot;</span><span class="p">,</span> <span class="s2">&quot;USER ON;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">};</span>
+
+<span class="o">/*</span> <span class="n">Array</span> <span class="n">of</span> <span class="n">structures</span> <span class="n">that</span> <span class="n">define</span> <span class="nb">all</span> <span class="n">GPIB</span> <span class="n">messages</span> <span class="o">*/</span>
+<span class="n">static</span> <span class="n">struct</span> <span class="n">gpibCmd</span> <span class="n">gpibCmds</span><span class="p">[]</span> <span class="o">=</span>
+<span class="p">{</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">0</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span><span class="n">GPIBCMD</span><span class="p">,</span><span class="n">IB_Q_HIGH</span><span class="p">,</span><span class="s2">&quot;init&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">32</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="o">&amp;</span><span class="n">initNames</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">1</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span> <span class="n">GPIBEFASTO</span><span class="p">,</span> <span class="n">IB_Q_HIGH</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">userOffOn</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">offOn</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">definitions</span> <span class="k">for</span> <span class="n">other</span> <span class="n">parameters</span> <span class="n">follow</span><span class="o">*/</span>
+<span class="p">};</span>
+<span class="o">/*</span> <span class="n">The</span> <span class="n">following</span> <span class="ow">is</span> <span class="n">the</span> <span class="n">number</span> <span class="n">of</span> <span class="n">elements</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">command</span> <span class="n">array</span> <span class="n">above</span><span class="o">.</span>  <span class="o">*/</span>
+<span class="c1">#define NUMPARAMS sizeof(gpibCmds)/sizeof(struct gpibCmd)</span>
+<span class="o">/*</span> <span class="n">User</span> <span class="n">MUST</span> <span class="n">define</span> <span class="n">init_ai</span> <span class="o">*/</span>
+<span class="n">static</span> <span class="n">long</span> <span class="n">init_ai</span><span class="p">(</span><span class="nb">int</span> <span class="n">parm</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">parm</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span>  <span class="p">{</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;devSkeletonGpib&quot;</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">gpibCmds</span> <span class="o">=</span> <span class="n">gpibCmds</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">numparams</span> <span class="o">=</span> <span class="n">NUMPARAMS</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">TIMEOUT</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">timeWindow</span> <span class="o">=</span> <span class="n">TIMEWINDOW</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">respond2Writes</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The meaning of each portion of the code should become clear as you read the following
+sections:</p>
+</section>
+</section>
+<section id="dset-device-support-entry-tables">
+<h2>DSET - Device Support Entry Tables<a class="headerlink" href="#dset-device-support-entry-tables" title="Permalink to this heading"></a></h2>
+<p>The following statements create the Device Support Entry Tables</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define DSET_AI    devAiSkeletonGpib</span>
+<span class="c1">#define DSET_BI    devBiSkeletonGpib</span>
+<span class="c1">#define DSET_MBBI   devMbbiSkeletonGpib</span>
+<span class="o">...</span>
+<span class="c1">#include &lt;devGpib.h&gt;    /* must be included after DSET defines */</span>
+</pre></div>
+</div>
+<p>The actual DSETs are created by devGpib.h based on which DSET_xx definitions are
+defined. A #define must appear for each record type required. DSET_AI must be defined
+because an init_ai routine must be implemented as described below. If you also define
+DSET_AIRAW the associated .dbd file must specify different DTYP strings for the
+DSET_AI and DSET_AIRAW device declarations.</p>
+<p>Likewise, if you define both DSET_AO and DSET_AORAW the associated .dbd file must
+specify different DTYP strings for the DSET_AO and DSET_AORAW device declarations.</p>
+<p>devCommonGpib provides device support for many standard record types. It is also
+possible to create custom support, but this is more difficult.</p>
+</section>
+<section id="gpibcmd-definitions">
+<h2>gpibCmd Definitions<a class="headerlink" href="#gpibcmd-definitions" title="Permalink to this heading"></a></h2>
+<p>This is where the translation to and from the language of the instrument is defined.
+The actual table contains one element for each parameter that is made available
+to the user via the &#64;&lt;number&gt; portion of an INP or OUT field.</p>
+<p>In the example above the definitions for the gpibCmds are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">struct</span> <span class="n">gpibCmd</span> <span class="n">gpibCmds</span><span class="p">[]</span> <span class="o">=</span>
+<span class="p">{</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">0</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span> <span class="n">GPIBEFASTO</span><span class="p">,</span> <span class="n">IB_Q_HIGH</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">userOffOn</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">offOn</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">definitions</span> <span class="k">for</span> <span class="n">other</span> <span class="n">parameters</span> <span class="n">follow</span><span class="o">*/</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>This example defines a single command. A database record using this definition must
+define field OUT as</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,,</span><span class="s2">&quot;#L&lt;link&gt; A&lt;addr&gt; @0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>gpibCmd is</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">gpibCmd</span> <span class="p">{</span>
+    <span class="n">gDset</span> <span class="o">*</span><span class="n">dset</span><span class="p">;</span> <span class="o">/*</span> <span class="n">used</span> <span class="n">to</span> <span class="n">indicate</span> <span class="n">record</span> <span class="nb">type</span> <span class="n">supported</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="nb">type</span><span class="p">;</span>    <span class="o">/*</span> <span class="n">enum</span> <span class="o">-</span> <span class="n">GPIBREAD</span><span class="o">...</span><span class="n">GPIBSRQHANDLER</span> <span class="o">*/</span>
+    <span class="n">short</span> <span class="n">pri</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">request</span> <span class="n">priority</span> <span class="n">IB_Q_LOW</span><span class="p">,</span> <span class="n">IB_G_MEDIUM</span><span class="p">,</span> <span class="ow">or</span> <span class="n">IB_Q_HIGH</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">*</span><span class="n">cmd</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">CONSTANT</span> <span class="n">STRING</span> <span class="n">to</span> <span class="n">send</span> <span class="n">to</span> <span class="n">instrument</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">*</span><span class="nb">format</span><span class="p">;</span><span class="o">/*</span> <span class="n">string</span> <span class="n">used</span> <span class="n">to</span> <span class="n">generate</span> <span class="ow">or</span> <span class="n">interpret</span> <span class="n">msg</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="n">rspLen</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">room</span> <span class="k">for</span> <span class="n">response</span> <span class="n">error</span> <span class="n">message</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="n">msgLen</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">room</span> <span class="k">for</span> <span class="k">return</span> <span class="n">data</span> <span class="n">message</span> <span class="n">length</span> <span class="o">*/</span>
+    <span class="o">/*</span><span class="n">convert</span> <span class="ow">is</span> <span class="n">optional</span> <span class="n">custom</span> <span class="n">routine</span> <span class="k">for</span> <span class="n">conversions</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">convert</span><span class="p">)</span> <span class="p">(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">P1</span><span class="p">,</span> <span class="nb">int</span> <span class="n">P2</span><span class="p">,</span> <span class="n">char</span> <span class="o">**</span><span class="n">P3</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="n">P1</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">P1</span> <span class="n">plays</span> <span class="n">a</span> <span class="n">dual</span> <span class="n">role</span><span class="p">:</span> <span class="o">*/</span>
+                 <span class="o">/*</span>      <span class="n">For</span> <span class="n">EFAST</span> <span class="n">it</span> <span class="ow">is</span> <span class="nb">set</span> <span class="n">internally</span> <span class="n">to</span> <span class="n">the</span>
+                 <span class="o">/*</span>      <span class="n">number</span> <span class="n">of</span> <span class="n">entries</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">EFAST</span> <span class="n">table</span> <span class="o">*/</span>
+                 <span class="o">/*</span>      <span class="n">For</span> <span class="n">convert</span> <span class="n">it</span> <span class="ow">is</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">convert</span><span class="p">()</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="n">P2</span><span class="p">;</span>      <span class="o">/*</span> <span class="n">user</span> <span class="n">defined</span> <span class="n">parameter</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">convert</span><span class="p">()</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">**</span><span class="n">P3</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">P3</span> <span class="n">plays</span> <span class="n">a</span> <span class="n">dual</span> <span class="n">role</span><span class="p">:</span> <span class="o">*/</span>
+                 <span class="o">/*</span>      <span class="n">For</span> <span class="n">EFAST</span> <span class="n">it</span> <span class="n">holds</span> <span class="n">the</span> <span class="n">address</span> <span class="n">of</span> <span class="n">the</span> <span class="n">EFAST</span> <span class="n">table</span> <span class="o">*/</span>
+                 <span class="o">/*</span>      <span class="n">For</span> <span class="n">convert</span> <span class="n">it</span> <span class="ow">is</span> <span class="n">passed</span> <span class="n">to</span> <span class="n">convert</span><span class="p">()</span> <span class="o">*/</span>
+    <span class="n">devGpibNames</span> <span class="o">*</span><span class="n">pdevGpibNames</span><span class="p">;</span> <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">name</span> <span class="n">strings</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">*</span> <span class="n">eos</span><span class="p">;</span> <span class="o">/*</span> <span class="nb">input</span> <span class="n">end</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">string</span> <span class="o">*/</span>
+<span class="p">}</span> <span class="n">gpibCmd</span><span class="p">;</span>
+</pre></div>
+</div>
+<p>where</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>dset</cite></p></td>
+<td><p>Address of the Device Support Entry Table (DSET) that describes the record type
+supported by the table entry.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>type</cite></p></td>
+<td><p>Type of GPIB I/O operation that is to be performed. The <cite>type</cite> field
+must be set to one of the enumerated values declared in devSupportGpib.h, i.e. GPIBREAD,…,GPIBSRQHANDLER.
+See next section for the definitions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>pri</cite></p></td>
+<td><p>Processing priority of the I/O operation. Must be <cite>IB_Q_HIGH</cite>, <cite>IB_Q_MEDIUM</cite>,
+or <cite>IB_Q_LOW</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>cmd</cite></p></td>
+<td><p>Constant string that is used differently depending on the value of <cite>type</cite>.
+See the discussion of <cite>type</cite> below. Set this field to 0 if not used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>format</cite></p></td>
+<td><p>Printf/scanf format string that is used differently depending on the value of `
+type`. See the discussion of <cite>type</cite>. Set this field to 0 if not
+used.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>rspLen</cite></p></td>
+<td><p>Size needed to read back from a device when performing a respond2Writes read operation.
+If a gpibCmd is a read operation or a write operation that does not respond, then
+set this field to zero. When devGpib initializes, it finds the maximum rspLen of
+all commands associated with a port instance and allocates storage of that size.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>msgLen</cite></p></td>
+<td><p>Size needed to read or write from a device. If not needed, set it to zero. When
+devGpib initializes it finds the maximum msgLen of all commands associated with
+a port instance and allocates storage of that size.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>convert</cite></p></td>
+<td><p>A conversion function that has the prototype:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">convert</span><span class="p">)</span> <span class="p">(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">P1</span><span class="p">,</span> <span class="nb">int</span> <span class="n">P2</span><span class="p">,</span> <span class="n">char</span> <span class="o">**</span><span class="n">P3</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The use depends on the pgpibCmd-&gt;type. See below for details. Set to 0 when no
+conversion function is present.</p>
+<p>Conversion routines should return 0 to signify a successful conversion. If a convert
+routine finds an error, it should do the following:</p>
+<ul>
+<li><p>Generate an error message as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">epicsSnprintf</span><span class="p">(</span><span class="n">pasynUser</span><span class="o">-&gt;</span><span class="n">errorMessage</span><span class="p">,</span><span class="n">pasynUser</span><span class="o">-&gt;</span><span class="n">errorMessageSize</span><span class="p">,</span> <span class="s2">&quot;&lt;format&gt;&quot;</span><span class="p">,</span><span class="o">...</span><span class="p">);</span>
+</pre></div>
+</div>
+</li>
+<li><p>return -1 to signify failure</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p><cite>P1</cite></p></td>
+<td><p>This plays a dual role.</p>
+<p>For EFAST operations it is set equal to the number of entries in the efast table
+by <cite>devSupportGpib:init_record</cite>.</p>
+<p>For other operations, it is an integer passed to the conversion function specified
+in <cite>convert.</cite></p>
+</td>
+</tr>
+<tr class="row-even"><td><p><cite>P2</cite></p></td>
+<td><p>Integer passed to the conversion function specified in <cite>convert</cite>.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>P3</cite></p></td>
+<td><p>This field plays a dual role.</p>
+<p>When <cite>type</cite> is one of the EFAST operations, this field points to the
+EFAST table. See the EFAST operation descriptions under the <cite>type</cite> field
+definitions and the section “Efast Tables” for more on the use of this field. Set
+this field to 0 when it is not used.</p>
+<p>For other operations, it is passed to the conversion function specified in <cite>convert</cite>.
+It has a <cite>char**</cite> value.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p><cite>pdevGpibNames</cite></p></td>
+<td><p>Pointer to a Name Table. Name tables are described in the section “Name Tables”.
+Set this to 0 when no Name Table is used.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>eos</cite></p></td>
+<td><p>Input message termination string. It can be:</p>
+<ul>
+<li><p>0</p>
+<blockquote>
+<div><p>A NULL pointer means that this read operation will be terminated by the current
+asynOctetSetInputEos value, if any.</p>
+</div></blockquote>
+</li>
+<li><p>“”</p>
+<blockquote>
+<div><p>An empty string signifies that a single null character (’\0’) is the terminator
+for this operation.</p>
+</div></blockquote>
+</li>
+<li><p>non-empty string (e.g. “\n”)</p>
+<blockquote>
+<div><p>The termination characters (not including the null character terminating the string)
+for this operation. For example, <cite>“n”</cite> sets the message terminator to
+a single ASCII newline (<cite>’n’</cite>) character. Some drivers, e.g. the VXI-11,
+allow only a single termination character.</p>
+</div></blockquote>
+</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<section id="definitions-for-pgpibcmd-type">
+<h3>Definitions for pgpibCmd-&gt;type<a class="headerlink" href="#definitions-for-pgpibcmd-type" title="Permalink to this heading"></a></h3>
+<p>The following describes the semantics for the device support provided by the devGpib
+support provided with asynDriver. If an application extends this support, it must
+document its changes.</p>
+<table class="docutils align-default" id="id3">
+<caption><span class="caption-text">Contributions</span><a class="headerlink" href="#id3" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>GPIBREAD</p></td>
+<td><p>Supports record types: ai, bi, event, longin, mbbi, mbbiDirect, stringin, and waveform.
+For all of these types the following is done.</p>
+<ul class="simple">
+<li><p>Send <cite>pgpibCmd-&gt;cmd</cite> to the instrument.</p></li>
+<li><p>Read from the instrument into <cite>pgpibDpvt-&gt;msg</cite>.
+<cite>pgpibCmd-&gt;msgLen</cite> must specify a size large enough for the message.</p></li>
+</ul>
+<p>If <cite>convert</cite> is defined then:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>convert</cite> is called. It is expected to give a value to the appropriate
+field (RVAL for bi, mbbi, mbbiDirect and VAL for all others) of the record or return
+-1. Note that it is the responsiblity of the custom conversion routine to set or
+clear the record .UDF field.</p></li>
+<li><p>The field <cite>pgpibDpvt-&gt;msgInputLen</cite> contains the number of bytes
+in the last read msg. This allows messages with null characters to be processed.</p></li>
+<li><p>Record completion occurs.</p></li>
+</ul>
+</div></blockquote>
+<p>If <cite>convert</cite> is not defined then what is done depends on the record type.</p>
+<blockquote>
+<div><ul>
+<li><p>bi, event, longin, mbbi, and mbbiDirect.</p>
+<blockquote>
+<div><p><cite>pgpibDpvt-&gt;msg</cite> is converted and the result put into field RVAL (bi,
+mbbi, mbbiDirect) or VAL (event, longin). If pgpibCmd-&gt;format is defined it is
+used for the conversion, otherwise a format appropriate to the data type of RVAL/VAL
+is used.</p>
+</div></blockquote>
+</li>
+<li><p>ai</p>
+<blockquote>
+<div><p><cite>pgpibDpvt-&gt;msg</cite> is converted and the result put into field VAL or
+RVAL. VAL is used if the DSET does NOT define special_linconv and RVAL is used if
+special_linconv is defined. If pgpibCmd-&gt;format is defined, it is used for the
+conversion. Otherwise, a format appropriate to the field is used. The DSET generated
+by devGpib.h does not define special_linconv.</p>
+</div></blockquote>
+</li>
+<li><p>stringin</p>
+<blockquote>
+<div><p><cite>pgpibDpvt-&gt;msg</cite> is converted and the result put into field VAL. If
+pgpibCmd-&gt;format is defined it is used for the conversion, otherwise “%39c” is
+used.</p>
+</div></blockquote>
+</li>
+<li><p>waveform</p>
+<blockquote>
+<div><p>Unless FTVL is menuFtypeCHAR, an error is generated and the record is put into alarm.
+If FTVL is menuFtypeCHAR,then epicsSnprintf is used to convert <cite>pgpibDpvt-&gt;msg</cite>
+into BPTR. If format is defined it is used, otherwise “%s” is used.</p>
+</div></blockquote>
+</li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBWRITE</p></td>
+<td><p>Supports record types: ao, bo, longout, mbbo, mbboDirect, stringout, and waveform.</p>
+<ul>
+<li><p>If <cite>convert</cite> is defined, it is called. It must put a command string
+into pgpibDpvt-&gt;msg. It can return:</p>
+<ul>
+<li><p>-1</p>
+<blockquote>
+<div><p>Signifies error. The operation is aborted and the record put into alarm.</p>
+</div></blockquote>
+</li>
+<li><p>0</p>
+<blockquote>
+<div><p>Success and call strlen to determine the length of msg.</p>
+</div></blockquote>
+</li>
+<li><p>&gt;0</p>
+<blockquote>
+<div><p>Success and the return value is the number of bytes in msg.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+<li><p>If <cite>convert</cite> is not defined, then what happens is determined by the
+record type.</p>
+<ul>
+<li><p>ao</p>
+<blockquote>
+<div><p>If special_linconv is NOT defined in DSET, the RVAL field is converted as a long
+into msg. If special_linconv is defined, OVAL is converted as a double into msg.</p>
+</div></blockquote>
+</li>
+<li><p>bo, mbbo, and mbboDirect</p>
+<blockquote>
+<div><p>VAL is converted as an unsigned long into msg.</p>
+</div></blockquote>
+</li>
+<li><p>longout</p>
+<blockquote>
+<div><p>VAL is converted as a long into msg.</p>
+</div></blockquote>
+</li>
+<li><p>stringout</p>
+<blockquote>
+<div><p>VAL is converted into msg via epicsSnprintf. If pgpibCmd-&gt;format is defined it
+is used, otherwise “%s” is used.</p>
+</div></blockquote>
+</li>
+<li><p>waveform</p>
+<blockquote>
+<div><p>BPTR is converted into msg via epicsSnprintf. If pgpibCmd-&gt;format is defined
+it is used, otherwise “%s” is used.</p>
+</div></blockquote>
+</li>
+</ul>
+</li>
+</ul>
+<blockquote>
+<div><ul class="simple">
+<li><p><cite>pgpibDpvt-&gt;msg</cite> is sent to the instrument.</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBCVTIO</p></td>
+<td><p>Supports record types: ai, ao, bi, bo, event, longin.longout, mbbi, mbbo, mbbiDirect, mmboDirect, stringin,
+stringout, waveform.</p>
+<p>All I/O is done by the <cite>convert</cite> routine, which must be defined. `
+convert` is called by a callback routine and thus can make an arbitrary
+number of calls to low level drivers. It is passed the address of <cite>gpibDpvt</cite>
+which contains the information needed to call the low level drivers: <cite>asynCommon,
+asynOctet, and asynGpib.</cite> Note that <cite>asynGpib</cite> may not be present,
+i.e. <cite>pasynGpib</cite> is null. <cite>gpibDpvt</cite> also contains a field
+<cite>pupvt</cite> which can be used by the convert routine. Is is initialized to
+null. The macro <cite>gpibCmdGet</cite> can be used to get the address of <cite>gpibCmd</cite>
+which contains other usefull information.</p>
+<p>If the End of String terminator needs to be changed, it must be changed by calling
+<cite>pdevSupportGpib-&gt;setEos</cite> rather than calling <cite>pgpibDpvt-&gt;pasynOctet-&gt;setEos</cite>
+Also when the <cite>convert</cite> routine has finished with read operations it
+must call <cite>pdevSupportGpib-&gt;restoreEos</cite></p>
+<p>Subsection “gpibCmd convert example” below provides an example.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBCMD</p></td>
+<td><p>Supports record types: ao, bo, longout, mbbo, mbboDirect, stringout, and waveform.</p>
+<p>Send the command string specified in <cite>pgpibCmd-&gt;cmd</cite> to the instrument
+exactly as specified.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBACMD</p></td>
+<td><p>This is like GPIBCMD except that ATN is held active. This should rarely be necessary.</p></td>
+</tr>
+<tr class="row-even"><td><p>GPIBSOFT</p></td>
+<td><p>No I/O is done. It calls <cite>pgpibCmd-&gt;convert</cite>. <cite>pgpibCmd-&gt;convert</cite>
+must be defined If GPIBSOFT fails, it calls <cite>asynPrint</cite> with mask `
+ASYN_TRACE_ERROR` and also puts the record into alarm.</p></td>
+</tr>
+<tr class="row-odd"><td><p>GPIBREADW</p></td>
+<td><p>Like GPIBREAD except for that it waits for the device to issue an SRQ before it
+issues the read request.</p></td>
+</tr>
+<tr class="row-even"><td><p>GPIBRAWREAD</p></td>
+<td><p>Like GPIBREAD except that no command is sent to the instrument.</p></td>
+</tr>
+<tr class="row-odd"><td><p>GPIBEFASTO</p></td>
+<td><p>This operation type is only valid on BO and MBBO record types. <cite>pgpibCmd-&gt;P3</cite>
+must contain the address of an efast table. At init time some checks are made to
+see that an efast table is defined, but if it is defined incorrectly problems may
+arise.</p>
+<p>The following is done:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>Device support sets <cite>pibDpvt.efastVal</cite> equal to the VAL field.</p></li>
+<li><p>If <cite>pgpibCmd-&gt;cmd `is not null, then</cite> msgLen` must also
+be specified. <cite>msg</cite> is set equal to the concatenation of` cmd`
+and the efast value specified by <cite>pgpibCmd-&gt;P3</cite>. The resulting `
+msg` is sent.</p></li>
+<li><p>If <cite>pgpibCmd-&gt;cmd `is null, then the string pointed to by `
+pgpibCmd-&gt;P3[efastVal]</cite> is sent.</p></li>
+</ul>
+</div></blockquote>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBEFASTI</p></td>
+<td><p>This operation type is only valid on BI and MBBI record types.</p>
+<p>The following is done:</p>
+<ul class="simple">
+<li><p>Send the command string specified in <cite>cmd</cite> to the instrument exactly
+as specified.</p></li>
+<li><p>Read the data from the instrument and place it into <cite>pgpibDpvt-&gt;msg</cite>.</p></li>
+<li><p>Compare <cite>msg</cite> with each element of the EFAST table referenced by `
+pgpibCmd-&gt;P3.`</p></li>
+<li><p>devSupportGpib sets <cite>pgpibDpvt-&gt;efastVal</cite> to the index of the EFAST
+table that matched.</p></li>
+<li><p>Device support sets RVAL equal to <cite>pgpibDpvt-&gt;efastVal</cite>.</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBEFASTIW</p></td>
+<td><p>This operation type is like GPIBEFASTI except that it waits for the device to raise
+SRQ before the data is read.</p></td>
+</tr>
+<tr class="row-even"><td><p>GPIBIFC</p></td>
+<td><p>Valid only for BO records. If rval = (0,1) then (do nothing, pulse IFC). IFC is
+one of the GPIB Bus Management Lines.</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided. For example</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span> <span class="n">GPIBIFC</span><span class="p">,</span> <span class="n">IB_Q_LOW</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">}</span>
+</pre></div>
+</div>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBREN</p></td>
+<td><p>Valid only for BO records. If rval = (0,1) then (drop,assert) REN. REN is one of
+the GPIB Bus Management Lines.</p>
+<p>If devices are in the LLO state they can be removed from this state by toggling
+the REN line, i.e. turn it off and then turn it back on.</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBDCL</p></td>
+<td><p>Valid only for BO records. If rval = (0,1) then (do nothing, send DCL). DCL is a
+Universal GPIB command, i.e. it applys to all devices on the link</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBLLO</p></td>
+<td><p>If rval = (0,1) then (do nothing, send LLO). LLO is a Universal GPIB command, i.e.
+it applys to all devices on the link</p>
+<p>After a LLO, the first time a device is addressed it will disable local control,
+i.e. the front pannel controls will not respond. To remove devices from this state
+toggle the REN line. A single device can temporarily be removed from LLO by sending
+the GPIBCTL command but it will go back to LLO state as soon as it is again addressed.</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBSDC</p></td>
+<td><p>If rval = (0,1) then (do nothing, send SDC). SDC is an addressed GPIB command, i.e.
+it applies only to the addressed device.</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided.</p>
+</td>
+</tr>
+<tr class="row-odd"><td><p>GPIBGTL</p></td>
+<td><p>If rval = (0,1) then (do nothing, send GTL). GTL is an addressed GPIB command, i.e.
+it applies only to the addressed device.</p>
+<p>If a device has local control locked out, local control can be temporarily granted
+by issuing this command. However the next time the device is addressed it will again
+disable local control.</p>
+<p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
+pdevGpibNames is provided.</p>
+</td>
+</tr>
+<tr class="row-even"><td><p>GPIBSRQHANDLER</p></td>
+<td><p>This is used to handle an unsolicited SRQ from gpibAddr, i.e. a device raises SRQ
+when a read wait, e.g. GPIBREADW or GPIBEFASTIW, is not active. This request is
+implemented only for longin records. When the device issues an SRQ, the status byte
+is put into the val field and the record is processed. It is expected that the record
+will forward link to records that issue GPIB commands to read the information that
+caused the SRQ.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="efast-enumerated-fast-i-o-tables">
+<h2>Efast (Enumerated Fast I/O) Tables<a class="headerlink" href="#efast-enumerated-fast-i-o-tables" title="Permalink to this heading"></a></h2>
+<p>A device’s command set often has things like “OFF” or “ON” in the command string.
+It is convenient to issue such commands via binary and multibit binary records.
+Efast tables specify such strings. Simply specify the string value for each of the
+possible states of the VAL field of the record.</p>
+<p>The format of an efast table is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">char</span>  <span class="o">*</span><span class="n">tableName</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;OFF&quot;</span><span class="p">,</span>    <span class="o">/*</span> <span class="n">when</span> <span class="n">VAL</span> <span class="o">=</span> <span class="mi">0</span> <span class="o">*/</span>
+    <span class="s2">&quot;ON&quot;</span><span class="p">,</span>    <span class="o">/*</span> <span class="n">when</span> <span class="n">VAL</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">*/</span>
+    <span class="mi">0</span>        <span class="o">/*</span> <span class="nb">list</span> <span class="n">terminator</span> <span class="o">*/</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>And is referenced in an output parameter table entry like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span> <span class="n">GPIBEFASTO</span><span class="p">,</span> <span class="n">IB_Q_HIGH</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tableName</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span>
+</pre></div>
+</div>
+<p>For an input entry, it would look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_BI</span><span class="p">,</span> <span class="n">GPIBEFASTI</span><span class="p">,</span> <span class="n">IB_Q_HIGH</span><span class="p">,</span> <span class="s2">&quot;&lt;command&gt;&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tableName</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">},</span>
+</pre></div>
+</div>
+<p>The efast table MUST be 0 terminated.</p>
+<p>For outputs the VAL field is used to index into the efast table and select a string
+to send to the instrument. If <cite>cmd</cite> is 0, the string is sent to the instrument
+exactly as as it appears in the efast table. If <cite>cmd</cite> is defined, then
+that string is prepended to the string obtained from the efast table.</p>
+<p>For input operations, the <cite>cmd</cite> string is sent to the instrument, and
+<cite>msg</cite> is read from the instrument. <cite>msg</cite> is compared against
+each of the entries in the efast table starting at the zeroth entry. The slot number
+of the first table entry that matches the response string is used as the setting
+for the RVAL field of the record. When strings are compared, they are compared from
+left to right until the number of characters in the efast table are checked. When
+ALL of the characters up to but <strong>NOT</strong> including the 0 of the string in the
+efast table match the corresponding characters of the response string, it is considered
+a valid match. This allows the user to check response strings fairly fast. For example,
+if a device returns something like “ON;XOFF;9600” or “OFF;XOFF;9600” in response
+to a status check, and you wish to know if the first field is either “OFF” or “ON”,
+your efast table could look like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">char</span> <span class="o">*</span><span class="n">statCheck</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+  <span class="s2">&quot;OFF&quot;</span><span class="p">,</span>      <span class="o">/*</span> <span class="nb">set</span> <span class="n">RVAL</span> <span class="n">to</span> <span class="mi">0</span> <span class="o">*/</span>
+  <span class="s2">&quot;ON&quot;</span><span class="p">,</span>      <span class="o">/*</span> <span class="nb">set</span> <span class="n">RVAL</span> <span class="n">to</span> <span class="mi">1</span> <span class="o">*/</span>
+  <span class="mi">0</span><span class="p">};</span>     <span class="o">/*</span> <span class="nb">list</span> <span class="n">terminator</span> <span class="o">*/</span>
+</pre></div>
+</div>
+<p>The 0 field is <em>extremely</em> important. If it is omitted and the instrument
+gets confused and responds with something that does not start with an “OFF” or “ON”,
+the GPIB support library code will end up running off the end of the table.</p>
+<p>In the case when none of the choices in an efast table match for an input operation,
+the record is placed into a INVALID alarm state.</p>
+</section>
+<section id="devgpibnames-name-table">
+<h2>devGpibNames - Name Table<a class="headerlink" href="#devgpibnames-name-table" title="Permalink to this heading"></a></h2>
+<p>For binary and multibit binary records, the choice fields of a record can be assigned
+values at record initialization. If pdevGpibNames has a value, then when a record
+is initialized, the instrument support uses the associated name table to assign
+values to choice fields that have not been assigned values. These name tables have
+<strong>nothing</strong> to do with I/O operations.</p>
+<p><cite>devGpibNames</cite> is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">devGpibNames</span> <span class="p">{</span>
+    <span class="nb">int</span> <span class="n">count</span><span class="p">;</span>            <span class="o">/*</span> <span class="n">CURRENTLY</span> <span class="n">only</span> <span class="n">used</span> <span class="k">for</span> <span class="n">MBBI</span> <span class="ow">and</span> <span class="n">MBBO</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">**</span><span class="n">item</span><span class="p">;</span>
+    <span class="n">unsigned</span> <span class="n">long</span> <span class="o">*</span><span class="n">value</span><span class="p">;</span> <span class="o">/*</span> <span class="n">CURRENTLY</span> <span class="n">only</span> <span class="n">used</span> <span class="k">for</span> <span class="n">MBBI</span> <span class="ow">and</span> <span class="n">MBBO</span> <span class="o">*/</span>
+    <span class="n">short</span> <span class="n">nobt</span><span class="p">;</span>           <span class="o">/*</span> <span class="n">CURRENTLY</span> <span class="n">only</span> <span class="n">used</span> <span class="k">for</span> <span class="n">MBBI</span> <span class="ow">and</span> <span class="n">MBBO</span> <span class="o">*/</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>To use a name table, the address of the table must be put into <cite>pdevGpibNames</cite>
+of the parameter table. The table format for a multibit record type looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">char</span> <span class="o">*</span><span class="n">tABCDList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;T&quot;</span><span class="p">,</span>                 <span class="o">/*</span> <span class="n">zrst</span><span class="o">*/</span>
+    <span class="s2">&quot;A&quot;</span><span class="p">,</span>                 <span class="o">/*</span> <span class="n">onst</span> <span class="o">*/</span>
+    <span class="s2">&quot;B&quot;</span><span class="p">,</span>                 <span class="o">/*</span> <span class="n">twst</span> <span class="o">*/</span>
+    <span class="s2">&quot;C&quot;</span><span class="p">,</span>                 <span class="o">/*</span> <span class="n">thst</span> <span class="o">*/</span>
+    <span class="s2">&quot;D&quot;</span><span class="p">};</span>                <span class="o">/*</span> <span class="n">frst</span> <span class="o">*/</span>
+
+<span class="n">static</span> <span class="n">unsigned</span> <span class="n">long</span> <span class="n">tABCDVal</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">1</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">zrvl</span> <span class="o">*/</span>
+    <span class="mi">2</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">onvl</span> <span class="o">*/</span>
+    <span class="mi">3</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">twvl</span> <span class="o">*/</span>
+    <span class="mi">5</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">thvl</span> <span class="o">*/</span>
+    <span class="mi">6</span> <span class="p">};</span>                <span class="o">/*</span> <span class="n">frvl</span> <span class="o">*/</span>
+
+<span class="n">static</span> <span class="n">devGpibNames</span> <span class="n">tABCD</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">5</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">elements</span> <span class="ow">in</span> <span class="n">string</span> <span class="n">table</span> <span class="o">*/</span>
+    <span class="n">tABCDList</span><span class="p">,</span>          <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">string</span> <span class="n">table</span> <span class="o">*/</span>
+    <span class="n">tABCDVal</span><span class="p">,</span>           <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">value</span> <span class="n">table</span> <span class="o">*/</span>
+    <span class="mi">3</span> <span class="p">};</span>                <span class="o">/*</span> <span class="n">value</span> <span class="k">for</span> <span class="n">the</span> <span class="n">nobt</span> <span class="n">field</span> <span class="o">*/</span>
+</pre></div>
+</div>
+<p>The table format for a binary record type looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">char</span> <span class="o">*</span><span class="n">disableEnableList</span><span class="p">[]</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s2">&quot;Disable&quot;</span><span class="p">,</span>          <span class="o">/*</span> <span class="n">znam</span> <span class="o">*/</span>
+    <span class="s2">&quot;Enable&quot;</span> <span class="p">};</span>         <span class="o">/*</span> <span class="n">onam</span> <span class="o">*/</span>
+
+<span class="n">static</span> <span class="n">devGpibNames</span> <span class="n">disableEnable</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="mi">2</span><span class="p">,</span>                  <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">elements</span> <span class="o">*/</span>
+    <span class="n">disableEnableList</span><span class="p">,</span>  <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">strings</span> <span class="o">*/</span>
+    <span class="mi">0</span><span class="p">,</span>               <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">value</span> <span class="nb">list</span> <span class="o">*/</span>
+    <span class="mi">1</span><span class="p">};</span>                 <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">valid</span> <span class="n">bits</span> <span class="o">*/</span>
+</pre></div>
+</div>
+<p><cite>devGpibNames</cite> is defined in <cite>devSupportGpib.h</cite>. For binary
+records, the strings are placed into the name fields in order from lowest to highest
+as shown above. For multibit binary records, up to sixteen strings can be defined.
+A <cite>devGpibNames</cite> structure referencing these strings is then defined.</p>
+<p><cite>value</cite> and <cite>nobt</cite> are not used for binary record types, but
+should be specified anyway as if the binary record was a multibit binary record
+with only 2 values.</p>
+<p>For multibit record types, the name strings, values, and NOBT fields are filled
+in from the <cite>devGpibNames</cite> information. For binary record types, only
+the znam and onam fields are filled in.</p>
+<p>Name strings (and their associated values in the multibit cases) are not filled
+in if the database designer has assigned them values.</p>
+</section>
+<section id="defining-the-devgpibparmblock">
+<h2>Defining the devGpibParmBlock<a class="headerlink" href="#defining-the-devgpibparmblock" title="Permalink to this heading"></a></h2>
+<p>Each DSET of the instrument support contains the address of a <cite>devGpibParmBlock</cite>.
+<cite>init_ai</cite> MUST initialize this structure. For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">long</span> <span class="n">init_ai</span><span class="p">(</span><span class="nb">int</span> <span class="n">parm</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="k">if</span><span class="p">(</span><span class="n">parm</span><span class="o">==</span><span class="mi">0</span><span class="p">)</span> <span class="p">{</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="s2">&quot;devSkeletonGpib&quot;</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">gpibCmds</span> <span class="o">=</span> <span class="n">gpibCmds</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">numparams</span> <span class="o">=</span> <span class="n">NUMPARAMS</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">timeout</span> <span class="o">=</span> <span class="n">TIMEOUT</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">timeWindow</span> <span class="o">=</span> <span class="n">TIMEWINDOW</span><span class="p">;</span>
+        <span class="n">devSupParms</span><span class="o">.</span><span class="n">respond2Writes</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="k">return</span><span class="p">(</span><span class="mi">0</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p><cite>devGpibParmBlock</cite> is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">devGpibParmBlock</span> <span class="p">{</span>
+    <span class="n">char</span> <span class="o">*</span><span class="n">name</span><span class="p">;</span>         <span class="o">/*</span> <span class="n">Name</span> <span class="n">of</span> <span class="n">this</span> <span class="n">device</span> <span class="n">support</span><span class="o">*/</span>
+    <span class="n">gpibCmd</span> <span class="o">*</span><span class="n">gpibCmds</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">pointer</span> <span class="n">to</span> <span class="n">gpib</span> <span class="n">command</span> <span class="nb">list</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="n">numparams</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">elements</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">command</span> <span class="nb">list</span> <span class="o">*/</span>
+    <span class="n">double</span> <span class="n">timeout</span><span class="p">;</span> <span class="o">/*</span> <span class="n">seconds</span> <span class="n">to</span> <span class="n">wait</span> <span class="k">for</span> <span class="n">I</span><span class="o">/</span><span class="n">O</span> <span class="o">*/</span>
+    <span class="n">double</span> <span class="n">timeWindow</span><span class="p">;</span>  <span class="o">/*</span> <span class="n">seconds</span> <span class="n">to</span> <span class="n">stop</span> <span class="n">I</span><span class="o">/</span><span class="n">O</span> <span class="n">after</span> <span class="n">a</span> <span class="n">timeout</span><span class="o">*/</span>
+    <span class="n">double</span> <span class="n">respond2Writes</span><span class="p">;</span> <span class="o">/*</span> <span class="nb">set</span> <span class="o">&gt;=</span> <span class="mi">0</span> <span class="k">if</span> <span class="n">device</span> <span class="n">responds</span> <span class="n">to</span> <span class="n">writes</span> <span class="o">*/</span>
+    <span class="o">/*</span><span class="n">The</span> <span class="n">following</span> <span class="n">are</span> <span class="nb">set</span> <span class="n">by</span> <span class="n">devSupportGpib</span><span class="o">*/</span>
+    <span class="nb">int</span>  <span class="n">msgLenMax</span><span class="p">;</span>     <span class="o">/*</span><span class="nb">max</span> <span class="n">msgLen</span> <span class="nb">all</span> <span class="n">commands</span><span class="o">*/</span>
+    <span class="nb">int</span>  <span class="n">rspLenMax</span><span class="p">;</span>     <span class="o">/*</span><span class="nb">max</span> <span class="n">rspLen</span> <span class="nb">all</span> <span class="n">commands</span><span class="o">*/</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id4">
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>name</cite></p></td>
+<td><p>The device support module type name. Used only to generate diagnostic messages.
+-  Address of an array of gpibCmd definitions.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>numparams</cite></p></td>
+<td><p>The number of gpibCmds defined. A macro should be used to set its value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>timeout</cite></p></td>
+<td><p>timeout in seconds for an individual I/O operation.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>timeWindow</cite></p></td>
+<td><p>The number of seconds after a timeout before a new I/O operation will be issued
+to the device. During this time window, any I/O operations directed to the timed
+out device will result in an error, and the appropriate alarm status will be raised
+for the record (either READ_ALARM or WRITE_ALARM depending on the record type and
+VALID_ALARM in all cases.)</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>respond2Writes</cite></p></td>
+<td><p>This field is for devices that echo writes. If respond2Writes &gt;=0 then after
+an output command the following is done:</p>
+<ul class="simple">
+<li><p>If pgpibCmd-&gt;rspLen is &lt;=0 no action is taken. This is a way to override
+respond2Writes for specific commands.</p></li>
+<li><p>If respond2Writes is &gt;0 then a wait of respond2Writes milliseconds occurs.</p></li>
+<li><p>A read of up to pgpibCmd-&gt;rspLen bytes (terminated earlier by GPIB EOI or by
+the terminator string, if any) is read into pgpibDpvt-&gt;rsp.</p></li>
+</ul>
+</td>
+</tr>
+<tr class="row-even"><td><p><cite>msgLenMax</cite></p></td>
+<td><p>This is set by devGpibSupport. The value is that of the maximum size input message,
+i.e. the largest msgLen defined in gpibCmds.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>rspLenMax</cite></p></td>
+<td><p>This is set by devGpibSupport. The value is that of the maximum size response message,
+i.e. the largest rspLen defined in gpibCmds.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="srq-processing">
+<h2>SRQ Processing<a class="headerlink" href="#srq-processing" title="Permalink to this heading"></a></h2>
+<p>If the low level device driver implements interface <cite>asynGpib</cite>, then
+devSupportGpib registers itself to handle SRQs. It defines two types of SRQs: solicited
+and unsollicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
+an SRQ is raised for a gpibAddr that does not have an outstanding GPIBREADW or GPIBEFASTIW
+command, the SRQ is considered unsolicited.</p>
+<p>When the devSupportGpib receives an unsolicited SRQ and it has a registered handler
+for the gpibAddr, it calls the handler. Otherwise it issues a message that it received
+an unsolicited SRQ.</p>
+<p>The device support for the longinRecord supports gpibCmd type GPIBSRQHANDLER. It
+calls the devSupportGpib registerSrqHandler method. When its interruptCallbackInt32
+gets called, it puts the SRQ status byte into the VAL field and then makes a request
+to process the record. By forward linking this record to other records, the user
+can handle SRQs from specific devices. Note that the callback is an interruptCallbackInt32
+since asynGpib handles SRQ callbacks via the asynInt32 interface and using asynUser.reason
+= ASYN_REASON_SIGNAL.</p>
+<p>To save time during SRQ polling operations it is possible to exclude a device which
+has become disconnected from the bus for some reason and then to restore the device
+to the polling list when the device is reattached. A binary output record with the
+following command table entry is used for this purpose:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Add</span><span class="o">/</span><span class="n">remove</span> <span class="n">address</span> <span class="kn">from</span> <span class="nn">SRQ</span> <span class="n">polling</span> <span class="nb">list</span> <span class="o">*/</span>
+<span class="p">{</span> <span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span><span class="n">GPIBCVTIO</span><span class="p">,</span><span class="n">IB_Q_HIGH</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">boSRQonOff</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>If the binary-output record rval is (0, 1) then (remove, add) device (from, to)
+the SRQ polling liist. No commands are sent to the bus. Before exluding a device
+from being polled stop any communications to it, i.e. set SCAN-field(s) to PASSIVE
+and turn off the device.</p>
+</section>
+<section id="gpibcmd-convert-example">
+<h2>gpibCmd convert example<a class="headerlink" href="#gpibcmd-convert-example" title="Permalink to this heading"></a></h2>
+<p>The asyn distribution includes an example of how to implement the convert parameter
+for a gpibCmd. The example is in asyn/devGpib/devGpibConvertExample.c. It defines
+three gpibCmds for stringin and three for stringout records. All three input commands
+have the same result and all three output commands have the same result. The difference
+is how much is done by devGpib support and how much is done by the instrument support.</p>
+<p>The example show how a convert routine can access fields from the devGpibsupport.</p>
+<p>The command tables are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">struct</span> <span class="n">gpibCmd</span> <span class="n">gpibCmds</span><span class="p">[]</span> <span class="o">=</span>
+<span class="p">{</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">0</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SI</span><span class="p">,</span><span class="n">GPIBREAD</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="s2">&quot;*IDN?&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">1</span> <span class="n">simple</span> <span class="n">convert</span>   <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SI</span><span class="p">,</span><span class="n">GPIBREAD</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="s2">&quot;*IDN?&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">readString</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">2</span><span class="p">,</span><span class="n">example</span> <span class="n">of</span> <span class="n">GPIBCVTIO</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SI</span><span class="p">,</span><span class="n">GPIBCVTIO</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="s2">&quot;*IDN?&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">readCvtio</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">3</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SO</span><span class="p">,</span><span class="n">GPIBWRITE</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">4</span> <span class="n">simple</span> <span class="n">convert</span>   <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SO</span><span class="p">,</span><span class="n">GPIBWRITE</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">writeString</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">},</span>
+  <span class="o">/*</span> <span class="n">Param</span> <span class="mi">5</span><span class="p">,</span><span class="n">example</span> <span class="n">of</span> <span class="n">GPIBCVTIO</span> <span class="o">*/</span>
+  <span class="p">{</span><span class="o">&amp;</span><span class="n">DSET_SO</span><span class="p">,</span><span class="n">GPIBCVTIO</span><span class="p">,</span><span class="n">IB_Q_LOW</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">200</span><span class="p">,</span><span class="n">writeCvtio</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">}</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>The command for Param 0 lets the devGpib support do everything as follows:</p>
+<ul class="simple">
+<li><p>The command “*IDN?” is sent to the instrument.</p></li>
+<li><p>A responds is read back from the instrument.</p></li>
+<li><p>device suipport for the stringin record copies the response to the VAL field of
+the record.</p></li>
+</ul>
+<p>The command for Param 1 is similar except that, after the response is read from
+the instrument, readString is called. It copies the response to VAL.</p>
+<p>The command for Param 2 causes the devGpib support to call readCvtio without doing
+any I/O. The convert routine is responsible for all I/O.</p>
+<p>The command for Param 3 lets the devGpib support do everything as follows:</p>
+<ul class="simple">
+<li><p>Device support for the stringout record copies the current value of the VAL field
+to a message buffer.</p></li>
+<li><p>The message buffer is sent to the instrument.</p></li>
+</ul>
+<p>The command for Param 4 is similar except that writeString is called to move the
+value of the VAL field to the message buffer.</p>
+<p>The command for Param 5 causes the devGpib support to call writeCvtio without doing
+any I/O. The convert routine is responsible for all I/O.</p>
+<p>The actual code for the convert routines is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>static int readString(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
+{
+    stringinRecord *precord = (stringinRecord*)pgpibDpvt-&gt;precord;
+    strncpy(precord-&gt;val,pgpibDpvt-&gt;msg,sizeof(precord-&gt;val));
+    precord-&gt;val[sizeof(precord-&gt;val) - 1] = 0;
+    return(0);
+}
+static int readCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
+{
+    stringinRecord *precord = (stringinRecord*)pgpibDpvt-&gt;precord;
+    asynUser *pasynUser = pgpibDpvt-&gt;pasynUser;
+    gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    asynOctet *pasynOctet = pgpibDpvt-&gt;pasynOctet;
+    void *asynOctetPvt = pgpibDpvt-&gt;asynOctetPvt;
+    asynStatus status;
+    size_t nchars = 0, lenmsg = 0;
+    pgpibDpvt-&gt;msgInputLen = 0;
+
+    assert(pgpibCmd-&gt;cmd);
+    lenmsg = strlen(pgpibCmd-&gt;cmd);
+    status  = pasynOctet-&gt;write(asynOctetPvt,pasynUser,
+        pgpibCmd-&gt;cmd,lenmsg,&amp;nchars);
+    if(nchars==lenmsg) {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibCmd-&gt;cmd,nchars,
+                                            &quot;%s readCvtio\n&quot;,precord-&gt;name);
+    } else {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s write status \&quot;%s\&quot; requested %d but sent %d bytes\n&quot;,
+                precord-&gt;name,pasynUser-&gt;errorMessage,lenmsg,nchars);
+            return -1;
+    }
+    if(!pgpibDpvt-&gt;msg) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s pgpibDpvt-&gt;msg is null\n&quot;,precord-&gt;name);
+        nchars = 0; return -1;
+    } else {
+        status = pasynOctet-&gt;read(asynOctetPvt,pasynUser,
+            pgpibDpvt-&gt;msg,pgpibCmd-&gt;msgLen,&amp;nchars,0);
+    }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,&quot;%s readCvtio nchars %d\n&quot;,
+        precord-&gt;name,nchars);
+    if(nchars &gt; 0) {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt-&gt;msg,nchars,
+            &quot;%s readCvtio\n&quot;,precord-&gt;name);
+    } else {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s read status \&quot;%s\&quot; nin %d\n&quot;,
+            precord-&gt;name, pasynUser-&gt;errorMessage,nchars);
+        pgpibDpvt-&gt;msgInputLen = 0;
+        return -1;
+    }
+    pgpibDpvt-&gt;msgInputLen = nchars;
+    if(nchars&lt;pgpibcmd-&gt;pgpibcmd-&gt;msgLen) pgpibDpvt-&gt;msg[nchars] = 0;
+    readString(pgpibDpvt,P1,P2,P3);
+    return 0;
+}
+
+static int writeString(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
+{
+    asynUser *pasynUser = pgpibDpvt-&gt;pasynUser;
+    stringoutRecord *precord = (stringoutRecord*)pgpibDpvt-&gt;precord;
+    int            nchars;
+    gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
+    char *format = (pgpibCmd-&gt;format) ? pgpibCmd-&gt;format : &quot;%s&quot;;
+
+    if(!pgpibDpvt-&gt;msg) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s no msg buffer. Must define gpibCmd.msgLen &gt; 0.\n&quot;,
+            precord-&gt;name);
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+        return -1;
+    }
+    nchars = epicsSnprintf(pgpibDpvt-&gt;msg,pgpibCmd-&gt;msgLen,format,precord-&gt;val);
+    if(nchars&gt;pgpibCmd-&gt;msgLen) {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s msg buffer too small. msgLen %d message length %d\n&quot;,
+            precord-&gt;name,pgpibCmd-&gt;msgLen,nchars);
+        recGblSetSevr(precord,WRITE_ALARM, INVALID_ALARM);
+        return -1;
+    }
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,&quot;%s writeMsgString\n&quot;,precord-&gt;name);
+    return nchars;
+}
+
+static int writeCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
+{
+    stringoutRecord *precord = (stringoutRecord*)pgpibDpvt-&gt;precord;
+    asynUser *pasynUser = pgpibDpvt-&gt;pasynUser;
+    asynOctet *pasynOctet = pgpibDpvt-&gt;pasynOctet;
+    void *asynOctetPvt = pgpibDpvt-&gt;asynOctetPvt;
+    asynStatus status;
+    size_t nsent = 0, lenmsg = 0;
+    pgpibDpvt-&gt;msgInputLen = 0;
+
+    lenmsg = writeString(pgpibDpvt,P1,P2,P3);
+    if(lenmsg &lt;= 0) return -1; status=pasynOctet-&gt;write(asynOctetPvt,pasynUser,
+        pgpibDpvt-&gt;msg,lenmsg,&amp;nsent);
+    if(nsent==lenmsg) {
+        asynPrintIO(pasynUser,ASYN_TRACEIO_DEVICE,pgpibDpvt-&gt;msg,lenmsg,
+                                            &quot;%s writeCvtio\n&quot;,precord-&gt;name);
+    } else {
+        asynPrint(pasynUser,ASYN_TRACE_ERROR,
+            &quot;%s write status \&quot;%s\&quot; requested %d but sent %d bytes\n&quot;,
+                precord-&gt;name,pasynUser-&gt;errorMessage,lenmsg,nsent);
+            return -1;
+    }
+    return 0;
+}
+</pre></div>
+</div>
+</section>
+<section id="devcommongpib">
+<h2>devCommonGpib<a class="headerlink" href="#devcommongpib" title="Permalink to this heading"></a></h2>
+<p>The facilities described above should satisfy most gpib requirements. This section
+and the next explain how to provide additional support. For example, support could
+be written for additional record types. This section explains devCommonGpib, and
+the next section explains devSupportGpib.</p>
+<p>devCommonGpib provides support for specific record types by making calls to devSupportGpib.
+As explained above, an instrument support module must define some combination of
+DSET_AI,…,DSET_WF and then include devGpib.h. devGpib.h defines DSETs (Device
+Support Entry Tables) that refer to methods implemented in devCommonGpib.c</p>
+<p>If you want to write additional support code that can be used for writing instrument
+specific device support, the easiest way is to start with code in devCommonGpib
+and modify it.</p>
+<p>devGpib provides three header files:</p>
+<ul class="simple">
+<li><p>devCommonGpib.h - This defines the function prototypes for the methods implemented
+in devCommonGpib.c</p></li>
+<li><p>devGpib.h - Included in instrument specific device support. It generates DSETs
+referring to the functions implemented in devCommonGpib.</p></li>
+<li><p>devSupportGpib.h - Describes the structures gpibCmd, devGpibNames, and devGpibParmBlock
+described above. It also describes additional structures described in the next section.</p></li>
+</ul>
+</section>
+<section id="devsupportgpib">
+<h2>devSupportGpib<a class="headerlink" href="#devsupportgpib" title="Permalink to this heading"></a></h2>
+<p>devSupportGpib.h describes all the public structures used by devGpib. The structures
+gpibCmd, devGpibNames, and devGpibParmBlock were described above. They are needed
+to create an instrument device support module. The remaining structures are used
+by devCommonGpib, devSupportGpib, or other support. These structures are: gDset,
+gpibDpvt, devGpibPvt, and devSupportGpib.</p>
+<section id="gdset">
+<h3>gDset<a class="headerlink" href="#gdset" title="Permalink to this heading"></a></h3>
+<p>A gDset is an “overloaded” definition of a DSET. A gDset looks to iocCore like a
+regular DSET, but it has an additional field that is the address of a devGpibParmBlock.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">gDset</span>
+<span class="p">{</span>
+    <span class="n">long</span> <span class="n">number</span><span class="p">;</span>
+    <span class="n">DEVSUPFUN</span> <span class="n">funPtr</span><span class="p">[</span><span class="mi">6</span><span class="p">];</span>
+    <span class="n">devGpibParmBlock</span> <span class="o">*</span><span class="n">pdevGpibParmBlock</span><span class="p">;</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>where</p>
+<table class="docutils align-default" id="id5">
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id5" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>number</cite></p></td>
+<td><p>This is required for a DSET. It should always be initialized to 6.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>funPtr</cite></p></td>
+<td><p>Pointers to device support functions. Allowing for 6 is sufficient for all the standard
+types in EPICS base.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>pdevGpibParmBlock</cite></p></td>
+<td><p>The address of the devGpibParmBlock for this instrument.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="gpibdpvt">
+<h3>gpibDpvt<a class="headerlink" href="#gpibdpvt" title="Permalink to this heading"></a></h3>
+<p>The dpvt field of a record with devGpib device support contains the address of a gpibDpvt</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">gpibDpvt</span>
+<span class="p">{</span>
+    <span class="n">devGpibParmBlock</span> <span class="o">*</span><span class="n">pdevGpibParmBlock</span><span class="p">;</span>
+    <span class="n">CALLBACK</span> <span class="n">callback</span><span class="p">;</span>
+    <span class="n">dbCommon</span> <span class="o">*</span><span class="n">precord</span><span class="p">;</span>
+    <span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">;</span>
+    <span class="n">asynCommon</span> <span class="o">*</span><span class="n">pasynCommon</span><span class="p">;</span>
+    <span class="n">void</span> <span class="o">*</span><span class="n">pasynCommonPvt</span><span class="p">;</span>
+    <span class="n">asynOctet</span> <span class="o">*</span><span class="n">pasynOctet</span><span class="p">;</span>
+    <span class="n">void</span> <span class="o">*</span><span class="n">pasynOctetPvt</span><span class="p">;</span>
+    <span class="n">asynGpib</span> <span class="o">*</span><span class="n">pasynGpib</span><span class="p">;</span>
+    <span class="n">void</span> <span class="o">*</span><span class="n">pasynGpibPvt</span><span class="p">;</span>
+    <span class="nb">int</span> <span class="n">parm</span><span class="p">;</span>                 <span class="o">/*</span> <span class="n">parameter</span> <span class="n">index</span> <span class="n">into</span> <span class="n">gpib</span> <span class="n">commands</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">*</span><span class="n">rsp</span><span class="p">;</span>                <span class="o">/*</span> <span class="k">for</span> <span class="n">read</span><span class="o">/</span><span class="n">write</span> <span class="n">message</span> <span class="n">error</span> <span class="n">responses</span> <span class="o">*/</span>
+    <span class="n">char</span> <span class="o">*</span><span class="n">msg</span><span class="p">;</span>                <span class="o">/*</span> <span class="k">for</span> <span class="n">read</span><span class="o">/</span><span class="n">write</span> <span class="n">messages</span> <span class="o">*/</span>
+    <span class="nb">int</span>  <span class="n">msgInputLen</span><span class="p">;</span>         <span class="o">/*</span> <span class="n">number</span> <span class="n">of</span> <span class="n">characters</span> <span class="ow">in</span> <span class="n">last</span> <span class="n">READ</span><span class="o">*/</span>
+    <span class="nb">int</span> <span class="n">efastVal</span><span class="p">;</span>             <span class="o">/*</span> <span class="n">For</span> <span class="n">GPIBEFASTxxx</span> <span class="o">*/</span>
+    <span class="n">void</span>     <span class="o">*</span><span class="n">pupvt</span><span class="p">;</span>          <span class="o">/*</span><span class="n">private</span> <span class="n">pointer</span> <span class="k">for</span> <span class="n">custom</span> <span class="n">code</span><span class="o">*/</span>
+    <span class="n">devGpibPvt</span> <span class="o">*</span><span class="n">pdevGpibPvt</span><span class="p">;</span>  <span class="o">/*</span><span class="n">private</span> <span class="k">for</span> <span class="n">devGpibCommon</span><span class="o">*/</span>
+<span class="p">};</span>
+</pre></div>
+</div>
+<p>where</p>
+<table class="docutils align-default" id="id6">
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id6" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 20%" />
+<col style="width: 80%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>pdevGpibParmBlock</cite></p></td>
+<td><p>Address of the devGpibParmBlock. It is the same value as <cite>pgDset-&gt;pdevGpibParmBlock</cite></p></td>
+</tr>
+<tr class="row-even"><td><p><cite>callback</cite></p></td>
+<td><p>For use by completeProcess.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>precord</cite></p></td>
+<td><p>Address of the record.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>pasynUser</cite></p></td>
+<td><p>Address of an asynUser which is needed to call asynDriver support.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>pasynCommon,pasynCommonPvt</cite></p></td>
+<td><p>Used to call asynCommon methods. If initialization is successful these will have
+a value.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>pasynOctet,pasynOctetPvt</cite></p></td>
+<td><p>Used to call asynOctet methods. If initialization is successful these will have
+a value.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>pasynGpib,pasynGpibPvt</cite></p></td>
+<td><p>Used to call asynGpib methods. These may be 0 even if initialization is successful.
+If a record that requires asynGpib is processed and pasynGpib is 0, then an error
+message is generated and the record is put into alarm.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>parm</cite></p></td>
+<td><p>The value of the parm field of INP or OUT. It locates the gpibCmd for its record.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>rsp</cite></p></td>
+<td><p>If respond2Writes is &gt;=0 and rspLen is &gt;0, this is the buffer that holds the
+read after each write.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>msg</cite></p></td>
+<td><p>A buffer of length msgLen. It is used by several GPIBXXX request types.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>msgInputLen</cite></p></td>
+<td><p>The length of the last input message.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>efastVal</cite></p></td>
+<td><p>Used for GPIBEFASTO, GPIBEFASTI, GPIBEFASTIW. For GPIBEFASTO the device support
+sets efastVal from RVAL or VAL before queuing an I/O request. For GPIBEFASTI and
+GPIBEFASTIW, the device support sets RVAL or VAL from efastVal after an I/O request
+completes.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>pupvt</cite></p></td>
+<td><p>This is a private pointer for use by specialized instrument support.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>pdevGpibPvt</cite></p></td>
+<td><p>This is used by devSupportGpib. Note that the structure is described in devSupportGpib.c,
+i.e. it is private.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+<section id="id1">
+<h3>devSupportGpib<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<p>Describes methods implemented by devSupportGpib.c.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">If</span> <span class="n">a</span> <span class="n">method</span> <span class="n">returns</span> <span class="nb">int</span> <span class="n">then</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">failure</span><span class="p">)</span> <span class="o">*/</span>
+<span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">gpibWork</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">failure</span><span class="p">);</span>
+<span class="n">typedef</span> <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">gpibStart</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">failure</span><span class="p">);</span>
+<span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">gpibFinish</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">failure</span><span class="p">);</span>
+
+<span class="n">typedef</span> <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">gpibWork</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">failure</span><span class="p">);</span>
+<span class="n">struct</span> <span class="n">devSupportGpib</span> <span class="p">{</span>
+    <span class="n">long</span> <span class="p">(</span><span class="o">*</span><span class="n">initRecord</span><span class="p">)(</span><span class="n">dbCommon</span> <span class="o">*</span><span class="n">precord</span><span class="p">,</span> <span class="n">struct</span> <span class="n">link</span> <span class="o">*</span> <span class="n">plink</span><span class="p">);</span>
+    <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">processGPIBSOFT</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">);</span>
+    <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">queueReadRequest</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">gpibStart</span> <span class="n">start</span><span class="p">,</span><span class="n">gpibFinish</span> <span class="n">finish</span><span class="p">);</span>
+    <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">queueWriteRequest</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">gpibStart</span> <span class="n">start</span><span class="p">,</span> <span class="n">gpibFinish</span> <span class="n">finish</span><span class="p">);</span>
+    <span class="o">/*</span> <span class="n">queueRequest</span> <span class="n">returns</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">)</span> <span class="k">for</span> <span class="p">(</span><span class="n">failure</span><span class="p">,</span><span class="n">success</span><span class="p">)</span> <span class="o">*/</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">queueRequest</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span> <span class="n">gpibWork</span> <span class="n">work</span><span class="p">);</span>
+    <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">registerSrqHandler</span><span class="p">)(</span>
+        <span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">interruptCallbackInt32</span> <span class="n">handler</span><span class="p">,</span><span class="n">void</span> <span class="o">*</span><span class="n">userPrivate</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writeMsgLong</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">long</span> <span class="n">val</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writeMsgULong</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">unsigned</span> <span class="n">long</span> <span class="n">val</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writeMsgDouble</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">double</span> <span class="n">val</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">writeMsgString</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="nb">str</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">readArbitraryBlockProgramData</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">setEos</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">gpibCmd</span> <span class="o">*</span><span class="n">pgpibCmd</span><span class="p">);</span>
+    <span class="nb">int</span> <span class="p">(</span><span class="o">*</span><span class="n">restoreEos</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="n">gpibCmd</span> <span class="o">*</span><span class="n">pgpibCmd</span><span class="p">);</span>
+    <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">completeProcess</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">);</span>
+<span class="p">};</span>
+<span class="n">epicsShareExtern</span> <span class="n">devSupportGpib</span> <span class="o">*</span><span class="n">pdevSupportGpib</span><span class="p">;</span>
+</pre></div>
+</div>
+<table class="docutils align-default" id="id7">
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id7" title="Permalink to this table"></a></caption>
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><cite>gpibWork</cite></p></td>
+<td><p>Prototype of a function that is called when a request is dequeued by asynManager.
+This can be either a function passed to queueRequest or an internal function that
+devGpibSupport uses to implement queueReadRequest and queueWriteRequest.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>gpibStart</cite></p></td>
+<td><p>If queueReadRequest or queueWriteRequest is called, the internal gpibWork function
+calls the start routine before it processes the request.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>gpibFinish</cite></p></td>
+<td><p>If queueReadRequest or queueWriteRequest is called, the internal gpibWork function
+calls the finish routine when it is done processing.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>initRecord</cite></p></td>
+<td><p>This initializes all the devGpib structures attached to the record starting with
+dbCommon.dpvt.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>processGPIBSOFT</cite></p></td>
+<td><p>If pgpibCmd-&gt;type is GPIBSOFT, just call this method.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>queueReadRequest</cite></p></td>
+<td><p>This handles GPIBREADW, GPIBEFASTIW, GPIBREAD, GPIBEFASTI, and GPIBRAWREAD. The
+only thing device support needs to provide is work functions to do record specific
+processing of the received message. The <cite>start</cite> function is called before
+devGpibSupport issues write/reads and <cite>finish</cite> is called after the read.
+<cite>start</cite> is optional and not usually required for read operations. The
+<cite>msg</cite> buffer MUST not be accessed except via the start or finish work
+functions.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>queueWriteRequest</cite></p></td>
+<td><p>This handles GPIBWRITE, GPIBCMD, GPIBACMD, and GPIBEFASTO. Device support provides
+a <cite>start</cite> and <cite>finish</cite> work function. The <cite>start</cite>
+function is called before devGpibSupport issues a write and <cite>finish</cite>
+is called after the write. The msg buffer MUST not be accessed except via the `
+start` or <cite>finish</cite> work functions. <cite>start</cite> must set
+<cite>msg</cite> or <cite>efastVal</cite> depending on the <cite>pgpibCmd-&gt;type</cite>.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>queueRequest</cite></p></td>
+<td><p>The device support provides a work function that is called when the request is dequeued.
+queueRequest returns (0,1) if the request (was not, was) queued.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>report</cite></p></td>
+<td><p>This generates a report or all devGpib devices.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>registerSrqHandler</cite></p></td>
+<td><p>Registers an SRQ handler for gpibAddr.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>writeMsgLong, writeMsgULong, writeMsgDouble, writeMsgString</cite></p></td>
+<td><p>pgpibDpvt-&gt;msg is written from pgpibCmd-&gt;format and the value passed by the
+caller.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>readArbitraryBlockProgramData</cite></p></td>
+<td><p>Reads zero or more preamble (non-<cite>#</cite>) characters followed by IEEE-488.2
+definite-length arbitrary block program data followed by the end-of-string specified
+by the active gpibCmd entry, and stores the entire response in pgpibDpvt-&gt;msg.
+This routine is intended for use by custom input functions to read a block of arbitrary
+data from a serial-line device.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>setEos</cite></p></td>
+<td><p>If the End of String terminator needs to be changed, it must be changed by calling
+this rather than calling the low level driver.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>restoreEos</cite></p></td>
+<td><p>If code calls setEos it must call restoreEos after all reads are done.</p></td>
+</tr>
+<tr class="row-odd"><td><p><cite>completeProcess</cite></p></td>
+<td><p>If the port can block, callbackRequestProcessCallback is called. If the port can
+not block then PACT is set false. Thus before calling queueRequest, the caller should
+set PACT true.</p></td>
+</tr>
+<tr class="row-even"><td><p><cite>pdevSupportGpib</cite></p></td>
+<td><p>An external variable which points to devSupportGpib.</p></td>
+</tr>
+</tbody>
+</table>
+</section>
+</section>
+<section id="changes-to-previous-epics-gpib-support">
+<h2>Changes to Previous EPICS GPIB Support<a class="headerlink" href="#changes-to-previous-epics-gpib-support" title="Permalink to this heading"></a></h2>
+<p><a class="reference external" href="gpibCoreConversion/conversionNotes.html">conversionNotes.html</a> describes
+how to convert GPIB device support modules written for the devGpib support that
+came with EPICS base 3.13 and earlier. The information also applies to support modules
+written for Benjamin Franksen’s GPIB support or the gpibCore support since both
+of these evolved from the EPICS base GPIB support.</p>
+</section>
+<section id="general-gpib-problems">
+<h2>General GPIB Problems<a class="headerlink" href="#general-gpib-problems" title="Permalink to this heading"></a></h2>
+<p>NOTE: The following comments are from John Winan’s original GPIB documentation.</p>
+<p>Every type of communication system has its problems. Some instrument vendors don’t
+properly test the GPIB interfaces on their products. Some devices miss messages
+or commands that are too close together in time. There are handshaking lines that
+are supposed to throttle the speed, but are apparently improperly implemented by
+device vendors, or make the (wrong) assumption that the controller in charge is
+slow in its ability to burst bytes down the bus. The only way that this problem
+can be worked around is to add delays in the GPIB device device support modules.
+The current device support library does not provide any means to do this.</p>
+<p>Very often, a device will slow down over 800% when a user presses a button on the
+front panel of the device. This can cause the GPIB message transfer to time out,
+alarms to be set, and so on. When devices of this type have to be used, operators
+will have to be instructed to “look, but don’t touch.”</p>
+<p>Some devices like to go out to lunch once every hour, or day or so, and not respond
+to a command for up to about 5 seconds (the DG 535 has done this on more than one
+occasion.) This can be more frustrating that anything else. All that can be said
+about these types of things is BEWARE of machines that don’t work as advertised.
+There is probably something wrong with it that won’t surface until it is in use
+and controlling something very important.</p>
+<p>Test, test, and test your devices after writing a new device support module. Many
+devices can run fine if doing only three or five transactions per second, but crank
+it up to 50 or more, and watch it go up in flames. Even if all the records in an
+EPICS database are scanned slowly, they can still get processed in bursts. EPICS
+can actually process over 20,000 records in one second if they are all ready to
+go at the same time. And if there are enough records tied to the same device, there
+is no telling how fast the device will be pushed.</p>
+</section>
+<section id="id2">
+<h2>License Agreement<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2002</span> <span class="n">University</span> <span class="n">of</span> <span class="n">Chicago</span><span class="p">,</span> <span class="n">The</span> <span class="n">Regents</span> <span class="n">of</span> <span class="n">the</span>
+<span class="n">University</span> <span class="n">of</span> <span class="n">California</span><span class="p">,</span> <span class="ow">and</span> <span class="n">Berliner</span> <span class="n">Elektronenspeicherring</span>
+<span class="n">Gesellschaft</span> <span class="n">fuer</span> <span class="n">Synchrotronstrahlung</span> <span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">H</span><span class="o">.</span> <span class="p">(</span><span class="n">BESSY</span><span class="p">)</span> <span class="n">All</span> <span class="n">rights</span>
+<span class="n">reserved</span><span class="o">.</span>
+
+<span class="n">asynDriver</span> <span class="ow">is</span> <span class="n">distributed</span> <span class="n">subject</span> <span class="n">to</span> <span class="n">the</span> <span class="n">following</span> <span class="n">license</span> <span class="n">conditions</span><span class="p">:</span>
+
+ <span class="n">SOFTWARE</span> <span class="n">LICENSE</span> <span class="n">AGREEMENT</span>
+ <span class="n">Software</span><span class="p">:</span> <span class="n">asynDriver</span>
+
+ <span class="mf">1.</span> <span class="n">The</span> <span class="s2">&quot;Software&quot;</span><span class="p">,</span> <span class="n">below</span><span class="p">,</span> <span class="n">refers</span> <span class="n">to</span> <span class="n">asynDriver</span> <span class="p">(</span><span class="ow">in</span> <span class="n">either</span> <span class="n">source</span> <span class="n">code</span><span class="p">,</span> <span class="ow">or</span>
+    <span class="n">binary</span> <span class="n">form</span> <span class="ow">and</span> <span class="n">accompanying</span> <span class="n">documentation</span><span class="p">)</span><span class="o">.</span> <span class="n">Each</span> <span class="n">licensee</span> <span class="ow">is</span>
+    <span class="n">addressed</span> <span class="k">as</span> <span class="s2">&quot;you&quot;</span> <span class="ow">or</span> <span class="s2">&quot;Licensee.&quot;</span>
+
+ <span class="mf">2.</span> <span class="n">The</span> <span class="n">copyright</span> <span class="n">holders</span> <span class="n">shown</span> <span class="n">above</span> <span class="ow">and</span> <span class="n">their</span> <span class="n">third</span><span class="o">-</span><span class="n">party</span> <span class="n">licensors</span>
+    <span class="n">hereby</span> <span class="n">grant</span> <span class="n">Licensee</span> <span class="n">a</span> <span class="n">royalty</span><span class="o">-</span><span class="n">free</span> <span class="n">nonexclusive</span> <span class="n">license</span><span class="p">,</span> <span class="n">subject</span> <span class="n">to</span>
+    <span class="n">the</span> <span class="n">limitations</span> <span class="n">stated</span> <span class="n">herein</span> <span class="ow">and</span> <span class="n">U</span><span class="o">.</span><span class="n">S</span><span class="o">.</span> <span class="n">Government</span> <span class="n">license</span> <span class="n">rights</span><span class="o">.</span>
+
+ <span class="mf">3.</span> <span class="n">You</span> <span class="n">may</span> <span class="n">modify</span> <span class="ow">and</span> <span class="n">make</span> <span class="n">a</span> <span class="n">copy</span> <span class="ow">or</span> <span class="n">copies</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span> <span class="k">for</span> <span class="n">use</span>
+    <span class="n">within</span> <span class="n">your</span> <span class="n">organization</span><span class="p">,</span> <span class="k">if</span> <span class="n">you</span> <span class="n">meet</span> <span class="n">the</span> <span class="n">following</span> <span class="n">conditions</span><span class="p">:</span>
+      <span class="n">a</span><span class="o">.</span> <span class="n">Copies</span> <span class="ow">in</span> <span class="n">source</span> <span class="n">code</span> <span class="n">must</span> <span class="n">include</span> <span class="n">the</span> <span class="n">copyright</span> <span class="n">notice</span> <span class="ow">and</span> <span class="n">this</span>
+         <span class="n">Software</span> <span class="n">License</span> <span class="n">Agreement</span><span class="o">.</span>
+      <span class="n">b</span><span class="o">.</span> <span class="n">Copies</span> <span class="ow">in</span> <span class="n">binary</span> <span class="n">form</span> <span class="n">must</span> <span class="n">include</span> <span class="n">the</span> <span class="n">copyright</span> <span class="n">notice</span> <span class="ow">and</span> <span class="n">this</span>
+         <span class="n">Software</span> <span class="n">License</span> <span class="n">Agreement</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">documentation</span> <span class="ow">and</span><span class="o">/</span><span class="ow">or</span> <span class="n">other</span>
+         <span class="n">materials</span> <span class="n">provided</span> <span class="k">with</span> <span class="n">the</span> <span class="n">copy</span><span class="o">.</span>
+
+ <span class="mf">4.</span> <span class="n">You</span> <span class="n">may</span> <span class="n">modify</span> <span class="n">a</span> <span class="n">copy</span> <span class="ow">or</span> <span class="n">copies</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span> <span class="ow">or</span> <span class="nb">any</span> <span class="n">portion</span> <span class="n">of</span> <span class="n">it</span><span class="p">,</span>
+    <span class="n">thus</span> <span class="n">forming</span> <span class="n">a</span> <span class="n">work</span> <span class="n">based</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Software</span><span class="p">,</span> <span class="ow">and</span> <span class="n">distribute</span> <span class="n">copies</span> <span class="n">of</span>
+    <span class="n">such</span> <span class="n">work</span> <span class="n">outside</span> <span class="n">your</span> <span class="n">organization</span><span class="p">,</span> <span class="k">if</span> <span class="n">you</span> <span class="n">meet</span> <span class="nb">all</span> <span class="n">of</span> <span class="n">the</span> <span class="n">following</span>
+    <span class="n">conditions</span><span class="p">:</span>
+      <span class="n">a</span><span class="o">.</span> <span class="n">Copies</span> <span class="ow">in</span> <span class="n">source</span> <span class="n">code</span> <span class="n">must</span> <span class="n">include</span> <span class="n">the</span> <span class="n">copyright</span> <span class="n">notice</span> <span class="ow">and</span> <span class="n">this</span>
+         <span class="n">Software</span> <span class="n">License</span> <span class="n">Agreement</span><span class="p">;</span>
+      <span class="n">b</span><span class="o">.</span> <span class="n">Copies</span> <span class="ow">in</span> <span class="n">binary</span> <span class="n">form</span> <span class="n">must</span> <span class="n">include</span> <span class="n">the</span> <span class="n">copyright</span> <span class="n">notice</span> <span class="ow">and</span> <span class="n">this</span>
+         <span class="n">Software</span> <span class="n">License</span> <span class="n">Agreement</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">documentation</span> <span class="ow">and</span><span class="o">/</span><span class="ow">or</span> <span class="n">other</span>
+         <span class="n">materials</span> <span class="n">provided</span> <span class="k">with</span> <span class="n">the</span> <span class="n">copy</span><span class="p">;</span>
+      <span class="n">c</span><span class="o">.</span> <span class="n">Modified</span> <span class="n">copies</span> <span class="ow">and</span> <span class="n">works</span> <span class="n">based</span> <span class="n">on</span> <span class="n">the</span> <span class="n">Software</span> <span class="n">must</span> <span class="n">carry</span>
+         <span class="n">prominent</span> <span class="n">notices</span> <span class="n">stating</span> <span class="n">that</span> <span class="n">you</span> <span class="n">changed</span> <span class="n">specified</span> <span class="n">portions</span> <span class="n">of</span>
+         <span class="n">the</span> <span class="n">Software</span><span class="o">.</span>
+
+ <span class="mf">5.</span> <span class="n">Portions</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span> <span class="n">resulted</span> <span class="kn">from</span> <span class="nn">work</span> <span class="n">developed</span> <span class="n">under</span> <span class="n">a</span> <span class="n">U</span><span class="o">.</span><span class="n">S</span><span class="o">.</span>
+    <span class="n">Government</span> <span class="n">contract</span> <span class="ow">and</span> <span class="n">are</span> <span class="n">subject</span> <span class="n">to</span> <span class="n">the</span> <span class="n">following</span> <span class="n">license</span><span class="p">:</span> <span class="n">the</span>
+    <span class="n">Government</span> <span class="ow">is</span> <span class="n">granted</span> <span class="k">for</span> <span class="n">itself</span> <span class="ow">and</span> <span class="n">others</span> <span class="n">acting</span> <span class="n">on</span> <span class="n">its</span> <span class="n">behalf</span> <span class="n">a</span>
+    <span class="n">paid</span><span class="o">-</span><span class="n">up</span><span class="p">,</span> <span class="n">nonexclusive</span><span class="p">,</span> <span class="n">irrevocable</span> <span class="n">worldwide</span> <span class="n">license</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">computer</span>
+    <span class="n">software</span> <span class="n">to</span> <span class="n">reproduce</span><span class="p">,</span> <span class="n">prepare</span> <span class="n">derivative</span> <span class="n">works</span><span class="p">,</span> <span class="ow">and</span> <span class="n">perform</span> <span class="n">publicly</span>
+    <span class="ow">and</span> <span class="n">display</span> <span class="n">publicly</span><span class="o">.</span>
+
+ <span class="mf">6.</span> <span class="n">WARRANTY</span> <span class="n">DISCLAIMER</span><span class="o">.</span> <span class="n">THE</span> <span class="n">SOFTWARE</span> <span class="n">IS</span> <span class="n">SUPPLIED</span> <span class="s2">&quot;AS IS&quot;</span> <span class="n">WITHOUT</span> <span class="n">WARRANTY</span>
+    <span class="n">OF</span> <span class="n">ANY</span> <span class="n">KIND</span><span class="o">.</span> <span class="n">THE</span> <span class="n">COPYRIGHT</span> <span class="n">HOLDERS</span><span class="p">,</span> <span class="n">THEIR</span> <span class="n">THIRD</span> <span class="n">PARTY</span> <span class="n">LICENSORS</span><span class="p">,</span> <span class="n">THE</span>
+    <span class="n">UNITED</span> <span class="n">STATES</span><span class="p">,</span> <span class="n">THE</span> <span class="n">UNITED</span> <span class="n">STATES</span> <span class="n">DEPARTMENT</span> <span class="n">OF</span> <span class="n">ENERGY</span><span class="p">,</span> <span class="n">AND</span> <span class="n">THEIR</span>
+    <span class="n">EMPLOYEES</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">)</span> <span class="n">DISCLAIM</span> <span class="n">ANY</span> <span class="n">WARRANTIES</span><span class="p">,</span> <span class="n">EXPRESS</span> <span class="n">OR</span> <span class="n">IMPLIED</span><span class="p">,</span> <span class="n">INCLUDING</span>
+    <span class="n">BUT</span> <span class="n">NOT</span> <span class="n">LIMITED</span> <span class="n">TO</span> <span class="n">ANY</span> <span class="n">IMPLIED</span> <span class="n">WARRANTIES</span> <span class="n">OF</span> <span class="n">MERCHANTABILITY</span><span class="p">,</span> <span class="n">FITNESS</span>
+    <span class="n">FOR</span> <span class="n">A</span> <span class="n">PARTICULAR</span> <span class="n">PURPOSE</span><span class="p">,</span> <span class="n">TITLE</span> <span class="n">OR</span> <span class="n">NON</span><span class="o">-</span><span class="n">INFRINGEMENT</span><span class="p">,</span> <span class="p">(</span><span class="mi">2</span><span class="p">)</span> <span class="n">DO</span> <span class="n">NOT</span> <span class="n">ASSUME</span>
+    <span class="n">ANY</span> <span class="n">LEGAL</span> <span class="n">LIABILITY</span> <span class="n">OR</span> <span class="n">RESPONSIBILITY</span> <span class="n">FOR</span> <span class="n">THE</span> <span class="n">ACCURACY</span><span class="p">,</span> <span class="n">COMPLETENESS</span><span class="p">,</span>
+    <span class="n">OR</span> <span class="n">USEFULNESS</span> <span class="n">OF</span> <span class="n">THE</span> <span class="n">SOFTWARE</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="n">DO</span> <span class="n">NOT</span> <span class="n">REPRESENT</span> <span class="n">THAT</span> <span class="n">USE</span> <span class="n">OF</span> <span class="n">THE</span>
+    <span class="n">SOFTWARE</span> <span class="n">WOULD</span> <span class="n">NOT</span> <span class="n">INFRINGE</span> <span class="n">PRIVATELY</span> <span class="n">OWNED</span> <span class="n">RIGHTS</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">)</span> <span class="n">DO</span> <span class="n">NOT</span> <span class="n">WARRANT</span>
+    <span class="n">THAT</span> <span class="n">THE</span> <span class="n">SOFTWARE</span> <span class="n">WILL</span> <span class="n">FUNCTION</span> <span class="n">UNINTERRUPTED</span><span class="p">,</span> <span class="n">THAT</span> <span class="n">IT</span> <span class="n">IS</span> <span class="n">ERROR</span><span class="o">-</span><span class="n">FREE</span>
+    <span class="n">OR</span> <span class="n">THAT</span> <span class="n">ANY</span> <span class="n">ERRORS</span> <span class="n">WILL</span> <span class="n">BE</span> <span class="n">CORRECTED</span><span class="o">.</span>
+
+ <span class="mf">7.</span> <span class="n">LIMITATION</span> <span class="n">OF</span> <span class="n">LIABILITY</span><span class="o">.</span> <span class="n">IN</span> <span class="n">NO</span> <span class="n">EVENT</span> <span class="n">WILL</span> <span class="n">THE</span> <span class="n">COPYRIGHT</span> <span class="n">HOLDERS</span><span class="p">,</span> <span class="n">THEIR</span>
+    <span class="n">THIRD</span> <span class="n">PARTY</span> <span class="n">LICENSORS</span><span class="p">,</span> <span class="n">THE</span> <span class="n">UNITED</span> <span class="n">STATES</span><span class="p">,</span> <span class="n">THE</span> <span class="n">UNITED</span> <span class="n">STATES</span> <span class="n">DEPARTMENT</span>
+    <span class="n">OF</span> <span class="n">ENERGY</span><span class="p">,</span> <span class="n">OR</span> <span class="n">THEIR</span> <span class="n">EMPLOYEES</span><span class="p">:</span> <span class="n">BE</span> <span class="n">LIABLE</span> <span class="n">FOR</span> <span class="n">ANY</span> <span class="n">INDIRECT</span><span class="p">,</span> <span class="n">INCIDENTAL</span><span class="p">,</span>
+    <span class="n">CONSEQUENTIAL</span><span class="p">,</span> <span class="n">SPECIAL</span> <span class="n">OR</span> <span class="n">PUNITIVE</span> <span class="n">DAMAGES</span> <span class="n">OF</span> <span class="n">ANY</span> <span class="n">KIND</span> <span class="n">OR</span> <span class="n">NATURE</span><span class="p">,</span>
+    <span class="n">INCLUDING</span> <span class="n">BUT</span> <span class="n">NOT</span> <span class="n">LIMITED</span> <span class="n">TO</span> <span class="n">LOSS</span> <span class="n">OF</span> <span class="n">PROFITS</span> <span class="n">OR</span> <span class="n">LOSS</span> <span class="n">OF</span> <span class="n">DATA</span><span class="p">,</span> <span class="n">FOR</span> <span class="n">ANY</span>
+    <span class="n">REASON</span> <span class="n">WHATSOEVER</span><span class="p">,</span> <span class="n">WHETHER</span> <span class="n">SUCH</span> <span class="n">LIABILITY</span> <span class="n">IS</span> <span class="n">ASSERTED</span> <span class="n">ON</span> <span class="n">THE</span> <span class="n">BASIS</span> <span class="n">OF</span>
+    <span class="n">CONTRACT</span><span class="p">,</span> <span class="n">TORT</span> <span class="p">(</span><span class="n">INCLUDING</span> <span class="n">NEGLIGENCE</span> <span class="n">OR</span> <span class="n">STRICT</span> <span class="n">LIABILITY</span><span class="p">),</span> <span class="n">OR</span>
+    <span class="n">OTHERWISE</span><span class="p">,</span> <span class="n">EVEN</span> <span class="n">IF</span> <span class="n">ANY</span> <span class="n">OF</span> <span class="n">SAID</span> <span class="n">PARTIES</span> <span class="n">HAS</span> <span class="n">BEEN</span> <span class="n">WARNED</span> <span class="n">OF</span> <span class="n">THE</span>
+    <span class="n">POSSIBILITY</span> <span class="n">OF</span> <span class="n">SUCH</span> <span class="n">LOSS</span> <span class="n">OR</span> <span class="n">DAMAGES</span><span class="o">.</span>
+</pre></div>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="asynRecordControl.html" class="btn btn-neutral float-left" title="asyn Record Control" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="doxygen.html" class="btn btn-neutral float-right" title="Doxygen documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mark Rivers.
+      <span class="lastupdated">Last updated on 2023-March-10.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

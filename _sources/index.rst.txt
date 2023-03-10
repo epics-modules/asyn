@@ -14,4 +14,6 @@ Table of Contents
   asynPortDriver
   asynPortClient
   asynRecord
+  asynRecordControl
+  devGpib
   doxygen

@@ -18,7 +18,7 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="asynDriver: EPICS Driver Support" href="asynDriver.html" /> 
+    <link rel="next" title="asynDriver" href="asynDriver.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,10 +41,12 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <ul>
-<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynPortDriver.html">asynPortDriver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn Record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record Control</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
 </ul>
 
@@ -83,7 +85,7 @@
 <h2>Table of Contents<a class="headerlink" href="#table-of-contents" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="asynDriver.html#license-agreement">License Agreement</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asynDriver.html#purpose">Purpose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asynDriver.html#status">Status</a></li>
@@ -264,6 +266,51 @@
 <li class="toctree-l2"><a class="reference internal" href="asynRecord.html#example-2">Example #2</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record Control</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#main-control-screen-asynrecord-adl">Main control screen, asynRecord.adl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#asynoctet-i-o-screen-asynoctet-adl">asynOctet I/O screen, asynOctet.adl</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#id1">asynOctet I/O screen, asynOctet.adl</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#note-devgpib-is-obsolete-and-should-not-be-used-for-new-applications"><strong>NOTE: devGpib is obsolete and should not be used for new applications.</strong></a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#license-agreement">License Agreement</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#introduction">Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#acknowledgments">Acknowledgments</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#install-and-build">Install and Build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#using-instrument-support">Using Instrument Support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#reports-and-timeouts">Reports and Timeouts</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#creating-instrument-device-support">Creating Instrument Device Support</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#purpose">Purpose</a></li>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#overview">Overview</a></li>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#device-dbd-definition">Device DBD Definition</a></li>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#instrument-device-support-module">Instrument Device Support Module</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#dset-device-support-entry-tables">DSET - Device Support Entry Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#gpibcmd-definitions">gpibCmd Definitions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#definitions-for-pgpibcmd-type">Definitions for pgpibCmd-&gt;type</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#efast-enumerated-fast-i-o-tables">Efast (Enumerated Fast I/O) Tables</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#devgpibnames-name-table">devGpibNames - Name Table</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#defining-the-devgpibparmblock">Defining the devGpibParmBlock</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#srq-processing">SRQ Processing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#gpibcmd-convert-example">gpibCmd convert example</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#devcommongpib">devCommonGpib</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#devsupportgpib">devSupportGpib</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#gdset">gDset</a></li>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#gpibdpvt">gpibDpvt</a></li>
+<li class="toctree-l3"><a class="reference internal" href="devGpib.html#id1">devSupportGpib</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#changes-to-previous-epics-gpib-support">Changes to Previous EPICS GPIB Support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#general-gpib-problems">General GPIB Problems</a></li>
+<li class="toctree-l2"><a class="reference internal" href="devGpib.html#id2">License Agreement</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
 </ul>
 </div>
@@ -274,7 +321,7 @@
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="asynDriver.html" class="btn btn-neutral float-right" title="asynDriver: EPICS Driver Support" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="asynDriver.html" class="btn btn-neutral float-right" title="asynDriver" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
