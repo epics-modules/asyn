@@ -15,4 +15,5 @@ Table of Contents
   asynPortClient
   asynRecord
   asynRecordControl
+  devGpib
   doxygen
