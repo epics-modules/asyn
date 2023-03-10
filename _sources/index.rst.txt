@@ -11,5 +11,7 @@ Table of Contents
   :maxdepth: 3
   
   asynDriver
+  asynPortDriver
+  asynPortClient
   asynRecord
   doxygen

@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>asynPortDriver &mdash; asyn support</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="asynPortClient" href="asynPortClient.html" />
+    <link rel="prev" title="asynDriver: EPICS Driver Support" href="asynDriver.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            asyn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver: EPICS Driver Support</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">asynPortDriver</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#detailed-documentation">Detailed documentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#example-driver">Example driver</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#testasynportdriver-adl">testAsynPortDriver.adl</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn - asyn Record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">asyn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">asynPortDriver</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/asynPortDriver.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="asynportdriver">
+<h1>asynPortDriver<a class="headerlink" href="#asynportdriver" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">author<span class="colon">:</span></dt>
+<dd class="field-odd"><p>Mark Rivers, University of Chicago</p>
+</dd>
+<dt class="field-even">date<span class="colon">:</span></dt>
+<dd class="field-even"><p>September 15, 2017</p>
+</dd>
+</dl>
+<section id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h2>
+<p>asynPortDriver is a base C++ class that is designed to greatly simplify the task
+of writing an asyn port driver. It handles all of the details of registering the
+port driver, registering the supported interfaces, and registering the required
+interrupt sources.</p>
+<p>Drivers typically need to support a number of parameters that control their operation
+and provide status information. Most of these can be treated as 32-bit integers,
+64-bit floats, or strings. When the new value of a parameter is sent to a driver,
+(e.g. new D/A output value) from an asyn client (e.g. an EPICS record), then the
+driver will need to take some action. It may change some other parameters in response
+to this new value. The sequence of operations in the driver can be summarized as</p>
+<ol class="arabic simple">
+<li><p>New parameter value arrives, or new data arrives from a device.</p></li>
+<li><p>Change values of one or more parameters.</p></li>
+<li><p>For each parameter whose value changes set a flag noting that it changed.</p></li>
+<li><p>When operation is complete, call the registered callbacks for each changed parameter.</p></li>
+</ol>
+<p>asynPortDriver provides methods to simplify the above sequence, which must be implemented
+for each of the often many parameters that the driver supports. Each parameter is
+assigned a number, which is the value in the pasynUser-&gt;reason field that asyn
+clients pass to the driver when reading or writing that parameter. asynPortDriver
+maintains a table of parameter values, associating each parameter number with a
+data type (integer, UInt32Digital, double, or string), caching the current value,
+and maintaining a flag indicating if a value has changed. Drivers use asynPortDriver
+methods to read the current value from the table, and to set new values in the table.
+There is a method to call all registered callbacks for values that have changed
+since callbacks were last done.</p>
+</section>
+<section id="detailed-documentation">
+<h2>Detailed documentation<a class="headerlink" href="#detailed-documentation" title="Permalink to this heading"></a></h2>
+<p>The detailed documentation for asynPortDriver is in these files (generated by doxygen):</p>
+<ul class="simple">
+<li><p><a class="reference external" href="doxygenHTML/classasyn_port_driver.html">asynPortDriver class reference</a></p></li>
+<li><p><a class="reference external" href="doxygenHTML/asyn_port_driver_8h.html">asynPortDriver.h</a></p></li>
+</ul>
+<p>The example driver in asyn (testAsynPortDriver) is a simple example of how to use
+this class</p>
+<p>The <a class="reference external" href="https://github.com/epics-modules/measComp">synApps measComp module</a>
+contains a detailed example of writing an asynPortDriver driver. The
+driver is for the Measurement Computing USB-1608GX-2AO USB device. The example starts
+with a very simple driver that only uses a few of the features of the device, and
+is fewer than 150 lines of code. There are 5 versions of the driver that each add
+additional features. There is a document describing the code for each driver in
+detail, which was the basis of a talk at an EPICS short course on asyn. The following
+are links to this example:</p>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/epics-modules/measComp/blob/master/docs/source/measCompDriverTalk.pdf">Introductory talk about the Measurement Computing USB-1608GX-2AO driver</a></p></li>
+<li><p><a class="reference external" href="https://github.com/epics-modules/measComp/blob/master/docs/source/measCompTutorial.pdf">Tutorial talk about writing the USB-1608GX-2AO driver step-by step, from a simple driver to a complex one</a></p></li>
+<li><p><a class="reference external" href="https://github.com/epics-modules/measComp/tree/master/measCompApp/demoSrc">Directory containing the source code for all 5 versions of the the example driver</a></p></li>
+</ul>
+<p>More complex examples can be found in the drivers and plugins provided with the
+<a class="reference external" href="https://github.com/areaDetector">areaDetector</a> module.</p>
+</section>
+<section id="example-driver">
+<h2>Example driver<a class="headerlink" href="#example-driver" title="Permalink to this heading"></a></h2>
+<p>An example driver using the asynPortDriver class is provided in the testAsynPortDriverApp
+application in asyn. This example is a simple digital oscilloscope emulator. In
+this example all of output control and input data is done in a calculated simulation.
+But it is easy to see how to use the driver as a basis for real device control.
+The code doing the simulation would simply be changed to talk to an actual device.
+This could be done using the asyn serial or IP drivers via the asynOctetSyncIO interface
+(because at this driver level blocking is permitted), or via VME register access,
+or any other I/O mechanism.</p>
+<p>This is the medm screen for controlling this example application. It is started
+in the testAsynPortDriverApp/adl directory with the command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">medm</span> <span class="o">-</span><span class="n">x</span> <span class="o">-</span><span class="n">macro</span> <span class="s2">&quot;P=testAPD:, R=scope1:&quot;</span> <span class="n">testAsynPortDriver</span><span class="o">.</span><span class="n">adl</span> <span class="o">&amp;</span><span class="p">;</span>
+</pre></div>
+</div>
+<section id="testasynportdriver-adl">
+<h3>testAsynPortDriver.adl<a class="headerlink" href="#testasynportdriver-adl" title="Permalink to this heading"></a></h3>
+<figure class="align-center" id="id1">
+<img alt="_images/testAsynPortDriver.png" src="_images/testAsynPortDriver.png" />
+<figcaption>
+<p><span class="caption-text"><strong>testAsynPortDriver.png</strong></span><a class="headerlink" href="#id1" title="Permalink to this image"></a></p>
+</figcaption>
+</figure>
+<p>The simulated scope input is a noisy 1kHz sin wave with an amplitude of +-1V. The
+amplitude of the noise is an adjustable parameter. The scope parameters that can
+be adjusted are the vertical volts/division, vertical volt offset, horizontal time/division,
+trigger delay (relative to time=0 for the sin wave). The minimum, maximum and mean
+values of the waveform are calculated. The run/stop control turns the simulation
+of the waveform on and off. The update time in seconds controls the rate at which
+the waveform and statistics are calculated. By default all of the EPICS input records
+are I/O Intr scanned. There is a control on the medm screen to change the scan rate
+of the waveform record itself. By default it is also I/O Intr scanned, so the plot
+updates on every simulation. One can change this to, for example, 1 second, and
+then the simulation can be running faster (for example 50 Hz, Update time=.02) so
+the statistics will update quickly but the waveform at only 1Hz to save CPU time
+and network bandwidth.</p>
+<p>This driver supports about 20 EPICS records, including ao, ai, bo, bi, and waveform.
+It does callbacks to device support when any of the input records changes, so the
+records can use I/O Intr scanning rather than polling. It uses only the standard
+asyn EPICS record device support provided as part of asyn. Yet the driver is only
+about 340 lines of well-commented C++ code, because so much of the infrastructure
+is handled by the asynPortDriver base class.</p>
+<p>Here are the important lines from the startup script to start this IOC:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">testAsynPortDriverConfigure</span><span class="p">(</span><span class="s2">&quot;testAPD&quot;</span><span class="p">,</span> <span class="mi">1000</span><span class="p">)</span>
+<span class="n">dbLoadRecords</span><span class="p">(</span><span class="s2">&quot;../../db/testAsynPortDriver.db&quot;</span><span class="p">,</span><span class="s2">&quot;P=testAPD:,R=scope1:,PORT=testAPD,ADDR=0,TIMEOUT=1,NPOINTS=1000&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The first line starts the asyn port driver with a 1000 point waveform. The second
+line loads the database. The PORT parameter is the name of the asyn port created
+in the first line. The ADDR parameter is 0 because this driver is not ASYN_MULTIDEVICE,
+it only supports a single address. The TIMEOUT parameter is not really significant
+because this is a synchronous asyn port driver, i.e. ASYN_CANBLOCK=0. NPOINTS is
+the value for NELM in the waveform record in the database. It would normally match
+the value provided in the configure command above.</p>
+<p>This is an example of 2 of the record definitions in the database file, testAsynPortDriver.db.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">###################################################################</span>
+<span class="c1">#  These records are the time per division                        #</span>
+<span class="c1">###################################################################</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)TimePerDiv&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">PINI</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;asynFloat64&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">PREC</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+
+<span class="n">record</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)TimePerDiv_RBV&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">PINI</span><span class="p">,</span> <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;asynFloat64&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">INP</span><span class="p">,</span>  <span class="s2">&quot;@asyn($(PORT),$(ADDR),$(TIMEOUT))SCOPE_TIME_PER_DIV&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">PREC</span><span class="p">,</span> <span class="s2">&quot;5&quot;</span><span class="p">)</span>
+   <span class="n">field</span><span class="p">(</span><span class="n">SCAN</span><span class="p">,</span> <span class="s2">&quot;I/O Intr&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that there is both an output record and an input record for this parameter,
+the time per horizontal division. This is done so that if the driver is forced to
+modify a parameter (for example because the device cannot support the output value
+it received) there is feedback to the user on the actual value being used. In this
+case the ai record will always be the same as the ao record. But in the case of
+the update time parameter the driver enforces a minimum time of 0.02 seconds, so
+that if a value less than this is requested the ao and ai records will not agree.
+In that particular case DRVL could be used to enforce that limit at the ao record
+level, but this is not always the case, because device limits can vary with the
+value of other parameters.</p>
+<p>The DTYP field of these records is asynFloat64, which uses the standard asyn device
+support for ao and ai records, provided in asyn/devEpics/devAsynFloat64.c.</p>
+<p>The OUT and INP fields use the PORT, ADDR and TIMEOUT values described above. The
+final parameter, SCOPE_TIME_PER_DIV in these fields is used by the driver to identify
+which driver parameter these records are connected to. This is the asyn drvInfo
+parameter, and is discussed below.</p>
+<p>Finally, note that the ai record has SCAN=I/O Intr. This means that this record
+does not have to be periodically scanned (which is inefficient), but rather it will
+be processed whenever its value is changed by the driver. For the ai statistics
+records (min, max, mean) in this example,,. record callbacks occur every time the
+simulation runs if the noise is non-zero.</p>
+<p>This is the definition of the testAsynPortDriver class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>class testAsynPortDriver : public asynPortDriver {
+public:
+    testAsynPortDriver(const char *portName, int maxArraySize);
+
+    /* These are the methods that we override from asynPortDriver */
+    virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
+    virtual asynStatus writeFloat64(asynUser *pasynUser, epicsFloat64 value);
+    virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
+                                        size_t nElements, size_t *nIn);
+    virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
+                                size_t nElements, size_t *nIn);
+
+    /* These are the methods that are new to this class */
+    void simTask(void);
+
+protected:
+    /** Values used for pasynUser-&gt;reason, and indexes into the parameter library. */
+    int P_Run;
+    int P_MaxPoints;
+    int P_TimePerDiv;
+    int P_TimePerDivSelect;
+    int P_VertGain;
+    int P_VertGainSelect;
+    int P_VoltsPerDiv;
+    int P_VoltsPerDivSelect;
+    int P_VoltOffset;
+    int P_TriggerDelay;
+    int P_NoiseAmplitude;
+    int P_UpdateTime;
+    int P_Waveform;
+    int P_TimeBase;
+    int P_MinValue;
+    int P_MaxValue;
+    int P_MeanValue;
+
+private:
+    /* Our data */
+    epicsEventId eventId_;
+    epicsFloat64 *pData_;
+    epicsFloat64 *pTimeBase_;
+    // Actual volts per division are these values divided by vertical gain
+    char *voltsPerDivStrings_[NUM_VERT_SELECTIONS];
+    int voltsPerDivValues_[NUM_VERT_SELECTIONS];
+    int voltsPerDivSeverities_[NUM_VERT_SELECTIONS];
+    void setVertGain();
+    void setVoltsPerDiv();
+    void setTimePerDiv();
+};
+</pre></div>
+</div>
+<p>testAsynPortDriver is derived from asynPortDriver. It overrides the methods writeInt32,
+writeFloat64, readFloat64Array, and drvUserCreate. It adds a new method, simTask,
+which runs a separate thread to compute the waveform at the specified update time.</p>
+<p>This is the how the parameters are defined in the driver, testAsynPortDriver.cpp</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">These</span> <span class="n">are</span> <span class="n">the</span> <span class="n">drvInfo</span> <span class="n">strings</span> <span class="n">that</span> <span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">identify</span> <span class="n">the</span> <span class="n">parameters</span><span class="o">.</span>
+ <span class="o">*</span> <span class="n">They</span> <span class="n">are</span> <span class="n">used</span> <span class="n">by</span> <span class="n">asyn</span> <span class="n">clients</span><span class="p">,</span> <span class="n">including</span> <span class="n">standard</span> <span class="n">asyn</span> <span class="n">device</span> <span class="n">support</span> <span class="o">*/</span>
+<span class="c1">#define P_RunString                &quot;SCOPE_RUN&quot;             /* asynInt32,    r/w */</span>
+<span class="c1">#define P_MaxPointsString          &quot;SCOPE_MAX_POINTS&quot;      /* asynInt32,    r/o */</span>
+<span class="c1">#define P_TimePerDivisionString    &quot;SCOPE_TIME_PER_DIV&quot;    /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_VoltsPerDivisionString   &quot;SCOPE_VOLTS_PER_DIV&quot;   /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_VoltOffsetString         &quot;SCOPE_VOLT_OFFSET&quot;     /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_TriggerDelayString       &quot;SCOPE_TRIGGER_DELAY&quot;   /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_NoiseAmplitudeString     &quot;SCOPE_NOISE_AMPLITUDE&quot; /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_UpdateTimeString         &quot;SCOPE_UPDATE_TIME&quot;     /* asynFloat64,  r/w */</span>
+<span class="c1">#define P_WaveformString           &quot;SCOPE_WAVEFORM&quot;        /* asynFloat64Array,  r/o */</span>
+<span class="c1">#define P_TimeBaseString           &quot;SCOPE_TIME_BASE&quot;       /* asynFloat64Array,  r/o */</span>
+<span class="c1">#define P_MinValueString           &quot;SCOPE_MIN_VALUE&quot;       /* asynFloat64,  r/o */</span>
+<span class="c1">#define P_MaxValueString           &quot;SCOPE_MAX_VALUE&quot;       /* asynFloat64,  r/o */</span>
+<span class="c1">#define P_MeanValueString          &quot;SCOPE_MEAN_VALUE&quot;      /* asynFloat64,  r/o */</span>
+</pre></div>
+</div>
+<p>Note that each parameter has an integer value that identifies it. It is also associated
+with a string that is used in the drvInfo field of the record INP or OUT fields
+to associate a record with a parameter.</p>
+<p>This is the beginning of the constructor for the testAsynPortDriver C++ class.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">testAsynPortDriver</span><span class="p">::</span><span class="n">testAsynPortDriver</span><span class="p">(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">portName</span><span class="p">,</span> <span class="nb">int</span> <span class="n">maxPoints</span><span class="p">)</span>
+   <span class="p">:</span> <span class="n">asynPortDriver</span><span class="p">(</span><span class="n">portName</span><span class="p">,</span>
+                    <span class="mi">1</span><span class="p">,</span> <span class="o">/*</span> <span class="n">maxAddr</span> <span class="o">*/</span>
+                    <span class="n">asynInt32Mask</span> <span class="o">|</span> <span class="n">asynFloat64Mask</span> <span class="o">|</span> <span class="n">asynFloat64ArrayMask</span> <span class="o">|</span> <span class="n">asynEnumMask</span> <span class="o">|</span> <span class="n">asynDrvUserMask</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Interface</span> <span class="n">mask</span> <span class="o">*/</span>
+                    <span class="n">asynInt32Mask</span> <span class="o">|</span> <span class="n">asynFloat64Mask</span> <span class="o">|</span> <span class="n">asynFloat64ArrayMask</span> <span class="o">|</span> <span class="n">asynEnumMask</span><span class="p">,</span>  <span class="o">/*</span> <span class="n">Interrupt</span> <span class="n">mask</span> <span class="o">*/</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="o">/*</span> <span class="n">asynFlags</span><span class="o">.</span>  <span class="n">This</span> <span class="n">driver</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">block</span> <span class="ow">and</span> <span class="n">it</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">multi</span><span class="o">-</span><span class="n">device</span><span class="p">,</span> <span class="n">so</span> <span class="n">flag</span> <span class="ow">is</span> <span class="mi">0</span> <span class="o">*/</span>
+                    <span class="mi">1</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Autoconnect</span> <span class="o">*/</span>
+                    <span class="mi">0</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Default</span> <span class="n">priority</span> <span class="o">*/</span>
+                    <span class="mi">0</span><span class="p">)</span> <span class="o">/*</span> <span class="n">Default</span> <span class="n">stack</span> <span class="n">size</span><span class="o">*/</span>
+<span class="o">...</span>
+</pre></div>
+</div>
+<p>It invokes the constructor for the asynPortDriver base class. It passes:</p>
+<ul class="simple">
+<li><p>The portName, which is the name of the asyn port to be created. In the st.cmd
+file above this is “testAPD”.</p></li>
+<li><p>The maximum number of asyn addresses that this driver supports, which is 1.</p></li>
+<li><p>A mask which defines which asyn interfaces this driver supports, in this case
+asynInt32, asynFloat64, asynFloat64Array, and asynDrvUser. All drivers must support
+asynCommon, so that bit is added in the base class.</p></li>
+<li><p>A mask which defines which asyn interfaces can generate interrupts (callbacks).
+In this case that is asynInt32, asynFloat64, and asynFloat64Array.</p></li>
+<li><p>A mask which defines the asyn attributes for this driver. asyn currently defines
+two attribute bits, ASYN_CANBLOCK and ASYN_MULTIDEVICE. ASYN_CANBLOCK must be set
+for drivers that perform “slow” operations on their interfaces, requiring asynManager
+to create a separate port thread for them and to use asynchronous device support.
+ASYN_MULTIDEVICE must be set for drivers that support more than one asyn address,
+for example a driver used to support a 16-channel A/D converter.</p></li>
+<li><p>A flag to tell asynManager that it should automatically attempt to connect to
+this device when a call is made on its interfaces. This results in a call to asynCommon-&gt;connect().</p></li>
+<li><p>A priority flag for the port thread that asynManager will create if ASYN_CANBLOCK
+is 1. If this is 0 then asyn will use a default medium thread priority.</p></li>
+<li><p>The stack size for the port thread that asynManager will create if ASYN_CANBLOCK
+is 1. If this is 0 then asyn will use a default medium thread stack size.</p></li>
+</ul>
+<p>The constructor also allocates spaces for the waveform arrays (X and Y axes), and
+creates the simTask thread.</p>
+<p>This is the implementation of the writeFloat64 function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">asynStatus</span> <span class="n">testAsynPortDriver</span><span class="p">::</span><span class="n">writeFloat64</span><span class="p">(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span> <span class="n">epicsFloat64</span> <span class="n">value</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="nb">int</span> <span class="n">function</span> <span class="o">=</span> <span class="n">pasynUser</span><span class="o">-&gt;</span><span class="n">reason</span><span class="p">;</span>
+    <span class="n">asynStatus</span> <span class="n">status</span> <span class="o">=</span> <span class="n">asynSuccess</span><span class="p">;</span>
+    <span class="n">epicsInt32</span> <span class="n">run</span><span class="p">;</span>
+    <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">paramName</span><span class="p">;</span>
+    <span class="n">const</span> <span class="n">char</span><span class="o">*</span> <span class="n">functionName</span> <span class="o">=</span> <span class="s2">&quot;writeFloat64&quot;</span><span class="p">;</span>
+
+    <span class="o">/*</span> <span class="n">Set</span> <span class="n">the</span> <span class="n">parameter</span> <span class="ow">in</span> <span class="n">the</span> <span class="n">parameter</span> <span class="n">library</span><span class="o">.</span> <span class="o">*/</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="p">(</span><span class="n">asynStatus</span><span class="p">)</span> <span class="n">setDoubleParam</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+
+    <span class="o">/*</span> <span class="n">Fetch</span> <span class="n">the</span> <span class="n">parameter</span> <span class="n">string</span> <span class="n">name</span> <span class="k">for</span> <span class="n">possible</span> <span class="n">use</span> <span class="ow">in</span> <span class="n">debugging</span> <span class="o">*/</span>
+    <span class="n">getParamName</span><span class="p">(</span><span class="n">function</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">paramName</span><span class="p">);</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">function</span> <span class="o">==</span> <span class="n">P_UpdateTime</span><span class="p">)</span> <span class="p">{</span>
+        <span class="o">/*</span> <span class="n">Make</span> <span class="n">sure</span> <span class="n">the</span> <span class="n">update</span> <span class="n">time</span> <span class="ow">is</span> <span class="n">valid</span><span class="o">.</span> <span class="n">If</span> <span class="ow">not</span> <span class="n">change</span> <span class="n">it</span> <span class="ow">and</span> <span class="n">put</span> <span class="n">back</span> <span class="ow">in</span> <span class="n">parameter</span> <span class="n">library</span> <span class="o">*/</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="n">MIN_UPDATE_TIME</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">asynPrint</span><span class="p">(</span><span class="n">pasynUser</span><span class="p">,</span> <span class="n">ASYN_TRACE_WARNING</span><span class="p">,</span>
+                <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">: warning, update time too small, changed from </span><span class="si">%f</span><span class="s2"> to </span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">driverName</span><span class="p">,</span> <span class="n">functionName</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">MIN_UPDATE_TIME</span><span class="p">);</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">MIN_UPDATE_TIME</span><span class="p">;</span>
+            <span class="n">setDoubleParam</span><span class="p">(</span><span class="n">P_UpdateTime</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="o">/*</span> <span class="n">If</span> <span class="n">the</span> <span class="n">update</span> <span class="n">time</span> <span class="n">has</span> <span class="n">changed</span> <span class="ow">and</span> <span class="n">we</span> <span class="n">are</span> <span class="n">running</span> <span class="n">then</span> <span class="n">wake</span> <span class="n">up</span> <span class="n">the</span> <span class="n">simulation</span> <span class="n">task</span> <span class="o">*/</span>
+        <span class="n">getIntegerParam</span><span class="p">(</span><span class="n">P_Run</span><span class="p">,</span> <span class="o">&amp;</span><span class="n">run</span><span class="p">);</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">run</span><span class="p">)</span> <span class="n">epicsEventSignal</span><span class="p">(</span><span class="n">eventId_</span><span class="p">);</span>
+    <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+        <span class="o">/*</span> <span class="n">All</span> <span class="n">other</span> <span class="n">parameters</span> <span class="n">just</span> <span class="n">get</span> <span class="nb">set</span> <span class="ow">in</span> <span class="n">parameter</span> <span class="nb">list</span><span class="p">,</span> <span class="n">no</span> <span class="n">need</span> <span class="n">to</span>
+         <span class="o">*</span> <span class="n">act</span> <span class="n">on</span> <span class="n">them</span> <span class="n">here</span> <span class="o">*/</span>
+    <span class="p">}</span>
+
+    <span class="o">/*</span> <span class="n">Do</span> <span class="n">callbacks</span> <span class="n">so</span> <span class="n">higher</span> <span class="n">layers</span> <span class="n">see</span> <span class="nb">any</span> <span class="n">changes</span> <span class="o">*/</span>
+    <span class="n">status</span> <span class="o">=</span> <span class="p">(</span><span class="n">asynStatus</span><span class="p">)</span> <span class="n">callParamCallbacks</span><span class="p">();</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="n">status</span><span class="p">)</span>
+        <span class="n">epicsSnprintf</span><span class="p">(</span><span class="n">pasynUser</span><span class="o">-&gt;</span><span class="n">errorMessage</span><span class="p">,</span> <span class="n">pasynUser</span><span class="o">-&gt;</span><span class="n">errorMessageSize</span><span class="p">,</span>
+                  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">: status=</span><span class="si">%d</span><span class="s2">, function=</span><span class="si">%d</span><span class="s2">, name=</span><span class="si">%s</span><span class="s2">, value=</span><span class="si">%f</span><span class="s2">&quot;</span><span class="p">,</span>
+                  <span class="n">driverName</span><span class="p">,</span> <span class="n">functionName</span><span class="p">,</span> <span class="n">status</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">paramName</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+    <span class="k">else</span>
+        <span class="n">asynPrint</span><span class="p">(</span><span class="n">pasynUser</span><span class="p">,</span> <span class="n">ASYN_TRACEIO_DRIVER</span><span class="p">,</span>
+              <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">:</span><span class="si">%s</span><span class="s2">: function=</span><span class="si">%d</span><span class="s2">, name=</span><span class="si">%s</span><span class="s2">, value=</span><span class="si">%f</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">,</span>
+              <span class="n">driverName</span><span class="p">,</span> <span class="n">functionName</span><span class="p">,</span> <span class="n">function</span><span class="p">,</span> <span class="n">paramName</span><span class="p">,</span> <span class="n">value</span><span class="p">);</span>
+    <span class="k">return</span> <span class="n">status</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This is what is being performed in this function:</p>
+<ul class="simple">
+<li><p>The pasynUser-&gt;reason field is used to get the value of <cite>function</cite>.
+This is one of the parameter indices (e.g. P_TimePerDivision). It was placed in
+the pasynUser-&gt;reason field by this driver’s drvUserCreate method that was called
+at iocInit, and was passed the drvUser field from the record link, e.g. “SCOPE_TIME_PER_DIV”.</p></li>
+<li><p>The value passed is set in the parameter list with <cite>setDoubleParam</cite>.</p></li>
+<li><p>A series of if statements that processes each of the parameters differently. In
+this case only one float64 parameter, P_UpdateTime, needs to actually have any action
+taken in this function. All other parameters just have their values set in the parameter
+list for later use.</p></li>
+<li><p>For P_UpdateTime the value is checked for validity to make sure it is greater
+than MIN_UPDATE_TIME. If not then the value is changed, and the new value is written
+to the parameter list. This new value will be passed in callbacks to any callback
+clients, for example an ai record that is monitoring this parameter. The function
+then retrieves the value of the P_Run parameter from the parameter list, and if
+it is 1 it sends an EPICS event signal to wake up the simTask. This is done so that
+if the update time is changed from a very long value to a shorter one then it does
+not wait for the long timer to expire.</p></li>
+<li><p><cite>callParamCallbacks()</cite> is called, which results in callbacks to all
+registered clients for any parameters that have changed as a result of this function
+call. In this case the only parameter that will have changed is whatever parameter
+was passed in pasynUser-&gt;reason, but in general other parameters could have changed
+as a side-effect of changing this parameter.</p></li>
+<li><p>Diagnostic information is optionally printed for both error and success status.</p></li>
+</ul>
+<p>The <cite>writeInt32</cite> function is very similar.</p>
+<p>Finally here is the <cite>simTask</cite> function, which actually does the simulation.
+It runs in a separate thread created in the constructor:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>void testAsynPortDriver::simTask(void)
+{
+    /* This thread computes the waveform and does callbacks with it */
+
+    double timePerDiv, voltsPerDiv, voltOffset, triggerDelay, noiseAmplitude;
+    double updateTime, minValue, maxValue, meanValue;
+    double time, timeStep;
+    double noise, yScale;
+    epicsInt32 run, i, maxPoints;
+    double pi=4.0*atan(1.0);
+
+    lock();
+    /* Loop forever */
+    while (1) {
+        getDoubleParam(P_UpdateTime, &amp;updateTime);
+        getIntegerParam(P_Run, &amp;run);
+        // Release the lock while we wait for a command to start or wait for updateTime
+        unlock();
+        if (run) epicsEventWaitWithTimeout(eventId_, updateTime);
+        else     (void) epicsEventWait(eventId_);
+        // Take the lock again
+        lock();
+        /* run could have changed while we were waiting */
+        getIntegerParam(P_Run, &amp;run);
+        if (!run) continue;
+        getIntegerParam(P_MaxPoints,        &amp;maxPoints);
+        getDoubleParam (P_TimePerDiv,       &amp;timePerDiv);
+        getDoubleParam (P_VoltsPerDiv,      &amp;voltsPerDiv);
+        getDoubleParam (P_VoltOffset,       &amp;voltOffset);
+        getDoubleParam (P_TriggerDelay,     &amp;triggerDelay);
+        getDoubleParam (P_NoiseAmplitude,   &amp;noiseAmplitude);
+        time = triggerDelay;
+        timeStep = timePerDiv * NUM_DIVISIONS / maxPoints;
+        minValue = 1e6;
+        maxValue = -1e6;
+        meanValue = 0.;
+
+        yScale = 1.0 / voltsPerDiv;
+        for (i=0; i&lt;maxPoints; i++) {
+            noise = noiseAmplitude * (rand()/(double)RAND_MAX - 0.5);
+            pData_[i] = AMPLITUDE * (sin(time*FREQUENCY*2*pi)) + noise;
+            /* Compute statistics before doing the yOffset and yScale */
+            if (pData_[i] &lt; minValue) minValue = pData_[i];
+            if (pData_[i] &gt; maxValue) maxValue = pData_[i];
+            meanValue += pData_[i];
+            pData_[i] = NUM_DIVISIONS/2 + yScale * (voltOffset + pData_[i]);
+            time += timeStep;
+        }
+        updateTimeStamp();
+        meanValue = meanValue/maxPoints;
+        setDoubleParam(P_MinValue, minValue);
+        setDoubleParam(P_MaxValue, maxValue);
+        setDoubleParam(P_MeanValue, meanValue);
+        callParamCallbacks();
+        doCallbacksFloat64Array(pData_, maxPoints, P_Waveform, 0);
+    }
+}
+</pre></div>
+</div>
+<p>Here are the important aspects of this function:</p>
+<ul class="simple">
+<li><p>The value of <cite>P_Run</cite> determines whether the simulation is running or
+stopped. If stopped it simply waits for a signal (from the <cite>writeInt32()</cite>
+function) to start running. If running it waits for the update time, or until it
+receives a signal, which will occur if the update time is changed in the <cite>writeFloat64()</cite>
+function.</p></li>
+<li><p>It reads the values of the simulation parameters (<cite>P_TimePerDivision</cite>,
+etc.) from the parameter list.</p></li>
+<li><p>It computes each point in the waveform inside the <cite>for</cite> loop, using
+the current values of the simulation parameters. It also updates the statistics
+parameters (min, max, mean) inside this loop.</p></li>
+<li><p>After the loop is done the new values of the statistics parameters are written
+to the parameter list with <cite>setDoubleParam()</cite>.</p></li>
+<li><p>New values of all scalar parameters (int32, float64, string) in the parameter
+list are sent to registered clients (e.g. asyn device support for input records)
+with the call to <cite>callParamCallbacks()</cite>.</p></li>
+<li><p>The new value of the waveform is sent to registered clients (e.g. device support
+for the waveform input record) with the call to <cite>doCallbacksFloat64Array()</cite>.</p></li>
+</ul>
+<p>Real drivers may or may not need such a separate thread. Drivers that need to periodically
+poll status information will probably use one. Most drivers will probably implement
+one or more of the <cite>writeInt32()</cite>, <cite>writeFloat64()</cite>, or `
+writeOctet()` functions, in addition to <cite>drvUserCreate()</cite>.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="asynDriver.html" class="btn btn-neutral float-left" title="asynDriver: EPICS Driver Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="asynPortClient.html" class="btn btn-neutral float-right" title="asynPortClient" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mark Rivers.
+      <span class="lastupdated">Last updated on 2023-March-10.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

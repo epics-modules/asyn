@@ -972,7 +972,7 @@ asynOctet I/O screen, asynOctet.adl
 .. figure:: asynOctet.png
     :align: center
 
-    **asynOctet.png.png**
+    **asynOctet.png**
 
 asyn register device I/O screen, asynRegister.adl
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
