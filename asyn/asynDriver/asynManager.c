@@ -2219,9 +2219,7 @@ static asynStatus shutdown(asynUser *pasynUser)
     }
 
     if (pdpCommon->defunct) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:shutdown: port is already shut down");
-        return asynDisabled;
+        return asynSuccess;
     }
 
     if (!(pport->attributes & ASYN_DESTRUCTIBLE)) {
