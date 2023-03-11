@@ -1,8 +1,7 @@
-devGpib
-=======
+devGpib (obsolete)
+==================
 
 **NOTE: devGpib is obsolete and should not be used for new applications.** 
---------------------------------------------------------------------------
 
 `StreamDevice <http://epics.web.psi.ch/software/streamdevice>`__
 should be used instead.
