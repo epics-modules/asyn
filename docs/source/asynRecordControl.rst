@@ -1,5 +1,5 @@
-asyn Record Control
-===================
+asyn Record I/O Example
+=======================
 
 This document describes how to use an asyn record to communicate with a message-based instrument.
 
