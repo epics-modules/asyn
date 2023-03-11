@@ -45,8 +45,10 @@
 <li class="toctree-l1"><a class="reference internal" href="asynPortDriver.html">asynPortDriver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn Record</a></li>
-<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record Control</a></li>
-<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynTimeStampSupport.html">asyn Timestamp Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record I/O Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToDoSerial.html">HowToDoSerial (StreamDevice)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib (obsolete)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
 </ul>
 
@@ -266,14 +268,52 @@
 <li class="toctree-l2"><a class="reference internal" href="asynRecord.html#example-2">Example #2</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record Control</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asynTimeStampSupport.html">asyn Timestamp Support</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#overview">Overview</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#asynmanager-changes">asynManager changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#asynshellcommands-changes-to-load-a-user-defined-timestamp-function">asynShellCommands changes to load a user-defined timestamp function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#asynportdriver-changes">asynPortDriver changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#devepics-changes">devEpics changes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="asynTimeStampSupport.html#testing">Testing</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-1-tse-0-scan-2-second-user-defined-timestamp-source-no">Result 1.  TSE=0, SCAN=2 second, user-defined timestamp source=No.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-2-tse-0-scan-2-second-user-defined-timestamp-source-yes">Result 2.  TSE=0, SCAN=2 second, user-defined timestamp source=Yes.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-3-tse-0-scan-i-o-intr-user-defined-timestamp-source-no">Result 3.  TSE=0, SCAN=I/O Intr, user-defined timestamp source=No.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-4-tse-0-scan-i-o-intr-user-defined-timestamp-source-yes">Result 4.  TSE=0, SCAN=I/O Intr, user-defined timestamp source=Yes</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-5-tse-2-scan-2-second-user-defined-timestamp-source-no">Result 5.  TSE=-2, SCAN=2 second, user-defined timestamp source=No.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-6-tse-2-scan-2-second-user-defined-timestamp-source-yes">Result 6.  TSE=-2, SCAN=2 second, user-defined timestamp source=Yes.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-7-tse-2-scan-i-o-intr-user-defined-timestamp-source-no">Result 7.  TSE=-2, SCAN=I/O Intr, user-defined timestamp source=No.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-8-tse-2-scan-i-o-intr-user-defined-timestamp-source-yes">Result 8.  TSE=-2, SCAN=I/O Intr, user-defined timestamp source=Yes.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="asynTimeStampSupport.html#result-9-tse-2-scan-i-o-intr-user-defined-timestamp-source-yes">Result 9.  TSE=-2, SCAN=I/O Intr, user-defined timestamp source=Yes.</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record I/O Example</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#main-control-screen-asynrecord-adl">Main control screen, asynRecord.adl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#asynoctet-i-o-screen-asynoctet-adl">asynOctet I/O screen, asynOctet.adl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="asynRecordControl.html#id1">asynOctet I/O screen, asynOctet.adl</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="devGpib.html#note-devgpib-is-obsolete-and-should-not-be-used-for-new-applications"><strong>NOTE: devGpib is obsolete and should not be used for new applications.</strong></a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToDoSerial.html">HowToDoSerial (StreamDevice)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="HowToDoSerial.html#introduction">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToDoSerial.html#create-a-new-device-support-module">2. Create a new device support module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToDoSerial.html#make-changes-to-some-files-in-configure">2.1 Make changes to some files in configure/</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToDoSerial.html#create-a-test-application-optional">3. Create a test application (optional)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToDoSerial.html#run-the-test-application">3.1 Run the test application</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="HowToDoSerial.html#asynrecord-support">4. asynRecord support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="HowToDoSerial.html#add-records-and-protocol-file-entries">5. Add records and protocol file entries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="HowToDoSerial.html#add-a-record-to-set-the-device-to-local-or-remote-control">5.1 Add a record to set the device to local or remote control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HowToDoSerial.html#add-records-to-set-and-check-the-output-on-off-status">5.2 Add records to set and check the output on/off status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="HowToDoSerial.html#add-records-to-set-and-check-the-output-voltage-and-current-setpoints">5.3 Add records to set and check the output voltage and current setpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib (obsolete)</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="devGpib.html#license-agreement">License Agreement</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devGpib.html#introduction">Introduction</a></li>
 <li class="toctree-l2"><a class="reference internal" href="devGpib.html#acknowledgments">Acknowledgments</a></li>
@@ -328,7 +368,7 @@
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-March-10.
+      <span class="lastupdated">Last updated on 2023-March-11.
       </span></p>
   </div>
 

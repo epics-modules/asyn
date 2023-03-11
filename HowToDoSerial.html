@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HowToDoSerial (StreamDevice) &mdash; asyn support</title>
+      <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="devGpib (obsolete)" href="devGpib.html" />
+    <link rel="prev" title="asyn Record I/O Example" href="asynRecordControl.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            asyn
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="asynDriver.html">asynDriver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynPortDriver.html">asynPortDriver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn Record</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynTimeStampSupport.html">asyn Timestamp Support</a></li>
+<li class="toctree-l1"><a class="reference internal" href="asynRecordControl.html">asyn Record I/O Example</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">HowToDoSerial (StreamDevice)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction">1. Introduction</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-new-device-support-module">2. Create a new device support module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#make-changes-to-some-files-in-configure">2.1 Make changes to some files in configure/</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#create-a-test-application-optional">3. Create a test application (optional)</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#run-the-test-application">3.1 Run the test application</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#asynrecord-support">4. asynRecord support</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#add-records-and-protocol-file-entries">5. Add records and protocol file entries</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#add-a-record-to-set-the-device-to-local-or-remote-control">5.1 Add a record to set the device to local or remote control</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add-records-to-set-and-check-the-output-on-off-status">5.2 Add records to set and check the output on/off status</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#add-records-to-set-and-check-the-output-voltage-and-current-setpoints">5.3 Add records to set and check the output voltage and current setpoints</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib (obsolete)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">asyn</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">HowToDoSerial (StreamDevice)</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/HowToDoSerial.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="howtodoserial-streamdevice">
+<h1>HowToDoSerial (StreamDevice)<a class="headerlink" href="#howtodoserial-streamdevice" title="Permalink to this heading"></a></h1>
+<dl class="field-list simple">
+<dt class="field-odd">author<span class="colon">:</span></dt>
+<dd class="field-odd"><ol class="upperalpha simple" start="23">
+<li><p>Eric Norum</p></li>
+</ol>
+</dd>
+</dl>
+<p>This document describes how to use StreamDevice and ASYN to create EPICS device support for a simple serial,
+GPIB, or network attached device</p>
+<section id="introduction">
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<p>This tutorial provides step-by-step instructions on how to create EPICS support
+for a simple serial, GPIB (IEEE-488) or network attached device. The steps are presented
+in a way that should make it possible to apply them in cookbook fashion to create
+support for other devices. For comprehensive description of all the details of the
+I/O system used here, refer to the
+<a class="reference external" href="asynDriver">asynDriver</a>
+and
+<a class="reference external" href="http://epics.web.psi.ch/software/streamdevice/doc/">StreamDevice</a>
+documentation.</p>
+<p>This document isn’t for the absolute newcomer though. You must have EPICS installed
+on a system somewhere and know how to build and run the example application. In
+particular you must have the following installed:</p>
+<ul class="simple">
+<li><p>EPICS R3.14.11 or higher.</p></li>
+<li><p>EPICS ASYN support module version 4.14 or higher.</p></li>
+<li><p>EPICS StreamDevice support module version 2.4.1 or higher.</p></li>
+</ul>
+<p>Serial, GPIB and network attached devices can now be treated in much the same way.
+The EPICS StreamDevice and ASYN support modules can use drivers which communicate
+with serial devices connected to ports on the IOC or to Ethernet/Serial converters
+or with GPIB devices connected to local I/O cards or to Ethernet/GPIB converters
+or to network attached devices using VXI-11 or plain TCP (‘telnet’) communication
+protocols.</p>
+<p>I based this tutorial on the device support I wrote for a Hewlett Packard E3631A
+power supply. I chose the E3610A as the basis for this tutorial partly because it
+was what I found lying around but mostly because it uses SCPI-compliant commands
+which are common to a wide range of devices. Sections 1 through 4 of this tutorial
+apply to all SCPI (IEEE-488.2) devices.</p>
+</section>
+<section id="create-a-new-device-support-module">
+<h2>2. Create a new device support module<a class="headerlink" href="#create-a-new-device-support-module" title="Permalink to this heading"></a></h2>
+<p>The easiest way to do this is with the makeSupport.pl script supplied with the EPICS
+ASYN package.</p>
+<p>Here are the commands I ran. To make the command examples a little shorter I used
+shell variables to hold the paths to my installation of EPICS base and the ASYN
+support module. You can do this with values appropriate for your site or just type
+the full path names to the commands.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">EPICS_BASE</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">epics</span><span class="o">/</span><span class="n">R3</span><span class="mf">.14.11</span><span class="o">/</span><span class="n">base</span>
+<span class="n">ASYN</span><span class="o">=/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">epics</span><span class="o">/</span><span class="n">R3</span><span class="mf">.14.11</span><span class="o">/</span><span class="n">modules</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">synApps_5_5</span><span class="o">/</span><span class="n">support</span><span class="o">/</span><span class="n">asyn</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="mi">14</span>
+</pre></div>
+</div>
+<p>You will have to change these to the values appropriate for your EPICS installation
+or simply type the appropriate full paths to invoke the scripts. You must also have
+the EPICS_HOST_ARCH environment variable set to match the machine on which you are
+building.</p>
+<p>To create a new StreamDevice support module:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>norume&gt; mkdir HPE3631A
+norume&gt; cd HPE3631A
+norume&gt; $ASYN/bin/$EPICS_HOST_ARCH/makeSupport.pl -t streamSCPI HPE3631A
+</pre></div>
+</div>
+<section id="make-changes-to-some-files-in-configure">
+<h3>2.1 Make changes to some files in configure/<a class="headerlink" href="#make-changes-to-some-files-in-configure" title="Permalink to this heading"></a></h3>
+<p>Edit the configure/RELEASE file which makeSupport.pl created and confirm that the
+entries describing the paths to your EPICS base and ASYN support are correct. For
+example these might be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ASYN</span> <span class="o">=</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">epics</span><span class="o">/</span><span class="n">R3</span><span class="mf">.14.11</span><span class="o">/</span><span class="n">modules</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">synApps_5_5</span><span class="o">/</span><span class="n">support</span><span class="o">/</span><span class="n">asyn</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="mi">14</span>
+<span class="n">EPICS_BASE</span> <span class="o">=</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">epics</span><span class="o">/</span><span class="n">R3</span><span class="mf">.14.11</span><span class="o">/</span><span class="n">base</span>
+</pre></div>
+</div>
+<p>You’ll also have to add a line describing the path to your StreamDevice support.
+For example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">STREAM</span> <span class="o">=</span> <span class="o">/</span><span class="n">usr</span><span class="o">/</span><span class="n">local</span><span class="o">/</span><span class="n">epics</span><span class="o">/</span><span class="n">R3</span><span class="mf">.14.11</span><span class="o">/</span><span class="n">modules</span><span class="o">/</span><span class="n">soft</span><span class="o">/</span><span class="n">synApps_5_5</span><span class="o">/</span><span class="n">support</span><span class="o">/</span><span class="n">stream</span><span class="o">-</span><span class="mi">2</span><span class="o">-</span><span class="mi">4</span><span class="o">-</span><span class="mi">1</span>
+</pre></div>
+</div>
+<p>Edit the configure/CONFIG_SITE file which makeSupport.pl created and specify the
+IOC architectures on which the application is to run. I wanted the application to
+run as a soft IOC, so I uncommented the CROSS_COMPILER_TARGET_ARCHS definition and
+set the definition to be empty:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CROSS_COMPILER_TARGET_ARCHS</span> <span class="o">=</span>
+</pre></div>
+</div>
+<p>You may have to fix an error in the HPE3631ASup/devHPE3631A.db file produced by
+the makeSupport.pl command. Verify that the IDNwf record description looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">record</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)IDNwf&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;SCPI identification string&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">INP</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getIDN(199) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">PINI</span><span class="p">,</span> <span class="s2">&quot;YES&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">FTVL</span><span class="p">,</span> <span class="s2">&quot;CHAR&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">NELM</span><span class="p">,</span> <span class="s2">&quot;200&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Some versions of the template have FTYP rather than FTVL for the waveform data type
+field.</p>
+<p>I install the StreamDevice protocol file into the support module db/ directory.
+This seems like a reasonable place to put this file since it’s tied closely to its
+associated database file. To have the protocol file installed into the db/ directory
+edit HPE3631ASup/Makefile and add the line</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>DB_INSTALLS += $(TOP)/HPE3631ASup/devHPE3631A.proto
+</pre></div>
+</div>
+<p>to the list of DB_INSTALLS.</p>
+</section>
+</section>
+<section id="create-a-test-application-optional">
+<h2>3. Create a test application (optional)<a class="headerlink" href="#create-a-test-application-optional" title="Permalink to this heading"></a></h2>
+<p>Now that a device support module has been produced it is a good idea to create a
+new EPICS application to confirm that the device support is operating correctly.
+The easiest way to do this is with the makeBaseApp.pl script supplied with EPICS.
+The files in the configure/ directory produced in the previous step do not provide
+all the information needed to build an application but will not be overwritten by
+the makeBaseApp.pl script. The easiest solution to this problem is to simply remove
+the configure/ directory and all its contents and then to make the changes to configure/RELEASE
+and configure/CONFIG_SITE at mentioned above.</p>
+<p>Here are the commands I ran.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>norume&gt; rm -rf configure
+norume&gt; $EPICS_BASE/bin/$EPICS_HOST_ARCH/makeBaseApp.pl -t ioc HPE3631Atest
+norume&gt; $EPICS_BASE/bin/$EPICS_HOST_ARCH/makeBaseApp.pl -t ioc -i HPE3631Atest
+
+The following target architectures are available in base:
+    darwin-x86
+    RTEMS-mvme2100
+    RTEMS-mvme3100
+    RTEMS-uC5282
+What architecture do you want to use? darwin-x86
+The following applications are available:
+    HPE3631Atest
+What application should the IOC(s) boot?
+The default uses the IOC&#39;s name, even if not listed above.
+Application name?
+norume&gt;
+</pre></div>
+</div>
+<p>I then added the ASYN and STREAM values to configure/RELEASE and made the change
+to the CROSS_COMPILER_TARGET_ARCHS line in configure/CONFIG_SITE.</p>
+<p>You must add the StreamDevice and ASYN support modules to the test application.
+Edit HPE3631AtestApp/src/Makefile and add the lines:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">HPE3631Atest_DBD</span> <span class="o">+=</span> <span class="n">stream</span><span class="o">.</span><span class="n">dbd</span>
+<span class="n">HPE3631Atest_DBD</span> <span class="o">+=</span> <span class="n">asyn</span><span class="o">.</span><span class="n">dbd</span>
+<span class="n">HPE3631Atest_DBD</span> <span class="o">+=</span> <span class="n">drvAsynSerialPort</span><span class="o">.</span><span class="n">dbd</span>
+<span class="ow">and</span>
+<span class="n">HPE3631Atest_LIBS</span> <span class="o">+=</span> <span class="n">stream</span> <span class="n">asyn</span>
+</pre></div>
+</div>
+<p>To install the support module files and build the test application simply run make:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norume</span><span class="o">&gt;</span> <span class="n">make</span>
+    <span class="o">.</span>
+    <span class="o">.</span>
+    <span class="o">.</span>
+<span class="n">norume</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+<p>The IOC startup script produced by the makeBaseApp.pl script must be modified before
+the test application can be run. Change directories to iocBoot/iocHPE3631Atest and
+edit the st.cmd file. Here’s the file that I use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="mi">1</span> <span class="c1">#!../../bin/darwin-x86/HPE3631Atest</span>
+ <span class="mi">2</span>
+ <span class="mi">3</span> <span class="c1">###############################################################################</span>
+ <span class="mi">4</span> <span class="c1"># Set up environment</span>
+ <span class="mi">5</span> <span class="o">&lt;</span> <span class="n">envPaths</span>
+ <span class="mi">6</span> <span class="n">epicsEnvSet</span> <span class="s2">&quot;STREAM_PROTOCOL_PATH&quot;</span> <span class="s2">&quot;$(TOP)/db&quot;</span>
+ <span class="mi">7</span>
+
+ <span class="mi">8</span> <span class="c1">###############################################################################</span>
+ <span class="mi">9</span> <span class="c1"># Allow PV name prefixes and serial port name to be set from the environment</span>
+<span class="mi">10</span> <span class="n">epicsEnvSet</span> <span class="s2">&quot;P&quot;</span> <span class="s2">&quot;$(P=hpE3631A)&quot;</span>
+<span class="mi">11</span> <span class="n">epicsEnvSet</span> <span class="s2">&quot;R&quot;</span> <span class="s2">&quot;$(R=Test)&quot;</span>
+<span class="mi">12</span> <span class="n">epicsEnvSet</span> <span class="s2">&quot;TTY&quot;</span> <span class="s2">&quot;$(TTY=/dev/tty.PL2303-000013FA)&quot;</span>
+<span class="mi">13</span>
+
+<span class="mi">14</span> <span class="c1">###############################################################################</span>
+<span class="mi">15</span> <span class="c1">## Register all support components</span>
+<span class="mi">16</span> <span class="n">cd</span> <span class="s2">&quot;$</span><span class="si">{TOP}</span><span class="s2">&quot;</span>
+<span class="mi">17</span> <span class="n">dbLoadDatabase</span> <span class="s2">&quot;dbd/HPE3631Atest.dbd&quot;</span>
+<span class="mi">18</span> <span class="n">HPE3631Atest_registerRecordDeviceDriver</span> <span class="n">pdbbase</span>
+<span class="mi">19</span>
+
+<span class="mi">20</span> <span class="c1">###############################################################################</span>
+<span class="mi">21</span> <span class="c1"># Set up ASYN ports</span>
+<span class="mi">22</span> <span class="c1"># drvAsynSerialPortConfigure port ipInfo priority noAutoconnect noProcessEos</span>
+<span class="mi">23</span> <span class="n">drvAsynSerialPortConfigure</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span><span class="s2">&quot;$(TTY)&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+<span class="mi">24</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;baud&quot;</span><span class="p">,</span> <span class="s2">&quot;9600&quot;</span><span class="p">)</span>
+<span class="mi">25</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;bits&quot;</span><span class="p">,</span> <span class="s2">&quot;8&quot;</span><span class="p">)</span>
+<span class="mi">26</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;parity&quot;</span><span class="p">,</span> <span class="s2">&quot;none&quot;</span><span class="p">)</span>
+<span class="mi">27</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;stop&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">)</span>
+<span class="mi">28</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;clocal&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+<span class="mi">29</span> <span class="n">asynSetOption</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;crtscts&quot;</span><span class="p">,</span> <span class="s2">&quot;Y&quot;</span><span class="p">)</span>
+<span class="mi">30</span> <span class="n">asynOctetSetInputEos</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="mi">31</span> <span class="n">asynOctetSetOutputEos</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;</span><span class="se">\n</span><span class="s2">&quot;</span><span class="p">)</span>
+<span class="mi">32</span> <span class="n">asynSetTraceIOMask</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x2</span><span class="p">)</span>
+<span class="mi">33</span> <span class="n">asynSetTraceMask</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mh">0x9</span><span class="p">)</span>
+<span class="mi">34</span>
+
+<span class="mi">35</span> <span class="c1">###############################################################################</span>
+<span class="mi">36</span> <span class="c1">## Load record instances</span>
+<span class="mi">37</span> <span class="n">dbLoadRecords</span><span class="p">(</span><span class="s2">&quot;db/devHPE3631A.db&quot;</span><span class="p">,</span><span class="s2">&quot;P=$(P),R=$(R),PORT=L0,A=0&quot;</span><span class="p">)</span>
+<span class="mi">38</span>
+
+<span class="mi">39</span> <span class="c1">###############################################################################</span>
+<span class="mi">40</span> <span class="c1">## Start EPICS</span>
+<span class="mi">41</span> <span class="n">cd</span> <span class="s2">&quot;$</span><span class="si">{TOP}</span><span class="s2">/iocBoot/$</span><span class="si">{IOC}</span><span class="s2">&quot;</span>
+<span class="mi">42</span> <span class="n">iocInit</span>
+</pre></div>
+</div>
+<p>Lines that you’ll likely have to modify are:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p>10,11</p></td>
+<td><p>The prefix applied to all PV names.</p></td>
+</tr>
+<tr class="row-even"><td><p>12</p></td>
+<td><p>The name of your serial line (for network attached devices or LAN/Serial adapters
+this will be something like 192.168.0.23:4001).</p></td>
+</tr>
+<tr class="row-odd"><td><p>23</p></td>
+<td><p>The command would be drvAsynIPPortConfigure for LAN/Serial adapters or network attached
+devices. See the asynDriver documentation for information on connecting to GPIB
+devices.</p></td>
+</tr>
+<tr class="row-even"><td><p>24-29</p></td>
+<td><p>The serial line settings for your device (for network attached devices or LAN/Serial
+adapters or GPIB devices these lines can be removed or commented out).</p></td>
+</tr>
+<tr class="row-odd"><td><p>30,31</p></td>
+<td><p>GPIB devices may not need line terminators since they can use the EOI line to mark
+the end of messages.</p></td>
+</tr>
+<tr class="row-even"><td><p>33</p></td>
+<td><p>This trace mask value prints a message showing the characters sent to and received
+from the device. This can produce a lot of messages on the IOC console. To display
+error messages only set the trace mask to 1 rather than 9.</p></td>
+</tr>
+</tbody>
+</table>
+<p>So, if you have a LAN/Serial adapter or network attached device which uses a raw
+TCP (‘telnet’ style) connection you would replace lines 23 through 29 with a single
+line like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">drvAsynIPPortConfigure</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span><span class="s2">&quot;192.168.0.23:4001&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You would also change the application Makefile to specify drvAsynIPPort.dbd rather
+than drvAsynSerialPort.dbd.</p>
+<p>If you have a VXI-11 LAN/GPIB adapter or network attached device you would replace
+lines 23 through 31 with a single line like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">vxi11Configure</span><span class="p">(</span><span class="s2">&quot;L0&quot;</span><span class="p">,</span><span class="s2">&quot;192.168.0.24&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">0.0</span><span class="p">,</span><span class="s2">&quot;gpib0&quot;</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You would also change the application Makefile to specify drfvVxi11.dbd rather than
+drvAsynSerialPort.dbd.</p>
+<section id="run-the-test-application">
+<h3>3.1 Run the test application<a class="headerlink" href="#run-the-test-application" title="Permalink to this heading"></a></h3>
+<p>The application can be started by running the startup script if you make the script
+executable:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norume</span><span class="o">&gt;</span> <span class="n">cd</span> <span class="n">iocBoot</span><span class="o">/</span><span class="n">iocHPE3631Atest</span>
+<span class="n">norume</span><span class="o">&gt;</span> <span class="n">chmod</span> <span class="o">+</span><span class="n">x</span> <span class="n">st</span><span class="o">.</span><span class="n">cmd</span>
+</pre></div>
+</div>
+<p>Then the application can be run by:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>norume&gt; ./st.cmd
+#!../../bin/darwin-x86/HPE3631Atest
+###############################################################################
+# Set up environment
+&lt; envPaths
+epicsEnvSet(&quot;ARCH&quot;,&quot;darwin-x86&quot;)
+epicsEnvSet(&quot;IOC&quot;,&quot;iocHPE3631Atest&quot;)
+epicsEnvSet(&quot;TOP&quot;,&quot;/Users/wenorum/tmp/t/HPE3631A&quot;)
+epicsEnvSet(&quot;ASYN&quot;,&quot;/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14&quot;)
+epicsEnvSet(&quot;STREAM&quot;,&quot;/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/stream-2-4-1&quot;)
+epicsEnvSet(&quot;EPICS_BASE&quot;,&quot;/usr/local/epics/R3.14.11/base&quot;)
+epicsEnvSet &quot;STREAM_PROTOCOL_PATH&quot; &quot;/Users/wenorum/tmp/t/HPE3631A/db&quot;
+###############################################################################
+# Allow PV name prefixes and serial port name to be set from the environment
+epicsEnvSet &quot;P&quot; &quot;hpE3631A&quot;
+epicsEnvSet &quot;R&quot; &quot;Test&quot;
+epicsEnvSet &quot;TTY&quot; &quot;/dev/tty.PL2303-000013FA&quot;
+###############################################################################
+## Register all support components
+cd &quot;/Users/wenorum/tmp/t/HPE3631A&quot;
+dbLoadDatabase &quot;dbd/HPE3631Atest.dbd&quot;
+HPE3631Atest_registerRecordDeviceDriver pdbbase
+###############################################################################
+# Set up ASYN ports
+# drvAsynSerialPortConfigure port ipInfo priority noAutoconnect noProcessEos
+drvAsynSerialPortConfigure(&quot;L0&quot;,&quot;/dev/tty.PL2303-000013FA&quot;,0,0,0)
+asynSetOption(&quot;L0&quot;, -1, &quot;baud&quot;, &quot;9600&quot;)
+asynSetOption(&quot;L0&quot;, -1, &quot;bits&quot;, &quot;8&quot;)
+asynSetOption(&quot;L0&quot;, -1, &quot;parity&quot;, &quot;none&quot;)
+asynSetOption(&quot;L0&quot;, -1, &quot;stop&quot;, &quot;2&quot;)
+asynSetOption(&quot;L0&quot;, -1, &quot;clocal&quot;, &quot;Y&quot;)
+asynSetOption(&quot;L0&quot;, -1, &quot;crtscts&quot;, &quot;Y&quot;)
+asynOctetSetInputEos(&quot;L0&quot;, -1, &quot;\n&quot;)
+asynOctetSetOutputEos(&quot;L0&quot;, -1, &quot;\n&quot;)
+asynSetTraceIOMask(&quot;L0&quot;,-1,0x2)
+asynSetTraceMask(&quot;L0&quot;,-1,0x9)
+###############################################################################
+## Load record instances
+dbLoadRecords(&quot;db/devHPE3631A.db&quot;,&quot;P=hpE3631A,R=Test,PORT=L0,A=0&quot;)
+###############################################################################
+## Start EPICS
+cd &quot;/Users/wenorum/tmp/t/HPE3631A/iocBoot/iocHPE3631Atest&quot;
+iocInit
+Starting iocInit
+############################################################################
+## EPICS R3.14.11 $R3-14-11$ $2009/08/28 18:47:36$
+## EPICS Base built Aug 24 2010
+############################################################################
+2010/08/31 13:10:32.986 /dev/tty.PL2303-000013FA write 6
+*IDN?\n
+iocRun: All initialization complete
+2010/08/31 13:10:33.116 /dev/tty.PL2303-000013FA read 1
+H
+2010/08/31 13:10:33.135 /dev/tty.PL2303-000013FA read 1
+E
+2010/08/31 13:10:33.153 /dev/tty.PL2303-000013FA read 1
+W
+2010/08/31 13:10:33.171 /dev/tty.PL2303-000013FA read 1
+L
+2010/08/31 13:10:33.189 /dev/tty.PL2303-000013FA read 1
+E
+2010/08/31 13:10:33.208 /dev/tty.PL2303-000013FA read 1
+T
+2010/08/31 13:10:33.226 /dev/tty.PL2303-000013FA read 1
+T
+.
+.
+.
+epics&gt;dbpr hpE3631ATestIDN
+ASG:
+DESC: SCPI identification string
+DISA: 0
+DISP: 0
+DISV: 1
+NAME: hpE3631ATestIDN
+SEVR: NO_ALARM      STAT: NO_ALARM
+SVAL:
+TPRO: 0
+VAL: HEWLETT-PACKARD,E3631A,0,2.1-5.0-1.0
+
+epics&gt;
+</pre></div>
+</div>
+<p>The SCPI IDN*? commands are run as part of iocInit since their records have PINI=YES.
+If the stringin record has truncated the identification string you should be able
+to see the full string as a waveform record. In another window run:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norume</span><span class="o">&gt;</span> <span class="n">caget</span> <span class="o">-</span><span class="n">S</span> <span class="n">hpE3631ATestIDNwf</span>
+<span class="n">hpE3631ATestIDNwf</span> <span class="n">HEWLETT</span><span class="o">-</span><span class="n">PACKARD</span><span class="p">,</span><span class="n">E3631A</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mf">2.1</span><span class="o">-</span><span class="mf">5.0</span><span class="o">-</span><span class="mf">1.0</span>
+<span class="n">norume</span><span class="o">&gt;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="asynrecord-support">
+<h2>4. asynRecord support<a class="headerlink" href="#asynrecord-support" title="Permalink to this heading"></a></h2>
+<p>The asynRecord provides a convenient mechanism for controlling the diagnostic messages
+produced by asyn drivers. You can also use the MEDM asynOctet screen to manually
+send commands to and view responses from a device. This can be very handy when trying
+to figure out just how a new device actually works.</p>
+<p>To use an asynRecord in your application:</p>
+<p>Add the line:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>DB_INSTALLS += $(ASYN)/db/asynRecord.db
+</pre></div>
+</div>
+<p>to the application Makefile.</p>
+<p>Create the diagnostic record in the IOC by adding a line like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dbLoadRecords</span><span class="p">(</span><span class="s2">&quot;db/asynRecord.db&quot;</span><span class="p">,</span><span class="s2">&quot;P=$(P)$(R),R=asyn,PORT=L0,ADDR=-1,OMAX=0,IMAX=0&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>to the application startup script. The PORT value must match the the value in the
+corresponding drvAsynIPPortConfigure or drvAsynSerialPortConfigure command. The
+ADDR value should be that of the instrument whose I/O you wish to monitor.</p>
+<p>To run the asynRecord screen, add&lt;&lt;i&gt;asynTop&gt;/opi/medm&lt;/i&gt; to your EPICS_DISPLAY_PATH
+environment variable and start medm with P, R, PORT and ADDR values matching those
+given in the dbLoadRecords command:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">medm</span> <span class="o">-</span><span class="n">x</span> <span class="o">-</span><span class="n">macro</span> <span class="s2">&quot;P=hpE3631ATest,R=asyn,PORT=L0,ADDR=-1&quot;</span> <span class="n">asynRecord</span><span class="o">.</span><span class="n">adl</span>
+</pre></div>
+</div>
+<p>If you have edm installed then you need to use the asynRecord.edl file instead.
+Ensure that&lt;&lt;i&gt;asynTop&gt;/opi/medm&lt;/i&gt; is in the EDMDATAFILES environment variable.
+Start edm with the arguments appropriate for your IOC:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">edm</span> <span class="o">-</span><span class="n">x</span> <span class="o">-</span><span class="n">m</span> <span class="s2">&quot;P=hpE3631ATest, R=asyn,PORT=L1_TCP,ADDR=-1&quot;</span> <span class="n">asynRecord</span><span class="o">.</span><span class="n">edl</span>
+</pre></div>
+</div>
+</section>
+<section id="add-records-and-protocol-file-entries">
+<h2>5. Add records and protocol file entries<a class="headerlink" href="#add-records-and-protocol-file-entries" title="Permalink to this heading"></a></h2>
+<p>The descriptions in this section apply directly to the HP E3631A only but may provide
+useful hints for adding commands for your particular device.</p>
+<section id="add-a-record-to-set-the-device-to-local-or-remote-control">
+<h3>5.1 Add a record to set the device to local or remote control<a class="headerlink" href="#add-a-record-to-set-the-device-to-local-or-remote-control" title="Permalink to this heading"></a></h3>
+<p>First add an entry to HPE3631ASup/devHPE3631A.proto:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setLocRem</span> <span class="p">{</span>
+    <span class="n">out</span> <span class="s2">&quot;SYST:%{LOC|REM}&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>This uses the StreamDevice ENUM converter to send one of two strings to the device
+based on the PV value. The corresponding addition to HPE3631ASup/devHPE3631A.db
+is:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">record</span><span class="p">(</span><span class="n">bo</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetRemote&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set into local/remote mode&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setLocRem $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ZNAM</span><span class="p">,</span> <span class="s2">&quot;Local&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ONAM</span><span class="p">,</span> <span class="s2">&quot;Remote&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">PINI</span><span class="p">,</span> <span class="s2">&quot;YES&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">VAL</span><span class="p">,</span>  <span class="s2">&quot;1&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The PINI and VAL fields ensure that the device is set into remote control mode during
+IOC startup.</p>
+<p>Once you’ve made the above changes run &lt;b&gt;make&lt;/b&gt; to install the modified files.
+If you’ve created the test application you can try out the new command and see if
+it works.</p>
+</section>
+<section id="add-records-to-set-and-check-the-output-on-off-status">
+<h3>5.2 Add records to set and check the output on/off status<a class="headerlink" href="#add-records-to-set-and-check-the-output-on-off-status" title="Permalink to this heading"></a></h3>
+<p>These are simple since they use StreamDevice protocol entries that already exist.
+The setD and getD entries set and get the value of a single integer parameter whose
+command is passed as the argument to the protocol entry:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">record</span><span class="p">(</span><span class="n">bo</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetOnOff&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Turn output off/on&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setD(OUTP) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ZNAM</span><span class="p">,</span> <span class="s2">&quot;Off&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ONAM</span><span class="p">,</span> <span class="s2">&quot;On&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">bi</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetOnOff&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Is output on?&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">INP</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getD(OUTP) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ZNAM</span><span class="p">,</span> <span class="s2">&quot;Off&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">ONAM</span><span class="p">,</span> <span class="s2">&quot;On&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</section>
+<section id="add-records-to-set-and-check-the-output-voltage-and-current-setpoints">
+<h3>5.3 Add records to set and check the output voltage and current setpoints<a class="headerlink" href="#add-records-to-set-and-check-the-output-voltage-and-current-setpoints" title="Permalink to this heading"></a></h3>
+<p>Add two entries to HPE3631ASup/devHPE3631A.proto:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setVI</span> <span class="p">{</span>
+    <span class="n">out</span> <span class="s2">&quot;INST \$1;\$2 </span><span class="si">%g</span><span class="s2">&quot;</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="n">getVI</span> <span class="p">{</span>
+    <span class="n">out</span> <span class="s2">&quot;INST \$1;\$2?&quot;</span><span class="p">;</span>
+    <span class="ow">in</span> <span class="s2">&quot;</span><span class="si">%g</span><span class="s2">&quot;</span><span class="p">;</span>
+    <span class="n">ExtraInput</span> <span class="o">=</span> <span class="n">Ignore</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>These entries set and get the floating point value for the channel passed as the
+first argument and for the parameter passed as the second argument.</p>
+<p>The corresponding additions to HPE3631ASup/devHPE3631A.db are:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetP6Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set +6V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(P6V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;6.18&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;6.18&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;6.18&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetP6Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set +6V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(P6V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;5.15&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;5.15&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;5.15&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetP25Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set +25V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(P25V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;25.75&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetP25Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set +25V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(P25V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetN25Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set -25V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(N25V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;-25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;-25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;-25.75&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)SetN25Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Set -25V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto setVI(N25V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DRVH</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetP6Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get +6V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(P6V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;6.18&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;6.18&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetP6Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get +6V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(P6V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;5.15&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;5.15&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetP25Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get +25V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(P25V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;25.75&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetP25Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get +25V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(P25V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetN25Volts&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get -25V output volage&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(N25V,VOLT) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Volts&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;-25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;-25.75&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+<span class="n">record</span><span class="p">(</span><span class="n">ao</span><span class="p">,</span> <span class="s2">&quot;$(P)$(R)GetN25Amps&quot;</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DESC</span><span class="p">,</span> <span class="s2">&quot;Get -25V output current&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">DTYP</span><span class="p">,</span> <span class="s2">&quot;stream&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">OUT</span><span class="p">,</span>  <span class="s2">&quot;@devHPE3631A.proto getVI(N25V,CURR) $(PORT) $(A)&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGU</span><span class="p">,</span>  <span class="s2">&quot;Amps&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">LOPR</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">HOPR</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUL</span><span class="p">,</span> <span class="s2">&quot;0&quot;</span><span class="p">)</span>
+    <span class="n">field</span><span class="p">(</span><span class="n">EGUF</span><span class="p">,</span> <span class="s2">&quot;1.03&quot;</span><span class="p">)</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>Depending on your application you might set up FLNK and/or SCAN fields to keep the
+setpoint readbacks up to date.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="asynRecordControl.html" class="btn btn-neutral float-left" title="asyn Record I/O Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="devGpib.html" class="btn btn-neutral float-right" title="devGpib (obsolete)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2023, Mark Rivers.
+      <span class="lastupdated">Last updated on 2023-March-11.
+      </span></p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

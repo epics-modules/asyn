@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>asyn Record Control &mdash; asyn support</title>
+  <title>asyn Record I/O Example &mdash; asyn support</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="_static/css/my_theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="devGpib" href="devGpib.html" />
-    <link rel="prev" title="asyn Record" href="asynRecord.html" /> 
+    <link rel="next" title="HowToDoSerial (StreamDevice)" href="HowToDoSerial.html" />
+    <link rel="prev" title="asyn Timestamp Support" href="asynTimeStampSupport.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -46,13 +46,15 @@
 <li class="toctree-l1"><a class="reference internal" href="asynPortDriver.html">asynPortDriver</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynPortClient.html">asynPortClient</a></li>
 <li class="toctree-l1"><a class="reference internal" href="asynRecord.html">asyn Record</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">asyn Record Control</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="asynTimeStampSupport.html">asyn Timestamp Support</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">asyn Record I/O Example</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#main-control-screen-asynrecord-adl">Main control screen, asynRecord.adl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#asynoctet-i-o-screen-asynoctet-adl">asynOctet I/O screen, asynOctet.adl</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#id1">asynOctet I/O screen, asynOctet.adl</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib</a></li>
+<li class="toctree-l1"><a class="reference internal" href="HowToDoSerial.html">HowToDoSerial (StreamDevice)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="devGpib.html">devGpib (obsolete)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="doxygen.html">Doxygen documentation</a></li>
 </ul>
 
@@ -70,7 +72,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
-      <li class="breadcrumb-item active">asyn Record Control</li>
+      <li class="breadcrumb-item active">asyn Record I/O Example</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/asynRecordControl.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -80,8 +82,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="asyn-record-control">
-<h1>asyn Record Control<a class="headerlink" href="#asyn-record-control" title="Permalink to this heading"></a></h1>
+  <section id="asyn-record-i-o-example">
+<h1>asyn Record I/O Example<a class="headerlink" href="#asyn-record-i-o-example" title="Permalink to this heading"></a></h1>
 <p>This document describes how to use an asyn record to communicate with a message-based instrument.</p>
 <p>It is a step-by-step example of how I set up simple instrument control
 using only an asyn record. The instrument may be connected to a
@@ -230,15 +232,15 @@ for writing support for your instrument.</p>
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="asynRecord.html" class="btn btn-neutral float-left" title="asyn Record" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="devGpib.html" class="btn btn-neutral float-right" title="devGpib" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="asynTimeStampSupport.html" class="btn btn-neutral float-left" title="asyn Timestamp Support" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="HowToDoSerial.html" class="btn btn-neutral float-right" title="HowToDoSerial (StreamDevice)" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-March-10.
+      <span class="lastupdated">Last updated on 2023-March-11.
       </span></p>
   </div>
 
