@@ -1318,14 +1318,6 @@ Describes methods implemented by devSupportGpib.c.
   * - `pdevSupportGpib`
     - An external variable which points to devSupportGpib.
 
-Changes to Previous EPICS GPIB Support
---------------------------------------
-`conversionNotes.html <gpibCoreConversion/conversionNotes.html>`__ describes
-how to convert GPIB device support modules written for the devGpib support that
-came with EPICS base 3.13 and earlier. The information also applies to support modules
-written for Benjamin Franksen's GPIB support or the gpibCore support since both
-of these evolved from the EPICS base GPIB support.
-
 General GPIB Problems
 ---------------------
   
