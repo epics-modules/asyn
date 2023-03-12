@@ -4786,8 +4786,8 @@ set the record STAT and SEVR fields, regardless of the value of asynUser.auxStat
 </section>
 <section id="asynrecord-generic-epics-record-support">
 <h2><a class="toc-backref" href="#id150" role="doc-backlink">asynRecord: Generic EPICS Record Support</a><a class="headerlink" href="#asynrecord-generic-epics-record-support" title="Permalink to this heading"></a></h2>
-<p>A special record type asynRecord is provided. Details are described in &lt;a href=”asynRecord.html”&gt;
-asynRecord&lt;/a&gt;. This section provides a brief description of how to use it.</p>
+<p>A special record type asynRecord is provided. Details are described in <a class="reference external" href="asynRecord.html">asynRecord.html</a>.
+This section provides a brief description of how to use it.</p>
 <p>Each IOC can load one or more instances of asynRecord. An example is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">dbLoadRecords</span><span class="p">(</span><span class="s2">&quot;$(ASYN)/db/asynRecord.db&quot;</span><span class="p">,</span><span class="s2">&quot;P=asyn,R=Test,PORT=L0,ADDR=15,IMAX=0,OMAX=0&quot;</span><span class="p">)</span>
 </pre></div>
@@ -5207,11 +5207,11 @@ no flow control.</p></li>
 </ul>
 <p>If the hostInfo argument begins with the characters <strong>unix://</strong> the remainder of the argument
 is taken to be the name of a UNIX-domain stream socket.</p>
-<p>&lt;a href=”<a class="reference external" href="https://lwn.net/Articles/542629/">https://lwn.net/Articles/542629/</a>”&gt;This article&lt;/a&gt; explains the use of
+<p><a class="reference external" href="https://lwn.net/Articles/542629/">This article</a> explains the use of
 the SO_REUSEPORT option for both TCP and UDP. The particular use case that motivated
-the addition of the SO_REUSEPORT to this driver is discussed in &lt;a href=”<a class="reference external" href="https://github.com/epics-modules/asyn/issues/108">https://github.com/epics-modules/asyn/issues/108</a>”&gt;
-this Github issue&lt;/a&gt;. On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT,
-but it should have the same effect.</p>
+the addition of the SO_REUSEPORT to this driver is discussed in
+<a class="reference external" href="https://github.com/epics-modules/asyn/issues/108">this Github issue</a>.
+On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT, but it should have the same effect.</p>
 <p>To receive UDP broadcasts the localPort is the port to listen on, for example:
 <code class="docutils literal notranslate"><span class="pre">drvAsynIPPortConfigure(&quot;BD&quot;,&quot;255.255.255.255:1234:3956</span> <span class="pre">UDP*&quot;,0,0,0)</span></code>.
 If the port is only to be used to receive broadcast messages then
@@ -5461,8 +5461,8 @@ setOptions. For example:</p>
 </section>
 <section id="drvprologixgpib">
 <h3><a class="toc-backref" href="#id160" role="doc-backlink">drvPrologixGPIB</a><a class="headerlink" href="#drvprologixgpib" title="Permalink to this heading"></a></h3>
-<p>The drvPrologixGPIB port driver was written to support &lt;a href=”<a class="reference external" href="https://prologix.biz/gpib-ethernet-controller.html">https://prologix.biz/gpib-ethernet-controller.html</a>”&gt;
-the Prologix GPIB-Ethernet controller&lt;/a&gt;.</p>
+<p>The drvPrologixGPIB port driver was written to support
+<a class="reference external" href="https://prologix.biz/gpib-ethernet-controller.html">the Prologix GPIB-Ethernet controller</a>.</p>
 <p>Configuration command is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">prologixGPIBConfigure</span><span class="p">(</span><span class="n">portName</span><span class="p">,</span><span class="n">host</span><span class="p">,</span><span class="n">priority</span><span class="p">,</span><span class="n">noAutoConnect</span><span class="p">)</span>
 </pre></div>
@@ -5510,8 +5510,8 @@ The Prologix GPIB-Ethernet is a simple device that does not support many GPIB fu
 </section>
 <section id="linux-gpib">
 <h3><a class="toc-backref" href="#id161" role="doc-backlink">Linux-Gpib</a><a class="headerlink" href="#linux-gpib" title="Permalink to this heading"></a></h3>
-<p>The linux-gpib port driver was written to support &lt;a href=”<a class="reference external" href="https://sourceforge.net/projects/linux-gpib/">https://sourceforge.net/projects/linux-gpib/</a>”&gt;
-The Linux GPIB Package library&lt;/a&gt;.</p>
+<p>The linux-gpib port driver was written to support
+<a class="reference external" href="https://sourceforge.net/projects/linux-gpib/">the Linux GPIB Package library</a>.</p>
 <p>In order to build this support the Linux GPIB Package must be installed. Also in
 configure/RELEASE the statement:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">LINUX_GPIB</span><span class="o">=</span><span class="n">NO</span>
@@ -5995,7 +5995,7 @@ respective technical manuals.</p>
 real asyn port drivers can be derived. It greatly simplifies the job of writing
 an asyn port driver, because it takes care of all of the tasks like registering
 the port, registering the interfaces, and calling interrupt clients. It is documented
-separately in &lt;a href=”asynPortDriver.html”&gt;asynPortDriver.html&lt;/a&gt;.</p>
+separately in <a class="reference external" href="asynPortDriver.html">asynPortDriver</a>.</p>
 </section>
 <section id="asynportclient-c-classes">
 <h2><a class="toc-backref" href="#id175" role="doc-backlink">asynPortClient C++ classes</a><a class="headerlink" href="#asynportclient-c-classes" title="Permalink to this heading"></a></h2>
@@ -6004,8 +6004,7 @@ writing a client that directly communicates with an asyn port driver, without ru
 an EPICS IOC. They handle the details of connecting to the driver, finding the required
 interfaces, etc. They only uses the synchronous interfaces, so all calls are blocking.
 If clients need asynchronous operation then they can use the normal C interface
-with pasynManager-&gt;queueRequest. It is documented separately in &lt;a href=”asynPortClient.html”&gt;
-asynPortClient.html&lt;/a&gt;.</p>
+with pasynManager-&gt;queueRequest. It is documented separately in <a class="reference external" href="asynPortClient.html">asynPortClient</a>.</p>
 </section>
 <section id="diagnostic-aids">
 <h2><a class="toc-backref" href="#id176" role="doc-backlink">Diagnostic Aids</a><a class="headerlink" href="#diagnostic-aids" title="Permalink to this heading"></a></h2>
@@ -6048,16 +6047,16 @@ until no bytes are left to read. The timeout is used for the read requests.</p>
 End of String processing for low level drivers that don’t.</p>
 <p><code class="docutils literal notranslate"><span class="pre">asynSetTraceMask</span></code> calls <code class="docutils literal notranslate"><span class="pre">asynTrace:setTraceMask</span></code> for the
 specified port and address. If portName is zero length then the global trace mask
-is set. The mask bit definitions are documented in the &lt;a href=”#TraceInterface”&gt;traceMask
-definitions&lt;/a&gt;.</p>
+is set. The mask bit definitions are documented in the
+<a class="reference external" href="#asyntrace">traceMask definitions</a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">asynSetTraceIOMask</span></code> calls <code class="docutils literal notranslate"><span class="pre">asynTrace:setTraceIOMask</span></code> for
 the specified port and address. If portName is zero length then the global traceIO
-mask is set. The mask bit definitions are documented in the &lt;a href=”#TraceInterface”&gt;
-traceIO mask definitions&lt;/a&gt;.</p>
+mask is set. The mask bit definitions are documented in the
+<a class="reference external" href="#asyntrace">traceIO mask definitions</a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">asynSetTraceInfoMask</span></code> calls <code class="docutils literal notranslate"><span class="pre">asynTrace:setTraceInfoMask</span></code>
 for the specified port and address. If portName is zero length then the global traceInfo
-mask is set. The mask bit definitions are documented in the &lt;a href=”#TraceInterface”&gt;
-traceInfo mask definitions&lt;/a&gt;.</p>
+mask is set. The mask bit definitions are documented in the
+<a class="reference external" href="#asyntrace">traceInfo mask definitions</a>.</p>
 <p>Beginning with asyn R4-35 the mask argument of asynSetTraceMask, asynSetTraceIOMask,
 and asynSetTraceInfoMask can be specified either as an integer (previous behavior)
 or as symbolic names connected with + or |. Spaces are allowed but require quotes.
@@ -6552,7 +6551,7 @@ There is no medm screen for this test.</p>
 <p>This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
 interfaces. Both drivers also implement the asynFloat64 interface for controlling
 the update rate. The testEpicsApp application also uses the asynOctet echoDriver
-from &lt;a href=”#testApp”&gt;testApp&lt;/a&gt;.</p>
+from <a class="reference external" href="#testapp">testApp</a>.</p>
 <p>The example resides in &lt;top&gt;/testEpicsApp.</p>
 <p>Executing “medm -x *.adl” from the &lt;top&gt;/testEpicsApp/adl directory opens
 the followings displays.</p>
@@ -6786,7 +6785,7 @@ is started, it can be connected to different devices.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-March-11.
+      <span class="lastupdated">Last updated on 2023-March-12.
       </span></p>
   </div>
 
