@@ -14,7 +14,7 @@ for a simple serial, GPIB (IEEE-488) or network attached device. The steps are p
 in a way that should make it possible to apply them in cookbook fashion to create
 support for other devices. For comprehensive description of all the details of the
 I/O system used here, refer to the 
-`asynDriver <asynDriver>`__
+`asynDriver <asynDriver.html>`__
 and
 `StreamDevice <http://epics.web.psi.ch/software/streamdevice/doc/>`__
 documentation.

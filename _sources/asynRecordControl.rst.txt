@@ -147,5 +147,5 @@ enabled I can see the entire message in the IOC console window:
 If your requirements are modest, you might be done. The asyn
 record may be adequate for your application. If not, you should
 investigate the
-`Streams device package <../HowToDoSerial_StreamDevice>`__
+`Streams device package <HowToDoSerial.html>`__
 for writing support for your instrument.
