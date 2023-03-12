@@ -3962,8 +3962,8 @@ set the record STAT and SEVR fields, regardless of the value of asynUser.auxStat
 
 asynRecord: Generic EPICS Record Support
 ----------------------------------------
-A special record type asynRecord is provided. Details are described in <a href="asynRecord.html">
-asynRecord</a>. This section provides a brief description of how to use it.
+A special record type asynRecord is provided. Details are described in `<asynRecord.html>`__.
+This section provides a brief description of how to use it.
 
 Each IOC can load one or more instances of asynRecord. An example is:
 ::
@@ -4331,11 +4331,11 @@ Possible protocols are
 If the hostInfo argument begins with the characters **unix://** the remainder of the argument
 is taken to be the name of a UNIX-domain stream socket.
 
-<a href="https://lwn.net/Articles/542629/">This article</a> explains the use of
+`This article <https://lwn.net/Articles/542629/>`__ explains the use of
 the SO_REUSEPORT option for both TCP and UDP. The particular use case that motivated
-the addition of the SO_REUSEPORT to this driver is discussed in <a href="https://github.com/epics-modules/asyn/issues/108">
-this Github issue</a>. On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT,
-but it should have the same effect.
+the addition of the SO_REUSEPORT to this driver is discussed in 
+`this Github issue <https://github.com/epics-modules/asyn/issues/108>`__.
+On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT, but it should have the same effect.
 
 To receive UDP broadcasts the localPort is the port to listen on, for example: 
 ``drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956 UDP*",0,0,0)``. 
@@ -4557,8 +4557,8 @@ Will change the rpcTimeout for port L0 to .1 seconds.
 
 drvPrologixGPIB
 ~~~~~~~~~~~~~~~
-The drvPrologixGPIB port driver was written to support <a href="https://prologix.biz/gpib-ethernet-controller.html">
-the Prologix GPIB-Ethernet controller</a>.
+The drvPrologixGPIB port driver was written to support 
+`the Prologix GPIB-Ethernet controller <https://prologix.biz/gpib-ethernet-controller.html>`__.
   
 Configuration command is:
 ::
@@ -4601,8 +4601,8 @@ The Prologix GPIB-Ethernet is a simple device that does not support many GPIB fu
 Linux-Gpib
 ~~~~~~~~~~
 
-The linux-gpib port driver was written to support <a href="https://sourceforge.net/projects/linux-gpib/">
-The Linux GPIB Package library</a>.
+The linux-gpib port driver was written to support 
+`the Linux GPIB Package library <https://sourceforge.net/projects/linux-gpib/>`__.
 
 In order to build this support the Linux GPIB Package must be installed. Also in
 configure/RELEASE the statement:
@@ -5036,7 +5036,7 @@ A C++ base class called asynPortDriver is available. This is a base class from w
 real asyn port drivers can be derived. It greatly simplifies the job of writing
 an asyn port driver, because it takes care of all of the tasks like registering
 the port, registering the interfaces, and calling interrupt clients. It is documented
-separately in <a href="asynPortDriver.html">asynPortDriver.html</a>.
+separately in `asynPortDriver <asynPortDriver.html>`__.
 
 
 asynPortClient C++ classes
@@ -5046,9 +5046,7 @@ writing a client that directly communicates with an asyn port driver, without ru
 an EPICS IOC. They handle the details of connecting to the driver, finding the required
 interfaces, etc. They only uses the synchronous interfaces, so all calls are blocking.
 If clients need asynchronous operation then they can use the normal C interface
-with pasynManager->queueRequest. It is documented separately in <a href="asynPortClient.html">
-asynPortClient.html</a>.
-
+with pasynManager->queueRequest. It is documented separately in `asynPortClient <asynPortClient.html>`__.
 
 Diagnostic Aids
 ---------------
@@ -5095,18 +5093,18 @@ End of String processing for low level drivers that don't.
 
 ``asynSetTraceMask`` calls ``asynTrace:setTraceMask`` for the
 specified port and address. If portName is zero length then the global trace mask
-is set. The mask bit definitions are documented in the <a href="#TraceInterface">traceMask
-definitions</a>.
+is set. The mask bit definitions are documented in the 
+`traceMask definitions <#asyntrace>`__.
 
 ``asynSetTraceIOMask`` calls ``asynTrace:setTraceIOMask`` for
 the specified port and address. If portName is zero length then the global traceIO
-mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
-traceIO mask definitions</a>.
+mask is set. The mask bit definitions are documented in the 
+`traceIO mask definitions <#asyntrace>`__.
 
 ``asynSetTraceInfoMask`` calls ``asynTrace:setTraceInfoMask``
 for the specified port and address. If portName is zero length then the global traceInfo
-mask is set. The mask bit definitions are documented in the <a href="#TraceInterface">
-traceInfo mask definitions</a>.
+mask is set. The mask bit definitions are documented in the 
+`traceInfo mask definitions <#asyntrace>`__.
 
 Beginning with asyn R4-35 the mask argument of asynSetTraceMask, asynSetTraceIOMask,
 and asynSetTraceInfoMask can be specified either as an integer (previous behavior)
@@ -5574,7 +5572,7 @@ testEpicsApp
 This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
 interfaces. Both drivers also implement the asynFloat64 interface for controlling
 the update rate. The testEpicsApp application also uses the asynOctet echoDriver
-from <a href="#testApp">testApp</a>.
+from `testApp <#testapp>`__.
 
 The example resides in <top>/testEpicsApp.
 
