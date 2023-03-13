@@ -38,6 +38,7 @@
 #include <asynInt64Array.h>
 #include <asynFloat32Array.h>
 #include <asynFloat64Array.h>
+#include "devEpicsPvt.h"
 
 #define DEFAULT_RING_BUFFER_SIZE 0
 #define INIT_OK 0
@@ -159,16 +160,7 @@ public:
          * then register for callbacks on output records */
         if (isOutput_) {
             int enableCallbacks=0;
-            const char *callbackString;
-            DBENTRY *pdbentry = dbAllocEntry(pdbbase);
-            status = dbFindRecord(pdbentry, pRecord_->name);
-            if (status) {
-                asynPrint(pasynUser_, ASYN_TRACE_ERROR,
-                    "%s %s::%s error finding record\n",
-                    pRecord_->name, driverName, functionName);
-                goto bad;
-            }
-            callbackString = dbGetInfo(pdbentry, "asyn:READBACK");
+            const char *callbackString = asynDbGetInfo((dbCommon*)pRecord_, "asyn:READBACK");
             if (callbackString) enableCallbacks = atoi(callbackString);
             if (enableCallbacks) {
                 status = createRingBuffer();

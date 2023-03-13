@@ -168,6 +168,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += devAsynFloat64.c
   asyn_SRCS += devAsynXXXArray.cpp
   asyn_SRCS += devAsynFloat64TimeSeries.c
+  asyn_SRCS += devEpicsPvt.c
 
   # These require 64-bit support
   ifdef BASE_7_0
