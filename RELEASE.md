@@ -8,19 +8,18 @@
   - Previously only the waveform record was supported for arrays.  Added support for aai and aoo records.
   - Add new devEpicsPvt functions (from Michael Davidsaver):
     - Avoids leaking DBENTRY during initialization.
-    - Use dbInitEntry() from record rather than dbFindRecord()) when available.
+    - Use dbInitEntry() from record rather than dbFindRecord() when available.
     - Reduces duplicate code.
-- testErrorsApp
-  - Add aai and aao records to databases in order to test new device support for these.
-- Fix testing on Github Actions by forcing TIRPC=YES, required for modern Linux releases.
 - Documentation:
-  - Converted documentation/asynDriver.html and asynRecord.html to Sphinx .rst files
-    in docs/source.
+  - Converted all HTML files in documentation/ to Sphinx RST files in docs/source.
   - It uses the Read The Docs theme (sphinx-rtd-theme) which provides a panel
     on the left side of the screen for easy navigation.
   - Added Github actions to publish the Sphinx generated documentation to Github Pages.
   - The new home page for the asyn documentation is https://epics-modules.github.io/asyn.
   - Converted documentation/RELEASE_NOTES.html to RELEASE.md.
+- testErrorsApp
+  - Add aai and aao records to databases in order to test new device support for these.
+- Fix testing on Github Actions by forcing TIRPC=YES, required for modern Linux releases.
 
 ## Release 4-43 (September 12, 2022)
 - devEpics
