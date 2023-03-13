@@ -12,6 +12,7 @@
   - Converted documentation/asynDriver.html and asynRecord.html to Sphinx .rst files
     in docs/source.
   - Added Github actions to publish the Sphinx generated documentation to Github Pages.
+  - The new home page for the asyn documentation is https://epics-modules.github.io/asyn.
   - Converted documentation/RELEASE_NOTES.html to RELEASE.md.
 
 ## Release 4-43 (September 12, 2022)
