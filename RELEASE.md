@@ -11,6 +11,8 @@
 - Documentation:
   - Converted documentation/asynDriver.html and asynRecord.html to Sphinx .rst files
     in docs/source.
+  - It uses the Read The Docs theme (sphinx-rtd-theme) which provides a panel
+    on the left side of the screen for easy navigation.
   - Added Github actions to publish the Sphinx generated documentation to Github Pages.
   - The new home page for the asyn documentation is https://epics-modules.github.io/asyn.
   - Converted documentation/RELEASE_NOTES.html to RELEASE.md.
