@@ -101,10 +101,10 @@ turning on traceIODriver debugging.
 Main control screen, asynRecord.adl
 -----------------------------------   
 
-.. figure:: asynRecord.png
+.. figure:: AsynRecordWindow.png
     :align: center
 
-    **AsynRecordWindow.png**
+    **asynRecord.adl**
     
     
 Click on the 'More...' button and bring up the "asynOctet Interface
@@ -118,10 +118,10 @@ characters.
 asynOctet I/O screen, asynOctet.adl
 -----------------------------------   
 
-.. figure:: asynOctet.png
+.. figure:: AsynOctetWindow.png
     :align: center
 
-    **AsynOctet.png**
+    **asynOctet.adl**
     
 Try entering some commands. A good one to start with is the SCPI
 Device Identification (\*IDN?) command. You can see why I had to
@@ -130,10 +130,10 @@ arrange for reply messages longer than the default 40 characters!
 asynOctet I/O screen, asynOctet.adl
 -----------------------------------    
 
-.. figure:: AynsOctetIDN.png
+.. figure:: AsynOctetIDN.png
     :align: center
 
-    **AynsOctetIDN.png**
+    **asynOctet.adl**
 
 The readback display is truncated. Since I have traceIODriver
 enabled I can see the entire message in the IOC console window:
