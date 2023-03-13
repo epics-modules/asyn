@@ -2,7 +2,6 @@ asynPortDriver
 ==============
 
 :author: Mark Rivers, University of Chicago
-:date: September 15, 2017
 
 Overview
 --------
