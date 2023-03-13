@@ -395,10 +395,8 @@ bad:
 static long createRingBuffer(dbCommon *pr, int minRingSize)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    asynStatus status;
     int i;
     const char *sizeString;
-    static const char *functionName="createRingBuffer";
 
     if (!pPvt->ringBuffer) {
         pPvt->ringSize = minRingSize;

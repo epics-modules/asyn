@@ -243,9 +243,7 @@ bad:
 static long createRingBuffer(dbCommon *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
-    asynStatus status;
     const char *sizeString;
-    static const char *functionName="createRingBuffer";
 
     if (!pPvt->ringBuffer) {
         pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
