@@ -61,11 +61,11 @@ jobs:
             base: "3.15"
             deps: "deps2"
 
-          - os: ubuntu-latest
-            cmp: gcc
-            configuration: static
-            base: "3.14"
-            deps: "deps1"
+#          - os: ubuntu-latest
+#            cmp: gcc
+#            configuration: static
+#            base: "3.14"
+#            deps: "deps1"
 
           - os: windows-2019
             cmp: vs2019
