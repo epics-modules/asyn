@@ -662,6 +662,82 @@ asynStatus testErrors::readFloat64Array(asynUser *pasynUser, epicsFloat64 *value
         (pasynUser, value, nElements, nIn, P_Float64ArrayValue, float64ArrayValue_);
 }
 
+template <typename epicsType>
+asynStatus testErrors::doWriteArray(asynUser *pasynUser, epicsType *value,
+                                    size_t nElements, int paramIndex, epicsType *pValue)
+{
+    int function = pasynUser->reason;
+    size_t ncopy = MAX_ARRAY_POINTS;
+    epicsInt32 status = asynSuccess;
+    epicsTimeStamp timestamp;
+    const char *functionName = "doWriteArray";
+
+    /* Get the current timestamp */
+    getTimeStamp(&timestamp);
+    pasynUser->timestamp = timestamp;
+
+    /* Set the parameter status in the parameter library */
+    status = setStatusAndSeverity(pasynUser);
+
+    if (nElements < ncopy) ncopy = nElements;
+    if (function == paramIndex) {
+        memcpy(pValue, value, ncopy*sizeof(epicsType));
+    }
+
+    if (status)
+        epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                  "%s:%s: status=%d, function=%d",
+                  driverName, functionName, status, function);
+    else
+        asynPrint(pasynUser, ASYN_TRACEIO_DRIVER,
+              "%s:%s: function=%d\n",
+              driverName, functionName, function);
+    return (asynStatus)status;
+}
+
+asynStatus testErrors::writeInt8Array(asynUser *pasynUser, epicsInt8 *value,
+                                      size_t nElements)
+{
+    return doWriteArray<epicsInt8>
+        (pasynUser, value, nElements, P_Int8ArrayValue, int8ArrayValue_);
+}
+
+asynStatus testErrors::writeInt16Array(asynUser *pasynUser, epicsInt16 *value,
+                                       size_t nElements)
+{
+    return doWriteArray<epicsInt16>
+        (pasynUser, value, nElements, P_Int16ArrayValue, int16ArrayValue_);
+}
+
+asynStatus testErrors::writeInt32Array(asynUser *pasynUser, epicsInt32 *value,
+                                       size_t nElements)
+{
+    return doWriteArray<epicsInt32>
+        (pasynUser, value, nElements, P_Int32ArrayValue, int32ArrayValue_);
+}
+
+asynStatus testErrors::writeInt64Array(asynUser *pasynUser, epicsInt64 *value,
+                                       size_t nElements)
+{
+    return doWriteArray<epicsInt64>
+        (pasynUser, value, nElements, P_Int64ArrayValue, int64ArrayValue_);
+}
+
+asynStatus testErrors::writeFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
+                                         size_t nElements)
+{
+    return doWriteArray<epicsFloat32>
+        (pasynUser, value, nElements, P_Float32ArrayValue, float32ArrayValue_);
+}
+
+asynStatus testErrors::writeFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
+                                         size_t nElements)
+{
+    return doWriteArray<epicsFloat64>
+        (pasynUser, value, nElements, P_Float64ArrayValue, float64ArrayValue_);
+}
+
+
 
 
 /* Configuration routine.  Called directly, or from the iocsh function below */
