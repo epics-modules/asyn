@@ -114,12 +114,20 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 
 
     /* Create the thread that computes the waveforms in the background */
+#ifdef EPICS_THREAD_CAN_JOIN  // Sadly, not all OS and EPICS versions can do things properly
     epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
     opts.joinable = true;  // We need to be able to stop the thread
     threadId_ = epicsThreadCreateOpt("testAsynPortDriverTask",
                                      (EPICSTHREADFUNC)::simTask,
                                      this,
                                      &opts);
+#else
+    threadId_ = epicsThreadCreate("testAsynPortDriverTask",
+                                  epicsThreadPriorityMedium,
+                                  epicsThreadGetStackSize(epicsThreadStackMedium),
+                                  (EPICSTHREADFUNC)::simTask,
+                                  this);
+#endif
     if (threadId_ == NULL) {
         printf("%s:%s: epicsThreadCreate failure\n", driverName, functionName);
         return;
@@ -136,10 +144,12 @@ testAsynPortDriver::~testAsynPortDriver()
     setIntegerParam(P_Run, 0);
     exiting_ = true;
     unlock();
-    epicsEventSignal(eventId_);
 
     // Wait for the simTask function to return and clean up the thread.
+#ifdef EPICS_THREAD_CAN_JOIN  // Sadly, not all OS and EPICS versions can do things properly
+    epicsEventSignal(eventId_);
     epicsThreadMustJoin(threadId_);
+#endif
 
     // Deallocate driver memory.
     free(pData_);
