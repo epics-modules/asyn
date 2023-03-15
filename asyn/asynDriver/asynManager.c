@@ -1759,6 +1759,13 @@ static asynStatus lockPort(asynUser *pasynUser)
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
+
+    if (findDpCommon(puserPvt)->defunct) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:lockPort: port has been shut down");
+        return asynDisabled;
+    }
+
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
     epicsMutexMustLock(pport->synchronousLock);
     if(pport->pasynLockPortNotify) {
@@ -1778,6 +1785,7 @@ static asynStatus unlockPort(asynUser *pasynUser)
                 "asynManager::unlockPort not connected\n");
         return asynError;
     }
+
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort\n", pport->portName);
     if(pport->pasynLockPortNotify) {
         asynStatus status;
@@ -1987,7 +1995,9 @@ static void destroyPortDriver(void *portName) {
     }
     status = pasynManager->lockPort(pasynUser);
     if(status != asynSuccess) {
-        printf("%s\n", pasynUser->errorMessage);
+        if (status != asynDisabled) {
+            printf("%s\n", pasynUser->errorMessage);
+        }
         pasynManager->freeAsynUser(pasynUser);
         return;
     }
