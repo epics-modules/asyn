@@ -2,8 +2,8 @@ asynDriver
 ==========
  
 :author: Mark Rivers, Eric Norum, and Marty Kraimer
-:date: March 13, 2024
-:version: R4-44
+:date: March 15, 2024
+:version: R4-44-1
 
 License Agreement
 -----------------
