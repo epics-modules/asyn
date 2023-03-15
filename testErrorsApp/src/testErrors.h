@@ -67,6 +67,18 @@ public:
                                         size_t nElements, size_t *nIn);
     virtual asynStatus readFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
                                         size_t nElements, size_t *nIn);
+    virtual asynStatus writeInt8Array   (asynUser *pasynUser, epicsInt8 *value,
+                                         size_t nElements);
+    virtual asynStatus writeInt16Array  (asynUser *pasynUser, epicsInt16 *value,
+                                         size_t nElements);
+    virtual asynStatus writeInt32Array  (asynUser *pasynUser, epicsInt32 *value,
+                                         size_t nElements);
+    virtual asynStatus writeInt64Array  (asynUser *pasynUser, epicsInt64 *value,
+                                         size_t nElements);
+    virtual asynStatus writeFloat32Array(asynUser *pasynUser, epicsFloat32 *value,
+                                         size_t nElements);
+    virtual asynStatus writeFloat64Array(asynUser *pasynUser, epicsFloat64 *value,
+                                         size_t nElements);
     virtual asynStatus readOption(asynUser *pasynUser, const char *key, char *value, int maxChars);
     virtual asynStatus writeOption(asynUser *pasynUser, const char *key, const char *value);
     virtual asynStatus readEnum(asynUser *pasynUser, char *strings[], int values[], int severities[],
@@ -117,5 +129,8 @@ private:
     epicsFloat64  float64ArrayValue_[MAX_ARRAY_POINTS];
     template <typename epicsType>
         asynStatus doReadArray(asynUser *pasynUser, epicsType *value,
-                           size_t nElements, size_t *nIn, int paramIndex, epicsType *pValue);
+                               size_t nElements, size_t *nIn, int paramIndex, epicsType *pValue);
+    template <typename epicsType>
+        asynStatus doWriteArray(asynUser *pasynUser, epicsType *value,
+                               size_t nElements, int paramIndex, epicsType *pValue);
 };
