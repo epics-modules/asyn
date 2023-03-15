@@ -1,5 +1,12 @@
 # asynDriver: Release Notes
 
+## Release 4-44-1 (March 15, 2023)
+- devEpics
+  - Fix problem with waveform out and aao records due to incorrect initialization of a private member variable
+    in devAsynXXXArray.cpp.
+- testErrorsApp
+  - Add code to test the asynXXXArray->write() functions.
+
 ## Release 4-44 (March 13, 2023)
 - devEpics
   - Rewrite the device support for arrays.
