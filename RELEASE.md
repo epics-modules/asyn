@@ -2,7 +2,7 @@
 
 ## Release 4-44-1 (March 15, 2023)
 - devEpics
-  - Fix problem with waveform out and aao records due to incorrect initialization of a private member variable
+  - Fix problem with waveform out and aao records due to missing initialization of a private member variable
     in devAsynXXXArray.cpp.
 - testErrorsApp
   - Add code to test the asynXXXArray->write() functions.
