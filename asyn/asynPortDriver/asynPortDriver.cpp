@@ -3943,10 +3943,20 @@ asynStatus asynPortDriver::createParams()
     return asynSuccess;
 }
 
+/** Returns `true` when the port is destructible and `shutdown()` wasn't run yet. */
 bool asynPortDriver::needsShutdown() {
     return shutdownNeeded;
 }
 
+/** Performs cleanup that cannot be done in a destructor.
+ *
+ * The destructor is limited in what it can do because the object is already
+ * partially destroyed. This function has no such limitation. However, it is not
+ * a destructor, and must not leave dangling references; the driver must be left
+ * in a consistent state, allowing the destructor to run.
+ *
+ * When overridden, this function must call the base class implementation.
+ */
 void asynPortDriver::shutdown() {
     // There is a possibility that the destructor is running because we are
     // being directly deleted by user code, without going through asynManager.

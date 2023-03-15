@@ -51,12 +51,11 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
                     1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
-                    0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                    ASYN_DESTRUCTIBLE, /* asynFlags.  This driver does not block and it is not multi-device, but has a destructor */
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/
 {
-    asynStatus status;
     int i;
     const char *functionName = "testAsynPortDriver";
 
@@ -71,6 +70,7 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
     /* Set the time base array */
     for (i=0; i<maxPoints; i++) pTimeBase_[i] = (double)i / (maxPoints-1) * NUM_DIVISIONS;
 
+    exiting_ = false;
     eventId_ = epicsEventCreate(epicsEventEmpty);
     createParam(P_RunString,                asynParamInt32,         &P_Run);
     createParam(P_MaxPointsString,          asynParamInt32,         &P_MaxPoints);
@@ -114,17 +114,40 @@ testAsynPortDriver::testAsynPortDriver(const char *portName, int maxPoints)
 
 
     /* Create the thread that computes the waveforms in the background */
-    status = (asynStatus)(epicsThreadCreate("testAsynPortDriverTask",
-                          epicsThreadPriorityMedium,
-                          epicsThreadGetStackSize(epicsThreadStackMedium),
-                          (EPICSTHREADFUNC)::simTask,
-                          this) == NULL);
-    if (status) {
+    epicsThreadOpts opts = EPICS_THREAD_OPTS_INIT;
+    opts.joinable = true;  // We need to be able to stop the thread
+    threadId_ = epicsThreadCreateOpt("testAsynPortDriverTask",
+                                     (EPICSTHREADFUNC)::simTask,
+                                     this,
+                                     &opts);
+    if (threadId_ == NULL) {
         printf("%s:%s: epicsThreadCreate failure\n", driverName, functionName);
         return;
     }
 }
 
+
+
+testAsynPortDriver::~testAsynPortDriver()
+{
+    // Tell the simTask function to finish by setting the exit flag and waking
+    // up the thread.
+    lock();
+    setIntegerParam(P_Run, 0);
+    exiting_ = true;
+    unlock();
+    epicsEventSignal(eventId_);
+
+    // Wait for the simTask function to return and clean up the thread.
+    epicsThreadMustJoin(threadId_);
+
+    // Deallocate driver memory.
+    free(pData_);
+    free(pTimeBase_);
+    for (int i = 0; i < NUM_VERT_SELECTIONS; i++) {
+        free(voltsPerDivStrings_[i]);
+    }
+}
 
 
 void simTask(void *drvPvt)
@@ -151,8 +174,9 @@ void testAsynPortDriver::simTask(void)
     double pi=4.0*atan(1.0);
 
     lock();
-    /* Loop forever */
+    /* Loop until it's time to exit */
     while (1) {
+        if (exiting_) break;
         getDoubleParam(P_UpdateTime, &updateTime);
         getIntegerParam(P_Run, &run);
         // Release the lock while we wait for a command to start or wait for updateTime
@@ -195,6 +219,7 @@ void testAsynPortDriver::simTask(void)
         callParamCallbacks();
         doCallbacksFloat64Array(pData_, maxPoints, P_Waveform, 0);
     }
+    unlock();
 }
 
 /** Called when asyn clients call pasynInt32->write().

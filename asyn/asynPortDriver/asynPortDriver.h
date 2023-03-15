@@ -41,7 +41,59 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
 class callbackThread;
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
-  * with standard asyn interfaces and a parameter library. */
+  * with standard asyn interfaces and a parameter library.
+  *
+  * **Destruction and cleanup**
+  *
+  * Historically, drivers were never destroyed. There are several reasons for
+  * this, an important one being that proper cleanup requires cooperation from
+  * the underlying system and the entire class hierarchy. That said, releasing
+  * resources is important in many cases, and is not too difficult if the rules
+  * listed below are followed by classes deriving from `asynPortDriver`:
+  *
+  * 1. Pass the `ASYN_DESTRUCTIBLE` flag to the constructor of `asynPortDriver`.
+  *    This will ensure `asynManager` destroys your driver on process exit by
+  *    first calling `shutdown()`, then deleting.
+  *
+  * 2. To release resources that are private to your derived class, do so in the
+  *    destructor. Remember, however, that no code from classes deriving from
+  *    yours may run at this point, because the object is already partly
+  *    destroyed. For example, virtual functions will behave as if not
+  *    overriden, and threads spawned by derived classes must already be
+  *    stopped.
+  *
+  * 3. To use functionality that requires an intact object, release resources by
+  *    overriding the `shutdown()` function. A possible example is stopping data
+  *    acquisition, which may involve functionality implemented in a derived
+  *    class. On process exit, `shutdown()` will be called before the
+  *    destructors are executed.
+  *
+  * 4. Your overriden `shutdown()` must call the base class implementation.
+  *
+  * To implement the above rules, you can use the following template:
+  *
+  *     class myDriver : public baseDriver {
+  *     public:
+  *         myDriver(const char *portName, ..., int asynFlags, ...) :
+  *               baseDriver(portName, ..., asynFlags, ...) {
+  *             // Your driver code; don't change the flags
+  *         }
+  *
+  *         void shutdown() {
+  *             // Stop threads, use virtual functions
+  *             baseDriver::shutdown();
+  *         }
+  *
+  *         ~myDriver() {
+  *             if (needsShutdown()) {
+  *                 // Not strictly needed, but allows your driver to be deleted
+  *                 // without calling shutdown() first, e.g. in tests.
+  *                 shutdown();
+  *             }
+  *             // Deallocate resources
+  *         }
+  *     };
+  */
 class ASYN_API asynPortDriver {
 public:
     asynPortDriver(asynParamSet* paramSet,

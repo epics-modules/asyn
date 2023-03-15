@@ -425,7 +425,7 @@ Queuing services
 Basic Driver services
 .....................
   
-  Methods: registerPort, registerInterface
+  Methods: registerPort, registerInterface, shutdown
 
   registerPort is called by a portDriver. registerInterface is called by a portDriver
   or an interposeInterface.
@@ -433,6 +433,12 @@ Basic Driver services
   Each port driver provides a configuration command that is executed for each port
   instance. The configuration command performs port specific initializations, calls
   registerPort, and registerInterface for each interface it implements.
+
+  When calling registerPort, the driver can declare that it is destructible. For
+  such a port, asynManager will allow the shutdown function to be called on the
+  port. Moreover, it will call this function itself on process exit. This allows
+  the driver to react and perform any cleanup necessary, such as stopping
+  internal threads and releasing device resources.
 
 Attribute Retrieval
 ...................
@@ -795,6 +801,28 @@ thread is pictured above in Figure 2, and explained below in the following steps
 #. processCallback returns to queueRequest, which unlocks the port and returns to
    device support, which returns to record support, which completes record processing.
 
+Shutdown
+~~~~~~~~
+
+asyn provides the low-level driver the opportunity to clean up when the port
+goes out of use, which happens when the shutdown function is called, or on
+process exit. A driver that wants to support this needs to:
+
+- pass the ASYN_DESTRUCTIBLE flag to registerPort;
+- call exceptionCallbackAdd to register a handler for asynExceptionShutdown;
+- perform any cleanup necessary in the exception handler.
+
+The above steps are implemented by the asynPortDriver C++ base class; see the
+`asynPortDriver <asynPortDriver.html>`__ documentation for more information on
+how to use its API. Its exception handler runs the destructors of the low-level
+driver.
+
+When a port is registered with ASYN_DESTRUCTIBLE, a destructor function is
+registered to run on process exit. This destructor is equivalent to the shutdown
+function of asynManager. It disables the port and marks it as defunct so it
+cannot be re-enabled. After removing all references to the low-level driver,
+asynExceptionShutdown is emitted.
+
 asynDriver Structures and Interfaces
 ------------------------------------
 
@@ -852,7 +880,7 @@ Defines the exceptions for method exceptionOccurred
   typedef enum {
     asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
     asynExceptionTraceMask,asynExceptionTraceIOMask,asynExceptionTraceInfoMask,
-    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
+    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize,asynExceptionShutdown
   } asynException;
 
 .. list-table::  asynException
@@ -873,7 +901,9 @@ Defines the exceptions for method exceptionOccurred
   * - asynExceptionTraceFile 
     - The trace file for the port or device has changed.  
   * - asynExceptionTraceIOTruncateSize 
-    - The traceIOTruncateSize for the port or device has changed. 
+    - The traceIOTruncateSize for the port or device has changed.
+  * - asynExceptionShutdown
+    - The port has been shut down and the driver may clean up.
 
 asynQueuePriority
 ~~~~~~~~~~~~~~~~~  
@@ -1018,6 +1048,7 @@ This is the main interface for communicating with asynDriver.
   /*registerPort attributes*/
   #define ASYN_MULTIDEVICE  0x0001
   #define ASYN_CANBLOCK     0x0002
+  #define ASYN_DESTRUCTIBLE 0x0004
   
   /*standard values for asynUser.reason*/
   #define ASYN_REASON_SIGNAL -1
@@ -1080,6 +1111,7 @@ This is the main interface for communicating with asynDriver.
                                 asynInterface *pasynInterface,
                                 asynInterface **ppPrev);
       asynStatus (*enable)(asynUser *pasynUser,int yesNo);
+      asynStatus (*shutdown)(asynUser *pasynUser);
       asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
       asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
       asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
@@ -1258,17 +1290,21 @@ This is the main interface for communicating with asynDriver.
   * - getPortName 
     - \*pportName is set equal to the name of the port to which the user is connected.
   * - registerPort 
-    - This method is called by drivers. A call is made for each port instance. Attributes
-      is a set of bits. Currently two bits are defined: ASYN_MULTIDEVICE and ASYN_CANBLOCK.
-      The driver must specify these properly. autoConnect, which is (0,1) for (no,yes),
-      provides the initial value for the port and all devices connected to the port. priority
-      and stacksize are only relevant if ASYN_CANBLOCK=1, in which case asynManager uses
-      these values when it creates the port thread with epicsThreadCreate(). If priority
-      is 0, then the default value epicsThreadPriorityMedium will be assigned. If stackSize
-      is 0, the default value of epicsThreadGetStackSize(epicsThreadStackMedium) will
-      be assigned. The portName argument specifies the name by which the upper levels
-      of the asyn code will refer to this communication interface instance. The registerPort
-      method makes an internal copy of the string to which the name argument points.
+    - This method is called by drivers. A call is made for each port instance.
+      Attributes is a set of bits. Currently three bits are defined:
+      ASYN_MULTIDEVICE, ASYN_CANBLOCK, and ASYN_DESTRUCTIBLE. The driver must
+      specify these properly; see the Theory of Operation section. autoConnect,
+      which is (0,1) for (no,yes), provides the initial value for the port and
+      all devices connected to the port. priority and stacksize are only
+      relevant if ASYN_CANBLOCK=1, in which case asynManager uses these values
+      when it creates the port thread with epicsThreadCreate(). If priority is
+      0, then the default value epicsThreadPriorityMedium will be assigned. If
+      stackSize is 0, the default value of
+      epicsThreadGetStackSize(epicsThreadStackMedium) will be assigned. The
+      portName argument specifies the name by which the upper levels of the asyn
+      code will refer to this communication interface instance. The registerPort
+      method makes an internal copy of the string to which the name argument
+      points.
   * - registerInterface 
     - This is called by port drivers for each supported interface. This method *does
       not* make a copy of the asynInterface to which the pasynInterface argument
@@ -1297,7 +1333,10 @@ This is the main interface for communicating with asynDriver.
       that are unknown to the low level driver can be implemented.
   * - enable 
     - If enable is set yes, then queueRequests are not dequeued unless their queue timeout
-      occurs. 
+      occurs.
+  * - shutdown
+    - The port is marked as defunct, preventing its use. It cannot be re-enabled.
+      The underlying driver is notified and may be destroyed.
   * - autoConnect 
     - If autoConnect is true and the port or device is not connected when a user callback
       is scheduled to be called, asynManager calls pasynCommon->connect. See the discussion
