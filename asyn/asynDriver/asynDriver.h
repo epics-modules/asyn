@@ -25,7 +25,7 @@
  * These macros are always numeric */
 #define ASYN_VERSION       4
 #define ASYN_REVISION     44
-#define ASYN_MODIFICATION  1
+#define ASYN_MODIFICATION  2
 
 #ifndef EPICS_VERSION_INT
 #define VERSION_INT(V,R,M,P) ( ((V)<<24) | ((R)<<16) | ((M)<<8) | (P))
