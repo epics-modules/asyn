@@ -1,5 +1,10 @@
 # asynDriver: Release Notes
 
+## Release 4-44-2 (March 28, 2023)
+- devEpics
+  - Fix additional problems with waveform, aai, and aao records due to missing initialization of private member variables
+    in devAsynXXXArray.cpp.
+
 ## Release 4-44-1 (March 15, 2023)
 - devEpics
   - Fix problem with waveform out and aao records due to missing initialization of a private member variable
