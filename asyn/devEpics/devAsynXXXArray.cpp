@@ -97,12 +97,19 @@ public:
     devAsynXXXArray(dbCommon *pRecord, DBLINK *plink, int signedType, int unsignedType, bool isOutput, const char *interfaceType,
                     userCallback qrCallback, INTERRUPT interruptCallback):
         pRecord_((RECORD_TYPE*) pRecord),
+        lastStatus_(asynSuccess),
         isOutput_(isOutput),
+        ringBuffer_(0),
+        ringHead_(0),
+        ringTail_(0),
         ringSize_(0),
+        ringBufferOverflows_(0),
+        gotValue_(0),
         interruptCallback_(interruptCallback),
         interfaceType_(epicsStrDup(interfaceType)),
         signedType_(signedType),
-        unsignedType_(unsignedType)
+        unsignedType_(unsignedType),
+        previousQueueRequestStatus_(asynSuccess)
     {
         int status;
         asynInterface *pasynInterface;
