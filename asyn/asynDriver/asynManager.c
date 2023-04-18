@@ -2238,14 +2238,18 @@ static asynStatus shutdown(asynUser *pasynUser)
         return asynError;
     }
 
-    // Disabling the port short-circuits queueRequest(), preventing usage of
-    // external asynUser instances that will shortly become dangling references.
-    // It is marked defunct so it cannot be re-enabled.
+    /*
+     * Disabling the port short-circuits queueRequest(), preventing usage of
+     * external asynUser instances that will shortly become dangling references.
+     * It is marked defunct so it cannot be re-enabled.
+     */
     pdpCommon->enabled = FALSE;
     pdpCommon->defunct = TRUE;
 
-    // Nullifying the private pointers to the driver enables trapping on
-    // erroneous accesses, making finding bugs easier.
+    /*
+     * Nullifying the private pointers to the driver enables trapping on
+     * erroneous accesses, making finding bugs easier.
+     */
     pport->pasynLockPortNotify = NULL;
     pport->lockPortNotifyPvt = NULL;
     pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
@@ -2255,8 +2259,10 @@ static asynStatus shutdown(asynUser *pasynUser)
         pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
     }
 
-    // Actual destruction of the driver is delegated to the driver itself, which
-    // shall implement an exception handler.
+    /*
+     * Actual destruction of the driver is delegated to the driver itself, which
+     * shall implement an exception handler.
+     */
     exceptionOccurred(pasynUser, asynExceptionShutdown);
 
     return asynSuccess;
