@@ -620,14 +620,7 @@ static const iocshArg asynSetTraceMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceMaskArgs[] = {
     &asynSetTraceMaskArg0,&asynSetTraceMaskArg1,&asynSetTraceMaskArg2};
-static const iocshFuncDef asynSetTraceMaskDef =
-    {"asynSetTraceMask", 3, asynSetTraceMaskArgs
-#ifdef IOCSHFUNCDEF_HAS_USAGE
-     ,
-#else
-    };
 static const char asynSetTraceMaskUsage[] =
-#endif
      "Set logging level bit mask, either as a number,"
      "  or since asyn R4-35 a combination of names.\n"
      "  mask bits\n"
@@ -640,13 +633,15 @@ static const char asynSetTraceMaskUsage[] =
      "\n"
      "  eg. the following are equivalent\n"
      "    asynSetTraceMask MYPORT -1 0x21\n"
-     "    asynSetTraceMask MYPORT -1 \"WARNING+ERROR\"\n"
+     "    asynSetTraceMask MYPORT -1 \"WARNING+ERROR\"\n";
+static const iocshFuncDef asynSetTraceMaskDef = {
+    "asynSetTraceMask",
+    3,
+    asynSetTraceMaskArgs
 #ifdef IOCSHFUNCDEF_HAS_USAGE
-    };
-#define asynSetTraceMaskUsage asynSetTraceMaskDef.usage
-#else
-    ;
+    , asynSetTraceMaskUsage
 #endif
+};
 ASYN_API int
  asynSetTraceMask(const char *portName,int addr,int mask)
 {
@@ -715,14 +710,7 @@ static const iocshArg asynSetTraceIOMaskArg1 = {"addr", iocshArgInt};
 static const iocshArg asynSetTraceIOMaskArg2 = {"mask", iocshArgString};
 static const iocshArg *const asynSetTraceIOMaskArgs[] = {
     &asynSetTraceIOMaskArg0,&asynSetTraceIOMaskArg1,&asynSetTraceIOMaskArg2};
-static const iocshFuncDef asynSetTraceIOMaskDef =
-    {"asynSetTraceIOMask", 3, asynSetTraceIOMaskArgs
-#ifdef IOCSHFUNCDEF_HAS_USAGE
-     ,
-#else
-    };
 static const char asynSetTraceIOMaskUsage[] =
-#endif
     "Set logging I/O print formatting bit mask, either as a number,\n"
     "  or since asyn R4-35 a combination of names.\n"
     "  mask bits\n"
@@ -732,13 +720,16 @@ static const char asynSetTraceIOMaskUsage[] =
     "\n"
     "  eg. the following are equivalent\n"
     "    asynSetTraceIOMask MYPORT -1 0x6\n"
-    "    asynSetTraceIOMask MYPORT -1 \"ESCAPE+HEX\"\n"
+    "    asynSetTraceIOMask MYPORT -1 \"ESCAPE+HEX\"\n";
+static const iocshFuncDef asynSetTraceIOMaskDef = {
+    "asynSetTraceIOMask",
+    3,
+    asynSetTraceIOMaskArgs
 #ifdef IOCSHFUNCDEF_HAS_USAGE
-    };
-#define asynSetTraceIOMaskUsage asynSetTraceIOMaskDef.usage
-#else
-    ;
+    , asynSetTraceIOMaskUsage
 #endif
+};
+
 ASYN_API int
  asynSetTraceIOMask(const char *portName,int addr,int mask)
 {
@@ -1317,22 +1308,17 @@ static void asynSetQueueLockPortTimeoutCall(const iocshArgBuf * args) {
 
 static const iocshArg asynShutdownPortArg0 = {"portName", iocshArgString};
 static const iocshArg *const asynShutdownPortArgs[] = {&asynShutdownPortArg0};
-static const iocshFuncDef asynShutdownPortDef =
-    {"asynShutdownPort", 1, asynShutdownPortArgs
-#ifdef IOCSHFUNCDEF_HAS_USAGE
-     ,
-#else
-    };
 static const char asynShutdownPortUsage[] =
-#endif
     "Permanently disables the port and destroys the port driver,\n"
-    "releasing its resources.\n"
+    "releasing its resources.\n";
+static const iocshFuncDef asynShutdownPortDef = {
+    "asynShutdownPort",
+    1,
+    asynShutdownPortArgs
 #ifdef IOCSHFUNCDEF_HAS_USAGE
-    };
-#define asynShutdownPortUsage asynShutdownPortDef.usage
-#else
-    ;
+    , asynShutdownPortUsage
 #endif
+};
 ASYN_API int
  asynShutdownPort(const char *portName)
 {
