@@ -428,7 +428,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         return status;
       }
     }
-    if (maxchars <= 0) {
+    if (maxchars == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                   "%d:%d maxchars %d. Why <=0?\n",ftdi->FTDIvendor, ftdi->FTDIproduct,(int)maxchars);
         return asynError;
@@ -447,9 +447,6 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
       }
     }
 
-    if (thisRead < 0){
-        thisRead = 0;
-    }
     *nbytesTransfered = thisRead;
 
     /* If there is room add a null byte */

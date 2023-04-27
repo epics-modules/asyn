@@ -524,7 +524,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
                                 "%s disconnected:", tty->serialDeviceName);
         return asynError;
     }
-    if (maxchars <= 0) {
+    if (maxchars == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s maxchars %d Why <=0?",tty->serialDeviceName,(int)maxchars);
         return asynError;
