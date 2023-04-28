@@ -607,11 +607,11 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   if (rc[3] > 0){
     // Since we write also the address byte byteswritten = sz+1
     *bytesWritten = (size_t)(sz+1);
-    debugPrint("%s : %d bytes written err=%d: ", functionName, *bytesWritten, err);
+    debugPrint("%s : %lu bytes written err=%d: ", functionName, *bytesWritten, err);
     if( err == FTDIDriverError ) debugPrint("FTDIDriverError\n");
     else                         debugPrint("FTDIDriverSUCCESS\n");
   } else {
-    debugPrint("FTDI write error: %d (%s)\n", rc, ftdi_get_error_string(ftdi_));
+    debugPrint("FTDI write error: %lu (%s)\n", rc, ftdi_get_error_string(ftdi_));
     *bytesWritten = 0;
     return FTDIDriverError;
   }
@@ -641,7 +641,7 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
     return FTDIDriverError;
   }
 
-  debugPrint("%s : Reading: bufferSize=%d, timeout=%d\n", functionName, bufferSize, timeout);
+  debugPrint("%s : Reading: bufferSize=%lu, timeout=%d\n", functionName, bufferSize, timeout);
 
   timeval stime;
   timeval ctime;

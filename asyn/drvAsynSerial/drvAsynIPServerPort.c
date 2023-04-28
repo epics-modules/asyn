@@ -416,7 +416,7 @@ int createServerSocket(ttyController_t *tty) {
             srvaddrtxt[sizeof(srvaddrtxt) - 1] = '\0';
             printf("serverAddr: %s\n", srvaddrtxt);
         }
-        printf("serverPort: %i\n", tty->portNumber);
+        printf("serverPort: %u\n", tty->portNumber);
         if (tty->socketType == SOCK_DGRAM) {
             /* For Port reuse, multiple IOCs */
             epicsSocketEnableAddressUseForDatagramFanout(tty->fd);

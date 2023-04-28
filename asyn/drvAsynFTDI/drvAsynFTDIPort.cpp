@@ -520,7 +520,7 @@ drvAsynFTDIPortConfigure(const char *portName,
     int SPI = ((mode & UART_SPI_BIT)==UART_SPI_BIT)? 1:0;
 
     printf("drvAsynFTDIPortConfigure: latency=%d\n", latency);
-    printf("drvAsynFTDIPortConfigure: priority=%d\n", priority);
+    printf("drvAsynFTDIPortConfigure: priority=%u\n", priority);
     printf("drvAsynFTDIPortConfigure: noAutoconnect=%d\n", noAutoConnect);
     printf("drvAsynFTDIPortConfigure: noProcessEos=%d\n", noProcessEos);
     printf("drvAsynFTDIPortConfigure: mode="); SPI ? printf("SPI\n") : printf("UART\n");

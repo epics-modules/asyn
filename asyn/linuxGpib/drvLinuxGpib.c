@@ -570,7 +570,7 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
         ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,1);
 
         if(DEBUG)
-            printf("Seting EOS: %u\n",*eos);
+            printf("Seting EOS: %d\n", *eos);
 
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;
