@@ -45,7 +45,14 @@ void debugPrint(...){}
  * @param vendor - Vendor ID
  * @param product - Product ID
  */
-FTDIDriver::FTDIDriver(int mode):spi(mode)
+FTDIDriver::FTDIDriver(int mode)
+    : ftdi_(nullptr)
+    , spi(mode)
+    , spiInit(0)
+    , buf({0})
+    , pbuf(nullptr)
+    , pinState(0)
+    , pinDirection(0)
 {
   static const char *functionName = "FTDIDriver::FTDIDriver";
   debugPrint("%s : Method called - ", functionName);
@@ -66,8 +73,6 @@ FTDIDriver::FTDIDriver(int mode):spi(mode)
   parity_ = NONE;
   break_ = BREAK_OFF;
   flowctrl_ = SIO_DISABLE_FLOW_CTRL;
-  spiInit = 0; // Status whether init done
-  memset(buf, 0, sizeof(buf));
 }
 
 FTDIDriverStatus FTDIDriver::initSPI() {
