@@ -50,7 +50,6 @@ FTDIDriver::FTDIDriver(int mode)
     , spi(mode)
     , spiInit(0)
     , buf({0})
-    , pbuf(nullptr)
     , pinState(0)
     , pinDirection(0)
 {
@@ -93,7 +92,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   // MASTER RESET
   pinState = Pin::CS|Pin::SYNCIO|Pin::RESET;
   pinDirection = Pin::SK|Pin::DO|Pin::CS|Pin::SYNCIO|Pin::RESET;
-  pbuf = (unsigned char *)&buf[0];
+  unsigned char *pbuf = (unsigned char *)&buf[0];
   *(pbuf + i++) = TCK_DIVISOR;     // opcode: set clk divisor
   *(pbuf + i++) = 0x05;            // argument: low bit. 60 MHz / (5+1) = 1 MHz
   *(pbuf + i++) = 0x00;            // argument: high bit.
@@ -579,7 +578,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   if( spi ) {
     if( !spiInit ) initSPI();
     i = 0;
-    pbuf = (unsigned char *)&buf[0];
+    unsigned char *pbuf = (unsigned char *)&buf[0];
 
     memcpy((pbuf+i), buffer, bufferSize);
     i+= bufferSize;
