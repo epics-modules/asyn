@@ -29,6 +29,7 @@
 #include <iocsh.h>
 #include <callback.h>
 #include <cantProceed.h>
+#include <errlog.h>
 #include <epicsTime.h>
 #include <devLib.h>
 #include <taskwd.h>
