@@ -200,6 +200,12 @@ getOption(void *drvPvt, asynUser *pasynUser,
         l = epicsSnprintf(val, valSize, "%c",  (tty->termios.c_iflag & IXOFF) ? 'Y' : 'N');
 #endif
     }
+#ifndef vxWorks
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* request serial line break status */
+        l = epicsSnprintf(val, valSize, "off");
+    }
+#endif
 #ifdef ASYN_RS485_SUPPORTED
     else if (epicsStrCaseCmp(key, "rs485_enable") == 0) {
         l = epicsSnprintf(val, valSize, "%c",  (tty->rs485.flags & SER_RS485_ENABLED) ? 'Y' : 'N');
@@ -497,6 +503,30 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
         }
 #endif
     }
+#ifndef vxWorks
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* signal serial line break */
+        unsigned break_len;
+        if (*val == '\0' || epicsStrCaseCmp(val, "on")  == 0) break_len = 0;
+        else if (epicsStrCaseCmp(val, "off") == 0) return asynSuccess;
+        else {
+            if (sscanf(val, "%u", &break_len) != 1) {
+                epicsSnprintf(pasynUser->errorMessage,
+                              pasynUser->errorMessageSize, "Bad number");
+                return asynError;
+            }
+        }
+        tcdrain(tty->fd); /* ensure all data transmitted prior to break */
+        if (tcsendbreak(tty->fd, break_len) < 0) {
+            epicsSnprintf(pasynUser->errorMessage,
+                          pasynUser->errorMessageSize,
+                          "%s tcsendbreak failed: %s",
+                          tty->serialDeviceName, strerror(errno));
+            return asynError;
+        }
+        return asynSuccess;
+    }
+#endif
 #ifdef ASYN_RS485_SUPPORTED
     else if (epicsStrCaseCmp(key, "rs485_enable") == 0) {
         if (epicsStrCaseCmp(val, "Y") == 0) {
