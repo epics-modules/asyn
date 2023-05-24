@@ -1,0 +1,1879 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2023-05-24 11:05:12 by epics-->
+<display version="2.0.0">
+  <name>test</name>
+  <x>49</x>
+  <y>26</y>
+  <width>874</width>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_visible>false</grid_visible>
+  <grid_step_x>5</grid_step_x>
+  <widget type="group" version="2.0.0">
+    <name>composite #6</name>
+    <y>275</y>
+    <width>850</width>
+    <height>106</height>
+    <style>3</style>
+    <transparent>true</transparent>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #9</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.ENBL</pv_name>
+      <text>enable</text>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #12</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.ENBL</pv_name>
+      <text>disable</text>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #15</name>
+      <pv_name>asynRecord_PMA_A-1.ENBL</pv_name>
+      <x>60</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #19</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.ENBL</pv_name>
+      <text>enable</text>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #22</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.ENBL</pv_name>
+      <text>disable</text>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #25</name>
+      <pv_name>asynRecord_PMA_A0.ENBL</pv_name>
+      <x>60</x>
+      <y>42</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #29</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.ENBL</pv_name>
+      <text>enable</text>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #32</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.ENBL</pv_name>
+      <text>disable</text>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #35</name>
+      <pv_name>asynRecord_PMA_A1.ENBL</pv_name>
+      <x>60</x>
+      <y>82</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #39</name>
+      <text>testClient_PMA_A-1</text>
+      <x>400</x>
+      <y>14</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #42</name>
+      <text>testClient_PMA_A0</text>
+      <x>400</x>
+      <y>34</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #45</name>
+      <text>testClient_PMA_A1</text>
+      <x>400</x>
+      <y>74</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #48</name>
+      <pv_name>testClient_PMA_A0_calc.SCAN</pv_name>
+      <x>550</x>
+      <y>34</y>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #51</name>
+      <pv_name>testClient_PMA_A1_calc.SCAN</pv_name>
+      <x>550</x>
+      <y>74</y>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #54</name>
+      <pv_name>testClient_PMA_A0_so</pv_name>
+      <x>650</x>
+      <y>34</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #58</name>
+      <pv_name>testClient_PMA_A1_so</pv_name>
+      <x>650</x>
+      <y>74</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #62</name>
+      <pv_name>testClient_PMA_A0_si</pv_name>
+      <x>750</x>
+      <y>34</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #66</name>
+      <pv_name>testClient_PMA_A1_si</pv_name>
+      <x>750</x>
+      <y>74</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #70</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #73</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #76</name>
+      <pv_name>asynRecord_PMA_A-1.CNCT</pv_name>
+      <x>320</x>
+      <y>8</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #80</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #83</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #86</name>
+      <pv_name>asynRecord_PMA_A0.CNCT</pv_name>
+      <x>320</x>
+      <y>42</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #90</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #93</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #96</name>
+      <pv_name>asynRecord_PMA_A1.CNCT</pv_name>
+      <x>320</x>
+      <y>82</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #100</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #103</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A-1.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A-1.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #106</name>
+      <pv_name>asynRecord_PMA_A-1.AUCT</pv_name>
+      <x>190</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #110</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #113</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A0.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A0.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #116</name>
+      <pv_name>asynRecord_PMA_A0.AUCT</pv_name>
+      <x>190</x>
+      <y>42</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #120</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #123</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PMA_A1.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PMA_A1.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #126</name>
+      <pv_name>asynRecord_PMA_A1.AUCT</pv_name>
+      <x>190</x>
+      <y>82</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>composite #130</name>
+    <y>30</y>
+    <width>850</width>
+    <height>32</height>
+    <style>3</style>
+    <transparent>true</transparent>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #133</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.ENBL</pv_name>
+      <text>enable</text>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #136</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.ENBL</pv_name>
+      <text>disable</text>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #139</name>
+      <pv_name>asynRecord_PA_A0.ENBL</pv_name>
+      <x>60</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #143</name>
+      <text>testClient_PA_A0</text>
+      <x>400</x>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #146</name>
+      <pv_name>testClient_PA_A0_calc.SCAN</pv_name>
+      <x>550</x>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #149</name>
+      <pv_name>testClient_PA_A0_so</pv_name>
+      <x>650</x>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #153</name>
+      <pv_name>testClient_PA_A0_si</pv_name>
+      <x>750</x>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #157</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #160</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #163</name>
+      <pv_name>asynRecord_PA_A0.CNCT</pv_name>
+      <x>320</x>
+      <y>8</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #167</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #170</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PA_A0.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PA_A0.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #173</name>
+      <pv_name>asynRecord_PA_A0.AUCT</pv_name>
+      <x>190</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #177</name>
+    <text>A is single device port</text>
+    <x>250</x>
+    <width>350</width>
+    <height>22</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #180</name>
+    <text>MA is two device port connected to A</text>
+    <x>200</x>
+    <y>232</y>
+    <width>450</width>
+    <height>22</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>composite #183</name>
+    <y>100</y>
+    <width>850</width>
+    <height>106</height>
+    <style>3</style>
+    <transparent>true</transparent>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #186</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.ENBL</pv_name>
+      <text>enable</text>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #189</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.ENBL</pv_name>
+      <text>disable</text>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #192</name>
+      <pv_name>asynRecord_PB_A-1.ENBL</pv_name>
+      <x>60</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #196</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.ENBL</pv_name>
+      <text>enable</text>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #199</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.ENBL</pv_name>
+      <text>disable</text>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #202</name>
+      <pv_name>asynRecord_PB_A0.ENBL</pv_name>
+      <x>60</x>
+      <y>42</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #206</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.ENBL</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.ENBL</pv_name>
+      <text>enable</text>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #209</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.ENBL</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.ENBL</pv_name>
+      <text>disable</text>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #212</name>
+      <pv_name>asynRecord_PB_A1.ENBL</pv_name>
+      <x>60</x>
+      <y>82</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #216</name>
+      <text>testClient_PB_A-1</text>
+      <x>400</x>
+      <y>14</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #219</name>
+      <text>testClient_PB_A0</text>
+      <x>400</x>
+      <y>34</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #222</name>
+      <text>testClient_PB_A1</text>
+      <x>400</x>
+      <y>74</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #225</name>
+      <pv_name>testClient_PB_A0_calc.SCAN</pv_name>
+      <x>550</x>
+      <y>34</y>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #228</name>
+      <pv_name>testClient_PB_A1_calc.SCAN</pv_name>
+      <x>550</x>
+      <y>74</y>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #231</name>
+      <pv_name>testClient_PB_A0_so</pv_name>
+      <x>650</x>
+      <y>34</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #235</name>
+      <pv_name>testClient_PB_A1_so</pv_name>
+      <x>650</x>
+      <y>74</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #239</name>
+      <pv_name>testClient_PB_A0_si</pv_name>
+      <x>750</x>
+      <y>34</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #243</name>
+      <pv_name>testClient_PB_A1_si</pv_name>
+      <x>750</x>
+      <y>74</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #247</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #250</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #253</name>
+      <pv_name>asynRecord_PB_A-1.CNCT</pv_name>
+      <x>320</x>
+      <y>8</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #257</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #260</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #263</name>
+      <pv_name>asynRecord_PB_A0.CNCT</pv_name>
+      <x>320</x>
+      <y>42</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #267</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.CNCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.CNCT</pv_name>
+      <text>connect</text>
+      <x>260</x>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #270</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.CNCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.CNCT</pv_name>
+      <text>disconnect</text>
+      <x>260</x>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #273</name>
+      <pv_name>asynRecord_PB_A1.CNCT</pv_name>
+      <x>320</x>
+      <y>82</y>
+      <width>80</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #277</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #280</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A-1.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A-1.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>16</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #283</name>
+      <pv_name>asynRecord_PB_A-1.AUCT</pv_name>
+      <x>190</x>
+      <y>8</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #287</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <y>34</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #290</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A0.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A0.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>50</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #293</name>
+      <pv_name>asynRecord_PB_A0.AUCT</pv_name>
+      <x>190</x>
+      <y>42</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #297</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.AUCT</pv_name>
+          <value>1</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.AUCT</pv_name>
+      <text>auto</text>
+      <x>130</x>
+      <y>74</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="action_button" version="3.0.0">
+      <name>message button #300</name>
+      <actions>
+        <action type="write_pv">
+          <pv_name>asynRecord_PB_A1.AUCT</pv_name>
+          <value>0</value>
+          <description>Write</description>
+        </action>
+      </actions>
+      <pv_name>asynRecord_PB_A1.AUCT</pv_name>
+      <text>noAuto</text>
+      <x>130</x>
+      <y>90</y>
+      <width>60</width>
+      <height>16</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #303</name>
+      <pv_name>asynRecord_PB_A1.AUCT</pv_name>
+      <x>190</x>
+      <y>82</y>
+      <width>60</width>
+      <height>16</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #307</name>
+    <text>B is two device port</text>
+    <x>250</x>
+    <y>73</y>
+    <width>350</width>
+    <height>22</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #310</name>
+    <text>blockProcessCallback test</text>
+    <x>250</x>
+    <y>420</y>
+    <width>350</width>
+    <height>22</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="group" version="2.0.0">
+    <name>composite #313</name>
+    <x>200</x>
+    <y>460</y>
+    <width>450</width>
+    <height>48</height>
+    <style>3</style>
+    <transparent>true</transparent>
+    <widget type="label" version="2.0.0">
+      <name>text #316</name>
+      <text>testBlock_PB_A1</text>
+      <y>30</y>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #319</name>
+      <pv_name>testBlock_PB_A1_calc.SCAN</pv_name>
+      <x>150</x>
+      <y>30</y>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #322</name>
+      <pv_name>testBlock_PB_A1_so</pv_name>
+      <x>250</x>
+      <y>30</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #326</name>
+      <pv_name>testBlock_PB_A1_si</pv_name>
+      <x>350</x>
+      <y>30</y>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="label" version="2.0.0">
+      <name>text #330</name>
+      <text>testBlock_PB_A0</text>
+      <width>150</width>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <horizontal_alignment>2</horizontal_alignment>
+    </widget>
+    <widget type="combo" version="2.0.0">
+      <name>menu #333</name>
+      <pv_name>testBlock_PB_A0_calc.SCAN</pv_name>
+      <x>150</x>
+      <height>18</height>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <border_alarm_sensitive>false</border_alarm_sensitive>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #336</name>
+      <pv_name>testBlock_PB_A0_so</pv_name>
+      <x>250</x>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+    <widget type="textupdate" version="2.0.0">
+      <name>text update #340</name>
+      <pv_name>testBlock_PB_A0_si</pv_name>
+      <x>350</x>
+      <height>18</height>
+      <font>
+        <font family="Liberation Sans" style="REGULAR" size="16.0">
+        </font>
+      </font>
+      <background_color>
+        <color red="187" green="187" blue="187">
+        </color>
+      </background_color>
+      <format>6</format>
+      <show_units>false</show_units>
+      <horizontal_alignment>1</horizontal_alignment>
+    </widget>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #344</name>
+    <text>testBlockAll_PB_A1</text>
+    <x>200</x>
+    <y>548</y>
+    <width>150</width>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="combo" version="2.0.0">
+    <name>menu #347</name>
+    <pv_name>testBlockAll_PB_A1_calc.SCAN</pv_name>
+    <x>350</x>
+    <y>548</y>
+    <height>18</height>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>text update #350</name>
+    <pv_name>testBlockAll_PB_A1_so</pv_name>
+    <x>450</x>
+    <y>548</y>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <format>6</format>
+    <show_units>false</show_units>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>text update #354</name>
+    <pv_name>testBlockAll_PB_A1_si</pv_name>
+    <x>550</x>
+    <y>548</y>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <format>6</format>
+    <show_units>false</show_units>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #358</name>
+    <text>testBlockAll_PB_A0</text>
+    <x>200</x>
+    <y>518</y>
+    <width>150</width>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <horizontal_alignment>2</horizontal_alignment>
+  </widget>
+  <widget type="combo" version="2.0.0">
+    <name>menu #361</name>
+    <pv_name>testBlockAll_PB_A0_calc.SCAN</pv_name>
+    <x>350</x>
+    <y>518</y>
+    <height>18</height>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <border_alarm_sensitive>false</border_alarm_sensitive>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>text update #364</name>
+    <pv_name>testBlockAll_PB_A0_so</pv_name>
+    <x>450</x>
+    <y>518</y>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <format>6</format>
+    <show_units>false</show_units>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+  <widget type="textupdate" version="2.0.0">
+    <name>text update #368</name>
+    <pv_name>testBlockAll_PB_A0_si</pv_name>
+    <x>550</x>
+    <y>518</y>
+    <height>18</height>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <background_color>
+      <color red="187" green="187" blue="187">
+      </color>
+    </background_color>
+    <format>6</format>
+    <show_units>false</show_units>
+    <horizontal_alignment>1</horizontal_alignment>
+  </widget>
+</display>
