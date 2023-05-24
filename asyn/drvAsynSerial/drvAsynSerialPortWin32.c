@@ -61,6 +61,7 @@ typedef struct {
     double             writeTimeout;
     epicsTimerId       timer;
     volatile int       timeoutFlag;
+    unsigned           break_active;
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
@@ -142,6 +143,10 @@ getOption(void *drvPvt, asynUser *pasynUser,
     }
     else if (epicsStrCaseCmp(key, "ixoff") == 0) {
         l = epicsSnprintf(val, valSize, "%c",  (tty->commConfig.dcb.fInX == TRUE) ? 'Y' : 'N');
+    }
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* request serial line break status */
+        l = epicsSnprintf(val, valSize, "%s",  tty->break_active ? "on" : "off");
     }
     else {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -294,6 +299,44 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
             return asynError;
         }
     }
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* signal serial line break */
+        unsigned on, off, len, break_len;
+        on = off = len = break_len = 0;
+        if      (epicsStrCaseCmp(val, "on")  == 0) /* switch break condition on */
+            on = tty->break_active ? 0 : 1;
+        else if (epicsStrCaseCmp(val, "off") == 0) /* switch break condition off */
+            off = tty->break_active ? 1 : 0;
+        else {
+            /* switch break condition on for a period of time and then off */
+            if (*val != '\0' && sscanf(val, "%u", &break_len) != 1) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
+                return asynError;
+            }
+            on = tty->break_active ? 0 : 1;
+            off = len = 1;
+        }
+        if (on) {
+            FlushFileBuffers(tty->commHandle); /* ensure all data transmitted prior to break */
+            if (SetCommBreak(tty->commHandle) == 0) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
+                return asynError;
+            }
+            tty->break_active = 1;
+        }
+        if (len) Sleep(break_len > 0 ? break_len : 250); /* wait while break is being asserted */
+        if (off) {
+            if (ClearCommBreak(tty->commHandle) == 0) {
+                epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
+              return asynError;
+            }
+            tty->break_active = 0;
+        }
+        return asynSuccess;
+    }
     else if (epicsStrCaseCmp(key, "") != 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                                 "Unsupported key \"%s\"", key);
@@ -399,6 +442,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
     }
 
     /* setOption(tty, tty->pasynUser, "baud", "9600"); */
+    ClearCommBreak(tty->commHandle); /* in case there is one leftover from an ioc termination */
 
     /*
      * Turn off non-blocking mode

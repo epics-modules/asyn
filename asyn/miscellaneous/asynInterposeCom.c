@@ -19,6 +19,7 @@
 #include <epicsStdio.h>
 #include <epicsString.h>
 #include <epicsTypes.h>
+#include <epicsThread.h>
 
 #include "asynDriver.h"
 #include "asynOctet.h"
@@ -50,8 +51,11 @@
 #define CPO_SET_STOPSIZE         4   /* Comand port option set stop size */
 #define CPO_SET_CONTROL          5   /* Comand port option set control mode */
 # define CPO_CONTROL_NOFLOW        1   /* No flow control */
-# define CPO_CONTROL_IXON       2   /* XON/XOFF Flow control*/
+# define CPO_CONTROL_IXON          2   /* XON/XOFF Flow control*/
 # define CPO_CONTROL_HWFLOW        3   /* Hardware flow control */
+# define CPO_CONTROL_BREAK         4   /* request break state */
+# define CPO_CONTROL_BREAK_ON      5   /* break state ON */
+# define CPO_CONTROL_BREAK_OFF     6   /* break state OFF */
 #define CPO_SET_LINESTATE_MASK  10 /* Comand port option set linestate mask */
 #define CPO_SET_MODEMSTATE_MASK 11 /* Comand port option set modemstate mask */
 #define CPO_SERVER_NOTIFY_LINESTATE  106
@@ -75,6 +79,7 @@ typedef struct interposePvt {
     int            bits;
     int            stop;
     int            flow;
+    int            break_active;
 
     char          *xBuf;          /* Buffer for transmit IAC stuffing */
     size_t         xBufCapacity;
@@ -597,6 +602,45 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
            printf("XON/XOFF not set.\n");
         }
     }
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* signal serial line break */
+        unsigned on, off, len, break_len;
+        on = off = len = break_len = 0;
+        if      (epicsStrCaseCmp(val, "on")  == 0) /* switch break condition on */
+            on = pinterposePvt->break_active ? 0 : 1;
+        else if (epicsStrCaseCmp(val, "off") == 0) /* switch break condition off */
+            off = pinterposePvt->break_active ? 1 : 0;
+        else {
+            /* switch break condition on for a period of time and then off */
+            if (*val != '\0' && sscanf(val, "%u", &break_len) != 1) {
+                epicsSnprintf(pasynUser->errorMessage,
+                              pasynUser->errorMessageSize, "Bad number");
+                return asynError;
+            }
+            on = pinterposePvt->break_active ? 0 : 1;
+            off = len = 1;
+        }
+        if (on) {
+            xBuf[0] = CPO_SET_CONTROL;
+            xBuf[1] = CPO_CONTROL_BREAK_ON;
+            status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
+            if (status != asynSuccess) return status;
+            pinterposePvt->break_active = (rBuf[0] == CPO_CONTROL_BREAK_ON) ? 1 : 0;
+        }
+        if (len) {
+            /* wait while break is being asserted */
+            if (!break_len) break_len = 250;
+            epicsThreadSleep(((double)break_len) / 1000.);
+        }
+        if (off) {
+            xBuf[0] = CPO_SET_CONTROL;
+            xBuf[1] = CPO_CONTROL_BREAK_OFF;
+            status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
+            if (status != asynSuccess) return status;
+            pinterposePvt->break_active = (rBuf[0] == CPO_CONTROL_BREAK_ON) ? 1 : 0;
+        }
+        return asynSuccess;
+    }
     else {
         if (pinterposePvt->pasynOptionDrv) {
             /* Call the setOption function in the underlying driver */
@@ -656,6 +700,11 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
                           "Unknown flow control code %#X", pinterposePvt->flow);
             return asynError;
         }
+    }
+    else if (epicsStrCaseCmp(key, "break") == 0) {
+        /* request serial line break status */
+        l = epicsSnprintf(val, valSize, "%s",
+                          pinterposePvt->break_active ? "on" : "off");
     }
     else {
         if (pinterposePvt->pasynOptionDrv) {
