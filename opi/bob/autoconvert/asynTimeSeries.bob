@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2023-05-24 11:37:59 by epics-->
 <display version="2.0.0">
   <name>asynTimeSeries</name>
   <x>326</x>
@@ -135,7 +136,7 @@
     </font>
     <auto_size>true</auto_size>
   </widget>
-  <widget type="xyplot" version="2.0.0">
+  <widget type="xyplot" version="3.0.0">
     <name>cartesian plot #30</name>
     <x>10</x>
     <y>92</y>
@@ -175,7 +176,12 @@
           <font name="Default" family="Liberation Sans" style="REGULAR" size="14.0">
           </font>
         </scale_font>
+        <on_right>false</on_right>
         <visible>true</visible>
+        <color>
+          <color name="Text" red="0" green="0" blue="0">
+          </color>
+        </color>
       </y_axis>
     </y_axes>
     <traces>
