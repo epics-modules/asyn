@@ -1,5 +1,15 @@
 # asynDriver: Release Notes
 
+## Release 4-45 (May XXX, 2023)
+- devEpics
+  - Changed devAsynXXXArray::interruptCallback so it returns immediately if interruptAccept is still 0, i.e. before iocInit
+    is mostly complete.  This was causing warnings if callbacks occured before iocInit.
+- Added autoconverted OPI files in the test applications for CSS/Boy, CSS/Phoebus, edm, and caQtDM.
+- Added missing include file in drvLinuxGpib.c.
+- Added support for sending serial break via option interface.  Thanks to Lutz Rossa for this.
+- Many files
+  - Fixed minor problems exposed with static code analysis.  Thanks to Ralph Lange for this.
+
 ## Release 4-44-2 (March 28, 2023)
 - devEpics
   - Fix additional problems with waveform, aai, and aao records due to missing initialization of private member variables
