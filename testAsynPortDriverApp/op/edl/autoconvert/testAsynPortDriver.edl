@@ -145,7 +145,7 @@ y 378
 w 80
 h 18
 controlPv "$(P)$(R)Run_RBV"
-format "decimal"
+format "string"
 font "helvetica-medium-r-14.0"
 fontAlign "center"
 fgColor rgb 0 65535 0
@@ -328,7 +328,7 @@ y 157
 w 80
 h 18
 controlPv "$(P)$(R)VoltsPerDivSelect_RBV"
-format "decimal"
+format "string"
 font "helvetica-medium-r-14.0"
 fontAlign "center"
 fgColor rgb 2560 0 47104
@@ -340,19 +340,6 @@ fastUpdate
 newPos
 objType "controls"
 endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 220
-y 66
-w 601
-h 407
-
-beginGroup
 
 # (X-Y Graph)
 object xyGraphClass
@@ -409,19 +396,6 @@ plotColor {
 }
 endObjectProperties
 
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 616
-y 370
-w 200
-h 100
-
-beginGroup
-
 # (Rectangle)
 object activeRectangleClass
 beginObjectProperties
@@ -436,19 +410,6 @@ lineColor rgb 0 0 0
 fillColor rgb 0 0 0
 lineWidth 0
 endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 661
-y 372
-w 110
-h 21
-
-beginGroup
 
 # (Rectangle)
 object activeRectangleClass
@@ -485,37 +446,6 @@ value {
   "Statistics"
 }
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 395
-w 178
-h 70
-
-beginGroup
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 395
-w 157
-h 20
-
-beginGroup
 
 # (Static Text)
 object activeXTextClass
@@ -561,24 +491,6 @@ newPos
 objType "controls"
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 420
-w 157
-h 20
-
-beginGroup
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -623,24 +535,6 @@ newPos
 objType "controls"
 endObjectProperties
 
-endGroup
-
-endObjectProperties
-
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 657
-y 445
-w 148
-h 20
-
-beginGroup
-
 # (Static Text)
 object activeXTextClass
 beginObjectProperties
@@ -684,21 +578,6 @@ fastUpdate
 newPos
 objType "controls"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
 
 # (Group)
 object activeGroupClass
@@ -958,11 +837,6 @@ endGroup
 endObjectProperties
 
 
-endGroup
-
-endObjectProperties
-
-
 # (Group)
 object activeGroupClass
 beginObjectProperties
@@ -1086,120 +960,6 @@ beginObjectProperties
 major 4
 minor 0
 release 0
-x 220
-y 66
-w 601
-h 407
-
-beginGroup
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 616
-y 370
-w 200
-h 100
-
-beginGroup
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 661
-y 372
-w 110
-h 21
-
-beginGroup
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 395
-w 178
-h 70
-
-beginGroup
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 395
-w 157
-h 20
-
-beginGroup
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 627
-y 420
-w 157
-h 20
-
-beginGroup
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
-x 657
-y 445
-w 148
-h 20
-
-beginGroup
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-
-endGroup
-
-endObjectProperties
-
-# (Group)
-object activeGroupClass
-beginObjectProperties
-major 4
-minor 0
-release 0
 x 455
 y 370
 w 130
@@ -1280,11 +1040,6 @@ controlPv "$(P)$(R)Waveform_RBV.SCAN"
 indicatorPv "$(P)$(R)Waveform_RBV.SCAN"
 font "helvetica-medium-r-12.0"
 endObjectProperties
-
-endGroup
-
-endObjectProperties
-
 
 endGroup
 
