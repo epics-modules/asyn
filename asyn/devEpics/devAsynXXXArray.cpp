@@ -403,6 +403,11 @@ public:
             (char *)value, len*sizeof(EPICS_TYPE),
             "%s %s::%s ringSize=%d, len=%d, callback data:",
             pRecord_->name, driverName, functionName, ringSize_, (int)len);
+        /* If interruptAccept is false we just return because record scanning cannot be done before interruptAccept.
+         * If a ring buffer is in use there will then be nothing in the ring buffer, so the first
+         * read will do a read from the driver, which should be OK. */
+        if (!interruptAccept) return;
+
         if (ringSize_ == 0) {
             /* Not using a ring buffer */
             dbScanLock((dbCommon *)pRecord_);
@@ -424,12 +429,6 @@ public:
         } else {
             /* Using a ring buffer */
             ringBufferElement *rp;
-
-            /* If interruptAccept is false we just return.  This prevents more ring pushes than pops.
-             * There will then be nothing in the ring buffer, so the first
-             * read will do a read from the driver, which should be OK. */
-            if (!interruptAccept) return;
-
             epicsMutexLock(ringBufferLock_);
             rp = &ringBuffer_[ringHead_];
             if (len > pRecord_->nelm) len = pRecord_->nelm;
