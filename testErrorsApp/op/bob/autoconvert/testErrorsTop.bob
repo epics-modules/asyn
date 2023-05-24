@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--Saved on 2023-05-24 11:16:41 by epics-->
+<display version="2.0.0">
+  <name>testErrorsTop</name>
+  <x>383</x>
+  <y>46</y>
+  <width>200</width>
+  <height>50</height>
+  <background_color>
+    <color red="187" green="187" blue="187">
+    </color>
+  </background_color>
+  <grid_visible>false</grid_visible>
+  <grid_step_x>5</grid_step_x>
+  <widget type="action_button" version="3.0.0">
+    <name>related display #6</name>
+    <actions>
+      <action type="open_display">
+        <file>testErrors.opi</file>
+        <macros>
+          <P>testErrors:</P>
+        </macros>
+        <target>tab</target>
+        <description>testErrors</description>
+      </action>
+      <action type="open_display">
+        <file>asynRecord.opi</file>
+        <macros>
+          <P>testErrors:</P>
+          <R>asyn1</R>
+        </macros>
+        <target>tab</target>
+        <description>asynRecord debug</description>
+      </action>
+      <action type="open_display">
+        <file>asynRecord.opi</file>
+        <macros>
+          <P>testErrors:</P>
+          <R>asynTest</R>
+        </macros>
+        <target>tab</target>
+        <description>asynRecord I/O</description>
+      </action>
+    </actions>
+    <text></text>
+    <x>113</x>
+    <y>13</y>
+    <width>80</width>
+    <height>20</height>
+    <background_color>
+      <color red="115" green="223" blue="255">
+      </color>
+    </background_color>
+  </widget>
+  <widget type="label" version="2.0.0">
+    <name>text #11</name>
+    <text>testErrors</text>
+    <x>6</x>
+    <y>12</y>
+    <width>180</width>
+    <font>
+      <font family="Liberation Sans" style="REGULAR" size="16.0">
+      </font>
+    </font>
+    <auto_size>true</auto_size>
+  </widget>
+</display>
