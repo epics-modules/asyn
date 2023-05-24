@@ -264,7 +264,7 @@ getEos(asynUser *pasynUser)
     default:     getFunc = NULL;                                  break;
     }
     if (getFunc) {
-        int l;
+        int l = 0;
         peosargs->status = (*getFunc)(peosargs->drvPvt, pasynUser, peosargs->eos, sizeof peosargs->eos, &l);
         peosargs->eosLen = l;
     }

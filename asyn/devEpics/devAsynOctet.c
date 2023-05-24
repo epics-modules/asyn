@@ -315,7 +315,7 @@ static long initCommon(dbCommon *precord, DBLINK *plink, userCallback callback,
            goto bad;
         }
     }
-    if(valSize <= 0) {
+    if (valSize == 0) {
        printf("%s record size must be > 0\n",precord->name);
        precord->pact = 1;
        goto bad;
@@ -629,7 +629,7 @@ static int initCmdBuffer(devPvt *pPvt)
     static const char *functionName="initCmdBuffer";
 
     len = strlen(pPvt->userParam);
-    if(len<=0) {
+    if (len == 0) {
         printf("%s  %s::%s no userParam\n",precord->name, driverName, functionName);
         precord->pact = 1;
         recGblSetSevr(precord,LINK_ALARM,INVALID_ALARM);

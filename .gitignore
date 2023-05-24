@@ -16,6 +16,7 @@ O.*/
 *.swp
 *_BAK.adl
 /QtC-*
+/.qtc_*
 cdCommands
 envPaths
 dllPath.bat

@@ -136,7 +136,7 @@ static asynGpib skeletonDriver = {
     serialPollEnd
 };
 
-int skeletonDriverConfig(const char *name, /*Start of device dependent args*/)
+int skeletonDriverConfig(const char *name /*, ... Start of device dependent args*/)
 {
     skeletonPvt *pskeletonPvt;
     char *portName;

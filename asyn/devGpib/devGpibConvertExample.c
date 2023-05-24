@@ -201,7 +201,7 @@ static int writeCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
     pgpibDpvt->msgInputLen = 0;
 
     lenmsg = writeString(pgpibDpvt,P1,P2,P3);
-    if(lenmsg <= 0) return -1;
+    if (lenmsg == 0) return -1;
     status  = pasynOctet->write(asynOctetPvt,pasynUser,
         pgpibDpvt->msg,lenmsg,&nsent);
     if(nsent==lenmsg) {

@@ -3000,7 +3000,7 @@ static int traceVprintIOSource(asynUser *pasynUser,int reason,
         }
     }
     /* If the traceIOMask is 0 or traceTruncateSize <=0 we need to output a newline */
-    if((traceIOMask == 0) || (traceTruncateSize <=0)) {
+    if((traceIOMask == 0) || (traceTruncateSize ==0)) {
         if(fp) {
             nout += fprintf(fp,"\n");
         } else {

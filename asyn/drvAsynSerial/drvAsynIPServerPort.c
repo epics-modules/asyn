@@ -177,7 +177,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "%s %p read.\n", tty->IPDeviceName, tty->pasynUser);
 
-    if (maxchars <= 0) {
+    if (maxchars == 0) {
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                 "%s maxchars %d. Why <=0?\n", tty->IPDeviceName, (int) maxchars);
         return asynError;
@@ -416,7 +416,7 @@ int createServerSocket(ttyController_t *tty) {
             srvaddrtxt[sizeof(srvaddrtxt) - 1] = '\0';
             printf("serverAddr: %s\n", srvaddrtxt);
         }
-        printf("serverPort: %i\n", tty->portNumber);
+        printf("serverPort: %u\n", tty->portNumber);
         if (tty->socketType == SOCK_DGRAM) {
             /* For Port reuse, multiple IOCs */
             epicsSocketEnableAddressUseForDatagramFanout(tty->fd);
@@ -530,7 +530,7 @@ int drvAsynIPServerPortConfigure(const char *portName,
         printf("TCP server information missing.\n");
         return -1;
     }
-    if (maxClients <= 0) {
+    if (maxClients == 0) {
         printf("No clients.\n");
         return -1;
     }

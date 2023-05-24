@@ -45,7 +45,13 @@ void debugPrint(...){}
  * @param vendor - Vendor ID
  * @param product - Product ID
  */
-FTDIDriver::FTDIDriver(int mode):spi(mode)
+FTDIDriver::FTDIDriver(int mode)
+    : ftdi_(nullptr)
+    , spi(mode)
+    , spiInit(0)
+    , buf({0})
+    , pinState(0)
+    , pinDirection(0)
 {
   static const char *functionName = "FTDIDriver::FTDIDriver";
   debugPrint("%s : Method called - ", functionName);
@@ -66,8 +72,6 @@ FTDIDriver::FTDIDriver(int mode):spi(mode)
   parity_ = NONE;
   break_ = BREAK_OFF;
   flowctrl_ = SIO_DISABLE_FLOW_CTRL;
-  spiInit = 0; // Status whether init done
-  memset(buf, 0, sizeof(buf));
 }
 
 FTDIDriverStatus FTDIDriver::initSPI() {
@@ -88,7 +92,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   // MASTER RESET
   pinState = Pin::CS|Pin::SYNCIO|Pin::RESET;
   pinDirection = Pin::SK|Pin::DO|Pin::CS|Pin::SYNCIO|Pin::RESET;
-  pbuf = (unsigned char *)&buf[0];
+  unsigned char *pbuf = (unsigned char *)&buf[0];
   *(pbuf + i++) = TCK_DIVISOR;     // opcode: set clk divisor
   *(pbuf + i++) = 0x05;            // argument: low bit. 60 MHz / (5+1) = 1 MHz
   *(pbuf + i++) = 0x00;            // argument: high bit.
@@ -574,7 +578,7 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   if( spi ) {
     if( !spiInit ) initSPI();
     i = 0;
-    pbuf = (unsigned char *)&buf[0];
+    unsigned char *pbuf = (unsigned char *)&buf[0];
 
     memcpy((pbuf+i), buffer, bufferSize);
     i+= bufferSize;
@@ -602,11 +606,11 @@ FTDIDriverStatus FTDIDriver::write(const unsigned char *buffer, int bufferSize, 
   if (rc[3] > 0){
     // Since we write also the address byte byteswritten = sz+1
     *bytesWritten = (size_t)(sz+1);
-    debugPrint("%s : %d bytes written err=%d: ", functionName, *bytesWritten, err);
+    debugPrint("%s : %llu bytes written err=%d: ", functionName, (unsigned long long) *bytesWritten, err);
     if( err == FTDIDriverError ) debugPrint("FTDIDriverError\n");
     else                         debugPrint("FTDIDriverSUCCESS\n");
   } else {
-    debugPrint("FTDI write error: %d (%s)\n", rc, ftdi_get_error_string(ftdi_));
+    debugPrint("FTDI write error: %llu (%s)\n", (unsigned long long) rc, ftdi_get_error_string(ftdi_));
     *bytesWritten = 0;
     return FTDIDriverError;
   }
@@ -636,7 +640,8 @@ FTDIDriverStatus FTDIDriver::read(unsigned char *buffer, size_t bufferSize, size
     return FTDIDriverError;
   }
 
-  debugPrint("%s : Reading: bufferSize=%d, timeout=%d\n", functionName, bufferSize, timeout);
+  debugPrint("%s : Reading: bufferSize=%llu, timeout=%d\n",
+             functionName, (unsigned long long) bufferSize, timeout);
 
   timeval stime;
   timeval ctime;

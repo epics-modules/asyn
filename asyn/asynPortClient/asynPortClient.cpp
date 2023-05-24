@@ -29,7 +29,7 @@
 asynParamClient::asynParamClient(const char *portName, int addr, const char *asynInterfaceType, const char *drvInfo,
                        double timeout)
     : pasynUser_(NULL), pasynUserSyncIO_(NULL), timeout_(timeout), portName_(epicsStrDup(portName)),
-      addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL)
+    addr_(addr), asynInterfaceType_(epicsStrDup(asynInterfaceType)), drvInfo_(NULL), drvPvt(NULL)
     ,interruptPvt_(NULL)
 {
     asynStatus status;

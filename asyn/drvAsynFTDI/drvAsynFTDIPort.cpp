@@ -428,7 +428,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         return status;
       }
     }
-    if (maxchars <= 0) {
+    if (maxchars == 0) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                   "%d:%d maxchars %d. Why <=0?\n",ftdi->FTDIvendor, ftdi->FTDIproduct,(int)maxchars);
         return asynError;
@@ -447,9 +447,6 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
       }
     }
 
-    if (thisRead < 0){
-        thisRead = 0;
-    }
     *nbytesTransfered = thisRead;
 
     /* If there is room add a null byte */
@@ -523,7 +520,7 @@ drvAsynFTDIPortConfigure(const char *portName,
     int SPI = ((mode & UART_SPI_BIT)==UART_SPI_BIT)? 1:0;
 
     printf("drvAsynFTDIPortConfigure: latency=%d\n", latency);
-    printf("drvAsynFTDIPortConfigure: priority=%d\n", priority);
+    printf("drvAsynFTDIPortConfigure: priority=%u\n", priority);
     printf("drvAsynFTDIPortConfigure: noAutoconnect=%d\n", noAutoConnect);
     printf("drvAsynFTDIPortConfigure: noProcessEos=%d\n", noProcessEos);
     printf("drvAsynFTDIPortConfigure: mode="); SPI ? printf("SPI\n") : printf("UART\n");
