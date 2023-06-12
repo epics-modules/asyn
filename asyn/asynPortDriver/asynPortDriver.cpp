@@ -3973,7 +3973,7 @@ void asynPortDriver::shutdown() {
             pasynManager->freeAsynUser(pasynUserSelf);
             return;
         }
-        status = pasynManager->shutdown(pasynUserSelf);
+        status = pasynManager->shutdownPort(pasynUserSelf);
         if(status != asynSuccess) {
             printf("%s\n", pasynUserSelf->errorMessage);
         }

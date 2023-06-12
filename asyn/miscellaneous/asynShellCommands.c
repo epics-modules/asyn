@@ -1338,7 +1338,7 @@ ASYN_API int
         pasynManager->freeAsynUser(pasynUser);
         return -1;
     }
-    status = pasynManager->shutdown(pasynUser);
+    status = pasynManager->shutdownPort(pasynUser);
     if(status != asynSuccess) {
         printf("%s\n", pasynUser->errorMessage);
     }

@@ -214,7 +214,7 @@ MAIN(asynPortDriverTest)
             asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
             pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
             pasynManager->lockPort(pasynUser);
-            pasynManager->shutdown(pasynUser);
+            pasynManager->shutdownPort(pasynUser);
             pasynManager->unlockPort(pasynUser);
             pasynManager->freeAsynUser(pasynUser);
 

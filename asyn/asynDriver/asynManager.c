@@ -310,7 +310,7 @@ static asynStatus exceptionDisconnect(asynUser *pasynUser);
 static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev);
 static asynStatus enable(asynUser *pasynUser,int yesNo);
-static asynStatus shutdown(asynUser *pasynUser);
+static asynStatus shutdownPort(asynUser *pasynUser);
 static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
 static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
@@ -368,7 +368,7 @@ static asynManager manager = {
     exceptionDisconnect,
     interposeInterface,
     enable,
-    shutdown,
+    shutdownPort,
     autoConnectAsyn,
     isConnected,
     isEnabled,
@@ -2001,7 +2001,7 @@ static void destroyPortDriver(void *portName) {
         pasynManager->freeAsynUser(pasynUser);
         return;
     }
-    status = pasynManager->shutdown(pasynUser);
+    status = pasynManager->shutdownPort(pasynUser);
     if(status != asynSuccess) {
         printf("%s\n", pasynUser->errorMessage);
     }
@@ -2215,7 +2215,7 @@ static asynStatus enable(asynUser *pasynUser,int yesNo)
     return asynSuccess;
 }
 
-static asynStatus shutdown(asynUser *pasynUser)
+static asynStatus shutdownPort(asynUser *pasynUser)
 {
     userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
     port       *pport = puserPvt->pport;
@@ -2224,7 +2224,7 @@ static asynStatus shutdown(asynUser *pasynUser)
 
     if (!pport || !pdpCommon) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:shutdown: not connected");
+            "asynManager:shutdownPort: not connected");
         return asynError;
     }
 
@@ -2234,7 +2234,7 @@ static asynStatus shutdown(asynUser *pasynUser)
 
     if (!(pport->attributes & ASYN_DESTRUCTIBLE)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-            "asynManager:shutdown: port does not support shutting down");
+            "asynManager:shutdownPort: port does not support shutting down");
         return asynError;
     }
 

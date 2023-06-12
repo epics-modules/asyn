@@ -425,7 +425,7 @@ Queuing services
 Basic Driver services
 .....................
   
-  Methods: registerPort, registerInterface, shutdown
+  Methods: registerPort, registerInterface, shutdownPort
 
   registerPort is called by a portDriver. registerInterface is called by a portDriver
   or an interposeInterface.
@@ -1111,7 +1111,7 @@ This is the main interface for communicating with asynDriver.
                                 asynInterface *pasynInterface,
                                 asynInterface **ppPrev);
       asynStatus (*enable)(asynUser *pasynUser,int yesNo);
-      asynStatus (*shutdown)(asynUser *pasynUser);
+      asynStatus (*shutdownPort)(asynUser *pasynUser);
       asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
       asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
       asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
@@ -1334,7 +1334,7 @@ This is the main interface for communicating with asynDriver.
   * - enable 
     - If enable is set yes, then queueRequests are not dequeued unless their queue timeout
       occurs.
-  * - shutdown
+  * - shutdownPort
     - The port is marked as defunct, preventing its use. It cannot be re-enabled.
       The underlying driver is notified and may be destroyed.
   * - autoConnect 
