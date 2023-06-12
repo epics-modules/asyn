@@ -1323,8 +1323,16 @@ static asynStatus connectDevice(asynUser *pasynUser,
     const char *portName, int addr)
 {
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
-    port    *pport = locatePort(portName);
+    port    *pport;
     device  *pdevice;
+
+    if(!portName) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:connectDevice no port name provided");
+        return asynError;
+    }
+
+    pport = locatePort(portName);
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
