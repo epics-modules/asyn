@@ -1768,14 +1768,19 @@ static asynStatus lockPort(asynUser *pasynUser)
         return asynError;
     }
 
+    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
+
+    epicsMutexMustLock(pport->asynManagerLock);
     if (findDpCommon(puserPvt)->defunct) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "asynManager:lockPort: port has been shut down");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynDisabled;
     }
+    epicsMutexUnlock(pport->asynManagerLock);
 
-    asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
     epicsMutexMustLock(pport->synchronousLock);
+
     if(pport->pasynLockPortNotify) {
         pport->pasynLockPortNotify->lock(
            pport->lockPortNotifyPvt,pasynUser);
@@ -1823,6 +1828,16 @@ static asynStatus queueLockPort(asynUser *pasynUser)
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort locking port\n", pport->portName);
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(!pport->dpc.enabled) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                        "port %s disabled",pport->portName);
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynDisabled;
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+
     if (pport->attributes & ASYN_CANBLOCK) {   /* Asynchronous driver */
         plockPortPvt = epicsThreadPrivateGet(pport->queueLockPortId);
         if (!plockPortPvt) {
@@ -2212,13 +2227,19 @@ static asynStatus enable(asynUser *pasynUser,int yesNo)
         return asynError;
     }
 
+    epicsMutexMustLock(pport->asynManagerLock);
+
     if (pdpCommon->defunct) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "asynManager:enable: port has been shut down");
+        epicsMutexUnlock(pport->asynManagerLock);
         return asynDisabled;
     }
 
     pdpCommon->enabled = (yesNo ? 1 : 0);
+
+    epicsMutexUnlock(pport->asynManagerLock);
+
     exceptionOccurred(pasynUser,asynExceptionEnable);
     return asynSuccess;
 }
@@ -2236,13 +2257,17 @@ static asynStatus shutdownPort(asynUser *pasynUser)
         return asynError;
     }
 
+    epicsMutexMustLock(pdpCommon->pport->asynManagerLock);
+
     if (pdpCommon->defunct) {
+        epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
         return asynSuccess;
     }
 
     if (!(pport->attributes & ASYN_DESTRUCTIBLE)) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "asynManager:shutdownPort: port does not support shutting down");
+        epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
         return asynError;
     }
 
@@ -2266,6 +2291,8 @@ static asynStatus shutdownPort(asynUser *pasynUser)
         pif->drvPvt = NULL;
         pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
     }
+
+    epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
 
     /*
      * Actual destruction of the driver is delegated to the driver itself, which
@@ -2316,7 +2343,9 @@ static asynStatus isEnabled(asynUser *pasynUser,int *yesNo)
             "asynManager:isEnabled asynUser not connected to device");
         return asynError;
     }
+    epicsMutexMustLock(pdpCommon->pport->asynManagerLock);
     *yesNo = pdpCommon->enabled;
+    epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
     return asynSuccess;
 }
 
