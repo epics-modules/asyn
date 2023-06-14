@@ -161,7 +161,7 @@ void paramVal::setInteger64(epicsInt64 value)
 {
     if (type != asynParamInt64)
         throw ParamValWrongType("paramVal::setInteger64 can only handle asynParamInt64");
-    if (!isDefined() || (data.ival != value))
+    if (!isDefined() || (data.i64val != value))
     {
         setDefined(true);
         data.i64val = value;
