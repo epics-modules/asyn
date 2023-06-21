@@ -221,7 +221,7 @@ MAIN(asynPortDriverTest)
             checkShutdown(portName.c_str());
         }
         {
-            testDiag("Testing a destructible port, early deletion");
+            testDiag("Testing a destructible port, early deletion, shows error message");
             asynPortDriver *tempPort = instantiateDriver("portD", true);
             testA(tempPort);
             std::string portName(tempPort->portName);

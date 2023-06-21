@@ -70,27 +70,27 @@ class callbackThread;
   *
   * 4. Your overriden `shutdown()` must call the base class implementation.
   *
+  * 5. When deleting a driver instance directly (e.g., in your test code),
+  *    always call `shutdown()` first.
+  *
   * To implement the above rules, you can use the following template:
   *
-  *     class myDriver : public baseDriver {
+  *     class myDriver : public asynPortDriver {
   *     public:
-  *         myDriver(const char *portName, ..., int asynFlags, ...) :
-  *               baseDriver(portName, ..., asynFlags, ...) {
-  *             // Your driver code; don't change the flags
+  *         myDriver(const char *portName, ...) :
+  *               asynPortDriver(portName, ..., ASYN_DESTRUCTIBLE, ...) {
+  *             // Your driver code.
   *         }
   *
   *         void shutdown() {
-  *             // Stop threads, use virtual functions
+  *             // Stop threads, you may use virtual functions.
+  *
+  *             // Don't forget to call the base class function.
   *             baseDriver::shutdown();
   *         }
   *
   *         ~myDriver() {
-  *             if (needsShutdown()) {
-  *                 // Not strictly needed, but allows your driver to be deleted
-  *                 // without calling shutdown() first, e.g. in tests.
-  *                 shutdown();
-  *             }
-  *             // Deallocate resources
+  *             // Deallocate resources, don't use virtual functions.
   *         }
   *     };
   */
@@ -276,7 +276,7 @@ private:
     char *outputEosOctet;
     int outputEosLenOctet;
     callbackThread *cbThread;
-    bool shutdownNeeded;
+    int shutdownNeeded;  // atomic!
     template <typename epicsType, typename interruptType>
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);

@@ -18,6 +18,7 @@
 
 #include <epicsString.h>
 #include <epicsMutex.h>
+#include <epicsAtomic.h>
 #include <epicsThread.h>
 #include <cantProceed.h>
 /* NOTE: interruptAccept is define in dbAccess.h if using EPICS IOC, else set it to 1 */
@@ -3788,7 +3789,7 @@ asynPortDriver::asynPortDriver(const char *portNameIn, int maxAddrIn, int paramT
 void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException exception) {
     asynPortDriver *pPvt = (asynPortDriver *)pasynUser->userPvt;
 
-    if (exception == asynExceptionShutdown && pPvt->shutdownNeeded) {
+    if (exception == asynExceptionShutdown && pPvt->needsShutdown()) {
         // This code is only excuted once: asynManager will not raise the
         // exception if the port has been shut down before.
         asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
@@ -3945,7 +3946,7 @@ asynStatus asynPortDriver::createParams()
 
 /** Returns `true` when the port is destructible and `shutdown()` wasn't run yet. */
 bool asynPortDriver::needsShutdown() {
-    return shutdownNeeded;
+    return epics::atomic::get(shutdownNeeded);
 }
 
 /** Performs cleanup that cannot be done in a destructor.
@@ -3956,6 +3957,9 @@ bool asynPortDriver::needsShutdown() {
  * in a consistent state, allowing the destructor to run.
  *
  * When overridden, this function must call the base class implementation.
+ *
+ * This function is called with the driver *unlocked*. When overriding it, take
+ * care to lock it as necessary.
  */
 void asynPortDriver::shutdown() {
     // There is a possibility that the destructor is running because we are
@@ -3963,8 +3967,8 @@ void asynPortDriver::shutdown() {
     // Which would leave a "working" port with dangling references. So let's
     // disarm the exception callback (because we are already being destroyed)
     // and shutdown the port.
-    if (shutdownNeeded) {
-        shutdownNeeded = false;
+    if (needsShutdown()) {
+        epics::atomic::set(shutdownNeeded, 0);
         asynStatus status = pasynManager->lockPort(pasynUserSelf);
         if(status != asynSuccess) {
             if (status != asynDisabled) {
@@ -3987,7 +3991,19 @@ void asynPortDriver::shutdown() {
 /** Destructor for asynPortDriver class; frees resources allocated when port driver is created. */
 asynPortDriver::~asynPortDriver()
 {
-    shutdown();
+    if (needsShutdown()) {
+        // This should not happen and is a user error, so yell at them. A
+        // destructible port always needs to be shut down before being
+        // destroyed.
+        asynPrint(this->pasynUserSelf, ASYN_TRACE_ERROR,
+                  "%s: port=%s is being destroyed, but was not shut down first!\n",
+                  driverName, portName);
+
+        // At this point, the destructors of derived classes have already run,
+        // so we can't do a proper shutdown anymore. But let's at least do our
+        // own shutdown to mark the port as defunct.
+        shutdown();
+    }
     delete cbThread;
     epicsMutexDestroy(this->mutexId);
 
