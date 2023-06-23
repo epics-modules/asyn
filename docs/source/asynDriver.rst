@@ -3143,7 +3143,7 @@ This provides the ability to configure serial ports on terminal servers using th
 RFC 2117 protocol. It is not configured from the iocsh directly, but is rather configured
 automatically by the drvAsynIPPort driver if the COM protocol is specified. It supports
 the same options as drvAsynSerialPort, i.e. "baud", "bits", "parity", "stop", "crtscts",
-"ixon" and "break".
+"ixon", "break" and "autobreak".
 
 asynInterposeDelay
 ~~~~~~~~~~~~~~~~~~
@@ -4228,7 +4228,11 @@ values. When a serial port connects the current values are fetched.
   * - rs485_delay_rts_after_send 
     - msec_delay 
   * - break
-      off on <numeric-device-dependend-time>
+    - off on <numeric-device-dependent-time>
+  * - autobreak
+    - <numeric-device-dependent-time or 0 to disable>
+  * - autobreak_delay
+    - <time-in-ms or 0 to disable>
  
 On some systems (e.g. Windows, Darwin) the driver accepts any numeric value for
 the baud rate, which must, of course be supported by the system hardware. On Linux
@@ -4265,9 +4269,14 @@ on hardware ports that support RS-485. The delay option units are integer millis
 
 The break option should send a serial break state on supported systems (Linux,
 Windows work, vxWorks does not). A numeric value should send a break for the
-specified time, which is device depended (deci seconds, milli seconds, ...).
-A zero value means a default time. A value "on" should set the break state on
-for a unlimited time and "off" should clear the break state.
+specified time, which is in units of milliseconds on Windows and Linux but 
+implementation defined elsewhere (see tcsendbreak()).A zero value means a default time. A value "on"
+should set the break state on for a unlimited time and "off" should clear the break state.
+
+For devices that use a serial break as a command terminator the autobreak option can
+be used. This will wait autobreak_delay (ms) before asserting a serial break for
+the specified length (see break above for time units) after every write. Use 0 to
+disable autobreak or autobreak_delay
 
 vxWorks IOC serial ports may need to be set up using hardware-specific commands.
 Once this is done, the standard drvAsynSerialPortConfigure and asynSetOption commands
