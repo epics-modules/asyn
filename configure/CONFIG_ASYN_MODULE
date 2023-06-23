@@ -1,0 +1,14 @@
+
+ifdef T_A
+ifneq (,$(filter linux-%,$(T_A)))
+ifeq ($(EPICS_HOST_ARCH),$(T_A))
+
+ifneq (,$(firstword $(wildcard /usr/include/tirpc/rpc/rpc.h)))
+
+TIRPC ?= YES
+
+endif
+
+endif
+endif
+endif
