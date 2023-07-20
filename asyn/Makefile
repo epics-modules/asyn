@@ -305,7 +305,7 @@ drvVxi11$(DEP): vxi11intr.h vxi11core.h
 vxi11core_xdr.c$(DEP): vxi11core.h
 
 ifdef T_A
-  ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
+ ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
 
 vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 % : ../vxi11/rpc/%
@@ -313,7 +313,7 @@ vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 vxi11core_xdr.o: vxi11core.h
 vxi11intr_xrd.o: vxi11intr.h
 
-  else
+ else
 
 .SECONDARY: vxi11core_xdr.c vxi11intr_xdr.c
 
@@ -323,9 +323,7 @@ RPCGEN_FLAGS_solaris = -M
 	cp $< .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) $*.rpcl
 
-  endif
-
-endif
+ endif  # OS_CLASS = vxWorks, RTEMS
 
 # Parallel build sometimes fails.
 # Make dependences on new records explicit.
@@ -337,11 +335,11 @@ devEpics.dbd$(DEP): $(TOP)/asyn/Makefile
 
 $(COMMON_DIR)/devEpics.dbd: $(TOP)/asyn/Makefile
 
-ifdef DBDCAT_COMMAND
+ ifdef DBDCAT_COMMAND
   # Override the default command when generating devEpics.dbd
   $(COMMON_DIR)/devEpics.dbd: DBDCAT_COMMAND = \
       $(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
-else
+ else
   # 3.14 didn't have the DBDCAT rule:
   build: $(COMMON_DIR)/devEpics.dbd
   $(COMMON_DIR)/devEpics.dbd: $(devEpics_DBD)
@@ -349,6 +347,6 @@ else
 	@$(RM) $(notdir $@)
 	$(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
 	@$(MV) $(notdir $@) $@
-endif
-
+ endif  # DBDCAT_COMMAND
+endif  # T_A
 USR_CPPFLAGS += -DBUILDING_asyn_API
