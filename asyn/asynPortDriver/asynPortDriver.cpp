@@ -1944,6 +1944,10 @@ paramList* asynPortDriver::getParamList(int list)
 extern "C" {static asynStatus readInt32(void *drvPvt, asynUser *pasynUser,
                             epicsInt32 *value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -1990,6 +1994,10 @@ asynStatus asynPortDriver::readInt32(asynUser *pasynUser, epicsInt32 *value)
 extern "C" {static asynStatus writeInt32(void *drvPvt, asynUser *pasynUser,
                             epicsInt32 value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2037,6 +2045,10 @@ asynStatus asynPortDriver::writeInt32(asynUser *pasynUser, epicsInt32 value)
 extern "C" {static asynStatus getBounds(void *drvPvt, asynUser *pasynUser,
                             epicsInt32 *low, epicsInt32 *high)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2071,6 +2083,10 @@ asynStatus asynPortDriver::getBounds(asynUser *pasynUser,
 extern "C" {static asynStatus readInt64(void *drvPvt, asynUser *pasynUser,
                             epicsInt64 *value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2117,6 +2133,10 @@ asynStatus asynPortDriver::readInt64(asynUser *pasynUser, epicsInt64 *value)
 extern "C" {static asynStatus writeInt64(void *drvPvt, asynUser *pasynUser,
                             epicsInt64 value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2164,6 +2184,10 @@ asynStatus asynPortDriver::writeInt64(asynUser *pasynUser, epicsInt64 value)
 extern "C" {static asynStatus getBounds64(void *drvPvt, asynUser *pasynUser,
                             epicsInt64 *low, epicsInt64 *high)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2198,6 +2222,10 @@ asynStatus asynPortDriver::getBounds64(asynUser *pasynUser,
 extern "C" {static asynStatus readUInt32Digital(void *drvPvt, asynUser *pasynUser,
                             epicsUInt32 *value, epicsUInt32 mask)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2245,6 +2273,10 @@ asynStatus asynPortDriver::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *v
 extern "C" {static asynStatus writeUInt32Digital(void *drvPvt, asynUser *pasynUser,
                             epicsUInt32 value, epicsUInt32 mask)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2292,6 +2324,10 @@ asynStatus asynPortDriver::writeUInt32Digital(asynUser *pasynUser, epicsUInt32 v
 
 extern "C" {static asynStatus setInterruptUInt32Digital(void *drvPvt, asynUser *pasynUser, epicsUInt32 mask, interruptReason reason)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2335,6 +2371,10 @@ asynStatus asynPortDriver::setInterruptUInt32Digital(asynUser *pasynUser, epicsU
 
 extern "C" {static asynStatus clearInterruptUInt32Digital(void *drvPvt, asynUser *pasynUser, epicsUInt32 mask)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2377,6 +2417,10 @@ asynStatus asynPortDriver::clearInterruptUInt32Digital(asynUser *pasynUser, epic
 
 extern "C" {static asynStatus getInterruptUInt32Digital(void *drvPvt, asynUser *pasynUser, epicsUInt32 *mask, interruptReason reason)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2422,6 +2466,10 @@ asynStatus asynPortDriver::getInterruptUInt32Digital(asynUser *pasynUser, epicsU
 extern "C" {static asynStatus readFloat64(void *drvPvt, asynUser *pasynUser,
                               epicsFloat64 *value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2474,6 +2522,10 @@ asynStatus asynPortDriver::readFloat64(asynUser *pasynUser, epicsFloat64 *value)
 extern "C" {static asynStatus writeFloat64(void *drvPvt, asynUser *pasynUser,
                               epicsFloat64 value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2524,6 +2576,10 @@ extern "C" {static asynStatus readOctet(void *drvPvt, asynUser *pasynUser,
                             char *value, size_t maxChars, size_t *nActual,
                             int *eomReason)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2578,6 +2634,10 @@ asynStatus asynPortDriver::readOctet(asynUser *pasynUser,
 extern "C" {static asynStatus writeOctet(void *drvPvt, asynUser *pasynUser,
                               const char *value, size_t maxChars, size_t *nActual)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2628,6 +2688,10 @@ asynStatus asynPortDriver::writeOctet(asynUser *pasynUser, const char *value,
 
 extern "C" {static asynStatus flushOctet(void *drvPvt, asynUser *pasynUser)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2665,6 +2729,10 @@ asynStatus asynPortDriver::flushOctet(asynUser *pasynUser)
 extern "C" {static asynStatus setInputEosOctet(void *drvPvt, asynUser *pasynUser,
                                 const char *eos, int eosLen)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2692,6 +2760,10 @@ asynStatus asynPortDriver::setInputEosOctet(asynUser *pasynUser, const char *eos
 extern "C" {static asynStatus getInputEosOctet(void *drvPvt, asynUser *pasynUser,
                                 char *eos, int eosSize, int *eosLen)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2719,6 +2791,10 @@ asynStatus asynPortDriver::getInputEosOctet(asynUser *pasynUser, char *eos, int 
 extern "C" {static asynStatus setOutputEosOctet(void *drvPvt, asynUser *pasynUser,
                                 const char *eos, int eosLen)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2746,6 +2822,10 @@ asynStatus asynPortDriver::setOutputEosOctet(asynUser *pasynUser, const char *eo
 extern "C" {static asynStatus getOutputEosOctet(void *drvPvt, asynUser *pasynUser,
                                 char *eos, int eosSize, int *eosLen)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2777,6 +2857,10 @@ asynStatus asynPortDriver::getOutputEosOctet(asynUser *pasynUser, char *eos, int
 extern "C" {static asynStatus readInt8Array(void *drvPvt, asynUser *pasynUser, epicsInt8 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2802,6 +2886,10 @@ asynStatus asynPortDriver::readInt8Array(asynUser *pasynUser, epicsInt8 *value,
 extern "C" {static asynStatus writeInt8Array(void *drvPvt, asynUser *pasynUser, epicsInt8 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2840,6 +2928,10 @@ asynStatus asynPortDriver::doCallbacksInt8Array(epicsInt8 *value,
 extern "C" {static asynStatus readInt16Array(void *drvPvt, asynUser *pasynUser, epicsInt16 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2865,6 +2957,10 @@ asynStatus asynPortDriver::readInt16Array(asynUser *pasynUser, epicsInt16 *value
 extern "C" {static asynStatus writeInt16Array(void *drvPvt, asynUser *pasynUser, epicsInt16 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2903,6 +2999,10 @@ asynStatus asynPortDriver::doCallbacksInt16Array(epicsInt16 *value,
 extern "C" {static asynStatus readInt32Array(void *drvPvt, asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2928,6 +3028,10 @@ asynStatus asynPortDriver::readInt32Array(asynUser *pasynUser, epicsInt32 *value
 extern "C" {static asynStatus writeInt32Array(void *drvPvt, asynUser *pasynUser, epicsInt32 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2966,6 +3070,10 @@ asynStatus asynPortDriver::doCallbacksInt32Array(epicsInt32 *value,
 extern "C" {static asynStatus readInt64Array(void *drvPvt, asynUser *pasynUser, epicsInt64 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -2991,6 +3099,10 @@ asynStatus asynPortDriver::readInt64Array(asynUser *pasynUser, epicsInt64 *value
 extern "C" {static asynStatus writeInt64Array(void *drvPvt, asynUser *pasynUser, epicsInt64 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3029,6 +3141,10 @@ asynStatus asynPortDriver::doCallbacksInt64Array(epicsInt64 *value,
 extern "C" {static asynStatus readFloat32Array(void *drvPvt, asynUser *pasynUser, epicsFloat32 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3054,6 +3170,10 @@ asynStatus asynPortDriver::readFloat32Array(asynUser *pasynUser, epicsFloat32 *v
 extern "C" {static asynStatus writeFloat32Array(void *drvPvt, asynUser *pasynUser, epicsFloat32 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3092,6 +3212,10 @@ asynStatus asynPortDriver::doCallbacksFloat32Array(epicsFloat32 *value,
 extern "C" {static asynStatus readFloat64Array(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value,
                                 size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3117,6 +3241,10 @@ asynStatus asynPortDriver::readFloat64Array(asynUser *pasynUser, epicsFloat64 *v
 extern "C" {static asynStatus writeFloat64Array(void *drvPvt, asynUser *pasynUser, epicsFloat64 *value,
                                 size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3153,6 +3281,10 @@ asynStatus asynPortDriver::doCallbacksFloat64Array(epicsFloat64 *value,
 /* asynGenericPointer interface methods */
 extern "C" {static asynStatus readGenericPointer(void *drvPvt, asynUser *pasynUser, void *genericPointer)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3176,6 +3308,10 @@ asynStatus asynPortDriver::readGenericPointer(asynUser *pasynUser, void *generic
 
 extern "C" {static asynStatus writeGenericPointer(void *drvPvt, asynUser *pasynUser, void *genericPointer)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3244,6 +3380,10 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
 /* asynOption interface methods */
 extern "C" {static asynStatus readOption(void *drvPvt, asynUser *pasynUser, const char *key, char *value, int maxChars)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3269,6 +3409,10 @@ asynStatus asynPortDriver::readOption(asynUser *pasynUser, const char *key, char
 
 extern "C" {static asynStatus writeOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *value)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3296,6 +3440,10 @@ asynStatus asynPortDriver::writeOption(asynUser *pasynUser, const char *key, con
 extern "C" {static asynStatus readEnum(void *drvPvt, asynUser *pasynUser, char *strings[], int values[], int severities[],
                                        size_t nElements, size_t *nIn)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3323,6 +3471,10 @@ asynStatus asynPortDriver::readEnum(asynUser *pasynUser, char *strings[], int va
 
 extern "C" {static asynStatus writeEnum(void *drvPvt, asynUser *pasynUser, char *strings[], int values[], int severities[], size_t nElements)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3386,6 +3538,10 @@ extern "C" {static asynStatus drvUserCreate(void *drvPvt, asynUser *pasynUser,
                                  const char *drvInfo,
                                  const char **pptypeName, size_t *psize)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3429,6 +3585,10 @@ asynStatus asynPortDriver::drvUserCreate(asynUser *pasynUser,
 extern "C" {static asynStatus drvUserGetType(void *drvPvt, asynUser *pasynUser,
                                  const char **pptypeName, size_t *psize)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3461,6 +3621,10 @@ asynStatus asynPortDriver::drvUserGetType(asynUser *pasynUser,
 
 extern "C" {static asynStatus drvUserDestroy(void *drvPvt, asynUser *pasynUser)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3490,6 +3654,11 @@ asynStatus asynPortDriver::drvUserDestroy(asynUser *pasynUser)
 
 extern "C" {static void report(void *drvPvt, FILE *fp, int details)
 {
+    if (!drvPvt) {
+        fprintf(fp, "Port does not exist, nothing to report.\n");
+        return;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
 
     pPvt->lock();
@@ -3580,6 +3749,10 @@ asynStatus asynPortDriver::setTimeStamp(const epicsTimeStamp *pTimeStamp)
 
 extern "C" {static asynStatus connect(void *drvPvt, asynUser *pasynUser)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
@@ -3610,6 +3783,10 @@ asynStatus asynPortDriver::connect(asynUser *pasynUser)
 
 extern "C" {static asynStatus disconnect(void *drvPvt, asynUser *pasynUser)
 {
+    if (!drvPvt) {
+        return asynDisabled;
+    }
+
     asynPortDriver *pPvt = (asynPortDriver *)drvPvt;
     asynStatus status;
 
