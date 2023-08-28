@@ -260,8 +260,9 @@ MAIN(asynPortDriverTest)
             testOk1(pcommon->disconnect(pcommonIf->drvPvt, pasynUser) == asynDisabled);
             testOk1(pdrvUser->create(pdrvUserIf->drvPvt, pasynUser, "int32", 0, 0) == asynDisabled);
             testOk1(pdrvUser->destroy(pdrvUserIf->drvPvt, pasynUser) == asynDisabled);
-            testOk1(pasynInt32SyncIO->readOnce(portName, 0, &val, 1.0, "int32") == asynDisabled);
-            testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) == asynDisabled);
+            // Standard interfaces may return either asynDisabled or asynError
+            testOk1(pasynInt32SyncIO->readOnce(portName, 0, &val, 1.0, "int32") != asynSuccess);
+            testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) != asynSuccess);
         }
     } catch(std::exception& e) {
         testAbort("Unhandled C++ exception: %s", e.what());

@@ -1479,20 +1479,36 @@ static asynInterface *findInterface(asynUser *pasynUser,
                 "asynManager:findInterface: not connected");
         return 0;
     }
+
+    epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:findInterface: port shut down");
+        return 0;
+    }
+
     if(interposeInterfaceOK) {
         if(pdevice) {
             pinterfaceNode = locateInterfaceNode(
                 &pdevice->dpc.interposeInterfaceList, interfaceType,FALSE);
-            if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+            if(pinterfaceNode) goto retif;
         }
         pinterfaceNode = locateInterfaceNode(
             &pport->dpc.interposeInterfaceList, interfaceType,FALSE);
-        if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+        if(pinterfaceNode) goto retif;
     }
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
-    if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+    if(pinterfaceNode) goto retif;
+
+    epicsMutexUnlock(pport->asynManagerLock);
     return 0;
+
+retif:
+    epicsMutexUnlock(pport->asynManagerLock);
+    return pinterfaceNode->pasynInterface;
 }
 
 static asynStatus queueRequest(asynUser *pasynUser,
@@ -2388,7 +2404,15 @@ static asynStatus registerInterruptSource(const char *portName,
           portName);
        return asynError;
     }
+
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        printf("%s asynManager:registerInterrupt: port shut down", pport->portName);
+        return asynDisabled;
+    }
+
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,pasynInterface->interfaceType,FALSE);
     if(!pinterfaceNode)
@@ -2431,7 +2455,16 @@ static asynStatus getInterruptPvt(asynUser *pasynUser,
             "asynManager:getInterruptPvt not connected to a port");
         return asynError;
     }
+
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:getInterruptPvt: port shut down");
+        return asynDisabled;
+    }
+
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
     if(!pinterfaceNode)
@@ -2510,6 +2543,14 @@ static asynStatus addInterruptUser(asynUser *pasynUser,
     port             *pport = pinterruptBase->pport;
 
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:assInterruptUser: port shut down");
+        return asynDisabled;
+    }
+
     if(pinterruptNodePvt->isOnList) {
         epicsMutexUnlock(pport->asynManagerLock);
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -2544,6 +2585,14 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
     port             *pport = pinterruptBase->pport;
 
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:removeInterruptUser: port shut down");
+        return asynDisabled;
+    }
+
     if(!pinterruptNodePvt->isOnList) {
         epicsMutexUnlock(pport->asynManagerLock);
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
