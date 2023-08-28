@@ -962,7 +962,7 @@ asynStatus asynPortDriver::unlock()
 /** Returns the asynStdInterfaces structure used by asynPortDriver. */
 asynStandardInterfaces* asynPortDriver::getAsynStdInterfaces()
 {
-    return &this->asynStdInterfaces;
+    return asynStdInterfaces;
 }
 
 /** Creates a parameter in the parameter library.
@@ -2920,7 +2920,7 @@ asynStatus asynPortDriver::doCallbacksInt8Array(epicsInt8 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsInt8, asynInt8ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.int8ArrayInterruptPvt);
+                                        asynStdInterfaces->int8ArrayInterruptPvt);
 }
 
 
@@ -2991,7 +2991,7 @@ asynStatus asynPortDriver::doCallbacksInt16Array(epicsInt16 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsInt16, asynInt16ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.int16ArrayInterruptPvt);
+                                        asynStdInterfaces->int16ArrayInterruptPvt);
 }
 
 
@@ -3062,7 +3062,7 @@ asynStatus asynPortDriver::doCallbacksInt32Array(epicsInt32 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsInt32, asynInt32ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.int32ArrayInterruptPvt);
+                                        asynStdInterfaces->int32ArrayInterruptPvt);
 }
 
 
@@ -3133,7 +3133,7 @@ asynStatus asynPortDriver::doCallbacksInt64Array(epicsInt64 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsInt64, asynInt64ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.int64ArrayInterruptPvt);
+                                        asynStdInterfaces->int64ArrayInterruptPvt);
 }
 
 
@@ -3204,7 +3204,7 @@ asynStatus asynPortDriver::doCallbacksFloat32Array(epicsFloat32 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsFloat32, asynFloat32ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.float32ArrayInterruptPvt);
+                                        asynStdInterfaces->float32ArrayInterruptPvt);
 }
 
 
@@ -3275,7 +3275,7 @@ asynStatus asynPortDriver::doCallbacksFloat64Array(epicsFloat64 *value,
                                 size_t nElements, int reason, int addr)
 {
     return doCallbacksArray<epicsFloat64, asynFloat64ArrayInterrupt>(value, nElements, reason, addr,
-                                        this->asynStdInterfaces.float64ArrayInterruptPvt);
+                                        asynStdInterfaces->float64ArrayInterruptPvt);
 }
 
 /* asynGenericPointer interface methods */
@@ -3351,7 +3351,7 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
     getParamStatus(address, reason, &status);
     getParamAlarmStatus(address, reason, &alarmStatus);
     getParamAlarmSeverity(address, reason, &alarmSeverity);
-    pasynManager->interruptStart(this->asynStdInterfaces.genericPointerInterruptPvt, &pclientList);
+    pasynManager->interruptStart(asynStdInterfaces->genericPointerInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynGenericPointerInterrupt *pInterrupt = (asynGenericPointerInterrupt *)pnode->drvPvt;
@@ -3372,7 +3372,7 @@ asynStatus asynPortDriver::doCallbacksGenericPointer(void *genericPointer, int r
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
-    pasynManager->interruptEnd(this->asynStdInterfaces.genericPointerInterruptPvt);
+    pasynManager->interruptEnd(asynStdInterfaces->genericPointerInterruptPvt);
     return asynSuccess;
 }
 
@@ -3513,7 +3513,7 @@ asynStatus asynPortDriver::doCallbacksEnum(char *strings[], int values[], int se
     interruptNode *pnode;
     int addr;
 
-    pasynManager->interruptStart(this->asynStdInterfaces.enumInterruptPvt, &pclientList);
+    pasynManager->interruptStart(asynStdInterfaces->enumInterruptPvt, &pclientList);
     pnode = (interruptNode *)ellFirst(pclientList);
     while (pnode) {
         asynEnumInterrupt *pInterrupt = (asynEnumInterrupt *)pnode->drvPvt;
@@ -3528,7 +3528,7 @@ asynStatus asynPortDriver::doCallbacksEnum(char *strings[], int values[], int se
         }
         pnode = (interruptNode *)ellNext(&pnode->node);
     }
-    pasynManager->interruptEnd(this->asynStdInterfaces.enumInterruptPvt);
+    pasynManager->interruptEnd(asynStdInterfaces->enumInterruptPvt);
     return asynSuccess;
 }
 
@@ -3677,15 +3677,13 @@ extern "C" {static void report(void *drvPvt, FILE *fp, int details)
   * call this base class function. */
 void asynPortDriver::report(FILE *fp, int details)
 {
-    asynStandardInterfaces *pInterfaces = &this->asynStdInterfaces;
-
     fprintf(fp, "Port: %s\n", this->portName);
     if (details >= 1) {
         char buff[256];
         epicsTimeStamp timeStamp; getTimeStamp(&timeStamp);
         epicsTimeToStrftime(buff, sizeof(buff), "%Y/%m/%d %H:%M:%S.%03f", &timeStamp);
         fprintf(fp, "  Timestamp: %s\n", buff);
-        if (asynStdInterfaces.octet.pinterface) {
+        if (asynStdInterfaces->octet.pinterface) {
             fprintf(fp, "  Input EOS[%d]: ", this->inputEosLenOctet);
             epicsStrPrintEscaped(fp, this->inputEosOctet, this->inputEosLenOctet);
             fprintf(fp, "\n");
@@ -3697,18 +3695,18 @@ void asynPortDriver::report(FILE *fp, int details)
     }
     if (details >= 3) {
         /* Report interrupt clients */
-        reportInterrupt<asynInt32Interrupt>         (fp, pInterfaces->int32InterruptPvt,        "int32");
-        reportInterrupt<asynInt64Interrupt>         (fp, pInterfaces->int64InterruptPvt,        "int64");
-        reportInterrupt<asynUInt32DigitalInterrupt> (fp, pInterfaces->uInt32DigitalInterruptPvt,"uint32");
-        reportInterrupt<asynFloat64Interrupt>       (fp, pInterfaces->float64InterruptPvt,      "float64");
-        reportInterrupt<asynOctetInterrupt>         (fp, pInterfaces->octetInterruptPvt,        "octet");
-        reportInterrupt<asynInt8ArrayInterrupt>     (fp, pInterfaces->int8ArrayInterruptPvt,    "int8Array");
-        reportInterrupt<asynInt16ArrayInterrupt>    (fp, pInterfaces->int16ArrayInterruptPvt,   "int16Array");
-        reportInterrupt<asynInt32ArrayInterrupt>    (fp, pInterfaces->int32ArrayInterruptPvt,   "int32Array");
-        reportInterrupt<asynFloat32ArrayInterrupt>  (fp, pInterfaces->float32ArrayInterruptPvt, "float32Array");
-        reportInterrupt<asynFloat64ArrayInterrupt>  (fp, pInterfaces->float64ArrayInterruptPvt, "float64Array");
-        reportInterrupt<asynGenericPointerInterrupt>(fp, pInterfaces->genericPointerInterruptPvt, "genericPointer");
-        reportInterrupt<asynEnumInterrupt>          (fp, pInterfaces->enumInterruptPvt,         "Enum");
+        reportInterrupt<asynInt32Interrupt>         (fp, asynStdInterfaces->int32InterruptPvt,        "int32");
+        reportInterrupt<asynInt64Interrupt>         (fp, asynStdInterfaces->int64InterruptPvt,        "int64");
+        reportInterrupt<asynUInt32DigitalInterrupt> (fp, asynStdInterfaces->uInt32DigitalInterruptPvt,"uint32");
+        reportInterrupt<asynFloat64Interrupt>       (fp, asynStdInterfaces->float64InterruptPvt,      "float64");
+        reportInterrupt<asynOctetInterrupt>         (fp, asynStdInterfaces->octetInterruptPvt,        "octet");
+        reportInterrupt<asynInt8ArrayInterrupt>     (fp, asynStdInterfaces->int8ArrayInterruptPvt,    "int8Array");
+        reportInterrupt<asynInt16ArrayInterrupt>    (fp, asynStdInterfaces->int16ArrayInterruptPvt,   "int16Array");
+        reportInterrupt<asynInt32ArrayInterrupt>    (fp, asynStdInterfaces->int32ArrayInterruptPvt,   "int32Array");
+        reportInterrupt<asynFloat32ArrayInterrupt>  (fp, asynStdInterfaces->float32ArrayInterruptPvt, "float32Array");
+        reportInterrupt<asynFloat64ArrayInterrupt>  (fp, asynStdInterfaces->float64ArrayInterruptPvt, "float64Array");
+        reportInterrupt<asynGenericPointerInterrupt>(fp, asynStdInterfaces->genericPointerInterruptPvt, "genericPointer");
+        reportInterrupt<asynEnumInterrupt>          (fp, asynStdInterfaces->enumInterruptPvt,         "Enum");
     }
 }
 
@@ -3988,14 +3986,16 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
 {
     asynStatus status;
     static const char *functionName = "asynPortDriver";
-    asynStandardInterfaces *pInterfaces;
     int addr;
 
     shutdownNeeded = asynFlags & ASYN_DESTRUCTIBLE;
 
-    /* Initialize some members to 0 */
-    pInterfaces = &this->asynStdInterfaces;
-    memset(pInterfaces, 0, sizeof(asynStdInterfaces));
+    /* Dynamically allocate standard interfaces, and never deallocate it. This
+     * causes a memory leak, but allows the interfaces to exist even after the
+     * driver has been destroyed. The interfaces will prevent the defunct driver
+     * to be accessed. */
+    asynStdInterfaces = new asynStandardInterfaces;
+    memset(asynStdInterfaces, 0, sizeof(*asynStdInterfaces));
 
     this->portName = epicsStrDup(portNameIn);
 
@@ -4049,39 +4049,39 @@ void asynPortDriver::initialize(const char *portNameIn, int maxAddrIn, int inter
         interruptMask, asynFlags, autoConnect, priority, stackSize);
 
      /* Set addresses of asyn interfaces */
-    if (interfaceMask & asynCommonMask)         pInterfaces->common.pinterface        = (void *)&ifaceCommon;
-    if (interfaceMask & asynDrvUserMask)        pInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
-    if (interfaceMask & asynInt32Mask)          pInterfaces->int32.pinterface         = (void *)&ifaceInt32;
-    if (interfaceMask & asynInt64Mask)          pInterfaces->int64.pinterface         = (void *)&ifaceInt64;
-    if (interfaceMask & asynUInt32DigitalMask)  pInterfaces->uInt32Digital.pinterface = (void *)&ifaceUInt32Digital;
-    if (interfaceMask & asynFloat64Mask)        pInterfaces->float64.pinterface       = (void *)&ifaceFloat64;
-    if (interfaceMask & asynOctetMask)          pInterfaces->octet.pinterface         = (void *)&ifaceOctet;
-    if (interfaceMask & asynInt8ArrayMask)      pInterfaces->int8Array.pinterface     = (void *)&ifaceInt8Array;
-    if (interfaceMask & asynInt16ArrayMask)     pInterfaces->int16Array.pinterface    = (void *)&ifaceInt16Array;
-    if (interfaceMask & asynInt32ArrayMask)     pInterfaces->int32Array.pinterface    = (void *)&ifaceInt32Array;
-    if (interfaceMask & asynInt64ArrayMask)     pInterfaces->int64Array.pinterface    = (void *)&ifaceInt64Array;
-    if (interfaceMask & asynFloat32ArrayMask)   pInterfaces->float32Array.pinterface  = (void *)&ifaceFloat32Array;
-    if (interfaceMask & asynFloat64ArrayMask)   pInterfaces->float64Array.pinterface  = (void *)&ifaceFloat64Array;
-    if (interfaceMask & asynGenericPointerMask) pInterfaces->genericPointer.pinterface= (void *)&ifaceGenericPointer;
-    if (interfaceMask & asynOptionMask)         pInterfaces->option.pinterface        = (void *)&ifaceOption;
-    if (interfaceMask & asynEnumMask)           pInterfaces->Enum.pinterface          = (void *)&ifaceEnum;
+    if (interfaceMask & asynCommonMask)         asynStdInterfaces->common.pinterface        = (void *)&ifaceCommon;
+    if (interfaceMask & asynDrvUserMask)        asynStdInterfaces->drvUser.pinterface       = (void *)&ifaceDrvUser;
+    if (interfaceMask & asynInt32Mask)          asynStdInterfaces->int32.pinterface         = (void *)&ifaceInt32;
+    if (interfaceMask & asynInt64Mask)          asynStdInterfaces->int64.pinterface         = (void *)&ifaceInt64;
+    if (interfaceMask & asynUInt32DigitalMask)  asynStdInterfaces->uInt32Digital.pinterface = (void *)&ifaceUInt32Digital;
+    if (interfaceMask & asynFloat64Mask)        asynStdInterfaces->float64.pinterface       = (void *)&ifaceFloat64;
+    if (interfaceMask & asynOctetMask)          asynStdInterfaces->octet.pinterface         = (void *)&ifaceOctet;
+    if (interfaceMask & asynInt8ArrayMask)      asynStdInterfaces->int8Array.pinterface     = (void *)&ifaceInt8Array;
+    if (interfaceMask & asynInt16ArrayMask)     asynStdInterfaces->int16Array.pinterface    = (void *)&ifaceInt16Array;
+    if (interfaceMask & asynInt32ArrayMask)     asynStdInterfaces->int32Array.pinterface    = (void *)&ifaceInt32Array;
+    if (interfaceMask & asynInt64ArrayMask)     asynStdInterfaces->int64Array.pinterface    = (void *)&ifaceInt64Array;
+    if (interfaceMask & asynFloat32ArrayMask)   asynStdInterfaces->float32Array.pinterface  = (void *)&ifaceFloat32Array;
+    if (interfaceMask & asynFloat64ArrayMask)   asynStdInterfaces->float64Array.pinterface  = (void *)&ifaceFloat64Array;
+    if (interfaceMask & asynGenericPointerMask) asynStdInterfaces->genericPointer.pinterface= (void *)&ifaceGenericPointer;
+    if (interfaceMask & asynOptionMask)         asynStdInterfaces->option.pinterface        = (void *)&ifaceOption;
+    if (interfaceMask & asynEnumMask)           asynStdInterfaces->Enum.pinterface          = (void *)&ifaceEnum;
 
     /* Define which interfaces can generate interrupts */
-    if (interruptMask & asynInt32Mask)          pInterfaces->int32CanInterrupt          = 1;
-    if (interruptMask & asynInt64Mask)          pInterfaces->int64CanInterrupt          = 1;
-    if (interruptMask & asynUInt32DigitalMask)  pInterfaces->uInt32DigitalCanInterrupt  = 1;
-    if (interruptMask & asynFloat64Mask)        pInterfaces->float64CanInterrupt        = 1;
-    if (interruptMask & asynOctetMask)          pInterfaces->octetCanInterrupt          = 1;
-    if (interruptMask & asynInt8ArrayMask)      pInterfaces->int8ArrayCanInterrupt      = 1;
-    if (interruptMask & asynInt16ArrayMask)     pInterfaces->int16ArrayCanInterrupt     = 1;
-    if (interruptMask & asynInt32ArrayMask)     pInterfaces->int32ArrayCanInterrupt     = 1;
-    if (interruptMask & asynInt64ArrayMask)     pInterfaces->int64ArrayCanInterrupt     = 1;
-    if (interruptMask & asynFloat32ArrayMask)   pInterfaces->float32ArrayCanInterrupt   = 1;
-    if (interruptMask & asynFloat64ArrayMask)   pInterfaces->float64ArrayCanInterrupt   = 1;
-    if (interruptMask & asynGenericPointerMask) pInterfaces->genericPointerCanInterrupt = 1;
-    if (interruptMask & asynEnumMask)           pInterfaces->enumCanInterrupt           = 1;
+    if (interruptMask & asynInt32Mask)          asynStdInterfaces->int32CanInterrupt          = 1;
+    if (interruptMask & asynInt64Mask)          asynStdInterfaces->int64CanInterrupt          = 1;
+    if (interruptMask & asynUInt32DigitalMask)  asynStdInterfaces->uInt32DigitalCanInterrupt  = 1;
+    if (interruptMask & asynFloat64Mask)        asynStdInterfaces->float64CanInterrupt        = 1;
+    if (interruptMask & asynOctetMask)          asynStdInterfaces->octetCanInterrupt          = 1;
+    if (interruptMask & asynInt8ArrayMask)      asynStdInterfaces->int8ArrayCanInterrupt      = 1;
+    if (interruptMask & asynInt16ArrayMask)     asynStdInterfaces->int16ArrayCanInterrupt     = 1;
+    if (interruptMask & asynInt32ArrayMask)     asynStdInterfaces->int32ArrayCanInterrupt     = 1;
+    if (interruptMask & asynInt64ArrayMask)     asynStdInterfaces->int64ArrayCanInterrupt     = 1;
+    if (interruptMask & asynFloat32ArrayMask)   asynStdInterfaces->float32ArrayCanInterrupt   = 1;
+    if (interruptMask & asynFloat64ArrayMask)   asynStdInterfaces->float64ArrayCanInterrupt   = 1;
+    if (interruptMask & asynGenericPointerMask) asynStdInterfaces->genericPointerCanInterrupt = 1;
+    if (interruptMask & asynEnumMask)           asynStdInterfaces->enumCanInterrupt           = 1;
 
-    status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
+    status = pasynStandardInterfacesBase->initialize(portName, asynStdInterfaces,
                                                      this->pasynUserSelf, this);
     if (status != asynSuccess) {
         std::string msg = std::string(driverName) + ":" + functionName +

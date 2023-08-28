@@ -263,7 +263,7 @@ protected:
 
     asynParamSet* paramSet;
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
-    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
+    asynStandardInterfaces *asynStdInterfaces;   /**< The asyn interfaces this driver implements */
 
 private:
     static void exceptionHandler(asynUser *pasynUser, asynException exception);
