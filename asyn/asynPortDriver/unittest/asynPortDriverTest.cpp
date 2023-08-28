@@ -214,9 +214,7 @@ MAIN(asynPortDriverTest)
             std::string portName(tempPort->portName);
             asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
             pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
-            pasynManager->lockPort(pasynUser);
             pasynManager->shutdownPort(pasynUser);
-            pasynManager->unlockPort(pasynUser);
             pasynManager->freeAsynUser(pasynUser);
 
             checkShutdown(portName.c_str());
@@ -254,9 +252,7 @@ MAIN(asynPortDriverTest)
             testOk1(pasynInt32SyncIO->connect(portName, 0, &intUser, "int32") == asynSuccess);
             testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) == asynSuccess);
 
-            pasynManager->lockPort(pasynUser);
             pasynManager->shutdownPort(pasynUser);
-            pasynManager->unlockPort(pasynUser);
             pasynManager->freeAsynUser(pasynUser);
 
             pcommon->report(pcommonIf->drvPvt, stdout, 0);

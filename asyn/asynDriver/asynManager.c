@@ -2016,19 +2016,7 @@ static void destroyPortDriver(void *portName) {
         pasynManager->freeAsynUser(pasynUser);
         return;
     }
-    status = pasynManager->lockPort(pasynUser);
-    if(status != asynSuccess) {
-        if (status != asynDisabled) {
-            printf("%s\n", pasynUser->errorMessage);
-        }
-        pasynManager->freeAsynUser(pasynUser);
-        return;
-    }
     status = pasynManager->shutdownPort(pasynUser);
-    if(status != asynSuccess) {
-        printf("%s\n", pasynUser->errorMessage);
-    }
-    status = pasynManager->unlockPort(pasynUser);
     if(status != asynSuccess) {
         printf("%s\n", pasynUser->errorMessage);
     }

@@ -4146,19 +4146,7 @@ void asynPortDriver::shutdown() {
     // and shutdown the port.
     if (needsShutdown()) {
         epics::atomic::set(shutdownNeeded, 0);
-        asynStatus status = pasynManager->lockPort(pasynUserSelf);
-        if(status != asynSuccess) {
-            if (status != asynDisabled) {
-                printf("%s\n", pasynUserSelf->errorMessage);
-            }
-            pasynManager->freeAsynUser(pasynUserSelf);
-            return;
-        }
-        status = pasynManager->shutdownPort(pasynUserSelf);
-        if(status != asynSuccess) {
-            printf("%s\n", pasynUserSelf->errorMessage);
-        }
-        status = pasynManager->unlockPort(pasynUserSelf);
+        asynStatus status = pasynManager->shutdownPort(pasynUserSelf);
         if(status != asynSuccess) {
             printf("%s\n", pasynUserSelf->errorMessage);
         }

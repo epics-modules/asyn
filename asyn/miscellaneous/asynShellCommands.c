@@ -1332,17 +1332,7 @@ ASYN_API int
         pasynManager->freeAsynUser(pasynUser);
         return -1;
     }
-    status = pasynManager->lockPort(pasynUser);
-    if(status != asynSuccess) {
-        printf("%s\n", pasynUser->errorMessage);
-        pasynManager->freeAsynUser(pasynUser);
-        return -1;
-    }
     status = pasynManager->shutdownPort(pasynUser);
-    if(status != asynSuccess) {
-        printf("%s\n", pasynUser->errorMessage);
-    }
-    status = pasynManager->unlockPort(pasynUser);
     if(status != asynSuccess) {
         printf("%s\n", pasynUser->errorMessage);
     }
