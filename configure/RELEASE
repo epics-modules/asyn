@@ -9,22 +9,22 @@ SUPPORT=/corvette/home/epics/support
 # IPAC is only necessary if support for Greensprings IP488 is required
 # IPAC release V2-7 or later is required.
 # It can be obtained here: https://github.com/epics-modules/ipac
-IPAC=$(SUPPORT)/ipac-2-16
+#IPAC=$(SUPPORT)/ipac-2-16
 
 # Optional
 # SEQ is required for testIPServer
 # It can be obtained here: https://www-csr.bessy.de/control/SoftDist/sequencer/Manual.html
-SNCSEQ=$(SUPPORT)/seq-2-2-9
+#SNCSEQ=$(SUPPORT)/seq-2-2-9
 
 # Optional
 # For sCalcout support in asynOctet - applications include asynCalc.dbd
 # It can be obtained here: https://github.com/epics-modules/calc
-CALC=$(SUPPORT)/calc-3-7-4
+#CALC=$(SUPPORT)/calc-3-7-4
 
 # Optional
 # If CALC was built with SSCAN support then SSCAN must be defined for testEpicsApp
 # It can be obtained here: https://github.com/epics-modules/sscan
-SSCAN=$(SUPPORT)/sscan-2-11-5
+#SSCAN=$(SUPPORT)/sscan-2-11-5
 
 # Required
 # EPICS_BASE 3.14.6 or later is required
