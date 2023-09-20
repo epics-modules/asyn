@@ -97,7 +97,7 @@ public:
     devAsynXXXArray(dbCommon *pRecord, DBLINK *plink, int signedType, int unsignedType, bool isOutput, const char *interfaceType,
                     userCallback qrCallback, INTERRUPT interruptCallback):
         pRecord_((RECORD_TYPE*) pRecord),
-        pInterface_(nullptr),
+        pInterface_(0),
         lastStatus_(asynSuccess),
         isOutput_(isOutput),
         ringBuffer_(0),
