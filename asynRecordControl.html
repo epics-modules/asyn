@@ -11,11 +11,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -84,7 +84,7 @@
            <div itemprop="articleBody">
              
   <section id="asyn-record-i-o-example">
-<h1>asyn Record I/O Example<a class="headerlink" href="#asyn-record-i-o-example" title="Permalink to this heading"></a></h1>
+<h1>asyn Record I/O Example<a class="headerlink" href="#asyn-record-i-o-example" title="Link to this heading"></a></h1>
 <p>This document describes how to use an asyn record to communicate with a message-based instrument.</p>
 <p>It is a step-by-step example of how I set up simple instrument control
 using only an asyn record. The instrument may be connected to a
@@ -178,11 +178,11 @@ few changes to the original values including increasing the trace I/O
 truncate size to 100 characters, enabling the traceIOEscape display and
 turning on traceIODriver debugging.</p>
 <section id="main-control-screen-asynrecord-adl">
-<h2>Main control screen, asynRecord.adl<a class="headerlink" href="#main-control-screen-asynrecord-adl" title="Permalink to this heading"></a></h2>
+<h2>Main control screen, asynRecord.adl<a class="headerlink" href="#main-control-screen-asynrecord-adl" title="Link to this heading"></a></h2>
 <figure class="align-center" id="id2">
 <img alt="_images/AsynRecordWindow.png" src="_images/AsynRecordWindow.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynRecord.adl</strong></span><a class="headerlink" href="#id2" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><strong>asynRecord.adl</strong></span><a class="headerlink" href="#id2" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>Click on the ‘More…’ button and bring up the “asynOctet Interface
@@ -194,11 +194,11 @@ probably need to specify appropriate input and output terminator
 characters.</p>
 </section>
 <section id="asynoctet-i-o-screen-asynoctet-adl">
-<h2>asynOctet I/O screen, asynOctet.adl<a class="headerlink" href="#asynoctet-i-o-screen-asynoctet-adl" title="Permalink to this heading"></a></h2>
+<h2>asynOctet I/O screen, asynOctet.adl<a class="headerlink" href="#asynoctet-i-o-screen-asynoctet-adl" title="Link to this heading"></a></h2>
 <figure class="align-center" id="id3">
 <img alt="_images/AsynOctetWindow.png" src="_images/AsynOctetWindow.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynOctet.adl</strong></span><a class="headerlink" href="#id3" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><strong>asynOctet.adl</strong></span><a class="headerlink" href="#id3" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>Try entering some commands. A good one to start with is the SCPI
@@ -206,11 +206,11 @@ Device Identification (*IDN?) command. You can see why I had to
 arrange for reply messages longer than the default 40 characters!</p>
 </section>
 <section id="id1">
-<h2>asynOctet I/O screen, asynOctet.adl<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h2>
+<h2>asynOctet I/O screen, asynOctet.adl<a class="headerlink" href="#id1" title="Link to this heading"></a></h2>
 <figure class="align-center" id="id4">
 <img alt="_images/AsynOctetIDN.png" src="_images/AsynOctetIDN.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynOctet.adl</strong></span><a class="headerlink" href="#id4" title="Permalink to this image"></a></p>
+<p><span class="caption-text"><strong>asynOctet.adl</strong></span><a class="headerlink" href="#id4" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>The readback display is truncated. Since I have traceIODriver
@@ -241,7 +241,7 @@ for writing support for your instrument.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-July-18.
+      <span class="lastupdated">Last updated on 2023-September-20.
       </span></p>
   </div>
 

@@ -11,11 +11,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -115,17 +115,17 @@
            <div itemprop="articleBody">
              
   <section id="devgpib-obsolete">
-<h1>devGpib (obsolete)<a class="headerlink" href="#devgpib-obsolete" title="Permalink to this heading"></a></h1>
+<h1>devGpib (obsolete)<a class="headerlink" href="#devgpib-obsolete" title="Link to this heading"></a></h1>
 <p><strong>NOTE: devGpib is obsolete and should not be used for new applications.</strong></p>
 <p><a class="reference external" href="http://epics.web.psi.ch/software/streamdevice">StreamDevice</a>
 should be used instead.</p>
 <section id="license-agreement">
-<h2>License Agreement<a class="headerlink" href="#license-agreement" title="Permalink to this heading"></a></h2>
+<h2>License Agreement<a class="headerlink" href="#license-agreement" title="Link to this heading"></a></h2>
 <p>This product is available via the open source license described at the end of this
 document.</p>
 </section>
 <section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<h2>Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
 <p>devGpib is the successor to the GPIB support that came with EPICS base 3.13. The
 3.13 code was unbundled by Benjamin Franksen, and ultimately became gpibCore which
 is the 3.14 version of Benjamin’s support. devGpib is the successor to the device
@@ -157,7 +157,7 @@ custom support that uses devSupportGpib.</p></li>
 </ul>
 </section>
 <section id="acknowledgments">
-<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Permalink to this heading"></a></h2>
+<h2>Acknowledgments<a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>
 <table class="docutils align-default">
 <colgroup>
 <col style="width: 20%" />
@@ -188,14 +188,14 @@ and addressed commands. He also made the conversion to using asyn drivers.</p></
 </table>
 </section>
 <section id="install-and-build">
-<h2>Install and Build<a class="headerlink" href="#install-and-build" title="Permalink to this heading"></a></h2>
+<h2>Install and Build<a class="headerlink" href="#install-and-build" title="Link to this heading"></a></h2>
 <p>devGpib is bundled with the asynDriver. The code is in library asyn. Thus, once
 asyn is included as part of an application, devGpib will also be available. It is
 only necessary to include <cite>devGpib.dbd</cite> in your <cite>&lt;app&gt;Include.dbd</cite>
 file. In addition, device support for your specific instruments must be installed.</p>
 </section>
 <section id="using-instrument-support">
-<h2>Using Instrument Support<a class="headerlink" href="#using-instrument-support" title="Permalink to this heading"></a></h2>
+<h2>Using Instrument Support<a class="headerlink" href="#using-instrument-support" title="Link to this heading"></a></h2>
 <p>devGpib does not provide support for specific GPIB devices but for implementing
 such support. Within the EPICS community, support exists for many GPIB devices.
 The EPICS supported hardware list shows some of the support. If your device is not
@@ -270,7 +270,7 @@ If the implementer is nice, documentation like the following is provided:</p>
 </tbody>
 </table>
 <section id="reports-and-timeouts">
-<h3>Reports and Timeouts<a class="headerlink" href="#reports-and-timeouts" title="Permalink to this heading"></a></h3>
+<h3>Reports and Timeouts<a class="headerlink" href="#reports-and-timeouts" title="Link to this heading"></a></h3>
 <p>In order to have these commands available, <cite>devGpib.dbd</cite> must be included
 as part of the applications` xxxInclude.dbd` file.</p>
 <p>A report of all devGpib devices can be generated via the command:</p>
@@ -299,17 +299,17 @@ be changed with the <cite>iocsh</cite> command:</p>
 </section>
 </section>
 <section id="creating-instrument-device-support">
-<h2>Creating Instrument Device Support<a class="headerlink" href="#creating-instrument-device-support" title="Permalink to this heading"></a></h2>
+<h2>Creating Instrument Device Support<a class="headerlink" href="#creating-instrument-device-support" title="Link to this heading"></a></h2>
 <p>This section describes how to write device support for an instrument. It is assumed
 that the reader is already familiar with the dialogue required to operate the instrument
 and EPICS record and device support.</p>
 <section id="purpose">
-<h3>Purpose<a class="headerlink" href="#purpose" title="Permalink to this heading"></a></h3>
+<h3>Purpose<a class="headerlink" href="#purpose" title="Link to this heading"></a></h3>
 <p>An instrument support module provides access to the operating parameters of the
 instrument.</p>
 </section>
 <section id="overview">
-<h3>Overview<a class="headerlink" href="#overview" title="Permalink to this heading"></a></h3>
+<h3>Overview<a class="headerlink" href="#overview" title="Link to this heading"></a></h3>
 <p>Instruments typically have many operating parameters, each of which may be thought
 of in terms of an EPICS database record type. It is the job of the instrument support
 designer to map operating parameters to record types. Once this mapping is complete,
@@ -317,7 +317,7 @@ an instrument support module can be written. For each operating parameter, a gpi
 must be created.</p>
 </section>
 <section id="device-dbd-definition">
-<h3>Device DBD Definition<a class="headerlink" href="#device-dbd-definition" title="Permalink to this heading"></a></h3>
+<h3>Device DBD Definition<a class="headerlink" href="#device-dbd-definition" title="Link to this heading"></a></h3>
 <p>For each instrument support module, device definitions must be defined:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="o">&lt;</span><span class="n">record</span> <span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">link</span> <span class="nb">type</span><span class="o">&gt;</span><span class="p">,</span><span class="o">&lt;</span><span class="n">DSET</span> <span class="n">name</span><span class="o">&gt;</span><span class="p">,</span><span class="s2">&quot;&lt;DTYP name&gt;&quot;</span><span class="p">)</span>
 </pre></div>
@@ -361,7 +361,7 @@ support code.</p></td>
 of records, see the EPICS Application Developers Guide.</p>
 </section>
 <section id="instrument-device-support-module">
-<h3>Instrument Device Support Module<a class="headerlink" href="#instrument-device-support-module" title="Permalink to this heading"></a></h3>
+<h3>Instrument Device Support Module<a class="headerlink" href="#instrument-device-support-module" title="Link to this heading"></a></h3>
 <p>If you are writing a new instrument support module just:</p>
 <ul>
 <li><p>Create a source directory and ‘cd’ to it.</p></li>
@@ -429,7 +429,7 @@ sections:</p>
 </section>
 </section>
 <section id="dset-device-support-entry-tables">
-<h2>DSET - Device Support Entry Tables<a class="headerlink" href="#dset-device-support-entry-tables" title="Permalink to this heading"></a></h2>
+<h2>DSET - Device Support Entry Tables<a class="headerlink" href="#dset-device-support-entry-tables" title="Link to this heading"></a></h2>
 <p>The following statements create the Device Support Entry Tables</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define DSET_AI    devAiSkeletonGpib</span>
 <span class="c1">#define DSET_BI    devBiSkeletonGpib</span>
@@ -449,7 +449,7 @@ specify different DTYP strings for the DSET_AO and DSET_AORAW device declaration
 possible to create custom support, but this is more difficult.</p>
 </section>
 <section id="gpibcmd-definitions">
-<h2>gpibCmd Definitions<a class="headerlink" href="#gpibcmd-definitions" title="Permalink to this heading"></a></h2>
+<h2>gpibCmd Definitions<a class="headerlink" href="#gpibcmd-definitions" title="Link to this heading"></a></h2>
 <p>This is where the translation to and from the language of the instrument is defined.
 The actual table contains one element for each parameter that is made available
 to the user via the &#64;&lt;number&gt; portion of an INP or OUT field.</p>
@@ -604,12 +604,12 @@ allow only a single termination character.</p>
 </tbody>
 </table>
 <section id="definitions-for-pgpibcmd-type">
-<h3>Definitions for pgpibCmd-&gt;type<a class="headerlink" href="#definitions-for-pgpibcmd-type" title="Permalink to this heading"></a></h3>
+<h3>Definitions for pgpibCmd-&gt;type<a class="headerlink" href="#definitions-for-pgpibcmd-type" title="Link to this heading"></a></h3>
 <p>The following describes the semantics for the device support provided by the devGpib
 support provided with asynDriver. If an application extends this support, it must
 document its changes.</p>
 <table class="docutils align-default" id="id3">
-<caption><span class="caption-text">Contributions</span><a class="headerlink" href="#id3" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">Contributions</span><a class="headerlink" href="#id3" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -882,7 +882,7 @@ caused the SRQ.</p></td>
 </section>
 </section>
 <section id="efast-enumerated-fast-i-o-tables">
-<h2>Efast (Enumerated Fast I/O) Tables<a class="headerlink" href="#efast-enumerated-fast-i-o-tables" title="Permalink to this heading"></a></h2>
+<h2>Efast (Enumerated Fast I/O) Tables<a class="headerlink" href="#efast-enumerated-fast-i-o-tables" title="Link to this heading"></a></h2>
 <p>A device’s command set often has things like “OFF” or “ON” in the command string.
 It is convenient to issue such commands via binary and multibit binary records.
 Efast tables specify such strings. Simply specify the string value for each of the
@@ -933,7 +933,7 @@ the GPIB support library code will end up running off the end of the table.</p>
 the record is placed into a INVALID alarm state.</p>
 </section>
 <section id="devgpibnames-name-table">
-<h2>devGpibNames - Name Table<a class="headerlink" href="#devgpibnames-name-table" title="Permalink to this heading"></a></h2>
+<h2>devGpibNames - Name Table<a class="headerlink" href="#devgpibnames-name-table" title="Link to this heading"></a></h2>
 <p>For binary and multibit binary records, the choice fields of a record can be assigned
 values at record initialization. If pdevGpibNames has a value, then when a record
 is initialized, the instrument support uses the associated name table to assign
@@ -997,7 +997,7 @@ the znam and onam fields are filled in.</p>
 in if the database designer has assigned them values.</p>
 </section>
 <section id="defining-the-devgpibparmblock">
-<h2>Defining the devGpibParmBlock<a class="headerlink" href="#defining-the-devgpibparmblock" title="Permalink to this heading"></a></h2>
+<h2>Defining the devGpibParmBlock<a class="headerlink" href="#defining-the-devgpibparmblock" title="Link to this heading"></a></h2>
 <p>Each DSET of the instrument support contains the address of a <cite>devGpibParmBlock</cite>.
 <cite>init_ai</cite> MUST initialize this structure. For example:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">static</span> <span class="n">long</span> <span class="n">init_ai</span><span class="p">(</span><span class="nb">int</span> <span class="n">parm</span><span class="p">)</span>
@@ -1029,7 +1029,7 @@ in if the database designer has assigned them values.</p>
 </pre></div>
 </div>
 <table class="docutils align-default" id="id4">
-<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id4" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id4" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -1076,7 +1076,7 @@ i.e. the largest rspLen defined in gpibCmds.</p></td>
 </table>
 </section>
 <section id="srq-processing">
-<h2>SRQ Processing<a class="headerlink" href="#srq-processing" title="Permalink to this heading"></a></h2>
+<h2>SRQ Processing<a class="headerlink" href="#srq-processing" title="Link to this heading"></a></h2>
 <p>If the low level device driver implements interface <cite>asynGpib</cite>, then
 devSupportGpib registers itself to handle SRQs. It defines two types of SRQs: solicited
 and unsollicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
@@ -1106,7 +1106,7 @@ from being polled stop any communications to it, i.e. set SCAN-field(s) to PASSI
 and turn off the device.</p>
 </section>
 <section id="gpibcmd-convert-example">
-<h2>gpibCmd convert example<a class="headerlink" href="#gpibcmd-convert-example" title="Permalink to this heading"></a></h2>
+<h2>gpibCmd convert example<a class="headerlink" href="#gpibcmd-convert-example" title="Link to this heading"></a></h2>
 <p>The asyn distribution includes an example of how to implement the convert parameter
 for a gpibCmd. The example is in asyn/devGpib/devGpibConvertExample.c. It defines
 three gpibCmds for stringin and three for stringout records. All three input commands
@@ -1265,7 +1265,7 @@ static int writeCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
 </div>
 </section>
 <section id="devcommongpib">
-<h2>devCommonGpib<a class="headerlink" href="#devcommongpib" title="Permalink to this heading"></a></h2>
+<h2>devCommonGpib<a class="headerlink" href="#devcommongpib" title="Link to this heading"></a></h2>
 <p>The facilities described above should satisfy most gpib requirements. This section
 and the next explain how to provide additional support. For example, support could
 be written for additional record types. This section explains devCommonGpib, and
@@ -1288,14 +1288,14 @@ described above. It also describes additional structures described in the next s
 </ul>
 </section>
 <section id="devsupportgpib">
-<h2>devSupportGpib<a class="headerlink" href="#devsupportgpib" title="Permalink to this heading"></a></h2>
+<h2>devSupportGpib<a class="headerlink" href="#devsupportgpib" title="Link to this heading"></a></h2>
 <p>devSupportGpib.h describes all the public structures used by devGpib. The structures
 gpibCmd, devGpibNames, and devGpibParmBlock were described above. They are needed
 to create an instrument device support module. The remaining structures are used
 by devCommonGpib, devSupportGpib, or other support. These structures are: gDset,
 gpibDpvt, devGpibPvt, and devSupportGpib.</p>
 <section id="gdset">
-<h3>gDset<a class="headerlink" href="#gdset" title="Permalink to this heading"></a></h3>
+<h3>gDset<a class="headerlink" href="#gdset" title="Link to this heading"></a></h3>
 <p>A gDset is an “overloaded” definition of a DSET. A gDset looks to iocCore like a
 regular DSET, but it has an additional field that is the address of a devGpibParmBlock.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">gDset</span>
@@ -1308,7 +1308,7 @@ regular DSET, but it has an additional field that is the address of a devGpibPar
 </div>
 <p>where</p>
 <table class="docutils align-default" id="id5">
-<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id5" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id5" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -1328,7 +1328,7 @@ types in EPICS base.</p></td>
 </table>
 </section>
 <section id="gpibdpvt">
-<h3>gpibDpvt<a class="headerlink" href="#gpibdpvt" title="Permalink to this heading"></a></h3>
+<h3>gpibDpvt<a class="headerlink" href="#gpibdpvt" title="Link to this heading"></a></h3>
 <p>The dpvt field of a record with devGpib device support contains the address of a gpibDpvt</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">struct</span> <span class="n">gpibDpvt</span>
 <span class="p">{</span>
@@ -1354,7 +1354,7 @@ types in EPICS base.</p></td>
 </div>
 <p>where</p>
 <table class="docutils align-default" id="id6">
-<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id6" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id6" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20%" />
 <col style="width: 80%" />
@@ -1415,7 +1415,7 @@ i.e. it is private.</p></td>
 </table>
 </section>
 <section id="id1">
-<h3>devSupportGpib<a class="headerlink" href="#id1" title="Permalink to this heading"></a></h3>
+<h3>devSupportGpib<a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <p>Describes methods implemented by devSupportGpib.c.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">If</span> <span class="n">a</span> <span class="n">method</span> <span class="n">returns</span> <span class="nb">int</span> <span class="n">then</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">(</span><span class="n">OK</span><span class="p">,</span> <span class="n">failure</span><span class="p">)</span> <span class="o">*/</span>
 <span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">gpibWork</span><span class="p">)(</span><span class="n">gpibDpvt</span> <span class="o">*</span><span class="n">pgpibDpvt</span><span class="p">,</span><span class="nb">int</span> <span class="n">failure</span><span class="p">);</span>
@@ -1445,7 +1445,7 @@ i.e. it is private.</p></td>
 </pre></div>
 </div>
 <table class="docutils align-default" id="id7">
-<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id7" title="Permalink to this table"></a></caption>
+<caption><span class="caption-text">gpibCmds</span><a class="headerlink" href="#id7" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 10%" />
 <col style="width: 90%" />
@@ -1529,7 +1529,7 @@ set PACT true.</p></td>
 </section>
 </section>
 <section id="general-gpib-problems">
-<h2>General GPIB Problems<a class="headerlink" href="#general-gpib-problems" title="Permalink to this heading"></a></h2>
+<h2>General GPIB Problems<a class="headerlink" href="#general-gpib-problems" title="Link to this heading"></a></h2>
 <p>NOTE: The following comments are from John Winan’s original GPIB documentation.</p>
 <p>Every type of communication system has its problems. Some instrument vendors don’t
 properly test the GPIB interfaces on their products. Some devices miss messages
@@ -1558,7 +1558,7 @@ go at the same time. And if there are enough records tied to the same device, th
 is no telling how fast the device will be pushed.</p>
 </section>
 <section id="id2">
-<h2>License Agreement<a class="headerlink" href="#id2" title="Permalink to this heading"></a></h2>
+<h2>License Agreement<a class="headerlink" href="#id2" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2002</span> <span class="n">University</span> <span class="n">of</span> <span class="n">Chicago</span><span class="p">,</span> <span class="n">The</span> <span class="n">Regents</span> <span class="n">of</span> <span class="n">the</span>
 <span class="n">University</span> <span class="n">of</span> <span class="n">California</span><span class="p">,</span> <span class="ow">and</span> <span class="n">Berliner</span> <span class="n">Elektronenspeicherring</span>
 <span class="n">Gesellschaft</span> <span class="n">fuer</span> <span class="n">Synchrotronstrahlung</span> <span class="n">m</span><span class="o">.</span><span class="n">b</span><span class="o">.</span><span class="n">H</span><span class="o">.</span> <span class="p">(</span><span class="n">BESSY</span><span class="p">)</span> <span class="n">All</span> <span class="n">rights</span>
@@ -1643,7 +1643,7 @@ is no telling how fast the device will be pushed.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-July-18.
+      <span class="lastupdated">Last updated on 2023-September-20.
       </span></p>
   </div>
 

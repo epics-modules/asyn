@@ -11,11 +11,11 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script src="_static/jquery.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
-        <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/doctools.js"></script>
-        <script src="_static/sphinx_highlight.js"></script>
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=5929fcd5"></script>
+        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -97,7 +97,7 @@
            <div itemprop="articleBody">
              
   <section id="howtodoserial-streamdevice">
-<h1>HowToDoSerial (StreamDevice)<a class="headerlink" href="#howtodoserial-streamdevice" title="Permalink to this heading"></a></h1>
+<h1>HowToDoSerial (StreamDevice)<a class="headerlink" href="#howtodoserial-streamdevice" title="Link to this heading"></a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">author<span class="colon">:</span></dt>
 <dd class="field-odd"><ol class="upperalpha simple" start="23">
@@ -108,7 +108,7 @@
 <p>This document describes how to use StreamDevice and ASYN to create EPICS device support for a simple serial,
 GPIB, or network attached device</p>
 <section id="introduction">
-<h2>1. Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
+<h2>1. Introduction<a class="headerlink" href="#introduction" title="Link to this heading"></a></h2>
 <p>This tutorial provides step-by-step instructions on how to create EPICS support
 for a simple serial, GPIB (IEEE-488) or network attached device. The steps are presented
 in a way that should make it possible to apply them in cookbook fashion to create
@@ -139,7 +139,7 @@ which are common to a wide range of devices. Sections 1 through 4 of this tutori
 apply to all SCPI (IEEE-488.2) devices.</p>
 </section>
 <section id="create-a-new-device-support-module">
-<h2>2. Create a new device support module<a class="headerlink" href="#create-a-new-device-support-module" title="Permalink to this heading"></a></h2>
+<h2>2. Create a new device support module<a class="headerlink" href="#create-a-new-device-support-module" title="Link to this heading"></a></h2>
 <p>The easiest way to do this is with the makeSupport.pl script supplied with the EPICS
 ASYN package.</p>
 <p>Here are the commands I ran. To make the command examples a little shorter I used
@@ -161,7 +161,7 @@ norume&gt; $ASYN/bin/$EPICS_HOST_ARCH/makeSupport.pl -t streamSCPI HPE3631A
 </pre></div>
 </div>
 <section id="make-changes-to-some-files-in-configure">
-<h3>2.1 Make changes to some files in configure/<a class="headerlink" href="#make-changes-to-some-files-in-configure" title="Permalink to this heading"></a></h3>
+<h3>2.1 Make changes to some files in configure/<a class="headerlink" href="#make-changes-to-some-files-in-configure" title="Link to this heading"></a></h3>
 <p>Edit the configure/RELEASE file which makeSupport.pl created and confirm that the
 entries describing the paths to your EPICS base and ASYN support are correct. For
 example these might be:</p>
@@ -207,7 +207,7 @@ edit HPE3631ASup/Makefile and add the line</p>
 </section>
 </section>
 <section id="create-a-test-application-optional">
-<h2>3. Create a test application (optional)<a class="headerlink" href="#create-a-test-application-optional" title="Permalink to this heading"></a></h2>
+<h2>3. Create a test application (optional)<a class="headerlink" href="#create-a-test-application-optional" title="Link to this heading"></a></h2>
 <p>Now that a device support module has been produced it is a good idea to create a
 new EPICS application to confirm that the device support is operating correctly.
 The easiest way to do this is with the makeBaseApp.pl script supplied with EPICS.
@@ -356,7 +356,7 @@ lines 23 through 31 with a single line like:</p>
 <p>You would also change the application Makefile to specify drfvVxi11.dbd rather than
 drvAsynSerialPort.dbd.</p>
 <section id="run-the-test-application">
-<h3>3.1 Run the test application<a class="headerlink" href="#run-the-test-application" title="Permalink to this heading"></a></h3>
+<h3>3.1 Run the test application<a class="headerlink" href="#run-the-test-application" title="Link to this heading"></a></h3>
 <p>The application can be started by running the startup script if you make the script
 executable:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">norume</span><span class="o">&gt;</span> <span class="n">cd</span> <span class="n">iocBoot</span><span class="o">/</span><span class="n">iocHPE3631Atest</span>
@@ -458,7 +458,7 @@ to see the full string as a waveform record. In another window run:</p>
 </section>
 </section>
 <section id="asynrecord-support">
-<h2>4. asynRecord support<a class="headerlink" href="#asynrecord-support" title="Permalink to this heading"></a></h2>
+<h2>4. asynRecord support<a class="headerlink" href="#asynrecord-support" title="Link to this heading"></a></h2>
 <p>The asynRecord provides a convenient mechanism for controlling the diagnostic messages
 produced by asyn drivers. You can also use the MEDM asynOctet screen to manually
 send commands to and view responses from a device. This can be very handy when trying
@@ -490,11 +490,11 @@ Start edm with the arguments appropriate for your IOC:</p>
 </div>
 </section>
 <section id="add-records-and-protocol-file-entries">
-<h2>5. Add records and protocol file entries<a class="headerlink" href="#add-records-and-protocol-file-entries" title="Permalink to this heading"></a></h2>
+<h2>5. Add records and protocol file entries<a class="headerlink" href="#add-records-and-protocol-file-entries" title="Link to this heading"></a></h2>
 <p>The descriptions in this section apply directly to the HP E3631A only but may provide
 useful hints for adding commands for your particular device.</p>
 <section id="add-a-record-to-set-the-device-to-local-or-remote-control">
-<h3>5.1 Add a record to set the device to local or remote control<a class="headerlink" href="#add-a-record-to-set-the-device-to-local-or-remote-control" title="Permalink to this heading"></a></h3>
+<h3>5.1 Add a record to set the device to local or remote control<a class="headerlink" href="#add-a-record-to-set-the-device-to-local-or-remote-control" title="Link to this heading"></a></h3>
 <p>First add an entry to HPE3631ASup/devHPE3631A.proto:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setLocRem</span> <span class="p">{</span>
     <span class="n">out</span> <span class="s2">&quot;SYST:%{LOC|REM}&quot;</span><span class="p">;</span>
@@ -523,7 +523,7 @@ If you’ve created the test application you can try out the new command and see
 it works.</p>
 </section>
 <section id="add-records-to-set-and-check-the-output-on-off-status">
-<h3>5.2 Add records to set and check the output on/off status<a class="headerlink" href="#add-records-to-set-and-check-the-output-on-off-status" title="Permalink to this heading"></a></h3>
+<h3>5.2 Add records to set and check the output on/off status<a class="headerlink" href="#add-records-to-set-and-check-the-output-on-off-status" title="Link to this heading"></a></h3>
 <p>These are simple since they use StreamDevice protocol entries that already exist.
 The setD and getD entries set and get the value of a single integer parameter whose
 command is passed as the argument to the protocol entry:</p>
@@ -547,7 +547,7 @@ command is passed as the argument to the protocol entry:</p>
 </div>
 </section>
 <section id="add-records-to-set-and-check-the-output-voltage-and-current-setpoints">
-<h3>5.3 Add records to set and check the output voltage and current setpoints<a class="headerlink" href="#add-records-to-set-and-check-the-output-voltage-and-current-setpoints" title="Permalink to this heading"></a></h3>
+<h3>5.3 Add records to set and check the output voltage and current setpoints<a class="headerlink" href="#add-records-to-set-and-check-the-output-voltage-and-current-setpoints" title="Link to this heading"></a></h3>
 <p>Add two entries to HPE3631ASup/devHPE3631A.proto:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">setVI</span> <span class="p">{</span>
     <span class="n">out</span> <span class="s2">&quot;INST \$1;\$2 </span><span class="si">%g</span><span class="s2">&quot;</span><span class="p">;</span>
@@ -726,7 +726,7 @@ setpoint readbacks up to date.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2023-July-18.
+      <span class="lastupdated">Last updated on 2023-September-20.
       </span></p>
   </div>
 
