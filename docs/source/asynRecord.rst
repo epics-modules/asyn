@@ -865,9 +865,9 @@ Error Status Fields
       string) at the start of each connection and I/O operation.
   * - AQR
     - W
-    - "About queueRequest"
+    - "Abort queueRequest"
     - DBF_CHAR
-    - Abort queueRequest. If a process request has been queued but not delivered it is
+    - Abort queueRequest. If a process request has been queued but not delivered, it is
       canceled, the record is put into alarm and record completion occurs.
 
 The ERRS field is set to "" (null string) at the start of every operation, including
