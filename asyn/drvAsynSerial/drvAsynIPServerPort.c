@@ -499,6 +499,7 @@ static void ttyCleanup(void *pPvt)
         asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
+        epicsThreadSleep(0.1); /* wait for accept thread to terminate */
     }
     free(tty->portName);
     free(tty->serverInfo);
