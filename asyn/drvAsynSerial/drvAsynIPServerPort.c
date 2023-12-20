@@ -305,7 +305,7 @@ static void connectionListener(void *drvPvt)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "drvAsynIPServerPort: %s started listening for connections on %s\n",
             tty->portName, tty->serverInfo);
-    while (1) {
+    while (tty->fd != INVALID_SOCKET) {
         if (tty->socketType == SOCK_DGRAM) {
             if ((tty->UDPbufferPos == 0) && (tty->UDPbufferSize == 0)) {
                 tty->UDPbufferSize = recvfrom(tty->fd, tty->UDPbuffer, THEORETICAL_UDP_MAX_SIZE , 0, NULL, NULL);
@@ -498,6 +498,7 @@ static void ttyCleanup(void *pPvt)
     if (tty->fd >= 0) {
         asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         epicsSocketDestroy(tty->fd);
+        tty->fd = INVALID_SOCKET;
     }
     free(tty->portName);
     free(tty->serverInfo);
