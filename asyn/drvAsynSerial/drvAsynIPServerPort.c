@@ -295,6 +295,8 @@ static void connectionListener(void *drvPvt)
     int i;
     portList_t *pl, *p;
     int connected;
+    fd_set read_set;
+    struct timeval select_timeout;
 
     /*
      * Sanity check
@@ -306,6 +308,13 @@ static void connectionListener(void *drvPvt)
             "drvAsynIPServerPort: %s started listening for connections on %s\n",
             tty->portName, tty->serverInfo);
     while (tty->fd != INVALID_SOCKET) {
+        FD_ZERO(&read_set);
+        FD_SET(tty->fd, &read_set);
+        select_timeout.tv_sec  = 0;
+        select_timeout.tv_usec = 50000; /* 0.05 seconds, needs to be less than delay in ttyCleanup */
+        if (select(tty->fd + 1, &read_set, NULL, NULL, &select_timeout) < 1 || !FD_ISSET(tty->fd, &read_set)) {
+            continue;
+        }
         if (tty->socketType == SOCK_DGRAM) {
             if ((tty->UDPbufferPos == 0) && (tty->UDPbufferSize == 0)) {
                 tty->UDPbufferSize = recvfrom(tty->fd, tty->UDPbuffer, THEORETICAL_UDP_MAX_SIZE , 0, NULL, NULL);
