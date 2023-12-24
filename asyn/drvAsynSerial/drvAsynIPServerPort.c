@@ -324,6 +324,12 @@ static void connectionListener(void *drvPvt)
 
         } else {
             clientFd = epicsSocketAccept(tty->fd, (struct sockaddr *) &clientAddr, &clientLen);
+            if (tty->fd == INVALID_SOCKET) {
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                    "drvAsynIPServerPort: terminating connection thread for %s\n",
+                    tty->serverInfo);                
+                break; /* we must be in ioc shutdown and ttyCleanup has been called */
+            }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "drvAsynIPServerPort: new connection, socket=%d on %s\n",
                     clientFd, tty->serverInfo);
