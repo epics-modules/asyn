@@ -344,7 +344,11 @@ report(void *pvt, FILE *fp, int details)
     if (details >= 100) {
         int l = details % 100;
         fprintf(fp, "==== Set libusb debug level %d ====\n", l);
+#if LIBUSB_API_VERSION >= 0x01000106
         libusb_set_option(pdpvt->usb, LIBUSB_OPTION_LOG_LEVEL, l);
+#else
+        libusb_set_debug(pdpvt->usb, 1);
+#endif
     }
 }
 
