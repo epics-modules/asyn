@@ -305,7 +305,7 @@ static void connectionListener(void *drvPvt)
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
             "drvAsynIPServerPort: %s started listening for connections on %s\n",
             tty->portName, tty->serverInfo);
-    while (1) {
+    while (tty->fd != INVALID_SOCKET) {
         if (tty->socketType == SOCK_DGRAM) {
             if ((tty->UDPbufferPos == 0) && (tty->UDPbufferSize == 0)) {
                 tty->UDPbufferSize = recvfrom(tty->fd, tty->UDPbuffer, THEORETICAL_UDP_MAX_SIZE , 0, NULL, NULL);
@@ -324,6 +324,12 @@ static void connectionListener(void *drvPvt)
 
         } else {
             clientFd = epicsSocketAccept(tty->fd, (struct sockaddr *) &clientAddr, &clientLen);
+            if (tty->fd == INVALID_SOCKET) {
+                asynPrint(pasynUser, ASYN_TRACE_FLOW,
+                    "drvAsynIPServerPort: terminating connection thread for %s\n",
+                    tty->serverInfo);                
+                break; /* we must be in ioc shutdown and ttyCleanup has been called */
+            }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "drvAsynIPServerPort: new connection, socket=%d on %s\n",
                     clientFd, tty->serverInfo);
@@ -497,7 +503,13 @@ static void ttyCleanup(void *pPvt)
     if (!tty) return;
     if (tty->fd >= 0) {
         asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
-        epicsSocketDestroy(tty->fd);
+        SOCKET fd_save = tty->fd;
+        tty->fd = INVALID_SOCKET;
+        /* shutdown then close the socket so accept thread will terminate */
+        shutdown(fd_save, SHUT_RDWR);
+        epicsThreadSleep(0.01); /* give time for shutdown to be noticed prior to close */
+        epicsSocketDestroy(fd_save);
+        epicsThreadSleep(0.1);
     }
     free(tty->portName);
     free(tty->serverInfo);
