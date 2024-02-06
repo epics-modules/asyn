@@ -173,6 +173,7 @@ This is the definition of the testAsynPortDriver class:
   class testAsynPortDriver : public asynPortDriver {
   public:
       testAsynPortDriver(const char *portName, int maxArraySize);
+      ~testAsynPortDriver();
   
       /* These are the methods that we override from asynPortDriver */
       virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
@@ -208,6 +209,8 @@ This is the definition of the testAsynPortDriver class:
   private:
       /* Our data */
       epicsEventId eventId_;
+      epicsThreadId threadId_;
+      bool exiting_;
       epicsFloat64 *pData_;
       epicsFloat64 *pTimeBase_;
       // Actual volts per division are these values divided by vertical gain
@@ -219,9 +222,11 @@ This is the definition of the testAsynPortDriver class:
       void setTimePerDiv();
   };
   
-testAsynPortDriver is derived from asynPortDriver. It overrides the methods writeInt32,
-writeFloat64, readFloat64Array, and drvUserCreate. It adds a new method, simTask,
-which runs a separate thread to compute the waveform at the specified update time.
+testAsynPortDriver is derived from asynPortDriver. It overrides the methods
+writeInt32, writeFloat64, readFloat64Array, and drvUserCreate. It adds a new
+method, simTask, which runs a separate thread to compute the waveform at the
+specified update time. It demonstrates how to terminate the thread and clean up
+on IOC exit, using the class destructor.
 
 This is the how the parameters are defined in the driver, testAsynPortDriver.cpp
 ::
@@ -254,7 +259,7 @@ This is the beginning of the constructor for the testAsynPortDriver C++ class.
                       1, /* maxAddr */
                       asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask | asynDrvUserMask, /* Interface mask */
                       asynInt32Mask | asynFloat64Mask | asynFloat64ArrayMask | asynEnumMask,  /* Interrupt mask */
-                      0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                      ASYN_DESTRUCTIBLE, /* asynFlags.  This driver does not block and it is not multi-device, but has a destructor */
                       1, /* Autoconnect */
                       0, /* Default priority */
                       0) /* Default stack size*/
@@ -270,12 +275,15 @@ It invokes the constructor for the asynPortDriver base class. It passes:
   asynCommon, so that bit is added in the base class.
 - A mask which defines which asyn interfaces can generate interrupts (callbacks).
   In this case that is asynInt32, asynFloat64, and asynFloat64Array.
-- A mask which defines the asyn attributes for this driver. asyn currently defines
-  two attribute bits, ASYN_CANBLOCK and ASYN_MULTIDEVICE. ASYN_CANBLOCK must be set
-  for drivers that perform "slow" operations on their interfaces, requiring asynManager
-  to create a separate port thread for them and to use asynchronous device support.
-  ASYN_MULTIDEVICE must be set for drivers that support more than one asyn address,
-  for example a driver used to support a 16-channel A/D converter.
+- A mask which defines the asyn attributes for this driver. asyn currently
+  defines three attribute bits, ASYN_CANBLOCK, ASYN_MULTIDEVICE and
+  ASYN_DESTRUCTIBLE. ASYN_CANBLOCK must be set for drivers that perform "slow"
+  operations on their interfaces, requiring asynManager to create a separate
+  port thread for them and to use asynchronous device support. ASYN_MULTIDEVICE
+  must be set for drivers that support more than one asyn address, for example a
+  driver used to support a 16-channel A/D converter. ASYN_DESTRUCTIBLE must be
+  set for drivers that need to release resources on IOC exit; such drivers need
+  a working destructor and override asynPortDriver::shutdown if necessary.
 - A flag to tell asynManager that it should automatically attempt to connect to
   this device when a call is made on its interfaces. This results in a call to asynCommon->connect().
 - A priority flag for the port thread that asynManager will create if ASYN_CANBLOCK

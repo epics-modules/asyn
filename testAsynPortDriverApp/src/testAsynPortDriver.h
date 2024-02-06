@@ -46,6 +46,7 @@
 class testAsynPortDriver : public asynPortDriver {
 public:
     testAsynPortDriver(const char *portName, int maxArraySize);
+    ~testAsynPortDriver();
 
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
@@ -81,6 +82,8 @@ protected:
 private:
     /* Our data */
     epicsEventId eventId_;
+    epicsThreadId threadId_;
+    bool exiting_;
     epicsFloat64 *pData_;
     epicsFloat64 *pTimeBase_;
     // Actual volts per division are these values divided by vertical gain
