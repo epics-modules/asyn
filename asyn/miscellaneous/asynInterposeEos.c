@@ -44,13 +44,13 @@ typedef struct eosPvt {
     char          *inBuf;
     unsigned int  inBufHead;
     unsigned int  inBufTail;
-    char          eosIn[2];
+    char          eosIn[3];
     int           eosInLen;
     int           eosInMatch;
     int           processEosOut;
     size_t        outBufSize;
     char          *outBuf;
-    char          eosOut[2];
+    char          eosOut[3];
     int           eosOutLen;
 }eosPvt;
 
@@ -301,6 +301,7 @@ static asynStatus setInputEos(void *ppvt,asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                         "%s illegal eoslen %d", peosPvt->portName,eoslen);
         return asynError;
+	case 3: peosPvt->eosIn[2] = eos[2]; /*fall through to case 2 */
     case 2: peosPvt->eosIn[1] = eos[1]; /* fall through to case 1 */
     case 1: peosPvt->eosIn[0] = eos[0]; break;
     case 0: break;
@@ -330,6 +331,7 @@ static asynStatus getInputEos(void *ppvt,asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s illegal peosPvt->eosInLen %d", peosPvt->portName,peosPvt->eosInLen);
         return asynError;
+	case 3: eos[2] = peosPvt->eosIn[2]; /*fall through to case 2 */
     case 2: eos[1] = peosPvt->eosIn[1]; /* fall through to case 1 */
     case 1: eos[0] = peosPvt->eosIn[0]; break;
     case 0: break;
@@ -354,6 +356,7 @@ static asynStatus setOutputEos(void *ppvt,asynUser *pasynUser,
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                         "%s illegal eoslen %d", peosPvt->portName,eoslen);
         return asynError;
+	case 3: peosPvt->eosOut[2] = eos[2]; /*fall through to case 2 */
     case 2: peosPvt->eosOut[1] = eos[1]; /* fall through to case 1 */
     case 1: peosPvt->eosOut[0] = eos[0]; break;
     case 0: break;
@@ -374,11 +377,14 @@ static asynStatus getOutputEos(void *ppvt,asynUser *pasynUser,
                                 peosPvt->portName,eossize,peosPvt->eosOutLen);
         return(asynError);
     }
+	
     switch (peosPvt->eosOutLen) {
     default:
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             "%s illegal peosPvt->eosOutLen %d", peosPvt->portName,peosPvt->eosOutLen);
         return asynError;
+	
+	case 3: eos[2] = peosPvt->eosOut[2]; /* fall through to case 2 */
     case 2: eos[1] = peosPvt->eosOut[1]; /* fall through to case 1 */
     case 1: eos[0] = peosPvt->eosOut[0]; break;
     case 0: break;
