@@ -44,5 +44,5 @@ port drivers without running an IOC. This currently contains a single test appli
 testAsynIPPortClient.cpp. This program creates an asynIPPort driver, and uses the
 command line arguments to set the hostInfo string, a single command string to send
 to the server, and optionally the input and output EOS. It then prints out the response
-from the server. There are 3 example shell scipts that show how to use testAsynIPPortClient
+from the server. There are 3 example shell scripts that show how to use testAsynIPPortClient
 to communicate with a Web server, XPS motor controller, and a telnet host respectively.
