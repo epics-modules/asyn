@@ -16,7 +16,7 @@
         <script src="_static/jquery.js?v=5d32c60e"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
         <script src="_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="_static/doctools.js?v=888ff710"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
         <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -114,7 +114,7 @@ to this new value. The sequence of operations in the driver can be summarized as
 <li><p>When operation is complete, call the registered callbacks for each changed parameter.</p></li>
 </ol>
 <p>asynPortDriver provides methods to simplify the above sequence, which must be implemented
-for each of the often many parameters that the driver supports. Each parameter is
+for each of the many parameters that the driver supports. Each parameter is
 assigned a number, which is the value in the pasynUser-&gt;reason field that asyn
 clients pass to the driver when reading or writing that parameter. asynPortDriver
 maintains a table of parameter values, associating each parameter number with a
@@ -534,7 +534,7 @@ writeOctet()` functions, in addition to <cite>drvUserCreate()</cite>.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2024-February-05.
+      <span class="lastupdated">Last updated on 2024-May-30.
       </span></p>
   </div>
 
