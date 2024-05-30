@@ -23,7 +23,7 @@ to this new value. The sequence of operations in the driver can be summarized as
 #. When operation is complete, call the registered callbacks for each changed parameter.
   
 asynPortDriver provides methods to simplify the above sequence, which must be implemented
-for each of the often many parameters that the driver supports. Each parameter is
+for each of the many parameters that the driver supports. Each parameter is
 assigned a number, which is the value in the pasynUser->reason field that asyn
 clients pass to the driver when reading or writing that parameter. asynPortDriver
 maintains a table of parameter values, associating each parameter number with a

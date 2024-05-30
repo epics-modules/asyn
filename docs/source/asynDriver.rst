@@ -150,7 +150,7 @@ most influential.
     
   - Dirk developed StreamDevice, which has a single device support model, but supports
     arbitrary low level message based drivers, i.e. GPIB, serial, etc.
-- **Jun-ichi Odagare**
+- **Jun-ichi Odagiri**
     
   - Jun-ichi developed NetDev, a system that provides EPICS device support for network
     based devices. It has a single device support model, but provides a general framework
@@ -414,7 +414,7 @@ Queuing services
   than the current port timeout value this larger timeout from the pasynUser is used
   instead.
 
-  blockProcessCallback is a request to prevent acccess to a device or port by other
+  blockProcessCallback is a request to prevent access to a device or port by other
   asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
   or when the asynUser has no request queued. When called from processCallback blocking
   starts immediately, otherwise blocking starts the next time processCallback is called.
@@ -504,11 +504,11 @@ Interrupt services
   the request after interruptEnd is called.
   
   Many standard interfaces, e.g. asynInt32, provide methods registerInterruptUser,
-  cancelInterruptUser. These interfaces also provide an auxilliary interface, e.g.
+  cancelInterruptUser. These interfaces also provide an auxiliary interface, e.g.
   asynInt32Base, and code which implements registerInterruptUser and cancelInterruptUser.
   
   On operating systems like vxWorks or RTEMS interruptStart,interruptEnd MUST NOT
-  be called from interupt level.
+  be called from interrupt level.
 
 Timestamp services
 ..................
@@ -696,7 +696,7 @@ An asynUser has the following features:
 
 - An asynUser is the means by which asynManager manages multiple requests for accessing
   a port.
-- processCallback,which is used by queueRequest described below, is the addresss
+- processCallback,which is used by queueRequest described below, is the address
   of a user supplied callback routine.
 - timeoutCallback is the address of caller supplied callback that will be called
   if a queueRequest remains on the queue too long.
@@ -803,7 +803,7 @@ asynDriver.h describes the following:
 - asynStatus - An enum that describes the status returned by many methods.
 - asynException - An enum that describes exceptions.
 - asynQueuePriority - An enum that describes the queue priorities.
-- asynUser - A struture that contains generic information and is the "handle" for calling most methods.
+- asynUser - A structure that contains generic information and is the "handle" for calling most methods.
 - asynInterface - a structure that describes an interface.
 - userCallback - a typedef for the user process callback function described above.
 - exceptionCallback - a typedef for a user callback to be called when exceptions occur.
@@ -838,7 +838,7 @@ method is expected to write a message into pasynUser->errorMessage.
       supplied buffer is too small. Whenever possible, low level drivers should be written
       so that the user can read input in small pieces. 
   * - asynError 
-    - Some other error occured. 
+    - Some other error occurred. 
   * - asynDisconnected 
     - The request failed because the port is not connected. 
   * - asynDisabled 
@@ -947,7 +947,7 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
     
       > 0.0 Wait for up to timeout seconds for the I/O to complete
     
-      = 0.0 Peform any I/O that can be done without blocking. Return timeout error if
+      = 0.0 Perform any I/O that can be done without blocking. Return timeout error if
       no I/O can be done without blocking.
     
       < 0.0 Infinite timeout. Wait forever for I/O to complete.
@@ -1212,7 +1212,7 @@ This is the main interface for communicating with asynDriver.
       callback is active when cancelRequest is called than cancelRequest will not return
       until the callback completes. 
   * - blockProcessCallback / unblockProcessCallback    
-    - blockProcessCallback is a request to prevent acccess to a device or port by other
+    - blockProcessCallback is a request to prevent access to a device or port by other
       asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
       or when the asynUser has no request queued. When called from processCallback blocking
       starts immediately, otherwise blocking starts the next time processCallback is called.
@@ -1321,7 +1321,7 @@ This is the main interface for communicating with asynDriver.
       supports interrupts. pasynPvt must be the address of a void * that will be given
       a value by registerInterruptSource. This argument is passed interruptStart and interruptEnd.
   * - getInterruptPvt 
-    - Any code that wants to call createInterruptNode but does not know the adresss of
+    - Any code that wants to call createInterruptNode but does not know the address of
       pasynPvt can find it via this method. The caller must be connected to a device,
       i.e. must have called connectDevice. If the caller is not connected, getInterruptPvt
       returns asynError. 
@@ -1341,7 +1341,7 @@ This is the main interface for communicating with asynDriver.
       will block forever. 
   * - interruptStart / interruptEnd
     - The code that implements interrupts is interface dependent. The only service asynManager
-      provides is a thread-safe implemention of the user list. When the code wants to
+      provides is a thread-safe implementation of the user list. When the code wants to
       call the callback specified in the calls to registerInterruptUser, it calls interruptStart
       to obtain the list of callbacks. When it is done it calls interruptEnd. If any requests
       are made to addInterruptUser/removeInterruptUser between the calls to interruptStart
@@ -2002,7 +2002,7 @@ for:
 Note that hardware may have registers with smaller sizes, e.g. 16 bit registers.
 The standard interfaces can still be used by setting the unused bits to 0.
 
-For all of these interfaces a default implementation and a synchronous inplementation
+For all of these interfaces a default implementation and a synchronous implementation
 are provided. Let's use Int32 as an example.
  
 - asynInt32 - An interface with methods: read, write, getBounds, registerInterruptUser,
@@ -3124,7 +3124,7 @@ asynInterposeFlush
 ~~~~~~~~~~~~~~~~~~
 This can be used to simulate flush processing for asynOctet if the port driver doesn't
 provide support for flush. It just reads and discards characters until no more characters
-arive before timeout seconds have occured. It is started by the shell command:
+arrive before timeout seconds have occurred. It is started by the shell command:
 ::
 
   asynInterposeFlushConfig port addr timeout
@@ -4749,7 +4749,7 @@ where
 - priority 
 
   - In integer specifying the priority of the portThread. A value of 0
-    will result in a defalt value being assigned
+    will result in a default value being assigned
 - noAutoConnect 
 
   - Zero or missing indicates that portThread should automatically
@@ -5505,7 +5505,8 @@ Example: testAsynIPPortClient cars.uchicago.edu:80 "GET / HTTP/1.0" "\n\n"
   
 The example resides in <top>/testAsynPortClientApp.
 
-testAsynPortDriverApp</h3>
+testAsynPortDriverApp
+~~~~~~~~~~~~~~~~~~~~~
 
 This test demonstrates how to write a driver using the asynPortDriver C++ class.
 It consists of a simple digital oscilloscope simulator. When the vertical gain changes
@@ -5697,7 +5698,7 @@ files for the stream package and for any needed ASYN drivers. There are two ways
 that this can be done:
 
 If you are building your application database definition file from the application
-Makefile you specify the aditional database definitions there (uncomment the lines
+Makefile you specify the additional database definitions there (uncomment the lines
 appropriate to your application):
 ::
 
