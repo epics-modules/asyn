@@ -3971,7 +3971,7 @@ void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException excepti
                   "%s: port=%s Port is shutting down.\n",
                   driverName, pPvt->portName);
 
-        pPvt->shutdown();
+        pPvt->shutdownPortDriver();
         delete pPvt;
     }
 }
@@ -4138,7 +4138,7 @@ bool asynPortDriver::needsShutdown() {
  * This function is called with the driver *unlocked*. When overriding it, take
  * care to lock it as necessary.
  */
-void asynPortDriver::shutdown() {
+void asynPortDriver::shutdownPortDriver() {
     // There is a possibility that the destructor is running because we are
     // being directly deleted by user code, without going through asynManager.
     // Which would leave a "working" port with dangling references. So let's
@@ -4167,7 +4167,7 @@ asynPortDriver::~asynPortDriver()
         // At this point, the destructors of derived classes have already run,
         // so we can't do a proper shutdown anymore. But let's at least do our
         // own shutdown to mark the port as defunct.
-        shutdown();
+        shutdownPortDriver();
     }
     delete cbThread;
     epicsMutexDestroy(this->mutexId);

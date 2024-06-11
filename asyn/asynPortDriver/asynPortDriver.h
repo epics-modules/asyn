@@ -53,7 +53,7 @@ class callbackThread;
   *
   * 1. Pass the `ASYN_DESTRUCTIBLE` flag to the constructor of `asynPortDriver`.
   *    This will ensure `asynManager` destroys your driver on process exit by
-  *    first calling `shutdown()`, then deleting.
+  *    first calling `shutdownPortDriver()`, then deleting.
   *
   * 2. To release resources that are private to your derived class, do so in the
   *    destructor. Remember, however, that no code from classes deriving from
@@ -63,15 +63,16 @@ class callbackThread;
   *    stopped.
   *
   * 3. To use functionality that requires an intact object, release resources by
-  *    overriding the `shutdown()` function. A possible example is stopping data
-  *    acquisition, which may involve functionality implemented in a derived
-  *    class. On process exit, `shutdown()` will be called before the
-  *    destructors are executed.
+  *    overriding the `shutdownPortDriver()` function. A possible example is
+  *    stopping data acquisition, which may involve functionality implemented in
+  *    a derived class. On process exit, `shutdownPortDriver()` will be called
+  *    before the destructors are executed.
   *
-  * 4. Your overriden `shutdown()` must call the base class implementation.
+  * 4. Your overriden `shutdownPortDriver()` must call the base class
+  *    implementation.
   *
   * 5. When deleting a driver instance directly (e.g., in your test code),
-  *    always call `shutdown()` first.
+  *    always call `shutdownPortDriver()` first.
   *
   * To implement the above rules, you can use the following template:
   *
@@ -82,11 +83,11 @@ class callbackThread;
   *             // Your driver code.
   *         }
   *
-  *         void shutdown() {
+  *         void shutdownPortDriver() {
   *             // Stop threads, you may use virtual functions.
   *
   *             // Don't forget to call the base class function.
-  *             baseDriver::shutdown();
+  *             baseDriver::shutdownPortDriver();
   *         }
   *
   *         ~myDriver() {
@@ -249,7 +250,7 @@ public:
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
     asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
-    virtual void shutdown();
+    virtual void shutdownPortDriver();
     bool needsShutdown();
 
     char *portName;         /**< The name of this asyn port */
