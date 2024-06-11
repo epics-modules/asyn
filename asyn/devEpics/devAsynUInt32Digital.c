@@ -1087,12 +1087,9 @@ static long processMbboDirect(mbboDirectRecord *pr)
 
             pr->rval = rval;
             if(pr->shft>0) rval >>= pr->shft;
+            pr->val = rval;
             for (i=0; i<NUM_BITS; i++, offset <<= 1, bit++ ) {
-                if(*bit) {
-                    pr->val |= offset;
-                } else {
-                    pr->val &= ~offset;
-                }
+                *bit = pr->val & offset;
             }
         }
     } else if(pr->pact == 0) {
