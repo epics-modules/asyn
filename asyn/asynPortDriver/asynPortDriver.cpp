@@ -18,7 +18,6 @@
 
 #include <epicsString.h>
 #include <epicsMutex.h>
-#include <epicsAtomic.h>
 #include <epicsThread.h>
 #include <cantProceed.h>
 /* NOTE: interruptAccept is define in dbAccess.h if using EPICS IOC, else set it to 1 */
@@ -4128,7 +4127,10 @@ asynStatus asynPortDriver::createParams()
 
 /** Returns `true` when the port is destructible and `shutdown()` wasn't run yet. */
 bool asynPortDriver::needsShutdown() {
-    return epics::atomic::get(shutdownNeeded);
+    lock();
+    bool ret = shutdownNeeded;
+    unlock();
+    return ret;
 }
 
 /** Performs cleanup that cannot be done in a destructor.
@@ -4149,8 +4151,8 @@ void asynPortDriver::shutdownPortDriver() {
     // Which would leave a "working" port with dangling references. So let's
     // disarm the exception callback (because we are already being destroyed)
     // and shutdown the port.
-    if (needsShutdown()) {
-        epics::atomic::set(shutdownNeeded, 0);
+    if (shutdownNeeded) {
+        shutdownNeeded = 0;
         asynStatus status = pasynManager->shutdownPort(pasynUserSelf);
         if(status != asynSuccess) {
             printf("%s\n", pasynUserSelf->errorMessage);
