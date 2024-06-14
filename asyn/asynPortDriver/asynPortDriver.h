@@ -41,7 +41,60 @@ typedef void (*userTimeStampFunction)(void *userPvt, epicsTimeStamp *pTimeStamp)
 class callbackThread;
 
 /** Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver
-  * with standard asyn interfaces and a parameter library. */
+  * with standard asyn interfaces and a parameter library.
+  *
+  * **Destruction and cleanup**
+  *
+  * Historically, drivers were never destroyed. There are several reasons for
+  * this, an important one being that proper cleanup requires cooperation from
+  * the underlying system and the entire class hierarchy. That said, releasing
+  * resources is important in many cases, and is not too difficult if the rules
+  * listed below are followed by classes deriving from `asynPortDriver`:
+  *
+  * 1. Pass the `ASYN_DESTRUCTIBLE` flag to the constructor of `asynPortDriver`.
+  *    This will ensure `asynManager` destroys your driver on process exit by
+  *    first calling `shutdownPortDriver()`, then deleting.
+  *
+  * 2. To release resources that are private to your derived class, do so in the
+  *    destructor. Remember, however, that no code from classes deriving from
+  *    yours may run at this point, because the object is already partly
+  *    destroyed. For example, virtual functions will behave as if not
+  *    overriden, and threads spawned by derived classes must already be
+  *    stopped.
+  *
+  * 3. To use functionality that requires an intact object, release resources by
+  *    overriding the `shutdownPortDriver()` function. A possible example is
+  *    stopping data acquisition, which may involve functionality implemented in
+  *    a derived class. On process exit, `shutdownPortDriver()` will be called
+  *    before the destructors are executed.
+  *
+  * 4. Your overriden `shutdownPortDriver()` must call the base class
+  *    implementation.
+  *
+  * 5. When deleting a driver instance directly (e.g., in your test code),
+  *    always call `shutdownPortDriver()` first.
+  *
+  * To implement the above rules, you can use the following template:
+  *
+  *     class myDriver : public asynPortDriver {
+  *     public:
+  *         myDriver(const char *portName, ...) :
+  *               asynPortDriver(portName, ..., ASYN_DESTRUCTIBLE, ...) {
+  *             // Your driver code.
+  *         }
+  *
+  *         void shutdownPortDriver() {
+  *             // Stop threads, you may use virtual functions.
+  *
+  *             // Don't forget to call the base class function.
+  *             baseDriver::shutdownPortDriver();
+  *         }
+  *
+  *         ~myDriver() {
+  *             // Deallocate resources, don't use virtual functions.
+  *         }
+  *     };
+  */
 class ASYN_API asynPortDriver {
 public:
     asynPortDriver(asynParamSet* paramSet,
@@ -197,6 +250,8 @@ public:
     virtual asynStatus setTimeStamp(const epicsTimeStamp *pTimeStamp);
     asynStandardInterfaces *getAsynStdInterfaces();
     virtual void reportParams(FILE *fp, int details);
+    virtual void shutdownPortDriver();
+    bool needsShutdown();
 
     char *portName;         /**< The name of this asyn port */
 
@@ -204,13 +259,17 @@ public:
     void callbackTask();
 
 protected:
-    asynParamSet* paramSet;
     void initialize(const char *portNameIn, int maxAddrIn, int interfaceMask, int interruptMask, int asynFlags,
                     int autoConnect, int priority, int stackSize);
+
+    asynParamSet* paramSet;
     asynUser *pasynUserSelf;    /**< asynUser connected to ourselves for asynTrace */
-    asynStandardInterfaces asynStdInterfaces;   /**< The asyn interfaces this driver implements */
+    asynStandardInterfaces *pasynStdInterfaces;   /**< The asyn interfaces this driver implements */
+    asynStandardInterfaces &asynStdInterfaces;   /**< Back-compat alias */
 
 private:
+    static void exceptionHandler(asynUser *pasynUser, asynException exception);
+
     std::vector<paramList*> params;
     paramList *getParamList(int list);
     epicsMutexId mutexId;
@@ -219,6 +278,7 @@ private:
     char *outputEosOctet;
     int outputEosLenOctet;
     callbackThread *cbThread;
+    int shutdownNeeded;  // atomic!
     template <typename epicsType, typename interruptType>
         asynStatus doCallbacksArray(epicsType *value, size_t nElements,
                                     int reason, int address, void *interruptPvt);
