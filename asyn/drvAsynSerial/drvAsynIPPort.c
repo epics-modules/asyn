@@ -515,18 +515,15 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             struct timeval saveTV, connectTV;
             socklen_t svlen = sizeof saveTV;
             pasynManager->getAutoConnectTimeout(&connectTimeout);
-            connectTV.tv_sec = (time_t)connectTimeout;
-            connectTV.tv_usec = (suseconds_t)((connectTimeout - connectTV.tv_sec)*1000000);
-            asynPrint(pasynUser, ASYN_TRACE_ERROR, "Calling setsockopt SO_SNDTIMEO tv_sec=%d tv_usec=%d\n", connectTV.tv_sec, connectTV.tv_usec);
+            connectTV.tv_sec = (long)connectTimeout;
+            connectTV.tv_usec = (long)((connectTimeout - connectTV.tv_sec)*1000000);
             if (getsockopt (fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&saveTV, &svlen) < 0) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling getsockopt for SO_RECVTIMEO: %s\n", strerror(SOCKERRNO));
             }
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&connectTV, sizeof connectTV) < 0) {
                  asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_RECVTIMEO: %s\n", strerror(SOCKERRNO));
             }
-            asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, calling connect()\n");
             if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
-                asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, connect returned error: %s\n", strerror(SOCKERRNO));
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't connect to %s: %s",
                               tty->IPDeviceName, strerror(SOCKERRNO));
