@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" data-content_root="./">
 <head>
@@ -9,15 +11,11 @@
       <link rel="stylesheet" type="text/css" href="_static/css/my_theme.css?v=254ed751" />
 
   
-  <!--[if lt IE 9]>
-    <script src="_static/js/html5shiv.min.js"></script>
-  <![endif]-->
-  
-        <script src="_static/jquery.js?v=5d32c60e"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
-        <script src="_static/documentation_options.js?v=5929fcd5"></script>
-        <script src="_static/doctools.js?v=9a2dae69"></script>
-        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+      <script src="_static/jquery.js?v=5d32c60e"></script>
+      <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+      <script src="_static/documentation_options.js?v=5929fcd5"></script>
+      <script src="_static/doctools.js?v=9bcbadda"></script>
+      <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -250,6 +248,7 @@ simulation runs if the noise is non-zero.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>class testAsynPortDriver : public asynPortDriver {
 public:
     testAsynPortDriver(const char *portName, int maxArraySize);
+    ~testAsynPortDriver();
 
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
@@ -285,6 +284,8 @@ protected:
 private:
     /* Our data */
     epicsEventId eventId_;
+    epicsThreadId threadId_;
+    bool exiting_;
     epicsFloat64 *pData_;
     epicsFloat64 *pTimeBase_;
     // Actual volts per division are these values divided by vertical gain
@@ -297,9 +298,11 @@ private:
 };
 </pre></div>
 </div>
-<p>testAsynPortDriver is derived from asynPortDriver. It overrides the methods writeInt32,
-writeFloat64, readFloat64Array, and drvUserCreate. It adds a new method, simTask,
-which runs a separate thread to compute the waveform at the specified update time.</p>
+<p>testAsynPortDriver is derived from asynPortDriver. It overrides the methods
+writeInt32, writeFloat64, readFloat64Array, and drvUserCreate. It adds a new
+method, simTask, which runs a separate thread to compute the waveform at the
+specified update time. It demonstrates how to terminate the thread and clean up
+on IOC exit, using the class destructor.</p>
 <p>This is the how the parameters are defined in the driver, testAsynPortDriver.cpp</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">These</span> <span class="n">are</span> <span class="n">the</span> <span class="n">drvInfo</span> <span class="n">strings</span> <span class="n">that</span> <span class="n">are</span> <span class="n">used</span> <span class="n">to</span> <span class="n">identify</span> <span class="n">the</span> <span class="n">parameters</span><span class="o">.</span>
  <span class="o">*</span> <span class="n">They</span> <span class="n">are</span> <span class="n">used</span> <span class="n">by</span> <span class="n">asyn</span> <span class="n">clients</span><span class="p">,</span> <span class="n">including</span> <span class="n">standard</span> <span class="n">asyn</span> <span class="n">device</span> <span class="n">support</span> <span class="o">*/</span>
@@ -327,7 +330,7 @@ to associate a record with a parameter.</p>
                     <span class="mi">1</span><span class="p">,</span> <span class="o">/*</span> <span class="n">maxAddr</span> <span class="o">*/</span>
                     <span class="n">asynInt32Mask</span> <span class="o">|</span> <span class="n">asynFloat64Mask</span> <span class="o">|</span> <span class="n">asynFloat64ArrayMask</span> <span class="o">|</span> <span class="n">asynEnumMask</span> <span class="o">|</span> <span class="n">asynDrvUserMask</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Interface</span> <span class="n">mask</span> <span class="o">*/</span>
                     <span class="n">asynInt32Mask</span> <span class="o">|</span> <span class="n">asynFloat64Mask</span> <span class="o">|</span> <span class="n">asynFloat64ArrayMask</span> <span class="o">|</span> <span class="n">asynEnumMask</span><span class="p">,</span>  <span class="o">/*</span> <span class="n">Interrupt</span> <span class="n">mask</span> <span class="o">*/</span>
-                    <span class="mi">0</span><span class="p">,</span> <span class="o">/*</span> <span class="n">asynFlags</span><span class="o">.</span>  <span class="n">This</span> <span class="n">driver</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">block</span> <span class="ow">and</span> <span class="n">it</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">multi</span><span class="o">-</span><span class="n">device</span><span class="p">,</span> <span class="n">so</span> <span class="n">flag</span> <span class="ow">is</span> <span class="mi">0</span> <span class="o">*/</span>
+                    <span class="n">ASYN_DESTRUCTIBLE</span><span class="p">,</span> <span class="o">/*</span> <span class="n">asynFlags</span><span class="o">.</span>  <span class="n">This</span> <span class="n">driver</span> <span class="n">does</span> <span class="ow">not</span> <span class="n">block</span> <span class="ow">and</span> <span class="n">it</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">multi</span><span class="o">-</span><span class="n">device</span><span class="p">,</span> <span class="n">but</span> <span class="n">has</span> <span class="n">a</span> <span class="n">destructor</span> <span class="o">*/</span>
                     <span class="mi">1</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Autoconnect</span> <span class="o">*/</span>
                     <span class="mi">0</span><span class="p">,</span> <span class="o">/*</span> <span class="n">Default</span> <span class="n">priority</span> <span class="o">*/</span>
                     <span class="mi">0</span><span class="p">)</span> <span class="o">/*</span> <span class="n">Default</span> <span class="n">stack</span> <span class="n">size</span><span class="o">*/</span>
@@ -344,12 +347,15 @@ asynInt32, asynFloat64, asynFloat64Array, and asynDrvUser. All drivers must supp
 asynCommon, so that bit is added in the base class.</p></li>
 <li><p>A mask which defines which asyn interfaces can generate interrupts (callbacks).
 In this case that is asynInt32, asynFloat64, and asynFloat64Array.</p></li>
-<li><p>A mask which defines the asyn attributes for this driver. asyn currently defines
-two attribute bits, ASYN_CANBLOCK and ASYN_MULTIDEVICE. ASYN_CANBLOCK must be set
-for drivers that perform “slow” operations on their interfaces, requiring asynManager
-to create a separate port thread for them and to use asynchronous device support.
-ASYN_MULTIDEVICE must be set for drivers that support more than one asyn address,
-for example a driver used to support a 16-channel A/D converter.</p></li>
+<li><p>A mask which defines the asyn attributes for this driver. asyn currently
+defines three attribute bits, ASYN_CANBLOCK, ASYN_MULTIDEVICE and
+ASYN_DESTRUCTIBLE. ASYN_CANBLOCK must be set for drivers that perform “slow”
+operations on their interfaces, requiring asynManager to create a separate
+port thread for them and to use asynchronous device support. ASYN_MULTIDEVICE
+must be set for drivers that support more than one asyn address, for example a
+driver used to support a 16-channel A/D converter. ASYN_DESTRUCTIBLE must be
+set for drivers that need to release resources on IOC exit; such drivers need
+a working destructor and override asynPortDriver::shutdown if necessary.</p></li>
 <li><p>A flag to tell asynManager that it should automatically attempt to connect to
 this device when a call is made on its interfaces. This results in a call to asynCommon-&gt;connect().</p></li>
 <li><p>A priority flag for the port thread that asynManager will create if ASYN_CANBLOCK
@@ -534,7 +540,7 @@ writeOctet()` functions, in addition to <cite>drvUserCreate()</cite>.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2024-June-14.
+      <span class="lastupdated">Last updated on 2024-November-05.
       </span></p>
   </div>
 

@@ -444,6 +444,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a93675408d6351491c56d8bb874852cd9"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a93675408d6351491c56d8bb874852cd9">reportParams</a> (FILE *fp, int details)</td></tr>
 <tr class="memdesc:a93675408d6351491c56d8bb874852cd9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls paramList::report(fp, details) for each parameter list that the driver supports.  <a href="classasyn_port_driver.html#a93675408d6351491c56d8bb874852cd9">More...</a><br /></td></tr>
 <tr class="separator:a93675408d6351491c56d8bb874852cd9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a159bcb9186139d328c874e0251eb7029"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029">shutdownPortDriver</a> ()</td></tr>
+<tr class="memdesc:a159bcb9186139d328c874e0251eb7029"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs cleanup that cannot be done in a destructor.  <a href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029">More...</a><br /></td></tr>
+<tr class="separator:a159bcb9186139d328c874e0251eb7029"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8442ac7097437fab86a252bd377b4d2c"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a8442ac7097437fab86a252bd377b4d2c">needsShutdown</a> ()</td></tr>
+<tr class="memdesc:a8442ac7097437fab86a252bd377b4d2c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns <code>true</code> when the port is destructible and <code>shutdown()</code> wasn't run yet.  <a href="classasyn_port_driver.html#a8442ac7097437fab86a252bd377b4d2c">More...</a><br /></td></tr>
+<tr class="separator:a8442ac7097437fab86a252bd377b4d2c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab54a75f524c802559e78e7bf000a7c61"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#ab54a75f524c802559e78e7bf000a7c61">callbackTask</a> ()</td></tr>
 <tr class="separator:ab54a75f524c802559e78e7bf000a7c61"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -469,9 +475,12 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:a3d701fd7f49ab07da6c5edf3429cdfe5"><td class="memItemLeft" align="right" valign="top">asynUser *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a3d701fd7f49ab07da6c5edf3429cdfe5">pasynUserSelf</a></td></tr>
 <tr class="memdesc:a3d701fd7f49ab07da6c5edf3429cdfe5"><td class="mdescLeft">&#160;</td><td class="mdescRight">asynUser connected to ourselves for asynTrace  <a href="classasyn_port_driver.html#a3d701fd7f49ab07da6c5edf3429cdfe5">More...</a><br /></td></tr>
 <tr class="separator:a3d701fd7f49ab07da6c5edf3429cdfe5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0acc0a49b9d762bdbd7d42af5dbea5ef"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a0acc0a49b9d762bdbd7d42af5dbea5ef">asynStdInterfaces</a></td></tr>
-<tr class="memdesc:a0acc0a49b9d762bdbd7d42af5dbea5ef"><td class="mdescLeft">&#160;</td><td class="mdescRight">The asyn interfaces this driver implements.  <a href="classasyn_port_driver.html#a0acc0a49b9d762bdbd7d42af5dbea5ef">More...</a><br /></td></tr>
-<tr class="separator:a0acc0a49b9d762bdbd7d42af5dbea5ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0208718150924f8b6966583aaed9626"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#ad0208718150924f8b6966583aaed9626">pasynStdInterfaces</a></td></tr>
+<tr class="memdesc:ad0208718150924f8b6966583aaed9626"><td class="mdescLeft">&#160;</td><td class="mdescRight">The asyn interfaces this driver implements.  <a href="classasyn_port_driver.html#ad0208718150924f8b6966583aaed9626">More...</a><br /></td></tr>
+<tr class="separator:ad0208718150924f8b6966583aaed9626"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0862323ae77fc13f906325a11ca2c678"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a0862323ae77fc13f906325a11ca2c678">asynStdInterfaces</a></td></tr>
+<tr class="memdesc:a0862323ae77fc13f906325a11ca2c678"><td class="mdescLeft">&#160;</td><td class="mdescRight">Back-compat alias.  <a href="classasyn_port_driver.html#a0862323ae77fc13f906325a11ca2c678">More...</a><br /></td></tr>
+<tr class="separator:a0862323ae77fc13f906325a11ca2c678"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="friends"></a>
 Friends</h2></td></tr>
@@ -482,7 +491,34 @@ Friends</h2></td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver with standard asyn interfaces and a parameter library. </p>
-</div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
+<p><b>Destruction and cleanup</b></p>
+<p>Historically, drivers were never destroyed. There are several reasons for this, an important one being that proper cleanup requires cooperation from the underlying system and the entire class hierarchy. That said, releasing resources is important in many cases, and is not too difficult if the rules listed below are followed by classes deriving from <code><a class="el" href="classasyn_port_driver.html" title="Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver wit...">asynPortDriver</a></code>:</p>
+<ol type="1">
+<li>Pass the <code>ASYN_DESTRUCTIBLE</code> flag to the constructor of <code><a class="el" href="classasyn_port_driver.html" title="Base class for asyn port drivers; handles most of the bookkeeping for writing an asyn port driver wit...">asynPortDriver</a></code>. This will ensure <code>asynManager</code> destroys your driver on process exit by first calling <code><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029" title="Performs cleanup that cannot be done in a destructor.">shutdownPortDriver()</a></code>, then deleting.</li>
+<li>To release resources that are private to your derived class, do so in the destructor. Remember, however, that no code from classes deriving from yours may run at this point, because the object is already partly destroyed. For example, virtual functions will behave as if not overriden, and threads spawned by derived classes must already be stopped.</li>
+<li>To use functionality that requires an intact object, release resources by overriding the <code><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029" title="Performs cleanup that cannot be done in a destructor.">shutdownPortDriver()</a></code> function. A possible example is stopping data acquisition, which may involve functionality implemented in a derived class. On process exit, <code><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029" title="Performs cleanup that cannot be done in a destructor.">shutdownPortDriver()</a></code> will be called before the destructors are executed.</li>
+<li>Your overriden <code><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029" title="Performs cleanup that cannot be done in a destructor.">shutdownPortDriver()</a></code> must call the base class implementation.</li>
+<li>When deleting a driver instance directly (e.g., in your test code), always call <code><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029" title="Performs cleanup that cannot be done in a destructor.">shutdownPortDriver()</a></code> first.</li>
+</ol>
+<p>To implement the above rules, you can use the following template: </p><pre class="fragment">class myDriver : public asynPortDriver {
+public:
+    myDriver(const char *portName, ...) :
+          asynPortDriver(portName, ..., ASYN_DESTRUCTIBLE, ...) {
+        // Your driver code.
+    }
+
+    void shutdownPortDriver() {
+        // Stop threads, you may use virtual functions.
+
+        // Don't forget to call the base class function.
+        baseDriver::shutdownPortDriver();
+    }
+
+    ~myDriver() {
+        // Deallocate resources, don't use virtual functions.
+    }
+};
+</pre> </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a31ee8ac1e0060d54d2a8ffac35e432eb"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a31ee8ac1e0060d54d2a8ffac35e432eb">&#9670;&nbsp;</a></span>asynPortDriver() <span class="overload">[1/3]</span></h2>
 
@@ -622,7 +658,7 @@ Friends</h2></td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">maxAddrIn</td><td>The maximum number of asyn addr addresses this driver supports. Often it is 1 (which is the minimum), but some drivers, for example a 16-channel D/A or A/D would support values &gt; 1. This controls the number of parameter tables that are created. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">interfaceMask</td><td>Bit mask defining the asyn interfaces that this driver supports. The bit mask values are defined in <a class="el" href="asyn_port_driver_8h.html">asynPortDriver.h</a>, e.g. asynInt32Mask. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">interruptMask</td><td>Bit mask definining the asyn interfaces that can generate interrupts (callbacks). The bit mask values are defined in <a class="el" href="asyn_port_driver_8h.html">asynPortDriver.h</a>, e.g. asynInt8ArrayMask. </td></tr>
-    <tr><td class="paramdir">[in]</td><td class="paramname">asynFlags</td><td>Flags when creating the asyn port driver; includes ASYN_CANBLOCK and ASYN_MULTIDEVICE. </td></tr>
+    <tr><td class="paramdir">[in]</td><td class="paramname">asynFlags</td><td>Flags when creating the asyn port driver; includes ASYN_CANBLOCK, ASYN_MULTIDEVICE and ASYN_DESTRUCTIBLE. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">autoConnect</td><td>The autoConnect flag for the asyn port driver. 1 if the driver should autoconnect. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">priority</td><td>The thread priority for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags. If it is 0 then the default value of epicsThreadPriorityMedium will be assigned by asynManager. </td></tr>
     <tr><td class="paramdir">[in]</td><td class="paramname">stackSize</td><td>The stack size for the asyn port driver thread if ASYN_CANBLOCK is set in asynFlags. If it is 0 then the default value of epicsThreadGetStackSize(epicsThreadStackMedium) will be assigned by asynManager. </td></tr>
@@ -3711,6 +3747,25 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a8442ac7097437fab86a252bd377b4d2c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8442ac7097437fab86a252bd377b4d2c">&#9670;&nbsp;</a></span>needsShutdown()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">bool asynPortDriver::needsShutdown </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Returns <code>true</code> when the port is destructible and <code>shutdown()</code> wasn't run yet. </p>
+
+</div>
+</div>
 <a id="a62378c2f0598765e422503c874e35a81"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a62378c2f0598765e422503c874e35a81">&#9670;&nbsp;</a></span>parseAsynUser()</h2>
 
@@ -6082,6 +6137,36 @@ Friends</h2></td></tr>
 
 </div>
 </div>
+<a id="a159bcb9186139d328c874e0251eb7029"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a159bcb9186139d328c874e0251eb7029">&#9670;&nbsp;</a></span>shutdownPortDriver()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void asynPortDriver::shutdownPortDriver </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Performs cleanup that cannot be done in a destructor. </p>
+<p>The destructor is limited in what it can do because the object is already partially destroyed. This function has no such limitation. However, it is not a destructor, and must not leave dangling references; the driver must be left in a consistent state, allowing the destructor to run.</p>
+<p>When overridden, this function must call the base class implementation.</p>
+<p>This function is called with the driver <em>unlocked</em>. When overriding it, take care to lock it as necessary. </p>
+
+</div>
+</div>
 <a id="a1d1d4af019934b79b9fca0aa444d0036"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a1d1d4af019934b79b9fca0aa444d0036">&#9670;&nbsp;</a></span>unlock()</h2>
 
@@ -6942,8 +7027,8 @@ Friends</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
-<a id="a0acc0a49b9d762bdbd7d42af5dbea5ef"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0acc0a49b9d762bdbd7d42af5dbea5ef">&#9670;&nbsp;</a></span>asynStdInterfaces</h2>
+<a id="a0862323ae77fc13f906325a11ca2c678"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a0862323ae77fc13f906325a11ca2c678">&#9670;&nbsp;</a></span>asynStdInterfaces</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -6952,7 +7037,7 @@ Friends</h2></td></tr>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">asynStandardInterfaces asynPortDriver::asynStdInterfaces</td>
+          <td class="memname">asynStandardInterfaces&amp; asynPortDriver::asynStdInterfaces</td>
         </tr>
       </table>
   </td>
@@ -6962,7 +7047,7 @@ Friends</h2></td></tr>
 </table>
 </div><div class="memdoc">
 
-<p>The asyn interfaces this driver implements. </p>
+<p>Back-compat alias. </p>
 
 </div>
 </div>
@@ -7001,6 +7086,30 @@ Friends</h2></td></tr>
   </tr>
 </table>
 </div><div class="memdoc">
+
+</div>
+</div>
+<a id="ad0208718150924f8b6966583aaed9626"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad0208718150924f8b6966583aaed9626">&#9670;&nbsp;</a></span>pasynStdInterfaces</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">asynStandardInterfaces* asynPortDriver::pasynStdInterfaces</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">protected</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>The asyn interfaces this driver implements. </p>
 
 </div>
 </div>

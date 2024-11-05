@@ -67,6 +67,8 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a8ab662451c4f1063616d66c82368f4fa"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtest_asyn_port_driver.html#a8ab662451c4f1063616d66c82368f4fa">testAsynPortDriver</a> (const char *<a class="el" href="classasyn_port_driver.html#a8ddf9106f0496dcdaa47dd9a2255fd6b">portName</a>, int maxArraySize)</td></tr>
 <tr class="memdesc:a8ab662451c4f1063616d66c82368f4fa"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor for the <a class="el" href="classtest_asyn_port_driver.html" title="Class that demonstrates the use of the asynPortDriver base class to greatly simplify the task of writ...">testAsynPortDriver</a> class.  <a href="classtest_asyn_port_driver.html#a8ab662451c4f1063616d66c82368f4fa">More...</a><br /></td></tr>
 <tr class="separator:a8ab662451c4f1063616d66c82368f4fa"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a59f38b3efb15b247b1f376a91811812c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtest_asyn_port_driver.html#a59f38b3efb15b247b1f376a91811812c">~testAsynPortDriver</a> ()</td></tr>
+<tr class="separator:a59f38b3efb15b247b1f376a91811812c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac43147a2c8d0ba9652d65b3ffb23791f"><td class="memItemLeft" align="right" valign="top">virtual asynStatus&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classtest_asyn_port_driver.html#ac43147a2c8d0ba9652d65b3ffb23791f">writeInt32</a> (asynUser *pasynUser, epicsInt32 value)</td></tr>
 <tr class="memdesc:ac43147a2c8d0ba9652d65b3ffb23791f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Called when asyn clients call pasynInt32-&gt;write().  <a href="classtest_asyn_port_driver.html#ac43147a2c8d0ba9652d65b3ffb23791f">More...</a><br /></td></tr>
 <tr class="separator:ac43147a2c8d0ba9652d65b3ffb23791f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -448,6 +450,12 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a93675408d6351491c56d8bb874852cd9 inherit pub_methods_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a93675408d6351491c56d8bb874852cd9">reportParams</a> (FILE *fp, int details)</td></tr>
 <tr class="memdesc:a93675408d6351491c56d8bb874852cd9 inherit pub_methods_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calls paramList::report(fp, details) for each parameter list that the driver supports.  <a href="classasyn_port_driver.html#a93675408d6351491c56d8bb874852cd9">More...</a><br /></td></tr>
 <tr class="separator:a93675408d6351491c56d8bb874852cd9 inherit pub_methods_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a159bcb9186139d328c874e0251eb7029 inherit pub_methods_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029">shutdownPortDriver</a> ()</td></tr>
+<tr class="memdesc:a159bcb9186139d328c874e0251eb7029 inherit pub_methods_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Performs cleanup that cannot be done in a destructor.  <a href="classasyn_port_driver.html#a159bcb9186139d328c874e0251eb7029">More...</a><br /></td></tr>
+<tr class="separator:a159bcb9186139d328c874e0251eb7029 inherit pub_methods_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8442ac7097437fab86a252bd377b4d2c inherit pub_methods_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">bool&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a8442ac7097437fab86a252bd377b4d2c">needsShutdown</a> ()</td></tr>
+<tr class="memdesc:a8442ac7097437fab86a252bd377b4d2c inherit pub_methods_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Returns <code>true</code> when the port is destructible and <code>shutdown()</code> wasn't run yet.  <a href="classasyn_port_driver.html#a8442ac7097437fab86a252bd377b4d2c">More...</a><br /></td></tr>
+<tr class="separator:a8442ac7097437fab86a252bd377b4d2c inherit pub_methods_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab54a75f524c802559e78e7bf000a7c61 inherit pub_methods_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#ab54a75f524c802559e78e7bf000a7c61">callbackTask</a> ()</td></tr>
 <tr class="separator:ab54a75f524c802559e78e7bf000a7c61 inherit pub_methods_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -494,9 +502,12 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:a3d701fd7f49ab07da6c5edf3429cdfe5 inherit pro_attribs_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">asynUser *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a3d701fd7f49ab07da6c5edf3429cdfe5">pasynUserSelf</a></td></tr>
 <tr class="memdesc:a3d701fd7f49ab07da6c5edf3429cdfe5 inherit pro_attribs_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">asynUser connected to ourselves for asynTrace  <a href="classasyn_port_driver.html#a3d701fd7f49ab07da6c5edf3429cdfe5">More...</a><br /></td></tr>
 <tr class="separator:a3d701fd7f49ab07da6c5edf3429cdfe5 inherit pro_attribs_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0acc0a49b9d762bdbd7d42af5dbea5ef inherit pro_attribs_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a0acc0a49b9d762bdbd7d42af5dbea5ef">asynStdInterfaces</a></td></tr>
-<tr class="memdesc:a0acc0a49b9d762bdbd7d42af5dbea5ef inherit pro_attribs_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The asyn interfaces this driver implements.  <a href="classasyn_port_driver.html#a0acc0a49b9d762bdbd7d42af5dbea5ef">More...</a><br /></td></tr>
-<tr class="separator:a0acc0a49b9d762bdbd7d42af5dbea5ef inherit pro_attribs_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0208718150924f8b6966583aaed9626 inherit pro_attribs_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#ad0208718150924f8b6966583aaed9626">pasynStdInterfaces</a></td></tr>
+<tr class="memdesc:ad0208718150924f8b6966583aaed9626 inherit pro_attribs_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">The asyn interfaces this driver implements.  <a href="classasyn_port_driver.html#ad0208718150924f8b6966583aaed9626">More...</a><br /></td></tr>
+<tr class="separator:ad0208718150924f8b6966583aaed9626 inherit pro_attribs_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0862323ae77fc13f906325a11ca2c678 inherit pro_attribs_classasyn_port_driver"><td class="memItemLeft" align="right" valign="top">asynStandardInterfaces &amp;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classasyn_port_driver.html#a0862323ae77fc13f906325a11ca2c678">asynStdInterfaces</a></td></tr>
+<tr class="memdesc:a0862323ae77fc13f906325a11ca2c678 inherit pro_attribs_classasyn_port_driver"><td class="mdescLeft">&#160;</td><td class="mdescRight">Back-compat alias.  <a href="classasyn_port_driver.html#a0862323ae77fc13f906325a11ca2c678">More...</a><br /></td></tr>
+<tr class="separator:a0862323ae77fc13f906325a11ca2c678 inherit pro_attribs_classasyn_port_driver"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="inherited"></a>
 Additional Inherited Members</h2></td></tr>
@@ -550,6 +561,23 @@ Additional Inherited Members</h2></td></tr>
   </table>
   </dd>
 </dl>
+
+</div>
+</div>
+<a id="a59f38b3efb15b247b1f376a91811812c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a59f38b3efb15b247b1f376a91811812c">&#9670;&nbsp;</a></span>~testAsynPortDriver()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">testAsynPortDriver::~testAsynPortDriver </td>
+          <td>(</td>
+          <td class="paramname"></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
 
 </div>
 </div>
