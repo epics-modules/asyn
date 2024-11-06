@@ -86,8 +86,9 @@
 #endif
 
 /* Linux after version 2.3.31 (2001) supports SO_SNDTIMEO for connect() calls. It uses a timeval argument.
- * Windows supports SO_SNDTIMEO but it takes a DWORD argument and does not appear to apply to connect() calls. */
-#if defined(linux)
+ * Windows supports SO_SNDTIMEO but it takes a DWORD argument and does not appear to apply to connect() calls. 
+ * Darwin supports SO_SNDTIMEO but the documentation is not clear whether it applies to connect() calls. */
+#if defined(linux) || defined(darwin)
 # define USE_CONNECTTIMEOUT
 #endif
 
