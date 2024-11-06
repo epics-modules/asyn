@@ -543,8 +543,8 @@ connectIt(void *drvPvt, asynUser *pasynUser)
 #ifdef USE_CONNECTTIMEOUT
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&saveTV, sizeof saveTV) < 0) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_SNDTIMEO: %s\n", strerror(SOCKERRNO));
-#endif
             }
+#endif
         }
     }
     i = 1;
