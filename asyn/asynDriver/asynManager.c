@@ -29,6 +29,7 @@
 #include <epicsTimer.h>
 #include <cantProceed.h>
 #include <epicsAssert.h>
+#include <epicsExit.h>
 
 #include <epicsExport.h>
 #include "asynDriver.h"
@@ -136,6 +137,7 @@ typedef struct interfaceNode {
 
 typedef struct dpCommon { /*device/port common fields*/
     BOOL           enabled;
+    BOOL           defunct;
     BOOL           connected;
     BOOL           autoConnect;
     BOOL           autoConnectActive;
@@ -308,6 +310,7 @@ static asynStatus exceptionDisconnect(asynUser *pasynUser);
 static asynStatus interposeInterface(const char *portName, int addr,
     asynInterface *pasynInterface,asynInterface **ppPrev);
 static asynStatus enable(asynUser *pasynUser,int yesNo);
+static asynStatus shutdownPort(asynUser *pasynUser);
 static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo);
 static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
@@ -366,6 +369,7 @@ static asynManager manager = {
     exceptionDisconnect,
     interposeInterface,
     enable,
+    shutdownPort,
     autoConnectAsyn,
     isConnected,
     isEnabled,
@@ -515,6 +519,7 @@ static void dpCommonInit(port *pport,device *pdevice,BOOL autoConnect)
         pdpCommon = &pport->dpc;
     }
     pdpCommon->enabled = TRUE;
+    pdpCommon->defunct = FALSE;
     pdpCommon->connected = FALSE;
     pdpCommon->autoConnect = autoConnect;
     ellInit(&pdpCommon->interposeInterfaceList);
@@ -1033,6 +1038,10 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     for(i=asynQueuePriorityLow; i<=asynQueuePriorityConnect; i++)
         nQueued += ellCount(&pport->queueList[i]);
     pdpc = &pport->dpc;
+    if (pdpc->defunct) {
+        fprintf(fp,"%s destroyed\n", pport->portName);
+        goto done;
+    }
     fprintf(fp,"%s multiDevice:%s canBlock:%s autoConnect:%s\n",
         pport->portName,
         ((pport->attributes&ASYN_MULTIDEVICE) ? "Yes" : "No"),
@@ -1114,6 +1123,8 @@ static void reportPrintPort(printPortArgs *pprintPortArgs)
     if(pasynCommon) {
         pasynCommon->report(drvPvt,fp,details);
     }
+
+done:
 #ifdef CYGWIN32
     /* This is a (hopefully) temporary fix for a problem with POSIX threads on Cygwin.
      * If a thread is very short-lived, which this report thread will be if the amount of
@@ -1314,8 +1325,16 @@ static asynStatus connectDevice(asynUser *pasynUser,
     const char *portName, int addr)
 {
     userPvt *puserPvt = asynUserToUserPvt(pasynUser);
-    port    *pport = locatePort(portName);
+    port    *pport;
     device  *pdevice;
+
+    if(!portName) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:connectDevice no port name provided");
+        return asynError;
+    }
+
+    pport = locatePort(portName);
 
     if(!pport) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -1462,20 +1481,36 @@ static asynInterface *findInterface(asynUser *pasynUser,
                 "asynManager:findInterface: not connected");
         return 0;
     }
+
+    epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:findInterface: port shut down");
+        return 0;
+    }
+
     if(interposeInterfaceOK) {
         if(pdevice) {
             pinterfaceNode = locateInterfaceNode(
                 &pdevice->dpc.interposeInterfaceList, interfaceType,FALSE);
-            if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+            if(pinterfaceNode) goto retif;
         }
         pinterfaceNode = locateInterfaceNode(
             &pport->dpc.interposeInterfaceList, interfaceType,FALSE);
-        if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+        if(pinterfaceNode) goto retif;
     }
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
-    if(pinterfaceNode) return(pinterfaceNode->pasynInterface);
+    if(pinterfaceNode) goto retif;
+
+    epicsMutexUnlock(pport->asynManagerLock);
     return 0;
+
+retif:
+    epicsMutexUnlock(pport->asynManagerLock);
+    return pinterfaceNode->pasynInterface;
 }
 
 static asynStatus queueRequest(asynUser *pasynUser,
@@ -1750,8 +1785,20 @@ static asynStatus lockPort(asynUser *pasynUser)
                 "asynManager::lockPort not connected\n");
         return asynError;
     }
+
     asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s lockPort\n", pport->portName);
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    if (findDpCommon(puserPvt)->defunct) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:lockPort: port has been shut down");
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynDisabled;
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+
     epicsMutexMustLock(pport->synchronousLock);
+
     if(pport->pasynLockPortNotify) {
         pport->pasynLockPortNotify->lock(
            pport->lockPortNotifyPvt,pasynUser);
@@ -1769,6 +1816,7 @@ static asynStatus unlockPort(asynUser *pasynUser)
                 "asynManager::unlockPort not connected\n");
         return asynError;
     }
+
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s unlockPort\n", pport->portName);
     if(pport->pasynLockPortNotify) {
         asynStatus status;
@@ -1798,6 +1846,16 @@ static asynStatus queueLockPort(asynUser *pasynUser)
         return asynError;
     }
     asynPrint(pasynUser,ASYN_TRACE_FLOW, "%s asynManager::queueLockPort locking port\n", pport->portName);
+
+    epicsMutexMustLock(pport->asynManagerLock);
+    if(!pport->dpc.enabled) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                        "port %s disabled",pport->portName);
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynDisabled;
+    }
+    epicsMutexUnlock(pport->asynManagerLock);
+
     if (pport->attributes & ASYN_CANBLOCK) {   /* Asynchronous driver */
         plockPortPvt = epicsThreadPrivateGet(pport->queueLockPortId);
         if (!plockPortPvt) {
@@ -1967,6 +2025,25 @@ static asynStatus getPortName(asynUser *pasynUser,const char **pportName)
     return asynSuccess;
 }
 
+static void destroyPortDriver(void *portName) {
+    asynStatus status;
+    asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+    status = pasynManager->connectDevice(pasynUser, portName, 0);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+        pasynManager->freeAsynUser(pasynUser);
+        return;
+    }
+    status = pasynManager->shutdownPort(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
+    status = pasynManager->freeAsynUser(pasynUser);
+    if(status != asynSuccess) {
+        printf("%s\n", pasynUser->errorMessage);
+    }
+}
+
 static asynStatus registerPort(const char *portName,
     int attributes,int autoConnect,
     unsigned int priority,unsigned int stackSize)
@@ -2018,6 +2095,9 @@ static asynStatus registerPort(const char *portName,
     epicsMutexMustLock(pasynBase->lock);
     ellAdd(&pasynBase->asynPortList,&pport->node);
     epicsMutexUnlock(pasynBase->lock);
+    if (attributes & ASYN_DESTRUCTIBLE) {
+        epicsAtExit(destroyPortDriver, (void *)pport->portName);
+    }
     return asynSuccess;
 }
 
@@ -2152,8 +2232,80 @@ static asynStatus enable(asynUser *pasynUser,int yesNo)
             "asynManager:enable not connected");
         return asynError;
     }
+
+    epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pdpCommon->defunct) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:enable: port has been shut down");
+        epicsMutexUnlock(pport->asynManagerLock);
+        return asynDisabled;
+    }
+
     pdpCommon->enabled = (yesNo ? 1 : 0);
+
+    epicsMutexUnlock(pport->asynManagerLock);
+
     exceptionOccurred(pasynUser,asynExceptionEnable);
+    return asynSuccess;
+}
+
+static asynStatus shutdownPort(asynUser *pasynUser)
+{
+    userPvt    *puserPvt = asynUserToUserPvt(pasynUser);
+    port       *pport = puserPvt->pport;
+    dpCommon   *pdpCommon = findDpCommon(puserPvt);
+    interfaceNode *pinterfaceNode;
+
+    if (!pport || !pdpCommon) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:shutdownPort: not connected");
+        return asynError;
+    }
+
+    epicsMutexMustLock(pdpCommon->pport->asynManagerLock);
+
+    if (pdpCommon->defunct) {
+        epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
+        return asynSuccess;
+    }
+
+    if (!(pport->attributes & ASYN_DESTRUCTIBLE)) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+            "asynManager:shutdownPort: port does not support shutting down");
+        epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
+        return asynError;
+    }
+
+    /*
+     * Disabling the port short-circuits queueRequest(), preventing usage of
+     * external asynUser instances that will shortly become dangling references.
+     * It is marked defunct so it cannot be re-enabled.
+     */
+    pdpCommon->enabled = FALSE;
+    pdpCommon->defunct = TRUE;
+
+    /*
+     * Nullifying the private pointers to the driver enables trapping on
+     * erroneous accesses, making finding bugs easier.
+     */
+    pport->pasynLockPortNotify = NULL;
+    pport->lockPortNotifyPvt = NULL;
+    pinterfaceNode = (interfaceNode *)ellFirst(&pport->interfaceList);
+    while(pinterfaceNode) {
+        asynInterface *pif = pinterfaceNode->pasynInterface;
+        pif->drvPvt = NULL;
+        pinterfaceNode = (interfaceNode *)ellNext(&pinterfaceNode->node);
+    }
+
+    epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
+
+    /*
+     * Actual destruction of the driver is delegated to the driver itself, which
+     * shall implement an exception handler.
+     */
+    exceptionOccurred(pasynUser, asynExceptionShutdown);
+
     return asynSuccess;
 }
 
@@ -2197,7 +2349,9 @@ static asynStatus isEnabled(asynUser *pasynUser,int *yesNo)
             "asynManager:isEnabled asynUser not connected to device");
         return asynError;
     }
+    epicsMutexMustLock(pdpCommon->pport->asynManagerLock);
     *yesNo = pdpCommon->enabled;
+    epicsMutexUnlock(pdpCommon->pport->asynManagerLock);
     return asynSuccess;
 }
 
@@ -2261,7 +2415,15 @@ static asynStatus registerInterruptSource(const char *portName,
           portName);
        return asynError;
     }
+
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        printf("%s asynManager:registerInterrupt: port shut down", pport->portName);
+        return asynDisabled;
+    }
+
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,pasynInterface->interfaceType,FALSE);
     if(!pinterfaceNode)
@@ -2304,7 +2466,16 @@ static asynStatus getInterruptPvt(asynUser *pasynUser,
             "asynManager:getInterruptPvt not connected to a port");
         return asynError;
     }
+
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:getInterruptPvt: port shut down");
+        return asynDisabled;
+    }
+
     pinterfaceNode = locateInterfaceNode(
         &pport->interfaceList,interfaceType,FALSE);
     if(!pinterfaceNode)
@@ -2383,6 +2554,14 @@ static asynStatus addInterruptUser(asynUser *pasynUser,
     port             *pport = pinterruptBase->pport;
 
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:assInterruptUser: port shut down");
+        return asynDisabled;
+    }
+
     if(pinterruptNodePvt->isOnList) {
         epicsMutexUnlock(pport->asynManagerLock);
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -2417,6 +2596,14 @@ static asynStatus removeInterruptUser(asynUser *pasynUser,
     port             *pport = pinterruptBase->pport;
 
     epicsMutexMustLock(pport->asynManagerLock);
+
+    if (pport->dpc.defunct) {
+        epicsMutexUnlock(pport->asynManagerLock);
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                "asynManager:removeInterruptUser: port shut down");
+        return asynDisabled;
+    }
+
     if(!pinterruptNodePvt->isOnList) {
         epicsMutexUnlock(pport->asynManagerLock);
         epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
