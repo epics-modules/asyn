@@ -85,6 +85,12 @@
 # endif
 #endif
 
+/* Linux after version 2.3.31 (2001) supports SO_SNDTIMEO for connect() calls. It uses a timeval argument.
+ * Windows supports SO_SNDTIMEO but it takes a DWORD argument and does not appear to apply to connect() calls. */
+#if defined(linux)
+# define USE_CONNECTTIMEOUT
+#endif
+
 /* If SO_REUSEPORT is not defined then use SO_REUSEADDR instead.
    It is not defined on RTEMS, Windows and older Linux versions. */
 #ifndef SO_REUSEPORT
@@ -517,12 +523,14 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             pasynManager->getAutoConnectTimeout(&connectTimeout);
             connectTV.tv_sec = (long)connectTimeout;
             connectTV.tv_usec = (long)((connectTimeout - connectTV.tv_sec)*1000000);
+#ifdef USE_CONNECTTIMEOUT
             if (getsockopt (fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&saveTV, &svlen) < 0) {
-                asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling getsockopt for SO_RECVTIMEO: %s\n", strerror(SOCKERRNO));
+                asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling getsockopt for SO_SNDTIMEO: %s\n", strerror(SOCKERRNO));
             }
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&connectTV, sizeof connectTV) < 0) {
-                 asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_RECVTIMEO: %s\n", strerror(SOCKERRNO));
+                 asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_SNDTIMEO: %s\n", strerror(SOCKERRNO));
             }
+#endif
             if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't connect to %s: %s",
@@ -532,8 +540,10 @@ connectIt(void *drvPvt, asynUser *pasynUser)
                     tty->flags |=  FLAG_NEED_LOOKUP;
                 return asynError;
             }
+#ifdef USE_CONNECTTIMEOUT
             if (setsockopt(fd, SOL_SOCKET, SO_SNDTIMEO, (char *)&saveTV, sizeof saveTV) < 0) {
-                asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_RECVTIMEO: %s\n", strerror(SOCKERRNO));
+                asynPrint(pasynUser, ASYN_TRACE_ERROR, "connectIt, error calling setsockopt for SO_SNDTIMEO: %s\n", strerror(SOCKERRNO));
+#endif
             }
         }
     }
