@@ -17,7 +17,8 @@
     - This change makes mbboDirect behave the same as mbbiDirect: RVAL is copied to VAL (shifted, if neccessary),
 	  then each of the fields  representing individual bits is set as well.
 	- Thanks to Jure Varlec for this.
-
+- drvAsynIPServerPort
+  - Numerous bug fixes from Freddie Akeroyd and Ralph Lange.
 - Added autoconverted OPI files in the test applications for CSS/Boy, CSS/Phoebus, edm, and caQtDM.
 - Added missing include file in drvLinuxGpib.c.
 - Added support for sending serial break via option interface.  Thanks to Lutz Rossa for this.
