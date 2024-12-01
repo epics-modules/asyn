@@ -1,9 +1,23 @@
 # asynDriver: Release Notes
 
-## Release 4-45 (May XXX, 2023)
-- devEpics
+## Release 4-45 (December 1, 2024)
+- asynManager, asynPortDriver
+  - Add support for destructable ports.  
+    - The port driver needs to declare that it supports destruction by passing
+      a new flag, ASYN_DESTRUCTIBLE, when registering the port. It also needs
+      to handle the new asynExceptionShutdown.
+    - A new function is added, asynManager::shutdown(). It disables the port,
+      nullifies the private driver pointers reachable from the port, and
+      triggers the shutdown exception.
+    - Thanks to Jure Varlec for this.
+- devEpics 
   - Changed devAsynXXXArray::interruptCallback so it returns immediately if interruptAccept is still 0, i.e. before iocInit
     is mostly complete.  This was causing warnings if callbacks occured before iocInit.
+  - Fix mbboDirect asyn:READBACK
+    - This change makes mbboDirect behave the same as mbbiDirect: RVAL is copied to VAL (shifted, if neccessary),
+	  then each of the fields  representing individual bits is set as well.
+	- Thanks to Jure Varlec for this.
+
 - Added autoconverted OPI files in the test applications for CSS/Boy, CSS/Phoebus, edm, and caQtDM.
 - Added missing include file in drvLinuxGpib.c.
 - Added support for sending serial break via option interface.  Thanks to Lutz Rossa for this.
