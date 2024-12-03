@@ -316,6 +316,7 @@ static asynStatus isConnected(asynUser *pasynUser,int *yesNo);
 static asynStatus isEnabled(asynUser *pasynUser,int *yesNo);
 static asynStatus isAutoConnect(asynUser *pasynUser,int *yesNo);
 static asynStatus setAutoConnectTimeout(double timeout);
+static asynStatus getAutoConnectTimeout(double *timeout);
 static asynStatus waitConnect(asynUser *pasynUser, double timeout);
 static asynStatus registerInterruptSource(const char *portName,
     asynInterface *pasynInterface, void **pasynPvt);
@@ -374,6 +375,7 @@ static asynManager manager = {
     isEnabled,
     isAutoConnect,
     setAutoConnectTimeout,
+    getAutoConnectTimeout,
     waitConnect,
     registerInterruptSource,
     getInterruptPvt,
@@ -2372,6 +2374,15 @@ static asynStatus setAutoConnectTimeout(double timeout)
     if(!pasynBase) asynInit();
     epicsMutexMustLock(pasynBase->lock);
     pasynBase->autoConnectTimeout = timeout;
+    epicsMutexUnlock(pasynBase->lock);
+    return asynSuccess;
+}
+
+static asynStatus getAutoConnectTimeout(double *timeout)
+{
+    if(!pasynBase) asynInit();
+    epicsMutexMustLock(pasynBase->lock);
+    *timeout = pasynBase->autoConnectTimeout;
     epicsMutexUnlock(pasynBase->lock);
     return asynSuccess;
 }
