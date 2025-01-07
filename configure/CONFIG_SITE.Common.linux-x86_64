@@ -3,3 +3,7 @@
 
 # If your system has libftdi1, set the following to YES. If it has libftdi, set it to NO
 #DRV_FTDI_USE_LIBFTDI1=YES
+
+# If your system has tirpc, set the following to YES.
+TIRPC=YES
+
