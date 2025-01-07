@@ -7,7 +7,7 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>devGpib (obsolete) &mdash; asyn support</title>
-      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=fa44fd50" />
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=03e43079" />
       <link rel="stylesheet" type="text/css" href="_static/css/my_theme.css?v=254ed751" />
 
   
@@ -1096,7 +1096,7 @@ since asynGpib handles SRQ callbacks via the asynInt32 interface and using asynU
 has become disconnected from the bus for some reason and then to restore the device
 to the polling list when the device is reattached. A binary output record with the
 following command table entry is used for this purpose:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Add</span><span class="o">/</span><span class="n">remove</span> <span class="n">address</span> <span class="kn">from</span> <span class="nn">SRQ</span> <span class="n">polling</span> <span class="nb">list</span> <span class="o">*/</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Add</span><span class="o">/</span><span class="n">remove</span> <span class="n">address</span> <span class="kn">from</span><span class="w"> </span><span class="nn">SRQ</span> <span class="n">polling</span> <span class="nb">list</span> <span class="o">*/</span>
 <span class="p">{</span> <span class="o">&amp;</span><span class="n">DSET_BO</span><span class="p">,</span><span class="n">GPIBCVTIO</span><span class="p">,</span><span class="n">IB_Q_HIGH</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">boSRQonOff</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">,</span><span class="n">NULL</span><span class="p">}</span>
 </pre></div>
 </div>
@@ -1598,7 +1598,7 @@ is no telling how fast the device will be pushed.</p>
          <span class="n">prominent</span> <span class="n">notices</span> <span class="n">stating</span> <span class="n">that</span> <span class="n">you</span> <span class="n">changed</span> <span class="n">specified</span> <span class="n">portions</span> <span class="n">of</span>
          <span class="n">the</span> <span class="n">Software</span><span class="o">.</span>
 
- <span class="mf">5.</span> <span class="n">Portions</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span> <span class="n">resulted</span> <span class="kn">from</span> <span class="nn">work</span> <span class="n">developed</span> <span class="n">under</span> <span class="n">a</span> <span class="n">U</span><span class="o">.</span><span class="n">S</span><span class="o">.</span>
+ <span class="mf">5.</span> <span class="n">Portions</span> <span class="n">of</span> <span class="n">the</span> <span class="n">Software</span> <span class="n">resulted</span> <span class="kn">from</span><span class="w"> </span><span class="nn">work</span> <span class="n">developed</span> <span class="n">under</span> <span class="n">a</span> <span class="n">U</span><span class="o">.</span><span class="n">S</span><span class="o">.</span>
     <span class="n">Government</span> <span class="n">contract</span> <span class="ow">and</span> <span class="n">are</span> <span class="n">subject</span> <span class="n">to</span> <span class="n">the</span> <span class="n">following</span> <span class="n">license</span><span class="p">:</span> <span class="n">the</span>
     <span class="n">Government</span> <span class="ow">is</span> <span class="n">granted</span> <span class="k">for</span> <span class="n">itself</span> <span class="ow">and</span> <span class="n">others</span> <span class="n">acting</span> <span class="n">on</span> <span class="n">its</span> <span class="n">behalf</span> <span class="n">a</span>
     <span class="n">paid</span><span class="o">-</span><span class="n">up</span><span class="p">,</span> <span class="n">nonexclusive</span><span class="p">,</span> <span class="n">irrevocable</span> <span class="n">worldwide</span> <span class="n">license</span> <span class="ow">in</span> <span class="n">this</span> <span class="n">computer</span>
@@ -1643,7 +1643,7 @@ is no telling how fast the device will be pushed.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2024-December-01.
+      <span class="lastupdated">Last updated on 2025-January-07.
       </span></p>
   </div>
 
