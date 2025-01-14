@@ -1,12 +1,22 @@
-name: asyn
+name: Build from source (ci-scripts)
 
 # Trigger on pushes and PRs to any branch
 on:
   push:
     paths-ignore:
+      - 'documentation/*'
+      - '.gitattributes'
+      - '**/*.html'
       - '**/*.md'
       - '**/*.txt'
   pull_request:
+    paths-ignore:
+      - 'documentation/*'
+      - '.gitattributes'
+      - '**/*.html'
+      - '**/*.md'
+      - '**/*.txt'
+  workflow_dispatch:
 
 env:
   SETUP_PATH: .ci-local:.ci
@@ -101,7 +111,7 @@ jobs:
 #            deps: "no-deps"
 #            cross: "RTEMS-pc686-qemu@5"
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         submodules: true
 
@@ -119,9 +129,9 @@ jobs:
 
     - name: Upload tapfiles Artifact
       if: ${{ always() }}
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
-        name: tapfiles ${{ matrix.name }}
+        name: "tapfiles ${{ matrix.name }}"
         path: '**/O.*/*.tap'
         if-no-files-found: ignore
 
