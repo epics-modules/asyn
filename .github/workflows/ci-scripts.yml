@@ -20,6 +20,7 @@ on:
 
 env:
   SETUP_PATH: .ci-local:.ci
+  BASE_RECURSIVE: NO
 
 jobs:
   test:
