@@ -108,9 +108,6 @@ jobs:
     - name: Prepare and compile EPICS dependencies
       run: python .ci/cue.py prepare
 
-    - name: TIRPC
-      run: echo TIRPC=YES > configure/CONFIG_SITE.Common.linux-x86_64
-
     - name: Build main module
       run: python .ci/cue.py build
 

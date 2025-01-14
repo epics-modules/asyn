@@ -1,8 +1,7 @@
-MODULES="sncseq sscan calc ipac"
+MODULES="sscan calc ipac"
 
 BASE_RECURSIVE=no
 
-SNCSEQ=master
 SSCAN=master
 CALC=master
 IPAC=master
