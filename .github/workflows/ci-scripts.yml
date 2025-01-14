@@ -32,7 +32,7 @@ jobs:
       SET: ${{ matrix.deps }}
       CI_CROSS_TARGETS: ${{ matrix.cross }}
       TEST: ${{ matrix.test }}
-      APT: re2c
+      APT: re2c libtirpc-dev
       CHOCO: re2c
       BREW: re2c
 
@@ -117,9 +117,6 @@ jobs:
 
     - name: Prepare and compile EPICS dependencies
       run: python .ci/cue.py prepare
-
-    - name: TIRPC
-      run: echo TIRPC=YES > configure/CONFIG_SITE.Common.linux-x86_64
 
     - name: Build main module
       run: python .ci/cue.py build
