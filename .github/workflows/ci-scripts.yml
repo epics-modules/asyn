@@ -33,7 +33,7 @@ jobs:
       SET: ${{ matrix.deps }}
       CI_CROSS_TARGETS: ${{ matrix.cross }}
       TEST: ${{ matrix.test }}
-      APT: re2c libtirpc-dev
+      APT: re2c libtirpc-dev libreadline-dev
       CHOCO: re2c
       BREW: re2c
 
