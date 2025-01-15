@@ -71,16 +71,9 @@ jobs:
             os: ubuntu-latest
             cmp: gcc
             configuration: default
-            base: "7.0"
             deps: "synapps-6.3"
 
-          - name: Linux (Base7.0.4.1) synapps-6.3
-            os: ubuntu-latest
-            cmp: gcc
-            configuration: default
-            deps: "synapps-6.3"
-
-          - name: Linux (Base3.15.5) synapps-6.0
+          - name: Linux Base3.15 synapps-6.0
             os: ubuntu-latest
             cmp: gcc
             configuration: default
@@ -93,7 +86,7 @@ jobs:
             base: "3.14"
             deps: "synapps-6.0"
 
-          - name: Linux (Base3.14.12.4) synapps-5.8
+          - name: Linux Base3.14 synapps-5.8
             os: ubuntu-latest
             cmp: gcc
             configuration: default
