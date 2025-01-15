@@ -1,6 +1,0 @@
-MODULES="sncseq sscan calc ipac"
-
-SNCSEQ=master
-SSCAN=master
-CALC=master
-IPAC=master

@@ -21,6 +21,10 @@ on:
 env:
   SETUP_PATH: .ci-local:.ci
   BASE_RECURSIVE: NO
+  MODULES: "sncseq sscan calc ipac"
+  APT: re2c libtirpc-dev libreadline-dev
+  CHOCO: re2c
+  BREW: re2c
 
 jobs:
   test:
@@ -33,9 +37,6 @@ jobs:
       SET: ${{ matrix.deps }}
       CI_CROSS_TARGETS: ${{ matrix.cross }}
       TEST: ${{ matrix.test }}
-      APT: re2c libtirpc-dev libreadline-dev
-      CHOCO: re2c
-      BREW: re2c
 
     strategy:
       fail-fast: false
@@ -47,63 +48,80 @@ jobs:
             cmp: gcc
             configuration: default
             base: "7.0"
-            deps: "deps2"
 
           - name: Linux Base7.0 static
             os: ubuntu-latest
             cmp: gcc
             configuration: static
             base: "7.0"
-            deps: "deps2"
 
           - name: Linux Base3.15
             os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "3.15"
-            deps: "deps2"
 
           - name: Linux Base3.15 static
             os: ubuntu-latest
             cmp: gcc
             configuration: static
             base: "3.15"
-            deps: "deps2"
+
+          - name: Linux Base7.0 synapps-6.3
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            deps: "synapps-6.3"
+
+          - name: Linux (Base7.0.4.1) synapps-6.3
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-6.3"
+
+          - name: Linux (Base3.15.5) synapps-6.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-6.0"
+
+          - name: Linux Base3.14 synapps-6.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "3.14"
+            deps: "synapps-6.0"
+
+          - name: Linux (Base3.14.12.4) synapps-5.8
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-5.8"
 
           - name: Linux Base3.15 no-deps
             os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "3.15"
-            deps: "no-deps"
-
-          - name: Linux Base3.14 deps1
-            os: ubuntu-latest
-            cmp: gcc
-            configuration: default
-            base: "3.14"
-            deps: "deps1"
 
           - name: Win2019 Base7.0 DLL
             os: windows-2019
             cmp: vs2019
             configuration: default
             base: "7.0"
-            deps: "deps2"
 
           - name: Win2019 Base7.0 static
             os: windows-2019
             cmp: vs2019
             configuration: static
             base: "7.0"
-            deps: "deps2"
 
           - name: RTEMS-4.9 Base7.0
             os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
-            deps: "no-deps"
             cross: "RTEMS-pc386-qemu@4.9"
 
           - name: RTEMS-4.10 Base7.0
@@ -111,7 +129,6 @@ jobs:
             cmp: gcc
             configuration: default
             base: "7.0"
-            deps: "no-deps"
             cross: "RTEMS-pc386-qemu@4.10"
             test: NO
 
@@ -120,7 +137,6 @@ jobs:
             cmp: gcc
             configuration: default
             base: "7.0"
-            deps: "no-deps"
             cross: "RTEMS-pc686-qemu@5"
 
     steps:
