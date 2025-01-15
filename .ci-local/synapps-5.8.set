@@ -4,3 +4,5 @@ CALC=R3-4-2-1
 IPAC=2.12
 
 BASE=3.14
+
+SSCAN_HOOK=.ci-local/sscan-2.10.1-fix.patch
