@@ -1,4 +1,4 @@
-name: Build from source (ci-scripts)
+name: Build and Test
 
 # Trigger on pushes and PRs to any branch
 on:
@@ -24,7 +24,7 @@ env:
 
 jobs:
   test:
-    name: ${{ matrix.os }}/${{ matrix.deps }}/${{ matrix.base }}/${{ matrix.cmp }}/${{ matrix.configuration }}/${{ matrix.cross }}
+    name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     env:
       CMP: ${{ matrix.cmp }}
@@ -42,62 +42,72 @@ jobs:
       matrix:
         # Job names also name artifacts, character limitations apply
         include:
-          - os: ubuntu-latest
+          - name: Linux Base7.0
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
             deps: "deps2"
 
-          - os: ubuntu-latest
+          - name: Linux Base7.0 static
+            os: ubuntu-latest
             cmp: gcc
             configuration: static
             base: "7.0"
             deps: "deps2"
 
-          - os: ubuntu-latest
+          - name: Linux Base3.15
+            os: ubuntu-latest
             cmp: gcc
-            configuration: static
-            base: "7.0"
+            configuration: default
+            base: "3.15"
             deps: "deps2"
 
-          - os: ubuntu-latest
+          - name: Linux Base3.15 static
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: static
+            base: "3.15"
+            deps: "deps2"
+
+          - name: Linux Base3.15 no-deps
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "3.15"
             deps: "no-deps"
 
-          - os: ubuntu-latest
+          - name: Linux Base3.14 deps1
+            os: ubuntu-latest
             cmp: gcc
-            configuration: static
-            base: "3.15"
-            deps: "deps2"
+            configuration: default
+            base: "3.14"
+            deps: "deps1"
 
-#          - os: ubuntu-latest
-#            cmp: gcc
-#            configuration: static
-#            base: "3.14"
-#            deps: "deps1"
-
-          - os: windows-2019
+          - name: Win2019 Base7.0 DLL
+            os: windows-2019
             cmp: vs2019
             configuration: default
             base: "7.0"
             deps: "deps2"
 
-          - os: windows-2019
+          - name: Win2019 Base7.0 static
+            os: windows-2019
             cmp: vs2019
             configuration: static
             base: "7.0"
             deps: "deps2"
 
-          - os: ubuntu-latest
+          - name: RTEMS-4.9 Base7.0
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
             deps: "no-deps"
             cross: "RTEMS-pc386-qemu@4.9"
 
-          - os: ubuntu-latest
+          - name: RTEMS-4.10 Base7.0
+            os: ubuntu-latest
             cmp: gcc
             configuration: default
             base: "7.0"
@@ -105,12 +115,14 @@ jobs:
             cross: "RTEMS-pc386-qemu@4.10"
             test: NO
 
-#          - os: ubuntu-latest
-#            cmp: gcc
-#            configuration: default
-#            base: "7.0"
-#            deps: "no-deps"
-#            cross: "RTEMS-pc686-qemu@5"
+          - name: RTEMS-5 Base7.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            deps: "no-deps"
+            cross: "RTEMS-pc686-qemu@5"
+
     steps:
     - uses: actions/checkout@v4
       with:
@@ -129,7 +141,7 @@ jobs:
       if: ${{ always() }}
       uses: actions/upload-artifact@v4
       with:
-        name: "tapfiles ${{ matrix.name }}"
+        name: tapfiles ${{ matrix.name }}
         path: '**/O.*/*.tap'
         if-no-files-found: ignore
 
