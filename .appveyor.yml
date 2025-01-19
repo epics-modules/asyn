@@ -33,17 +33,7 @@ skip_commits:
     - 'templates/*'
     - '**/*.html'
     - '**/*.md'
-    - '.travis.yml'
-
-#---------------------------------#
-#       additional packages       #
-#---------------------------------#
-
-install:
-# fetch submodules (like ci-scripts)
-  - cmd: git submodule update --init --recursive
-# for the sequencer
-  - cinst re2c
+    - ".github/*"
 
 #---------------------------------#
 #   build matrix configuration    #
@@ -89,33 +79,23 @@ configuration:
 environment:
   # common / default variables for all jobs
   SETUP_PATH: .ci-local:.ci
+  BASE: "7.0"
 
   matrix:
-  - CMP: vs2019
-    BASE: "7.0"
-    SET: "deps2"
-    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: gcc
-    BASE: "7.0"
-    SET: "deps2"
+  - CMP: vs2019
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: vs2019
     BASE: "3.15"
-    SET: "deps2"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
   - CMP: vs2019
     BASE: "3.14"
-    SET: "deps1"
+    SET: "synapps-6.0"
     APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-  #- CMP: vs2017
-  #  BASE: "7.0"
-  #  SET: "deps2"
-  #  APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+  - CMP: vs2017
+    APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
   - CMP: vs2015
-    BASE: "7.0"
-    SET: "deps2"
-  #- CMP: vs2013
-  #  BASE: "7.0"
-  #  SET: "deps2"
+  - CMP: vs2013
 
 # Platform: processor architecture
 platform:
@@ -125,27 +105,45 @@ platform:
 # Matrix configuration: exclude sets of jobs
 matrix:
   exclude:
+  # VS2012 and older installs don't have the 64 bit compiler
+  - platform: x64
+    CMP: vs2012
+  - platform: x64
+    CMP: vs2010
   # Exclude more jobs to reduce build time
   # E.g., skip 32-bit for newer compilers
   - platform: x86
     CMP: vs2019
-  #- platform: x86
-  #  CMP: vs2015
+  # MinGW debug builds use the same libraries, unlike VS
+  - configuration: dynamic-debug
+    CMP: gcc
+  - configuration: static-debug
+    CMP: gcc
 
 #---------------------------------#
 #     building & testing          #
 #---------------------------------#
 
-build_script:
+install:
+  - cmd: git submodule update --init --recursive
+# for the sequencer
+  - choco install re2c
+  - cmd: pip install git+https://github.com/mdavidsaver/ci-core-dumper#egg=ci-core-dumper
   - cmd: python .ci/cue.py prepare
+
+build_script:
   - cmd: python .ci/cue.py build
 
 test_script:
+  - cmd: python -m ci_core_dumper install
   - cmd: python .ci/cue.py -T 20M test
 
 on_finish:
   - ps: Get-ChildItem *.tap -Recurse -Force | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name }
   - cmd: python .ci/cue.py -T 5M test-results
+
+on_failure:
+  - cmd: python -m ci_core_dumper report
 
 #---------------------------------#
 #         debugging               #
