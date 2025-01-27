@@ -58,6 +58,12 @@ DRV_FTDI_USE_LIBFTDI1=NO
 # To enable linking against this library, uncomment the following line
 # TIRPC=YES
 
+# If libtirpc on Linux is not installed in a system location, then uncomment
+# and edit these lines to define the location of the include and lib
+# directories
+#TIRPC_INCLUDE=/usr/local/include/tirpc
+#TIRPC_LIB=/usr/local/lib
+
 -include $(SUPPORT)/configure/CONFIG_SITE
 
 # These allow developers to override the CONFIG_SITE variable
