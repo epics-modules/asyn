@@ -2319,6 +2319,9 @@ static asynStatus autoConnectAsyn(asynUser *pasynUser,int yesNo)
         return asynError;
     }
     pdpCommon->autoConnect = (yesNo ? 1 : 0);
+    if(!pdpCommon->connected && pdpCommon->autoConnect) {
+        epicsTimerStartDelay(pport->connectTimer,.01);
+    }
     exceptionOccurred(pasynUser,asynExceptionAutoConnect);
     return asynSuccess;
 }
