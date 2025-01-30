@@ -1,5 +1,12 @@
 # asynDriver: Release Notes
 
+## Release 4-46 (XXX, 2025)
+- devVxi11
+  - Make VXI11 support (for VISA systems) optional.
+    VXI11 is broken on RTEMS-5 and rarely required for real-time system IOCs.
+    By default enabled via setting DRV_VXI11=YES in configure/CONFIG_SITE. (Except RTEMS-5.)
+  - Thanks to Heinz Junkes for this.
+
 ## Release 4-45 (December 1, 2024)
 - asynManager, asynPortDriver
   - Add support for destructable ports.  

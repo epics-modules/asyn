@@ -36,6 +36,9 @@ CHECK_RELEASE = YES
 # then set LINUX_GPIB=YES
 LINUX_GPIB=NO
 
+# If you have rpc-lib installed and want to have support for VISA devices (VXI11) set DRV_VXI11=YES
+#DRV_VXI11=YES
+
 # If you have libusb-1.0 revision 16 or newer and want the USB TMC support set DRV_USBTMC=YES
 #DRV_USBTMC=YES
 
