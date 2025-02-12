@@ -215,6 +215,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   DB += asynRecord.db
 endif
 
+ifeq ($(DRV_VXI11),YES)
 SRC_DIRS += $(ASYN)/vxi11
 ifeq ($(OS_CLASS), WIN32)
   asyn_SRCS += drvVxi11Win32.c
@@ -226,6 +227,7 @@ asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
+endif
 
 SRC_DIRS += $(ASYN)/drvPrologixGPIB
 asyn_SRCS += drvPrologixGPIB.c
@@ -242,9 +244,11 @@ endif
 
 ifneq (, $(findstring RTEMS, $(T_A)))
   DRV_USBTMC = NO
+  DRV_VXI11 = NO
 endif
 ifneq (, $(findstring vxWorks, $(T_A)))
   DRV_USBTMC = NO
+  DRV_VXI11 = NO
 endif
 ifeq ($(DRV_USBTMC),YES)
   SRC_DIRS += $(ASYN)/drvAsynUSBTMC

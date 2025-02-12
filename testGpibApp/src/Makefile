@@ -10,7 +10,7 @@ ASYN_LIB = $(TOP)/lib/$(T_A)
 ASYN_BIN = $(TOP)/bin/$(T_A)
 
 USR_CFLAGS += -DUSE_TYPED_RSET -DUSE_TYPED_DSET -DUSE_TYPED_DRVET
-
+ifeq ($(DRV_VXI11),YES)
 DBD += devTestGpib.dbd
 
 DBD += testGpib.dbd
@@ -61,7 +61,7 @@ testGpibVx_LIBS += $(EPICS_BASE_IOC_LIBS)
 
 
 #===========================
-
+endif
 include $(TOP)/configure/RULES
 #----------------------------------------
 #  ADD RULES AFTER THIS LINE

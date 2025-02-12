@@ -1,0 +1,164 @@
+name: Build and Test
+
+# Trigger on pushes and PRs to any branch
+on:
+  push:
+    paths-ignore:
+      - 'documentation/*'
+      - '.gitattributes'
+      - '**/*.html'
+      - '**/*.md'
+      - '**/*.txt'
+  pull_request:
+    paths-ignore:
+      - 'documentation/*'
+      - '.gitattributes'
+      - '**/*.html'
+      - '**/*.md'
+      - '**/*.txt'
+  workflow_dispatch:
+
+env:
+  SETUP_PATH: .ci-local:.ci
+  BASE_RECURSIVE: NO
+  MODULES: "sncseq sscan calc ipac"
+  APT: re2c libtirpc-dev libreadline-dev
+  CHOCO: re2c
+  BREW: re2c
+
+jobs:
+  test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    env:
+      CMP: ${{ matrix.cmp }}
+      BCFG: ${{ matrix.configuration }}
+      BASE: ${{ matrix.base }}
+      SET: ${{ matrix.deps }}
+      CI_CROSS_TARGETS: ${{ matrix.cross }}
+      TEST: ${{ matrix.test }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Job names also name artifacts, character limitations apply
+        include:
+          - name: Linux Base7.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+
+          - name: Linux Base7.0 static
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: static
+            base: "7.0"
+
+          - name: Linux Base3.15
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "3.15"
+
+          - name: Linux Base3.15 static
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: static
+            base: "3.15"
+
+          - name: Linux Base7.0 synapps-6.3
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-6.3"
+
+          - name: Linux Base3.15 synapps-6.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-6.0"
+
+          - name: Linux Base3.14 synapps-6.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "3.14"
+            deps: "synapps-6.0"
+
+          - name: Linux Base3.14 synapps-5.8
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            deps: "synapps-5.8"
+
+          - name: Linux Base3.15 no-deps
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "3.15"
+
+          - name: MacOS Base7.0
+            os: macos-latest
+            cmp: clang
+            configuration: default
+
+          - name: Win2019 Base7.0 DLL
+            os: windows-2019
+            cmp: vs2019
+            configuration: default
+            base: "7.0"
+
+          - name: Win2019 Base7.0 static
+            os: windows-2019
+            cmp: vs2019
+            configuration: static
+            base: "7.0"
+
+          - name: RTEMS-4.9 Base7.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            cross: "RTEMS-pc386-qemu@4.9"
+
+          - name: RTEMS-4.10 Base7.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            cross: "RTEMS-pc386-qemu@4.10"
+            test: NO
+
+          - name: RTEMS-5 Base7.0
+            os: ubuntu-latest
+            cmp: gcc
+            configuration: default
+            base: "7.0"
+            cross: "RTEMS-pc686-qemu@5"
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        submodules: true
+
+    - name: Prepare and compile EPICS dependencies
+      run: python .ci/cue.py prepare
+
+    - name: Build main module
+      run: python .ci/cue.py build
+
+    - name: Run main module tests
+      run: python .ci/cue.py -T 20M test
+
+    - name: Upload tapfiles Artifact
+      if: ${{ always() }}
+      uses: actions/upload-artifact@v4
+      with:
+        name: tapfiles ${{ matrix.name }}
+        path: '**/O.*/*.tap'
+        if-no-files-found: ignore
+
+    - name: Collect and show test results
+      if: ${{ always() }}
+      run: python .ci/cue.py -T 5M test-results
