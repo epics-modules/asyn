@@ -2041,8 +2041,8 @@ static void reportError(asynRecord * pasynRec, asynStatus status,
                   pasynRec->name, buffer);
     }
     strncpy(pasynRec->errs, buffer, ERR_SIZE);
-    if(strncmp(pasynRec->errs, pasynRecPvt->old.errs, ERR_SIZE) != 0) {
-        strncpy(pasynRecPvt->old.errs, pasynRec->errs, ERR_SIZE);
+    if(strncmp(pasynRec->errs, pasynRecPvt->old.errs, ERR_SIZE-1) != 0) {
+        strncpy(pasynRecPvt->old.errs, pasynRec->errs, ERR_SIZE-1);
         monitor_mask = DBE_VALUE | DBE_LOG;
         db_post_events(pasynRec, pasynRec->errs, monitor_mask);
     }
@@ -2052,8 +2052,8 @@ static void resetError(asynRecord * pasynRec)
     asynRecPvt *pasynRecPvt = pasynRec->dpvt;
     unsigned short monitor_mask;
     pasynRec->errs[0] = 0;
-    if(strncmp(pasynRec->errs, pasynRecPvt->old.errs, ERR_SIZE) != 0) {
-        strncpy(pasynRecPvt->old.errs, pasynRec->errs, ERR_SIZE);
+    if(strncmp(pasynRec->errs, pasynRecPvt->old.errs, ERR_SIZE-1) != 0) {
+        strncpy(pasynRecPvt->old.errs, pasynRec->errs, ERR_SIZE-1);
         monitor_mask = DBE_VALUE | DBE_LOG;
         db_post_events(pasynRec, pasynRec->errs, monitor_mask);
     }
