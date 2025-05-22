@@ -263,21 +263,22 @@ ifeq ($(DRV_FTDI),YES)
   asyn_SYS_LIBS += usb-1.0
   INC += drvAsynFTDIPort.h
   ifeq ($(DRV_FTDI_USE_LIBFTDI1),YES)
-     USR_CXXFLAGS += -DHAVE_LIBFTDI1
-     ifeq ($(FTDI_LIB),)
-       asyn_SYS_LIBS += ftdi1
-     else
-       asyn_LIBS += ftdi1
-       ftdi1_DIR = $(FTDI_LIB)
-     endif
+    USR_CXXFLAGS += -DHAVE_LIBFTDI1
+    ifeq ($(FTDI_LIB),)
+      asyn_SYS_LIBS += ftdi1
+    else
+      asyn_LIBS += ftdi1
+      ftdi1_DIR = $(FTDI_LIB)
+    endif
   else
-     ifeq ($(FTDI_LIB),)
-       asyn_SYS_LIBS += ftdi
-     else
-       asyn_LIBS += ftdi
-       ftdi_DIR = $(FTDI_LIB)
-     endif
+    ifeq ($(FTDI_LIB),)
+      asyn_SYS_LIBS += ftdi
+    else
+      asyn_LIBS += ftdi
+      ftdi_DIR = $(FTDI_LIB)
+    endif
   endif
+
   ifdef FTDI_INCLUDE
     USR_INCLUDES += $(addprefix -I, $(FTDI_INCLUDE))
   endif
