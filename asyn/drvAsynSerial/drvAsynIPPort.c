@@ -505,13 +505,56 @@ connectIt(void *drvPvt, asynUser *pasynUser)
             }
         }
 
+    }
+
+#ifdef USE_POLL
+    if (setNonBlock(fd, 1) < 0) {
+        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
+                               "Can't set %s O_NONBLOCK option: %s",
+                                       tty->IPDeviceName, strerror(SOCKERRNO));
+        epicsSocketDestroy(fd);
+        return asynError;
+    }
+#endif
+
+    if (pasynUser->reason <= 0) {
+
         /*
          * Connect to the remote host
          * If the connect fails, arrange for another DNS lookup in case the
          * problem is just that the device has DHCP'd itself an new number.
          */
         if (tty->socketType != SOCK_DGRAM) {
-            if (connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize) < 0) {
+            int connectResult = connect(fd, &tty->farAddr.oa.sa, (int)tty->farAddrSize);
+        #ifdef USE_POLL
+            if (connectResult < 0 && ((SOCKERRNO == EWOULDBLOCK) || (SOCKERRNO == EINPROGRESS))) {
+                double connectTimeout;
+                int msConnectTimeout;
+                struct pollfd pollfd;
+
+                pasynManager->getAutoConnectTimeout(&connectTimeout);
+                msConnectTimeout = 1000 * connectTimeout;
+                pollfd.fd = fd;
+                pollfd.events = POLLOUT;
+
+                /*
+                 * poll() returning 1 is the only case where connect might have been successful.
+                 * Otherwise connectResult will remain -1.
+                 */
+                if (poll(&pollfd, 1, msConnectTimeout) == 1) {
+                    int so_error;
+                    socklen_t len = sizeof so_error;
+
+                    /*
+                     * We must verify SO_ERROR to make sure the connection was successful.
+                     */
+                    getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+                    if (so_error == 0)
+                        connectResult = 0;
+                }
+            }
+        #endif
+            if (connectResult < 0) {
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                               "Can't connect to %s: %s",
                               tty->IPDeviceName, strerror(SOCKERRNO));
@@ -532,15 +575,6 @@ connectIt(void *drvPvt, asynUser *pasynUser)
         epicsSocketDestroy(fd);
         return asynError;
     }
-#ifdef USE_POLL
-    if (setNonBlock(fd, 1) < 0) {
-        epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                               "Can't set %s O_NONBLOCK option: %s",
-                                       tty->IPDeviceName, strerror(SOCKERRNO));
-        epicsSocketDestroy(fd);
-        return asynError;
-    }
-#endif
 
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                           "Opened connection OK to %s\n", tty->IPDeviceName);
