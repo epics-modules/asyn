@@ -246,7 +246,7 @@
            <div itemprop="articleBody">
              
   <section id="asyndriver">
-<h1><a class="toc-backref" href="#id61" role="doc-backlink">asynDriver</a><a class="headerlink" href="#asyndriver" title="Link to this heading"></a></h1>
+<h1><a class="toc-backref" href="#id62" role="doc-backlink">asynDriver</a><a class="headerlink" href="#asyndriver" title="Link to this heading"></a></h1>
 <dl class="field-list simple">
 <dt class="field-odd">author<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Mark Rivers, Eric Norum, and Marty Kraimer</p>
@@ -259,202 +259,202 @@
 </dd>
 </dl>
 <section id="license-agreement">
-<h2><a class="toc-backref" href="#id62" role="doc-backlink">License Agreement</a><a class="headerlink" href="#license-agreement" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id63" role="doc-backlink">License Agreement</a><a class="headerlink" href="#license-agreement" title="Link to this heading"></a></h2>
 <p>This product is available via the open source license
 described at the end of this document.</p>
 <nav class="contents" id="contents">
 <p class="topic-title">Contents</p>
 <ul class="simple">
-<li><p><a class="reference internal" href="#asyndriver" id="id61">asynDriver</a></p>
+<li><p><a class="reference internal" href="#asyndriver" id="id62">asynDriver</a></p>
 <ul>
-<li><p><a class="reference internal" href="#license-agreement" id="id62">License Agreement</a></p></li>
-<li><p><a class="reference internal" href="#purpose" id="id63">Purpose</a></p></li>
-<li><p><a class="reference internal" href="#status" id="id64">Status</a></p></li>
-<li><p><a class="reference internal" href="#acknowledgments" id="id65">Acknowledgments</a></p></li>
-<li><p><a class="reference internal" href="#overview-of-asyndriver" id="id66">Overview of asynDriver</a></p>
+<li><p><a class="reference internal" href="#license-agreement" id="id63">License Agreement</a></p></li>
+<li><p><a class="reference internal" href="#purpose" id="id64">Purpose</a></p></li>
+<li><p><a class="reference internal" href="#status" id="id65">Status</a></p></li>
+<li><p><a class="reference internal" href="#acknowledgments" id="id66">Acknowledgments</a></p></li>
+<li><p><a class="reference internal" href="#overview-of-asyndriver" id="id67">Overview of asynDriver</a></p>
 <ul>
-<li><p><a class="reference internal" href="#definitions" id="id67">Definitions</a></p></li>
-<li><p><a class="reference internal" href="#standard-interfaces" id="id68">Standard Interfaces</a></p></li>
-<li><p><a class="reference internal" href="#generic-interfaces" id="id69">Generic Interfaces</a></p></li>
-<li><p><a class="reference internal" href="#asynmanager" id="id70">asynManager</a></p>
+<li><p><a class="reference internal" href="#definitions" id="id68">Definitions</a></p></li>
+<li><p><a class="reference internal" href="#standard-interfaces" id="id69">Standard Interfaces</a></p></li>
+<li><p><a class="reference internal" href="#generic-interfaces" id="id70">Generic Interfaces</a></p></li>
+<li><p><a class="reference internal" href="#asynmanager" id="id71">asynManager</a></p>
 <ul>
-<li><p><a class="reference internal" href="#reporting" id="id71">reporting</a></p></li>
-<li><p><a class="reference internal" href="#asynuser-creation" id="id72">asynUser creation</a></p></li>
-<li><p><a class="reference internal" href="#basic-asynuser-services" id="id73">Basic asynUser services</a></p></li>
-<li><p><a class="reference internal" href="#queuing-services" id="id74">Queuing services</a></p></li>
-<li><p><a class="reference internal" href="#basic-driver-services" id="id75">Basic Driver services</a></p></li>
-<li><p><a class="reference internal" href="#attribute-retrieval" id="id76">Attribute Retrieval</a></p></li>
-<li><p><a class="reference internal" href="#connection-services" id="id77">Connection services</a></p></li>
-<li><p><a class="reference internal" href="#exception-services" id="id78">Exception services</a></p></li>
-<li><p><a class="reference internal" href="#interrupt-services" id="id79">Interrupt services</a></p></li>
-<li><p><a class="reference internal" href="#timestamp-services" id="id80">Timestamp services</a></p></li>
-<li><p><a class="reference internal" href="#general-purpose-freelist-service" id="id81">General purpose freelist service</a></p></li>
-<li><p><a class="reference internal" href="#interpose-service" id="id82">Interpose service</a></p></li>
+<li><p><a class="reference internal" href="#reporting" id="id72">reporting</a></p></li>
+<li><p><a class="reference internal" href="#asynuser-creation" id="id73">asynUser creation</a></p></li>
+<li><p><a class="reference internal" href="#basic-asynuser-services" id="id74">Basic asynUser services</a></p></li>
+<li><p><a class="reference internal" href="#queuing-services" id="id75">Queuing services</a></p></li>
+<li><p><a class="reference internal" href="#basic-driver-services" id="id76">Basic Driver services</a></p></li>
+<li><p><a class="reference internal" href="#attribute-retrieval" id="id77">Attribute Retrieval</a></p></li>
+<li><p><a class="reference internal" href="#connection-services" id="id78">Connection services</a></p></li>
+<li><p><a class="reference internal" href="#exception-services" id="id79">Exception services</a></p></li>
+<li><p><a class="reference internal" href="#interrupt-services" id="id80">Interrupt services</a></p></li>
+<li><p><a class="reference internal" href="#timestamp-services" id="id81">Timestamp services</a></p></li>
+<li><p><a class="reference internal" href="#general-purpose-freelist-service" id="id82">General purpose freelist service</a></p></li>
+<li><p><a class="reference internal" href="#interpose-service" id="id83">Interpose service</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#multiple-device-vs-single-device-port-drivers" id="id83">Multiple Device vs Single Device Port Drivers</a></p></li>
-<li><p><a class="reference internal" href="#connection-management" id="id84">Connection Management</a></p></li>
-<li><p><a class="reference internal" href="#protecting-a-thread-from-blocking" id="id85">Protecting a Thread from Blocking</a></p></li>
-<li><p><a class="reference internal" href="#portthread" id="id86">portThread</a></p></li>
-<li><p><a class="reference internal" href="#overview-of-queuing" id="id87">Overview of Queuing</a></p></li>
+<li><p><a class="reference internal" href="#multiple-device-vs-single-device-port-drivers" id="id84">Multiple Device vs Single Device Port Drivers</a></p></li>
+<li><p><a class="reference internal" href="#connection-management" id="id85">Connection Management</a></p></li>
+<li><p><a class="reference internal" href="#protecting-a-thread-from-blocking" id="id86">Protecting a Thread from Blocking</a></p></li>
+<li><p><a class="reference internal" href="#portthread" id="id87">portThread</a></p></li>
+<li><p><a class="reference internal" href="#overview-of-queuing" id="id88">Overview of Queuing</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#theory-of-operation" id="id88">Theory of Operation</a></p>
+<li><p><a class="reference internal" href="#theory-of-operation" id="id89">Theory of Operation</a></p>
 <ul>
-<li><p><a class="reference internal" href="#initialization" id="id89">Initialization</a></p></li>
-<li><p><a class="reference internal" href="#requesting-access-to-a-port" id="id90">Requesting access to a port</a></p></li>
-<li><p><a class="reference internal" href="#queuerequest-flow-of-control" id="id91">queueRequest - Flow of Control</a></p></li>
-<li><p><a class="reference internal" href="#shutdown" id="id92">Shutdown</a></p></li>
+<li><p><a class="reference internal" href="#initialization" id="id90">Initialization</a></p></li>
+<li><p><a class="reference internal" href="#requesting-access-to-a-port" id="id91">Requesting access to a port</a></p></li>
+<li><p><a class="reference internal" href="#queuerequest-flow-of-control" id="id92">queueRequest - Flow of Control</a></p></li>
+<li><p><a class="reference internal" href="#shutdown" id="id93">Shutdown</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#asyndriver-structures-and-interfaces" id="id93">asynDriver Structures and Interfaces</a></p>
+<li><p><a class="reference internal" href="#asyndriver-structures-and-interfaces" id="id94">asynDriver Structures and Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asynstatus" id="id94">asynStatus</a></p></li>
-<li><p><a class="reference internal" href="#asynexception" id="id95">asynException</a></p></li>
-<li><p><a class="reference internal" href="#asynqueuepriority" id="id96">asynQueuePriority</a></p></li>
-<li><p><a class="reference internal" href="#asynuser" id="id97">asynUser</a></p></li>
-<li><p><a class="reference internal" href="#asyninterface" id="id98">asynInterface</a></p></li>
-<li><p><a class="reference internal" href="#id1" id="id99">asynManager</a></p></li>
-<li><p><a class="reference internal" href="#asyncommon" id="id100">asynCommon</a></p></li>
-<li><p><a class="reference internal" href="#asyncommonsyncio" id="id101">asynCommonSyncIO</a></p></li>
-<li><p><a class="reference internal" href="#asyndrvuser" id="id102">asynDrvUser</a></p></li>
-<li><p><a class="reference internal" href="#asynlockportnotify" id="id103">asynLockPortNotify</a></p></li>
-<li><p><a class="reference internal" href="#asynoption" id="id104">asynOption</a></p></li>
-<li><p><a class="reference internal" href="#asyntrace" id="id105">asynTrace</a></p></li>
+<li><p><a class="reference internal" href="#asynstatus" id="id95">asynStatus</a></p></li>
+<li><p><a class="reference internal" href="#asynexception" id="id96">asynException</a></p></li>
+<li><p><a class="reference internal" href="#asynqueuepriority" id="id97">asynQueuePriority</a></p></li>
+<li><p><a class="reference internal" href="#asynuser" id="id98">asynUser</a></p></li>
+<li><p><a class="reference internal" href="#asyninterface" id="id99">asynInterface</a></p></li>
+<li><p><a class="reference internal" href="#id1" id="id100">asynManager</a></p></li>
+<li><p><a class="reference internal" href="#asyncommon" id="id101">asynCommon</a></p></li>
+<li><p><a class="reference internal" href="#asyncommonsyncio" id="id102">asynCommonSyncIO</a></p></li>
+<li><p><a class="reference internal" href="#asyndrvuser" id="id103">asynDrvUser</a></p></li>
+<li><p><a class="reference internal" href="#asynlockportnotify" id="id104">asynLockPortNotify</a></p></li>
+<li><p><a class="reference internal" href="#asynoption" id="id105">asynOption</a></p></li>
+<li><p><a class="reference internal" href="#asyntrace" id="id106">asynTrace</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#standard-message-based-interfaces" id="id106">Standard Message Based Interfaces</a></p>
+<li><p><a class="reference internal" href="#standard-message-based-interfaces" id="id107">Standard Message Based Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asynoctet" id="id107">asynOctet</a></p></li>
-<li><p><a class="reference internal" href="#asynoctetsyncio" id="id108">asynOctetSyncIO</a></p></li>
-<li><p><a class="reference internal" href="#end-of-string-support" id="id109">End of String Support</a></p></li>
+<li><p><a class="reference internal" href="#asynoctet" id="id108">asynOctet</a></p></li>
+<li><p><a class="reference internal" href="#asynoctetsyncio" id="id109">asynOctetSyncIO</a></p></li>
+<li><p><a class="reference internal" href="#end-of-string-support" id="id110">End of String Support</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#standard-register-based-interfaces" id="id110">Standard Register Based Interfaces</a></p>
+<li><p><a class="reference internal" href="#standard-register-based-interfaces" id="id111">Standard Register Based Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#introduction" id="id111">Introduction</a></p></li>
-<li><p><a class="reference internal" href="#example-drivers" id="id112">Example Drivers</a></p></li>
-<li><p><a class="reference internal" href="#asynintxx-xx-32-or-64" id="id113">asynIntXX (XX=32 or 64)</a></p></li>
-<li><p><a class="reference internal" href="#asynintxxsyncio-xx-32-or-64" id="id114">asynIntXXSyncIO (XX=32 or 64)</a></p></li>
-<li><p><a class="reference internal" href="#asynuint32digital" id="id115">asynUInt32Digital</a></p></li>
-<li><p><a class="reference internal" href="#asynuint32digitalsyncio" id="id116">asynUInt32DigitalSyncIO</a></p></li>
-<li><p><a class="reference internal" href="#asynfloat64" id="id117">asynFloat64</a></p></li>
-<li><p><a class="reference internal" href="#asynfloat64syncio" id="id118">asynFloat64SyncIO</a></p></li>
-<li><p><a class="reference internal" href="#asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64" id="id119">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</a></p></li>
-<li><p><a class="reference internal" href="#asynxxxarraysyncio" id="id120">asynXXXArraySyncIO</a></p></li>
-<li><p><a class="reference internal" href="#asynenum" id="id121">asynEnum</a></p></li>
-<li><p><a class="reference internal" href="#asynenumsyncio" id="id122">asynEnumSyncIO</a></p></li>
-<li><p><a class="reference internal" href="#asyngenericpointer" id="id123">asynGenericPointer</a></p></li>
-<li><p><a class="reference internal" href="#asyngenericpointersyncio" id="id124">asynGenericPointerSyncIO</a></p></li>
+<li><p><a class="reference internal" href="#introduction" id="id112">Introduction</a></p></li>
+<li><p><a class="reference internal" href="#example-drivers" id="id113">Example Drivers</a></p></li>
+<li><p><a class="reference internal" href="#asynintxx-xx-32-or-64" id="id114">asynIntXX (XX=32 or 64)</a></p></li>
+<li><p><a class="reference internal" href="#asynintxxsyncio-xx-32-or-64" id="id115">asynIntXXSyncIO (XX=32 or 64)</a></p></li>
+<li><p><a class="reference internal" href="#asynuint32digital" id="id116">asynUInt32Digital</a></p></li>
+<li><p><a class="reference internal" href="#asynuint32digitalsyncio" id="id117">asynUInt32DigitalSyncIO</a></p></li>
+<li><p><a class="reference internal" href="#asynfloat64" id="id118">asynFloat64</a></p></li>
+<li><p><a class="reference internal" href="#asynfloat64syncio" id="id119">asynFloat64SyncIO</a></p></li>
+<li><p><a class="reference internal" href="#asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64" id="id120">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</a></p></li>
+<li><p><a class="reference internal" href="#asynxxxarraysyncio" id="id121">asynXXXArraySyncIO</a></p></li>
+<li><p><a class="reference internal" href="#asynenum" id="id122">asynEnum</a></p></li>
+<li><p><a class="reference internal" href="#asynenumsyncio" id="id123">asynEnumSyncIO</a></p></li>
+<li><p><a class="reference internal" href="#asyngenericpointer" id="id124">asynGenericPointer</a></p></li>
+<li><p><a class="reference internal" href="#asyngenericpointersyncio" id="id125">asynGenericPointerSyncIO</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#asynstandardinterfacesbase" id="id125">asynStandardInterfacesBase</a></p>
+<li><p><a class="reference internal" href="#asynstandardinterfacesbase" id="id126">asynStandardInterfacesBase</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asynstandardinterfaces-structure" id="id126">asynStandardInterfaces structure</a></p></li>
-<li><p><a class="reference internal" href="#asynstandardinterfacesbase-interface" id="id127">asynStandardInterfacesBase interface</a></p></li>
+<li><p><a class="reference internal" href="#asynstandardinterfaces-structure" id="id127">asynStandardInterfaces structure</a></p></li>
+<li><p><a class="reference internal" href="#asynstandardinterfacesbase-interface" id="id128">asynStandardInterfacesBase interface</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#standard-interpose-interfaces" id="id128">Standard Interpose Interfaces</a></p>
+<li><p><a class="reference internal" href="#standard-interpose-interfaces" id="id129">Standard Interpose Interfaces</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asyninterposeeos" id="id129">asynInterposeEos</a></p></li>
-<li><p><a class="reference internal" href="#asyninterposeflush" id="id130">asynInterposeFlush</a></p></li>
-<li><p><a class="reference internal" href="#asyninterposecom" id="id131">asynInterposeCom</a></p></li>
-<li><p><a class="reference internal" href="#asyninterposedelay" id="id132">asynInterposeDelay</a></p></li>
-<li><p><a class="reference internal" href="#asyninterposeecho" id="id133">asynInterposeEcho</a></p></li>
+<li><p><a class="reference internal" href="#asyninterposeeos" id="id130">asynInterposeEos</a></p></li>
+<li><p><a class="reference internal" href="#asyninterposeflush" id="id131">asynInterposeFlush</a></p></li>
+<li><p><a class="reference internal" href="#asyninterposecom" id="id132">asynInterposeCom</a></p></li>
+<li><p><a class="reference internal" href="#asyninterposedelay" id="id133">asynInterposeDelay</a></p></li>
+<li><p><a class="reference internal" href="#asyninterposeecho" id="id134">asynInterposeEcho</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#generic-device-support-for-epics-records" id="id134">Generic Device Support for EPICS records</a></p>
+<li><p><a class="reference internal" href="#generic-device-support-for-epics-records" id="id135">Generic Device Support for EPICS records</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asynmanager-interrupts-and-epics-device-support" id="id135">asynManager interrupts and EPICS device support</a></p></li>
-<li><p><a class="reference internal" href="#initial-values-of-output-records" id="id136">Initial values of output records</a></p></li>
-<li><p><a class="reference internal" href="#enum-values-for-bi-bo-mbbi-and-mbbo-records" id="id137">Enum values for bi, bo, mbbi, and mbbo records</a></p></li>
-<li><p><a class="reference internal" href="#callback-updates-for-output-records" id="id138">Callback updates for output records</a></p></li>
-<li><p><a class="reference internal" href="#buffering-of-driver-callbacks" id="id139">Buffering of driver callbacks</a></p></li>
-<li><p><a class="reference internal" href="#time-stamps" id="id140">Time stamps</a></p></li>
-<li><p><a class="reference internal" href="#asynint32-device-support" id="id141">asynInt32 device support</a></p></li>
-<li><p><a class="reference internal" href="#asynint64-device-support" id="id142">asynInt64 device support</a></p></li>
-<li><p><a class="reference internal" href="#asynintxxxarray-device-support-xxx-8-16-32-or-64" id="id143">asynIntXXXArray device support (XXX=8, 16, 32, or 64)</a></p></li>
-<li><p><a class="reference internal" href="#asynxxxtimeseries-device-support-xxx-int32-int64-or-float64" id="id144">asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</a></p></li>
-<li><p><a class="reference internal" href="#asynuint32digital-device-support" id="id145">asynUInt32Digital device support</a></p></li>
-<li><p><a class="reference internal" href="#asynfloat64-device-support" id="id146">asynFloat64 device support</a></p></li>
-<li><p><a class="reference internal" href="#asynfloatxxxarray-device-support-xxx-32-or-64" id="id147">asynFloatXXXArray device support (XXX=32 or 64)</a></p></li>
-<li><p><a class="reference internal" href="#asynoctet-device-support" id="id148">asynOctet device support</a></p></li>
-<li><p><a class="reference internal" href="#record-alarms" id="id149">Record alarms</a></p></li>
+<li><p><a class="reference internal" href="#asynmanager-interrupts-and-epics-device-support" id="id136">asynManager interrupts and EPICS device support</a></p></li>
+<li><p><a class="reference internal" href="#initial-values-of-output-records" id="id137">Initial values of output records</a></p></li>
+<li><p><a class="reference internal" href="#enum-values-for-bi-bo-mbbi-and-mbbo-records" id="id138">Enum values for bi, bo, mbbi, and mbbo records</a></p></li>
+<li><p><a class="reference internal" href="#callback-updates-for-output-records" id="id139">Callback updates for output records</a></p></li>
+<li><p><a class="reference internal" href="#buffering-of-driver-callbacks" id="id140">Buffering of driver callbacks</a></p></li>
+<li><p><a class="reference internal" href="#time-stamps" id="id141">Time stamps</a></p></li>
+<li><p><a class="reference internal" href="#asynint32-device-support" id="id142">asynInt32 device support</a></p></li>
+<li><p><a class="reference internal" href="#asynint64-device-support" id="id143">asynInt64 device support</a></p></li>
+<li><p><a class="reference internal" href="#asynintxxxarray-device-support-xxx-8-16-32-or-64" id="id144">asynIntXXXArray device support (XXX=8, 16, 32, or 64)</a></p></li>
+<li><p><a class="reference internal" href="#asynxxxtimeseries-device-support-xxx-int32-int64-or-float64" id="id145">asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</a></p></li>
+<li><p><a class="reference internal" href="#asynuint32digital-device-support" id="id146">asynUInt32Digital device support</a></p></li>
+<li><p><a class="reference internal" href="#asynfloat64-device-support" id="id147">asynFloat64 device support</a></p></li>
+<li><p><a class="reference internal" href="#asynfloatxxxarray-device-support-xxx-32-or-64" id="id148">asynFloatXXXArray device support (XXX=32 or 64)</a></p></li>
+<li><p><a class="reference internal" href="#asynoctet-device-support" id="id149">asynOctet device support</a></p></li>
+<li><p><a class="reference internal" href="#record-alarms" id="id150">Record alarms</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#asynrecord-generic-epics-record-support" id="id150">asynRecord: Generic EPICS Record Support</a></p></li>
-<li><p><a class="reference internal" href="#asyngpib" id="id151">asynGpib</a></p>
+<li><p><a class="reference internal" href="#asynrecord-generic-epics-record-support" id="id151">asynRecord: Generic EPICS Record Support</a></p></li>
+<li><p><a class="reference internal" href="#asyngpib" id="id152">asynGpib</a></p>
 <ul>
-<li><p><a class="reference internal" href="#asyngpibdriver-h" id="id152">asynGpibDriver.h</a></p></li>
-<li><p><a class="reference internal" href="#id2" id="id153">asynGpib</a></p></li>
-<li><p><a class="reference internal" href="#asyngpibport" id="id154">asynGpibPort</a></p></li>
+<li><p><a class="reference internal" href="#asyngpibdriver-h" id="id153">asynGpibDriver.h</a></p></li>
+<li><p><a class="reference internal" href="#id2" id="id154">asynGpib</a></p></li>
+<li><p><a class="reference internal" href="#asyngpibport" id="id155">asynGpibPort</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#port-drivers" id="id155">Port Drivers</a></p>
+<li><p><a class="reference internal" href="#port-drivers" id="id156">Port Drivers</a></p>
 <ul>
-<li><p><a class="reference internal" href="#local-serial-port" id="id156">Local Serial Port</a></p></li>
-<li><p><a class="reference internal" href="#tcp-ip-or-udp-ip-port" id="id157">TCP/IP or UDP/IP Port</a></p></li>
-<li><p><a class="reference internal" href="#tcp-ip-server" id="id158">TCP/IP Server</a></p></li>
-<li><p><a class="reference internal" href="#vxi-11" id="id159">VXI-11</a></p></li>
-<li><p><a class="reference internal" href="#drvprologixgpib" id="id160">drvPrologixGPIB</a></p></li>
-<li><p><a class="reference internal" href="#linux-gpib" id="id161">Linux-Gpib</a></p></li>
-<li><p><a class="reference internal" href="#green-springs-ip488" id="id162">Green Springs IP488</a></p></li>
-<li><p><a class="reference internal" href="#national-instruments-gpib-1014d" id="id163">National Instruments GPIB-1014D</a></p></li>
-<li><p><a class="reference internal" href="#usb-tmc-test-and-measurement-class-driver" id="id164">USB TMC (Test and Measurement Class) driver</a></p>
+<li><p><a class="reference internal" href="#local-serial-port" id="id157">Local Serial Port</a></p></li>
+<li><p><a class="reference internal" href="#tcp-ip-or-udp-ip-port" id="id158">TCP/IP or UDP/IP Port</a></p></li>
+<li><p><a class="reference internal" href="#tcp-ip-server" id="id159">TCP/IP Server</a></p></li>
+<li><p><a class="reference internal" href="#vxi-11" id="id160">VXI-11</a></p></li>
+<li><p><a class="reference internal" href="#drvprologixgpib" id="id161">drvPrologixGPIB</a></p></li>
+<li><p><a class="reference internal" href="#linux-gpib" id="id162">Linux-Gpib</a></p></li>
+<li><p><a class="reference internal" href="#green-springs-ip488" id="id163">Green Springs IP488</a></p></li>
+<li><p><a class="reference internal" href="#national-instruments-gpib-1014d" id="id164">National Instruments GPIB-1014D</a></p></li>
+<li><p><a class="reference internal" href="#usb-tmc-test-and-measurement-class-driver" id="id165">USB TMC (Test and Measurement Class) driver</a></p>
 <ul>
-<li><p><a class="reference internal" href="#non-octet-records" id="id165">Non-octet records</a></p></li>
-<li><p><a class="reference internal" href="#service-request-srq-handling" id="id166">Service Request (SRQ) handling</a></p></li>
-<li><p><a class="reference internal" href="#device-status-byte-stb" id="id167">Device Status Byte (STB)</a></p></li>
-<li><p><a class="reference internal" href="#remote-enable-ren" id="id168">Remote Enable (REN)</a></p></li>
-<li><p><a class="reference internal" href="#local-lockout-llo" id="id169">Local Lockout (LLO)</a></p></li>
-<li><p><a class="reference internal" href="#go-to-local-gtl" id="id170">Go To Local (GTL)</a></p></li>
-<li><p><a class="reference internal" href="#linux-udev-configuration" id="id171">Linux udev configuration</a></p></li>
-<li><p><a class="reference internal" href="#streamdevice-exception-handlers" id="id172">StreamDevice Exception Handlers</a></p></li>
+<li><p><a class="reference internal" href="#non-octet-records" id="id166">Non-octet records</a></p></li>
+<li><p><a class="reference internal" href="#service-request-srq-handling" id="id167">Service Request (SRQ) handling</a></p></li>
+<li><p><a class="reference internal" href="#device-status-byte-stb" id="id168">Device Status Byte (STB)</a></p></li>
+<li><p><a class="reference internal" href="#remote-enable-ren" id="id169">Remote Enable (REN)</a></p></li>
+<li><p><a class="reference internal" href="#local-lockout-llo" id="id170">Local Lockout (LLO)</a></p></li>
+<li><p><a class="reference internal" href="#go-to-local-gtl" id="id171">Go To Local (GTL)</a></p></li>
+<li><p><a class="reference internal" href="#linux-udev-configuration" id="id172">Linux udev configuration</a></p></li>
+<li><p><a class="reference internal" href="#streamdevice-exception-handlers" id="id173">StreamDevice Exception Handlers</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#ftdi-port" id="id173">FTDI Port</a></p></li>
+<li><p><a class="reference internal" href="#ftdi-port" id="id174">FTDI Port</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#asynportdriver-c-base-class" id="id174">asynPortDriver C++ base class</a></p></li>
-<li><p><a class="reference internal" href="#asynportclient-c-classes" id="id175">asynPortClient C++ classes</a></p></li>
-<li><p><a class="reference internal" href="#diagnostic-aids" id="id176">Diagnostic Aids</a></p>
+<li><p><a class="reference internal" href="#asynportdriver-c-base-class" id="id175">asynPortDriver C++ base class</a></p></li>
+<li><p><a class="reference internal" href="#asynportclient-c-classes" id="id176">asynPortClient C++ classes</a></p></li>
+<li><p><a class="reference internal" href="#diagnostic-aids" id="id177">Diagnostic Aids</a></p>
 <ul>
-<li><p><a class="reference internal" href="#iocsh-commands" id="id177">iocsh Commands</a></p></li>
+<li><p><a class="reference internal" href="#iocsh-commands" id="id178">iocsh Commands</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#example-client" id="id178">Example Client</a></p></li>
-<li><p><a class="reference internal" href="#test-applications" id="id179">Test Applications</a></p>
+<li><p><a class="reference internal" href="#example-client" id="id179">Example Client</a></p></li>
+<li><p><a class="reference internal" href="#test-applications" id="id180">Test Applications</a></p>
 <ul>
-<li><p><a class="reference internal" href="#testapp" id="id180">testApp</a></p></li>
-<li><p><a class="reference internal" href="#testarrayringbufferapp" id="id181">testArrayRingBufferApp</a></p></li>
-<li><p><a class="reference internal" href="#testasynportclientapp" id="id182">testAsynPortClientApp</a></p></li>
-<li><p><a class="reference internal" href="#testasynportdriverapp" id="id183">testAsynPortDriverApp</a></p></li>
-<li><p><a class="reference internal" href="#testbroadcastapp" id="id184">testBroadcastApp</a></p>
+<li><p><a class="reference internal" href="#testapp" id="id181">testApp</a></p></li>
+<li><p><a class="reference internal" href="#testarrayringbufferapp" id="id182">testArrayRingBufferApp</a></p></li>
+<li><p><a class="reference internal" href="#testasynportclientapp" id="id183">testAsynPortClientApp</a></p></li>
+<li><p><a class="reference internal" href="#testasynportdriverapp" id="id184">testAsynPortDriverApp</a></p></li>
+<li><p><a class="reference internal" href="#testbroadcastapp" id="id185">testBroadcastApp</a></p>
 <ul>
-<li><p><a class="reference internal" href="#testbroadcastasyn-c" id="id185">testBroadcastAsyn.c</a></p></li>
-<li><p><a class="reference internal" href="#testbroadcastnoasyn-c" id="id186">testBroadcastNoAsyn.c</a></p></li>
-<li><p><a class="reference internal" href="#testbroadcastburst-c" id="id187">testBroadcastBurst.c</a></p></li>
+<li><p><a class="reference internal" href="#testbroadcastasyn-c" id="id186">testBroadcastAsyn.c</a></p></li>
+<li><p><a class="reference internal" href="#testbroadcastnoasyn-c" id="id187">testBroadcastNoAsyn.c</a></p></li>
+<li><p><a class="reference internal" href="#testbroadcastburst-c" id="id188">testBroadcastBurst.c</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#testconnectapp" id="id188">testConnectApp</a></p></li>
-<li><p><a class="reference internal" href="#testepicsapp" id="id189">testEpicsApp</a></p></li>
-<li><p><a class="reference internal" href="#testerrorsapp" id="id190">testErrorsApp</a></p></li>
+<li><p><a class="reference internal" href="#testconnectapp" id="id189">testConnectApp</a></p></li>
+<li><p><a class="reference internal" href="#testepicsapp" id="id190">testEpicsApp</a></p></li>
+<li><p><a class="reference internal" href="#testerrorsapp" id="id191">testErrorsApp</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#install-and-build" id="id191">Install and Build</a></p>
+<li><p><a class="reference internal" href="#install-and-build" id="id192">Install and Build</a></p>
 <ul>
-<li><p><a class="reference internal" href="#install-and-build-asyndriver" id="id192">Install and Build asynDriver</a></p></li>
-<li><p><a class="reference internal" href="#using-asyndriver-components-with-an-epics-ioccore-application" id="id193">Using asynDriver Components with an EPICS iocCore Application</a></p></li>
+<li><p><a class="reference internal" href="#install-and-build-asyndriver" id="id193">Install and Build asynDriver</a></p></li>
+<li><p><a class="reference internal" href="#using-asyndriver-components-with-an-epics-ioccore-application" id="id194">Using asynDriver Components with an EPICS iocCore Application</a></p></li>
 </ul>
 </li>
-<li><p><a class="reference internal" href="#id3" id="id194">License Agreement</a></p></li>
+<li><p><a class="reference internal" href="#id3" id="id195">License Agreement</a></p></li>
 </ul>
 </li>
 </ul>
 </nav>
 </section>
 <section id="purpose">
-<h2><a class="toc-backref" href="#id63" role="doc-backlink">Purpose</a><a class="headerlink" href="#purpose" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id64" role="doc-backlink">Purpose</a><a class="headerlink" href="#purpose" title="Link to this heading"></a></h2>
 <p><strong>asynDriver</strong> is a general purpose facility for interfacing device specific
 code to low level drivers. asynDriver allows non-blocking device support that works
 with both blocking and non-blocking drivers.</p>
@@ -529,7 +529,7 @@ ethernet.</p></li>
 </ul>
 </section>
 <section id="status">
-<h2><a class="toc-backref" href="#id64" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id65" role="doc-backlink">Status</a><a class="headerlink" href="#status" title="Link to this heading"></a></h2>
 <p>This version provides:</p>
 <ul class="simple">
 <li><p>asynManager: the software layer between device support and drivers.</p></li>
@@ -575,7 +575,7 @@ original motivation for the development of asynPortDriver.</p></li>
 </ul>
 </section>
 <section id="acknowledgments">
-<h2><a class="toc-backref" href="#id65" role="doc-backlink">Acknowledgments</a><a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id66" role="doc-backlink">Acknowledgments</a><a class="headerlink" href="#acknowledgments" title="Link to this heading"></a></h2>
 <p>The idea of creating asynDriver resulted from many years of experience with writing
 device support for serial and GPIB devices. The following individuals have been
 most influential.</p>
@@ -651,9 +651,9 @@ at difficult code!!!</p></li>
 </ul>
 </section>
 <section id="overview-of-asyndriver">
-<h2><a class="toc-backref" href="#id66" role="doc-backlink">Overview of asynDriver</a><a class="headerlink" href="#overview-of-asyndriver" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id67" role="doc-backlink">Overview of asynDriver</a><a class="headerlink" href="#overview-of-asyndriver" title="Link to this heading"></a></h2>
 <section id="definitions">
-<h3><a class="toc-backref" href="#id67" role="doc-backlink">Definitions</a><a class="headerlink" href="#definitions" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id68" role="doc-backlink">Definitions</a><a class="headerlink" href="#definitions" title="Link to this heading"></a></h3>
 <p>asynDriver is a software layer between device specific code and drivers that communicate
 with devices. It supports both blocking and non-blocking communication and can be
 used with both register and message based devices. asynDriver uses the following
@@ -775,7 +775,7 @@ however, independent of record/device support. Thus, it can be used by other cod
 e.g. a sequence program.</p>
 </section>
 <section id="standard-interfaces">
-<h3><a class="toc-backref" href="#id68" role="doc-backlink">Standard Interfaces</a><a class="headerlink" href="#standard-interfaces" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id69" role="doc-backlink">Standard Interfaces</a><a class="headerlink" href="#standard-interfaces" title="Link to this heading"></a></h3>
 <p>These are interfaces provided by asynManager or interfaces implemented by all or
 most port drivers.</p>
 <p>The interfaces are:</p>
@@ -794,7 +794,7 @@ whenever it locks or unlocks the port.</p>
 details about what is passed.</p>
 </section>
 <section id="generic-interfaces">
-<h3><a class="toc-backref" href="#id69" role="doc-backlink">Generic Interfaces</a><a class="headerlink" href="#generic-interfaces" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id70" role="doc-backlink">Generic Interfaces</a><a class="headerlink" href="#generic-interfaces" title="Link to this heading"></a></h3>
 <p>In addition to <strong>asynCommon</strong> and optionally <strong>asynDrvUser</strong>, port drivers can implement one
 or more of the following message and/or register based interfaces.</p>
 <p><strong>asynOctet</strong> methods for message based devices</p>
@@ -815,18 +815,18 @@ The client and the server of course need to agree on the structure type being po
 <p><strong>asynOption</strong> methods for device configuration using key/value pairs.</p>
 </section>
 <section id="asynmanager">
-<h3><a class="toc-backref" href="#id70" role="doc-backlink">asynManager</a><a class="headerlink" href="#asynmanager" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id71" role="doc-backlink">asynManager</a><a class="headerlink" href="#asynmanager" title="Link to this heading"></a></h3>
 <p>asynManager is an interface and associated code. It is the “heart” of asynDriver
 since it manages the interactions between device support code and drivers. It provides
 the following services:</p>
 <section id="reporting">
-<h4><a class="toc-backref" href="#id71" role="doc-backlink">reporting</a><a class="headerlink" href="#reporting" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id72" role="doc-backlink">reporting</a><a class="headerlink" href="#reporting" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Method: report</p>
 </div></blockquote>
 </section>
 <section id="asynuser-creation">
-<h4><a class="toc-backref" href="#id72" role="doc-backlink">asynUser creation</a><a class="headerlink" href="#asynuser-creation" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id73" role="doc-backlink">asynUser creation</a><a class="headerlink" href="#asynuser-creation" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: createAsynUser, duplicateAsynUser, freeAsynUser</p>
 <p>An asynUser is a “handle” for accessing asynManager services and for calling interfaces
@@ -842,7 +842,7 @@ asynUser for each record instance.</p>
 </div></blockquote>
 </section>
 <section id="basic-asynuser-services">
-<h4><a class="toc-backref" href="#id73" role="doc-backlink">Basic asynUser services</a><a class="headerlink" href="#basic-asynuser-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id74" role="doc-backlink">Basic asynUser services</a><a class="headerlink" href="#basic-asynuser-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: connectDevice, disconnect, findInterface</p>
 <p>These methods should only be called by the code that created the asynUser.</p>
@@ -853,7 +853,7 @@ the device.</p>
 </div></blockquote>
 </section>
 <section id="queuing-services">
-<h4><a class="toc-backref" href="#id74" role="doc-backlink">Queuing services</a><a class="headerlink" href="#queuing-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id75" role="doc-backlink">Queuing services</a><a class="headerlink" href="#queuing-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: queueRequest, cancelRequest, lockPort, unlockPort, queueLockPort, queueUnlockPort,
 blockProcessCallback, unblockProcessCallback</p>
@@ -900,7 +900,7 @@ is returned if it is called for non-blocking drivers.</p>
 </div></blockquote>
 </section>
 <section id="basic-driver-services">
-<h4><a class="toc-backref" href="#id75" role="doc-backlink">Basic Driver services</a><a class="headerlink" href="#basic-driver-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id76" role="doc-backlink">Basic Driver services</a><a class="headerlink" href="#basic-driver-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: registerPort, registerInterface, shutdownPort</p>
 <p>registerPort is called by a portDriver. registerInterface is called by a portDriver
@@ -916,7 +916,7 @@ internal threads and releasing device resources.</p>
 </div></blockquote>
 </section>
 <section id="attribute-retrieval">
-<h4><a class="toc-backref" href="#id76" role="doc-backlink">Attribute Retrieval</a><a class="headerlink" href="#attribute-retrieval" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id77" role="doc-backlink">Attribute Retrieval</a><a class="headerlink" href="#attribute-retrieval" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: isMultiDevice, canBlock, getAddr, getPortName, isConnected, isEnabled,
 isAutoConnect</p>
@@ -924,7 +924,7 @@ isAutoConnect</p>
 </div></blockquote>
 </section>
 <section id="connection-services">
-<h4><a class="toc-backref" href="#id77" role="doc-backlink">Connection services</a><a class="headerlink" href="#connection-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id78" role="doc-backlink">Connection services</a><a class="headerlink" href="#connection-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: enable,autoConnect,setAutoConnectTimeout</p>
 <p>These methods can be called by any code that has access to the asynUser.</p>
@@ -951,7 +951,7 @@ it calls processCallback.</p>
 </div></blockquote>
 </section>
 <section id="exception-services">
-<h4><a class="toc-backref" href="#id78" role="doc-backlink">Exception services</a><a class="headerlink" href="#exception-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id79" role="doc-backlink">Exception services</a><a class="headerlink" href="#exception-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: exceptionCallbackAdd, exceptionCallbackRemove, exceptionConnect, exceptionDisconnect</p>
 <p>Device support code calls exceptionCallbackAdd and exceptionCallbackRemove. The
@@ -962,7 +962,7 @@ or exceptionDisconnect.</p>
 </div></blockquote>
 </section>
 <section id="interrupt-services">
-<h4><a class="toc-backref" href="#id79" role="doc-backlink">Interrupt services</a><a class="headerlink" href="#interrupt-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id80" role="doc-backlink">Interrupt services</a><a class="headerlink" href="#interrupt-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: registerInterruptSource, getInterruptPvt, createInterruptNode, freeInterruptNode,
 addInterruptUser, removeInterruptUser, interruptStart, interruptEnd</p>
@@ -987,7 +987,7 @@ be called from interrupt level.</p>
 </div></blockquote>
 </section>
 <section id="timestamp-services">
-<h4><a class="toc-backref" href="#id80" role="doc-backlink">Timestamp services</a><a class="headerlink" href="#timestamp-services" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id81" role="doc-backlink">Timestamp services</a><a class="headerlink" href="#timestamp-services" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: updateTimeStamp, getTimeStamp, setTimeStamp, registerTimeStampSource, unregisterTimeStampSource.</p>
 <p>These methods provide support for setting a timestamp for a port. This timestamp
@@ -1002,7 +1002,7 @@ unregisterTimeStampSource reverts to the default timestamp source in pasynManage
 </div></blockquote>
 </section>
 <section id="general-purpose-freelist-service">
-<h4><a class="toc-backref" href="#id81" role="doc-backlink">General purpose freelist service</a><a class="headerlink" href="#general-purpose-freelist-service" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id82" role="doc-backlink">General purpose freelist service</a><a class="headerlink" href="#general-purpose-freelist-service" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Methods: memMalloc, memFree</p>
 <p>These methods do not require an asynUser. They are provided for code that must continually
@@ -1012,7 +1012,7 @@ fragmentation.</p>
 </div></blockquote>
 </section>
 <section id="interpose-service">
-<h4><a class="toc-backref" href="#id82" role="doc-backlink">Interpose service</a><a class="headerlink" href="#interpose-service" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id83" role="doc-backlink">Interpose service</a><a class="headerlink" href="#interpose-service" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>Method: interposeInterface</p>
 <p>Code that calls interposeInterface implements an interface which is either not supported
@@ -1025,7 +1025,7 @@ exist above a single port,addr.</p>
 </section>
 </section>
 <section id="multiple-device-vs-single-device-port-drivers">
-<h3><a class="toc-backref" href="#id83" role="doc-backlink">Multiple Device vs Single Device Port Drivers</a><a class="headerlink" href="#multiple-device-vs-single-device-port-drivers" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id84" role="doc-backlink">Multiple Device vs Single Device Port Drivers</a><a class="headerlink" href="#multiple-device-vs-single-device-port-drivers" title="Link to this heading"></a></h3>
 <p>When a low level driver calls registerPort, it declares if it handles multiple devices.
 This determines how the addr argument to connectDevice is handled and what getAddr
 returns.</p>
@@ -1045,7 +1045,7 @@ access to the port prevents access to all addresses on the port.</p>
 </div></blockquote>
 </section>
 <section id="connection-management">
-<h3><a class="toc-backref" href="#id84" role="doc-backlink">Connection Management</a><a class="headerlink" href="#connection-management" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id85" role="doc-backlink">Connection Management</a><a class="headerlink" href="#connection-management" title="Link to this heading"></a></h3>
 <p>asynManager keeps track of the following states:</p>
 <blockquote>
 <div><p><strong>connection</strong></p>
@@ -1071,7 +1071,7 @@ called exceptionCallbackAdd for that port or device are called.</p>
 to a port or port,addr and exceptionDisconnect whenever they disconnect.</p>
 </section>
 <section id="protecting-a-thread-from-blocking">
-<h3><a class="toc-backref" href="#id85" role="doc-backlink">Protecting a Thread from Blocking</a><a class="headerlink" href="#protecting-a-thread-from-blocking" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id86" role="doc-backlink">Protecting a Thread from Blocking</a><a class="headerlink" href="#protecting-a-thread-from-blocking" title="Link to this heading"></a></h3>
 <p>The methods asynManager:report and asynCommon:report can be called by any thread,
 but the caller is blocked until the report finishes. lockPort, unlockPort, queueLockPort,
 queueUnlockPort, and most port methods may block. The other asynManager methods
@@ -1083,7 +1083,7 @@ The registerInterruptUser callback must not block because it could be called by
 a non blocking driver.</p>
 </section>
 <section id="portthread">
-<h3><a class="toc-backref" href="#id86" role="doc-backlink">portThread</a><a class="headerlink" href="#portthread" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id87" role="doc-backlink">portThread</a><a class="headerlink" href="#portthread" title="Link to this heading"></a></h3>
 <p>If a driver calls asynManager:registerPort with the ASYN_CANBLOCK attributes bit
 set, then asynManager creates a thread for the port. Each portThread has its own
 set of queues for the calls to queueRequest. Four queues are maintained. One queue
@@ -1129,7 +1129,7 @@ to the device.</p></li>
 asynManager. This means that the queues can be modified and exceptions may occur.</p>
 </section>
 <section id="overview-of-queuing">
-<h3><a class="toc-backref" href="#id87" role="doc-backlink">Overview of Queuing</a><a class="headerlink" href="#overview-of-queuing" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id88" role="doc-backlink">Overview of Queuing</a><a class="headerlink" href="#overview-of-queuing" title="Link to this heading"></a></h3>
 <p>When discussing queuing it is useful to think of 3 components of asyn:</p>
 <ol class="arabic">
 <li><p>asynManager. This is the core part of asyn. It knows nothing about EPICS records.
@@ -1165,9 +1165,9 @@ values for array parameters.</p></li>
 </section>
 </section>
 <section id="theory-of-operation">
-<h2><a class="toc-backref" href="#id88" role="doc-backlink">Theory of Operation</a><a class="headerlink" href="#theory-of-operation" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id89" role="doc-backlink">Theory of Operation</a><a class="headerlink" href="#theory-of-operation" title="Link to this heading"></a></h2>
 <section id="initialization">
-<h3><a class="toc-backref" href="#id89" role="doc-backlink">Initialization</a><a class="headerlink" href="#initialization" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id90" role="doc-backlink">Initialization</a><a class="headerlink" href="#initialization" title="Link to this heading"></a></h3>
 <p>During initialization, port drivers register each communication port as well as
 all supported interfaces.</p>
 <p>User code creates an asynUser, which is a “handle” for accessing asynDriver facilities,
@@ -1202,7 +1202,7 @@ calls findInterface to locate the interfaces with which it calls the driver. For
 </div>
 </section>
 <section id="requesting-access-to-a-port">
-<h3><a class="toc-backref" href="#id90" role="doc-backlink">Requesting access to a port</a><a class="headerlink" href="#requesting-access-to-a-port" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id91" role="doc-backlink">Requesting access to a port</a><a class="headerlink" href="#requesting-access-to-a-port" title="Link to this heading"></a></h3>
 <ul>
 <li><p>queueRequest</p>
 <blockquote>
@@ -1219,7 +1219,7 @@ not block, e.g. synchronous device support for EPICS records.</p>
 </ul>
 </section>
 <section id="queuerequest-flow-of-control">
-<h3><a class="toc-backref" href="#id91" role="doc-backlink">queueRequest - Flow of Control</a><a class="headerlink" href="#queuerequest-flow-of-control" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id92" role="doc-backlink">queueRequest - Flow of Control</a><a class="headerlink" href="#queuerequest-flow-of-control" title="Link to this heading"></a></h3>
 <p>User code requests access to a port by calling</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">status</span> <span class="o">=</span> <span class="n">pasynManager</span><span class="o">-&gt;</span><span class="n">queueRequest</span><span class="p">(</span><span class="n">pasynUser</span><span class="p">,</span> <span class="n">priority</span><span class="p">,</span> <span class="n">timeout</span><span class="p">);</span>
 </pre></div>
@@ -1278,7 +1278,7 @@ device support, which returns to record support, which completes record processi
 </ol>
 </section>
 <section id="shutdown">
-<h3><a class="toc-backref" href="#id92" role="doc-backlink">Shutdown</a><a class="headerlink" href="#shutdown" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id93" role="doc-backlink">Shutdown</a><a class="headerlink" href="#shutdown" title="Link to this heading"></a></h3>
 <p>asyn provides the low-level driver the opportunity to clean up when the port
 goes out of use, which happens when the shutdown function is called, or on
 process exit. A driver that wants to support this needs to:</p>
@@ -1299,7 +1299,7 @@ asynExceptionShutdown is emitted.</p>
 </section>
 </section>
 <section id="asyndriver-structures-and-interfaces">
-<h2><a class="toc-backref" href="#id93" role="doc-backlink">asynDriver Structures and Interfaces</a><a class="headerlink" href="#asyndriver-structures-and-interfaces" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id94" role="doc-backlink">asynDriver Structures and Interfaces</a><a class="headerlink" href="#asyndriver-structures-and-interfaces" title="Link to this heading"></a></h2>
 <p>asynDriver.h describes the following:</p>
 <ul class="simple">
 <li><p>asynStatus - An enum that describes the status returned by many methods.</p></li>
@@ -1315,7 +1315,7 @@ asynExceptionShutdown is emitted.</p>
 <li><p>asynTrace - An interface plus associated functions and definitions that implement the trace facility.</p></li>
 </ul>
 <section id="asynstatus">
-<h3><a class="toc-backref" href="#id94" role="doc-backlink">asynStatus</a><a class="headerlink" href="#asynstatus" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id95" role="doc-backlink">asynStatus</a><a class="headerlink" href="#asynstatus" title="Link to this heading"></a></h3>
 <p>Defines the status returned by most methods. If a method returns a status other
 than asynSuccess, and one of the arguments to the method is pasynUser, then the
 method is expected to write a message into pasynUser-&gt;errorMessage.</p>
@@ -1355,7 +1355,7 @@ so that the user can read input in small pieces.</p></td>
 </table>
 </section>
 <section id="asynexception">
-<h3><a class="toc-backref" href="#id95" role="doc-backlink">asynException</a><a class="headerlink" href="#asynexception" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id96" role="doc-backlink">asynException</a><a class="headerlink" href="#asynexception" title="Link to this heading"></a></h3>
 <p>Defines the exceptions for method exceptionOccurred</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
   <span class="n">asynExceptionConnect</span><span class="p">,</span><span class="n">asynExceptionEnable</span><span class="p">,</span><span class="n">asynExceptionAutoConnect</span><span class="p">,</span>
@@ -1402,7 +1402,7 @@ so that the user can read input in small pieces.</p></td>
 </table>
 </section>
 <section id="asynqueuepriority">
-<h3><a class="toc-backref" href="#id96" role="doc-backlink">asynQueuePriority</a><a class="headerlink" href="#asynqueuepriority" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id97" role="doc-backlink">asynQueuePriority</a><a class="headerlink" href="#asynqueuepriority" title="Link to this heading"></a></h3>
 <p>This defines the priority passed to queueRequest.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
   <span class="n">asynQueuePriorityLow</span><span class="p">,</span><span class="n">asynQueuePriorityMedium</span><span class="p">,</span><span class="n">asynQueuePriorityHigh</span><span class="p">,</span>
@@ -1434,7 +1434,7 @@ connect/disconnect requests.</p></td>
 </table>
 </section>
 <section id="asynuser">
-<h3><a class="toc-backref" href="#id97" role="doc-backlink">asynUser</a><a class="headerlink" href="#asynuser" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id98" role="doc-backlink">asynUser</a><a class="headerlink" href="#asynuser" title="Link to this heading"></a></h3>
 <p>Describes a structure that user code passes to most asynManager and driver methods.
 Code must allocate and free an asynUser by calling asynManager:createAsynUser (or
 asynManager:duplicateAsynUser) and asynManager:freeAsynUser.</p>
@@ -1538,7 +1538,7 @@ severity in device support callback functions.</p></td>
 </table>
 </section>
 <section id="asyninterface">
-<h3><a class="toc-backref" href="#id98" role="doc-backlink">asynInterface</a><a class="headerlink" href="#asyninterface" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id99" role="doc-backlink">asynInterface</a><a class="headerlink" href="#asyninterface" title="Link to this heading"></a></h3>
 <p>This defines an interface registered with asynPortManager:registerPort or asynManager:interposeInterface.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">asynInterface</span><span class="p">{</span>
   <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">interfaceType</span><span class="p">;</span> <span class="o">/*</span><span class="n">For</span> <span class="n">example</span><span class="p">,</span> <span class="n">asynCommonType</span> <span class="o">*/</span>
@@ -1567,7 +1567,7 @@ severity in device support callback functions.</p></td>
 </table>
 </section>
 <section id="id1">
-<h3><a class="toc-backref" href="#id99" role="doc-backlink">asynManager</a><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id100" role="doc-backlink">asynManager</a><a class="headerlink" href="#id1" title="Link to this heading"></a></h3>
 <p>This is the main interface for communicating with asynDriver.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span><span class="n">registerPort</span> <span class="n">attributes</span><span class="o">*/</span>
 <span class="c1">#define ASYN_MULTIDEVICE  0x0001</span>
@@ -1974,7 +1974,7 @@ to this function.</p></td>
 </table>
 </section>
 <section id="asyncommon">
-<h3><a class="toc-backref" href="#id100" role="doc-backlink">asynCommon</a><a class="headerlink" href="#asyncommon" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id101" role="doc-backlink">asynCommon</a><a class="headerlink" href="#asyncommon" title="Link to this heading"></a></h3>
 <p>asynCommon describes the methods that must be implemented by drivers.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">Device</span> <span class="n">Interface</span> <span class="n">supported</span> <span class="n">by</span> <span class="n">ALL</span> <span class="n">asyn</span> <span class="n">drivers</span><span class="o">*/</span>
 <span class="c1">#define asynCommonType &quot;asynCommon&quot;</span>
@@ -2010,7 +2010,7 @@ specify priority asynQueuePriorityConnect.</p></td>
 </table>
 </section>
 <section id="asyncommonsyncio">
-<h3><a class="toc-backref" href="#id101" role="doc-backlink">asynCommonSyncIO</a><a class="headerlink" href="#asyncommonsyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id102" role="doc-backlink">asynCommonSyncIO</a><a class="headerlink" href="#asyncommonsyncio" title="Link to this heading"></a></h3>
 <p>asynCommonSyncIO provides a convenient interface for software that needs to perform
 “synchronous” operations to an asyn device, i.e. that blocks while waiting for the
 port to be available and for the operation to complete. The code does not need to
@@ -2032,7 +2032,7 @@ calls pasynManager-&gt;connectDevice, disconnect calls pasynManager-&gt;disconne
 connectDevice calls asynCommon-&gt;connect, and disconnectDevice calls asynCommon-&gt;disconnect.</p>
 </section>
 <section id="asyndrvuser">
-<h3><a class="toc-backref" href="#id102" role="doc-backlink">asynDrvUser</a><a class="headerlink" href="#asyndrvuser" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id103" role="doc-backlink">asynDrvUser</a><a class="headerlink" href="#asyndrvuser" title="Link to this heading"></a></h3>
 <p>asynDrvUser provides methods that allow an asynUser to communicate user specific
 information to/from a port driver</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynDrvUserType &quot;asynDrvUser&quot;</span>
@@ -2073,7 +2073,7 @@ call this and verify that typeName and size are what it expects.</p></td>
 </table>
 </section>
 <section id="asynlockportnotify">
-<h3><a class="toc-backref" href="#id103" role="doc-backlink">asynLockPortNotify</a><a class="headerlink" href="#asynlockportnotify" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id104" role="doc-backlink">asynLockPortNotify</a><a class="headerlink" href="#asynlockportnotify" title="Link to this heading"></a></h3>
 <p>This is provided for port drivers that are an asynUser of another port driver. For
 example a serial bus driver can be implemented by connecting to a standard serial
 port to perform the actual I/O. When the serial bus port is locked, either by the
@@ -2113,7 +2113,7 @@ for the port to which it is connected.</p></td>
 </table>
 </section>
 <section id="asynoption">
-<h3><a class="toc-backref" href="#id104" role="doc-backlink">asynOption</a><a class="headerlink" href="#asynoption" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id105" role="doc-backlink">asynOption</a><a class="headerlink" href="#asynoption" title="Link to this heading"></a></h3>
 <p>asynOption provides a generic way of setting driver specific options. For example
 the serial port driver uses this to specify baud rate, stop bits, etc.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynOptionType &quot;asynOption&quot;</span>
@@ -2143,7 +2143,7 @@ the serial port driver uses this to specify baud rate, stop bits, etc.</p>
 </table>
 </section>
 <section id="asyntrace">
-<h3><a class="toc-backref" href="#id105" role="doc-backlink">asynTrace</a><a class="headerlink" href="#asyntrace" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id106" role="doc-backlink">asynTrace</a><a class="headerlink" href="#asyntrace" title="Link to this heading"></a></h3>
 <p>asynDriver provides a trace facility with the following attributes:</p>
 <ul>
 <li><p>Tracing is turned on/off for individual devices, i.e. a portName, addr.</p></li>
@@ -2404,7 +2404,7 @@ the same as printIO() but with the additional <strong>file</strong> and <strong>
 </section>
 </section>
 <section id="standard-message-based-interfaces">
-<h2><a class="toc-backref" href="#id106" role="doc-backlink">Standard Message Based Interfaces</a><a class="headerlink" href="#standard-message-based-interfaces" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id107" role="doc-backlink">Standard Message Based Interfaces</a><a class="headerlink" href="#standard-message-based-interfaces" title="Link to this heading"></a></h2>
 <p>These are interfaces for communicating with message based devices, where message
 based means that the device communicates via octet strings, i.e. arrays of 8 bit
 bytes. Three interfaces are provided: asynOctet, asynOctetBase, and asynOctetSyncIO.
@@ -2413,7 +2413,7 @@ by port drivers that implement asynOctet. It’s primary purpose is to help with
 support. asynOctetSyncIO provides a synchronous inteface to asynOctet and can be
 used by code that is willing to block.</p>
 <section id="asynoctet">
-<h3><a class="toc-backref" href="#id107" role="doc-backlink">asynOctet</a><a class="headerlink" href="#asynoctet" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id108" role="doc-backlink">asynOctet</a><a class="headerlink" href="#asynoctet" title="Link to this heading"></a></h3>
 <p>asynOctet describes the methods implemented by drivers that use octet strings for
 sending commands and receiving responses from a device.</p>
 <p>NOTE: The name octet is used instead of ASCII because it implies that communication
@@ -2557,7 +2557,7 @@ it can be called directly rather than via queueRequest.</p>
 </table>
 </section>
 <section id="asynoctetsyncio">
-<h3><a class="toc-backref" href="#id108" role="doc-backlink">asynOctetSyncIO</a><a class="headerlink" href="#asynoctetsyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id109" role="doc-backlink">asynOctetSyncIO</a><a class="headerlink" href="#asynoctetsyncio" title="Link to this heading"></a></h3>
 <p>asynOctetSyncIO provides a convenient interface for software that needs to perform
 “synchronous” I/O to an asyn device, i.e. that starts an I/O operation and then
 blocks while waiting for the response. The code does not need to handle callbacks
@@ -2666,7 +2666,7 @@ for the operations to complete or time out.</p></td>
 </table>
 </section>
 <section id="end-of-string-support">
-<h3><a class="toc-backref" href="#id109" role="doc-backlink">End of String Support</a><a class="headerlink" href="#end-of-string-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id110" role="doc-backlink">End of String Support</a><a class="headerlink" href="#end-of-string-support" title="Link to this heading"></a></h3>
 <p>asynOctet provides methods for handling end of string (message) processing. It does
 not specify policy. Device support code, interpose layers, or low level drivers
 can all handle EOS processing. An application developer must decide what policy
@@ -2675,9 +2675,9 @@ the device support, and the driver.</p>
 </section>
 </section>
 <section id="standard-register-based-interfaces">
-<h2><a class="toc-backref" href="#id110" role="doc-backlink">Standard Register Based Interfaces</a><a class="headerlink" href="#standard-register-based-interfaces" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id111" role="doc-backlink">Standard Register Based Interfaces</a><a class="headerlink" href="#standard-register-based-interfaces" title="Link to this heading"></a></h2>
 <section id="introduction">
-<h3><a class="toc-backref" href="#id111" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id112" role="doc-backlink">Introduction</a><a class="headerlink" href="#introduction" title="Link to this heading"></a></h3>
 <p>This section describes interfaces for register based devices. Support is provided
 for:</p>
 <ul class="simple">
@@ -2750,7 +2750,7 @@ UInt32 registers.</p></li>
 </ul>
 </section>
 <section id="example-drivers">
-<h3><a class="toc-backref" href="#id112" role="doc-backlink">Example Drivers</a><a class="headerlink" href="#example-drivers" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id113" role="doc-backlink">Example Drivers</a><a class="headerlink" href="#example-drivers" title="Link to this heading"></a></h3>
 <p>Two examples of drivers that might implement and use the interfaces are:
 - Analog to Digital Converter.</p>
 <blockquote>
@@ -2773,7 +2773,7 @@ is a soft example of a driver that implements asynUInt32Digital.</p>
 </ul>
 </section>
 <section id="asynintxx-xx-32-or-64">
-<h3><a class="toc-backref" href="#id113" role="doc-backlink">asynIntXX (XX=32 or 64)</a><a class="headerlink" href="#asynintxx-xx-32-or-64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id114" role="doc-backlink">asynIntXX (XX=32 or 64)</a><a class="headerlink" href="#asynintxx-xx-32-or-64" title="Link to this heading"></a></h3>
 <p>asynIntXX describes the methods implemented by drivers that use integers for communicating
 with a device.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">interruptCallbackIntXX</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">userPvt</span><span class="p">,</span> <span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
@@ -2887,7 +2887,7 @@ and asynManager:interruptEnd.</p>
 </table>
 </section>
 <section id="asynintxxsyncio-xx-32-or-64">
-<h3><a class="toc-backref" href="#id114" role="doc-backlink">asynIntXXSyncIO (XX=32 or 64)</a><a class="headerlink" href="#asynintxxsyncio-xx-32-or-64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id115" role="doc-backlink">asynIntXXSyncIO (XX=32 or 64)</a><a class="headerlink" href="#asynintxxsyncio-xx-32-or-64" title="Link to this heading"></a></h3>
 <p>asynIntXXSyncIO describes a synchronous interface to asynIntXX. The code that calls
 it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynIntXXSyncIOType &quot;asynIntXXSyncIO&quot;</span>
@@ -2944,7 +2944,7 @@ it must be willing to block.</p>
 </table>
 </section>
 <section id="asynuint32digital">
-<h3><a class="toc-backref" href="#id115" role="doc-backlink">asynUInt32Digital</a><a class="headerlink" href="#asynuint32digital" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id116" role="doc-backlink">asynUInt32Digital</a><a class="headerlink" href="#asynuint32digital" title="Link to this heading"></a></h3>
 <p>asynUInt32Digital describes the methods for communicating via bits of an Int32 register.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">enum</span> <span class="p">{</span>
     <span class="n">interruptOnZeroToOne</span><span class="p">,</span> <span class="n">interruptOnOneToZero</span><span class="p">,</span> <span class="n">interruptOnBoth</span>
@@ -3082,7 +3082,7 @@ via calls to asynManager:interruptStart and asynManager:interruptEnd.</p></td>
 </table>
 </section>
 <section id="asynuint32digitalsyncio">
-<h3><a class="toc-backref" href="#id116" role="doc-backlink">asynUInt32DigitalSyncIO</a><a class="headerlink" href="#asynuint32digitalsyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id117" role="doc-backlink">asynUInt32DigitalSyncIO</a><a class="headerlink" href="#asynuint32digitalsyncio" title="Link to this heading"></a></h3>
 <p>asynUInt32DigitalSyncIO describes a synchronous interface to asynUInt32Digital.
 The code that calls it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynUInt32DigitalSyncIOType &quot;asynUInt32DigitalSyncIO&quot;</span>
@@ -3153,7 +3153,7 @@ The code that calls it must be willing to block.</p>
 </table>
 </section>
 <section id="asynfloat64">
-<h3><a class="toc-backref" href="#id117" role="doc-backlink">asynFloat64</a><a class="headerlink" href="#asynfloat64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id118" role="doc-backlink">asynFloat64</a><a class="headerlink" href="#asynfloat64" title="Link to this heading"></a></h3>
 <p>asynFloat64 describes the methods for communicating via IEEE double precision float
 values.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">interruptCallbackFloat64</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">userPvt</span><span class="p">,</span> <span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
@@ -3255,7 +3255,7 @@ via calls to asynManager:interruptStart and asynManager:interruptEnd.</p></td>
 </table>
 </section>
 <section id="asynfloat64syncio">
-<h3><a class="toc-backref" href="#id118" role="doc-backlink">asynFloat64SyncIO</a><a class="headerlink" href="#asynfloat64syncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id119" role="doc-backlink">asynFloat64SyncIO</a><a class="headerlink" href="#asynfloat64syncio" title="Link to this heading"></a></h3>
 <p>asynFloat64SyncIO describes a synchronous interrace to asynFloat64. The code that
 calls it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynFloat64SyncIOType &quot;asynFloat64SyncIO&quot;</span>
@@ -3302,7 +3302,7 @@ calls it must be willing to block.</p>
 </table>
 </section>
 <section id="asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64">
-<h3><a class="toc-backref" href="#id119" role="doc-backlink">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</a><a class="headerlink" href="#asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id120" role="doc-backlink">asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)</a><a class="headerlink" href="#asynxxxarray-xxx-int8-int16-int32-int64-float32-or-float64" title="Link to this heading"></a></h3>
 <p>asynXXXArray describes the methods for communicating via 8, 16, 32, or 64-bit integers,
 or 32 or 64-bit IEEE float values.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">interruptCallbackXXXArray</span><span class="p">)(</span>
@@ -3405,7 +3405,7 @@ or 32 or 64-bit IEEE float values.</p>
 </table>
 </section>
 <section id="asynxxxarraysyncio">
-<h3><a class="toc-backref" href="#id120" role="doc-backlink">asynXXXArraySyncIO</a><a class="headerlink" href="#asynxxxarraysyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id121" role="doc-backlink">asynXXXArraySyncIO</a><a class="headerlink" href="#asynxxxarraysyncio" title="Link to this heading"></a></h3>
 <p>asynXXXArraySyncIO describes a synchronous interface to asynXXXArray. The code that
 calls it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynXXXArraySyncIOType &quot;asynXXXArraySyncIO&quot;</span>
@@ -3452,7 +3452,7 @@ calls it must be willing to block.</p>
 </table>
 </section>
 <section id="asynenum">
-<h3><a class="toc-backref" href="#id121" role="doc-backlink">asynEnum</a><a class="headerlink" href="#asynenum" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id122" role="doc-backlink">asynEnum</a><a class="headerlink" href="#asynenum" title="Link to this heading"></a></h3>
 <p>asynEnum describes the methods implemented by drivers to define the enum strings,
 values, and severities for a device.</p>
 <p>This interface is typically used by drivers to set the enum strings and values for
@@ -3584,7 +3584,7 @@ and asynManager:interruptEnd.</p>
 </table>
 </section>
 <section id="asynenumsyncio">
-<h3><a class="toc-backref" href="#id122" role="doc-backlink">asynEnumSyncIO</a><a class="headerlink" href="#asynenumsyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id123" role="doc-backlink">asynEnumSyncIO</a><a class="headerlink" href="#asynenumsyncio" title="Link to this heading"></a></h3>
 <p>asynEnumSyncIO describes a synchronous interface to asynEnum. The code that calls
 it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynEnumSyncIOType &quot;asynEnumSyncIO&quot;</span>
@@ -3633,7 +3633,7 @@ it must be willing to block.</p>
 </table>
 </section>
 <section id="asyngenericpointer">
-<h3><a class="toc-backref" href="#id123" role="doc-backlink">asynGenericPointer</a><a class="headerlink" href="#asyngenericpointer" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id124" role="doc-backlink">asynGenericPointer</a><a class="headerlink" href="#asyngenericpointer" title="Link to this heading"></a></h3>
 <p>asynGenericPointer describes the methods for communicating via void* pointers. asyn
 clients and port drivers must agree on the type of object that is being pointed to!</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">void</span> <span class="p">(</span><span class="o">*</span><span class="n">interruptCallbackGenericPointer</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">userPvt</span><span class="p">,</span> <span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
@@ -3735,7 +3735,7 @@ via calls to asynManager:interruptStart and asynManager:interruptEnd.</p></td>
 </table>
 </section>
 <section id="asyngenericpointersyncio">
-<h3><a class="toc-backref" href="#id124" role="doc-backlink">asynGenericPointerSyncIO</a><a class="headerlink" href="#asyngenericpointersyncio" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id125" role="doc-backlink">asynGenericPointerSyncIO</a><a class="headerlink" href="#asyngenericpointersyncio" title="Link to this heading"></a></h3>
 <p>asynGenericPointerSyncIO describes a synchronous interrace to asynGenericPointer.
 The code that calls it must be willing to block.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#define asynGenericPointerSyncIOType &quot;asynGenericPointerSyncIO&quot;</span>
@@ -3793,7 +3793,7 @@ the operations to complete or time out.</p></td>
 </section>
 </section>
 <section id="asynstandardinterfacesbase">
-<h2><a class="toc-backref" href="#id125" role="doc-backlink">asynStandardInterfacesBase</a><a class="headerlink" href="#asynstandardinterfacesbase" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id126" role="doc-backlink">asynStandardInterfacesBase</a><a class="headerlink" href="#asynstandardinterfacesbase" title="Link to this heading"></a></h2>
 <p>asynStandardInterfacesBase is an interface designed as a convenience to minimize
 the amount of code that must be written in the initialization routine of a port
 driver that uses the standard asyn message-based or register-based interfaces that
@@ -3808,7 +3808,7 @@ to register itself as an interrupt source on one or more of those interfaces. Th
 can reduce the number of lines of code in the driver initialization routine by a
 factor of four or more.</p>
 <section id="asynstandardinterfaces-structure">
-<h3><a class="toc-backref" href="#id126" role="doc-backlink">asynStandardInterfaces structure</a><a class="headerlink" href="#asynstandardinterfaces-structure" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id127" role="doc-backlink">asynStandardInterfaces structure</a><a class="headerlink" href="#asynstandardinterfaces-structure" title="Link to this heading"></a></h3>
 <p>The following is the definition of the asynStandardInterfaces structure. Drivers
 will normally have a structure of this type contained in their drvPvt structure.
 If this structure is initialized to all zeros when drvPvt is created, then all that
@@ -3882,7 +3882,7 @@ those interfaces that are interrupt sources.</p>
 </div>
 </section>
 <section id="asynstandardinterfacesbase-interface">
-<h3><a class="toc-backref" href="#id127" role="doc-backlink">asynStandardInterfacesBase interface</a><a class="headerlink" href="#asynstandardinterfacesbase-interface" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id128" role="doc-backlink">asynStandardInterfacesBase interface</a><a class="headerlink" href="#asynstandardinterfacesbase-interface" title="Link to this heading"></a></h3>
 <p>The following is the definition of the asynStandardInterfacesBase interface.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">typedef</span> <span class="n">struct</span> <span class="n">asynStandardInterfacesBase</span> <span class="p">{</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">initialize</span><span class="p">)(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">portName</span><span class="p">,</span> <span class="n">asynStandardInterfaces</span> <span class="o">*</span><span class="n">pInterfaces</span><span class="p">,</span>
@@ -4011,9 +4011,9 @@ asynStandardInterfacesBase interface.</p>
 </section>
 </section>
 <section id="standard-interpose-interfaces">
-<h2><a class="toc-backref" href="#id128" role="doc-backlink">Standard Interpose Interfaces</a><a class="headerlink" href="#standard-interpose-interfaces" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id129" role="doc-backlink">Standard Interpose Interfaces</a><a class="headerlink" href="#standard-interpose-interfaces" title="Link to this heading"></a></h2>
 <section id="asyninterposeeos">
-<h3><a class="toc-backref" href="#id129" role="doc-backlink">asynInterposeEos</a><a class="headerlink" href="#asyninterposeeos" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id130" role="doc-backlink">asynInterposeEos</a><a class="headerlink" href="#asyninterposeeos" title="Link to this heading"></a></h3>
 <p>This can be used to simulate EOS processing for asynOctet if the port driver doesn’t
 provide EOS support. If an EOS is specified it looks for the eos on each read. It
 is started by the shell command:</p>
@@ -4031,7 +4031,7 @@ is started by the shell command:</p>
 Some drivers provide configuration options to call this automatically.</p>
 </section>
 <section id="asyninterposeflush">
-<h3><a class="toc-backref" href="#id130" role="doc-backlink">asynInterposeFlush</a><a class="headerlink" href="#asyninterposeflush" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id131" role="doc-backlink">asynInterposeFlush</a><a class="headerlink" href="#asyninterposeflush" title="Link to this heading"></a></h3>
 <p>This can be used to simulate flush processing for asynOctet if the port driver doesn’t
 provide support for flush. It just reads and discards characters until no more characters
 arrive before timeout seconds have occurred. It is started by the shell command:</p>
@@ -4047,7 +4047,7 @@ arrive before timeout seconds have occurred. It is started by the shell command:
 <p>This command should appear immediately after the command that initializes a port.</p>
 </section>
 <section id="asyninterposecom">
-<h3><a class="toc-backref" href="#id131" role="doc-backlink">asynInterposeCom</a><a class="headerlink" href="#asyninterposecom" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id132" role="doc-backlink">asynInterposeCom</a><a class="headerlink" href="#asyninterposecom" title="Link to this heading"></a></h3>
 <p>This provides the ability to configure serial ports on terminal servers using the
 RFC 2117 protocol. It is not configured from the iocsh directly, but is rather configured
 automatically by the drvAsynIPPort driver if the COM protocol is specified. It supports
@@ -4055,7 +4055,7 @@ the same options as drvAsynSerialPort, i.e. “baud”, “bits”, “parity”
 “ixon” and “break”.</p>
 </section>
 <section id="asyninterposedelay">
-<h3><a class="toc-backref" href="#id132" role="doc-backlink">asynInterposeDelay</a><a class="headerlink" href="#asyninterposedelay" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id133" role="doc-backlink">asynInterposeDelay</a><a class="headerlink" href="#asyninterposedelay" title="Link to this heading"></a></h3>
 <p>This can be used to wait for a specified delay after sending each character before
 sending the next. Some poorly designed devices require this. It is started by the
 shell command:</p>
@@ -4077,7 +4077,7 @@ with the <cite>delay</cite> option which is added by this interpose layer.</p>
 </div>
 </section>
 <section id="asyninterposeecho">
-<h3><a class="toc-backref" href="#id133" role="doc-backlink">asynInterposeEcho</a><a class="headerlink" href="#asyninterposeecho" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id134" role="doc-backlink">asynInterposeEcho</a><a class="headerlink" href="#asyninterposeecho" title="Link to this heading"></a></h3>
 <p>This can be used to wait for each character to be echoed by the device before sending
 the next character. Some poorly designed devices require this. It is started by
 the shell command:</p>
@@ -4093,7 +4093,7 @@ the shell command:</p>
 </section>
 </section>
 <section id="generic-device-support-for-epics-records">
-<h2><a class="toc-backref" href="#id134" role="doc-backlink">Generic Device Support for EPICS records</a><a class="headerlink" href="#generic-device-support-for-epics-records" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id135" role="doc-backlink">Generic Device Support for EPICS records</a><a class="headerlink" href="#generic-device-support-for-epics-records" title="Link to this heading"></a></h2>
 <p>Generic device support is provided for standard EPICS records. This support should
 be usable for a large class of low level register based drivers. For complicated
 devices other support is required. This release provides the following:</p>
@@ -4148,7 +4148,7 @@ It is optional.</p></li>
 </pre></div>
 </div>
 <section id="asynmanager-interrupts-and-epics-device-support">
-<h3><a class="toc-backref" href="#id135" role="doc-backlink">asynManager interrupts and EPICS device support</a><a class="headerlink" href="#asynmanager-interrupts-and-epics-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id136" role="doc-backlink">asynManager interrupts and EPICS device support</a><a class="headerlink" href="#asynmanager-interrupts-and-epics-device-support" title="Link to this heading"></a></h3>
 <p>All of the device support files can call registerInterruptUser for input records.
 The callback is used in one of two ways:</p>
 <ul>
@@ -4177,7 +4177,7 @@ is used to append values to the time series.</p>
 </ul>
 </section>
 <section id="initial-values-of-output-records">
-<h3><a class="toc-backref" href="#id136" role="doc-backlink">Initial values of output records</a><a class="headerlink" href="#initial-values-of-output-records" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id137" role="doc-backlink">Initial values of output records</a><a class="headerlink" href="#initial-values-of-output-records" title="Link to this heading"></a></h3>
 <p>The device support for output records on register based interfaces (bo, mbbo, ao,
 longout) does an initial read() of the value from the driver in init_record. If
 this read() returns asynSuccess then the record value is set to the value returned
@@ -4197,7 +4197,7 @@ the record in the database contains the following line:</p>
 </div>
 </section>
 <section id="enum-values-for-bi-bo-mbbi-and-mbbo-records">
-<h3><a class="toc-backref" href="#id137" role="doc-backlink">Enum values for bi, bo, mbbi, and mbbo records</a><a class="headerlink" href="#enum-values-for-bi-bo-mbbi-and-mbbo-records" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id138" role="doc-backlink">Enum values for bi, bo, mbbi, and mbbo records</a><a class="headerlink" href="#enum-values-for-bi-bo-mbbi-and-mbbo-records" title="Link to this heading"></a></h3>
 <p>Beginning in asyn R4-19 support was added for asyn port drivers to control the values
 of the enum strings, enum values and enum severities in bi, bo, mbbi, and mbbo records.
 This is implemented in the asynInt32 and asynUInt32Digital device support as follows:</p>
@@ -4218,7 +4218,7 @@ and reopened, but newer clients like CSS should dynamically change the enum widg
 </ul>
 </section>
 <section id="callback-updates-for-output-records">
-<h3><a class="toc-backref" href="#id138" role="doc-backlink">Callback updates for output records</a><a class="headerlink" href="#callback-updates-for-output-records" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id139" role="doc-backlink">Callback updates for output records</a><a class="headerlink" href="#callback-updates-for-output-records" title="Link to this heading"></a></h3>
 <p>Beginning in asyn R4-26 support was added for updating output records from driver
 interrupt callbacks. This feature allows output records to reflect changes in the
 underlying hardware that are caused by manual front-panel operation, changes caused
@@ -4234,7 +4234,7 @@ does a callback for that value.</p>
 of output records on interrupt callbacks are disabled.</p>
 </section>
 <section id="buffering-of-driver-callbacks">
-<h3><a class="toc-backref" href="#id139" role="doc-backlink">Buffering of driver callbacks</a><a class="headerlink" href="#buffering-of-driver-callbacks" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id140" role="doc-backlink">Buffering of driver callbacks</a><a class="headerlink" href="#buffering-of-driver-callbacks" title="Link to this heading"></a></h3>
 <p>It is possible for the time between driver callbacks to be less than the time for
 record processing. asyn device support provides a ring-buffer (FIFO) mechanism to
 buffer values so that the record will process all callback values from a short burst
@@ -4256,7 +4256,7 @@ these records if asyn:REABACK=1 even if asyn:FIFO is not specified. asyn:FIFO ca
 still be used to select a larger ring buffer size.</p>
 </section>
 <section id="time-stamps">
-<h3><a class="toc-backref" href="#id140" role="doc-backlink">Time stamps</a><a class="headerlink" href="#time-stamps" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id141" role="doc-backlink">Time stamps</a><a class="headerlink" href="#time-stamps" title="Link to this heading"></a></h3>
 <p>Beginning in asyn R4-20 support was added for asyn port drivers to set the TIME
 field of input records. This is done by setting the TSE field of the record to “-2”
 and setting the desired value into the timestamp field of the pasynUser structure
@@ -4267,7 +4267,7 @@ was also added for user-supplied timestamp source functions. Timestamp support w
 also added to asynPortDriver for the base-class read functions and callback functions.</p>
 </section>
 <section id="asynint32-device-support">
-<h3><a class="toc-backref" href="#id141" role="doc-backlink">asynInt32 device support</a><a class="headerlink" href="#asynint32-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id142" role="doc-backlink">asynInt32 device support</a><a class="headerlink" href="#asynint32-device-support" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynAiInt32</span><span class="p">,</span><span class="s2">&quot;asynInt32&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynAiInt32Average</span><span class="p">,</span><span class="s2">&quot;asynInt32Average&quot;</span><span class="p">)</span>
@@ -4438,7 +4438,7 @@ is processed a new value is read. SCAN “I/O Intr” is supported similar to ai
 </div>
 </section>
 <section id="asynint64-device-support">
-<h3><a class="toc-backref" href="#id142" role="doc-backlink">asynInt64 device support</a><a class="headerlink" href="#asynint64-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id143" role="doc-backlink">asynInt64 device support</a><a class="headerlink" href="#asynint64-device-support" title="Link to this heading"></a></h3>
 <p>asynInt64 device support is available for the ao, ai, longout, and longin records
 on all versions of EPICS base. The following support is available in devAsynInt64Misc.dbd.</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">longin</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynLiInt64</span><span class="p">,</span><span class="s2">&quot;asynInt64&quot;</span><span class="p">)</span>
@@ -4504,7 +4504,7 @@ the record type</p>
 </div>
 </section>
 <section id="asynintxxxarray-device-support-xxx-8-16-32-or-64">
-<h3><a class="toc-backref" href="#id143" role="doc-backlink">asynIntXXXArray device support (XXX=8, 16, 32, or 64)</a><a class="headerlink" href="#asynintxxxarray-device-support-xxx-8-16-32-or-64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id144" role="doc-backlink">asynIntXXXArray device support (XXX=8, 16, 32, or 64)</a><a class="headerlink" href="#asynintxxxarray-device-support-xxx-8-16-32-or-64" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynIntXXXArrayWfIn</span><span class="p">,</span><span class="s2">&quot;asynIntXXXArrayIn&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynIntXXXArrayWfOut</span><span class="p">,</span><span class="s2">&quot;asynIntXXXArrayOut&quot;</span><span class="p">)</span>
@@ -4515,7 +4515,7 @@ asynIntXXXArray. It has support for both reading and writing a waveform. SCAN �
 Intr” is supported similar to the aiRecord in devAsynInt32 device support.</p>
 </section>
 <section id="asynxxxtimeseries-device-support-xxx-int32-int64-or-float64">
-<h3><a class="toc-backref" href="#id144" role="doc-backlink">asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</a><a class="headerlink" href="#asynxxxtimeseries-device-support-xxx-int32-int64-or-float64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id145" role="doc-backlink">asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)</a><a class="headerlink" href="#asynxxxtimeseries-device-support-xxx-int32-int64-or-float64" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynInt32TimeSeries</span><span class="p">,</span><span class="s2">&quot;asynInt32TimeSeries&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynInt64TimeSeries</span><span class="p">,</span><span class="s2">&quot;asynInt64TimeSeries&quot;</span><span class="p">)</span>
@@ -4537,7 +4537,7 @@ NORD=0.</p></li>
 </ul>
 </section>
 <section id="asynuint32digital-device-support">
-<h3><a class="toc-backref" href="#id145" role="doc-backlink">asynUInt32Digital device support</a><a class="headerlink" href="#asynuint32digital-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id146" role="doc-backlink">asynUInt32Digital device support</a><a class="headerlink" href="#asynuint32digital-device-support" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">bi</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynBiUInt32Digital</span><span class="p">,</span><span class="s2">&quot;asynUInt32Digital&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">bo</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynBoUInt32Digital</span><span class="p">,</span><span class="s2">&quot;asynUInt32Digital&quot;</span><span class="p">)</span>
@@ -4664,7 +4664,7 @@ SCAN “I/O Intr” is supported similar to aiRecord.</p>
 </div>
 </section>
 <section id="asynfloat64-device-support">
-<h3><a class="toc-backref" href="#id146" role="doc-backlink">asynFloat64 device support</a><a class="headerlink" href="#asynfloat64-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id147" role="doc-backlink">asynFloat64 device support</a><a class="headerlink" href="#asynfloat64-device-support" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynAiFloat64</span><span class="p">,</span><span class="s2">&quot;asynFloat64&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">ai</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynAiFloat64Average</span><span class="p">,</span><span class="s2">&quot;asynFloat64Average&quot;</span><span class="p">)</span>
@@ -4711,7 +4711,7 @@ supported.</p>
 </ul>
 </section>
 <section id="asynfloatxxxarray-device-support-xxx-32-or-64">
-<h3><a class="toc-backref" href="#id147" role="doc-backlink">asynFloatXXXArray device support (XXX=32 or 64)</a><a class="headerlink" href="#asynfloatxxxarray-device-support-xxx-32-or-64" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id148" role="doc-backlink">asynFloatXXXArray device support (XXX=32 or 64)</a><a class="headerlink" href="#asynfloatxxxarray-device-support-xxx-32-or-64" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynFloatXXXArrayWfIn</span><span class="p">,</span><span class="s2">&quot;asynFloatXXXArrayIn&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">waveform</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynFloatXXXArrayWfOut</span><span class="p">,</span><span class="s2">&quot;asynFloatXXXArrayOut&quot;</span><span class="p">)</span>
@@ -4722,7 +4722,7 @@ interface asynFloatXXXArray. It has support for both reading and writing a wavef
 SCAN “I/O Intr” is supported similar to the aiRecord in devAsynInt32 device support.</p>
 </section>
 <section id="asynoctet-device-support">
-<h3><a class="toc-backref" href="#id148" role="doc-backlink">asynOctet device support</a><a class="headerlink" href="#asynoctet-device-support" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id149" role="doc-backlink">asynOctet device support</a><a class="headerlink" href="#asynoctet-device-support" title="Link to this heading"></a></h3>
 <p>The following support is available:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">device</span><span class="p">(</span><span class="n">stringin</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynSiOctetCmdResponse</span><span class="p">,</span><span class="s2">&quot;asynOctetCmdResponse&quot;</span><span class="p">)</span>
 <span class="n">device</span><span class="p">(</span><span class="n">stringin</span><span class="p">,</span><span class="n">INST_IO</span><span class="p">,</span><span class="n">asynSiOctetWriteRead</span><span class="p">,</span><span class="s2">&quot;asynOctetWriteRead&quot;</span><span class="p">)</span>
@@ -4796,7 +4796,7 @@ read into the record.</p>
 </ul>
 </section>
 <section id="record-alarms">
-<h3><a class="toc-backref" href="#id149" role="doc-backlink">Record alarms</a><a class="headerlink" href="#record-alarms" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id150" role="doc-backlink">Record alarms</a><a class="headerlink" href="#record-alarms" title="Link to this heading"></a></h3>
 <p>The generic EPICS device support sets the record alarm status and severity when
 errors occur. Beginning in R4-30 the alarmStatus and alarmSeverity fields were added
 to the asynUser structure. Drivers can use these fields to explicitly control the
@@ -4831,7 +4831,7 @@ set the record STAT and SEVR fields, regardless of the value of asynUser.auxStat
 </section>
 </section>
 <section id="asynrecord-generic-epics-record-support">
-<h2><a class="toc-backref" href="#id150" role="doc-backlink">asynRecord: Generic EPICS Record Support</a><a class="headerlink" href="#asynrecord-generic-epics-record-support" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id151" role="doc-backlink">asynRecord: Generic EPICS Record Support</a><a class="headerlink" href="#asynrecord-generic-epics-record-support" title="Link to this heading"></a></h2>
 <p>A special record type asynRecord is provided. Details are described in <a class="reference external" href="asynRecord.html">asynRecord.html</a>.
 This section provides a brief description of how to use it.</p>
 <p>Each IOC can load one or more instances of asynRecord. An example is:</p>
@@ -4857,7 +4857,7 @@ needed if one or more devices need a dedicated record.</p>
 </figure>
 </section>
 <section id="asyngpib">
-<h2><a class="toc-backref" href="#id151" role="doc-backlink">asynGpib</a><a class="headerlink" href="#asyngpib" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id152" role="doc-backlink">asynGpib</a><a class="headerlink" href="#asyngpib" title="Link to this heading"></a></h2>
 <p>GPIB has additional features that are not supported by asynCommon and asynOctet.
 asynGpib defines two interfaces.</p>
 <ul>
@@ -4873,7 +4873,7 @@ asynGpib defines two interfaces.</p>
 <li><p>asynGpibPort - A set of methods implemented by GPIB drivers</p></li>
 </ul>
 <section id="asyngpibdriver-h">
-<h3><a class="toc-backref" href="#id152" role="doc-backlink">asynGpibDriver.h</a><a class="headerlink" href="#asyngpibdriver-h" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id153" role="doc-backlink">asynGpibDriver.h</a><a class="headerlink" href="#asyngpibdriver-h" title="Link to this heading"></a></h3>
 <p>asynGpibDriver.h contains the following definitions:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">/*</span> <span class="n">GPIB</span> <span class="n">Addressed</span> <span class="n">Commands</span><span class="o">*/</span>
 <span class="c1">#define IBGTL &quot;\x01&quot;    /* Go to local */</span>
@@ -4955,7 +4955,7 @@ asynGpib defines two interfaces.</p>
 </div>
 </section>
 <section id="id2">
-<h3><a class="toc-backref" href="#id153" role="doc-backlink">asynGpib</a><a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id154" role="doc-backlink">asynGpib</a><a class="headerlink" href="#id2" title="Link to this heading"></a></h3>
 <p>asynGpib describes the interface for device support code. It provides gpib specific
 functions like SRQ handling. It makes calls to asynGpibPort. asynGpib.c implements
 asynCommon and asynOctet. It supports asynInt32 by using the methods from asynInt32Base.
@@ -4999,7 +4999,7 @@ specified address.</p></td>
 </table>
 </section>
 <section id="asyngpibport">
-<h3><a class="toc-backref" href="#id154" role="doc-backlink">asynGpibPort</a><a class="headerlink" href="#asyngpibport" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id155" role="doc-backlink">asynGpibPort</a><a class="headerlink" href="#asyngpibport" title="Link to this heading"></a></h3>
 <p>asynGpibPort is the interface that is implemented by gpib drivers, e.g. the VXI-11.
 It provides:</p>
 <table class="docutils align-default" id="id46">
@@ -5049,9 +5049,9 @@ by asynGpib.</p></td>
 </section>
 </section>
 <section id="port-drivers">
-<h2><a class="toc-backref" href="#id155" role="doc-backlink">Port Drivers</a><a class="headerlink" href="#port-drivers" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id156" role="doc-backlink">Port Drivers</a><a class="headerlink" href="#port-drivers" title="Link to this heading"></a></h2>
 <section id="local-serial-port">
-<h3><a class="toc-backref" href="#id156" role="doc-backlink">Local Serial Port</a><a class="headerlink" href="#local-serial-port" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id157" role="doc-backlink">Local Serial Port</a><a class="headerlink" href="#local-serial-port" title="Link to this heading"></a></h3>
 <p>The drvAsynSerialPort driver supports devices connected to serial ports on the IOC.</p>
 <p>Serial ports are configured with the <code class="docutils literal notranslate"><span class="pre">drvAsynSerialPortConfigure</span></code> and <code class="docutils literal notranslate"><span class="pre">asynSetOption</span></code> commands:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">drvAsynSerialPortConfigure</span><span class="p">(</span><span class="s2">&quot;portName&quot;</span><span class="p">,</span><span class="s2">&quot;ttyName&quot;</span><span class="p">,</span><span class="n">priority</span><span class="p">,</span><span class="n">noAutoConnect</span><span class="p">,</span><span class="n">noProcessEosIn</span><span class="p">)</span>
@@ -5100,6 +5100,65 @@ The read method transfers as many characters as possible, limited by the specifi
 count. asynInterposeEos can be used to support EOS.</p>
 <p>The following table summarizes the drvAsynSerialPort driver asynSetOption keys and
 values. When a serial port connects the current values are fetched.</p>
+<table class="docutils align-default" id="id47">
+<caption><span class="caption-text">Local serial port</span><a class="headerlink" href="#id47" title="Link to this table"></a></caption>
+<colgroup>
+<col style="width: 20.0%" />
+<col style="width: 80.0%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Key</p></th>
+<th class="head"><p>Value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>baud</p></td>
+<td><p>50 75 110 134 150 200 300 600 1200 2400 9600 …</p></td>
+</tr>
+<tr class="row-odd"><td><p>bits</p></td>
+<td><p>8 7 6 5</p></td>
+</tr>
+<tr class="row-even"><td><p>parity</p></td>
+<td><p>none even odd</p></td>
+</tr>
+<tr class="row-odd"><td><p>stop</p></td>
+<td><p>1 2</p></td>
+</tr>
+<tr class="row-even"><td><p>clocal</p></td>
+<td><p>Y N</p></td>
+</tr>
+<tr class="row-odd"><td><p>crtscts</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-even"><td><p>ixon</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-odd"><td><p>ixoff</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-even"><td><p>ixany</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-odd"><td><p>rs485_enable</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-even"><td><p>rs485_rts_on_send</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-odd"><td><p>rs485_rts_after_send</p></td>
+<td><p>N Y</p></td>
+</tr>
+<tr class="row-even"><td><p>rs485_delay_rts_before_send</p></td>
+<td><p>msec_delay</p></td>
+</tr>
+<tr class="row-odd"><td><p>rs485_delay_rts_after_send</p></td>
+<td><p>msec_delay</p></td>
+</tr>
+<tr class="row-even"><td><p>break</p></td>
+<td><p>off on &lt;numeric-device-dependent-time&gt;</p></td>
+</tr>
+</tbody>
+</table>
 <p>On some systems (e.g. Windows, Darwin) the driver accepts any numeric value for
 the baud rate, which must, of course be supported by the system hardware. On Linux
 the choices are limited to the values like B300, B9600, etc. which are defined in
@@ -5156,7 +5215,7 @@ carrier.</p>
 </div>
 </section>
 <section id="tcp-ip-or-udp-ip-port">
-<h3><a class="toc-backref" href="#id157" role="doc-backlink">TCP/IP or UDP/IP Port</a><a class="headerlink" href="#tcp-ip-or-udp-ip-port" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id158" role="doc-backlink">TCP/IP or UDP/IP Port</a><a class="headerlink" href="#tcp-ip-or-udp-ip-port" title="Link to this heading"></a></h3>
 <p>The drvAsynIPPort driver supports devices which communicate over a TCP/IP or UDP/IP
 connection. A typical example is a device connected through an Ethernet/Serial converter
 box.</p>
@@ -5240,8 +5299,8 @@ methods. read blocks until at least one character has been received or until a t
 occurs. read transfers as many characters as possible, limited by the specified
 count.</p>
 <p>The following table summarizes the drvAsynIPPort driver asynSetOption keys and values.</p>
-<table class="docutils align-default" id="id47">
-<caption><span class="caption-text">TCP/IP or UDP/IP Port</span><a class="headerlink" href="#id47" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id48">
+<caption><span class="caption-text">TCP/IP or UDP/IP Port</span><a class="headerlink" href="#id48" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 12.5%" />
 <col style="width: 12.5%" />
@@ -5277,7 +5336,7 @@ the serial parameters, i.e. “baud”, “bits”, etc.</p>
 <p>asynInterposeEos and asynInterposeFlush can be used to provide additional functionality.</p>
 </section>
 <section id="tcp-ip-server">
-<h3><a class="toc-backref" href="#id158" role="doc-backlink">TCP/IP Server</a><a class="headerlink" href="#tcp-ip-server" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id159" role="doc-backlink">TCP/IP Server</a><a class="headerlink" href="#tcp-ip-server" title="Link to this heading"></a></h3>
 <p>The drvAsynIPServerPort driver supports asyn socket servers by listening for TCP/IP
 or UDP connections from remote clients. The creates maxClients drvAsynIPPort port
 drivers by calling drvAsynIPPortConfigure at initialization. These ports are named
@@ -5351,7 +5410,7 @@ port.</p></li>
 </ul>
 </section>
 <section id="vxi-11">
-<h3><a class="toc-backref" href="#id159" role="doc-backlink">VXI-11</a><a class="headerlink" href="#vxi-11" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id160" role="doc-backlink">VXI-11</a><a class="headerlink" href="#vxi-11" title="Link to this heading"></a></h3>
 <p>VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is an
 RPC based protocol. In addition to the VXI-11 standard, three additional standards
 are defined.</p>
@@ -5455,7 +5514,7 @@ setOptions. For example:</p>
 <p>Will change the rpcTimeout for port L0 to .1 seconds.</p>
 </section>
 <section id="drvprologixgpib">
-<h3><a class="toc-backref" href="#id160" role="doc-backlink">drvPrologixGPIB</a><a class="headerlink" href="#drvprologixgpib" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id161" role="doc-backlink">drvPrologixGPIB</a><a class="headerlink" href="#drvprologixgpib" title="Link to this heading"></a></h3>
 <p>The drvPrologixGPIB port driver was written to support
 <a class="reference external" href="https://prologix.biz/gpib-ethernet-controller.html">the Prologix GPIB-Ethernet controller</a>.</p>
 <p>Configuration command is:</p>
@@ -5504,7 +5563,7 @@ The Prologix GPIB-Ethernet is a simple device that does not support many GPIB fu
 </ul>
 </section>
 <section id="linux-gpib">
-<h3><a class="toc-backref" href="#id161" role="doc-backlink">Linux-Gpib</a><a class="headerlink" href="#linux-gpib" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id162" role="doc-backlink">Linux-Gpib</a><a class="headerlink" href="#linux-gpib" title="Link to this heading"></a></h3>
 <p>The linux-gpib port driver was written to support
 <a class="reference external" href="https://sourceforge.net/projects/linux-gpib/">the Linux GPIB Package library</a>.</p>
 <p>In order to build this support the Linux GPIB Package must be installed. Also in
@@ -5570,7 +5629,7 @@ See GPIB library documentation for details.</p></li>
 </ul>
 </section>
 <section id="green-springs-ip488">
-<h3><a class="toc-backref" href="#id162" role="doc-backlink">Green Springs IP488</a><a class="headerlink" href="#green-springs-ip488" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id163" role="doc-backlink">Green Springs IP488</a><a class="headerlink" href="#green-springs-ip488" title="Link to this heading"></a></h3>
 <p>This is support for the Green Springs Industry Pack GPIB carrier. The configuration
 command is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">gsIP488Configure</span><span class="p">(</span><span class="n">portName</span><span class="p">,</span><span class="n">carrier</span><span class="p">,</span><span class="n">module</span><span class="p">,</span><span class="n">intVec</span><span class="p">,</span><span class="n">priority</span><span class="p">,</span><span class="n">noAutoConnect</span><span class="p">)</span>
@@ -5625,7 +5684,7 @@ run to determine a variable used by the delay routine. It assumes that there is
 no higher priority thread running that consumes lots of cpu cycles.</p>
 </section>
 <section id="national-instruments-gpib-1014d">
-<h3><a class="toc-backref" href="#id163" role="doc-backlink">National Instruments GPIB-1014D</a><a class="headerlink" href="#national-instruments-gpib-1014d" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id164" role="doc-backlink">National Instruments GPIB-1014D</a><a class="headerlink" href="#national-instruments-gpib-1014d" title="Link to this heading"></a></h3>
 <p>This is support for a National Instruments VME GPIB interface. The configuration
 command is:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">ni1014Config</span><span class="p">(</span><span class="n">portNameA</span><span class="p">,</span><span class="n">portNameB</span><span class="p">,</span><span class="n">base</span><span class="p">,</span><span class="n">vector</span><span class="p">,</span><span class="n">level</span><span class="p">,</span><span class="n">priority</span><span class="p">,</span><span class="n">noAutoConnect</span><span class="p">)</span>
@@ -5696,7 +5755,7 @@ to determine a variable used by the delay routine. It assumes that there is no h
 priority thread running that consumes lots of cpu cycles.</p>
 </section>
 <section id="usb-tmc-test-and-measurement-class-driver">
-<h3><a class="toc-backref" href="#id164" role="doc-backlink">USB TMC (Test and Measurement Class) driver</a><a class="headerlink" href="#usb-tmc-test-and-measurement-class-driver" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id165" role="doc-backlink">USB TMC (Test and Measurement Class) driver</a><a class="headerlink" href="#usb-tmc-test-and-measurement-class-driver" title="Link to this heading"></a></h3>
 <p>Configure each instance of the driver in the application startup script:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usbtmcConfigure</span><span class="p">(</span><span class="s2">&quot;asynPort&quot;</span><span class="p">,</span> <span class="n">vendorId</span><span class="p">,</span> <span class="n">productId</span><span class="p">,</span> <span class="s2">&quot;serialNumber&quot;</span><span class="p">,</span> <span class="n">priority</span><span class="p">,</span> <span class="n">flags</span><span class="p">)</span>
 </pre></div>
@@ -5713,7 +5772,7 @@ or 0 priority will set the worker thread priority to its default value of 50 (<c
 <p>A missing flags argument is taken to be 0. As of now only one bit is used: Bit 0
 (0x1) Disable/enable (1/0) automatic port connection.</p>
 <section id="non-octet-records">
-<h4><a class="toc-backref" href="#id165" role="doc-backlink">Non-octet records</a><a class="headerlink" href="#non-octet-records" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id166" role="doc-backlink">Non-octet records</a><a class="headerlink" href="#non-octet-records" title="Link to this heading"></a></h4>
 <p>In addition to the asynOctet stream this support module provides some values for
 records with DTYP=asynInt32. Since the port is a single-address device the subaddress
 field of the INP or OUT ‘&#64;asyn()’ descriptor can not be used. Instead the ‘drvUser’
@@ -5721,7 +5780,7 @@ string at the end of the INP or OUT field is used to distinguish the parameter t
 be read or written.</p>
 </section>
 <section id="service-request-srq-handling">
-<h4><a class="toc-backref" href="#id166" role="doc-backlink">Service Request (SRQ) handling</a><a class="headerlink" href="#service-request-srq-handling" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id167" role="doc-backlink">Service Request (SRQ) handling</a><a class="headerlink" href="#service-request-srq-handling" title="Link to this heading"></a></h4>
 <p>The presence of one or more records with INP=”&#64;asyn(port, 0, 0) SRQ”) will cause
 the driver to create an extra thread to read from the device Interrupt-In endpoint.
 The SCAN field must be “I/O Intr”. Record processing will occur when the device
@@ -5730,7 +5789,7 @@ be the device status byte sent as part of the service request message. Typically
 the record type will be longin or mbbiDirect.</p>
 </section>
 <section id="device-status-byte-stb">
-<h4><a class="toc-backref" href="#id167" role="doc-backlink">Device Status Byte (STB)</a><a class="headerlink" href="#device-status-byte-stb" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id168" role="doc-backlink">Device Status Byte (STB)</a><a class="headerlink" href="#device-status-byte-stb" title="Link to this heading"></a></h4>
 <p>The USBTMC/USB488 device status byte is read by a record with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">INP</span><span class="o">=</span><span class="s2">&quot;@asyn(port, 0, 0) STB&quot;</span><span class="p">)</span><span class="o">.</span>
 </pre></div>
@@ -5738,7 +5797,7 @@ the record type will be longin or mbbiDirect.</p>
 <p>Typically the record type will be longin or mbbiDirect.</p>
 </section>
 <section id="remote-enable-ren">
-<h4><a class="toc-backref" href="#id168" role="doc-backlink">Remote Enable (REN)</a><a class="headerlink" href="#remote-enable-ren" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id169" role="doc-backlink">Remote Enable (REN)</a><a class="headerlink" href="#remote-enable-ren" title="Link to this heading"></a></h4>
 <p>The device remote enable is written by a record with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OUT</span><span class="o">=</span><span class="s2">&quot;@asyn(port, 0, 0) REN&quot;</span><span class="p">)</span>
 </pre></div>
@@ -5747,7 +5806,7 @@ the record type will be longin or mbbiDirect.</p>
 operation.</p>
 </section>
 <section id="local-lockout-llo">
-<h4><a class="toc-backref" href="#id169" role="doc-backlink">Local Lockout (LLO)</a><a class="headerlink" href="#local-lockout-llo" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id170" role="doc-backlink">Local Lockout (LLO)</a><a class="headerlink" href="#local-lockout-llo" title="Link to this heading"></a></h4>
 <p>The IEEE-488 local lockout command is sent by processing a record with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OUT</span><span class="o">=</span><span class="s2">&quot;@asyn(port, 0, 0) LLO&quot;</span><span class="p">)</span>
 </pre></div>
@@ -5755,7 +5814,7 @@ operation.</p>
 <p>Typically the record type will be bo. The value written is ignored.</p>
 </section>
 <section id="go-to-local-gtl">
-<h4><a class="toc-backref" href="#id170" role="doc-backlink">Go To Local (GTL)</a><a class="headerlink" href="#go-to-local-gtl" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id171" role="doc-backlink">Go To Local (GTL)</a><a class="headerlink" href="#go-to-local-gtl" title="Link to this heading"></a></h4>
 <p>The IEEE-488 go to local command is sent by processing a record with</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">OUT</span><span class="o">=</span><span class="s2">&quot;@asyn(port, 0, 0) GTL&quot;</span><span class="p">)</span>
 </pre></div>
@@ -5763,7 +5822,7 @@ operation.</p>
 <p>Typically the record type will be bo. The value written is ignored.</p>
 </section>
 <section id="linux-udev-configuration">
-<h4><a class="toc-backref" href="#id171" role="doc-backlink">Linux udev configuration</a><a class="headerlink" href="#linux-udev-configuration" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id172" role="doc-backlink">Linux udev configuration</a><a class="headerlink" href="#linux-udev-configuration" title="Link to this heading"></a></h4>
 <p>If attempts to communicate with a device result in error messages of the form “Access
 denied (insufficient permissions)” you must add udev entries to allow access. In
 the /etc/udev/rules.d directory create a file, 55-usbtmc.rules for example, with
@@ -5781,7 +5840,7 @@ a line for each device of interest.</p>
 device with which you wish to communicate.</p>
 </section>
 <section id="streamdevice-exception-handlers">
-<h4><a class="toc-backref" href="#id172" role="doc-backlink">StreamDevice Exception Handlers</a><a class="headerlink" href="#streamdevice-exception-handlers" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id173" role="doc-backlink">StreamDevice Exception Handlers</a><a class="headerlink" href="#streamdevice-exception-handlers" title="Link to this heading"></a></h4>
 <p>The USBTMC driver attempts to take correct action when it detects that the device
 has been unplugged or become unresponsive. The effectiveness of this depends somewhat
 on the level of support provided by the underlying operating system so it is good
@@ -5795,7 +5854,7 @@ practice to also specify the following StreamDevice global exception handlers:</
 </section>
 </section>
 <section id="ftdi-port">
-<h3><a class="toc-backref" href="#id173" role="doc-backlink">FTDI Port</a><a class="headerlink" href="#ftdi-port" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id174" role="doc-backlink">FTDI Port</a><a class="headerlink" href="#ftdi-port" title="Link to this heading"></a></h3>
 <p>The drvAsynFTDIPort driver supports devices connected via FTDI adapters.</p>
 <p>FTDI ports are configured with the <code class="docutils literal notranslate"><span class="pre">drvAsynFTDIPortConfigure</span></code> and <code class="docutils literal notranslate"><span class="pre">asynSetOption</span></code>
 commands:</p>
@@ -5861,8 +5920,8 @@ The read method transfers as many characters as possible, limited by the specifi
 count. asynInterposeEos can be used to support EOS.</p>
 <p>The following table summarizes the drvAsynFTDIPort driver asynSetOption keys and
 values. Reasonable defaults are used at first.</p>
-<table class="docutils align-default" id="id48">
-<caption><span class="caption-text">FTDI driver</span><a class="headerlink" href="#id48" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id49">
+<caption><span class="caption-text">FTDI driver</span><a class="headerlink" href="#id49" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 12.5%" />
 <col style="width: 12.5%" />
@@ -5907,8 +5966,8 @@ via Adafruit FT232H. During initial SPI learning it is sufficient to short circu
 SPI is synchronous interface, not asynchronous.)</p>
 <p>AD9915 provides basic control for RF amplitude and phase. In order to use the Adafruit
 as USB - SPI converter for EVAL-AD9915 the following pins need to be connected:</p>
-<table class="docutils align-default" id="id49">
-<caption><span class="caption-text">Adafruit FT232H EVAL-AD9915 connections</span><a class="headerlink" href="#id49" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id50">
+<caption><span class="caption-text">Adafruit FT232H EVAL-AD9915 connections</span><a class="headerlink" href="#id50" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -5985,7 +6044,7 @@ respective technical manuals.</p>
 </section>
 </section>
 <section id="asynportdriver-c-base-class">
-<h2><a class="toc-backref" href="#id174" role="doc-backlink">asynPortDriver C++ base class</a><a class="headerlink" href="#asynportdriver-c-base-class" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id175" role="doc-backlink">asynPortDriver C++ base class</a><a class="headerlink" href="#asynportdriver-c-base-class" title="Link to this heading"></a></h2>
 <p>A C++ base class called asynPortDriver is available. This is a base class from which
 real asyn port drivers can be derived. It greatly simplifies the job of writing
 an asyn port driver, because it takes care of all of the tasks like registering
@@ -5993,7 +6052,7 @@ the port, registering the interfaces, and calling interrupt clients. It is docum
 separately in <a class="reference external" href="asynPortDriver.html">asynPortDriver</a>.</p>
 </section>
 <section id="asynportclient-c-classes">
-<h2><a class="toc-backref" href="#id175" role="doc-backlink">asynPortClient C++ classes</a><a class="headerlink" href="#asynportclient-c-classes" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id176" role="doc-backlink">asynPortClient C++ classes</a><a class="headerlink" href="#asynportclient-c-classes" title="Link to this heading"></a></h2>
 <p>asynPortClient is a set of C++ classes that are designed to simplify the task of
 writing a client that directly communicates with an asyn port driver, without running
 an EPICS IOC. They handle the details of connecting to the driver, finding the required
@@ -6002,9 +6061,9 @@ If clients need asynchronous operation then they can use the normal C interface
 with pasynManager-&gt;queueRequest. It is documented separately in <a class="reference external" href="asynPortClient.html">asynPortClient</a>.</p>
 </section>
 <section id="diagnostic-aids">
-<h2><a class="toc-backref" href="#id176" role="doc-backlink">Diagnostic Aids</a><a class="headerlink" href="#diagnostic-aids" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id177" role="doc-backlink">Diagnostic Aids</a><a class="headerlink" href="#diagnostic-aids" title="Link to this heading"></a></h2>
 <section id="iocsh-commands">
-<h3><a class="toc-backref" href="#id177" role="doc-backlink">iocsh Commands</a><a class="headerlink" href="#iocsh-commands" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id178" role="doc-backlink">iocsh Commands</a><a class="headerlink" href="#iocsh-commands" title="Link to this heading"></a></h3>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">asynReport</span><span class="p">(</span><span class="n">level</span><span class="p">,</span><span class="n">portName</span><span class="p">)</span>
 <span class="n">asynInterposeFlushConfig</span><span class="p">(</span><span class="n">portName</span><span class="p">,</span><span class="n">addr</span><span class="p">,</span><span class="n">timeout</span><span class="p">)</span>
 <span class="n">asynInterposeEosConfig</span><span class="p">(</span><span class="n">portName</span><span class="p">,</span><span class="n">addr</span><span class="p">,</span><span class="n">processIn</span><span class="p">,</span><span class="n">processOut</span><span class="p">)</span>
@@ -6078,8 +6137,8 @@ file pointer is passed to setTraceFile.</p></li>
 <p>The asynOctetXXX commands provide shell access to asynOctetSyncIO methods. The entry
 is a character string constant that identifies the port,addr.</p>
 <p>The other arguments are as follows:</p>
-<table class="docutils align-default" id="id50">
-<caption><span class="caption-text">asynOctetXXX command arguments</span><a class="headerlink" href="#id50" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id51">
+<caption><span class="caption-text">asynOctetXXX command arguments</span><a class="headerlink" href="#id51" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -6164,7 +6223,7 @@ asynManager.</p>
 </section>
 </section>
 <section id="example-client">
-<h2><a class="toc-backref" href="#id178" role="doc-backlink">Example Client</a><a class="headerlink" href="#example-client" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id179" role="doc-backlink">Example Client</a><a class="headerlink" href="#example-client" title="Link to this heading"></a></h2>
 <p>The following is an example of an asyn client that reads from an asyn driver via
 octet messages:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span>#include &lt;asynDriver.h&gt;
@@ -6260,11 +6319,11 @@ static void asynExample(const char *port,int addr,const char *message)
 #. queueCallback is called. It calls the port driver’s write and read methods.</p>
 </section>
 <section id="test-applications">
-<h2><a class="toc-backref" href="#id179" role="doc-backlink">Test Applications</a><a class="headerlink" href="#test-applications" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id180" role="doc-backlink">Test Applications</a><a class="headerlink" href="#test-applications" title="Link to this heading"></a></h2>
 <p>The asynDriver distribution includes several test applications to test asynDriver
 and device support.</p>
 <section id="testapp">
-<h3><a class="toc-backref" href="#id180" role="doc-backlink">testApp</a><a class="headerlink" href="#testapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id181" role="doc-backlink">testApp</a><a class="headerlink" href="#testapp" title="Link to this heading"></a></h3>
 <p>This is an example of how to interface to asynManager. The example resides in &lt;top&gt;/testApp
 and contains the following components:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Db</span><span class="o">/</span>
@@ -6290,8 +6349,8 @@ port driver.</p>
 </pre></div>
 </div>
 <p>where the arguments are:</p>
-<table class="docutils align-default" id="id51">
-<caption><span class="caption-text">echoDriverInit command arguments</span><a class="headerlink" href="#id51" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id52">
+<caption><span class="caption-text">echoDriverInit command arguments</span><a class="headerlink" href="#id52" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -6328,8 +6387,8 @@ serial port.</p>
 </pre></div>
 </div>
 <p>where the arguments are:</p>
-<table class="docutils align-default" id="id52">
-<caption><span class="caption-text">echoDriverInit command arguments</span><a class="headerlink" href="#id52" title="Link to this table"></a></caption>
+<table class="docutils align-default" id="id53">
+<caption><span class="caption-text">echoDriverInit command arguments</span><a class="headerlink" href="#id53" title="Link to this table"></a></caption>
 <colgroup>
 <col style="width: 20.0%" />
 <col style="width: 80.0%" />
@@ -6420,10 +6479,10 @@ it asks for the record to complete processing.</p></li>
 <p>testBlock.db is a template similar to test.db except that it attached to device
 support testBlock instead of asynOctetWriteRead.</p>
 <p>Executing “medm -x test.adl” produces the display:</p>
-<figure class="align-center" id="id53">
+<figure class="align-center" id="id54">
 <img alt="_images/asynTest.png" src="_images/asynTest.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynTest.png</strong></span><a class="headerlink" href="#id53" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>asynTest.png</strong></span><a class="headerlink" href="#id54" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>It assumes that an ioc has been started via:</p>
@@ -6442,14 +6501,14 @@ to port A.</p>
 file attaches to these database records.</p>
 </section>
 <section id="testarrayringbufferapp">
-<h3><a class="toc-backref" href="#id181" role="doc-backlink">testArrayRingBufferApp</a><a class="headerlink" href="#testarrayringbufferapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id182" role="doc-backlink">testArrayRingBufferApp</a><a class="headerlink" href="#testarrayringbufferapp" title="Link to this heading"></a></h3>
 <p>This tests ring buffers for callbacks with arrays. The example resides in &lt;top&gt;/testArrayRingBufferApp.</p>
 <p>Executing “medm -x testArrayRingBufferTop.adl” produces a top-level display from
 which this display can be opened:</p>
-<figure class="align-center" id="id54">
+<figure class="align-center" id="id55">
 <img alt="_images/asynTestArrayRingBuffer.png" src="_images/asynTestArrayRingBuffer.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynTestArrayRingBuffer.png</strong></span><a class="headerlink" href="#id54" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>asynTestArrayRingBuffer.png</strong></span><a class="headerlink" href="#id55" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>It assumes that an ioc has been started via:</p>
@@ -6459,7 +6518,7 @@ which this display can be opened:</p>
 </div>
 </section>
 <section id="testasynportclientapp">
-<h3><a class="toc-backref" href="#id182" role="doc-backlink">testAsynPortClientApp</a><a class="headerlink" href="#testasynportclientapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id183" role="doc-backlink">testAsynPortClientApp</a><a class="headerlink" href="#testasynportclientapp" title="Link to this heading"></a></h3>
 <p>This is a test program that demonstrates how to write C++ program that instantiates
 both an asyn port driver and an asynPortClient object. It uses the asynPortClient
 object to communicate with the asyn port driver directly over the asyn interfaces
@@ -6474,7 +6533,7 @@ XPS motor controller, and a telnet host respectively.</p>
 <p>The example resides in &lt;top&gt;/testAsynPortClientApp.</p>
 </section>
 <section id="testasynportdriverapp">
-<h3><a class="toc-backref" href="#id183" role="doc-backlink">testAsynPortDriverApp</a><a class="headerlink" href="#testasynportdriverapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id184" role="doc-backlink">testAsynPortDriverApp</a><a class="headerlink" href="#testasynportdriverapp" title="Link to this heading"></a></h3>
 <p>This test demonstrates how to write a driver using the asynPortDriver C++ class.
 It consists of a simple digital oscilloscope simulator. When the vertical gain changes
 the driver does callbacks on the enum choices for the vertical volts/division. This
@@ -6483,10 +6542,10 @@ not do monitors on enum value changes.</p>
 <p>The example resides in &lt;top&gt;/testAsynPortDriverApp.</p>
 <p>Executing “medm -x testAsynPortDriverTop.adl” produces a top-level display from
 which this display can be opened:</p>
-<figure class="align-center" id="id55">
+<figure class="align-center" id="id56">
 <img alt="_images/testAsynPortDriver.png" src="_images/testAsynPortDriver.png" />
 <figcaption>
-<p><span class="caption-text"><strong>testAsynPortDriver.png</strong></span><a class="headerlink" href="#id55" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>testAsynPortDriver.png</strong></span><a class="headerlink" href="#id56" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>It assumes that an ioc has been started via:</p>
@@ -6496,10 +6555,10 @@ which this display can be opened:</p>
 </div>
 </section>
 <section id="testbroadcastapp">
-<h3><a class="toc-backref" href="#id184" role="doc-backlink">testBroadcastApp</a><a class="headerlink" href="#testbroadcastapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id185" role="doc-backlink">testBroadcastApp</a><a class="headerlink" href="#testbroadcastapp" title="Link to this heading"></a></h3>
 <p>This application contains 3 test programs that use UDP IP broadcast messages.</p>
 <section id="testbroadcastasyn-c">
-<h4><a class="toc-backref" href="#id185" role="doc-backlink">testBroadcastAsyn.c</a><a class="headerlink" href="#testbroadcastasyn-c" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id186" role="doc-backlink">testBroadcastAsyn.c</a><a class="headerlink" href="#testbroadcastasyn-c" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>This program uses drvAsynIPPort to send UDP broadcast messages on port 37747. The
 message is “in”. It then listens for any responses. If there are NSLS electrometers
@@ -6507,14 +6566,14 @@ on the network they should respond.</p>
 </div></blockquote>
 </section>
 <section id="testbroadcastnoasyn-c">
-<h4><a class="toc-backref" href="#id186" role="doc-backlink">testBroadcastNoAsyn.c</a><a class="headerlink" href="#testbroadcastnoasyn-c" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id187" role="doc-backlink">testBroadcastNoAsyn.c</a><a class="headerlink" href="#testbroadcastnoasyn-c" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>This program does the same as testBroadcastAsyn.c but uses native socket calls rather
 than drvAsynIPort.</p>
 </div></blockquote>
 </section>
 <section id="testbroadcastburst-c">
-<h4><a class="toc-backref" href="#id187" role="doc-backlink">testBroadcastBurst.c</a><a class="headerlink" href="#testbroadcastburst-c" title="Link to this heading"></a></h4>
+<h4><a class="toc-backref" href="#id188" role="doc-backlink">testBroadcastBurst.c</a><a class="headerlink" href="#testbroadcastburst-c" title="Link to this heading"></a></h4>
 <blockquote>
 <div><p>This program is used to test the behavior of devices in the presence of large amounts
 of broadcast traffic. It should be used with caution, since it can send a large
@@ -6528,7 +6587,7 @@ Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops d
 </section>
 </section>
 <section id="testconnectapp">
-<h3><a class="toc-backref" href="#id188" role="doc-backlink">testConnectApp</a><a class="headerlink" href="#testconnectapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id189" role="doc-backlink">testConnectApp</a><a class="headerlink" href="#testconnectapp" title="Link to this heading"></a></h3>
 <p>This application can be used to test connection management. It connects to a device
 with drvAsynIPPort and periodically writes to it in a background thread. Depending
 on whether the device is connected error messages will be printed. The device can
@@ -6544,7 +6603,7 @@ test the behavior.</p>
 There is no medm screen for this test.</p>
 </section>
 <section id="testepicsapp">
-<h3><a class="toc-backref" href="#id189" role="doc-backlink">testEpicsApp</a><a class="headerlink" href="#testepicsapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id190" role="doc-backlink">testEpicsApp</a><a class="headerlink" href="#testepicsapp" title="Link to this heading"></a></h3>
 <p>This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
 interfaces. Both drivers also implement the asynFloat64 interface for controlling
 the update rate. The testEpicsApp application also uses the asynOctet echoDriver
@@ -6552,29 +6611,29 @@ from <a class="reference external" href="#testapp">testApp</a>.</p>
 <p>The example resides in &lt;top&gt;/testEpicsApp.</p>
 <p>Executing “medm -x *.adl” from the &lt;top&gt;/testEpicsApp/adl directory opens
 the followings displays.</p>
-<figure class="align-center" id="id56">
+<figure class="align-center" id="id57">
 <img alt="_images/testInt32.png" src="_images/testInt32.png" />
 <figcaption>
-<p><span class="caption-text"><strong>testInt32</strong></span><a class="headerlink" href="#id56" title="Link to this image"></a></p>
-</figcaption>
-</figure>
-<figure class="align-center" id="id57">
-<img alt="_images/testDigital.png" src="_images/testDigital.png" />
-<figcaption>
-<p><span class="caption-text"><strong>testDigital</strong></span><a class="headerlink" href="#id57" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>testInt32</strong></span><a class="headerlink" href="#id57" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <figure class="align-center" id="id58">
+<img alt="_images/testDigital.png" src="_images/testDigital.png" />
+<figcaption>
+<p><span class="caption-text"><strong>testDigital</strong></span><a class="headerlink" href="#id58" title="Link to this image"></a></p>
+</figcaption>
+</figure>
+<figure class="align-center" id="id59">
 <img alt="_images/testOctet.png" src="_images/testOctet.png" />
 <figcaption>
-<p><span class="caption-text"><strong>testOctet</strong></span><a class="headerlink" href="#id58" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>testOctet</strong></span><a class="headerlink" href="#id59" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>From the testInt32.adl screen the following time-series screen can be opened.</p>
-<figure class="align-center" id="id59">
+<figure class="align-center" id="id60">
 <img alt="_images/asynTimeSeries.png" src="_images/asynTimeSeries.png" />
 <figcaption>
-<p><span class="caption-text"><strong>asynTimeSeries</strong></span><a class="headerlink" href="#id59" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>asynTimeSeries</strong></span><a class="headerlink" href="#id60" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>It assumes that an ioc has been started via:</p>
@@ -6584,7 +6643,7 @@ the followings displays.</p>
 </div>
 </section>
 <section id="testerrorsapp">
-<h3><a class="toc-backref" href="#id190" role="doc-backlink">testErrorsApp</a><a class="headerlink" href="#testerrorsapp" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id191" role="doc-backlink">testErrorsApp</a><a class="headerlink" href="#testerrorsapp" title="Link to this heading"></a></h3>
 <p>This tests error handling in standard asyn device support. The user can control
 the status and severity for write operations, read operations, and interrupt callbacks.
 It tests all of the interfaces (asynInt32, asynInt64, asynUInt32Digital, asynFloat64,
@@ -6601,10 +6660,10 @@ from the driver)</p></li>
 <p>The example resides in &lt;top&gt;/testEpicsApp.</p>
 <p>Executing “medm -x testErrorsTop.adl” from the &lt;top&gt;/testEerrorsApp/adl directory
 produces a top-level display from which this display can be opened:</p>
-<figure class="align-center" id="id60">
+<figure class="align-center" id="id61">
 <img alt="_images/testErrors.png" src="_images/testErrors.png" />
 <figcaption>
-<p><span class="caption-text"><strong>testErrors</strong></span><a class="headerlink" href="#id60" title="Link to this image"></a></p>
+<p><span class="caption-text"><strong>testErrors</strong></span><a class="headerlink" href="#id61" title="Link to this image"></a></p>
 </figcaption>
 </figure>
 <p>It assumes that an ioc has been started via:</p>
@@ -6615,9 +6674,9 @@ produces a top-level display from which this display can be opened:</p>
 </section>
 </section>
 <section id="install-and-build">
-<h2><a class="toc-backref" href="#id191" role="doc-backlink">Install and Build</a><a class="headerlink" href="#install-and-build" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id192" role="doc-backlink">Install and Build</a><a class="headerlink" href="#install-and-build" title="Link to this heading"></a></h2>
 <section id="install-and-build-asyndriver">
-<h3><a class="toc-backref" href="#id192" role="doc-backlink">Install and Build asynDriver</a><a class="headerlink" href="#install-and-build-asyndriver" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id193" role="doc-backlink">Install and Build asynDriver</a><a class="headerlink" href="#install-and-build-asyndriver" title="Link to this heading"></a></h3>
 <p>After obtaining a copy of the distribution, it must be installed and built for use
 at your site. These steps only need to be performed once for the site (unless versions
 of the module running under different releases of EPICS and/or the other required
@@ -6646,7 +6705,7 @@ EPICS_BASE and IPAC. IPAC is only needed if you are building for vxWorks.</p></l
 </ol>
 </section>
 <section id="using-asyndriver-components-with-an-epics-ioccore-application">
-<h3><a class="toc-backref" href="#id193" role="doc-backlink">Using asynDriver Components with an EPICS iocCore Application</a><a class="headerlink" href="#using-asyndriver-components-with-an-epics-ioccore-application" title="Link to this heading"></a></h3>
+<h3><a class="toc-backref" href="#id194" role="doc-backlink">Using asynDriver Components with an EPICS iocCore Application</a><a class="headerlink" href="#using-asyndriver-components-with-an-epics-ioccore-application" title="Link to this heading"></a></h3>
 <p>Since asynDriver does NOT provide support for specific devices an application must
 obtain device specific support elsewhere. This section only explains how to include
 asynDriver components.</p>
@@ -6701,7 +6760,7 @@ is started, it can be connected to different devices.</p>
 </section>
 </section>
 <section id="id3">
-<h2><a class="toc-backref" href="#id194" role="doc-backlink">License Agreement</a><a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
+<h2><a class="toc-backref" href="#id195" role="doc-backlink">License Agreement</a><a class="headerlink" href="#id3" title="Link to this heading"></a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2002</span> <span class="n">University</span> <span class="n">of</span> <span class="n">Chicago</span> <span class="n">All</span> <span class="n">rights</span> <span class="n">reserved</span><span class="o">.</span>
 <span class="n">asynDriver</span> <span class="ow">is</span> <span class="n">distributed</span> <span class="n">subject</span> <span class="n">to</span> <span class="n">the</span> <span class="n">following</span> <span class="n">license</span> <span class="n">conditions</span><span class="p">:</span>
 
@@ -6782,7 +6841,7 @@ is started, it can be connected to different devices.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2025-June-16.
+      <span class="lastupdated">Last updated on 2025-August-04.
       </span></p>
   </div>
 
