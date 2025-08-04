@@ -4267,7 +4267,7 @@ values. When a serial port connects the current values are fetched.
   * - rs485_delay_rts_after_send 
     - msec_delay 
   * - break
-      off on <numeric-device-dependend-time>
+    - off on <numeric-device-dependent-time>
  
 On some systems (e.g. Windows, Darwin) the driver accepts any numeric value for
 the baud rate, which must, of course be supported by the system hardware. On Linux
