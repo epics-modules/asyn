@@ -151,9 +151,9 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynBiUInt32Digital = {
-    6,0,0,initBi,         getIoIntInfo, processBi};
+    5,0,0,initBi,         getIoIntInfo, processBi};
 analogDset asynBoUInt32Digital = {
-    6,0,0,initBo,         getIoIntInfo, processBo};
+    5,0,0,initBo,         getIoIntInfo, processBo};
 analogDset asynLiUInt32Digital = {
     5,0,0,initLi,         getIoIntInfo, processLi};
 analogDset asynLoUInt32Digital = {
