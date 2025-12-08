@@ -96,7 +96,7 @@ typedef struct commonDset {
 } commonDset;
 
 commonDset devTestBlockInp   = {
-    5,0,0,initSiWriteRead,  0            ,processCommon};
+    5, 0, 0, (DEVSUPFUN)initSiWriteRead, 0, (DEVSUPFUN)processCommon };
 
 epicsExportAddress(dset, devTestBlockInp);
 

@@ -264,7 +264,7 @@ typedef struct asynRecordDset {
 } asynRecordDset;
 
 asynRecordDset asynRecordDevice = {
-    5,0,0,0,getIoIntInfo,0};
+    5, 0, 0, 0, (DEVSUPFUN)getIoIntInfo, 0 };
 epicsExportAddress(dset, asynRecordDevice);
 
 

@@ -151,21 +151,21 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynBiUInt32Digital = {
-    5,0,0,initBi,         getIoIntInfo, processBi};
+    5, 0, 0, (DEVSUPFUN)initBi,         (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processBi };
 analogDset asynBoUInt32Digital = {
-    5,0,0,initBo,         getIoIntInfo, processBo};
+    5, 0, 0, (DEVSUPFUN)initBo,         (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processBo };
 analogDset asynLiUInt32Digital = {
-    5,0,0,initLi,         getIoIntInfo, processLi};
+    5, 0, 0, (DEVSUPFUN)initLi,         (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLi };
 analogDset asynLoUInt32Digital = {
-    5,0,0,initLo,         getIoIntInfo, processLo};
+    5, 0, 0, (DEVSUPFUN)initLo,         (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLo };
 analogDset asynMbbiUInt32Digital = {
-    5,0,0,initMbbi,       getIoIntInfo, processMbbi};
+    5, 0, 0, (DEVSUPFUN)initMbbi,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbbi };
 analogDset asynMbboUInt32Digital = {
-    5,0,0,initMbbo,       getIoIntInfo, processMbbo};
+    5, 0, 0, (DEVSUPFUN)initMbbo,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbbo };
 analogDset asynMbbiDirectUInt32Digital = {
-    5,0,0,initMbbiDirect, getIoIntInfo, processMbbiDirect};
+    5, 0, 0, (DEVSUPFUN)initMbbiDirect, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbbiDirect };
 analogDset asynMbboDirectUInt32Digital = {
-    5,0,0,initMbboDirect, getIoIntInfo, processMbboDirect};
+    5, 0, 0, (DEVSUPFUN)initMbboDirect, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbboDirect };
 
 epicsExportAddress(dset, asynBiUInt32Digital);
 epicsExportAddress(dset, asynBoUInt32Digital);

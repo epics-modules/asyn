@@ -140,9 +140,9 @@ static long processLLi(int64inRecord *pr);
 static long processLLo(int64outRecord *pr);
 
 analogDset asynInt64In = {
-    5,0,0,initLLi,       getIoIntInfo, processLLi };
+    5, 0, 0, (DEVSUPFUN)initLLi, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLLi };
 analogDset asynInt64Out = {
-    5,0,0,initLLo,       getIoIntInfo, processLLo };
+    5, 0, 0, (DEVSUPFUN)initLLo, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLLo };
 epicsExportAddress(dset, asynInt64In);
 epicsExportAddress(dset, asynInt64Out);
 #endif
@@ -161,15 +161,15 @@ static long processLo(longoutRecord *pr);
 
 
 analogDset asynAiInt64 = {
-    6,0,0,initAi,       getIoIntInfo, processAi, convertAi };
+    6, 0, 0, (DEVSUPFUN)initAi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAi,         (DEVSUPFUN)convertAi };
 analogDset asynAiInt64Average = {
-    6,0,0,initAiAverage,getIoIntInfo, processAiAverage , convertAi };
+    6, 0, 0, (DEVSUPFUN)initAiAverage, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAiAverage , (DEVSUPFUN)convertAi };
 analogDset asynAoInt64 = {
-    6,0,0,initAo,       getIoIntInfo, processAo , convertAo };
+    6, 0, 0, (DEVSUPFUN)initAo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAo,         (DEVSUPFUN)convertAo };
 analogDset asynLiInt64 = {
-    5,0,0,initLi,       getIoIntInfo, processLi };
+    5, 0, 0, (DEVSUPFUN)initLi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLi };
 analogDset asynLoInt64 = {
-    5,0,0,initLo,       getIoIntInfo, processLo };
+    5, 0, 0, (DEVSUPFUN)initLo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLo };
 epicsExportAddress(dset, asynAiInt64);
 epicsExportAddress(dset, asynAiInt64Average);
 epicsExportAddress(dset, asynAoInt64);
