@@ -346,7 +346,7 @@ prologixRead(void *drvPvt, asynUser *pasynUser,
     memcpy(data, pdpvt->buf + pdpvt->bufIndex, n);
      pdpvt->bufIndex += n;
     if (eomReason) *eomReason = eom;
-    *nbytesTransfered = n;
+    *nbytesTransfered = (int)n; /* cast is safe: we alreay know n <= maxchars */
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, n,
                                 "%s %d prologixRead %d EOM:%#x\n",
                                 pdpvt->portName, pdpvt->lastAddress, (int)n, eom);
