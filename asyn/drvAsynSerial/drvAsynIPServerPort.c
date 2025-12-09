@@ -502,8 +502,8 @@ static void ttyCleanup(void *pPvt)
 
     if (!tty) return;
     if (tty->fd >= 0) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         SOCKET fd_save = tty->fd;
+        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         tty->fd = INVALID_SOCKET;
         /* shutdown then close the socket so accept thread will terminate */
         shutdown(fd_save, SHUT_RDWR);
