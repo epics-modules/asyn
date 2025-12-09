@@ -1308,9 +1308,11 @@ static void asynSetQueueLockPortTimeoutCall(const iocshArgBuf * args) {
 
 static const iocshArg asynShutdownPortArg0 = {"portName", iocshArgString};
 static const iocshArg *const asynShutdownPortArgs[] = {&asynShutdownPortArg0};
+#ifdef IOCSHFUNCDEF_HAS_USAGE
 static const char asynShutdownPortUsage[] =
     "Permanently disables the port and destroys the port driver,\n"
     "releasing its resources.\n";
+#endif
 static const iocshFuncDef asynShutdownPortDef = {
     "asynShutdownPort",
     1,
