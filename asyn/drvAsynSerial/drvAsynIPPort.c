@@ -123,7 +123,7 @@ typedef struct {
     }                  farAddr;
     size_t             farAddrSize;
     osiSockAddr        localAddr;
-    size_t             localAddrSize;
+    osiSocklen_t       localAddrSize;
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
@@ -775,7 +775,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if (tty->socketType == SOCK_DGRAM) {
         /* We use recvfrom() for SOCK_DRAM so we can print the source address with ASYN_TRACEIO_DRIVER */
         osiSockAddr oa;
-        unsigned int addrlen = sizeof(oa.ia);
+        osiSocklen_t addrlen = sizeof(oa.ia);
         thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &oa.sa, &addrlen);
         if (thisRead >= 0) {
             if (pasynTrace->getTraceMask(pasynUser) & ASYN_TRACEIO_DRIVER) {
