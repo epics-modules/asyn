@@ -355,7 +355,7 @@ static long createRingBuffer(dbCommon *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     const char *sizeString;
- 
+
     if (!pPvt->ringBuffer) {
         pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
         sizeString = asynDbGetInfo(pr, "asyn:FIFO");

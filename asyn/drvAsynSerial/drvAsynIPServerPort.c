@@ -328,7 +328,7 @@ static void connectionListener(void *drvPvt)
             if (tty->fd == INVALID_SOCKET) {
                 asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "drvAsynIPServerPort: terminating connection thread for %s\n",
-                    tty->serverInfo);                
+                    tty->serverInfo);
                 break; /* we must be in ioc shutdown and ttyCleanup has been called */
             }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,

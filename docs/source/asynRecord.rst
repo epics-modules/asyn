@@ -1,6 +1,6 @@
 asyn Record
 ===========
- 
+
 :author: Mark Rivers and Marty Kraimer
 
 .. contents:: Contents
@@ -26,7 +26,7 @@ asyn facility. It includes the ability to:
 - Control the the baud rate, parity, etc. for serial ports whose drivers support
   the asynOption interface.
 - Control the GPIB address and execute global and addressed commands for GPIB devices.
-  
+
 For the asynOctet interface there are two output fields, AOUT (ASCII Output) and
 BOUT (Byte Output). The OFMT (Output Format) field is used to select one of these
 fields or the other as the output source to the device. Similarly, there are two
@@ -41,9 +41,9 @@ and can be used to transfer large blocks of arbitrary data, either ASCII or bina
 
 In the "Access" columns in the field description tables:
 
-.. list-table:: Access Codes  
+.. list-table:: Access Codes
   :widths: 20 80
-  
+
   * - R
     - Read only
   * - R/W
@@ -100,7 +100,7 @@ Device Address Control Fields
       to read or write. This value is updated when connecting to the driver, using the
       DRVINFO field. It can be changed later without reconnecting to the driver. If REASON
       is changed then the DRVINFO field will be set to an empty string.
- 
+
 The asyn record does not have traditional INP or OUT fields for input and output
 links. Rather it provides the PORT and ADDR fields to allow dynamically changing
 what asyn device the record is connected to.
@@ -140,7 +140,7 @@ Input/Output Control Fields
     - "Transaction mode"
     - DBF_MENU
     - The type of I/O transaction to perform when the record is processed. The choices are:
-      
+
       - "Write/Read" (default)
       - "Write"
       - "Read"
@@ -194,12 +194,12 @@ Input/Output Control Fields
     - The timeout value for read and write operations in seconds. If a response is not
       received from the device within this time then the record sets a major alarm. -1.0
       means wait forever, no timeout. Default=1.0
-   
+
 The TMOD field controls what type of I/O is performed when the record processes.
 
 .. list-table::  Transfer Mode
   :widths: 20 80
-  
+
   * - "Write/Read" (default)
     - The output data is sent from the selected output field to the device. A response
       is then read back into the selected input field. The response must be received within
@@ -279,18 +279,18 @@ These fields control output I/O when using the asynOctet interface (i.e. when IF
     - "Output format"
     - DBF_MENU
     - The output format. The choices are:
-      
+
       - "ASCII "(default)
       - The data sent to the device will be taken from the AOUT field.
       - "Hybrid"
       - The data sent to the device will be taken from the BOUT field.
       - "Binary"
       - The data sent to the device will be taken from the BOUT field.
-              
+
 There are two output fields, AOUT (ASCII Output) and BOUT (Byte Output). The OFMT
 (Output Format) field is used to select one of these fields or the other as the
 output source to the device.
-  
+
 If OFMT="ASCII" then the AOUT field is processed with dbTranslateEscape() to convert
 control characters (e.g. "\r", "\021") to bytes, the length of the output is determined
 with strlen(), and the string is sent to the device using asynOctet->write. This
@@ -371,17 +371,17 @@ These fields control input I/O when using the asynOctet interface (i.e. when IFA
     - "Input format"
     - DBF_MENU
     - The input format. The choices are:
-              
+
       - "ASCII" (default)
-      
+
         - The data read from the device will be placed in the AINP field.
-    
+
       - "Hybrid"
-      
+
        - The data read from the device will be placed in the BINP field.
-    
+
       - "Binary"
-      
+
         - The data read from the device will be placed in the BINP field.
   * - TINP
     - R
@@ -390,12 +390,12 @@ These fields control input I/O when using the asynOctet interface (i.e. when IFA
     - This field will contain up to the first 40 characters of the AINP or BINP fields
       (depending on IFMT), after translation with epicsStrSnPrintEscaped, to convert non-printable
       characters to a printable form (e.g. \r, \n, etc.)
-      
-  
+
+
 There are two input fields, AINP (ASCII Input) and BINP (Byte Input). The IFMT (Input
 Format) field is used to select one or the other as the destination of data sent
 from the device.
-  
+
 A read operation terminates when any 1 of the following 4 conditions is met:
 
 #. The input terminator (IEOS) is found (if IFMT="ASCII" or "Hybrid")
@@ -403,7 +403,7 @@ A read operation terminates when any 1 of the following 4 conditions is met:
 #. The desired number of input characters (NRRD) are received
 #. The timeout (TMOT) expires
 
-  
+
 If IFMT="ASCII" then input is read into the AINP field with asynOctet->read.
 This will remove the input EOS string, if any, and AINP will be NULL terminated
 if possible.
@@ -489,7 +489,7 @@ These fields control I/O when using the register interfaces (i.e. when IFACE="as
     - "asynFloat64 output"
     - DBF_DOUBLE
     - The data that is sent to the device if IFACE="asynFloat64" and TMOD="Write" or "Write/Read".
-        
+
 Serial Control Fields
 ---------------------
 
@@ -570,7 +570,7 @@ Serial Control Fields
       to restart output when output has been suspended with the XOFF character. Otherwise,
       only the XON character restarts output. This flag is not available on all systems,
       including WIN32.
-  
+
 The above fields are used to set the serial port parameters. A write to any of these
 fields causes the port parameters to be changed immediately, but does not cause
 any I/O to be performed. The port parameters can currently be set only for local
@@ -594,7 +594,7 @@ POSIX calls CTSRTS (Clear to send and request to send). It does not appear that
 sioLib has any concept of modem control, which is what POSIX calls CLOCAL. For vxWorks
 the standard serial support for asynDriver supplied in drvAsynSerialPort.c, accepts
 both MCTL and FCTL. MCTL=(CLOCAL,YES) is the same as FCTL=(None,Hardware).
-  
+
 IP Control Fields
 -----------------
 
@@ -619,7 +619,7 @@ IP Control Fields
     - DBF_STRING
     - The IP port hostInfo string with the same syntax as the drvAsynIPPortConfigure command
       i.e. host:port[:localport] [protocol].
-  
+
 Writing to the HOSTINFO field will cause the drvAsynIPPort driver to disconnect
 from the current host (if any) and then attempt to connect to the new host.
 
@@ -649,8 +649,8 @@ GPIB Control Fields
     - "Universal command"
     - DBF_MENU
     - A GPIB Universal Command to be executed. The choices are:
-              
-       - "None"      
+
+       - "None"
        - "Device Clear (DCL)"
        - "Local Lockout (LL0)"
        - "Serial Poll Disable (SPD)"
@@ -681,7 +681,7 @@ on the GPIB bus. If the ACMD field is set to any value except "None" then the ap
 Addressed Command is executed, and ACMD is set back to "None". The record processing
 only performs the Addressed Command, i.e. it does not also perform the GPIB operation
 indicated by TMOD.
-  
+
 Trace Control Fields
 --------------------
 
@@ -779,13 +779,13 @@ Trace Control Fields
     - "TraceIO truncate size"
     - DBF_LONG
     - The parameter passed to asynTraceSetTraceIOTruncateSize(). This value is used to
-      limit the number of I/O bytes printed by traceIO. 
+      limit the number of I/O bytes printed by traceIO.
   * - TFIL
     - R/W
     - "Trace IO file"
     - DBF_STRING
     - The name of the file to which trace information is printed.
-      
+
 The above fields are used to control the asynTrace facility. They allow one to turn
 on and off debugging output printed at the shell or written to the trace file.
 
@@ -806,12 +806,12 @@ In this case the file name is displayed as "Unknown". Set this field to a string
 file name (including possibly a valid path from the IOC's current default directory)
 to have the output written to that file. The following values are handled as special
 cases:
-  
+
 - <stdout> - Write to standard out.
 - <stderr> - Write to standard error.
 - <errlog> - Use the errlog facility.
 
-  
+
 Connection Management Fields
 ----------------------------
 
@@ -844,14 +844,14 @@ Connection Management Fields
     - Disconnects or connects the device. Choices are "Disconnect" and "Connect". The
       value read reflects current state of the connected flag, i.e. the value returned
       from isConnected().
-  
+
 Error Status Fields
 -------------------
 
 .. list-table:: Error Status Fields
   :widths: 10 10 10 10 60
   :header-rows: 1
- 
+
   * - Name
     - Access
     - Prompt
@@ -880,10 +880,10 @@ the I/O error status. For example status field may be set to NO_ALARM, WRITE, RE
 or COMM, and the SEVR field may be set to NO_ALARM, MINOR, or MAJOR. These alarm
 fields are only used to report I/O errors or errors when connecting to a new PORT
 or ADDR. They are not affected by trace or connection management operations.
-  
+
 Private Fields
---------------  
-  
+--------------
+
 .. list-table:: Error Status Fields
   :widths: 10 10 10 10 60
   :header-rows: 1
@@ -903,7 +903,7 @@ Private Fields
     - "Output buffer pointer"
     - DBF_NOACCESS
     - The pointer to the buffer for the BOUT field.
-        
+
 Record Processing
 -----------------
 The asyn record processes, i.e. performs the I/O operation given by TMOD, according
@@ -919,8 +919,8 @@ If the SCAN field is "I/O Intr" it will be changed to "Passive" when any of the
 following fields are modified: PORT, ADDR, DRVINFO, REASON, IFACE, or UINT32MASK.
 This is necessary because changes to these fields require re-registering with the
 interrupt source.
-  
-  
+
+
 Obsolete serial and GPIB records
 --------------------------------
 The asyn record is designed to be a complete replacement for the older generic serial
@@ -950,24 +950,24 @@ changes to databases or applications.
    these fields are modified after the record connects to the port. Thus, it is now
    important to initialize the EOS strings for the port correctly in the startup script.
 #. The TMOT field has changed from DBF_LONG to DBF_DOUBLE, and the units have changed
-   from milliseconds to seconds. TMOT=-1.0 now means wait forever. 
-  
+   from milliseconds to seconds. TMOT=-1.0 now means wait forever.
+
 medm screens
 ------------
-  
+
 The following are screen shots of the medm screens provided for the asyn record.
 
 Main control screen, asynRecord.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynRecord.png
     :align: center
 
     **asynRecord.png**
-    
-    
+
+
 asynOctet I/O screen, asynOctet.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynOctet.png
     :align: center
@@ -975,7 +975,7 @@ asynOctet I/O screen, asynOctet.adl
     **asynOctet.png**
 
 asyn register device I/O screen, asynRegister.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynRegister.png
     :align: center
@@ -983,29 +983,29 @@ asyn register device I/O screen, asynRegister.adl
     **asynRegister.png**
 
 Serial port setup screen, asynSerialPortSetup.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynSerialPortSetup.png
     :align: center
 
-    **asynSerialPortSetup.png**    
-    
+    **asynSerialPortSetup.png**
+
 IP port setup screen, asynIPPortSetup.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynIPPortSetup.png
     :align: center
 
-    **asynIPPortSetup.png**    
-    
+    **asynIPPortSetup.png**
+
 GPIB setup screen, asynGPIBSetup.adl
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. figure:: asynGPIBSetup.png
     :align: center
 
     **asynGPIBSetup.png**
-    
+
 Example #1
 ----------
 
@@ -1020,7 +1020,7 @@ scripting language.
   ; 2 records are connected with a null-modem cable
   ; Record 1 sends a message to record 2 in ASCII.
   ; Record 2 sends a message back to record 1 in binary.
-  
+
   ; Record names
   rec1 = '13LAB:serial2'
   rec2 = '13LAB:serial3'
@@ -1037,7 +1037,7 @@ scripting language.
       t = caput(rec+'.FCTL', 'None')
       t = caput(rec+'.TMOT', 1.0)
   endfor
-  
+
   ; Put record 1 in ASCII output mode, <CR> output delimiter,
   ;   binary input mode, no input delimiter
   t = caput(rec1+'.OFMT', 'ASCII')
@@ -1048,21 +1048,21 @@ scripting language.
   t = casetmonitor(rec1+'.BINP')
   ; Clear the monitor by reading the value
   t = caget(rec1+'.BINP', junk)
-  
+
   ; Put record 2 in Binary output mode, no output delimiter
   ;   ASCII input mode, <CR> input delimiter
   t = caput(rec2+'.OFMT', 'Binary')
   t = caput(rec2+'.OEOS', '')
   t = caput(rec2+'.IFMT', 'ASCII')
   t = caput(rec2+'.IEOS', '\r')
-  
+
   ; Put record 2 in read transfer mode
   t = caput(rec2+'.TMOD', 'Read')
   ; Put a monitor on record2 ASCII input field
   t = casetmonitor(rec2+'.AINP')
   ; Clear the monitor by reading the value
   t = caget(rec2+'.AINP', junk)
-  
+
   ; Process record 2; this will cause it to wait for data
   t = caput(rec2+'.PROC', 1)
   ; Put record 1 in Write transfer mode
@@ -1071,20 +1071,20 @@ scripting language.
   message = 'Request data: '+string(systime())
   print, 'Record 1 sent message: ' + message
   t = caput(rec1+'.AOUT', message)
-  
+
   ; Wait for monitor on record2 ASCII input field
   while (not cacheckmonitor(rec2+'.AINP')) do wait, .1
   ; Read data from record 2
   t = caget(rec2+'.AINP', input)
   print, 'Got a message from record 1: ', input
-  
+
   size=256
   ; Put record 1 in read mode, expect "size" byte input
   t = caput(rec1+'.TMOD', 'Read')
   t = caput(rec1+'.NRRD', size)
   ; Process record 1; this will cause it to wait for data
   t = caput(rec1+'.PROC', '1')
-  
+
   ; Put record 2 in write mode
   t = caput(rec2+'.TMOD', 'Write')
   ; Send an 8 bit binary sin wave, "size" points long from
@@ -1092,23 +1092,23 @@ scripting language.
   send_data = byte(sin(findgen(size)/5)*126 + 127)
   t = caput(rec2+'.NOWT', size)
   t = caput(rec2+'.BOUT', send_data)
-  
+
   ; Wait for monitor on channel 1 binary input
   while (not cacheckmonitor(rec1+'.BINP')) do wait, .1
-  
+
   ; Record 1 should have received "size" bytes. Make sure NORD=size
   t = caget(rec1+'.NORD', nord)
   if (nord eq size) then $
       print, 'Read array data OK' $
   else $
       print, 'Error reading array data!'
-  
+
   ; Read data from record 1
   t = caget(rec1+'.BINP', rec_data, max=nord)
-  
+
   ; Plot it
   plot, rec_data
-  
+
   end
 
 Example #2
@@ -1126,19 +1126,19 @@ can be translated into your favorite scripting language.
 ::
 
   pro read_tds200, record, data, start=start, stop=stop, chan=chan
-  
+
   ; This procedure reads waveforms from the Tektronix TDS200 series scopes
   ; Mark Rivers
-  ; Modifications: 
+  ; Modifications:
   ;     March 7,  2001 Correctly put record in Write and Write/Read modes.
   ;     Dec. 7,   2001 Set timeout to 2 seconds before read.
   ;     March 30, 2004 Change IFMT from Binary to Hybrid, other fixes.
-  
+
   if (n_elements(start) eq 0) then start=1
   if (n_elements(stop) eq 0) then stop=2500
   if (n_elements(chan) eq 0) then chan=1
   chan = 'CH'+strtrim(chan,2)
-  
+
   aout = record + '.AOUT'
   binp = record + '.BINP'
   tmod = record + '.TMOD'
@@ -1148,46 +1148,46 @@ can be translated into your favorite scripting language.
   tmot = record + '.TMOT'
   oeos = record + '.OEOS'
   ieos = record + '.IEOS'
-  
+
   ; Set the terminators to newline (assumes scope is set up this way)
   t = caput(oeos, '\n', /wait)
   t = caput(ieos, '\n', /wait)
-  
+
   ; Set the transfer mode to write
   t = caput(tmod, 'Write', /wait)
-  
+
   ; Set the encoding to positive binary, start and stop readout channels
   ; Set the readout range.  Can't do as one command, exceed 40 characters
   command = 'DATA:ENC RPB; DATA:START ' + strtrim(start,2)
   t = caput(aout, command, /wait)
   command = 'DATA:STOP ' + strtrim(stop,2)
   t = caput(aout, command, /wait)
-  
+
   ;Set DATa:WIDth to 2
   ;command = 'DATA:WIDTH 2'
   ;t = caput(aout, command, /wait)
-  
+
   ;Set channel number
   command = 'DATA:SOURCE '+ strtrim(chan,2)
   t = caput(aout, command, /wait)
-  
+
   ; Set the input mode to hybrid. Large buffer but line-feed terminator
   t = caput(ifmt, 'Hybrid', /wait)
-  
-  
+
+
   ; Set the transfer mode to write/read
   t = caput(tmod, 'Write/Read', /wait)
-  
+
   ; Empirically the timeout needs to be about 5 seconds for
   ; 1024 channels with RS-232
   t = caput(tmot, 5.0)
-  
+
   ; Read the scope
   t = caput(aout, 'Curve?', /wait)
-  
+
   ; Get the data
   t = caget(binp, data)
-  
+
   ; Check the number of bytes read.  See if it's what's expected
   n_data = stop-start+1
   n_header = 2 + strlen(strtrim(n_data, 2))
@@ -1196,10 +1196,10 @@ can be translated into your favorite scripting language.
   t = caget(nord, n)
   if (n ne n_expected) then $
      print, 'Scope returned:', n, $' bytes, expected: ', n_expected
-  
+
   ; The first n_header bytes are header, the last byte is checksum.
   ; Data are offset by 127, convert to long
   data = data[n_header:n-2] - 127L
-  
+
   return
   end

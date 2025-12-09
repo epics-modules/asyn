@@ -1,7 +1,7 @@
 devGpib (obsolete)
 ==================
 
-**NOTE: devGpib is obsolete and should not be used for new applications.** 
+**NOTE: devGpib is obsolete and should not be used for new applications.**
 
 `StreamDevice <http://epics.web.psi.ch/software/streamdevice>`__
 should be used instead.
@@ -12,7 +12,7 @@ This product is available via the open source license described at the end of th
 document.
 
 Introduction
-------------  
+------------
 devGpib is the successor to the GPIB support that came with EPICS base 3.13. The
 3.13 code was unbundled by Benjamin Franksen, and ultimately became gpibCore which
 is the 3.14 version of Benjamin's support. devGpib is the successor to the device
@@ -52,7 +52,7 @@ Acknowledgments
 
 .. list-table::
   :widths: 20 80
-  
+
   * - John Winans
     - John provided the original EPICS GPIB support. Most databases using John's support
       can be used without modification. With some modification, device support modules
@@ -114,7 +114,7 @@ where
 
 .. list-table::
   :widths: 10 90
-  
+
   * - `<link>`
     - Link number. Low level drivers use portName to provide access to a specific communication
       interface. In order to keep compatibility with link numbers, the portName MUST be
@@ -129,15 +129,15 @@ where
 
         A9    primary address 9
         A900  extended address: primary address is 9, secondary address is 0
-        A906  extended address: primary address is 9, secondary address is 6. 
-  
+        A906  extended address: primary address is 9, secondary address is 6.
+
   * - `<number>`
     - An integer that identifies a gpibCmd definition in a GPIB device support module.
       If the implementer is nice, documentation like the following is provided:
       ::
 
        recordType  @<number>   Description
-       
+
       If such documentation is not available, look at the device support itself for statements like:
       ::
 
@@ -152,7 +152,7 @@ where
             field(OUT,"#L<link> A<addr> @12")
             ...
         }
-    
+
 Reports and Timeouts
 ~~~~~~~~~~~~~~~~~~~~
 In order to have these commands available, `devGpib.dbd` must be included
@@ -201,13 +201,13 @@ an instrument support module can be written. For each operating parameter, a gpi
 must be created.
 
 Device DBD Definition
-~~~~~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~~~~~
 For each instrument support module, device definitions must be defined:
 
 ::
 
   device(<record type>,<link type>,<DSET name>,"<DTYP name>")
-  
+
 where
 
 .. list-table::
@@ -222,7 +222,7 @@ where
       support code.
   * - `<DTYP name>`
     - Device Type name. This is what appears in the DTYP field of record instances.
-  
+
 For example, the definitions for the test supplied with devGpib are:
 ::
 
@@ -275,12 +275,12 @@ A simplified version of the skeleton file is:
   /* Strings used by the init routines to fill in the znam,onam,... in BI and BO*/
   static  char    *offOnList[] = { "Off", "On" };
   static  struct  devGpibNames   offOn = { 2, offOnList, 0, 1 };
-  
+
   static char  *initNamesList[] = { "Init","Init" };
   static struct devGpibNames initNames = { 2,initNamesList,0,1 };
   /* example EFAST table */
   static char *userOffOn[] = {"USER OFF;", "USER ON;", 0};
-  
+
   /* Array of structures that define all GPIB messages */
   static struct gpibCmd gpibCmds[] =
   {
@@ -304,13 +304,13 @@ A simplified version of the skeleton file is:
           devSupParms.respond2Writes = -1;
       }
   }
-  
+
 The meaning of each portion of the code should become clear as you read the following
 sections:
 
 DSET - Device Support Entry Tables
 ----------------------------------
-  
+
 The following statements create the Device Support Entry Tables
 ::
 
@@ -319,7 +319,7 @@ The following statements create the Device Support Entry Tables
   #define DSET_MBBI   devMbbiSkeletonGpib
   ...
   #include <devGpib.h>    /* must be included after DSET defines */
-  
+
 The actual DSETs are created by devGpib.h based on which DSET_xx definitions are
 defined. A #define must appear for each record type required. DSET_AI must be defined
 because an init_ai routine must be implemented as described below. If you also define
@@ -347,13 +347,13 @@ In the example above the definitions for the gpibCmds are:
     {&DSET_BO, GPIBEFASTO, IB_Q_HIGH, 0, 0, 0, 32,0, 0, 0, userOffOn, &offOn, 0},
     /* definitions for other parameters follow*/
   };
-  
+
 This example defines a single command. A database record using this definition must
 define field OUT as
 ::
 
   field(OUT,,"#L<link> A<addr> @0")
-  
+
 gpibCmd is
 ::
 
@@ -378,7 +378,7 @@ gpibCmd is
       devGpibNames *pdevGpibNames; /* pointer to name strings */
       char * eos; /* input end-of-string */
   } gpibCmd;
-  
+
 where
 
 .. list-table::
@@ -418,14 +418,14 @@ where
 
       The use depends on the pgpibCmd->type. See below for details. Set to 0 when no
       conversion function is present.
-      
+
       Conversion routines should return 0 to signify a successful conversion. If a convert
       routine finds an error, it should do the following:
-      
+
       - Generate an error message as follows:
         ::
-      
-          epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize, "<format>",...);      
+
+          epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize, "<format>",...);
       - return -1 to signify failure
   * - `P1`
     - This plays a dual role.
@@ -435,20 +435,20 @@ where
 
       For other operations, it is an integer passed to the conversion function specified
       in `convert.`
-  
+
   * - `P2`
     - Integer passed to the conversion function specified in `convert`.
   * - `P3`
     - This field plays a dual role.
-  
+
       When `type` is one of the EFAST operations, this field points to the
       EFAST table. See the EFAST operation descriptions under the `type` field
       definitions and the section "Efast Tables" for more on the use of this field. Set
       this field to 0 when it is not used.
-      
+
       For other operations, it is passed to the conversion function specified in `convert`.
       It has a `char**` value.
-  
+
   * - `pdevGpibNames`
     -  Pointer to a Name Table. Name tables are described in the section "Name Tables".
        Set this to 0 when no Name Table is used.
@@ -476,9 +476,9 @@ The following describes the semantics for the device support provided by the dev
 support provided with asynDriver. If an application extends this support, it must
 document its changes.
 
-.. list-table:: Contributions  
+.. list-table:: Contributions
   :widths: 20 80
-    
+
   * - GPIBREAD
     - Supports record types: ai, bi, event, longin, mbbi, mbbiDirect, stringin, and waveform.
       For all of these types the following is done.
@@ -486,7 +486,7 @@ document its changes.
       - Send `pgpibCmd->cmd` to the instrument.
       - Read from the instrument into `pgpibDpvt->msg`.
         `pgpibCmd->msgLen` must specify a size large enough for the message.
-  
+
       If `convert` is defined then:
 
         - `convert` is called. It is expected to give a value to the appropriate
@@ -500,27 +500,27 @@ document its changes.
       If `convert` is not defined then what is done depends on the record type.
 
         - bi, event, longin, mbbi, and mbbiDirect.
-         
+
             `pgpibDpvt->msg` is converted and the result put into field RVAL (bi,
             mbbi, mbbiDirect) or VAL (event, longin). If pgpibCmd->format is defined it is
             used for the conversion, otherwise a format appropriate to the data type of RVAL/VAL
             is used.
-        
+
         - ai
-          
+
             `pgpibDpvt->msg` is converted and the result put into field VAL or
             RVAL. VAL is used if the DSET does NOT define special_linconv and RVAL is used if
             special_linconv is defined. If pgpibCmd->format is defined, it is used for the
             conversion. Otherwise, a format appropriate to the field is used. The DSET generated
             by devGpib.h does not define special_linconv.
-        
+
         - stringin
-          
+
             `pgpibDpvt->msg` is converted and the result put into field VAL. If
             pgpibCmd->format is defined it is used for the conversion, otherwise "%39c" is
             used.
-        
-        - waveform         
+
+        - waveform
 
             Unless FTVL is menuFtypeCHAR, an error is generated and the record is put into alarm.
             If FTVL is menuFtypeCHAR,then epicsSnprintf is used to convert `pgpibDpvt->msg`
@@ -530,42 +530,42 @@ document its changes.
 
       - If `convert` is defined, it is called. It must put a command string
         into pgpibDpvt->msg. It can return:
-  
+
         - \-1
-          
+
             Signifies error. The operation is aborted and the record put into alarm.
-        
+
         - 0
-          
+
             Success and call strlen to determine the length of msg.
-        
+
         - >0
-          
+
             Success and the return value is the number of bytes in msg.
 
       - If `convert` is not defined, then what happens is determined by the
         record type.
 
         - ao
-          
+
             If special_linconv is NOT defined in DSET, the RVAL field is converted as a long
             into msg. If special_linconv is defined, OVAL is converted as a double into msg.
-        
+
         - bo, mbbo, and mbboDirect
-          
+
             VAL is converted as an unsigned long into msg.
-        
+
         - longout
-          
+
             VAL is converted as a long into msg.
-        
+
         - stringout
-          
+
             VAL is converted into msg via epicsSnprintf. If pgpibCmd->format is defined it
             is used, otherwise "%s" is used.
-        
+
         - waveform
-          
+
             BPTR is converted into msg via epicsSnprintf. If pgpibCmd->format is defined
             it is used, otherwise "%s" is used.
 
@@ -574,7 +574,7 @@ document its changes.
   * - GPIBCVTIO
     - Supports record types: ai, ao, bi, bo, event, longin.longout, mbbi, mbbo, mbbiDirect, mmboDirect, stringin,
       stringout, waveform.
-    
+
       All I/O is done by the `convert` routine, which must be defined. `
       convert` is called by a callback routine and thus can make an arbitrary
       number of calls to low level drivers. It is passed the address of `gpibDpvt`
@@ -584,20 +584,20 @@ document its changes.
       `pupvt` which can be used by the convert routine. Is is initialized to
       null. The macro `gpibCmdGet` can be used to get the address of `gpibCmd`
       which contains other usefull information.
-    
+
       If the End of String terminator needs to be changed, it must be changed by calling
       `pdevSupportGpib->setEos` rather than calling `pgpibDpvt->pasynOctet->setEos`
       Also when the `convert` routine has finished with read operations it
       must call `pdevSupportGpib->restoreEos`
-      
+
       Subsection "gpibCmd convert example" below provides an example.
   * - GPIBCMD
     - Supports record types: ao, bo, longout, mbbo, mbboDirect, stringout, and waveform.
-  
+
       Send the command string specified in `pgpibCmd->cmd` to the instrument
       exactly as specified.
   * - GPIBACMD
-    - This is like GPIBCMD except that ATN is held active. This should rarely be necessary. 
+    - This is like GPIBCMD except that ATN is held active. This should rarely be necessary.
   * - GPIBSOFT
     - No I/O is done. It calls `pgpibCmd->convert`. `pgpibCmd->convert`
       must be defined If GPIBSOFT fails, it calls `asynPrint` with mask `
@@ -612,7 +612,7 @@ document its changes.
       must contain the address of an efast table. At init time some checks are made to
       see that an efast table is defined, but if it is defined incorrectly problems may
       arise.
-  
+
       The following is done:
 
         - Device support sets `pibDpvt.efastVal` equal to the VAL field.
@@ -624,7 +624,7 @@ document its changes.
           pgpibCmd->P3[efastVal]` is sent.
   * - GPIBEFASTI
     - This operation type is only valid on BI and MBBI record types.
-  
+
       The following is done:
 
       - Send the command string specified in `cmd` to the instrument exactly
@@ -641,53 +641,53 @@ document its changes.
   * - GPIBIFC
     - Valid only for BO records. If rval = (0,1) then (do nothing, pulse IFC). IFC is
       one of the GPIB Bus Management Lines.
-  
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided. For example
       ::
 
         {&DSET_BO, GPIBIFC, IB_Q_LOW, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
- 
+
   * - GPIBREN
     - Valid only for BO records. If rval = (0,1) then (drop,assert) REN. REN is one of
       the GPIB Bus Management Lines.
-  
+
       If devices are in the LLO state they can be removed from this state by toggling
       the REN line, i.e. turn it off and then turn it back on.
-    
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBDCL
     - Valid only for BO records. If rval = (0,1) then (do nothing, send DCL). DCL is a
       Universal GPIB command, i.e. it applys to all devices on the link
-  
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBLLO
     - If rval = (0,1) then (do nothing, send LLO). LLO is a Universal GPIB command, i.e.
       it applys to all devices on the link
-  
+
       After a LLO, the first time a device is addressed it will disable local control,
       i.e. the front pannel controls will not respond. To remove devices from this state
       toggle the REN line. A single device can temporarily be removed from LLO by sending
       the GPIBCTL command but it will go back to LLO state as soon as it is again addressed.
-    
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBSDC
     - If rval = (0,1) then (do nothing, send SDC). SDC is an addressed GPIB command, i.e.
       it applies only to the addressed device.
-  
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBGTL
     - If rval = (0,1) then (do nothing, send GTL). GTL is an addressed GPIB command, i.e.
       it applies only to the addressed device.
-    
+
       If a device has local control locked out, local control can be temporarily granted
       by issuing this command. However the next time the device is addressed it will again
       disable local control.
-    
+
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBSRQHANDLER
@@ -699,7 +699,7 @@ document its changes.
       caused the SRQ.
 
 Efast (Enumerated Fast I/O) Tables
----------------------------------- 
+----------------------------------
 A device's command set often has things like "OFF" or "ON" in the command string.
 It is convenient to issue such commands via binary and multibit binary records.
 Efast tables specify such strings. Simply specify the string value for each of the
@@ -712,8 +712,8 @@ The format of an efast table is:
       "OFF",    /* when VAL = 0 */
       "ON",    /* when VAL = 1 */
       0        /* list terminator */
-  }; 
-  
+  };
+
 And is referenced in an output parameter table entry like this:
 ::
 
@@ -759,13 +759,13 @@ the record is placed into a INVALID alarm state.
 
 devGpibNames - Name Table
 -------------------------
-  
+
 For binary and multibit binary records, the choice fields of a record can be assigned
 values at record initialization. If pdevGpibNames has a value, then when a record
 is initialized, the instrument support uses the associated name table to assign
 values to choice fields that have not been assigned values. These name tables have
 **nothing** to do with I/O operations.
-  
+
 `devGpibNames` is:
 ::
 
@@ -775,7 +775,7 @@ values to choice fields that have not been assigned values. These name tables ha
       unsigned long *value; /* CURRENTLY only used for MBBI and MBBO */
       short nobt;           /* CURRENTLY only used for MBBI and MBBO */
   };
-  
+
 To use a name table, the address of the table must be put into `pdevGpibNames`
 of the parameter table. The table format for a multibit record type looks like this:
 ::
@@ -799,11 +799,11 @@ of the parameter table. The table format for a multibit record type looks like t
       tABCDList,          /* pointer to string table */
       tABCDVal,           /* pointer to value table */
       3 };                /* value for the nobt field */
-  
+
 The table format for a binary record type looks like this:
 ::
 
-  static char *disableEnableList[] = { 
+  static char *disableEnableList[] = {
       "Disable",          /* znam */
       "Enable" };         /* onam */
 
@@ -812,7 +812,7 @@ The table format for a binary record type looks like this:
       disableEnableList,  /* pointer to strings */
       0,               /* pointer to value list */
       1};                 /* number of valid bits */
-  
+
 `devGpibNames` is defined in `devSupportGpib.h`. For binary
 records, the strings are placed into the name fields in order from lowest to highest
 as shown above. For multibit binary records, up to sixteen strings can be defined.
@@ -847,7 +847,7 @@ Each DSET of the instrument support contains the address of a `devGpibParmBlock`
       }
       return(0);
   }
-  
+
 `devGpibParmBlock` is:
 ::
 
@@ -863,7 +863,7 @@ Each DSET of the instrument support contains the address of a `devGpibParmBlock`
       int  rspLenMax;     /*max rspLen all commands*/
   };
 
-.. list-table:: gpibCmds 
+.. list-table:: gpibCmds
   :widths: 20 80
 
   * - `name`
@@ -888,14 +888,14 @@ Each DSET of the instrument support contains the address of a `devGpibParmBlock`
       - If respond2Writes is >0 then a wait of respond2Writes milliseconds occurs.
       - A read of up to pgpibCmd->rspLen bytes (terminated earlier by GPIB EOI or by
         the terminator string, if any) is read into pgpibDpvt->rsp.
-  
+
   * - `msgLenMax`
     - This is set by devGpibSupport. The value is that of the maximum size input message,
       i.e. the largest msgLen defined in gpibCmds.
   * - `rspLenMax`
     - This is set by devGpibSupport. The value is that of the maximum size response message,
       i.e. the largest rspLen defined in gpibCmds.
- 
+
 SRQ Processing
 --------------
 
@@ -932,7 +932,7 @@ from being polled stop any communications to it, i.e. set SCAN-field(s) to PASSI
 and turn off the device.
 
 gpibCmd convert example
------------------------ 
+-----------------------
 The asyn distribution includes an example of how to implement the convert parameter
 for a gpibCmd. The example is in asyn/devGpib/devGpibConvertExample.c. It defines
 three gpibCmds for stringin and three for stringout records. All three input commands
@@ -959,14 +959,14 @@ The command tables are:
     /* Param 5,example of GPIBCVTIO */
     {&DSET_SO,GPIBCVTIO,IB_Q_LOW,0,0,0,200,writeCvtio,0,0,0,0,0}
   };
-  
+
 The command for Param 0 lets the devGpib support do everything as follows:
 
 - The command "\*IDN?" is sent to the instrument.
 - A responds is read back from the instrument.
 - device suipport for the stringin record copies the response to the VAL field of
   the record.
-  
+
 The command for Param 1 is similar except that, after the response is read from
 the instrument, readString is called. It copies the response to VAL.
 
@@ -978,13 +978,13 @@ The command for Param 3 lets the devGpib support do everything as follows:
 - Device support for the stringout record copies the current value of the VAL field
   to a message buffer.
 - The message buffer is sent to the instrument.
-  
+
 The command for Param 4 is similar except that writeString is called to move the
 value of the VAL field to the message buffer.
 
 The command for Param 5 causes the devGpib support to call writeCvtio without doing
 any I/O. The convert routine is responsible for all I/O.
-  
+
 The actual code for the convert routines is:
 ::
 
@@ -1005,7 +1005,7 @@ The actual code for the convert routines is:
       asynStatus status;
       size_t nchars = 0, lenmsg = 0;
       pgpibDpvt->msgInputLen = 0;
-  
+
       assert(pgpibCmd->cmd);
       lenmsg = strlen(pgpibCmd->cmd);
       status  = pasynOctet->write(asynOctetPvt,pasynUser,
@@ -1044,7 +1044,7 @@ The actual code for the convert routines is:
       readString(pgpibDpvt,P1,P2,P3);
       return 0;
   }
-  
+
   static int writeString(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
   {
       asynUser *pasynUser = pgpibDpvt->pasynUser;
@@ -1052,7 +1052,7 @@ The actual code for the convert routines is:
       int            nchars;
       gpibCmd *pgpibCmd = gpibCmdGet(pgpibDpvt);
       char *format = (pgpibCmd->format) ? pgpibCmd->format : "%s";
-  
+
       if(!pgpibDpvt->msg) {
           asynPrint(pasynUser,ASYN_TRACE_ERROR,
               "%s no msg buffer. Must define gpibCmd.msgLen > 0.\n",
@@ -1071,7 +1071,7 @@ The actual code for the convert routines is:
       asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s writeMsgString\n",precord->name);
       return nchars;
   }
-  
+
   static int writeCvtio(gpibDpvt *pgpibDpvt,int P1, int P2, char **P3)
   {
       stringoutRecord *precord = (stringoutRecord*)pgpibDpvt->precord;
@@ -1081,7 +1081,7 @@ The actual code for the convert routines is:
       asynStatus status;
       size_t nsent = 0, lenmsg = 0;
       pgpibDpvt->msgInputLen = 0;
-  
+
       lenmsg = writeString(pgpibDpvt,P1,P2,P3);
       if(lenmsg <= 0) return -1; status=pasynOctet->write(asynOctetPvt,pasynUser,
           pgpibDpvt->msg,lenmsg,&nsent);
@@ -1143,10 +1143,10 @@ regular DSET, but it has an additional field that is the address of a devGpibPar
       DEVSUPFUN funPtr[6];
       devGpibParmBlock *pdevGpibParmBlock;
   };
-  
+
 where
 
-.. list-table:: gpibCmds 
+.. list-table:: gpibCmds
   :widths: 20 80
 
   * - `number`
@@ -1182,10 +1182,10 @@ The dpvt field of a record with devGpib device support contains the address of a
       void     *pupvt;          /*private pointer for custom code*/
       devGpibPvt *pdevGpibPvt;  /*private for devGpibCommon*/
   };
-  
+
 where
 
-.. list-table:: gpibCmds 
+.. list-table:: gpibCmds
   :widths: 20 80
 
   * - `pdevGpibParmBlock`
@@ -1235,7 +1235,7 @@ Describes methods implemented by devSupportGpib.c.
   typedef void (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
   typedef int (*gpibStart)(gpibDpvt *pgpibDpvt,int failure);
   typedef void (*gpibFinish)(gpibDpvt *pgpibDpvt,int failure);
-  
+
   typedef int (*gpibWork)(gpibDpvt *pgpibDpvt,int failure);
   struct devSupportGpib {
       long (*initRecord)(dbCommon *precord, struct link * plink);
@@ -1257,7 +1257,7 @@ Describes methods implemented by devSupportGpib.c.
   };
   epicsShareExtern devSupportGpib *pdevSupportGpib;
 
-.. list-table:: gpibCmds 
+.. list-table:: gpibCmds
   :widths: 10 90
 
   * - `gpibWork`
@@ -1320,7 +1320,7 @@ Describes methods implemented by devSupportGpib.c.
 
 General GPIB Problems
 ---------------------
-  
+
 NOTE: The following comments are from John Winan's original GPIB documentation.
 
 Every type of communication system has its problems. Some instrument vendors don't
@@ -1360,20 +1360,20 @@ License Agreement
   University of California, and Berliner Elektronenspeicherring
   Gesellschaft fuer Synchrotronstrahlung m.b.H. (BESSY) All rights
   reserved.
-  
+
   asynDriver is distributed subject to the following license conditions:
-  
+
    SOFTWARE LICENSE AGREEMENT
    Software: asynDriver
-  
+
    1. The "Software", below, refers to asynDriver (in either source code, or
       binary form and accompanying documentation). Each licensee is
       addressed as "you" or "Licensee."
-  
+
    2. The copyright holders shown above and their third-party licensors
       hereby grant Licensee a royalty-free nonexclusive license, subject to
       the limitations stated herein and U.S. Government license rights.
-  
+
    3. You may modify and make a copy or copies of the Software for use
       within your organization, if you meet the following conditions:
         a. Copies in source code must include the copyright notice and this
@@ -1381,7 +1381,7 @@ License Agreement
         b. Copies in binary form must include the copyright notice and this
            Software License Agreement in the documentation and/or other
            materials provided with the copy.
-  
+
    4. You may modify a copy or copies of the Software or any portion of it,
       thus forming a work based on the Software, and distribute copies of
       such work outside your organization, if you meet all of the following
@@ -1394,14 +1394,14 @@ License Agreement
         c. Modified copies and works based on the Software must carry
            prominent notices stating that you changed specified portions of
            the Software.
-  
+
    5. Portions of the Software resulted from work developed under a U.S.
       Government contract and are subject to the following license: the
       Government is granted for itself and others acting on its behalf a
       paid-up, nonexclusive, irrevocable worldwide license in this computer
       software to reproduce, prepare derivative works, and perform publicly
       and display publicly.
-  
+
    6. WARRANTY DISCLAIMER. THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY
       OF ANY KIND. THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, THE
       UNITED STATES, THE UNITED STATES DEPARTMENT OF ENERGY, AND THEIR
@@ -1413,7 +1413,7 @@ License Agreement
       SOFTWARE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS, (4) DO NOT WARRANT
       THAT THE SOFTWARE WILL FUNCTION UNINTERRUPTED, THAT IT IS ERROR-FREE
       OR THAT ANY ERRORS WILL BE CORRECTED.
-  
+
    7. LIMITATION OF LIABILITY. IN NO EVENT WILL THE COPYRIGHT HOLDERS, THEIR
       THIRD PARTY LICENSORS, THE UNITED STATES, THE UNITED STATES DEPARTMENT
       OF ENERGY, OR THEIR EMPLOYEES: BE LIABLE FOR ANY INDIRECT, INCIDENTAL,
