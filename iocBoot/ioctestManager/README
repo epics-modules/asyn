@@ -15,7 +15,7 @@ NOTES:
 testManager.c has epicsThreadSleep in many of the callbacks.
 This, of course, violates the rule that callbacks should not
 block except because of calling interface methods. The
-epicsThreadSleep calls are used to cause particlar states in asynManager
+epicsThreadSleep calls are used to cause particular states in asynManager
 
 The test tests two features of asynManager:
 

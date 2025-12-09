@@ -84,7 +84,7 @@ record(fanout,"$(P)$(R)_P$(PORT)_fanout") {
     field(LNK2,"$(P)$(R)_P$(PORT)_srqCount")
 }
 record(calc,"$(P)$(R)_P$(PORT)_srqCount") {
-    field(DESC, "Count unsollicited SRQs")
+    field(DESC, "Count unsolicited SRQs")
     field(CALC, "A+B")
     field(INPA, "$(P)$(R)_P$(PORT)_srqCount")
     field(INPB,"1")

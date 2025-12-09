@@ -80,7 +80,7 @@ typedef struct asynUser {
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus;     /* For auxillary status*/
+    int            auxStatus;     /* For auxiliary status*/
     int            alarmStatus;   /* Typically for EPICS record alarm status */
     int            alarmSeverity; /* Typically for EPICS record alarm severity */
 }asynUser;

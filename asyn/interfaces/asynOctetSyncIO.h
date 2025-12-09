@@ -30,9 +30,9 @@ typedef struct asynOctetSyncIO {
                          asynUser **ppasynUser, const char *drvInfo);
    asynStatus (*disconnect)(asynUser *pasynUser);
    asynStatus (*write)(asynUser *pasynUser, char const *buffer, size_t buffer_len,
-                  double timeout,size_t *nbytesTransfered);
+                  double timeout,size_t *nbytesTransferred);
    asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len,
-                  double timeout, size_t *nbytesTransfered,int *eomReason);
+                  double timeout, size_t *nbytesTransferred,int *eomReason);
    asynStatus (*writeRead)(asynUser *pasynUser,
                   const char *write_buffer, size_t write_buffer_len,
                   char *read_buffer, size_t read_buffer_len,
@@ -49,10 +49,10 @@ typedef struct asynOctetSyncIO {
                   char *eos, int eossize, int *eoslen);
    asynStatus (*writeOnce)(const char *port, int addr,
                   char const *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered, const char *drvInfo);
+                  size_t *nbytesTransferred, const char *drvInfo);
    asynStatus (*readOnce)(const char *port, int addr,
                   char *buffer, size_t buffer_len, double timeout,
-                  size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                  size_t *nbytesTransferred,int *eomReason, const char *drvInfo);
    asynStatus (*writeReadOnce)(const char *port, int addr,
                   const char *write_buffer, size_t write_buffer_len,
                   char *read_buffer, size_t read_buffer_len,

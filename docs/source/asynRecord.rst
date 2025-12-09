@@ -624,7 +624,7 @@ Writing to the HOSTINFO field will cause the drvAsynIPPort driver to disconnect
 from the current host (if any) and then attempt to connect to the new host.
 
 If the drvAsynIPPort was created with the COM (RFC 2217) protocol then the serial
-control fields listed above can be used to control those settings on ther Ethernet/serial
+control fields listed above can be used to control those settings on their Ethernet/serial
 adapter.
 
 GPIB Control Fields

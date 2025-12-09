@@ -94,9 +94,9 @@
      if(nt&lt;maxchars) data[nt] = 0;
 -    if(nt==maxchars) *eomReason |= ASYN_EOM_CNT;
 +    if((nt==maxchars) &amp;&amp; eomReason) *eomReason |= ASYN_EOM_CNT;
-     *nbytesTransfered = (size_t)nt;
+     *nbytesTransferred = (size_t)nt;
      pasynOctetBase-&gt;callInterruptUsers(pasynUser,pgpibPvt-&gt;pasynPvt,
-         data,nbytesTransfered,eomReason);
+         data,nbytesTransferred,eomReason);
 </pre>
   <h2 style="text-align: center">
     Release 4-11</h2>

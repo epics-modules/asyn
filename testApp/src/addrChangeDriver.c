@@ -88,9 +88,9 @@ static asynLockPortNotify lockPortNotify = {lockPort,unlockPort};
 
 /* asynOctet methods */
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransferred);
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 
 
 static asynStatus lowerPortInit(addrChangePvt *paddrChangePvt)
@@ -365,7 +365,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 
 /* asynOctet methods*/
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
+    const char *data,size_t numchars,size_t *nbytesTransferred)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
     lowerPort     *plowerPort = paddrChangePvt->plowerPort;
@@ -374,7 +374,7 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
     asynStatus    status;
 
     status = pasynOctet->write(octetPvt,plowerPort->pasynUser,
-        data,numchars,nbytesTransfered);
+        data,numchars,nbytesTransferred);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             " port %s error %s",plowerPort->portName,
@@ -384,7 +384,7 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
 }
 
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     addrChangePvt *paddrChangePvt = (addrChangePvt *)drvPvt;
     lowerPort     *plowerPort = paddrChangePvt->plowerPort;
@@ -393,15 +393,15 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     asynStatus    status;
 
     status = pasynOctet->read(octetPvt,plowerPort->pasynUser,
-        data,maxchars,nbytesTransfered,eomReason);
+        data,maxchars,nbytesTransferred,eomReason);
     if(status!=asynSuccess) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
             " port %s error %s",plowerPort->portName,
             plowerPort->pasynUser->errorMessage);
     }
     pasynOctetBase->callInterruptUsers(pasynUser,paddrChangePvt->pasynPvt,
-        data,nbytesTransfered,eomReason);
-    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,*nbytesTransfered,
+        data,nbytesTransferred,eomReason);
+    asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,*nbytesTransferred,
         "addrChangeDriver\n");
     return status;
 }

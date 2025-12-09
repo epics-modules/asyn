@@ -165,7 +165,7 @@ static void closeConnection(asynUser *pasynUser, ttyController_t *tty)
  * Read from the UDP port
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-        char *data, size_t maxchars, size_t *nbytesTransfered, int *gotEom) {
+        char *data, size_t maxchars, size_t *nbytesTransferred, int *gotEom) {
     ttyController_t *tty = (ttyController_t *) drvPvt;
     int thisRead;
     int readPollmsec;
@@ -227,7 +227,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
-    *nbytesTransfered = thisRead;
+    *nbytesTransferred = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
         data[thisRead] = 0;
@@ -247,7 +247,7 @@ flushIt(void *drvPvt, asynUser *pasynUser) {
 }
 
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-        const char *data, size_t numchars, size_t *nbytesTransfered) {
+        const char *data, size_t numchars, size_t *nbytesTransferred) {
     return asynError;
 }
 /*Beginning of asynCommon methods*/

@@ -59,7 +59,7 @@ class callbackThread;
   *    destructor. Remember, however, that no code from classes deriving from
   *    yours may run at this point, because the object is already partly
   *    destroyed. For example, virtual functions will behave as if not
-  *    overriden, and threads spawned by derived classes must already be
+  *    overridden, and threads spawned by derived classes must already be
   *    stopped.
   *
   * 3. To use functionality that requires an intact object, release resources by
@@ -68,7 +68,7 @@ class callbackThread;
   *    a derived class. On process exit, `shutdownPortDriver()` will be called
   *    before the destructors are executed.
   *
-  * 4. Your overriden `shutdownPortDriver()` must call the base class
+  * 4. Your overridden `shutdownPortDriver()` must call the base class
   *    implementation.
   *
   * 5. When deleting a driver instance directly (e.g., in your test code),

@@ -40,9 +40,9 @@ typedef struct interposePvt {
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransferred);
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *drvPvt,asynUser *pasynUser,
     interruptCallbackOctet callback, void *userPvt,void **registrarPvt);
@@ -92,21 +92,21 @@ asynInterposeFlushConfig(const char *portName,int addr,int timeout)
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
+    const char *data,size_t numchars,size_t *nbytesTransferred)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     return pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvPvt,
-        pasynUser,data,numchars,nbytesTransfered);
+        pasynUser,data,numchars,nbytesTransferred);
 }
 
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     return pinterposePvt->pasynOctetDrv->read(pinterposePvt->drvPvt,
-        pasynUser,data,maxchars,nbytesTransfered,eomReason);
+        pasynUser,data,maxchars,nbytesTransferred,eomReason);
 }
 
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser)
@@ -116,17 +116,17 @@ static asynStatus flushIt(void *ppvt,asynUser *pasynUser)
     void         *drvPvt = pinterposePvt->drvPvt;
     double       savetimeout = pasynUser->timeout;
     char         buffer[100];
-    size_t       nbytesTransfered;
+    size_t       nbytesTransferred;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,"entered asynInterposeFlush::flush\n");
     pasynUser->timeout = pinterposePvt->timeout;
     while(1) {
-        nbytesTransfered = 0;
+        nbytesTransferred = 0;
         pasynOctetDrv->read(drvPvt,pasynUser,
-            buffer,sizeof(buffer),&nbytesTransfered,0);
-        if(nbytesTransfered==0) break;
+            buffer,sizeof(buffer),&nbytesTransferred,0);
+        if(nbytesTransferred==0) break;
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,
-            buffer,nbytesTransfered,"asynInterposeFlush:flush\n");
+            buffer,nbytesTransferred,"asynInterposeFlush:flush\n");
     }
     pasynUser->timeout = savetimeout;
     return(asynSuccess);

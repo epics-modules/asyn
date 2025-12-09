@@ -491,7 +491,7 @@ document its changes.
 
         - `convert` is called. It is expected to give a value to the appropriate
           field (RVAL for bi, mbbi, mbbiDirect and VAL for all others) of the record or return
-          -1. Note that it is the responsiblity of the custom conversion routine to set or
+          -1. Note that it is the responsibility of the custom conversion routine to set or
           clear the record .UDF field.
         - The field `pgpibDpvt->msgInputLen` contains the number of bytes
           in the last read msg. This allows messages with null characters to be processed.
@@ -583,7 +583,7 @@ document its changes.
       i.e. `pasynGpib` is null. `gpibDpvt` also contains a field
       `pupvt` which can be used by the convert routine. Is is initialized to
       null. The macro `gpibCmdGet` can be used to get the address of `gpibCmd`
-      which contains other usefull information.
+      which contains other useful information.
 
       If the End of String terminator needs to be changed, it must be changed by calling
       `pdevSupportGpib->setEos` rather than calling `pgpibDpvt->pasynOctet->setEos`
@@ -659,16 +659,16 @@ document its changes.
       pdevGpibNames is provided.
   * - GPIBDCL
     - Valid only for BO records. If rval = (0,1) then (do nothing, send DCL). DCL is a
-      Universal GPIB command, i.e. it applys to all devices on the link
+      Universal GPIB command, i.e. it applies to all devices on the link
 
       Only define `dset`, `type`, and `pri`. A default
       pdevGpibNames is provided.
   * - GPIBLLO
     - If rval = (0,1) then (do nothing, send LLO). LLO is a Universal GPIB command, i.e.
-      it applys to all devices on the link
+      it applies to all devices on the link
 
       After a LLO, the first time a device is addressed it will disable local control,
-      i.e. the front pannel controls will not respond. To remove devices from this state
+      i.e. the front panel controls will not respond. To remove devices from this state
       toggle the REN line. A single device can temporarily be removed from LLO by sending
       the GPIBCTL command but it will go back to LLO state as soon as it is again addressed.
 
@@ -901,7 +901,7 @@ SRQ Processing
 
 If the low level device driver implements interface `asynGpib`, then
 devSupportGpib registers itself to handle SRQs. It defines two types of SRQs: solicited
-and unsollicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
+and unsolicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
 an SRQ is raised for a gpibAddr that does not have an outstanding GPIBREADW or GPIBEFASTIW
 command, the SRQ is considered unsolicited.
 
@@ -927,7 +927,7 @@ following command table entry is used for this purpose:
   { &DSET_BO,GPIBCVTIO,IB_Q_HIGH,NULL,NULL,0,0,boSRQonOff,0,0,NULL,NULL,NULL}
 
 If the binary-output record rval is (0, 1) then (remove, add) device (from, to)
-the SRQ polling liist. No commands are sent to the bus. Before exluding a device
+the SRQ polling list. No commands are sent to the bus. Before excluding a device
 from being polled stop any communications to it, i.e. set SCAN-field(s) to PASSIVE
 and turn off the device.
 

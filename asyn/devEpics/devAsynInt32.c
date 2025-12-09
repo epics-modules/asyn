@@ -1316,7 +1316,7 @@ static long processMbbo(mbboRecord *pr)
                 int i;
 
                 pstate_values = &(pr->zrvl);
-                pr->val = 65535;        /* initalize to unknown state*/
+                pr->val = 65535;        /* initialize to unknown state*/
                 for (i = 0; i < 16; i++){
                     if (*pstate_values == rval){
                         pr->val = i;

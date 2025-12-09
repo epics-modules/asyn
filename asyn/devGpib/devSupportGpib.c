@@ -171,7 +171,7 @@ static void srqHandlerGpib(void *parm, asynUser *pasynUser, epicsInt32 statusByt
 static void waitTimeoutCallback(void *parm);
 
 /*Utility routines*/
-/* gpibCmdIsConsistant returns (0,1) If (is not, is) consistant*/
+/* gpibCmdIsConsistant returns (0,1) If (is not, is) consistent*/
 static int gpibCmdIsConsistant(gpibDpvt *pgpibDpvt);
 static int checkEnums(char * msg, char **enums);
 static void gpibErrorHappened(gpibDpvt *pgpibDpvt);
@@ -1105,7 +1105,7 @@ static void gpibWrite(gpibDpvt *pgpibDpvt,int failure)
         break;
     default:
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
-            "%s gpibWrite cant handle cmdType %d"
+            "%s gpibWrite can't handle cmdType %d"
             " record left with PACT true\n",precord->name,cmdType);
         goto done;
     }

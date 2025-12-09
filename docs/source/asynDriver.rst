@@ -948,7 +948,7 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus;     /* For auxillary status*/
+    int            auxStatus;     /* For auxiliary status*/
     int            alarmStatus;   /* Typically for EPICS record alarm status */
     int            alarmSeverity; /* Typically for EPICS record alarm severity */
   } asynUser;
@@ -1737,7 +1737,7 @@ This is the asynTrace interface:
     - Get the file descriptor to use for output. Device support that wants to issue its
       own IO messages instead of calling asynPrintIO should call this and honor the mask
       settings. In this case, lock must have been called first. Most code will not need
-      it. If the return value is 0, then ouput should be directed to errlog.
+      it. If the return value is 0, then output should be directed to errlog.
   * - setTraceIOTruncateSize
     - Determines how much data is printed by printIO. In all cases it determines how many
       bytes of the buffer are displayed. The actual number of characters printed depends
@@ -1782,7 +1782,7 @@ based means that the device communicates via octet strings, i.e. arrays of 8 bit
 bytes. Three interfaces are provided: asynOctet, asynOctetBase, and asynOctetSyncIO.
 asynOctet is generic message based interface. asynOctetBase is an interface used
 by port drivers that implement asynOctet. It's primary purpose is to help with interrupt
-support. asynOctetSyncIO provides a synchronous inteface to asynOctet and can be
+support. asynOctetSyncIO provides a synchronous interface to asynOctet and can be
 used by code that is willing to block.
 
 asynOctet
@@ -1813,9 +1813,9 @@ is done via 8-bit bytes.
   #define asynOctetType "asynOctet"
   typedef struct asynOctet{
       asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                      const char *data,size_t numchars,size_t *nbytesTransfered);
+                      const char *data,size_t numchars,size_t *nbytesTransferred);
       asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                      char *data,size_t maxchars,size_t *nbytesTransfered,
+                      char *data,size_t maxchars,size_t *nbytesTransferred,
                       int *eomReason);
       asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
       asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
@@ -1846,7 +1846,7 @@ is done via 8-bit bytes.
           asynDriverasynInterface *pasynOctetInterface,
           int processEosIn,int processEosOut,int interruptProcess);
       void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
-          char *data,size_t *nbytesTransfered,int *eomReason);
+          char *data,size_t *nbytesTransferred,int *eomReason);
   } asynOctetBase;
   epicsShareExtern asynOctetBase *pasynOctetBase;
 
@@ -1855,16 +1855,16 @@ is done via 8-bit bytes.
   :widths: 20 80
 
   * - write
-    - Send a message to the device. \*nbytesTransfered is the number of 8-bit bytes sent
+    - Send a message to the device. \*nbytesTransferred is the number of 8-bit bytes sent
       to the device. Interpose or driver code may add end of string terminators to the
-      message but the extra characters are not included in \*nbytesTransfered.
+      message but the extra characters are not included in \*nbytesTransferred.
   * - read
-    - Read a message from the device. \*nbytesTransfered is the number of 8-bit bytes read
+    - Read a message from the device. \*nbytesTransferred is the number of 8-bit bytes read
       from the device. If read returns asynSuccess than eomReason ( some combination of
       ASYN_EOM_CNT, ASYN_EOM_EOS, and ASYN_EOM_END)tells why the read completed. Interpose
       or driver code may strip end of string terminators from the message. If it does
       the first eos character will be replaced by null and the eos characters will not
-      be included in nbytesTransfered.
+      be included in nbytesTransferred.
   * - flush
     - Flush the input buffer.
   * - registerInterruptUser
@@ -1933,9 +1933,9 @@ commands described later in this document.
      asynStatus (*disconnect)(asynUser *pasynUser);
      asynStatus (*write)(asynUser *pasynUser,
                     char const *buffer, size_t buffer_len,
-                    double timeout,size_t *nbytesTransfered);
+                    double timeout,size_t *nbytesTransferred);
      asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len,
-                    double timeout, size_t *nbytesTransfered,int *eomReason);
+                    double timeout, size_t *nbytesTransferred,int *eomReason);
      asynStatus (*writeRead)(asynUser *pasynUser,
                     const char *write_buffer, size_t write_buffer_len,
                     char *read_buffer, size_t read_buffer_len,
@@ -1952,10 +1952,10 @@ commands described later in this document.
                     char *eos, int eossize, int *eoslen);
      asynStatus (*writeOnce)(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered, const char *drvInfo);
+                    size_t *nbytesTransferred, const char *drvInfo);
      asynStatus (*readOnce)(const char *port, int addr,
                     char *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                    size_t *nbytesTransferred,int *eomReason, const char *drvInfo);
      asynStatus (*writeReadOnce)(const char *port, int addr,
                     const char *write_buffer, size_t write_buffer_len,
                     char *read_buffer, size_t read_buffer_len,
@@ -4099,10 +4099,10 @@ asynGpibDriver.h contains the following definitions:
       asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
       /*asynOctet methods passed through from asynGpib*/
       asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                        char *data,int maxchars,int *nbytesTransfered,
+                        char *data,int maxchars,int *nbytesTransferred,
                         int *eomReason);
       asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
+                        const char *data,int numchars,int *nbytesTransferred);
       asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
       asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                   const char *eos,int eoslen);
@@ -4733,7 +4733,7 @@ where
 - priority
 
   - An integer specifying the priority of the portThread. A value of 0
-    will result in a defalt value being assigned
+    will result in a default value being assigned
 - noAutoConnect
 
   - Zero or missing indicates that portThread should automatically connect.
@@ -5534,7 +5534,7 @@ object to communicate with the asyn port driver directly over the asyn interface
 without running an EPICS IOC. It creates an asynIPPort driver and an asynPortClient,
 and uses the command line arguments to set the hostInfo string, a single command
 string to send to the server, and optionally the input and output EOS. It then prints
-out the response from the server. There are 3 example shell scipts provided that
+out the response from the server. There are 3 example shell scripts provided that
 show how to use testAsynIPPortClient to communicate with a Web server, a Newport
 XPS motor controller, and a telnet host respectively.
 
@@ -5625,7 +5625,7 @@ from `testApp <#testapp>`__.
 The example resides in <top>/testEpicsApp.
 
 Executing "medm -x \*.adl" from the <top>/testEpicsApp/adl directory opens
-the followings displays.
+the following displays.
 
 .. figure:: testInt32.png
     :align: center
@@ -5750,7 +5750,7 @@ appropriate to your application):
   #include "drvUSBTMC.dbd"
 
 If you are building your application database definition file from the application
-Makefile you specify the aditional database definitions there (again, uncomment
+Makefile you specify the additional database definitions there (again, uncomment
 the lines appropriate to your application):
 ::
 

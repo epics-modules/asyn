@@ -470,7 +470,7 @@ static long special(struct dbAddr * paddr, int after)
         /* Set old value to this, so monitorStatus won't think another
          * thread changed it */
         /* Must do this before calling setTraceFile, because it generates
-         * an exeception, which calls monitorStatus() */
+         * an exception, which calls monitorStatus() */
         pasynRecPvt->old.traceFd = fd;
         status = pasynTrace->setTraceFile(pasynUser, fd);
         if(status != asynSuccess) {
@@ -1472,7 +1472,7 @@ static void performOctetIO(asynUser * pasynUser)
     asynRecPvt *pasynRecPvt = pasynUser->userPvt;
     asynRecord *pasynRec = pasynRecPvt->prec;
     asynStatus status = asynSuccess;
-    size_t nbytesTransfered = 0;
+    size_t nbytesTransferred = 0;
     char *inptr;
     char *outptr;
     size_t inlen;
@@ -1495,7 +1495,7 @@ static void performOctetIO(asynUser * pasynUser)
         outptr = pasynRecPvt->outbuff;
     } else {
         /* Binary output mode */
-        /* Check that nowt is not greated than omax */
+        /* Check that nowt is not greater than omax */
         if(pasynRec->nowt > pasynRec->omax) pasynRec->nowt = pasynRec->omax;
         nwrite = pasynRec->nowt;
         outptr = pasynRec->optr;
@@ -1524,7 +1524,7 @@ static void performOctetIO(asynUser * pasynUser)
     if((pasynRec->tmod == asynTMOD_Write) ||
         (pasynRec->tmod == asynTMOD_Write_Read)) {
         /* Send the message */
-        nbytesTransfered = 0;
+        nbytesTransferred = 0;
         if(pasynRec->ofmt == asynFMT_Binary) {
             status = pasynRecPvt->pasynOctet->getOutputEos(
                                     pasynRecPvt->asynOctetPvt,pasynUser,
@@ -1535,23 +1535,23 @@ static void performOctetIO(asynUser * pasynUser)
                 pasynRecPvt->pasynOctet->setOutputEos(pasynRecPvt->asynOctetPvt,
                                                       pasynUser,NULL,0);
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
-                                pasynUser, outptr, nwrite, &nbytesTransfered);
+                                pasynUser, outptr, nwrite, &nbytesTransferred);
             if (saveEosLen)
                 pasynRecPvt->pasynOctet->setOutputEos(pasynRecPvt->asynOctetPvt,
                                                       pasynUser,saveEosBuf,saveEosLen);
         } else {
             /* ASCII or Hybrid mode */
             status = pasynRecPvt->pasynOctet->write(pasynRecPvt->asynOctetPvt,
-                                 pasynUser, outptr, nwrite, &nbytesTransfered);
+                                 pasynUser, outptr, nwrite, &nbytesTransferred);
         }
-        pasynRec->nawt = (int)nbytesTransfered;
-        asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransfered,
+        pasynRec->nawt = (int)nbytesTransferred;
+        asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, outptr, nbytesTransferred,
            "%s: nwrite=%lu, status=%d, nawt=%lu\n", pasynRec->name, (unsigned long)nwrite,
-                    status, (unsigned long)nbytesTransfered);
-        if(status != asynSuccess || nbytesTransfered != nwrite) {
+                    status, (unsigned long)nbytesTransferred);
+        if(status != asynSuccess || nbytesTransferred != nwrite) {
             /* Something is wrong if we couldn't write everything */
             reportError(pasynRec, status, "Write error, nout=%d, %s",
-                        nbytesTransfered, pasynUser->errorMessage);
+                        nbytesTransferred, pasynUser->errorMessage);
         }
     }
     if((pasynRec->tmod == asynTMOD_Read) ||
@@ -1559,7 +1559,7 @@ static void performOctetIO(asynUser * pasynUser)
         /* Set the input buffer to all zeros */
         memset(inptr, 0, inlen);
         /* Read the message  */
-        nbytesTransfered = 0;
+        nbytesTransferred = 0;
         status = asynSuccess;
         if(pasynRec->ifmt == asynFMT_Binary) {
             status = pasynRecPvt->pasynOctet->getInputEos(
@@ -1571,67 +1571,67 @@ static void performOctetIO(asynUser * pasynUser)
                 pasynRecPvt->pasynOctet->setInputEos(pasynRecPvt->asynOctetPvt,
                                                      pasynUser,NULL,0);
             status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                  pasynUser, inptr, nread, &nbytesTransfered,&eomReason);
+                  pasynUser, inptr, nread, &nbytesTransferred,&eomReason);
             if (saveEosLen)
                 pasynRecPvt->pasynOctet->setInputEos(pasynRecPvt->asynOctetPvt,
                                                      pasynUser,saveEosBuf,saveEosLen);
         } else {
             /* ASCII or Hybrid mode */
             status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                        pasynUser, inptr, nread, &nbytesTransfered, &eomReason);
+                        pasynUser, inptr, nread, &nbytesTransferred, &eomReason);
         }
         if(status!=asynSuccess) {
             reportError(pasynRec, status,
                 "Error %s", pasynUser->errorMessage);
         } else {
-            asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransfered,
+            asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE, inptr, nbytesTransferred,
              "%s: inlen=%lu, status=%d, ninp=%lu\n", pasynRec->name, (unsigned long)inlen,
-                    status, (unsigned long)nbytesTransfered);
+                    status, (unsigned long)nbytesTransferred);
         }
         pasynRec->eomr = eomReason;
-        inlen = nbytesTransfered;
+        inlen = nbytesTransferred;
         if(status != asynSuccess) {
             reportError(pasynRec, status,
                 "%s  nread %d %s",
                 ((status==asynTimeout) ? "timeout" :
                  (status==asynOverflow) ? "overflow" : "error"),
-                 nbytesTransfered, pasynUser->errorMessage);
+                 nbytesTransferred, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MAJOR_ALARM);
         }
         /* Check for input buffer overflow */
         if((pasynRec->ifmt == asynFMT_ASCII) &&
-            (nbytesTransfered >= (int) sizeof(pasynRec->ainp))) {
+            (nbytesTransferred >= (int) sizeof(pasynRec->ainp))) {
             reportError(pasynRec, status, "Overflow nread %d %s",
-                nbytesTransfered, pasynUser->errorMessage);
+                nbytesTransferred, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MINOR_ALARM);
             /* terminate response with \0 */
             inptr[sizeof(pasynRec->ainp) - 1] = '\0';
         } else if((pasynRec->ifmt == asynFMT_Hybrid) &&
-                   ((int)nbytesTransfered >= pasynRec->imax)) {
+                   ((int)nbytesTransferred >= pasynRec->imax)) {
             reportError(pasynRec, status, "Overflow nread %d %s",
-                nbytesTransfered, pasynUser->errorMessage);
+                nbytesTransferred, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MINOR_ALARM);
             /* terminate response with \0 */
             inptr[pasynRec->imax - 1] = '\0';
         } else if((pasynRec->ifmt == asynFMT_Binary) &&
-                   ((int)nbytesTransfered > pasynRec->imax)) {
+                   ((int)nbytesTransferred > pasynRec->imax)) {
             /* This should not be able to happen */
             reportError(pasynRec, status, "Overflow nread %d %s",
-                nbytesTransfered, pasynUser->errorMessage);
+                nbytesTransferred, pasynUser->errorMessage);
             recGblSetSevr(pasynRec,READ_ALARM, MINOR_ALARM);
         } else if(pasynRec->ifmt != asynFMT_Binary) {
             /* Not binary and no input buffer overflow has occurred */
             /* Add null at end of input.  This is safe because of tests above */
-            inptr[nbytesTransfered] = '\0';
+            inptr[nbytesTransferred] = '\0';
         }
-        pasynRec->nord = (int)nbytesTransfered;    /* Number of bytes read */
+        pasynRec->nord = (int)nbytesTransferred;    /* Number of bytes read */
         /* Copy to tinp with dbTranslateEscape */
         ntranslate = epicsStrSnPrintEscaped(pasynRec->tinp,
                                            sizeof(pasynRec->tinp),
                                            inptr, inlen);
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-             "%s: inlen=%lu, nbytesTransfered=%lu, ntranslate=%d\n",
-             pasynRec->name, (unsigned long)inlen, (unsigned long)nbytesTransfered, ntranslate);
+             "%s: inlen=%lu, nbytesTransferred=%lu, ntranslate=%d\n",
+             pasynRec->name, (unsigned long)inlen, (unsigned long)nbytesTransferred, ntranslate);
     }
 }
 
@@ -1685,7 +1685,7 @@ static void gpibAddressedCmd(asynUser * pasynUser)
     asynGpib   *pasynGpib = pasynRecPvt->pasynGpib;
     void       *asynGpibPvt = pasynRecPvt->asynGpibPvt;
     asynStatus status;
-    size_t     nbytesTransfered;
+    size_t     nbytesTransferred;
     char       acmd[6];
     char       cmd_char = 0;
     int lenCmd = 6;
@@ -1727,8 +1727,8 @@ static void gpibAddressedCmd(asynUser * pasynUser)
         }
         /* Read the response byte  */
         status = pasynRecPvt->pasynOctet->read(pasynRecPvt->asynOctetPvt,
-                pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransfered,0);
-        if(status != asynSuccess || nbytesTransfered != 1) {
+                pasynUser, (char *) &pasynRec->spr, 1, &nbytesTransferred,0);
+        if(status != asynSuccess || nbytesTransferred != 1) {
             reportError(pasynRec, status,
                         "Error in GPIB Serial Poll read, %s",
                         pasynUser->errorMessage);

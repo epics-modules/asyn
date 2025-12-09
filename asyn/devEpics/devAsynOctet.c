@@ -18,7 +18,7 @@
         The command string is sent and a response read.
     asynSiOctetWriteRead,asynWfOctetWriteRead
         INP contains the name of a PV (string or array of chars)
-        The value read from PV is sent and a respose read.
+        The value read from PV is sent and a response read.
     asynSiOctetRead,asynWfOctetRead
         INP contains <drvUser> which is passed to asynDrvUser.create
         A response is read from the device.
@@ -665,10 +665,10 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     dbCommon   *precord = pPvt->precord;
     asynOctet  *poctet = pPvt->poctet;
     void       *octetPvt = pPvt->octetPvt;
-    size_t     nbytesTransfered;
+    size_t     nbytesTransferred;
     static const char *functionName="writeIt";
 
-    pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
+    pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransferred);
     pPvt->result.time = pPvt->pasynUser->timestamp;
     pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
@@ -678,10 +678,10 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
             precord->name, driverName, functionName, pasynUser->errorMessage);
         return pPvt->result.status;
     }
-    if(nbytes != nbytesTransfered) {
+    if(nbytes != nbytesTransferred) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s %s::%s requested %lu but sent %lu bytes\n",
-            precord->name, driverName, functionName, (unsigned long)nbytes, (unsigned long)nbytesTransfered);
+            precord->name, driverName, functionName, (unsigned long)nbytes, (unsigned long)nbytesTransferred);
         recGblSetSevr(precord, WRITE_ALARM, MINOR_ALARM);
         return asynError;
     }
@@ -1239,7 +1239,7 @@ static long initScalcoutWrite(scalcoutRecord *pscalcout)
     pscalcout->osv[0] = 0;
     ret = initCommon((dbCommon *)pscalcout, &pscalcout->out, callbackScalcoutWrite,
                       1, 0, 1, pscalcout->osv, NULL, sizeof(pscalcout->osv));
-    /* update sval and val if an inital readback from the device */
+    /* update sval and val if an initial readback from the device */
     if (ret == INIT_OK && my_strnlen(pscalcout->osv, sizeof(pscalcout->osv)) > 0) {
         strncpy(pscalcout->sval, pscalcout->osv, sizeof(pscalcout->sval));
         pscalcout->sval[sizeof(pscalcout->sval) - 1] = 0;

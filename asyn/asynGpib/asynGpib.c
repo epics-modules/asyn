@@ -101,9 +101,9 @@ static asynStatus connect(void *drvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *drvPvt,asynUser *pasynUser);
 /*asynOctet methods */
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t maxchars,size_t *nbytesTransfered);
+    const char *data,size_t maxchars,size_t *nbytesTransferred);
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 static asynStatus gpibFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setInputEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -389,7 +389,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 
 /*asynOctet methods */
 static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
+    const char *data,size_t numchars,size_t *nbytesTransferred)
 {
     int nt;
     asynStatus status;
@@ -397,12 +397,12 @@ static asynStatus writeIt(void *drvPvt,asynUser *pasynUser,
 
     status =  pasynGpibPort->write(pgpibPvt->asynGpibPortPvt,pasynUser,
               data,(int)numchars,&nt);
-    *nbytesTransfered = (size_t)nt;
+    *nbytesTransferred = (size_t)nt;
     return status;
 }
 
 static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     int nt;
     asynStatus status;
@@ -410,7 +410,7 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
 
     status = pasynGpibPort->read(pgpibPvt->asynGpibPortPvt,pasynUser,
                data,(int)maxchars,&nt,eomReason);
-    *nbytesTransfered = (size_t)nt;
+    *nbytesTransferred = (size_t)nt;
     if(status!=asynSuccess) return status;
     if(pgpibPvt->eoslen==1 && nt>0) {
         if(data[nt-1]==pgpibPvt->eos) {
@@ -420,9 +420,9 @@ static asynStatus readIt(void *drvPvt,asynUser *pasynUser,
     }
     if(nt<(int)maxchars) data[nt] = 0;
     if((nt==maxchars) && eomReason) *eomReason |= ASYN_EOM_CNT;
-    *nbytesTransfered = (size_t)nt;
+    *nbytesTransferred = (size_t)nt;
     pasynOctetBase->callInterruptUsers(pasynUser,pgpibPvt->pasynPvt,
-        data,nbytesTransfered,eomReason);
+        data,nbytesTransferred,eomReason);
     return status;
 }
 
@@ -538,7 +538,7 @@ static asynStatus pollAddr(void *drvPvt,asynUser *pasynUser, int onOff)
                  asynCommonType,0);
         if(!pasynInterface) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                "%s asynGpib:pollIt cant find interface asynCommon\n",
+                "%s asynGpib:pollIt can't find interface asynCommon\n",
                 pgpibPvt->portName);
             return asynError;
         }
