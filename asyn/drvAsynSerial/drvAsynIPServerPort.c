@@ -45,7 +45,7 @@
 /* This structure holds the information for an IP port created by the listener */
 typedef struct {
     char               *portName;
-    int                fd;
+    SOCKET             fd;
     asynUser          *pasynUser;
 } portList_t;
 
@@ -272,7 +272,8 @@ static void report(void *drvPvt, FILE *fp, int details)
         for (i=0; i<tty->maxClients; i++) {
             pl = &tty->portList[i];
             pasynManager->isConnected(pl->pasynUser, &connected);
-            fprintf(fp, "    Client %d name:%s fd: %d connected:%d\n", i, pl->portName, pl->fd, connected);
+            fprintf(fp, "    Client %d name:%s fd:%lld connected:%d\n",
+                i, pl->portName, (long long)pl->fd, connected);
         }
     }
 }
@@ -285,7 +286,7 @@ static void connectionListener(void *drvPvt)
 {
     ttyController_t *tty = (ttyController_t *) drvPvt;
     struct sockaddr_in clientAddr;
-    int clientFd;
+    SOCKET clientFd;
     osiSocklen_t clientLen = sizeof (clientAddr);
     ELLLIST *pclientList;
     interruptNode *pnode;
@@ -331,12 +332,12 @@ static void connectionListener(void *drvPvt)
                 break; /* we must be in ioc shutdown and ttyCleanup has been called */
             }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                    "drvAsynIPServerPort: new connection, socket=%d on %s\n",
-                    clientFd, tty->serverInfo);
+                    "drvAsynIPServerPort: new connection, socket=%lld on %s\n",
+                    (long long)clientFd, tty->serverInfo);
             if (clientFd < 0) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                        "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
-                        tty->fd, strerror(errno));
+                        "drvAsynIPServerPort: accept error on %s: fd=%lld, %s\n", tty->serverInfo,
+                        (long long)tty->fd, strerror(errno));
                 continue;
             }
             /* Search for a port which is disconnected */
@@ -355,7 +356,7 @@ static void connectionListener(void *drvPvt)
                 continue;
             }
             /* Set the existing port to use the new file descriptor */
-            pl->pasynUser->reason = clientFd;
+            pl->pasynUser->reason = (int)clientFd; /* maybe we lose information on Windows */
             pl->fd = clientFd;
             status = pasynCommonSyncIO->connectDevice(pl->pasynUser);
             if (status != asynSuccess) {

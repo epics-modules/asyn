@@ -206,7 +206,7 @@ static void
 closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Closing %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
+              "Closing %s connection (fd %lld): %s\n", tty->IPDeviceName, (long long)tty->fd, why);
     if (tty->fd != INVALID_SOCKET) {
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -232,7 +232,7 @@ asynCommonReport(void *drvPvt, FILE *fp, int details)
                                                 tty->fd != INVALID_SOCKET ? "C" : "Disc");
     }
     if (details >= 2) {
-        fprintf(fp, "                    fd: %d\n", (int)tty->fd);
+        fprintf(fp, "                    fd: %lld\n", (long long)tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }
@@ -417,9 +417,9 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Attempting to connect to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+              "Attempting to connect to %s  reason:%d  fd: %lld\n", tty->IPDeviceName,
                                                            pasynUser->reason,
-                                                           tty->fd);
+                                                           (long long)tty->fd);
 
     if (tty->fd != INVALID_SOCKET) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
