@@ -16,7 +16,7 @@
 #if EPICS_VERSION_INT < VERSION_INT(3, 16, 1, 0)
 static
 void dbInitEntryFromRecord(struct dbCommon *prec,
-                           struct dbEntry *pdbentry)
+                           DBENTRY *pdbentry)
 {
     long status;
     dbInitEntry(pdbbase, pdbentry);
