@@ -3211,6 +3211,12 @@ static const char *strStatus(asynStatus status)
     case asynError:         return "asynError";
     case asynDisconnected:  return "asynDisconnected";
     case asynDisabled:      return "asynDisabled";
+    case asynParamAlreadyExists: return "asynParamAlreadyExists";
+    case asynParamNotFound: return "asynParamNotFound";
+    case asynParamWrongType: return "asynParamWrongType";
+    case asynParamBadIndex: return "asynParamBadIndex";
+    case asynParamUndefined: return "asynParamUndefined";
+    case asynParamInvalidList: return "asynParamInvalidList";
     }
 
     return "asyn????";

@@ -95,9 +95,9 @@ static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered);
+    const char *data,int numchars,int *nbytesTransferred);
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -206,7 +206,7 @@ static asynGpibPort gpibPort = {
 #define AUXCREN 0x17    /*Clear Remote Enable*/
 #define AUXICR  0x20   /*Internal Counter Clock*/
 #define AUXPPR  0x50   /*Parallel Poll Register*/
-#define AUXRA   0x80   /*Auxilary Register A*/
+#define AUXRA   0x80   /*Auxiliary Register A*/
 
 #define PPRU    0x10   /*AUXPPR Unconfigure*/
 #define RABIN   0x10   /*AUXRA BIN, i.e. EOS is 8 bit*/
@@ -637,7 +637,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 }
 
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason)
 {
     niport *pniport = (niport *)pdrvPvt;
     int        actual = 0;
@@ -657,12 +657,12 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s addr %d gpibPortRead\n",pniport->portName,addr);
-    *nbytesTransfered = actual;
+    *nbytesTransferred = actual;
     return status;
 }
 
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered)
+    const char *data,int numchars,int *nbytesTransferred)
 {
     niport *pniport = (niport *)pdrvPvt;
     int        actual = 0;
@@ -686,7 +686,7 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s addr %d gpibPortWrite\n",pniport->portName,addr);
-    *nbytesTransfered = actual;
+    *nbytesTransferred = actual;
     return status;
 }
 

@@ -372,7 +372,7 @@ asynCommonDisconnect(void *drvPvt, asynUser *pasynUser)
  * Write to the USB FTDI port
  */
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-    const char *data, size_t numchars,size_t *nbytesTransfered)
+    const char *data, size_t numchars,size_t *nbytesTransferred)
 {
     ftdiController_t *ftdi = (ftdiController_t *)drvPvt;
     size_t thisWrite;
@@ -383,7 +383,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
               "%d:%d write.\n", ftdi->FTDIvendor, ftdi->FTDIproduct);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                 "%d:%d write %lu\n", ftdi->FTDIvendor, ftdi->FTDIproduct, numchars);
-    *nbytesTransfered = 0;
+    *nbytesTransferred = 0;
 
     // Here we will simply issue the write to the driver
     if (!ftdi->driver){
@@ -400,9 +400,9 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
       closeConnection(pasynUser,ftdi,"Write error");
       status = asynError;
     }
-    *nbytesTransfered = thisWrite;
+    *nbytesTransferred = thisWrite;
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "wrote %lu to %d:%d, return %s.\n", (unsigned long)*nbytesTransfered,
+              "wrote %lu to %d:%d, return %s.\n", (unsigned long)*nbytesTransferred,
                                                 ftdi->FTDIvendor, ftdi->FTDIproduct,
                                                pasynManager->strStatus(status));
     return status;
@@ -412,7 +412,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
  * Read from the TCP port
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-    char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
+    char *data, size_t maxchars,size_t *nbytesTransferred,int *gotEom)
 {
     ftdiController_t *ftdi = (ftdiController_t *)drvPvt;
     size_t thisRead;
@@ -447,7 +447,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
       }
     }
 
-    *nbytesTransfered = thisRead;
+    *nbytesTransferred = thisRead;
 
     /* If there is room add a null byte */
     if (thisRead < maxchars)

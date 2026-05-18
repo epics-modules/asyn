@@ -138,7 +138,7 @@ static asynStatus writeOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,do
     if (status==asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
                   "asynInt64ArraySyncIO wrote: %lld\n",
-                  *pvalue);
+                  (long long)*pvalue);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
@@ -160,7 +160,8 @@ static asynStatus readOp(asynUser *pasynUser,epicsInt64 *pvalue,size_t nelem,siz
     status = pPvt->pasynInt64Array->read(pPvt->int64ArrayPvt, pasynUser, pvalue, nelem, nIn);
     if (status==asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "asynInt64ArraySyncIO read: %lld\n", *pvalue);
+                  "asynInt64ArraySyncIO read: %lld\n",
+                  (long long)*pvalue);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {

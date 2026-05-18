@@ -109,7 +109,7 @@ typedef struct vxiPort {
     asynInterface option;
     epicsEventId  srqThreadDone;
     SOCKET        srqBindSock; /*socket for bind*/
-    osiSockAddr   vxiServerAddr; /*addess of vxi11 server*/
+    osiSockAddr   vxiServerAddr; /*address of vxi11 server*/
     char          *srqThreadName;
     epicsInterruptibleSyscallContext *srqInterrupt;
     int           srqEnabled;
@@ -147,9 +147,9 @@ static void vxiReport(void *drvPvt,FILE *fd,int details);
 static asynStatus vxiConnect(void *drvPvt,asynUser *pasynUser);
 static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser);
 static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason);
 static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered);
+    const char *data,int numchars,int *nbytesTransferred);
 static asynStatus vxiFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus vxiSetEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -472,7 +472,7 @@ static int vxiWriteCmd(vxiPort * pvxiPort,asynUser *pasynUser,
 /******************************************************************************
  * Check the bus status. Parameter <request> can be a number from 1 to 8 to
  * indicate the information requested (see VXI_BSTAT_XXXX in vxi11.h)
- * or it can be 0 meaning all (exept the bus address) which will then be
+ * or it can be 0 meaning all (except the bus address) which will then be
  * combined into a bitfield according to the bit numbers+1 (1 corresponds to
  * bit 0, etc.).
  ******************************************************************************/
@@ -594,7 +594,7 @@ static enum clnt_stat clientIoCall(vxiPort * pvxiPort,asynUser *pasynUser,
    is required.
    Until vxiSrqThread has accepted a connection from the vxiii server
    the local inet address is not known if multiple ethernet ports exist.
-   Thus the following code creats a UDP connection to the portmapper
+   Thus the following code creates a UDP connection to the portmapper
    on the vxi11 server just to determine the local net address for
    connections to the server.
 
@@ -1134,7 +1134,7 @@ static asynStatus vxiDisconnect(void *drvPvt,asynUser *pasynUser)
 }
 
 static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason)
 {
     vxiPort *pvxiPort = (vxiPort *)drvPvt;
     int     nRead = 0, thisRead;
@@ -1213,12 +1213,12 @@ static asynStatus vxiRead(void *drvPvt,asynUser *pasynUser,
         if(devReadR.reason & VXI_CHR) *eomReason |= ASYN_EOM_EOS;
         if(devReadR.reason & VXI_ENDR) *eomReason |= ASYN_EOM_END;
     }
-    *nbytesTransfered = nRead;
+    *nbytesTransferred = nRead;
     return status;
 }
 
 static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered)
+    const char *data,int numchars,int *nbytesTransferred)
 {
     vxiPort *pvxiPort = (vxiPort *) drvPvt;
     int     addr;
@@ -1289,7 +1289,7 @@ static asynStatus vxiWrite(void *drvPvt,asynUser *pasynUser,
         }
         xdr_free((const xdrproc_t) xdr_Device_WriteResp, (char *) &devWriteR);
     } while(size==thisWrite && numchars>0);
-    *nbytesTransfered = nWrite;
+    *nbytesTransferred = nWrite;
     return status;
 }
 

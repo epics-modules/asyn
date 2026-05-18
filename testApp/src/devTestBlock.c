@@ -96,7 +96,7 @@ typedef struct commonDset {
 } commonDset;
 
 commonDset devTestBlockInp   = {
-    5,0,0,(DEVSUPFUN)initSiWriteRead,  0            ,(DEVSUPFUN)processCommon};
+    5, 0, 0, (DEVSUPFUN)initSiWriteRead, 0, (DEVSUPFUN)processCommon };
 
 epicsExportAddress(dset, devTestBlockInp);
 
@@ -224,9 +224,9 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     asynOctet  *poctet = pdevPvt->poctet;
     void       *octetPvt = pdevPvt->octetPvt;
     asynStatus status;
-    size_t     nbytesTransfered;
+    size_t     nbytesTransferred;
 
-    status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
+    status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransferred);
     if(status!=asynSuccess) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s devTestBlock: writeIt failed %s\n",
@@ -234,10 +234,10 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
         recGblSetSevr(precord, WRITE_ALARM, INVALID_ALARM);
         return status;
     }
-    if(nbytes != nbytesTransfered) {
+    if(nbytes != nbytesTransferred) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s devTestBlock: writeIt requested %lu but sent %lu bytes\n",
-            precord->name,(unsigned long)nbytes,(unsigned long)nbytesTransfered);
+            precord->name,(unsigned long)nbytes,(unsigned long)nbytesTransferred);
         recGblSetSevr(precord, WRITE_ALARM, MINOR_ALARM);
         return asynError;
     }

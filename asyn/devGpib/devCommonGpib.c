@@ -53,7 +53,7 @@ long  devGpib_initAi(aiRecord * pai)
     long result;
     int cmdType;
     gpibDpvt *pgpibDpvt;
-    DEVSUPFUN  got_special_linconv = ((gDset *) pai->dset)->funPtr[5];
+    long (*got_special_linconv)(struct aiRecord *, int) = (long (*)(struct aiRecord *, int))((gDset *) pai->dset)->funPtr[5];
 
     result = pdevSupportGpib->initRecord((dbCommon *) pai, &pai->inp);
     if(result) return result;
@@ -132,7 +132,7 @@ long  devGpib_initAo(aoRecord * pao)
     long result;
     int cmdType;
     gpibDpvt *pgpibDpvt;
-    DEVSUPFUN  got_special_linconv = ((gDset *) pao->dset)->funPtr[5];
+    long (*got_special_linconv)(struct aoRecord *, int) = (long (*)(struct aoRecord *, int))((gDset *) pao->dset)->funPtr[5];
 
     /* do common initialization */
     result = pdevSupportGpib->initRecord((dbCommon *) pao, &pao->out);

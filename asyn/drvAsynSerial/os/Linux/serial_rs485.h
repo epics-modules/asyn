@@ -10,8 +10,10 @@
  * The features we need were introduced in 2.6.35 */
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(2,6,35)
   #define ASYN_RS485_SUPPORTED      1
-  #define TIOCGRS485                0x542E
-  #define TIOCSRS485                0x542F
+  #ifndef TIOCGRS485
+    #define TIOCGRS485              0x542E
+    #define TIOCSRS485              0x542F
+  #endif
 #endif
 
 #endif

@@ -38,16 +38,16 @@ typedef struct interposePvt {
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
-    const char *data, size_t numchars, size_t *nbytesTransfered)
+    const char *data, size_t numchars, size_t *nbytesTransferred)
 {
     interposePvt *pvt = (interposePvt *)ppvt;
     size_t n;
-    size_t transfered = 0;
+    size_t transferred = 0;
     char echo[4];
     asynStatus status = asynSuccess;
     int eomReason;
 
-    while (transfered < numchars) {
+    while (transferred < numchars) {
         /* write one char at a time */
         status = pvt->pasynOctetDrv->write(pvt->drvPvt,
             pasynUser, data, 1, &n);
@@ -64,7 +64,7 @@ static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
         if (status == asynTimeout)
         {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
-                "timeout reading back char number %" Z "d", transfered);
+                "timeout reading back char number %" Z "d", transferred);
         }
         if (status != asynSuccess) break;
         if (n != 1 || echo[0] != data[0]) {
@@ -77,20 +77,20 @@ static asynStatus writeIt(void *ppvt, asynUser *pasynUser,
             status = asynError;
             break;
         }
-        transfered++;
+        transferred++;
         data++;
     }
-    *nbytesTransfered = transfered;
+    *nbytesTransferred = transferred;
     return status;
 }
 
 static asynStatus readIt(void *ppvt, asynUser *pasynUser,
-    char *data, size_t maxchars, size_t *nbytesTransfered, int *eomReason)
+    char *data, size_t maxchars, size_t *nbytesTransferred, int *eomReason)
 {
     interposePvt *pvt = (interposePvt *)ppvt;
 
     return pvt->pasynOctetDrv->read(pvt->drvPvt,
-        pasynUser, data, maxchars, nbytesTransfered, eomReason);
+        pasynUser, data, maxchars, nbytesTransferred, eomReason);
 }
 
 static asynStatus flushIt(void *ppvt, asynUser *pasynUser)

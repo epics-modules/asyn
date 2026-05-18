@@ -237,7 +237,7 @@ prologixDisconnect(void *drvPvt, asynUser *pasynUser)
  */
 static asynStatus
 prologixRead(void *drvPvt, asynUser *pasynUser,
-             char *data, int maxchars, int *nbytesTransfered, int *eomReason)
+             char *data, int maxchars, int *nbytesTransferred, int *eomReason)
 {
     dPvt *pdpvt = (dPvt *)drvPvt;
     size_t n;
@@ -276,7 +276,7 @@ prologixRead(void *drvPvt, asynUser *pasynUser,
         /*
          * Read until we see the appropriate terminator
          */
-        *nbytesTransfered = 0;
+        *nbytesTransferred = 0;
         for (;;)  {
             /*
              * Ensure that there's space for the read
@@ -346,7 +346,7 @@ prologixRead(void *drvPvt, asynUser *pasynUser,
     memcpy(data, pdpvt->buf + pdpvt->bufIndex, n);
      pdpvt->bufIndex += n;
     if (eomReason) *eomReason = eom;
-    *nbytesTransfered = n;
+    *nbytesTransferred = (int)n; /* cast is safe: we alreay know n <= maxchars */
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, n,
                                 "%s %d prologixRead %d EOM:%#x\n",
                                 pdpvt->portName, pdpvt->lastAddress, (int)n, eom);
@@ -355,7 +355,7 @@ prologixRead(void *drvPvt, asynUser *pasynUser,
 
 static asynStatus
 prologixWrite(void *drvPvt, asynUser *pasynUser,
-              const char *data, int numchars, int *nbytesTransfered)
+              const char *data, int numchars, int *nbytesTransferred)
 {
     dPvt *pdpvt = (dPvt *)drvPvt;
     size_t n, nt;
@@ -381,7 +381,7 @@ prologixWrite(void *drvPvt, asynUser *pasynUser,
      */
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                  "%s %d prologixWrite\n", pdpvt->portName, pdpvt->lastAddress);
-    *nbytesTransfered = 0;
+    *nbytesTransferred = 0;
     n = numchars;
     pdpvt->bufCount = 0;
     while (n) {
@@ -405,7 +405,7 @@ prologixWrite(void *drvPvt, asynUser *pasynUser,
     status = pasynOctetSyncIO->write(pdpvt->pasynUserTCPoctet, pdpvt->buf,
                                     pdpvt->bufCount, pasynUser->timeout, &nt);
     if (status == asynSuccess)
-        *nbytesTransfered = numchars;
+        *nbytesTransferred = numchars;
     pdpvt->bufCount = 0;
     return status;
 }

@@ -22,7 +22,7 @@
  *
  * Item 1) above was not really implemented because there is no portable robust way
  * to abort an I/O operation.  So the timer set a flag which was checked after
- * the poll() was complete to see if the timeout had occured.  This was not robust,
+ * the poll() was complete to see if the timeout had occurred.  This was not robust,
  * because there were competing timers (timeout timer and poll) which could fire in
  * the wrong order.
  *
@@ -123,7 +123,7 @@ typedef struct {
     }                  farAddr;
     size_t             farAddrSize;
     osiSockAddr        localAddr;
-    size_t             localAddrSize;
+    osiSocklen_t       localAddrSize;
     asynInterface      common;
     asynInterface      option;
     asynInterface      octet;
@@ -206,7 +206,7 @@ static void
 closeConnection(asynUser *pasynUser,ttyController_t *tty,const char *why)
 {
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Closing %s connection (fd %d): %s\n", tty->IPDeviceName, tty->fd, why);
+              "Closing %s connection (fd %lld): %s\n", tty->IPDeviceName, (long long)tty->fd, why);
     if (tty->fd != INVALID_SOCKET) {
         epicsSocketDestroy(tty->fd);
         tty->fd = INVALID_SOCKET;
@@ -232,7 +232,7 @@ asynCommonReport(void *drvPvt, FILE *fp, int details)
                                                 tty->fd != INVALID_SOCKET ? "C" : "Disc");
     }
     if (details >= 2) {
-        fprintf(fp, "                    fd: %d\n", (int)tty->fd);
+        fprintf(fp, "                    fd: %lld\n", (long long)tty->fd);
         fprintf(fp, "    Characters written: %lu\n", tty->nWritten);
         fprintf(fp, "       Characters read: %lu\n", tty->nRead);
     }
@@ -417,9 +417,9 @@ connectIt(void *drvPvt, asynUser *pasynUser)
      */
     assert(tty);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "Attempting to connect to %s  reason:%d  fd:%d\n", tty->IPDeviceName,
+              "Attempting to connect to %s  reason:%d  fd: %lld\n", tty->IPDeviceName,
                                                            pasynUser->reason,
-                                                           tty->fd);
+                                                           (long long)tty->fd);
 
     if (tty->fd != INVALID_SOCKET) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
@@ -578,7 +578,7 @@ asynCommonDisconnect(void *drvPvt, asynUser *pasynUser)
  * Write to the TCP port
  */
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-    const char *data, size_t numchars,size_t *nbytesTransfered)
+    const char *data, size_t numchars,size_t *nbytesTransferred)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
@@ -594,7 +594,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
               "%s write.\n", tty->IPDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
                 "%s write %lu\n", tty->IPDeviceName, (unsigned long)numchars);
-    *nbytesTransfered = 0;
+    *nbytesTransferred = 0;
     if (tty->fd == INVALID_SOCKET) {
         if (tty->flags & FLAG_CONNECT_PER_TRANSACTION) {
             if ((status = connectIt(drvPvt, pasynUser)) != asynSuccess)
@@ -677,7 +677,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         }
         if (thisWrite > 0) {
             tty->nWritten += (unsigned long)thisWrite;
-            *nbytesTransfered += thisWrite;
+            *nbytesTransferred += thisWrite;
             numchars -= thisWrite;
             if (numchars == 0)
                 break;
@@ -699,7 +699,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         }
     }
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
-              "wrote %lu to %s, return %s.\n", (unsigned long)*nbytesTransfered,
+              "wrote %lu to %s, return %s.\n", (unsigned long)*nbytesTransferred,
                                                tty->IPDeviceName,
                                                pasynManager->strStatus(status));
     return status;
@@ -709,7 +709,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
  * Read from the TCP port
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-    char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
+    char *data, size_t maxchars,size_t *nbytesTransferred,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
@@ -775,7 +775,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if (tty->socketType == SOCK_DGRAM) {
         /* We use recvfrom() for SOCK_DRAM so we can print the source address with ASYN_TRACEIO_DRIVER */
         osiSockAddr oa;
-        unsigned int addrlen = sizeof(oa.ia);
+        osiSocklen_t addrlen = sizeof(oa.ia);
         thisRead = recvfrom(tty->fd, data, (int)maxchars, 0, &oa.sa, &addrlen);
         if (thisRead >= 0) {
             if (pasynTrace->getTraceMask(pasynUser) & ASYN_TRACEIO_DRIVER) {
@@ -821,7 +821,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
-    *nbytesTransfered = thisRead;
+    *nbytesTransferred = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
         data[thisRead] = 0;

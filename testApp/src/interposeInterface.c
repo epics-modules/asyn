@@ -43,9 +43,9 @@ static int interposeInterfaceInit(const char *interposeInterfaceName,
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransferred);
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *ppvt,asynUser *pasynUser,
     interruptCallbackOctet callback, void *userPvt,void **registrarPvt);
@@ -102,25 +102,25 @@ static int interposeInterfaceInit(const char *pmn,const char *dn,int addr)
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
+    const char *data,size_t numchars,size_t *nbytesTransferred)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
         "entered interposeInterface::write\n");
     return pinterposePvt->pasynOctet->write(pinterposePvt->asynOctetPvt,
-        pasynUser,data,numchars,nbytesTransfered);
+        pasynUser,data,numchars,nbytesTransferred);
 }
 
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
 
     asynPrint(pasynUser,ASYN_TRACEIO_FILTER,
         "entered interposeInterface::read\n");
     return pinterposePvt->pasynOctet->read(pinterposePvt->asynOctetPvt,
-        pasynUser,data,maxchars,nbytesTransfered,eomReason);
+        pasynUser,data,maxchars,nbytesTransferred,eomReason);
 }
 
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser)

@@ -95,9 +95,9 @@ static void gpibPortReport(void *pdrvPvt,FILE *fd,int details);
 static asynStatus gpibPortConnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason);
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason);
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered);
+    const char *data,int numchars,int *nbytesTransferred);
 static asynStatus gpibPortFlush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus gpibPortSetEos(void *pdrvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -589,7 +589,7 @@ static asynStatus gpibPortDisconnect(void *pdrvPvt,asynUser *pasynUser)
 }
 
 static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
-    char *data,int maxchars,int *nbytesTransfered,int *eomReason)
+    char *data,int maxchars,int *nbytesTransferred,int *eomReason)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
     int        actual = 0;
@@ -609,12 +609,12 @@ static asynStatus gpibPortRead(void *pdrvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s addr %d gpibPortRead\n",pgsport->portName,addr);
-    *nbytesTransfered = actual;
+    *nbytesTransferred = actual;
     return status;
 }
 
 static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
-    const char *data,int numchars,int *nbytesTransfered)
+    const char *data,int numchars,int *nbytesTransferred)
 {
     gsport *pgsport = (gsport *)pdrvPvt;
     int        actual = 0;
@@ -638,7 +638,7 @@ static asynStatus gpibPortWrite(void *pdrvPvt,asynUser *pasynUser,
     }
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
         data,actual,"%s addr %d gpibPortWrite\n",pgsport->portName,addr);
-    *nbytesTransfered = actual;
+    *nbytesTransferred = actual;
     return status;
 }
 
