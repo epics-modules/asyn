@@ -204,7 +204,7 @@ ASYN_API extern devSupportGpib *pdevSupportGpib;
  * GPIBRAWREAD:(1) data is read from the inst into gpibDpvt.msg
  *           (2) data is read from the buffer using gpibCmd.format
  * The following is only supported on mbbo and bo record types.
- * GPIBEFASTO: (1) sends the string pointed to by P3[VAL] w/o formating
+ * GPIBEFASTO: (1) sends the string pointed to by P3[VAL] w/o formatting
  * The following are only supported on mbbi and bi record types.
  * GPIBEFASTI: (1) gpibDpvt.cmd is sent to the instrument
  *             (2) data is read from the inst into gpibDpvt.msg
@@ -218,7 +218,7 @@ ASYN_API extern devSupportGpib *pdevSupportGpib;
  * Commands for Bus Management Lines
  * GPIBIFC:     bo only. (0,1) => (do nothing, pulse Interface Clear)
  * GPIBREN:     bo only. (0,1) => (drop,assert) Remote Enable
- * Universial Commands
+ * Universal Commands
  * GPIBDCL:     bo only. (0,1) => (do nothing, send Device Clear)
  * GPIBLLO:     bo only. (0,1) => (do nothing, Send Local Lockout)
  * Addressed Commands

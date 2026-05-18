@@ -100,7 +100,7 @@ int testOutputReadbackConfigure(const char *portName, int initialReadStatus)
 /* EPICS iocsh shell commands */
 
 static const iocshArg initArg0 = { "portName",iocshArgString};
-static const iocshArg initArg1 = { "intial read status",iocshArgInt};
+static const iocshArg initArg1 = { "initial read status",iocshArgInt};
 static const iocshArg * const initArgs[] = {&initArg0, &initArg1};
 static const iocshFuncDef initFuncDef = {"testOutputReadbackConfigure",2,initArgs};
 static void initCallFunc(const iocshArgBuf *args)

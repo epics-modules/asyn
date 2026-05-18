@@ -48,7 +48,7 @@ typedef struct analogDset { /* analog  dset */ \
 } analogDset; \
  \
 analogDset DSET = \
-    {6, 0, 0, initRecord,    0, process, 0}; \
+    {6, 0, 0, (DEVSUPFUN)initRecord,    0, (DEVSUPFUN)process, 0}; \
  \
 epicsExportAddress(dset, DSET); \
 \

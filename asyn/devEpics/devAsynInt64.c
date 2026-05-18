@@ -140,9 +140,9 @@ static long processLLi(int64inRecord *pr);
 static long processLLo(int64outRecord *pr);
 
 analogDset asynInt64In = {
-    5,0,0,initLLi,       getIoIntInfo, processLLi };
+    5,0,0,(DEVSUPFUN)initLLi,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLLi };
 analogDset asynInt64Out = {
-    5,0,0,initLLo,       getIoIntInfo, processLLo };
+    5,0,0,(DEVSUPFUN)initLLo,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLLo };
 epicsExportAddress(dset, asynInt64In);
 epicsExportAddress(dset, asynInt64Out);
 #endif
@@ -161,15 +161,15 @@ static long processLo(longoutRecord *pr);
 
 
 analogDset asynAiInt64 = {
-    6,0,0,initAi,       getIoIntInfo, processAi, convertAi };
+    6,0,0,(DEVSUPFUN)initAi,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAi, (DEVSUPFUN)convertAi };
 analogDset asynAiInt64Average = {
-    6,0,0,initAiAverage,getIoIntInfo, processAiAverage , convertAi };
+    6,0,0,(DEVSUPFUN)initAiAverage,(DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAiAverage , (DEVSUPFUN)convertAi };
 analogDset asynAoInt64 = {
-    6,0,0,initAo,       getIoIntInfo, processAo , convertAo };
+    6,0,0,(DEVSUPFUN)initAo,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAo , (DEVSUPFUN)convertAo };
 analogDset asynLiInt64 = {
-    5,0,0,initLi,       getIoIntInfo, processLi };
+    5,0,0,(DEVSUPFUN)initLi,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLi };
 analogDset asynLoInt64 = {
-    5,0,0,initLo,       getIoIntInfo, processLo };
+    5,0,0,(DEVSUPFUN)initLo,       (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLo };
 epicsExportAddress(dset, asynAiInt64);
 epicsExportAddress(dset, asynAiInt64Average);
 epicsExportAddress(dset, asynAoInt64);
@@ -380,7 +380,8 @@ static void processCallbackInput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if (pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s %s::%s process value=%lld\n",pr->name, driverName, functionName,pPvt->result.value);
+            "%s %s::%s process value=%lld\n",
+            pr->name, driverName, functionName, (long long)pPvt->result.value);
     } else {
         if (pPvt->result.status != pPvt->lastStatus) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -404,7 +405,8 @@ static void processCallbackOutput(asynUser *pasynUser)
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
     if(pPvt->result.status == asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-            "%s %s::%s process value %lld\n",pr->name, driverName, functionName,pPvt->result.value);
+            "%s %s::%s process value %lld\n",
+            pr->name, driverName, functionName, (long long)pPvt->result.value);
     } else {
         if (pPvt->result.status != pPvt->lastStatus) {
             asynPrint(pasynUser, ASYN_TRACE_ERROR,
@@ -426,7 +428,7 @@ static void interruptCallbackInput(void *drvPvt, asynUser *pasynUser,
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s %s::%s new value=%lld\n",
-        pr->name, driverName, functionName, value);
+        pr->name, driverName, functionName, (long long)value);
     /* There is a problem.  A driver could be calling us with a value after
      * this record has registered for callbacks but before EPICS has set interruptAccept,
      * which means that scanIoRequest will return immediately.
@@ -473,7 +475,7 @@ static void interruptCallbackOutput(void *drvPvt, asynUser *pasynUser,
 
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s %s::%s new value=%lld\n",
-        pr->name, driverName, functionName, value);
+        pr->name, driverName, functionName, (long long)value);
     if (!interruptAccept) return;
     epicsMutexLock(pPvt->devPvtLock);
     rp = &pPvt->ringBuffer[pPvt->ringHead];
@@ -513,7 +515,7 @@ static void interruptCallbackAverage(void *drvPvt, asynUser *pasynUser,
     }
     asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
         "%s %s::%s new value=%lld\n",
-         pai->name, driverName, functionName, value);
+         pai->name, driverName, functionName, (long long)value);
     if (!interruptAccept) return;
     epicsMutexLock(pPvt->devPvtLock);
     pPvt->numAverage++;
@@ -608,7 +610,7 @@ static int getCallbackValue(devPvt *pPvt)
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         asynPrint(pPvt->pasynUser, ASYN_TRACEIO_DEVICE,
             "%s %s::%s from ringBuffer value=%lld\n",
-            pPvt->pr->name, driverName, functionName,pPvt->result.value);
+            pPvt->pr->name, driverName, functionName, (long long)pPvt->result.value);
         ret = 1;
     }
     epicsMutexUnlock(pPvt->devPvtLock);

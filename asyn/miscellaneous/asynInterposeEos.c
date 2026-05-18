@@ -59,9 +59,9 @@ static void eosInExceptionHandler(asynUser *pasynUser,asynException exception);
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransferred);
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 static asynStatus flushIt(void *ppvt,asynUser *pasynUser);
 static asynStatus registerInterruptUser(void *ppvt,asynUser *pasynUser,
     interruptCallbackOctet callback, void *userPvt,void **registrarPvt);
@@ -152,7 +152,7 @@ static void eosInExceptionHandler(asynUser *pasynUser,asynException exception)
 
 /* asynOctet methods */
 static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered)
+    const char *data,size_t numchars,size_t *nbytesTransferred)
 {
     eosPvt     *peosPvt = (eosPvt *)ppvt;
     asynStatus status;
@@ -160,7 +160,7 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
 
     if((!peosPvt->processEosOut) || (peosPvt->eosOutLen <= 0)) {
         return peosPvt->poctet->write(peosPvt->octetPvt,
-            pasynUser,data,numchars,nbytesTransfered);
+            pasynUser,data,numchars,nbytesTransferred);
     }
     if(peosPvt->outBufSize<(numchars + peosPvt->eosOutLen)) {
         pasynManager->memFree(peosPvt->outBuf,peosPvt->outBufSize);
@@ -176,12 +176,12 @@ static asynStatus writeIt(void *ppvt,asynUser *pasynUser,
     if (status!=asynError)
         asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,peosPvt->outBuf,nbytesActual,
                 "%s wrote\n",peosPvt->portName);
-    *nbytesTransfered = (nbytesActual>numchars) ? numchars : nbytesActual;
+    *nbytesTransferred = (nbytesActual>numchars) ? numchars : nbytesActual;
     return status;
 }
 
 static asynStatus readIt(void *ppvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     eosPvt *peosPvt = (eosPvt *)ppvt;
     size_t thisRead;
@@ -190,7 +190,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
     asynStatus status = asynSuccess;
     if(!peosPvt->processEosIn) {
         return peosPvt->poctet->read(peosPvt->octetPvt,
-            pasynUser,data,maxchars,nbytesTransfered,eomReason);
+            pasynUser,data,maxchars,nbytesTransferred,eomReason);
     }
     for (;;) {
         if ((peosPvt->inBufTail != peosPvt->inBufHead)) {
@@ -232,7 +232,8 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
              pasynUser,peosPvt->inBuf,peosPvt->inBufSize,&thisRead,&eom);
         if(status==asynSuccess) {
             asynPrintIO(pasynUser,ASYN_TRACEIO_FILTER,peosPvt->inBuf,thisRead,
-                "%s read %llu bytes eom=%d\n",peosPvt->portName, (epicsUInt64)thisRead, eom);
+                "%s read %llu bytes eom=%d\n",
+                peosPvt->portName, (long long unsigned)thisRead, eom);
             /*
              * Read could have returned with ASYN_EOM_CNT set in eom because
              * the number of octets available exceeded inBufSize.  This is not
@@ -249,7 +250,7 @@ static asynStatus readIt(void *ppvt,asynUser *pasynUser,
     }
     if(nRead<maxchars) *data = 0; /*null terminate string if room*/
     if (eomReason) *eomReason = eom;
-    *nbytesTransfered = nRead;
+    *nbytesTransferred = nRead;
     return status;
 }
 

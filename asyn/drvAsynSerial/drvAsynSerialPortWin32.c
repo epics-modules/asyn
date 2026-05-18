@@ -92,7 +92,7 @@ getOption(void *drvPvt, asynUser *pasynUser,
     DWORD commConfigSize = sizeof(tty->commConfig);
     BOOL ret;
     DWORD error;
-    int l;
+    int l=0;
 
     val[0] = '\0';
     assert(tty);
@@ -105,12 +105,12 @@ getOption(void *drvPvt, asynUser *pasynUser,
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s error calling GetCommConfig %d", tty->serialDeviceName, error);
+                            "%s error calling GetCommConfig %ld", tty->serialDeviceName, error);
         return asynError;
     }
 
     if (epicsStrCaseCmp(key, "baud") == 0) {
-        l = epicsSnprintf(val, valSize, "%d", tty->commConfig.dcb.BaudRate);
+        l = epicsSnprintf(val, valSize, "%ld", tty->commConfig.dcb.BaudRate);
     }
     else if (epicsStrCaseCmp(key, "bits") == 0) {
         l = epicsSnprintf(val, valSize, "%d", tty->commConfig.dcb.ByteSize);
@@ -193,7 +193,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s error calling GetCommConfig %d", tty->serialDeviceName, error);
+                            "%s error calling GetCommConfig %ld", tty->serialDeviceName, error);
         return asynError;
     }
 
@@ -375,7 +375,7 @@ setOption(void *drvPvt, asynUser *pasynUser, const char *key, const char *val)
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                            "%s error calling SetCommConfig %d", tty->serialDeviceName, error);
+                            "%s error calling SetCommConfig %ld", tty->serialDeviceName, error);
         return asynError;
     }
     return asynSuccess;
@@ -507,10 +507,10 @@ disconnect(void *drvPvt, asynUser *pasynUser)
  * Write to the serial line
  */
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-    const char *data, size_t numchars,size_t *nbytesTransfered)
+    const char *data, size_t numchars,size_t *nbytesTransferred)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    int thisWrite;
+    DWORD thisWrite;
     int nleft = (int)numchars;
     int timerStarted = 0;
     BOOL ret;
@@ -521,14 +521,14 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                             "%s write.\n", tty->serialDeviceName);
     asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, numchars,
-                            "%s write %d\n", tty->serialDeviceName, numchars);
+                            "%s write %zd\n", tty->serialDeviceName, numchars);
     if (tty->commHandle == INVALID_HANDLE_VALUE) {
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
                                 "%s disconnected:", tty->serialDeviceName);
         return asynError;
     }
     if (numchars == 0) {
-        *nbytesTransfered = 0;
+        *nbytesTransferred = 0;
         return asynSuccess;
     }
     if (tty->writeTimeout != pasynUser->timeout) {
@@ -551,7 +551,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         if (ret == 0) {
             error = GetLastError();
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                                "%s write error: %d",
+                                "%s write error: %ld",
                                         tty->serialDeviceName, error);
             closeConnection(pasynUser,tty);
             status = asynError;
@@ -598,6 +598,9 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW, "wrote %lu %sto %s, return %s\n",
                                             (unsigned long)*nbytesTransfered,
                                             (tty->break_len > 0 ? "(with BREAK) " : ""),
+    *nbytesTransferred = numchars - nleft;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "wrote %lu to %s, return %s\n",
+                                            (unsigned long)*nbytesTransferred,
                                             tty->serialDeviceName,
                                             pasynManager->strStatus(status));
     return status;
@@ -607,10 +610,10 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
  * Read from the serial line
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-    char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
+    char *data, size_t maxchars,size_t *nbytesTransferred,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
-    int thisRead;
+    DWORD thisRead;
     int nRead = 0;
     int timerStarted = 0;
     COMMTIMEOUTS ctimeout;
@@ -652,7 +655,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
             if (ret == 0) {
                 error = GetLastError();
                 epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                              "Can't set \"%s\" timeout: %f, error=%d",
+                              "Can't set \"%s\" timeout: %f, error=%ld",
                               tty->serialDeviceName, pasynUser->timeout, error);
                 return asynError;
             }
@@ -676,14 +679,14 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         if (ret == 0) {
             error = GetLastError();
             epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                          "%s read error: %d",
+                          "%s read error: %ld",
                           tty->serialDeviceName, error);
             status = asynError;
             break;
         }
         if (thisRead > 0) {
             asynPrintIO(pasynUser, ASYN_TRACEIO_DRIVER, data, thisRead,
-                       "%s read %d\n", tty->serialDeviceName, thisRead);
+                       "%s read %ld\n", tty->serialDeviceName, thisRead);
             nRead = thisRead;
             tty->nRead += thisRead;
             break;
@@ -700,14 +703,14 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if (timerStarted) epicsTimerCancel(tty->timer);
     if (tty->timeoutFlag && (status == asynSuccess))
         status = asynTimeout;
-    *nbytesTransfered = nRead;
+    *nbytesTransferred = nRead;
     /* If there is room add a null byte */
     if (nRead < (int)maxchars)
         data[nRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
-    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %d, return %d\n",
-                            tty->serialDeviceName, *nbytesTransfered, status);
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %zd, return %d\n",
+                            tty->serialDeviceName, *nbytesTransferred, status);
     return status;
 }
 
@@ -732,7 +735,7 @@ flushIt(void *drvPvt,asynUser *pasynUser)
     if (ret == 0) {
         error = GetLastError();
         epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-                      "%s flush error: %d",
+                      "%s flush error: %ld",
                       tty->serialDeviceName, error);
         return asynError;
     }

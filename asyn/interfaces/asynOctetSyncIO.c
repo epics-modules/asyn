@@ -44,9 +44,9 @@ static asynStatus connect(const char *port, int addr,
                                asynUser **ppasynUser, const char *drvInfo);
 static asynStatus disconnect(asynUser *pasynUser);
 static asynStatus writeIt(asynUser *pasynUser,
-    char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered);
+    char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransferred);
 static asynStatus readIt(asynUser *pasynUser, char *buffer, size_t buffer_len,
-                   double timeout, size_t *nbytesTransfered,int *eomReason);
+                   double timeout, size_t *nbytesTransferred,int *eomReason);
 static asynStatus writeRead(asynUser *pasynUser,
                         const char *write_buffer, size_t write_buffer_len,
                         char *read_buffer, size_t read_buffer_len,
@@ -63,11 +63,11 @@ static asynStatus getOutputEos(asynUser *pasynUser,
                      char *eos, int eossize, int *eoslen);
 static asynStatus writeOnce(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered, const char *drvInfo);
+                    size_t *nbytesTransferred, const char *drvInfo);
 static asynStatus readOnce(const char *port, int addr,
                    char *buffer, size_t buffer_len,
                    double timeout,
-                   size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                   size_t *nbytesTransferred,int *eomReason, const char *drvInfo);
 static asynStatus writeReadOnce(const char *port, int addr,
                         const char *write_buffer, size_t write_buffer_len,
                         char *read_buffer, size_t read_buffer_len,
@@ -179,7 +179,7 @@ static asynStatus disconnect(asynUser *pasynUser)
 
 
 static asynStatus writeIt(asynUser *pasynUser,
-    char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransfered)
+    char const *buffer, size_t buffer_len, double timeout,size_t *nbytesTransferred)
 {
     asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
@@ -190,7 +190,7 @@ static asynStatus writeIt(asynUser *pasynUser,
         return status;
     }
     status = pioPvt->pasynOctet->write(
-        pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered);
+        pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransferred);
     if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
              buffer,buffer_len,"asynOctetSyncIO wrote:\n");
@@ -205,7 +205,7 @@ static asynStatus writeIt(asynUser *pasynUser,
 static asynStatus readIt(asynUser *pasynUser,
                    char *buffer, size_t buffer_len,
                    double timeout,
-                   size_t *nbytesTransfered,int *eomReason)
+                   size_t *nbytesTransferred,int *eomReason)
 {
     asynStatus status, unlockStatus;
     ioPvt      *pioPvt = (ioPvt *)pasynUser->userPvt;
@@ -216,10 +216,10 @@ static asynStatus readIt(asynUser *pasynUser,
         return status;
     }
     status = pioPvt->pasynOctet->read(
-        pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransfered,eomReason);
+        pioPvt->octetPvt,pasynUser,buffer,buffer_len,nbytesTransferred,eomReason);
     if(status==asynSuccess) {
          asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-             buffer,*nbytesTransfered,"asynOctetSyncIO read:\n");
+             buffer,*nbytesTransferred,"asynOctetSyncIO read:\n");
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
@@ -391,7 +391,7 @@ static asynStatus getOutputEos(asynUser *pasynUser,
 
 static asynStatus writeOnce(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered,const char *drvInfo)
+                    size_t *nbytesTransferred,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
@@ -403,7 +403,7 @@ static asynStatus writeOnce(const char *port, int addr,
          disconnect(pasynUser);
          return status;
     }
-    status = writeIt(pasynUser,buffer,buffer_len,timeout,nbytesTransfered);
+    status = writeIt(pasynUser,buffer,buffer_len,timeout,nbytesTransferred);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
              "asynOctetSyncIO write failed %s\n",pasynUser->errorMessage);
@@ -415,7 +415,7 @@ static asynStatus writeOnce(const char *port, int addr,
 static asynStatus readOnce(const char *port, int addr,
                    char *buffer, size_t buffer_len,
                    double timeout,
-                   size_t *nbytesTransfered,int *eomReason,const char *drvInfo)
+                   size_t *nbytesTransferred,int *eomReason,const char *drvInfo)
 {
     asynStatus status;
     asynUser   *pasynUser;
@@ -428,7 +428,7 @@ static asynStatus readOnce(const char *port, int addr,
          return status;
     }
     status = readIt(pasynUser,buffer,buffer_len,
-         timeout,nbytesTransfered,eomReason);
+         timeout,nbytesTransferred,eomReason);
     if(status!=asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACE_ERROR,
              "asynOctetSyncIO read failed %s\n",pasynUser->errorMessage);

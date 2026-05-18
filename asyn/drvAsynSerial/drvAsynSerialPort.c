@@ -791,7 +791,7 @@ disconnect(void *drvPvt, asynUser *pasynUser)
  * Write to the serial line
  */
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-    const char *data, size_t numchars,size_t *nbytesTransfered)
+    const char *data, size_t numchars,size_t *nbytesTransferred)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisWrite;
@@ -810,7 +810,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
         return asynError;
     }
     if (numchars == 0) {
-        *nbytesTransfered = 0;
+        *nbytesTransferred = 0;
         return asynSuccess;
     }
     if (tty->writeTimeout != pasynUser->timeout) {
@@ -887,6 +887,9 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
     asynPrint(pasynUser, ASYN_TRACE_FLOW, "wrote %lu %sto %s, return %s\n",
                                             (unsigned long)*nbytesTransfered,
                                             (tty->break_len > 0 ? "(with BREAK) " : ""),
+    *nbytesTransferred = numchars - nleft;
+    asynPrint(pasynUser, ASYN_TRACE_FLOW, "wrote %lu to %s, return %s\n",
+                                            (unsigned long)*nbytesTransferred,
                                             tty->serialDeviceName,
                                             pasynManager->strStatus(status));
     return status;
@@ -896,7 +899,7 @@ static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
  * Read from the serial line
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-    char *data, size_t maxchars,size_t *nbytesTransfered,int *gotEom)
+    char *data, size_t maxchars,size_t *nbytesTransferred,int *gotEom)
 {
     ttyController_t *tty = (ttyController_t *)drvPvt;
     int thisRead;
@@ -1013,14 +1016,14 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     if (timerStarted) epicsTimerCancel(tty->timer);
     if (tty->timeoutFlag && (status == asynSuccess))
         status = asynTimeout;
-    *nbytesTransfered = nRead;
+    *nbytesTransferred = nRead;
     /* If there is room add a null byte */
     if (nRead < maxchars)
         data[nRead] = 0;
     else if (gotEom)
         *gotEom = ASYN_EOM_CNT;
     asynPrint(pasynUser, ASYN_TRACE_FLOW, "%s read %lu, return %d\n",
-                            tty->serialDeviceName, (unsigned long)*nbytesTransfered, status);
+                            tty->serialDeviceName, (unsigned long)*nbytesTransferred, status);
     return status;
 }
 

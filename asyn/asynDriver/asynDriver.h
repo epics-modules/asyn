@@ -24,8 +24,8 @@
 /* Version number names similar to those provide by base
  * These macros are always numeric */
 #define ASYN_VERSION       4
-#define ASYN_REVISION     44
-#define ASYN_MODIFICATION  2
+#define ASYN_REVISION     45
+#define ASYN_MODIFICATION  0
 
 #ifndef EPICS_VERSION_INT
 #define VERSION_INT(V,R,M,P) ( ((V)<<24) | ((R)<<16) | ((M)<<8) | (P))
@@ -46,19 +46,33 @@ extern "C" {
 
 
 typedef enum {
-    asynSuccess,asynTimeout,asynOverflow,asynError,asynDisconnected,asynDisabled
+    asynSuccess,
+    asynTimeout,
+    asynOverflow,
+    asynError,
+    asynDisconnected,
+    asynDisabled,
+    /* Values used for the param interface */
+    asynParamAlreadyExists,
+    asynParamNotFound,
+    asynParamWrongType,
+    asynParamBadIndex,
+    asynParamUndefined,
+    asynParamInvalidList
 }asynStatus;
 
 typedef enum {
     asynExceptionConnect,asynExceptionEnable,asynExceptionAutoConnect,
     asynExceptionTraceMask,asynExceptionTraceIOMask,asynExceptionTraceInfoMask,
-    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize
+    asynExceptionTraceFile,asynExceptionTraceIOTruncateSize,
+    asynExceptionShutdown
 } asynException;
 
 #define ASYN_EXCEPTION_STRINGS                                                          \
     "asynExceptionConnect",   "asynExceptionEnable",      "asynExceptionAutoConnect",   \
     "asynExceptionTraceMask", "asynExceptionTraceIOMask", "asynExceptionTraceInfoMask", \
-    "asynExceptionTraceFile", "asynExceptionTraceIOTruncateSize"
+    "asynExceptionTraceFile", "asynExceptionTraceIOTruncateSize",                       \
+    "asynExceptionShutdown"
 extern  const char * asynExceptionToString( asynException e );
 
 typedef enum {
@@ -79,7 +93,7 @@ typedef struct asynUser {
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus;     /* For auxillary status*/
+    int            auxStatus;     /* For auxiliary status*/
     int            alarmStatus;   /* Typically for EPICS record alarm status */
     int            alarmSeverity; /* Typically for EPICS record alarm severity */
 }asynUser;
@@ -93,6 +107,7 @@ typedef struct asynInterface{
 /*registerPort attributes*/
 #define ASYN_MULTIDEVICE  0x0001
 #define ASYN_CANBLOCK     0x0002
+#define ASYN_DESTRUCTIBLE 0x0004
 
 /*standard values for asynUser.reason*/
 #define ASYN_REASON_SIGNAL -1
@@ -156,11 +171,13 @@ typedef struct asynManager {
                               asynInterface *pasynInterface,
                               asynInterface **ppPrev);
     asynStatus (*enable)(asynUser *pasynUser,int yesNo);
+    asynStatus (*shutdownPort)(asynUser *pasynUser);
     asynStatus (*autoConnect)(asynUser *pasynUser,int yesNo);
     asynStatus (*isConnected)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isEnabled)(asynUser *pasynUser,int *yesNo);
     asynStatus (*isAutoConnect)(asynUser *pasynUser,int *yesNo);
     asynStatus (*setAutoConnectTimeout)(double timeout);
+    asynStatus (*getAutoConnectTimeout)(double *timeout);
     asynStatus (*waitConnect)(asynUser *pasynUser, double timeout);
     /*The following are methods for interrupts*/
     asynStatus (*registerInterruptSource)(const char *portName,

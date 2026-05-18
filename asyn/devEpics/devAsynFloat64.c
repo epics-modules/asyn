@@ -126,11 +126,11 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynAiFloat64 = {
-    6, 0, 0, initAi,        getIoIntInfo, processAi, 0};
+    6, 0, 0, (DEVSUPFUN)initAi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAi, 0};
 analogDset asynAoFloat64 = {
-    6, 0, 0, initAo,        getIoIntInfo, processAo, 0};
+    6, 0, 0, (DEVSUPFUN)initAo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAo, 0};
 analogDset asynAiFloat64Average = {
-    6, 0, 0, initAiAverage, getIoIntInfo, processAiAverage, 0};
+    6, 0, 0, (DEVSUPFUN)initAiAverage, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAiAverage, 0};
 
 epicsExportAddress(dset, asynAiFloat64);
 epicsExportAddress(dset, asynAoFloat64);

@@ -66,9 +66,9 @@ static asynCommon asyn = { report, connect, disconnect };
 
 /* asynOctet methods */
 static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t numchars,size_t *nbytesTransfered);
+    const char *data,size_t numchars,size_t *nbytesTransferred);
 static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason);
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason);
 static asynStatus echoFlush(void *drvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *drvPvt,asynUser *pasynUser,
     const char *eos,int eoslen);
@@ -263,7 +263,7 @@ static asynStatus disconnect(void *drvPvt,asynUser *pasynUser)
 
 /* asynOctet methods */
 static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
-    const char *data,size_t nchars,size_t *nbytesTransfered)
+    const char *data,size_t nchars,size_t *nbytesTransferred)
 {
     echoPvt      *pechoPvt = (echoPvt *)drvPvt;
     deviceInfo   *pdeviceInfo;
@@ -306,12 +306,12 @@ static asynStatus echoWrite(void *drvPvt,asynUser *pasynUser,
             "echoWrite nchars %lu\n",(unsigned long)nchars);
     pdeviceBuffer->nchars = nchars;
     if(pechoPvt->delay>0.0) epicsThreadSleep(pechoPvt->delay);
-    *nbytesTransfered = nchars;
+    *nbytesTransferred = nchars;
     return status;
 }
 
 static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
-    char *data,size_t maxchars,size_t *nbytesTransfered,int *eomReason)
+    char *data,size_t maxchars,size_t *nbytesTransferred,int *eomReason)
 {
     echoPvt      *pechoPvt = (echoPvt *)drvPvt;
     deviceInfo   *pdeviceInfo;
@@ -324,7 +324,7 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
     asynStatus   status;
 
     if(eomReason) *eomReason=0;
-    if(nbytesTransfered) *nbytesTransfered = 0;
+    if(nbytesTransferred) *nbytesTransferred = 0;
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     if(!pechoPvt->multiDevice) addr = 0;
@@ -382,15 +382,15 @@ static asynStatus echoRead(void *drvPvt,asynUser *pasynUser,
             }
        }
     }
-    if(nbytesTransfered) *nbytesTransfered = nout;
+    if(nbytesTransferred) *nbytesTransferred = nout;
     if(eomReason) {
-        if(*nbytesTransfered>=maxchars) *eomReason |= ASYN_EOM_CNT;
+        if(*nbytesTransferred>=maxchars) *eomReason |= ASYN_EOM_CNT;
         if(nremaining==0) *eomReason |= ASYN_EOM_END;
     }
     pasynOctetBase->callInterruptUsers(pasynUser,pechoPvt->pasynPvt,
-        data,nbytesTransfered,eomReason);
+        data,nbytesTransferred,eomReason);
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nout,
-        "echoRead nbytesTransfered %lu\n",(unsigned long)*nbytesTransfered);
+        "echoRead nbytesTransferred %lu\n",(unsigned long)*nbytesTransferred);
     return status;
 }
 

@@ -18,7 +18,7 @@
         The command string is sent and a response read.
     asynSiOctetWriteRead,asynWfOctetWriteRead
         INP contains the name of a PV (string or array of chars)
-        The value read from PV is sent and a respose read.
+        The value read from PV is sent and a response read.
     asynSiOctetRead,asynWfOctetRead
         INP contains <drvUser> which is passed to asynDrvUser.create
         A response is read from the device.
@@ -193,38 +193,38 @@ typedef struct commonDset {
 } commonDset;
 
 commonDset asynSiOctetCmdResponse = {
-    5, 0, 0, initSiCmdResponse, 0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initSiCmdResponse,  0,                      (DEVSUPFUN)processCommon};
 commonDset asynSiOctetWriteRead   = {
-    5, 0, 0, initSiWriteRead,   0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initSiWriteRead,    0,                      (DEVSUPFUN)processCommon};
 commonDset asynSiOctetRead        = {
-    5, 0, 0, initSiRead,        getIoIntInfo, processCommon};
+    5, 0, 0, (DEVSUPFUN)initSiRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynSoOctetWrite       = {
-    5, 0, 0, initSoWrite,       0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initSoWrite,        0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetCmdResponse = {
-    5, 0, 0, initWfCmdResponse, 0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initWfCmdResponse,  0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWriteRead   = {
-    5, 0, 0, initWfWriteRead,   0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initWfWriteRead,    0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetRead        = {
-    5, 0, 0, initWfRead,        getIoIntInfo, processCommon};
+    5, 0, 0, (DEVSUPFUN)initWfRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWrite       = {
-    5, 0, 0, initWfWrite,       0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initWfWrite,        0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWriteBinary = {
-    5, 0, 0, initWfWriteBinary, 0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initWfWriteBinary,  0,                      (DEVSUPFUN)processCommon};
 #ifdef HAVE_LSREC
 commonDset asynLsiOctetCmdResponse = {
-    5, 0, 0, initLsiCmdResponse, 0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initLsiCmdResponse, 0,                      (DEVSUPFUN)processCommon};
 commonDset asynLsiOctetWriteRead   = {
-    5, 0, 0, initLsiWriteRead,   0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initLsiWriteRead,   0,                      (DEVSUPFUN)processCommon};
 commonDset asynLsiOctetRead        = {
-    5, 0, 0, initLsiRead,        getIoIntInfo, processCommon};
+    5, 0, 0, (DEVSUPFUN)initLsiRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynLsoOctetWrite       = {
-    5, 0, 0, initLsoWrite,       0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initLsoWrite,       0,                      (DEVSUPFUN)processCommon};
 commonDset asynPfOctetWrite       = {
-    5, 0, 0, initPfWrite,       0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initPfWrite,        0,                      (DEVSUPFUN)processCommon};
 #endif /* HAVE_LSREC */
 #ifdef HAVE_CALCMOD
 commonDset asynScalcoutOctetWrite       = {
-    5, 0, 0, initScalcoutWrite,       0,            processCommon};
+    5, 0, 0, (DEVSUPFUN)initScalcoutWrite,  0,                      (DEVSUPFUN)processCommon};
 #endif /* HAVE_CALCMOD */
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);
@@ -665,10 +665,10 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
     dbCommon   *precord = pPvt->precord;
     asynOctet  *poctet = pPvt->poctet;
     void       *octetPvt = pPvt->octetPvt;
-    size_t     nbytesTransfered;
+    size_t     nbytesTransferred;
     static const char *functionName="writeIt";
 
-    pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransfered);
+    pPvt->result.status = poctet->write(octetPvt,pasynUser,message,nbytes,&nbytesTransferred);
     pPvt->result.time = pPvt->pasynUser->timestamp;
     pPvt->result.alarmStatus = pPvt->pasynUser->alarmStatus;
     pPvt->result.alarmSeverity = pPvt->pasynUser->alarmSeverity;
@@ -678,10 +678,10 @@ static asynStatus writeIt(asynUser *pasynUser,const char *message,size_t nbytes)
             precord->name, driverName, functionName, pasynUser->errorMessage);
         return pPvt->result.status;
     }
-    if(nbytes != nbytesTransfered) {
+    if(nbytes != nbytesTransferred) {
         asynPrint(pasynUser,ASYN_TRACE_ERROR,
             "%s %s::%s requested %lu but sent %lu bytes\n",
-            precord->name, driverName, functionName, (unsigned long)nbytes, (unsigned long)nbytesTransfered);
+            precord->name, driverName, functionName, (unsigned long)nbytes, (unsigned long)nbytesTransferred);
         recGblSetSevr(precord, WRITE_ALARM, MINOR_ALARM);
         return asynError;
     }
@@ -1239,7 +1239,7 @@ static long initScalcoutWrite(scalcoutRecord *pscalcout)
     pscalcout->osv[0] = 0;
     ret = initCommon((dbCommon *)pscalcout, &pscalcout->out, callbackScalcoutWrite,
                       1, 0, 1, pscalcout->osv, NULL, sizeof(pscalcout->osv));
-    /* update sval and val if an inital readback from the device */
+    /* update sval and val if an initial readback from the device */
     if (ret == INIT_OK && my_strnlen(pscalcout->osv, sizeof(pscalcout->osv)) > 0) {
         strncpy(pscalcout->sval, pscalcout->osv, sizeof(pscalcout->sval));
         pscalcout->sval[sizeof(pscalcout->sval) - 1] = 0;

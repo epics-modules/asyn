@@ -40,24 +40,24 @@
 #define WD_TRANSMIT_BINARY  0   /* Will/Do transmit binary */
 
 #define SB_COM_PORT_OPTION      44   /* Subnegotiation command port option */
-#define CPO_SET_BAUDRATE         1   /* Comand port option set baud rate */
-#define CPO_SET_DATASIZE         2   /* Comand port option set data size */
-#define CPO_SET_PARITY           3   /* Comand port option set parity */
+#define CPO_SET_BAUDRATE         1   /* Command port option set baud rate */
+#define CPO_SET_DATASIZE         2   /* Command port option set data size */
+#define CPO_SET_PARITY           3   /* Command port option set parity */
 # define CPO_PARITY_NONE           1
 # define CPO_PARITY_ODD            2
 # define CPO_PARITY_EVEN           3
 # define CPO_PARITY_MARK           4
 # define CPO_PARITY_SPACE          5
-#define CPO_SET_STOPSIZE         4   /* Comand port option set stop size */
-#define CPO_SET_CONTROL          5   /* Comand port option set control mode */
+#define CPO_SET_STOPSIZE         4   /* Command port option set stop size */
+#define CPO_SET_CONTROL          5   /* Command port option set control mode */
 # define CPO_CONTROL_NOFLOW        1   /* No flow control */
 # define CPO_CONTROL_IXON          2   /* XON/XOFF Flow control*/
 # define CPO_CONTROL_HWFLOW        3   /* Hardware flow control */
 # define CPO_CONTROL_BREAK         4   /* request break state */
 # define CPO_CONTROL_BREAK_ON      5   /* break state ON */
 # define CPO_CONTROL_BREAK_OFF     6   /* break state OFF */
-#define CPO_SET_LINESTATE_MASK  10 /* Comand port option set linestate mask */
-#define CPO_SET_MODEMSTATE_MASK 11 /* Comand port option set modemstate mask */
+#define CPO_SET_LINESTATE_MASK  10 /* Command port option set linestate mask */
+#define CPO_SET_MODEMSTATE_MASK 11 /* Command port option set modemstate mask */
 #define CPO_SERVER_NOTIFY_LINESTATE  106
 #define CPO_SERVER_NOTIFY_MODEMSTATE 107
 
@@ -140,7 +140,7 @@ sbComPortOption(interposePvt *pinterposePvt, asynUser *pasynUser, const char *xB
  */
 static asynStatus
 writeIt(void *ppvt, asynUser *pasynUser,
-    const char *data, size_t numchars, size_t *nbytesTransfered)
+    const char *data, size_t numchars, size_t *nbytesTransferred)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
     const char *iac;
@@ -210,12 +210,15 @@ writeIt(void *ppvt, asynUser *pasynUser,
     }
     if (*nbytesTransfered == numchars)
         *nbytesTransfered -= nIAC;
+                                pasynUser, data, numchars, nbytesTransferred);
+    if (*nbytesTransferred == numchars)
+        *nbytesTransferred -= nIAC;
     return status;
 }
 
 static asynStatus
 readIt(void *ppvt, asynUser *pasynUser,
-    char *data, size_t maxchars, size_t *nbytesTransfered, int *eomReason)
+    char *data, size_t maxchars, size_t *nbytesTransferred, int *eomReason)
 {
     interposePvt *pinterposePvt = (interposePvt *)ppvt;
     int eom;
@@ -258,7 +261,7 @@ readIt(void *ppvt, asynUser *pasynUser,
                                 "nRead %d after IAC unstuffing", (int)nRead);
     if (nRead == maxchars)
         eom |= ASYN_EOM_CNT;
-    *nbytesTransfered = nRead;
+    *nbytesTransferred = nRead;
     if (eomReason) *eomReason = eom;
     return asynSuccess;
 }

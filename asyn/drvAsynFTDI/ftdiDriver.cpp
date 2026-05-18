@@ -99,7 +99,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   *(pbuf + i++) = DIS_ADAPTIVE;    // opcode: disable adaptive clocking
   *(pbuf + i++) = DIS_3_PHASE;     // opcode: disable 3-phase clocking
   *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
-  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinState;        // argument: initial pin states
   *(pbuf + i++) = pinDirection;    // argument: pin direction
   n  = ftdi_write_data(ftdi_, pbuf, i);
   rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
@@ -115,7 +115,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   i = 0; // CLEAR MASTER RESET
   *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
   pinState&=~Pin::RESET;
-  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinState;        // argument: initial pin states
   *(pbuf + i++) = pinDirection;    // argument: pin direction
   n  = ftdi_write_data(ftdi_, pbuf, i);
   rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
@@ -133,7 +133,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   i = 0;
   *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
   pinState&=~Pin::SYNCIO;
-  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinState;        // argument: initial pin states
   *(pbuf + i++) = pinDirection;    // argument: pin direction
   n  = ftdi_write_data(ftdi_, pbuf, i);
   rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
@@ -148,7 +148,7 @@ FTDIDriverStatus FTDIDriver::initSPI() {
   i = 0;
   *(pbuf + i++) = SET_BITS_LOW;    // opcode: set low bits (ADBUS[0-7])
   pinState&=~Pin::CS;
-  *(pbuf + i++) = pinState;        // argument: inital pin states
+  *(pbuf + i++) = pinState;        // argument: initial pin states
   *(pbuf + i++) = pinDirection;    // argument: pin direction
   n  = ftdi_write_data(ftdi_, pbuf, i);
   rc = (n==i)?FTDIDriverSuccess:FTDIDriverError;
@@ -719,7 +719,7 @@ FTDIDriver::~FTDIDriver()
 
 #ifndef _MINGW
 #ifdef _WIN32
-/* Windows implemenation of gettimeofday and usleep */
+/* Windows implementation of gettimeofday and usleep */
 #include < time.h >
 #include < windows.h >
 

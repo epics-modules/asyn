@@ -344,7 +344,11 @@ report(void *pvt, FILE *fp, int details)
     if (details >= 100) {
         int l = details % 100;
         fprintf(fp, "==== Set libusb debug level %d ====\n", l);
+#if LIBUSB_API_VERSION >= 0x01000106
         libusb_set_option(pdpvt->usb, LIBUSB_OPTION_LOG_LEVEL, l);
+#else
+        libusb_set_debug(pdpvt->usb, 1);
+#endif
     }
 }
 
@@ -721,7 +725,7 @@ static asynCommon commonMethods = { report, connect, disconnect };
  */
 static asynStatus
 asynOctetWrite(void *pvt, asynUser *pasynUser,
-               const char *data, size_t numchars, size_t *nbytesTransfered)
+               const char *data, size_t numchars, size_t *nbytesTransferred)
 {
     drvPvt *pdpvt = (drvPvt *)pvt;
     int timeout = pasynUser->timeout * 1000;
@@ -741,7 +745,7 @@ asynOctetWrite(void *pvt, asynUser *pasynUser,
     /*
      * Send
      */
-    *nbytesTransfered = 0;
+    *nbytesTransferred = 0;
     while (numchars) {
         int nSend, pkSend, pkSent;
         int s;
@@ -789,15 +793,15 @@ asynOctetWrite(void *pvt, asynUser *pasynUser,
         }
         data += nSend;
         numchars -= nSend;
-        *nbytesTransfered += nSend;
+        *nbytesTransferred += nSend;
     }
-    pdpvt->bytesSentCount += *nbytesTransfered;
+    pdpvt->bytesSentCount += *nbytesTransferred;
     return asynSuccess;
 }
 
 static asynStatus
 asynOctetRead(void *pvt, asynUser *pasynUser,
-              char *data, size_t maxchars, size_t *nbytesTransfered,
+              char *data, size_t maxchars, size_t *nbytesTransferred,
               int *eomReason)
 {
     drvPvt *pdpvt = (drvPvt *)pvt;
@@ -808,7 +812,7 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
     int timeout = pasynUser->timeout * 1000;
     if (timeout == 0) timeout = 1;
 
-    *nbytesTransfered = 0;
+    *nbytesTransferred = 0;
     for (;;) {
         /*
          * Special case for stream device which requires an asynTimeout return.
@@ -827,7 +831,7 @@ asynOctetRead(void *pvt, asynUser *pasynUser,
             pdpvt->bufp += nCopy;
             pdpvt->bufCount -= nCopy;
             maxchars -= nCopy;
-            *nbytesTransfered += nCopy;
+            *nbytesTransferred += nCopy;
             pdpvt->bytesReceivedCount += nCopy;
             data += nCopy;
             if (maxchars == 0)

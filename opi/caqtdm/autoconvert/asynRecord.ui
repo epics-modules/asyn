@@ -85,6 +85,16 @@ caChoice &gt; QPushButton {
       padding: 1px;
 }
 
+/* when font specified, no font sizing is done any more,  font: 10pt; is not bad. You could Enable this when you converted from .adl files
+caRelatedDisplay  &gt; QPushButton {
+font: 10pt;
+}
+
+caShellCommand  &gt; QPushButton {
+font: 10pt;
+}
+*/
+
 caSlider::groove:horizontal {
 border: 1px solid #bbb;
 background: lightgrey;
@@ -1870,7 +1880,7 @@ border-radius: 2px;
                 <string>asynOctet Interface I/O;Register interfaces I/O;Serial port parameters;IP port parameters;GPIB parameters</string>
             </property>
             <property name="files">
-                <string>asynOctet.adl;asynRegister.adl;asynSerialPortSetup.adl;asynIPPortSetup.adl;asynGPIBSetup.adl</string>
+                <string>asynOctet.ui ;asynRegister.ui ;asynSerialPortSetup.ui ;asynIPPortSetup.ui ;asynGPIBSetup.ui </string>
             </property>
             <property name="args">
                 <string>P=$(P),R=$(R);P=$(P),R=$(R);P=$(P),R=$(R);P=$(P),R=$(R);P=$(P),R=$(R)</string>

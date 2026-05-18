@@ -33,7 +33,7 @@ asyn_SYS_LIBS_cygwin32 = $(CYGWIN_RPC_LIB)
 # Some linux systems moved RPC related symbols to libtirpc
 # Define TIRPC in configure/CONFIG_SITE in this case
 ifeq ($(TIRPC),YES)
-  USR_INCLUDES_Linux += -I/usr/include/tirpc
+  USR_INCLUDES_Linux += -I$(SYSROOT)/usr/include/tirpc
   asyn_SYS_LIBS_Linux += tirpc
 endif
 
@@ -215,6 +215,7 @@ ifneq ($(EPICS_LIBCOM_ONLY),YES)
   DB += asynRecord.db
 endif
 
+ifeq ($(DRV_VXI11),YES)
 SRC_DIRS += $(ASYN)/vxi11
 ifeq ($(OS_CLASS), WIN32)
   asyn_SRCS += drvVxi11Win32.c
@@ -226,6 +227,7 @@ asyn_SRCS += E5810Reboot.c
 asyn_SRCS += E2050Reboot.c
 asyn_SRCS += TDS3000Reboot.c
 DBD += drvVxi11.dbd
+endif
 
 SRC_DIRS += $(ASYN)/drvPrologixGPIB
 asyn_SRCS += drvPrologixGPIB.c
@@ -242,9 +244,11 @@ endif
 
 ifneq (, $(findstring RTEMS, $(T_A)))
   DRV_USBTMC = NO
+  DRV_VXI11 = NO
 endif
 ifneq (, $(findstring vxWorks, $(T_A)))
   DRV_USBTMC = NO
+  DRV_VXI11 = NO
 endif
 ifeq ($(DRV_USBTMC),YES)
   SRC_DIRS += $(ASYN)/drvAsynUSBTMC
@@ -259,11 +263,26 @@ ifeq ($(DRV_FTDI),YES)
   asyn_SYS_LIBS += usb-1.0
   INC += drvAsynFTDIPort.h
   ifeq ($(DRV_FTDI_USE_LIBFTDI1),YES)
-    asyn_SYS_LIBS += ftdi1
     USR_CXXFLAGS += -DHAVE_LIBFTDI1
+    ifeq ($(FTDI_LIB),)
+      asyn_SYS_LIBS += ftdi1
+    else
+      asyn_LIBS += ftdi1
+      ftdi1_DIR = $(FTDI_LIB)
+    endif
   else
-    asyn_SYS_LIBS += ftdi
+    ifeq ($(FTDI_LIB),)
+      asyn_SYS_LIBS += ftdi
+    else
+      asyn_LIBS += ftdi
+      ftdi_DIR = $(FTDI_LIB)
+    endif
   endif
+
+  ifdef FTDI_INCLUDE
+    USR_INCLUDES += $(addprefix -I, $(FTDI_INCLUDE))
+  endif
+
   DBD += drvAsynFTDIPort.dbd
 endif
 
@@ -305,7 +324,7 @@ drvVxi11$(DEP): vxi11intr.h vxi11core.h
 vxi11core_xdr.c$(DEP): vxi11core.h
 
 ifdef T_A
-  ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
+ ifneq ($(findstring $(OS_CLASS),vxWorks RTEMS),)
 
 vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 % : ../vxi11/rpc/%
@@ -313,7 +332,7 @@ vxi11core.h vxi11core_xdr.c vxi11intr.h vxi11intr_xdr.c : \
 vxi11core_xdr.o: vxi11core.h
 vxi11intr_xrd.o: vxi11intr.h
 
-  else
+ else
 
 .SECONDARY: vxi11core_xdr.c vxi11intr_xdr.c
 
@@ -323,9 +342,7 @@ RPCGEN_FLAGS_solaris = -M
 	cp $< .
 	rpcgen $(RPCGEN_FLAGS_$(OS_CLASS)) $*.rpcl
 
-  endif
-
-endif
+ endif  # OS_CLASS = vxWorks, RTEMS
 
 # Parallel build sometimes fails.
 # Make dependences on new records explicit.
@@ -337,11 +354,11 @@ devEpics.dbd$(DEP): $(TOP)/asyn/Makefile
 
 $(COMMON_DIR)/devEpics.dbd: $(TOP)/asyn/Makefile
 
-ifdef DBDCAT_COMMAND
+ ifdef DBDCAT_COMMAND
   # Override the default command when generating devEpics.dbd
   $(COMMON_DIR)/devEpics.dbd: DBDCAT_COMMAND = \
       $(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
-else
+ else
   # 3.14 didn't have the DBDCAT rule:
   build: $(COMMON_DIR)/devEpics.dbd
   $(COMMON_DIR)/devEpics.dbd: $(devEpics_DBD)
@@ -349,6 +366,6 @@ else
 	@$(RM) $(notdir $@)
 	$(PERL) $(TOOLS)/makeIncludeDbd.pl $(devEpics_DBD) $(notdir $@)
 	@$(MV) $(notdir $@) $@
-endif
-
+ endif  # DBDCAT_COMMAND
+endif  # T_A
 USR_CPPFLAGS += -DBUILDING_asyn_API

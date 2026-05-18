@@ -38,6 +38,8 @@
 #include "devSupportGpib.h"
 #include "devCommonGpib.h"
 
+typedef long(*special_linconv_t)(void*, int);
+
 
 /* The following is a generic finish routine for output records */
 static void genericFinish(gpibDpvt * pgpibDpvt,int failure)
@@ -51,7 +53,7 @@ long  devGpib_initAi(aiRecord * pai)
     long result;
     int cmdType;
     gpibDpvt *pgpibDpvt;
-    DEVSUPFUN  got_special_linconv = ((gDset *) pai->dset)->funPtr[5];
+    long (*got_special_linconv)(struct aiRecord *, int) = (long (*)(struct aiRecord *, int))((gDset *) pai->dset)->funPtr[5];
 
     result = pdevSupportGpib->initRecord((dbCommon *) pai, &pai->inp);
     if(result) return result;
@@ -64,7 +66,7 @@ long  devGpib_initAi(aiRecord * pai)
         pai->pact = TRUE;
         return S_db_badField;
     }
-    if(got_special_linconv) (*got_special_linconv)(pai,TRUE);
+    if(got_special_linconv) ((special_linconv_t)got_special_linconv)(pai,TRUE);
     return 0;
 }
 
@@ -130,7 +132,7 @@ long  devGpib_initAo(aoRecord * pao)
     long result;
     int cmdType;
     gpibDpvt *pgpibDpvt;
-    DEVSUPFUN  got_special_linconv = ((gDset *) pao->dset)->funPtr[5];
+    long (*got_special_linconv)(struct aoRecord *, int) = (long (*)(struct aoRecord *, int))((gDset *) pao->dset)->funPtr[5];
 
     /* do common initialization */
     result = pdevSupportGpib->initRecord((dbCommon *) pao, &pao->out);
@@ -145,7 +147,7 @@ long  devGpib_initAo(aoRecord * pao)
         pao->pact = TRUE;
         return S_db_badField;
     }
-    if(got_special_linconv) (*got_special_linconv)(pao,TRUE);
+    if(got_special_linconv) ((special_linconv_t)got_special_linconv)(pao,TRUE);
     return (got_special_linconv ? 0 : 2);
 }
 

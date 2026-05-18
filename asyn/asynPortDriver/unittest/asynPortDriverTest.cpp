@@ -35,9 +35,9 @@ typedef epicsGuard<asynPortDriver> Guard;
 epicsInt32 lastint32;
 size_t cbcount;
 
-void int32cb(void *userPvt, asynUser *pasynUser,
-                                       epicsInt32 data)
+void int32cb(void *userPvt, asynUser *pasynUser, epicsInt32 data)
 {
+    (void)pasynUser;
     testDiag("int32cb() called with %d", (int)data);
     cbcount++;
     asynInt32Client *client = (asynInt32Client*)userPvt;
@@ -51,21 +51,23 @@ void int32cb(void *userPvt, asynUser *pasynUser,
     testDiag("int32cb() done");
 }
 
-/* since asyn ports are forever, store them in a global
- * pointer so that valgrind will consider them reachable
- */
-asynPortDriver *portA;
+static asynPortDriver *instantiateDriver(const char *portName, bool autoDestroy) {
+    return new asynPortDriver(portName, 0,
+                              asynDrvUserMask|asynInt32Mask,
+                              asynInt32Mask,
+                              autoDestroy ? ASYN_DESTRUCTIBLE : 0,
+                              0, 0,
+                              epicsThreadGetStackSize(epicsThreadStackSmall));
+}
 
-void testA()
+void testA(asynPortDriver *portA)
 {
-    portA = new asynPortDriver("portA", 0,
-                               asynDrvUserMask|asynInt32Mask,
-                               asynInt32Mask, 0, 0, 0,
-                               epicsThreadGetStackSize(epicsThreadStackSmall));
-
     int idx1=-1, idx2=-1, sevr, ival;
     const char *name;
     double dval;
+
+    lastint32 = 0;
+    cbcount = 0;
 
     testDiag("Basic parameter creation");
 
@@ -134,7 +136,7 @@ void testA()
     {
         testOk1(portA->findParam(0, "y", &idx1)==asynSuccess);
 
-        asynInt32Client client("portA", -1, "y");
+        asynInt32Client client(portA->portName, -1, "y");
         testOk1(client.registerInterruptUser(&int32cb)==asynSuccess);
 
         lastint32 = 1234;
@@ -167,12 +169,101 @@ void testA()
 
 } // namespace
 
+static void checkShutdown(const char *portName) {
+    asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+    pasynManager->connectDevice(pasynUser, portName, 0);
+
+    asynStatus status = pasynManager->queueRequest(pasynUser, asynQueuePriorityMedium, 0);
+    testOk1(status != asynSuccess);
+
+    int enabled = 1;
+    status = pasynManager->isEnabled(pasynUser, &enabled);
+    testOk1(status == asynSuccess && enabled == 0);
+
+    status = pasynManager->enable(pasynUser, 1);
+    testOk1(status != asynSuccess);
+
+    enabled = 1;
+    status = pasynManager->isEnabled(pasynUser, &enabled);
+    testOk1(status == asynSuccess && enabled == 0);
+
+    pasynManager->freeAsynUser(pasynUser);
+}
+
 MAIN(asynPortDriverTest)
 {
-    testPlan(54);
+    const int testsPerRun = 54;
+    const int testRuns = 4;
+    const int interfaceTests = 14;
+    const int additionalTests = 8;
+    testPlan(testsPerRun * testRuns + interfaceTests + additionalTests);
     interruptAccept=1;
     try {
-        testA();
+        {
+            testDiag("Testing a non-destructible port");
+            testA(instantiateDriver("portA", false));
+        }
+        {
+            testDiag("Testing a destructible port, late shutdown");
+            testA(instantiateDriver("portB", true));
+        }
+        {
+            testDiag("Testing a destructible port, \"proper\" early shutdown");
+            asynPortDriver *tempPort = instantiateDriver("portC", true);
+            testA(tempPort);
+            std::string portName(tempPort->portName);
+            asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+            pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
+            pasynManager->shutdownPort(pasynUser);
+            pasynManager->freeAsynUser(pasynUser);
+
+            checkShutdown(portName.c_str());
+        }
+        {
+            testDiag("Testing a destructible port, early deletion, shows error message");
+            asynPortDriver *tempPort = instantiateDriver("portD", true);
+            testA(tempPort);
+            std::string portName(tempPort->portName);
+            delete tempPort;
+            checkShutdown(portName.c_str());
+        }
+        {
+            testDiag("Testing interfaces on a destroyed port");
+            char const *portName = "portE";
+            asynPortDriver *tempPort = instantiateDriver(portName, true);
+            int paramIdx;
+            testOk1(tempPort->createParam(0, "int32", asynParamInt32, &paramIdx)==asynSuccess);
+            testOk1(tempPort->setIntegerParam(0, paramIdx, 42) == asynSuccess);
+
+            asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+            pasynManager->connectDevice(pasynUser, tempPort->portName, 0);
+
+            asynInterface *pcommonIf = pasynManager->findInterface(pasynUser, "asynCommon", 0);
+            asynCommon *pcommon = (asynCommon*)pcommonIf->pinterface;
+            asynInterface *pdrvUserIf = pasynManager->findInterface(pasynUser, "asynDrvUser", 0);
+            asynDrvUser *pdrvUser = (asynDrvUser*)pdrvUserIf->pinterface;
+
+            epicsInt32 val;
+            asynUser *intUser;
+            testOk1(pcommon->connect(pcommonIf->drvPvt, pasynUser) == asynSuccess);
+            testOk1(pcommon->disconnect(pcommonIf->drvPvt, pasynUser) == asynSuccess);
+            testOk1(pdrvUser->create(pdrvUserIf->drvPvt, pasynUser, "int32", 0, 0) == asynSuccess);
+            testOk1(pdrvUser->destroy(pdrvUserIf->drvPvt, pasynUser) == asynSuccess);
+            testOk1(pasynInt32SyncIO->connect(portName, 0, &intUser, "int32") == asynSuccess);
+            testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) == asynSuccess);
+
+            pasynManager->shutdownPort(pasynUser);
+            pasynManager->freeAsynUser(pasynUser);
+
+            pcommon->report(pcommonIf->drvPvt, stdout, 0);
+            testOk1(pcommon->connect(pcommonIf->drvPvt, pasynUser) == asynDisabled);
+            testOk1(pcommon->disconnect(pcommonIf->drvPvt, pasynUser) == asynDisabled);
+            testOk1(pdrvUser->create(pdrvUserIf->drvPvt, pasynUser, "int32", 0, 0) == asynDisabled);
+            testOk1(pdrvUser->destroy(pdrvUserIf->drvPvt, pasynUser) == asynDisabled);
+            // Standard interfaces may return either asynDisabled or asynError
+            testOk1(pasynInt32SyncIO->readOnce(portName, 0, &val, 1.0, "int32") != asynSuccess);
+            testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) != asynSuccess);
+        }
     } catch(std::exception& e) {
         testAbort("Unhandled C++ exception: %s", e.what());
     }
