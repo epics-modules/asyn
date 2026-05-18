@@ -1800,13 +1800,13 @@ the asynUser is connected.</p>
 <tr class="row-odd"><td><p>lockPort / unlockPort</p></td>
 <td><p>Lock access to a port driver. This is used by code that is willing to block while
 making calls to a port driver. The code can call lockPort, make an arbitrary number
-of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
+of calls to the port driver, and then call unlockPort. Other code that calls queueRequest
 and/or lockPort will be delayed between the calls to lockPort and unlockPort.</p></td>
 </tr>
 <tr class="row-even"><td><p>queueLockPort / queueUnlockPort</p></td>
 <td><p>Lock access to a port driver. This is used by code that is willing to block while
 making calls to a port driver. The code can call queueLockPort, make an arbitrary
-number of calls to the port driver, and than call queueUnlockPort. Other code that
+number of calls to the port driver, and then call queueUnlockPort. Other code that
 calls queueRequest and/or lockPort will be delayed between the calls to queueLockPort
 and queueUnlockPort. The difference between lockPort and queueLockPort is that queueLockPort
 queues a request to lock the port, using the same queues as queueRequest. This means
@@ -6841,7 +6841,7 @@ is started, it can be connected to different devices.</p>
 
   <div role="contentinfo">
     <p>&#169; Copyright 2023, Mark Rivers.
-      <span class="lastupdated">Last updated on 2025-August-04.
+      <span class="lastupdated">Last updated on 2026-May-18.
       </span></p>
   </div>
 
