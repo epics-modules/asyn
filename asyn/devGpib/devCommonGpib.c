@@ -38,6 +38,8 @@
 #include "devSupportGpib.h"
 #include "devCommonGpib.h"
 
+typedef long(*special_linconv_t)(void*, int);
+
 
 /* The following is a generic finish routine for output records */
 static void genericFinish(gpibDpvt * pgpibDpvt,int failure)
@@ -64,7 +66,7 @@ long  devGpib_initAi(aiRecord * pai)
         pai->pact = TRUE;
         return S_db_badField;
     }
-    if(got_special_linconv) (*got_special_linconv)(pai,TRUE);
+    if(got_special_linconv) ((special_linconv_t)got_special_linconv)(pai,TRUE);
     return 0;
 }
 
@@ -145,7 +147,7 @@ long  devGpib_initAo(aoRecord * pao)
         pao->pact = TRUE;
         return S_db_badField;
     }
-    if(got_special_linconv) (*got_special_linconv)(pao,TRUE);
+    if(got_special_linconv) ((special_linconv_t)got_special_linconv)(pao,TRUE);
     return (got_special_linconv ? 0 : 2);
 }
 

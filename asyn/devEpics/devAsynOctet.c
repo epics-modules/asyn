@@ -193,38 +193,38 @@ typedef struct commonDset {
 } commonDset;
 
 commonDset asynSiOctetCmdResponse = {
-    5, 0, 0, (DEVSUPFUN)initSiCmdResponse,  0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initSiCmdResponse,  0,                      (DEVSUPFUN)processCommon};
 commonDset asynSiOctetWriteRead   = {
-    5, 0, 0, (DEVSUPFUN)initSiWriteRead,    0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initSiWriteRead,    0,                      (DEVSUPFUN)processCommon};
 commonDset asynSiOctetRead        = {
-    5, 0, 0, (DEVSUPFUN)initSiRead,         (DEVSUPFUN)getIoIntInfo,  (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initSiRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynSoOctetWrite       = {
-    5, 0, 0, (DEVSUPFUN)initSoWrite,        0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initSoWrite,        0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetCmdResponse = {
-    5, 0, 0, (DEVSUPFUN)initWfCmdResponse,  0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initWfCmdResponse,  0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWriteRead   = {
-    5, 0, 0, (DEVSUPFUN)initWfWriteRead,    0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initWfWriteRead,    0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetRead        = {
-    5, 0, 0, (DEVSUPFUN)initWfRead,         (DEVSUPFUN)getIoIntInfo,  (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initWfRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWrite       = {
-    5, 0, 0, (DEVSUPFUN)initWfWrite,        0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initWfWrite,        0,                      (DEVSUPFUN)processCommon};
 commonDset asynWfOctetWriteBinary = {
-    5, 0, 0, (DEVSUPFUN)initWfWriteBinary,  0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initWfWriteBinary,  0,                      (DEVSUPFUN)processCommon};
 #ifdef HAVE_LSREC
 commonDset asynLsiOctetCmdResponse = {
-    5, 0, 0, (DEVSUPFUN)initLsiCmdResponse, 0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initLsiCmdResponse, 0,                      (DEVSUPFUN)processCommon};
 commonDset asynLsiOctetWriteRead   = {
-    5, 0, 0, (DEVSUPFUN)initLsiWriteRead,   0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initLsiWriteRead,   0,                      (DEVSUPFUN)processCommon};
 commonDset asynLsiOctetRead        = {
-    5, 0, 0, (DEVSUPFUN)initLsiRead,        (DEVSUPFUN) getIoIntInfo, (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initLsiRead,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processCommon};
 commonDset asynLsoOctetWrite       = {
-    5, 0, 0, (DEVSUPFUN)initLsoWrite,       0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initLsoWrite,       0,                      (DEVSUPFUN)processCommon};
 commonDset asynPfOctetWrite       = {
-    5, 0, 0, (DEVSUPFUN)initPfWrite,        0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initPfWrite,        0,                      (DEVSUPFUN)processCommon};
 #endif /* HAVE_LSREC */
 #ifdef HAVE_CALCMOD
 commonDset asynScalcoutOctetWrite       = {
-    5, 0, 0, (DEVSUPFUN)initScalcoutWrite,  0,                        (DEVSUPFUN)processCommon };
+    5, 0, 0, (DEVSUPFUN)initScalcoutWrite,  0,                      (DEVSUPFUN)processCommon};
 #endif /* HAVE_CALCMOD */
 
 epicsExportAddress(dset, asynSiOctetCmdResponse);

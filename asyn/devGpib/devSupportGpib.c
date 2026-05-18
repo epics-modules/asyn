@@ -1554,7 +1554,7 @@ static long report(int interest)
 
 static gDset devGpib= {
     6,
-    { (DEVSUPFUN)report, (DEVSUPFUN)init, 0, 0, 0, 0 },
+    {(DEVSUPFUN)report,(DEVSUPFUN)init,0,0,0,0},
     0
 };
 epicsExportAddress(dset,devGpib);
