@@ -1260,12 +1260,12 @@ This is the main interface for communicating with asynDriver.
   * - lockPort / unlockPort 
     - Lock access to a port driver. This is used by code that is willing to block while
       making calls to a port driver. The code can call lockPort, make an arbitrary number
-      of calls to the port driver, and than call unlockPort. Other code that calls queueRequest
+      of calls to the port driver, and then call unlockPort. Other code that calls queueRequest
       and/or lockPort will be delayed between the calls to lockPort and unlockPort.
   * - queueLockPort / queueUnlockPort 
     - Lock access to a port driver. This is used by code that is willing to block while
       making calls to a port driver. The code can call queueLockPort, make an arbitrary
-      number of calls to the port driver, and than call queueUnlockPort. Other code that
+      number of calls to the port driver, and then call queueUnlockPort. Other code that
       calls queueRequest and/or lockPort will be delayed between the calls to queueLockPort
       and queueUnlockPort. The difference between lockPort and queueLockPort is that queueLockPort
       queues a request to lock the port, using the same queues as queueRequest. This means
