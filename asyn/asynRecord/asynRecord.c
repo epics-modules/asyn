@@ -2063,7 +2063,7 @@ static void resetError(asynRecord * pasynRec)
 static const char * asynExceptionStrings[] = { ASYN_EXCEPTION_STRINGS };
 const char * asynExceptionToString( asynException e )
 {
-    if ((size_t)e > asynExceptionTraceIOTruncateSize)
+    if ((size_t)e > sizeof(asynExceptionStrings)/sizeof(*asynExceptionStrings))
         return "Invalid Exception Number!";
     return asynExceptionStrings[e];
 }
