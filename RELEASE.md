@@ -1,11 +1,16 @@
 # asynDriver: Release Notes
 
-## Release 4-46 (XXX, 2025)
+## Release 4-46 (May XXX, 2026)
 - devVxi11
   - Make VXI11 support (for VISA systems) optional.
     VXI11 is broken on RTEMS-5 and rarely required for real-time system IOCs.
     By default enabled via setting DRV_VXI11=YES in configure/CONFIG_SITE. (Except RTEMS-5.)
   - Thanks to Heinz Junkes for this.
+- Many changes to eliminate compiler errors and warnings on newer compilers.
+- Fixed an issue with late enabling of autoconnect where it would only attempt to connect once.
+- Changed drvAsynIPPort so that connection attempts are non-blocking using poll().
+  This prevents operations like setting the EOS from hanging the IOC startup for
+  long periods if the device is not reachable.
 
 ## Release 4-45 (December 1, 2024)
 - asynManager, asynPortDriver
