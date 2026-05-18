@@ -395,7 +395,7 @@ static void testManager(const char *port,int addr,FILE *file)
     pasynUser = pacmdInfo[0]->pasynUser;
     pasynManager->canBlock(pasynUser,&yesNo);
     if(!yesNo) {
-        fprintf(file,"\nport %s addr %d cant block so no block or cancel test\n",port,addr);
+        fprintf(file,"\nport %s addr %d can't block so no block or cancel test\n",port,addr);
     } else {
         fprintf(file,"\nport %s addr %d\n",port,addr);
         /* test lock */

@@ -19,24 +19,24 @@ unless(defined $t_a) {
     opendir ARCHS, "$base/bin";
     my @archs = grep {m/vxWorks-/} readdir ARCHS;
     closedir ARCHS;
-    
+
     # This case is easy:
     if (@archs == 1) {
-	$t_a = $archs[0];
-	print "Assuming ioc${name}'s CPU architecture is '$t_a'\n";
+        $t_a = $archs[0];
+        print "Assuming ioc${name}'s CPU architecture is '$t_a'\n";
     } else {
-	# Need input from the user:
-	if (! @archs) {
-	    print "Base has not been built for vxWorks yet.\n";
-	} else {
-	    print "Base has these vxWorks architectures available:\n";
-	    foreach (@archs) {
-		print "\t$_\n";
-	    }
-	}
-	print "Which architecture is ioc${name}'s CPU? ";
-	$t_a = <STDIN>;
-	chomp $t_a;
+        # Need input from the user:
+        if (! @archs) {
+            print "Base has not been built for vxWorks yet.\n";
+        } else {
+            print "Base has these vxWorks architectures available:\n";
+            foreach (@archs) {
+                print "\t$_\n";
+            }
+        }
+        print "Which architecture is ioc${name}'s CPU? ";
+        $t_a = <STDIN>;
+        chomp $t_a;
     }
 }
 

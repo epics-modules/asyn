@@ -165,23 +165,23 @@ typedef struct analogDset { /* analog  dset */
 } analogDset;
 
 analogDset asynAiInt32 = {
-    6,0,0,initAi,       getIoIntInfo, processAi, convertAi };
+    6, 0, 0, (DEVSUPFUN)initAi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAi,        (DEVSUPFUN)convertAi };
 analogDset asynAiInt32Average = {
-    6,0,0,initAiAverage,getIoIntInfo, processAiAverage , convertAi };
+    6, 0, 0, (DEVSUPFUN)initAiAverage, (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAiAverage, (DEVSUPFUN)convertAi };
 analogDset asynAoInt32 = {
-    6,0,0,initAo,       getIoIntInfo, processAo , convertAo };
+    6, 0, 0, (DEVSUPFUN)initAo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processAo,        (DEVSUPFUN)convertAo };
 analogDset asynLiInt32 = {
-    5,0,0,initLi,       getIoIntInfo, processLi };
+    5, 0, 0, (DEVSUPFUN)initLi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLi };
 analogDset asynLoInt32 = {
-    5,0,0,initLo,       getIoIntInfo, processLo };
+    5, 0, 0, (DEVSUPFUN)initLo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processLo };
 analogDset asynBiInt32 = {
-    5,0,0,initBi,     getIoIntInfo, processBi };
+    5, 0, 0, (DEVSUPFUN)initBi,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processBi };
 analogDset asynBoInt32 = {
-    5,0,0,initBo,     getIoIntInfo, processBo };
+    5, 0, 0, (DEVSUPFUN)initBo,        (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processBo };
 analogDset asynMbbiInt32 = {
-    5,0,0,initMbbi,     getIoIntInfo, processMbbi };
+    5, 0, 0, (DEVSUPFUN)initMbbi,      (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbbi };
 analogDset asynMbboInt32 = {
-    5,0,0,initMbbo,     getIoIntInfo, processMbbo };
+    5, 0, 0, (DEVSUPFUN)initMbbo,      (DEVSUPFUN)getIoIntInfo, (DEVSUPFUN)processMbbo };
 
 epicsExportAddress(dset, asynAiInt32);
 epicsExportAddress(dset, asynAiInt32Average);
@@ -355,7 +355,7 @@ static long createRingBuffer(dbCommon *pr)
 {
     devPvt *pPvt = (devPvt *)pr->dpvt;
     const char *sizeString;
- 
+
     if (!pPvt->ringBuffer) {
         pPvt->ringSize = DEFAULT_RING_BUFFER_SIZE;
         sizeString = asynDbGetInfo(pr, "asyn:FIFO");
@@ -1316,7 +1316,7 @@ static long processMbbo(mbboRecord *pr)
                 int i;
 
                 pstate_values = &(pr->zrvl);
-                pr->val = 65535;        /* initalize to unknown state*/
+                pr->val = 65535;        /* initialize to unknown state*/
                 for (i = 0; i < 16; i++){
                     if (*pstate_values == rval){
                         pr->val = i;

@@ -1,6 +1,6 @@
 asynDriver
 ==========
- 
+
 :author: Mark Rivers, Eric Norum, and Marty Kraimer
 :date: December 1, 2024
 :version: R4-45
@@ -17,10 +17,10 @@ Purpose
 **asynDriver** is a general purpose facility for interfacing device specific
 code to low level drivers. asynDriver allows non-blocking device support that works
 with both blocking and non-blocking drivers.
-  
+
 A primary target for asynDriver is EPICS IOC device support but, other than using
 libCom, much of it is independent of EPICS.
-  
+
 asynDriver has the following key concepts:
 
 - Device support communicates with drivers via interfaces
@@ -69,7 +69,7 @@ asynDriver has the following key concepts:
 
   - asynDriver provides many facilities for communicating with RS232, RS485, GPIB, and
     ethernet.
- 
+
 Status
 ------
 This version provides:
@@ -116,7 +116,7 @@ that have been converted to use asynDriver:
   original motivation for the development of asynPortDriver.
 
 Acknowledgments
----------------  
+---------------
 The idea of creating asynDriver resulted from many years of experience with writing
 device support for serial and GPIB devices. The following individuals have been
 most influential.
@@ -137,33 +137,33 @@ most influential.
    - Eric started with Benjamin's code and converted it to use the Operating System Independent
      features of EPICS 3.14.
 - **Marty Kraimer**
-    
+
    - Marty started with Eric's version and made changes to support secondary addressing;
      and to replace ioctl with code to support general bus management, universal commands,
      and addressed commands.
 - **Pete Owens**
-    
+
   - Pete, for the Diamond Light Source, did a survey of several types of device/driver
     support packages for serial devices. Diamond decided to use the StreamDevice support
     developed by Dirk Zimoch.
 - **Dirk Zimoch**
-    
+
   - Dirk developed StreamDevice, which has a single device support model, but supports
     arbitrary low level message based drivers, i.e. GPIB, serial, etc.
 - **Jun-ichi Odagiri**
-    
+
   - Jun-ichi developed NetDev, a system that provides EPICS device support for network
     based devices. It has a single device support model, but provides a general framework
     for communicating with network based devices.
 - **Mark Rivers**
-   
+
   - Mark became an active developer of asynDriver soon after he started converting SynApps
     to use asynDriver. He soon pushed to have asynDriver support synchronous drivers,
     support register based drivers, and support interrupts. With these additions asynDriver
     is a framework for interfacing to a large class of devices instead of just message
     based asynchronous devices.
 - **Yevgeny A. Gusev**
-    
+
   - Yevgeny has found bugs and suggested improvements in the way asynManager handles
     queue timeouts and cancels. He provides an expert and welcome set of eyes to look
     at difficult code!!!
@@ -172,7 +172,7 @@ Overview of asynDriver
 ----------------------
 
 Definitions
-~~~~~~~~~~~  
+~~~~~~~~~~~
 asynDriver is a software layer between device specific code and drivers that communicate
 with devices. It supports both blocking and non-blocking communication and can be
 used with both register and message based devices. asynDriver uses the following
@@ -190,54 +190,54 @@ terminology:
   - A physical or logical entity which provides access to a device. A port provides
     access to one or more devices.
 - portDriver
-      
+
   - Code that communicates with a port.
 - portThread
-      
+
   - If a portDriver can block, a thread is created for each port, and all I/O to the
     portDriver is done via this thread.
 - device
-      
+
   - A device (instrument) connected to a port. For example a GPIB interface can have
     up to 15 devices connected to it. Other ports, e.g. RS-232 serial ports, only support
     a single device. Whenever this document uses the word device without a qualifier,
     it means something that is connected to a port.
-    
+
 - device support
-      
+
   - Code that interacts with a device.
 - synchronous
-      
+
   - Support that does not voluntarily give up control of the CPU.
 - asynchronous
-      
+
   - Support that is not synchronous. Some examples of asynchronous operations are epicsThreadSleep,
     epicsEventWait, and stdio operations. Calls to epicsMutexTake are considered to
     be synchronous operations, i.e. they are permitted in synchronous support.
 - asynDriver
-  
+
   - The name for the support described in this manual. It is also the name of the header
     file that describes the core interfaces.
 - asynManager
-  
+
   - An interface and the code which implements the methods for interfaces asynManager
     and asynTrace.
 - asynchronous Driver
-  
+
   - A driver that blocks while communicating with a device. Typical examples are serial,
     gpib, and network based drivers.
 - synchronous Driver
-  
+
   - A driver that does not block while communicating with a device. Typical examples
     are VME register based devices.
 - Message Based Interfaces
 
   - Interfaces that use octet arrays for read/write operations.
 - Register Based Interfaces
-  
+
   - Interfaces that use integers or floats for read/write operations.
 - interrupt
-  
+
   - As implemented by asynManager, interrupt just means "I have a new value for port,
     address".
 
@@ -285,8 +285,8 @@ The interfaces are:
 - disconnect - Disconnect from the port or device.
 
 **asynTrace** is an interface for generating diagnostic messages.
- 
-**asynLockPortNotify** is an interface that is implemented by a driver which is an asynUser of another driver. 
+
+**asynLockPortNotify** is an interface that is implemented by a driver which is an asynUser of another driver.
 An example is a serial bus driver that uses standard serial support. asynManager calls asynLockPortNotify
 whenever it locks or unlocks the port.
 
@@ -338,14 +338,14 @@ the following services:
 
 reporting
 .........
-  
+
   Method: report
 
 asynUser creation
 .................
-  
+
   Methods: createAsynUser, duplicateAsynUser, freeAsynUser
-  
+
   An asynUser is a "handle" for accessing asynManager services and for calling interfaces
   implemented by drivers. An asynUser must only be created via a call to createAsynUser
   or duplicateAsynUser since asynManager keeps private information for each asynUser.
@@ -360,9 +360,9 @@ asynUser creation
 
 Basic asynUser services
 .......................
-  
+
   Methods: connectDevice, disconnect, findInterface
-  
+
   These methods should only be called by the code that created the asynUser.
 
   After an asynUser is created the user calls connectDevice. The user is connected
@@ -372,7 +372,7 @@ Basic asynUser services
 
 Queuing services
 ................
-  
+
   Methods: queueRequest, cancelRequest, lockPort, unlockPort, queueLockPort, queueUnlockPort,
   blockProcessCallback, unblockProcessCallback
 
@@ -380,9 +380,9 @@ Queuing services
   Most interface methods must only be called from processCallback via a call to queueRequest
   or between calls to lockPort/unlockPort.. Exceptions to this rule must be clearly
   documented (a common exception are methods registerInterruptUser/cancelInterruptUser).
-  
+
   queueRequest semantics differ for ports that can block and ports that do not block
-  
+
   When registerPort is called by a driver that can block, a thread is created for
   the port. A set of queues, based on priority, is created for the thread. queueRequest
   puts the request on one of the queues. The port thread takes the requests from the
@@ -392,7 +392,7 @@ Queuing services
   for the port. queueRequest takes the mutex, calls the callback, and releases the
   mutex. The mutex guarantees that two callbacks to a port are not active at the same
   time.
- 
+
   lockPort is a request to lock all access to low level drivers until unlockPort is
   called. If the port blocks then lockPort and all calls to the port driver may block.
   lockPort/unlockPort are provided for use by code that is willing to block or for
@@ -424,7 +424,7 @@ Queuing services
 
 Basic Driver services
 .....................
-  
+
   Methods: registerPort, registerInterface, shutdownPort
 
   registerPort is called by a portDriver. registerInterface is called by a portDriver
@@ -450,7 +450,7 @@ Attribute Retrieval
 
 Connection services
 ...................
-  
+
   Methods: enable,autoConnect,setAutoConnectTimeout
 
   These methods can be called by any code that has access to the asynUser.
@@ -477,7 +477,7 @@ Connection services
 
 Exception services
 ....................
-  
+
   Methods: exceptionCallbackAdd, exceptionCallbackRemove, exceptionConnect, exceptionDisconnect
 
   Device support code calls exceptionCallbackAdd and exceptionCallbackRemove. The
@@ -489,7 +489,7 @@ Exception services
 
 Interrupt services
 ..................
-  
+
   Methods: registerInterruptSource, getInterruptPvt, createInterruptNode, freeInterruptNode,
   addInterruptUser, removeInterruptUser, interruptStart, interruptEnd
 
@@ -499,26 +499,26 @@ Interrupt services
   whenever an interrupt occurs. Drivers or other code that implements the interface
   calls the registered users when it has new data. asynManager provides services that
   help drivers implement thread-safe support for interrupts.
-  
+
   A driver that supports interrupts calls registerInterruptSource for each interface
   that has associated interrupts. It calls interruptStart to obtain a list of all
   registered users and interruptEnd after it calls the registered users. The driver
   is also responsible for calling addInterruptUser and removeInterruptUser.
-  
+
   If any calls are made to addInterruptUser or removeInterruptUser between the calls
   to interruptStart and interruptEnd, asynManager puts the request on a list and processes
   the request after interruptEnd is called.
-  
+
   Many standard interfaces, e.g. asynInt32, provide methods registerInterruptUser,
   cancelInterruptUser. These interfaces also provide an auxiliary interface, e.g.
   asynInt32Base, and code which implements registerInterruptUser and cancelInterruptUser.
-  
+
   On operating systems like vxWorks or RTEMS interruptStart,interruptEnd MUST NOT
   be called from interrupt level.
 
 Timestamp services
 ..................
-  
+
   Methods: updateTimeStamp, getTimeStamp, setTimeStamp, registerTimeStampSource, unregisterTimeStampSource.
 
   These methods provide support for setting a timestamp for a port. This timestamp
@@ -533,7 +533,7 @@ Timestamp services
 
 General purpose freelist service
 ................................
-  
+
   Methods: memMalloc, memFree
 
   These methods do not require an asynUser. They are provided for code that must continually
@@ -543,7 +543,7 @@ General purpose freelist service
 
 Interpose service
 .................
-  
+
   Method: interposeInterface
 
   Code that calls interposeInterface implements an interface which is either not supported
@@ -556,38 +556,38 @@ Interpose service
 
 Multiple Device vs Single Device Port Drivers
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 When a low level driver calls registerPort, it declares if it handles multiple devices.
 This determines how the addr argument to connectDevice is handled and what getAddr
 returns.
 
   **multiDevice false**
-  
+
     The addr argument to connectDevice is ignored and getAddr always returns -1
 
   **multiDevice true**
-  
+
     If connectDevice is called with addr<0, the connection is to the port and getAddr
     always returns -1. If addr>=0, then the caller is connected to the device at
     the specified address. getAddr will return this address. An asynUser connected to
     the port can issue requests that affect all address on the port. For example disabling
     access to the port prevents access to all addresses on the port.
-    
+
 Connection Management
 ~~~~~~~~~~~~~~~~~~~~~
-  
+
 asynManager keeps track of the following states:
 
   **connection**
-      
+
     Is the port or device connected? This state is initialized to disconnected.
-    
-  **enabled**      
+
+  **enabled**
 
     Is the port or device enabled? This state is initialized to enabled.
-    
+
   **autoConnect**
-      
+
     Does asynManager automatically attempt to connect if it finds the port or device
     disconnected? This is initialized to the state specified in the call to registerPort.
 
@@ -604,7 +604,7 @@ to a port or port,addr and exceptionDisconnect whenever they disconnect.
 
 Protecting a Thread from Blocking
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 The methods asynManager:report and asynCommon:report can be called by any thread,
 but the caller is blocked until the report finishes. lockPort, unlockPort, queueLockPort,
 queueUnlockPort, and most port methods may block. The other asynManager methods
@@ -619,7 +619,7 @@ a non blocking driver.
 
 portThread
 ~~~~~~~~~~
-  
+
 If a driver calls asynManager:registerPort with the ASYN_CANBLOCK attributes bit
 set, then asynManager creates a thread for the port. Each portThread has its own
 set of queues for the calls to queueRequest. Four queues are maintained. One queue
@@ -644,7 +644,7 @@ portThread runs forever implementing the following algorithm:
     - If blocked by another thread, skip this element.
     - If not blocked and user has requested blocking, then blocked.
     - Remove from queue and:
-  
+
        * lock port
        * call user callback
        *  unlock port
@@ -654,7 +654,7 @@ asynManager. This means that the queues can be modified and exceptions may occur
 
 Overview of Queuing
 ~~~~~~~~~~~~~~~~~~~
-  
+
 When discussing queuing it is useful to think of 3 components of asyn:
 
 #. asynManager. This is the core part of asyn. It knows nothing about EPICS records.
@@ -688,7 +688,7 @@ Theory of Operation
 -------------------
 
 Initialization
-~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~
 During initialization, port drivers register each communication port as well as
 all supported interfaces.
 
@@ -697,7 +697,7 @@ by calling
 ::
 
     pasynManager->createAsynUser(processCallback, timeoutCallback);
-  
+
 An asynUser has the following features:
 
 - An asynUser is the means by which asynManager manages multiple requests for accessing
@@ -713,7 +713,7 @@ An asynUser has the following features:
 - Device support code should NOT try to share an asynUser between multiple sources
   of requests for access to a port. If this is done then device support must itself
   handle contention issues that are already handled by asynManager.
-  
+
 User code connects to a low level driver via a call to
 ::
 
@@ -728,25 +728,25 @@ calls findInterface to locate the interfaces with which it calls the driver. For
 
 Requesting access to a port
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 - queueRequest
-      
+
     The processCallback passed to createAsynUser makes calls to the port interfaces.
-    
+
 - lockPort/unlockPort, queueLockPort/queueUnlockPort
-      
+
     The caller can make calls to the port interfaces while the lock is held. These calls
     and calls to the port may block and thus should NOT be used by code that should
     not block, e.g. synchronous device support for EPICS records.
-    
+
 queueRequest - Flow of Control
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 User code requests access to a port by calling
 ::
 
     status = pasynManager->queueRequest(pasynUser, priority, timeout);
-  
+
 This results in either processCallback or timeoutCallback being called. Most requests
 to a port must be made from processCallback. queueRequest does not block. If queueRequest
 is called for a port that can block the request is queued to a thread dedicated
@@ -757,7 +757,7 @@ lockPort/unlockPort, and/or queueLockPort/queueUnlockPort
 The following examples are based on EPICS IOC record/device support.
 
 The first example shows access to a port that can block.
-  
+
 .. figure:: AsynFlow.jpg
     :align: center
 
@@ -781,9 +781,9 @@ thread is pictured above in Figure 1, and explained below in the following steps
 #. Record support calls device support again, this time with PACT 1(processing is
    active). Device support updates fields in the record and returns to record support
    which completes record processing.
-  
+
 The second example shows access to a port that cannot block.
-  
+
 .. figure:: AsynSynFlow.jpg
     :align: center
 
@@ -852,28 +852,28 @@ method is expected to write a message into pasynUser->errorMessage.
   typedef enum {
     asynSuccess,asynTimeout,asynOverflow,asynError,asynDisconnected,asynDisabled
   } asynStatus
-  
+
 
 .. list-table::  asynStatus
   :widths: 20 80
-  
+
   * - asynSuccess
     - The request was successful.
-  * - asynTimeout 
-    - The request failed with a timeout. 
-  * - asynOverflow 
+  * - asynTimeout
+    - The request failed with a timeout.
+  * - asynOverflow
     - The driver has lost input data. This can happen if an internal buffer or the user
       supplied buffer is too small. Whenever possible, low level drivers should be written
-      so that the user can read input in small pieces. 
-  * - asynError 
-    - Some other error occurred. 
-  * - asynDisconnected 
-    - The request failed because the port is not connected. 
-  * - asynDisabled 
-    - The request failed because the port or device is disabled. 
- 
+      so that the user can read input in small pieces.
+  * - asynError
+    - Some other error occurred.
+  * - asynDisconnected
+    - The request failed because the port is not connected.
+  * - asynDisabled
+    - The request failed because the port or device is disabled.
+
 asynException
-~~~~~~~~~~~~~  
+~~~~~~~~~~~~~
 Defines the exceptions for method exceptionOccurred
 ::
 
@@ -885,28 +885,28 @@ Defines the exceptions for method exceptionOccurred
 
 .. list-table::  asynException
   :widths: 20 80
-  
-  * - asynExceptionConnect 
+
+  * - asynExceptionConnect
     - The connection state of the port or device has changed.
-  * - asynExceptionEnable 
-    - The enable state of the port or device has changed. 
-  * - asynExceptionAutoConnect  
-    - The autoConnect state of the port or device has changed. 
-  * - asynExceptionTraceMask 
+  * - asynExceptionEnable
+    - The enable state of the port or device has changed.
+  * - asynExceptionAutoConnect
+    - The autoConnect state of the port or device has changed.
+  * - asynExceptionTraceMask
     - The traceMask for the port or device has changed.
-  * - asynExceptionTraceIOMask 
-    - The traceIOMask for the port or device has changed. 
-  * - asynExceptionTraceInfoMask 
-    - The traceInfoMask for the port or device has changed. 
-  * - asynExceptionTraceFile 
-    - The trace file for the port or device has changed.  
-  * - asynExceptionTraceIOTruncateSize 
+  * - asynExceptionTraceIOMask
+    - The traceIOMask for the port or device has changed.
+  * - asynExceptionTraceInfoMask
+    - The traceInfoMask for the port or device has changed.
+  * - asynExceptionTraceFile
+    - The trace file for the port or device has changed.
+  * - asynExceptionTraceIOTruncateSize
     - The traceIOTruncateSize for the port or device has changed.
   * - asynExceptionShutdown
     - The port has been shut down and the driver may clean up.
 
 asynQueuePriority
-~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~
 This defines the priority passed to queueRequest.
 ::
 
@@ -917,19 +917,19 @@ This defines the priority passed to queueRequest.
 
 .. list-table::  asynQueuePriority
   :widths: 20 80
-  
-  * - asynQueuePriorityLow 
-    - Lowest queue priority. 
-  * - asynQueuePriorityMedium 
-    - Medium queue priority. 
-  * - asynQueuePriorityHigh  
-    - High queue priority. 
-  * - asynQueuePriorityConnect  
+
+  * - asynQueuePriorityLow
+    - Lowest queue priority.
+  * - asynQueuePriorityMedium
+    - Medium queue priority.
+  * - asynQueuePriorityHigh
+    - High queue priority.
+  * - asynQueuePriorityConnect
     - Queue a connect or disconnect request. This priority must be used for and only for
-      connect/disconnect requests. 
+      connect/disconnect requests.
 
 asynUser
-~~~~~~~~  
+~~~~~~~~
 Describes a structure that user code passes to most asynManager and driver methods.
 Code must allocate and free an asynUser by calling asynManager:createAsynUser (or
 asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
@@ -940,23 +940,23 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
     int            errorMessageSize;
     /* timeout must be set by the user */
     double         timeout;  /* Timeout for I/O operations*/
-    void          *userPvt; 
-    void          *userData; 
+    void          *userPvt;
+    void          *userData;
     /* The following is for use by driver */
     void          *drvUser;
     /* The following is normally set by driver via asynDrvUser->create() */
     int            reason;
     epicsTimeStamp timestamp;
     /* The following are for additional information from method calls */
-    int            auxStatus;     /* For auxillary status*/
+    int            auxStatus;     /* For auxiliary status*/
     int            alarmStatus;   /* Typically for EPICS record alarm status */
     int            alarmSeverity; /* Typically for EPICS record alarm severity */
   } asynUser;
 
 .. list-table::  asynUser
   :widths: 20 80
-  
-  * - errorMessage 
+
+  * - errorMessage
     - When a method returns asynError it should put an error message into errorMessage
       via a call to
       ::
@@ -966,32 +966,32 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
       The error message should *not* end with (nor contain) a newline character
       sequence (e.g. ``\n``). It is up to user code to decide whether and how to
       display the error message. Keeping newlines out of the error message make it easy
-      for user code to embed the error message in another message or output format. 
-  * - errorMessageSize  
+      for user code to embed the error message in another message or output format.
+  * - errorMessageSize
     - The size of errorMessage. The user can not change this value.
-  * - timeout 
+  * - timeout
     - The number of seconds before timeout for I/O requests. This is set by the user and
       can be changed between calls to a driver. If a call to a low level driver results
-      in the driver making many I/O requests this is the time for each I/O request. 
+      in the driver making many I/O requests this is the time for each I/O request.
       The meaning is as follows:
-    
+
       > 0.0 Wait for up to timeout seconds for the I/O to complete
-    
+
       = 0.0 Perform any I/O that can be done without blocking. Return timeout error if
       no I/O can be done without blocking.
-    
+
       < 0.0 Infinite timeout. Wait forever for I/O to complete.
-  * - userPvt 
+  * - userPvt
     - For use by the user. The user should set this immediately after the call to pasynManager->createAsynUser.
-          
+
       If this is changed while asynUser is queued, the results are undefined, e.g. it
-      could cause a crash. 
-  * - userData 
-    - Also for use by the user. 
-  * - drvUser  
+      could cause a crash.
+  * - userData
+    - Also for use by the user.
+  * - drvUser
     - A driver can use this to hold asynUser specific data. The asynDrvUser interface
-      is used for communication between asynUser and the driver. 
-  * - reason   
+      is used for communication between asynUser and the driver.
+  * - reason
     - Drivers and asynUsers can use this as a general purpose field. By convention it
       is used to determine what "command" is being sent over a particular interface. For
       example an A/D driver implementing the asynInt32 interface might define reason=0
@@ -1001,22 +1001,22 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.
       the enum "reason". A driver that is calling an interrupt users often uses reason
       to decide if the users callback should be called. Values of reason less than 0 are
       reserved for standard meanings. For example ASYN_REASON_SIGNAL is used to mean "out
-      of band" request. The devGpib support uses this to report SRQs. 
-  * - timestamp  
+      of band" request. The devGpib support uses this to report SRQs.
+  * - timestamp
     - Devices which provide their own time stamps use this field to provide the time value
-      for records whose TSE field is set to "-2". 
-  * - auxStatus 
+      for records whose TSE field is set to "-2".
+  * - auxStatus
     - Any method can provide additional return information in auxStatus. The meaning is
       determined by the method. Callbacks can use auxStatus to set record alarm status
       in device support callback functions.
-  * - alarmStatus  
+  * - alarmStatus
     - Any method can provide additional return information in alarmStatus. The meaning
       is determined by the method. Callbacks can use alarmStatus to set record alarm status
-      in device support callback functions. 
-  * - alarmSeverity  
+      in device support callback functions.
+  * - alarmSeverity
     - Any method can provide additional return information in alarmStatus. The meaning
       is determined by the method. Callbacks can use alarmSeverity to set record alarm
-      severity in device support callback functions. 
+      severity in device support callback functions.
 
 
 asynInterface
@@ -1032,12 +1032,12 @@ This defines an interface registered with asynPortManager:registerPort or asynMa
 
 .. list-table::  asynInterface
   :widths: 20 80
-  
+
   * - interfaceType
-    - A character string describing the interface. 
-  * - pinterface 
+    - A character string describing the interface.
+  * - pinterface
     - A pointer to the interface. The user must cast this to the correct type.
-  * - drvPvt  
+  * - drvPvt
     - For the exclusive use of the code that called registerPort or interposeInterface.
 
 asynManager
@@ -1049,19 +1049,19 @@ This is the main interface for communicating with asynDriver.
   #define ASYN_MULTIDEVICE  0x0001
   #define ASYN_CANBLOCK     0x0002
   #define ASYN_DESTRUCTIBLE 0x0004
-  
+
   /*standard values for asynUser.reason*/
   #define ASYN_REASON_SIGNAL -1
-  
+
   #define ASYN_REASON_RESERVED_LOW 0x70000000
   #define ASYN_REASON_RESERVED_HIGH 0x7FFFFFFF
-  
+
   #define ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED ASYN_REASON_RESERVED_LOW
-  
+
   typedef void (*userCallback)(asynUser *pasynUser);
   typedef void (*exceptionCallback)(asynUser *pasynUser,asynException exception);
   typedef void (*timeStampCallback)(void *userPvt, epicsTimeStamp *pTimeStamp);
-  
+
   typedef struct interruptNode{
       ELLNODE node;
       void    *drvPvt;
@@ -1137,68 +1137,68 @@ This is the main interface for communicating with asynDriver.
       asynStatus (*updateTimeStamp)(asynUser *pasynUser);
       asynStatus (*getTimeStamp)(asynUser *pasynUser, epicsTimeStamp *pTimeStamp);
       asynStatus (*setTimeStamp)(asynUser *pasynUser, const epicsTimeStamp *pTimeStamp);
-  
+
       const char *(*strStatus)(asynStatus status);
   } asynManager;
   epicsShareExtern asynManager *pasynManager;
 
 .. list-table::  asynManager
   :widths: 20 80
-  
-  * - report 
+
+  * - report
     - Reports status about the asynPortManager. If portName is non-NULL it reports for
       a specific port. If portName is NULL then it reports for each registered port. It
-      also calls asynCommon:report for each port being reported. 
-  * - createAsynUser 
+      also calls asynCommon:report for each port being reported.
+  * - createAsynUser
     - Creates an asynUser. The caller specifies two callbacks, process and timeout. These
       callback are only called as a result of a queueRequest. The timeout callback is
       optional. errorMessageSize characters are allocated for errorMessage. The amount
       of storage can not be changed. This method doesn't return if it is unable to allocate
-      the storage. 
-  * - duplicateAsynUser 
+      the storage.
+  * - duplicateAsynUser
     - Creates an asynUser by calling createAsynUser. It then initializes the new asynUser
       as follows: The fields timeout, userPvt, userData, and drvUser are initialized with
       values taken from pasynUser. Its connectDevice state is the same as that for pasynUser.
-  * - freeAsynUser 
+  * - freeAsynUser
     - Free an asynUser. The user must free an asynUser only via this call. If the asynUser
       is connected to a port, asynManager:disconnect is called. If the disconnect fails,
       this call will also fail. The storage for the asynUser is saved on a free list and
       will be reused in later calls to createAsynUser or duplicateAsynUser. Thus continually
-      calling createAsynUser (or duplicateAsynUser) and freeAsynUser is efficient. 
+      calling createAsynUser (or duplicateAsynUser) and freeAsynUser is efficient.
   * - memMalloc / memFree
     - Allocate/Free memory. memMalloc/memFree maintain a set of freelists of different
       sizes. Thus any application that needs storage for a short time can use memMalloc/memFree
       to allocate and free the storage without causing memory fragmentation. The size
       passed to memFree MUST be the same as the value specified in the call to memMalloc.
-  * - isMultiDevice 
+  * - isMultiDevice
     - Answers the question "Does the port support multiple devices?" This method can be
-      called before calling connectDevice. 
-  * - connectDevice 
+      called before calling connectDevice.
+  * - connectDevice
     - Connect the asynUser structure to a device specified by portName, addr. The port
       Name is the same as that specified in a call to registerPort. The call will fail
       if the asynUser is already connected to a device. If the port does not support multiple
       devices, than addr is ignored. connectDevice only connects the asynUser to the port
       driver for the portName,addr. The port driver may or may not be connected to the
       actual device. Thus, connectDevice and asynCommon:connect are completely different.
-      
+
       See the Theory of Operation section for a description of the difference between
       single and multi-device port drivers.
-  * - disconnect 
+  * - disconnect
     - Disconnect the asynUser from the port,addr to which it is connected via a previous
       call to connectDevice. The call will fail if the asynUser is queued or locked, or
       has a callback registered via exceptionCallbackAdd. Note that asynManager:disconnect
-      and asynCommon:disconnect are completely different. 
-  * - exceptionCallbackAdd 
+      and asynCommon:disconnect are completely different.
+  * - exceptionCallbackAdd
     - Callback will be called whenever one of the exceptions defined by asynException
       occurs. The callback can call isConnected, isEnabled, or isAutoConnect to find the
       connection state. asynTrace provides methods to find out the current trace settings.
-  * - exceptionCallbackRemove 
-    - Callback is removed. This must be called before disconnect. 
-  * - findInterface 
+  * - exceptionCallbackRemove
+    - Callback is removed. This must be called before disconnect.
+  * - findInterface
     - Find a driver interface. If interposeInterfaceOK is true, then findInterface returns
       the last interface registered or interposed. Otherwise, the interface registered
       by registerPort is returned. It returns 0 if the interfaceType is not supported.
-      
+
       The user needs the address of the driver's interface and of pdrvPvt so that calls
       can be made to the driver. For example
       ::
@@ -1216,53 +1216,53 @@ This is the main interface for communicating with asynDriver.
         /* The following call must be made from a callback */
         pasynOctet->read(pasynOctetPvt,pasynUser,...
 
-  * - queueRequest 
+  * - queueRequest
     - When registerPort is called, the caller must specify if it can block, i.e. attribute
       bit ASYN_CANBLOCK is set or cleared. If the port has been registered with ASYN_CANBLOCK
       true then the request is put on a queue for the thread associated with the queue.
       If the port has been registered with ASYN_CANBLOCK false then queueRequest locks
       the port and calls the process callback. In either case the process callback specified
       in the call to createAsynUser is called.
-      
+
       If the asynUser is already on a queue, asynError is returned. The timeout starts
       when the request is queued. A value less than or equal to 0.0 means no timeout.
       The request is removed from the queue before the callback is called. Callbacks are
       allowed to make requests to asynManager such as queueRequest, blockProcessCallback,
       etc. It is even permissible to call freeAsynUser from a callback but the request
       will be delayed until after the callback completes.
-      
+
       The priority asynQueuePriorityConnect must be used for asynCommon:connect and asynCommon:disconnect
       calls, and must NOT be used for any other calls.
-     
+
       If a timeout callback was not passed to createAsynUser and a queueRequest with a
       non-zero timeout is requested, the request fails.
-     
+
       Attempts to queue a request other than a connection request to a disconnected port
       will fail unless the reason is ASYN_REASON_QUEUE_EVEN_IF_NOT_CONNECTED.
-  * - cancelRequest 
+  * - cancelRequest
     - If a asynUser is queued, remove it from the queue. If either the process or timeout
       callback is active when cancelRequest is called than cancelRequest will not return
-      until the callback completes. 
-  * - blockProcessCallback / unblockProcessCallback    
+      until the callback completes.
+  * - blockProcessCallback / unblockProcessCallback
     - blockProcessCallback is a request to prevent access to a device or port by other
       asynUsers between queueRequests. blockProcessCallback can be called from a processCallback
       or when the asynUser has no request queued. When called from processCallback blocking
       starts immediately, otherwise blocking starts the next time processCallback is called.
       Blocking means that no other asynUser's processCallback will be called until unblockProcessCallback
       is called. Note the following restrictions for blockProcessCallback:
-      
+
       - blockProcessCallback only works with drivers that can block and an error is returned
         if it is called for non-blocking drivers.
       - queueRequests that specify a priority of asynQueuePriorityConnect are not blocked.
-      
+
       It is permissible to simultaneously block allDevices and also the device to which
-      the asynUser is connected. 
-  * - lockPort / unlockPort 
+      the asynUser is connected.
+  * - lockPort / unlockPort
     - Lock access to a port driver. This is used by code that is willing to block while
       making calls to a port driver. The code can call lockPort, make an arbitrary number
       of calls to the port driver, and then call unlockPort. Other code that calls queueRequest
       and/or lockPort will be delayed between the calls to lockPort and unlockPort.
-  * - queueLockPort / queueUnlockPort 
+  * - queueLockPort / queueUnlockPort
     - Lock access to a port driver. This is used by code that is willing to block while
       making calls to a port driver. The code can call queueLockPort, make an arbitrary
       number of calls to the port driver, and then call queueUnlockPort. Other code that
@@ -1272,24 +1272,24 @@ This is the main interface for communicating with asynDriver.
       that a thread that repeatedly calls queueLockPort without sleeping between calls
       will still allow other threads to access the port. This is not true with lockPort,
       which will take a mutex as soon as the port is free, and can prevent other threads
-      from accessing the port at all. 
-  * - setQueueLockPortTimeout 
+      from accessing the port at all.
+  * - setQueueLockPortTimeout
     - Sets the timeout passed to queueRequest() in queueLockPort(). The default value
       of 2.0 seconds is set when the port is created. This function can be used to change
       that value. Note that if the pasynUser->timeout value passed to queueLockPort
-      is larger than the current value then this larger timeout value is used. 
-  * - canBlock 
+      is larger than the current value then this larger timeout value is used.
+  * - canBlock
     - yesNo is set to (0,1), i.e. (false,true) if calls to the low level driver can block.
-      The value is determined by the attributes passed to registerPort. 
-  * - getAddr 
+      The value is determined by the attributes passed to registerPort.
+  * - getAddr
     - \*addr is set equal to the address which the user specified in the call to connectDevice
       or -1 if the port does not support multiple devices.
-      
+
       See the Theory of Operation section for a description of the difference between
       single and multi-device port drivers.
-  * - getPortName 
+  * - getPortName
     - \*pportName is set equal to the name of the port to which the user is connected.
-  * - registerPort 
+  * - registerPort
     - This method is called by drivers. A call is made for each port instance.
       Attributes is a set of bits. Currently three bits are defined:
       ASYN_MULTIDEVICE, ASYN_CANBLOCK, and ASYN_DESTRUCTIBLE. The driver must
@@ -1305,70 +1305,70 @@ This is the main interface for communicating with asynDriver.
       code will refer to this communication interface instance. The registerPort
       method makes an internal copy of the string to which the name argument
       points.
-  * - registerInterface 
+  * - registerInterface
     - This is called by port drivers for each supported interface. This method *does
       not* make a copy of the asynInterface to which the pasynInterface argument
       points. Callers must store the asynInteface in a location which is retained for
       the lifetime of the port. This is commonly done by placing the asynInterface structure
-      in the 'driver private' structure. 
-  * - exceptionConnect 
+      in the 'driver private' structure.
+  * - exceptionConnect
     - This method must be called by the driver when and only when it connects to a port
-      or device. 
-  * - exceptionDisconnect 
+      or device.
+  * - exceptionDisconnect
     - This method must be called by the driver when and only when it disconnects from
-      a port or device. 
-  * - interposeInterface 
+      a port or device.
+  * - interposeInterface
     - This is called by a software layer between client code and the port driver. For
       example, if a device echos writes then a software module that issues a read after
       each write could be created and call interposeInterface for interface asynOctet.
-      
+
       Multiple interposeInterface calls for a port/addr/interface can be issued. \*ppPrev
       is set to the address of the previous asynInterface. Thus the software module that
       last called interposeInterface is called by user code. It in turn can call the software
       module that was the second to last to call interposeInterface. This continues until
       the actual port driver is called.
-    
+
       interposeInterface can also be called with an asynInterface that has not been previously
       registered or replaced. In this case \*ppPrev will be null. Thus, new interfaces
       that are unknown to the low level driver can be implemented.
-  * - enable 
+  * - enable
     - If enable is set yes, then queueRequests are not dequeued unless their queue timeout
       occurs.
   * - shutdownPort
     - The port is marked as defunct, preventing its use. It cannot be re-enabled.
       The underlying driver is notified and may be destroyed.
-  * - autoConnect 
+  * - autoConnect
     - If autoConnect is true and the port or device is not connected when a user callback
       is scheduled to be called, asynManager calls pasynCommon->connect. See the discussion
-      of Flow of Control below for details. 
-  * - isConnected 
-    - \*yesNo is set to (0,1) if the port or device (is not, is) connected. 
-  * - isEnabled 
-    - \*yesNo is set to (0,1) if the port or device (is not, is) enabled. 
-  * - isAutoConnect 
+      of Flow of Control below for details.
+  * - isConnected
+    - \*yesNo is set to (0,1) if the port or device (is not, is) connected.
+  * - isEnabled
+    - \*yesNo is set to (0,1) if the port or device (is not, is) enabled.
+  * - isAutoConnect
     - \*yesNo is set to (0,1) if the portThread (will not, will) autoConnect for the port
-      or device. 
-  * - setAutoConnectTimeout 
+      or device.
+  * - setAutoConnectTimeout
     - Changes the timeout when waiting for the initial connection callback from port drivers.
       This callback occurs in response to asynManager queueing a connection request, which
       happens when the port driver registers its asynCommon interface. The default timeout
-      is 0.5 seconds. 
-  * - waitConnect 
-    - Wait for up to timeout seconds for the port/device to connect. 
-  * - registerInterruptSource 
+      is 0.5 seconds.
+  * - waitConnect
+    - Wait for up to timeout seconds for the port/device to connect.
+  * - registerInterruptSource
     - If a low level driver supports interrupts it must call this for each interface that
       supports interrupts. pasynPvt must be the address of a void * that will be given
       a value by registerInterruptSource. This argument is passed interruptStart and interruptEnd.
-  * - getInterruptPvt 
+  * - getInterruptPvt
     - Any code that wants to call createInterruptNode but does not know the address of
       pasynPvt can find it via this method. The caller must be connected to a device,
       i.e. must have called connectDevice. If the caller is not connected, getInterruptPvt
-      returns asynError. 
+      returns asynError.
   * - createInterruptNode / freeInterruptNode
     - These methods are the only way a user can allocate and free an interruptNode. pasynPvt
       is the value obtained from getInterruptPvt. createInterruptNode/freeInterruptNode
       are separate methods rather than being done automatically by addInterruptUser/removeInterruptUser
-      so that addInterruptUser/removeInterruptUser can be efficient. 
+      so that addInterruptUser/removeInterruptUser can be efficient.
   * - addInterruptUser / removeInterruptUser
     - Code that implements registerInterruptUser/cancelInterruptUser must call addInterruptUser/removeInterruptUser
       to add and remove users from the list or else calls to interruptStart/interruptEnd
@@ -1377,7 +1377,7 @@ This is the main interface for communicating with asynDriver.
       interrupt is being processed, i.e. between calls to interruptStart/interruptEnd,
       the call will block until interruptEnd is called. The process callback for the asynUser
       specified in the call to addInterruptUser must not call removeInterruptUser or it
-      will block forever. 
+      will block forever.
   * - interruptStart / interruptEnd
     - The code that implements interrupts is interface dependent. The only service asynManager
       provides is a thread-safe implementation of the user list. When the code wants to
@@ -1385,22 +1385,22 @@ This is the main interface for communicating with asynDriver.
       to obtain the list of callbacks. When it is done it calls interruptEnd. If any requests
       are made to addInterruptUser/removeInterruptUser between the calls to interruptStart
       and interruptEnd, asynManager delays the requests until interruptEnd is called.
-  * - registerTimeStampSource 
-    - Registers a user-defined time stamp callback function. 
-  * - unregisterTimeStampSource 
+  * - registerTimeStampSource
+    - Registers a user-defined time stamp callback function.
+  * - unregisterTimeStampSource
     - Unregisters any user-defined timestamp callback function and reverts to the default
       timestamp source function in asynManager, which simply calls epicsTimeGetCurrent().
-  * - updateTimeStamp 
+  * - updateTimeStamp
     - Set the current time stamp for this port by calling either the default timestamp
       source, or a user-defined timestamp source that was registered with registerTimeStampSource.
-  * - getTimeStamp 
+  * - getTimeStamp
     - Get the current time stamp for this port that was returned by the most recent call
-      to updateTimeStamp. 
-  * - setTimeStamp 
+      to updateTimeStamp.
+  * - setTimeStamp
     - Set the current time stamp for this port directly from the timestamp value passed
-      to this function. 
-  * - strStatus 
-    - Returns a descriptive string corresponding to the asynStatus value. 
+      to this function.
+  * - strStatus
+    - Returns a descriptive string corresponding to the asynStatus value.
 
 asynCommon
 ~~~~~~~~~~
@@ -1418,17 +1418,17 @@ asynCommon describes the methods that must be implemented by drivers.
 
 .. list-table::  asynCommon
   :widths: 20 80
-  
-  * - report 
+
+  * - report
     - Generates a report about the hardware device. This is the only asynCommon method
       that does not have to be called by the queueRequest callback or between calls to
-      lockPort/unlockPort. 
-  * - connect 
+      lockPort/unlockPort.
+  * - connect
     - Connect to the hardware device or communication path. The queueRequest must specify
-      priority asynQueuePriorityConnect. 
-  * - disconnect 
+      priority asynQueuePriorityConnect.
+  * - disconnect
     - Disconnect from the hardware device or communication path. The queueRequest must
-      specify priority asynQueuePriorityConnect. 
+      specify priority asynQueuePriorityConnect.
 
 asynCommonSyncIO
 ~~~~~~~~~~~~~~~~
@@ -1439,7 +1439,7 @@ handle callbacks or understand the details of the asynManager and asynCommon int
 ::
 
   typedef struct asynCommonSyncIO {
-      asynStatus (*connect)(const char *port, int addr, 
+      asynStatus (*connect)(const char *port, int addr,
                             asynUser **ppasynUser, const char *drvInfo);
       asynStatus (*disconnect)(asynUser *pasynUser);
       asynStatus (*connectDevice)(asynUser *pasynUser);
@@ -1447,7 +1447,7 @@ handle callbacks or understand the details of the asynManager and asynCommon int
       asynStatus (*report)(asynUser *pasynUser, FILE *fd, int details);
   } asynCommonSyncIO;
   epicsShareExtern asynCommonSyncIO *pasynCommonSyncIO;
-  
+
 Note that there is a potential for confusion in the connect* and disconnect* function
 names of this interface. For consistency with the other SyncIO interfaces, connect
 calls pasynManager->connectDevice, disconnect calls pasynManager->disconnect,
@@ -1479,12 +1479,12 @@ information to/from a port driver
       about the name for the resource and a size. If pptypeName is not null the driver
       can give a value to \*pptypeName. If psize is not null the driver can give a value
       to \*psize. Unless asynUser receives a typeName and size that it recognizes it must
-      not access asynUser.drvUser. 
-  * - getType 
+      not access asynUser.drvUser.
+  * - getType
     - If other code, e.g. an interposeInterface wants to access asynUser.drvUser it must
-      call this and verify that typeName and size are what it expects. 
-  * - destroy 
-    - Destroy the resources created by create and set asynUser.drvUser null. 
+      call this and verify that typeName and size are what it expects.
+  * - destroy
+    - Destroy the resources created by create and set asynUser.drvUser null.
 
 asynLockPortNotify
 ~~~~~~~~~~~~~~~~~~
@@ -1502,7 +1502,7 @@ locked.
 
 asynLockPortNotify is used only by asynManager itself. It is not put in the list
 of interfaces for the port.
-  
+
 asynLockPortNotify is
 ::
 
@@ -1514,16 +1514,16 @@ asynLockPortNotify is
 
 .. list-table:: asynLockPortNotify
   :widths: 20 80
-  
-  * - lock 
+
+  * - lock
     - Called when asynManager.lockPort is called. The driver normally calls asynManager.lockPort
-      for the port to which it is connected. 
-  * - unlock 
+      for the port to which it is connected.
+  * - unlock
     - Called when asynManager.unlockPort is called. The driver normally calls asynManager.unlockPort
-      for the port to which it is connected. 
+      for the port to which it is connected.
 
 asynOption
-~~~~~~~~~~  
+~~~~~~~~~~
 asynOption provides a generic way of setting driver specific options. For example
 the serial port driver uses this to specify baud rate, stop bits, etc.
 ::
@@ -1540,7 +1540,7 @@ the serial port driver uses this to specify baud rate, stop bits, etc.
 .. list-table:: asynOption
   :widths: 20 80
 
-  * - setOption 
+  * - setOption
     - Set value associated with key.
   * - getOption
     - Get value associated with key.
@@ -1586,7 +1586,7 @@ asynDriver provides a trace facility with the following attributes:
     - ASYN_TRACEINFO_THREAD prints the thread name, thread ID and thread priority, i.e.
       [epicsThreadGetNameSelf(), epicsThreadGetIdSelf(), epicsThreadGetPrioritySelf()].
 
-  
+
 In order for the trace facility to perform properly; device support and all drivers
 must use the trace facility. Device and driver support can directly call the asynTrace
 methods. The asynPrint and asynPrintIO macros are provided so that it is easier
@@ -1594,13 +1594,13 @@ for device/driver support. Support can have calls like
 ::
 
   asynPrint(pasynUser,ASYN_TRACE_FLOW,"%s Calling queueRequest\n", someName);
-  
+
 The asynPrintIO call is designed for device support or drivers that issue read or
 write requests. They make calls like
 ::
 
   asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,data,nchars,"%s nchars %d",someName,nchars);
-  
+
 The asynTrace methods are implemented by asynManager. These methods can be used
 by any code that has created an asynUser and is connected to a device. All methods
 can be called by any thread. That is, an application thread and/or a portThread.
@@ -1613,10 +1613,10 @@ I/O and unlock after. For example:
     fd = pasynTrace->getTraceFile(pasynUser);
     /*perform I/O to fd */
     pasynTrace->unlock(pasynUser);
-  
+
 If the asynUser is not connected to a port, i.e. pasynManager->connectDevice
 has not been called, then a "global" device is assumed. This is useful when asynPrint
-is called before connectDevice.  
+is called before connectDevice.
 
 This is the asynTrace interface:
 ::
@@ -1630,19 +1630,19 @@ This is the asynTrace interface:
   #define ASYN_TRACEIO_DRIVER  0x0008
   #define ASYN_TRACE_FLOW      0x0010
   #define ASYN_TRACE_WARNING   0x0020
-  
+
   /* traceIO mask definitions*/
   #define ASYN_TRACEIO_NODATA 0x0000
   #define ASYN_TRACEIO_ASCII  0x0001
   #define ASYN_TRACEIO_ESCAPE 0x0002
   #define ASYN_TRACEIO_HEX    0x0004
-  
+
   /* traceInfo mask definitions*/
   #define ASYN_TRACEINFO_TIME 0x0001
   #define ASYN_TRACEINFO_PORT 0x0002
   #define ASYN_TRACEINFO_SOURCE 0x0004
   #define ASYN_TRACEINFO_THREAD 0x0008
-  
+
   /* asynPrint and asynPrintIO are macros that act like
      int asynPrintSource(asynUser *pasynUser,int reason, __FILE__, __LINE__, const char *format, ... );
      int asynPrintIOSource(asynUser *pasynUser,int reason,
@@ -1696,82 +1696,82 @@ This is the asynTrace interface:
 
 .. list-table:: asynTrace
   :widths: 20 80
-  
-  * - lock/unlock 
+
+  * - lock/unlock
     - These are only needed for code that call asynTrace.print or asynTrace.printIO instead
       of asynPrint and asynPrintIO.
-      
+
       print, and printIO both lock while performing their operations. The get methods
       do not lock (except for getTraceFile) and they are safe. Except for setTraceFile
       the set methods do not block, since worst that can happen is that the user gets
       a little more or a little less output.
-  * - setTraceMask 
+  * - setTraceMask
     - Set the trace mask. Normally set by the user requesting it via a shell command or
       the devTrace device support. Setting the trace mask for a port also sets the trace
-      mask for all devices connected to that port 
-  * - getTraceMask 
+      mask for all devices connected to that port
+  * - getTraceMask
     - Get the trace mask. Device support that wants to issue trace messages calls this
-      to see what trace options have been requested. 
-  * - setTraceIOMask 
+      to see what trace options have been requested.
+  * - setTraceIOMask
     - Set the traceIO mask. Normally set by the user requesting it via a shell command
       or the devTrace device support. Setting the traceIO mask for a port also sets the
-      traceIO mask for all devices connected to that port 
-  * - getTraceIOMask 
+      traceIO mask for all devices connected to that port
+  * - getTraceIOMask
     - Get the traceIO mask. Support that wants to issue its own IO messages instead of
       calling asynPrintIO should call this and honor the mask settings. Most code will
-      not need it. 
-  * - setTraceInfoMask 
+      not need it.
+  * - setTraceInfoMask
     - Set the traceInfo mask. Normally set by the user requesting it via a shell command
       or the devTrace device support. Setting the traceInfo mask for a port also sets
-      the traceInfo mask for all devices connected to that port 
-  * - getTraceInfoMask 
+      the traceInfo mask for all devices connected to that port
+  * - getTraceInfoMask
     - Get the traceInfo mask. Support that wants to issue its own IO messages instead
       of calling asynPrint should call this and honor the mask settings. Most code will
-      not need it. 
-  * - setTraceFile 
+      not need it.
+  * - setTraceFile
     - Set the stream to use for output. A NULL argument means use errlog. Normally set
       by the user requesting it via a shell command or by the devTrace device support.
       If the current output stream is none of (NULL, stdout, stderr) then the current
-      output stream is closed before the new stream is used. 
-  * - getTraceFile 
+      output stream is closed before the new stream is used.
+  * - getTraceFile
     - Get the file descriptor to use for output. Device support that wants to issue its
       own IO messages instead of calling asynPrintIO should call this and honor the mask
       settings. In this case, lock must have been called first. Most code will not need
-      it. If the return value is 0, then ouput should be directed to errlog. 
-  * - setTraceIOTruncateSize 
+      it. If the return value is 0, then output should be directed to errlog.
+  * - setTraceIOTruncateSize
     - Determines how much data is printed by printIO. In all cases it determines how many
       bytes of the buffer are displayed. The actual number of characters printed depends
       on the traceIO mask. For example ASYN_TRACEIO_HEX results in 3 characters being
       printed for each byte. Normally set by the user requesting it via a shell command
-      or the devTrace device support. 
-  * - getTraceIOTruncateSize 
+      or the devTrace device support.
+  * - getTraceIOTruncateSize
     - Get the current truncate size. Called by asynPrintIO. Code that does its own I/O
-      should also support the traceIO mask. 
-  * - print 
+      should also support the traceIO mask.
+  * - print
     - If reason ORed with the current traceMask is not zero, then the message is printed.
       This method is provided for backwards compatibility. The asynPrint macro now calls
-      printSource(). 
-  * - printSource 
+      printSource().
+  * - printSource
     - If reason ORed with the current traceMask is not zero, then the message is printed.
       Most code should call asynPrint instead of calling this method. This method is the
       same as print() but with the additional **file** and **line** arguments.
-  * - vprint 
-    - This is the same as print, but using a va_list as its final argument. 
-  * - vprintSource 
-    - This is the same as printSource, but using a va_list as its final argument. 
-  * - printIO 
+  * - vprint
+    - This is the same as print, but using a va_list as its final argument.
+  * - vprintSource
+    - This is the same as printSource, but using a va_list as its final argument.
+  * - printIO
     - If reason ORed with the current traceMask is not zero then the message is printed.
       If len is >0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
       This method is provided for backwards compatibility. The asynPrintIO macro now calls
-      printIOSource(). 
-  * - printIOSource 
+      printIOSource().
+  * - printIOSource
     - If reason ORed with the current traceMask is not zero then the message is printed.
       If len is >0, then the buffer is printed using the traceIO mask and getTraceIOTruncateSize.
       Most code should call asynPrintIO instead of calling this method. This method is
       the same as printIO() but with the additional **file** and **line** arguments.
-  * - vprintIO 
-    - This is the same as printIO, but using a va_list as its final argument. 
-  * - vprintIOSource 
+  * - vprintIO
+    - This is the same as printIO, but using a va_list as its final argument.
+  * - vprintIOSource
     - This is the same as printIOSource, but using a va_list as its final argument.
 
 Standard Message Based Interfaces
@@ -1782,7 +1782,7 @@ based means that the device communicates via octet strings, i.e. arrays of 8 bit
 bytes. Three interfaces are provided: asynOctet, asynOctetBase, and asynOctetSyncIO.
 asynOctet is generic message based interface. asynOctetBase is an interface used
 by port drivers that implement asynOctet. It's primary purpose is to help with interrupt
-support. asynOctetSyncIO provides a synchronous inteface to asynOctet and can be
+support. asynOctetSyncIO provides a synchronous interface to asynOctet and can be
 used by code that is willing to block.
 
 asynOctet
@@ -1798,24 +1798,24 @@ is done via 8-bit bytes.
   #define ASYN_EOM_CNT 0x0001 /*Request count reached*/
   #define ASYN_EOM_EOS 0x0002 /*End of String detected*/
   #define ASYN_EOM_END 0x0004 /*End indicator detected*/
-  
+
   typedef void (*interruptCallbackOctet)(void *userPvt, asynUser *pasynUser,
                 char *data,size_t numchars, int eomReason);
-  
+
   typedef struct asynOctetInterrupt {
       asynUser *pasynUser;
       int      addr;
       interruptCallbackOctet callback;
       void *userPvt;
   }asynOctetInterrupt;
-  
-  
+
+
   #define asynOctetType "asynOctet"
   typedef struct asynOctet{
       asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                      const char *data,size_t numchars,size_t *nbytesTransfered);
+                      const char *data,size_t numchars,size_t *nbytesTransferred);
       asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                      char *data,size_t maxchars,size_t *nbytesTransfered,
+                      char *data,size_t maxchars,size_t *nbytesTransferred,
                       int *eomReason);
       asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
       asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
@@ -1839,49 +1839,49 @@ is done via 8-bit bytes.
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynOctetBaseType "asynOctetBase"
   typedef struct asynOctetBase {
       asynStatus (*initialize)(const char *portName,
           asynDriverasynInterface *pasynOctetInterface,
           int processEosIn,int processEosOut,int interruptProcess);
       void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
-          char *data,size_t *nbytesTransfered,int *eomReason);
+          char *data,size_t *nbytesTransferred,int *eomReason);
   } asynOctetBase;
   epicsShareExtern asynOctetBase *pasynOctetBase;
-  
-  
+
+
 .. list-table:: asynOctet
   :widths: 20 80
-  
-  * - write 
-    - Send a message to the device. \*nbytesTransfered is the number of 8-bit bytes sent
+
+  * - write
+    - Send a message to the device. \*nbytesTransferred is the number of 8-bit bytes sent
       to the device. Interpose or driver code may add end of string terminators to the
-      message but the extra characters are not included in \*nbytesTransfered. 
-  * - read 
-    - Read a message from the device. \*nbytesTransfered is the number of 8-bit bytes read
+      message but the extra characters are not included in \*nbytesTransferred.
+  * - read
+    - Read a message from the device. \*nbytesTransferred is the number of 8-bit bytes read
       from the device. If read returns asynSuccess than eomReason ( some combination of
       ASYN_EOM_CNT, ASYN_EOM_EOS, and ASYN_EOM_END)tells why the read completed. Interpose
       or driver code may strip end of string terminators from the message. If it does
       the first eos character will be replaced by null and the eos characters will not
-      be included in nbytesTransfered. 
-  * - flush 
-    - Flush the input buffer. 
-  * - registerInterruptUser 
+      be included in nbytesTransferred.
+  * - flush
+    - Flush the input buffer.
+  * - registerInterruptUser
     - Register a user that will be called whenever a new message is received. NOTE: The
       callback must not block and must not call registerInterruptUser or cancelInterruptUser.
-  * - cancelInterruptUser 
-    - Cancel a registered user. 
-  * - setInputEos 
+  * - cancelInterruptUser
+    - Cancel a registered user.
+  * - setInputEos
     - Set End Of String for input. For example "\\n". Note that gpib drivers usually accept
-      at most a one character terminator. 
-  * - getInputEos 
-    - Get the current End of String. 
-  * - setOutputEos 
-    - Set End Of String for output. 
-  * - getOutputEos 
-    - Get the current End of String. 
-  
+      at most a one character terminator.
+  * - getInputEos
+    - Get the current End of String.
+  * - setOutputEos
+    - Set End Of String for output.
+  * - getOutputEos
+    - Get the current End of String.
+
 asynOctetBase is an interface and implementation for drivers that implement interface
 asynOctet. asynOctetBase implements registerInterruptUser and cancelInterruptUser.
 
@@ -1899,11 +1899,11 @@ For an example of how to use asynOctetBase look at ``asyn/testApp/src/echoDriver
 
 .. list-table:: asynOctetBase
   :widths: 20 80
-  
-  * - initialize 
+
+  * - initialize
     - After a driver calls registerPort it can call
       ::
-      
+
          pasynOctetBase->initialize(...
 
       Any null methods in the asynInterface are replaced by default implementations. If
@@ -1912,9 +1912,9 @@ For an example of how to use asynOctetBase look at ``asyn/testApp/src/echoDriver
       is specified, then whenever read is called, asynBase calls all the registered interrupt
       users. asynOctetBase can not implement processEosIn, processEosOut, and interruptProcess
       if the port is a multi-device port. Since this method is called only during initialization
-      it can be called directly rather than via queueRequest. 
-  * - callInterruptUsers 
-    - Calls the callbacks registered via registerInterruptUser. 
+      it can be called directly rather than via queueRequest.
+  * - callInterruptUsers
+    - Calls the callbacks registered via registerInterruptUser.
 
 asynOctetSyncIO
 ~~~~~~~~~~~~~~~
@@ -1933,9 +1933,9 @@ commands described later in this document.
      asynStatus (*disconnect)(asynUser *pasynUser);
      asynStatus (*write)(asynUser *pasynUser,
                     char const *buffer, size_t buffer_len,
-                    double timeout,size_t *nbytesTransfered);
+                    double timeout,size_t *nbytesTransferred);
      asynStatus (*read)(asynUser *pasynUser, char *buffer, size_t buffer_len,
-                    double timeout, size_t *nbytesTransfered,int *eomReason);
+                    double timeout, size_t *nbytesTransferred,int *eomReason);
      asynStatus (*writeRead)(asynUser *pasynUser,
                     const char *write_buffer, size_t write_buffer_len,
                     char *read_buffer, size_t read_buffer_len,
@@ -1952,10 +1952,10 @@ commands described later in this document.
                     char *eos, int eossize, int *eoslen);
      asynStatus (*writeOnce)(const char *port, int addr,
                     char const *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered, const char *drvInfo);
+                    size_t *nbytesTransferred, const char *drvInfo);
      asynStatus (*readOnce)(const char *port, int addr,
                     char *buffer, size_t buffer_len, double timeout,
-                    size_t *nbytesTransfered,int *eomReason, const char *drvInfo);
+                    size_t *nbytesTransferred,int *eomReason, const char *drvInfo);
      asynStatus (*writeReadOnce)(const char *port, int addr,
                     const char *write_buffer, size_t write_buffer_len,
                     char *read_buffer, size_t read_buffer_len,
@@ -1976,36 +1976,36 @@ commands described later in this document.
 
 .. list-table:: asynOctetSyncIO
   :widths: 20 80
-  
-  * - connect 
+
+  * - connect
     - Connects to an asyn port and address, returns a pointer to an asynUser structure.
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
     - Calls asynOctet->write and waits for the operation to complete or time out.
-  * - read 
-    - Calls asynOctet->read. Waits for the operation to complete or time out. 
-  * - writeRead 
+  * - read
+    - Calls asynOctet->read. Waits for the operation to complete or time out.
+  * - writeRead
     - Calls pasynOctet->flush, pasynOctet->write, and asynOctet->read. Waits
-      for the operations to complete or time out. 
-  * - flush 
-    - Calls pasynOctet->flush 
-  * - setInputEos 
-    - Calls pasynOctet->setInputEos 
-  * - getInputEos 
-    - Calls pasynOctet->getInputEos 
-  * - setOutputEos 
-    - Calls pasynOctet->setOutputEos 
-  * - getOutputEos 
-    - Calls pasynOctet->getOutputEos 
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
-  * - writeReadOnce 
-    - This does a connect, writeRead, and disconnect. 
+      for the operations to complete or time out.
+  * - flush
+    - Calls pasynOctet->flush
+  * - setInputEos
+    - Calls pasynOctet->setInputEos
+  * - getInputEos
+    - Calls pasynOctet->getInputEos
+  * - setOutputEos
+    - Calls pasynOctet->setOutputEos
+  * - getOutputEos
+    - Calls pasynOctet->getOutputEos
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
+  * - writeReadOnce
+    - This does a connect, writeRead, and disconnect.
 
 End of String Support
 ~~~~~~~~~~~~~~~~~~~~~
@@ -2037,13 +2037,13 @@ for:
 - Enum - Arrays of strings, integer values and integer severities.
 - GenericPointer - void* pointer.
 
-  
+
 Note that hardware may have registers with smaller sizes, e.g. 16 bit registers.
 The standard interfaces can still be used by setting the unused bits to 0.
 
 For all of these interfaces a default implementation and a synchronous implementation
 are provided. Let's use Int32 as an example.
- 
+
 - asynInt32 - An interface with methods: read, write, getBounds, registerInterruptUser,
   and cancelInterruptUser.
 - asynInt32Base - An interface used by drivers that implement asynInt32. It also
@@ -2069,7 +2069,7 @@ are provided. Let's use Int32 as an example.
 - asynInt32SyncIO - A synchronous interface to asynInt32
 
 **addr - What does it mean for register based interfaces?**
-  
+
 Low level register based drivers are normally multi-device. The meaning of addr
 is:
 
@@ -2090,10 +2090,10 @@ is:
 
 Example Drivers
 ~~~~~~~~~~~~~~~
-  
+
 Two examples of drivers that might implement and use the interfaces are:
 - Analog to Digital Converter.
-  
+
   An example is a 16 channel ADC. The driver implements interfaces asynCommon and
   asynInt32. It uses interface asynInt32Base. It can call asynManager:interruptStart
   and asynManager:interruptEnd to support interrupts. It can use pasynUser->reason
@@ -2102,22 +2102,22 @@ Two examples of drivers that might implement and use the interfaces are:
   asynFloat64.
 
 - Digital I/O module
-  
+
   An example is a 64 bit combination digital input and digital output module. The
   driver implements interfaces asynCommon and asynUInt32Digital. It uses interface
   asynUInt32DigitalBase. It can call asynManager:interruptStart and asynManager:interruptEnd
   to support interrupts. It can use reason, mask, and addr to decide which callbacks
   to call. ``asyn/testEpicsApp/uint32DigitalDriver.c``
   is a soft example of a driver that implements asynUInt32Digital.
-    
+
 asynIntXX (XX=32 or 64)
 ~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 asynIntXX describes the methods implemented by drivers that use integers for communicating
 with a device.
 ::
 
-  typedef void (*interruptCallbackIntXX)(void *userPvt, asynUser *pasynUser, 
+  typedef void (*interruptCallbackIntXX)(void *userPvt, asynUser *pasynUser,
                                          epicsIntXX data);
   typedef struct asynIntXXInterrupt {
       int addr;
@@ -2137,7 +2137,7 @@ with a device.
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                       void *registrarPvt);
   } asynIntXX;
-  
+
   /* asynIntXXBase does the following:
      calls  registerInterface for asynIntXX.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2145,7 +2145,7 @@ with a device.
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynIntXXBaseType "asynIntXXBase"
   typedef struct asynIntXXBase {
       asynStatus (*initialize)(const char *portName,
@@ -2155,20 +2155,20 @@ with a device.
 
 .. list-table:: asynIntXX
   :widths: 20 80
-  
-  * - write 
-    - Write an integer value to the device. 
-  * - read 
-    - Read an integer value from the device. 
-  * - getBounds 
+
+  * - write
+    - Write an integer value to the device.
+  * - read
+    - Read an integer value from the device.
+  * - getBounds
     - Get the bounds. For example a 16 bit ADC might set low=-32768 and high = 32767.
-  * - registerInterruptUser 
+  * - registerInterruptUser
     - Registers a callback that will be called whenever new data is available. Since it
       can be called directly rather than via a queueRequest this method must not block.
-  * - cancelInterruptUser 
+  * - cancelInterruptUser
     - Cancels the callback. Since it can be called directly rather than via a queueRequest
-      this method must not block. 
-  
+      this method must not block.
+
 asynIntXXBase is an interface and associated code that is used by drivers that implement
 interface asynIntXX. asynIntXXBase provides code to handle registerInterruptUser/cancelInterruptUser.
 The driver must itself call the callbacks via calls to asynManager:interruptStart
@@ -2176,34 +2176,34 @@ and asynManager:interruptEnd.
 
 .. list-table:: asynIntXXBase
   :widths: 20 80
-  
-  * - initialize 
+
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
          pasynIntXXBase->initialize(...
-          
+
       Any null methods in the asynInterface are replaced by default implementations.
-   
+
 The default implementation of each method does the following:
 
 .. list-table:: asynIntXX
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - getBounds 
-    - Reports an error "getBounds is not supported" and returns asynError 
-  * - registerInterruptUser 
-    - registers an interrupt callback. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - getBounds
+    - Reports an error "getBounds is not supported" and returns asynError
+  * - registerInterruptUser
+    - registers an interrupt callback.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynIntXXSyncIO (XX=32 or 64)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  
+
 asynIntXXSyncIO describes a synchronous interface to asynIntXX. The code that calls
 it must be willing to block.
 ::
@@ -2228,23 +2228,23 @@ it must be willing to block.
 
 .. list-table:: asynIntXXSyncIO
   :widths: 20 80
-  
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
+
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
     - Calls pasynIntXX->write and waits for the operation to complete or time out.
-  * - read 
+  * - read
     - Calls pasynIntXX->read and waits for the operation to complete or time out.
-  * - getBounds 
+  * - getBounds
     - Calls pasynIntXX->getBounds and waits for the operation to complete or time out.
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
-  * - getBoundsOnce 
-    - This does a connect, getBounds, and disconnect. 
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
+  * - getBoundsOnce
+    - This does a connect, getBounds, and disconnect.
 
 asynUInt32Digital
 ~~~~~~~~~~~~~~~~~
@@ -2254,8 +2254,8 @@ asynUInt32Digital describes the methods for communicating via bits of an Int32 r
   typedef enum {
       interruptOnZeroToOne, interruptOnOneToZero, interruptOnBoth
   } interruptReason;
-  
-  typedef void (*interruptCallbackUInt32Digital)(void *userPvt, 
+
+  typedef void (*interruptCallbackUInt32Digital)(void *userPvt,
                    asynUser *pasynUser, epicsUInt32 data);
   typedef struct asynUInt32DigitalInterrupt {
       epicsUInt32 mask;
@@ -2282,7 +2282,7 @@ asynUInt32Digital describes the methods for communicating via bits of an Int32 r
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                       void *registrarPvt);
   } asynUInt32Digital;
-  
+
   /* asynUInt32DigitalBase does the following:
      calls  registerInterface for asynUInt32Digital.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2290,7 +2290,7 @@ asynUInt32Digital describes the methods for communicating via bits of an Int32 r
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynUInt32DigitalBaseType "asynUInt32DigitalBase"
   typedef struct asynUInt32DigitalBase {
       asynStatus (*initialize)(const char *portName,
@@ -2301,25 +2301,25 @@ asynUInt32Digital describes the methods for communicating via bits of an Int32 r
 .. list-table:: asynUInt32Digital
   :widths: 20 80
 
-  * - write 
-    - Modify the bits specified by mask with the corresponding bits in value. 
-  * - read 
+  * - write
+    - Modify the bits specified by mask with the corresponding bits in value.
+  * - read
     - Read the bits specified by mask into value. The other bits of value will be set
-      to 0. 
-  * - setInterrupt 
-    - Set the bits specified by mask to interrupt for reason. 
-  * - clearInterrupt 
-    - Clear the interrupt bits specified by mask. 
-  * - getInterrupt 
-    - Set each bit of mask that is enabled for reason. 
-  * - registerInterruptUser 
+      to 0.
+  * - setInterrupt
+    - Set the bits specified by mask to interrupt for reason.
+  * - clearInterrupt
+    - Clear the interrupt bits specified by mask.
+  * - getInterrupt
+    - Set each bit of mask that is enabled for reason.
+  * - registerInterruptUser
     - Register a callback that will be called whenever the driver detects a change in
       any of the bits specified by mask. Since it can be called directly rather than via
-      a queueRequest this method must not block. 
-  * - cancelInterruptUser 
+      a queueRequest this method must not block.
+  * - cancelInterruptUser
     - Cancels the registered callback. Since it can be called directly rather than via
-      a queueRequest this method must not block. 
- 
+      a queueRequest this method must not block.
+
 asynUInt32DigitalBase is an interface and associated code that is used by drivers
 that implement interface asynUInt32Digital. asynUInt32DigitalBase provides code
 to implement registerInterruptUser and cancelInterruptUser.
@@ -2327,10 +2327,10 @@ to implement registerInterruptUser and cancelInterruptUser.
 .. list-table:: asynUInt32DigitalBase
   :widths: 20 80
 
-  * - initialize 
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
         pasynUInt32DigitalBase->initialize(...
 
       Any null methods in the asynInterface are replaced by default implementations.
@@ -2340,21 +2340,21 @@ The default implementation of each method does the following:
 .. list-table:: asynUInt32Digital
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - setInterrupt 
-    - Reports an error "setInterrupt is not supported" and returns asynError 
-  * - clearInterrupt 
-    - Reports an error "clearInterrupt is not supported" and returns asynError 
-  * - getInterrupt 
-    - Reports an error "getInterrupt is not supported" and returns asynError 
-  * - registerInterruptUser 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - setInterrupt
+    - Reports an error "setInterrupt is not supported" and returns asynError
+  * - clearInterrupt
+    - Reports an error "clearInterrupt is not supported" and returns asynError
+  * - getInterrupt
+    - Reports an error "getInterrupt is not supported" and returns asynError
+  * - registerInterruptUser
     - registers the interrupt user. The low level driver must call the registered callbacks
-      via calls to asynManager:interruptStart and asynManager:interruptEnd. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+      via calls to asynManager:interruptStart and asynManager:interruptEnd.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynUInt32DigitalSyncIO
 ~~~~~~~~~~~~~~~~~~~~~~~
@@ -2397,22 +2397,22 @@ The code that calls it must be willing to block.
 .. list-table:: asynUInt32DigitalSyncIO
   :widths: 20 80
 
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser structure. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
-    - Calls pasynUInt32Digital->write and waits for the operation to complete or time out. 
-  * - read 
-    - Calls pasynUInt32Digital->read and waits for the operation to complete or time out. 
-  * - setInterrupt 
-    - Calls pasynUInt32Digital->setInterrupt and waits for the operation to complete or time out. 
-  * - clearInterrupt 
-    - Calls pasynUInt32Digital->clearInterrupt and waits for the operation to complete or time out. 
-  * - getInterrupt 
-    - Calls pasynUInt32Digital->getInterrupt and waits for the operation to complete or time out. 
-  * - writeOnce,...,getInterruptOnce 
-    - Does a connect, (write,...,getInterrupt), and disconnect. 
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser structure.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
+    - Calls pasynUInt32Digital->write and waits for the operation to complete or time out.
+  * - read
+    - Calls pasynUInt32Digital->read and waits for the operation to complete or time out.
+  * - setInterrupt
+    - Calls pasynUInt32Digital->setInterrupt and waits for the operation to complete or time out.
+  * - clearInterrupt
+    - Calls pasynUInt32Digital->clearInterrupt and waits for the operation to complete or time out.
+  * - getInterrupt
+    - Calls pasynUInt32Digital->getInterrupt and waits for the operation to complete or time out.
+  * - writeOnce,...,getInterruptOnce
+    - Does a connect, (write,...,getInterrupt), and disconnect.
 
 asynFloat64
 ~~~~~~~~~~~
@@ -2437,7 +2437,7 @@ values.
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                       void *registrarPvt);
   } asynFloat64;
-  
+
   /* asynFloat64Base does the following:
      calls  registerInterface for asynFloat64.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2445,7 +2445,7 @@ values.
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynFloat64BaseType "asynFloat64Base"
   typedef struct asynFloat64Base {
       asynStatus (*initialize)(const char *portName,
@@ -2456,42 +2456,42 @@ values.
 .. list-table:: asynFloat64
   :widths: 20 80
 
-  * - write 
-    - Write a value. 
-  * - read 
-    - Read a value. 
-  * - registerInterruptUser 
+  * - write
+    - Write a value.
+  * - read
+    - Read a value.
+  * - registerInterruptUser
     - Register a callback that is called whenever new data is available. Since it can
       be called directly rather than via a queueRequest this method must not block.
-  * - cancelInterruptUser 
+  * - cancelInterruptUser
     - Cancel the callback. Since it can be called directly rather than via a queueRequest
-      this method must not block. 
+      this method must not block.
 
 .. list-table:: asynFloat64Base
   :widths: 20 80
 
-  * - initialize 
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
         pasynFloat64Base->initialize(...
-      
+
       Any null methods in the asynInterface are replaced by default implementations.
- 
+
 The default implementation of each method does the following:
 
 .. list-table:: asynFloat64Base
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - registerInterruptUser 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - registerInterruptUser
     - registers the interrupt user. The low level driver must call the registered callbacks
-      via calls to asynManager:interruptStart and asynManager:interruptEnd. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+      via calls to asynManager:interruptStart and asynManager:interruptEnd.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynFloat64SyncIO
 ~~~~~~~~~~~~~~~~~
@@ -2516,18 +2516,18 @@ calls it must be willing to block.
 .. list-table:: asynFloat64SyncIO
   :widths: 20 80
 
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser structure. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser structure.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
     - Calls pasynFloat64->write and waits for the operation to complete or time out.
-  * - read 
+  * - read
     - Calls pasynFloat64->read and waits for the operation to complete or time out.
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
 
 asynXXXArray (XXX=Int8, Int16, Int32, Int64, Float32 or Float64)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2556,7 +2556,7 @@ or 32 or 64-bit IEEE float values.
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                       void *registrarPvt);
   } asynXXXArray;
-  
+
   /* asynXXXArrayBase does the following:
      calls  registerInterface for asynXXXArray.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2564,7 +2564,7 @@ or 32 or 64-bit IEEE float values.
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynXXXArrayBaseType "asynXXXArrayBase"
   typedef struct asynXXXArrayBase {
       asynStatus (*initialize)(const char *portName,
@@ -2575,24 +2575,24 @@ or 32 or 64-bit IEEE float values.
 .. list-table:: asynXXXArray
   :widths: 20 80
 
-  * - write 
-    - Write an array of values. 
-  * - read 
-    - Read an array of values. 
-  * - registerInterruptUser 
-    - Register a callback that is called whenever new data is available. 
-  * - cancelInterruptUser 
-    - Cancel the callback 
+  * - write
+    - Write an array of values.
+  * - read
+    - Read an array of values.
+  * - registerInterruptUser
+    - Register a callback that is called whenever new data is available.
+  * - cancelInterruptUser
+    - Cancel the callback
 
 .. list-table:: asynXXXArrayBase
   :widths: 20 80
 
-  * - initialize 
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
         pasynXXXArrayBase->initialize(...
-       
+
       Any null methods in the asynInterface are replaced by default implementations.
 
 The default implementation of each method does the following:
@@ -2600,14 +2600,14 @@ The default implementation of each method does the following:
 .. list-table:: asynXXXArrayBase
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - registerInterruptUser 
-    - Registers an interrupt callback. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - registerInterruptUser
+    - Registers an interrupt callback.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynXXXArraySyncIO
 ~~~~~~~~~~~~~~~~~~
@@ -2632,24 +2632,24 @@ calls it must be willing to block.
 .. list-table:: asynXXXArraySyncIO
   :widths: 20 80
 
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
     - Calls pasynXXXArray->write and waits for the operation to complete or time out.
-  * - read 
+  * - read
     - Calls pasynXXXArray->read and waits for the operation to complete or time out.
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
 
 asynEnum
 ~~~~~~~~
 asynEnum describes the methods implemented by drivers to define the enum strings,
 values, and severities for a device.
-  
+
 This interface is typically used by drivers to set the enum strings and values for
 EPICS bi, bo, mbbi, and mbbo records. The strings[] are used to define the ZNAM
 and ONAM fields in bi and bo records, and the ZRST, ONST, ...FFST fields in mbbi
@@ -2696,7 +2696,7 @@ values to them.
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                void *registrarPvt);
   } asynEnum;
-  
+
   /* asynEnumBase does the following:
      calls registerInterface for asynEnum.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2704,7 +2704,7 @@ values to them.
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynEnumBaseType "asynEnumBase"
   typedef struct asynEnumBase {
       asynStatus (*initialize)(const char *portName,
@@ -2715,18 +2715,18 @@ values to them.
 .. list-table:: asynEnum
   :widths: 20 80
 
-  * - write 
-    - Writes the enum strings, enum values and enum severities to the driver. 
-  * - read 
-    - Reads the enum strings, enum values and enum severities to the driver. 
-  * - registerInterruptUser 
+  * - write
+    - Writes the enum strings, enum values and enum severities to the driver.
+  * - read
+    - Reads the enum strings, enum values and enum severities to the driver.
+  * - registerInterruptUser
     - Registers a callback that will be called whenever there are new enum strings, values
       and severities. Since it can be called directly rather than via a queueRequest this
-      method must not block. 
-  * - cancelInterruptUser 
+      method must not block.
+  * - cancelInterruptUser
     - Cancels the callback. Since it can be called directly rather than via a queueRequest
-      this method must not block. 
-  
+      this method must not block.
+
 asynEnumBase is an interface and associated code that is used by drivers that implement
 interface asynEnum. asynEnumBase provides code to handle registerInterruptUser/cancelInterruptUser.
 The driver must itself call the callbacks via calls to asynManager:interruptStart
@@ -2735,27 +2735,27 @@ and asynManager:interruptEnd.
 .. list-table:: asynEnumBase
   :widths: 20 80
 
-  * - initialize 
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
         pasynEnumBase->initialize(...
-        
+
       Any null methods in the asynInterface are replaced by default implementations.
-        
+
 The default implementation of each method does the following:
 
 .. list-table:: asynEnumBase
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - registerInterruptUser 
-    - registers an interrupt callback. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - registerInterruptUser
+    - registers an interrupt callback.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynEnumSyncIO
 ~~~~~~~~~~~~~~
@@ -2765,16 +2765,16 @@ it must be willing to block.
 
   #define asynEnumSyncIOType "asynEnumSyncIO"
   typedef struct asynEnumSyncIO {
-      asynStatus (*connect)(const char *port, int addr, 
+      asynStatus (*connect)(const char *port, int addr,
                             asynUser **ppasynUser, const char *drvInfo);
       asynStatus (*disconnect)(asynUser *pasynUser);
-      asynStatus (*write)(asynUser *pasynUser, char *strings[], int values[], int severities[], 
+      asynStatus (*write)(asynUser *pasynUser, char *strings[], int values[], int severities[],
                          size_t nElements, double timeout);
-      asynStatus (*read)(asynUser *pasynUser, char *string[], int values[],  int severities[], 
+      asynStatus (*read)(asynUser *pasynUser, char *string[], int values[],  int severities[],
                          size_t nElements, size_t *nIn, double timeout);
-      asynStatus (*writeOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+      asynStatus (*writeOnce)(const char *port, int addr, char *strings[], int values[],  int severities[],
                              size_t nElements, double timeout, const char *drvInfo);
-      asynStatus (*readOnce)(const char *port, int addr, char *strings[], int values[],  int severities[], 
+      asynStatus (*readOnce)(const char *port, int addr, char *strings[], int values[],  int severities[],
                              size_t nElements, size_t *nIn, double timeout, const char *drvInfo);
   } asynEnumSyncIO;
   epicsShareExtern asynEnumSyncIO *pasynEnumSyncIO;
@@ -2782,18 +2782,18 @@ it must be willing to block.
 .. list-table:: asynEnumSyncIO
   :widths: 20 80
 
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
     - Calls pasynEnum->write and waits for the operation to complete or time out.
-  * - read 
+  * - read
     - Calls pasynEnum->read and waits for the operation to complete or time out.
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
 
 asynGenericPointer
 ~~~~~~~~~~~~~~~~~~
@@ -2818,7 +2818,7 @@ clients and port drivers must agree on the type of object that is being pointed 
       asynStatus (*cancelInterruptUser)(void *drvPvt, asynUser *pasynUser,
                       void *registrarPvt);
   } asynGenericPointer;
-  
+
   /* asynGenericPointerBase does the following:
      calls  registerInterface for asynGenericPointer.
      Implements registerInterruptUser and cancelInterruptUser
@@ -2826,7 +2826,7 @@ clients and port drivers must agree on the type of object that is being pointed 
      registerInterruptUser and cancelInterruptUser can be called
      directly rather than via queueRequest.
   */
-  
+
   #define asynGenericPointerBaseType "asynGenericPointerBase"
   typedef struct asynGenericPointerBase {
       asynStatus (*initialize)(const char *portName,
@@ -2837,42 +2837,42 @@ clients and port drivers must agree on the type of object that is being pointed 
 .. list-table:: asynGenericPointer
   :widths: 20 80
 
-  * - write 
-    - Write a value. 
-  * - read 
-    - Read a value. 
-  * - registerInterruptUser 
+  * - write
+    - Write a value.
+  * - read
+    - Read a value.
+  * - registerInterruptUser
     - Register a callback that is called whenever new data is available. Since it can
       be called directly rather than via a queueRequest this method must not block.
-  * - cancelInterruptUser 
+  * - cancelInterruptUser
     - Cancel the callback. Since it can be called directly rather than via a queueRequest
-      this method must not block. 
- 
+      this method must not block.
+
 .. list-table:: asynGenericPointerBase
   :widths: 20 80
 
-  * - initialize 
+  * - initialize
     - After a driver calls registerPort it can call:
       ::
-      
+
         pasynGenericPointerBase->initialize(...
-        
+
       Any null methods in the asynInterface are replaced by default implementations.
-   
+
 The default implementation of each method does the following:
 
 .. list-table:: asynGenericPointerBase
   :widths: 20 80
 
-  * - write 
-    - Reports an error "write is not supported" and returns asynError 
-  * - read 
-    - Reports an error "read is not supported" and returns asynError 
-  * - registerInterruptUser 
+  * - write
+    - Reports an error "write is not supported" and returns asynError
+  * - read
+    - Reports an error "read is not supported" and returns asynError
+  * - registerInterruptUser
     - registers the interrupt user. The low level driver must call the registered callbacks
-      via calls to asynManager:interruptStart and asynManager:interruptEnd. 
-  * - cancelInterruptUser 
-    - Cancels the callback 
+      via calls to asynManager:interruptStart and asynManager:interruptEnd.
+  * - cancelInterruptUser
+    - Cancels the callback
 
 asynGenericPointerSyncIO
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2896,27 +2896,27 @@ The code that calls it must be willing to block.
                          void *pwrite_buffer,void *pread_buffer,double timeout,const char *drvInfo);
   } asynGenericPointerSyncIO;
   epicsShareExtern asynGenericPointerSyncIO *pasynGenericPointerSyncIO;
-  
+
 .. list-table:: asynGenericPointerSyncIO
   :widths: 20 80
 
-  * - connect 
-    - Connects to a port and address, returns a pointer to an asynUser structure. 
-  * - disconnect 
-    - Disconnect. This frees all resources allocated by connect. 
-  * - write 
-    - Calls pasynGenericPointer->write and waits for the operation to complete or time out. 
-  * - read 
-    - Calls pasynGenericPointer->read and waits for the operation to complete or time out. 
-  * - writeRead 
+  * - connect
+    - Connects to a port and address, returns a pointer to an asynUser structure.
+  * - disconnect
+    - Disconnect. This frees all resources allocated by connect.
+  * - write
+    - Calls pasynGenericPointer->write and waits for the operation to complete or time out.
+  * - read
+    - Calls pasynGenericPointer->read and waits for the operation to complete or time out.
+  * - writeRead
     - Calls pasynGenericPointer->write, then pasynGenericPointer->read. Waits for
-      the operations to complete or time out. 
-  * - writeOnce 
-    - This does a connect, write, and disconnect. 
-  * - readOnce 
-    - This does a connect, read, and disconnect. 
-  * - writeReadOnce 
-    - This does a connect, writeRead, and disconnect. 
+      the operations to complete or time out.
+  * - writeOnce
+    - This does a connect, write, and disconnect.
+  * - readOnce
+    - This does a connect, read, and disconnect.
+  * - writeReadOnce
+    - This does a connect, writeRead, and disconnect.
 
 asynStandardInterfacesBase
 --------------------------
@@ -2946,66 +2946,66 @@ those interfaces that are interrupt sources.
 
   typedef struct asynStandardInterfaces {
       asynInterface common;
-  
+
       asynInterface drvUser;
-  
+
       asynInterface option;
-  
+
       asynInterface octet;
       int octetProcessEosIn;
       int octetProcessEosOut;
       int octetInterruptProcess;
       int octetCanInterrupt;
       void *octetInterruptPvt;
-  
+
       asynInterface uInt32Digital;
       int uInt32DigitalCanInterrupt;
       void *uInt32DigitalInterruptPvt;
-  
+
       asynInterface int32;
       int int32CanInterrupt;
       void *int32InterruptPvt;
-  
+
       asynInterface int64;
       int int64CanInterrupt;
       void *int64InterruptPvt;
-  
+
       asynInterface float64;
       int float64CanInterrupt;
       void *float64InterruptPvt;
-  
+
       asynInterface int8Array;
       int int8ArrayCanInterrupt;
       void *int8ArrayInterruptPvt;
-  
+
       asynInterface int16Array;
       int int16ArrayCanInterrupt;
       void *int16ArrayInterruptPvt;
-  
+
       asynInterface int32Array;
       int int32ArrayCanInterrupt;
       void *int32ArrayInterruptPvt;
-  
+
       asynInterface int64Array;
       int int64ArrayCanInterrupt;
       void *int64ArrayInterruptPvt;
-  
+
       asynInterface float32Array;
       int float32ArrayCanInterrupt;
       void *float32ArrayInterruptPvt;
-  
+
       asynInterface float64Array;
       int float64ArrayCanInterrupt;
       void *float64ArrayInterruptPvt;
-  
+
       asynInterface genericPointer;
       int genericPointerCanInterrupt;
       void *genericPointerInterruptPvt;
-  
+
       asynInterface Enum;
       int enumCanInterrupt;
       void *enumInterruptPvt;
-  
+
   } asynStandardInterfaces;
 
 asynStandardInterfacesBase interface
@@ -3014,10 +3014,10 @@ The following is the definition of the asynStandardInterfacesBase interface.
 ::
 
   typedef struct asynStandardInterfacesBase {
-      asynStatus (*initialize)(const char *portName, asynStandardInterfaces *pInterfaces, 
+      asynStatus (*initialize)(const char *portName, asynStandardInterfaces *pInterfaces,
                                asynUser *pasynUser, void *pPvt);
   } asynStandardInterfacesBase;
-  
+
   epicsShareExtern asynStandardInterfacesBase *pasynStandardInterfacesBase;
 
 asynStandardInterfacesBase has a single method, initialize(), which calls registerInterface
@@ -3038,7 +3038,7 @@ asynStandardInterfacesBase interface.
   ...
       /* The asyn interfaces this driver implements */
       asynStandardInterfaces asynStdInterfaces;
-  
+
       /* asynUser connected to ourselves for asynTrace */
       asynUser *pasynUser;
   ...
@@ -3050,53 +3050,53 @@ asynStandardInterfacesBase interface.
       connect,
       disconnect
   };
-  
+
   static asynInt32 ifaceInt32 = {
       writeInt32,
       readInt32,
       getBounds
   };
-  
+
   static asynInt64 ifaceInt64 = {
       writeInt64,
       readInt64,
       getBounds
   };
-  
+
   static asynFloat64 ifaceFloat64 = {
       writeFloat64,
       readFloat64
   };
-  
+
   static asynOctet ifaceOctet = {
       writeOctet,
       NULL,
       readOctet,
   };
-  
+
   static asynDrvUser ifaceDrvUser = {
       drvUserCreate,
       drvUserGetType,
       drvUserDestroy
   };
-  
+
   static asynGenericPointer ifaceGenericPointer = {
       writeADImage,
       readADImage
   };
   ...
-  
+
   int simDetectorConfig(const char *portName, int maxSizeX, int maxSizeY, int dataType)
-  
+
   {
       drvADPvt *pPvt;
       int status = asynSuccess;
       char *functionName = "simDetectorConfig";
       asynStandardInterfaces *pInterfaces;
-  
+
       pPvt = callocMustSucceed(1, sizeof(*pPvt), functionName);
       pPvt->portName = epicsStrDup(portName);
-  
+
       status = pasynManager->registerPort(portName,
                                           ASYN_MULTIDEVICE | ASYN_CANBLOCK,
                                           1,  /*  autoconnect */
@@ -3106,12 +3106,12 @@ asynStandardInterfacesBase interface.
           printf("%s ERROR: Can't register port\n", functionName);
           return(asynError);
       }
-  
+
       /* Create asynUser for debugging */
       pPvt->pasynUser = pasynManager->createAsynUser(0, 0);
-  
+
       pInterfaces = &pPvt->asynStdInterfaces;
-      
+
       /* Initialize interface pointers */
       pInterfaces->common.pinterface         = (void *)&ifaceCommon;
       pInterfaces->drvUser.pinterface        = (void *)&ifaceDrvUser;
@@ -3120,14 +3120,14 @@ asynStandardInterfacesBase interface.
       pInterfaces->int64.pinterface          = (void *)&ifaceInt64;
       pInterfaces->float64.pinterface        = (void *)&ifaceFloat64;
       pInterfaces->genericPointer.pinterface = (void *)&ifaceGenericPointer;
-  
+
       /* Define which interfaces can generate interrupts */
       pInterfaces->octetCanInterrupt          = 1;
       pInterfaces->int32CanInterrupt          = 1;
       pInterfaces->int64CanInterrupt          = 1;
       pInterfaces->float64CanInterrupt        = 1;
       pInterfaces->genericPointerCanInterrupt = 1;
-  
+
       status = pasynStandardInterfacesBase->initialize(portName, pInterfaces,
                                                        pPvt->pasynUser, pPvt);
       if (status != asynSuccess) {
@@ -3252,7 +3252,7 @@ devices other support is required. This release provides the following:
   and parseLinkFree() parse record the record INP and OUT links described below. asynStatusToEpicsAlarm()
   converts asynStatus enum values to EPICS record STAT and SEVR values setting record
   alarms.
-  
+
 The support uses the following conventions for DTYP and INP. OUT fields are the
 same as INP.
 ::
@@ -3286,11 +3286,11 @@ All of the device support files can call registerInterruptUser for input records
 The callback is used in one of two ways:
 
 - Input Records except Average and TimeSeries
-  
+
   It is used to support SCAN = "I/O Intr".
 
 - Input records that are averaged, i.e. asynInt32Average or asynFloat64Average.
-  
+
   These records can be scanned either periodically or with SCAN=I/O Intr. The registerInterruptUser
   callback is used to add the current value to the sum of values between record processing.
 
@@ -3308,7 +3308,7 @@ The callback is used in one of two ways:
 
 - Input records that are waveform time series, i.e. asynInt32TimeSeries, asynInt64TimeSeries
   or asynFloat64TimeSeries.
-  
+
   These records are normally scanned periodically. The registerInterruptUser callback
   is used to append values to the time series.
 
@@ -3332,7 +3332,7 @@ the record in the database contains the following line:
 ::
 
   info(asyn:INITIAL_READBACK, "1")
-  
+
 Enum values for bi, bo, mbbi, and mbbo records
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Beginning in asyn R4-19 support was added for asyn port drivers to control the values
@@ -3385,7 +3385,7 @@ the following info tag for a record in the database file:
 ::
 
   info(asyn:FIFO, "20")
-  
+
 In this example the buffer size was set to 20. Ring buffer support was added in
 asyn R4-10 for all records except stringin, stringout, and waveform. Waveform record
 support for numeric arrays was added in asyn R4-25. asynOctet support for stringin,
@@ -3429,7 +3429,7 @@ asynInt32.
 For ai and ao records either of the following specifications for the INP and OUT
 fields can be used:
 ::
-   
+
   field(INP,"@asyn(portName,addr,timeout) drvParams")
     or
   field(INP,"@asynMask(portName,addr,nbits,timeout) drvParams")
@@ -3447,28 +3447,28 @@ Values read with the asynInt32 interface will be sign extended
 using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
 
 - aiRecord
-  
+
   A value is given to rval. Linear conversions are supported if the driver implements
   getBounds, or if nbits is specified as explained above.
 
-  - asynInt32 
-  
+  - asynInt32
+
     - SCAN "I/O Intr" is supported. If the record is "I/O Intr" scanned
       then when the registerInterruptUser callback is called, it saves the value and calls
-      scanIoRequest. When the record is processed the saved value is put into rval. 
+      scanIoRequest. When the record is processed the saved value is put into rval.
     - If the record is not "I/O Intr" scanned then each time the record is processed, a new
       value is read via a call to pasynInt32->read.
-  - asynInt32Average 
+  - asynInt32Average
 
     - The registerInterruptUser callback adds the new value to a
-      sum and also increments the number of samples. 
-    - When the record is processed the average is computed and the sum and number of samples is set to zero. 
+      sum and also increments the number of samples.
+    - When the record is processed the average is computed and the sum and number of samples is set to zero.
     - If the record is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
-      UDF is set to TRUE, and the value is left unchanged. 
-    - The record can be scanned either periodically or with SCAN=I/O Intr. 
+      UDF is set to TRUE, and the value is left unchanged.
+    - The record can be scanned either periodically or with SCAN=I/O Intr.
     - If the record has SCAN=I/O Intr then the average is computed and the record is processed each time NumAverage callback readings have
-      been received. 
-    - The SVAL field in the ai record is used to set NumAverage. 
+      been received.
+    - The SVAL field in the ai record is used to set NumAverage.
 
 - aoRecord
 
@@ -3495,12 +3495,12 @@ using the sign bit (e.g. bit abs(nbits)-1 starting at bit 0).
   rval is written. The mask field in the record is not used.
 
 - mbbiRecord
-  
+
   A value is given to rval. mask is computed from nobt and shft. Each time the record
   is processed a new value is read. SCAN "I/O Intr" is supported similar to aiRecord.
 
 - mbboRecord
-  
+
   rval is written. mask is computed from nobt and shft.
 
 Analog Input Example Records
@@ -3532,7 +3532,7 @@ Analog Input Example Records
         field(EGUL,"-10.0")
         field(PREC,"3")
    }
-  
+
 Analog Output Example Record
 ::
 
@@ -3543,7 +3543,7 @@ Analog Output Example Record
         field(EGUL,"-10.0")
         field(PREC,"3")
    }
-  
+
 Long Input Example Records
 ::
 
@@ -3552,7 +3552,7 @@ Long Input Example Records
         field(DTYP,"asynInt32")
         field(INP,"@asyn($(port),$(addr))")
    }
-  
+
 Long Output Example Record
 ::
 
@@ -3560,7 +3560,7 @@ Long Output Example Record
         field(DTYP,"asynInt32")
         field(OUT,"@asyn($(port),$(addr))")
    }
-  
+
 Multibit Binary Input Example Records
 ::
 
@@ -3575,7 +3575,7 @@ Multibit Binary Input Example Records
         field(TWST,"twoVal")
         field(THST,"threeVal")
    }
-  
+
 Multibit Binary Output Example Record
 ::
 
@@ -3589,7 +3589,7 @@ Multibit Binary Output Example Record
         field(TWST,"twoVal")
         field(THST,"threeVal")
    }
-   
+
 asynInt64 device support
 ~~~~~~~~~~~~~~~~~~~~~~~~
 asynInt64 device support is available for the ao, ai, longout, and longin records
@@ -3600,7 +3600,7 @@ on all versions of EPICS base. The following support is available in devAsynInt6
   device(longout,INST_IO,asynLoInt64,"asynInt64")
   device(ai,INST_IO,asynAiInt64,"asynInt64")
   device(ao,INST_IO,asynAoInt64,"asynInt64")
-  
+
 Support for the int64in, int64out, and waveform records is available in EPICS base
 3.16.1 and later. That is when the int64in, int64out records were added, and when
 the waveform record added support for FTVL=Int64. The following support is available
@@ -3609,7 +3609,7 @@ in devAsynInt64.dbd:
 
   device(int64in,INST_IO,Int64Out,"asynInt64")
   device(int64out,INST_IO,Int64Out,"asynInt64")
-  
+
 devAsynInt64.c provides EPICS device support for drivers that implement interface
 asynInt64.
 
@@ -3654,7 +3654,7 @@ record type.
         field(DTYP,"asynInt64")
         field(INP,"@asyn($(port),$(addr))")
    }
-  
+
 Int64 Output Example Record. The longout and ao records are the same except for
 the record type
 ::
@@ -3663,28 +3663,28 @@ the record type
         field(DTYP,"asynInt64")
         field(OUT,"@asyn($(port),$(addr))")
    }
-   
+
 asynIntXXXArray device support (XXX=8, 16, 32, or 64)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following support is available:
 ::
 
   device(waveform,INST_IO,asynIntXXXArrayWfIn,"asynIntXXXArrayIn")
   device(waveform,INST_IO,asynIntXXXArrayWfOut,"asynIntXXXArrayOut")
-  
+
 devAsynIntXXXArray.c provides EPICS device support for drivers that implement interface
 asynIntXXXArray. It has support for both reading and writing a waveform. SCAN "I/O
 Intr" is supported similar to the aiRecord in devAsynInt32 device support.
 
 asynXXXTimeSeries device support (XXX=Int32, Int64, or Float64)
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The following support is available:
 ::
 
   device(waveform,INST_IO,asynInt32TimeSeries,"asynInt32TimeSeries")
   device(waveform,INST_IO,asynInt64TimeSeries,"asynInt64TimeSeries")
   device(waveform,INST_IO,asynFloat64TimeSeries,"asynFloat64TimeSeries")
-  
+
 devAsynXXXTimeSeries.c provides EPICS device support to collect a time series of
 values into a waveform record. It works with drivers that implement callbacks on
 the asynInt32, asynInt64, or asynFloat64 interfaces. This permits more rapid and
@@ -3711,7 +3711,7 @@ The following support is available:
   device(mbbo,INST_IO,asynMbboUInt32Digital,"asynUInt32Digital")
   device(mbbiDirect,INST_IO,asynMbbiDirectUInt32Digital,"asynUInt32Digital")
   device(mbboDirect,INST_IO,asynMbboDirectUInt32Digital,"asynUInt32Digital")
-  
+
 devAsynUInt32Digital.c provides EPICS device support for drivers that implement
 interface asynUInt32Digital. The INP or OUT field must define asynMask. The mask
 specified in the argument to asynMask is used in the calls to asynUInt32Digital
@@ -3719,7 +3719,7 @@ methods. In addition it is used to set the mask fields in bi and bo records and
 the mask and shft fields in mbbi, mbbo, mbbiDirect, and mbboDirect records.
 
 - biRecord
-  
+
   A value is given to rval. asynInt32 - SCAN "I/O Intr" is supported. If the record
   is "I/O Intr" scanned then when the registerInterruptUser callback is called, it
   saves the value and calls scanIoRequest. When the record is processed the saved
@@ -3727,34 +3727,34 @@ the mask and shft fields in mbbi, mbbo, mbbiDirect, and mbboDirect records.
   record is processed, a new value is read via a call to pasynUInt32Digital->read.
 
 - boRecord
-  
+
   rval is written.
 
 - longinRecord
-  
+
   A value is given to val. Each time the record is processed a new value is read.
   SCAN "I/O Intr" is supported similar to aiRecord.
 
 - longoutRecord
-  
+
    val is written.
 
 - mbbiRecord
-  
+
   A value is given to rval. Each time the record is processed a new value is read.
   SCAN "I/O Intr" is supported similar to aiRecord.
 
 - mbboRecord
-  
+
   rval is written.
 
 - mbbiDirectRecord
-  
+
   A value is given to rval. Each time the record is processed a new value is read.
   SCAN "I/O Intr" is supported similar to aiRecord.
 
 - mbboDirectRecord
-  
+
   rval is written.
 
 Binary Input Example Record
@@ -3767,7 +3767,7 @@ Binary Input Example Record
       field(ZNAM,"zero")
       field(ONAM,"one")
   }
-  
+
 Binary Output Example Record
 ::
 
@@ -3777,16 +3777,16 @@ Binary Output Example Record
       field(ZNAM,"zero")
       field(ONAM,"one")
   }
-  
+
 Long Input Example Record
 ::
-  
+
   record(longin,"liUInt32") {
       field(SCAN,"I/O Intr")
       field(DTYP,"asynUInt32Digital")
       field(INP,"@asynMask( $(port) , 0, 0xffffffff , 1.0) ")
   }
-  
+
 Long Output Example Record
 ::
 
@@ -3794,7 +3794,7 @@ Long Output Example Record
       field(DTYP,"asynUInt32Digital")
       field(OUT,"@asynMask( $(port) , 0, 0xffffffff , 1.0) ")
   }
-  
+
 Multibit Input Example Record
 ::
 
@@ -3811,7 +3811,7 @@ Multibit Input Example Record
       field(TWVL,"0x2")
       field(THVL,"0x3")
   }
-  
+
 Multibit Output Example Record
 ::
 
@@ -3844,36 +3844,36 @@ The following support is available:
   device(ai,INST_IO,asynAiFloat64,"asynFloat64")
   device(ai,INST_IO,asynAiFloat64Average,"asynFloat64Average")
   device(ao,INST_IO,asynAoFloat64,"asynFloat64")
-  
+
 devAsynFloat64.c provides EPICS device support for drivers that implement interface
 asynFloat64.
 
 - aiRecord
-  
+
   A value is given to val. Beginning with R4-33 scaling via the ASLO/AOFF record fields,
   and smoothing via the SMOO field are supported.
 
-    - asynFloat64 
-    
+    - asynFloat64
+
       - SCAN "I/O Intr" is supported. If the record is "I/O Intr" scanned
         then when the registerInterruptUser callback is called, it saves the value and calls
-        scanIoRequest. When the record is processed the saved value is put into val. 
+        scanIoRequest. When the record is processed the saved value is put into val.
       - If the record is not "I/O Intr" scanned then each time the record is processed, a new
         value is read via a call to pasynFloat64->read.
-    - asynFloat64Average 
+    - asynFloat64Average
 
       - The registerInterruptUser callback adds the new value to
-        a sum and also increments the number of samples. 
-      - When the record is processed the average is computed and the sum and number of samples is set to zero. 
+        a sum and also increments the number of samples.
+      - When the record is processed the average is computed and the sum and number of samples is set to zero.
       - If the record is processed before new data have arrived (numAverage==0) the record is set to UDF/INVALID,
-        UDF is set to TRUE, and the value is left unchanged. 
-      - The record can be scanned either periodically or with SCAN=I/O Intr. 
+        UDF is set to TRUE, and the value is left unchanged.
+      - The record can be scanned either periodically or with SCAN=I/O Intr.
       - If the record has SCAN=I/O Intr then the average is computed and the record is processed each time NumAverage callback readings have
-        been received. 
+        been received.
       - The SVAL field in the ai record is used to set NumAverage.
- 
+
 - aoRecord
-  
+
   val is written. Beginning with R4-33 scaling via the ASLO/AOFF record fields is
   supported.
 
@@ -3884,7 +3884,7 @@ The following support is available:
 
   device(waveform,INST_IO,asynFloatXXXArrayWfIn,"asynFloatXXXArrayIn")
   device(waveform,INST_IO,asynFloatXXXArrayWfOut,"asynFloatXXXArrayOut")
-  
+
 devAsynFloatXXXArray.c provides EPICS device support for drivers that implement
 interface asynFloatXXXArray. It has support for both reading and writing a waveform.
 SCAN "I/O Intr" is supported similar to the aiRecord in devAsynInt32 device support.
@@ -3929,7 +3929,7 @@ Four types of support are provided:
 
 - CmdResponse The INP field is of the form:
   ::
-  
+
     field(INP,"@asyn(portName,addr,timeout) cmd")
 
   During record initialization, cmd is converted by dbTranslateEscape. The resultant
@@ -3937,7 +3937,7 @@ Four types of support are provided:
   is sent to the device and the response read into the record.
 - WriteRead The INP field is of the form:
   ::
-  
+
     field(INP,"@asyn(portName,addr,timeout) pvname")
 
   pvname must refer to a field in a record in the same IOC. During record initialization
@@ -3948,7 +3948,7 @@ Four types of support are provided:
   it is not passed through dbTranslateEscape.
 - Write The INP(OUT) field is of the form:
   ::
-  
+
     field(INP,"@asyn(portName,addr,timeout) drvUser")
 
   drvUser is information that is passed to the portDriver if it implements interface
@@ -3956,7 +3956,7 @@ Four types of support are provided:
   to the device.
 - Read The INP field is of the form:
   ::
-  
+
     field(INP,"@asyn(portName,addr,timeout) drvUser")
 
   drvUser is information that is passed to the portDriver if it implements interface
@@ -3988,7 +3988,7 @@ field is set using following mapping:
   asynError = epicsAlarmRead or epicsAlarmWrite
   asynDisconnected = epicsAlarmComm
   asynDisabled = epicsAlarmDisable
-  
+
 For records that use callbacks, the status information is passed from the driver
 to device support using the pasynUser->auxStatus field in the pasynUser that
 is passed in the callback. This feature was added in asyn R4-19. Prior to that release
@@ -4008,19 +4008,19 @@ Each IOC can load one or more instances of asynRecord. An example is:
 ::
 
   dbLoadRecords("$(ASYN)/db/asynRecord.db","P=asyn,R=Test,PORT=L0,ADDR=15,IMAX=0,OMAX=0")
-  
+
 The example creates a record with name "asynTest" (formed from the concatenation
 of the P and R macros) that will connect to port "L0" and addr 15. After the ioc
 is started, it is possible to change PORT and/or ADDR. Thus, a single record can
 be used to access all asyn devices connected to the IOC. Multiple records are only
 needed if one or more devices need a dedicated record.
-  
+
 An medm display is available for accessing an asynRecord. It is started as follows:
 ::
 
   cd <asyn>/medm
   medm -x -macro "P=asyn,R=Test" asynRecord.adl
-    
+
 The following medm display appears.
 
 .. figure:: asynRecord.png
@@ -4029,7 +4029,7 @@ The following medm display appears.
     **asynRecord.adl**
 
 asynGpib
---------  
+--------
 GPIB has additional features that are not supported by asynCommon and asynOctet.
 asynGpib defines two interfaces.
 
@@ -4050,7 +4050,7 @@ asynGpibDriver.h contains the following definitions:
   #define IBSDC "\x04"    /* Selective Device Clear */
   #define IBGET "\x08"    /* Group Execute Trigger */
   #define IBTCT "\x09"    /* Take Control */
-  
+
   /* GPIB Universal Commands*/
   #define IBDCL 0x14      /* Device Clear */
   #define IBLLO 0x11      /* Local Lockout */
@@ -4058,12 +4058,12 @@ asynGpibDriver.h contains the following definitions:
   #define IBSPD 0x19      /* Serial Poll Disable */
   #define IBUNT 0x5f      /* Untalk */
   #define IBUNL 0x3f      /* Unlisten */
-  
+
   /* Talk, Listen, Secondary base addresses */
   #define TADBASE    0x40   /* offset to GPIB listen address 0 */
   #define LADBASE    0x20   /* offset to GPIB talk address 0 */
   #define SADBASE    0x60   /* offset to GPIB secondary address 0 */
-  
+
   #define NUM_GPIB_ADDRESSES    32
   #include "asynDriver.h"
   #include "asynInt32.h"
@@ -4091,7 +4091,7 @@ asynGpibDriver.h contains the following definitions:
       void (*srqHappened)(void *asynGpibPvt);
   };
   epicsShareExtern asynGpib *pasynGpib;
-  
+
   struct asynGpibPort {
       /*asynCommon methods */
       void (*report)(void *drvPvt,FILE *fd,int details);
@@ -4099,10 +4099,10 @@ asynGpibDriver.h contains the following definitions:
       asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
       /*asynOctet methods passed through from asynGpib*/
       asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                        char *data,int maxchars,int *nbytesTransfered,
+                        char *data,int maxchars,int *nbytesTransferred,
                         int *eomReason);
       asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                        const char *data,int numchars,int *nbytesTransfered);
+                        const char *data,int numchars,int *nbytesTransferred);
       asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
       asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                   const char *eos,int eoslen);
@@ -4135,25 +4135,25 @@ are multidevice drivers, the VXI11 standard allows for a controller (VXI-11.2) t
 attached to a single device, i.e. it is a single address port driver. For such controllers,
 the use must specify addr = 0 in order to use SRQs. Also see the vxi support below
 for more details.
-  
+
 .. list-table:: asynGpib
   :widths: 20 80
 
-  * - addressedCmd 
-    - The request is passed to the low level driver. 
-  * - universalCmd 
-    - The request is passed to the low level driver. 
-  * - ifc 
-    - The request is passed to the low level driver. 
-  * - ren 
-    - The request is passed to the low level driver. 
-  * - pollAddr 
+  * - addressedCmd
+    - The request is passed to the low level driver.
+  * - universalCmd
+    - The request is passed to the low level driver.
+  * - ifc
+    - The request is passed to the low level driver.
+  * - ren
+    - The request is passed to the low level driver.
+  * - pollAddr
     - Set SRQ polling on or off. onOff = (0,1) means (disable, enable) SRQ polling of
-      specified address. 
-  * - registerPort 
+      specified address.
+  * - registerPort
     - Register a port. When asynGpib receives this request, it calls asynManager.registerPort.
-  * - srqHappened 
-    - Called by low level driver when it detects that a GPIB device issues an SRQ. 
+  * - srqHappened
+    - Called by low level driver when it detects that a GPIB device issues an SRQ.
 
 asynGpibPort
 ~~~~~~~~~~~~
@@ -4163,37 +4163,37 @@ It provides:
 .. list-table:: asynGpibPort
   :widths: 20 80
 
-  * - asynCommon methods 
-    - All the methods of asynCommon 
-  * - asynOctet methods 
-    - All the methods of asynOctet 
-  * - addressedCmd 
-    - Issue a GPIB addressed command. 
-  * - universalCmd 
-    - Issue a GPIB universal command. 
-  * - ifc 
-    - Issue a GPIB Interface Clear command. 
-  * - ren 
-    - Issue a GPIB Remote Enable command 
-  * - srqStatus 
+  * - asynCommon methods
+    - All the methods of asynCommon
+  * - asynOctet methods
+    - All the methods of asynOctet
+  * - addressedCmd
+    - Issue a GPIB addressed command.
+  * - universalCmd
+    - Issue a GPIB universal command.
+  * - ifc
+    - Issue a GPIB Interface Clear command.
+  * - ren
+    - Issue a GPIB Remote Enable command
+  * - srqStatus
     - If return is asynSuccess then isSet is (0,1) if SRQ (is not, is) active. Normally
-      only called by asynGpib. 
-  * - srqEnable 
-    - Enable or disable SRQs. Normally only called by asynGpib. 
-  * - serialPollBegin 
-    - Start of serial poll. Normally only called by asynGpib. 
-  * - serialPoll 
+      only called by asynGpib.
+  * - srqEnable
+    - Enable or disable SRQs. Normally only called by asynGpib.
+  * - serialPollBegin
+    - Start of serial poll. Normally only called by asynGpib.
+  * - serialPoll
     - Poll the specified address and set status to the response. Normally only called
-      by asynGpib. 
-  * - serialPollEnd 
-    - End of serial poll. Normally only called by asynGpib. 
+      by asynGpib.
+  * - serialPollEnd
+    - End of serial poll. Normally only called by asynGpib.
 
 Port Drivers
 ------------
 Local Serial Port
 ~~~~~~~~~~~~~~~~~
 The drvAsynSerialPort driver supports devices connected to serial ports on the IOC.
-  
+
 Serial ports are configured with the ``drvAsynSerialPortConfigure`` and ``asynSetOption`` commands:
 ::
 
@@ -4202,24 +4202,24 @@ Serial ports are configured with the ``drvAsynSerialPortConfigure`` and ``asynSe
 
 where the arguments are:
 
-- portName 
+- portName
 
   - The portName that is registered with asynGpib.
-- ttyName 
+- ttyName
 
   - The name of the local serial port (e.g. "/dev/ttyS0", "COM1").
-- priority 
+- priority
 
   - Priority at which the asyn I/O thread will run. If this is zero or
     missing,then epicsThreadPriorityMedium is used.
-- addr 
+- addr
 
   - This argument is ignored since serial devices are configured with multiDevice=0.
-- noAutoConnect 
+- noAutoConnect
 
   - Zero or missing indicates that portThread should automatically
     connect. Non-zero if explicit connect command must be issued.
-- noProcessEos 
+- noProcessEos
 
   - If 0 then asynInterposeEosConfig is called specifying both processEosIn
     and processEosOut.
@@ -4238,37 +4238,37 @@ values. When a serial port connects the current values are fetched.
 
   * - Key
     - Value
-  * - baud 
-    - 50 75 110 134 150 200 300 600 1200 2400 9600 ... 
-  * - bits 
-    - 8 7 6 5 
-  * - parity 
-    - none even odd 
-  * - stop 
-    - 1 2 
-  * - clocal 
-    - Y N 
-  * - crtscts 
-    - N Y 
-  * - ixon 
-    - N Y 
-  * - ixoff 
-    - N Y 
-  * - ixany 
-    - N Y 
-  * - rs485_enable 
-    - N Y 
-  * - rs485_rts_on_send 
-    - N Y 
-  * - rs485_rts_after_send 
-    - N Y 
-  * - rs485_delay_rts_before_send 
-    - msec_delay 
-  * - rs485_delay_rts_after_send 
-    - msec_delay 
+  * - baud
+    - 50 75 110 134 150 200 300 600 1200 2400 9600 ...
+  * - bits
+    - 8 7 6 5
+  * - parity
+    - none even odd
+  * - stop
+    - 1 2
+  * - clocal
+    - Y N
+  * - crtscts
+    - N Y
+  * - ixon
+    - N Y
+  * - ixoff
+    - N Y
+  * - ixany
+    - N Y
+  * - rs485_enable
+    - N Y
+  * - rs485_rts_on_send
+    - N Y
+  * - rs485_rts_after_send
+    - N Y
+  * - rs485_delay_rts_before_send
+    - msec_delay
+  * - rs485_delay_rts_after_send
+    - msec_delay
   * - break
     - off on <numeric-device-dependent-time>
- 
+
 On some systems (e.g. Windows, Darwin) the driver accepts any numeric value for
 the baud rate, which must, of course be supported by the system hardware. On Linux
 the choices are limited to the values like B300, B9600, etc. which are defined in
@@ -4321,9 +4321,9 @@ carrier.
   tyGSOctalDevCreate("/tyGS/0/0","Mod0",0,0,1000,1000)
   drvAsynSerialPortConfigure("/tyGS/0/0","/tyGS/0/0",0,0,0)
   asynSetOption("/tyGS/0/0",0,"baud","9600")
-  
+
   For the IP520:
-  
+
   IP520Drv(1)
   IP520ModuleInit("UART_0", "232", 0xC2, 0, 0)
   IP520DevCreate("A1", "UART_0", 0, 0, 1000, 1000)
@@ -4346,15 +4346,15 @@ command:
 
 where the arguments are:
 
-- portName 
+- portName
 
   - The portName that is registered with asynManager.
-- hostInfo 
+- hostInfo
 
   - The Internet host name, port number, optional local port number, and
     optional IP protocol of the device. The format is:
     ::
-    
+
       <host>:<port>[:localPort] [protocol]
 
     (e.g. "164.54.9.90:4002", "164.54.9.90:4001:10101", "serials8n3:4002", "serials8n3:4002
@@ -4380,12 +4380,12 @@ is taken to be the name of a UNIX-domain stream socket.
 
 `This article <https://lwn.net/Articles/542629/>`__ explains the use of
 the SO_REUSEPORT option for both TCP and UDP. The particular use case that motivated
-the addition of the SO_REUSEPORT to this driver is discussed in 
+the addition of the SO_REUSEPORT to this driver is discussed in
 `this Github issue <https://github.com/epics-modules/asyn/issues/108>`__.
 On Windows and RTEMS SO_REUSEADDR is used instead of SO_RESUSEPORT, but it should have the same effect.
 
-To receive UDP broadcasts the localPort is the port to listen on, for example: 
-``drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956 UDP*",0,0,0)``. 
+To receive UDP broadcasts the localPort is the port to listen on, for example:
+``drvAsynIPPortConfigure("BD","255.255.255.255:1234:3956 UDP*",0,0,0)``.
 If the port is only to be used to receive broadcast messages then
 the UDP protocol should be specified. If it is also to be used to send UDP broadcasts
 then the UDP* protocol must be specified. In this case the broadcasts will be send
@@ -4397,12 +4397,12 @@ local port or range of local ports, in which case localPort must be specified.
 - priority - Priority at which the asyn I/O thread will run. If this is zero or
 missing, then epicsThreadPriorityMedium is used.
 
-- noAutoConnect 
+- noAutoConnect
 
   - Zero or missing indicates that portThread should automatically
-    connect. 
+    connect.
   - Non-zero if explicit connect command must be issued.
-- noProcessEos 
+- noProcessEos
 
   - If 0 then asynInterposeEosConfig is called specifying both processEosIn
     and processEosOut.
@@ -4423,19 +4423,19 @@ The following table summarizes the drvAsynIPPort driver asynSetOption keys and v
   * - Key
     - Value
     - Description
-  * - disconnectOnReadTimeout 
-    - N Y 
+  * - disconnectOnReadTimeout
+    - N Y
     - Default=N. If Y then if a read operation times out the driver automatically disconnect
-      the IP port. 
-  * - hostInfo 
-    - <host>:<port>[:localPort] [protocol] 
+      the IP port.
+  * - hostInfo
+    - <host>:<port>[:localPort] [protocol]
     - The IP port hostInfo specification using the same syntax as drvAsynIPPortConfigure.
       This option allows changing at run time the Internet host and port to which this
       asyn port is connected. The only restriction is that the setting of the COM (TELNET
       RFC 2217) protocol cannot be changed from that specified with drvAsynIPPortConfigure.
       This is because if COM is specified in the drvAsynIPPortConfigure command then asynOctet
       and asynOption interpose interfaces are used, and asynManager does not support removing
-      interpose interfaces. 
+      interpose interfaces.
 
 In addition to these key/value pairs if the COM protocol is used then the drvAsynIPPort
 driver uses the same key/value pairs as the drvAsynSerialPort driver for specifying
@@ -4458,10 +4458,10 @@ command:
 
 where the arguments are:
 
-- portName 
+- portName
 
   - The portName that is registered with asynManager.
-- serverInfo 
+- serverInfo
 
   - The Internet host name and port number to listen for connections
     on (e.g. "localhost:4002" for TCP, "localhost:4002 UDP" for UDP). This allows to
@@ -4471,15 +4471,15 @@ where the arguments are:
     be an existing interface on the host. If the name cannot be resolved, the call will
     complain and fail. If you need the loopback interface, use "127.0.0.1:port".
 
-- maxClients 
+- maxClients
 
   - The maximum number of IP clients that can be simultaneously connected
     on this port. Additional connect requests will fail.
-- priority 
+- priority
 
   - Priority at which the listener thread and any asyn I/O ports it creates
     will run. If this is zero or missing, then epicsThreadPriorityMedium is used.
-- noAutoConnect 
+- noAutoConnect
 
   - Zero or missing indicates that the listener port should automatically
     connect. Non-zero if explicit connect command must be issued. Note that all asyn
@@ -4511,7 +4511,7 @@ drvAsynIPServerPortConfigure:
   port.
 
 VXI-11
-~~~~~~  
+~~~~~~
 VXI-11 is a TCP/IP protocol for communicating with IEEE 488.2 devices. It is an
 RPC based protocol. In addition to the VXI-11 standard, three additional standards
 are defined.
@@ -4535,15 +4535,15 @@ are defined.
 - The following VXI-11.3 instruments have been tested:
 
   - Tektronix TDS3054B scope.
-      
+
         SRQs do not work. Do not know why
-    
+
   - Tektronix TDS5054B scope.
-      
+
         SRQs do work. The asynUser MUST specify addr = 0. Also do NOT set bit 0x40 of Service
         Request Enable register, i.e. cause SRQ when device has output available. This did
         not work and can cause infinite set of SRQs
-    
+
 Consult the following documents (available on-line) for details.
 ::
 
@@ -4573,21 +4573,21 @@ where
     - Bit 2 (0x4) noSRQ - (0,1 ) => (do, don't) set up a VXI-11 SRQ channel.
 
 
-- timeout 
+- timeout
 
   - I/O operation timeout in seconds as a string. Prior to release R4-16
     this was a double, but was changed to a string because it is not safe to pass doubles
     on the vxWorks shell. If "0.0", then a default is assigned.
-- vxiName 
+- vxiName
 
   - Must be chosen as specified above. NOTE: For the Agilent E2050 vxiName
     must be "hpib". For the Agilent E5810 use the name "gpib0". For an instrument that
     supports VXI11 try "inst0".
-- priority 
+- priority
 
   - Priority at which the asyn I/O thread will run. If this is zero or
     missing, then epicsThreadPriorityMedium is used.
-- noAutoConnect 
+- noAutoConnect
 
   - Zero or missing indicates that portThread should automatically
     connect. Non-zero if explicit connect command must be issued.
@@ -4604,9 +4604,9 @@ Will change the rpcTimeout for port L0 to .1 seconds.
 
 drvPrologixGPIB
 ~~~~~~~~~~~~~~~
-The drvPrologixGPIB port driver was written to support 
+The drvPrologixGPIB port driver was written to support
 `the Prologix GPIB-Ethernet controller <https://prologix.biz/gpib-ethernet-controller.html>`__.
-  
+
 Configuration command is:
 ::
 
@@ -4614,19 +4614,19 @@ Configuration command is:
 
 where
 
-- portName 
+- portName
 
   - An ascii string specifying the port name that will be registered with
     asynDriver.
-- host 
+- host
 
   - The IP address or IP name and port number of the Prologix GPIB-Ethernet
     controller. The port number is factory assigned to 1234.
-- priority 
+- priority
 
   - An integer specifying the priority of the port thread. A value of 0
     will result in a default value being assigned.
-- noAutoConnect 
+- noAutoConnect
 
   - Non-zero indicates that portThread should automatically connect.
   - Zero means explicit connect command must be issued.
@@ -4636,7 +4636,7 @@ An example is:
 
   prologixGPIBConfigure("L0","gse-prologix:1234",0,0)
 
-**NOTES** 
+**NOTES**
 The Prologix GPIB-Ethernet is a simple device that does not support many GPIB functions.
 
 - SRQ is not supported.
@@ -4648,7 +4648,7 @@ The Prologix GPIB-Ethernet is a simple device that does not support many GPIB fu
 Linux-Gpib
 ~~~~~~~~~~
 
-The linux-gpib port driver was written to support 
+The linux-gpib port driver was written to support
 `the Linux GPIB Package library <https://sourceforge.net/projects/linux-gpib/>`__.
 
 In order to build this support the Linux GPIB Package must be installed. Also in
@@ -4669,26 +4669,26 @@ Configuration command is:
 
 where
 
-- portName 
+- portName
 
   - An ascii string specifying the port name that will be registered with
     asynDriver.
-- noAutoConnect 
+- noAutoConnect
 
   - Non-zero indicates that portThread should automatically connect.
   - Zero means explicit connect command must be issued.
-- boardIndex 
+- boardIndex
 
   - Integer containing index of board (0 means /dev/gpib0). Normally it
     is 0. This must be the same as in gpib.conf file (minor number - board index) of
     driver configuration.
-- timeout 
+- timeout
 
   - Time in seconds in which an i/o operation must complete. Zero means
     disabled. This is "general" timeout for every call to low level drivers. For actual
     read/write operations timeout must be defined in device support. Both timeouts are
     converted into integers 0-17 which represents disabled to 1000 seconds.
-- priority 
+- priority
 
   - An integer specifying the priority of the port thread. A value of 0
     will result in a default value being assigned.
@@ -4717,33 +4717,33 @@ command is:
 
 where
 
-- portName 
+- portName
 
   - An ascii string specifying the port name that will be registered with
     asynDriver.
-- carrier 
+- carrier
 
   - An integer identifying the Industry Pack Carrier
-- module 
+- module
 
   - An integer identifying the module on the carrier
-- intVec 
+- intVec
 
   - An integer specifying the interrupt vector
-- priority 
+- priority
 
   - An integer specifying the priority of the portThread. A value of 0
-    will result in a defalt value being assigned
-- noAutoConnect 
+    will result in a default value being assigned
+- noAutoConnect
 
-  - Zero or missing indicates that portThread should automatically connect. 
+  - Zero or missing indicates that portThread should automatically connect.
   - Non-zero if explicit connect command must be issued.
 
 
 An example is:
 ::
 
-  #The following is for the Greensprings IP488 on an MV162 
+  #The following is for the Greensprings IP488 on an MV162
   ipacAddMVME162("A:l=3,3 m=0xe0000000,64")
   gsIP488Configure("L0",0,0,0x61,0,0)
 
@@ -4766,30 +4766,30 @@ command is:
 
 where
 
-- portNameA 
+- portNameA
 
   - An ascii string specifying the port name that will be registered with
     asynDriver for portA.
-- portNameB 
+- portNameB
 
   - An ascii string specifying the port name that will be registered with
     asynDriver for portB. If only one port should be registered, then leave this as
     a null string. The support should also work for a single port NI1014 but has not
     been tested.
-- base 
+- base
 
   - VME A16 base address.
-- vector 
+- vector
 
   - VME interrupt vector.
-- level 
+- level
 
   - An integer specifying the interrupt level.
-- priority 
+- priority
 
   - In integer specifying the priority of the portThread. A value of 0
     will result in a default value being assigned
-- noAutoConnect 
+- noAutoConnect
 
   - Zero or missing indicates that portThread should automatically
     connect. Non-zero if explicit connect command must be issued.
@@ -4815,7 +4815,7 @@ This module includes code that implement a 6 microsecond delay because the gpib
 interface chip requires it. The first time ni1014Config is executed code is run
 to determine a variable used by the delay routine. It assumes that there is no higher
 priority thread running that consumes lots of cpu cycles.
- 
+
 USB TMC (Test and Measurement Class) driver
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Configure each instance of the driver in the application startup script:
@@ -4869,7 +4869,7 @@ Remote Enable (REN)
 The device remote enable is written by a record with
 ::
 
-  OUT="@asyn(port, 0, 0) REN") 
+  OUT="@asyn(port, 0, 0) REN")
 
 Typically the record type will be bo but writing any non-zero value enables remote
 operation.
@@ -4879,7 +4879,7 @@ Local Lockout (LLO)
 The IEEE-488 local lockout command is sent by processing a record with
 ::
 
-  OUT="@asyn(port, 0, 0) LLO") 
+  OUT="@asyn(port, 0, 0) LLO")
 
 Typically the record type will be bo. The value written is ignored.
 
@@ -4888,7 +4888,7 @@ Go To Local (GTL)
 The IEEE-488 go to local command is sent by processing a record with
 ::
 
-  OUT="@asyn(port, 0, 0) GTL") 
+  OUT="@asyn(port, 0, 0) GTL")
 
 Typically the record type will be bo. The value written is ignored.
 
@@ -4939,36 +4939,36 @@ commands:
 
 where the arguments are:
 
-- portName 
+- portName
 
   - The portName that is registered with asyn.
-- vendor 
+- vendor
 
   - The USB vendor number associated with the FTDI device.
-- product 
+- product
 
   - The USB product number associated with the FTDI device.
-- baudrate 
+- baudrate
 
   - The baudrate to be used with the FTDI device.
-- latency 
+- latency
 
   - The latency timer after which non-full FTDI buffers are sent.
-- priority 
+- priority
 
   - Priority at which the asyn I/O thread will run. If this is zero or
     missing,then epicsThreadPriorityMedium is used.
-- noAutoConnect 
+- noAutoConnect
 
-  - Zero or missing indicates that portThread should automatically connect. 
+  - Zero or missing indicates that portThread should automatically connect.
   - Non-zero if explicit connect command must be issued.
-- noProcessEos 
+- noProcessEos
 
   - If 0 then asynInterposeEosConfig is called specifying both processEosIn
     and processEosOut.
-- mode: 
+- mode:
 
-  - 0 = UART; 
+  - 0 = UART;
   - 1 = FTDI initialized in binary SPI mode.
 
 The setEos and getEos methods have no effect and return asynError. The read method
@@ -4988,20 +4988,20 @@ values. Reasonable defaults are used at first.
     - Value
     - Note
   * - baud
-    - 50 75 110 134 150 200 300 600 1200 2400 9600 ... 
+    - 50 75 110 134 150 200 300 600 1200 2400 9600 ...
     - Any numeric value. Check chip datasheet for actual supported baud rates.
   * - bits
     - 8 7
-    - 
+    -
   * - parity
     - none even odd mark space
-    - 
+    -
   * - stop
     - 1 1.5 2
-    - 
+    -
   * - break
     - off on
-    - 
+    -
   * - flow
     - rts_cts dtr_dsr xon_xoff
     - Values can be OR'ed together, e.g., ``rts_cts|dtr_dsr``
@@ -5020,25 +5020,25 @@ as USB - SPI converter for EVAL-AD9915 the following pins need to be connected:
 
   * - Adafruit FT232H
     - EVAL-AD9915
-  * - D0 (SPI Clock, SK) 
-    - SCLK-BUF 
-  * - D1 (Data Out, MOSI) 
-    - SDIO 
-  * - D2 (Data In, MISO) 
-    - SDO 
-  * - D3 (Chip Select, CS) 
-    - CSB 
-  * - D4 
-    - IOUPDATE-BUF 
-  * - D5 
-    - SYNC_IO 
-  * - D6 
-    - RESET 
+  * - D0 (SPI Clock, SK)
+    - SCLK-BUF
+  * - D1 (Data Out, MOSI)
+    - SDIO
+  * - D2 (Data In, MISO)
+    - SDO
+  * - D3 (Chip Select, CS)
+    - CSB
+  * - D4
+    - IOUPDATE-BUF
+  * - D5
+    - SYNC_IO
+  * - D6
+    - RESET
 
-On EVAL-AD9915 board: 
+On EVAL-AD9915 board:
 
 1. The on-board USB-SPI converter, (lacking open source driver),
-   should be disabled by jumpers P203-P205. 
+   should be disabled by jumpers P203-P205.
 2. The following jumpers need to be configured:
    EXTPDCTL=GND; PS0-BUF=GND; PS1-BUF=GND; PS2-BUF=GND; IOCFG=+5V; IOCFG1...3=GND.
 
@@ -5052,7 +5052,7 @@ codes, pin controls, data lengths are currently hard coded in the stream protoco
   # Length = 0x04 bytes after the instruction code and 2 length bytes:
   out 0x31 0x04 0x00 $1 "%.4r";
   }
-  
+
   WRPIN {
   # SK = 0x01
   # DO = 0x02
@@ -5065,7 +5065,7 @@ codes, pin controls, data lengths are currently hard coded in the stream protoco
   # SET_BITS_LOW = 0x80
   out 0x80 "%r" 0x7B;
   }
-  
+
   RDDI {
   # MPSSE_DO_WRITE | MPSSE_WRITE_NEG | MPSSE_DO_READ = 0x31
   # Length = 0x04 bytes after the instruction code and 2 length bytes:
@@ -5125,7 +5125,7 @@ iocsh Commands
   asynOctetSetOutputEos(portName,addr,eos,drvInfo)
   asynOctetGetOutputEos(portName,addr,drvInfo)
   asynRegisterTimeStampSource(portName,functionName);
-  asynUnregisterTimeStampSource(portName)    
+  asynUnregisterTimeStampSource(portName)
 
 ``asynReport`` calls ``asynCommon:report`` for a specific port
 if portName is specified, or for all registered drivers and interposeInterface if
@@ -5140,17 +5140,17 @@ End of String processing for low level drivers that don't.
 
 ``asynSetTraceMask`` calls ``asynTrace:setTraceMask`` for the
 specified port and address. If portName is zero length then the global trace mask
-is set. The mask bit definitions are documented in the 
+is set. The mask bit definitions are documented in the
 `traceMask definitions <#asyntrace>`__.
 
 ``asynSetTraceIOMask`` calls ``asynTrace:setTraceIOMask`` for
 the specified port and address. If portName is zero length then the global traceIO
-mask is set. The mask bit definitions are documented in the 
+mask is set. The mask bit definitions are documented in the
 `traceIO mask definitions <#asyntrace>`__.
 
 ``asynSetTraceInfoMask`` calls ``asynTrace:setTraceInfoMask``
 for the specified port and address. If portName is zero length then the global traceInfo
-mask is set. The mask bit definitions are documented in the 
+mask is set. The mask bit definitions are documented in the
 `traceInfo mask definitions <#asyntrace>`__.
 
 Beginning with asyn R4-35 the mask argument of asynSetTraceMask, asynSetTraceIOMask,
@@ -5160,7 +5160,7 @@ The symbolic names are like the macro names in asyn.h, but are not case sensitiv
 and the prefixes ASYN\_, TRACE\_, TRACEIO\_, and TRACEINFO\_ are optional. Examples:
 ::
 
-     asynSetTraceMask port,0,ASYN_TRACE_ERROR 
+     asynSetTraceMask port,0,ASYN_TRACE_ERROR
      asynSetTraceIOMask port,0,ascii+escape
      asynSetTraceInfoMask port,0,1+port+TRACEINFO_SOURCE|ASYN_TRACEINFO_THREAD
 
@@ -5177,7 +5177,7 @@ is handled as follows:
 
 ``asynSetTraceIOTruncateSize`` calls ``asynTrace:setTraceIOTruncateSize``
 
-``asynSetOption`` calls ``asynCommon:setOption``. 
+``asynSetOption`` calls ``asynCommon:setOption``.
 
 ``asynShowOption`` calls ``asynCommon:getOption``.
 
@@ -5197,7 +5197,7 @@ The other arguments are as follows:
       is sent to ``stdout.``
   * - level
     - The report level.
-  * - portName 
+  * - portName
     - An ascii string specifying the portName of the driver.
   * - addr
     - An integer specifying the address of the device. For multiDevice ports
@@ -5249,7 +5249,7 @@ in the application dbd file.
 ``asynUnregisterTimeStampSource`` calls ``pasynManager->runegisterTimeStampSource``
 for the specified port. This reverts to the default timestamp source function in
 asynManager.
- 
+
 Example Client
 --------------
 The following is an example of an asyn client that reads from an asyn driver via
@@ -5265,7 +5265,7 @@ octet messages:
       void         *drvPvt;
       char         buffer[BUFFER_SIZE];
   }myData;
-  
+
   static void queueCallback(asynUser *pasynUser) {
       myData     *pmydata = (myData *)pasynUser->userPvt;
       asynOctet  *pasynOctet = pmydata->pasynOctet;
@@ -5273,7 +5273,7 @@ octet messages:
       asynStatus status;
       int        writeBytes,readBytes;
       int        eomReason;
-  
+
       asynPrint(pasynUser,ASYN_TRACE_FLOW,"queueCallback entered\n");
       status = pasynOctet->write(drvPvt,pasynUser,pmydata->buffer,
                 strlen(pmydata->buffer),&amp;writeBytes);
@@ -5298,14 +5298,14 @@ octet messages:
       }
       epicsEventSignal(pmydata->done);
   }
-  
+
   static void asynExample(const char *port,int addr,const char *message)
   {
       myData        *pmyData;
       asynUser      *pasynUser;
       asynStatus    status;
       asynInterface *pasynInterface;
-  
+
       pmyData = (myData *)pasynManager->memMalloc(sizeof(myData));
       memset(pmyData,0,sizeof(myData));
       strcpy(pmyData->buffer,message);
@@ -5339,7 +5339,7 @@ octet messages:
       epicsEventDestroy(pmyData->done);
       pasynManager->memFree(pasynUser->userPvt,sizeof(myData));
   }
-    
+
 The flow of control is as follows:
 #. A port driver calls registerPort. This step is not shown in the above example.
 #. asynExample allocates myData and an asynUser.
@@ -5369,18 +5369,18 @@ and contains the following components:
      addrChangeDriver.c
      devTestBlock.c
      interposeInterface.c
-  
+
 echoDriver is a port driver that echos messages it receives. It implements asynCommon
 and asynOctet. When asynOctet:write is called it saves the message. When asynOctet:read
 is called, the saved message is returned and the message is flushed. echoDriverInit
 has an argument that determines if it acts like a multiDevice or a single device
 port driver.
-  
+
 An instance of echoDriver is started via the iocsh command:
 ::
 
   echoDriverInit(portName,delay,noAutoConnect,multiDevice)
-  
+
 where the arguments are:
 
 .. list-table:: echoDriverInit command arguments
@@ -5398,20 +5398,20 @@ where the arguments are:
       not set. If delay>0 then ASYN_CANBLOCK is set.
   * - noAutoConnect
     - Determines initial setting for port.
-  * - multiDevice 
+  * - multiDevice
     - If true then it supports two devices with addresses 0 and 1. If
       false it does not set ASYN_MULTIDEVICE, i.e. it only supports a single device.
-  
+
 addrChangeDriver is a multidevice driver that is an asynUser of another port driver.
 In the example application it connects to echoDriver. An example where this technique
 might be used is a port driver for mult-drop serial that connects to a standard
 serial port.
-  
+
 An instance of addrChangeDriver is started via the iocsh command:
 ::
 
   addrChangeDriverInit(portName,lowerPort,addr)
-  
+
 where the arguments are:
 
 .. list-table:: echoDriverInit command arguments
@@ -5426,13 +5426,13 @@ where the arguments are:
     - the port to which addrChangeDriver connects
   * - addr
     - The address to which addrChangeDriver connects
-  
+
 devTestBlock is device support that tests blockProcessCallback. It has device support
 for stringin records. The INP field has the syntax:
 ::
 
   field(INP,"@asyn(port,addr,timeout) pvname)
-  
+
 where:
 - asyn(port,addr,timeout) is same as for devEpics support.
 - pvname - The name of a record in the same ioc.
@@ -5451,20 +5451,20 @@ When the stringin record is processed the following occurs.
 
     - calls unblockProcessCallback
     - If state is stateIdle
-      
+
         - Calls dbGet to get a string value from pvname
         - calls pasynOctet->write to send the string
         - sets state to stateWrite
         - Calls blockProcessCallback
         - callbackRequestDelayed is called The callback calls queueRequest.
         - completes. processCallback will be called again
-  
+
     - If state is stateWrite
-     
+
         - calls pasynOctet->read and puts the value in VAL.
         - Sets state = stateIdle
         - requests the the record be processed. This time PACT will be TRUE
-  
+
 test.db is a template containing three records: a calc record, which forward links
 to a stringout record which forward links to a stringin record. The stringOut record
 attaches to the device support supplied by asynOctetWriteRead.c. When the calcRecord
@@ -5480,10 +5480,10 @@ is processed the following happens:
   the stringIn record. The then does does a pasynOctet->read. When this completes
   it asks for the record to complete processing.
 - The stringOut record completes processing.
-  
+
 testBlock.db is a template similar to test.db except that it attached to device
 support testBlock instead of asynOctetWriteRead.
-  
+
 Executing "medm -x test.adl" produces the display:
 
 .. figure:: asynTest.png
@@ -5496,7 +5496,7 @@ It assumes that an ioc has been started via:
 
   cd <top>/iocBoot/ioctest
   ../../bin/linux-x86_64/test st.cmd
-  
+
 This starts two versions of echoDriver as port "A" and "B". port A acts as single
 device port. port B acts as a multiDevice port that has two devices. For each of
 the three possible devices, the st.cmd file starts up two sets of records from test.db
@@ -5504,14 +5504,14 @@ The st.cmd file also loads a set of records from asynTest.db for port A and for
 port B and for each of the two devices attached to port B. It also loads a set of
 records from asynRecord.db. It starts one version of addrChangeDriver which connects
 to port A.
-  
+
 It loads six versions of test.db and four versions of testBlock.db The test.adl
 file attaches to these database records.
 
 testArrayRingBufferApp
 ~~~~~~~~~~~~~~~~~~~~~~
 This tests ring buffers for callbacks with arrays. The example resides in <top>/testArrayRingBufferApp.
- 
+
 Executing "medm -x testArrayRingBufferTop.adl" produces a top-level display from
 which this display can be opened:
 
@@ -5534,14 +5534,14 @@ object to communicate with the asyn port driver directly over the asyn interface
 without running an EPICS IOC. It creates an asynIPPort driver and an asynPortClient,
 and uses the command line arguments to set the hostInfo string, a single command
 string to send to the server, and optionally the input and output EOS. It then prints
-out the response from the server. There are 3 example shell scipts provided that
+out the response from the server. There are 3 example shell scripts provided that
 show how to use testAsynIPPortClient to communicate with a Web server, a Newport
 XPS motor controller, and a telnet host respectively.
 
 Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]
 
 Example: testAsynIPPortClient cars.uchicago.edu:80 "GET / HTTP/1.0" "\n\n"
-  
+
 The example resides in <top>/testAsynPortClientApp.
 
 testAsynPortDriverApp
@@ -5562,7 +5562,7 @@ which this display can be opened:
     :align: center
 
     **testAsynPortDriver.png**
-  
+
 It assumes that an ioc has been started via:
 ::
 
@@ -5572,18 +5572,18 @@ It assumes that an ioc has been started via:
 testBroadcastApp
 ~~~~~~~~~~~~~~~~
 This application contains 3 test programs that use UDP IP broadcast messages.
-  
+
 testBroadcastAsyn.c
 ...................
   This program uses drvAsynIPPort to send UDP broadcast messages on port 37747. The
   message is "i\n". It then listens for any responses. If there are NSLS electrometers
   on the network they should respond.
-  
+
 testBroadcastNoAsyn.c
 .....................
   This program does the same as testBroadcastAsyn.c but uses native socket calls rather
   than drvAsynIPort.
-  
+
 testBroadcastBurst.c
 ....................
   This program is used to test the behavior of devices in the presence of large amounts
@@ -5593,30 +5593,30 @@ testBroadcastBurst.c
   of delayTime seconds at the end of each loop. delayTime is floating point value,
   so can be less than 1 second.<br />
   Usage: testBroadcastBurst broadcastAddress broadcastPort numBroadcast numLoops delayTime
-  
+
 The code resides in <top>/testBroadcastApp.
 
 testConnectApp
-~~~~~~~~~~~~~~  
+~~~~~~~~~~~~~~
 This application can be used to test connection management. It connects to a device
 with drvAsynIPPort and periodically writes to it in a background thread. Depending
 on whether the device is connected error messages will be printed. The device can
 be connected and disconnected by power-cycling or removing the network cable to
 test the behavior.
-  
+
 The example resides in <top>/testConnectApp.
-  
+
 The test ioc can be started via:
 ::
 
   cd <top>/iocBoot/ioctestConnect
   ../../bin/linux-x86_64/testConnect st.cmd
-  
+
 The st.cmd file can be edited to select devices which will or will not ever connect.
 There is no medm screen for this test.
 
 testEpicsApp
-~~~~~~~~~~~~  
+~~~~~~~~~~~~
 This test includes example asyn port drivers for the asynInt32 and asynUInt32Digital
 interfaces. Both drivers also implement the asynFloat64 interface for controlling
 the update rate. The testEpicsApp application also uses the asynOctet echoDriver
@@ -5625,7 +5625,7 @@ from `testApp <#testapp>`__.
 The example resides in <top>/testEpicsApp.
 
 Executing "medm -x \*.adl" from the <top>/testEpicsApp/adl directory opens
-the followings displays.
+the following displays.
 
 .. figure:: testInt32.png
     :align: center
@@ -5697,17 +5697,17 @@ modules are needed).
 
 #. Create an installation directory for the module, usually this will end with
    ::
-   
+
       .../support/asyn/
-    
+
 #. Place the distribution file in this directory. Then issue the commands (Unix style)
    ::
-   
+
       tar xvzf <file>.tar.gz
 
 #. This creates a support <top>.
    ::
-  
+
      .../support/asyn/X-Y
      where X-Y is the release number. For example:
      .../support/asyn/3-1
@@ -5750,7 +5750,7 @@ appropriate to your application):
   #include "drvUSBTMC.dbd"
 
 If you are building your application database definition file from the application
-Makefile you specify the aditional database definitions there (again, uncomment
+Makefile you specify the additional database definitions there (again, uncomment
 the lines appropriate to your application):
 ::
 
@@ -5769,7 +5769,7 @@ In the ``st.cmd`` file add:
 
 You must provide values for <ioc>, <record>, <port>, <addr>, <omax>, and <imax>.
 
-Once the application is running, medm displays for an ioc can be started by: 
+Once the application is running, medm displays for an ioc can be started by:
 ::
 
   medm -x -macro "P=<ioc>,R=<record>" <asyntop>/medm/asynRecord.adl &
@@ -5783,18 +5783,18 @@ License Agreement
 
   Copyright (c) 2002 University of Chicago All rights reserved.
   asynDriver is distributed subject to the following license conditions:
-  
+
   SOFTWARE LICENSE AGREEMENT
   Software: asynDriver
-  
+
    1. The "Software", below, refers to asynDriver (in either source code, or
       binary form and accompanying documentation). Each licensee is
       addressed as "you" or "Licensee."
-  
+
    2. The copyright holders shown above and their third-party licensors
       hereby grant Licensee a royalty-free nonexclusive license, subject to
       the limitations stated herein and U.S. Government license rights.
-  
+
    3. You may modify and make a copy or copies of the Software for use
       within your organization, if you meet the following conditions:
         a. Copies in source code must include the copyright notice and this
@@ -5802,7 +5802,7 @@ License Agreement
         b. Copies in binary form must include the copyright notice and this
            Software License Agreement in the documentation and/or other
            materials provided with the copy.
-  
+
    4. You may modify a copy or copies of the Software or any portion of it,
       thus forming a work based on the Software, and distribute copies of
       such work outside your organization, if you meet all of the following
@@ -5815,14 +5815,14 @@ License Agreement
         c. Modified copies and works based on the Software must carry
            prominent notices stating that you changed specified portions of
            the Software.
-  
+
    5. Portions of the Software resulted from work developed under a U.S.
       Government contract and are subject to the following license: the
       Government is granted for itself and others acting on its behalf a
       paid-up, nonexclusive, irrevocable worldwide license in this computer
       software to reproduce, prepare derivative works, and perform publicly
       and display publicly.
-  
+
    6. WARRANTY DISCLAIMER. THE SOFTWARE IS SUPPLIED "AS IS" WITHOUT WARRANTY
       OF ANY KIND. THE COPYRIGHT HOLDERS, THEIR THIRD PARTY LICENSORS, THE
       UNITED STATES, THE UNITED STATES DEPARTMENT OF ENERGY, AND THEIR
@@ -5834,7 +5834,7 @@ License Agreement
       SOFTWARE WOULD NOT INFRINGE PRIVATELY OWNED RIGHTS, (4) DO NOT WARRANT
       THAT THE SOFTWARE WILL FUNCTION UNINTERRUPTED, THAT IT IS ERROR-FREE
       OR THAT ANY ERRORS WILL BE CORRECTED.
-  
+
    7. LIMITATION OF LIABILITY. IN NO EVENT WILL THE COPYRIGHT HOLDERS, THEIR
       THIRD PARTY LICENSORS, THE UNITED STATES, THE UNITED STATES DEPARTMENT
       OF ENERGY, OR THEIR EMPLOYEES: BE LIABLE FOR ANY INDIRECT, INCIDENTAL,

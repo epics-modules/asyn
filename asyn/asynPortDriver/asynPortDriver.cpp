@@ -2710,16 +2710,16 @@ asynStatus asynPortDriver::flushOctet(asynUser *pasynUser)
 {
     double     savetimeout = pasynUser->timeout;
     char       buffer[100];
-    size_t     nbytesTransfered;
+    size_t     nbytesTransferred;
     static const char *functionName = "flushOctet";
 
     pasynUser->timeout = .05;
     while(1) {
-        nbytesTransfered = 0;
-        readOctet(pasynUser, buffer, sizeof(buffer), &nbytesTransfered, 0);
-        if (nbytesTransfered==0) break;
+        nbytesTransferred = 0;
+        readOctet(pasynUser, buffer, sizeof(buffer), &nbytesTransferred, 0);
+        if (nbytesTransferred==0) break;
         asynPrintIO(pasynUser, ASYN_TRACEIO_DEVICE,
-            buffer, nbytesTransfered, "%s:%s\n", driverName, functionName);
+            buffer, nbytesTransferred, "%s:%s\n", driverName, functionName);
     }
     pasynUser->timeout = savetimeout;
     return asynSuccess;
@@ -3929,7 +3929,7 @@ static asynDrvUser ifaceDrvUser = {
                This controls the number of parameter tables that are created.
   * \param[in] interfaceMask Bit mask defining the asyn interfaces that this driver supports.
                 The bit mask values are defined in asynPortDriver.h, e.g. asynInt32Mask.
-  * \param[in] interruptMask Bit mask definining the asyn interfaces that can generate interrupts (callbacks).
+  * \param[in] interruptMask Bit mask defining the asyn interfaces that can generate interrupts (callbacks).
                The bit mask values are defined in asynPortDriver.h, e.g. asynInt8ArrayMask.
   * \param[in] asynFlags Flags when creating the asyn port driver; includes ASYN_CANBLOCK, ASYN_MULTIDEVICE and ASYN_DESTRUCTIBLE.
   * \param[in] autoConnect The autoConnect flag for the asyn port driver.
@@ -3970,7 +3970,7 @@ void asynPortDriver::exceptionHandler(asynUser *pasynUser, asynException excepti
     asynPortDriver *pPvt = (asynPortDriver *)pasynUser->userPvt;
 
     if (exception == asynExceptionShutdown && pPvt->needsShutdown()) {
-        // This code is only excuted once: asynManager will not raise the
+        // This code is only executed once: asynManager will not raise the
         // exception if the port has been shut down before.
         asynPrint(pPvt->pasynUserSelf, ASYN_TRACE_FLOW,
                   "%s: port=%s Port is shutting down.\n",

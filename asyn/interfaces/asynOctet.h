@@ -34,9 +34,9 @@ typedef struct asynOctetInterrupt {
 #define asynOctetType "asynOctet"
 typedef struct asynOctet{
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                    const char *data,size_t numchars,size_t *nbytesTransfered);
+                    const char *data,size_t numchars,size_t *nbytesTransferred);
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                    char *data,size_t maxchars,size_t *nbytesTransfered,
+                    char *data,size_t maxchars,size_t *nbytesTransferred,
                     int *eomReason);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*registerInterruptUser)(void *drvPvt,asynUser *pasynUser,
@@ -68,7 +68,7 @@ typedef struct asynOctetBase {
         asynInterface *pasynOctetInterface,
         int processEosIn,int processEosOut,int interruptProcess);
     void       (*callInterruptUsers)(asynUser *pasynUser,void *pasynPvt,
-        char *data,size_t *nbytesTransfered,int *eomReason);
+        char *data,size_t *nbytesTransferred,int *eomReason);
 } asynOctetBase;
 ASYN_API extern asynOctetBase *pasynOctetBase;
 

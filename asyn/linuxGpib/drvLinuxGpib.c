@@ -68,9 +68,9 @@ static asynStatus connect(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus disconnect(void *pdrvPvt,asynUser *pasynUser);
 /*asynOctet methods */
 static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
-*data,int maxchars,int *nbytesTransfered,int *eomReason);
+*data,int maxchars,int *nbytesTransferred,int *eomReason);
 static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
-                    const char *data,int numchars,int *nbytesTransfered);
+                    const char *data,int numchars,int *nbytesTransferred);
 static asynStatus gpibFlush(void *pdrvPvt,asynUser *pasynUser);
 static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int eoslen);
 static asynStatus getEos(void *pdrvPvt,asynUser *pasynUser,
@@ -419,7 +419,7 @@ static asynStatus gpibPortGetPortOptions(void *pdrvPvt,asynUser *pasynUser,
 
 /*asynOctet methods */
 static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
-*data,int maxchars,int *nbytesTransfered,int *eomReason)
+*data,int maxchars,int *nbytesTransferred,int *eomReason)
 {
     GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
     int addr=0;
@@ -450,8 +450,8 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
     /*read data*/
     ibsta = ibrd(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],data,maxchars);
 
-    /*ibcnt holds number of bytes transfered*/
-    *nbytesTransfered=ibcnt;
+    /*ibcnt holds number of bytes transferred*/
+    *nbytesTransferred=ibcnt;
 
     if (eomReason != NULL)
     {
@@ -479,7 +479,7 @@ static asynStatus gpibRead(void *pdrvPvt,asynUser *pasynUser,char
 }
 
 static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
-                            const char *data,int numchars,int *nbytesTransfered)
+                            const char *data,int numchars,int *nbytesTransferred)
 {
     GpibBoardPvt *pGpibBoardPvt = (GpibBoardPvt *)pdrvPvt;
     int addr=0;
@@ -519,8 +519,8 @@ static asynStatus gpibWrite(void *pdrvPvt,asynUser *pasynUser,
     }
 
 
-    /*ibcnt holds number of bytes transfered*/
-    *nbytesTransfered=ibcnt;
+    /*ibcnt holds number of bytes transferred*/
+    *nbytesTransferred=ibcnt;
 
     asynPrintIO(pasynUser,ASYN_TRACEIO_DRIVER,
                 data,ibcnt,"%s addr %d gpibPortWrite\n",pGpibBoardPvt->portName,addr);
@@ -571,7 +571,7 @@ static asynStatus setEos(void *pdrvPvt,asynUser *pasynUser,const char *eos,int e
         ibconfig(pGpibBoardPvt->uddev[primaryAddr][secondaryAddr],IbcEOSrd,1);
 
         if(DEBUG)
-            printf("Seting EOS: %d\n", *eos);
+            printf("Setting EOS: %d\n", *eos);
 
         status=checkError(pdrvPvt,pasynUser,addr);
         if(status!=asynSuccess)return status;

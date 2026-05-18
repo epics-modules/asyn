@@ -45,7 +45,7 @@
 /* This structure holds the information for an IP port created by the listener */
 typedef struct {
     char               *portName;
-    int                fd;
+    SOCKET             fd;
     asynUser          *pasynUser;
 } portList_t;
 
@@ -165,7 +165,7 @@ static void closeConnection(asynUser *pasynUser, ttyController_t *tty)
  * Read from the UDP port
  */
 static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
-        char *data, size_t maxchars, size_t *nbytesTransfered, int *gotEom) {
+        char *data, size_t maxchars, size_t *nbytesTransferred, int *gotEom) {
     ttyController_t *tty = (ttyController_t *) drvPvt;
     int thisRead;
     int readPollmsec;
@@ -227,7 +227,7 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
     }
     if (thisRead < 0)
         thisRead = 0;
-    *nbytesTransfered = thisRead;
+    *nbytesTransferred = thisRead;
     /* If there is room add a null byte */
     if (thisRead < (int) maxchars)
         data[thisRead] = 0;
@@ -247,7 +247,7 @@ flushIt(void *drvPvt, asynUser *pasynUser) {
 }
 
 static asynStatus writeIt(void *drvPvt, asynUser *pasynUser,
-        const char *data, size_t numchars, size_t *nbytesTransfered) {
+        const char *data, size_t numchars, size_t *nbytesTransferred) {
     return asynError;
 }
 /*Beginning of asynCommon methods*/
@@ -272,7 +272,8 @@ static void report(void *drvPvt, FILE *fp, int details)
         for (i=0; i<tty->maxClients; i++) {
             pl = &tty->portList[i];
             pasynManager->isConnected(pl->pasynUser, &connected);
-            fprintf(fp, "    Client %d name:%s fd: %d connected:%d\n", i, pl->portName, pl->fd, connected);
+            fprintf(fp, "    Client %d name:%s fd:%lld connected:%d\n",
+                i, pl->portName, (long long)pl->fd, connected);
         }
     }
 }
@@ -285,7 +286,7 @@ static void connectionListener(void *drvPvt)
 {
     ttyController_t *tty = (ttyController_t *) drvPvt;
     struct sockaddr_in clientAddr;
-    int clientFd;
+    SOCKET clientFd;
     osiSocklen_t clientLen = sizeof (clientAddr);
     ELLLIST *pclientList;
     interruptNode *pnode;
@@ -327,16 +328,16 @@ static void connectionListener(void *drvPvt)
             if (tty->fd == INVALID_SOCKET) {
                 asynPrint(pasynUser, ASYN_TRACE_FLOW,
                     "drvAsynIPServerPort: terminating connection thread for %s\n",
-                    tty->serverInfo);                
+                    tty->serverInfo);
                 break; /* we must be in ioc shutdown and ttyCleanup has been called */
             }
             asynPrint(pasynUser, ASYN_TRACE_FLOW,
-                    "drvAsynIPServerPort: new connection, socket=%d on %s\n",
-                    clientFd, tty->serverInfo);
+                    "drvAsynIPServerPort: new connection, socket=%lld on %s\n",
+                    (long long)clientFd, tty->serverInfo);
             if (clientFd < 0) {
                 asynPrint(pasynUser, ASYN_TRACE_ERROR,
-                        "drvAsynIPServerPort: accept error on %s: fd=%d, %s\n", tty->serverInfo,
-                        tty->fd, strerror(errno));
+                        "drvAsynIPServerPort: accept error on %s: fd=%lld, %s\n", tty->serverInfo,
+                        (long long)tty->fd, strerror(errno));
                 continue;
             }
             /* Search for a port which is disconnected */
@@ -355,7 +356,7 @@ static void connectionListener(void *drvPvt)
                 continue;
             }
             /* Set the existing port to use the new file descriptor */
-            pl->pasynUser->reason = clientFd;
+            pl->pasynUser->reason = (int)clientFd; /* maybe we lose information on Windows */
             pl->fd = clientFd;
             status = pasynCommonSyncIO->connectDevice(pl->pasynUser);
             if (status != asynSuccess) {
@@ -502,8 +503,8 @@ static void ttyCleanup(void *pPvt)
 
     if (!tty) return;
     if (tty->fd >= 0) {
-        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         SOCKET fd_save = tty->fd;
+        asynPrint(tty->pasynUser, ASYN_TRACE_FLOW, "drvAsynIPServerPort:ttyCleanup %s: shutdown socket %d\n", tty->portName, tty->fd);
         tty->fd = INVALID_SOCKET;
         /* shutdown then close the socket so accept thread will terminate */
         shutdown(fd_save, SHUT_RDWR);

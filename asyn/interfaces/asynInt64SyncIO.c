@@ -144,7 +144,7 @@ static asynStatus writeOp(asynUser *pasynUser, epicsInt64 value,double timeout)
     status = pioPvt->pasynInt64->write(pioPvt->int64Pvt, pasynUser, value);
     if (status==asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "asynInt64SyncIO wrote: %lld\n", value);
+                  "asynInt64SyncIO wrote: %lld\n", (long long)value);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
@@ -166,7 +166,7 @@ static asynStatus readOp(asynUser *pasynUser, epicsInt64 *pvalue, double timeout
     status = pioPvt->pasynInt64->read(pioPvt->int64Pvt, pasynUser, pvalue);
     if (status==asynSuccess) {
         asynPrint(pasynUser, ASYN_TRACEIO_DEVICE,
-                  "asynInt64SyncIO read: %lld\n", *pvalue);
+                  "asynInt64SyncIO read: %lld\n", (long long)*pvalue);
     }
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
@@ -188,7 +188,7 @@ static asynStatus getBounds(asynUser *pasynUser,
     status = pioPvt->pasynInt64->getBounds(pioPvt->int64Pvt,pasynUser,plow,phigh);
     asynPrint(pasynUser, ASYN_TRACE_FLOW,
                   "asynInt64SyncIO getBounds: status=%d low %lld high %lld\n",
-                  status, *plow,*phigh);
+                  status, (long long)*plow, (long long)*phigh);
     unlockStatus = pasynManager->queueUnlockPort(pasynUser);
     if (unlockStatus != asynSuccess) {
         return unlockStatus;

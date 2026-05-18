@@ -69,10 +69,10 @@ struct asynGpibPort {
     asynStatus (*disconnect)(void *drvPvt,asynUser *pasynUser);
     /*asynOctet methods passed through from asynGpib*/
     asynStatus (*read)(void *drvPvt,asynUser *pasynUser,
-                      char *data,int maxchars,int *nbytesTransfered,
+                      char *data,int maxchars,int *nbytesTransferred,
                       int *eomReason);
     asynStatus (*write)(void *drvPvt,asynUser *pasynUser,
-                      const char *data,int numchars,int *nbytesTransfered);
+                      const char *data,int numchars,int *nbytesTransferred);
     asynStatus (*flush)(void *drvPvt,asynUser *pasynUser);
     asynStatus (*setEos)(void *drvPvt,asynUser *pasynUser,
                 const char *eos,int eoslen);
