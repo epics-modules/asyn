@@ -46,7 +46,19 @@ extern "C" {
 
 
 typedef enum {
-    asynSuccess,asynTimeout,asynOverflow,asynError,asynDisconnected,asynDisabled
+    asynSuccess,
+    asynTimeout,
+    asynOverflow,
+    asynError,
+    asynDisconnected,
+    asynDisabled,
+    /* Values used for the param interface */
+    asynParamAlreadyExists,
+    asynParamNotFound,
+    asynParamWrongType,
+    asynParamBadIndex,
+    asynParamUndefined,
+    asynParamInvalidList
 }asynStatus;
 
 typedef enum {
