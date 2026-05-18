@@ -8,21 +8,21 @@ GPIB, or network attached device
 
 1. Introduction
 ---------------
-  
+
 This tutorial provides step-by-step instructions on how to create EPICS support
 for a simple serial, GPIB (IEEE-488) or network attached device. The steps are presented
 in a way that should make it possible to apply them in cookbook fashion to create
 support for other devices. For comprehensive description of all the details of the
-I/O system used here, refer to the 
+I/O system used here, refer to the
 `asynDriver <asynDriver.html>`__
 and
 `StreamDevice <http://epics.web.psi.ch/software/streamdevice/doc/>`__
 documentation.
-  
+
 This document isn't for the absolute newcomer though. You must have EPICS installed
 on a system somewhere and know how to build and run the example application. In
 particular you must have the following installed:
-  
+
 - EPICS R3.14.11 or higher.
 - EPICS ASYN support module version 4.14 or higher.
 - EPICS StreamDevice support module version 2.4.1 or higher.
@@ -50,10 +50,10 @@ shell variables to hold the paths to my installation of EPICS base and the ASYN
 support module. You can do this with values appropriate for your site or just type
 the full path names to the commands.
 ::
-  
-  EPICS_BASE=/usr/local/epics/R3.14.11/base 
-  ASYN=/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14 
-  
+
+  EPICS_BASE=/usr/local/epics/R3.14.11/base
+  ASYN=/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14
+
 You will have to change these to the values appropriate for your EPICS installation
 or simply type the appropriate full paths to invoke the scripts. You must also have
 the EPICS_HOST_ARCH environment variable set to match the machine on which you are
@@ -64,7 +64,7 @@ To create a new StreamDevice support module:
 
   norume> mkdir HPE3631A
   norume> cd HPE3631A
-  norume> $ASYN/bin/$EPICS_HOST_ARCH/makeSupport.pl -t streamSCPI HPE3631A 
+  norume> $ASYN/bin/$EPICS_HOST_ARCH/makeSupport.pl -t streamSCPI HPE3631A
 
 2.1 Make changes to some files in configure/
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -73,14 +73,14 @@ entries describing the paths to your EPICS base and ASYN support are correct. Fo
 example these might be:
 ::
 
-  ASYN = /usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14 
-  EPICS_BASE = /usr/local/epics/R3.14.11/base 
-  
+  ASYN = /usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14
+  EPICS_BASE = /usr/local/epics/R3.14.11/base
+
 You'll also have to add a line describing the path to your StreamDevice support.
 For example:
-::  
+::
 
-  STREAM = /usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/stream-2-4-1 
+  STREAM = /usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/stream-2-4-1
 
 Edit the configure/CONFIG_SITE file which makeSupport.pl created and specify the
 IOC architectures on which the application is to run. I wanted the application to
@@ -88,32 +88,32 @@ run as a soft IOC, so I uncommented the CROSS_COMPILER_TARGET_ARCHS definition a
 set the definition to be empty:
 ::
 
-  CROSS_COMPILER_TARGET_ARCHS = 
-  
+  CROSS_COMPILER_TARGET_ARCHS =
+
 You may have to fix an error in the HPE3631ASup/devHPE3631A.db file produced by
 the makeSupport.pl command. Verify that the IDNwf record description looks like:
 ::
- 
-  record(waveform, "$(P)$(R)IDNwf") 
+
+  record(waveform, "$(P)$(R)IDNwf")
   {
       field(DESC, "SCPI identification string")
-      field(DTYP, "stream") 
+      field(DTYP, "stream")
       field(INP,  "@devHPE3631A.proto getIDN(199) $(PORT) $(A)")
-      field(PINI, "YES") 
-      field(FTVL, "CHAR") 
-      field(NELM, "200") 
-  } 
+      field(PINI, "YES")
+      field(FTVL, "CHAR")
+      field(NELM, "200")
+  }
 
 Some versions of the template have FTYP rather than FTVL for the waveform data type
 field.
-  
+
 I install the StreamDevice protocol file into the support module db/ directory.
 This seems like a reasonable place to put this file since it's tied closely to its
 associated database file. To have the protocol file installed into the db/ directory
 edit HPE3631ASup/Makefile and add the line
-::  
+::
 
-  DB_INSTALLS += $(TOP)/HPE3631ASup/devHPE3631A.proto 
+  DB_INSTALLS += $(TOP)/HPE3631ASup/devHPE3631A.proto
 
 to the list of DB_INSTALLS.
 
@@ -134,21 +134,21 @@ Here are the commands I ran.
   norume> rm -rf configure
   norume> $EPICS_BASE/bin/$EPICS_HOST_ARCH/makeBaseApp.pl -t ioc HPE3631Atest
   norume> $EPICS_BASE/bin/$EPICS_HOST_ARCH/makeBaseApp.pl -t ioc -i HPE3631Atest
-  
+
   The following target architectures are available in base:
       darwin-x86
-      RTEMS-mvme2100 
-      RTEMS-mvme3100 
+      RTEMS-mvme2100
+      RTEMS-mvme3100
       RTEMS-uC5282
   What architecture do you want to use? darwin-x86
-  The following applications are available: 
+  The following applications are available:
       HPE3631Atest
-  What application should the IOC(s) boot? 
+  What application should the IOC(s) boot?
   The default uses the IOC's name, even if not listed above.
-  Application name? 
-  norume> 
-  
-    
+  Application name?
+  norume>
+
+
 I then added the ASYN and STREAM values to configure/RELEASE and made the change
 to the CROSS_COMPILER_TARGET_ARCHS line in configure/CONFIG_SITE.
 
@@ -158,9 +158,9 @@ Edit HPE3631AtestApp/src/Makefile and add the lines:
 
   HPE3631Atest_DBD += stream.dbd
   HPE3631Atest_DBD += asyn.dbd
-  HPE3631Atest_DBD += drvAsynSerialPort.dbd 
+  HPE3631Atest_DBD += drvAsynSerialPort.dbd
   and
-  HPE3631Atest_LIBS += stream asyn 
+  HPE3631Atest_LIBS += stream asyn
 
 To install the support module files and build the test application simply run make:
 ::
@@ -176,53 +176,53 @@ the test application can be run. Change directories to iocBoot/iocHPE3631Atest a
 edit the st.cmd file. Here's the file that I use:
 ::
 
-  1 #!../../bin/darwin-x86/HPE3631Atest 
+  1 #!../../bin/darwin-x86/HPE3631Atest
   2
-  3 ############################################################################### 
-  4 # Set up environment 
-  5 < envPaths 
-  6 epicsEnvSet "STREAM_PROTOCOL_PATH" "$(TOP)/db" 
+  3 ###############################################################################
+  4 # Set up environment
+  5 < envPaths
+  6 epicsEnvSet "STREAM_PROTOCOL_PATH" "$(TOP)/db"
   7
- 
-  8 ############################################################################### 
-  9 # Allow PV name prefixes and serial port name to be set from the environment 
- 10 epicsEnvSet "P" "$(P=hpE3631A)" 
- 11 epicsEnvSet "R" "$(R=Test)" 
- 12 epicsEnvSet "TTY" "$(TTY=/dev/tty.PL2303-000013FA)" 
+
+  8 ###############################################################################
+  9 # Allow PV name prefixes and serial port name to be set from the environment
+ 10 epicsEnvSet "P" "$(P=hpE3631A)"
+ 11 epicsEnvSet "R" "$(R=Test)"
+ 12 epicsEnvSet "TTY" "$(TTY=/dev/tty.PL2303-000013FA)"
  13
- 
- 14 ############################################################################### 
- 15 ## Register all support components 
- 16 cd "${TOP}" 
- 17 dbLoadDatabase "dbd/HPE3631Atest.dbd" 
- 18 HPE3631Atest_registerRecordDeviceDriver pdbbase 
+
+ 14 ###############################################################################
+ 15 ## Register all support components
+ 16 cd "${TOP}"
+ 17 dbLoadDatabase "dbd/HPE3631Atest.dbd"
+ 18 HPE3631Atest_registerRecordDeviceDriver pdbbase
  19
- 
- 20 ############################################################################### 
- 21 # Set up ASYN ports 
- 22 # drvAsynSerialPortConfigure port ipInfo priority noAutoconnect noProcessEos 
- 23 drvAsynSerialPortConfigure("L0","$(TTY)",0,0,0) 
- 24 asynSetOption("L0", -1, "baud", "9600") 
- 25 asynSetOption("L0", -1, "bits", "8") 
- 26 asynSetOption("L0", -1, "parity", "none") 
- 27 asynSetOption("L0", -1, "stop", "2") 
- 28 asynSetOption("L0", -1, "clocal", "Y") 
- 29 asynSetOption("L0", -1, "crtscts", "Y") 
- 30 asynOctetSetInputEos("L0", -1, "\n") 
- 31 asynOctetSetOutputEos("L0", -1, "\n") 
- 32 asynSetTraceIOMask("L0",-1,0x2) 
- 33 asynSetTraceMask("L0",-1,0x9) 
+
+ 20 ###############################################################################
+ 21 # Set up ASYN ports
+ 22 # drvAsynSerialPortConfigure port ipInfo priority noAutoconnect noProcessEos
+ 23 drvAsynSerialPortConfigure("L0","$(TTY)",0,0,0)
+ 24 asynSetOption("L0", -1, "baud", "9600")
+ 25 asynSetOption("L0", -1, "bits", "8")
+ 26 asynSetOption("L0", -1, "parity", "none")
+ 27 asynSetOption("L0", -1, "stop", "2")
+ 28 asynSetOption("L0", -1, "clocal", "Y")
+ 29 asynSetOption("L0", -1, "crtscts", "Y")
+ 30 asynOctetSetInputEos("L0", -1, "\n")
+ 31 asynOctetSetOutputEos("L0", -1, "\n")
+ 32 asynSetTraceIOMask("L0",-1,0x2)
+ 33 asynSetTraceMask("L0",-1,0x9)
  34
- 
- 35 ############################################################################### 
- 36 ## Load record instances 
- 37 dbLoadRecords("db/devHPE3631A.db","P=$(P),R=$(R),PORT=L0,A=0") 
+
+ 35 ###############################################################################
+ 36 ## Load record instances
+ 37 dbLoadRecords("db/devHPE3631A.db","P=$(P),R=$(R),PORT=L0,A=0")
  38
- 
- 39 ############################################################################### 
- 40 ## Start EPICS 
- 41 cd "${TOP}/iocBoot/${IOC}" 
- 42 iocInit 
+
+ 39 ###############################################################################
+ 40 ## Start EPICS
+ 41 cd "${TOP}/iocBoot/${IOC}"
+ 42 iocInit
 
 Lines that you'll likely have to modify are:
 
@@ -252,10 +252,10 @@ Lines that you'll likely have to modify are:
 So, if you have a LAN/Serial adapter or network attached device which uses a raw
 TCP ('telnet' style) connection you would replace lines 23 through 29 with a single
 line like:
-::  
+::
 
-  drvAsynIPPortConfigure("L0","192.168.0.23:4001",0,0,0) 
-  
+  drvAsynIPPortConfigure("L0","192.168.0.23:4001",0,0,0)
+
 You would also change the application Makefile to specify drvAsynIPPort.dbd rather
 than drvAsynSerialPort.dbd.
 
@@ -263,11 +263,11 @@ If you have a VXI-11 LAN/GPIB adapter or network attached device you would repla
 lines 23 through 31 with a single line like:
 ::
 
-  vxi11Configure("L0","192.168.0.24",0,0.0,"gpib0",0,0) 
+  vxi11Configure("L0","192.168.0.24",0,0.0,"gpib0",0,0)
 
 You would also change the application Makefile to specify drfvVxi11.dbd rather than
 drvAsynSerialPort.dbd.
-  
+
 3.1 Run the test application
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 The application can be started by running the startup script if you make the script
@@ -276,47 +276,47 @@ executable:
 
   norume> cd iocBoot/iocHPE3631Atest
   norume> chmod +x st.cmd
-  
+
 Then the application can be run by:
 ::
 
   norume> ./st.cmd
-  #!../../bin/darwin-x86/HPE3631Atest 
+  #!../../bin/darwin-x86/HPE3631Atest
   ###############################################################################
   # Set up environment
   < envPaths
-  epicsEnvSet("ARCH","darwin-x86") 
-  epicsEnvSet("IOC","iocHPE3631Atest") 
-  epicsEnvSet("TOP","/Users/wenorum/tmp/t/HPE3631A") 
-  epicsEnvSet("ASYN","/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14") 
-  epicsEnvSet("STREAM","/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/stream-2-4-1") 
-  epicsEnvSet("EPICS_BASE","/usr/local/epics/R3.14.11/base") 
-  epicsEnvSet "STREAM_PROTOCOL_PATH" "/Users/wenorum/tmp/t/HPE3631A/db" 
-  ############################################################################### 
+  epicsEnvSet("ARCH","darwin-x86")
+  epicsEnvSet("IOC","iocHPE3631Atest")
+  epicsEnvSet("TOP","/Users/wenorum/tmp/t/HPE3631A")
+  epicsEnvSet("ASYN","/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/asyn-4-14")
+  epicsEnvSet("STREAM","/usr/local/epics/R3.14.11/modules/soft/synApps_5_5/support/stream-2-4-1")
+  epicsEnvSet("EPICS_BASE","/usr/local/epics/R3.14.11/base")
+  epicsEnvSet "STREAM_PROTOCOL_PATH" "/Users/wenorum/tmp/t/HPE3631A/db"
+  ###############################################################################
   # Allow PV name prefixes and serial port name to be set from the environment
   epicsEnvSet "P" "hpE3631A"
   epicsEnvSet "R" "Test"
   epicsEnvSet "TTY" "/dev/tty.PL2303-000013FA"
   ###############################################################################
-  ## Register all support components 
-  cd "/Users/wenorum/tmp/t/HPE3631A" 
-  dbLoadDatabase "dbd/HPE3631Atest.dbd" 
-  HPE3631Atest_registerRecordDeviceDriver pdbbase 
-  ############################################################################### 
+  ## Register all support components
+  cd "/Users/wenorum/tmp/t/HPE3631A"
+  dbLoadDatabase "dbd/HPE3631Atest.dbd"
+  HPE3631Atest_registerRecordDeviceDriver pdbbase
+  ###############################################################################
   # Set up ASYN ports
   # drvAsynSerialPortConfigure port ipInfo priority noAutoconnect noProcessEos
   drvAsynSerialPortConfigure("L0","/dev/tty.PL2303-000013FA",0,0,0)
-  asynSetOption("L0", -1, "baud", "9600") 
-  asynSetOption("L0", -1, "bits", "8") 
-  asynSetOption("L0", -1, "parity", "none") 
-  asynSetOption("L0", -1, "stop", "2") 
-  asynSetOption("L0", -1, "clocal", "Y") 
-  asynSetOption("L0", -1, "crtscts", "Y") 
-  asynOctetSetInputEos("L0", -1, "\n") 
-  asynOctetSetOutputEos("L0", -1, "\n") 
+  asynSetOption("L0", -1, "baud", "9600")
+  asynSetOption("L0", -1, "bits", "8")
+  asynSetOption("L0", -1, "parity", "none")
+  asynSetOption("L0", -1, "stop", "2")
+  asynSetOption("L0", -1, "clocal", "Y")
+  asynSetOption("L0", -1, "crtscts", "Y")
+  asynOctetSetInputEos("L0", -1, "\n")
+  asynOctetSetOutputEos("L0", -1, "\n")
   asynSetTraceIOMask("L0",-1,0x2)
   asynSetTraceMask("L0",-1,0x9)
-  ############################################################################### 
+  ###############################################################################
   ## Load record instances
   dbLoadRecords("db/devHPE3631A.db","P=hpE3631A,R=Test,PORT=L0,A=0")
   ###############################################################################
@@ -344,22 +344,22 @@ Then the application can be run by:
   2010/08/31 13:10:33.208 /dev/tty.PL2303-000013FA read 1
   T
   2010/08/31 13:10:33.226 /dev/tty.PL2303-000013FA read 1
-  T 
+  T
   .
   .
   .
   epics>dbpr hpE3631ATestIDN
-  ASG:               
-  DESC: SCPI identification string        
-  DISA: 0  
-  DISP: 0            
-  DISV: 1            
-  NAME: hpE3631ATestIDN                  
-  SEVR: NO_ALARM      STAT: NO_ALARM     
-  SVAL:              
-  TPRO: 0            
-  VAL: HEWLETT-PACKARD,E3631A,0,2.1-5.0-1.0                  
-  
+  ASG:
+  DESC: SCPI identification string
+  DISA: 0
+  DISP: 0
+  DISV: 1
+  NAME: hpE3631ATestIDN
+  SEVR: NO_ALARM      STAT: NO_ALARM
+  SVAL:
+  TPRO: 0
+  VAL: HEWLETT-PACKARD,E3631A,0,2.1-5.0-1.0
+
   epics>
 
 The SCPI IDN*? commands are run as part of iocInit since their records have PINI=YES.
@@ -383,14 +383,14 @@ To use an asynRecord in your application:
 Add the line:
 ::
 
-  DB_INSTALLS += $(ASYN)/db/asynRecord.db 
-  
+  DB_INSTALLS += $(ASYN)/db/asynRecord.db
+
 to the application Makefile.
-  
+
 Create the diagnostic record in the IOC by adding a line like:
 ::
 
-  dbLoadRecords("db/asynRecord.db","P=$(P)$(R),R=asyn,PORT=L0,ADDR=-1,OMAX=0,IMAX=0") 
+  dbLoadRecords("db/asynRecord.db","P=$(P)$(R),R=asyn,PORT=L0,ADDR=-1,OMAX=0,IMAX=0")
 
 to the application startup script. The PORT value must match the the value in the
 corresponding drvAsynIPPortConfigure or drvAsynSerialPortConfigure command. The
@@ -401,14 +401,14 @@ environment variable and start medm with P, R, PORT and ADDR values matching tho
 given in the dbLoadRecords command:
 ::
 
-  medm -x -macro "P=hpE3631ATest,R=asyn,PORT=L0,ADDR=-1" asynRecord.adl 
-  
+  medm -x -macro "P=hpE3631ATest,R=asyn,PORT=L0,ADDR=-1" asynRecord.adl
+
 If you have edm installed then you need to use the asynRecord.edl file instead.
 Ensure that<<i>asynTop>/opi/medm</i> is in the EDMDATAFILES environment variable.
 Start edm with the arguments appropriate for your IOC:
 ::
 
-  edm -x -m "P=hpE3631ATest, R=asyn,PORT=L1_TCP,ADDR=-1" asynRecord.edl 
+  edm -x -m "P=hpE3631ATest, R=asyn,PORT=L1_TCP,ADDR=-1" asynRecord.edl
 
 5. Add records and protocol file entries
 ----------------------------------------
@@ -423,7 +423,7 @@ First add an entry to HPE3631ASup/devHPE3631A.proto:
   setLocRem {
       out "SYST:%{LOC|REM}";
   }
-  
+
 This uses the StreamDevice ENUM converter to send one of two strings to the device
 based on the PV value. The corresponding addition to HPE3631ASup/devHPE3631A.db
 is:
@@ -439,7 +439,7 @@ is:
       field(PINI, "YES")
       field(VAL,  "1")
   }
-  
+
 The PINI and VAL fields ensure that the device is set into remote control mode during
 IOC startup.
 
@@ -484,7 +484,7 @@ Add two entries to HPE3631ASup/devHPE3631A.proto:
       in "%g";
       ExtraInput = Ignore;
   }
-  
+
 These entries set and get the floating point value for the channel passed as the
 first argument and for the parameter passed as the second argument.
 
@@ -635,6 +635,6 @@ The corresponding additions to HPE3631ASup/devHPE3631A.db are:
       field(EGUL, "0")
       field(EGUF, "1.03")
   }
-  
+
 Depending on your application you might set up FLNK and/or SCAN fields to keep the
 setpoint readbacks up to date.

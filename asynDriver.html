@@ -1451,7 +1451,7 @@ asynManager:duplicateAsynUser) and asynManager:freeAsynUser.</p>
   <span class="nb">int</span>            <span class="n">reason</span><span class="p">;</span>
   <span class="n">epicsTimeStamp</span> <span class="n">timestamp</span><span class="p">;</span>
   <span class="o">/*</span> <span class="n">The</span> <span class="n">following</span> <span class="n">are</span> <span class="k">for</span> <span class="n">additional</span> <span class="n">information</span> <span class="kn">from</span><span class="w"> </span><span class="nn">method</span> <span class="n">calls</span> <span class="o">*/</span>
-  <span class="nb">int</span>            <span class="n">auxStatus</span><span class="p">;</span>     <span class="o">/*</span> <span class="n">For</span> <span class="n">auxillary</span> <span class="n">status</span><span class="o">*/</span>
+  <span class="nb">int</span>            <span class="n">auxStatus</span><span class="p">;</span>     <span class="o">/*</span> <span class="n">For</span> <span class="n">auxiliary</span> <span class="n">status</span><span class="o">*/</span>
   <span class="nb">int</span>            <span class="n">alarmStatus</span><span class="p">;</span>   <span class="o">/*</span> <span class="n">Typically</span> <span class="k">for</span> <span class="n">EPICS</span> <span class="n">record</span> <span class="n">alarm</span> <span class="n">status</span> <span class="o">*/</span>
   <span class="nb">int</span>            <span class="n">alarmSeverity</span><span class="p">;</span> <span class="o">/*</span> <span class="n">Typically</span> <span class="k">for</span> <span class="n">EPICS</span> <span class="n">record</span> <span class="n">alarm</span> <span class="n">severity</span> <span class="o">*/</span>
 <span class="p">}</span> <span class="n">asynUser</span><span class="p">;</span>
@@ -2352,7 +2352,7 @@ output stream is closed before the new stream is used.</p></td>
 <td><p>Get the file descriptor to use for output. Device support that wants to issue its
 own IO messages instead of calling asynPrintIO should call this and honor the mask
 settings. In this case, lock must have been called first. Most code will not need
-it. If the return value is 0, then ouput should be directed to errlog.</p></td>
+it. If the return value is 0, then output should be directed to errlog.</p></td>
 </tr>
 <tr class="row-even"><td><p>setTraceIOTruncateSize</p></td>
 <td><p>Determines how much data is printed by printIO. In all cases it determines how many
@@ -2410,7 +2410,7 @@ based means that the device communicates via octet strings, i.e. arrays of 8 bit
 bytes. Three interfaces are provided: asynOctet, asynOctetBase, and asynOctetSyncIO.
 asynOctet is generic message based interface. asynOctetBase is an interface used
 by port drivers that implement asynOctet. It’s primary purpose is to help with interrupt
-support. asynOctetSyncIO provides a synchronous inteface to asynOctet and can be
+support. asynOctetSyncIO provides a synchronous interface to asynOctet and can be
 used by code that is willing to block.</p>
 <section id="asynoctet">
 <h3><a class="toc-backref" href="#id108" role="doc-backlink">asynOctet</a><a class="headerlink" href="#asynoctet" title="Link to this heading"></a></h3>
@@ -2436,9 +2436,9 @@ is done via 8-bit bytes.</p>
 <span class="c1">#define asynOctetType &quot;asynOctet&quot;</span>
 <span class="n">typedef</span> <span class="n">struct</span> <span class="n">asynOctet</span><span class="p">{</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">write</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
-                    <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="n">numchars</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">);</span>
+                    <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="n">numchars</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">read</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
-                    <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="n">maxchars</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span>
+                    <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="n">maxchars</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span>
                     <span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">flush</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">registerInterruptUser</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
@@ -2469,7 +2469,7 @@ is done via 8-bit bytes.</p>
         <span class="n">asynDriverasynInterface</span> <span class="o">*</span><span class="n">pasynOctetInterface</span><span class="p">,</span>
         <span class="nb">int</span> <span class="n">processEosIn</span><span class="p">,</span><span class="nb">int</span> <span class="n">processEosOut</span><span class="p">,</span><span class="nb">int</span> <span class="n">interruptProcess</span><span class="p">);</span>
     <span class="n">void</span>       <span class="p">(</span><span class="o">*</span><span class="n">callInterruptUsers</span><span class="p">)(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span><span class="n">void</span> <span class="o">*</span><span class="n">pasynPvt</span><span class="p">,</span>
-        <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
+        <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
 <span class="p">}</span> <span class="n">asynOctetBase</span><span class="p">;</span>
 <span class="n">epicsShareExtern</span> <span class="n">asynOctetBase</span> <span class="o">*</span><span class="n">pasynOctetBase</span><span class="p">;</span>
 </pre></div>
@@ -2482,17 +2482,17 @@ is done via 8-bit bytes.</p>
 </colgroup>
 <tbody>
 <tr class="row-odd"><td><p>write</p></td>
-<td><p>Send a message to the device. *nbytesTransfered is the number of 8-bit bytes sent
+<td><p>Send a message to the device. *nbytesTransferred is the number of 8-bit bytes sent
 to the device. Interpose or driver code may add end of string terminators to the
-message but the extra characters are not included in *nbytesTransfered.</p></td>
+message but the extra characters are not included in *nbytesTransferred.</p></td>
 </tr>
 <tr class="row-even"><td><p>read</p></td>
-<td><p>Read a message from the device. *nbytesTransfered is the number of 8-bit bytes read
+<td><p>Read a message from the device. *nbytesTransferred is the number of 8-bit bytes read
 from the device. If read returns asynSuccess than eomReason ( some combination of
 ASYN_EOM_CNT, ASYN_EOM_EOS, and ASYN_EOM_END)tells why the read completed. Interpose
 or driver code may strip end of string terminators from the message. If it does
 the first eos character will be replaced by null and the eos characters will not
-be included in nbytesTransfered.</p></td>
+be included in nbytesTransferred.</p></td>
 </tr>
 <tr class="row-odd"><td><p>flush</p></td>
 <td><p>Flush the input buffer.</p></td>
@@ -2570,9 +2570,9 @@ commands described later in this document.</p>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">disconnect</span><span class="p">)(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">write</span><span class="p">)(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
                   <span class="n">char</span> <span class="n">const</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">buffer_len</span><span class="p">,</span>
-                  <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">);</span>
+                  <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span><span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">read</span><span class="p">)(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span> <span class="n">char</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">buffer_len</span><span class="p">,</span>
-                  <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
+                  <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span> <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">writeRead</span><span class="p">)(</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
                   <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">write_buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">write_buffer_len</span><span class="p">,</span>
                   <span class="n">char</span> <span class="o">*</span><span class="n">read_buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">read_buffer_len</span><span class="p">,</span>
@@ -2589,10 +2589,10 @@ commands described later in this document.</p>
                   <span class="n">char</span> <span class="o">*</span><span class="n">eos</span><span class="p">,</span> <span class="nb">int</span> <span class="n">eossize</span><span class="p">,</span> <span class="nb">int</span> <span class="o">*</span><span class="n">eoslen</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">writeOnce</span><span class="p">)(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">port</span><span class="p">,</span> <span class="nb">int</span> <span class="n">addr</span><span class="p">,</span>
                   <span class="n">char</span> <span class="n">const</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">buffer_len</span><span class="p">,</span> <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span>
-                  <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">drvInfo</span><span class="p">);</span>
+                  <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">drvInfo</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">readOnce</span><span class="p">)(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">port</span><span class="p">,</span> <span class="nb">int</span> <span class="n">addr</span><span class="p">,</span>
                   <span class="n">char</span> <span class="o">*</span><span class="n">buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">buffer_len</span><span class="p">,</span> <span class="n">double</span> <span class="n">timeout</span><span class="p">,</span>
-                  <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">drvInfo</span><span class="p">);</span>
+                  <span class="n">size_t</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">,</span> <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">drvInfo</span><span class="p">);</span>
    <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">writeReadOnce</span><span class="p">)(</span><span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">port</span><span class="p">,</span> <span class="nb">int</span> <span class="n">addr</span><span class="p">,</span>
                   <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">write_buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">write_buffer_len</span><span class="p">,</span>
                   <span class="n">char</span> <span class="o">*</span><span class="n">read_buffer</span><span class="p">,</span> <span class="n">size_t</span> <span class="n">read_buffer_len</span><span class="p">,</span>
@@ -4929,10 +4929,10 @@ asynGpib defines two interfaces.</p>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">disconnect</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">);</span>
     <span class="o">/*</span><span class="n">asynOctet</span> <span class="n">methods</span> <span class="n">passed</span> <span class="n">through</span> <span class="kn">from</span><span class="w"> </span><span class="nn">asynGpib</span><span class="o">*/</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">read</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
-                      <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="nb">int</span> <span class="n">maxchars</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">,</span>
+                      <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="nb">int</span> <span class="n">maxchars</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">,</span>
                       <span class="nb">int</span> <span class="o">*</span><span class="n">eomReason</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">write</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
-                      <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="nb">int</span> <span class="n">numchars</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">nbytesTransfered</span><span class="p">);</span>
+                      <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">data</span><span class="p">,</span><span class="nb">int</span> <span class="n">numchars</span><span class="p">,</span><span class="nb">int</span> <span class="o">*</span><span class="n">nbytesTransferred</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">flush</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">);</span>
     <span class="n">asynStatus</span> <span class="p">(</span><span class="o">*</span><span class="n">setEos</span><span class="p">)(</span><span class="n">void</span> <span class="o">*</span><span class="n">drvPvt</span><span class="p">,</span><span class="n">asynUser</span> <span class="o">*</span><span class="n">pasynUser</span><span class="p">,</span>
                 <span class="n">const</span> <span class="n">char</span> <span class="o">*</span><span class="n">eos</span><span class="p">,</span><span class="nb">int</span> <span class="n">eoslen</span><span class="p">);</span>
@@ -5661,7 +5661,7 @@ asynDriver.</p></li>
 <li><p>priority</p>
 <ul>
 <li><p>An integer specifying the priority of the portThread. A value of 0
-will result in a defalt value being assigned</p></li>
+will result in a default value being assigned</p></li>
 </ul>
 </li>
 <li><p>noAutoConnect</p>
@@ -6525,7 +6525,7 @@ object to communicate with the asyn port driver directly over the asyn interface
 without running an EPICS IOC. It creates an asynIPPort driver and an asynPortClient,
 and uses the command line arguments to set the hostInfo string, a single command
 string to send to the server, and optionally the input and output EOS. It then prints
-out the response from the server. There are 3 example shell scipts provided that
+out the response from the server. There are 3 example shell scripts provided that
 show how to use testAsynIPPortClient to communicate with a Web server, a Newport
 XPS motor controller, and a telnet host respectively.</p>
 <p>Usage: testAsynIPPortClient hostInfo outputString [outputEos] [inputEos]</p>
@@ -6610,7 +6610,7 @@ the update rate. The testEpicsApp application also uses the asynOctet echoDriver
 from <a class="reference external" href="#testapp">testApp</a>.</p>
 <p>The example resides in &lt;top&gt;/testEpicsApp.</p>
 <p>Executing “medm -x *.adl” from the &lt;top&gt;/testEpicsApp/adl directory opens
-the followings displays.</p>
+the following displays.</p>
 <figure class="align-center" id="id57">
 <img alt="_images/testInt32.png" src="_images/testInt32.png" />
 <figcaption>
@@ -6735,7 +6735,7 @@ appropriate to your application):</p>
 </pre></div>
 </div>
 <p>If you are building your application database definition file from the application
-Makefile you specify the aditional database definitions there (again, uncomment
+Makefile you specify the additional database definitions there (again, uncomment
 the lines appropriate to your application):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">xxx_DBD</span> <span class="o">+=</span> <span class="n">asyn</span><span class="o">.</span><span class="n">dbd</span>
 <span class="c1">#xxx_DBD += drvAsynSerialPort.dbd</span>

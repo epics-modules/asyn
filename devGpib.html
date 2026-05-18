@@ -628,7 +628,7 @@ For all of these types the following is done.</p>
 <div><ul class="simple">
 <li><p><cite>convert</cite> is called. It is expected to give a value to the appropriate
 field (RVAL for bi, mbbi, mbbiDirect and VAL for all others) of the record or return
--1. Note that it is the responsiblity of the custom conversion routine to set or
+-1. Note that it is the responsibility of the custom conversion routine to set or
 clear the record .UDF field.</p></li>
 <li><p>The field <cite>pgpibDpvt-&gt;msgInputLen</cite> contains the number of bytes
 in the last read msg. This allows messages with null characters to be processed.</p></li>
@@ -748,7 +748,7 @@ asynOctet, and asynGpib.</cite> Note that <cite>asynGpib</cite> may not be prese
 i.e. <cite>pasynGpib</cite> is null. <cite>gpibDpvt</cite> also contains a field
 <cite>pupvt</cite> which can be used by the convert routine. Is is initialized to
 null. The macro <cite>gpibCmdGet</cite> can be used to get the address of <cite>gpibCmd</cite>
-which contains other usefull information.</p>
+which contains other useful information.</p>
 <p>If the End of String terminator needs to be changed, it must be changed by calling
 <cite>pdevSupportGpib-&gt;setEos</cite> rather than calling <cite>pgpibDpvt-&gt;pasynOctet-&gt;setEos</cite>
 Also when the <cite>convert</cite> routine has finished with read operations it
@@ -836,16 +836,16 @@ pdevGpibNames is provided.</p>
 </tr>
 <tr class="row-even"><td><p>GPIBDCL</p></td>
 <td><p>Valid only for BO records. If rval = (0,1) then (do nothing, send DCL). DCL is a
-Universal GPIB command, i.e. it applys to all devices on the link</p>
+Universal GPIB command, i.e. it applies to all devices on the link</p>
 <p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
 pdevGpibNames is provided.</p>
 </td>
 </tr>
 <tr class="row-odd"><td><p>GPIBLLO</p></td>
 <td><p>If rval = (0,1) then (do nothing, send LLO). LLO is a Universal GPIB command, i.e.
-it applys to all devices on the link</p>
+it applies to all devices on the link</p>
 <p>After a LLO, the first time a device is addressed it will disable local control,
-i.e. the front pannel controls will not respond. To remove devices from this state
+i.e. the front panel controls will not respond. To remove devices from this state
 toggle the REN line. A single device can temporarily be removed from LLO by sending
 the GPIBCTL command but it will go back to LLO state as soon as it is again addressed.</p>
 <p>Only define <cite>dset</cite>, <cite>type</cite>, and <cite>pri</cite>. A default
@@ -1079,7 +1079,7 @@ i.e. the largest rspLen defined in gpibCmds.</p></td>
 <h2>SRQ Processing<a class="headerlink" href="#srq-processing" title="Link to this heading"></a></h2>
 <p>If the low level device driver implements interface <cite>asynGpib</cite>, then
 devSupportGpib registers itself to handle SRQs. It defines two types of SRQs: solicited
-and unsollicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
+and unsolicited. Solicited SRQs are for GPIBREADW and GPIBEFASTIW commands. If
 an SRQ is raised for a gpibAddr that does not have an outstanding GPIBREADW or GPIBEFASTIW
 command, the SRQ is considered unsolicited.</p>
 <p>When the devSupportGpib receives an unsolicited SRQ and it has a registered handler
@@ -1101,7 +1101,7 @@ following command table entry is used for this purpose:</p>
 </pre></div>
 </div>
 <p>If the binary-output record rval is (0, 1) then (remove, add) device (from, to)
-the SRQ polling liist. No commands are sent to the bus. Before exluding a device
+the SRQ polling list. No commands are sent to the bus. Before excluding a device
 from being polled stop any communications to it, i.e. set SCAN-field(s) to PASSIVE
 and turn off the device.</p>
 </section>
