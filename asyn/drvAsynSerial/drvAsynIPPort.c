@@ -533,7 +533,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
                 struct pollfd pollfd;
 
                 pasynManager->getAutoConnectTimeout(&connectTimeout);
-                msConnectTimeout = 1000 * connectTimeout;
+                msConnectTimeout = (int)(1000 * connectTimeout);
                 pollfd.fd = fd;
                 pollfd.events = POLLOUT;
 
@@ -548,7 +548,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
                     /*
                      * We must verify SO_ERROR to make sure the connection was successful.
                      */
-                    getsockopt(fd, SOL_SOCKET, SO_ERROR, &so_error, &len);
+                    getsockopt(fd, SOL_SOCKET, SO_ERROR, (void*)&so_error, &len);
                     if (so_error == 0)
                         connectResult = 0;
                 }
