@@ -80,6 +80,8 @@ typedef struct interposePvt {
     int            stop;
     int            flow;
     int            break_active;
+    unsigned       break_len;      /* length of break (ms) in autobreak mode */
+    unsigned       break_delay;    /* break delay (ms) in autobreak mode */
 
     char          *xBuf;          /* Buffer for transmit IAC stuffing */
     size_t         xBufCapacity;
@@ -124,6 +126,9 @@ expectChar(interposePvt *pinterposePvt, asynUser *pasynUser, int expect)
     return 1;
 }
 
+static asynStatus
+sbComPortOption(interposePvt *pinterposePvt, asynUser *pasynUser, const char *xBuf, int xLen, char *rBuf);
+
 /*
  * asynOctet methods
  */
@@ -141,6 +146,7 @@ writeIt(void *ppvt, asynUser *pasynUser,
     const char *iac;
     char *dst = pinterposePvt->xBuf;
     size_t nIAC = 0;
+    char xBuf[5], rBuf[4];
     asynStatus status;
 
     if ((iac = memchr(data, C_IAC, numchars)) != NULL) {
@@ -188,6 +194,22 @@ writeIt(void *ppvt, asynUser *pasynUser,
         data = pinterposePvt->xBuf;
     }
     status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
+                                pasynUser, data, numchars, nbytesTransfered);
+    if (!pinterposePvt->break_active && pinterposePvt->break_len > 0) {
+        if (pinterposePvt->break_delay > 0) {
+            epicsThreadSleep(pinterposePvt->break_delay / 1000.0);
+        }
+        xBuf[0] = CPO_SET_CONTROL;
+        xBuf[1] = CPO_CONTROL_BREAK_ON;
+        status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
+        if (status != asynSuccess) return status;
+        epicsThreadSleep(((double)pinterposePvt->break_len) / 1000.);
+        xBuf[1] = CPO_CONTROL_BREAK_OFF;
+        status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
+        if (status != asynSuccess) return status;
+    }
+    if (*nbytesTransfered == numchars)
+        *nbytesTransfered -= nIAC;
                                 pasynUser, data, numchars, nbytesTransferred);
     if (*nbytesTransferred == numchars)
         *nbytesTransferred -= nIAC;
@@ -641,6 +663,24 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
         }
         return asynSuccess;
     }
+    else if (epicsStrCaseCmp(key, "autobreak") == 0) {
+        unsigned break_len;
+        if(sscanf(val, "%u", &break_len) != 1) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
+            return asynError;
+        }
+        pinterposePvt->break_len = break_len;
+    }
+    else if (epicsStrCaseCmp(key, "autobreak_delay") == 0) {
+        unsigned break_delay;
+        if(sscanf(val, "%u", &break_delay) != 1) {
+            epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
+                                                                "Bad number");
+            return asynError;
+        }
+        pinterposePvt->break_delay = break_delay;
+    }
     else {
         if (pinterposePvt->pasynOptionDrv) {
             /* Call the setOption function in the underlying driver */
@@ -705,6 +745,12 @@ getOption(void *ppvt, asynUser *pasynUser, const char *key, char *val, int valSi
         /* request serial line break status */
         l = epicsSnprintf(val, valSize, "%s",
                           pinterposePvt->break_active ? "on" : "off");
+    }
+    else if (epicsStrCaseCmp(key, "autobreak") == 0) {
+        l = epicsSnprintf(val, valSize, "%u",  pinterposePvt->break_len);
+    }
+    else if (epicsStrCaseCmp(key, "autobreak_delay") == 0) {
+        l = epicsSnprintf(val, valSize, "%u",  pinterposePvt->break_delay);
     }
     else {
         if (pinterposePvt->pasynOptionDrv) {
