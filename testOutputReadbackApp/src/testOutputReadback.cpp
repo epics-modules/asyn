@@ -18,6 +18,7 @@
 // static const char *driverName="testOutputReadback";
 
 #define UINT32_DIGITAL_MASK 0xFFFFFFFF
+#define MAX_FLOAT64_OUTPUT_VALUE 100.0
 
 /** Constructor for the testOutputReadback class.
   * Calls constructor for the asynPortDriver base class.
@@ -74,6 +75,15 @@ asynStatus testOutputReadback::readFloat64(asynUser *pasynUser, epicsFloat64 *va
         return initialReadStatus_;
     else
         return asynPortDriver::readFloat64(pasynUser, value);
+}
+
+asynStatus testOutputReadback::writeFloat64(asynUser *pasynUser, epicsFloat64 value)
+{
+    if (value > MAX_FLOAT64_OUTPUT_VALUE) {
+        value = MAX_FLOAT64_OUTPUT_VALUE;
+    }
+    asynPrint(pasynUserSelf, ASYN_TRACE_FLOW, "testOutputReadback::writeFloat64 value=%f\n", value);
+    return asynPortDriver::writeFloat64(pasynUser, value);
 }
 
 asynStatus testOutputReadback::readUInt32Digital(asynUser *pasynUser, epicsUInt32 *value, epicsUInt32 mask)
