@@ -4,4 +4,4 @@ m2r2
 sphinx-multibuild
 breathe
 Jinja2<3.1
-mistune<0.8.5
+mistune==3.3.0
