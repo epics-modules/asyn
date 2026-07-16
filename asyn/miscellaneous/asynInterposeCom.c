@@ -593,6 +593,7 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                                                                   "Bad option value");
+            return asynError;
         }
         status = sbComPortOption(pinterposePvt, pasynUser, xBuf, 2, rBuf);
         if (status == asynSuccess) {
