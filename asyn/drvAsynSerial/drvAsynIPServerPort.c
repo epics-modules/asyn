@@ -192,12 +192,22 @@ static asynStatus readIt(void *drvPvt, asynUser *pasynUser,
         epicsThreadSleep(.001);
         thisRead = 0;
     } else {
+        /*
+         * The buffered datagram occupies [UDPbufferPos, UDPbufferSize).
+         * Hand over as much of it as the caller can take, and consume
+         * exactly what was handed over.
+         */
+        int remaining = tty->UDPbufferSize - tty->UDPbufferPos;
 
-        for (x = 0; x < (int)maxchars - 1; x++) {
+        if (remaining < 0) remaining = 0;
+        if ((size_t)remaining > maxchars)
+            thisRead = (int)maxchars;
+        else
+            thisRead = remaining;
+        for (x = 0; x < thisRead; x++) {
             data[x] = tty->UDPbuffer[x + tty->UDPbufferPos];
         }
-        thisRead = (int)maxchars - 1;
-        tty->UDPbufferPos = tty->UDPbufferPos + (int)maxchars;
+        tty->UDPbufferPos = tty->UDPbufferPos + thisRead;
         if (tty->UDPbufferSize <= tty->UDPbufferPos) {
             tty->UDPbufferPos = 0;
             tty->UDPbufferSize = 0;
