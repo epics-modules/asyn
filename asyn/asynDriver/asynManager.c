@@ -2961,9 +2961,20 @@ static asynStatus setTraceIOTruncateSize(asynUser *pasynUser,size_t size)
 
     epicsMutexMustLock(pasynBase->lockTrace);
     if(size>ptracePvt->traceBufferSize) {
+        /* size is caller-supplied (asynRecord TSIZ / asynSetTraceIOTruncateSize)
+         * and reaches here as size_t; a negative epicsInt32 becomes a huge
+         * value.  callocMustSucceed() would loop forever on such a request
+         * while this global lockTrace mutex is held, wedging tracing for the
+         * whole IOC.  Allocate with calloc() and fail cleanly instead, and do
+         * not free the existing buffer until the new one is in hand so a
+         * failure leaves the trace buffer intact rather than dangling. */
+        char *newBuffer = (char *)calloc(size,sizeof(char));
+        if(newBuffer == NULL) {
+            epicsMutexUnlock(pasynBase->lockTrace);
+            return asynError;
+        }
         free(ptracePvt->traceBuffer);
-        ptracePvt->traceBuffer = callocMustSucceed(size,sizeof(char),
-            "asynTrace:setTraceIOTruncateSize");
+        ptracePvt->traceBuffer = newBuffer;
         ptracePvt->traceBufferSize = size;
     }
     ptracePvt->traceTruncateSize = size;
