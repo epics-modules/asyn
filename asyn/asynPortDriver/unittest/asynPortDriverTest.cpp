@@ -195,7 +195,7 @@ MAIN(asynPortDriverTest)
     const int testsPerRun = 54;
     const int testRuns = 4;
     const int interfaceTests = 14;
-    const int additionalTests = 8;
+    const int additionalTests = 11;
     testPlan(testsPerRun * testRuns + interfaceTests + additionalTests);
     interruptAccept=1;
     try {
@@ -263,6 +263,19 @@ MAIN(asynPortDriverTest)
             // Standard interfaces may return either asynDisabled or asynError
             testOk1(pasynInt32SyncIO->readOnce(portName, 0, &val, 1.0, "int32") != asynSuccess);
             testOk1(pasynInt32SyncIO->read(intUser, &val, 1.0) != asynSuccess);
+        }
+        {
+            testDiag("setTraceIOTruncateSize must reject an oversize request, not hang");
+            asynUser *pasynUser = pasynManager->createAsynUser(0, 0);
+            testOk1(pasynManager->connectDevice(pasynUser, "portA", 0) == asynSuccess);
+            /* asynRecord TSIZ of -1, or asynSetTraceIOTruncateSize -1, reaches
+             * setTraceIOTruncateSize() as a size_t near SIZE_MAX.  Before the
+             * fix callocMustSucceed() looped forever under the global lockTrace
+             * mutex, wedging tracing IOC-wide; it must now fail cleanly. */
+            testOk1(pasynTrace->setTraceIOTruncateSize(pasynUser, (size_t)-1) == asynError);
+            /* A reasonable size still succeeds. */
+            testOk1(pasynTrace->setTraceIOTruncateSize(pasynUser, 200) == asynSuccess);
+            pasynManager->freeAsynUser(pasynUser);
         }
     } catch(std::exception& e) {
         testAbort("Unhandled C++ exception: %s", e.what());
