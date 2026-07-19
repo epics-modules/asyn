@@ -572,7 +572,7 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                             "XON/XOFF already set. Now using RTS/CTS.");
         }
-        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = CPO_CONTROL_NOFLOW;
         else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_HWFLOW;
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -588,7 +588,7 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                              "RTS/CTS already set. Now using XON/XOFF.");
         }
-        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = CPO_CONTROL_NOFLOW;
         else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_IXON;
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
