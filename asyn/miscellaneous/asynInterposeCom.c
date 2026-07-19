@@ -101,7 +101,7 @@ nextChar(interposePvt *pinterposePvt, asynUser *pasynUser)
     asynStatus    status;
 
     status = poct->read(pinterposePvt->drvOctetPvt, pasynUser, &c, 1, &nbytes, &eom);
-    if (status != asynSuccess)
+    if (status != asynSuccess || nbytes == 0)
         return EOF;
     return c & 0xFF;
 }
