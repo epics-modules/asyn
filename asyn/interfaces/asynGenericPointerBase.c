@@ -74,7 +74,7 @@ static asynStatus readDefault(void *drvPvt, asynUser *pasynUser, void *pointer)
     status = pasynManager->getAddr(pasynUser,&addr);
     if(status!=asynSuccess) return status;
     epicsSnprintf(pasynUser->errorMessage,pasynUser->errorMessageSize,
-        "write is not supported");
+        "read is not supported");
     asynPrint(pasynUser,ASYN_TRACE_ERROR,
         "%s %d read is not supported\n",portName,addr);
     return asynError;
