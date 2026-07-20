@@ -419,16 +419,29 @@ sbComPortOption(interposePvt *pinterposePvt, asynUser *pasynUser, const char *xB
     char          cbuf[20];
     asynStatus    status;
     int           c;
+    int           i, n;
     size_t        nbytes;
 
     cbuf[0] = (char)C_IAC;
     cbuf[1] = (char)C_SB;
     cbuf[2] = SB_COM_PORT_OPTION;
-    memcpy(cbuf+3, xBuf, xLen);
-    cbuf[3+xLen+0] = (char)C_IAC;
-    cbuf[3+xLen+1] = (char)C_SE;
+    /*
+     * RFC 2217: a payload byte equal to IAC (0xFF) must be doubled so the
+     * server does not mistake it for a command.  Only the interior payload
+     * is stuffed; the framing IAC bytes (leading IAC SB, trailing IAC SE)
+     * stay single.  A baud rate whose big-endian encoding contains 0xFF
+     * (e.g. 255) is the case that needs this.
+     */
+    n = 3;
+    for (i = 0 ; i < xLen ; i++) {
+        cbuf[n++] = xBuf[i];
+        if ((xBuf[i] & 0xFF) == C_IAC)
+            cbuf[n++] = (char)C_IAC;
+    }
+    cbuf[n++] = (char)C_IAC;
+    cbuf[n++] = (char)C_SE;
     status =  pinterposePvt->pasynOctetDrv->write(pinterposePvt->drvOctetPvt,
-                                            pasynUser, cbuf, 5+xLen, &nbytes);
+                                            pasynUser, cbuf, n, &nbytes);
     if (status != asynSuccess)
         return status;
     for (;;) {
@@ -572,7 +585,7 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                             "XON/XOFF already set. Now using RTS/CTS.");
         }
-        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = CPO_CONTROL_NOFLOW;
         else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_HWFLOW;
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
@@ -588,7 +601,7 @@ setOption(void *ppvt, asynUser *pasynUser, const char *key, const char *val)
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
                              "RTS/CTS already set. Now using XON/XOFF.");
         }
-        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = pinterposePvt->flow;
+        if      (epicsStrCaseCmp(val, "n") == 0) xBuf[1] = CPO_CONTROL_NOFLOW;
         else if (epicsStrCaseCmp(val, "y") == 0) xBuf[1] = CPO_CONTROL_IXON;
         else {
             epicsSnprintf(pasynUser->errorMessage, pasynUser->errorMessageSize,
