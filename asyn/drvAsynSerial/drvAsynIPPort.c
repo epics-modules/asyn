@@ -543,7 +543,7 @@ connectIt(void *drvPvt, asynUser *pasynUser)
                  */
                 if (poll(&pollfd, 1, msConnectTimeout) == 1) {
                     int so_error;
-                    socklen_t len = sizeof so_error;
+                    osiSocklen_t len = sizeof so_error;
 
                     /*
                      * We must verify SO_ERROR to make sure the connection was successful.
