@@ -125,10 +125,11 @@ matrix:
 #---------------------------------#
 
 install:
+  - cmd: set PATH=C:\Python38-x64;%PATH%
   - cmd: git submodule update --init --recursive
 # for the sequencer
   - choco install re2c
-  - cmd: pip install git+https://github.com/mdavidsaver/ci-core-dumper#egg=ci-core-dumper
+  - cmd: python -m pip install git+https://github.com/mdavidsaver/ci-core-dumper#egg=ci-core-dumper
   - cmd: python .ci/cue.py prepare
 
 build_script:
