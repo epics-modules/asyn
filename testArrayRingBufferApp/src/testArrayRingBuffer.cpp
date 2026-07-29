@@ -35,7 +35,7 @@ static const char *driverName="testArrayRingBuffer";
 
 class testArrayRingBuffer : public asynPortDriver {
 public:
-    testArrayRingBuffer(const char *portName, int maxArrayLength);
+    testArrayRingBuffer(const char *portName, int maxArrayLength, int canBlock);
 
     /* These are the methods that we override from asynPortDriver */
     virtual asynStatus writeInt32(asynUser *pasynUser, epicsInt32 value);
@@ -72,12 +72,12 @@ void arrayGenTaskC(void *drvPvt)
   * Calls constructor for the asynPortDriver base class.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxArrayLength The maximum  number of points in the volt and time arrays */
-testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLength)
+testArrayRingBuffer::testArrayRingBuffer(const char *portName, int maxArrayLength, int canBlock)
    : asynPortDriver(portName,
                     1, /* maxAddr */
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask | asynDrvUserMask, /* Interface mask */
                     asynInt32Mask | asynFloat64Mask | asynInt32ArrayMask,                   /* Interrupt mask */
-                    0, /* asynFlags.  This driver does not block and it is not multi-device, so flag is 0 */
+                    canBlock ? ASYN_CANBLOCK : 0, /* asynFlags.  canBlock is passed to the constructor, not multi-device */
                     1, /* Autoconnect */
                     0, /* Default priority */
                     0) /* Default stack size*/
@@ -245,9 +245,9 @@ extern "C" {
 /** EPICS iocsh callable function to call constructor for the testArrayRingBuffer class.
   * \param[in] portName The name of the asyn port driver to be created.
   * \param[in] maxArrayLength The maximum  number of points in the volt and time arrays */
-int testArrayRingBufferConfigure(const char *portName, int maxArrayLength)
+int testArrayRingBufferConfigure(const char *portName, int maxArrayLength, int canBlock)
 {
-    new testArrayRingBuffer(portName, maxArrayLength);
+    new testArrayRingBuffer(portName, maxArrayLength, canBlock);
     return asynSuccess;
 }
 
@@ -256,12 +256,14 @@ int testArrayRingBufferConfigure(const char *portName, int maxArrayLength)
 
 static const iocshArg initArg0 = { "portName",iocshArgString};
 static const iocshArg initArg1 = { "max array length",iocshArgInt};
+static const iocshArg initArg2 = { "canBlock",iocshArgInt};
 static const iocshArg * const initArgs[] = {&initArg0,
-                                            &initArg1};
-static const iocshFuncDef initFuncDef = {"testArrayRingBufferConfigure",2,initArgs};
+                                            &initArg1,
+                                            &initArg2};
+static const iocshFuncDef initFuncDef = {"testArrayRingBufferConfigure",3,initArgs};
 static void initCallFunc(const iocshArgBuf *args)
 {
-    testArrayRingBufferConfigure(args[0].sval, args[1].ival);
+    testArrayRingBufferConfigure(args[0].sval, args[1].ival, args[2].ival);
 }
 
 void testArrayRingBufferRegister(void)

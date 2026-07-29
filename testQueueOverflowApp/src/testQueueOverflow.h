@@ -36,8 +36,9 @@ public:
     testQueueOverflow(const char *portName, int numChannels);
     ~testQueueOverflow();
 
-    /* Called from the iocsh testQueueOverflowBurst() command */
-    void burst(int numUpdates);
+    /* Called from the iocsh testQueueOverflowBurst() command.
+     * delay is the pause between rounds in seconds; 0 pushes back-to-back. */
+    void burst(int numUpdates, double delay);
 
 private:
     int numChannels_;

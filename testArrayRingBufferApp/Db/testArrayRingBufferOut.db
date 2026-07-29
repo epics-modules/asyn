@@ -1,0 +1,19 @@
+# Output array record with readbacks (asyn:READBACK), for exercising the
+# devAsynXXXArray output path, which requests record processing with scanOnce().
+#
+# RING_SIZE selects the two variants of that path:
+#   RING_SIZE > 0  ring buffer; readback values are buffered
+#   RING_SIZE = 0  no ring buffer; each callback is copied straight to the record
+#
+# The driver's own array callbacks (started with the Run record) drive the
+# readback, so no writes to this record are needed to exercise it.
+
+record(aao, "$(P)$(R)ArrayDataOut")
+{
+    field(DTYP, "asynInt32ArrayOut")
+    field(OUT,  "@asyn($(PORT),$(ADDR),$(TIMEOUT))ARRAY_DATA")
+    field(FTVL, "LONG")
+    field(NELM, "$(NELM)")
+    info(asyn:FIFO, "$(RING_SIZE)")
+    info(asyn:READBACK, "1")
+}

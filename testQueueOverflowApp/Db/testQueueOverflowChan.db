@@ -1,10 +1,11 @@
 # One I/O Intr scanned longin record connected to one channel of a
 # testQueueOverflow asyn port. Load once per channel, with N set to the
 # channel number (0 .. numChannels-1) and PRIO to the record's scan priority.
+# FIFO sets the depth of this record's own devAsynInt32 ring buffer.
 #
-# Every value the driver pushes to CHANNEL$(N) goes through this record's
-# own devAsynInt32 ring buffer (default depth 10) into the shared
-# cb$(PRIO) general purpose callback queue -- see testQueueOverflow.h.
+# Every value the driver pushes to CHANNEL$(N) goes into this record's ring
+# buffer; devAsynInt32 keeps at most one process request per record on the
+# shared cb$(PRIO) general purpose callback queue -- see testQueueOverflow.h.
 
 record(longin, "$(P)Chan$(N)")
 {
@@ -13,4 +14,5 @@ record(longin, "$(P)Chan$(N)")
     field(INP,  "@asyn($(PORT),0,1)CHANNEL$(N)")
     field(SCAN, "I/O Intr")
     field(PRIO, "$(PRIO=LOW)")
+    info(asyn:FIFO, "$(FIFO=10)")
 }
