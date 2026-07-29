@@ -1,0 +1,16 @@
+# One I/O Intr scanned longin record connected to one channel of a
+# testQueueOverflow asyn port. Load once per channel, with N set to the
+# channel number (0 .. numChannels-1) and PRIO to the record's scan priority.
+#
+# Every value the driver pushes to CHANNEL$(N) goes through this record's
+# own devAsynInt32 ring buffer (default depth 10) into the shared
+# cb$(PRIO) general purpose callback queue -- see testQueueOverflow.h.
+
+record(longin, "$(P)Chan$(N)")
+{
+    field(DESC, "queue overflow test channel $(N)")
+    field(DTYP, "asynInt32")
+    field(INP,  "@asyn($(PORT),0,1)CHANNEL$(N)")
+    field(SCAN, "I/O Intr")
+    field(PRIO, "$(PRIO=LOW)")
+}
