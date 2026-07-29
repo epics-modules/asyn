@@ -117,11 +117,12 @@ typedef struct devPvt {
     CALLBACK            processCallback;
     CALLBACK            outputCallback;
     int                 newOutputCallbackValue;
-    int                 numDeferredOutputCallbacks;
+    int                 outputCallbackRequested;
     int                 asyncProcessingActive;
     IOSCANPVT           ioScanPvt;
     void                *registrarPvt;
     int                 gotValue;
+    int                 scanIoRequested;
     interruptCallbackOctet interruptCallback;
     asynStatus          previousQueueRequestStatus;
 } devPvt;
@@ -449,8 +450,50 @@ static long getIoIntInfo(int cmd, dbCommon *pr, IOSCANPVT *iopvt)
                    pr->name, driverName, functionName, pPvt->pasynUser->errorMessage);
         }
     }
+    epicsMutexLock(pPvt->devPvtLock);
+    /* Not I/O Intr scanned now, so no scanIoRequest() of ours can be pending. */
+    pPvt->scanIoRequested = 0;
+    epicsMutexUnlock(pPvt->devPvtLock);
     *iopvt = pPvt->ioScanPvt;
     return 0;
+}
+
+static void requestRecordProcessing(devPvt *pPvt);
+static void requestOutputCallback(devPvt *pPvt);
+
+/* Are there readback values still waiting to be consumed by the record?
+ * Must be called with pPvt->devPvtLock held. */
+static int haveBufferedValue(devPvt *pPvt)
+{
+    return (pPvt->ringSize == 0) ? (pPvt->gotValue != 0)
+                                 : (pPvt->ringTail != pPvt->ringHead);
+}
+
+/* At most one readback request outstanding per record; caller holds the lock.
+ * Not posted while PACT=1; the active processing pass posts it when done. */
+static void requestOutputCallback(devPvt *pPvt)
+{
+    if (pPvt->outputCallbackRequested) return;
+    if (pPvt->asyncProcessingActive) return;
+#if LT_EPICSBASE(3,15,0,2)
+    callbackRequest(&pPvt->outputCallback);
+    pPvt->outputCallbackRequested = 1;
+#else
+    if (callbackRequest(&pPvt->outputCallback) == 0) pPvt->outputCallbackRequested = 1;
+#endif
+}
+
+/* At most one scanIoRequest() outstanding per record; caller holds the lock.
+ * On Base >= 3.15.0.2 a request that was not queued leaves the flag clear. */
+static void requestRecordProcessing(devPvt *pPvt)
+{
+    if (pPvt->scanIoRequested) return;
+#if LT_EPICSBASE(3,15,0,2)
+    scanIoRequest(pPvt->ioScanPvt);
+    pPvt->scanIoRequested = 1;
+#else
+    if (scanIoRequest(pPvt->ioScanPvt) != 0) pPvt->scanIoRequested = 1;
+#endif
 }
 
 static int getRingBufferValue(devPvt *pPvt)
@@ -469,6 +512,11 @@ static int getRingBufferValue(devPvt *pPvt)
         pPvt->result = pPvt->ringBuffer[pPvt->ringTail];
         pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
         ret = 1;
+    }
+    if (pPvt->scanIoRequested) {
+        /* Re-request under the lock while values remain, so none is stranded. */
+        pPvt->scanIoRequested = 0;
+        if (pPvt->ringTail != pPvt->ringHead) requestRecordProcessing(pPvt);
     }
     epicsMutexUnlock(pPvt->devPvtLock);
     return ret;
@@ -509,15 +557,11 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
         pPvt->result.alarmStatus = pasynUser->alarmStatus;
         pPvt->result.alarmSeverity = pasynUser->alarmSeverity;
         if (pPvt->isOutput) {
-            /* If this callback was received during asynchronous record processing
-             * we must defer calling callbackRequest until end of record processing */
-            if (pPvt->asyncProcessingActive) {
-                pPvt->numDeferredOutputCallbacks++;
-            } else {
-                callbackRequest(&pPvt->outputCallback);
-            }
+            /* No-op if a request is pending. */
+            requestOutputCallback(pPvt);
         } else {
-            scanIoRequest(pPvt->ioScanPvt);
+            /* No-op if a request is pending; processCommon() re-requests. */
+            requestRecordProcessing(pPvt);
         }
     } else {
         /* Using a ring buffer */
@@ -545,20 +589,13 @@ static void interruptCallback(void *drvPvt, asynUser *pasynUser,
              * is guaranteed to be the most recent value */
             pPvt->ringTail = (pPvt->ringTail==pPvt->ringSize) ? 0 : pPvt->ringTail+1;
             pPvt->ringBufferOverflows++;
+        }
+        if (pPvt->isOutput) {
+            /* No-op if a request is pending; retries one that was not queued. */
+            requestOutputCallback(pPvt);
         } else {
-            /* We only need to request the record to process if we added a new
-             * element to the ring buffer, not if we just replaced an element. */
-            if (pPvt->isOutput) {
-                /* If this callback was received during asynchronous record processing
-                 * we must defer calling callbackRequest until end of record processing */
-                if (pPvt->asyncProcessingActive) {
-                    pPvt->numDeferredOutputCallbacks++;
-                } else {
-                    callbackRequest(&pPvt->outputCallback);
-                }
-            } else {
-                scanIoRequest(pPvt->ioScanPvt);
-            }
+            /* No-op if a request is pending; retries one that was not queued. */
+            requestRecordProcessing(pPvt);
         }
     }
     epicsMutexUnlock(pPvt->devPvtLock);
@@ -574,6 +611,8 @@ static void outputCallbackCallback(CALLBACK *pcb)
         dbCommon *pr = pPvt->precord;
         dbScanLock(pr);
         epicsMutexLock(pPvt->devPvtLock);
+        /* The callback queue entry that got us here has been taken off the queue. */
+        pPvt->outputCallbackRequested = 0;
         pPvt->newOutputCallbackValue = 1;
         /* We need to set udf=0 here so that it is already cleared when dbProcess is called */
         pr->udf = 0;
@@ -773,6 +812,11 @@ static long processCommon(dbCommon *precord)
         if (pPvt->ringSize == 0) {
             /* Data has already been copied to the record in interruptCallback */
             pPvt->gotValue--;
+            if (pPvt->scanIoRequested) {
+                /* Re-request while unprocessed callbacks remain. */
+                pPvt->scanIoRequested = 0;
+                if (pPvt->gotValue) requestRecordProcessing(pPvt);
+            }
             if ((pPvt->pLen != NULL) && (pPvt->result.status == asynSuccess)) {
                 (*pPvt->pLen) = (pPvt->isWaveform ? pPvt->nord : pPvt->nord + 1); /* lsi, lso and printf count \0 in length */
             }
@@ -807,12 +851,10 @@ static long processCommon(dbCommon *precord)
                                             pPvt->isOutput ? WRITE_ALARM : READ_ALARM, &pPvt->result.alarmStatus,
                                             INVALID_ALARM, &pPvt->result.alarmSeverity);
     (void)recGblSetSevr(precord, pPvt->result.alarmStatus, pPvt->result.alarmSeverity);
-    if (pPvt->numDeferredOutputCallbacks > 0) {
-        callbackRequest(&pPvt->outputCallback);
-        pPvt->numDeferredOutputCallbacks--;
-    }
     pPvt->newOutputCallbackValue = 0;
     pPvt->asyncProcessingActive = 0;
+    /* Re-request while readbacks remain (asyncProcessingActive must be clear). */
+    if (pPvt->isOutput && haveBufferedValue(pPvt)) requestOutputCallback(pPvt);
     epicsMutexUnlock(pPvt->devPvtLock);
     if (pPvt->result.status == asynSuccess) {
         pPvt->precord->udf = 0;

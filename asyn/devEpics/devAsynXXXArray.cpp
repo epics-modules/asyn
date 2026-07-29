@@ -45,6 +45,12 @@
 #define INIT_DO_NOT_CONVERT 2
 #define INIT_ERROR -1
 
+/* scanOnceCallback() (Base >= 3.16.0.1) completes even if dbProcess() declined,
+ * which allows bounding the scanOnce queue use of output records. */
+#if !LT_EPICSBASE(3,16,0,1)
+  #define ASYN_HAVE_SCAN_ONCE_CALLBACK
+#endif
+
 static const char *driverName = "devAsynXXXArray";
 
 
@@ -81,6 +87,11 @@ private:
     int                 ringTail_;
     int                 ringSize_;
     int                 ringBufferOverflows_;
+    bool                scanIoRequested_;
+#ifdef ASYN_HAVE_SCAN_ONCE_CALLBACK
+    bool                scanOnceRequested_;
+    bool                scanOnceProcessed_;
+#endif
     ringBufferElement   result_;
     int                 gotValue_; /* For interruptCallbackInput */
     INTERRUPT           interruptCallback_;
@@ -105,6 +116,11 @@ public:
         ringTail_(0),
         ringSize_(0),
         ringBufferOverflows_(0),
+        scanIoRequested_(false),
+#ifdef ASYN_HAVE_SCAN_ONCE_CALLBACK
+        scanOnceRequested_(false),
+        scanOnceProcessed_(false),
+#endif
         gotValue_(0),
         interruptCallback_(interruptCallback),
         interfaceType_(epicsStrDup(interfaceType)),
@@ -259,6 +275,10 @@ public:
                           pRecord_->name, driverName, functionName, pasynUser_->errorMessage);
             }
         }
+        epicsMutexLock(ringBufferLock_);
+        /* Not I/O Intr scanned now, so no scanIoRequest() of ours can be pending. */
+        scanIoRequested_ = false;
+        epicsMutexUnlock(ringBufferLock_);
         *iopvt = ioScanPvt_;
         return INIT_OK;
     }
@@ -325,6 +345,12 @@ public:
                         pRecord_->name, driverName, driverName, pRecord_->nord);
                 }
                 pRecord_->time = rp->time;
+#ifdef ASYN_HAVE_SCAN_ONCE_CALLBACK
+                /* Let onceComplete() know that the record processed. */
+                epicsMutexLock(ringBufferLock_);
+                scanOnceProcessed_ = true;
+                epicsMutexUnlock(ringBufferLock_);
+#endif
             }
         }
         pasynEpicsUtils->asynStatusToEpicsAlarm(result_.status,
@@ -373,6 +399,44 @@ public:
         if (pRecord_->pact) callbackRequestProcessCallback(&callback_, pRecord_->prio, pRecord_);
     }
 
+#ifdef ASYN_HAVE_SCAN_ONCE_CALLBACK
+    /* Runs after dbProcess(), whether or not the record processed. Re-request
+     * only if it did, otherwise a declined request would spin. */
+    static void onceComplete(void *usr, dbCommon *prec)
+    {
+        devAsynXXXArray *pPvt = (devAsynXXXArray *)usr;
+
+        epicsMutexLock(pPvt->ringBufferLock_);
+        pPvt->scanOnceRequested_ = false;
+        if (pPvt->scanOnceProcessed_ && (pPvt->ringTail_ != pPvt->ringHead_)) {
+            pPvt->requestOutputProcessing();
+        }
+        epicsMutexUnlock(pPvt->ringBufferLock_);
+    }
+
+    /* At most one scanOnce request outstanding per record; caller holds the lock. */
+    void requestOutputProcessing()
+    {
+        if (scanOnceRequested_) return;
+        scanOnceProcessed_ = false;
+        if (scanOnceCallback((dbCommon *)pRecord_, onceComplete, this) == 0)
+            scanOnceRequested_ = true;
+    }
+#endif
+
+    /* At most one scanIoRequest() outstanding per record; caller holds the lock.
+     * On Base >= 3.15.0.2 a request that was not queued leaves the flag clear. */
+    void requestRecordProcessing()
+    {
+        if (scanIoRequested_) return;
+#if LT_EPICSBASE(3,15,0,2)
+        scanIoRequest(ioScanPvt_);
+        scanIoRequested_ = true;
+#else
+        if (scanIoRequest(ioScanPvt_) != 0) scanIoRequested_ = true;
+#endif
+    }
+
     int getRingBufferValue()
     {
         int ret = 0;
@@ -390,6 +454,11 @@ public:
             ringTail_ = (ringTail_ == ringSize_-1) ? 0 : ringTail_ + 1;
             ret = 1;
         }
+        if (scanIoRequested_) {
+            /* Re-request under the lock while values remain, so none is stranded. */
+            scanIoRequested_ = false;
+            if (ringTail_ != ringHead_) requestRecordProcessing();
+        }
         epicsMutexUnlock(ringBufferLock_);
         return ret;
     }
@@ -397,6 +466,9 @@ public:
     void interruptCallback(asynUser *pasynUser, EPICS_TYPE *value, size_t len)
     {
         int i;
+#ifndef ASYN_HAVE_SCAN_ONCE_CALLBACK
+        bool newElement = true;
+#endif
         EPICS_TYPE *pData = (EPICS_TYPE *)pRecord_->bptr;
         static const char *functionName = "interruptCallback";
 
@@ -447,13 +519,22 @@ public:
                  * is guaranteed to be the most recent value */
                 ringTail_ = (ringTail_ == ringSize_ - 1) ? 0 : ringTail_ + 1;
                 ringBufferOverflows_++;
-            } else {
+#ifndef ASYN_HAVE_SCAN_ONCE_CALLBACK
+                newElement = false;
+#endif
+            }
+            if (isOutput_) {
+#ifdef ASYN_HAVE_SCAN_ONCE_CALLBACK
+                /* No-op if a request is pending; retries one that was not queued. */
+                requestOutputProcessing();
+#else
                 /* We only need to request the record to process if we added a new
                  * element to the ring buffer, not if we just replaced an element. */
-                if (isOutput_)
-                    scanOnce((dbCommon *)pRecord_);
-                else
-                    scanIoRequest(ioScanPvt_);
+                if (newElement) scanOnce((dbCommon *)pRecord_);
+#endif
+            } else {
+                /* No-op if a request is pending; retries one that was not queued. */
+                requestRecordProcessing();
             }
             epicsMutexUnlock(ringBufferLock_);
         }

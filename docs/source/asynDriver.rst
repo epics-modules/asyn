@@ -673,9 +673,22 @@ When discussing queuing it is useful to think of 3 components of asyn:
    the callbacks happen faster than the record can process. The size of the ring buffer
    can be controlled with the asyn:FIFO info tag. The default is 10 for scalar records.
    The default is 0 for devAsynOctet, waveform, stringin, stringout, lsi, lso, printf
-   and scalcout records. If the ring buffer is in use then each driver callback results
-   in pushing a new value into the buffer and a request to process the record in a
-   separate callback thread. If the ring buffer is full then the oldest value in the
+   and scalcout records. If the ring buffer is in use then each driver callback pushes a
+   new value into the buffer and requests that the record be processed in a separate
+   callback thread. At most one such request is outstanding per record at any time: the
+   driver callback only requests processing if no request is pending, and the device
+   support issues the next request as it takes each value out of the ring buffer while
+   more values remain. A record therefore never occupies more than one entry of the
+   EPICS general purpose callback queue, whatever the ring buffer depth and however
+   fast the callbacks arrive. This applies both to input records with SCAN=I/O Intr,
+   which are processed via scanIoRequest(), and to output records with
+   asyn:READBACK=1, which are processed via callbackRequest(). For an output record
+   the request is not posted while the record is in the middle of asynchronous
+   processing, because the record could not be processed then; it is posted at the end
+   of the processing that is in flight. Output array records request processing with
+   scanOnce() instead, which uses the separate scanOnce queue; they are bounded the
+   same way when built against EPICS Base 3.16.0.1 or later, and only when they have
+   a ring buffer. If the ring buffer is full then the oldest value in the
    queue is discarded and the new value is added. This guarantees that the record will
    eventually have the value of the most recent callback, but it may skip some before
    this. If ASYN_TRACE_WARNING is set then a warning message is printed. The driver
