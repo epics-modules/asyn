@@ -103,6 +103,7 @@ INC += asynShellCommands.h
 INC += asynInterposeCom.h
 INC += asynInterposeEos.h
 INC += asynInterposeFlush.h
+INC += asynInterposeLimitRate.h
 ifneq ($(EPICS_LIBCOM_ONLY),YES)
   asyn_SRCS += asynShellCommands.c
 endif
@@ -111,6 +112,7 @@ asyn_SRCS += asynInterposeEos.c
 asyn_SRCS += asynInterposeFlush.c
 asyn_SRCS += asynInterposeDelay.c
 asyn_SRCS += asynInterposeEcho.c
+asyn_SRCS += asynInterposeLimitRate.c
 
 SRC_DIRS += $(ASYN)/asynPortDriver/exceptions
 INC += ParamListInvalidIndex.h
