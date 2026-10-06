@@ -11,12 +11,12 @@ _build/
 /include/
 /templates/
 /configure/*.local
+cdCommands
+envPaths
+dllPath.bat
+.iocsh_history
+
 *~
 O.*/
 *.swp
 *_BAK.adl
-/QtC-*
-/.qtc_*
-cdCommands
-envPaths
-dllPath.bat

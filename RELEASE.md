@@ -1,5 +1,18 @@
 # asynDriver: Release Notes
 
+## Release 4-47 (MMM DD, YYYY)
+- devEpics
+  - Change the ring buffer callback mechanism so that a record never occupies more than
+    one entry of the EPICS general purpose callback queue.
+    Affects devAsynInt32, devAsynInt64, devAsynFloat64, devAsynUInt32Digital,
+    devAsynOctet and devAsynXXXArray.
+  - Apply the same bound to output record readbacks (asyn:READBACK), which request
+    processing with callbackRequest() rather than scanIoRequest().
+  - Similar for devAsynXXXArray output readbacks, which are using scanOnce()/onceQueue.
+    Update testArrayRingBufferApp to exercise and show this.
+  - Add testQueueOverflowApp, which demonstrates and verifies the above bounds.
+  - Thanks to Ralph Lange for this.
+
 ## Release 4-46 (July 20, 2026)
 - devVxi11
   - Make VXI11 support (for VISA systems) optional.
@@ -27,8 +40,8 @@
     is mostly complete.  This was causing warnings if callbacks occured before iocInit.
   - Fix mbboDirect asyn:READBACK
     - This change makes mbboDirect behave the same as mbbiDirect: RVAL is copied to VAL (shifted, if neccessary),
-	  then each of the fields  representing individual bits is set as well.
-	- Thanks to Jure Varlec for this.
+      then each of the fields  representing individual bits is set as well.
+    - Thanks to Jure Varlec for this.
 - drvAsynIPServerPort
   - Numerous bug fixes from Freddie Akeroyd and Ralph Lange.
 - Added autoconverted OPI files in the test applications for CSS/Boy, CSS/Phoebus, edm, and caQtDM.
@@ -288,7 +301,7 @@
     changes, not each time there is an error. Thanks to Ben Franksen for this.
 - asynRecord
   - Fixes to allow changing the HOSTINFO for the asynIPPort driver when the port is
-    not connected. Thanks to Krisztián Löki for this.
+    not connected. Thanks to Krisztiï¿½n Lï¿½ki for this.
 - Many files
   - Changes to avoid compiler warnings.
 

@@ -1,0 +1,71 @@
+dbLoadDatabase("../../dbd/testQueueOverflow.dbd")
+testQueueOverflow_registerRecordDeviceDriver(pdbbase)
+
+# --- The callback queue needs only one entry per I/O Intr record -----------
+#
+# devAsynInt32 keeps at most one outstanding process request per record: an
+# interrupt callback issues scanIoRequest() only if no request is pending, and
+# getCallbackValue() issues the next one as it pops each value while the ring
+# buffer is still not empty. The number of entries a record can occupy on the
+# shared "cbLow"/"cbMedium"/"cbHigh" general purpose callback queue is
+# therefore 1, independent of the ring buffer depth and of how fast data
+# arrives. (Before that change every buffered value posted its own entry, so
+# the queue had to be sized for NCHAN * ring depth.)
+#
+# NCHAN=8 records here, so cbLow needs 8 entries. The queue is deliberately
+# left far below the old requirement of NCHAN * 10 = 80 to show that a small
+# queue is now sufficient: run the bursts below and look at the HIGH-WATER
+# MARK and Q OVERFLOWS columns printed by callbackQueueShow(0), EPICS Base's
+# iocsh command for inspecting the callback queues.
+#
+# Compare with st.cmd.deep_fifo, which runs the same burst with a ring buffer
+# depth of 100 and reaches the same high-water mark.
+
+epicsEnvSet("NCHAN","8")
+epicsEnvSet("QSIZE","32")
+epicsEnvSet("FIFO","10")
+
+# callbackSetQueueSize() only has an effect if called before iocInit()
+callbackSetQueueSize($(QSIZE))
+
+testQueueOverflowConfigure("PORT1", $(NCHAN))
+
+# Enable ASYN_TRACE_WARNING so per-record ring buffer overflows are also
+# printed on the console.
+asynSetTraceMask("PORT1",0,0x21)
+
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=0,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=1,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=2,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=3,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=4,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=5,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=6,PRIO=LOW,FIFO=$(FIFO)")
+dbLoadRecords("../../db/testQueueOverflowChan.db","P=testQueueOverflow:,PORT=PORT1,N=7,PRIO=LOW,FIFO=$(FIFO)")
+
+iocInit()
+
+# Baseline: the queue is empty and has never overflowed.
+callbackQueueShow(0)
+
+# 1) Simulate a burst of high-rate incoming data: 200 new values per channel,
+#    delivered back-to-back with no delay in between, exactly as a fast
+#    hardware input would push samples faster than the IOC can process them.
+testQueueOverflowBurst("PORT1", 200, 0)
+
+# cbLow's HIGH-WATER MARK is NCHAN (8) -- one entry per record -- and
+# Q OVERFLOWS stays 0, even though 1600 values were pushed into 8 ring buffers
+# of depth 10 with a queue of only 32 entries.
+callbackQueueShow(0)
+
+# 2) Now push 300 rounds paced slower than record processing, so every value is
+#    consumed before the next arrives and the ring buffers repeatedly go empty
+#    and refill. That is the case where a missed process request would strand a
+#    value: it would show up as "ring buffer overflows" warnings as the ring
+#    buffer backed up, and finally as records stuck at a stale value.
+#    Expect no overflow warnings at all, and every Chan record at 299.
+callbackQueueShow(1)
+testQueueOverflowBurst("PORT1", 300, 0.002)
+callbackQueueShow(0)
+dbgf testQueueOverflow:Chan0
+dbgf testQueueOverflow:Chan7
